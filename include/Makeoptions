@@ -1,0 +1,32 @@
+
+RM = rm
+
+# =======================================================
+# gfortran 
+
+FF = gfortran -fopenmp
+
+NETCDF_LIB = /usr/lib
+NETCDF_INC = /usr/include
+
+FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
+	-ffpe-trap=invalid,zero,overflow -fbounds-check \
+	-mcmodel=medium -fbacktrace -fdump-core -cpp
+# =======================================================
+
+
+# =======================================================
+# ifort
+
+#FF = ifort -openmp
+
+#NETCDF_LIB = /opt/netcdf/lib
+#NETCDF_INC = /opt/netcdf/include
+
+#FOPTS = -r8 -free -g -check uninit -check bounds -check pointers \
+#	-traceback 
+# =======================================================
+
+
+INCLUDE_DIR = -I. -I../include -I$(NETCDF_INC)
+LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas
