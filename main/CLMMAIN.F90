@@ -15,11 +15,11 @@ SUBROUTINE CLMMAIN ( &
            lakedepth,    dz_lake,                                   &
 
          ! vegetation information
-           htop,         hbot,         sqrtdi,                      &
+           htop,         hbot,         sqrtdi,       chil,          &
            effcon,       vmax25,       slti,         hlti,          &
            shti,         hhti,         trda,         trdm,          &
            trop,         gradm,        binter,       extkn,         &
-           chil,         rho,          tau,                         &
+           rho,          tau,                                       &
 
          ! atmospheric forcing
            forc_pco2m,   forc_po2m,    forc_us,      forc_vs,       &
@@ -162,6 +162,7 @@ SUBROUTINE CLMMAIN ( &
         htop        ,&! canopy top height [m]
         hbot        ,&! canopy bottom height [m]
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
+        chil        ,&! leaf angle distribution factor
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
         slti        ,&! slope of low temperature inhibition function      [s3] 
@@ -174,7 +175,6 @@ SUBROUTINE CLMMAIN ( &
         gradm       ,&! conductance-photosynthesis slope parameter
         binter      ,&! conductance-photosynthesis intercep
         extkn       ,&! coefficient of leaf nitrogen allocation
-        chil        ,&! leaf angle distribution factor
         rho(2,2)    ,&! leaf reflectance (iw=iband, il=life and dead)
         tau(2,2)    ,&! leaf transmittance (iw=iband, il=life and dead)
 
