@@ -17,6 +17,7 @@ MODULE MOD_TimeVariables
   REAL(r8), allocatable :: t_soisno    (:,:) !soil temperature [K]
   REAL(r8), allocatable :: wliq_soisno (:,:) !liquid water in layers [kg/m2]
   REAL(r8), allocatable :: wice_soisno (:,:) !ice lens in layers [kg/m2]
+  REAL(r8), allocatable :: smp         (:,:) !soil matric potential [mm]
   REAL(r8), allocatable :: h2osoi      (:,:) !volumetric soil water in layers [m3/m3]
   REAL(r8), allocatable :: rstfac        (:) !factor of soil water stress 
   REAL(r8), allocatable :: t_grnd        (:) !ground surface temperature [K]
@@ -66,6 +67,75 @@ MODULE MOD_TimeVariables
   REAL(r8), allocatable :: fh            (:) !integral of profile function for heat
   REAL(r8), allocatable :: fq            (:) !integral of profile function for moisture
 
+! bgc variables
+  REAL(r8), allocatable :: decomp_cpools_vr  (:,:,:)
+  REAL(r8), allocatable :: decomp_k          (:,:,:) ! soil decomposition rate [1/s]
+
+  REAL(r8), allocatable :: t_scalar          (:,:)   ! soil decomposition temperature scalars [unitless]
+  REAL(r8), allocatable :: w_scalar          (:,:)   ! soil decomposition water scalars [unitless]
+  REAL(r8), allocatable :: o_scalar          (:,:)   ! soil decomposition oxygen scalars [unitless]
+  REAL(r8), allocatable :: depth_scalar      (:,:)   ! soil decomposition depth scalars [unitless]
+
+! Soil CN diffusion and advection
+  REAL(r8), allocatable :: som_adv_coef             (:,:)
+  REAL(r8), allocatable :: som_diffus_coef          (:,:)
+
+! Active Layer
+  REAL(r8), allocatable :: altmax                   (:)
+  REAL(r8), allocatable :: altmax_lastyear          (:)
+  INTEGER , allocatable :: altmax_lastyear_indx     (:)
+
+  REAL(r8), allocatable :: totlitc                  (:)
+  REAL(r8), allocatable :: totvegc                  (:)
+  REAL(r8), allocatable :: totsomc                  (:)
+
+  REAL(r8), allocatable :: decomp_npools_vr         (:,:,:)
+
+  REAL(r8), allocatable :: sminn_vr                 (:,:)
+  REAL(r8), allocatable :: smin_no3_vr              (:,:)
+  REAL(r8), allocatable :: smin_nh4_vr              (:,:)
+
+  REAL(r8), allocatable :: ndep_prof                (:,:)
+  REAL(r8), allocatable :: nfixation_prof           (:,:)
+
+  REAL(r8), allocatable :: cn_decomp_pools          (:,:,:) 
+  REAL(r8), allocatable :: fpi_vr                   (:,:)
+  REAL(r8), allocatable :: fpi                      (:)
+  REAL(r8), allocatable :: fpg                      (:)
+
+  REAL(r8), allocatable :: cropf                    (:)
+  REAL(r8), allocatable :: lfwt                     (:)
+  REAL(r8), allocatable :: fuelc                    (:)
+  REAL(r8), allocatable :: fuelc_crop               (:)
+  REAL(r8), allocatable :: fsr                      (:)
+  REAL(r8), allocatable :: fd                       (:)
+  REAL(r8), allocatable :: rootc                    (:)
+  REAL(r8), allocatable :: lgdp                     (:)
+  REAL(r8), allocatable :: lgdp1                    (:)
+  REAL(r8), allocatable :: lpop                     (:)
+  REAL(r8), allocatable :: wtlf                     (:)
+  REAL(r8), allocatable :: trotr1                   (:)
+  REAL(r8), allocatable :: trotr2                   (:)
+  REAL(r8), allocatable :: hdmlf                    (:)
+  REAL(r8), allocatable :: lnfm                     (:)
+  REAL(r8), allocatable :: baf_crop                 (:)
+  REAL(r8), allocatable :: baf_peatf                (:)
+  REAL(r8), allocatable :: farea_burned             (:)
+  REAL(r8), allocatable :: nfire                    (:)
+  REAL(r8), allocatable :: fsat                     (:)
+  REAL(r8), allocatable :: prec10                   (:) ! 10-day running mean of total      precipitation [mm/s]
+  REAL(r8), allocatable :: prec60                   (:) ! 60-day running mean of total      precipitation [mm/s]
+  REAL(r8), allocatable :: prec365                  (:) ! 365-day running mean of tota     l precipitation [mm/s]
+  REAL(r8), allocatable :: prec_today               (:) ! today's daily precipitation      [mm/day]
+  REAL(r8), allocatable :: prec_daily               (:,:) ! daily total precipitation      [mm/day]
+  REAL(r8), allocatable :: wf2                      (:)
+  REAL(r8), allocatable :: tsoi17                   (:)
+  REAL(r8), allocatable :: rh30                     (:) ! 30-day running mean of relative humidity
+
+  REAL(r8), allocatable :: dayl                     (:)
+  REAL(r8), allocatable :: prev_dayl                (:)
+!---
+
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_TimeVariables
   PUBLIC :: READ_TimeVariables
@@ -96,6 +166,7 @@ MODULE MOD_TimeVariables
      allocate (t_soisno    (maxsnl+1:nl_soil,numpatch))
      allocate (wliq_soisno (maxsnl+1:nl_soil,numpatch))
      allocate (wice_soisno (maxsnl+1:nl_soil,numpatch))
+     allocate (smp                (1:nl_soil,numpatch))
      allocate (h2osoi             (1:nl_soil,numpatch))
      allocate (rstfac                       (numpatch))
      allocate (t_grnd                       (numpatch))
@@ -144,6 +215,72 @@ MODULE MOD_TimeVariables
      allocate (fh                           (numpatch))
      allocate (fq                           (numpatch))
 
+#ifdef BGC
+! bgc variables
+     allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch))
+
+     allocate (t_scalar                     (nl_soil,numpatch))
+     allocate (w_scalar                     (nl_soil,numpatch))
+     allocate (o_scalar                     (nl_soil,numpatch))
+     allocate (depth_scalar                 (nl_soil,numpatch))
+
+     allocate (som_adv_coef                 (nl_soil_full,numpatch))
+     allocate (som_diffus_coef              (nl_soil_full,numpatch))
+
+     allocate (altmax                       (numpatch))
+     allocate (altmax_lastyear              (numpatch))
+     allocate (altmax_lastyear_indx         (numpatch))
+
+     allocate (totlitc(numpatch))
+     allocate (totvegc(numpatch))
+     allocate (totsomc(numpatch))
+
+     allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (sminn_vr                     (nl_soil,numpatch))
+     allocate (smin_no3_vr                  (nl_soil,numpatch))
+     allocate (smin_nh4_vr                  (nl_soil,numpatch))
+
+     allocate (ndep_prof                    (nl_soil,numpatch))
+     allocate (nfixation_prof               (nl_soil,numpatch))
+
+     allocate (cn_decomp_pools              (nl_soil,ndecomp_pools,numpatch))
+     allocate (fpi_vr                       (nl_soil,numpatch))
+     allocate (fpi                          (numpatch))
+     allocate (fpg                          (numpatch))
+
+     allocate (cropf                        (numpatch))
+     allocate (lfwt                         (numpatch))
+     allocate (fuelc                        (numpatch))
+     allocate (fuelc_crop                   (numpatch))
+     allocate (fsr                          (numpatch))
+     allocate (fd                           (numpatch))
+     allocate (rootc                        (numpatch))
+     allocate (lgdp                         (numpatch))
+     allocate (lgdp1                        (numpatch))
+     allocate (lpop                         (numpatch))
+     allocate (wtlf                         (numpatch))
+     allocate (trotr1                       (numpatch))
+     allocate (trotr2                       (numpatch))
+     allocate (hdmlf                        (numpatch))
+     allocate (lnfm                         (numpatch))
+     allocate (baf_crop                     (numpatch))
+     allocate (baf_peatf                    (numpatch))
+     allocate (farea_burned                 (numpatch))
+     allocate (nfire                        (numpatch))
+     allocate (fsat                         (numpatch))
+     allocate (prec10                       (numpatch)) ! 10-day running mean of total      precipitation [mm/s]
+     allocate (prec60                       (numpatch)) ! 60-day running mean of total      precipitation [mm/s]
+     allocate (prec365                      (numpatch)) ! 365-day running mean of tota     l precipitation [mm/s]
+     allocate (prec_today                   (numpatch)) ! today's daily precipitation      [mm/day]
+     allocate (prec_daily               (365,numpatch)) ! daily total precipitation      [mm/day]
+     allocate (wf2                          (numpatch))
+     allocate (tsoi17                       (numpatch))
+     allocate (rh30                         (numpatch)) ! 30-day running mean of relative humidity
+
+     allocate (dayl                         (numpatch))
+     allocate (prev_dayl                    (numpatch))
+#endif
 #ifdef PFT_CLASSIFICATION
      CALL allocate_PFTimeVars
 #endif
@@ -190,6 +327,7 @@ MODULE MOD_TimeVariables
            t_soisno,        &! soil temperature [K]
            wliq_soisno,     &! liquid water in layers [kg/m2]
            wice_soisno,     &! ice lens in layers [kg/m2]
+           smp,             &! soil matric potential
            t_grnd,          &! ground surface temperature [K]
            tleaf,           &! leaf temperature [K]
            ldew,            &! depth of water on foliage [mm]
@@ -231,7 +369,69 @@ MODULE MOD_TimeVariables
            tstar,           &! t* in similarity theory [K]
            fm,              &! integral of profile function for momentum
            fh,              &! integral of profile function for heat
-           fq                ! integral of profile function for moisture
+           fq,              &! integral of profile function for moisture
+
+! bgc variables
+           decomp_cpools_vr,    &
+!           decomp_k,            &
+
+!           t_scalar,            &
+!           w_scalar,            &
+!           o_scalar,            &
+!           depth_scalar,        &
+
+!           som_adv_coef,        &
+!           som_diffus_coef,     &
+
+           altmax,              &
+           altmax_lastyear,     &
+           altmax_lastyear_indx,&
+
+!           totlitc,             &
+!           totvegc,             &
+!           totsomc,             &
+
+           decomp_npools_vr,    &
+           sminn_vr,            &
+           smin_no3_vr,         &
+           smin_nh4_vr,         &
+
+!           ndep_prof,           &
+!           nfixation_prof,      &
+
+!           cn_decomp_pools,     &
+!           fpi_vr,              &
+!           fpi,                 &
+!           fpg,                 &
+
+!           cropf,               &
+!           lfwt,                &
+!           fuelc,               &
+!           fuelc_crop,          &
+!           fsr,                 &
+!           fd,                  &
+!           rootc,               &
+!           lgdp,                &
+!           lgdp1,               &
+!           lpop,                &
+!           wtlf,                &
+!           trotr1,              &
+!           trotr2,              &
+!           hdmlf,               &
+!           lnfm,                &
+!           baf_crop,            &
+!           baf_peatf,           &
+!           farea_burned,        &
+!           nfire,               &
+!           fsat,                &
+           prec10,              &
+           prec60,              &
+           prec365,             &
+           prec_today,          &
+           prec_daily,          &
+!           wf2,                 &
+           tsoi17,              &
+           rh30
 
      ! PFT/PC time variabls
 #ifdef PFT_CLASSIFICATION
@@ -251,7 +451,101 @@ MODULE MOD_TimeVariables
            tref_p,          &! 2 m height air temperature [kelvin]
            qref_p,          &! 2 m height air specific humidity
            rst_p,           &! canopy stomatal resistance (s/m)
-           z0m_p             ! effective roughness [m]                                 
+           z0m_p,           &! effective roughness [m]                                 
+
+! bgc PFT variables
+           leafc_p,                &
+           leafc_storage_p,        &
+           leafc_xfer_p,           &
+           frootc_p,               &
+           frootc_storage_p,       &
+           frootc_xfer_p,          &
+           livestemc_p,            &
+           livestemc_storage_p,    &
+           livestemc_xfer_p,       &
+           deadstemc_p,            &
+           deadstemc_storage_p,    &
+           deadstemc_xfer_p,       &
+           livecrootc_p,           &
+           livecrootc_storage_p,   &
+           livecrootc_xfer_p,      &
+           deadcrootc_p,           &
+           deadcrootc_storage_p,   &
+           deadcrootc_xfer_p,      &
+           grainc_p,               &
+           grainc_storage_p,       &
+           grainc_xfer_p,          &
+           cropseedc_deficit_p,    &
+           xsmrpool_p,             &
+           gresp_storage_p,        &
+           gresp_xfer_p,           &
+      
+           leafn_p,                &
+           leafn_storage_p,        &
+           leafn_xfer_p,           &
+           frootn_p,               &
+           frootn_storage_p,       &
+           frootn_xfer_p,          &
+           livestemn_p,            &
+           livestemn_storage_p,    &
+           livestemn_xfer_p,       &
+           deadstemn_p,            &
+           deadstemn_storage_p,    &
+           deadstemn_xfer_p,       &
+           livecrootn_p,           &
+           livecrootn_storage_p,   &
+           livecrootn_xfer_p,      &
+           deadcrootn_p,           &
+           deadcrootn_storage_p,   &
+           deadcrootn_xfer_p,      &
+           grainn_p,               &
+           grainn_storage_p,       &
+           grainn_xfer_p,          &
+           cropseedn_deficit_p,    &
+           retransn_p,             &
+      
+           harvdate_p,             &
+      
+           tempsum_potential_gpp_p,&
+           tempmax_retransn_p,     &
+           tempavg_tref_p,         &
+           tempsum_npp_p,          &
+           tempsum_litfall_p,      &
+           annsum_potential_gpp_p, &
+           annmax_retransn_p,      &
+           annavg_tref_p,          &
+           annsum_npp_p,           &
+           annsum_litfall_p,       &
+      
+           bglfr_p,                &
+           bgtr_p,                 &
+           lgsf_p,                 &
+           gdd0_p,                 &
+           gdd8_p,                 &
+           gdd10_p,                &
+           gdd020_p,               &
+           gdd820_p,               &
+           gdd1020_p,              &
+           nyrs_crop_active_p,     &
+      
+           offset_flag_p,          &
+           offset_counter_p,       &
+           onset_flag_p,           &
+           onset_counter_p,        &
+           onset_gddflag_p,        &
+           onset_gdd_p,            &
+           onset_fdd_p,            &
+           onset_swi_p,            &
+           offset_fdd_p,           &
+           offset_swi_p,           &
+           dormant_flag_p,         &
+           prev_leafc_to_litter_p, &
+           prev_frootc_to_litter_p,&
+           days_active_p,          &
+      
+           burndate_p,             &
+           grain_flag_p
+
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -324,6 +618,7 @@ MODULE MOD_TimeVariables
            t_soisno,        &! soil temperature [K]
            wliq_soisno,     &! liquid water in layers [kg/m2]
            wice_soisno,     &! ice lens in layers [kg/m2]
+           smp,             &! soil matric potential
            t_grnd,          &! ground surface temperature [K]
            tleaf,           &! leaf temperature [K]
            ldew,            &! depth of water on foliage [mm]
@@ -365,7 +660,69 @@ MODULE MOD_TimeVariables
            tstar,           &! t* in similarity theory [K]
            fm,              &! integral of profile function for momentum
            fh,              &! integral of profile function for heat
-           fq                ! integral of profile function for moisture
+           fq,              &! integral of profile function for moisture
+
+! bgc variables
+           decomp_cpools_vr,    &
+!           decomp_k,            &
+
+!           t_scalar,            &
+!           w_scalar,            &
+!           o_scalar,            &
+!           depth_scalar,        &
+
+!           som_adv_coef,        &
+!           som_diffus_coef,     &
+
+           altmax,              &
+           altmax_lastyear,     &
+           altmax_lastyear_indx,&
+
+!           totlitc,             &
+!           totvegc,             &
+!           totsomc,             &
+
+           decomp_npools_vr,    &
+           sminn_vr,            &
+           smin_no3_vr,         &
+           smin_nh4_vr,         &
+
+!           ndep_prof,           &
+!           nfixation_prof,      &
+
+!           cn_decomp_pools,     &
+!           fpi_vr,              &
+!           fpi,                 &
+!           fpg,                 &
+
+!           cropf,               &
+!           lfwt,                &
+!           fuelc,               &
+!           fuelc_crop,          &
+!           fsr,                 &
+!           fd,                  &
+!           rootc,               &
+!           lgdp,                &
+!           lgdp1,               &
+!           lpop,                &
+!           wtlf,                &
+!           trotr1,              &
+!           trotr2,              &
+!           hdmlf,               &
+!           lnfm,                &
+!           baf_crop,            &
+!           baf_peatf,           &
+!           farea_burned,        &
+!           nfire,               &
+!           fsat,                &
+           prec10,              &
+           prec60,              &
+           prec365,             &
+           prec_today,          &
+           prec_daily,          &
+!           wf2,                 &
+           tsoi17,              &
+           rh30
 
       ! PFT/PC time variabls
 #ifdef PFT_CLASSIFICATION
@@ -385,7 +742,99 @@ MODULE MOD_TimeVariables
            tref_p,          &! 2 m height air temperature [kelvin]
            qref_p,          &! 2 m height air specific humidity
            rst_p,           &! canopy stomatal resistance (s/m)
-           z0m_p             ! effective roughness [m]                                 
+           z0m_p,           &! effective roughness [m]                                 
+! bgc PFT variables
+           leafc_p,                &
+           leafc_storage_p,        &
+           leafc_xfer_p,           &
+           frootc_p,               &
+           frootc_storage_p,       &
+           frootc_xfer_p,          &
+           livestemc_p,            &
+           livestemc_storage_p,    &
+           livestemc_xfer_p,       &
+           deadstemc_p,            &
+           deadstemc_storage_p,    &
+           deadstemc_xfer_p,       &
+           livecrootc_p,           &
+           livecrootc_storage_p,   &
+           livecrootc_xfer_p,      &
+           deadcrootc_p,           &
+           deadcrootc_storage_p,   &
+           deadcrootc_xfer_p,      &
+           grainc_p,               &
+           grainc_storage_p,       &
+           grainc_xfer_p,          &
+           cropseedc_deficit_p,    &
+           xsmrpool_p,             &
+           gresp_storage_p,        &
+           gresp_xfer_p,           &
+      
+           leafn_p,                &
+           leafn_storage_p,        &
+           leafn_xfer_p,           &
+           frootn_p,               &
+           frootn_storage_p,       &
+           frootn_xfer_p,          &
+           livestemn_p,            &
+           livestemn_storage_p,    &
+           livestemn_xfer_p,       &
+           deadstemn_p,            &
+           deadstemn_storage_p,    &
+           deadstemn_xfer_p,       &
+           livecrootn_p,           &
+           livecrootn_storage_p,   &
+           livecrootn_xfer_p,      &
+           deadcrootn_p,           &
+           deadcrootn_storage_p,   &
+           deadcrootn_xfer_p,      &
+           grainn_p,               &
+           grainn_storage_p,       &
+           grainn_xfer_p,          &
+           cropseedn_deficit_p,    &
+           retransn_p,             &
+      
+           harvdate_p,             &
+      
+           tempsum_potential_gpp_p,&
+           tempmax_retransn_p,     &
+           tempavg_tref_p,         &
+           tempsum_npp_p,          &
+           tempsum_litfall_p,      &
+           annsum_potential_gpp_p, &
+           annmax_retransn_p,      &
+           annavg_tref_p,          &
+           annsum_npp_p,           &
+           annsum_litfall_p,       &
+      
+           bglfr_p,                &
+           bgtr_p,                 &
+           lgsf_p,                 &
+           gdd0_p,                 &
+           gdd8_p,                 &
+           gdd10_p,                &
+           gdd020_p,               &
+           gdd820_p,               &
+           gdd1020_p,              &
+           nyrs_crop_active_p,     &
+      
+           offset_flag_p,          &
+           offset_counter_p,       &
+           onset_flag_p,           &
+           onset_counter_p,        &
+           onset_gddflag_p,        &
+           onset_gdd_p,            &
+           onset_fdd_p,            &
+           onset_swi_p,            &
+           offset_fdd_p,           &
+           offset_swi_p,           &
+           dormant_flag_p,         &
+           prev_leafc_to_litter_p, &
+           prev_frootc_to_litter_p,&
+           days_active_p,          &
+      
+           burndate_p,             &
+           grain_flag_p
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -423,6 +872,7 @@ MODULE MOD_TimeVariables
      deallocate (t_soisno     )
      deallocate (wliq_soisno  )
      deallocate (wice_soisno  )
+     deallocate (smp          )
      deallocate (h2osoi       )
      deallocate (rstfac       )
      deallocate (t_grnd       )
@@ -471,6 +921,71 @@ MODULE MOD_TimeVariables
      deallocate (fh           )
      deallocate (fq           )
      
+! bgc variables
+     deallocate (decomp_cpools_vr     )
+     deallocate (decomp_k             )
+
+     deallocate (t_scalar             )
+     deallocate (w_scalar             )
+     deallocate (o_scalar             )
+     deallocate (depth_scalar         )
+
+     deallocate (som_adv_coef         )
+     deallocate (som_diffus_coef      )
+
+     deallocate (altmax               )
+     deallocate (altmax_lastyear      )
+     deallocate (altmax_lastyear_indx )
+
+     deallocate (totlitc              )
+     deallocate (totvegc              )
+     deallocate (totsomc              )
+
+     deallocate (decomp_npools_vr     )
+     deallocate (sminn_vr             )
+     deallocate (smin_no3_vr          )
+     deallocate (smin_nh4_vr          )
+
+     deallocate (ndep_prof            )
+     deallocate (nfixation_prof       )
+
+     deallocate (cn_decomp_pools      )
+     deallocate (fpi_vr               )
+     deallocate (fpi                  )
+     deallocate (fpg                  )
+
+     deallocate (cropf                )
+     deallocate (lfwt                 )
+     deallocate (fuelc                )
+     deallocate (fuelc_crop           )
+     deallocate (fsr                  )
+     deallocate (fd                   )
+     deallocate (rootc                )
+     deallocate (lgdp                 )
+     deallocate (lgdp1                )
+     deallocate (lpop                 )
+     deallocate (wtlf                 )
+     deallocate (trotr1               )
+     deallocate (trotr2               )
+     deallocate (hdmlf                )
+     deallocate (lnfm                 )
+     deallocate (baf_crop             )
+     deallocate (baf_peatf            )
+     deallocate (farea_burned         )
+     deallocate (nfire                )
+     deallocate (fsat                 )
+     deallocate (prec10               )
+     deallocate (prec60               )
+     deallocate (prec365              )
+     deallocate (prec_today           )
+     deallocate (prec_daily           )
+     deallocate (wf2                  )
+     deallocate (tsoi17               )
+     deallocate (rh30                 )
+
+     deallocate (dayl                 )
+     deallocate (prev_dayl            )
+
 #ifdef PFT_CLASSIFICATION
      CALL deallocate_PFTimeVars
 #endif

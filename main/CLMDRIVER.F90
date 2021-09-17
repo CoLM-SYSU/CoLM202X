@@ -19,6 +19,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_TimeVariables
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
+ use MOD_PFTimeInvars
  use omp_lib
 
  IMPLICIT NONE
@@ -36,7 +37,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
   real(r8), allocatable :: z_soisno (:,:)
   real(r8), allocatable :: dz_soisno(:,:)
 
-  integer :: i, m
+  integer :: i, m, ps ,pe
 
 ! ======================================================================
 
@@ -50,6 +51,12 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP SCHEDULE(STATIC, 1)
 #endif
       DO i = 1, numpatch
+!      DO i = 16214, 16214
+!         if(patchtype(i) .eq. 0)then
+!            do m=patch_pft_s(i),patch_pft_e(i)
+!               print*,'i',i,patchlonr(i)*180/3.14,patchlatr(i)*180/3.14, pftclass(m), pftfrac(m)
+!            end do
+!         end if
          
          m = patchclass(i)
          !TODO: can be removed
@@ -87,7 +94,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
        ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
          z_soisno(maxsnl+1:,i),            dz_soisno(maxsnl+1:,i),           &
          t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-         wice_soisno(maxsnl+1:,i),                                           &
+         wice_soisno(maxsnl+1:,i),         smp(1:,i),                        &
 
          t_grnd(i),       tleaf(i),        ldew(i),         &
          sag(i),          scv(i),          snowdp(i),       fveg(i),         &
@@ -131,6 +138,13 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
          dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
 
+#if(defined BGC)
+         if(patchtype(i) .eq. 0)then
+            ps = patch_pft_s(i)
+            pe = patch_pft_e(i)
+            CALL bgc_driver (i,ps,pe,idate(1:3),deltim, patchlatr(i)*180/PI)
+         end if
+#endif
       ENDDO
 #ifdef OPENMP
 !$OMP END PARALLEL DO

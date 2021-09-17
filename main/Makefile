@@ -69,7 +69,32 @@ OBJS =  precision.o                 \
 	THERMAL.o                   \
 	tridia.o                    \
 	vec2xy.o                    \
-	wetbulb.o
+	wetbulb.o                   \
+        bgc_CNCStateUpdate1Mod.o    \
+        bgc_CNCStateUpdate2Mod.o    \
+        bgc_CNCStateUpdate3Mod.o    \
+        bgc_CNNStateUpdate1Mod.o    \
+        bgc_CNNStateUpdate2Mod.o    \
+        bgc_CNNStateUpdate3Mod.o    \
+        bgc_SoilBiogeochemNStateUpdate1Mod.o \
+        bgc_soil_SoilBiogeochemCompetitionMod.o  \
+        bgc_soil_SoilBiogeochemDecompCascadeBGCMod.o  \
+        bgc_soil_SoilBiogeochemDecompMod.o  \
+        bgc_soil_SoilBiogeochemLittVertTranspMod.o  \
+        bgc_soil_SoilBiogeochemNLeachingMod.o  \
+        bgc_soil_SoilBiogeochemPotentialMod.o  \
+        bgc_soil_SoilBiogeochemVerticalProfileMod.o  \
+        bgc_veg_CNGapMortalityMod.o  \
+        bgc_veg_CNGRespMod.o  \
+        bgc_veg_CNMRespMod.o  \
+        bgc_DaylengthMod.o \
+        bgc_veg_CNPhenologyMod.o  \
+        bgc_veg_NutrientCompetitionMod.o  \
+        bgc_CNSummaryMod.o  \
+        bgc_CNAnnualUpdateMod.o \
+        bgc_CNZeroFluxesMod.o \
+        bgc_driver.o
+
 
 ####################################################################
 

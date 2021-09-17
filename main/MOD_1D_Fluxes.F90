@@ -58,6 +58,80 @@ MODULE MOD_1D_Fluxes
 
   REAL(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
 
+! bgc variables
+! decomposition carbon fluxes
+  REAL(r8), allocatable :: decomp_cpools_sourcesink   (:,:,:)
+  REAL(r8), allocatable :: decomp_ctransfer_vr        (:,:,:)
+  REAL(r8), allocatable :: decomp_hr_vr               (:,:,:)
+  REAL(r8), allocatable :: phr_vr                     (:,:)
+  REAL(r8), allocatable :: m_decomp_cpools_to_fire_vr (:,:,:)
+  REAL(r8), allocatable :: decomp_cpools_transport_tendency(:,:,:)
+
+! vegetation to decomposition carbon fluxes
+  REAL(r8), allocatable :: phenology_to_met_c       (:,:)
+  REAL(r8), allocatable :: phenology_to_cel_c       (:,:)
+  REAL(r8), allocatable :: phenology_to_lig_c       (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_met_c   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_cel_c   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_lig_c   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_cwdc    (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_met_c  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_cel_c  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_lig_c  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_cwdc   (:,:)  
+
+! decomposition nitrogen fluxes
+  REAL(r8), allocatable :: decomp_npools_sourcesink   (:,:,:)
+  REAL(r8), allocatable :: decomp_ntransfer_vr        (:,:,:)
+  REAL(r8), allocatable :: decomp_sminn_flux_vr       (:,:,:)
+  REAL(r8), allocatable :: sminn_to_denit_decomp_vr   (:,:,:)
+  REAL(r8), allocatable :: m_decomp_npools_to_fire_vr (:,:,:)
+  REAL(r8), allocatable :: decomp_npools_transport_tendency(:,:,:)
+
+! vegetation to decomposition nitrogen fluxes
+  REAL(r8), allocatable :: phenology_to_met_n       (:,:)
+  REAL(r8), allocatable :: phenology_to_cel_n       (:,:)
+  REAL(r8), allocatable :: phenology_to_lig_n       (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_met_n   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_cel_n   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_lig_n   (:,:)
+  REAL(r8), allocatable :: gap_mortality_to_cwdn    (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_met_n  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_cel_n  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_lig_n  (:,:)
+  REAL(r8), allocatable :: fire_mortality_to_cwdn   (:,:)
+
+  REAL(r8), allocatable :: sminn_leached_vr         (:,:)
+  REAL(r8), allocatable :: smin_no3_leached_vr      (:,:)
+  REAL(r8), allocatable :: smin_no3_runoff_vr       (:,:)
+  REAL(r8), allocatable :: net_nmin_vr              (:,:)
+  REAL(r8), allocatable :: gross_nmin_vr            (:,:)
+  REAL(r8), allocatable :: net_nmin                 (:)
+  REAL(r8), allocatable :: gross_nmin               (:)
+  REAL(r8), allocatable :: plant_ndemand            (:)
+  REAL(r8), allocatable :: actual_immob_vr          (:,:)
+  REAL(r8), allocatable :: actual_immob_nh4_vr      (:,:)
+  REAL(r8), allocatable :: actual_immob_no3_vr      (:,:)
+  REAL(r8), allocatable :: potential_immob_vr       (:,:)
+  REAL(r8), allocatable :: pmnf_decomp              (:,:,:)
+  REAL(r8), allocatable :: p_decomp_cpool_loss      (:,:,:)
+  REAL(r8), allocatable :: sminn_to_plant_vr        (:,:)
+  REAL(r8), allocatable :: smin_nh4_to_plant_vr     (:,:)
+  REAL(r8), allocatable :: smin_no3_to_plant_vr     (:,:)
+  REAL(r8), allocatable :: supplement_to_sminn_vr   (:,:)
+  REAL(r8), allocatable :: sminn_to_plant_fun_vr    (:,:)
+  REAL(r8), allocatable :: sminn_to_plant_fun_nh4_vr(:,:)
+  REAL(r8), allocatable :: sminn_to_plant_fun_no3_vr(:,:)
+  REAL(r8), allocatable :: sminn_to_denit_excess_vr (:,:)
+  REAL(r8), allocatable :: f_nit_vr                 (:,:)
+  REAL(r8), allocatable :: f_denit_vr               (:,:)
+  REAL(r8), allocatable :: ndep_to_sminn            (:)
+  REAL(r8), allocatable :: ffix_to_sminn            (:)
+  REAL(r8), allocatable :: nfix_to_sminn            (:)
+  REAL(r8), allocatable :: somc_fire                (:)
+
+
+
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Fluxes
   PUBLIC :: deallocate_1D_Fluxes
@@ -72,7 +146,7 @@ MODULE MOD_1D_Fluxes
 
   SUBROUTINE allocate_1D_Fluxes
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpatch] variables
+  ! Allocates memory for CLM 1d [numpatch] variables 
   ! --------------------------------------------------------------------
      USE precision
      USE GlobalVars
@@ -125,6 +199,77 @@ MODULE MOD_1D_Fluxes
      allocate (respc   (numpatch))  !canopy respiration (mol m-2 s-1)
 
      allocate (qcharge (numpatch))  !groundwater recharge [mm/s]
+
+! bgc variables
+     allocate (decomp_cpools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_ctransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (decomp_hr_vr               (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (phr_vr                     (nl_soil_full,numpatch))
+     allocate (m_decomp_cpools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_cpools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
+
+! vegetation to decomposition carbon fluxes
+     allocate (phenology_to_met_c       (nl_soil,numpatch))
+     allocate (phenology_to_cel_c       (nl_soil,numpatch))
+     allocate (phenology_to_lig_c       (nl_soil,numpatch))
+     allocate (gap_mortality_to_met_c   (nl_soil,numpatch))
+     allocate (gap_mortality_to_cel_c   (nl_soil,numpatch))
+     allocate (gap_mortality_to_lig_c   (nl_soil,numpatch))
+     allocate (gap_mortality_to_cwdc    (nl_soil,numpatch))
+     allocate (fire_mortality_to_met_c  (nl_soil,numpatch))
+     allocate (fire_mortality_to_cel_c  (nl_soil,numpatch))
+     allocate (fire_mortality_to_lig_c  (nl_soil,numpatch))
+     allocate (fire_mortality_to_cwdc   (nl_soil,numpatch))  
+
+! decomposition nitrogen fluxes
+     allocate (decomp_npools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_ntransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (decomp_sminn_flux_vr       (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (sminn_to_denit_decomp_vr   (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (m_decomp_npools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_npools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
+
+! vegetation to decomposition nitrogen fluxes
+     allocate (phenology_to_met_n       (nl_soil,numpatch))
+     allocate (phenology_to_cel_n       (nl_soil,numpatch))
+     allocate (phenology_to_lig_n       (nl_soil,numpatch))
+     allocate (gap_mortality_to_met_n   (nl_soil,numpatch))
+     allocate (gap_mortality_to_cel_n   (nl_soil,numpatch))
+     allocate (gap_mortality_to_lig_n   (nl_soil,numpatch))
+     allocate (gap_mortality_to_cwdn    (nl_soil,numpatch))
+     allocate (fire_mortality_to_met_n  (nl_soil,numpatch))
+     allocate (fire_mortality_to_cel_n  (nl_soil,numpatch))
+     allocate (fire_mortality_to_lig_n  (nl_soil,numpatch))
+     allocate (fire_mortality_to_cwdn   (nl_soil,numpatch))
+
+     allocate (sminn_leached_vr         (nl_soil,numpatch))
+     allocate (smin_no3_leached_vr      (nl_soil,numpatch))
+     allocate (smin_no3_runoff_vr       (nl_soil,numpatch))
+     allocate (net_nmin_vr              (nl_soil,numpatch))
+     allocate (gross_nmin_vr            (nl_soil,numpatch))
+     allocate (net_nmin                 (numpatch))
+     allocate (gross_nmin               (numpatch))
+     allocate (plant_ndemand            (numpatch))
+     allocate (actual_immob_vr          (nl_soil,numpatch))
+     allocate (actual_immob_nh4_vr      (nl_soil,numpatch))
+     allocate (actual_immob_no3_vr      (nl_soil,numpatch))
+     allocate (potential_immob_vr       (nl_soil,numpatch))
+     allocate (pmnf_decomp              (nl_soil,ndecomp_transitions,numpatch))
+     allocate (p_decomp_cpool_loss      (nl_soil,ndecomp_transitions,numpatch))
+     allocate (sminn_to_plant_vr        (nl_soil,numpatch))
+     allocate (smin_nh4_to_plant_vr     (nl_soil,numpatch))
+     allocate (smin_no3_to_plant_vr     (nl_soil,numpatch))
+     allocate (supplement_to_sminn_vr   (nl_soil,numpatch))
+     allocate (sminn_to_plant_fun_vr    (nl_soil,numpatch))
+     allocate (sminn_to_plant_fun_nh4_vr(nl_soil,numpatch))
+     allocate (sminn_to_plant_fun_no3_vr(nl_soil,numpatch))
+     allocate (sminn_to_denit_excess_vr (nl_soil,numpatch))
+     allocate (f_nit_vr                 (nl_soil,numpatch))
+     allocate (f_denit_vr               (nl_soil,numpatch))
+     allocate (ndep_to_sminn            (numpatch))
+     allocate (ffix_to_sminn            (numpatch))
+     allocate (nfix_to_sminn            (numpatch))
+     allocate (somc_fire                (numpatch))
 
 #ifdef PFT_CLASSIFICATION
      CALL allocate_1D_PFTFluxes
@@ -188,6 +333,77 @@ MODULE MOD_1D_Fluxes
      deallocate (respc   )  !canopy respiration (mol m-2 s-1)
 
      deallocate (qcharge )  !groundwater recharge [mm/s]
+
+! bgc variables
+     deallocate (decomp_cpools_sourcesink   )
+     deallocate (decomp_ctransfer_vr        )
+     deallocate (decomp_hr_vr               )
+     deallocate (phr_vr                     )
+     deallocate (m_decomp_cpools_to_fire_vr )
+     deallocate (decomp_cpools_transport_tendency)
+
+! vegetation to decomposition carbon fluxes
+     deallocate (phenology_to_met_c       )
+     deallocate (phenology_to_cel_c       )
+     deallocate (phenology_to_lig_c       )
+     deallocate (gap_mortality_to_met_c   )
+     deallocate (gap_mortality_to_cel_c   )
+     deallocate (gap_mortality_to_lig_c   )
+     deallocate (gap_mortality_to_cwdc    )
+     deallocate (fire_mortality_to_met_c  )
+     deallocate (fire_mortality_to_cel_c  )
+     deallocate (fire_mortality_to_lig_c  )
+     deallocate (fire_mortality_to_cwdc   )
+
+! decomposition nitrogen fluxes
+     deallocate (decomp_npools_sourcesink   )
+     deallocate (decomp_ntransfer_vr        )
+     deallocate (decomp_sminn_flux_vr       )
+     deallocate (sminn_to_denit_decomp_vr   )
+     deallocate (m_decomp_npools_to_fire_vr )
+     deallocate (decomp_npools_transport_tendency)
+
+! vegetation to decomposition nitrogen fluxes
+     deallocate (phenology_to_met_n       )
+     deallocate (phenology_to_cel_n       )
+     deallocate (phenology_to_lig_n       )
+     deallocate (gap_mortality_to_met_n   )
+     deallocate (gap_mortality_to_cel_n   )
+     deallocate (gap_mortality_to_lig_n   )
+     deallocate (gap_mortality_to_cwdn    )
+     deallocate (fire_mortality_to_met_n  )
+     deallocate (fire_mortality_to_cel_n  )
+     deallocate (fire_mortality_to_lig_n  )
+     deallocate (fire_mortality_to_cwdn   )
+
+     deallocate (sminn_leached_vr         )
+     deallocate (smin_no3_leached_vr      )
+     deallocate (smin_no3_runoff_vr       )
+     deallocate (net_nmin_vr              )
+     deallocate (gross_nmin_vr            )
+     deallocate (net_nmin                 )
+     deallocate (gross_nmin               )
+     deallocate (plant_ndemand            )
+     deallocate (actual_immob_vr          )
+     deallocate (actual_immob_nh4_vr      )
+     deallocate (actual_immob_no3_vr      )
+     deallocate (potential_immob_vr       )
+     deallocate (pmnf_decomp              )
+     deallocate (p_decomp_cpool_loss      )
+     deallocate (sminn_to_plant_vr        )
+     deallocate (smin_nh4_to_plant_vr     )
+     deallocate (smin_no3_to_plant_vr     )
+     deallocate (supplement_to_sminn_vr   )
+     deallocate (sminn_to_plant_fun_vr    )
+     deallocate (sminn_to_plant_fun_nh4_vr)
+     deallocate (sminn_to_plant_fun_no3_vr)
+     deallocate (sminn_to_denit_excess_vr )
+     deallocate (f_nit_vr                 )
+     deallocate (f_denit_vr               )
+     deallocate (ndep_to_sminn            )
+     deallocate (ffix_to_sminn            )
+     deallocate (nfix_to_sminn            )
+     deallocate (somc_fire                )
      
 #ifdef PFT_CLASSIFICATION
      CALL deallocate_1D_PFTFluxes

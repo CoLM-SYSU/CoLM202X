@@ -19,13 +19,24 @@ MODULE GlobalVars
    
    ! number of plant functional types
    INTEGER, parameter :: N_PFT    = 16 
+   INTEGER, parameter :: N_CFT    = 1
    
    ! vertical layer number
    INTEGER, parameter :: maxsnl   = -5
    INTEGER, parameter :: nl_soil  = 10
+   INTEGER, parameter :: nl_soil_full  = 15
+   
    INTEGER, parameter :: nl_lake  = 10
    INTEGER, parameter :: nl_roof  = 5
    INTEGER, parameter :: nl_wall  = 5
+
+   ! bgc variables
+   integer, parameter :: ndecomp_pools = 7
+   integer, parameter :: ndecomp_transitions = 10
+   integer, parameter :: npcropmin = 17
+   real(r8),parameter :: zmin_bedrock = 0.4
+   integer, parameter :: nbedrock = 10
+
    
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
    INTEGER :: numpatch                 !total number of patches of grids

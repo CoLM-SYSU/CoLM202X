@@ -179,6 +179,10 @@ MODULE PFT_Const
       =(/-2.051, -1.835, -1.880, -1.880, -1.632, -1.757, -1.681, -1.757,&
          -1.880, -1.623, -1.623, -1.623, -2.621, -1.176, -1.452, -1.796/)
 
+   ! woody (1) or grass (0)
+   INTEGER , parameter, dimension(0:15) :: woody &
+      =(/0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0/)
+
    !设定PFT的根分布参数 
    REAL(r8), PRIVATE, parameter :: roota(0:15) &
       =(/  0.0,   7.0,   7.0,   7.0,   7.0,   7.0,   6.0,   6.0,&
@@ -187,6 +191,176 @@ MODULE PFT_Const
    REAL(r8), PRIVATE, parameter :: rootb(0:15) &
       =(/  0.0,   2.0,   2.0,   2.0,   1.0,   1.0,   2.0,   2.0,&
            2.0,   1.5,   1.5,   1.5,   2.0,   2.0,   2.0,   3.0/)
+
+!   bgc PFT constants
+
+   REAL(r8), parameter, dimension(0:15) :: grperc = 0.11_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: grpnow = 1._r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: lf_flab = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: lf_fcel = 0.5_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: lf_flig = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: fr_flab = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: fr_fcel = 0.5_r8
+
+
+   REAL(r8), parameter, dimension(0:15) :: fr_flig = 0.25_r8
+
+
+   LOGICAL , parameter, dimension(0:15) :: isshrub & ! True => is a shrub
+      =(/.False., .False., .False., .False., .False., .False., .False., .False., &
+         .False., .True.,  .True.,  .True.,  .False., .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: isgrass & ! True => is a grass
+      =(/.False., .False., .False., .False., .False., .False., .False., .False., &
+         .False., .False., .False., .False., .True.,  .True.,  .True.,  .True. /)
+
+   LOGICAL , parameter, dimension(0:15) :: isbetr  & ! True => is tropical broadleaf evergreen tree
+      =(/.False., .False., .False., .False., .True.,  .False., .False., .False., &
+         .False., .False., .False., .False., .False., .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: isbdtr  & ! True => is a broadleaf deciduous tree
+      =(/.False., .False., .False., .False., .False., .False., .True.,  .False., &
+         .False., .False., .False., .False., .False., .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: isevg   & ! True => is a evergreen tree
+      =(/.False., .True.,  .True.,  .False., .True.,  .True.,  .False., .False., &
+         .False., .True.,  .False., .False., .False., .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: issed   & ! True => is a seasonal deciduous tree
+      =(/.False., .False., .False., .True.,  .False., .False., .False., .True.,  &
+         .True.,  .False., .False., .True.,  .True.,  .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: isstd   & ! True => is a stress deciduous tree
+      =(/.False., .False., .False., .False., .False., .False., .True.,  .False., &
+         .False., .False., .True.,  .False., .False., .True.,  .True.,  .True. /) 
+
+   LOGICAL , parameter, dimension(0:15) :: isbare  & ! True => is a bare land
+      =(/.True.,  .False., .False., .False., .False., .False., .False., .False., &
+         .False., .False., .False., .False., .False., .False., .False., .False./)
+
+   LOGICAL , parameter, dimension(0:15) :: iscrop  & ! True => is a crop land
+      =(/.False., .False., .False., .False., .False., .False., .False., .False., &
+         .False., .False., .False., .False., .False., .False., .False., .True. /)
+
+   LOGICAL , parameter, dimension(0:15) :: isnatveg &! True => is a natural vegetation
+      =(/.False., .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True., &
+         .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .False./)
+
+   REAL(r8), parameter, dimension(0:15) :: fsr_pft &
+      =(/   0.,   0.26,   0.26,   0.26,   0.25,   0.25,   0.25,   0.25, &
+          0.25,   0.28,   0.28,   0.28,   0.33,   0.33,   0.33,   0.33/)
+
+   REAL(r8), parameter, dimension(0:15) :: fd_pft &
+      =(/   0.,     24.,     24.,     24.,     24.,     24.,     24.,     24., &
+           24.,     24.,     24.,     24.,     24.,     24.,     24.,     24./)
+
+   REAL(r8), parameter, dimension(0:15) :: leafcn &
+      =(/            1.,              58.,              58., 25.8131130614352, &
+        29.603315571344,  29.603315571344, 23.4521575984991, 23.4521575984991, &
+       23.4521575984991, 36.4166059723234, 23.2558139534884, 23.2558139534884, &
+       28.0269058295964, 28.0269058295964, 35.3606789250354, 28.0269058295964 /)
+
+   REAL(r8), parameter, dimension(0:15) :: frootcn &
+      =(/   1.,     42.,     42.,     42.,     42.,     42.,     42.,     42.,&
+           42.,     42.,     42.,     42.,     42.,     42.,     42.,     42./)
+
+   REAL(r8), parameter, dimension(0:15) :: livewdcn &
+      =(/   1.,     50.,     50.,     50.,     50.,     50.,     50.,     50.,&
+           50.,     50.,     50.,     50.,      0.,      0.,      0.,      0./)
+
+   REAL(r8), parameter, dimension(0:15) :: deadwdcn &
+      =(/   1.,    500.,    500.,    500.,    500.,    500.,    500.,    500.,&
+          500.,    500.,    500.,    500.,      0.,      0.,      0.,      0./) 
+
+   REAL(r8), parameter, dimension(0:15) :: graincn &
+      =(/-999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.,&
+         -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999./)
+
+   REAL(r8), parameter, dimension(0:15) :: lflitcn &
+      =(/   1.,     70.,     80.,     50.,     60.,     60.,     50.,     50.,&
+           50.,     60.,     50.,     50.,     50.,     50.,     50.,     50./)
+
+   REAL(r8), parameter, dimension(0:15) :: leaf_long &
+      =(/            0., 3.30916666666667, 3.30916666666667, 0.506666666666667,&
+                 1.4025,           1.4025, 0.48333333333333, 0.483333333333333,&
+      0.483333333333333, 1.32333333333333,             0.39,              0.39,&
+      0.320833333333333, 0.32083333333333,             0.14, 0.320833333333333/)
+
+   REAL(r8), parameter, dimension(0:15) :: cc_leaf  &
+      =(/   0.,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,&
+           0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: cc_lstem &
+      =(/   0.,     0.3,     0.3,     0.3,    0.27,    0.27,    0.27,    0.27,&
+          0.27,    0.35,    0.35,    0.35,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: cc_dstem &
+      =(/   0.,     0.3,     0.3,     0.3,    0.27,    0.27,    0.27,    0.27,&
+          0.27,    0.35,    0.35,    0.35,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: cc_other &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.45,    0.45,&
+          0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_leaf  &
+      =(/   0.,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,&
+           0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_lstem &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.35,    0.35,&
+          0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_lroot &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1,&
+          0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_root  &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1,&
+          0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_droot &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1,&
+          0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2/)
+
+   REAL(r8), parameter, dimension(0:15) :: fm_other &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.35,    0.35,&
+          0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8/)
+
+   REAL(r8), parameter, dimension(0:15) :: froot_leaf         &
+      =(/   0.,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5,&
+           1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5/)
+
+   REAL(r8), parameter, dimension(0:15) :: croot_stem         &
+      =(/  0.3,     0.3,     0.3,     0.3,     0.3,     0.3,     0.3,     0.3,&
+           0.3,     0.3,     0.3,     0.3,      0.,      0.,      0.,      0./)
+
+   REAL(r8), parameter, dimension(0:15) :: stem_leaf          &
+      =(/   0.,     2.3,     2.3,      1.,     2.3,     1.5,      1.,     2.3,&
+           2.3,     1.4,    0.24,    0.24,      0.,      0.,      0.,      0./)
+
+   REAL(r8), parameter, dimension(0:15) :: flivewd            &
+      =(/   0.,     0.1,     0.1,     0.1,     0.1,     0.1,     0.1,     0.1,&
+           0.1,     0.5,     0.5,     0.1,      0.,      0.,      0.,      0./)
+
+   REAL(r8), parameter, dimension(0:15) :: fcur2              &
+      =(/   0.,      1.,      1.,      0.,      1.,      1.,      0.,      0.,&
+            0.,      1.,      0.,      0.,      0.,      0.,      0.,      0./)
+
+!---
+
+!   end bgc variables
 
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
    INTEGER, PRIVATE :: ROOTFR_SCHEME = 1 

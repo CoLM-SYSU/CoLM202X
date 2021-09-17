@@ -109,6 +109,14 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
   REAL(r8) sumpctpft
   REAL(r8), external :: orb_coszen     !cosine of the solar zenith angle
 
+  REAL(r8) f_s1s2 (1:nl_soil)
+  REAL(r8) f_s1s3 (1:nl_soil)
+  REAL(r8) rf_s1s2(1:nl_soil)
+  REAL(r8) rf_s1s3(1:nl_soil)
+  REAL(r8) f_s2s1
+  REAL(r8) f_s2s3
+  REAL(r8) t
+
 
 ! ----------------------------------------------------------------------
 ! [1] READ IN LAND INFORMATION
@@ -740,10 +748,101 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       trsmx0 = 2.e-4   !Max transpiration for moist soil+100% veg. [mm/s]
       tcrit  = 2.5     !critical temp. to determine rain or snow
 
+! bgc constant
+      i_met_lit = 1
+      i_cel_lit = 2
+      i_lig_lit = 3
+      i_cwd     = 4
+      i_soil1   = 5
+      i_soil2   = 6
+      i_soil3   = 7
+      i_atm     = 0
+
+      donor_pool    = (/i_met_lit, i_cel_lit, i_lig_lit, i_soil1, i_cwd    , i_cwd    , i_soil1, i_soil2, i_soil2, i_soil3/)
+      receiver_pool = (/i_soil1  , i_soil1  , i_soil2  , i_soil2, i_cel_lit, i_lig_lit, i_soil3, i_soil1, i_soil3, i_soil1/)
+      am = 0.02_r8
+      floating_cn_ratio = (/.true., .true., .true., .true., .false. ,.false., .false./)
+      initial_cn_ratio  = (/90._r8, 90._r8, 90._r8, 90._r8, 200._r8, 200._r8, 200._r8/)      ! 1:ndecomp_pools
+
+      f_s2s1 = 0.42_r8/(0.45_r8)
+      f_s2s3 = 0.03_r8/(0.45_r8)
+      do j=1,nl_soil
+         do i = 1, numpatch
+!         t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - wf_sand(j))
+            t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - 50._r8)
+            f_s1s2 (j) = 1._r8 - .004_r8 / (1._r8 - t)
+            f_s1s3 (j) = .004_r8 / (1._r8 - t)
+            rf_s1s2(j) = t
+            rf_s1s3(j) = t
+            rf_decomp(j,:,i)  = (/0.55_r8, 0.5_r8, 0.5_r8, rf_s1s2(j), 0._r8  , 0._r8  , rf_s1s3(j), 0.55_r8, 0.55_r8, 0.55_r8/)
+            pathfrac_decomp(j,:,i) = (/1.0_r8 ,1.0_r8 , 1.0_r8, f_s1s2(j) , 0.76_r8, 0.24_r8, f_s1s3(j) , f_s2s1 , f_s2s3 , 1._r8/)
+         end do
+      end do
+
+      is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
+      is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
+   
+      gdp_lf (:)    = 0._r8
+      abm_lf (:)    = 0._r8
+      peatf_lf (:)  = 0._r8
+      cmb_cmplt_fact(1:2) = (/0.5_r8,0.25_r8/)
+
+      nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
+      dnp    = 0.01_r8
+      bdnr   = 0.5_r8
+      Q10       = 1.5_r8
+      froz_q10  = 1.5_r8
+      tau_l1    = 1._r8/18.5_r8
+      tau_l2_l3 = 1._r8/4.9_r8
+      tau_s1    = 1._r8/7.3_r8
+      tau_s2    = 1._r8/0.2_r8
+      tau_s3    = 1._r8/.0045_r8
+      tau_cwd   = 1._r8/0.3_r8
+      lwtop     = 0.7_r8/31536000.0_r8
+
+      som_adv_flux               = 0._r8
+      som_diffus                 = 3.170979198376459e-12_r8
+      cryoturb_diffusion_k       = 1.585489599188229e-11_r8
+      max_altdepth_cryoturbation = 2._r8
+      max_depth_cryoturb         = 3._r8
+
+      br              = 2.525e-6_r8
+      br_root         = 0.83e-6_r8
+
+      fstor2tran      = 0.5
+      ndays_on        = 30
+      ndays_off       = 15
+      crit_dayl       = 39300
+      crit_onset_fdd  = 15
+      crit_onset_swi  = 15
+      crit_offset_fdd = 15
+      crit_offset_swi = 15
+      soilpsi_on      = -0.6
+      soilpsi_off     = -0.8
+
+! constant for fire module
+      occur_hi_gdp_tree        = 0.39_r8
+      lfuel                    = 75._r8
+      ufuel                    = 650._r8
+      cropfire_a1              = 0.3_r8
+      borealat                 = 40._r8/(4.*atan(1.))
+      troplat                  = 23.5_r8/(4.*atan(1.))
+      non_boreal_peatfire_c    = 0.001_r8
+      boreal_peatfire_c        = 4.2e-5_r8
+      rh_low                   = 30.0_r8
+      rh_hgh                   = 80.0_r8
+      bt_min                   = 0.3_r8
+      bt_max                   = 0.7_r8
+      pot_hmn_ign_counts_alpha = 0.0035_r8
+      g0                       = 0.05_r8
+
+      sf     = 0.1_r8
+      sf_no3 = 1._r8
+
+
 ! ...............................................
 ! 3.5 Write out as a restart file [histTimeConst]
 ! ...............................................
-
       CALL WRITE_TimeInvariants (dir_restart_hist,casename)
 
       write (6,*)
@@ -882,7 +981,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           ,soil_s_v_alb(i),soil_d_v_alb(i),soil_s_n_alb(i),soil_d_n_alb(i)&
           ,z0m(i),zlnd,chil(m),rho(1:,1:,m),tau(1:,1:,m)&
           ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
-          ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
+          ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i),smp(1:,i)&
           ,zwt(i),wa(i)&
           ,t_grnd(i),tleaf(i),ldew(i),sag(i),scv(i)&
           ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
@@ -890,6 +989,11 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           ,thermk(i),extkb(i),extkd(i)&
           ,trad(i),tref(i),qref(i),rst(i),emis(i),zol(i),rib(i)&
           ,ustar(i),qstar(i),tstar(i),fm(i),fh(i),fq(i)&
+#if(defined BGC)
+          ,decomp_cpools_vr(:,:,i), altmax    (i), altmax_lastyear(i), altmax_lastyear_indx(i)&
+          ,decomp_npools_vr(:,:,i), sminn_vr(:,i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
+          ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i)&
+#endif
 #if(defined SOILINI)
           ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i))
 #else

@@ -31,7 +31,7 @@ SUBROUTINE CLMMAIN ( &
 
          ! land surface variables required for restart
            z_soisno,     dz_soisno,    t_soisno,     wliq_soisno,   &
-           wice_soisno,  t_grnd,       tleaf,        ldew,          &
+           wice_soisno,  smp,          t_grnd,       tleaf,        ldew,          &
            sag,          scv,          snowdp,       fveg,          &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
@@ -229,6 +229,7 @@ SUBROUTINE CLMMAIN ( &
         t_soisno(maxsnl+1:nl_soil)    ,&! soil + snow layer temperature [K]
         wliq_soisno(maxsnl+1:nl_soil) ,&! liquid water (kg/m2)
         wice_soisno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
+        smp(1:nl_soil)        ,&! soil water matric potential (mm)
 
         t_lake(nl_lake)       ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
@@ -508,7 +509,7 @@ ENDIF
            qsdew             ,qsubl             ,qfros             ,rsur              ,&
            rnof              ,qinfl             ,wtfact            ,pondmx            ,&
            ssi               ,wimp              ,smpmin            ,zwt               ,&
-           wa                ,qcharge                                                  )
+           wa                ,qcharge           ,smp                                   )
 
       IF (snl < 0) THEN
          ! Compaction rate for snow 

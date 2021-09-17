@@ -3,12 +3,17 @@
 SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,porsl,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb&
                      ,z0m,zlnd,chil,rho,tau,z_soisno,dz_soisno&
-                     ,t_soisno,wliq_soisno,wice_soisno,zwt,wa&
+                     ,t_soisno,wliq_soisno,wice_soisno,smp,zwt,wa&
                      ,t_grnd,tleaf,ldew,sag,scv&   
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,alb,ssun,ssha,thermk,extkb,extkd&
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
+#if(defined BGC)
+                     ,decomp_cpools_vr, altmax, altmax_lastyear, altmax_lastyear_indx&
+                     ,decomp_npools_vr, sminn_vr, smin_no3_vr, smin_nh4_vr&
+                     ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30&
+#endif
 #if(defined SOILINI)
                      ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d)
 #else
@@ -69,6 +74,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         t_soisno (maxsnl+1:nl_soil),   &! soil temperature [K]
         wliq_soisno(maxsnl+1:nl_soil), &! liquid water in layers [kg/m2]
         wice_soisno(maxsnl+1:nl_soil), &! ice lens in layers [kg/m2]
+        smp               (1:nl_soil), &! soil matric potential [mm]
         t_grnd,                 &! ground surface temperature [K]
         tleaf,                  &! sunlit leaf temperature [K]
         ldew,                   &! depth of water on foliage [mm]
@@ -105,6 +111,26 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         fh,                     &! integral of profile function for heat
         fq                       ! integral of profile function for moisture
 
+#if(defined BGC)
+   REAL(r8),intent(out) ::      &
+        decomp_cpools_vr          (nl_soil_full,ndecomp_pools), &
+        altmax                                                , &
+        altmax_lastyear                                       
+   INTEGER, intent(out) :: altmax_lastyear_indx     
+   REAL(r8),intent(out) ::      &
+        decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
+        sminn_vr                  (nl_soil)                   , &
+        smin_no3_vr               (nl_soil)                   , &
+        smin_nh4_vr               (nl_soil)                   , &
+        prec10                                                , &
+        prec60                                                , &
+        prec365                                               , &
+        prec_today                                            , &
+        prec_daily                                            , &
+        tsoi17                                                , &
+        rh30                                                 
+#endif
+        
         INTEGER j, snl                      
         REAL(r8) wet(nl_soil), wt, ssw, oro, rhosno_ini, a
 
@@ -136,6 +162,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
            wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
 !          wliq_soisno(j) = porsl(j)*wet(j)*dz_soisno(j)*1000.
         ENDIF
+        smp(j) = 0.
      ENDDO
 
      snowdp = snow_d
@@ -298,6 +325,116 @@ ENDIF
   fh    = alog(30.)  
   fq    = alog(30.)  
 
+#ifdef BGC
+    decomp_cpools_vr          (:,:) = 0.0
+    altmax                          = 10.0
+    altmax_lastyear                 = 10.0
+    altmax_lastyear_indx            = 10
+    decomp_npools_vr          (:,:) = 0.0
+    sminn_vr                  (:)   = 0.0
+    smin_no3_vr               (:)   = 0.0
+    smin_nh4_vr               (:)   = 0.0
+    prec10                          = 0._r8
+    prec60                          = 0._r8
+    prec365                         = 0._r8
+    prec_today                      = 0._r8
+    prec_daily                      = 0._r8
+    tsoi17                          = 273.15_r8
+    rh30                            = 0._r8
+#if(defined PFT_CLASSIFICATION)
+    leafc_p                  (ps:pe) = 0.0
+    leafc_storage_p          (ps:pe) = 0.0
+    leafc_xfer_p             (ps:pe) = 0.0
+    frootc_p                 (ps:pe) = 0.0
+    frootc_storage_p         (ps:pe) = 0.0
+    frootc_xfer_p            (ps:pe) = 0.0
+    livestemc_p              (ps:pe) = 0.0
+    livestemc_storage_p      (ps:pe) = 0.0
+    livestemc_xfer_p         (ps:pe) = 0.0
+    deadstemc_p              (ps:pe) = 0.0
+    deadstemc_storage_p      (ps:pe) = 0.0
+    deadstemc_xfer_p         (ps:pe) = 0.0
+    livecrootc_p             (ps:pe) = 0.0
+    livecrootc_storage_p     (ps:pe) = 0.0
+    livecrootc_xfer_p        (ps:pe) = 0.0
+    deadcrootc_p             (ps:pe) = 0.0
+    deadcrootc_storage_p     (ps:pe) = 0.0
+    deadcrootc_xfer_p        (ps:pe) = 0.0
+    grainc_p                 (ps:pe) = 0.0
+    grainc_storage_p         (ps:pe) = 0.0
+    grainc_xfer_p            (ps:pe) = 0.0
+    cropseedc_deficit_p      (ps:pe) = 0.0
+    xsmrpool_p               (ps:pe) = 0.0
+    gresp_storage_p          (ps:pe) = 0.0
+    gresp_xfer_p             (ps:pe) = 0.0
+
+    leafn_p                  (ps:pe) = 0.0
+    leafn_storage_p          (ps:pe) = 0.0
+    leafn_xfer_p             (ps:pe) = 0.0
+    frootn_p                 (ps:pe) = 0.0
+    frootn_storage_p         (ps:pe) = 0.0
+    frootn_xfer_p            (ps:pe) = 0.0
+    livestemn_p              (ps:pe) = 0.0
+    livestemn_storage_p      (ps:pe) = 0.0
+    livestemn_xfer_p         (ps:pe) = 0.0
+    deadstemn_p              (ps:pe) = 0.0
+    deadstemn_storage_p      (ps:pe) = 0.0
+    deadstemn_xfer_p         (ps:pe) = 0.0
+    livecrootn_p             (ps:pe) = 0.0
+    livecrootn_storage_p     (ps:pe) = 0.0
+    livecrootn_xfer_p        (ps:pe) = 0.0
+    deadcrootn_p             (ps:pe) = 0.0
+    deadcrootn_storage_p     (ps:pe) = 0.0
+    deadcrootn_xfer_p        (ps:pe) = 0.0
+    grainn_p                 (ps:pe) = 0.0
+    grainn_storage_p         (ps:pe) = 0.0
+    grainn_xfer_p            (ps:pe) = 0.0
+    cropseedn_deficit_p      (ps:pe) = 0.0
+    retransn_p               (ps:pe) = 0.0
+    
+    harvdate_p               (ps:pe) = 99999999
+
+    tempsum_potential_gpp_p  (ps:pe) = 0.0
+    tempmax_retransn_p       (ps:pe) = 0.0
+    tempavg_tref_p           (ps:pe) = 0.0
+    tempsum_npp_p            (ps:pe) = 0.0
+    tempsum_litfall_p        (ps:pe) = 0.0
+    annsum_potential_gpp_p   (ps:pe) = 0.0
+    annmax_retransn_p        (ps:pe) = 0.0
+    annavg_tref_p            (ps:pe) = 280.0
+    annsum_npp_p             (ps:pe) = 0.0
+    annsum_litfall_p         (ps:pe) = 0.0
+    
+    bglfr_p                  (ps:pe) = 0.0
+    bgtr_p                   (ps:pe) = 0.0
+    lgsf_p                   (ps:pe) = 0.0
+    gdd0_p                   (ps:pe) = 0.0
+    gdd8_p                   (ps:pe) = 0.0
+    gdd10_p                  (ps:pe) = 0.0
+    gdd020_p                 (ps:pe) = 0.0
+    gdd820_p                 (ps:pe) = 0.0
+    gdd1020_p                (ps:pe) = 0.0
+    nyrs_crop_active_p       (ps:pe) = 0
+    
+    offset_flag_p            (ps:pe) = 0.0
+    offset_counter_p         (ps:pe) = 0.0
+    onset_flag_p             (ps:pe) = 0.0
+    onset_counter_p          (ps:pe) = 0.0
+    onset_gddflag_p          (ps:pe) = 0.0
+    onset_gdd_p              (ps:pe) = 0.0
+    onset_fdd_p              (ps:pe) = 0.0
+    onset_swi_p              (ps:pe) = 0.0
+    offset_fdd_p             (ps:pe) = 0.0
+    offset_swi_p             (ps:pe) = 0.0
+    dormant_flag_p           (ps:pe) = 1.0
+    prev_leafc_to_litter_p   (ps:pe) = 0.0
+    prev_frootc_to_litter_p  (ps:pe) = 0.0
+    days_active_p            (ps:pe) = 0.0
+    
+    burndate_p               (ps:pe) = 10000
+    grain_flag_p             (ps:pe) = 0.0
+#endif
+#endif
 END SUBROUTINE IniTimeVar
 !-----------------------------------------------------------------------
 ! EOP

@@ -753,16 +753,17 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                obu = zldis/a_zol(i,j)
                
 !NOTE: for single point debug [注释下面]
-               call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,& ! fordebug
-                    obu,um,a_ustar(i,j),fh2m,fq2m,&
-                    a_fm10m(i,j),a_fm(i,j),a_fh(i,j),a_fq(i,j))
-
+!               print*,'z0m',z0m_av
+!               call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,& ! fordebug
+!                    obu,um,a_ustar(i,j),fh2m,fq2m,&
+!                    a_fm10m(i,j),a_fm(i,j),a_fh(i,j),a_fq(i,j))
+!
 ! bug found by chen qiying 2013/07/01 
-               a_rib(i,j) = a_zol(i,j)/vonkar*a_ustar(i,j)**2/(vonkar/a_fh(i,j)*um**2)
-               a_rib(i,j) = min(5.,a_rib(i,j))
-
-               a_us10m(i,j) = us/um * a_ustar(i,j)/vonkar * a_fm10m(i,j)
-               a_vs10m(i,j) = vs/um * a_ustar(i,j)/vonkar * a_fm10m(i,j)
+!               a_rib(i,j) = a_zol(i,j)/vonkar*a_ustar(i,j)**2/(vonkar/a_fh(i,j)*um**2)
+!               a_rib(i,j) = min(5.,a_rib(i,j))
+!
+!               a_us10m(i,j) = us/um * a_ustar(i,j)/vonkar * a_fm10m(i,j)
+!               a_vs10m(i,j) = vs/um * a_ustar(i,j)/vonkar * a_fm10m(i,j)
 
             else
 

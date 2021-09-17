@@ -1,0 +1,127 @@
+module bgc_CNNStateUpdate2Mod
+
+use precision
+use MOD_TimeInvariants, only: &
+            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd
+use MOD_TimeVariables, only: &
+    ! decompositionn nitrogen pools & fluxes variables (inout)
+           decomp_npools_vr
+
+use MOD_1D_Fluxes, only: &
+           gap_mortality_to_met_n, gap_mortality_to_cel_n , &
+           gap_mortality_to_lig_n, gap_mortality_to_cwdn  
+
+use MOD_PFTimeVars, only: &
+    ! vegetation nitrogen state variables (inout)
+           leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
+           frootn_p           , frootn_storage_p    , frootn_xfer_p    , &
+           livestemn_p        , livestemn_storage_p , livestemn_xfer_p , &
+           deadstemn_p        , deadstemn_storage_p , deadstemn_xfer_p , &
+           livecrootn_p       , livecrootn_storage_p, livecrootn_xfer_p, &
+           deadcrootn_p       , deadcrootn_storage_p, deadcrootn_xfer_p, &
+           retransn_p
+
+use MOD_1D_PFTFluxes, only: &
+    ! vegetation nitrogen flux variables
+           m_leafn_to_litter_p        , m_leafn_storage_to_litter_p     , m_leafn_xfer_to_litter_p     , &
+           m_frootn_to_litter_p       , m_frootn_storage_to_litter_p    , m_frootn_xfer_to_litter_p    , &
+           m_livestemn_to_litter_p    , m_livestemn_storage_to_litter_p , m_livestemn_xfer_to_litter_p , &
+           m_deadstemn_to_litter_p    , m_deadstemn_storage_to_litter_p , m_deadstemn_xfer_to_litter_p , &
+           m_livecrootn_to_litter_p   , m_livecrootn_storage_to_litter_p, m_livecrootn_xfer_to_litter_p, &
+           m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
+           m_retransn_to_litter_p
+
+implicit none
+
+public NStateUpdate2
+
+contains
+
+subroutine NStateUpdate2(i, ps, pe, deltim, nl_soil)
+
+integer ,intent(in) :: i
+integer ,intent(in) :: ps
+integer ,intent(in) :: pe
+real(r8),intent(in) :: deltim
+integer ,intent(in) :: nl_soil
+
+integer j, m
+
+      ! column-level nitrogen fluxes from gap-phase mortality
+
+      do j = 1, nl_soil
+!            if (.not. use_soil_matrixcn)then
+         decomp_npools_vr(j,i_met_lit,i) = &
+               decomp_npools_vr(j,i_met_lit,i) + gap_mortality_to_met_n(j,i) * deltim
+         decomp_npools_vr(j,i_cel_lit,i) = &
+               decomp_npools_vr(j,i_cel_lit,i) + gap_mortality_to_cel_n(j,i) * deltim
+         decomp_npools_vr(j,i_lig_lit,i) = &
+               decomp_npools_vr(j,i_lig_lit,i) + gap_mortality_to_lig_n(j,i) * deltim
+         decomp_npools_vr(j,i_cwd,i)     = &
+               decomp_npools_vr(j,i_cwd,i)     + gap_mortality_to_cwdn(j,i)       * deltim
+!            else
+!               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+!                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + gap_mortality_n_to_litr_met_n(j) * deltim
+!               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+!                 nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + gap_mortality_n_to_litr_cel_n(j) * deltim
+!               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+!                 nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + gap_mortality_n_to_litr_lig_n(j) * deltim
+!               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
+!                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + gap_mortality_n_to_cwdn(j)       * deltim
+!            end if !not use_soil_matrix
+      end do
+
+      ! patch -level nitrogen fluxes from gap-phase mortality
+
+!         if(.not.  use_matrixcn)then
+         ! displayed pools
+      do m = ps, pe
+         leafn_p(m) =  leafn_p(m)                           &
+           - m_leafn_to_litter_p(m) * deltim
+         frootn_p(m) =  frootn_p(m)                         &
+           - m_frootn_to_litter_p(m) * deltim
+         livestemn_p(m) =  livestemn_p(m)                   &
+           - m_livestemn_to_litter_p(m) * deltim
+         deadstemn_p(m) =  deadstemn_p(m)                   &
+           - m_deadstemn_to_litter_p(m) * deltim
+         livecrootn_p(m) =  livecrootn_p(m)                 &
+           - m_livecrootn_to_litter_p(m) * deltim
+         deadcrootn_p(m) =  deadcrootn_p(m)                 &
+           - m_deadcrootn_to_litter_p(m) * deltim
+         retransn_p(m) =  retransn_p(m)                     &
+           - m_retransn_to_litter_p(m) * deltim
+   
+   ! storage pools
+         leafn_storage_p(m) =  leafn_storage_p(m)           &
+           - m_leafn_storage_to_litter_p(m) * deltim
+         frootn_storage_p(m) =  frootn_storage_p(m)         &
+           - m_frootn_storage_to_litter_p(m) * deltim
+         livestemn_storage_p(m) =  livestemn_storage_p(m)   &
+           - m_livestemn_storage_to_litter_p(m) * deltim
+         deadstemn_storage_p(m) =  deadstemn_storage_p(m)   &
+           - m_deadstemn_storage_to_litter_p(m) * deltim
+         livecrootn_storage_p(m) =  livecrootn_storage_p(m) &
+           - m_livecrootn_storage_to_litter_p(m) * deltim
+         deadcrootn_storage_p(m) =  deadcrootn_storage_p(m) &
+           - m_deadcrootn_storage_to_litter_p(m) * deltim
+   
+   ! transfer pools
+         leafn_xfer_p(m) =  leafn_xfer_p(m)                 &
+           - m_leafn_xfer_to_litter_p(m) * deltim
+         frootn_xfer_p(m) =  frootn_xfer_p(m)               &
+           - m_frootn_xfer_to_litter_p(m) * deltim
+         livestemn_xfer_p(m) =  livestemn_xfer_p(m)         &
+           - m_livestemn_xfer_to_litter_p(m) * deltim
+         deadstemn_xfer_p(m) =  deadstemn_xfer_p(m)         &
+           - m_deadstemn_xfer_to_litter_p(m) * deltim
+         livecrootn_xfer_p(m) =  livecrootn_xfer_p(m)       &
+           - m_livecrootn_xfer_to_litter_p(m) * deltim
+         deadcrootn_xfer_p(m) =  deadcrootn_xfer_p(m)       &
+           - m_deadcrootn_xfer_to_litter_p(m) * deltim
+      end do
+
+!    end if !not use_matrixcn
+
+end subroutine NStateUpdate2
+
+end module bgc_CNNStateUpdate2Mod

@@ -6,6 +6,7 @@ MODULE MOD_TimeInvariants
 ! -------------------------------
 
   USE precision
+  USE GlobalVars, only: ndecomp_transitions, ndecomp_pools
   IMPLICIT NONE
   SAVE
 ! -----------------------------------------------------------------
@@ -42,6 +43,7 @@ MODULE MOD_TimeInvariants
   REAL(r8), allocatable :: htop           (:)  !canopy top height [m]
   REAL(r8), allocatable :: hbot           (:)  !canopy bottom height [m]
 
+
   REAL(r8) :: zlnd         !roughness length for soil [m]
   REAL(r8) :: zsno         !roughness length for snow [m]
   REAL(r8) :: csoilc       !drag coefficient for soil under canopy [-]
@@ -57,6 +59,85 @@ MODULE MOD_TimeInvariants
   REAL(r8) :: trsmx0       !max transpiration for moist soil+100% veg.  [mm/s]
   REAL(r8) :: tcrit        !critical temp. to determine rain or snow
 
+! bgc constant
+  INTEGER  :: donor_pool       (1:ndecomp_transitions)
+  INTEGER  :: receiver_pool    (1:ndecomp_transitions)
+  REAL(r8) :: am
+  LOGICAL  :: floating_cn_ratio(1:ndecomp_pools)
+  REAL(r8) :: initial_cn_ratio (1:ndecomp_pools)
+  REAL(r8), allocatable :: rf_decomp        (:,:,:)
+  REAL(r8), allocatable :: pathfrac_decomp  (:,:,:)
+
+  INTEGER  :: i_met_lit
+  INTEGER  :: i_cel_lit
+  INTEGER  :: i_lig_lit
+  INTEGER  :: i_cwd
+  INTEGER  :: i_soil1
+  INTEGER  :: i_soil2
+  INTEGER  :: i_soil3
+  INTEGER  :: i_atm
+
+  LOGICAL  :: is_cwd    (1:ndecomp_pools) ! True => is a coarse woody debris pool
+  LOGICAL  :: is_litter (1:ndecomp_pools) ! True => is a litter pool
+
+  REAL(r8), allocatable :: gdp_lf (:) !
+  REAL(r8), allocatable :: abm_lf (:) !
+  REAL(r8), allocatable :: peatf_lf(:)!
+  REAL(r8) :: cmb_cmplt_fact(1:2)
+
+  REAL(r8) :: nitrif_n2o_loss_frac ! fraction of N lost as N2O in nitrification (Li et al., 2000)
+  REAL(r8) :: dnp     ! denitrification proportion
+  REAL(r8) :: bdnr    ! bulk denitrification rate (1/day)
+  REAL(r8) :: Q10
+  REAL(r8) :: froz_q10 
+  REAL(r8) :: tau_l1
+  REAL(r8) :: tau_l2_l3
+  REAL(r8) :: tau_s1   
+  REAL(r8) :: tau_s2  
+  REAL(r8) :: tau_s3 
+  REAL(r8) :: tau_cwd
+  REAL(r8) :: lwtop
+
+  REAL(r8) :: som_adv_flux
+  REAL(r8) :: som_diffus
+  REAL(r8) :: cryoturb_diffusion_k
+  REAL(r8) :: max_altdepth_cryoturbation
+  REAL(r8) :: max_depth_cryoturb
+
+  REAL(r8) :: br         ! basal respiration rate for aboveground biomass
+  REAL(r8) :: br_root    ! basal respiration rate for belowground biomass
+  REAL(r8) :: fstor2tran
+  REAL(r8) :: ndays_on
+  REAL(r8) :: ndays_off
+  REAL(r8) :: crit_dayl
+  REAL(r8) :: crit_onset_fdd
+  REAL(r8) :: crit_onset_swi
+  REAL(r8) :: crit_offset_fdd
+  REAL(r8) :: crit_offset_swi
+  REAL(r8) :: soilpsi_on
+  REAL(r8) :: soilpsi_off
+
+  REAL(r8) :: occur_hi_gdp_tree
+  REAL(r8) :: lfuel
+  REAL(r8) :: ufuel
+  REAL(r8) :: cropfire_a1
+  REAL(r8) :: borealat
+  REAL(r8) :: troplat
+  REAL(r8) :: non_boreal_peatfire_c
+  REAL(r8) :: boreal_peatfire_c
+  REAL(r8) :: rh_low
+  REAL(r8) :: rh_hgh
+  REAL(r8) :: bt_min
+  REAL(r8) :: bt_max
+  REAL(r8) :: pot_hmn_ign_counts_alpha
+  REAL(r8) :: g0
+
+  REAL(r8) :: sf
+  REAL(r8) :: sf_no3
+
+!----
+
+          
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_TimeInvariants
   PUBLIC :: deallocate_TimeInvariants
@@ -117,6 +198,15 @@ MODULE MOD_TimeInvariants
      allocate (htop                      (numpatch))
      allocate (hbot                      (numpatch))
 
+! bgc varaibles
+     allocate (rf_decomp         (nl_soil,ndecomp_transitions,numpatch))
+     allocate (pathfrac_decomp   (nl_soil,ndecomp_transitions,numpatch))
+     allocate (gdp_lf            (numpatch))
+     allocate (abm_lf            (numpatch))
+     allocate (peatf_lf          (numpatch))
+
+! end bgc variables
+
 #ifdef PFT_CLASSIFICATION
      CALL allocate_PFTimeInvars
 #endif
@@ -165,6 +255,7 @@ MODULE MOD_TimeInvariants
            gridlatd,        &! latitude in degrees
            gridlond,        &! longitude in degrees
 
+     ! Soil and plant parameters OF CLM
            lakedepth,       &! lake depth
            dz_lake,         &! new lake scheme
 
@@ -197,7 +288,82 @@ MODULE MOD_TimeInvariants
            smpmax,          &! wilting point potential in mm
            smpmin,          &! restriction for min of soil poten. (mm)
            trsmx0,          &! max transpiration for moist soil+100% veg.  [mm/s]
-           tcrit             ! critical temp. to determine rain or snow
+           tcrit,           &! critical temp. to determine rain or snow
+
+! bgc constants
+           donor_pool     , &
+           receiver_pool  , &
+           floating_cn_ratio,& ! TRUE => pool has fixed C:N ratio
+           initial_cn_ratio, & ! c:n ratio for initialization of pools
+           rf_decomp       , & ! (frac) respired fraction in decomposition step
+           pathfrac_decomp , & ! what fraction of C leaving a given pool passes through a given transition (frac)
+
+           i_met_lit      , &
+           i_cel_lit      , &
+           i_lig_lit      , &
+           i_cwd          , &
+           i_soil1        , &
+           i_soil2        , &
+           i_soil3        , &
+           i_atm          , &
+           is_cwd         , &
+           is_litter      , &
+
+           gdp_lf         , &
+           abm_lf         , &
+           peatf_lf       , &
+           cmb_cmplt_fact , &
+
+           nitrif_n2o_loss_frac, &! fraction of N lost as N2O in nitrification (Li et al., 2000)
+           dnp                 , &!
+           bdnr                , &!
+           Q10                 , &!
+           froz_q10            , &!
+           tau_l1              , &!
+           tau_l2_l3           , &!
+           tau_s1              , &!
+           tau_s2              , &!
+           tau_s3              , &!
+           tau_cwd             , &
+           lwtop               , &
+
+           som_adv_flux        , &
+           som_diffus          , &
+           cryoturb_diffusion_k, &
+           max_altdepth_cryoturbation, &
+           max_depth_cryoturb  , &
+
+           br                  , &
+           br_root             , &
+           fstor2tran          , &
+           ndays_on            , &
+           ndays_off           , &
+           crit_dayl           , &
+           crit_onset_fdd      , &
+           crit_onset_swi      , &
+           crit_offset_fdd     , &
+           crit_offset_swi     , &
+           soilpsi_on          , &
+           soilpsi_off         , &
+
+           occur_hi_gdp_tree   , &
+           lfuel               , &
+           ufuel               , &
+           cropfire_a1         , &
+           borealat            , &
+           troplat             , &
+           non_boreal_peatfire_c, &
+           boreal_peatfire_c   , &
+           rh_low              , &
+           rh_hgh              , &
+           bt_min              , &
+           bt_max              , &
+           pot_hmn_ign_counts_alpha, &
+           g0, &
+
+           sf, &
+           sf_no3
+
      
      ! PFT/PC time invariants
 #ifdef PFT_CLASSIFICATION
@@ -245,6 +411,7 @@ MODULE MOD_TimeInvariants
      fhistTimeConst = trim(dir_restart_hist)//trim(casename)//'-'//'rstTimeConst'
      open(unit=lhistTimeConst,file=trim(fhistTimeConst),status='unknown',&
                               form='unformatted',action='write')
+
 
      write(lhistTimeConst)  &!
            patch2lon,       &! longitude index for each patch point
@@ -295,7 +462,81 @@ MODULE MOD_TimeInvariants
            smpmax,          &! wilting point potential in mm
            smpmin,          &! restriction for min of soil poten. (mm)
            trsmx0,          &! max transpiration for moist soil+100% veg.  [mm/s]
-           tcrit             ! critical temp. to determine rain or snow
+           tcrit,           &! critical temp. to determine rain or snow
+
+! bgc variables
+           donor_pool     , &
+           receiver_pool  , &
+           floating_cn_ratio,& ! TRUE => pool has fixed C:N ratio
+           initial_cn_ratio, & ! c:n ratio for initialization of pools
+           rf_decomp       , & ! (frac) respired fraction in decomposition step
+           pathfrac_decomp , & ! what fraction of C leaving a given pool passes through a given transition (frac)
+
+           i_met_lit      , &
+           i_cel_lit      , &
+           i_lig_lit      , &
+           i_cwd          , &
+           i_soil1        , &
+           i_soil2        , &
+           i_soil3        , &
+           i_atm          , &
+           is_cwd         , &
+           is_litter      , &
+
+           gdp_lf         , &
+           abm_lf         , &
+           peatf_lf       , &
+           cmb_cmplt_fact , &
+
+           nitrif_n2o_loss_frac, &! fraction of N lost as N2O in nitrification (Li et al., 2000)
+           dnp                 , &!
+           bdnr                , &!
+           Q10                 , &!
+           froz_q10            , &!
+           tau_l1              , &!
+           tau_l2_l3           , &!
+           tau_s1              , &!
+           tau_s2              , &!
+           tau_s3              , &!
+           tau_cwd             , &
+           lwtop               , &
+
+           som_adv_flux        , &
+           som_diffus          , &
+           cryoturb_diffusion_k, &
+           max_altdepth_cryoturbation, &
+           max_depth_cryoturb  , &
+
+           br                  , &
+           br_root             , &
+           fstor2tran          , &
+           ndays_on            , &
+           ndays_off           , &
+           crit_dayl           , &
+           crit_onset_fdd      , &
+           crit_onset_swi      , &
+           crit_offset_fdd     , &
+           crit_offset_swi     , &
+           soilpsi_on          , &
+           soilpsi_off         , &
+
+           occur_hi_gdp_tree   , &
+           lfuel               , &
+           ufuel               , &
+           cropfire_a1         , &
+           borealat            , &
+           troplat             , &
+           non_boreal_peatfire_c, &
+           boreal_peatfire_c   , &
+           rh_low              , &
+           rh_hgh              , &
+           bt_min              , &
+           bt_max              , &
+           pot_hmn_ign_counts_alpha, &
+           g0, &
+
+           sf, &
+           sf_no3
 
      ! PFT/PC time invariants
 #ifdef PFT_CLASSIFICATION
@@ -362,6 +603,13 @@ MODULE MOD_TimeInvariants
      deallocate (htop         )
      deallocate (hbot         )
 
+! bgc variables
+     deallocate (rf_decomp      )
+     deallocate (pathfrac_decomp)
+     deallocate (gdp_lf         )
+     deallocate (abm_lf         )
+     deallocate (peatf_lf       )
+  
 #ifdef PFT_CLASSIFICATION
      CALL deallocate_PFTimeInvars
 #endif

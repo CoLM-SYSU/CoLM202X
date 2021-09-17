@@ -33,7 +33,7 @@ MODULE SOIL_SNOW_hydrology
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
-             qcharge     )  
+             qcharge     ,smp)  
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation of 
@@ -101,7 +101,8 @@ MODULE SOIL_SNOW_hydrology
         rsur             , &! surface runoff (mm h2o/s)
         rnof             , &! total runoff (mm h2o/s)
         qinfl            , &! infiltration rate (mm h2o/s)
-        qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
+        qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
+        smp(1:nl_soil)      ! soil water potential
   
 !-----------------------Local Variables------------------------------
 !                   
@@ -181,7 +182,7 @@ MODULE SOIL_SNOW_hydrology
                      qinfl,etr,z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                      t_soisno(1:),vol_liq,vol_ice,icefrac,eff_porosity,&
                      porsl,hksati,bsw,psi0,rootr,&
-                     zwt,dwat,qcharge)
+                     zwt,dwat,qcharge,smp(1:))
 
       ! update the mass of liquid water
       do j= 1, nl_soil
@@ -438,7 +439,7 @@ MODULE SOIL_SNOW_hydrology
                        qinfl,etr,z_soisno,dz_soisno,zi_soisno,&
                        t_soisno,vol_liq,vol_ice,icefrac,eff_porosity,&
                        porsl,hksati,bsw,psi0,rootr,&
-                       zwt,dwat,qcharge)
+                       zwt,dwat,qcharge,smp)
 
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, 09/1999, 04/2014, 07/2014
@@ -537,6 +538,7 @@ MODULE SOIL_SNOW_hydrology
 
     real(r8), intent(out) :: dwat(1:nl_soil)   ! change of soil water [m3/m3]
     real(r8), INTENT(out) :: qcharge           ! aquifer recharge rate (positive to aquifer) (mm/s)
+    real(r8), intent(out) :: smp (1:nl_soil)   ! soil matrix potential [mm]
 !
 ! local arguments
 !
@@ -560,7 +562,6 @@ MODULE SOIL_SNOW_hydrology
     real(r8) :: s_node            ! soil wetness
     real(r8) :: s1                ! "s" at interface of layer
     real(r8) :: s2                ! k*s**(2b+2)
-    real(r8) :: smp(1:nl_soil)    ! soil matrix potential [mm]
     real(r8) :: hk(1:nl_soil)     ! hydraulic conductivity [mm h2o/s]
     real(r8) :: dhkdw1(1:nl_soil) ! d(hk)/d(vol_liq(j))
     real(r8) :: dhkdw2(1:nl_soil) ! d(hk)/d(vol_liq(j+1))
