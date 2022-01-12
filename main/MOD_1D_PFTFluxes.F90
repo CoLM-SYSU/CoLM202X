@@ -201,7 +201,6 @@ MODULE MOD_1D_PFTFluxes
   REAL(r8), allocatable :: livestemn_to_litter_p                (:)
   REAL(r8), allocatable :: livestemn_to_deadstemn_p             (:)
   REAL(r8), allocatable :: livecrootn_to_deadcrootn_p           (:)
-  !REAL(r8), allocatable :: !grainn_to_cropprodn               , &
 
   REAL(r8), allocatable :: leafn_to_retransn_p                  (:)
   REAL(r8), allocatable :: frootn_to_retransn_p                 (:)
@@ -304,6 +303,8 @@ MODULE MOD_1D_PFTFluxes
   REAL(r8), allocatable :: livecroot_mr_p (:) !live coarse root maintenance respiration
   REAL(r8), allocatable :: grain_mr_p     (:) !grain maintenance respiration
 
+  REAL(r8), allocatable :: soil_change_p  (:)
+
   REAL(r8), allocatable :: psn_to_cpool_p               (:)
   REAL(r8), allocatable :: gpp_p                        (:)
   REAL(r8), allocatable :: availc_p                     (:)
@@ -319,6 +320,16 @@ MODULE MOD_1D_PFTFluxes
   REAL(r8), allocatable :: livestem_curmr_p             (:)
   REAL(r8), allocatable :: livecroot_curmr_p            (:)
   REAL(r8), allocatable :: grain_curmr_p                (:)
+
+  REAL(r8), allocatable :: fire_closs_p                 (:)
+  REAL(r8), allocatable :: fire_nloss_p                 (:)
+  REAL(r8), allocatable :: wood_harvestc_p              (:)
+  REAL(r8), allocatable :: wood_harvestn_p              (:)
+  REAL(r8), allocatable :: grainc_to_cropprodc_p        (:)
+  REAL(r8), allocatable :: grainn_to_cropprodn_p        (:)
+  REAL(r8), allocatable :: hrv_xsmrpool_to_atm_p        (:)
+  REAL(r8), allocatable :: fert_p                       (:)
+  REAL(r8), allocatable :: soyfixn_p                    (:)
 !--------
 
 
@@ -535,7 +546,6 @@ MODULE MOD_1D_PFTFluxes
      allocate (livestemn_to_litter_p                (numpft))
      allocate (livestemn_to_deadstemn_p             (numpft))
      allocate (livecrootn_to_deadcrootn_p           (numpft))
-!     allocate (!grainn_to_cropprodn               , &
 
      allocate (leafn_to_retransn_p                  (numpft))
      allocate (frootn_to_retransn_p                 (numpft))
@@ -638,6 +648,8 @@ MODULE MOD_1D_PFTFluxes
      allocate (livecroot_mr_p (numpft)) !live coarse root maintenance respiration
      allocate (grain_mr_p     (numpft)) !grain maintenance respiration
 
+     allocate (soil_change_p  (numpft))
+
      allocate (psn_to_cpool_p               (numpft))
      allocate (gpp_p                        (numpft))
      allocate (availc_p                     (numpft))
@@ -653,6 +665,16 @@ MODULE MOD_1D_PFTFluxes
      allocate (livestem_curmr_p             (numpft))
      allocate (livecroot_curmr_p            (numpft))
      allocate (grain_curmr_p                (numpft))
+
+     allocate (fire_closs_p                 (numpft))
+     allocate (fire_nloss_p                 (numpft))
+     allocate (wood_harvestc_p              (numpft))
+     allocate (wood_harvestn_p              (numpft))
+     allocate (grainc_to_cropprodc_p        (numpft))
+     allocate (grainn_to_cropprodn_p        (numpft))
+     allocate (hrv_xsmrpool_to_atm_p        (numpft))
+     allocate (fert_p                       (numpft))
+     allocate (soyfixn_p                    (numpft))
 !--------
 
   END SUBROUTINE allocate_1D_PFTFluxes
@@ -850,7 +872,6 @@ MODULE MOD_1D_PFTFluxes
      deallocate (livestemn_to_litter_p                )
      deallocate (livestemn_to_deadstemn_p             )
      deallocate (livecrootn_to_deadcrootn_p           )
-!     deallocate (!grainn_to_cropprodn               , &
 
      deallocate (leafn_to_retransn_p                  )
      deallocate (frootn_to_retransn_p                 )
@@ -953,6 +974,8 @@ MODULE MOD_1D_PFTFluxes
      deallocate (livecroot_mr_p )
      deallocate (grain_mr_p     )
 
+     deallocate (soil_change_p  )
+
      deallocate (psn_to_cpool_p               )
      deallocate (gpp_p                        )
      deallocate (availc_p                     )
@@ -968,6 +991,16 @@ MODULE MOD_1D_PFTFluxes
      deallocate (livestem_curmr_p             )
      deallocate (livecroot_curmr_p            )
      deallocate (grain_curmr_p                )
+
+     deallocate (fire_closs_p                 )
+     deallocate (fire_nloss_p                 )
+     deallocate (wood_harvestc_p              )
+     deallocate (wood_harvestn_p              )
+     deallocate (grainc_to_cropprodc_p        )
+     deallocate (grainn_to_cropprodn_p        )
+     deallocate (hrv_xsmrpool_to_atm_p        )
+     deallocate (fert_p                       )
+     deallocate (soyfixn_p                    )
 
   END SUBROUTINE deallocate_1D_PFTFluxes
 

@@ -5,7 +5,7 @@ use PFT_Const, only: rootfr_p
 use MOD_TimeVariables, only: &
     nfixation_prof, ndep_prof, altmax_lastyear_indx
 use MOD_PFTimeVars, only: &
-    leaf_prof_p, froot_prof_p, croot_prof_p, stem_prof_p
+    leaf_prof_p, froot_prof_p, croot_prof_p, stem_prof_p, cinput_rootfr_p
 use MOD_PFTimeInvars, only: &
     pftclass, pftfrac
 implicit none
@@ -32,7 +32,6 @@ contains
    real(r8) :: surface_prof(1:nl_soil)
    real(r8) :: surface_prof_tot
    real(r8) :: rootfr_tot
-   real(r8) :: cinput_rootfr(1:nl_soil_full,ps:pe)      ! pft-native root fraction used for calculating inputs
    real(r8) :: col_cinput_rootfr(1:nl_soil_full)
    integer  :: ivt, m
    integer  :: j 
@@ -45,6 +44,8 @@ contains
    real(r8) :: nfixation_prof_sum
    real(r8) :: delta = 1.e-10
 
+!   print*,'delta',delta,i,ps,pe
+!    print*,'i,ps,pe after alloc',i,ps,pe
     surface_prof(:) = 0._r8
     do j = 1, nl_soil
        surface_prof(j) = exp(-surfprof_exp * z_soi(j)) / dz_soi(j)
@@ -52,11 +53,13 @@ contains
           surface_prof(j) = 0._r8
        end if
     end do
+!    print*,'i,ps,pe after prof',i,ps,pe
 
     ! initialize profiles to zero
     col_cinput_rootfr(:)   = 0._r8
     nfixation_prof   (:,i) = 0._r8
     ndep_prof        (:,i) = 0._r8
+!    print*,'i,ps,pe before loop',i,ps,pe
     do m = ps , pe
        ivt = pftclass(m)
        leaf_prof_p (:,m)     = 0._r8
@@ -64,15 +67,15 @@ contains
        croot_prof_p(:,m)     = 0._r8
        stem_prof_p (:,m)     = 0._r8
 
-       cinput_rootfr(:,m)    = 0._r8
+       cinput_rootfr_p(:,m)    = 0._r8
 
        if (ivt /= 0) then
           do j = 1, nl_soil
-             cinput_rootfr(j,m) = rootfr_p(j,ivt) / dz_soi(j)
+             cinput_rootfr_p(j,m) = rootfr_p(j,ivt) / dz_soi(j)
           end do
 
        else
-          cinput_rootfr(1,m) = 0.
+          cinput_rootfr_p(1,m) = 0.
        endif
     end do
 
@@ -81,18 +84,18 @@ contains
        rootfr_tot = 0._r8
        surface_prof_tot = 0._r8
        do j = 1, min(max(altmax_lastyear_indx(i), 1), nl_soil)
-          rootfr_tot = rootfr_tot + cinput_rootfr(j,m) * dz_soi(j)
+          rootfr_tot = rootfr_tot + cinput_rootfr_p(j,m) * dz_soi(j)
           surface_prof_tot = surface_prof_tot + surface_prof(j)  * dz_soi(j)
        end do
        if ( (altmax_lastyear_indx(i) > 0) .and. (rootfr_tot > 0._r8) .and. (surface_prof_tot > 0._r8) ) then
        ! where there is not permafrost extending to the surface, integrate the profiles over the active layer
        ! this is equivalnet to integrating over all soil layers outside of permafrost regions
           do j = 1, min(max(altmax_lastyear_indx(i), 1), nl_soil)
-             froot_prof_p(j,m) = cinput_rootfr(j,m) / rootfr_tot
-             croot_prof_p(j,m) = cinput_rootfr(j,m) / rootfr_tot
+             froot_prof_p(j,m) = cinput_rootfr_p(j,m) / rootfr_tot
+             croot_prof_p(j,m) = cinput_rootfr_p(j,m) / rootfr_tot
 
-             if (j > nbedrock .and. cinput_rootfr(j,m) > 0._r8) then
-                write(*,*) 'ERROR: cinput_rootfr > 0 in bedrock'
+             if (j > nbedrock .and. cinput_rootfr_p(j,m) > 0._r8) then
+                write(*,*) 'ERROR: cinput_rootfr_p > 0 in bedrock'
              end if
           ! set all surface processes to shallower profile
              leaf_prof_p(j,m) = surface_prof(j)/ surface_prof_tot
@@ -110,13 +113,13 @@ contains
 
     !! aggregate root profile to column
     ! call p2c (decomp, nl_soil_full, &
-    !      cinput_rootfr(bounds%begp:bounds%endp, :), &
+    !      cinput_rootfr_p(bounds%begp:bounds%endp, :), &
     !      col_cinput_rootfr(bounds%begc:bounds%endc, :), &
     !      'unity')
 
     do m = ps , pe
        do j = 1,nl_soil
-          col_cinput_rootfr(j) = col_cinput_rootfr(j) + cinput_rootfr(j,m) * pftfrac(m)
+          col_cinput_rootfr(j) = col_cinput_rootfr(j) + cinput_rootfr_p(j,m) * pftfrac(m)
        end do
     end do
 
@@ -157,19 +160,21 @@ contains
        ndep_prof_sum = ndep_prof_sum + ndep_prof(j,i) *  dz_soi(j)
        nfixation_prof_sum = nfixation_prof_sum + nfixation_prof(j,i) *  dz_soi(j)
     end do
+!   print*,'delta before prof check',delta
     if ( ( abs(ndep_prof_sum - 1._r8) > delta ) .or.  ( abs(nfixation_prof_sum - 1._r8) > delta ) ) then
-       write(*,*) 'profile sums: ', ndep_prof_sum, nfixation_prof_sum
-       write(*,*) 'c: ', i
+       print*,'i',i,delta
+       write(*,*) 'profile sums:',ndep_prof_sum-1._r8,nfixation_prof_sum-1._r8
        write(*,*) 'altmax_lastyear_indx: ', altmax_lastyear_indx(i)
        write(*,*) 'nfixation_prof: ', nfixation_prof(:,i)
        write(*,*) 'ndep_prof: ', ndep_prof(:,i)
-       write(*,*) 'cinput_rootfr: ', cinput_rootfr(:,ps:pe)
+       write(*,*) 'cinput_rootfr: ', cinput_rootfr_p(:,ps:pe)
        write(*,*) 'dz_soi: ', dz_soi(:)
        write(*,*) 'surface_prof: ', surface_prof(:)
 !       do p = col%patchi(c), col%patchi(c) + col%npatches(c) -1
        write(*,*) 'p, itype(p) : ', i, pftclass(ps:pe)
-       write(*,*) 'cinput_rootfr(p,:): ', cinput_rootfr(:,ps:pe)
+       write(*,*) 'cinput_rootfr(p,:): ', cinput_rootfr_p(:,ps:pe)
        write(*,*) 'ERROR: _prof_sum-1>delta'
+       call abort()
 !       end do
 !       call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
     endif

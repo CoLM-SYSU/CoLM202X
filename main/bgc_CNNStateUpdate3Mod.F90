@@ -3,7 +3,7 @@
 module bgc_CNNStateUpdate3Mod
 use precision
 use MOD_TimeInvariants, only: &
-           i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
+           i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2, i_soil3
 use MOD_TimeVariables, only: &
     ! decomposition pools & fluxes variables (inout)
            decomp_npools_vr, sminn_vr, smin_no3_vr, smin_nh4_vr
@@ -52,7 +52,7 @@ public NStateUpdate3
 
 contains
 
-subroutine NStateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools)
+subroutine NStateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools, dz_soi)
 
 integer ,intent(in) :: i
 integer ,intent(in) :: ps
@@ -60,9 +60,18 @@ integer ,intent(in) :: pe
 real(r8),intent(in) :: deltim
 integer ,intent(in) :: nl_soil
 integer ,intent(in) :: ndecomp_pools
+real(r8),intent(in) :: dz_soi(1:nl_soil)
 
 integer j,l
 
+!if(i .eq. 123226)print*,'soiln before NStateUpdate3',&
+!      sum(decomp_npools_vr(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_lig_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil)) 
       do j = 1, nl_soil
 
 #ifndef NITRIF
@@ -75,6 +84,7 @@ integer j,l
 
          sminn_vr(j,i) = smin_no3_vr(j,i) + smin_nh4_vr(j,i)
 #endif
+         
             ! column level nitrogen fluxes from fire
             ! patch-level wood to column-level CWD (uncombusted wood)
 !            if (.not. use_soil_matrixcn)then
@@ -103,7 +113,8 @@ integer j,l
 !            end if ! not use_soil_matrix
 #endif
       end do
-
+!      if(i .eq. 147958)print*,'sminn after leached',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
+!      if(i .eq. 147958)print*,'leached sminn',sum(sminn_leached_vr(1:nl_soil,i)*deltim*dz_soi(1:nl_soil))
 #ifdef FIRE
       ! litter and CWD losses to fire
 !      if(.not. use_soil_matrixcn)then
@@ -210,6 +221,14 @@ integer j,l
                  m_retransn_to_litter_fire_p(m) * deltim
 !         end if !.not. use_matrixcn
       end do
+!if(i .eq. 123226)print*,'soiln after NStateUpdate3',&
+!      sum(decomp_npools_vr(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_lig_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil)) 
 #endif
 
 end subroutine NStateUpdate3

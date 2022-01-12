@@ -453,7 +453,7 @@ CONTAINS
       end if
 
       if (time_i <= 0) then
-         write(6, *) "got the wrong time record of forcing! stop!"; stop
+         write(6, *) "got the wrong time record of forcing! stop!"!; stop
       end if
 
       return 
@@ -560,7 +560,7 @@ CONTAINS
       end if
  
       if (time_i < 0) then
-         write(6, *) "got the wrong time record of forcing! stop!"; stop
+         write(6, *) "got the wrong time record of forcing! stop!"!; stop
       end if
 
       return 

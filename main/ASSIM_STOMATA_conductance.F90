@@ -288,7 +288,7 @@ MODULE ASSIM_STOMATA_conductance
       sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) ) 
       omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
       sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta )
+      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
       assimn= ( assim - respc)                         ! mol m-2 s-1
 

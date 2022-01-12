@@ -69,7 +69,11 @@ MODULE MOD_TimeVariables
 
 ! bgc variables
   REAL(r8), allocatable :: decomp_cpools_vr  (:,:,:)
+  REAL(r8), allocatable :: decomp_cpools     (:,:)
   REAL(r8), allocatable :: decomp_k          (:,:,:) ! soil decomposition rate [1/s]
+  REAL(r8), allocatable :: ctrunc_vr         (:,:)
+  REAL(r8), allocatable :: ctrunc_veg        (:)
+  REAL(r8), allocatable :: ctrunc_soil       (:)
 
   REAL(r8), allocatable :: t_scalar          (:,:)   ! soil decomposition temperature scalars [unitless]
   REAL(r8), allocatable :: w_scalar          (:,:)   ! soil decomposition water scalars [unitless]
@@ -88,12 +92,86 @@ MODULE MOD_TimeVariables
   REAL(r8), allocatable :: totlitc                  (:)
   REAL(r8), allocatable :: totvegc                  (:)
   REAL(r8), allocatable :: totsomc                  (:)
+  REAL(r8), allocatable :: totcwdc                  (:)
+  REAL(r8), allocatable :: totcolc                  (:)
+  REAL(r8), allocatable :: col_begcb                (:)
+  REAL(r8), allocatable :: col_endcb                (:)
+  REAL(r8), allocatable :: col_vegbegcb             (:)
+  REAL(r8), allocatable :: col_vegendcb             (:)
+  REAL(r8), allocatable :: col_soilbegcb            (:)
+  REAL(r8), allocatable :: col_soilendcb            (:)
+
+  REAL(r8), allocatable :: totlitn                  (:)
+  REAL(r8), allocatable :: totvegn                  (:)
+  REAL(r8), allocatable :: totsomn                  (:)
+  REAL(r8), allocatable :: totcwdn                  (:)
+  REAL(r8), allocatable :: totcoln                  (:)
+  REAL(r8), allocatable :: col_begnb                (:)
+  REAL(r8), allocatable :: col_endnb                (:)
+  REAL(r8), allocatable :: col_vegbegnb             (:)
+  REAL(r8), allocatable :: col_vegendnb             (:)
+  REAL(r8), allocatable :: col_soilbegnb            (:)
+  REAL(r8), allocatable :: col_soilendnb            (:)
+  REAL(r8), allocatable :: col_sminnbegnb           (:)
+  REAL(r8), allocatable :: col_sminnendnb           (:)
+
+  REAL(r8), allocatable :: leafc                    (:)
+  REAL(r8), allocatable :: leafc_storage            (:)
+  REAL(r8), allocatable :: leafc_xfer               (:)
+  REAL(r8), allocatable :: frootc                   (:)
+  REAL(r8), allocatable :: frootc_storage           (:)
+  REAL(r8), allocatable :: frootc_xfer              (:)
+  REAL(r8), allocatable :: livestemc                (:)
+  REAL(r8), allocatable :: livestemc_storage        (:)
+  REAL(r8), allocatable :: livestemc_xfer           (:)
+  REAL(r8), allocatable :: deadstemc                (:)
+  REAL(r8), allocatable :: deadstemc_storage        (:)
+  REAL(r8), allocatable :: deadstemc_xfer           (:)
+  REAL(r8), allocatable :: livecrootc               (:)
+  REAL(r8), allocatable :: livecrootc_storage       (:)
+  REAL(r8), allocatable :: livecrootc_xfer          (:)
+  REAL(r8), allocatable :: deadcrootc               (:)
+  REAL(r8), allocatable :: deadcrootc_storage       (:)
+  REAL(r8), allocatable :: deadcrootc_xfer          (:)
+  REAL(r8), allocatable :: grainc                   (:)
+  REAL(r8), allocatable :: grainc_storage           (:)
+  REAL(r8), allocatable :: grainc_xfer              (:)
+  REAL(r8), allocatable :: xsmrpool                 (:)
+  REAL(r8), allocatable :: downreg                  (:)
+
+  REAL(r8), allocatable :: leafn                    (:)
+  REAL(r8), allocatable :: leafn_storage            (:)
+  REAL(r8), allocatable :: leafn_xfer               (:)
+  REAL(r8), allocatable :: frootn                   (:)
+  REAL(r8), allocatable :: frootn_storage           (:)
+  REAL(r8), allocatable :: frootn_xfer              (:)
+  REAL(r8), allocatable :: livestemn                (:)
+  REAL(r8), allocatable :: livestemn_storage        (:)
+  REAL(r8), allocatable :: livestemn_xfer           (:)
+  REAL(r8), allocatable :: deadstemn                (:)
+  REAL(r8), allocatable :: deadstemn_storage        (:)
+  REAL(r8), allocatable :: deadstemn_xfer           (:)
+  REAL(r8), allocatable :: livecrootn               (:)
+  REAL(r8), allocatable :: livecrootn_storage       (:)
+  REAL(r8), allocatable :: livecrootn_xfer          (:)
+  REAL(r8), allocatable :: deadcrootn               (:)
+  REAL(r8), allocatable :: deadcrootn_storage       (:)
+  REAL(r8), allocatable :: deadcrootn_xfer          (:)
+  REAL(r8), allocatable :: grainn                   (:)
+  REAL(r8), allocatable :: grainn_storage           (:)
+  REAL(r8), allocatable :: grainn_xfer              (:)
+  REAL(r8), allocatable :: retransn                 (:)
 
   REAL(r8), allocatable :: decomp_npools_vr         (:,:,:)
+  REAL(r8), allocatable :: decomp_npools            (:,:)
+  REAL(r8), allocatable :: ntrunc_vr                (:,:)
+  REAL(r8), allocatable :: ntrunc_veg               (:)
+  REAL(r8), allocatable :: ntrunc_soil              (:)
 
   REAL(r8), allocatable :: sminn_vr                 (:,:)
   REAL(r8), allocatable :: smin_no3_vr              (:,:)
   REAL(r8), allocatable :: smin_nh4_vr              (:,:)
+  REAL(r8), allocatable :: sminn                    (:)
 
   REAL(r8), allocatable :: ndep_prof                (:,:)
   REAL(r8), allocatable :: nfixation_prof           (:,:)
@@ -215,9 +293,12 @@ MODULE MOD_TimeVariables
      allocate (fh                           (numpatch))
      allocate (fq                           (numpatch))
 
-#ifdef BGC
 ! bgc variables
      allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_cpools                (ndecomp_pools,numpatch))
+     allocate (ctrunc_vr                    (nl_soil_full,numpatch))
+     allocate (ctrunc_veg                   (numpatch))
+     allocate (ctrunc_soil                  (numpatch))
      allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch))
 
      allocate (t_scalar                     (nl_soil,numpatch))
@@ -232,14 +313,88 @@ MODULE MOD_TimeVariables
      allocate (altmax_lastyear              (numpatch))
      allocate (altmax_lastyear_indx         (numpatch))
 
-     allocate (totlitc(numpatch))
-     allocate (totvegc(numpatch))
-     allocate (totsomc(numpatch))
+     allocate (totlitc                      (numpatch))
+     allocate (totvegc                      (numpatch))
+     allocate (totsomc                      (numpatch))
+     allocate (totcwdc                      (numpatch))
+     allocate (totcolc                      (numpatch))
+     allocate (col_begcb                    (numpatch))
+     allocate (col_endcb                    (numpatch))
+     allocate (col_vegbegcb                 (numpatch))
+     allocate (col_vegendcb                 (numpatch))
+     allocate (col_soilbegcb                (numpatch))
+     allocate (col_soilendcb                (numpatch))
+
+     allocate (totlitn                      (numpatch))
+     allocate (totvegn                      (numpatch))
+     allocate (totsomn                      (numpatch))
+     allocate (totcwdn                      (numpatch))
+     allocate (totcoln                      (numpatch))
+     allocate (col_begnb                    (numpatch))
+     allocate (col_endnb                    (numpatch))
+     allocate (col_vegbegnb                 (numpatch))
+     allocate (col_vegendnb                 (numpatch))
+     allocate (col_soilbegnb                (numpatch))
+     allocate (col_soilendnb                (numpatch))
+     allocate (col_sminnbegnb               (numpatch))
+     allocate (col_sminnendnb               (numpatch))
+
+     allocate (leafc                        (numpatch))
+     allocate (leafc_storage                (numpatch))
+     allocate (leafc_xfer                   (numpatch))
+     allocate (frootc                       (numpatch))
+     allocate (frootc_storage               (numpatch))
+     allocate (frootc_xfer                  (numpatch))
+     allocate (livestemc                    (numpatch))
+     allocate (livestemc_storage            (numpatch))
+     allocate (livestemc_xfer               (numpatch))
+     allocate (deadstemc                    (numpatch))
+     allocate (deadstemc_storage            (numpatch))
+     allocate (deadstemc_xfer               (numpatch))
+     allocate (livecrootc                   (numpatch))
+     allocate (livecrootc_storage           (numpatch))
+     allocate (livecrootc_xfer              (numpatch))
+     allocate (deadcrootc                   (numpatch))
+     allocate (deadcrootc_storage           (numpatch))
+     allocate (deadcrootc_xfer              (numpatch))
+     allocate (grainc                       (numpatch))
+     allocate (grainc_storage               (numpatch))
+     allocate (grainc_xfer                  (numpatch))
+     allocate (xsmrpool                     (numpatch))
+     allocate (downreg                      (numpatch))
+
+     allocate (leafn                        (numpatch))
+     allocate (leafn_storage                (numpatch))
+     allocate (leafn_xfer                   (numpatch))
+     allocate (frootn                       (numpatch))
+     allocate (frootn_storage               (numpatch))
+     allocate (frootn_xfer                  (numpatch))
+     allocate (livestemn                    (numpatch))
+     allocate (livestemn_storage            (numpatch))
+     allocate (livestemn_xfer               (numpatch))
+     allocate (deadstemn                    (numpatch))
+     allocate (deadstemn_storage            (numpatch))
+     allocate (deadstemn_xfer               (numpatch))
+     allocate (livecrootn                   (numpatch))
+     allocate (livecrootn_storage           (numpatch))
+     allocate (livecrootn_xfer              (numpatch))
+     allocate (deadcrootn                   (numpatch))
+     allocate (deadcrootn_storage           (numpatch))
+     allocate (deadcrootn_xfer              (numpatch))
+     allocate (grainn                       (numpatch))
+     allocate (grainn_storage               (numpatch))
+     allocate (grainn_xfer                  (numpatch))
+     allocate (retransn                     (numpatch))
 
      allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch))
+     allocate (decomp_npools                (ndecomp_pools,numpatch))
+     allocate (ntrunc_vr                    (nl_soil_full,numpatch))
+     allocate (ntrunc_veg                   (numpatch))
+     allocate (ntrunc_soil                  (numpatch))
      allocate (sminn_vr                     (nl_soil,numpatch))
      allocate (smin_no3_vr                  (nl_soil,numpatch))
      allocate (smin_nh4_vr                  (nl_soil,numpatch))
+     allocate (sminn                        (numpatch))
 
      allocate (ndep_prof                    (nl_soil,numpatch))
      allocate (nfixation_prof               (nl_soil,numpatch))
@@ -280,7 +435,6 @@ MODULE MOD_TimeVariables
 
      allocate (dayl                         (numpatch))
      allocate (prev_dayl                    (numpatch))
-#endif
 #ifdef PFT_CLASSIFICATION
      CALL allocate_PFTimeVars
 #endif
@@ -372,7 +526,22 @@ MODULE MOD_TimeVariables
            fq,              &! integral of profile function for moisture
 
 ! bgc variables
+           totlitc,                &
+           totvegc,                &
+           totsomc,                &
+           totcwdc,                &
+           totcolc,                &
+
+           totlitn,                &
+           totvegn,                &
+           totsomn,                &
+           totcwdn,                &
+           totcoln,                &
+       
+           sminn,                  &
+
            decomp_cpools_vr,    &
+           ctrunc_vr,           &
 !           decomp_k,            &
 
 !           t_scalar,            &
@@ -392,6 +561,7 @@ MODULE MOD_TimeVariables
 !           totsomc,             &
 
            decomp_npools_vr,    &
+           ntrunc_vr,          &
            sminn_vr,            &
            smin_no3_vr,         &
            smin_nh4_vr,         &
@@ -479,6 +649,7 @@ MODULE MOD_TimeVariables
            xsmrpool_p,             &
            gresp_storage_p,        &
            gresp_xfer_p,           &
+           totvegc_p,              &
       
            leafn_p,                &
            leafn_storage_p,        &
@@ -503,6 +674,7 @@ MODULE MOD_TimeVariables
            grainn_xfer_p,          &
            cropseedn_deficit_p,    &
            retransn_p,             &
+           totvegn_p,              &
       
            harvdate_p,             &
       
@@ -544,7 +716,10 @@ MODULE MOD_TimeVariables
            days_active_p,          &
       
            burndate_p,             &
-           grain_flag_p
+           grain_flag_p,           &
+           ctrunc_p,               &
+           ntrunc_p,               &
+           npool_p
 
 #endif
 
@@ -663,7 +838,22 @@ MODULE MOD_TimeVariables
            fq,              &! integral of profile function for moisture
 
 ! bgc variables
+           totlitc,                &
+           totvegc,                &
+           totsomc,                &
+           totcwdc,                &
+           totcolc,                &
+
+           totlitn,                &
+           totvegn,                &
+           totsomn,                &
+           totcwdn,                &
+           totcoln,                &
+
+           sminn,                  &
+
            decomp_cpools_vr,    &
+           ntrunc_vr,           &
 !           decomp_k,            &
 
 !           t_scalar,            &
@@ -683,6 +873,7 @@ MODULE MOD_TimeVariables
 !           totsomc,             &
 
            decomp_npools_vr,    &
+           ntrunc_vr,           &
            sminn_vr,            &
            smin_no3_vr,         &
            smin_nh4_vr,         &
@@ -769,6 +960,7 @@ MODULE MOD_TimeVariables
            xsmrpool_p,             &
            gresp_storage_p,        &
            gresp_xfer_p,           &
+           totvegc_p,              &
       
            leafn_p,                &
            leafn_storage_p,        &
@@ -793,6 +985,7 @@ MODULE MOD_TimeVariables
            grainn_xfer_p,          &
            cropseedn_deficit_p,    &
            retransn_p,             &
+           totvegn_p,              &
       
            harvdate_p,             &
       
@@ -834,7 +1027,11 @@ MODULE MOD_TimeVariables
            days_active_p,          &
       
            burndate_p,             &
-           grain_flag_p
+           grain_flag_p,           &
+           ctrunc_p,               &
+           ntrunc_p,               &
+           npool_p
+
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -923,6 +1120,10 @@ MODULE MOD_TimeVariables
      
 ! bgc variables
      deallocate (decomp_cpools_vr     )
+     deallocate (decomp_cpools        )
+     deallocate (ctrunc_vr            )
+     deallocate (ctrunc_veg           )
+     deallocate (ctrunc_soil          )
      deallocate (decomp_k             )
 
      deallocate (t_scalar             )
@@ -940,11 +1141,85 @@ MODULE MOD_TimeVariables
      deallocate (totlitc              )
      deallocate (totvegc              )
      deallocate (totsomc              )
+     deallocate (totcwdc              )
+     deallocate (totcolc              )
+     deallocate (col_begcb            )
+     deallocate (col_endcb            )
+     deallocate (col_vegbegcb         )
+     deallocate (col_vegendcb         )
+     deallocate (col_soilbegcb        )
+     deallocate (col_soilendcb        )
+
+     deallocate (totlitn              )
+     deallocate (totvegn              )
+     deallocate (totsomn              )
+     deallocate (totcwdn              )
+     deallocate (totcoln              )
+     deallocate (col_begnb            )
+     deallocate (col_endnb            )
+     deallocate (col_vegbegnb         )
+     deallocate (col_vegendnb         )
+     deallocate (col_soilbegnb        )
+     deallocate (col_soilendnb        )
+     deallocate (col_sminnbegnb       )
+     deallocate (col_sminnendnb       )
+
+     deallocate (leafc                )
+     deallocate (leafc_storage        )
+     deallocate (leafc_xfer           )
+     deallocate (frootc               )
+     deallocate (frootc_storage       )
+     deallocate (frootc_xfer          )
+     deallocate (livestemc            )
+     deallocate (livestemc_storage    )
+     deallocate (livestemc_xfer       )
+     deallocate (deadstemc            )
+     deallocate (deadstemc_storage    )
+     deallocate (deadstemc_xfer       )
+     deallocate (livecrootc           )
+     deallocate (livecrootc_storage   )
+     deallocate (livecrootc_xfer      )
+     deallocate (deadcrootc           )
+     deallocate (deadcrootc_storage   )
+     deallocate (deadcrootc_xfer      )
+     deallocate (grainc               )
+     deallocate (grainc_storage       )
+     deallocate (grainc_xfer          )
+     deallocate (xsmrpool             )
+     deallocate (downreg              )
+
+     deallocate (leafn                )
+     deallocate (leafn_storage        )
+     deallocate (leafn_xfer           )
+     deallocate (frootn               )
+     deallocate (frootn_storage       )
+     deallocate (frootn_xfer          )
+     deallocate (livestemn            )
+     deallocate (livestemn_storage    )
+     deallocate (livestemn_xfer       )
+     deallocate (deadstemn            )
+     deallocate (deadstemn_storage    )
+     deallocate (deadstemn_xfer       )
+     deallocate (livecrootn           )
+     deallocate (livecrootn_storage   )
+     deallocate (livecrootn_xfer      )
+     deallocate (deadcrootn           )
+     deallocate (deadcrootn_storage   )
+     deallocate (deadcrootn_xfer      )
+     deallocate (grainn               )
+     deallocate (grainn_storage       )
+     deallocate (grainn_xfer          )
+     deallocate (retransn             )
 
      deallocate (decomp_npools_vr     )
+     deallocate (decomp_npools        )
+     deallocate (ntrunc_vr            )
+     deallocate (ntrunc_veg           )
+     deallocate (ntrunc_soil          )
      deallocate (sminn_vr             )
      deallocate (smin_no3_vr          )
      deallocate (smin_nh4_vr          )
+     deallocate (sminn                )
 
      deallocate (ndep_prof            )
      deallocate (nfixation_prof       )

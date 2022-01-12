@@ -79,6 +79,7 @@ MODULE MOD_TimeInvariants
 
   LOGICAL  :: is_cwd    (1:ndecomp_pools) ! True => is a coarse woody debris pool
   LOGICAL  :: is_litter (1:ndecomp_pools) ! True => is a litter pool
+  LOGICAL  :: is_soil   (1:ndecomp_pools) ! True => is a soil pool
 
   REAL(r8), allocatable :: gdp_lf (:) !
   REAL(r8), allocatable :: abm_lf (:) !
@@ -308,6 +309,7 @@ MODULE MOD_TimeInvariants
            i_atm          , &
            is_cwd         , &
            is_litter      , &
+           is_soil        , &
 
            gdp_lf         , &
            abm_lf         , &
@@ -333,6 +335,7 @@ MODULE MOD_TimeInvariants
            max_altdepth_cryoturbation, &
            max_depth_cryoturb  , &
 
+           am                  , &
            br                  , &
            br_root             , &
            fstor2tran          , &
@@ -482,6 +485,7 @@ MODULE MOD_TimeInvariants
            i_atm          , &
            is_cwd         , &
            is_litter      , &
+           is_soil        , &
 
            gdp_lf         , &
            abm_lf         , &
@@ -507,6 +511,7 @@ MODULE MOD_TimeInvariants
            max_altdepth_cryoturbation, &
            max_depth_cryoturb  , &
 
+           am                  , &
            br                  , &
            br_root             , &
            fstor2tran          , &

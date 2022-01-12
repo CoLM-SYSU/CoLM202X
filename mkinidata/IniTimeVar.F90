@@ -10,9 +10,15 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
 #if(defined BGC)
-                     ,decomp_cpools_vr, altmax, altmax_lastyear, altmax_lastyear_indx&
-                     ,decomp_npools_vr, sminn_vr, smin_no3_vr, smin_nh4_vr&
-                     ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30&
+                     ,totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_veg, ctrunc_soil, ctrunc_vr &
+                     ,totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_veg, ntrunc_soil, ntrunc_vr &
+                     ,totvegc, totvegn, totcolc, totcoln, col_endcb, col_begcb, col_endnb, col_begnb &
+                     ,col_vegendcb, col_vegbegcb, col_soilendcb, col_soilbegcb &
+                     ,col_vegendnb, col_vegbegnb, col_soilendnb, col_soilbegnb &
+                     ,col_sminnendnb, col_sminnbegnb &
+                     ,altmax, altmax_lastyear, altmax_lastyear_indx &
+                     ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
+                     ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30 &
 #endif
 #if(defined SOILINI)
                      ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d)
@@ -113,13 +119,46 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 
 #if(defined BGC)
    REAL(r8),intent(out) ::      &
+        totlitc               , &
+        totsomc               , &
+        totcwdc               , &
+        totvegc               , &
+        totcolc               , &
+        totlitn               , &
+        totsomn               , &
+        totcwdn               , &
+        totvegn               , &
+        totcoln               , &
+        col_endcb             , &
+        col_begcb             , &
+        col_vegendcb          , &
+        col_vegbegcb          , &
+        col_soilendcb         , &
+        col_soilbegcb         , &
+        col_endnb             , &
+        col_begnb             , &
+        col_vegendnb          , &
+        col_vegbegnb          , &
+        col_soilendnb         , &
+        col_soilbegnb         , &
+        col_sminnendnb        , &
+        col_sminnbegnb        , &
         decomp_cpools_vr          (nl_soil_full,ndecomp_pools), &
+        decomp_cpools             (ndecomp_pools)             , &
+        ctrunc_vr                 (nl_soil_full)              , &
+        ctrunc_veg            , &    
+        ctrunc_soil           , &    
         altmax                                                , &
         altmax_lastyear                                       
    INTEGER, intent(out) :: altmax_lastyear_indx     
    REAL(r8),intent(out) ::      &
         decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
+        decomp_npools             (ndecomp_pools)             , &
+        ntrunc_vr                 (nl_soil_full)              , &
+        ntrunc_veg            , &    
+        ntrunc_soil           , &    
         sminn_vr                  (nl_soil)                   , &
+        sminn                 , &
         smin_no3_vr               (nl_soil)                   , &
         smin_nh4_vr               (nl_soil)                   , &
         prec10                                                , &
@@ -326,14 +365,48 @@ ENDIF
   fq    = alog(30.)  
 
 #ifdef BGC
+    totlitc                         = 0.0
+    totsomc                         = 0.0
+    totcwdc                         = 0.0
+    totvegc                         = 0.0
+    totcolc                         = 0.0
+    totlitn                         = 0.0
+    totsomn                         = 0.0
+    totcwdn                         = 0.0
+    totvegn                         = 0.0
+    totcoln                         = 0.0
+    col_endcb                       = 0.0
+    col_begcb                       = 0.0
+    col_vegendcb                    = 0.0
+    col_vegbegcb                    = 0.0
+    col_soilendcb                   = 0.0
+    col_soilbegcb                   = 0.0
+    col_endnb                       = 0.0
+    col_begnb                       = 0.0
+    col_vegendnb                    = 0.0
+    col_vegbegnb                    = 0.0
+    col_soilendnb                   = 0.0
+    col_soilbegnb                   = 0.0
+    col_sminnendnb                  = 0.0
+    col_sminnbegnb                  = 0.0
     decomp_cpools_vr          (:,:) = 0.0
+    decomp_cpools             (:)   = 0.0
+    ctrunc_vr                 (:)   = 0.0
+    ctrunc_veg                      = 0.0
+    ctrunc_soil                     = 0.0
     altmax                          = 10.0
     altmax_lastyear                 = 10.0
     altmax_lastyear_indx            = 10
     decomp_npools_vr          (:,:) = 0.0
+    decomp_npools             (:)   = 0.0
+    ntrunc_vr                 (:)   = 0.0
+    ntrunc_veg                      = 0.0
+    ntrunc_soil                     = 0.0
     sminn_vr                  (:)   = 0.0
+    sminn                           = 0.0
     smin_no3_vr               (:)   = 0.0
     smin_nh4_vr               (:)   = 0.0
+    sminn_vr                  (:)   = 0.0
     prec10                          = 0._r8
     prec60                          = 0._r8
     prec365                         = 0._r8
@@ -342,97 +415,99 @@ ENDIF
     tsoi17                          = 273.15_r8
     rh30                            = 0._r8
 #if(defined PFT_CLASSIFICATION)
-    leafc_p                  (ps:pe) = 0.0
-    leafc_storage_p          (ps:pe) = 0.0
-    leafc_xfer_p             (ps:pe) = 0.0
-    frootc_p                 (ps:pe) = 0.0
-    frootc_storage_p         (ps:pe) = 0.0
-    frootc_xfer_p            (ps:pe) = 0.0
-    livestemc_p              (ps:pe) = 0.0
-    livestemc_storage_p      (ps:pe) = 0.0
-    livestemc_xfer_p         (ps:pe) = 0.0
-    deadstemc_p              (ps:pe) = 0.0
-    deadstemc_storage_p      (ps:pe) = 0.0
-    deadstemc_xfer_p         (ps:pe) = 0.0
-    livecrootc_p             (ps:pe) = 0.0
-    livecrootc_storage_p     (ps:pe) = 0.0
-    livecrootc_xfer_p        (ps:pe) = 0.0
-    deadcrootc_p             (ps:pe) = 0.0
-    deadcrootc_storage_p     (ps:pe) = 0.0
-    deadcrootc_xfer_p        (ps:pe) = 0.0
-    grainc_p                 (ps:pe) = 0.0
-    grainc_storage_p         (ps:pe) = 0.0
-    grainc_xfer_p            (ps:pe) = 0.0
-    cropseedc_deficit_p      (ps:pe) = 0.0
-    xsmrpool_p               (ps:pe) = 0.0
-    gresp_storage_p          (ps:pe) = 0.0
-    gresp_xfer_p             (ps:pe) = 0.0
+    IF (patchtype == 0) THEN
+       leafc_p                  (ps:pe) = 0.0
+       leafc_storage_p          (ps:pe) = 0.0
+       leafc_xfer_p             (ps:pe) = 0.0
+       frootc_p                 (ps:pe) = 0.0
+       frootc_storage_p         (ps:pe) = 0.0
+       frootc_xfer_p            (ps:pe) = 0.0
+       livestemc_p              (ps:pe) = 0.0
+       livestemc_storage_p      (ps:pe) = 0.0
+       livestemc_xfer_p         (ps:pe) = 0.0
+       deadstemc_p              (ps:pe) = 0.0
+       deadstemc_storage_p      (ps:pe) = 0.0
+       deadstemc_xfer_p         (ps:pe) = 0.0
+       livecrootc_p             (ps:pe) = 0.0
+       livecrootc_storage_p     (ps:pe) = 0.0
+       livecrootc_xfer_p        (ps:pe) = 0.0
+       deadcrootc_p             (ps:pe) = 0.0
+       deadcrootc_storage_p     (ps:pe) = 0.0
+       deadcrootc_xfer_p        (ps:pe) = 0.0
+       grainc_p                 (ps:pe) = 0.0
+       grainc_storage_p         (ps:pe) = 0.0
+       grainc_xfer_p            (ps:pe) = 0.0
+       cropseedc_deficit_p      (ps:pe) = 0.0
+       xsmrpool_p               (ps:pe) = 0.0
+       gresp_storage_p          (ps:pe) = 0.0
+       gresp_xfer_p             (ps:pe) = 0.0
 
-    leafn_p                  (ps:pe) = 0.0
-    leafn_storage_p          (ps:pe) = 0.0
-    leafn_xfer_p             (ps:pe) = 0.0
-    frootn_p                 (ps:pe) = 0.0
-    frootn_storage_p         (ps:pe) = 0.0
-    frootn_xfer_p            (ps:pe) = 0.0
-    livestemn_p              (ps:pe) = 0.0
-    livestemn_storage_p      (ps:pe) = 0.0
-    livestemn_xfer_p         (ps:pe) = 0.0
-    deadstemn_p              (ps:pe) = 0.0
-    deadstemn_storage_p      (ps:pe) = 0.0
-    deadstemn_xfer_p         (ps:pe) = 0.0
-    livecrootn_p             (ps:pe) = 0.0
-    livecrootn_storage_p     (ps:pe) = 0.0
-    livecrootn_xfer_p        (ps:pe) = 0.0
-    deadcrootn_p             (ps:pe) = 0.0
-    deadcrootn_storage_p     (ps:pe) = 0.0
-    deadcrootn_xfer_p        (ps:pe) = 0.0
-    grainn_p                 (ps:pe) = 0.0
-    grainn_storage_p         (ps:pe) = 0.0
-    grainn_xfer_p            (ps:pe) = 0.0
-    cropseedn_deficit_p      (ps:pe) = 0.0
-    retransn_p               (ps:pe) = 0.0
+       leafn_p                  (ps:pe) = 0.0
+       leafn_storage_p          (ps:pe) = 0.0
+       leafn_xfer_p             (ps:pe) = 0.0
+       frootn_p                 (ps:pe) = 0.0
+       frootn_storage_p         (ps:pe) = 0.0
+       frootn_xfer_p            (ps:pe) = 0.0
+       livestemn_p              (ps:pe) = 0.0
+       livestemn_storage_p      (ps:pe) = 0.0
+       livestemn_xfer_p         (ps:pe) = 0.0
+       deadstemn_p              (ps:pe) = 0.0
+       deadstemn_storage_p      (ps:pe) = 0.0
+       deadstemn_xfer_p         (ps:pe) = 0.0
+       livecrootn_p             (ps:pe) = 0.0
+       livecrootn_storage_p     (ps:pe) = 0.0
+       livecrootn_xfer_p        (ps:pe) = 0.0
+       deadcrootn_p             (ps:pe) = 0.0
+       deadcrootn_storage_p     (ps:pe) = 0.0
+       deadcrootn_xfer_p        (ps:pe) = 0.0
+       grainn_p                 (ps:pe) = 0.0
+       grainn_storage_p         (ps:pe) = 0.0
+       grainn_xfer_p            (ps:pe) = 0.0
+       cropseedn_deficit_p      (ps:pe) = 0.0
+       retransn_p               (ps:pe) = 0.0
+       
+       harvdate_p               (ps:pe) = 99999999
+   
+       tempsum_potential_gpp_p  (ps:pe) = 0.0
+       tempmax_retransn_p       (ps:pe) = 0.0
+       tempavg_tref_p           (ps:pe) = 0.0
+       tempsum_npp_p            (ps:pe) = 0.0
+       tempsum_litfall_p        (ps:pe) = 0.0
+       annsum_potential_gpp_p   (ps:pe) = 0.0
+       annmax_retransn_p        (ps:pe) = 0.0
+       annavg_tref_p            (ps:pe) = 280.0
+       annsum_npp_p             (ps:pe) = 0.0
+       annsum_litfall_p         (ps:pe) = 0.0
+       
+       bglfr_p                  (ps:pe) = 0.0
+       bgtr_p                   (ps:pe) = 0.0
+       lgsf_p                   (ps:pe) = 0.0
+       gdd0_p                   (ps:pe) = 0.0
+       gdd8_p                   (ps:pe) = 0.0
+       gdd10_p                  (ps:pe) = 0.0
+       gdd020_p                 (ps:pe) = 0.0
+       gdd820_p                 (ps:pe) = 0.0
+       gdd1020_p                (ps:pe) = 0.0
+       nyrs_crop_active_p       (ps:pe) = 0
+       
+       offset_flag_p            (ps:pe) = 0.0
+       offset_counter_p         (ps:pe) = 0.0
+       onset_flag_p             (ps:pe) = 0.0
+       onset_counter_p          (ps:pe) = 0.0
+       onset_gddflag_p          (ps:pe) = 0.0
+       onset_gdd_p              (ps:pe) = 0.0
+       onset_fdd_p              (ps:pe) = 0.0
+       onset_swi_p              (ps:pe) = 0.0
+       offset_fdd_p             (ps:pe) = 0.0
+       offset_swi_p             (ps:pe) = 0.0
+       dormant_flag_p           (ps:pe) = 1.0
+       prev_leafc_to_litter_p   (ps:pe) = 0.0
+       prev_frootc_to_litter_p  (ps:pe) = 0.0
+       days_active_p            (ps:pe) = 0.0
     
-    harvdate_p               (ps:pe) = 99999999
-
-    tempsum_potential_gpp_p  (ps:pe) = 0.0
-    tempmax_retransn_p       (ps:pe) = 0.0
-    tempavg_tref_p           (ps:pe) = 0.0
-    tempsum_npp_p            (ps:pe) = 0.0
-    tempsum_litfall_p        (ps:pe) = 0.0
-    annsum_potential_gpp_p   (ps:pe) = 0.0
-    annmax_retransn_p        (ps:pe) = 0.0
-    annavg_tref_p            (ps:pe) = 280.0
-    annsum_npp_p             (ps:pe) = 0.0
-    annsum_litfall_p         (ps:pe) = 0.0
-    
-    bglfr_p                  (ps:pe) = 0.0
-    bgtr_p                   (ps:pe) = 0.0
-    lgsf_p                   (ps:pe) = 0.0
-    gdd0_p                   (ps:pe) = 0.0
-    gdd8_p                   (ps:pe) = 0.0
-    gdd10_p                  (ps:pe) = 0.0
-    gdd020_p                 (ps:pe) = 0.0
-    gdd820_p                 (ps:pe) = 0.0
-    gdd1020_p                (ps:pe) = 0.0
-    nyrs_crop_active_p       (ps:pe) = 0
-    
-    offset_flag_p            (ps:pe) = 0.0
-    offset_counter_p         (ps:pe) = 0.0
-    onset_flag_p             (ps:pe) = 0.0
-    onset_counter_p          (ps:pe) = 0.0
-    onset_gddflag_p          (ps:pe) = 0.0
-    onset_gdd_p              (ps:pe) = 0.0
-    onset_fdd_p              (ps:pe) = 0.0
-    onset_swi_p              (ps:pe) = 0.0
-    offset_fdd_p             (ps:pe) = 0.0
-    offset_swi_p             (ps:pe) = 0.0
-    dormant_flag_p           (ps:pe) = 1.0
-    prev_leafc_to_litter_p   (ps:pe) = 0.0
-    prev_frootc_to_litter_p  (ps:pe) = 0.0
-    days_active_p            (ps:pe) = 0.0
-    
-    burndate_p               (ps:pe) = 10000
-    grain_flag_p             (ps:pe) = 0.0
+       burndate_p               (ps:pe) = 10000
+       grain_flag_p             (ps:pe) = 0.0
+    end if
 #endif
 #endif
 END SUBROUTINE IniTimeVar

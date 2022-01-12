@@ -276,6 +276,8 @@ aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patanka
 !            else
 !               decomp_cpools_transport_tendency(c,j,s) = 0.0_r8
 !           end if !soil_matrix
+!            if(i .eq. 79738)print*,'tendency in LittVertTransp',j,s,i,decomp_cpools_transport_tendency(j,s,i),&
+!            conc_trcr_c(j), decomp_cpools_sourcesink(j,s,i)
          end do
 
 !         if (.not. use_soil_matrixcn) then
@@ -287,6 +289,8 @@ aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patanka
          call tridia(nl_soil+2, a_tri  (:), b_tri(:), c_tri(:), r_tri_c(:), conc_trcr_c(0:nl_soil+1))
          call tridia(nl_soil+2, a_tri  (:), b_tri(:), c_tri(:), r_tri_n(:), conc_trcr_n(0:nl_soil+1))
 
+!         if(i .eq. 79738)print*,'tendency in after tridia',j,s,i,decomp_cpools_transport_tendency(j,s,i),&
+!         conc_trcr_c(j)
          ! add post-transport concentration to calculate tendency term
          do j = 1, nl_soil
             decomp_cpools_transport_tendency(j,s,i) = decomp_cpools_transport_tendency(j,s,i) + conc_trcr_c(j)

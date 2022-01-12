@@ -221,6 +221,10 @@ print*, 'TIMELOOP = ', istep
          CALL TICKTIME (deltim,idate)
          itstamp = itstamp + int(deltim)
 
+#if(defined BGC)
+    call NDEP_readin (lon_points,lat_points,numpatch,dir_model_landdata,idate)
+#endif
+
        ! Call clm driver
        ! ----------------------------------------------------------------------
          CALL CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
@@ -255,6 +259,7 @@ print*, 'TIMELOOP = ', istep
             dolai = .true.
          endif
 #endif
+
 
        ! Mapping subgrid patch [numpatch] vector of subgrid points to 
        !     -> [lon_points]x[lat_points] grid average

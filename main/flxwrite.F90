@@ -106,7 +106,46 @@
            if (f_qref   (i,j) /= spval) f_qref   (i,j) = f_qref   (i,j) / a  ! 2 m height air specific humidity [kg/kg]
            if (f_xy_rain(i,j) /= spval) f_xy_rain(i,j) = f_xy_rain(i,j) / a  ! rain [mm/s]
            if (f_xy_snow(i,j) /= spval) f_xy_snow(i,j) = f_xy_snow(i,j) / a  ! snow [mm/s]
+!------------------------vegetation carbon/nitrogen-------------------
+           if (f_leafc             (i,j) /= spval) f_leafc              (i,j) = f_leafc (i,j)               / a  ! leaf carbon display pool  (gC/m2)
+           if (f_leafc_storage     (i,j) /= spval) f_leafc_storage      (i,j) = f_leafc_storage (i,j)       / a  ! leaf carbon storage pool  (gC/m2)
+           if (f_leafc_xfer        (i,j) /= spval) f_leafc_xfer         (i,j) = f_leafc_xfer (i,j)          / a  ! leaf carbon transfer pool (gC/m2)
+           if (f_frootc            (i,j) /= spval) f_frootc             (i,j) = f_frootc (i,j)              / a  ! fine root carbon display pool  (gC/m2)
+           if (f_frootc_storage    (i,j) /= spval) f_frootc_storage     (i,j) = f_frootc_storage  (i,j)     / a  ! fine root carbon storage pool  (gC/m2)
+           if (f_frootc_xfer       (i,j) /= spval) f_frootc_xfer        (i,j) = f_frootc_xfer (i,j)         / a  ! fine root carbon transfer pool (gC/m2)
+           if (f_livestemc         (i,j) /= spval) f_livestemc          (i,j) = f_livestemc (i,j)           / a  ! live stem carbon display pool  (gC/m2)
+           if (f_livestemc_storage (i,j) /= spval) f_livestemc_storage  (i,j) = f_livestemc_storage (i,j)   / a  ! live stem carbon storage pool  (gC/m2)
+           if (f_livestemc_xfer    (i,j) /= spval) f_livestemc_xfer     (i,j) = f_livestemc_xfer (i,j)      / a  ! live stem carbon transfer pool (gC/m2)
+           if (f_deadstemc         (i,j) /= spval) f_deadstemc          (i,j) = f_deadstemc (i,j)           / a  ! dead stem carbon display pool  (gC/m2)
+           if (f_deadstemc_storage (i,j) /= spval) f_deadstemc_storage  (i,j) = f_deadstemc_storage (i,j)   / a  ! dead stem carbon storage pool  (gC/m2)
+           if (f_deadstemc_xfer    (i,j) /= spval) f_deadstemc_xfer     (i,j) = f_deadstemc_xfer (i,j)      / a  ! dead stem carbon transfer pool (gC/m2)
+           if (f_livecrootc        (i,j) /= spval) f_livecrootc         (i,j) = f_livecrootc (i,j)          / a  ! live coarse root carbon display pool  (gC/m2)
+           if (f_livecrootc_storage(i,j) /= spval) f_livecrootc_storage (i,j) = f_livecrootc_storage (i,j)  / a  ! live coarse root carbon storage pool  (gC/m2)
+           if (f_livecrootc_xfer   (i,j) /= spval) f_livecrootc_xfer    (i,j) = f_livecrootc_xfer (i,j)     / a  ! live coarse root carbon transfer pool (gC/m2)
+           if (f_deadcrootc        (i,j) /= spval) f_deadcrootc         (i,j) = f_deadcrootc (i,j)          / a  ! dead coarse root carbon display pool  (gC/m2)
+           if (f_deadcrootc_storage(i,j) /= spval) f_deadcrootc_storage (i,j) = f_deadcrootc_storage (i,j)  / a  ! dead coarse root carbon storage pool  (gC/m2)
+           if (f_deadcrootc_xfer   (i,j) /= spval) f_deadcrootc_xfer    (i,j) = f_deadcrootc_xfer (i,j)     / a  ! dead coarse root carbon transfer pool (gC/m2)
+           if (f_leafn             (i,j) /= spval) f_leafn              (i,j) = f_leafn (i,j)               / a  ! leaf nitrogen display pool  (gC/m2)
+           if (f_leafn_storage     (i,j) /= spval) f_leafn_storage      (i,j) = f_leafn_storage (i,j)       / a  ! leaf nitrogen storage pool  (gC/m2)
+           if (f_leafn_xfer        (i,j) /= spval) f_leafn_xfer         (i,j) = f_leafn_xfer (i,j)          / a  ! leaf nitrogen transfer pool (gC/m2)
+           if (f_frootn            (i,j) /= spval) f_frootn             (i,j) = f_frootn (i,j)              / a  ! fine root nitrogen display pool  (gC/m2)
+           if (f_frootn_storage    (i,j) /= spval) f_frootn_storage     (i,j) = f_frootn_storage  (i,j)     / a  ! fine root nitrogen storage pool  (gC/m2)
+           if (f_frootn_xfer       (i,j) /= spval) f_frootn_xfer        (i,j) = f_frootn_xfer (i,j)         / a  ! fine root nitrogen transfer pool (gC/m2)
+           if (f_livestemn         (i,j) /= spval) f_livestemn          (i,j) = f_livestemn (i,j)           / a  ! live stem nitrogen display pool  (gC/m2)
+           if (f_livestemn_storage (i,j) /= spval) f_livestemn_storage  (i,j) = f_livestemn_storage (i,j)   / a  ! live stem nitrogen storage pool  (gC/m2)
+           if (f_livestemn_xfer    (i,j) /= spval) f_livestemn_xfer     (i,j) = f_livestemn_xfer (i,j)      / a  ! live stem nitrogen transfer pool (gC/m2)
+           if (f_deadstemn         (i,j) /= spval) f_deadstemn          (i,j) = f_deadstemn (i,j)           / a  ! dead stem nitrogen display pool  (gC/m2)
+           if (f_deadstemn_storage (i,j) /= spval) f_deadstemn_storage  (i,j) = f_deadstemn_storage (i,j)   / a  ! dead stem nitrogen storage pool  (gC/m2)
+           if (f_deadstemn_xfer    (i,j) /= spval) f_deadstemn_xfer     (i,j) = f_deadstemn_xfer (i,j)      / a  ! dead stem nitrogen transfer pool (gC/m2)
+           if (f_livecrootn        (i,j) /= spval) f_livecrootn         (i,j) = f_livecrootn (i,j)          / a  ! live coarse root nitrogen display pool  (gC/m2)
+           if (f_livecrootn_storage(i,j) /= spval) f_livecrootn_storage (i,j) = f_livecrootn_storage (i,j)  / a  ! live coarse root nitrogen storage pool  (gC/m2)
+           if (f_livecrootn_xfer   (i,j) /= spval) f_livecrootn_xfer    (i,j) = f_livecrootn_xfer (i,j)     / a  ! live coarse root nitrogen transfer pool (gC/m2)
+           if (f_deadcrootn        (i,j) /= spval) f_deadcrootn         (i,j) = f_deadcrootn (i,j)          / a  ! dead coarse root nitrogen display pool  (gC/m2)
+           if (f_deadcrootn_storage(i,j) /= spval) f_deadcrootn_storage (i,j) = f_deadcrootn_storage (i,j)  / a  ! dead coarse root nitrogen storage pool  (gC/m2)
+           if (f_deadcrootn_xfer   (i,j) /= spval) f_deadcrootn_xfer    (i,j) = f_deadcrootn_xfer (i,j)     / a  ! dead coarse root nitrogen transfer pool (gC/m2)
 
+           if (f_gpp               (i,j) /= spval) f_gpp                (i,j) = f_gpp             (i,j)     / a  ! net primary production (gC/m2)
+           if (f_downreg           (i,j) /= spval) f_downreg            (i,j) = f_downreg         (i,j)     / a  ! gpp downregulation due to n limitation
 !---------------------------------------------------------------------
            do l = maxsnl+1, nl_soil
               if (f_t_soisno   (l,i,j) /= spval) f_t_soisno   (l,i,j) = f_t_soisno   (l,i,j) / a  ! soil temperature [K]
@@ -117,6 +156,26 @@
            do l = 1, nl_soil
               if (f_h2osoi     (l,i,j) /= spval) f_h2osoi     (l,i,j) = f_h2osoi     (l,i,j) / a  ! volumetric soil water in layers [m3/m3]
            end do
+
+!------------------------------bgc soil carbon/nitrogen---------------
+           do l = 1, nl_soil
+              if (f_litr1c     (l,i,j) /= spval) f_litr1c     (l,i,j) = f_litr1c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_litr2c     (l,i,j) /= spval) f_litr2c     (l,i,j) = f_litr2c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_litr3c     (l,i,j) /= spval) f_litr3c     (l,i,j) = f_litr3c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_cwdc       (l,i,j) /= spval) f_cwdc       (l,i,j) = f_cwdc       (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_soil1c     (l,i,j) /= spval) f_soil1c     (l,i,j) = f_soil1c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_soil2c     (l,i,j) /= spval) f_soil2c     (l,i,j) = f_soil2c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_soil3c     (l,i,j) /= spval) f_soil3c     (l,i,j) = f_soil3c     (l,i,j) / a  ! soil carbon pools [ gC m-2]
+              if (f_litr1n     (l,i,j) /= spval) f_litr1n     (l,i,j) = f_litr1n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_litr2n     (l,i,j) /= spval) f_litr2n     (l,i,j) = f_litr2n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_litr3n     (l,i,j) /= spval) f_litr3n     (l,i,j) = f_litr3n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_cwdn       (l,i,j) /= spval) f_cwdn       (l,i,j) = f_cwdn       (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_soil1n     (l,i,j) /= spval) f_soil1n     (l,i,j) = f_soil1n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_soil2n     (l,i,j) /= spval) f_soil2n     (l,i,j) = f_soil2n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_soil3n     (l,i,j) /= spval) f_soil3n     (l,i,j) = f_soil3n     (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+              if (f_sminn      (l,i,j) /= spval) f_sminn      (l,i,j) = f_sminn      (l,i,j) / a  ! soil nitrogen pools [ gN m-2]
+           end do
+!-------------------------------------------------------------------
 
            do l = 1, nl_lake
               if (f_t_lake      (l,i,j) /= spval) f_t_lake      (l,i,j) = f_t_lake      (l,i,j) / a  ! lake temperature [K]
@@ -276,6 +335,64 @@
      write(luout) f_srviln (:,:)  ! reflected diffuse beam vis solar radiation at local noon(W/m2)
      write(luout) f_srndln (:,:)  ! reflected direct beam nir solar radiation at local noon(W/m2)
      write(luout) f_srniln (:,:)  ! reflected diffuse beam nir solar radiation at local noon(W/m2)
+
+     write(luout) f_leafc             (:,:) ! leaf carbon display pool  (gC/m2)
+     write(luout) f_leafc_storage     (:,:) ! leaf carbon storage pool  (gC/m2)
+     write(luout) f_leafc_xfer        (:,:) ! leaf carbon transfer pool (gC/m2)
+     write(luout) f_frootc            (:,:) ! fine root carbon display pool  (gC/m2)
+     write(luout) f_frootc_storage    (:,:) ! fine root carbon storage pool  (gC/m2)
+     write(luout) f_frootc_xfer       (:,:) ! fine root carbon transfer pool (gC/m2)
+     write(luout) f_livestemc         (:,:) ! live stem carbon display pool  (gC/m2)
+     write(luout) f_livestemc_storage (:,:) ! live stem carbon storage pool  (gC/m2)
+     write(luout) f_livestemc_xfer    (:,:) ! live stem carbon transfer pool (gC/m2)
+     write(luout) f_deadstemc         (:,:) ! dead stem carbon display pool  (gC/m2)
+     write(luout) f_deadstemc_storage (:,:) ! dead stem carbon storage pool  (gC/m2)
+     write(luout) f_deadstemc_xfer    (:,:) ! dead stem carbon transfer pool (gC/m2)
+     write(luout) f_livecrootc        (:,:) ! live coarse root carbon display pool  (gC/m2)
+     write(luout) f_livecrootc_storage(:,:) ! live coarse root carbon storage pool  (gC/m2)
+     write(luout) f_livecrootc_xfer   (:,:) ! live coarse root carbon transfer pool (gC/m2)
+     write(luout) f_deadcrootc        (:,:) ! dead coarse root carbon display pool  (gC/m2)
+     write(luout) f_deadcrootc_storage(:,:) ! dead coarse root carbon storage pool  (gC/m2)
+     write(luout) f_deadcrootc_xfer   (:,:) ! dead coarse root carbon transfer pool (gC/m2)
+     write(luout) f_leafn             (:,:) ! leaf nitrogen display pool  (gC/m2)
+     write(luout) f_leafn_storage     (:,:) ! leaf nitrogen storage pool  (gC/m2)
+     write(luout) f_leafn_xfer        (:,:) ! leaf nitrogen transfer pool (gC/m2)
+     write(luout) f_frootn            (:,:) ! fine root nitrogen display pool  (gC/m2)
+     write(luout) f_frootn_storage    (:,:) ! fine root nitrogen storage pool  (gC/m2)
+     write(luout) f_frootn_xfer       (:,:) ! fine root nitrogen transfer pool (gC/m2)
+     write(luout) f_livestemn         (:,:) ! live stem nitrogen display pool  (gC/m2)
+     write(luout) f_livestemn_storage (:,:) ! live stem nitrogen storage pool  (gC/m2)
+     write(luout) f_livestemn_xfer    (:,:) ! live stem nitrogen transfer pool (gC/m2)
+     write(luout) f_deadstemn         (:,:) ! dead stem nitrogen display pool  (gC/m2)
+     write(luout) f_deadstemn_storage (:,:) ! dead stem nitrogen storage pool  (gC/m2)
+     write(luout) f_deadstemn_xfer    (:,:) ! dead stem nitrogen transfer pool (gC/m2)
+     write(luout) f_livecrootn        (:,:) ! live coarse root nitrogen display pool  (gC/m2)
+     write(luout) f_livecrootn_storage(:,:) ! live coarse root nitrogen storage pool  (gC/m2)
+     write(luout) f_livecrootn_xfer   (:,:) ! live coarse root nitrogen transfer pool (gC/m2)
+     write(luout) f_deadcrootn        (:,:) ! dead coarse root nitrogen display pool  (gC/m2)
+     write(luout) f_deadcrootn_storage(:,:) ! dead coarse root nitrogen storage pool  (gC/m2)
+     write(luout) f_deadcrootn_xfer   (:,:) ! dead coarse root nitrogen transfer pool (gC/m2)
+
+     write(luout) f_gpp               (:,:) ! net primary production (gC/m2)
+     write(luout) f_downreg           (:,:) ! gpp downregulation due to N limitation
+
+     write(luout) f_litr1c          (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_litr2c          (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_litr3c          (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_cwdc            (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_soil1c          (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_soil2c          (:,:,:)  ! soil carbon pool [gC/m3]
+     write(luout) f_soil3c          (:,:,:)  ! soil carbon pool [gC/m3]
+
+     write(luout) f_litr1n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_litr2n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_litr3n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_cwdn            (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_soil1n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_soil2n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+     write(luout) f_soil3n          (:,:,:)  ! soil nitrogen pool [gN/m3]
+
+     write(luout) f_sminn           (:,:,:)  ! soil mineral nitrogen pool [gN/m3]
 
      CLOSE (luout)
 

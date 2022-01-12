@@ -59,12 +59,13 @@ MODULE MOD_PFTimeVars
   REAL(r8), allocatable :: xsmrpool_p               (:)
   REAL(r8), allocatable :: gresp_storage_p          (:)
   REAL(r8), allocatable :: gresp_xfer_p             (:)
+  REAL(r8), allocatable :: totvegc_p               (:)
 
   REAL(r8), allocatable :: leaf_prof_p              (:,:) !profile of leaves
   REAL(r8), allocatable :: stem_prof_p              (:,:) !profile of stem
   REAL(r8), allocatable :: froot_prof_p             (:,:) !profile of fine roots
   REAL(r8), allocatable :: croot_prof_p             (:,:) !profile of coarse roots
-  REAL(r8), allocatable :: crootfr                  (:,:)
+  REAL(r8), allocatable :: cinput_rootfr_p          (:,:)
 
   REAL(r8), allocatable :: leafn_p                  (:)
   REAL(r8), allocatable :: leafn_storage_p          (:)
@@ -89,6 +90,7 @@ MODULE MOD_PFTimeVars
   REAL(r8), allocatable :: grainn_xfer_p            (:)
   REAL(r8), allocatable :: cropseedn_deficit_p      (:)
   REAL(r8), allocatable :: retransn_p               (:)
+  REAL(r8), allocatable :: totvegn_p                (:)
 
   REAL(r8), allocatable :: harvdate_p               (:)
 
@@ -136,6 +138,9 @@ MODULE MOD_PFTimeVars
   REAL(r8), allocatable :: downreg_p                (:)
   REAL(r8), allocatable :: grain_flag_p             (:)
 
+  REAL(r8), allocatable :: ctrunc_p                 (:)
+  REAL(r8), allocatable :: ntrunc_p                 (:)
+  REAL(r8), allocatable :: npool_p                  (:)
 !-----
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -203,12 +208,13 @@ CONTAINS
       allocate (xsmrpool_p               (numpft))
       allocate (gresp_storage_p          (numpft))
       allocate (gresp_xfer_p             (numpft))
+      allocate (totvegc_p                (numpft))
 
       allocate (leaf_prof_p              (nl_soil,numpft))
       allocate (froot_prof_p             (nl_soil,numpft))
       allocate (croot_prof_p             (nl_soil,numpft))
       allocate (stem_prof_p              (nl_soil,numpft))
-      allocate (crootfr                  (nl_soil,numpatch))
+      allocate (cinput_rootfr_p          (nl_soil,numpft))
 
       allocate (leafn_p                  (numpft))
       allocate (leafn_storage_p          (numpft))
@@ -233,6 +239,7 @@ CONTAINS
       allocate (grainn_xfer_p            (numpft))
       allocate (cropseedn_deficit_p      (numpft))
       allocate (retransn_p               (numpft))
+      allocate (totvegn_p                (numpft))
 
       allocate (harvdate_p               (numpft))
 
@@ -279,6 +286,10 @@ CONTAINS
       allocate (n_allometry_p            (numpft))
       allocate (downreg_p                (numpft))
       allocate (grain_flag_p             (numpft))
+
+      allocate (ctrunc_p                 (numpft))
+      allocate (ntrunc_p                 (numpft))
+      allocate (npool_p                  (numpft))
 
    END SUBROUTINE allocate_PFTimeVars 
   
@@ -331,12 +342,13 @@ CONTAINS
       deallocate (xsmrpool_p               )
       deallocate (gresp_storage_p          )
       deallocate (gresp_xfer_p             )
+      deallocate (totvegc_p                )
 
       deallocate (leaf_prof_p              )
       deallocate (froot_prof_p             )
       deallocate (croot_prof_p             )
       deallocate (stem_prof_p              )
-      deallocate (crootfr                  )
+      deallocate (cinput_rootfr_p          )
 
       deallocate (leafn_p                  )
       deallocate (leafn_storage_p          )
@@ -361,6 +373,7 @@ CONTAINS
       deallocate (grainn_xfer_p            )
       deallocate (cropseedn_deficit_p      )
       deallocate (retransn_p               )
+      deallocate (totvegn_p                )
 
       deallocate (harvdate_p               )
 
@@ -407,6 +420,10 @@ CONTAINS
       deallocate (n_allometry_p            )
       deallocate (downreg_p                )
       deallocate (grain_flag_p             )
+
+      deallocate (ctrunc_p                 )
+      deallocate (ntrunc_p                 )
+      deallocate (npool_p                  )
 
    END SUBROUTINE deallocate_PFTimeVars
 

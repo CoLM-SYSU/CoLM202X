@@ -121,6 +121,64 @@ real(r8), allocatable :: f_xy_solarin(:,:)  ! downward solar radiation at surfac
 real(r8), allocatable :: f_xy_rain(:,:)  ! rain [mm/s]
 real(r8), allocatable :: f_xy_snow(:,:)  ! snow [mm/s]
 
+real(r8), allocatable :: f_leafc             (:,:)  ! leaf carbon display pool  (gC/m2)
+real(r8), allocatable :: f_leafc_storage     (:,:)  ! leaf carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_leafc_xfer        (:,:)  ! leaf carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_frootc            (:,:)  ! fine root carbon display pool  (gC/m2)
+real(r8), allocatable :: f_frootc_storage    (:,:)  ! fine root carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_frootc_xfer       (:,:)  ! fine root carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_livestemc         (:,:)  ! live stem carbon display pool  (gC/m2)
+real(r8), allocatable :: f_livestemc_storage (:,:)  ! live stem carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_livestemc_xfer    (:,:)  ! live stem carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_deadstemc         (:,:)  ! dead stem carbon display pool  (gC/m2)
+real(r8), allocatable :: f_deadstemc_storage (:,:)  ! dead stem carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_deadstemc_xfer    (:,:)  ! dead stem carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_livecrootc        (:,:)  ! live coarse root carbon display pool  (gC/m2)
+real(r8), allocatable :: f_livecrootc_storage(:,:)  ! live coarse root carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_livecrootc_xfer   (:,:)  ! live coarse root carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_deadcrootc        (:,:)  ! dead coarse root carbon display pool  (gC/m2)
+real(r8), allocatable :: f_deadcrootc_storage(:,:)  ! dead coarse root carbon storage pool  (gC/m2)
+real(r8), allocatable :: f_deadcrootc_xfer   (:,:)  ! dead coarse root carbon transfer pool (gC/m2)
+real(r8), allocatable :: f_leafn             (:,:)  ! leaf nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_leafn_storage     (:,:)  ! leaf nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_leafn_xfer        (:,:)  ! leaf nitrogen transfer pool (gC/m2)
+real(r8), allocatable :: f_frootn            (:,:)  ! fine root nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_frootn_storage    (:,:)  ! fine root nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_frootn_xfer       (:,:)  ! fine root nitrogen transfer pool (gC/m2)
+real(r8), allocatable :: f_livestemn         (:,:)  ! live stem nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_livestemn_storage (:,:)  ! live stem nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_livestemn_xfer    (:,:)  ! live stem nitrogen transfer pool (gC/m2)
+real(r8), allocatable :: f_deadstemn         (:,:)  ! dead stem nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_deadstemn_storage (:,:)  ! dead stem nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_deadstemn_xfer    (:,:)  ! dead stem nitrogen transfer pool (gC/m2)
+real(r8), allocatable :: f_livecrootn        (:,:)  ! live coarse root nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_livecrootn_storage(:,:)  ! live coarse root nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_livecrootn_xfer   (:,:)  ! live coarse root nitrogen transfer pool (gC/m2)
+real(r8), allocatable :: f_deadcrootn        (:,:)  ! dead coarse root nitrogen display pool  (gC/m2)
+real(r8), allocatable :: f_deadcrootn_storage(:,:)  ! dead coarse root nitrogen storage pool  (gC/m2)
+real(r8), allocatable :: f_deadcrootn_xfer   (:,:)  ! dead coarse root nitrogen transfer pool (gC/m2)
+
+real(r8), allocatable :: f_gpp               (:,:)  ! net primary production (gC/m2)
+real(r8), allocatable :: f_downreg           (:,:)  ! gpp downregulation due to N limitation
+
+real(r8), allocatable :: f_litr1c          (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_litr2c          (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_litr3c          (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_cwdc            (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_soil1c          (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_soil2c          (:,:,:)  ! soil carbon pool [gC/m2]
+real(r8), allocatable :: f_soil3c          (:,:,:)  ! soil carbon pool [gC/m2]
+
+real(r8), allocatable :: f_litr1n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_litr2n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_litr3n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_cwdn            (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_soil1n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_soil2n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_soil3n          (:,:,:)  ! soil nitrogen pool [gN/m2]
+real(r8), allocatable :: f_sminn           (:,:,:)  ! soil mineral nitrogen pool [gN/m2]
+
+
 
 ! PUBLIC MEMBER FUNCTIONS:
       public :: allocate_2D_Fluxes
@@ -253,6 +311,62 @@ allocate ( f_xy_solarin(lon_points,lat_points) )  ! downward solar radiation at 
 allocate ( f_xy_rain(lon_points,lat_points) )  ! rain [mm/s]
 allocate ( f_xy_snow(lon_points,lat_points) )  ! snow [mm/s]
 
+allocate ( f_leafc             (lon_points,lat_points) ) ! leaf carbon display pool  (gC/m2)
+allocate ( f_leafc_storage     (lon_points,lat_points) ) ! leaf carbon storage pool  (gC/m2)
+allocate ( f_leafc_xfer        (lon_points,lat_points) ) ! leaf carbon transfer pool (gC/m2)
+allocate ( f_frootc            (lon_points,lat_points) ) ! fine root carbon display pool  (gC/m2)
+allocate ( f_frootc_storage    (lon_points,lat_points) ) ! fine root carbon storage pool  (gC/m2)
+allocate ( f_frootc_xfer       (lon_points,lat_points) ) ! fine root carbon transfer pool (gC/m2)
+allocate ( f_livestemc         (lon_points,lat_points) ) ! live stem carbon display pool  (gC/m2)
+allocate ( f_livestemc_storage (lon_points,lat_points) ) ! live stem carbon storage pool  (gC/m2)
+allocate ( f_livestemc_xfer    (lon_points,lat_points) ) ! live stem carbon transfer pool (gC/m2)
+allocate ( f_deadstemc         (lon_points,lat_points) ) ! dead stem carbon display pool  (gC/m2)
+allocate ( f_deadstemc_storage (lon_points,lat_points) ) ! dead stem carbon storage pool  (gC/m2)
+allocate ( f_deadstemc_xfer    (lon_points,lat_points) ) ! dead stem carbon transfer pool (gC/m2)
+allocate ( f_livecrootc        (lon_points,lat_points) ) ! live coarse root carbon display pool  (gC/m2)
+allocate ( f_livecrootc_storage(lon_points,lat_points) ) ! live coarse root carbon storage pool  (gC/m2)
+allocate ( f_livecrootc_xfer   (lon_points,lat_points) ) ! live coarse root carbon transfer pool (gC/m2)
+allocate ( f_deadcrootc        (lon_points,lat_points) ) ! dead coarse root carbon display pool  (gC/m2)
+allocate ( f_deadcrootc_storage(lon_points,lat_points) ) ! dead coarse root carbon storage pool  (gC/m2)
+allocate ( f_deadcrootc_xfer   (lon_points,lat_points) ) ! dead coarse root carbon transfer pool (gC/m2)
+allocate ( f_leafn             (lon_points,lat_points) ) ! leaf nitrogen display pool  (gC/m2)
+allocate ( f_leafn_storage     (lon_points,lat_points) ) ! leaf nitrogen storage pool  (gC/m2)
+allocate ( f_leafn_xfer        (lon_points,lat_points) ) ! leaf nitrogen transfer pool (gC/m2)
+allocate ( f_frootn            (lon_points,lat_points) ) ! fine root nitrogen display pool  (gC/m2)
+allocate ( f_frootn_storage    (lon_points,lat_points) ) ! fine root nitrogen storage pool  (gC/m2)
+allocate ( f_frootn_xfer       (lon_points,lat_points) ) ! fine root nitrogen transfer pool (gC/m2)
+allocate ( f_livestemn         (lon_points,lat_points) ) ! live stem nitrogen display pool  (gC/m2)
+allocate ( f_livestemn_storage (lon_points,lat_points) ) ! live stem nitrogen storage pool  (gC/m2)
+allocate ( f_livestemn_xfer    (lon_points,lat_points) ) ! live stem nitrogen transfer pool (gC/m2)
+allocate ( f_deadstemn         (lon_points,lat_points) ) ! dead stem nitrogen display pool  (gC/m2)
+allocate ( f_deadstemn_storage (lon_points,lat_points) ) ! dead stem nitrogen storage pool  (gC/m2)
+allocate ( f_deadstemn_xfer    (lon_points,lat_points) ) ! dead stem nitrogen transfer pool (gC/m2)
+allocate ( f_livecrootn        (lon_points,lat_points) ) ! live coarse root nitrogen display pool  (gC/m2)
+allocate ( f_livecrootn_storage(lon_points,lat_points) ) ! live coarse root nitrogen storage pool  (gC/m2)
+allocate ( f_livecrootn_xfer   (lon_points,lat_points) ) ! live coarse root nitrogen transfer pool (gC/m2)
+allocate ( f_deadcrootn        (lon_points,lat_points) ) ! dead coarse root nitrogen display pool  (gC/m2)
+allocate ( f_deadcrootn_storage(lon_points,lat_points) ) ! dead coarse root nitrogen storage pool  (gC/m2)
+allocate ( f_deadcrootn_xfer   (lon_points,lat_points) ) ! dead coarse root nitrogen transfer pool (gC/m2)
+
+allocate ( f_gpp               (lon_points,lat_points) ) ! net primary production (gC/m2)
+allocate ( f_downreg           (lon_points,lat_points) ) ! gpp downregulation due to N limitation
+
+allocate ( f_litr1c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_litr2c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_litr3c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_cwdc              (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_soil1c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_soil2c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+allocate ( f_soil3c            (1:nl_soil,lon_points,lat_points) )  ! soil carbon pool (gC/m2)
+
+allocate ( f_litr1n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_litr2n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_litr3n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_cwdn              (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_soil1n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_soil2n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_soil3n            (1:nl_soil,lon_points,lat_points) )  ! soil nitrogen pool (gN/m2)
+allocate ( f_sminn             (1:nl_soil,lon_points,lat_points) )  ! soil mineral nitrogen pool (gN/m2)
 
 END SUBROUTINE allocate_2D_Fluxes
 
@@ -365,6 +479,62 @@ f_us10m     (:,:) = spval
 f_vs10m     (:,:) = spval
 f_fm10m     (:,:) = spval
 
+f_leafc             (:,:) = spval
+f_leafc_storage     (:,:) = spval
+f_leafc_xfer        (:,:) = spval
+f_frootc            (:,:) = spval
+f_frootc_storage    (:,:) = spval
+f_frootc_xfer       (:,:) = spval
+f_livestemc         (:,:) = spval
+f_livestemc_storage (:,:) = spval
+f_livestemc_xfer    (:,:) = spval
+f_deadstemc         (:,:) = spval
+f_deadstemc_storage (:,:) = spval
+f_deadstemc_xfer    (:,:) = spval
+f_livecrootc        (:,:) = spval
+f_livecrootc_storage(:,:) = spval
+f_livecrootc_xfer   (:,:) = spval
+f_deadcrootc        (:,:) = spval
+f_deadcrootc_storage(:,:) = spval
+f_deadcrootc_xfer   (:,:) = spval
+f_leafn             (:,:) = spval
+f_leafn_storage     (:,:) = spval
+f_leafn_xfer        (:,:) = spval
+f_frootn            (:,:) = spval
+f_frootn_storage    (:,:) = spval
+f_frootn_xfer       (:,:) = spval
+f_livestemn         (:,:) = spval
+f_livestemn_storage (:,:) = spval
+f_livestemn_xfer    (:,:) = spval
+f_deadstemn         (:,:) = spval
+f_deadstemn_storage (:,:) = spval
+f_deadstemn_xfer    (:,:) = spval
+f_livecrootn        (:,:) = spval
+f_livecrootn_storage(:,:) = spval
+f_livecrootn_xfer   (:,:) = spval
+f_deadcrootn        (:,:) = spval
+f_deadcrootn_storage(:,:) = spval
+f_deadcrootn_xfer   (:,:) = spval
+
+f_gpp               (:,:) = spval ! net primary production (gC/m2)
+f_downreg           (:,:) = spval ! gpp downregulation due to N limitation
+
+f_litr1c      (:,:,:) = spval
+f_litr2c      (:,:,:) = spval
+f_litr3c      (:,:,:) = spval
+f_cwdc        (:,:,:) = spval
+f_soil1c      (:,:,:) = spval
+f_soil2c      (:,:,:) = spval
+f_soil3c      (:,:,:) = spval
+
+f_litr1n      (:,:,:) = spval
+f_litr2n      (:,:,:) = spval
+f_litr3n      (:,:,:) = spval
+f_cwdn        (:,:,:) = spval
+f_soil1n      (:,:,:) = spval
+f_soil2n      (:,:,:) = spval
+f_soil3n      (:,:,:) = spval
+f_sminn       (:,:,:) = spval
 
 END SUBROUTINE FLUSH_2D_Fluxes
 
@@ -480,6 +650,63 @@ deallocate ( f_xy_frl )  ! atmospheric infrared (longwave) radiation [W/m2]
 deallocate ( f_xy_solarin)  ! downward solar radiation at surface [W/m2]
 deallocate ( f_xy_rain)  ! rain [mm/s]
 deallocate ( f_xy_snow)  ! snow [mm/s]
+
+deallocate ( f_leafc             )  ! leaf carbon display pool  (gC/m2)
+deallocate ( f_leafc_storage     )  ! leaf carbon storage pool  (gC/m2)
+deallocate ( f_leafc_xfer        )  ! leaf carbon transfer pool (gC/m2)
+deallocate ( f_frootc            )  ! fine root carbon display pool  (gC/m2)
+deallocate ( f_frootc_storage    )  ! fine root carbon storage pool  (gC/m2)
+deallocate ( f_frootc_xfer       )  ! fine root carbon transfer pool (gC/m2)
+deallocate ( f_livestemc         )  ! live stem carbon display pool  (gC/m2)
+deallocate ( f_livestemc_storage )  ! live stem carbon storage pool  (gC/m2)
+deallocate ( f_livestemc_xfer    )  ! live stem carbon transfer pool (gC/m2)
+deallocate ( f_deadstemc         )  ! dead stem carbon display pool  (gC/m2)
+deallocate ( f_deadstemc_storage )  ! dead stem carbon storage pool  (gC/m2)
+deallocate ( f_deadstemc_xfer    )  ! dead stem carbon transfer pool (gC/m2)
+deallocate ( f_livecrootc        )  ! live coarse root carbon display pool  (gC/m2)
+deallocate ( f_livecrootc_storage)  ! live coarse root carbon storage pool  (gC/m2)
+deallocate ( f_livecrootc_xfer   )  ! live coarse root carbon transfer pool (gC/m2)
+deallocate ( f_deadcrootc        )  ! dead coarse root carbon display pool  (gC/m2)
+deallocate ( f_deadcrootc_storage)  ! dead coarse root carbon storage pool  (gC/m2)
+deallocate ( f_deadcrootc_xfer   )  ! dead coarse root carbon transfer pool (gC/m2)
+deallocate ( f_leafn             )  ! leaf nitrogen display pool  (gC/m2)
+deallocate ( f_leafn_storage     )  ! leaf nitrogen storage pool  (gC/m2)
+deallocate ( f_leafn_xfer        )  ! leaf nitrogen transfer pool (gC/m2)
+deallocate ( f_frootn            )  ! fine root nitrogen display pool  (gC/m2)
+deallocate ( f_frootn_storage    )  ! fine root nitrogen storage pool  (gC/m2)
+deallocate ( f_frootn_xfer       )  ! fine root nitrogen transfer pool (gC/m2)
+deallocate ( f_livestemn         )  ! live stem nitrogen display pool  (gC/m2)
+deallocate ( f_livestemn_storage )  ! live stem nitrogen storage pool  (gC/m2)
+deallocate ( f_livestemn_xfer    )  ! live stem nitrogen transfer pool (gC/m2)
+deallocate ( f_deadstemn         )  ! dead stem nitrogen display pool  (gC/m2)
+deallocate ( f_deadstemn_storage )  ! dead stem nitrogen storage pool  (gC/m2)
+deallocate ( f_deadstemn_xfer    )  ! dead stem nitrogen transfer pool (gC/m2)
+deallocate ( f_livecrootn        )  ! live coarse root nitrogen display pool  (gC/m2)
+deallocate ( f_livecrootn_storage)  ! live coarse root nitrogen storage pool  (gC/m2)
+deallocate ( f_livecrootn_xfer   )  ! live coarse root nitrogen transfer pool (gC/m2)
+deallocate ( f_deadcrootn        )  ! dead coarse root nitrogen display pool  (gC/m2)
+deallocate ( f_deadcrootn_storage)  ! dead coarse root nitrogen storage pool  (gC/m2)
+deallocate ( f_deadcrootn_xfer   )  ! dead coarse root nitrogen transfer pool (gC/m2)
+
+deallocate ( f_gpp               )  ! net primary production (gC/m2)
+deallocate ( f_downreg           )  ! gpp downregulation due to N limitation
+
+deallocate ( f_litr1c            )  ! soil carbon pool size
+deallocate ( f_litr2c            )  ! soil carbon pool size
+deallocate ( f_litr3c            )  ! soil carbon pool size
+deallocate ( f_cwdc              )  ! soil carbon pool size
+deallocate ( f_soil1c            )  ! soil carbon pool size
+deallocate ( f_soil2c            )  ! soil carbon pool size
+deallocate ( f_soil3c            )  ! soil carbon pool size
+
+deallocate ( f_litr1n            )  ! soil nitrogen pool size
+deallocate ( f_litr2n            )  ! soil nitrogen pool size
+deallocate ( f_litr3n            )  ! soil nitrogen pool size
+deallocate ( f_cwdn              )  ! soil nitrogen pool size
+deallocate ( f_soil1n            )  ! soil nitrogen pool size
+deallocate ( f_soil2n            )  ! soil nitrogen pool size
+deallocate ( f_soil3n            )  ! soil nitrogen pool size
+deallocate ( f_sminn             )  ! soil mineral nitrogen pool size
 
 END SUBROUTINE deallocate_2D_Fluxes
 

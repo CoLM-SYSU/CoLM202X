@@ -263,6 +263,12 @@ integer ivt, m
             frootc_p         (m) = 0._r8
          end if
       end if
+      if(m .eq. 22784)print*,'leafc',i,m,ivt,leafc_p(m)+leafc_storage_p(m)+leafc_xfer_p(m)
+      if(m .eq. 22784)print*,'frootc',frootc_p(m)+frootc_storage_p(m)+frootc_xfer_p(m)
+      if(m .eq. 22784)print*,'livestemc',livestemc_p(m)+livestemc_storage_p(m)+livestemc_xfer_p(m)
+      if(m .eq. 22784)print*,'deadstemc',deadstemc_p(m)+deadstemc_storage_p(m)+deadstemc_xfer_p(m)
+      if(m .eq. 22784)print*,'livecrootc',livecrootc_p(m)+livecrootc_storage_p(m)+livecrootc_xfer_p(m)
+      if(m .eq. 22784)print*,'deadcrootc',deadcrootc_p(m)+deadcrootc_storage_p(m)+deadcrootc_xfer_p(m)
    end do ! end pft loop
     
 end subroutine CStateUpdate1

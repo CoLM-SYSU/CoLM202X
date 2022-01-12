@@ -5,7 +5,7 @@ module bgc_veg_NutrientCompetitionMod
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2
     
-    use MOD_PFTimeInvars, only: pftclass
+    use MOD_PFTimeInvars, only: pftclass, pftfrac
 
     use MOD_PFTimeVars, only: &
         xsmrpool_p, retransn_p, &
@@ -53,6 +53,11 @@ contains
 !    real(r8):: fsmn(bounds%begp:bounds%endp)  ! A emperate variable for adjusting FUN uptakes 
     integer :: ivt, m
 
+!if (i  .eq. 123226)print*,'npool_to_wood before alloc',&
+!   sum((npool_to_livestemn_p(ps:pe) + npool_to_livestemn_storage_p(ps:pe) &
+!   +npool_to_deadstemn_p(ps:pe) + npool_to_deadstemn_storage_p(ps:pe) &
+!   +npool_to_livecrootn_p(ps:pe) + npool_to_livecrootn_storage_p(ps:pe) &
+!   +npool_to_deadcrootn_p(ps:pe) + npool_to_deadcrootn_storage_p(ps:pe))*pftfrac(ps:pe)*1800._r8)
       do m = ps, pe
          ivt = pftclass(m)
          ! set some local allocation variables
@@ -103,7 +108,9 @@ contains
 !         print*,'nalloc in nutrient compeition',i,sminn_to_npool(i),plant_ndemand(i),fpg(i)
 
          plant_nalloc_p(m) = sminn_to_npool_p(m) + retransn_to_npool_p(m)
+!if(i .eq. 79738)print*,'nalloc',i,m,plant_nalloc_p(m),sminn_to_npool_p(m),retransn_to_npool_p(m),plant_ndemand_p(m),fpg(i)
          plant_calloc_p(m) = plant_nalloc_p(m) * (c_allometry_p(m)/n_allometry_p(m))
+         !if(i .eq. 79738)print*,'calloc',i,m,plant_calloc_p(m),plant_nalloc_p(m),c_allometry_p(m)/n_allometry_p(m)
          !print*,'plant_calloc in nutrient competition',i,plant_calloc(i),plant_nalloc(i),&
 !         sminn_to_npool(i),retransn_to_npool(i)
 !         if (use_matrixcn)then 
@@ -112,6 +119,7 @@ contains
 !         end if
 
 
+!         if(i .eq.  79738)print*,'availc',i,m,availc_p(m)
 !         if(.not.use_fun)then  !ORIGINAL CLM(CN) downregulation code. 
             excess_cflux_p(m) = availc_p(m) - plant_calloc_p(m)
 	    ! reduce gpp fluxes due to N limitation
@@ -134,10 +142,13 @@ contains
 !	          c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
 !	               c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
 !	       end if
+               if(m .eq. 22784)print*,'downreg_p',m,downreg_p(m),gpp_p(m),excess_cflux_p(m),availc_p(m),plant_calloc_p(m)
 	    end if
 !	         
 !	 end if !use_fun
-         
+
+!         if(i .eq. 79738)print*,'gpp',i,m,gpp_p(m), downreg_p(m),psn_to_cpool_p(m)
+
          ! calculate the amount of new leaf C dictated by these allocation
          ! decisions, and calculate the daily fluxes of C and N to current
          ! growth and storage pools
@@ -181,6 +192,7 @@ contains
          npool_to_leafn_storage_p(m)  = (nlc / cnl) * (1._r8 - fcur)
          npool_to_frootn_p(m)         = (nlc * f1 / cnfr) * fcur
          npool_to_frootn_storage_p(m) = (nlc * f1 / cnfr) * (1._r8 - fcur)
+!         if(i .eq. 123226)print*,'woody(ivt)',ivt, woody(ivt)
          if (woody(ivt) == 1._r8) then
             npool_to_livestemn_p(m)          = (nlc * f3 * f4 / cnlw) * fcur
             npool_to_livestemn_storage_p(m)  = (nlc * f3 * f4 / cnlw) * (1._r8 - fcur)
@@ -317,6 +329,11 @@ contains
 !            end if
 !         end if !end use_matrixcn  
       end do ! end patch loop
+!if (i  .eq. 123226)print*,'npool_to_wood',&
+!   sum((npool_to_livestemn_p(ps:pe) + npool_to_livestemn_storage_p(ps:pe) &
+!   +npool_to_deadstemn_p(ps:pe) + npool_to_deadstemn_storage_p(ps:pe) &
+!   +npool_to_livecrootn_p(ps:pe) + npool_to_livecrootn_storage_p(ps:pe) &
+!   +npool_to_deadcrootn_p(ps:pe) + npool_to_deadcrootn_storage_p(ps:pe))*pftfrac(ps:pe)*1800._r8)
 !
 !    end associate 
 
@@ -349,6 +366,7 @@ contains
 !      psnsun_to_cpool(m) = assimsun_p(m) * laisun_p(m) * 12.011_r8
 !      psnsha_to_cpool(m) = assimsha_p(m) * laisha_p(m) * 12.011_r8
       psn_to_cpool_p(m) = assim_p(m) * 12.011_r8
+      if(assim_p(m) .lt.  0)print*,'m',assim_p(m)
 
   !       if ( use_c13 ) then
   !          c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = c13_psnsun(p) * laisun(p) * 12.011e-6_r8

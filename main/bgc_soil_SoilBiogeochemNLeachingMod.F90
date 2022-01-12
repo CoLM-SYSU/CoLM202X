@@ -91,7 +91,11 @@ real(r8), parameter :: depth_runoff_Nloss = 0.05   ! (m) depth over which runoff
 
           ! calculate the N leaching flux as a function of the dissolved
           ! concentration and the sub-surface drainage flux
-          sminn_leached_vr(j,i) = disn_conc * drain_tot * wliq_soisno(j,i) / ( tot_water * dz_soi(j) )
+          if(tot_water > 0._r8)then
+             sminn_leached_vr(j,i) = disn_conc * drain_tot * wliq_soisno(j,i) / ( tot_water * dz_soi(j) )
+          else
+             sminn_leached_vr(j,i) = 0._r8
+          end if
 
 !             end if
 

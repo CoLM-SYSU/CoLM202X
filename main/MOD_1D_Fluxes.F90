@@ -59,13 +59,27 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
 
 ! bgc variables
+! ecosystem vegetation carbon/nitrogen flux
+  REAL(r8), allocatable :: gpp                        (:)
+  REAL(r8), allocatable :: ar                         (:)
+  REAL(r8), allocatable :: er                         (:)
+  REAL(r8), allocatable :: fire_closs                 (:)!
+  REAL(r8), allocatable :: fire_nloss                 (:)!
+  REAL(r8), allocatable :: hrv_xsmrpool_to_atm        (:)!
+  REAL(r8), allocatable :: wood_harvestc              (:)!
+  REAL(r8), allocatable :: wood_harvestn              (:)!
+  REAL(r8), allocatable :: grainc_to_cropprodc        (:)!
+  REAL(r8), allocatable :: grainn_to_cropprodn        (:)!
+
 ! decomposition carbon fluxes
   REAL(r8), allocatable :: decomp_cpools_sourcesink   (:,:,:)
   REAL(r8), allocatable :: decomp_ctransfer_vr        (:,:,:)
   REAL(r8), allocatable :: decomp_hr_vr               (:,:,:)
+  REAL(r8), allocatable :: decomp_hr                  (:)
   REAL(r8), allocatable :: phr_vr                     (:,:)
   REAL(r8), allocatable :: m_decomp_cpools_to_fire_vr (:,:,:)
   REAL(r8), allocatable :: decomp_cpools_transport_tendency(:,:,:)
+  REAL(r8), allocatable :: som_c_leached              (:)!
 
 ! vegetation to decomposition carbon fluxes
   REAL(r8), allocatable :: phenology_to_met_c       (:,:)
@@ -87,6 +101,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: sminn_to_denit_decomp_vr   (:,:,:)
   REAL(r8), allocatable :: m_decomp_npools_to_fire_vr (:,:,:)
   REAL(r8), allocatable :: decomp_npools_transport_tendency(:,:,:)
+  REAL(r8), allocatable :: som_n_leached            (:)!
 
 ! vegetation to decomposition nitrogen fluxes
   REAL(r8), allocatable :: phenology_to_met_n       (:,:)
@@ -115,6 +130,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: potential_immob_vr       (:,:)
   REAL(r8), allocatable :: pmnf_decomp              (:,:,:)
   REAL(r8), allocatable :: p_decomp_cpool_loss      (:,:,:)
+  REAL(r8), allocatable :: sminn_to_plant           (:)
   REAL(r8), allocatable :: sminn_to_plant_vr        (:,:)
   REAL(r8), allocatable :: smin_nh4_to_plant_vr     (:,:)
   REAL(r8), allocatable :: smin_no3_to_plant_vr     (:,:)
@@ -125,10 +141,19 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: sminn_to_denit_excess_vr (:,:)
   REAL(r8), allocatable :: f_nit_vr                 (:,:)
   REAL(r8), allocatable :: f_denit_vr               (:,:)
+  REAL(r8), allocatable :: f_n2o_nit_vr             (:,:)
   REAL(r8), allocatable :: ndep_to_sminn            (:)
   REAL(r8), allocatable :: ffix_to_sminn            (:)
   REAL(r8), allocatable :: nfix_to_sminn            (:)
   REAL(r8), allocatable :: somc_fire                (:)
+  REAL(r8), allocatable :: supplement_to_sminn      (:)!
+  REAL(r8), allocatable :: fert_to_sminn            (:)!
+  REAL(r8), allocatable :: soyfixn_to_sminn         (:)!
+  REAL(r8), allocatable :: denit                    (:)!
+  REAL(r8), allocatable :: sminn_leached            (:)!
+  REAL(r8), allocatable :: f_n2o_nit                (:)!
+  REAL(r8), allocatable :: smin_no3_leached         (:)!
+  REAL(r8), allocatable :: smin_no3_runoff          (:)!
 
 
 
@@ -201,12 +226,28 @@ MODULE MOD_1D_Fluxes
      allocate (qcharge (numpatch))  !groundwater recharge [mm/s]
 
 ! bgc variables
+! ecosystem carbon flux
+     allocate (gpp                        (numpatch))
+     allocate (ar                         (numpatch))
+     allocate (er                         (numpatch))
+     allocate (fire_closs                 (numpatch))
+     allocate (fire_nloss                 (numpatch))
+     allocate (hrv_xsmrpool_to_atm        (numpatch))
+     allocate (wood_harvestc              (numpatch))
+     allocate (wood_harvestn              (numpatch))
+     allocate (grainc_to_cropprodc        (numpatch))
+     allocate (grainn_to_cropprodn        (numpatch))
+
+
+! decomposition carbon fluxes
      allocate (decomp_cpools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
      allocate (decomp_ctransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch))
      allocate (decomp_hr_vr               (nl_soil_full,ndecomp_transitions,numpatch))
+     allocate (decomp_hr                  (numpatch))
      allocate (phr_vr                     (nl_soil_full,numpatch))
      allocate (m_decomp_cpools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
      allocate (decomp_cpools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
+     allocate (som_c_leached              (numpatch))
 
 ! vegetation to decomposition carbon fluxes
      allocate (phenology_to_met_c       (nl_soil,numpatch))
@@ -228,6 +269,7 @@ MODULE MOD_1D_Fluxes
      allocate (sminn_to_denit_decomp_vr   (nl_soil_full,ndecomp_transitions,numpatch))
      allocate (m_decomp_npools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
      allocate (decomp_npools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
+     allocate (som_n_leached            (numpatch))
 
 ! vegetation to decomposition nitrogen fluxes
      allocate (phenology_to_met_n       (nl_soil,numpatch))
@@ -256,6 +298,7 @@ MODULE MOD_1D_Fluxes
      allocate (potential_immob_vr       (nl_soil,numpatch))
      allocate (pmnf_decomp              (nl_soil,ndecomp_transitions,numpatch))
      allocate (p_decomp_cpool_loss      (nl_soil,ndecomp_transitions,numpatch))
+     allocate (sminn_to_plant           (numpatch))
      allocate (sminn_to_plant_vr        (nl_soil,numpatch))
      allocate (smin_nh4_to_plant_vr     (nl_soil,numpatch))
      allocate (smin_no3_to_plant_vr     (nl_soil,numpatch))
@@ -266,10 +309,19 @@ MODULE MOD_1D_Fluxes
      allocate (sminn_to_denit_excess_vr (nl_soil,numpatch))
      allocate (f_nit_vr                 (nl_soil,numpatch))
      allocate (f_denit_vr               (nl_soil,numpatch))
+     allocate (f_n2o_nit_vr             (nl_soil,numpatch))
      allocate (ndep_to_sminn            (numpatch))
      allocate (ffix_to_sminn            (numpatch))
      allocate (nfix_to_sminn            (numpatch))
      allocate (somc_fire                (numpatch))
+     allocate (supplement_to_sminn      (numpatch))
+     allocate (fert_to_sminn            (numpatch))
+     allocate (soyfixn_to_sminn         (numpatch))
+     allocate (denit                    (numpatch))
+     allocate (sminn_leached            (numpatch))
+     allocate (f_n2o_nit                (numpatch))
+     allocate (smin_no3_leached         (numpatch))
+     allocate (smin_no3_runoff          (numpatch))
 
 #ifdef PFT_CLASSIFICATION
      CALL allocate_1D_PFTFluxes
@@ -335,12 +387,28 @@ MODULE MOD_1D_Fluxes
      deallocate (qcharge )  !groundwater recharge [mm/s]
 
 ! bgc variables
+! ecosystem carbon flux
+     deallocate (gpp                        )
+     deallocate (ar                         )
+     deallocate (er                         )
+     deallocate (fire_closs                 )
+     deallocate (fire_nloss                 )
+     deallocate (hrv_xsmrpool_to_atm        )
+     deallocate (wood_harvestc              )
+     deallocate (wood_harvestn              )
+     deallocate (grainc_to_cropprodc        )
+     deallocate (grainn_to_cropprodn        )
+
+
+! decomposition carbon fluxes
      deallocate (decomp_cpools_sourcesink   )
      deallocate (decomp_ctransfer_vr        )
      deallocate (decomp_hr_vr               )
+     deallocate (decomp_hr                  )
      deallocate (phr_vr                     )
      deallocate (m_decomp_cpools_to_fire_vr )
      deallocate (decomp_cpools_transport_tendency)
+     deallocate (som_c_leached              )
 
 ! vegetation to decomposition carbon fluxes
      deallocate (phenology_to_met_c       )
@@ -362,6 +430,7 @@ MODULE MOD_1D_Fluxes
      deallocate (sminn_to_denit_decomp_vr   )
      deallocate (m_decomp_npools_to_fire_vr )
      deallocate (decomp_npools_transport_tendency)
+     deallocate (som_n_leached              )
 
 ! vegetation to decomposition nitrogen fluxes
      deallocate (phenology_to_met_n       )
@@ -390,6 +459,7 @@ MODULE MOD_1D_Fluxes
      deallocate (potential_immob_vr       )
      deallocate (pmnf_decomp              )
      deallocate (p_decomp_cpool_loss      )
+     deallocate (sminn_to_plant           )
      deallocate (sminn_to_plant_vr        )
      deallocate (smin_nh4_to_plant_vr     )
      deallocate (smin_no3_to_plant_vr     )
@@ -400,10 +470,19 @@ MODULE MOD_1D_Fluxes
      deallocate (sminn_to_denit_excess_vr )
      deallocate (f_nit_vr                 )
      deallocate (f_denit_vr               )
+     deallocate (f_n2o_nit_vr             )
      deallocate (ndep_to_sminn            )
      deallocate (ffix_to_sminn            )
      deallocate (nfix_to_sminn            )
      deallocate (somc_fire                )
+     deallocate (supplement_to_sminn      )
+     deallocate (fert_to_sminn            )
+     deallocate (soyfixn_to_sminn         )
+     deallocate (denit                    )
+     deallocate (sminn_leached            )
+     deallocate (f_n2o_nit                )
+     deallocate (smin_no3_leached         )
+     deallocate (smin_no3_runoff          )
      
 #ifdef PFT_CLASSIFICATION
      CALL deallocate_1D_PFTFluxes

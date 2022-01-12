@@ -781,6 +781,7 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
 
       is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
       is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
+      is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
    
       gdp_lf (:)    = 0._r8
       abm_lf (:)    = 0._r8
@@ -990,8 +991,16 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           ,trad(i),tref(i),qref(i),rst(i),emis(i),zol(i),rib(i)&
           ,ustar(i),qstar(i),tstar(i),fm(i),fh(i),fq(i)&
 #if(defined BGC)
-          ,decomp_cpools_vr(:,:,i), altmax    (i), altmax_lastyear(i), altmax_lastyear_indx(i)&
-          ,decomp_npools_vr(:,:,i), sminn_vr(:,i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
+          ,totlitc(i), totsomc(i), totcwdc(i), decomp_cpools(:,i), decomp_cpools_vr(:,:,i) &
+          ,ctrunc_veg(i), ctrunc_soil(i), ctrunc_vr(:,i) &
+          ,totlitn(i), totsomn(i), totcwdn(i), decomp_npools(:,i), decomp_npools_vr(:,:,i) &
+          ,ntrunc_veg(i), ntrunc_soil(i), ntrunc_vr(:,i) &
+          ,totvegc(i), totvegn(i), totcolc(i), totcoln(i), col_endcb(i), col_begcb(i), col_endnb(i), col_begnb(i) &
+          ,col_vegendcb(i), col_vegbegcb(i), col_soilendcb(i), col_soilbegcb(i) &
+          ,col_vegendnb(i), col_vegbegnb(i), col_soilendnb(i), col_soilbegnb(i) &
+          ,col_sminnendnb(i), col_sminnbegnb(i) &
+          ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i)&
+          ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
           ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i)&
 #endif
 #if(defined SOILINI)

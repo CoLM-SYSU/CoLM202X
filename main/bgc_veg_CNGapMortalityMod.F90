@@ -137,6 +137,7 @@ integer :: ivt, m
 
          ! storage pools
          m_leafc_storage_to_litter_p(m)       = leafc_storage_p(m)       * mort
+!         if(i .eq. 79738)print*,'m_leafc_to_litter_p',m_leafc_storage_to_litter_p(m),leafc_storage_p(m),mort
          m_frootc_storage_to_litter_p(m)      = frootc_storage_p(m)      * mort
          m_livestemc_storage_to_litter_p(m)   = livestemc_storage_p(m)   * mort
          m_deadstemc_storage_to_litter_p(m)   = deadstemc_storage_p(m)   * mort
@@ -272,7 +273,8 @@ integer ,intent(in) :: ps
 integer ,intent(in) :: pe
 integer ,intent(in) :: nl_soil
 
-integer j,m,ivt,wtcol
+integer j,m,ivt
+real(r8) :: wtcol
 
    do j = 1,nl_soil
       do m = ps, pe
@@ -367,7 +369,8 @@ integer j,m,ivt,wtcol
          gap_mortality_to_met_n(j,i) = gap_mortality_to_met_n(j,i) + &
               (m_livecrootn_xfer_to_litter_p(m) + m_deadcrootn_xfer_to_litter_p(m)) * wtcol * croot_prof_p(j,m)
 
-
+!         if(i .eq. 79738)print*,'CNGapVegToLitter',m,j,i,gap_mortality_to_met_c(j,i),m_leafc_to_litter_p(m)&
+!         ,lf_flab(ivt), wtcol, leaf_prof_p(j,m)
       end do
    end do
 

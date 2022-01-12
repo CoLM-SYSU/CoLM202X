@@ -247,11 +247,8 @@ use MOD_1D_PFTFluxes, only:             &
    livestemn_to_retransn_p              , &
    livecrootn_to_deadcrootn_p           , &
    livecrootn_to_retransn_p             , &
-!   wood_harvestn(i)                       = 0._r8
-!   fire_nloss(i)                          = 0._r8
    
    crop_seedn_to_leaf_p                 , &
-   !grainn_to_cropprodn               , &
 
    livestemn_to_litter_p                , &
    grainn_to_food_p                     , &
@@ -261,7 +258,16 @@ use MOD_1D_PFTFluxes, only:             &
    npool_to_grainn_storage_p            , &
    grainn_storage_to_xfer_p             , &
 !   soyfixn                           , &
-   frootn_to_retransn_p                 
+   frootn_to_retransn_p                 , &      
+
+   fire_closs_p                         , &
+   fire_nloss_p                         , &
+   wood_harvestc_p                      , &
+   wood_harvestn_p                      , &
+   grainc_to_cropprodc_p                , &
+   grainn_to_cropprodn_p                , &
+   fert_p                               , &
+   soyfixn_p
 
 use MOD_1D_Fluxes, only:                &
 
@@ -308,7 +314,13 @@ use MOD_1D_Fluxes, only:                &
 !      this%harvest_n_to_cwdn(j,i)                = 0._r8
    m_decomp_npools_to_fire_vr , &
 
-!   wood_harvestc, &
+   fire_closs   , &
+   fire_nloss   , &
+   wood_harvestc, &
+   wood_harvestn, &
+   grainc_to_cropprodc, &
+   grainn_to_cropprodn, &
+
 !   npp_Nactive, &
 !   npp_burnedoff, &
 !   npp_Nnonmyc, &
@@ -329,7 +341,7 @@ use MOD_1D_Fluxes, only:                &
 !   leafc_change, &
 !   soilc_change, &
 
-!   decomp_hr           , &
+   decomp_hr           , &
    decomp_hr_vr        , &
 !   decomp_ctransfer    , &
    decomp_ctransfer_vr , &
@@ -342,7 +354,7 @@ use MOD_1D_Fluxes, only:                &
 
 !   hr            , &
    somc_fire      , &
-!   som_c_leached , &
+   som_c_leached , &
 !   somhr         , &
 !   lithr         
 
@@ -387,6 +399,7 @@ use MOD_1D_Fluxes, only:                &
 #endif
     potential_immob_vr       , &
     actual_immob_vr       , &
+    sminn_to_plant       , &
     sminn_to_plant_vr       , &
     supplement_to_sminn_vr       , &
     gross_nmin_vr       , &
@@ -394,35 +407,34 @@ use MOD_1D_Fluxes, only:                &
     sminn_to_plant_fun_no3_vr       , &
     sminn_to_plant_fun_nh4_vr       , &
 
-
     nfix_to_sminn       , &
     ffix_to_sminn       , &
-!    fert_to_sminn       , &
-!    soyfixn_to_sminn       , &
+    fert_to_sminn       , &
+    soyfixn_to_sminn       , &
 !    potential_immob       , &
 !    actual_immob       , &
-!    sminn_to_plant       , &
-!    supplement_to_sminn       , &
+    sminn_to_plant       , &
+    supplement_to_sminn       , &
     gross_nmin       , &
     net_nmin       , &
-!    denit       , &
+    denit       , &
 !    sminn_to_plant_fun       , &
-#ifndef NITRIF
+!#ifndef NITRIF
 !    f_nit       , &
 !    pot_f_nit       , &
 !    f_denit       , &
 !    pot_f_denit       , &
 !    f_n2o_denit       , &
-!    f_n2o_nit       , &
-!    smin_no3_leached       , &
-!    smin_no3_runoff       , &
-#else
+    f_n2o_nit       , &
+    smin_no3_leached       , &
+    smin_no3_runoff       , &
+!#else
 !    sminn_to_denit_excess       , &
-!    sminn_leached       , &
-#endif
+    sminn_leached       , &
+!#endif
 !    ninputs       , &
 !    noutputs       , &
-!    som_n_leached       , &
+    som_n_leached       , &
 
 !    decomp_npools_leached       , &
    
@@ -632,9 +644,21 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
      end do
   end do
 
+  fire_closs(i)          = 0._r8
+  fire_nloss(i)                          = 0._r8
+  wood_harvestc(i)       = 0._r8
+  wood_harvestn(i)                       = 0._r8
+  grainc_to_cropprodc(i) = 0._r8
+  grainn_to_cropprodn(i) = 0._r8
+
   do m = ps, pe
      gpp_p(m)                                 = 0._r8
-!4381        this%wood_harvestc_patch(i) = value_patch
+     wood_harvestc_p(m)                       = 0._r8
+     wood_harvestn_p(m)                       = 0._r8
+     grainc_to_cropprodc_p(m)                 = 0._r8
+     grainn_to_cropprodn_p(m)                 = 0._r8
+     fert_p(m)                                = 0._r8 
+     soyfixn_p(m)                             = 0._r8 
 !4386        this%npp_Nactive_patch(i)     = value_patch
 !4387        this%npp_burnedoff_patch(i)     = value_patch
 !4388        this%npp_Nnonmyc_patch(i)     = value_patch
@@ -655,9 +679,9 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
 !4403        this%leafc_change_patch(i)    = value_patch
 !4404        this%soilc_change_patch(i)    = value_patch
 
-!   fire_closs(i)                          = 0._r8
+    fire_closs_p(m)                          = 0._r8
+    fire_nloss_p(m)                          = 0._r8
         ! Zero p2c column fluxes
-!4423        this%wood_harvestc_col(i)       = value_column
 
 ! CNVegNitrogenFluxes set zero
 
@@ -758,11 +782,8 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
      livestemn_to_retransn_p(m)               = 0._r8
      livecrootn_to_deadcrootn_p(m)            = 0._r8
      livecrootn_to_retransn_p(m)              = 0._r8
-!   wood_harvestn(i)                       = 0._r8
-!   fire_nloss(i)                          = 0._r8
    
      crop_seedn_to_leaf_p(m)                  = 0._r8
-   !grainn_to_cropprodn(i)                 = 0._r8
 
      livestemn_to_litter_p(m)              = 0._r8
      grainn_to_food_p(m)                   = 0._r8
@@ -831,10 +852,11 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
 
 !   hr(i)            = 0._r8
    somc_fire(i)     = 0._r8
-!   som_c_leached(i) = 0._r8
+   som_c_leached(i) = 0._r8
 !   somhr(i)         = 0._r8
 !   lithr(i)         = 0._r8
 !   soilc_change(i)  = 0._r8
+   decomp_hr(i)     = 0._r8
 
 
    do j = 1, nl_soil
@@ -879,6 +901,7 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
 #endif
       potential_immob_vr(j,i)               = 0._r8
       actual_immob_vr(j,i)                  = 0._r8
+      sminn_to_plant(i)                = 0._r8
       sminn_to_plant_vr(j,i)                = 0._r8
       supplement_to_sminn_vr(j,i)           = 0._r8
       gross_nmin_vr(j,i)                    = 0._r8
@@ -887,35 +910,34 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
       sminn_to_plant_fun_nh4_vr(j,i)        = 0._r8
    end do
 
-
    nfix_to_sminn(i)             = 0._r8
    ffix_to_sminn(i)             = 0._r8
-!    fert_to_sminn(i)             = 0._r8
-!    soyfixn_to_sminn(i)          = 0._r8
+   fert_to_sminn(i)             = 0._r8
+    soyfixn_to_sminn(i)          = 0._r8
 !    potential_immob(i)           = 0._r8
 !    actual_immob(i)              = 0._r8
 !    sminn_to_plant(i)            = 0._r8
-!    supplement_to_sminn(i)       = 0._r8
+   supplement_to_sminn(i)       = 0._r8
    gross_nmin(i)                = 0._r8
    net_nmin(i)                  = 0._r8
-!    denit(i)                     = 0._r8
+    denit(i)                     = 0._r8
 !    sminn_to_plant_fun(i)        = 0._r8
-#ifndef NITRIF
+!#ifdef NITRIF
 !    f_nit(i)                  = 0._r8
 !    pot_f_nit(i)              = 0._r8
 !    f_denit(i)                = 0._r8
 !    pot_f_denit(i)            = 0._r8
 !    f_n2o_denit(i)            = 0._r8
-!    f_n2o_nit(i)              = 0._r8
-!    smin_no3_leached(i)       = 0._r8
-!    smin_no3_runoff(i)        = 0._r8
-#else
+    f_n2o_nit(i)              = 0._r8
+    smin_no3_leached(i)       = 0._r8
+    smin_no3_runoff(i)        = 0._r8
+!#else
 !    sminn_to_denit_excess(i)  = 0._r8
-!    sminn_leached(i)          = 0._r8
-#endif
+    sminn_leached(i)          = 0._r8
+!#endif
 !    ninputs(i)                   = 0._r8
 !    noutputs(i)                  = 0._r8
-!    som_n_leached(i)             = 0._r8
+    som_n_leached(i)             = 0._r8
 
 !    do k = 1, ndecomp_pools
 !       decomp_npools_leached(i,k) = 0._r8

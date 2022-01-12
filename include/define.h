@@ -18,4 +18,5 @@
 #undef  NITRIF
 #undef  FUN
 #undef  FIRE
+#define OPENMP 48
 #undef  CaMa_Flood

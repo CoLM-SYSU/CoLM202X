@@ -51,7 +51,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP SCHEDULE(STATIC, 1)
 #endif
       DO i = 1, numpatch
-!      DO i = 16214, 16214
+!      DO i = 19643, 19643
 !         if(patchtype(i) .eq. 0)then
 !            do m=patch_pft_s(i),patch_pft_e(i)
 !               print*,'i',i,patchlonr(i)*180/3.14,patchlatr(i)*180/3.14, pftclass(m), pftfrac(m)
@@ -140,9 +140,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
 #if(defined BGC)
          if(patchtype(i) .eq. 0)then
-            ps = patch_pft_s(i)
-            pe = patch_pft_e(i)
-            CALL bgc_driver (i,ps,pe,idate(1:3),deltim, patchlatr(i)*180/PI)
+            CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
          end if
 #endif
       ENDDO

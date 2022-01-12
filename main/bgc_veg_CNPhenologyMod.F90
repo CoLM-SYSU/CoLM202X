@@ -235,10 +235,11 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
       do m = ps , pe
          ivt = pftclass(m)
          if (isevg(ivt)) then
-            bglfr_p(i) = 1._r8/(leaf_long(ivt) * dayspyr * 86400._r8)
-            bgtr_p(i)  = 0._r8
-            lgsf_p(i)  = 0._r8
+            bglfr_p(m) = 1._r8/(leaf_long(ivt) * dayspyr * 86400._r8)
+            bgtr_p(m)  = 0._r8
+            lgsf_p(m)  = 0._r8
          end if
+         if(i .eq. 140778)print*,'bglfr_p',m,ivt,isevg(ivt),bglfr_p(m)
       end do
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1343,10 +1344,15 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
       do m = ps , pe
          ! only calculate these fluxes if the background litterfall rate is non-zero
+         ivt = pftclass(m)
+         if(i .eq. 140778)print*,'before backgroundlitter',m,bglfr_p(m)
          if (bglfr_p(m) > 0._r8) then
             ! units for bglfr are already 1/s
             leafc_to_litter_p(m)  = bglfr_p(m) * leafc_p(m)
             frootc_to_litter_p(m) = bglfr_p(m) * frootc_p(m)
+            if(i .eq. 140778)then
+               print*,'leafc_to_litter_p background',m,leafc_to_litter_p(m), bglfr_p(m), leafc_p(m)
+            end if
 !            if (use_matrixcn) then
 !               matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
 !               matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
@@ -1464,6 +1470,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
   
       do m = ps, pe
          ! only calculate these fluxes for woody types
+         ivt = pftclass(m)
          if (woody(ivt) > 0._r8) then
 
             ! live stem to dead stem turnover
@@ -1575,7 +1582,8 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
     integer ,intent(in) :: npcropmin
 
     integer j
-    integer ivt,m, wtcol
+    integer ivt,m
+    real(r8):: wtcol
   
     do j = 1, nl_soil
        do m = ps,pe

@@ -3,7 +3,8 @@ module bgc_soil_SoilBiogeochemCompetitionMod
 
 use precision
 use MOD_1D_Fluxes, only: &
-    potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, actual_immob_vr
+    potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, &
+    actual_immob_vr, sminn_to_plant
 use MOD_TimeVariables, only: &
     sminn_vr, smin_no3_vr, smin_nh4_vr, nfixation_prof, fpi_vr, fpi, fpg
 use MOD_TimeInVariants,only: &
@@ -52,9 +53,8 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
     real(r8) :: residual_smin_no3
     real(r8) :: residual_plant_ndemand
     real(r8) :: sminn_to_plant_new
-    real(r8) :: sminn_to_plant
-    real(r8) :: actual_immob
-    real(r8) :: potential_immob
+    real(r8) :: actual_immob = 0
+    real(r8) :: potential_immob = 0
     !-----------------------------------------------------------------------
 
     sminn_to_plant_new  =  0._r8
@@ -84,7 +84,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 
          do j = 1, nl_soil
 !               l = col%landunit(c)
-!            print*,'here1',j,sum_ndemand_vr(j)*deltim, sminn_vr(j,i)
+!            if(i .eq. 79738)print*,'here1',j,sum_ndemand_vr(j)*deltim, sminn_vr(j,i)
             if (sum_ndemand_vr(j)*deltim < sminn_vr(j,i)) then
 
                ! N availability is not limiting immobilization or plant
@@ -126,8 +126,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 
                sminn_to_plant_vr(j,i) = (sminn_vr(j,i)/deltim) - actual_immob_vr(j,i)
             end if
-!            print*,'fpi_vr',i,j,fpi_vr(j,i),actual_immob_vr(j,i),potential_immob_vr(j,i)
-!            print*,'sminn_to_plant_vr',i,j,sum_ndemand_vr(j)*deltim,sminn_vr(j,i),sminn_to_plant_vr(j,i),plant_ndemand(i),nuptake_prof(j)
+!            if(i .eq. 79738)print*,'fpi_vr',i,j,fpi_vr(j,i),actual_immob_vr(j,i),potential_immob_vr(j,i)
+!            if(i .eq. 79738)print*,'sminn_to_plant_vr',i,j,sum_ndemand_vr(j)*deltim,sminn_vr(j,i),&
+!                                   sminn_to_plant_vr(j,i),plant_ndemand(i),nuptake_prof(j)
          end do
 
 #ifdef FUN
@@ -146,7 +147,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 
          ! sum up N fluxes to plant
          do j = 1, nl_soil
-            sminn_to_plant = sminn_to_plant + sminn_to_plant_vr(j,i) * dz_soi(j)
+            sminn_to_plant(i) = sminn_to_plant(i) + sminn_to_plant_vr(j,i) * dz_soi(j)
 #ifdef FUN
                   if (sminn_to_plant_fun_vr(c,j).gt.sminn_to_plant_vr(c,j)) then
                       sminn_to_plant_fun_vr(c,j)  = sminn_to_plant_vr(c,j)
@@ -158,7 +159,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
          residual_sminn = 0._r8
 
          ! sum up total N left over after initial plant and immobilization fluxes
-         residual_plant_ndemand = plant_ndemand(i) - sminn_to_plant
+         residual_plant_ndemand = plant_ndemand(i) - sminn_to_plant(i)
 
          do j = 1, nl_soil
             if (residual_plant_ndemand  >  0._r8 ) then
@@ -180,9 +181,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
          end do
 
          ! re-sum up N fluxes to plant
-         sminn_to_plant = 0._r8
+         sminn_to_plant(i) = 0._r8
          do j = 1, nl_soil
-            sminn_to_plant = sminn_to_plant + sminn_to_plant_vr(j,i) * dz_soi(j)
+            sminn_to_plant(i) = sminn_to_plant(i) + sminn_to_plant_vr(j,i) * dz_soi(j)
 #ifndef FUN
             sum_ndemand_vr(j) = potential_immob_vr(j,i) + sminn_to_plant_vr(j,i)
 #else
@@ -220,7 +221,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
          ! acheived with the N available to plants      
          if (plant_ndemand(i) > 0.0_r8) then
 #ifndef FUN
-            fpg(i) = sminn_to_plant / plant_ndemand(i)
+            fpg(i) = sminn_to_plant(i) / plant_ndemand(i)
 #else
             fpg(c) = sminn_to_plant_new(c) / plant_ndemand(c)
 #endif
@@ -230,6 +231,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 
          ! calculate the fraction of immobilization realized (for diagnostic purposes)
          if (potential_immob > 0.0_r8) then
+!            if(i .eq. 79738)print*,'potential_immob',i,potential_immob
             fpi(i) = actual_immob / potential_immob
          else
             fpi(i) = 1.0_r8
@@ -566,6 +568,7 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
             do j = 1, nl_soil
                sminn_to_plant_vr(j,i) = smin_nh4_to_plant_vr(j,i) + smin_no3_to_plant_vr(j,i)
                sminn_to_plant(i) = sminn_to_plant(i) + (sminn_to_plant_vr(j,i)) * dz_soi(j)
+!               if(i .eq. 79738)print*,'sminn_to_plant',i,j,sminn_to_plant(i),(sminn_to_plant_vr(j,i)) * dz_soi(j)
             end do
    
 #else

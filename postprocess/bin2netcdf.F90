@@ -180,6 +180,64 @@ CONTAINS
       read(11) f_srndln (:,:)   ! reflected direct beam nir solar radiation at local noon(W/m2)
       read(11) f_srniln (:,:)   ! reflected diffuse beam nir solar radiation at local noon(W/m2)
 
+      read(11) f_leafc             (:,:) ! leaf carbon display pool  (gC/m2)
+      read(11) f_leafc_storage     (:,:) ! leaf carbon storage pool  (gC/m2)
+      read(11) f_leafc_xfer        (:,:) ! leaf carbon transfer pool (gC/m2)
+      read(11) f_frootc            (:,:) ! fine root carbon display pool  (gC/m2)
+      read(11) f_frootc_storage    (:,:) ! fine root carbon storage pool  (gC/m2)
+      read(11) f_frootc_xfer       (:,:) ! fine root carbon transfer pool (gC/m2)
+      read(11) f_livestemc         (:,:) ! live stem carbon display pool  (gC/m2)
+      read(11) f_livestemc_storage (:,:) ! live stem carbon storage pool  (gC/m2)
+      read(11) f_livestemc_xfer    (:,:) ! live stem carbon transfer pool (gC/m2)
+      read(11) f_deadstemc         (:,:) ! dead stem carbon display pool  (gC/m2)
+      read(11) f_deadstemc_storage (:,:) ! dead stem carbon storage pool  (gC/m2)
+      read(11) f_deadstemc_xfer    (:,:) ! dead stem carbon transfer pool (gC/m2)
+      read(11) f_livecrootc        (:,:) ! live coarse root carbon display pool  (gC/m2)
+      read(11) f_livecrootc_storage(:,:) ! live coarse root carbon storage pool  (gC/m2)
+      read(11) f_livecrootc_xfer   (:,:) ! live coarse root carbon transfer pool (gC/m2)
+      read(11) f_deadcrootc        (:,:) ! dead coarse root carbon display pool  (gC/m2)
+      read(11) f_deadcrootc_storage(:,:) ! dead coarse root carbon storage pool  (gC/m2)
+      read(11) f_deadcrootc_xfer   (:,:) ! dead coarse root carbon transfer pool (gC/m2)
+      read(11) f_leafn             (:,:) ! leaf nitrogen display pool  (gN/m2)
+      read(11) f_leafn_storage     (:,:) ! leaf nitrogen storage pool  (gN/m2)
+      read(11) f_leafn_xfer        (:,:) ! leaf nitrogen transfer pool (gN/m2)
+      read(11) f_frootn            (:,:) ! fine root nitrogen display pool  (gN/m2)
+      read(11) f_frootn_storage    (:,:) ! fine root nitrogen storage pool  (gN/m2)
+      read(11) f_frootn_xfer       (:,:) ! fine root nitrogen transfer pool (gN/m2)
+      read(11) f_livestemn         (:,:) ! live stem nitrogen display pool  (gN/m2)
+      read(11) f_livestemn_storage (:,:) ! live stem nitrogen storage pool  (gN/m2)
+      read(11) f_livestemn_xfer    (:,:) ! live stem nitrogen transfer pool (gN/m2)
+      read(11) f_deadstemn         (:,:) ! dead stem nitrogen display pool  (gN/m2)
+      read(11) f_deadstemn_storage (:,:) ! dead stem nitrogen storage pool  (gN/m2)
+      read(11) f_deadstemn_xfer    (:,:) ! dead stem nitrogen transfer pool (gN/m2)
+      read(11) f_livecrootn        (:,:) ! live coarse root nitrogen display pool  (gN/m2)
+      read(11) f_livecrootn_storage(:,:) ! live coarse root nitrogen storage pool  (gN/m2)
+      read(11) f_livecrootn_xfer   (:,:) ! live coarse root nitrogen transfer pool (gN/m2)
+      read(11) f_deadcrootn        (:,:) ! dead coarse root nitrogen display pool  (gN/m2)
+      read(11) f_deadcrootn_storage(:,:) ! dead coarse root nitrogen storage pool  (gN/m2)
+      read(11) f_deadcrootn_xfer   (:,:) ! dead coarse root nitrogen transfer pool (gN/m2)
+
+      read(11) f_gpp               (:,:)
+      read(11) f_downreg           (:,:)
+
+      read(11) f_litr1c          (:,:,:)
+      read(11) f_litr2c          (:,:,:)
+      read(11) f_litr3c          (:,:,:)
+      read(11) f_cwdc            (:,:,:)
+      read(11) f_soil1c          (:,:,:)
+      read(11) f_soil2c          (:,:,:)
+      read(11) f_soil3c          (:,:,:)
+
+      read(11) f_litr1n          (:,:,:)
+      read(11) f_litr2n          (:,:,:)
+      read(11) f_litr3n          (:,:,:)
+      read(11) f_cwdn            (:,:,:)
+      read(11) f_soil1n          (:,:,:)
+      read(11) f_soil2n          (:,:,:)
+      read(11) f_soil3n          (:,:,:)
+
+      read(11) f_sminn           (:,:,:)
+
       close(11)
 
    END SUBROUTINE readfluxes
@@ -845,6 +903,132 @@ CONTAINS
       call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
       call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
       
+      ! leaf carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_leafc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! leaf carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_leafc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! leaf carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_leafc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! fine root carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_frootc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! fine root carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_frootc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! fine root carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_frootc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live stem carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livestemc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live stem carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livestemc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livestemc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead stem carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadstemc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead stem carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadstemc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadstemc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livecrootc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livecrootc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! live coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_livecrootc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadcrootc', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadcrootc_storage', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
+      ! dead coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'f_deadcrootc_xfer', nf90_double, (/xid,yid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval) )
+      
 
     ! end defination
       call sanity( nf90_enddef(ncid) )
@@ -1253,6 +1437,78 @@ CONTAINS
       call sanity( nf90_inq_varid(ncid,'f_srniln',varid) )
       call sanity( nf90_put_var(ncid,varid,f_srniln) )
  
+      ! leaf carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_leafc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_leafc) )
+ 
+      ! leaf carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_leafc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_leafc_storage) )
+ 
+      ! leaf carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_leafc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_leafc_xfer) )
+ 
+      ! fine root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_frootc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_frootc) )
+ 
+      ! fine root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_frootc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_frootc_storage) )
+ 
+      ! fine root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_frootc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_frootc_xfer) )
+ 
+      ! live stem carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livestemc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livestemc) )
+ 
+      ! live stem carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livestemc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livestemc_storage) )
+ 
+      ! live stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livestemc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livestemc_xfer) )
+ 
+      ! dead stem carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadstemc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadstemc) )
+ 
+      ! dead stem carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadstemc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadstemc_storage) )
+ 
+      ! dead stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadstemc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadstemc_xfer) )
+ 
+      ! live coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livecrootc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livecrootc) )
+ 
+      ! live coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livecrootc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livecrootc_storage) )
+ 
+      ! live coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_livecrootc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_livecrootc_xfer) )
+ 
+      ! dead coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadcrootc',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadcrootc) )
+ 
+      ! dead coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadcrootc_storage',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadcrootc_storage) )
+ 
+      ! dead coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'f_deadcrootc_xfer',varid) )
+      call sanity( nf90_put_var(ncid,varid,f_deadcrootc_xfer) )
+
       call sanity( nf90_close(ncid) )
 
    END SUBROUTINE writenetcdf
@@ -1284,7 +1540,7 @@ CONTAINS
       read(filename(    :i-1 ), *) casename
       read(filename(i+11:i+14), *) year
       read(filename(i+11:i+14), "(I4)") iyear
-      
+
       if( (mod(iyear,4)==0 .AND. mod(iyear,100)/=0) .OR. mod(iyear,400)==0 ) then
          months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
       else
@@ -2121,6 +2377,377 @@ CONTAINS
       call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
       call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
       
+      ! leaf carbon display pool  (gC/m2), LEAFC
+      call sanity( nf90_def_var(ncid, 'LEAFC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! leaf carbon storage pool  (gC/m2), LEAFC_STORAGE
+      call sanity( nf90_def_var(ncid, 'LEAFC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! leaf carbon transfer pool  (gC/m2), LEAFC_XFER
+      call sanity( nf90_def_var(ncid, 'LEAFC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root carbon display pool  (gC/m2), FROOTC
+      call sanity( nf90_def_var(ncid, 'FROOTC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root carbon storage pool  (gC/m2), FROOTC_STORAGE
+      call sanity( nf90_def_var(ncid, 'FROOTC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root carbon transfer pool  (gC/m2), FROOTC_XFER
+      call sanity( nf90_def_var(ncid, 'FROOTC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem carbon display pool  (gC/m2), LIVESTEMC
+      call sanity( nf90_def_var(ncid, 'LIVESTEMC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem carbon storage pool  (gC/m2), LIVESTEMC_STORAGE
+      call sanity( nf90_def_var(ncid, 'LIVESTEMC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem carbon transfer pool  (gC/m2), LIVESTEMC_XFER
+      call sanity( nf90_def_var(ncid, 'LIVESTEMC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem carbon display pool  (gC/m2), DEADSTEMC
+      call sanity( nf90_def_var(ncid, 'DEADSTEMC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem carbon storage pool  (gC/m2), DEADSTEMC_STORAGE
+      call sanity( nf90_def_var(ncid, 'DEADSTEMC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem carbon transfer pool  (gC/m2), DEADSTEMC_XFER
+      call sanity( nf90_def_var(ncid, 'DEADSTEMC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root carbon display pool  (gC/m2), LIVECROOTC
+      call sanity( nf90_def_var(ncid, 'LIVECROOTC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root carbon storage pool  (gC/m2), LIVECROOTC_STORAGE
+      call sanity( nf90_def_var(ncid, 'LIVECROOTC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root carbon transfer pool  (gC/m2), LIVECROOTC_XFER
+      call sanity( nf90_def_var(ncid, 'LIVECROOTC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root carbon display pool  (gC/m2), DEADCROOTC
+      call sanity( nf90_def_var(ncid, 'DEADCROOTC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root carbon storage pool  (gC/m2), DEADCROOTC_STORAGE
+      call sanity( nf90_def_var(ncid, 'DEADCROOTC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root carbon transfer pool  (gC/m2), DEADCROOTC_XFER
+      call sanity( nf90_def_var(ncid, 'DEADCROOTC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! leaf nitrogen display pool  (gN/m2), LEAFN
+      call sanity( nf90_def_var(ncid, 'LEAFN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! leaf nitrogen storage pool  (gN/m2), LEAFN_STORAGE
+      call sanity( nf90_def_var(ncid, 'LEAFN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! leaf nitrogen transfer pool  (gN/m2), LEAFN_XFER
+      call sanity( nf90_def_var(ncid, 'LEAFN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','leaf nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root nitrogen display pool  (gN/m2), FROOTN
+      call sanity( nf90_def_var(ncid, 'FROOTN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root nitrogen storage pool  (gN/m2), FROOTN_STORAGE
+      call sanity( nf90_def_var(ncid, 'FROOTN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! fine root nitrogen transfer pool  (gN/m2), FROOTN_XFER
+      call sanity( nf90_def_var(ncid, 'FROOTN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','fine root nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem nitrogen display pool  (gN/m2), LIVESTEMN
+      call sanity( nf90_def_var(ncid, 'LIVESTEMN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem nitrogen storage pool  (gN/m2), LIVESTEMN_STORAGE
+      call sanity( nf90_def_var(ncid, 'LIVESTEMN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live stem nitrogen transfer pool  (gN/m2), LIVESTEMN_XFER
+      call sanity( nf90_def_var(ncid, 'LIVESTEMN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live stem nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem nitrogen display pool  (gN/m2), DEADSTEMN
+      call sanity( nf90_def_var(ncid, 'DEADSTEMN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem nitrogen storage pool  (gN/m2), DEADSTEMN_STORAGE
+      call sanity( nf90_def_var(ncid, 'DEADSTEMN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead stem nitrogen transfer pool  (gN/m2), DEADSTEMN_XFER
+      call sanity( nf90_def_var(ncid, 'DEADSTEMN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead stem nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root nitrogen display pool  (gN/m2), LIVECROOTN
+      call sanity( nf90_def_var(ncid, 'LIVECROOTN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root nitrogen storage pool  (gN/m2), LIVECROOTN_STORAGE
+      call sanity( nf90_def_var(ncid, 'LIVECROOTN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! live coarse root nitrogen transfer pool  (gN/m2), LIVECROOTN_XFER
+      call sanity( nf90_def_var(ncid, 'LIVECROOTN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','live coarse root nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root nitrogen display pool  (gN/m2), DEADCROOTN
+      call sanity( nf90_def_var(ncid, 'DEADCROOTN', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root nitrogen display pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root nitrogen storage pool  (gN/m2), DEADCROOTN_STORAGE
+      call sanity( nf90_def_var(ncid, 'DEADCROOTN_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root nitrogen storage pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! dead coarse root nitrogen transfer pool  (gN/m2), DEADCROOTN_XFER
+      call sanity( nf90_def_var(ncid, 'DEADCROOTN_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','dead coarse root nitrogen transfer pool  (gN/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! gross primary productivity (gC/m2/s-1) GPP
+      call sanity( nf90_def_var(ncid, 'GPP', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','gross primary productivity (gC/m2/s)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2/s') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! gpp downregulation due to N limitation [-] DOWNREG
+      call sanity( nf90_def_var(ncid, 'DOWNREG', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','gpp downregulation due to N limitation [-]') )
+      call sanity( nf90_put_att(ncid, varid, 'units','0-1') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! litter 1 carbon in soil layers, (gC/m3), LITR1C_vr
+      call sanity( nf90_def_var(ncid, 'LITR1C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 1 carbon in soil layers, (gC/m3), LITR1C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! litter 2 carbon in soil layers, (gC/m3), LITR2C_vr
+      call sanity( nf90_def_var(ncid, 'LITR2C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 2 carbon in soil layers, (gC/m3), LITR2C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! litter 1 carbon in soil layers, (gC/m3), LITR3C_vr
+      call sanity( nf90_def_var(ncid, 'LITR3C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 3 carbon in soil layers, (gC/m3), LITR3C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! cwd carbon in soil layers, (gC/m3), CWDC_vr
+      call sanity( nf90_def_var(ncid, 'CWDC_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','CWD carbon in soil layers, (gC/m3), CWDC_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! soil 1 carbon in soil layers, (gC/m3), SOIL1C_vr
+      call sanity( nf90_def_var(ncid, 'SOIL1C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 1 carbon in soil layers, (gC/m3), SOIL1C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! soil 2 carbon in soil layers, (gC/m3), SOIL2C_vr
+      call sanity( nf90_def_var(ncid, 'SOIL2C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 2 carbon in soil layers, (gC/m3), SOIL2C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! soil 1 carbon in soil layers, (gC/m3), SOIL3C_vr
+      call sanity( nf90_def_var(ncid, 'SOIL3C_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 3 carbon in soil layers, (gC/m3), SOIL3C_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! litter 1 nitrogen in soil layers, (gN/m3), LITR1N_vr
+      call sanity( nf90_def_var(ncid, 'LITR1N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 1 nitrogen in soil layers, (gN/m3), LITR1N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! litter 2 nitrogen in soil layers, (gN/m3), LITR2N_vr
+      call sanity( nf90_def_var(ncid, 'LITR2N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 2 nitrogen in soil layers, (gN/m3), LITR2N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! litter 1 nitrogen in soil layers, (gN/m3), LITR3N_vr
+      call sanity( nf90_def_var(ncid, 'LITR3N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','litter 3 nitrogen in soil layers, (gN/m3), LITR3N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! cwd nitrogen in soil layers, (gN/m3), CWDN_vr
+      call sanity( nf90_def_var(ncid, 'CWDN_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','CWD nitrogen in soil layers, (gN/m3), CWDN_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! soil 1 nitrogen in soil layers, (gN/m3), SOIL1N_vr
+      call sanity( nf90_def_var(ncid, 'SOIL1N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 1 nitrogen in soil layers, (gN/m3), SOIL1N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! soil 2 nitrogen in soil layers, (gN/m3), SOIL2N_vr
+      call sanity( nf90_def_var(ncid, 'SOIL2N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 2 nitrogen in soil layers, (gN/m3), SOIL2N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! soil 3 nitrogen in soil layers, (gN/m3), SOIL3N_vr
+      call sanity( nf90_def_var(ncid, 'SOIL3N_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil 3 nitrogen in soil layers, (gN/m3), SOIL3N_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+      ! soil mineral nitrogen in soil layers, (gN/m3), SMINN_vr
+      call sanity( nf90_def_var(ncid, 'SMINN_vr', nf90_float, (/xid,yid,sslevid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','soil mineral nitrogen in soil layers, (gN/m3), SMINN_vr'))
+      call sanity( nf90_put_att(ncid, varid, 'units','gN/m3') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
     ! end defination
       call sanity( nf90_enddef(ncid) )
 
@@ -2738,19 +3365,20 @@ CONTAINS
       call sanity( nf90_inq_varid(ncid,'f_rib',varid) )
       call sanity( nf90_put_var(ncid,varid,vars) )
       
-      vars(1:max(lon_points/2,1),:) = f_fm((lon_points/2+1):lon_points,:)
-      vars((lon_points/2+1):lon_points,:) = f_fm(1:max(lon_points/2,1),:)
-      vars = vars(:,lat_points:1:-1)
-      ! integral of profile function for momentum
-      call sanity( nf90_inq_varid(ncid,'f_fm',varid) )
-      call sanity( nf90_put_var(ncid,varid,vars) )
+!      print*,f_fm((lon_points/2+1):lon_points,:)
+!      vars(1:max(lon_points/2,1),:) = f_fm((lon_points/2+1):lon_points,:)
+!      vars((lon_points/2+1):lon_points,:) = f_fm(1:max(lon_points/2,1),:)
+!      vars = vars(:,lat_points:1:-1)
+!      ! integral of profile function for momentum
+!      call sanity( nf90_inq_varid(ncid,'f_fm',varid) )
+!      call sanity( nf90_put_var(ncid,varid,vars) )
       
-      vars(1:max(lon_points/2,1),:) = f_fh((lon_points/2+1):lon_points,:)
-      vars((lon_points/2+1):lon_points,:) = f_fh(1:max(lon_points/2,1),:)
-      vars = vars(:,lat_points:1:-1)
-      ! integral of profile function for heat
-      call sanity( nf90_inq_varid(ncid,'f_fh',varid) )
-      call sanity( nf90_put_var(ncid,varid,vars) )
+!      vars(1:max(lon_points/2,1),:) = f_fh((lon_points/2+1):lon_points,:)
+!      vars((lon_points/2+1):lon_points,:) = f_fh(1:max(lon_points/2,1),:)
+!      vars = vars(:,lat_points:1:-1)
+!      ! integral of profile function for heat
+!      call sanity( nf90_inq_varid(ncid,'f_fh',varid) )
+!      call sanity( nf90_put_var(ncid,varid,vars) )
       
       vars(1:max(lon_points/2,1),:) = f_fq((lon_points/2+1):lon_points,:)
       vars((lon_points/2+1):lon_points,:) = f_fq(1:max(lon_points/2,1),:)
@@ -2972,6 +3600,407 @@ CONTAINS
       call sanity( nf90_inq_varid(ncid,'FSRNILN',varid) )
       call sanity( nf90_put_var(ncid,varid,vars) )
       
+      vars(1:max(lon_points/2,1),:) = f_leafc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_leafc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_leafc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_leafn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_leafn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_leafn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_leafn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! leaf carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LEAFN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_frootn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_frootn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! fine root carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'FROOTN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livestemn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livestemn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live stem carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVESTEMN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadstemn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadstemn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead stem carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADSTEMN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_livecrootn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_livecrootn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! live coarse root carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'LIVECROOTN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootn((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootn(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon display pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTN',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootn_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootn_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon storage pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTN_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_deadcrootn_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_deadcrootn_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! dead coarse root carbon transfer pool  (gN/m2)
+      call sanity( nf90_inq_varid(ncid,'DEADCROOTN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_gpp((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_gpp(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! gross primary productivity  (gC/m2/s)
+      call sanity( nf90_inq_varid(ncid,'GPP',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_downreg((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_downreg(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! gpp downregulation due to N limitation (gC/m2/s)
+      call sanity( nf90_inq_varid(ncid,'DOWNREG',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      ! litter 1 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr1c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr1c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR1C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! litter 2 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr2c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr2c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR2C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! litter 3 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr3c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr3c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR3C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! cwd carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_cwdc(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_cwdc(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'CWDC_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 1 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil1c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil1c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL1C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 2 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil2c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil2c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL2C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 3 carbon in soil layers [gC/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil3c(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil3c(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL3C_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! litter 1 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr1n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr1n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR1N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! litter 2 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr2n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr2n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR2N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! litter 3 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_litr3n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_litr3n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'LITR3N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! cwd nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_cwdn(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_cwdn(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'CWDN_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 1 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil1n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil1n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL1N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 2 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil2n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil2n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL2N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil 3 nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_soil3n(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_soil3n(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SOIL3N_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
+      ! soil mineral nitrogen in soil layers [gN/m3]
+      do i = 1, nl_soil
+         tmp1(1:max(lon_points/2,1),:,i) = f_sminn(i,(lon_points/2+1):lon_points,:)
+         tmp1((lon_points/2+1):lon_points,:,i) = f_sminn(i,1:max(lon_points/2,1),:)
+      end do
+      tmp1 = tmp1(:,lat_points:1:-1,:)
+      call sanity( nf90_inq_varid(ncid,'SMINN_vr',varid) )
+      call sanity( nf90_put_var(ncid,varid,tmp1) )
+
       call sanity( nf90_close(ncid) )
 
    END SUBROUTINE writenetcdf_ncar

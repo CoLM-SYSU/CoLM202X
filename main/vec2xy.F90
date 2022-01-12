@@ -17,6 +17,7 @@ use MOD_1D_Forcing
 use MOD_2D_Forcing
 use MOD_1D_Fluxes
 use MOD_2D_Fluxes
+use MOD_PFTimeVars
 use FRICTION_VELOCITY
 use omp_lib
 
@@ -26,6 +27,7 @@ integer, INTENT(in) :: lon_points
 integer, INTENT(in) :: lat_points
 integer, INTENT(inout) :: nac
 integer, INTENT(inout) :: nac_ln(lon_points,lat_points)
+real(r8),intent(inout) :: a_rnof(lon_points,lat_points)  ! total runoff [mm/s]
       
 !---------------------------------------------------------------------
 real(r8) a_xy_us  (lon_points,lat_points)  ! wind in eastward direction [m/s]
@@ -60,7 +62,6 @@ real(r8) a_rnet   (lon_points,lat_points)  ! net radiation [W/m2]
 real(r8) a_xerr   (lon_points,lat_points)  ! the error of water banace [mm/s]
 real(r8) a_zerr   (lon_points,lat_points)  ! the error of energy balance [W/m2]
 real(r8) a_rsur   (lon_points,lat_points)  ! surface runoff [mm/s]
-real(r8) a_rnof   (lon_points,lat_points)  ! total runoff [mm/s]
 real(r8) a_qintr  (lon_points,lat_points)  ! interception [mm/s]
 real(r8) a_qinfl  (lon_points,lat_points)  ! inflitration [mm/s]
 real(r8) a_qdrip  (lon_points,lat_points)  ! throughfall [mm/s]
@@ -134,6 +135,65 @@ real(r8) a_srvdln (lon_points,lat_points) ! reflected direct beam vis solar radi
 real(r8) a_srviln (lon_points,lat_points) ! reflected diffuse beam vis solar radiation at local noon (W/m2)
 real(r8) a_srndln (lon_points,lat_points) ! reflected direct beam nir solar radiation at local noon (W/m2)
 real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar radiation at local noon (W/m2)
+
+ !----------------bgc varaibles----------------------------------------
+ real(r8) a_leafc             (lon_points,lat_points)  ! leaf carbon display pool  (gC/m2)
+ real(r8) a_leafc_storage     (lon_points,lat_points)  ! leaf carbon storage pool  (gC/m2)
+ real(r8) a_leafc_xfer        (lon_points,lat_points)  ! leaf carbon transfer pool (gC/m2)
+ real(r8) a_frootc            (lon_points,lat_points)  ! fine root carbon display pool  (gC/m2)
+ real(r8) a_frootc_storage    (lon_points,lat_points)  ! fine root carbon storage pool  (gC/m2)
+ real(r8) a_frootc_xfer       (lon_points,lat_points)  ! fine root carbon transfer pool (gC/m2)
+ real(r8) a_livestemc         (lon_points,lat_points)  ! live stem carbon display pool  (gC/m2)
+ real(r8) a_livestemc_storage (lon_points,lat_points)  ! live stem carbon storage pool  (gC/m2)
+ real(r8) a_livestemc_xfer    (lon_points,lat_points)  ! live stem carbon transfer pool (gC/m2)
+ real(r8) a_deadstemc         (lon_points,lat_points)  ! dead stem carbon display pool  (gC/m2)
+ real(r8) a_deadstemc_storage (lon_points,lat_points)  ! dead stem carbon storage pool  (gC/m2)
+ real(r8) a_deadstemc_xfer    (lon_points,lat_points)  ! dead stem carbon transfer pool (gC/m2)
+ real(r8) a_livecrootc        (lon_points,lat_points)  ! live coarse root carbon display pool  (gC/m2)
+ real(r8) a_livecrootc_storage(lon_points,lat_points)  ! live coarse root carbon storage pool  (gC/m2)
+ real(r8) a_livecrootc_xfer   (lon_points,lat_points)  ! live coarse root carbon transfer pool (gC/m2)
+ real(r8) a_deadcrootc        (lon_points,lat_points)  ! dead coarse root carbon display pool  (gC/m2)
+ real(r8) a_deadcrootc_storage(lon_points,lat_points)  ! dead coarse root carbon storage pool  (gC/m2)
+ real(r8) a_deadcrootc_xfer   (lon_points,lat_points)  ! dead coarse root carbon transfer pool (gC/m2)
+ real(r8) a_leafn             (lon_points,lat_points)  ! leaf nitrogen display pool  (gC/m2)
+ real(r8) a_leafn_storage     (lon_points,lat_points)  ! leaf nitrogen storage pool  (gC/m2)
+ real(r8) a_leafn_xfer        (lon_points,lat_points)  ! leaf nitrogen transfer pool (gC/m2)
+ real(r8) a_frootn            (lon_points,lat_points)  ! fine root nitrogen display pool  (gC/m2)
+ real(r8) a_frootn_storage    (lon_points,lat_points)  ! fine root nitrogen storage pool  (gC/m2)
+ real(r8) a_frootn_xfer       (lon_points,lat_points)  ! fine root nitrogen transfer pool (gC/m2)
+ real(r8) a_livestemn         (lon_points,lat_points)  ! live stem nitrogen display pool  (gC/m2)
+ real(r8) a_livestemn_storage (lon_points,lat_points)  ! live stem nitrogen storage pool  (gC/m2)
+ real(r8) a_livestemn_xfer    (lon_points,lat_points)  ! live stem nitrogen transfer pool (gC/m2)
+ real(r8) a_deadstemn         (lon_points,lat_points)  ! dead stem nitrogen display pool  (gC/m2)
+ real(r8) a_deadstemn_storage (lon_points,lat_points)  ! dead stem nitrogen storage pool  (gC/m2)
+ real(r8) a_deadstemn_xfer    (lon_points,lat_points)  ! dead stem nitrogen transfer pool (gC/m2)
+ real(r8) a_livecrootn        (lon_points,lat_points)  ! live coarse root nitrogen display pool  (gC/m2)
+ real(r8) a_livecrootn_storage(lon_points,lat_points)  ! live coarse root nitrogen storage pool  (gC/m2)
+ real(r8) a_livecrootn_xfer   (lon_points,lat_points)  ! live coarse root nitrogen transfer pool (gC/m2)
+ real(r8) a_deadcrootn        (lon_points,lat_points)  ! dead coarse root nitrogen display pool  (gC/m2)
+ real(r8) a_deadcrootn_storage(lon_points,lat_points)  ! dead coarse root nitrogen storage pool  (gC/m2)
+ real(r8) a_deadcrootn_xfer   (lon_points,lat_points)  ! dead coarse root nitrogen transfer pool (gC/m2)
+ 
+ real(r8) a_gpp               (lon_points,lat_points)  ! gpp
+ real(r8) a_downreg           (lon_points,lat_points)  ! gpp downregulation due to N limitation
+
+ real(r8) a_litr1c            (1:nl_soil,lon_points,lat_points) ! litter 1 carbon pool [gC/m2]
+ real(r8) a_litr2c            (1:nl_soil,lon_points,lat_points) ! litter 2 carbon pool [gC/m2]
+ real(r8) a_litr3c            (1:nl_soil,lon_points,lat_points) ! litter 3 carbon pool [gC/m2]
+ real(r8) a_soil1c            (1:nl_soil,lon_points,lat_points) ! soil 1 carbon pool [gC/m2]
+ real(r8) a_soil2c            (1:nl_soil,lon_points,lat_points) ! soil 2 carbon pool [gC/m2]
+ real(r8) a_soil3c            (1:nl_soil,lon_points,lat_points) ! soil 3 carbon pool [gC/m2]
+ real(r8) a_cwdc              (1:nl_soil,lon_points,lat_points) ! coarse woody debris carbon pool [gC/m2]
+
+ real(r8) a_litr1n            (1:nl_soil,lon_points,lat_points) ! litter 1 nitrogen pool [gN/m2]
+ real(r8) a_litr2n            (1:nl_soil,lon_points,lat_points) ! litter 2 nitrogen pool [gN/m2]
+ real(r8) a_litr3n            (1:nl_soil,lon_points,lat_points) ! litter 3 nitrogen pool [gN/m2]
+ real(r8) a_soil1n            (1:nl_soil,lon_points,lat_points) ! soil 1 nitrogen pool [gN/m2]
+ real(r8) a_soil2n            (1:nl_soil,lon_points,lat_points) ! soil 2 nitrogen pool [gN/m2]
+ real(r8) a_soil3n            (1:nl_soil,lon_points,lat_points) ! soil 3 nitrogen pool [gN/m2]
+ real(r8) a_cwdn              (1:nl_soil,lon_points,lat_points) ! coarse woody debris nitrogen pool [gN/m2]
+ real(r8) a_sminn             (1:nl_soil,lon_points,lat_points) ! soil mineral nitrogen pool [gN/m2]
+
 
 !---------------------------------------------------------------------
 ! local variables
@@ -212,6 +272,46 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
       a_qref   (:,:) = 0.
       a_xy_rain(:,:) = 0.
       a_xy_snow(:,:) = 0.
+
+      a_leafc             (:,:) = 0.
+      a_leafc_storage     (:,:) = 0.
+      a_leafc_xfer        (:,:) = 0.
+      a_frootc            (:,:) = 0.
+      a_frootc_storage    (:,:) = 0.
+      a_frootc_xfer       (:,:) = 0.
+      a_livestemc         (:,:) = 0.
+      a_livestemc_storage (:,:) = 0.
+      a_livestemc_xfer    (:,:) = 0.
+      a_deadstemc         (:,:) = 0.
+      a_deadstemc_storage (:,:) = 0.
+      a_deadstemc_xfer    (:,:) = 0.
+      a_livecrootc        (:,:) = 0.
+      a_livecrootc_storage(:,:) = 0.
+      a_livecrootc_xfer   (:,:) = 0.
+      a_deadcrootc        (:,:) = 0.
+      a_deadcrootc_storage(:,:) = 0.
+      a_deadcrootc_xfer   (:,:) = 0.
+      a_leafn             (:,:) = 0.
+      a_leafn_storage     (:,:) = 0.
+      a_leafn_xfer        (:,:) = 0.
+      a_frootn            (:,:) = 0.
+      a_frootn_storage    (:,:) = 0.
+      a_frootn_xfer       (:,:) = 0.
+      a_livestemn         (:,:) = 0.
+      a_livestemn_storage (:,:) = 0.
+      a_livestemn_xfer    (:,:) = 0.
+      a_deadstemn         (:,:) = 0.
+      a_deadstemn_storage (:,:) = 0.
+      a_deadstemn_xfer    (:,:) = 0.
+      a_livecrootn        (:,:) = 0.
+      a_livecrootn_storage(:,:) = 0.
+      a_livecrootn_xfer   (:,:) = 0.
+      a_deadcrootn        (:,:) = 0.
+      a_deadcrootn_storage(:,:) = 0.
+      a_deadcrootn_xfer   (:,:) = 0.
+
+      a_gpp               (:,:) = 0.
+      a_downreg           (:,:) = 0.
 
       a_sr     (:,:) = spval
       a_solvd  (:,:) = spval
@@ -294,6 +394,46 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_qref   (i,j) = a_qref   (i,j) + patchfrac(np)*qref   (np)
                a_xy_rain(i,j) = a_xy_rain(i,j) + patchfrac(np)*forc_rain(np)
                a_xy_snow(i,j) = a_xy_snow(i,j) + patchfrac(np)*forc_snow(np)
+
+               a_leafc             (i,j) = a_leafc             (i,j) + patchfrac(nP)*leafc(np)
+               a_leafc_storage     (i,j) = a_leafc_storage     (i,j) + patchfrac(nP)*leafc_storage(np)
+               a_leafc_xfer        (i,j) = a_leafc_xfer        (i,j) + patchfrac(nP)*leafc_xfer(np)
+               a_frootc            (i,j) = a_frootc            (i,j) + patchfrac(nP)*frootc(np)
+               a_frootc_storage    (i,j) = a_frootc_storage    (i,j) + patchfrac(nP)*frootc_storage(np)
+               a_frootc_xfer       (i,j) = a_frootc_xfer       (i,j) + patchfrac(nP)*frootc_xfer(np)
+               a_livestemc         (i,j) = a_livestemc         (i,j) + patchfrac(nP)*livestemc(np)
+               a_livestemc_storage (i,j) = a_livestemc_storage (i,j) + patchfrac(nP)*livestemc_storage(np)
+               a_livestemc_xfer    (i,j) = a_livestemc_xfer    (i,j) + patchfrac(nP)*livestemc_xfer(np)
+               a_deadstemc         (i,j) = a_deadstemc         (i,j) + patchfrac(nP)*deadstemc(np)
+               a_deadstemc_storage (i,j) = a_deadstemc_storage (i,j) + patchfrac(nP)*deadstemc_storage(np)
+               a_deadstemc_xfer    (i,j) = a_deadstemc_xfer    (i,j) + patchfrac(nP)*deadstemc_xfer(np)
+               a_livecrootc        (i,j) = a_livecrootc        (i,j) + patchfrac(nP)*livecrootc(np)
+               a_livecrootc_storage(i,j) = a_livecrootc_storage(i,j) + patchfrac(nP)*livecrootc_storage(np)
+               a_livecrootc_xfer   (i,j) = a_livecrootc_xfer   (i,j) + patchfrac(nP)*livecrootc_xfer(np)
+               a_deadcrootc        (i,j) = a_deadcrootc        (i,j) + patchfrac(nP)*deadcrootc(np)
+               a_deadcrootc_storage(i,j) = a_deadcrootc_storage(i,j) + patchfrac(nP)*deadcrootc_storage(np)
+               a_deadcrootc_xfer   (i,j) = a_deadcrootc_xfer   (i,j) + patchfrac(nP)*deadcrootc_xfer(np)
+               a_leafn             (i,j) = a_leafn             (i,j) + patchfrac(nP)*leafn(np)
+               a_leafn_storage     (i,j) = a_leafn_storage     (i,j) + patchfrac(nP)*leafn_storage(np)
+               a_leafn_xfer        (i,j) = a_leafn_xfer        (i,j) + patchfrac(nP)*leafn_xfer(np)
+               a_frootn            (i,j) = a_frootn            (i,j) + patchfrac(nP)*frootn(np)
+               a_frootn_storage    (i,j) = a_frootn_storage    (i,j) + patchfrac(nP)*frootn_storage(np)
+               a_frootn_xfer       (i,j) = a_frootn_xfer       (i,j) + patchfrac(nP)*frootn_xfer(np)
+               a_livestemn         (i,j) = a_livestemn         (i,j) + patchfrac(nP)*livestemn(np)
+               a_livestemn_storage (i,j) = a_livestemn_storage (i,j) + patchfrac(nP)*livestemn_storage(np)
+               a_livestemn_xfer    (i,j) = a_livestemn_xfer    (i,j) + patchfrac(nP)*livestemn_xfer(np)
+               a_deadstemn         (i,j) = a_deadstemn         (i,j) + patchfrac(nP)*deadstemn(np)
+               a_deadstemn_storage (i,j) = a_deadstemn_storage (i,j) + patchfrac(nP)*deadstemn_storage(np)
+               a_deadstemn_xfer    (i,j) = a_deadstemn_xfer    (i,j) + patchfrac(nP)*deadstemn_xfer(np)
+               a_livecrootn        (i,j) = a_livecrootn        (i,j) + patchfrac(nP)*livecrootn(np)
+               a_livecrootn_storage(i,j) = a_livecrootn_storage(i,j) + patchfrac(nP)*livecrootn_storage(np)
+               a_livecrootn_xfer   (i,j) = a_livecrootn_xfer   (i,j) + patchfrac(nP)*livecrootn_xfer(np)
+               a_deadcrootn        (i,j) = a_deadcrootn        (i,j) + patchfrac(nP)*deadcrootn(np)
+               a_deadcrootn_storage(i,j) = a_deadcrootn_storage(i,j) + patchfrac(nP)*deadcrootn_storage(np)
+               a_deadcrootn_xfer   (i,j) = a_deadcrootn_xfer   (i,j) + patchfrac(nP)*deadcrootn_xfer(np)
+
+               a_gpp               (i,j) = a_gpp               (i,j) + patchfrac(nP)*gpp(np)
+               a_downreg           (i,j) = a_downreg           (i,j) + patchfrac(nP)*downreg(np)
 
                ! radiation fluxes
                call acc(sr     (np), patchfrac(np), a_sr     (i,j))
@@ -386,6 +526,46 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_xy_rain(i,j) = a_xy_rain(i,j) / sumwt(i,j)
                a_xy_snow(i,j) = a_xy_snow(i,j) / sumwt(i,j)
                
+               a_leafc             (i,j) = a_leafc             (i,j) / sumwt(i,j)
+               a_leafc_storage     (i,j) = a_leafc_storage     (i,j) / sumwt(i,j)
+               a_leafc_xfer        (i,j) = a_leafc_xfer        (i,j) / sumwt(i,j)
+               a_frootc            (i,j) = a_frootc            (i,j) / sumwt(i,j)
+               a_frootc_storage    (i,j) = a_frootc_storage    (i,j) / sumwt(i,j)
+               a_frootc_xfer       (i,j) = a_frootc_xfer       (i,j) / sumwt(i,j)
+               a_livestemc         (i,j) = a_livestemc         (i,j) / sumwt(i,j)
+               a_livestemc_storage (i,j) = a_livestemc_storage (i,j) / sumwt(i,j)
+               a_livestemc_xfer    (i,j) = a_livestemc_xfer    (i,j) / sumwt(i,j)
+               a_deadstemc         (i,j) = a_deadstemc         (i,j) / sumwt(i,j)
+               a_deadstemc_storage (i,j) = a_deadstemc_storage (i,j) / sumwt(i,j)
+               a_deadstemc_xfer    (i,j) = a_deadstemc_xfer    (i,j) / sumwt(i,j)
+               a_livecrootc        (i,j) = a_livecrootc        (i,j) / sumwt(i,j)
+               a_livecrootc_storage(i,j) = a_livecrootc_storage(i,j) / sumwt(i,j)
+               a_livecrootc_xfer   (i,j) = a_livecrootc_xfer   (i,j) / sumwt(i,j)
+               a_deadcrootc        (i,j) = a_deadcrootc        (i,j) / sumwt(i,j)
+               a_deadcrootc_storage(i,j) = a_deadcrootc_storage(i,j) / sumwt(i,j)
+               a_deadcrootc_xfer   (i,j) = a_deadcrootc_xfer   (i,j) / sumwt(i,j)
+               a_leafn             (i,j) = a_leafn             (i,j) / sumwt(i,j)
+               a_leafn_storage     (i,j) = a_leafn_storage     (i,j) / sumwt(i,j)
+               a_leafn_xfer        (i,j) = a_leafn_xfer        (i,j) / sumwt(i,j)
+               a_frootn            (i,j) = a_frootn            (i,j) / sumwt(i,j)
+               a_frootn_storage    (i,j) = a_frootn_storage    (i,j) / sumwt(i,j)
+               a_frootn_xfer       (i,j) = a_frootn_xfer       (i,j) / sumwt(i,j)
+               a_livestemn         (i,j) = a_livestemn         (i,j) / sumwt(i,j)
+               a_livestemn_storage (i,j) = a_livestemn_storage (i,j) / sumwt(i,j)
+               a_livestemn_xfer    (i,j) = a_livestemn_xfer    (i,j) / sumwt(i,j)
+               a_deadstemn         (i,j) = a_deadstemn         (i,j) / sumwt(i,j)
+               a_deadstemn_storage (i,j) = a_deadstemn_storage (i,j) / sumwt(i,j)
+               a_deadstemn_xfer    (i,j) = a_deadstemn_xfer    (i,j) / sumwt(i,j)
+               a_livecrootn        (i,j) = a_livecrootn        (i,j) / sumwt(i,j)
+               a_livecrootn_storage(i,j) = a_livecrootn_storage(i,j) / sumwt(i,j)
+               a_livecrootn_xfer   (i,j) = a_livecrootn_xfer   (i,j) / sumwt(i,j)
+               a_deadcrootn        (i,j) = a_deadcrootn        (i,j) / sumwt(i,j)
+               a_deadcrootn_storage(i,j) = a_deadcrootn_storage(i,j) / sumwt(i,j)
+               a_deadcrootn_xfer   (i,j) = a_deadcrootn_xfer   (i,j) / sumwt(i,j)
+
+               a_gpp               (i,j) = a_gpp               (i,j) / sumwt(i,j)
+               a_downreg           (i,j) = a_downreg           (i,j) / sumwt(i,j)
+
                if (a_sr     (i,j) /= spval) a_sr     (i,j) = a_sr     (i,j) / sumwt(i,j)
                if (a_solvd  (i,j) /= spval) a_solvd  (i,j) = a_solvd  (i,j) / sumwt(i,j)
                if (a_solvi  (i,j) /= spval) a_solvi  (i,j) = a_solvi  (i,j) / sumwt(i,j)
@@ -462,6 +642,46 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_xy_rain(i,j) = spval
                a_xy_snow(i,j) = spval
 
+               a_leafc             (i,j) = spval
+               a_leafc_storage     (i,j) = spval
+               a_leafc_xfer        (i,j) = spval
+               a_frootc            (i,j) = spval
+               a_frootc_storage    (i,j) = spval
+               a_frootc_xfer       (i,j) = spval
+               a_livestemc         (i,j) = spval
+               a_livestemc_storage (i,j) = spval
+               a_livestemc_xfer    (i,j) = spval
+               a_deadstemc         (i,j) = spval
+               a_deadstemc_storage (i,j) = spval
+               a_deadstemc_xfer    (i,j) = spval
+               a_livecrootc        (i,j) = spval
+               a_livecrootc_storage(i,j) = spval
+               a_livecrootc_xfer   (i,j) = spval
+               a_deadcrootc        (i,j) = spval
+               a_deadcrootc_storage(i,j) = spval
+               a_deadcrootc_xfer   (i,j) = spval
+               a_leafn             (i,j) = spval
+               a_leafn_storage     (i,j) = spval
+               a_leafn_xfer        (i,j) = spval
+               a_frootn            (i,j) = spval
+               a_frootn_storage    (i,j) = spval
+               a_frootn_xfer       (i,j) = spval
+               a_livestemn         (i,j) = spval
+               a_livestemn_storage (i,j) = spval
+               a_livestemn_xfer    (i,j) = spval
+               a_deadstemn         (i,j) = spval
+               a_deadstemn_storage (i,j) = spval
+               a_deadstemn_xfer    (i,j) = spval
+               a_livecrootn        (i,j) = spval
+               a_livecrootn_storage(i,j) = spval
+               a_livecrootn_xfer   (i,j) = spval
+               a_deadcrootn        (i,j) = spval
+               a_deadcrootn_storage(i,j) = spval
+               a_deadcrootn_xfer   (i,j) = spval
+
+               a_gpp               (i,j) = spval
+               a_downreg           (i,j) = spval
+
                a_sr     (i,j) = spval
                a_solvd  (i,j) = spval
                a_solvi  (i,j) = spval
@@ -500,6 +720,22 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
       a_t_soisno   (:,:,:) = 0.
       a_wliq_soisno(:,:,:) = 0.
       a_wice_soisno(:,:,:) = 0.
+      a_litr1c     (:,:,:) = 0.
+      a_litr2c     (:,:,:) = 0.
+      a_litr3c     (:,:,:) = 0.
+      a_cwdc       (:,:,:) = 0.
+      a_soil1c     (:,:,:) = 0.
+      a_soil2c     (:,:,:) = 0.
+      a_soil3c     (:,:,:) = 0.
+      a_litr1n     (:,:,:) = 0.
+      a_litr2n     (:,:,:) = 0.
+      a_litr3n     (:,:,:) = 0.
+      a_cwdn       (:,:,:) = 0.
+      a_soil1n     (:,:,:) = 0.
+      a_soil2n     (:,:,:) = 0.
+      a_soil3n     (:,:,:) = 0.
+      a_sminn      (:,:,:) = 0.
+
 
 #ifdef OPENMP
 !$OMP PARALLEL DO NUM_THREADS(OPENMP) PRIVATE(i,j,np)
@@ -517,6 +753,37 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                      + patchfrac(np)*wliq_soisno(maxsnl+1:nl_soil,np)
                   a_wice_soisno(maxsnl+1:nl_soil,i,j) = a_wice_soisno(maxsnl+1:nl_soil,i,j) &
                      + patchfrac(np)*wice_soisno(maxsnl+1:nl_soil,np)
+                  a_litr1c     (1:nl_soil,i,j)        = a_litr1c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_met_lit,np)
+                  a_litr2c     (1:nl_soil,i,j)        = a_litr2c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_cel_lit,np)
+                  a_litr3c     (1:nl_soil,i,j)        = a_litr3c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_lig_lit,np)
+                  a_cwdc       (1:nl_soil,i,j)        = a_cwdc       (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_cwd,np)
+                  a_soil1c     (1:nl_soil,i,j)        = a_soil1c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_soil1,np)
+                  a_soil2c     (1:nl_soil,i,j)        = a_soil2c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_soil2,np)
+                  a_soil3c     (1:nl_soil,i,j)        = a_soil3c     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_cpools_vr(1:nl_soil,i_soil3,np)
+                  a_litr1n     (1:nl_soil,i,j)        = a_litr1n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_met_lit,np)
+                  a_litr2n     (1:nl_soil,i,j)        = a_litr2n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_cel_lit,np)
+                  a_litr3n     (1:nl_soil,i,j)        = a_litr3n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_lig_lit,np)
+                  a_cwdn       (1:nl_soil,i,j)        = a_cwdn       (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_cwd,np)
+                  a_soil1n     (1:nl_soil,i,j)        = a_soil1n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_soil1,np)
+                  a_soil2n     (1:nl_soil,i,j)        = a_soil2n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_soil2,np)
+                  a_soil3n     (1:nl_soil,i,j)        = a_soil3n     (1:nl_soil,i,j) &
+                     + patchfrac(np)*decomp_npools_vr(1:nl_soil,i_soil3,np)
+                  a_sminn      (1:nl_soil,i,j)        = a_sminn      (1:nl_soil,i,j) &
+                     + patchfrac(np)*sminn_vr(1:nl_soil,np)
+
                endif
             ENDDO
 
@@ -541,10 +808,44 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                   a_wliq_soisno(l,i,j) = a_wliq_soisno(l,i,j) / sumwt(i,j)
                   a_wice_soisno(l,i,j) = a_wice_soisno(l,i,j) / sumwt(i,j)
                enddo
+               do l = 1, nl_soil
+                  a_litr1c     (l,i,j) = a_litr1c     (l,i,j) / sumwt(i,j)
+                  a_litr2c     (l,i,j) = a_litr2c     (l,i,j) / sumwt(i,j)
+                  a_litr3c     (l,i,j) = a_litr3c     (l,i,j) / sumwt(i,j)
+                  a_cwdc       (l,i,j) = a_cwdc       (l,i,j) / sumwt(i,j)
+                  a_soil1c     (l,i,j) = a_soil1c     (l,i,j) / sumwt(i,j)
+                  a_soil2c     (l,i,j) = a_soil2c     (l,i,j) / sumwt(i,j)
+                  a_soil3c     (l,i,j) = a_soil3c     (l,i,j) / sumwt(i,j)
+                  a_litr1n     (l,i,j) = a_litr1n     (l,i,j) / sumwt(i,j)
+                  a_litr2n     (l,i,j) = a_litr2n     (l,i,j) / sumwt(i,j)
+                  a_litr3n     (l,i,j) = a_litr3n     (l,i,j) / sumwt(i,j)
+                  a_cwdn       (l,i,j) = a_cwdn       (l,i,j) / sumwt(i,j)
+                  a_soil1n     (l,i,j) = a_soil1n     (l,i,j) / sumwt(i,j)
+                  a_soil2n     (l,i,j) = a_soil2n     (l,i,j) / sumwt(i,j)
+                  a_soil3n     (l,i,j) = a_soil3n     (l,i,j) / sumwt(i,j)
+                  a_sminn      (l,i,j) = a_sminn      (l,i,j) / sumwt(i,j)
+               end do
+
             else
                a_t_soisno   (maxsnl+1:nl_soil,i,j) = spval 
                a_wliq_soisno(maxsnl+1:nl_soil,i,j) = spval 
                a_wice_soisno(maxsnl+1:nl_soil,i,j) = spval 
+               a_litr1c     (1:nl_soil,i,j)        = spval
+               a_litr2c     (1:nl_soil,i,j)        = spval
+               a_litr3c     (1:nl_soil,i,j)        = spval
+               a_cwdc       (1:nl_soil,i,j)        = spval
+               a_soil1c     (1:nl_soil,i,j)        = spval
+               a_soil2c     (1:nl_soil,i,j)        = spval
+               a_soil3c     (1:nl_soil,i,j)        = spval
+               a_litr1n     (1:nl_soil,i,j)        = spval
+               a_litr2n     (1:nl_soil,i,j)        = spval
+               a_litr3n     (1:nl_soil,i,j)        = spval
+               a_cwdn       (1:nl_soil,i,j)        = spval
+               a_soil1n     (1:nl_soil,i,j)        = spval
+               a_soil2n     (1:nl_soil,i,j)        = spval
+               a_soil3n     (1:nl_soil,i,j)        = spval
+               a_sminn      (1:nl_soil,i,j)        = spval
+
             endif
 
          ENDDO
@@ -864,6 +1165,46 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
             call acc(a_xy_rain(i,j), 1., f_xy_rain(i,j))
             call acc(a_xy_snow(i,j), 1., f_xy_snow(i,j))
 
+            call acc(a_leafc              (i,j), 1., f_leafc               (i,j))
+            call acc(a_leafc_storage      (i,j), 1., f_leafc_storage       (i,j))
+            call acc(a_leafc_xfer         (i,j), 1., f_leafc_xfer          (i,j))
+            call acc(a_frootc             (i,j), 1., f_frootc              (i,j))
+            call acc(a_frootc_storage     (i,j), 1., f_frootc_storage      (i,j))
+            call acc(a_frootc_xfer        (i,j), 1., f_frootc_xfer         (i,j))
+            call acc(a_livestemc          (i,j), 1., f_livestemc           (i,j))
+            call acc(a_livestemc_storage  (i,j), 1., f_livestemc_storage   (i,j))
+            call acc(a_livestemc_xfer     (i,j), 1., f_livestemc_xfer      (i,j))
+            call acc(a_deadstemc          (i,j), 1., f_deadstemc           (i,j))
+            call acc(a_deadstemc_storage  (i,j), 1., f_deadstemc_storage   (i,j))
+            call acc(a_deadstemc_xfer     (i,j), 1., f_deadstemc_xfer      (i,j))
+            call acc(a_livecrootc         (i,j), 1., f_livecrootc          (i,j))
+            call acc(a_livecrootc_storage (i,j), 1., f_livecrootc_storage  (i,j))
+            call acc(a_livecrootc_xfer    (i,j), 1., f_livecrootc_xfer     (i,j))
+            call acc(a_deadcrootc         (i,j), 1., f_deadcrootc          (i,j))
+            call acc(a_deadcrootc_storage (i,j), 1., f_deadcrootc_storage  (i,j))
+            call acc(a_deadcrootc_xfer    (i,j), 1., f_deadcrootc_xfer     (i,j))
+            call acc(a_leafn              (i,j), 1., f_leafn               (i,j))
+            call acc(a_leafn_storage      (i,j), 1., f_leafn_storage       (i,j))
+            call acc(a_leafn_xfer         (i,j), 1., f_leafn_xfer          (i,j))
+            call acc(a_frootn             (i,j), 1., f_frootn              (i,j))
+            call acc(a_frootn_storage     (i,j), 1., f_frootn_storage      (i,j))
+            call acc(a_frootn_xfer        (i,j), 1., f_frootn_xfer         (i,j))
+            call acc(a_livestemn          (i,j), 1., f_livestemn           (i,j))
+            call acc(a_livestemn_storage  (i,j), 1., f_livestemn_storage   (i,j))
+            call acc(a_livestemn_xfer     (i,j), 1., f_livestemn_xfer      (i,j))
+            call acc(a_deadstemn          (i,j), 1., f_deadstemn           (i,j))
+            call acc(a_deadstemn_storage  (i,j), 1., f_deadstemn_storage   (i,j))
+            call acc(a_deadstemn_xfer     (i,j), 1., f_deadstemn_xfer      (i,j))
+            call acc(a_livecrootn         (i,j), 1., f_livecrootn          (i,j))
+            call acc(a_livecrootn_storage (i,j), 1., f_livecrootn_storage  (i,j))
+            call acc(a_livecrootn_xfer    (i,j), 1., f_livecrootn_xfer     (i,j))
+            call acc(a_deadcrootn         (i,j), 1., f_deadcrootn          (i,j))
+            call acc(a_deadcrootn_storage (i,j), 1., f_deadcrootn_storage  (i,j))
+            call acc(a_deadcrootn_xfer    (i,j), 1., f_deadcrootn_xfer     (i,j))
+
+            call acc(a_gpp                (i,j), 1., f_gpp                 (i,j))
+            call acc(a_downreg            (i,j), 1., f_downreg             (i,j))
+
             do l = maxsnl+1, nl_soil
                call acc(a_t_soisno   (l,i,j), 1., f_t_soisno   (l,i,j))
                call acc(a_wliq_soisno(l,i,j), 1., f_wliq_soisno(l,i,j))
@@ -872,6 +1213,21 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
             
             do l = 1, nl_soil
                call acc(a_h2osoi     (l,i,j), 1., f_h2osoi     (l,i,j))
+               call acc(a_litr1c     (l,i,j), 1., f_litr1c     (l,i,j))
+               call acc(a_litr2c     (l,i,j), 1., f_litr2c     (l,i,j))
+               call acc(a_litr3c     (l,i,j), 1., f_litr3c     (l,i,j))
+               call acc(a_cwdc       (l,i,j), 1., f_cwdc       (l,i,j))
+               call acc(a_soil1c     (l,i,j), 1., f_soil1c     (l,i,j))
+               call acc(a_soil2c     (l,i,j), 1., f_soil2c     (l,i,j))
+               call acc(a_soil3c     (l,i,j), 1., f_soil3c     (l,i,j))
+               call acc(a_litr1n     (l,i,j), 1., f_litr1n     (l,i,j))
+               call acc(a_litr2n     (l,i,j), 1., f_litr2n     (l,i,j))
+               call acc(a_litr3n     (l,i,j), 1., f_litr3n     (l,i,j))
+               call acc(a_cwdn       (l,i,j), 1., f_cwdn       (l,i,j))
+               call acc(a_soil1n     (l,i,j), 1., f_soil1n     (l,i,j))
+               call acc(a_soil2n     (l,i,j), 1., f_soil2n     (l,i,j))
+               call acc(a_soil3n     (l,i,j), 1., f_soil3n     (l,i,j))
+               call acc(a_sminn      (l,i,j), 1., f_sminn      (l,i,j))
             end do
 
             do l = 1, nl_lake

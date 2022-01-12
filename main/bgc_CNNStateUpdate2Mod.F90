@@ -2,7 +2,7 @@ module bgc_CNNStateUpdate2Mod
 
 use precision
 use MOD_TimeInvariants, only: &
-            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd
+            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2,i_soil3
 use MOD_TimeVariables, only: &
     ! decompositionn nitrogen pools & fluxes variables (inout)
            decomp_npools_vr
@@ -19,7 +19,7 @@ use MOD_PFTimeVars, only: &
            deadstemn_p        , deadstemn_storage_p , deadstemn_xfer_p , &
            livecrootn_p       , livecrootn_storage_p, livecrootn_xfer_p, &
            deadcrootn_p       , deadcrootn_storage_p, deadcrootn_xfer_p, &
-           retransn_p
+           retransn_p         , npool_p, grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p
 
 use MOD_1D_PFTFluxes, only: &
     ! vegetation nitrogen flux variables
@@ -31,24 +31,44 @@ use MOD_1D_PFTFluxes, only: &
            m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
            m_retransn_to_litter_p
 
+use MOD_PFTimeInvars, only: pftfrac
 implicit none
 
 public NStateUpdate2
 
 contains
 
-subroutine NStateUpdate2(i, ps, pe, deltim, nl_soil)
+subroutine NStateUpdate2(i, ps, pe, deltim, nl_soil, dz_soi)
 
 integer ,intent(in) :: i
 integer ,intent(in) :: ps
 integer ,intent(in) :: pe
 real(r8),intent(in) :: deltim
 integer ,intent(in) :: nl_soil
+real(r8),intent(in) :: dz_soi(1:nl_soil)
 
 integer j, m
 
       ! column-level nitrogen fluxes from gap-phase mortality
+!if(i .eq. 123226)print*,'vegn before NStateUpdate2',&
+!             sum((leafn_p(ps:pe)             + frootn_p(ps:pe)             + livestemn_p(ps:pe) &
+!                + deadstemn_p(ps:pe)         + livecrootn_p(ps:pe)         + deadcrootn_p(ps:pe) &
+!                + leafn_storage_p(ps:pe)     + frootn_storage_p(ps:pe)     + livestemn_storage_p(ps:pe) &
+!                + deadstemn_storage_p(ps:pe) + livecrootn_storage_p(ps:pe) + deadcrootn_storage_p(ps:pe) &
+!                + leafn_xfer_p(ps:pe)        + frootn_xfer_p(ps:pe)        + livestemn_xfer_p(ps:pe) &
+!                + deadstemn_xfer_p(ps:pe)    + livecrootn_xfer_p(ps:pe)    + deadcrootn_xfer_p(ps:pe) &
+!                + npool_p(ps:pe)             + retransn_p(ps:pe) &
+!                + grainn_p(ps:pe)            + grainn_storage_p(ps:pe)     + grainn_xfer_p(ps:pe) &
+!                + cropseedn_deficit_p(ps:pe))*pftfrac(ps:pe))
 
+!if(i .eq. 123226)print*,'soiln before NStateUpdate2',&
+!      sum(decomp_npools_vr(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_lig_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil)) 
       do j = 1, nl_soil
 !            if (.not. use_soil_matrixcn)then
          decomp_npools_vr(j,i_met_lit,i) = &
@@ -58,7 +78,7 @@ integer j, m
          decomp_npools_vr(j,i_lig_lit,i) = &
                decomp_npools_vr(j,i_lig_lit,i) + gap_mortality_to_lig_n(j,i) * deltim
          decomp_npools_vr(j,i_cwd,i)     = &
-               decomp_npools_vr(j,i_cwd,i)     + gap_mortality_to_cwdn(j,i)       * deltim
+               decomp_npools_vr(j,i_cwd,i)     + gap_mortality_to_cwdn(j,i)  * deltim
 !            else
 !               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
 !                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + gap_mortality_n_to_litr_met_n(j) * deltim
@@ -71,6 +91,10 @@ integer j, m
 !            end if !not use_soil_matrix
       end do
 
+!      if(i .eq. 123226)print*,'gapm_to_lit',deltim*sum(gap_mortality_to_met_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
+!                    + deltim*sum(gap_mortality_to_cel_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
+!                    + deltim*sum(gap_mortality_to_lig_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
+!                    + deltim*sum(gap_mortality_to_cwdn (1:nl_soil,i)*dz_soi(1:nl_soil)) 
       ! patch -level nitrogen fluxes from gap-phase mortality
 
 !         if(.not.  use_matrixcn)then
@@ -120,7 +144,33 @@ integer j, m
            - m_deadcrootn_xfer_to_litter_p(m) * deltim
       end do
 
+!   if(i .eq. 123226)print*,'veg nitrogen loss',sum(pftfrac(ps:pe)*deltim* &
+!      (m_leafn_to_litter_p(ps:pe)+m_frootn_to_litter_p(ps:pe)+m_livestemn_to_litter_p(ps:pe)&
+!      +m_deadstemn_to_litter_p(ps:pe)+m_livecrootn_to_litter_p(ps:pe)+m_deadcrootn_to_litter_p(ps:pe)&
+!      +m_retransn_to_litter_p(ps:pe)+m_leafn_storage_to_litter_p(ps:pe)+m_frootn_storage_to_litter_p(ps:pe)&
+!      +m_livestemn_storage_to_litter_p(ps:pe)+m_deadstemn_storage_to_litter_p(ps:pe) &
+!      +m_livecrootn_storage_to_litter_p(ps:pe)+m_deadcrootn_storage_to_litter_p(ps:pe) &
+!      +m_leafn_xfer_to_litter_p(ps:pe)+m_frootn_xfer_to_litter_p(ps:pe)+m_livestemn_xfer_to_litter_p(ps:pe)&
+!      +m_deadstemn_xfer_to_litter_p(ps:pe)+m_livecrootn_xfer_to_litter_p(ps:pe)+m_deadcrootn_xfer_to_litter_p(ps:pe)))
+!if(i .eq. 123226)print*,'vegn after NStateUpdate2',&
+!             sum((leafn_p(ps:pe)             + frootn_p(ps:pe)             + livestemn_p(ps:pe) &
+!                + deadstemn_p(ps:pe)         + livecrootn_p(ps:pe)         + deadcrootn_p(ps:pe) &
+!                + leafn_storage_p(ps:pe)     + frootn_storage_p(ps:pe)     + livestemn_storage_p(ps:pe) &
+!                + deadstemn_storage_p(ps:pe) + livecrootn_storage_p(ps:pe) + deadcrootn_storage_p(ps:pe) &
+!                + leafn_xfer_p(ps:pe)        + frootn_xfer_p(ps:pe)        + livestemn_xfer_p(ps:pe) &
+!                + deadstemn_xfer_p(ps:pe)    + livecrootn_xfer_p(ps:pe)    + deadcrootn_xfer_p(ps:pe) &
+!                + npool_p(ps:pe)             + retransn_p(ps:pe) &
+!                + grainn_p(ps:pe)            + grainn_storage_p(ps:pe)     + grainn_xfer_p(ps:pe) &
+!                + cropseedn_deficit_p(ps:pe))*pftfrac(ps:pe))
 !    end if !not use_matrixcn
+!if(i .eq. 123226)print*,'soiln after NStateUpdate2',&
+!      sum(decomp_npools_vr(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_lig_lit,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
+!    + sum(decomp_npools_vr(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil)) 
 
 end subroutine NStateUpdate2
 
