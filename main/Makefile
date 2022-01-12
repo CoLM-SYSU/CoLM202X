@@ -94,6 +94,7 @@ OBJS =  precision.o                 \
         bgc_CNAnnualUpdateMod.o \
         bgc_CNZeroFluxesMod.o \
         bgc_CNBalanceCheckMod.o \
+        bgc_CNSASUMod.o \
         bgc_driver.o \
         bgc_NDEP_readin.o
 

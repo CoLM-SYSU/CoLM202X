@@ -1002,6 +1002,23 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i)&
           ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
           ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i)&
+!------------------------SASU variables-----------------------
+          ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
+          ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &
+          ,AKX_met_to_soil1_c_vr_acc  (:,i), AKX_cel_to_soil1_c_vr_acc  (:,i), AKX_lig_to_soil2_c_vr_acc  (:,i), AKX_soil1_to_soil2_c_vr_acc(:,i) &
+          ,AKX_cwd_to_cel_c_vr_acc    (:,i), AKX_cwd_to_lig_c_vr_acc    (:,i), AKX_soil1_to_soil3_c_vr_acc(:,i), AKX_soil2_to_soil1_c_vr_acc(:,i) &
+          ,AKX_soil2_to_soil3_c_vr_acc(:,i), AKX_soil3_to_soil1_c_vr_acc(:,i) &
+          ,AKX_met_exit_c_vr_acc      (:,i), AKX_cel_exit_c_vr_acc      (:,i), AKX_lig_exit_c_vr_acc      (:,i), AKX_cwd_exit_c_vr_acc      (:,i) &
+          ,AKX_soil1_exit_c_vr_acc    (:,i), AKX_soil2_exit_c_vr_acc    (:,i), AKX_soil3_exit_c_vr_acc    (:,i) &
+          ,diagVX_c_vr_acc          (:,:,i), upperVX_c_vr_acc         (:,:,i), lowerVX_c_vr_acc         (:,:,i) &
+          ,I_met_n_vr_acc             (:,i), I_cel_n_vr_acc             (:,i), I_lig_n_vr_acc             (:,i), I_cwd_n_vr_acc             (:,i) &
+          ,AKX_met_to_soil1_n_vr_acc  (:,i), AKX_cel_to_soil1_n_vr_acc  (:,i), AKX_lig_to_soil2_n_vr_acc  (:,i), AKX_soil1_to_soil2_n_vr_acc(:,i) &
+          ,AKX_cwd_to_cel_n_vr_acc    (:,i), AKX_cwd_to_lig_n_vr_acc    (:,i), AKX_soil1_to_soil3_n_vr_acc(:,i), AKX_soil2_to_soil1_n_vr_acc(:,i) &
+          ,AKX_soil2_to_soil3_n_vr_acc(:,i), AKX_soil3_to_soil1_n_vr_acc(:,i) &
+          ,AKX_met_exit_n_vr_acc      (:,i), AKX_cel_exit_n_vr_acc      (:,i), AKX_lig_exit_n_vr_acc      (:,i), AKX_cwd_exit_n_vr_acc      (:,i) &
+          ,AKX_soil1_exit_n_vr_acc    (:,i), AKX_soil2_exit_n_vr_acc    (:,i), AKX_soil3_exit_n_vr_acc    (:,i) &
+          ,diagVX_n_vr_acc          (:,:,i), upperVX_n_vr_acc         (:,:,i), lowerVX_n_vr_acc         (:,:,i), skip_balance_check(i) &
+!------------------------------------------------------------
 #endif
 #if(defined SOILINI)
           ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i))
@@ -1009,7 +1026,6 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           )
 #endif
       ENDDO
-
 ! 03/13/2020, yuan: 
 #ifdef OPENMP
 !$OMP END PARALLEL DO

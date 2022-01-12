@@ -212,7 +212,62 @@ MODULE MOD_TimeVariables
 
   REAL(r8), allocatable :: dayl                     (:)
   REAL(r8), allocatable :: prev_dayl                (:)
-!---
+
+!--------------SASU variables---------------------------
+  REAL(r8), allocatable :: decomp0_cpools_vr           (:,:,:)
+  REAL(r8), allocatable :: I_met_c_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_cel_c_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_lig_c_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_cwd_c_vr_acc              (:,:)
+  REAL(r8), allocatable :: AKX_met_to_soil1_c_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_cel_to_soil1_c_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_lig_to_soil2_c_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_soil1_to_soil2_c_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_cwd_to_cel_c_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_cwd_to_lig_c_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil1_to_soil3_c_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil2_to_soil1_c_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil2_to_soil3_c_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil3_to_soil1_c_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_met_exit_c_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_cel_exit_c_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_lig_exit_c_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_cwd_exit_c_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_soil1_exit_c_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil2_exit_c_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil3_exit_c_vr_acc     (:,:)
+
+  REAL(r8), allocatable :: decomp0_npools_vr           (:,:,:)
+  REAL(r8), allocatable :: I_met_n_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_cel_n_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_lig_n_vr_acc              (:,:)
+  REAL(r8), allocatable :: I_cwd_n_vr_acc              (:,:)
+  REAL(r8), allocatable :: AKX_met_to_soil1_n_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_cel_to_soil1_n_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_lig_to_soil2_n_vr_acc   (:,:)
+  REAL(r8), allocatable :: AKX_soil1_to_soil2_n_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_cwd_to_cel_n_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_cwd_to_lig_n_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil1_to_soil3_n_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil2_to_soil1_n_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil2_to_soil3_n_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_soil3_to_soil1_n_vr_acc (:,:)
+  REAL(r8), allocatable :: AKX_met_exit_n_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_cel_exit_n_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_lig_exit_n_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_cwd_exit_n_vr_acc       (:,:)
+  REAL(r8), allocatable :: AKX_soil1_exit_n_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil2_exit_n_vr_acc     (:,:)
+  REAL(r8), allocatable :: AKX_soil3_exit_n_vr_acc     (:,:)
+
+  REAL(r8), allocatable :: diagVX_c_vr_acc             (:,:,:)
+  REAL(r8), allocatable :: upperVX_c_vr_acc            (:,:,:)
+  REAL(r8), allocatable :: lowerVX_c_vr_acc            (:,:,:)
+  REAL(r8), allocatable :: diagVX_n_vr_acc             (:,:,:)
+  REAL(r8), allocatable :: upperVX_n_vr_acc            (:,:,:)
+  REAL(r8), allocatable :: lowerVX_n_vr_acc            (:,:,:)
+  LOGICAL , allocatable :: skip_balance_check          (:)
+!------------------------------------------------------
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_TimeVariables
@@ -435,6 +490,63 @@ MODULE MOD_TimeVariables
 
      allocate (dayl                         (numpatch))
      allocate (prev_dayl                    (numpatch))
+!---------------------------SASU variables--------------------------------------
+     allocate (decomp0_cpools_vr            (nl_soil,ndecomp_pools,numpatch))
+     allocate (I_met_c_vr_acc               (nl_soil,numpatch))
+     allocate (I_cel_c_vr_acc               (nl_soil,numpatch))
+     allocate (I_lig_c_vr_acc               (nl_soil,numpatch))
+     allocate (I_cwd_c_vr_acc               (nl_soil,numpatch))
+     allocate (AKX_met_to_soil1_c_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_cel_to_soil1_c_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_lig_to_soil2_c_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_soil1_to_soil2_c_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_cwd_to_cel_c_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_cwd_to_lig_c_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil1_to_soil3_c_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil2_to_soil1_c_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil2_to_soil3_c_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil3_to_soil1_c_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_met_exit_c_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_cel_exit_c_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_lig_exit_c_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_cwd_exit_c_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_soil1_exit_c_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil2_exit_c_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil3_exit_c_vr_acc      (nl_soil,numpatch))
+
+     allocate (decomp0_npools_vr            (nl_soil,ndecomp_pools,numpatch))
+     allocate (I_met_n_vr_acc               (nl_soil,numpatch))
+     allocate (I_cel_n_vr_acc               (nl_soil,numpatch))
+     allocate (I_lig_n_vr_acc               (nl_soil,numpatch))
+     allocate (I_cwd_n_vr_acc               (nl_soil,numpatch))
+     allocate (AKX_met_to_soil1_n_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_cel_to_soil1_n_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_lig_to_soil2_n_vr_acc    (nl_soil,numpatch))
+     allocate (AKX_soil1_to_soil2_n_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_cwd_to_cel_n_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_cwd_to_lig_n_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil1_to_soil3_n_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil2_to_soil1_n_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil2_to_soil3_n_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_soil3_to_soil1_n_vr_acc  (nl_soil,numpatch))
+     allocate (AKX_met_exit_n_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_cel_exit_n_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_lig_exit_n_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_cwd_exit_n_vr_acc        (nl_soil,numpatch))
+     allocate (AKX_soil1_exit_n_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil2_exit_n_vr_acc      (nl_soil,numpatch))
+     allocate (AKX_soil3_exit_n_vr_acc      (nl_soil,numpatch))
+
+     allocate (diagVX_c_vr_acc              (nl_soil,ndecomp_pools,numpatch))
+     allocate (upperVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))
+     allocate (lowerVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))
+     allocate (diagVX_n_vr_acc              (nl_soil,ndecomp_pools,numpatch))
+     allocate (upperVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))
+     allocate (lowerVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))
+
+     allocate (skip_balance_check           (numpatch))
+!---------------------------------------------------------------------------
+
 #ifdef PFT_CLASSIFICATION
      CALL allocate_PFTimeVars
 #endif
@@ -601,8 +713,63 @@ MODULE MOD_TimeVariables
            prec_daily,          &
 !           wf2,                 &
            tsoi17,              &
-           rh30
+           rh30,                &
+!---------------SASU variables-----------------------
+           decomp0_cpools_vr            , &
+           I_met_c_vr_acc               , &
+           I_cel_c_vr_acc               , &
+           I_lig_c_vr_acc               , &
+           I_cwd_c_vr_acc               , &
+           AKX_met_to_soil1_c_vr_acc    , &
+           AKX_cel_to_soil1_c_vr_acc    , &
+           AKX_lig_to_soil2_c_vr_acc    , &
+           AKX_soil1_to_soil2_c_vr_acc  , &
+           AKX_cwd_to_cel_c_vr_acc      , &
+           AKX_cwd_to_lig_c_vr_acc      , &
+           AKX_soil1_to_soil3_c_vr_acc  , &
+           AKX_soil2_to_soil1_c_vr_acc  , &
+           AKX_soil2_to_soil3_c_vr_acc  , &
+           AKX_soil3_to_soil1_c_vr_acc  , &
+           AKX_met_exit_c_vr_acc        , &
+           AKX_cel_exit_c_vr_acc        , &
+           AKX_lig_exit_c_vr_acc        , &
+           AKX_cwd_exit_c_vr_acc        , &
+           AKX_soil1_exit_c_vr_acc      , &
+           AKX_soil2_exit_c_vr_acc      , &
+           AKX_soil3_exit_c_vr_acc      , &
 
+           decomp0_npools_vr            , &
+           I_met_n_vr_acc               , &
+           I_cel_n_vr_acc               , &
+           I_lig_n_vr_acc               , &
+           I_cwd_n_vr_acc               , &
+           AKX_met_to_soil1_n_vr_acc    , &
+           AKX_cel_to_soil1_n_vr_acc    , &
+           AKX_lig_to_soil2_n_vr_acc    , &
+           AKX_soil1_to_soil2_n_vr_acc  , &
+           AKX_cwd_to_cel_n_vr_acc      , &
+           AKX_cwd_to_lig_n_vr_acc      , &
+           AKX_soil1_to_soil3_n_vr_acc  , &
+           AKX_soil2_to_soil1_n_vr_acc  , &
+           AKX_soil2_to_soil3_n_vr_acc  , &
+           AKX_soil3_to_soil1_n_vr_acc  , &
+           AKX_met_exit_n_vr_acc        , &
+           AKX_cel_exit_n_vr_acc        , &
+           AKX_lig_exit_n_vr_acc        , &
+           AKX_cwd_exit_n_vr_acc        , &
+           AKX_soil1_exit_n_vr_acc      , &
+           AKX_soil2_exit_n_vr_acc      , &
+           AKX_soil3_exit_n_vr_acc      , &
+
+           diagVX_c_vr_acc              , &
+           upperVX_c_vr_acc             , &
+           lowerVX_c_vr_acc             , &
+           diagVX_n_vr_acc              , &
+           upperVX_n_vr_acc             , &
+           lowerVX_n_vr_acc             , &
+
+           skip_balance_check           
+!----------------------------------------------------
      ! PFT/PC time variabls
 #ifdef PFT_CLASSIFICATION
      read (lhistTimeVar)    &!
@@ -719,8 +886,188 @@ MODULE MOD_TimeVariables
            grain_flag_p,           &
            ctrunc_p,               &
            ntrunc_p,               &
-           npool_p
+           npool_p,                &
 
+! SASU variables
+           leafc0_p,                &
+           leafc0_storage_p,        &
+           leafc0_xfer_p,           &
+           frootc0_p,               &
+           frootc0_storage_p,       &
+           frootc0_xfer_p,          &
+           livestemc0_p,            &
+           livestemc0_storage_p,    &
+           livestemc0_xfer_p,       &
+           deadstemc0_p,            &
+           deadstemc0_storage_p,    &
+           deadstemc0_xfer_p,       &
+           livecrootc0_p,           &
+           livecrootc0_storage_p,   &
+           livecrootc0_xfer_p,      &
+           deadcrootc0_p,           &
+           deadcrootc0_storage_p,   &
+           deadcrootc0_xfer_p,      &
+           grainc0_p,               &
+           grainc0_storage_p,       &
+           grainc0_xfer_p,          &
+
+           leafn0_p,                &
+           leafn0_storage_p,        &
+           leafn0_xfer_p,           &
+           frootn0_p,               &
+           frootn0_storage_p,       &
+           frootn0_xfer_p,          &
+           livestemn0_p,            &
+           livestemn0_storage_p,    &
+           livestemn0_xfer_p,       &
+           deadstemn0_p,            &
+           deadstemn0_storage_p,    &
+           deadstemn0_xfer_p,       &
+           livecrootn0_p,           &
+           livecrootn0_storage_p,   &
+           livecrootn0_xfer_p,      &
+           deadcrootn0_p,           &
+           deadcrootn0_storage_p,   &
+           deadcrootn0_xfer_p,      &
+           grainn0_p,               &
+           grainn0_storage_p,       &
+           grainn0_xfer_p,          &
+           retransn0_p,             &
+
+           I_leafc_p_acc         , &
+           I_leafc_st_p_acc      , &
+           I_frootc_p_acc        , &
+           I_frootc_st_p_acc     , &
+           I_livestemc_p_acc     , &
+           I_livestemc_st_p_acc  , &
+           I_deadstemc_p_acc     , &
+           I_deadstemc_st_p_acc  , &
+           I_livecrootc_p_acc    , &
+           I_livecrootc_st_p_acc , &
+           I_deadcrootc_p_acc    , &
+           I_deadcrootc_st_p_acc , &
+           I_grainc_p_acc        , &
+           I_grainc_st_p_acc     , &
+           I_leafn_p_acc         , &
+           I_leafn_st_p_acc      , &
+           I_frootn_p_acc        , &
+           I_frootn_st_p_acc     , &
+           I_livestemn_p_acc     , &
+           I_livestemn_st_p_acc  , &
+           I_deadstemn_p_acc     , &
+           I_deadstemn_st_p_acc  , &
+           I_livecrootn_p_acc    , &
+           I_livecrootn_st_p_acc , &
+           I_deadcrootn_p_acc    , &
+           I_deadcrootn_st_p_acc , &
+           I_grainn_p_acc        , &
+           I_grainn_st_p_acc     , &
+
+           AKX_leafc_xf_to_leafc_p_acc              , &
+           AKX_frootc_xf_to_frootc_p_acc            , &
+           AKX_livestemc_xf_to_livestemc_p_acc      , &
+           AKX_deadstemc_xf_to_deadstemc_p_acc      , &
+           AKX_livecrootc_xf_to_livecrootc_p_acc    , &
+           AKX_deadcrootc_xf_to_deadcrootc_p_acc    , &
+           AKX_grainc_xf_to_grainc_p_acc            , &
+           AKX_livestemc_to_deadstemc_p_acc         , &
+           AKX_livecrootc_to_deadcrootc_p_acc       , &
+           
+           AKX_leafc_st_to_leafc_xf_p_acc           , &
+           AKX_frootc_st_to_frootc_xf_p_acc         , &
+           AKX_livestemc_st_to_livestemc_xf_p_acc   , &
+           AKX_deadstemc_st_to_deadstemc_xf_p_acc   , &
+           AKX_livecrootc_st_to_livecrootc_xf_p_acc , &
+           AKX_deadcrootc_st_to_deadcrootc_xf_p_acc , &
+           AKX_grainc_st_to_grainc_xf_p_acc         , &
+
+           AKX_leafc_exit_p_acc                     , &
+           AKX_frootc_exit_p_acc                    , &
+           AKX_livestemc_exit_p_acc                 , &
+           AKX_deadstemc_exit_p_acc                 , &
+           AKX_livecrootc_exit_p_acc                , &
+           AKX_deadcrootc_exit_p_acc                , &
+           AKX_grainc_exit_p_acc                    , &
+
+           AKX_leafc_st_exit_p_acc                  , &
+           AKX_frootc_st_exit_p_acc                 , &
+           AKX_livestemc_st_exit_p_acc              , &
+           AKX_deadstemc_st_exit_p_acc              , &
+           AKX_livecrootc_st_exit_p_acc             , &
+           AKX_deadcrootc_st_exit_p_acc             , &
+           AKX_grainc_st_exit_p_acc                 , &
+
+           AKX_leafc_xf_exit_p_acc                  , &
+           AKX_frootc_xf_exit_p_acc                 , &
+           AKX_livestemc_xf_exit_p_acc              , &
+           AKX_deadstemc_xf_exit_p_acc              , &
+           AKX_livecrootc_xf_exit_p_acc             , &
+           AKX_deadcrootc_xf_exit_p_acc             , &
+           AKX_grainc_xf_exit_p_acc                 , &
+           
+           AKX_leafn_xf_to_leafn_p_acc              , &
+           AKX_frootn_xf_to_frootn_p_acc            , &
+           AKX_livestemn_xf_to_livestemn_p_acc      , &
+           AKX_deadstemn_xf_to_deadstemn_p_acc      , &
+           AKX_livecrootn_xf_to_livecrootn_p_acc    , &
+           AKX_deadcrootn_xf_to_deadcrootn_p_acc    , &
+           AKX_grainn_xf_to_grainn_p_acc            , &
+           AKX_livestemn_to_deadstemn_p_acc         , &
+           AKX_livecrootn_to_deadcrootn_p_acc       , &
+
+           AKX_leafn_st_to_leafn_xf_p_acc           , &
+           AKX_frootn_st_to_frootn_xf_p_acc         , &
+           AKX_livestemn_st_to_livestemn_xf_p_acc   , &
+           AKX_deadstemn_st_to_deadstemn_xf_p_acc   , &
+           AKX_livecrootn_st_to_livecrootn_xf_p_acc , &
+           AKX_deadcrootn_st_to_deadcrootn_xf_p_acc , &
+           AKX_grainn_st_to_grainn_xf_p_acc         , &
+
+           AKX_leafn_to_retransn_p_acc              , &
+           AKX_frootn_to_retransn_p_acc             , &
+           AKX_livestemn_to_retransn_p_acc          , &
+           AKX_livecrootn_to_retransn_p_acc         , &
+
+           AKX_retransn_to_leafn_p_acc              , &
+           AKX_retransn_to_frootn_p_acc             , &
+           AKX_retransn_to_livestemn_p_acc          , &
+           AKX_retransn_to_deadstemn_p_acc          , &
+           AKX_retransn_to_livecrootn_p_acc         , &
+           AKX_retransn_to_deadcrootn_p_acc         , &
+           AKX_retransn_to_grainn_p_acc             , &
+
+           AKX_retransn_to_leafn_st_p_acc           , &
+           AKX_retransn_to_frootn_st_p_acc          , &
+           AKX_retransn_to_livestemn_st_p_acc       , &
+           AKX_retransn_to_deadstemn_st_p_acc       , &
+           AKX_retransn_to_livecrootn_st_p_acc      , &
+           AKX_retransn_to_deadcrootn_st_p_acc      , &
+           AKX_retransn_to_grainn_st_p_acc          , &
+
+           AKX_leafn_exit_p_acc                     , &
+           AKX_frootn_exit_p_acc                    , &
+           AKX_livestemn_exit_p_acc                 , &
+           AKX_deadstemn_exit_p_acc                 , &
+           AKX_livecrootn_exit_p_acc                , &
+           AKX_deadcrootn_exit_p_acc                , &
+           AKX_grainn_exit_p_acc                    , &
+           AKX_retransn_exit_p_acc                  , &
+
+           AKX_leafn_st_exit_p_acc                  , &
+           AKX_frootn_st_exit_p_acc                 , &
+           AKX_livestemn_st_exit_p_acc              , &
+           AKX_deadstemn_st_exit_p_acc              , &
+           AKX_livecrootn_st_exit_p_acc             , &
+           AKX_deadcrootn_st_exit_p_acc             , &
+           AKX_grainn_st_exit_p_acc                 , &
+
+           AKX_leafn_xf_exit_p_acc                  , &
+           AKX_frootn_xf_exit_p_acc                 , &
+           AKX_livestemn_xf_exit_p_acc              , &
+           AKX_deadstemn_xf_exit_p_acc              , &
+           AKX_livecrootn_xf_exit_p_acc             , &
+           AKX_deadcrootn_xf_exit_p_acc             , &
+           AKX_grainn_xf_exit_p_acc                 
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -745,7 +1092,7 @@ MODULE MOD_TimeVariables
            IF (id(1) /= idate(1) .or. id(2) /= idate(2) .or. id(3) /= idate(3)) THEN
               print*, 'id = ', id, 'idate = ', idate
               print*, 'The date of initial data is NOT IDENTICAL TO initial set-up'
-              CALL abort
+!              CALL abort
            ENDIF
 
      close(lhistTimeVar)
@@ -853,7 +1200,7 @@ MODULE MOD_TimeVariables
            sminn,                  &
 
            decomp_cpools_vr,    &
-           ntrunc_vr,           &
+           ctrunc_vr,           &
 !           decomp_k,            &
 
 !           t_scalar,            &
@@ -913,8 +1260,64 @@ MODULE MOD_TimeVariables
            prec_daily,          &
 !           wf2,                 &
            tsoi17,              &
-           rh30
+           rh30,                &
 
+!---------------SASU variables-----------------------
+           decomp0_cpools_vr            , &
+           I_met_c_vr_acc               , &
+           I_cel_c_vr_acc               , &
+           I_lig_c_vr_acc               , &
+           I_cwd_c_vr_acc               , &
+           AKX_met_to_soil1_c_vr_acc    , &
+           AKX_cel_to_soil1_c_vr_acc    , &
+           AKX_lig_to_soil2_c_vr_acc    , &
+           AKX_soil1_to_soil2_c_vr_acc  , &
+           AKX_cwd_to_cel_c_vr_acc      , &
+           AKX_cwd_to_lig_c_vr_acc      , &
+           AKX_soil1_to_soil3_c_vr_acc  , &
+           AKX_soil2_to_soil1_c_vr_acc  , &
+           AKX_soil2_to_soil3_c_vr_acc  , &
+           AKX_soil3_to_soil1_c_vr_acc  , &
+           AKX_met_exit_c_vr_acc        , &
+           AKX_cel_exit_c_vr_acc        , &
+           AKX_lig_exit_c_vr_acc        , &
+           AKX_cwd_exit_c_vr_acc        , &
+           AKX_soil1_exit_c_vr_acc      , &
+           AKX_soil2_exit_c_vr_acc      , &
+           AKX_soil3_exit_c_vr_acc      , &
+
+           decomp0_npools_vr            , &
+           I_met_n_vr_acc               , &
+           I_cel_n_vr_acc               , &
+           I_lig_n_vr_acc               , &
+           I_cwd_n_vr_acc               , &
+           AKX_met_to_soil1_n_vr_acc    , &
+           AKX_cel_to_soil1_n_vr_acc    , &
+           AKX_lig_to_soil2_n_vr_acc    , &
+           AKX_soil1_to_soil2_n_vr_acc  , &
+           AKX_cwd_to_cel_n_vr_acc      , &
+           AKX_cwd_to_lig_n_vr_acc      , &
+           AKX_soil1_to_soil3_n_vr_acc  , &
+           AKX_soil2_to_soil1_n_vr_acc  , &
+           AKX_soil2_to_soil3_n_vr_acc  , &
+           AKX_soil3_to_soil1_n_vr_acc  , &
+           AKX_met_exit_n_vr_acc        , &
+           AKX_cel_exit_n_vr_acc        , &
+           AKX_lig_exit_n_vr_acc        , &
+           AKX_cwd_exit_n_vr_acc        , &
+           AKX_soil1_exit_n_vr_acc      , &
+           AKX_soil2_exit_n_vr_acc      , &
+           AKX_soil3_exit_n_vr_acc      , &
+
+           diagVX_c_vr_acc              , &
+           upperVX_c_vr_acc             , &
+           lowerVX_c_vr_acc             , &
+           diagVX_n_vr_acc              , &
+           upperVX_n_vr_acc             , &
+           lowerVX_n_vr_acc             , &
+
+           skip_balance_check           
+!----------------------------------------------------
       ! PFT/PC time variabls
 #ifdef PFT_CLASSIFICATION
      write(lhistTimeVar)    &!
@@ -1030,8 +1433,188 @@ MODULE MOD_TimeVariables
            grain_flag_p,           &
            ctrunc_p,               &
            ntrunc_p,               &
-           npool_p
+           npool_p,                &
 
+! SASU variables
+           leafc0_p,                &
+           leafc0_storage_p,        &
+           leafc0_xfer_p,           &
+           frootc0_p,               &
+           frootc0_storage_p,       &
+           frootc0_xfer_p,          &
+           livestemc0_p,            &
+           livestemc0_storage_p,    &
+           livestemc0_xfer_p,       &
+           deadstemc0_p,            &
+           deadstemc0_storage_p,    &
+           deadstemc0_xfer_p,       &
+           livecrootc0_p,           &
+           livecrootc0_storage_p,   &
+           livecrootc0_xfer_p,      &
+           deadcrootc0_p,           &
+           deadcrootc0_storage_p,   &
+           deadcrootc0_xfer_p,      &
+           grainc0_p,               &
+           grainc0_storage_p,       &
+           grainc0_xfer_p,          &
+
+           leafn0_p,                &
+           leafn0_storage_p,        &
+           leafn0_xfer_p,           &
+           frootn0_p,               &
+           frootn0_storage_p,       &
+           frootn0_xfer_p,          &
+           livestemn0_p,            &
+           livestemn0_storage_p,    &
+           livestemn0_xfer_p,       &
+           deadstemn0_p,            &
+           deadstemn0_storage_p,    &
+           deadstemn0_xfer_p,       &
+           livecrootn0_p,           &
+           livecrootn0_storage_p,   &
+           livecrootn0_xfer_p,      &
+           deadcrootn0_p,           &
+           deadcrootn0_storage_p,   &
+           deadcrootn0_xfer_p,      &
+           grainn0_p,               &
+           grainn0_storage_p,       &
+           grainn0_xfer_p,          &
+           retransn0_p,             &
+
+           I_leafc_p_acc         , &
+           I_leafc_st_p_acc      , &
+           I_frootc_p_acc        , &
+           I_frootc_st_p_acc     , &
+           I_livestemc_p_acc     , &
+           I_livestemc_st_p_acc  , &
+           I_deadstemc_p_acc     , &
+           I_deadstemc_st_p_acc  , &
+           I_livecrootc_p_acc    , &
+           I_livecrootc_st_p_acc , &
+           I_deadcrootc_p_acc    , &
+           I_deadcrootc_st_p_acc , &
+           I_grainc_p_acc        , &
+           I_grainc_st_p_acc     , &
+           I_leafn_p_acc         , &
+           I_leafn_st_p_acc      , &
+           I_frootn_p_acc        , &
+           I_frootn_st_p_acc     , &
+           I_livestemn_p_acc     , &
+           I_livestemn_st_p_acc  , &
+           I_deadstemn_p_acc     , &
+           I_deadstemn_st_p_acc  , &
+           I_livecrootn_p_acc    , &
+           I_livecrootn_st_p_acc , &
+           I_deadcrootn_p_acc    , &
+           I_deadcrootn_st_p_acc , &
+           I_grainn_p_acc        , &
+           I_grainn_st_p_acc     , &
+
+           AKX_leafc_xf_to_leafc_p_acc              , &
+           AKX_frootc_xf_to_frootc_p_acc            , &
+           AKX_livestemc_xf_to_livestemc_p_acc      , &
+           AKX_deadstemc_xf_to_deadstemc_p_acc      , &
+           AKX_livecrootc_xf_to_livecrootc_p_acc    , &
+           AKX_deadcrootc_xf_to_deadcrootc_p_acc    , &
+           AKX_grainc_xf_to_grainc_p_acc            , &
+           AKX_livestemc_to_deadstemc_p_acc         , &
+           AKX_livecrootc_to_deadcrootc_p_acc       , &
+           
+           AKX_leafc_st_to_leafc_xf_p_acc           , &
+           AKX_frootc_st_to_frootc_xf_p_acc         , &
+           AKX_livestemc_st_to_livestemc_xf_p_acc   , &
+           AKX_deadstemc_st_to_deadstemc_xf_p_acc   , &
+           AKX_livecrootc_st_to_livecrootc_xf_p_acc , &
+           AKX_deadcrootc_st_to_deadcrootc_xf_p_acc , &
+           AKX_grainc_st_to_grainc_xf_p_acc         , &
+
+           AKX_leafc_exit_p_acc                     , &
+           AKX_frootc_exit_p_acc                    , &
+           AKX_livestemc_exit_p_acc                 , &
+           AKX_deadstemc_exit_p_acc                 , &
+           AKX_livecrootc_exit_p_acc                , &
+           AKX_deadcrootc_exit_p_acc                , &
+           AKX_grainc_exit_p_acc                    , &
+
+           AKX_leafc_st_exit_p_acc                  , &
+           AKX_frootc_st_exit_p_acc                 , &
+           AKX_livestemc_st_exit_p_acc              , &
+           AKX_deadstemc_st_exit_p_acc              , &
+           AKX_livecrootc_st_exit_p_acc             , &
+           AKX_deadcrootc_st_exit_p_acc             , &
+           AKX_grainc_st_exit_p_acc                 , &
+
+           AKX_leafc_xf_exit_p_acc                  , &
+           AKX_frootc_xf_exit_p_acc                 , &
+           AKX_livestemc_xf_exit_p_acc              , &
+           AKX_deadstemc_xf_exit_p_acc              , &
+           AKX_livecrootc_xf_exit_p_acc             , &
+           AKX_deadcrootc_xf_exit_p_acc             , &
+           AKX_grainc_xf_exit_p_acc                 , &
+           
+           AKX_leafn_xf_to_leafn_p_acc              , &
+           AKX_frootn_xf_to_frootn_p_acc            , &
+           AKX_livestemn_xf_to_livestemn_p_acc      , &
+           AKX_deadstemn_xf_to_deadstemn_p_acc      , &
+           AKX_livecrootn_xf_to_livecrootn_p_acc    , &
+           AKX_deadcrootn_xf_to_deadcrootn_p_acc    , &
+           AKX_grainn_xf_to_grainn_p_acc            , &
+           AKX_livestemn_to_deadstemn_p_acc         , &
+           AKX_livecrootn_to_deadcrootn_p_acc       , &
+
+           AKX_leafn_st_to_leafn_xf_p_acc           , &
+           AKX_frootn_st_to_frootn_xf_p_acc         , &
+           AKX_livestemn_st_to_livestemn_xf_p_acc   , &
+           AKX_deadstemn_st_to_deadstemn_xf_p_acc   , &
+           AKX_livecrootn_st_to_livecrootn_xf_p_acc , &
+           AKX_deadcrootn_st_to_deadcrootn_xf_p_acc , &
+           AKX_grainn_st_to_grainn_xf_p_acc         , &
+
+           AKX_leafn_to_retransn_p_acc              , &
+           AKX_frootn_to_retransn_p_acc             , &
+           AKX_livestemn_to_retransn_p_acc          , &
+           AKX_livecrootn_to_retransn_p_acc         , &
+
+           AKX_retransn_to_leafn_p_acc              , &
+           AKX_retransn_to_frootn_p_acc             , &
+           AKX_retransn_to_livestemn_p_acc          , &
+           AKX_retransn_to_deadstemn_p_acc          , &
+           AKX_retransn_to_livecrootn_p_acc         , &
+           AKX_retransn_to_deadcrootn_p_acc         , &
+           AKX_retransn_to_grainn_p_acc             , &
+
+           AKX_retransn_to_leafn_st_p_acc           , &
+           AKX_retransn_to_frootn_st_p_acc          , &
+           AKX_retransn_to_livestemn_st_p_acc       , &
+           AKX_retransn_to_deadstemn_st_p_acc       , &
+           AKX_retransn_to_livecrootn_st_p_acc      , &
+           AKX_retransn_to_deadcrootn_st_p_acc      , &
+           AKX_retransn_to_grainn_st_p_acc          , &
+
+           AKX_leafn_exit_p_acc                     , &
+           AKX_frootn_exit_p_acc                    , &
+           AKX_livestemn_exit_p_acc                 , &
+           AKX_deadstemn_exit_p_acc                 , &
+           AKX_livecrootn_exit_p_acc                , &
+           AKX_deadcrootn_exit_p_acc                , &
+           AKX_grainn_exit_p_acc                    , &
+           AKX_retransn_exit_p_acc                  , &
+
+           AKX_leafn_st_exit_p_acc                  , &
+           AKX_frootn_st_exit_p_acc                 , &
+           AKX_livestemn_st_exit_p_acc              , &
+           AKX_deadstemn_st_exit_p_acc              , &
+           AKX_livecrootn_st_exit_p_acc             , &
+           AKX_deadcrootn_st_exit_p_acc             , &
+           AKX_grainn_st_exit_p_acc                 , &
+
+           AKX_leafn_xf_exit_p_acc                  , &
+           AKX_frootn_xf_exit_p_acc                 , &
+           AKX_livestemn_xf_exit_p_acc              , &
+           AKX_deadstemn_xf_exit_p_acc              , &
+           AKX_livecrootn_xf_exit_p_acc             , &
+           AKX_deadcrootn_xf_exit_p_acc             , &
+           AKX_grainn_xf_exit_p_acc                 
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -1261,6 +1844,62 @@ MODULE MOD_TimeVariables
      deallocate (dayl                 )
      deallocate (prev_dayl            )
 
+!---------------------------SASU variables--------------------------------------
+     deallocate (decomp0_cpools_vr           )
+     deallocate (I_met_c_vr_acc              )
+     deallocate (I_cel_c_vr_acc              )
+     deallocate (I_lig_c_vr_acc              )
+     deallocate (I_cwd_c_vr_acc              )
+     deallocate (AKX_met_to_soil1_c_vr_acc   )
+     deallocate (AKX_cel_to_soil1_c_vr_acc   )
+     deallocate (AKX_lig_to_soil2_c_vr_acc   )
+     deallocate (AKX_soil1_to_soil2_c_vr_acc )
+     deallocate (AKX_cwd_to_cel_c_vr_acc     )
+     deallocate (AKX_cwd_to_lig_c_vr_acc     )
+     deallocate (AKX_soil1_to_soil3_c_vr_acc )
+     deallocate (AKX_soil2_to_soil1_c_vr_acc )
+     deallocate (AKX_soil2_to_soil3_c_vr_acc )
+     deallocate (AKX_soil3_to_soil1_c_vr_acc )
+     deallocate (AKX_met_exit_c_vr_acc       )
+     deallocate (AKX_cel_exit_c_vr_acc       )
+     deallocate (AKX_lig_exit_c_vr_acc       )
+     deallocate (AKX_cwd_exit_c_vr_acc       )
+     deallocate (AKX_soil1_exit_c_vr_acc     )
+     deallocate (AKX_soil2_exit_c_vr_acc     )
+     deallocate (AKX_soil3_exit_c_vr_acc     )
+
+     deallocate (decomp0_npools_vr           )
+     deallocate (I_met_n_vr_acc              )
+     deallocate (I_cel_n_vr_acc              )
+     deallocate (I_lig_n_vr_acc              )
+     deallocate (I_cwd_n_vr_acc              )
+     deallocate (AKX_met_to_soil1_n_vr_acc   )
+     deallocate (AKX_cel_to_soil1_n_vr_acc   )
+     deallocate (AKX_lig_to_soil2_n_vr_acc   )
+     deallocate (AKX_soil1_to_soil2_n_vr_acc )
+     deallocate (AKX_cwd_to_cel_n_vr_acc     )
+     deallocate (AKX_cwd_to_lig_n_vr_acc     )
+     deallocate (AKX_soil1_to_soil3_n_vr_acc )
+     deallocate (AKX_soil2_to_soil1_n_vr_acc )
+     deallocate (AKX_soil2_to_soil3_n_vr_acc )
+     deallocate (AKX_soil3_to_soil1_n_vr_acc )
+     deallocate (AKX_met_exit_n_vr_acc       )
+     deallocate (AKX_cel_exit_n_vr_acc       )
+     deallocate (AKX_lig_exit_n_vr_acc       )
+     deallocate (AKX_cwd_exit_n_vr_acc       )
+     deallocate (AKX_soil1_exit_n_vr_acc     )
+     deallocate (AKX_soil2_exit_n_vr_acc     )
+     deallocate (AKX_soil3_exit_n_vr_acc     )
+
+     deallocate (diagVX_c_vr_acc             )
+     deallocate (upperVX_c_vr_acc            )
+     deallocate (lowerVX_c_vr_acc            )
+     deallocate (diagVX_n_vr_acc             )
+     deallocate (upperVX_n_vr_acc            )
+     deallocate (lowerVX_n_vr_acc            )
+
+     deallocate (skip_balance_check          )
+!---------------------------------------------------------------------------
 #ifdef PFT_CLASSIFICATION
      CALL deallocate_PFTimeVars
 #endif

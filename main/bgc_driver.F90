@@ -34,11 +34,12 @@ SUBROUTINE bgc_driver &
   use bgc_CNAnnualUpdateMod, only: CNAnnualUpdate
   use bgc_CNZeroFluxesMod, only: CNZeroFluxes
   use bgc_CNBalanceCheckMod, only: BeginCNBalance, CBalanceCheck, NBalanceCheck
+  use bgc_CNSASUMod, only: CNSASU
   use timemanager
-  use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_transitions, npcropmin, &
+  use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                       z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
-  use MOD_TimeVariables, only: sminn_vr, col_begnb
+  use MOD_TimeVariables, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr
   implicit none
 
   integer ,intent(in) :: i
@@ -48,6 +49,7 @@ SUBROUTINE bgc_driver &
   real(r8),intent(in) :: dlon
 
   integer :: ps, pe
+  integer j
   call BeginCNBalance(i)
 !  if(i .eq. 79738)print*,'ndep in bgcdriver',ndep_to_sminn(i) 
 !  if(i .eq. 79738)print*,'col_begnb after BeginCNBalance',col_begnb(i)
@@ -104,13 +106,25 @@ SUBROUTINE bgc_driver &
 !if(i .eq. 147958)print*,'sminn after NStateUpdate2',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
   call NstateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools,dz_soi)
 !if(i .eq. 147958)print*,'sminn after NStateUpdate3',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
+
+#ifdef SASU
+  call CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
+#endif
+
   call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
   call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
-  call CBalanceCheck(i,deltim,dlat,dlon)
+if( .not. skip_balance_check(i) )then
+  call CBalanceCheck(i,ps,pe,deltim,dlat,dlon)
 !  if(i .eq. 79738)print*,'col_begnb before NBalanceCheck',col_begnb(i)
 !  if(i .eq. 79738)print*,'ndep before Nbalance check',ndep_to_sminn(i)*deltim, &
 !                  sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
   call NBalanceCheck(i,deltim,dlat,dlon)
+else
+  skip_balance_check(i) = .false.
+end if
+do j = 1, ndecomp_pools
+   if(i .eq. 140778)print*,'decomp_cpools_vr(1,:,i)',j,decomp_cpools_vr(1,j,i)
+end do
 
 END SUBROUTINE bgc_driver
 

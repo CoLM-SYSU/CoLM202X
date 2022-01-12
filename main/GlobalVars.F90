@@ -36,6 +36,7 @@ MODULE GlobalVars
    integer, parameter :: npcropmin = 17
    real(r8),parameter :: zmin_bedrock = 0.4
    integer, parameter :: nbedrock = 10
+   integer, parameter :: ndecomp_pools_vr = ndecomp_pools * nl_soil
 
    
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
@@ -82,6 +83,8 @@ CONTAINS
       DO nsl = 2, nl_soil
          zi_soi(nsl) = zi_soi(nsl-1) + dz_soi(nsl)
       ENDDO
+
+!      ndecomp_pools_vr = ndecomp_pools * nl_soil
 
    END SUBROUTINE Init_GlovalVars
 

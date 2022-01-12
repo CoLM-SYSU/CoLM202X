@@ -51,7 +51,8 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP SCHEDULE(STATIC, 1)
 #endif
       DO i = 1, numpatch
-!      DO i = 19643, 19643
+!      DO i = 19643, 1964
+!      DO i = 119932 , 119932
 !         if(patchtype(i) .eq. 0)then
 !            do m=patch_pft_s(i),patch_pft_e(i)
 !               print*,'i',i,patchlonr(i)*180/3.14,patchlatr(i)*180/3.14, pftclass(m), pftfrac(m)

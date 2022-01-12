@@ -1,3 +1,4 @@
+#include <define.h>
 module bgc_CNNStateUpdate2Mod
 
 use precision
@@ -5,7 +6,8 @@ use MOD_TimeInvariants, only: &
             i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2,i_soil3
 use MOD_TimeVariables, only: &
     ! decompositionn nitrogen pools & fluxes variables (inout)
-           decomp_npools_vr
+           decomp_npools_vr, &
+           I_met_n_vr_acc     , I_cel_n_vr_acc      , I_lig_n_vr_acc   , I_cwd_n_vr_acc             
 
 use MOD_1D_Fluxes, only: &
            gap_mortality_to_met_n, gap_mortality_to_cel_n , &
@@ -19,7 +21,16 @@ use MOD_PFTimeVars, only: &
            deadstemn_p        , deadstemn_storage_p , deadstemn_xfer_p , &
            livecrootn_p       , livecrootn_storage_p, livecrootn_xfer_p, &
            deadcrootn_p       , deadcrootn_storage_p, deadcrootn_xfer_p, &
-           retransn_p         , npool_p, grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p
+           retransn_p         , npool_p, grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p, &
+          
+! SASU variables
+           AKX_leafn_exit_p_acc     , AKX_leafn_st_exit_p_acc     , AKX_leafn_xf_exit_p_acc     , &
+           AKX_frootn_exit_p_acc    , AKX_frootn_st_exit_p_acc    , AKX_frootn_xf_exit_p_acc    , &
+           AKX_livestemn_exit_p_acc , AKX_livestemn_st_exit_p_acc , AKX_livestemn_xf_exit_p_acc , &
+           AKX_deadstemn_exit_p_acc , AKX_deadstemn_st_exit_p_acc , AKX_deadstemn_xf_exit_p_acc , &
+           AKX_livecrootn_exit_p_acc, AKX_livecrootn_st_exit_p_acc, AKX_livecrootn_xf_exit_p_acc, &
+           AKX_deadcrootn_exit_p_acc, AKX_deadcrootn_st_exit_p_acc, AKX_deadcrootn_xf_exit_p_acc, &
+           AKX_retransn_exit_p_acc
 
 use MOD_1D_PFTFluxes, only: &
     ! vegetation nitrogen flux variables
@@ -90,7 +101,14 @@ integer j, m
 !                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + gap_mortality_n_to_cwdn(j)       * deltim
 !            end if !not use_soil_matrix
       end do
-
+#ifdef SASU
+   do j=1,nl_soil
+      I_met_n_vr_acc(j,i) = I_met_n_vr_acc(j,i) + gap_mortality_to_met_n(j,i) * deltim
+      I_cel_n_vr_acc(j,i) = I_cel_n_vr_acc(j,i) + gap_mortality_to_cel_n(j,i) * deltim
+      I_lig_n_vr_acc(j,i) = I_lig_n_vr_acc(j,i) + gap_mortality_to_lig_n(j,i) * deltim
+      I_cwd_n_vr_acc(j,i) = I_cwd_n_vr_acc(j,i) + gap_mortality_to_cwdn (j,i) * deltim
+   end do
+#endif
 !      if(i .eq. 123226)print*,'gapm_to_lit',deltim*sum(gap_mortality_to_met_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
 !                    + deltim*sum(gap_mortality_to_cel_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
 !                    + deltim*sum(gap_mortality_to_lig_n(1:nl_soil,i)*dz_soi(1:nl_soil)) &
@@ -142,6 +160,30 @@ integer j, m
            - m_livecrootn_xfer_to_litter_p(m) * deltim
          deadcrootn_xfer_p(m) =  deadcrootn_xfer_p(m)       &
            - m_deadcrootn_xfer_to_litter_p(m) * deltim
+
+#ifdef SASU
+         AKX_leafn_exit_p_acc         (m) = AKX_leafn_exit_p_acc         (m) + m_leafn_to_litter_p             (m) * deltim
+         AKX_frootn_exit_p_acc        (m) = AKX_frootn_exit_p_acc        (m) + m_frootn_to_litter_p            (m) * deltim
+         AKX_livestemn_exit_p_acc     (m) = AKX_livestemn_exit_p_acc     (m) + m_livestemn_to_litter_p         (m) * deltim
+         AKX_deadstemn_exit_p_acc     (m) = AKX_deadstemn_exit_p_acc     (m) + m_deadstemn_to_litter_p         (m) * deltim
+         AKX_livecrootn_exit_p_acc    (m) = AKX_livecrootn_exit_p_acc    (m) + m_livecrootn_to_litter_p        (m) * deltim
+         AKX_deadcrootn_exit_p_acc    (m) = AKX_deadcrootn_exit_p_acc    (m) + m_deadcrootn_to_litter_p        (m) * deltim
+         AKX_retransn_exit_p_acc      (m) = AKX_retransn_exit_p_acc      (m) + m_retransn_to_litter_p          (m) * deltim
+
+         AKX_leafn_st_exit_p_acc      (m) = AKX_leafn_st_exit_p_acc      (m) + m_leafn_storage_to_litter_p     (m) * deltim
+         AKX_frootn_st_exit_p_acc     (m) = AKX_frootn_st_exit_p_acc     (m) + m_frootn_storage_to_litter_p    (m) * deltim
+         AKX_livestemn_st_exit_p_acc  (m) = AKX_livestemn_st_exit_p_acc  (m) + m_livestemn_storage_to_litter_p (m) * deltim
+         AKX_deadstemn_st_exit_p_acc  (m) = AKX_deadstemn_st_exit_p_acc  (m) + m_deadstemn_storage_to_litter_p (m) * deltim
+         AKX_livecrootn_st_exit_p_acc (m) = AKX_livecrootn_st_exit_p_acc (m) + m_livecrootn_storage_to_litter_p(m) * deltim
+         AKX_deadcrootn_st_exit_p_acc (m) = AKX_deadcrootn_st_exit_p_acc (m) + m_deadcrootn_storage_to_litter_p(m) * deltim
+
+         AKX_leafn_xf_exit_p_acc      (m) = AKX_leafn_xf_exit_p_acc      (m) + m_leafn_xfer_to_litter_p        (m) * deltim
+         AKX_frootn_xf_exit_p_acc     (m) = AKX_frootn_xf_exit_p_acc     (m) + m_frootn_xfer_to_litter_p       (m) * deltim
+         AKX_livestemn_xf_exit_p_acc  (m) = AKX_livestemn_xf_exit_p_acc  (m) + m_livestemn_xfer_to_litter_p    (m) * deltim
+         AKX_deadstemn_xf_exit_p_acc  (m) = AKX_deadstemn_xf_exit_p_acc  (m) + m_deadstemn_xfer_to_litter_p    (m) * deltim
+         AKX_livecrootn_xf_exit_p_acc (m) = AKX_livecrootn_xf_exit_p_acc (m) + m_livecrootn_xfer_to_litter_p   (m) * deltim
+         AKX_deadcrootn_xf_exit_p_acc (m) = AKX_deadcrootn_xf_exit_p_acc (m) + m_deadcrootn_xfer_to_litter_p   (m) * deltim
+#endif
       end do
 
 !   if(i .eq. 123226)print*,'veg nitrogen loss',sum(pftfrac(ps:pe)*deltim* &

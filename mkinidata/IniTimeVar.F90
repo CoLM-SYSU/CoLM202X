@@ -19,6 +19,23 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,altmax, altmax_lastyear, altmax_lastyear_indx &
                      ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
                      ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30 &
+!------------------------SASU variables-----------------
+                     ,decomp0_cpools_vr          , decomp0_npools_vr           &
+                     ,I_met_c_vr_acc             , I_cel_c_vr_acc             , I_lig_c_vr_acc             , I_cwd_c_vr_acc              &
+                     ,AKX_met_to_soil1_c_vr_acc  , AKX_cel_to_soil1_c_vr_acc  , AKX_lig_to_soil2_c_vr_acc  , AKX_soil1_to_soil2_c_vr_acc &
+                     ,AKX_cwd_to_cel_c_vr_acc    , AKX_cwd_to_lig_c_vr_acc    , AKX_soil1_to_soil3_c_vr_acc, AKX_soil2_to_soil1_c_vr_acc &
+                     ,AKX_soil2_to_soil3_c_vr_acc, AKX_soil3_to_soil1_c_vr_acc &
+                     ,AKX_met_exit_c_vr_acc      , AKX_cel_exit_c_vr_acc      , AKX_lig_exit_c_vr_acc      , AKX_cwd_exit_c_vr_acc       &
+                     ,AKX_soil1_exit_c_vr_acc    , AKX_soil2_exit_c_vr_acc    , AKX_soil3_exit_c_vr_acc     &
+                     ,diagVX_c_vr_acc            , upperVX_c_vr_acc           , lowerVX_c_vr_acc            &
+                     ,I_met_n_vr_acc             , I_cel_n_vr_acc             , I_lig_n_vr_acc             , I_cwd_n_vr_acc              &
+                     ,AKX_met_to_soil1_n_vr_acc  , AKX_cel_to_soil1_n_vr_acc  , AKX_lig_to_soil2_n_vr_acc  , AKX_soil1_to_soil2_n_vr_acc &
+                     ,AKX_cwd_to_cel_n_vr_acc    , AKX_cwd_to_lig_n_vr_acc    , AKX_soil1_to_soil3_n_vr_acc, AKX_soil2_to_soil1_n_vr_acc &
+                     ,AKX_soil2_to_soil3_n_vr_acc, AKX_soil3_to_soil1_n_vr_acc &
+                     ,AKX_met_exit_n_vr_acc      , AKX_cel_exit_n_vr_acc      , AKX_lig_exit_n_vr_acc      , AKX_cwd_exit_n_vr_acc       &
+                     ,AKX_soil1_exit_n_vr_acc    , AKX_soil2_exit_n_vr_acc    , AKX_soil3_exit_n_vr_acc     &
+                     ,diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           , skip_balance_check &
+!------------------------------------------------------------
 #endif
 #if(defined SOILINI)
                      ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d)
@@ -167,7 +184,66 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         prec_today                                            , &
         prec_daily                                            , &
         tsoi17                                                , &
-        rh30                                                 
+        rh30                                                  , &
+ !---------------SASU variables-----------------------
+        decomp0_cpools_vr          (nl_soil,ndecomp_pools)  , &
+        decomp0_npools_vr          (nl_soil,ndecomp_pools)  , &
+
+        I_met_c_vr_acc             (nl_soil)  , &
+        I_cel_c_vr_acc             (nl_soil)  , &
+        I_lig_c_vr_acc             (nl_soil)  , &
+        I_cwd_c_vr_acc             (nl_soil)  , &
+        AKX_met_to_soil1_c_vr_acc  (nl_soil)  , &
+        AKX_cel_to_soil1_c_vr_acc  (nl_soil)  , &
+        AKX_lig_to_soil2_c_vr_acc  (nl_soil)  , &
+        AKX_soil1_to_soil2_c_vr_acc(nl_soil)  , &
+        AKX_cwd_to_cel_c_vr_acc    (nl_soil)  , &
+        AKX_cwd_to_lig_c_vr_acc    (nl_soil)  , &
+        AKX_soil1_to_soil3_c_vr_acc(nl_soil)  , &
+        AKX_soil2_to_soil1_c_vr_acc(nl_soil)  , &
+        AKX_soil2_to_soil3_c_vr_acc(nl_soil)  , &
+        AKX_soil3_to_soil1_c_vr_acc(nl_soil)  , &
+        AKX_met_exit_c_vr_acc      (nl_soil)  , &
+        AKX_cel_exit_c_vr_acc      (nl_soil)  , &
+        AKX_lig_exit_c_vr_acc      (nl_soil)  , &
+        AKX_cwd_exit_c_vr_acc      (nl_soil)  , &
+        AKX_soil1_exit_c_vr_acc    (nl_soil)  , &
+        AKX_soil2_exit_c_vr_acc    (nl_soil)  , &
+        AKX_soil3_exit_c_vr_acc    (nl_soil)  , &
+
+        I_met_n_vr_acc             (nl_soil)  , &
+        I_cel_n_vr_acc             (nl_soil)  , &
+        I_lig_n_vr_acc             (nl_soil)  , &
+        I_cwd_n_vr_acc             (nl_soil)  , &
+        AKX_met_to_soil1_n_vr_acc  (nl_soil)  , &
+        AKX_cel_to_soil1_n_vr_acc  (nl_soil)  , &
+        AKX_lig_to_soil2_n_vr_acc  (nl_soil)  , &
+        AKX_soil1_to_soil2_n_vr_acc(nl_soil)  , &
+        AKX_cwd_to_cel_n_vr_acc    (nl_soil)  , &
+        AKX_cwd_to_lig_n_vr_acc    (nl_soil)  , &
+        AKX_soil1_to_soil3_n_vr_acc(nl_soil)  , &
+        AKX_soil2_to_soil1_n_vr_acc(nl_soil)  , &
+        AKX_soil2_to_soil3_n_vr_acc(nl_soil)  , &
+        AKX_soil3_to_soil1_n_vr_acc(nl_soil)  , &
+        AKX_met_exit_n_vr_acc      (nl_soil)  , &
+        AKX_cel_exit_n_vr_acc      (nl_soil)  , &
+        AKX_lig_exit_n_vr_acc      (nl_soil)  , &
+        AKX_cwd_exit_n_vr_acc      (nl_soil)  , &
+        AKX_soil1_exit_n_vr_acc    (nl_soil)  , &
+        AKX_soil2_exit_n_vr_acc    (nl_soil)  , &
+        AKX_soil3_exit_n_vr_acc    (nl_soil)  , &
+
+        diagVX_c_vr_acc            (nl_soil,ndecomp_pools)  , &
+        upperVX_c_vr_acc           (nl_soil,ndecomp_pools)  , &
+        lowerVX_c_vr_acc           (nl_soil,ndecomp_pools)  , &
+        diagVX_n_vr_acc            (nl_soil,ndecomp_pools)  , &
+        upperVX_n_vr_acc           (nl_soil,ndecomp_pools)  , &
+        lowerVX_n_vr_acc           (nl_soil,ndecomp_pools)  
+
+   LOGICAL, intent(out) :: &
+        skip_balance_check
+ !----------------------------------------------------
+
 #endif
         
         INTEGER j, snl                      
@@ -414,6 +490,63 @@ ENDIF
     prec_daily                      = 0._r8
     tsoi17                          = 273.15_r8
     rh30                            = 0._r8
+ !---------------SASU variables-----------------------
+    decomp0_cpools_vr         (:,:) = 0.0
+    I_met_c_vr_acc              (:) = 0.0
+    I_cel_c_vr_acc              (:) = 0.0
+    I_lig_c_vr_acc              (:) = 0.0
+    I_cwd_c_vr_acc              (:) = 0.0
+    AKX_met_to_soil1_c_vr_acc   (:) = 0.0
+    AKX_cel_to_soil1_c_vr_acc   (:) = 0.0
+    AKX_lig_to_soil2_c_vr_acc   (:) = 0.0
+    AKX_soil1_to_soil2_c_vr_acc (:) = 0.0
+    AKX_cwd_to_cel_c_vr_acc     (:) = 0.0
+    AKX_cwd_to_lig_c_vr_acc     (:) = 0.0
+    AKX_soil1_to_soil3_c_vr_acc (:) = 0.0
+    AKX_soil2_to_soil1_c_vr_acc (:) = 0.0
+    AKX_soil2_to_soil3_c_vr_acc (:) = 0.0
+    AKX_soil3_to_soil1_c_vr_acc (:) = 0.0
+    AKX_met_exit_c_vr_acc       (:) = 0.0
+    AKX_cel_exit_c_vr_acc       (:) = 0.0
+    AKX_lig_exit_c_vr_acc       (:) = 0.0
+    AKX_cwd_exit_c_vr_acc       (:) = 0.0
+    AKX_soil1_exit_c_vr_acc     (:) = 0.0
+    AKX_soil2_exit_c_vr_acc     (:) = 0.0
+    AKX_soil3_exit_c_vr_acc     (:) = 0.0
+
+    decomp0_npools_vr         (:,:) = 0.0
+    I_met_n_vr_acc              (:) = 0.0
+    I_cel_n_vr_acc              (:) = 0.0
+    I_lig_n_vr_acc              (:) = 0.0
+    I_cwd_n_vr_acc              (:) = 0.0
+    AKX_met_to_soil1_n_vr_acc   (:) = 0.0
+    AKX_cel_to_soil1_n_vr_acc   (:) = 0.0
+    AKX_lig_to_soil2_n_vr_acc   (:) = 0.0
+    AKX_soil1_to_soil2_n_vr_acc (:) = 0.0
+    AKX_cwd_to_cel_n_vr_acc     (:) = 0.0
+    AKX_cwd_to_lig_n_vr_acc     (:) = 0.0
+    AKX_soil1_to_soil3_n_vr_acc (:) = 0.0
+    AKX_soil2_to_soil1_n_vr_acc (:) = 0.0
+    AKX_soil2_to_soil3_n_vr_acc (:) = 0.0
+    AKX_soil3_to_soil1_n_vr_acc (:) = 0.0
+    AKX_met_exit_n_vr_acc       (:) = 0.0
+    AKX_cel_exit_n_vr_acc       (:) = 0.0
+    AKX_lig_exit_n_vr_acc       (:) = 0.0
+    AKX_cwd_exit_n_vr_acc       (:) = 0.0
+    AKX_soil1_exit_n_vr_acc     (:) = 0.0
+    AKX_soil2_exit_n_vr_acc     (:) = 0.0
+    AKX_soil3_exit_n_vr_acc     (:) = 0.0
+
+    diagVX_c_vr_acc           (:,:) = 0.0
+    upperVX_c_vr_acc          (:,:) = 0.0
+    lowerVX_c_vr_acc          (:,:) = 0.0
+    diagVX_n_vr_acc           (:,:) = 0.0
+    upperVX_n_vr_acc          (:,:) = 0.0
+    lowerVX_n_vr_acc          (:,:) = 0.0
+
+    skip_balance_check              = .false.
+ !----------------------------------------------------
+
 #if(defined PFT_CLASSIFICATION)
     IF (patchtype == 0) THEN
        leafc_p                  (ps:pe) = 0.0
@@ -507,6 +640,188 @@ ENDIF
     
        burndate_p               (ps:pe) = 10000
        grain_flag_p             (ps:pe) = 0.0
+
+! SASU varaibles
+       leafc0_p                 (ps:pe) = 0.0
+       leafc0_storage_p         (ps:pe) = 0.0
+       leafc0_xfer_p            (ps:pe) = 0.0
+       frootc0_p                (ps:pe) = 0.0
+       frootc0_storage_p        (ps:pe) = 0.0
+       frootc0_xfer_p           (ps:pe) = 0.0
+       livestemc0_p             (ps:pe) = 0.0
+       livestemc0_storage_p     (ps:pe) = 0.0
+       livestemc0_xfer_p        (ps:pe) = 0.0
+       deadstemc0_p             (ps:pe) = 0.0
+       deadstemc0_storage_p     (ps:pe) = 0.0
+       deadstemc0_xfer_p        (ps:pe) = 0.0
+       livecrootc0_p            (ps:pe) = 0.0
+       livecrootc0_storage_p    (ps:pe) = 0.0
+       livecrootc0_xfer_p       (ps:pe) = 0.0
+       deadcrootc0_p            (ps:pe) = 0.0
+       deadcrootc0_storage_p    (ps:pe) = 0.0
+       deadcrootc0_xfer_p       (ps:pe) = 0.0
+       grainc0_p                (ps:pe) = 0.0
+       grainc0_storage_p        (ps:pe) = 0.0
+       grainc0_xfer_p           (ps:pe) = 0.0
+
+       leafn0_p                 (ps:pe) = 0.0
+       leafn0_storage_p         (ps:pe) = 0.0
+       leafn0_xfer_p            (ps:pe) = 0.0
+       frootn0_p                (ps:pe) = 0.0
+       frootn0_storage_p        (ps:pe) = 0.0
+       frootn0_xfer_p           (ps:pe) = 0.0
+       livestemn0_p             (ps:pe) = 0.0
+       livestemn0_storage_p     (ps:pe) = 0.0
+       livestemn0_xfer_p        (ps:pe) = 0.0
+       deadstemn0_p             (ps:pe) = 0.0
+       deadstemn0_storage_p     (ps:pe) = 0.0
+       deadstemn0_xfer_p        (ps:pe) = 0.0
+       livecrootn0_p            (ps:pe) = 0.0
+       livecrootn0_storage_p    (ps:pe) = 0.0
+       livecrootn0_xfer_p       (ps:pe) = 0.0
+       deadcrootn0_p            (ps:pe) = 0.0
+       deadcrootn0_storage_p    (ps:pe) = 0.0
+       deadcrootn0_xfer_p       (ps:pe) = 0.0
+       grainn0_p                (ps:pe) = 0.0
+       grainn0_storage_p        (ps:pe) = 0.0
+       grainn0_xfer_p           (ps:pe) = 0.0
+       retransn0_p              (ps:pe) = 0.0
+
+       I_leafc_p_acc            (ps:pe) = 0._r8
+       I_leafc_st_p_acc         (ps:pe) = 0._r8
+       I_frootc_p_acc           (ps:pe) = 0._r8
+       I_frootc_st_p_acc        (ps:pe) = 0._r8
+       I_livestemc_p_acc        (ps:pe) = 0._r8
+       I_livestemc_st_p_acc     (ps:pe) = 0._r8
+       I_deadstemc_p_acc        (ps:pe) = 0._r8
+       I_deadstemc_st_p_acc     (ps:pe) = 0._r8
+       I_livecrootc_p_acc       (ps:pe) = 0._r8
+       I_livecrootc_st_p_acc    (ps:pe) = 0._r8
+       I_deadcrootc_p_acc       (ps:pe) = 0._r8
+       I_deadcrootc_st_p_acc    (ps:pe) = 0._r8
+       I_grainc_p_acc           (ps:pe) = 0._r8
+       I_grainc_st_p_acc        (ps:pe) = 0._r8
+       I_leafn_p_acc            (ps:pe) = 0._r8
+       I_leafn_st_p_acc         (ps:pe) = 0._r8
+       I_frootn_p_acc           (ps:pe) = 0._r8
+       I_frootn_st_p_acc        (ps:pe) = 0._r8
+       I_livestemn_p_acc        (ps:pe) = 0._r8
+       I_livestemn_st_p_acc     (ps:pe) = 0._r8
+       I_deadstemn_p_acc        (ps:pe) = 0._r8
+       I_deadstemn_st_p_acc     (ps:pe) = 0._r8
+       I_livecrootn_p_acc       (ps:pe) = 0._r8
+       I_livecrootn_st_p_acc    (ps:pe) = 0._r8
+       I_deadcrootn_p_acc       (ps:pe) = 0._r8
+       I_deadcrootn_st_p_acc    (ps:pe) = 0._r8
+       I_grainn_p_acc           (ps:pe) = 0._r8
+       I_grainn_st_p_acc        (ps:pe) = 0._r8
+
+       AKX_leafc_xf_to_leafc_p_acc                 (ps:pe) = 0._r8
+       AKX_frootc_xf_to_frootc_p_acc               (ps:pe) = 0._r8
+       AKX_livestemc_xf_to_livestemc_p_acc         (ps:pe) = 0._r8
+       AKX_deadstemc_xf_to_deadstemc_p_acc         (ps:pe) = 0._r8
+       AKX_livecrootc_xf_to_livecrootc_p_acc       (ps:pe) = 0._r8
+       AKX_deadcrootc_xf_to_deadcrootc_p_acc       (ps:pe) = 0._r8
+       AKX_grainc_xf_to_grainc_p_acc               (ps:pe) = 0._r8
+       AKX_livestemc_to_deadstemc_p_acc            (ps:pe) = 0._r8
+       AKX_livecrootc_to_deadcrootc_p_acc          (ps:pe) = 0._r8
+      
+       AKX_leafc_st_to_leafc_xf_p_acc              (ps:pe) = 0._r8
+       AKX_frootc_st_to_frootc_xf_p_acc            (ps:pe) = 0._r8
+       AKX_livestemc_st_to_livestemc_xf_p_acc      (ps:pe) = 0._r8
+       AKX_deadstemc_st_to_deadstemc_xf_p_acc      (ps:pe) = 0._r8
+       AKX_livecrootc_st_to_livecrootc_xf_p_acc    (ps:pe) = 0._r8
+       AKX_deadcrootc_st_to_deadcrootc_xf_p_acc    (ps:pe) = 0._r8
+       AKX_grainc_st_to_grainc_xf_p_acc            (ps:pe) = 0._r8
+
+       AKX_leafc_exit_p_acc                        (ps:pe) = 0._r8
+       AKX_frootc_exit_p_acc                       (ps:pe) = 0._r8
+       AKX_livestemc_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_deadstemc_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livecrootc_exit_p_acc                   (ps:pe) = 0._r8
+       AKX_deadcrootc_exit_p_acc                   (ps:pe) = 0._r8
+       AKX_grainc_exit_p_acc                       (ps:pe) = 0._r8
+
+       AKX_leafc_st_exit_p_acc                     (ps:pe) = 0._r8
+       AKX_frootc_st_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livestemc_st_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_deadstemc_st_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_livecrootc_st_exit_p_acc                (ps:pe) = 0._r8
+       AKX_deadcrootc_st_exit_p_acc                (ps:pe) = 0._r8
+       AKX_grainc_st_exit_p_acc                    (ps:pe) = 0._r8
+
+       AKX_leafc_xf_exit_p_acc                     (ps:pe) = 0._r8
+       AKX_frootc_xf_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livestemc_xf_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_deadstemc_xf_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_livecrootc_xf_exit_p_acc                (ps:pe) = 0._r8
+       AKX_deadcrootc_xf_exit_p_acc                (ps:pe) = 0._r8
+       AKX_grainc_xf_exit_p_acc                    (ps:pe) = 0._r8
+      
+       AKX_leafn_xf_to_leafn_p_acc                 (ps:pe) = 0._r8        
+       AKX_frootn_xf_to_frootn_p_acc               (ps:pe) = 0._r8
+       AKX_livestemn_xf_to_livestemn_p_acc         (ps:pe) = 0._r8
+       AKX_deadstemn_xf_to_deadstemn_p_acc         (ps:pe) = 0._r8
+       AKX_livecrootn_xf_to_livecrootn_p_acc       (ps:pe) = 0._r8
+       AKX_deadcrootn_xf_to_deadcrootn_p_acc       (ps:pe) = 0._r8
+       AKX_grainn_xf_to_grainn_p_acc               (ps:pe) = 0._r8
+       AKX_livestemn_to_deadstemn_p_acc            (ps:pe) = 0._r8
+       AKX_livecrootn_to_deadcrootn_p_acc          (ps:pe) = 0._r8
+
+       AKX_leafn_st_to_leafn_xf_p_acc              (ps:pe) = 0._r8
+       AKX_frootn_st_to_frootn_xf_p_acc            (ps:pe) = 0._r8
+       AKX_livestemn_st_to_livestemn_xf_p_acc      (ps:pe) = 0._r8
+       AKX_deadstemn_st_to_deadstemn_xf_p_acc      (ps:pe) = 0._r8
+       AKX_livecrootn_st_to_livecrootn_xf_p_acc    (ps:pe) = 0._r8
+       AKX_deadcrootn_st_to_deadcrootn_xf_p_acc    (ps:pe) = 0._r8
+       AKX_grainn_st_to_grainn_xf_p_acc            (ps:pe) = 0._r8
+
+       AKX_leafn_to_retransn_p_acc                 (ps:pe) = 0._r8
+       AKX_frootn_to_retransn_p_acc                (ps:pe) = 0._r8
+       AKX_livestemn_to_retransn_p_acc             (ps:pe) = 0._r8
+       AKX_livecrootn_to_retransn_p_acc            (ps:pe) = 0._r8
+
+       AKX_retransn_to_leafn_p_acc                 (ps:pe) = 0._r8
+       AKX_retransn_to_frootn_p_acc                (ps:pe) = 0._r8
+       AKX_retransn_to_livestemn_p_acc             (ps:pe) = 0._r8
+       AKX_retransn_to_deadstemn_p_acc             (ps:pe) = 0._r8
+       AKX_retransn_to_livecrootn_p_acc            (ps:pe) = 0._r8
+       AKX_retransn_to_deadcrootn_p_acc            (ps:pe) = 0._r8
+       AKX_retransn_to_grainn_p_acc                (ps:pe) = 0._r8
+
+       AKX_retransn_to_leafn_st_p_acc              (ps:pe) = 0._r8
+       AKX_retransn_to_frootn_st_p_acc             (ps:pe) = 0._r8
+       AKX_retransn_to_livestemn_st_p_acc          (ps:pe) = 0._r8
+       AKX_retransn_to_deadstemn_st_p_acc          (ps:pe) = 0._r8
+       AKX_retransn_to_livecrootn_st_p_acc         (ps:pe) = 0._r8
+       AKX_retransn_to_deadcrootn_st_p_acc         (ps:pe) = 0._r8
+       AKX_retransn_to_grainn_st_p_acc             (ps:pe) = 0._r8
+
+       AKX_leafn_exit_p_acc                        (ps:pe) = 0._r8
+       AKX_frootn_exit_p_acc                       (ps:pe) = 0._r8
+       AKX_livestemn_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_deadstemn_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livecrootn_exit_p_acc                   (ps:pe) = 0._r8
+       AKX_deadcrootn_exit_p_acc                   (ps:pe) = 0._r8
+       AKX_grainn_exit_p_acc                       (ps:pe) = 0._r8
+       AKX_retransn_exit_p_acc                     (ps:pe) = 0._r8
+
+       AKX_leafn_st_exit_p_acc                     (ps:pe) = 0._r8
+       AKX_frootn_st_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livestemn_st_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_deadstemn_st_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_livecrootn_st_exit_p_acc                (ps:pe) = 0._r8
+       AKX_deadcrootn_st_exit_p_acc                (ps:pe) = 0._r8
+       AKX_grainn_st_exit_p_acc                    (ps:pe) = 0._r8
+
+       AKX_leafn_xf_exit_p_acc                     (ps:pe) = 0._r8
+       AKX_frootn_xf_exit_p_acc                    (ps:pe) = 0._r8
+       AKX_livestemn_xf_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_deadstemn_xf_exit_p_acc                 (ps:pe) = 0._r8
+       AKX_livecrootn_xf_exit_p_acc                (ps:pe) = 0._r8
+       AKX_deadcrootn_xf_exit_p_acc                (ps:pe) = 0._r8
+       AKX_grainn_xf_exit_p_acc                    (ps:pe) = 0._r8
+       
     end if
 #endif
 #endif

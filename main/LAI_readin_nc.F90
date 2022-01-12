@@ -33,7 +33,7 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
       integer :: ncid
       INTEGER :: lclai_vid, lcsai_vid, pftlai_vid, pftsai_vid
       INTEGER :: pclai_vid, pcsai_vid, pctpc_vid
-      integer :: i, j, m, n, t, p, ps, pe, ep, npatch
+      integer :: i, j, m, n, t, p, ps, pe, ep, npatch, ivt
 
       REAL(r8), allocatable :: lclai(:,:,:)
       REAL(r8), allocatable :: lcsai(:,:,:)
@@ -141,6 +141,7 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
             pe = patch_pft_e(npatch)
 
             DO p = ps, pe
+               print*,'before pftclass here2',p,ps,pe
                n = pftclass(p)
                tlai_p(p) = pftlai(i,j,n)
                tsai_p(p) = pftsai(i,j,n)
@@ -158,8 +159,24 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
          
          green(npatch) = 1.                
          fveg(npatch)  = fveg0(m)
-
+#ifdef LAIfdbk
+         IF (t == 0)  THEN
+            ps = patch_pft_s(npatch)
+            pe = patch_pft_e(npatch)
+            do p = ps, pe
+               print*,'before pftclass here1',p,ps,pe
+               ivt = pftclass(p)
+               if (dsladlai(ivt) > 0._r8) then
+                  tlai_p(p) = (slatop(ivt)*(exp(leafc_p(p)*dsladlai(ivt)) - 1._r8))/dsladlai(ivt)
+               else
+                  tlai_p(p) = slatop(ivt) * leafc_p(p)
+               end if
+               tlai_p(p) = max(0._r8, tlai_p(p))
+            end do
+            tlai(npatch) = sum(tlai_p(ps:pe) * pftfrac(ps:pe))
+         end if
       end do
+#endif
 #ifdef OPENMP
 !$OMP END PARALLEL DO
 #endif

@@ -1,3 +1,4 @@
+#include <define.h>
 module bgc_CNCStateUpdate2Mod
 
 use precision
@@ -5,7 +6,8 @@ use MOD_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
 use MOD_TimeVariables, only: &
     ! decomposition pools & fluxes variables (inout)
-           decomp_cpools_vr
+           decomp_cpools_vr, &
+           I_met_c_vr_acc, I_cel_c_vr_acc, I_lig_c_vr_acc, I_cwd_c_vr_acc
 
 use MOD_1D_Fluxes, only: &
            gap_mortality_to_met_c, gap_mortality_to_cel_c , &
@@ -19,7 +21,15 @@ use MOD_PFTimeVars, only: &
            deadstemc_p        , deadstemc_storage_p , deadstemc_xfer_p , &
            livecrootc_p       , livecrootc_storage_p, livecrootc_xfer_p, &
            deadcrootc_p       , deadcrootc_storage_p, deadcrootc_xfer_p, &
-           gresp_storage_p    , gresp_xfer_p       
+           gresp_storage_p    , gresp_xfer_p        , &
+          
+! SASU variables
+           AKX_leafc_exit_p_acc     , AKX_leafc_st_exit_p_acc     , AKX_leafc_xf_exit_p_acc     , &
+           AKX_frootc_exit_p_acc    , AKX_frootc_st_exit_p_acc    , AKX_frootc_xf_exit_p_acc    , &
+           AKX_livestemc_exit_p_acc , AKX_livestemc_st_exit_p_acc , AKX_livestemc_xf_exit_p_acc , &
+           AKX_deadstemc_exit_p_acc , AKX_deadstemc_st_exit_p_acc , AKX_deadstemc_xf_exit_p_acc , &
+           AKX_livecrootc_exit_p_acc, AKX_livecrootc_st_exit_p_acc, AKX_livecrootc_xf_exit_p_acc, &
+           AKX_deadcrootc_exit_p_acc, AKX_deadcrootc_st_exit_p_acc, AKX_deadcrootc_xf_exit_p_acc
 
 use MOD_1D_PFTFluxes, only: &
     ! vegetation carbon flux variables
@@ -74,6 +84,15 @@ integer m
           !print*,'gap_mortality_to_cel_c',j,gap_mortality_to_cel_c(j,i) * deltim
        end do
 
+#ifdef SASU
+       do j = 1,nl_soil
+          I_met_c_vr_acc(j,i) = I_met_c_vr_acc(j,i) + gap_mortality_to_met_c(j,i) * deltim
+          I_cel_c_vr_acc(j,i) = I_cel_c_vr_acc(j,i) + gap_mortality_to_cel_c(j,i) * deltim
+          I_lig_c_vr_acc(j,i) = I_lig_c_vr_acc(j,i) + gap_mortality_to_lig_c(j,i) * deltim
+          I_cwd_c_vr_acc(j,i) = I_cwd_c_vr_acc(j,i) + gap_mortality_to_cwdc (j,i) * deltim
+       end do
+#endif
+
        ! patch loop
 
        do m = ps, pe
@@ -124,6 +143,29 @@ integer m
                   - m_livecrootc_xfer_to_litter_p(m) * deltim
           deadcrootc_xfer_p(m) = deadcrootc_xfer_p(m)       &
                   - m_deadcrootc_xfer_to_litter_p(m) * deltim
+
+#ifdef SASU
+          AKX_leafc_exit_p_acc        (m) = AKX_leafc_exit_p_acc        (m) + m_leafc_to_litter_p             (m) * deltim
+          AKX_frootc_exit_p_acc       (m) = AKX_frootc_exit_p_acc       (m) + m_frootc_to_litter_p            (m) * deltim
+          AKX_livestemc_exit_p_acc    (m) = AKX_livestemc_exit_p_acc    (m) + m_livestemc_to_litter_p         (m) * deltim
+          AKX_deadstemc_exit_p_acc    (m) = AKX_deadstemc_exit_p_acc    (m) + m_deadstemc_to_litter_p         (m) * deltim
+          AKX_livecrootc_exit_p_acc   (m) = AKX_livecrootc_exit_p_acc   (m) + m_livecrootc_to_litter_p        (m) * deltim
+          AKX_deadcrootc_exit_p_acc   (m) = AKX_deadcrootc_exit_p_acc   (m) + m_deadcrootc_to_litter_p        (m) * deltim
+
+          AKX_leafc_st_exit_p_acc     (m) = AKX_leafc_st_exit_p_acc     (m) + m_leafc_storage_to_litter_p     (m) * deltim
+          AKX_frootc_st_exit_p_acc    (m) = AKX_frootc_st_exit_p_acc    (m) + m_frootc_storage_to_litter_p    (m) * deltim
+          AKX_livestemc_st_exit_p_acc (m) = AKX_livestemc_st_exit_p_acc (m) + m_livestemc_storage_to_litter_p (m) * deltim
+          AKX_deadstemc_st_exit_p_acc (m) = AKX_deadstemc_st_exit_p_acc (m) + m_deadstemc_storage_to_litter_p (m) * deltim
+          AKX_livecrootc_st_exit_p_acc(m) = AKX_livecrootc_st_exit_p_acc(m) + m_livecrootc_storage_to_litter_p(m) * deltim
+          AKX_deadcrootc_st_exit_p_acc(m) = AKX_deadcrootc_st_exit_p_acc(m) + m_deadcrootc_storage_to_litter_p(m) * deltim
+
+          AKX_leafc_xf_exit_p_acc     (m) = AKX_leafc_xf_exit_p_acc     (m) + m_leafc_xfer_to_litter_p        (m) * deltim
+          AKX_frootc_xf_exit_p_acc    (m) = AKX_frootc_xf_exit_p_acc    (m) + m_frootc_xfer_to_litter_p       (m) * deltim
+          AKX_livestemc_xf_exit_p_acc (m) = AKX_livestemc_xf_exit_p_acc (m) + m_livestemc_xfer_to_litter_p    (m) * deltim
+          AKX_deadstemc_xf_exit_p_acc (m) = AKX_deadstemc_xf_exit_p_acc (m) + m_deadstemc_xfer_to_litter_p    (m) * deltim
+          AKX_livecrootc_xf_exit_p_acc(m) = AKX_livecrootc_xf_exit_p_acc(m) + m_livecrootc_xfer_to_litter_p   (m) * deltim
+          AKX_deadcrootc_xf_exit_p_acc(m) = AKX_deadcrootc_xf_exit_p_acc(m) + m_deadcrootc_xfer_to_litter_p   (m) * deltim
+#endif
        end do
 
 

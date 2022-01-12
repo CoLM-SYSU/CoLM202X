@@ -1,3 +1,4 @@
+#include <define.h>
 module bgc_soil_SoilBiogeochemLittVertTranspMod
 
 use precision
@@ -5,7 +6,9 @@ use MOD_TimeInvariants, only: &
     is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
 use MOD_TimeVariables, only: &
     altmax, altmax_lastyear, som_adv_coef, som_diffus_coef, &
-    decomp_cpools_vr, decomp_npools_vr
+    decomp_cpools_vr, decomp_npools_vr, &
+    diagVX_c_vr_acc, upperVX_c_vr_acc, lowerVX_c_vr_acc, &
+    diagVX_n_vr_acc, upperVX_n_vr_acc, lowerVX_n_vr_acc
 use MOD_1D_Fluxes, only: &
     decomp_cpools_sourcesink, decomp_npools_sourcesink, &
     decomp_cpools_transport_tendency, decomp_npools_transport_tendency
@@ -227,6 +230,12 @@ aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patanka
                b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_c(j)
                r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_n(j)
+#ifdef SASU
+               upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_c(j+1)! upwards transfer
+               diagVX_c_vr_acc (j,s,i) = diagVX_c_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)! exit flux
+               upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_n(j+1)! upwards transfer
+               diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! exit flux
+#endif
 !               if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then !vertical matrix are the same for all pools
 !                  do i = 1,ndecomp_pools-1 !excluding cwd
 !                     tri_ma_vr(c,1+(i-1)*(nl_soil*3-2)) = (b_tri(j,i) - a_p_0) / dz_soi(j) * (-deltim)
@@ -234,11 +243,30 @@ aaa (pe) = max (0._r8, (1._r8 - 0.1_r8 * abs(pe))**5)  ! A function from Patanka
 !                  end do
 !               end if
             elseif (j < nl_soil+1) then
+               
                a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
                c_tri(j) = -(d_p1_zp1(j) * aaa(pe_p1(j)) + max(-f_p1(j), 0._r8))
                b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_c(j)
                r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_n(j)
+               
+#ifdef SASU
+               if(j .le. nbedrock)then
+                  lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)
+                  lowerVX_n_vr_acc(j,s,i) = lowerVX_n_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j-1)
+                  if(j .ne. nl_soil)then
+                     upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j+1)
+                     upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j+1)
+                  end if
+                  diagVX_c_vr_acc(j,s,i) = diagVX_c_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)
+                  diagVX_n_vr_acc(j,s,i) = diagVX_n_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)
+               else
+                  if(j .eq. nbedrock + 1 .and. j .ne. nl_soil .and. j .gt. 1)then
+                     diagVX_c_vr_acc(j-1,s,i) = diagVX_c_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_c(j-1)
+                     diagVX_n_vr_acc(j-1,s,i) = diagVX_n_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_n(j-1)
+                  end if
+               end if
+#endif
 !               if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn)then
 !                  if(j .le. col%nbedrock)then
 !                     do i = 1,ndecomp_pools-1
