@@ -155,6 +155,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
  real(r8) a_deadcrootc        (lon_points,lat_points)  ! dead coarse root carbon display pool  (gC/m2)
  real(r8) a_deadcrootc_storage(lon_points,lat_points)  ! dead coarse root carbon storage pool  (gC/m2)
  real(r8) a_deadcrootc_xfer   (lon_points,lat_points)  ! dead coarse root carbon transfer pool (gC/m2)
+ real(r8) a_grainc            (lon_points,lat_points)  ! grain carbon display pool  (gC/m2)
+ real(r8) a_grainc_storage    (lon_points,lat_points)  ! grain carbon storage pool  (gC/m2)
+ real(r8) a_grainc_xfer       (lon_points,lat_points)  ! grain carbon transfer pool (gC/m2)
  real(r8) a_leafn             (lon_points,lat_points)  ! leaf nitrogen display pool  (gC/m2)
  real(r8) a_leafn_storage     (lon_points,lat_points)  ! leaf nitrogen storage pool  (gC/m2)
  real(r8) a_leafn_xfer        (lon_points,lat_points)  ! leaf nitrogen transfer pool (gC/m2)
@@ -176,6 +179,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
  
  real(r8) a_gpp               (lon_points,lat_points)  ! gpp
  real(r8) a_downreg           (lon_points,lat_points)  ! gpp downregulation due to N limitation
+ real(r8) a_cphase            (lon_points,lat_points)  ! crop phase
+ real(r8) a_cropprod1c        (lon_points,lat_points)  ! 1-yr crop production carbon (gC/m2)
+ real(r8) a_cropprod1c_loss   (lon_points,lat_points)  ! loss of 1-yr crop production carbon (gC/m2/s)
+ real(r8) a_cropseedc_deficit (lon_points,lat_points)  ! crop deficit (gC/m2)
+ real(r8) a_grainc_to_cropprodc(lon_points,lat_points) ! grain to crop production carbon (gC/m2/s)
+ real(r8) a_grainc_to_seed    (lon_points,lat_points)  ! grain to crop seed carbon (gC/m2/s)
 
  real(r8) a_litr1c            (1:nl_soil,lon_points,lat_points) ! litter 1 carbon pool [gC/m2]
  real(r8) a_litr2c            (1:nl_soil,lon_points,lat_points) ! litter 2 carbon pool [gC/m2]
@@ -291,6 +300,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
       a_deadcrootc        (:,:) = 0.
       a_deadcrootc_storage(:,:) = 0.
       a_deadcrootc_xfer   (:,:) = 0.
+      a_grainc            (:,:) = 0.
+      a_grainc_storage    (:,:) = 0.
+      a_grainc_xfer       (:,:) = 0.
       a_leafn             (:,:) = 0.
       a_leafn_storage     (:,:) = 0.
       a_leafn_xfer        (:,:) = 0.
@@ -312,6 +324,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
 
       a_gpp               (:,:) = 0.
       a_downreg           (:,:) = 0.
+      a_cphase            (:,:) = 0.
+      a_cropprod1c        (:,:) = 0.
+      a_cropprod1c_loss   (:,:) = 0.
+      a_cropseedc_deficit (:,:) = 0.
+      a_grainc_to_cropprodc(:,:) = 0.
+      a_grainc_to_seed    (:,:) = 0.
 
       a_sr     (:,:) = spval
       a_solvd  (:,:) = spval
@@ -413,6 +431,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_deadcrootc        (i,j) = a_deadcrootc        (i,j) + patchfrac(nP)*deadcrootc(np)
                a_deadcrootc_storage(i,j) = a_deadcrootc_storage(i,j) + patchfrac(nP)*deadcrootc_storage(np)
                a_deadcrootc_xfer   (i,j) = a_deadcrootc_xfer   (i,j) + patchfrac(nP)*deadcrootc_xfer(np)
+               a_grainc            (i,j) = a_grainc            (i,j) + patchfrac(nP)*grainc(np)
+               a_grainc_storage    (i,j) = a_grainc_storage    (i,j) + patchfrac(nP)*grainc_storage(np)
+               a_grainc_xfer       (i,j) = a_grainc_xfer       (i,j) + patchfrac(nP)*grainc_xfer(np)
                a_leafn             (i,j) = a_leafn             (i,j) + patchfrac(nP)*leafn(np)
                a_leafn_storage     (i,j) = a_leafn_storage     (i,j) + patchfrac(nP)*leafn_storage(np)
                a_leafn_xfer        (i,j) = a_leafn_xfer        (i,j) + patchfrac(nP)*leafn_xfer(np)
@@ -434,6 +455,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
 
                a_gpp               (i,j) = a_gpp               (i,j) + patchfrac(nP)*gpp(np)
                a_downreg           (i,j) = a_downreg           (i,j) + patchfrac(nP)*downreg(np)
+               a_cphase            (i,j) = a_cphase            (i,j) + patchfrac(nP)*cphase(np)
+               a_cropprod1c        (i,j) = a_cropprod1c        (i,j) + patchfrac(nP)*cropprod1c(np)
+               a_cropprod1c_loss   (i,j) = a_cropprod1c_loss   (i,j) + patchfrac(nP)*cropprod1c_loss(np)
+               a_cropseedc_deficit (i,j) = a_cropseedc_deficit (i,j) + patchfrac(nP)*cropseedc_deficit(np)
+               a_grainc_to_cropprodc(i,j)= a_grainc_to_cropprodc(i,j)+ patchfrac(nP)*grainc_to_cropprodc(np)
+               a_grainc_to_seed    (i,j) = a_grainc_to_seed    (i,j) + patchfrac(nP)*grainc_to_seed(np)
 
                ! radiation fluxes
                call acc(sr     (np), patchfrac(np), a_sr     (i,j))
@@ -469,7 +496,7 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
          do i = 1, lon_points
             if(sumwt(i,j).gt.1.00001)then
                print*, 'summation of fraction patches (1) = ', sumwt(i,j), i,j
-            !  call abort
+               call abort
             endif
             if(sumwt(i,j).gt.0.00001)then
                a_taux   (i,j) = a_taux   (i,j) / sumwt(i,j)
@@ -544,6 +571,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_deadcrootc        (i,j) = a_deadcrootc        (i,j) / sumwt(i,j)
                a_deadcrootc_storage(i,j) = a_deadcrootc_storage(i,j) / sumwt(i,j)
                a_deadcrootc_xfer   (i,j) = a_deadcrootc_xfer   (i,j) / sumwt(i,j)
+               a_grainc            (i,j) = a_grainc            (i,j) / sumwt(i,j)
+               a_grainc_storage    (i,j) = a_grainc_storage    (i,j) / sumwt(i,j)
+               a_grainc_xfer       (i,j) = a_grainc_xfer       (i,j) / sumwt(i,j)
                a_leafn             (i,j) = a_leafn             (i,j) / sumwt(i,j)
                a_leafn_storage     (i,j) = a_leafn_storage     (i,j) / sumwt(i,j)
                a_leafn_xfer        (i,j) = a_leafn_xfer        (i,j) / sumwt(i,j)
@@ -565,6 +595,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
 
                a_gpp               (i,j) = a_gpp               (i,j) / sumwt(i,j)
                a_downreg           (i,j) = a_downreg           (i,j) / sumwt(i,j)
+               a_cphase            (i,j) = a_cphase            (i,j) / sumwt(i,j)
+               a_cropprod1c        (i,j) = a_cropprod1c        (i,j) / sumwt(i,j)
+               a_cropprod1c_loss   (i,j) = a_cropprod1c_loss   (i,j) / sumwt(i,j)
+               a_cropseedc_deficit (i,j) = a_cropseedc_deficit (i,j) / sumwt(i,j)
+               a_grainc_to_cropprodc(i,j)= a_grainc_to_cropprodc(i,j)/ sumwt(i,j)
+               a_grainc_to_seed    (i,j) = a_grainc_to_seed    (i,j) / sumwt(i,j)
 
                if (a_sr     (i,j) /= spval) a_sr     (i,j) = a_sr     (i,j) / sumwt(i,j)
                if (a_solvd  (i,j) /= spval) a_solvd  (i,j) = a_solvd  (i,j) / sumwt(i,j)
@@ -660,6 +696,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
                a_deadcrootc        (i,j) = spval
                a_deadcrootc_storage(i,j) = spval
                a_deadcrootc_xfer   (i,j) = spval
+               a_grainc            (i,j) = spval
+               a_grainc_storage    (i,j) = spval
+               a_grainc_xfer       (i,j) = spval
                a_leafn             (i,j) = spval
                a_leafn_storage     (i,j) = spval
                a_leafn_xfer        (i,j) = spval
@@ -681,6 +720,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
 
                a_gpp               (i,j) = spval
                a_downreg           (i,j) = spval
+               a_cphase            (i,j) = spval
+               a_cropprod1c        (i,j) = spval
+               a_cropprod1c_loss   (i,j) = spval
+               a_cropseedc_deficit (i,j) = spval
+               a_grainc_to_cropprodc(i,j)= spval
+               a_grainc_to_seed    (i,j) = spval
 
                a_sr     (i,j) = spval
                a_solvd  (i,j) = spval
@@ -1183,6 +1228,9 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
             call acc(a_deadcrootc         (i,j), 1., f_deadcrootc          (i,j))
             call acc(a_deadcrootc_storage (i,j), 1., f_deadcrootc_storage  (i,j))
             call acc(a_deadcrootc_xfer    (i,j), 1., f_deadcrootc_xfer     (i,j))
+            call acc(a_grainc             (i,j), 1., f_grainc              (i,j))
+            call acc(a_grainc_storage     (i,j), 1., f_grainc_storage      (i,j))
+            call acc(a_grainc_xfer        (i,j), 1., f_grainc_xfer         (i,j))
             call acc(a_leafn              (i,j), 1., f_leafn               (i,j))
             call acc(a_leafn_storage      (i,j), 1., f_leafn_storage       (i,j))
             call acc(a_leafn_xfer         (i,j), 1., f_leafn_xfer          (i,j))
@@ -1204,6 +1252,12 @@ real(r8) a_srniln (lon_points,lat_points)  ! reflected diffuse beam nir solar ra
 
             call acc(a_gpp                (i,j), 1., f_gpp                 (i,j))
             call acc(a_downreg            (i,j), 1., f_downreg             (i,j))
+            call acc(a_cphase             (i,j), 1., f_cphase              (i,j))
+            call acc(a_cropprod1c         (i,j), 1., f_cropprod1c          (i,j))
+            call acc(a_cropprod1c_loss    (i,j), 1., f_cropprod1c_loss     (i,j))
+            call acc(a_cropseedc_deficit  (i,j), 1., f_cropseedc_deficit   (i,j))
+            call acc(a_grainc_to_cropprodc(i,j), 1., f_grainc_to_cropprodc (i,j))
+            call acc(a_grainc_to_seed     (i,j), 1., f_grainc_to_seed      (i,j))
 
             do l = maxsnl+1, nl_soil
                call acc(a_t_soisno   (l,i,j), 1., f_t_soisno   (l,i,j))

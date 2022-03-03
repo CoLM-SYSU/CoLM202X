@@ -69,7 +69,9 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: wood_harvestc              (:)!
   REAL(r8), allocatable :: wood_harvestn              (:)!
   REAL(r8), allocatable :: grainc_to_cropprodc        (:)!
+  REAL(r8), allocatable :: grainc_to_seed             (:)!
   REAL(r8), allocatable :: grainn_to_cropprodn        (:)!
+  REAL(r8), allocatable :: cropprod1c_loss            (:)!
 
 ! decomposition carbon fluxes
   REAL(r8), allocatable :: decomp_cpools_sourcesink   (:,:,:)
@@ -236,7 +238,9 @@ MODULE MOD_1D_Fluxes
      allocate (wood_harvestc              (numpatch))
      allocate (wood_harvestn              (numpatch))
      allocate (grainc_to_cropprodc        (numpatch))
+     allocate (grainc_to_seed             (numpatch))
      allocate (grainn_to_cropprodn        (numpatch))
+     allocate (cropprod1c_loss            (numpatch))
 
 
 ! decomposition carbon fluxes
@@ -397,7 +401,9 @@ MODULE MOD_1D_Fluxes
      deallocate (wood_harvestc              )
      deallocate (wood_harvestn              )
      deallocate (grainc_to_cropprodc        )
+     deallocate (grainc_to_seed             )
      deallocate (grainn_to_cropprodn        )
+     deallocate (cropprod1c_loss            )
 
 
 ! decomposition carbon fluxes

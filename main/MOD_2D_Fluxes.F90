@@ -158,6 +158,18 @@ real(r8), allocatable :: f_deadcrootn        (:,:)  ! dead coarse root nitrogen 
 real(r8), allocatable :: f_deadcrootn_storage(:,:)  ! dead coarse root nitrogen storage pool  (gC/m2)
 real(r8), allocatable :: f_deadcrootn_xfer   (:,:)  ! dead coarse root nitrogen transfer pool (gC/m2)
 
+real(r8), allocatable :: f_grainc            (:,:)  ! grain carbon display pool (gC/m2)
+real(r8), allocatable :: f_grainc_storage    (:,:)  ! grain carbon storage pool (gC/m2)
+real(r8), allocatable :: f_grainc_xfer       (:,:)  ! grain carbon transfer pool (gC/m2)
+
+real(r8), allocatable :: f_cphase            (:,:)  ! crop phase
+real(r8), allocatable :: f_cropprod1c        (:,:)  ! 1-yr crop production carbon
+real(r8), allocatable :: f_cropprod1c_loss   (:,:)  ! loss of 1-yr crop production carbon
+real(r8), allocatable :: f_cropseedc_deficit (:,:)  ! crop seed carbon deficit
+real(r8), allocatable :: f_grainc_to_cropprodc(:,:) ! grain to crop production
+real(r8), allocatable :: f_grainc_to_seed    (:,:)  ! grain to crop seed
+
+
 real(r8), allocatable :: f_gpp               (:,:)  ! net primary production (gC/m2)
 real(r8), allocatable :: f_downreg           (:,:)  ! gpp downregulation due to N limitation
 
@@ -348,6 +360,17 @@ allocate ( f_deadcrootn        (lon_points,lat_points) ) ! dead coarse root nitr
 allocate ( f_deadcrootn_storage(lon_points,lat_points) ) ! dead coarse root nitrogen storage pool  (gC/m2)
 allocate ( f_deadcrootn_xfer   (lon_points,lat_points) ) ! dead coarse root nitrogen transfer pool (gC/m2)
 
+allocate ( f_grainc            (lon_points,lat_points) ) ! grain carbon display pool  (gC/m2)
+allocate ( f_grainc_storage    (lon_points,lat_points) ) ! grain carbon storage pool  (gC/m2)
+allocate ( f_grainc_xfer       (lon_points,lat_points) ) ! grain carbon transfer pool (gC/m2)
+
+allocate ( f_cphase            (lon_points,lat_points) )  ! crop phase
+allocate ( f_cropprod1c        (lon_points,lat_points) )  ! 1-yr crop production carbon
+allocate ( f_cropprod1c_loss   (lon_points,lat_points) )  ! loss of 1-yr crop production carbon
+allocate ( f_cropseedc_deficit (lon_points,lat_points) )  ! crop seed carbon deficit
+allocate ( f_grainc_to_cropprodc(lon_points,lat_points) ) ! grain to crop production
+allocate ( f_grainc_to_seed    (lon_points,lat_points) )  ! grain to crop seed
+
 allocate ( f_gpp               (lon_points,lat_points) ) ! net primary production (gC/m2)
 allocate ( f_downreg           (lon_points,lat_points) ) ! gpp downregulation due to N limitation
 
@@ -515,6 +538,17 @@ f_livecrootn_xfer   (:,:) = spval
 f_deadcrootn        (:,:) = spval
 f_deadcrootn_storage(:,:) = spval
 f_deadcrootn_xfer   (:,:) = spval
+
+f_grainc            (:,:) = spval
+f_grainc_storage    (:,:) = spval
+f_grainc_xfer       (:,:) = spval
+
+f_cphase            (:,:) = spval
+f_cropprod1c        (:,:) = spval
+f_cropprod1c_loss   (:,:) = spval
+f_cropseedc_deficit (:,:) = spval
+f_grainc_to_cropprodc(:,:) = spval
+f_grainc_to_seed    (:,:) = spval
 
 f_gpp               (:,:) = spval ! net primary production (gC/m2)
 f_downreg           (:,:) = spval ! gpp downregulation due to N limitation
@@ -687,6 +721,17 @@ deallocate ( f_livecrootn_xfer   )  ! live coarse root nitrogen transfer pool (g
 deallocate ( f_deadcrootn        )  ! dead coarse root nitrogen display pool  (gC/m2)
 deallocate ( f_deadcrootn_storage)  ! dead coarse root nitrogen storage pool  (gC/m2)
 deallocate ( f_deadcrootn_xfer   )  ! dead coarse root nitrogen transfer pool (gC/m2)
+
+deallocate ( f_grainc            ) ! grain carbon display pool  (gC/m2)
+deallocate ( f_grainc_storage    ) ! grain carbon storage pool  (gC/m2)
+deallocate ( f_grainc_xfer       ) ! grain carbon transfer pool (gC/m2)
+
+deallocate ( f_cphase            )  ! crop phase
+deallocate ( f_cropprod1c        )  ! 1-yr crop production carbon
+deallocate ( f_cropprod1c_loss   )  ! loss of 1-yr crop production carbon
+deallocate ( f_cropseedc_deficit )  ! crop seed carbon deficit
+deallocate ( f_grainc_to_cropprodc) ! grain to crop production
+deallocate ( f_grainc_to_seed    )  ! grain to crop seed
 
 deallocate ( f_gpp               )  ! net primary production (gC/m2)
 deallocate ( f_downreg           )  ! gpp downregulation due to N limitation

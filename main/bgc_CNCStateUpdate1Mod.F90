@@ -3,7 +3,7 @@
 module bgc_CNCStateUpdate1Mod
 
 use precision
-use MOD_PFTimeInvars, only: pftclass
+use MOD_PFTimeInvars, only: pftclass, pftfrac
 use PFT_Const, only: woody
 use MOD_TimeInvariants, only: &
   ! bgc constants
@@ -32,10 +32,11 @@ use MOD_PFTimeVars, only: &
            livecrootc_p       , livecrootc_storage_p, livecrootc_xfer_p, &
            deadcrootc_p       , deadcrootc_storage_p, deadcrootc_xfer_p, &
            grainc_p           , grainc_storage_p    , grainc_xfer_p    , &
-           cropseedc_deficit_p, xsmrpool_p          , gresp_storage_p  , gresp_xfer_p, &    
+           cropseedc_deficit_p, xsmrpool_p          , gresp_storage_p  , gresp_xfer_p, &
+           cpool_p, &
 
 ! crop variables (in)
-           harvdate_p        , &
+           harvdate_p         , cropprod1c_p        , &
 
 ! SASU variables           
            I_leafc_p_acc     , I_leafc_st_p_acc     , I_frootc_p_acc    , I_frootc_st_p_acc    , &
@@ -66,6 +67,9 @@ use MOD_PFTimeVars, only: &
 
 use MOD_1D_PFTFluxes, only: &
 ! vegetation carbon flux variables (in)
+! Vegetation physiology
+           psn_to_cpool_p, &
+
 ! xfer to display
            leafc_xfer_to_leafc_p          , frootc_xfer_to_frootc_p        , &
            livestemc_xfer_to_livestemc_p  , deadstemc_xfer_to_deadstemc_p  , &
@@ -84,6 +88,9 @@ use MOD_1D_PFTFluxes, only: &
            crop_seedc_to_leaf_p    , livestemc_to_litter_p     , &
            livestemc_to_deadstemc_p, livecrootc_to_deadcrootc_p, &
 
+! crop
+           cropprod1c_loss_p, &
+
 ! cpool to display/storage (in)
            cpool_to_xsmrpool_p  , cpool_to_gresp_storage_p     , &
            cpool_to_leafc_p     , cpool_to_leafc_storage_p     , &
@@ -94,8 +101,19 @@ use MOD_1D_PFTFluxes, only: &
            cpool_to_deadcrootc_p, cpool_to_deadcrootc_storage_p, &
            cpool_to_grainc_p    , cpool_to_grainc_storage_p    , &
 
+! cpool to growth repsiration
+           cpool_leaf_gr_p             , cpool_froot_gr_p             , &
+           cpool_livestem_gr_p         , cpool_deadstem_gr_p          , &
+           cpool_livecroot_gr_p        , cpool_deadcroot_gr_p         , &
+           cpool_leaf_storage_gr_p     , cpool_froot_storage_gr_p     , &
+           cpool_livestem_storage_gr_p , cpool_deadstem_storage_gr_p  , &
+           cpool_livecroot_storage_gr_p, cpool_deadcroot_storage_gr_p , &
+
+           cpool_grain_gr_p            , cpool_grain_storage_gr_p     , &
+
 ! maintenance respiration fluxes (in)
-           leaf_xsmr_p,   froot_xsmr_p,   livestem_xsmr_p,   livecroot_xsmr_p,   grain_xsmr_p,   &
+           leaf_xsmr_p,  froot_xsmr_p,  livestem_xsmr_p,  livecroot_xsmr_p,  grain_xsmr_p , &
+           leaf_curmr_p, froot_curmr_p, livestem_curmr_p, livecroot_curmr_p, grain_curmr_p, &
 
 ! growth respiration fluxes (in/inout)
            transfer_leaf_gr_p     , transfer_froot_gr_p    , &
@@ -137,6 +155,9 @@ integer ivt, m
    !print*,'livecrootc,livecrootc_storage,livecrootc_xfer',livecrootc(i),livecrootc_storage(i),livecrootc_xfer(i)
    !print*,'deadcrootc,deadcrootc_storage,deadcrootc_xfer',deadcrootc(i),deadcrootc_storage(i),deadcrootc_xfer(i)
 
+   do m = ps, pe
+      cpool_p(m) = cpool_p(m) + psn_to_cpool_p(m) * deltim
+   end do
    do j=1,nl_soil
       decomp_cpools_sourcesink(j,i_met_lit,i) = phenology_to_met_c(j,i) *deltim
       decomp_cpools_sourcesink(j,i_cel_lit,i) = phenology_to_cel_c(j,i) *deltim
@@ -199,7 +220,6 @@ integer ivt, m
 
    do m = ps , pe
       ivt = pftclass(m)
-   !print*,'leafc_xfer_to_leafc',leafc_xfer_to_leafc  (m) * deltim
       leafc_p      (m) = leafc_p      (m) + leafc_xfer_to_leafc_p  (m) * deltim
       leafc_xfer_p (m) = leafc_xfer_p (m) - leafc_xfer_to_leafc_p  (m) * deltim
       frootc_p     (m) = frootc_p     (m) + frootc_xfer_to_frootc_p(m) * deltim
@@ -245,7 +265,6 @@ integer ivt, m
       end if
 #endif
 
-   !print*,'leafc_xfer_to_leafc',leafc_to_litter  (m) * deltim
  ! phenology: litterfall fluxes
       leafc_p (m) = leafc_p (m) - leafc_to_litter_p (m) * deltim
       frootc_p(m) = frootc_p(m) - frootc_to_litter_p(m) * deltim
@@ -278,6 +297,20 @@ integer ivt, m
       end if
 #endif
    ! maintenance respiration fluxes from xsmrpool
+      cpool_p   (m) = cpool_p   (m) - cpool_to_xsmrpool_p(m) * deltim
+      cpool_p   (m) = cpool_p   (m) - leaf_curmr_p       (m) * deltim
+      cpool_p   (m) = cpool_p   (m) - froot_curmr_p      (m) * deltim
+      if (woody(ivt) == 1) then
+         cpool_p(m) = cpool_p   (m) - livestem_curmr_p   (m) * deltim
+         cpool_p(m) = cpool_p   (m) - livecroot_curmr_p  (m) * deltim
+      end if
+      if (ivt >= npcropmin) then
+         cpool_p(m) = cpool_p   (m) - livestem_curmr_p   (m) * deltim
+         cpool_p(m) = cpool_p   (m) - grain_curmr_p      (m) * deltim
+      end if
+#ifdef FUN
+      cpool_p   (m) = cpool_p   (m) - soilc_change_p     (m) * deltim
+#endif
       xsmrpool_p(m) = xsmrpool_p(m) + cpool_to_xsmrpool_p(m) * deltim
       xsmrpool_p(m) = xsmrpool_p(m) - leaf_xsmr_p        (m) * deltim
       xsmrpool_p(m) = xsmrpool_p(m) - froot_xsmr_p       (m) * deltim
@@ -285,26 +318,40 @@ integer ivt, m
          xsmrpool_p(m) = xsmrpool_p(m) - livestem_xsmr_p (m) * deltim
          xsmrpool_p(m) = xsmrpool_p(m) - livecroot_xsmr_p(m) * deltim
       end if
-      !print*,'cpool_to_leafc in CNCStateUpdate1',i,cpool_to_leafc(m) * deltim
-   !print*,'cpool_to_leafc_storage in CNCStateUpdate1',i,cpool_to_leafc_storage(m) * deltim
+      cpool_p         (m) = cpool_p         (m) - cpool_to_leafc_p         (m) * deltim
       leafc_p         (m) = leafc_p         (m) + cpool_to_leafc_p         (m) * deltim
+      cpool_p         (m) = cpool_p         (m) - cpool_to_leafc_storage_p (m) * deltim
       leafc_storage_p (m) = leafc_storage_p (m) + cpool_to_leafc_storage_p (m) * deltim
+      cpool_p         (m) = cpool_p         (m) - cpool_to_frootc_p        (m) * deltim
       frootc_p        (m) = frootc_p        (m) + cpool_to_frootc_p        (m) * deltim
+      cpool_p         (m) = cpool_p         (m) - cpool_to_frootc_storage_p(m) * deltim
       frootc_storage_p(m) = frootc_storage_p(m) + cpool_to_frootc_storage_p(m) * deltim
       if (woody(ivt) == 1) then
+         cpool_p             (m) = cpool_p             (m) - cpool_to_livestemc_p         (m) * deltim
          livestemc_p         (m) = livestemc_p         (m) + cpool_to_livestemc_p         (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_livestemc_storage_p (m) * deltim
          livestemc_storage_p (m) = livestemc_storage_p (m) + cpool_to_livestemc_storage_p (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_deadstemc_p         (m) * deltim
          deadstemc_p         (m) = deadstemc_p         (m) + cpool_to_deadstemc_p         (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_deadstemc_storage_p (m) * deltim
          deadstemc_storage_p (m) = deadstemc_storage_p (m) + cpool_to_deadstemc_storage_p (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_livecrootc_p        (m) * deltim
          livecrootc_p        (m) = livecrootc_p        (m) + cpool_to_livecrootc_p        (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_livecrootc_storage_p(m) * deltim
          livecrootc_storage_p(m) = livecrootc_storage_p(m) + cpool_to_livecrootc_storage_p(m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_deadcrootc_p        (m) * deltim
          deadcrootc_p        (m) = deadcrootc_p        (m) + cpool_to_deadcrootc_p        (m) * deltim
+         cpool_p             (m) = cpool_p             (m) - cpool_to_deadcrootc_storage_p(m) * deltim
          deadcrootc_storage_p(m) = deadcrootc_storage_p(m) + cpool_to_deadcrootc_storage_p(m) * deltim
       end if
       if (ivt >= npcropmin) then ! skip 2 generic crops
+         cpool_p            (m) = cpool_p            (m) - cpool_to_livestemc_p        (m) * deltim
          livestemc_p        (m) = livestemc_p        (m) + cpool_to_livestemc_p        (m) * deltim
+         cpool_p            (m) = cpool_p            (m) - cpool_to_livestemc_storage_p(m) * deltim
          livestemc_storage_p(m) = livestemc_storage_p(m) + cpool_to_livestemc_storage_p(m) * deltim
+         cpool_p            (m) = cpool_p            (m) - cpool_to_grainc_p           (m) * deltim
          grainc_p           (m) = grainc_p           (m) + cpool_to_grainc_p           (m) * deltim
+         cpool_p            (m) = cpool_p            (m) - cpool_to_grainc_storage_p   (m) * deltim
          grainc_storage_p   (m) = grainc_storage_p   (m) + cpool_to_grainc_storage_p   (m) * deltim
       end if
 #ifdef SASU
@@ -330,6 +377,19 @@ integer ivt, m
       end if
 #endif
       ! growth respiration for transfer growth
+      cpool_p     (m) = cpool_p     (m) - cpool_leaf_gr_p     (m) * deltim
+      cpool_p     (m) = cpool_p     (m) - cpool_froot_gr_p    (m) * deltim
+      if(woody(ivt) == 1) then
+         cpool_p  (m) = cpool_p     (m) - cpool_livestem_gr_p (m) * deltim
+         cpool_p  (m) = cpool_p     (m) - cpool_deadstem_gr_p (m) * deltim
+         cpool_p  (m) = cpool_p     (m) - cpool_livecroot_gr_p(m) * deltim
+         cpool_p  (m) = cpool_p     (m) - cpool_deadcroot_gr_p(m) * deltim
+      end if
+      if(ivt >= npcropmin)then
+         cpool_p  (m) = cpool_p     (m) - cpool_livestem_gr_p (m) * deltim
+         cpool_p  (m) = cpool_p     (m) - cpool_grain_gr_p    (m) * deltim
+      end if
+
       gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_leaf_gr_p (m) * deltim
       gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_froot_gr_p(m) * deltim
       if (woody(ivt) == 1) then
@@ -342,10 +402,24 @@ integer ivt, m
          gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_livestem_gr_p(m) * deltim
          gresp_xfer_p(m) = gresp_xfer_p(m) - transfer_grain_gr_p   (m) * deltim
       end if
+   ! growth respiration at time of storage
+      cpool_p        (m) = cpool_p        (m) - cpool_leaf_storage_gr_p (m) * deltim
+      cpool_p        (m) = cpool_p        (m) - cpool_froot_storage_gr_p(m) * deltim
+      if(woody(ivt) == 1)then
+          cpool_p    (m) = cpool_p        (m) - cpool_livestem_storage_gr_p (m) * deltim
+          cpool_p    (m) = cpool_p        (m) - cpool_deadstem_storage_gr_p (m) * deltim
+          cpool_p    (m) = cpool_p        (m) - cpool_livecroot_storage_gr_p(m) * deltim
+          cpool_p    (m) = cpool_p        (m) - cpool_deadcroot_storage_gr_p(m) * deltim
+      end if
+      if(ivt >= npcropmin)then
+          cpool_p    (m) = cpool_p        (m) - cpool_livestem_storage_gr_p (m) * deltim
+          cpool_p    (m) = cpool_p        (m) - cpool_grain_storage_gr_p    (m) * deltim
+      end if
+          
    ! growth respiration stored for release during transfer growth
+      cpool_p        (m) = cpool_p        (m) - cpool_to_gresp_storage_p(m) * deltim
       gresp_storage_p(m) = gresp_storage_p(m) + cpool_to_gresp_storage_p(m) * deltim
 
-   !print*,'leaf storage to xfer',leafc_storage_to_xfer (m) * deltim
    ! move storage pools into transfer pools
       leafc_storage_p (m) = leafc_storage_p (m) - leafc_storage_to_xfer_p (m) * deltim
       leafc_xfer_p    (m) = leafc_xfer_p    (m) + leafc_storage_to_xfer_p (m) * deltim
@@ -410,26 +484,18 @@ integer ivt, m
 
             xsmrpool_to_atm_p(m) = xsmrpool_to_atm_p(m) + xsmrpool_p(m)/deltim
             xsmrpool_p       (m) = 0._r8
-!         xsmrpool_to_atm(m) = xsmrpool_to_atm(m) + cpool(m)/deltim
+            xsmrpool_to_atm_p(m) = xsmrpool_to_atm_p(m) + cpool_p (m)/deltim
+            cpool_p          (m) = 0._r8
             xsmrpool_to_atm_p(m) = xsmrpool_to_atm_p(m) + frootc_p(m)/deltim
             frootc_p         (m) = 0._r8
          end if
       end if
-!      if(m .eq. 22784)print*,'leafc',i,m,ivt,leafc_p(m)+leafc_storage_p(m)+leafc_xfer_p(m)
-!      if(m .eq. 22784)print*,'frootc',frootc_p(m)+frootc_storage_p(m)+frootc_xfer_p(m)
-!      if(m .eq. 22784)print*,'livestemc',livestemc_p(m)+livestemc_storage_p(m)+livestemc_xfer_p(m)
-!      if(m .eq. 22784)print*,'deadstemc',deadstemc_p(m)+deadstemc_storage_p(m)+deadstemc_xfer_p(m)
-!      if(m .eq. 22784)print*,'livecrootc',livecrootc_p(m)+livecrootc_storage_p(m)+livecrootc_xfer_p(m)
-!      if(m .eq. 22784)print*,'deadcrootc',deadcrootc_p(m)+deadcrootc_storage_p(m)+deadcrootc_xfer_p(m)
-      if(i .eq. 140778)print*,'i,m,ivt',i,m,ivt
-      if(i .eq. 140778)print*,'leafc',leafc_p(m)+leafc_storage_p(m)+leafc_xfer_p(m)
-      if(i .eq. 140778)print*,'frootc',frootc_p(m)+frootc_storage_p(m)+frootc_xfer_p(m)
-      if(i .eq. 140778)print*,'livestemc',livestemc_p(m)+livestemc_storage_p(m)+livestemc_xfer_p(m)
-      if(i .eq. 140778)print*,'deadstemc',deadstemc_p(m)+deadstemc_storage_p(m)+deadstemc_xfer_p(m)
-      if(i .eq. 140778)print*,'livecrootc',livecrootc_p(m)+livecrootc_storage_p(m)+livecrootc_xfer_p(m)
-      if(i .eq. 140778)print*,'deadcrootc',deadcrootc_p(m)+deadcrootc_storage_p(m)+deadcrootc_xfer_p(m)
+#ifdef CROP
+      cropprod1c_loss_p(m) = cropprod1c_p(m) * 7.2e-8_r8
+      cropprod1c_p     (m) = cropprod1c_p(m) + grainc_to_food_p(m) * deltim - cropprod1c_loss_p(m) * deltim
+#endif
    end do ! end pft loop
-    
+
 end subroutine CStateUpdate1
 
 end module bgc_CNCStateUpdate1Mod

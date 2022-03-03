@@ -138,6 +138,8 @@ MODULE MOD_TimeVariables
   REAL(r8), allocatable :: grainc_xfer              (:)
   REAL(r8), allocatable :: xsmrpool                 (:)
   REAL(r8), allocatable :: downreg                  (:)
+  REAL(r8), allocatable :: cropprod1c               (:)
+  REAL(r8), allocatable :: cropseedc_deficit        (:)
 
   REAL(r8), allocatable :: leafn                    (:)
   REAL(r8), allocatable :: leafn_storage            (:)
@@ -209,6 +211,8 @@ MODULE MOD_TimeVariables
   REAL(r8), allocatable :: wf2                      (:)
   REAL(r8), allocatable :: tsoi17                   (:)
   REAL(r8), allocatable :: rh30                     (:) ! 30-day running mean of relative humidity
+  REAL(r8), allocatable :: accumnstep               (:) ! 30-day running mean of relative humidity
+  REAL(r8), allocatable :: cphase                   (:) ! 30-day running mean of relative humidity
 
   REAL(r8), allocatable :: dayl                     (:)
   REAL(r8), allocatable :: prev_dayl                (:)
@@ -417,6 +421,8 @@ MODULE MOD_TimeVariables
      allocate (grainc_xfer                  (numpatch))
      allocate (xsmrpool                     (numpatch))
      allocate (downreg                      (numpatch))
+     allocate (cropprod1c                   (numpatch))
+     allocate (cropseedc_deficit            (numpatch))
 
      allocate (leafn                        (numpatch))
      allocate (leafn_storage                (numpatch))
@@ -487,6 +493,8 @@ MODULE MOD_TimeVariables
      allocate (wf2                          (numpatch))
      allocate (tsoi17                       (numpatch))
      allocate (rh30                         (numpatch)) ! 30-day running mean of relative humidity
+     allocate (accumnstep                   (numpatch)) ! 30-day running mean of relative humidity
+     allocate (cphase                       (numpatch)) ! 30-day running mean of relative humidity
 
      allocate (dayl                         (numpatch))
      allocate (prev_dayl                    (numpatch))
@@ -714,6 +722,9 @@ MODULE MOD_TimeVariables
 !           wf2,                 &
            tsoi17,              &
            rh30,                &
+           accumnstep,          &
+           cphase,          &
+
 !---------------SASU variables-----------------------
            decomp0_cpools_vr            , &
            I_met_c_vr_acc               , &
@@ -816,7 +827,10 @@ MODULE MOD_TimeVariables
            xsmrpool_p,             &
            gresp_storage_p,        &
            gresp_xfer_p,           &
+           cpool_p,                &
            totvegc_p,              &
+           cropprod1c_p,           &
+           cropseedc_deficit,      &
       
            leafn_p,                &
            leafn_storage_p,        &
@@ -887,6 +901,39 @@ MODULE MOD_TimeVariables
            ctrunc_p,               &
            ntrunc_p,               &
            npool_p,                &
+
+! crop variables 
+           croplive_p,             &
+           gddtsoi_p,              &
+           huileaf_p,              &
+           gddplant_p,             &
+           huigrain_p,             &
+           peaklai_p,              &
+           aroot_p,                &
+           astem_p,                &
+           arepr_p,                &
+           aleaf_p,                &
+           astemi_p,               &
+           aleafi_p,               &
+           gddmaturity_p,          &
+
+           cropplant_p,            &
+           idop_p,                 &
+           a5tmin_p,               &
+           a10tmin_p,              &
+           t10_p,                  &
+           cumvd_p,                &
+           hdidx_p,                &
+           vf_p,                   &
+           cphase_p,               &
+           fert_counter_p,         &
+           fert_p,                 &
+           tref_min_p,             &
+           tref_max_p,             &
+           tref_min_inst_p,        &
+           tref_max_inst_p,        &
+           fertnitro_p,            &
+           latbaset_p,             &
 
 ! SASU variables
            leafc0_p,                &
@@ -1261,6 +1308,8 @@ MODULE MOD_TimeVariables
 !           wf2,                 &
            tsoi17,              &
            rh30,                &
+           accumnstep,             &
+           cphase,          &
 
 !---------------SASU variables-----------------------
            decomp0_cpools_vr            , &
@@ -1363,7 +1412,10 @@ MODULE MOD_TimeVariables
            xsmrpool_p,             &
            gresp_storage_p,        &
            gresp_xfer_p,           &
+           cpool_p,                &
            totvegc_p,              &
+           cropprod1c_p,           &
+           cropseedc_deficit,      &
       
            leafn_p,                &
            leafn_storage_p,        &
@@ -1434,6 +1486,39 @@ MODULE MOD_TimeVariables
            ctrunc_p,               &
            ntrunc_p,               &
            npool_p,                &
+
+! crop variables 
+           croplive_p,             &
+           gddtsoi_p,              &
+           huileaf_p,              &
+           gddplant_p,             &
+           huigrain_p,             &
+           peaklai_p,              &
+           aroot_p,                &
+           astem_p,                &
+           arepr_p,                &
+           aleaf_p,                &
+           astemi_p,               &
+           aleafi_p,               &
+           gddmaturity_p,          &
+
+           cropplant_p,            &
+           idop_p,                 &
+           a5tmin_p,               &
+           a10tmin_p,              &
+           t10_p,                  &
+           cumvd_p,                &
+           hdidx_p,                &
+           vf_p,                   &
+           cphase_p,               &
+           fert_counter_p,         &
+           fert_p,                 &
+           tref_min_p,             &
+           tref_max_p,             &
+           tref_min_inst_p,        &
+           tref_max_inst_p,        &
+           fertnitro_p,            &
+           latbaset_p,             &
 
 ! SASU variables
            leafc0_p,                &
@@ -1770,6 +1855,8 @@ MODULE MOD_TimeVariables
      deallocate (grainc_xfer          )
      deallocate (xsmrpool             )
      deallocate (downreg              )
+     deallocate (cropprod1c           )
+     deallocate (cropseedc_deficit    )
 
      deallocate (leafn                )
      deallocate (leafn_storage        )
@@ -1840,6 +1927,8 @@ MODULE MOD_TimeVariables
      deallocate (wf2                  )
      deallocate (tsoi17               )
      deallocate (rh30                 )
+     deallocate (accumnstep           )
+     deallocate (cphase               )
 
      deallocate (dayl                 )
      deallocate (prev_dayl            )

@@ -45,7 +45,11 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
 
 ! READ in Leaf area index and stem area index
 
+#ifndef CROP
       lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5.nc'
+#else
+      lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5_CLM5crop.nc'
+#endif
       print*,trim(lndname)
       CALL nccheck( nf90_open(trim(lndname), nf90_nowrite, ncid) )
 
@@ -140,13 +144,23 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
             ps = patch_pft_s(npatch)
             pe = patch_pft_e(npatch)
 
+#ifndef LAIfdbk
             DO p = ps, pe
-               print*,'before pftclass here2',p,ps,pe
                n = pftclass(p)
-               tlai_p(p) = pftlai(i,j,n)
-               tsai_p(p) = pftsai(i,j,n)
+#ifdef CROP
+               if(n<N_PFT-1)then
+#endif
+                  tlai_p(p) = pftlai(i,j,n)
+                  tsai_p(p) = pftsai(i,j,n)
+#ifdef CROP
+               else
+                  tlai_p(p) = pftlai(i,j,N_PFT-1) ! set to grass lai for now by Xingjie Lu : 2022/1/26
+                  tsai_p(p) = pftsai(i,j,N_PFT-1)
+               end if
+#endif
             ENDDO
 
+#endif
             tlai(npatch) = sum(tlai_p(ps:pe) * pftfrac(ps:pe))
             tsai(npatch) = sum(tsai_p(ps:pe) * pftfrac(ps:pe))
 
@@ -159,24 +173,7 @@ SUBROUTINE LAI_readin_nc (lon_points,lat_points,&
          
          green(npatch) = 1.                
          fveg(npatch)  = fveg0(m)
-#ifdef LAIfdbk
-         IF (t == 0)  THEN
-            ps = patch_pft_s(npatch)
-            pe = patch_pft_e(npatch)
-            do p = ps, pe
-               print*,'before pftclass here1',p,ps,pe
-               ivt = pftclass(p)
-               if (dsladlai(ivt) > 0._r8) then
-                  tlai_p(p) = (slatop(ivt)*(exp(leafc_p(p)*dsladlai(ivt)) - 1._r8))/dsladlai(ivt)
-               else
-                  tlai_p(p) = slatop(ivt) * leafc_p(p)
-               end if
-               tlai_p(p) = max(0._r8, tlai_p(p))
-            end do
-            tlai(npatch) = sum(tlai_p(ps:pe) * pftfrac(ps:pe))
-         end if
       end do
-#endif
 #ifdef OPENMP
 !$OMP END PARALLEL DO
 #endif

@@ -7,7 +7,7 @@ SUBROUTINE bgc_driver &
   use PhysicalConstants, only : tfrz, denh2o, denice
   use MOD_PFTimeInvars, only: pftfrac, patch_pft_s, patch_pft_e
   use MOD_1D_Fluxes, only: plant_ndemand, ndep_to_sminn
-  use MOD_1D_PFTFluxes, only: plant_ndemand_p
+  use MOD_1D_PFTFluxes, only: plant_ndemand_p, cpool_to_leafc_p, crop_seedc_to_leaf_p
   use bgc_veg_CNMRespMod, only: CNMResp
   use bgc_soil_SoilBiogeochemDecompCascadeBGCMod, only: decomp_rate_constants_bgc
   use bgc_soil_SoilBiogeochemPotentialMod, only: SoilBiogeochemPotential
@@ -33,6 +33,7 @@ SUBROUTINE bgc_driver &
   use bgc_CNSummaryMod, only: CNDriverSummarizeStates, CNDriverSummarizeFluxes
   use bgc_CNAnnualUpdateMod, only: CNAnnualUpdate
   use bgc_CNZeroFluxesMod, only: CNZeroFluxes
+  use bgc_veg_CNVegStructUpdateMod, only: CNVegStructUpdate
   use bgc_CNBalanceCheckMod, only: BeginCNBalance, CBalanceCheck, NBalanceCheck
   use bgc_CNSASUMod, only: CNSASU
   use timemanager
@@ -40,6 +41,9 @@ SUBROUTINE bgc_driver &
                       z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
   use MOD_TimeVariables, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr
+use MOD_PFTimeVars, only: &
+! vegetation carbon state variables (inout)
+           leafc_p            , leafc_storage_p     , leafc_xfer_p    ,cropseedc_deficit_p
   implicit none
 
   integer ,intent(in) :: i
@@ -50,38 +54,30 @@ SUBROUTINE bgc_driver &
 
   integer :: ps, pe
   integer j
-  call BeginCNBalance(i)
-!  if(i .eq. 79738)print*,'ndep in bgcdriver',ndep_to_sminn(i) 
-!  if(i .eq. 79738)print*,'col_begnb after BeginCNBalance',col_begnb(i)
   ps = patch_pft_s(i)      
   pe = patch_pft_e(i)
+  call BeginCNBalance(i)
 ! update vegetation pools from phenology, allocation and nitrogen uptake
 ! update soil pools from decomposition and nitrogen competition
   call CNZeroFluxes(i, ps, pe, nl_soil, ndecomp_pools, ndecomp_transitions)
-!  if(i .eq. 79738)print*,'ndep after 0flux',ndep_to_sminn(i) 
   call CNMResp(i, ps, pe, nl_soil, npcropmin)
   call decomp_rate_constants_bgc(i,nl_soil,z_soi)
   call SoilBiogeochemPotential(i,nl_soil,ndecomp_pools,ndecomp_transitions)
-!  if(i .eq. 79738)print*,'ndep after soil pontential',ndep_to_sminn(i) 
   call SoilBiogeochemVerticalProfile(i,ps,pe,nl_soil,nl_soil_full,nbedrock,zmin_bedrock,z_soi,dz_soi)
   call calc_plant_nutrient_demand_CLM45_default(i,ps,pe,deltim,npcropmin)
   
   plant_ndemand(i) = sum( plant_ndemand_p(ps:pe)*pftfrac(ps:pe) )
 
   call SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
-!  if(i .eq. 79738)print*,'ndep after soil competition',ndep_to_sminn(i) 
   call calc_plant_nutrient_competition_CLM45_default(i,ps,pe,npcropmin)
   call SoilBiogeochemDecomp(i,nl_soil,ndecomp_pools,ndecomp_transitions, dz_soi)
-  call CNPhenology(i,ps,pe,nl_soil,idate(1:3),deltim,dlat,npcropmin,phase=1)
-  call CNPhenology(i,ps,pe,nl_soil,idate(1:3),deltim,dlat,npcropmin,phase=2)
+  call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=1)
+  call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=2)
   call CNGResp(i, ps, pe, npcropmin)
   call CStateUpdate0()
   call CStateUpdate1(i, ps, pe, deltim, nl_soil, ndecomp_transitions, npcropmin)
   call NStateUpdate1(i, ps, pe, deltim, nl_soil, ndecomp_transitions, npcropmin,dz_soi)
-!  if(i .eq. 79738)print*,'ndep before SoilBiogeochemNStateUpdate1',ndep_to_sminn(i)*deltim, &
-!                  sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
   call SoilBiogeochemNStateUpdate1(i,deltim,nl_soil,ndecomp_transitions,dz_soi)
-!  if(i .eq. 147958)print*,'ndep after SoilBiogeochemNStateUpdate1',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
 
 ! update soil pools from soil vertical mixing
   call SoilBiogeochemLittVertTransp(i,deltim,nl_soil,nl_soil_full,ndecomp_pools,nbedrock,z_soi,zi_soi,dz_soi)
@@ -91,7 +87,6 @@ SUBROUTINE bgc_driver &
   call CStateUpdate2(i, ps, pe, deltim, nl_soil)
   call NStateUpdate2(i, ps, pe, deltim, nl_soil, dz_soi)
 
-!  if(i .eq. 79738)print*,'col_begnb after NStateUpdate2',col_begnb(i)
 
 #ifdef FIRE
 ! update vegetation and fire pools from fire
@@ -103,9 +98,7 @@ SUBROUTINE bgc_driver &
 
 ! update soil mineral nitrogen pools leaching
   call SoilBiogeochemNLeaching(i,deltim,nl_soil,zi_soi,dz_soi)
-!if(i .eq. 147958)print*,'sminn after NStateUpdate2',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
   call NstateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools,dz_soi)
-!if(i .eq. 147958)print*,'sminn after NStateUpdate3',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
 
 #ifdef SASU
   call CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
@@ -113,18 +106,17 @@ SUBROUTINE bgc_driver &
 
   call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
   call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
+
 if( .not. skip_balance_check(i) )then
   call CBalanceCheck(i,ps,pe,deltim,dlat,dlon)
-!  if(i .eq. 79738)print*,'col_begnb before NBalanceCheck',col_begnb(i)
-!  if(i .eq. 79738)print*,'ndep before Nbalance check',ndep_to_sminn(i)*deltim, &
-!                  sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
   call NBalanceCheck(i,deltim,dlat,dlon)
+
+
 else
   skip_balance_check(i) = .false.
 end if
-do j = 1, ndecomp_pools
-   if(i .eq. 140778)print*,'decomp_cpools_vr(1,:,i)',j,decomp_cpools_vr(1,j,i)
-end do
+
+call CNVegStructUpdate(i,ps,pe,deltim,npcropmin)
 
 END SUBROUTINE bgc_driver
 

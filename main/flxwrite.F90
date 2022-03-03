@@ -144,6 +144,17 @@
            if (f_deadcrootn_storage(i,j) /= spval) f_deadcrootn_storage (i,j) = f_deadcrootn_storage (i,j)  / a  ! dead coarse root nitrogen storage pool  (gC/m2)
            if (f_deadcrootn_xfer   (i,j) /= spval) f_deadcrootn_xfer    (i,j) = f_deadcrootn_xfer (i,j)     / a  ! dead coarse root nitrogen transfer pool (gC/m2)
 
+           if (f_grainc            (i,j) /= spval) f_grainc             (i,j) = f_grainc (i,j)              / a  ! grain carbon display pool  (gC/m2)
+           if (f_grainc_storage    (i,j) /= spval) f_grainc_storage     (i,j) = f_grainc_storage (i,j)      / a  ! grain carbon storage pool  (gC/m2)
+           if (f_grainc_xfer       (i,j) /= spval) f_grainc_xfer        (i,j) = f_grainc_xfer (i,j)         / a  ! grain carbon transfer pool (gC/m2)
+
+           if (f_cphase            (i,j) /= spval) f_cphase             (i,j) = f_cphase (i,j)              / a  ! crop phase
+           if (f_cropprod1c        (i,j) /= spval) f_cropprod1c         (i,j) = f_cropprod1c (i,j)          / a  ! 1-yr crop production carbon
+           if (f_cropprod1c_loss   (i,j) /= spval) f_cropprod1c_loss    (i,j) = f_cropprod1c_loss (i,j)     / a  ! loss of 1-yr crop production carbon
+           if (f_cropseedc_deficit (i,j) /= spval) f_cropseedc_deficit  (i,j) = f_cropseedc_deficit (i,j)   / a  ! crop carbon deficit
+           if (f_grainc_to_cropprodc(i,j)/= spval) f_grainc_to_cropprodc(i,j)= f_grainc_to_cropprodc(i,j)   / a  ! grain to crop production
+           if (f_grainc_to_seed    (i,j)/= spval) f_grainc_to_seed      (i,j)=  f_grainc_to_seed(i,j)       / a  ! grain to seed
+
            if (f_gpp               (i,j) /= spval) f_gpp                (i,j) = f_gpp             (i,j)     / a  ! net primary production (gC/m2)
            if (f_downreg           (i,j) /= spval) f_downreg            (i,j) = f_downreg         (i,j)     / a  ! gpp downregulation due to n limitation
 !---------------------------------------------------------------------
@@ -373,7 +384,18 @@
      write(luout) f_deadcrootn_storage(:,:) ! dead coarse root nitrogen storage pool  (gC/m2)
      write(luout) f_deadcrootn_xfer   (:,:) ! dead coarse root nitrogen transfer pool (gC/m2)
 
-     write(luout) f_gpp               (:,:) ! net primary production (gC/m2)
+     write(luout) f_grainc        (:,:) ! grain carbon display pool  (gC/m2)
+     write(luout) f_grainc_storage(:,:) ! grain carbon storage storage pool  (gC/m2)
+     write(luout) f_grainc_xfer   (:,:) ! grain transpher carbon pool (gC/m2)
+
+     write(luout) f_cphase            (:,:) ! crop phase
+     write(luout) f_cropprod1c        (:,:) ! crop phase
+     write(luout) f_cropprod1c_loss   (:,:) ! crop phase
+     write(luout) f_cropseedc_deficit (:,:) ! crop phase
+     write(luout) f_grainc_to_cropprodc(:,:) ! crop phase
+     write(luout) f_grainc_to_seed    (:,:) ! crop phase
+
+     write(luout) f_gpp               (:,:) ! net primary production (gC/m2/s)
      write(luout) f_downreg           (:,:) ! gpp downregulation due to N limitation
 
      write(luout) f_litr1c          (:,:,:)  ! soil carbon pool [gC/m3]

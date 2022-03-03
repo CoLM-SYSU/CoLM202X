@@ -69,6 +69,9 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
   REAL(r8), allocatable :: pctwater(:,:)            ! 
   REAL(r8), allocatable :: pctwetland(:,:)          ! 
   REAL(r8), allocatable :: pctglacier(:,:)          ! 
+#ifdef CROP
+  REAL(r8), allocatable :: pctcft(:,:,:)            ! 
+#endif
   REAL(r8), allocatable :: pctpc(:,:,:,:)           ! 
   REAL(r8), allocatable :: fraction_patches(:,:,:)  !fraction of the patch of landtypes in gridcells
 
@@ -103,10 +106,11 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
 
   INTEGER npft, npc
   INTEGER ncid, landfrac_vid, pctlc_vid, pctelc_vid
-  INTEGER pctpft_vid, pctpc_vid
+  INTEGER pctpft_vid, pctpc_vid, pctcft_vid
   INTEGER pcturban_vid, pctwater_vid, pctwetland_vid, pctglacier_vid
 
   REAL(r8) sumpctpft
+  REAL(r8) sumpctcft
   REAL(r8), external :: orb_coszen     !cosine of the solar zenith angle
 
   REAL(r8) f_s1s2 (1:nl_soil)
@@ -116,6 +120,7 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
   REAL(r8) f_s2s1
   REAL(r8) f_s2s3
   REAL(r8) t
+
 
 
 ! ----------------------------------------------------------------------
@@ -260,7 +265,12 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       allocate (pctwater(1:lon_points,1:lat_points))
       allocate (pctwetland(1:lon_points,1:lat_points))
       allocate (pctglacier(1:lon_points,1:lat_points))
+#ifndef CROP
       lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5.nc'
+#else
+      allocate (pctcft(1:lon_points,1:lat_points,1:N_CFT))
+      lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5_CLM5crop.nc'
+#endif
       print*,trim(lndname)
 
       CALL nccheck( nf90_open(trim(lndname), nf90_nowrite, ncid) )
@@ -270,6 +280,9 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       CALL nccheck( nf90_inq_varid(ncid, "PCT_WATER", pctwater_vid ) )
       CALL nccheck( nf90_inq_varid(ncid, "PCT_WETLAND", pctwetland_vid ) )
       CALL nccheck( nf90_inq_varid(ncid, "PCT_GLACIER", pctglacier_vid ) )
+#ifdef CROP
+      CALL nccheck( nf90_inq_varid(ncid, "PCT_CFT", pctcft_vid ) )
+#endif
 
       CALL nccheck( nf90_get_var(ncid, landfrac_vid, landfrac) )
       CALL nccheck( nf90_get_var(ncid, pctpft_vid, pctpft) )
@@ -277,6 +290,9 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       CALL nccheck( nf90_get_var(ncid, pctwater_vid, pctwater) )
       CALL nccheck( nf90_get_var(ncid, pctwetland_vid, pctwetland) )
       CALL nccheck( nf90_get_var(ncid, pctglacier_vid, pctglacier) )
+#ifdef CROP
+      CALL nccheck( nf90_get_var(ncid, pctcft_vid, pctcft) )
+#endif
 
       landfrac   = landfrac   / 100.
       pctpft     = pctpft     / 100.
@@ -284,6 +300,10 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       pctwater   = pctwater   / 100.
       pctwetland = pctwetland / 100.
       pctglacier = pctglacier / 100.
+#ifdef CROP
+      pctcft     = pctcft     / 100.
+      if(any(pctcft .gt. 0))print*,'pctcft exist positive value'
+#endif
 
       npatch = 0
       numpatch_lat(:) = 0
@@ -298,7 +318,7 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
                npatch = npatch + 1 !subgrid patch number
                numpatch_lat(j) = numpatch_lat(j) + 1
 
-               DO np = 0, N_PFT-1
+               DO np = 0, N_PFT-1   ! when crop is on, pctpft(i,j,N_PFT-1) is already 0, conditional statement will be ignored 
                   IF (pctpft(i,j,np) > 0.) THEN
                      npft = npft + 1
                   ENDIF
@@ -321,6 +341,22 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
                npatch = npatch + 1 
                numpatch_lat(j) = numpatch_lat(j) + 1
             ENDIF 
+#ifdef CROP 
+            DO k = N_PFT, N_PFT + N_CFT - 1
+               IF(k .ne. mergetoclmpft(k))then
+                  pctcft(i,j,mergetoclmpft(k)-N_PFT+1) = pctcft(i,j,mergetoclmpft(k)-N_PFT+1) + pctcft(i,j,k-N_PFT+1)
+                  pctcft(i,j,k-N_PFT+1) = 0
+               ENDIF
+            END DO
+            sumpctcft = sum(pctcft(i,j,:))
+            DO np = 1, N_CFT
+               IF (pctcft(i,j,np) > 0.) THEN
+                  npatch = npatch + 1 !subgrid patch number
+                  numpatch_lat(j) = numpatch_lat(j) + 1
+                  npft = npft + 1
+               ENDIF
+            ENDDO
+#endif
          ENDDO
       ENDDO
 
@@ -623,8 +659,42 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
                ENDIF
             ENDIF 
 
+#ifdef CROP
+            do np = 1, N_CFT
+               IF (pctcft(i,j,np) > 0.) THEN
+!                  print*,'pctcft is greater than 0'
+
+                  npatch             = npatch + 1 !subgrid patch number
+                  patch2lon(npatch)  = i !patch longitude index
+                  patch2lat(npatch)  = j !patch latitude index
+                  patchclass(npatch) = 1 !no meaning here
+                  patchlatr(npatch)  = latixy(i,j) !latitude in radians
+                  patchlonr(npatch)  = longxy(i,j) !longitude in radians
+
+                  patchfrac(npatch)  = pctcft(i,j,np)*landfrac(i,j) !patch weight
+                  patchtype(npatch)  = 0                       !soil patch
+                  grid_patch_e(i,j)  = npatch
+                  patch_pft_s(npatch)= -1
+
+                  IF (l.ne.i .OR. m.ne.j) THEN
+                     l = i; m = j; grid_patch_s(i,j) = npatch
+                  ENDIF
+
+                  npft            = npft + 1
+                  pftclass(npft)  = np + N_PFT - 1   ! PFT: 0~N_PFT-1; CFT: N_PFT ~ N_PFT + N_CFT-1
+                  pftfrac(npft)   = 1.
+                  pft2patch(npft) = npatch
+
+                  IF (patch_pft_s(npatch) == -1) THEN
+                      patch_pft_s(npatch) = npft
+                  ENDIF 
+
+                  patch_pft_e(npatch)= npft
+               ENDIF
+            ENDDO
          ENDDO
       ENDDO
+#endif
 
       IF(numpatch.ne.npatch)THEN
          write(6,*) 'the number of patches is not identical ', numpatch, npatch
@@ -729,7 +799,7 @@ SUBROUTINE initialize (casename,dir_model_landdata,dir_restart_hist,&
       ! read global tree top height from nc file
       CALL HTOP_readin_nc (lon_points, lat_points, dir_model_landdata)
 #endif
-
+print*,'after readin htop'
 ! ................................
 ! 3.4 Initialize TUNABLE constants
 ! ................................
@@ -1001,7 +1071,7 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
           ,col_sminnendnb(i), col_sminnbegnb(i) &
           ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i)&
           ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
-          ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i)&
+          ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) &
 !------------------------SASU variables-----------------------
           ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
           ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &

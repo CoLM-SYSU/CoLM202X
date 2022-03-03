@@ -175,6 +175,8 @@ MODULE MOD_1D_PFTFluxes
 
   REAL(r8), allocatable :: xsmrpool_to_atm_p                    (:)
 
+  REAL(r8), allocatable :: cropprod1c_loss_p                    (:)
+
   REAL(r8), allocatable :: plant_ndemand_p              (:)
 
   REAL(r8), allocatable :: leafn_xfer_to_leafn_p                (:)
@@ -520,6 +522,8 @@ MODULE MOD_1D_PFTFluxes
 
      allocate (xsmrpool_to_atm_p                    (numpft))
 
+     allocate (cropprod1c_loss_p                    (numpft))
+
      allocate (plant_ndemand_p              (numpft))
 
      allocate (leafn_xfer_to_leafn_p                (numpft))
@@ -845,6 +849,8 @@ MODULE MOD_1D_PFTFluxes
      deallocate (transfer_grain_gr_p                  )
 
      deallocate (xsmrpool_to_atm_p                    )
+
+     deallocate (cropprod1c_loss_p                    )
 
      deallocate (plant_ndemand_p              )
 

@@ -33,7 +33,11 @@ SUBROUTINE HTOP_readin_nc (lon_points,lat_points,dir_model_landdata)
       REAL(r8), allocatable :: htoplc(:,:,:)
       REAL(r8), allocatable :: htoppft(:,:,:)
 
+#ifndef CROP
       lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5.nc'
+#else
+      lndname = trim(dir_model_landdata)//'global_0.5x0.5.MOD2005_V4.5_CLM5crop.nc'
+#endif
       print*,trim(lndname)
       CALL nccheck( nf90_open(trim(lndname), nf90_nowrite, ncid) )
 
@@ -99,10 +103,18 @@ SUBROUTINE HTOP_readin_nc (lon_points,lat_points,dir_model_landdata)
                
                ! trees
 ! yuan, 01/06/2020: adjust htop reading
+#ifdef CROP
+               IF ( n>0 .and. n<9)THEN
+                  IF(htoppft(i,j,n)>2.)THEN
+#else
                IF ( n>0 .and. n<9 .and. htoppft(i,j,n)>2.) THEN
+#endif
                   htop_p(p) = htoppft(i,j,n)
                   hbot_p(p) = htoppft(i,j,n)*hbot0_p(n)/htop0_p(n)
                   hbot_p(p) = max(1., hbot_p(n))
+#ifdef CROP
+                  ENDIF
+#endif
                ENDIF
             ENDDO
 

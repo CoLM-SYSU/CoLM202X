@@ -217,6 +217,17 @@ CONTAINS
       read(11) f_deadcrootn_storage(:,:) ! dead coarse root nitrogen storage pool  (gN/m2)
       read(11) f_deadcrootn_xfer   (:,:) ! dead coarse root nitrogen transfer pool (gN/m2)
 
+      read(11) f_grainc            (:,:)
+      read(11) f_grainc_storage    (:,:)
+      read(11) f_grainc_xfer       (:,:)
+
+      read(11) f_cphase            (:,:) ! crop phase
+      read(11) f_cropprod1c        (:,:) ! crop phase
+      read(11) f_cropprod1c_loss   (:,:) ! crop phase
+      read(11) f_cropseedc_deficit (:,:) ! crop phase
+      read(11) f_grainc_to_cropprodc(:,:) ! crop phase
+      read(11) f_grainc_to_seed    (:,:) ! crop phase
+
       read(11) f_gpp               (:,:)
       read(11) f_downreg           (:,:)
 
@@ -2628,7 +2639,71 @@ CONTAINS
       call sanity( nf90_put_att(ncid, varid, 'units','gN/m2') )
       call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
       call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
+! crop variables      
+      ! grain carbon display pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'GRAINC', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','grain carbon display pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
       
+      ! grain carbon storage pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'GRAINC_STORAGE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','grain carbon storage pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! grain carbon transfer pool  (gC/m2)
+      call sanity( nf90_def_var(ncid, 'GRAINC_XFER', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','grain carbon transfer pool  (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! crop phase  (unitless)
+      call sanity( nf90_def_var(ncid, 'CPHASE', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','crop phase  (unitless)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','unitless') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! crop production pool (gC/m2)
+      call sanity( nf90_def_var(ncid, 'CROPPROD1C', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','crop production pool (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! crop production pool loss rate (gC/m2/s)
+      call sanity( nf90_def_var(ncid, 'CROPPROD1C_LOSS', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','crop production pool loss rate (gC/m2/s)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2/s') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! crop seed deficit pool (gC/m2)
+      call sanity( nf90_def_var(ncid, 'CROPSEEDC_DEFICIT', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','crop seed deficit pool (gC/m2)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2/s') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! grain carbon to food (gC/m2/s)
+      call sanity( nf90_def_var(ncid, 'GRAINC_TO_FOOD', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','grainc to food (gC/m2/s)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2/s') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+      
+      ! grain carbon to seed (gC/m2/s)
+      call sanity( nf90_def_var(ncid, 'GRAINC_TO_SEED', nf90_float, (/xid,yid,timeid/), varid) )
+      call sanity( nf90_put_att(ncid, varid, 'long_name','grainc to seed (gC/m2/s)') )
+      call sanity( nf90_put_att(ncid, varid, 'units','gC/m2/s') )
+      call sanity( nf90_put_att(ncid, varid, 'missing_value', spval_r4) )
+      call sanity( nf90_put_att(ncid, varid, '_FillValue', spval_r4) )
+
       ! gross primary productivity (gC/m2/s-1) GPP
       call sanity( nf90_def_var(ncid, 'GPP', nf90_float, (/xid,yid,timeid/), varid) )
       call sanity( nf90_put_att(ncid, varid, 'long_name','gross primary productivity (gC/m2/s)') )
@@ -3850,6 +3925,71 @@ CONTAINS
       vars = vars(:,lat_points:1:-1)
       ! dead coarse root carbon transfer pool  (gN/m2)
       call sanity( nf90_inq_varid(ncid,'DEADCROOTN_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+
+! crop variables
+      
+      vars(1:max(lon_points/2,1),:) = f_grainc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_grainc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! grain carbon display pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'GRAINC',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_grainc_storage((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_grainc_storage(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! grain carbon storage pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'GRAINC_STORAGE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_grainc_xfer((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_grainc_xfer(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! grain carbon transfer pool  (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'GRAINC_XFER',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_cphase((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_cphase(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! crop phase  (unitless)
+      call sanity( nf90_inq_varid(ncid,'CPHASE',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_cropprod1c((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_cropprod1c(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! crop production pool (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'CROPPROD1C',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_cropprod1c_loss((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_cropprod1c_loss(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! crop production pool loss rate (gC/m2/s)
+      call sanity( nf90_inq_varid(ncid,'CROPPROD1C_LOSS',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_cropseedc_deficit((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_cropseedc_deficit(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! crop seed deficit pool (gC/m2)
+      call sanity( nf90_inq_varid(ncid,'CROPSEEDC_DEFICIT',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_grainc_to_cropprodc((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_grainc_to_cropprodc(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! grain carbon to food (gC/m2/s)
+      call sanity( nf90_inq_varid(ncid,'GRAINC_TO_FOOD',varid) )
+      call sanity( nf90_put_var(ncid,varid,vars) )
+      
+      vars(1:max(lon_points/2,1),:) = f_grainc_to_seed((lon_points/2+1):lon_points,:)
+      vars((lon_points/2+1):lon_points,:) = f_grainc_to_seed(1:max(lon_points/2,1),:)
+      vars = vars(:,lat_points:1:-1)
+      ! grain carbon to seed (gC/m2/s)
+      call sanity( nf90_inq_varid(ncid,'GRAINC_TO_SEED',varid) )
       call sanity( nf90_put_var(ncid,varid,vars) )
       
       vars(1:max(lon_points/2,1),:) = f_gpp((lon_points/2+1):lon_points,:)

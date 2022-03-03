@@ -712,7 +712,7 @@ MODULE LEAF_temperature
           rst = 2.0e4
        ENDIF
        assim = assimsun + assimsha
-       respc = respcsun + respcsha + rsoil
+       respc = respcsun + respcsha! + rsoil
 
 ! canopy fluxes and total assimilation amd respiration
        fsenl = fsenl + fsenl_dtl*dtl(it-1) &

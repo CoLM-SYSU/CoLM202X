@@ -1,3 +1,4 @@
+#include <define.h>
 module bgc_CNSummaryMod
 
 use precision
@@ -8,6 +9,7 @@ use MOD_TimeVariables, only: &
     leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
     deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
     deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, grainc, grainc_storage, grainc_xfer, &
+    cropseedc_deficit, cropprod1c, cphase, & 
     leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
     deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
     deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, grainn, grainn_storage, grainn_xfer, downreg
@@ -19,7 +21,8 @@ use MOD_PFTimeVars, only: &
     deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
     leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
     deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
-    grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, cropseedc_deficit_p, &
+    grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, &
+    cropseedc_deficit_p, cropprod1c_p, cphase_p, cpool_p, &
     leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
     leafn_storage_p, frootn_storage_p, livestemn_storage_p, &
     deadstemn_storage_p, livecrootn_storage_p, deadcrootn_storage_p, &
@@ -29,6 +32,7 @@ use MOD_PFTimeVars, only: &
 use MOD_PFTimeInvars,  only: pftfrac
 use MOD_1D_Fluxes, only: &
     decomp_hr, decomp_hr_vr, gpp, ar, er, supplement_to_sminn, supplement_to_sminn_vr, &
+    cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, &
     sminn_leached, sminn_leached_vr, smin_no3_leached, smin_no3_leached_vr, smin_no3_runoff, smin_no3_runoff_vr, &
     f_n2o_nit, f_n2o_nit_vr, decomp_cpools_transport_tendency, decomp_npools_transport_tendency, &
     denit, f_denit_vr, fire_closs, hrv_xsmrpool_to_atm, som_c_leached, som_n_leached, sminn_to_denit_excess_vr, &
@@ -51,7 +55,8 @@ use MOD_1D_PFTFluxes, only: &
     m_deadstemc_to_fire_p, m_deadstemc_storage_to_fire_p, m_deadstemc_xfer_to_fire_p, &
     m_livecrootc_to_fire_p, m_livecrootc_storage_to_fire_p, m_livecrootc_xfer_to_fire_p, &
     m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
-    m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
+    m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p, &
+    cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p
     
 implicit none
 
@@ -137,7 +142,6 @@ do l = 1, ndecomp_pools
    if(is_cwd(l))then
       totcwdc(i) = totcwdc(i) + decomp_cpools(l,i)
    end if
-!   if(i .eq. 79738)print*,'decomp_cpools',i,l,decomp_cpools(l,i)
 end do
 
 do j = 1, nl_soil
@@ -220,6 +224,10 @@ grainc(i)             = sum(grainc_p(ps:pe)             * pftfrac(ps:pe))
 grainc_storage(i)     = sum(grainc_storage_p(ps:pe)     * pftfrac(ps:pe))
 grainc_xfer(i)        = sum(grainc_xfer_p(ps:pe)        * pftfrac(ps:pe))
 xsmrpool(i)           = sum(xsmrpool_p(ps:pe)           * pftfrac(ps:pe))
+cropseedc_deficit(i)  = sum(cropseedc_deficit_p(ps:pe)  * pftfrac(ps:pe))
+cropprod1c(i)         = sum(cropprod1c_p(ps:pe)         * pftfrac(ps:pe))
+cphase(i)             = sum(cphase_p(ps:pe)             * pftfrac(ps:pe))
+!prodc10(i)            = sum(prodc10_p(ps:pe)            * pftfrac(ps:pe))
 
 do m = ps, pe
    totvegc_p(m) = leafc_p(m)             + frootc_p(m)             + livestemc_p(m) &
@@ -230,23 +238,13 @@ do m = ps, pe
                 + deadstemc_xfer_p(m)    + livecrootc_xfer_p(m)    + deadcrootc_xfer_p(m) &
                 + gresp_storage_p(m)     + gresp_xfer_p(m)         + xsmrpool_p(m) &
                 + grainc_p(m)            + grainc_storage_p(m)     + grainc_xfer_p(m) &
-                + cropseedc_deficit_p(m) 
+                + cropseedc_deficit_p(m) + cpool_p(m)
 
-!if(i .eq. 79738)print*,'totvegc',i,m,leafc_p(m)+leafc_storage_p(m)+leafc_xfer_p(m)&
-!         ,frootc_p(m)+frootc_storage_p(m)+frootc_xfer_p(m)&
-!         ,livestemc_p(m)+livestemc_storage_p(m)+livestemc_xfer_p(m)&
-!         ,deadstemc_p(m)+deadstemc_storage_p(m)+deadstemc_xfer_p(m)&
-!         ,livecrootc_p(m)+livecrootc_storage_p(m)+livecrootc_xfer_p(m)&
-!         ,deadcrootc_p(m)+deadcrootc_storage_p(m)+deadcrootc_xfer_p(m)&
-!         ,grainc_p(m)+grainc_storage_p(m)+grainc_xfer_p(m)+cropseedc_deficit_p(m)&
-!         , gresp_storage_p(m)     + gresp_xfer_p(m)         + xsmrpool_p(m)
 end do
 
 totvegc(i) = sum(totvegc_p(ps:pe)*pftfrac(ps:pe))
 ctrunc_veg(i) = sum(ctrunc_p(ps:pe) *pftfrac(ps:pe))
 totcolc(i) = totvegc(i) + totcwdc(i) + totlitc(i) + totsomc(i) + ctrunc_veg(i) +ctrunc_soil(i)
-
-!if(i .eq. 79738)print*,'totcolc',i,totcolc(i),totvegc(i),totcwdc(i),totlitc(i),totsomc(i)
 
 end subroutine cnveg_carbonstate_summary
 
@@ -319,7 +317,6 @@ do l = 1, ndecomp_pools
    do j = 1, nl_soil
       som_c_leached(i) = som_c_leached(i) + decomp_cpools_transport_tendency(j,l,i) * dz_soi(j)
    end do
-!   if(i .eq.  79738)print*,'som_c_leached',som_c_leached(i),sum(decomp_cpools_transport_tendency(1:nl_soil,l,i)*dz_soi(1:nl_soil))
 end do
 
 
@@ -341,8 +338,6 @@ do l = 1, ndecomp_pools
    end do
 end do
 
-!if(i .eq. 71003)print*,'sminn_leached before summary',sminn_leached(i), &
-!                      sum(sminn_leached_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
 do j = 1, nl_soil
    supplement_to_sminn(i) = supplement_to_sminn(i) + supplement_to_sminn_vr(j,i) * dz_soi(j)
    smin_no3_leached(i)    = smin_no3_leached(i)    + smin_no3_leached_vr(j,i) * dz_soi(j)
@@ -355,8 +350,6 @@ do j = 1, nl_soil
       denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
    end do
 end do
-!if(i .eq. 147958)print*,'sminn_leached after summary',sminn_leached(i), &
-!                      sum(sminn_leached_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
 end subroutine soilbiogeochem_nitrogenflux_summary
 
 subroutine cnveg_carbonflux_summary(i,ps,pe)
@@ -387,6 +380,11 @@ ar (i) = sum((leaf_mr_p(ps:pe)                    + froot_mr_p(ps:pe) &
 ar(i) = ar(i) + sum(soil_change_p(ps:pe) * pftfrac(ps:pe))
 #endif
 er(i) = ar(i) + decomp_hr(i)
+#ifdef CROP
+cropprod1c_loss(i) = sum(cropprod1c_loss_p(ps:pe) * pftfrac(ps:pe))
+grainc_to_cropprodc (i) = sum(grainc_to_food_p(ps:pe)  * pftfrac(ps:pe))
+grainc_to_seed (i) = sum(grainc_to_seed_p(ps:pe)  * pftfrac(ps:pe))
+#endif
 
 do m = ps, pe
    fire_closs_p(m) = m_leafc_to_fire_p(m) &

@@ -15,12 +15,12 @@ OBJS =  precision.o                 \
 	GlobalVars.o                \
 	PhysicalConstants.o         \
 	LC_Const.o                  \
-	PFT_Const.o                 \
 	ncio.o                      \
 	MOD_PFTimeInvars.o          \
 	MOD_PCTimeInvars.o          \
 	MOD_TimeInvariants.o        \
 	timemanager.o               \
+	PFT_Const.o                 \
 	user_specified_forcing.o    \
 	metdata.o                   \
 	MOD_PFTimeVars.o            \
@@ -90,6 +90,7 @@ OBJS =  precision.o                 \
         bgc_DaylengthMod.o \
         bgc_veg_CNPhenologyMod.o  \
         bgc_veg_NutrientCompetitionMod.o  \
+        bgc_veg_CNVegStructUpdateMod.o \
         bgc_CNSummaryMod.o  \
         bgc_CNAnnualUpdateMod.o \
         bgc_CNZeroFluxesMod.o \

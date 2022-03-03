@@ -18,7 +18,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,col_sminnendnb, col_sminnbegnb &
                      ,altmax, altmax_lastyear, altmax_lastyear_indx &
                      ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
-                     ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30 &
+                     ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30, accumnstep &
 !------------------------SASU variables-----------------
                      ,decomp0_cpools_vr          , decomp0_npools_vr           &
                      ,I_met_c_vr_acc             , I_cel_c_vr_acc             , I_lig_c_vr_acc             , I_cwd_c_vr_acc              &
@@ -185,6 +185,8 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         prec_daily                                            , &
         tsoi17                                                , &
         rh30                                                  , &
+        accumnstep                                            , &
+    
  !---------------SASU variables-----------------------
         decomp0_cpools_vr          (nl_soil,ndecomp_pools)  , &
         decomp0_npools_vr          (nl_soil,ndecomp_pools)  , &
@@ -490,6 +492,7 @@ ENDIF
     prec_daily                      = 0._r8
     tsoi17                          = 273.15_r8
     rh30                            = 0._r8
+    accumnstep                      = 0._r8
  !---------------SASU variables-----------------------
     decomp0_cpools_vr         (:,:) = 0.0
     I_met_c_vr_acc              (:) = 0.0
@@ -574,6 +577,8 @@ ENDIF
        xsmrpool_p               (ps:pe) = 0.0
        gresp_storage_p          (ps:pe) = 0.0
        gresp_xfer_p             (ps:pe) = 0.0
+       cpool_p                  (ps:pe) = 0.0
+       cropprod1c_p             (ps:pe) = 0.0
 
        leafn_p                  (ps:pe) = 0.0
        leafn_storage_p          (ps:pe) = 0.0
@@ -640,6 +645,39 @@ ENDIF
     
        burndate_p               (ps:pe) = 10000
        grain_flag_p             (ps:pe) = 0.0
+
+! crop variables
+       croplive_p               (ps:pe) = .false.
+       gddtsoi_p                (ps:pe) =  spval
+       huileaf_p                (ps:pe) =  spval
+       gddplant_p               (ps:pe) =  spval
+       huigrain_p               (ps:pe) =  0.0_r8
+       peaklai_p                (ps:pe) =  0
+       aroot_p                  (ps:pe) =  spval
+       astem_p                  (ps:pe) =  spval
+       arepr_p                  (ps:pe) =  spval
+       aleaf_p                  (ps:pe) =  spval
+       astemi_p                 (ps:pe) =  spval
+       aleafi_p                 (ps:pe) =  spval
+       gddmaturity_p            (ps:pe) =  spval
+
+       cropplant_p              (ps:pe) = .false.
+       idop_p                   (ps:pe) = 99999999
+       a5tmin_p                 (ps:pe) = spval
+       a10tmin_p                (ps:pe) = spval
+       t10_p                    (ps:pe) = spval
+       cumvd_p                  (ps:pe) = spval
+       hdidx_p                  (ps:pe) = spval
+       vf_p                     (ps:pe) = 0._r8
+       cphase_p                 (ps:pe) = 0._r8
+       fert_counter_p           (ps:pe) = 0._r8
+       fert_p                   (ps:pe) = 0._r8
+       tref_min_p               (ps:pe) = 273.15_r8
+       tref_max_p               (ps:pe) = 273.15_r8
+       tref_min_inst_p          (ps:pe) = spval
+       tref_max_inst_p          (ps:pe) = spval
+       fertnitro_p              (ps:pe) = spval
+       latbaset_p               (ps:pe) = spval
 
 ! SASU varaibles
        leafc0_p                 (ps:pe) = 0.0

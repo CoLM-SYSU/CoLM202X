@@ -5,12 +5,11 @@ use MOD_TimeInvariants, only: &
     Q10,br, br_root
 use MOD_PFTimeInvars, only: pftclass
 use MOD_TimeVariables, only: &
-    t_soisno, tref, sigf
+    t_soisno, tref
 use MOD_PFTimeVars, only: &
-    laisun_p, laisha_p, frootn_p, livestemn_p, livecrootn_p, grainn_p
+    laisun_p, laisha_p, frootn_p, livestemn_p, livecrootn_p, grainn_p, sigf_p
 use MOD_1D_PFTFluxes, only: &
-    leaf_mr_p, froot_mr_p, livestem_mr_p, livecroot_mr_p, grain_mr_p, &
-    respcsun_p,respcsha_p
+    leaf_mr_p, froot_mr_p, livestem_mr_p, livecroot_mr_p, grain_mr_p, respc_p
 use PFT_Const, only: &
     woody, rootfr_p
 
@@ -71,9 +70,8 @@ contains
 
       do m = ps, pe
          ivt = pftclass(m)
-         if (sigf(i) == 1) then
-            leaf_mr_p(m) = respcsun_p(m) * laisun_p(m)* 12.011_r8 + &
-                           respcsha_p(m) * laisha_p(m)* 12.011_r8
+         if (sigf_p(m) == 1) then
+            leaf_mr_p(m) = respc_p(m) * 12.011_r8
          else !nosno
             leaf_mr_p(m) = 0._r8
          end if
