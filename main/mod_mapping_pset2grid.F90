@@ -1,0 +1,1041 @@
+#include <define.h>
+
+MODULE mod_mapping_pset2grid
+
+   USE precision
+   USE mod_grid
+   USE mod_data_type
+   IMPLICIT NONE
+
+   ! ------
+   TYPE :: mapping_pset2grid_type
+
+      TYPE(grid_type) :: grid
+      INTEGER :: npset
+
+      TYPE(grid_list_type), allocatable :: glist (:)
+
+      TYPE(pointer_int32_2d), allocatable :: address(:)
+      TYPE(pointer_real8_1d), allocatable :: gweight(:)
+      
+   CONTAINS
+
+      procedure, PUBLIC :: build => mapping_pset2grid_build
+      
+      procedure, PRIVATE :: map_2d => map_p2g_2d
+      procedure, PRIVATE :: map_3d => map_p2g_3d
+      procedure, PRIVATE :: map_4d => map_p2g_4d
+      generic, PUBLIC :: map => map_2d, map_3d, map_4d
+      
+      final :: mapping_pset2grid_free_mem
+
+   END TYPE mapping_pset2grid_type
+
+!-----------------------
+CONTAINS
+   
+   !------------------------------------------
+   SUBROUTINE mapping_pset2grid_build (this, pixelset, fgrid)
+
+      USE precision
+      USE mod_namelist
+      USE mod_block
+      USE mod_pixel
+      USE mod_grid
+      USE mod_pixelset
+      USE mod_data_type
+      USE mod_landunit
+      USE mod_utils
+      USE spmd_task
+      IMPLICIT NONE
+
+      class (mapping_pset2grid_type) :: this
+
+      TYPE(pixelset_type), intent(in) :: pixelset
+      TYPE(grid_type),     intent(in) :: fgrid
+
+      ! Local variables
+      TYPE(pointer_real8_1d), allocatable :: afrac(:)
+      TYPE(grid_list_type),   allocatable :: gfrom(:)
+      TYPE(pointer_int32_1d), allocatable :: list_lat(:)
+      INTEGER,  allocatable :: ng_lat(:)
+      INTEGER,  allocatable :: ys(:), yn(:), xw(:), xe(:)
+      INTEGER,  allocatable :: xlist(:), ylist(:)
+      INTEGER,  allocatable :: ipt(:)
+      LOGICAL,  allocatable :: msk(:)
+      TYPE(block_data_real8_2d) :: garea
+      REAL(r8), allocatable :: gbuff(:)
+      TYPE(pointer_real8_1d), allocatable :: parea(:)
+
+      INTEGER  :: iu, iset
+      INTEGER  :: ng, ig, ng_all, iloc
+      INTEGER  :: npxl, ipxl, ilat, ilon, istt, iend
+      INTEGER  :: iworker, iproc, idest, isrc, nrecv, nsend
+      INTEGER  :: rmesg(2), smesg(2)
+      INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
+      REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area
+      LOGICAL  :: is_new
+      INTEGER  :: nproc
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+      IF (p_is_master) THEN
+         write(*,101) 
+         101 format (/, 'Making mapping from pixel set to grid ...')
+         write(*,*) fgrid%nlat, 'grids in latitude'
+         write(*,*) fgrid%nlon, 'grids in longitude'
+      ENDIF
+
+      allocate (this%grid%xblk (size(fgrid%xblk)))
+      allocate (this%grid%yblk (size(fgrid%yblk)))
+      allocate (this%grid%xloc (size(fgrid%xloc)))
+      allocate (this%grid%yloc (size(fgrid%yloc)))
+
+      this%grid%xblk = fgrid%xblk
+      this%grid%yblk = fgrid%yblk
+      this%grid%xloc = fgrid%xloc
+      this%grid%yloc = fgrid%yloc
+
+      this%npset = pixelset%nset
+
+      IF (p_is_worker) THEN
+      
+         allocate (afrac (pixelset%nset))
+         allocate (gfrom (pixelset%nset))
+
+         allocate (ys (pixel%nlat))
+         allocate (yn (pixel%nlat))
+         allocate (xw (pixel%nlon))
+         allocate (xe (pixel%nlon))
+
+         DO ilat = 1, pixel%nlat
+            ys(ilat) = find_nearest_south (pixel%lat_s(ilat), fgrid%nlat, fgrid%lat_s)
+            yn(ilat) = find_nearest_north (pixel%lat_n(ilat), fgrid%nlat, fgrid%lat_n)
+         ENDDO
+               
+         DO ilon = 1, pixel%nlon
+            xw(ilon) = find_nearest_west (pixel%lon_w(ilon), fgrid%nlon, fgrid%lon_w)
+            xe(ilon) = find_nearest_east (pixel%lon_e(ilon), fgrid%nlon, fgrid%lon_e)
+         ENDDO
+
+         allocate (list_lat (fgrid%nlat))
+         DO iy = 1, fgrid%nlat
+            allocate (list_lat(iy)%val (100))
+         ENDDO
+
+         allocate (ng_lat (fgrid%nlat))
+         ng_lat(:) = 0
+
+         DO iset = 1, pixelset%nset
+
+            iu = pixelset%iunt(iset)
+            npxl = pixelset%iend(iset) - pixelset%istt(iset) + 1
+
+            allocate (afrac(iset)%val (npxl))
+            allocate (gfrom(iset)%ilat(npxl))
+            allocate (gfrom(iset)%ilon(npxl))
+
+            gfrom(iset)%ng = 0
+            DO ipxl = pixelset%istt(iset), pixelset%iend(iset)
+
+               ilat = landunit(iu)%ilat(ipxl)
+               ilon = landunit(iu)%ilon(ipxl)
+
+               DO iy = ys(ilat), yn(ilat), fgrid%yinc
+                     
+                  lat_s = max(fgrid%lat_s(iy), pixel%lat_s(ilat))
+                  lat_n = min(fgrid%lat_n(iy), pixel%lat_n(ilat))
+
+                  IF ((lat_n-lat_s) < 1.0e-7_r8) THEN
+                     cycle
+                  ENDIF
+
+                  ix = xw(ilon)
+                  DO while (.true.) 
+
+                     IF (ix == xw(ilon)) THEN
+                        lon_w = pixel%lon_w(ilon)
+                     ELSE
+                        lon_w = fgrid%lon_w(ix)
+                     ENDIF
+
+                     IF (ix == xe(ilon)) THEN
+                        lon_e = pixel%lon_e(ilon)
+                     ELSE
+                        lon_e = fgrid%lon_e(ix)
+                     ENDIF
+
+                     IF (lon_e > lon_w) THEN
+                        IF ((lon_e-lon_w) < 1.0e-7_r8) THEN
+                           IF (ix == xe(ilon))  exit
+                           ix = mod(ix,fgrid%nlon) + 1
+                           cycle
+                        ENDIF
+                     ELSE
+                        IF ((lon_e+360.0_r8-lon_w) < 1.0e-7_r8) THEN
+                           IF (ix == xe(ilon))  exit
+                           ix = mod(ix,fgrid%nlon) + 1
+                           cycle
+                        ENDIF
+                     ENDIF
+
+                     area = areaquad (lat_s, lat_n, lon_w, lon_e)
+                     IF (area < 1.0e-10) THEN
+                        write(*,*) area, lat_s, lat_n, lon_w, lon_e ! count(parea(iproc)%val <= 0.0)
+                     ENDIF
+
+                     CALL insert_into_sorted_list2 ( ix, iy, &
+                        gfrom(iset)%ng, gfrom(iset)%ilon, gfrom(iset)%ilat, &
+                        iloc, is_new)
+
+                     IF (is_new) THEN
+                        IF (iloc < gfrom(iset)%ng) THEN
+                           afrac(iset)%val(iloc+1:gfrom(iset)%ng) &
+                              = afrac(iset)%val(iloc:gfrom(iset)%ng-1)
+                        ENDIF
+
+                        afrac(iset)%val(iloc) = area
+                     ELSE
+                        afrac(iset)%val(iloc) = afrac(iset)%val(iloc) + area                        
+                     ENDIF
+
+                     IF (gfrom(iset)%ng == size(gfrom(iset)%ilat)) THEN
+                        CALL expand_list (gfrom(iset)%ilat, 0.2_r8)
+                        CALL expand_list (gfrom(iset)%ilon, 0.2_r8)
+                        CALL expand_list (afrac(iset)%val,  0.2_r8)
+                     ENDIF
+
+                     CALL insert_into_sorted_list1 ( &
+                        ix, ng_lat(iy), list_lat(iy)%val, iloc)
+
+                     IF (ng_lat(iy) == size(list_lat(iy)%val)) THEN
+                        CALL expand_list (list_lat(iy)%val, 0.2_r8)
+                     ENDIF
+
+                     IF (ix == xe(ilon))  exit
+                     ix = mod(ix,fgrid%nlon) + 1
+                  ENDDO
+               ENDDO
+               
+            ENDDO
+         ENDDO
+         
+         deallocate (ys)
+         deallocate (yn)
+         deallocate (xw)
+         deallocate (xe)
+
+         ng_all = sum(ng_lat)
+         allocate (xlist(ng_all))
+         allocate (ylist(ng_all))
+
+         ig = 0
+         DO iy = 1, fgrid%nlat
+            IF (ng_lat(iy) > 0) THEN
+               DO ix = 1, ng_lat(iy)
+                  ig = ig + 1
+                  xlist(ig) = list_lat(iy)%val(ix)
+                  ylist(ig) = iy
+               ENDDO
+            ENDIF
+         ENDDO
+
+         deallocate (ng_lat)
+         DO iy = 1, fgrid%nlat
+            deallocate (list_lat(iy)%val)
+         ENDDO
+         deallocate (list_lat)
+
+#ifdef USEMPI
+         allocate (ipt (ng_all))
+         allocate (msk (ng_all))
+         DO ig = 1, ng_all
+            xblk = fgrid%xblk(xlist(ig))
+            yblk = fgrid%yblk(ylist(ig))
+            ipt(ig) = gblock%pio(xblk,yblk)
+         ENDDO
+#endif
+
+         allocate (this%glist (0:p_np_io-1))
+         DO iproc = 0, p_np_io-1
+#ifdef USEMPI
+            msk = (ipt == p_address_io(iproc))
+            ng  = count(msk)
+#else
+            ng  = ng_all 
+#endif
+
+            allocate (this%glist(iproc)%ilat (ng))
+            allocate (this%glist(iproc)%ilon (ng))
+
+            this%glist(iproc)%ng = 0
+         ENDDO
+
+         DO ig = 1, ng_all
+#ifdef USEMPI
+            iproc = p_itis_io(ipt(ig))
+#else
+            iproc = 0 
+#endif
+
+            this%glist(iproc)%ng = this%glist(iproc)%ng + 1
+         
+            ng = this%glist(iproc)%ng
+            this%glist(iproc)%ilon(ng) = xlist(ig)
+            this%glist(iproc)%ilat(ng) = ylist(ig)
+         ENDDO
+         
+#ifdef USEMPI
+         deallocate (ipt)
+         deallocate (msk)
+#endif
+         
+         allocate (this%address (pixelset%nset))
+         allocate (this%gweight (pixelset%nset))
+
+         DO iset = 1, pixelset%nset
+            ng = gfrom(iset)%ng
+            allocate (this%address(iset)%val (2,ng))
+            allocate (this%gweight(iset)%val (ng))
+
+            this%gweight(iset)%val = afrac(iset)%val(1:ng)
+
+            DO ig = 1, gfrom(iset)%ng
+               ilon = gfrom(iset)%ilon(ig)
+               ilat = gfrom(iset)%ilat(ig)
+               xblk = fgrid%xblk(ilon)
+               yblk = fgrid%yblk(ilat)
+
+#ifdef USEMPI
+               iproc = p_itis_io(gblock%pio(xblk,yblk))
+#else
+               iproc = 0
+#endif
+
+               this%address(iset)%val(1,ig) = iproc
+               this%address(iset)%val(2,ig) = find_in_sorted_list2 ( &
+                  ilon, ilat, this%glist(iproc)%ng, this%glist(iproc)%ilon, this%glist(iproc)%ilat)
+            ENDDO
+         ENDDO
+
+         deallocate (xlist)
+         deallocate (ylist)
+
+         DO iset = 1, pixelset%nset
+            deallocate (afrac(iset)%val )
+            deallocate (gfrom(iset)%ilon)
+            deallocate (gfrom(iset)%ilat)
+         ENDDO
+
+         deallocate (afrac)
+         deallocate (gfrom)
+
+         allocate (parea (0:p_np_io-1))
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               allocate (parea(iproc)%val (this%glist(iproc)%ng))
+               parea(iproc)%val(:) = 0
+            ENDIF
+         ENDDO
+
+         DO iset = 1, pixelset%nset
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+               parea(iproc)%val(iloc) = parea(iproc)%val(iloc) + this%gweight(iset)%val(ig)
+            ENDDO
+         ENDDO
+
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            idest = p_address_io(iproc)
+            smesg = (/p_iam_glb, this%glist(iproc)%ng/)
+
+            CALL mpi_send (smesg, 2, MPI_INTEGER, &
+               idest, mpi_tag_mesg, p_comm_glb, p_err) 
+
+            IF (this%glist(iproc)%ng > 0) THEN
+               CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
+               CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
+               CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+            ENDIF
+         ENDDO
+#endif
+
+      ENDIF 
+
+#ifdef USEMPI
+      IF (p_is_io) THEN 
+
+         CALL allocate_block_data (fgrid, garea)
+         CALL flush_block_data (garea, 0.0_r8)
+         
+         allocate (this%glist (0:p_np_worker-1))
+
+         DO iworker = 0, p_np_worker-1
+
+            CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
+               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+
+            isrc  = rmesg(1)
+            nrecv = rmesg(2)
+            iproc = p_itis_worker(isrc)
+
+            this%glist(iproc)%ng = nrecv
+
+            IF (nrecv > 0) THEN
+               allocate (this%glist(iproc)%ilon (nrecv))
+               allocate (this%glist(iproc)%ilat (nrecv))
+               allocate (gbuff (nrecv))
+
+               CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               CALL mpi_recv (gbuff, nrecv, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = fgrid%xblk (ilon)
+                  yblk = fgrid%yblk (ilat)
+                  xloc = fgrid%xloc (ilon)
+                  yloc = fgrid%yloc (ilat)
+
+                  garea%blk(xblk,yblk)%val(xloc,yloc) = &
+                     garea%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
+               ENDDO
+
+               deallocate (gbuff)
+            ENDIF
+         ENDDO
+         
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (this%glist(iproc)%ng))
+
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = fgrid%xblk (ilon)
+                  yblk = fgrid%yblk (ilat)
+                  xloc = fgrid%xloc (ilon)
+                  yloc = fgrid%yloc (ilat)
+
+                  gbuff(ig) = garea%blk(xblk,yblk)%val(xloc,yloc)
+               ENDDO
+
+               idest = p_address_worker(iproc)
+               CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+
+               deallocate (gbuff)
+            ENDIF
+         ENDDO
+         
+      ENDIF 
+#endif
+
+
+      IF (p_is_worker) THEN 
+
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               isrc = p_address_io(iproc)
+               CALL mpi_recv (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+            ENDIF
+         ENDDO
+#endif
+
+         DO iset = 1, pixelset%nset
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+               this%gweight(iset)%val(ig) = &
+                  this%gweight(iset)%val(ig) / parea(iproc)%val(iloc)
+            ENDDO
+         ENDDO
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (parea(iproc)%val)
+            ENDIF
+         ENDDO
+         
+         deallocate (parea)
+
+      ENDIF 
+
+#ifdef USEMPI
+#ifdef CLMDEBUG 
+      IF (p_is_io) THEN 
+         nproc = 0
+         nrecv = 0
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               nproc = nproc + 1
+               nrecv = nrecv + this%glist(iproc)%ng
+            ENDIF
+         ENDDO
+
+         write(*,102) nrecv, nproc, p_iam_glb
+         102 format ('Receive ', I10, ' data from', I5, ' workers to IO', I5) 
+      ELSEIF (p_is_worker) THEN 
+         nproc = 0
+         nsend = 0
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               nproc = nproc + 1
+               nsend = nsend + this%glist(iproc)%ng
+            ENDIF
+         ENDDO
+
+         write(*,103) nsend, nproc, p_iam_glb
+         103 format ('Sending ', I10, ' data to', I5, ' IO from worker', I5) 
+      ENDIF
+#endif 
+
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+   END SUBROUTINE mapping_pset2grid_build 
+
+
+   !-----------------------------------------------------
+   SUBROUTINE map_p2g_2d (this, pdata, gdata, spv, msk)
+
+      USE precision
+      USE mod_grid
+      USE mod_data_type
+      USE spmd_task
+      IMPLICIT NONE
+      
+      class (mapping_pset2grid_type) :: this
+      
+      REAL(r8), intent(in) :: pdata(:)
+      TYPE(block_data_real8_2d), intent(inout) :: gdata
+
+      REAL(r8), intent(in), optional :: spv
+      LOGICAL,  intent(in), optional :: msk(:)
+
+      ! Local variables
+      INTEGER :: iproc, idest, isrc
+      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+
+      REAL(r8), allocatable :: gbuff(:)
+      TYPE(pointer_real8_1d), allocatable :: pbuff(:)
+
+      IF (p_is_worker) THEN
+
+         allocate (pbuff (0:p_np_io-1))
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               allocate (pbuff(iproc)%val (this%glist(iproc)%ng))
+
+               IF (present(spv)) THEN
+                  pbuff(iproc)%val(:) = spv
+               ELSE
+                  pbuff(iproc)%val(:) = 0.0
+               ENDIF
+            ENDIF
+         ENDDO
+
+         DO iset = 1, this%npset
+
+            IF (present(spv)) THEN
+               IF (pdata(iset) == spv) cycle
+            ENDIF
+
+            IF (present(msk)) THEN
+               IF (.not. msk(iset)) cycle
+            ENDIF
+
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+
+               IF (present(spv)) THEN
+                  IF (pbuff(iproc)%val(iloc) /= spv) THEN
+                     pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
+                        + pdata(iset) * this%gweight(iset)%val(ig)
+                  ELSE
+                     pbuff(iproc)%val(iloc) = &
+                        pdata(iset) * this%gweight(iset)%val(ig)
+                  ENDIF
+               ELSE
+                  pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
+                     + pdata(iset) * this%gweight(iset)%val(ig)
+               ENDIF
+            ENDDO
+         ENDDO
+
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               idest = p_address_io(iproc)
+               CALL mpi_send (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+            ENDIF
+         ENDDO
+#endif
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+
+         deallocate (pbuff)
+
+      ENDIF 
+
+      IF (p_is_io) THEN
+
+         IF (present(spv)) THEN
+            CALL flush_block_data (gdata, spv)
+         ELSE
+            CALL flush_block_data (gdata, 0.0_r8)
+         ENDIF
+         
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (this%glist(iproc)%ng))
+               
+#ifdef USEMPI
+               isrc = p_address_worker(iproc)
+               CALL mpi_recv (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+               gbuff = pbuff(0)%val
+#endif
+            
+               DO ig = 1, this%glist(iproc)%ng
+                  IF (present(spv)) THEN
+                     IF (gbuff(ig) /= spv) THEN
+                        ilon = this%glist(iproc)%ilon(ig)
+                        ilat = this%glist(iproc)%ilat(ig)
+                        xblk = this%grid%xblk (ilon)
+                        yblk = this%grid%yblk (ilat)
+                        xloc = this%grid%xloc (ilon)
+                        yloc = this%grid%yloc (ilat)
+
+                        IF (gdata%blk(xblk,yblk)%val(xloc,yloc) /= spv) THEN
+                           gdata%blk(xblk,yblk)%val(xloc,yloc) = &
+                              gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig) 
+                        ELSE
+                           gdata%blk(xblk,yblk)%val(xloc,yloc) = gbuff(ig)
+                        ENDIF
+                     ENDIF
+                  ELSE
+                     ilon = this%glist(iproc)%ilon(ig)
+                     ilat = this%glist(iproc)%ilat(ig)
+                     xblk = this%grid%xblk (ilon)
+                     yblk = this%grid%yblk (ilat)
+                     xloc = this%grid%xloc (ilon)
+                     yloc = this%grid%yloc (ilat)
+
+                     gdata%blk(xblk,yblk)%val(xloc,yloc) = &
+                        gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig) 
+                  ENDIF
+               ENDDO
+
+               deallocate (gbuff)
+            ENDIF
+         ENDDO
+      
+      ENDIF
+
+   END SUBROUTINE map_p2g_2d
+
+   !-----------------------------------------------------
+   SUBROUTINE map_p2g_3d (this, pdata, gdata, spv, msk)
+
+      USE precision
+      USE mod_grid
+      USE mod_data_type
+      USE spmd_task
+      IMPLICIT NONE
+      
+      class (mapping_pset2grid_type) :: this
+      
+      REAL(r8), intent(in) :: pdata(:,:)
+      TYPE(block_data_real8_3d), intent(inout) :: gdata
+
+      REAL(r8), intent(in), optional :: spv
+      LOGICAL,  intent(in), optional :: msk(:)
+
+      ! Local variables
+      INTEGER :: iproc, idest, isrc
+      INTEGER :: ig, ilon, ilat, iloc, iset
+      INTEGER :: xblk, yblk, xloc, yloc
+      INTEGER :: lb1, ub1, i1
+
+      REAL(r8), allocatable :: gbuff(:,:)
+      TYPE(pointer_real8_2d), allocatable :: pbuff(:)
+
+
+      IF (p_is_worker) THEN
+
+         allocate (pbuff (0:p_np_io-1))
+
+         lb1 = lbound(pdata,1)
+         ub1 = ubound(pdata,1)
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               allocate (pbuff(iproc)%val (lb1:ub1, this%glist(iproc)%ng))
+
+               IF (present(spv)) THEN
+                  pbuff(iproc)%val(:,:) = spv
+               ELSE
+                  pbuff(iproc)%val(:,:) = 0.0
+               ENDIF
+            ENDIF
+         ENDDO
+
+         DO iset = 1, this%npset
+            IF (present(msk)) THEN
+               IF (.not. msk(iset)) cycle
+            ENDIF
+
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+
+               DO i1 = lb1, ub1
+                  IF (present(spv)) THEN
+                     IF (pdata(i1,iset) /= spv) THEN
+                        IF (pbuff(iproc)%val(i1,iloc) /= spv) THEN
+                           pbuff(iproc)%val(i1,iloc) = pbuff(iproc)%val(i1,iloc) &
+                              + pdata(i1,iset) * this%gweight(iset)%val(ig)
+                        ELSE
+                           pbuff(iproc)%val(i1,iloc) = &
+                              pdata(i1,iset) * this%gweight(iset)%val(ig)
+                        ENDIF
+                     ENDIF
+                  ELSE
+                     pbuff(iproc)%val(i1,iloc) = pbuff(iproc)%val(i1,iloc) &
+                        + pdata(i1-lb1+1,iset) * this%gweight(iset)%val(ig)
+                  ENDIF
+               ENDDO
+            ENDDO
+         ENDDO
+
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               idest = p_address_io(iproc)
+               CALL mpi_send (pbuff(iproc)%val, &
+                  (ub1-lb1+1) * this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+
+            ENDIF
+         ENDDO
+#endif
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+
+         deallocate (pbuff)
+
+      ENDIF
+
+      IF (p_is_io) THEN
+
+         lb1 = gdata%lb1
+         ub1 = gdata%ub1
+               
+         IF (present(spv)) THEN
+            CALL flush_block_data (gdata, spv)
+         ELSE
+            CALL flush_block_data (gdata, 0.0_r8)
+         ENDIF
+         
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (lb1:ub1, this%glist(iproc)%ng))
+               
+#ifdef USEMPI
+               isrc = p_address_worker(iproc)
+               CALL mpi_recv (gbuff, &
+                  (ub1-lb1+1) * this%glist(iproc)%ng, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+               gbuff = pbuff(0)%val
+#endif
+               
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = this%grid%xblk (ilon)
+                  yblk = this%grid%yblk (ilat)
+                  xloc = this%grid%xloc (ilon)
+                  yloc = this%grid%yloc (ilat)
+
+                  DO i1 = lb1, ub1
+                     IF (present(spv)) THEN
+                        IF (gbuff(i1,ig) /= spv) THEN
+                           IF (gdata%blk(xblk,yblk)%val(i1,xloc,yloc) /= spv) THEN
+                              gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = &
+                                 gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig) 
+                           ELSE
+                              gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = gbuff(i1,ig)
+                           ENDIF
+                        ENDIF
+                     ELSE
+                        gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = &
+                           gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig) 
+                     ENDIF
+                  ENDDO
+               ENDDO
+               
+               deallocate (gbuff)
+            ENDIF
+
+         ENDDO
+      
+      ENDIF
+
+   END SUBROUTINE map_p2g_3d
+
+   !-----------------------------------------------------
+   SUBROUTINE map_p2g_4d (this, pdata, gdata, spv, msk)
+
+      USE precision
+      USE mod_grid
+      USE mod_data_type
+      USE spmd_task
+      IMPLICIT NONE
+      
+      class (mapping_pset2grid_type) :: this
+      
+      REAL(r8), intent(in) :: pdata(:,:,:)
+      TYPE(block_data_real8_4d), intent(inout) :: gdata
+
+      REAL(r8), intent(in), optional :: spv
+      LOGICAL,  intent(in), optional :: msk(:)
+
+      ! Local variables
+      INTEGER :: iproc, idest, isrc
+      INTEGER :: ig, ilon, ilat, iloc, iset
+      INTEGER :: xblk, yblk, xloc, yloc
+      INTEGER :: lb1, ub1, i1, ndim1, lb2, ub2, i2, ndim2
+
+      REAL(r8), allocatable :: gbuff(:,:,:)
+      TYPE(pointer_real8_3d), allocatable :: pbuff(:)
+
+      IF (p_is_worker) THEN
+
+         allocate (pbuff (0:p_np_io-1))
+
+         lb1 = lbound(pdata,1)
+         ub1 = ubound(pdata,1)
+         ndim1 = ub1 - lb1 + 1
+         
+         lb2 = lbound(pdata,2)
+         ub2 = ubound(pdata,2)
+         ndim2 = ub2 - lb2 + 1
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               allocate (pbuff(iproc)%val (lb1:ub1, lb2:ub2, this%glist(iproc)%ng))
+
+               IF (present(spv)) THEN
+                  pbuff(iproc)%val(:,:,:) = spv
+               ELSE
+                  pbuff(iproc)%val(:,:,:) = 0.0
+               ENDIF
+            ENDIF
+         ENDDO
+
+         DO iset = 1, this%npset
+            IF (present(msk)) THEN
+               IF (.not. msk(iset)) cycle
+            ENDIF
+
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+
+               DO i1 = lb1, ub1
+                  DO i2 = lb2, ub2
+                     IF (present(spv)) THEN
+                        IF (pdata(i1,i2,iset) /= spv) THEN
+                           IF (pbuff(iproc)%val(i1,i2,iloc) /= spv) THEN
+                              pbuff(iproc)%val(i1,i2,iloc) = pbuff(iproc)%val(i1,i2,iloc) &
+                                 + pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                           ELSE
+                              pbuff(iproc)%val(i1,i2,iloc) = &
+                                 pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                           ENDIF
+                        ENDIF
+                     ELSE
+                        pbuff(iproc)%val(i1,i2,iloc) = pbuff(iproc)%val(i1,i2,iloc) &
+                           + pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                     ENDIF
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               idest = p_address_io(iproc)
+               CALL mpi_send (pbuff(iproc)%val, ndim1 * ndim2 * this%glist(iproc)%ng, MPI_DOUBLE, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+            ENDIF
+         ENDDO
+#endif
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+
+         deallocate (pbuff)
+
+      ENDIF
+
+      IF (p_is_io) THEN
+
+         lb1 = gdata%lb1
+         ub1 = gdata%ub1
+         ndim1 = ub1 - lb1 + 1
+         
+         lb2 = gdata%lb2
+         ub2 = gdata%ub2
+         ndim2 = ub2 - lb2 + 1
+               
+         IF (present(spv)) THEN
+            CALL flush_block_data (gdata, spv)
+         ELSE
+            CALL flush_block_data (gdata, 0.0_r8)
+         ENDIF
+         
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (lb1:ub1, lb2:ub2, this%glist(iproc)%ng))
+               
+#ifdef USEMPI
+               isrc = p_address_worker(iproc)
+               CALL mpi_recv (gbuff, ndim1 * ndim2 * this%glist(iproc)%ng, MPI_DOUBLE, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+               gbuff = pbuff(0)%val
+#endif
+
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = this%grid%xblk (ilon)
+                  yblk = this%grid%yblk (ilat)
+                  xloc = this%grid%xloc (ilon)
+                  yloc = this%grid%yloc (ilat)
+
+                  DO i1 = lb1, ub1
+                     DO i2 = lb2, ub2
+                        IF (present(spv)) THEN
+                           IF (gbuff(i1,i2,ig) /= spv) THEN
+                              IF (gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) /= spv) THEN
+                                 gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = &
+                                    gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig) 
+                              ELSE
+                                 gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = gbuff(i1,i2,ig)
+                              ENDIF
+                           ENDIF
+                        ELSE
+                           gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = &
+                              gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig) 
+                        ENDIF
+                     ENDDO
+                  ENDDO
+               ENDDO
+
+               deallocate (gbuff)
+            ENDIF
+         ENDDO
+      ENDIF 
+
+   END SUBROUTINE map_p2g_4d
+
+   !-----------------------------------------------------
+   SUBROUTINE mapping_pset2grid_free_mem (this)
+      
+      USE spmd_task
+      IMPLICIT NONE
+
+      TYPE (mapping_pset2grid_type) :: this
+
+      ! Local variables
+      INTEGER :: iproc, iset
+      
+      IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk) 
+      IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk) 
+      
+      IF (allocated (this%grid%xloc))   deallocate (this%grid%xloc) 
+      IF (allocated (this%grid%yloc))   deallocate (this%grid%yloc) 
+
+      IF (p_is_io) THEN
+         IF (allocated(this%glist)) THEN
+            DO iproc = 0, p_np_worker-1
+               IF (allocated(this%glist(iproc)%ilat)) deallocate (this%glist(iproc)%ilat)
+               IF (allocated(this%glist(iproc)%ilon)) deallocate (this%glist(iproc)%ilon)
+            ENDDO
+
+            deallocate (this%glist)
+         ENDIF
+      ENDIF
+
+      IF (p_is_worker) THEN
+         IF (allocated(this%glist)) THEN
+            DO iproc = 0, p_np_io-1
+               IF (allocated(this%glist(iproc)%ilat)) deallocate (this%glist(iproc)%ilat)
+               IF (allocated(this%glist(iproc)%ilon)) deallocate (this%glist(iproc)%ilon)
+            ENDDO
+
+            deallocate (this%glist)
+         ENDIF
+
+         IF (allocated(this%address)) THEN
+            DO iset = 1, this%npset
+               IF (allocated(this%address(iset)%val)) THEN
+                  deallocate (this%address(iset)%val)
+               ENDIF
+            ENDDO
+
+            deallocate (this%address)
+         ENDIF
+
+         IF (allocated(this%gweight)) THEN
+            DO iset = 1, this%npset
+               IF (allocated(this%gweight(iset)%val)) THEN
+                  deallocate (this%gweight(iset)%val)
+               ENDIF
+            ENDDO
+
+            deallocate (this%gweight)
+         ENDIF
+      ENDIF
+   
+   END SUBROUTINE mapping_pset2grid_free_mem
+
+END MODULE mod_mapping_pset2grid

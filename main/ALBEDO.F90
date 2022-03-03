@@ -14,8 +14,10 @@ MODULE ALBEDO
 
 ! PRIVATE MEMBER FUNCTIONS:
   PRIVATE :: twostream
+#ifdef PFT_CLASSIFICATION
   PRIVATE :: twostream_mod
   PRIVATE :: twostream_wrap
+#endif
 
 
 !-----------------------------------------------------------------------
@@ -56,10 +58,16 @@ MODULE ALBEDO
 
   USE precision
   USE PhysicalConstants, only: tfrz
+#ifdef PFT_CLASSIFICATION
+  USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
   USE MOD_PFTimeVars
+#endif
+#ifdef PC_CLASSIFICATION
+  USE mod_landpc
   USE MOD_PCTimeInvars
   USE MOD_PCTimeVars
+#endif
   
   IMPLICIT NONE
 
@@ -587,6 +595,7 @@ ENDIF
 
   END SUBROUTINE twostream
 
+#ifdef PFT_CLASSIFICATION
   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, &
              coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
                                                                               
@@ -961,11 +970,14 @@ ENDIF
       extkb = extkbd
 
   END SUBROUTINE twostream_mod
+#endif
   
+#ifdef PFT_CLASSIFICATION
   SUBROUTINE twostream_wrap ( ipatch, coszen, albg, &
              albv, tran, thermk, extkb, extkd, ssun, ssha )
                                                                               
       USE precision
+      USE mod_landpft
       USE PFT_Const
       USE MOD_PFTimeInvars
       USE MOD_PFTimeVars
@@ -1046,6 +1058,7 @@ ENDIF
       deallocate ( tran_p )
 
   END SUBROUTINE twostream_wrap
+#endif
 
   SUBROUTINE albocean (oro, scv, coszrs, alb)
 

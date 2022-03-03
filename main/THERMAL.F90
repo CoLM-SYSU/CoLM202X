@@ -3,7 +3,15 @@
  SUBROUTINE THERMAL (ipatch      ,patchtype   ,lb          ,deltim     ,&
                      trsmx0      ,zlnd        ,zsno        ,csoilc     ,&
                      dewmx       ,capr        ,cnfac       ,csol       ,&
-                     porsl       ,psi0        ,bsw         ,dkdry      ,&
+                     porsl       ,psi0        ,                         &
+#ifdef Campbell_SOIL_MODEL
+                     bsw         ,                                      &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                     theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm      ,&
+                     sc_vgm      ,fc_vgm      ,                         &
+#endif
+                     dkdry       ,                                      &
                      dksatu      ,lai         ,laisun      ,laisha     ,&
                      sai         ,htop        ,hbot        ,sqrtdi     ,&
                      rootfr      ,rstfac      ,effcon      ,vmax25     ,&
@@ -55,13 +63,22 @@
                                stefnc,denice,tfrz,vonkar,grav 
   USE FRICTION_VELOCITY
   USE LEAF_temperature
-  USE LEAF_temperature_PC
+#ifdef PFT_CLASSIFICATION
+  USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
-  USE MOD_PCTimeInvars
   USE MOD_PFTimeVars
-  USE MOD_PCTimeVars
   USE MOD_1D_PFTFluxes
+#endif
+#ifdef PC_CLASSIFICATION
+  USE mod_landpc
+  USE MOD_PCTimeInvars
+  USE MOD_PCTimeVars
   USE MOD_1D_PCFluxes
+  USE LEAF_temperature_PC
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  USE mod_soil_function, only : soil_psi_from_vliq
+#endif
 
   IMPLICIT NONE
  
@@ -87,7 +104,17 @@
         csol(1:nl_soil),   &! heat capacity of soil solids [J/(m3 K)]
         porsl(1:nl_soil),  &! soil porosity [-]
         psi0(1:nl_soil),   &! soil water suction, negative potential [m]
+#ifdef Campbell_SOIL_MODEL
         bsw(1:nl_soil),    &! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r  (1:nl_soil), &
+        alpha_vgm(1:nl_soil), &
+        n_vgm    (1:nl_soil), &
+        L_vgm    (1:nl_soil), &
+        sc_vgm   (1:nl_soil), &
+        fc_vgm   (1:nl_soil), &
+#endif
         dkdry(1:nl_soil),  &! thermal conductivity of dry soil [W/m-K]
         dksatu(1:nl_soil), &! thermal conductivity of saturated soil [W/m-K]
 
@@ -348,7 +375,14 @@
             fac  = max( fac, 0.001 )
          ENDIF
 
+#ifdef Campbell_SOIL_MODEL
          psit = psi0(1) * fac ** (- bsw(1) )   !psit = max(smpmin, psit)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         psit = soil_psi_from_vliq ( fac*(porsl(1)-theta_r(1)) + theta_r(1), &
+            porsl(1), theta_r(1), psi0(1), &
+            5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+#endif
          psit = max( -1.e8, psit )
          hr   = exp(psit/roverg/t_grnd)
          qred = (1.-fsno)*hr + fsno
@@ -390,8 +424,14 @@ IF (patchtype == 0) THEN
       IF (lai+sai > 1e-6) THEN
 
          ! soil water strees factor on stomatal resistance
-         CALL eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr,&
-                     dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
+         CALL eroot (nl_soil,trsmx0,porsl,&
+#ifdef Campbell_SOIL_MODEL
+            bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+            psi0,rootfr,dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
 
          ! fraction of sunlit and shaded leaves of canopy
          fsun = ( 1. - exp(-min(extkb*lai,40.))) / max( min(extkb*lai,40.), 1.e-6 )
@@ -481,7 +521,14 @@ IF (patchtype == 0) THEN
 
          IF (lai_p(i)+sai_p(i) > 1e-6) THEN
 
-            CALL eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr_p(:,p),&
+            CALL eroot (nl_soil,trsmx0,porsl,&
+#ifdef Campbell_SOIL_MODEL
+               bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+               theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+               psi0,rootfr_p(:,p),&
                dz_soisno,t_soisno,wliq_soisno,rootr_p(:,i),etrc_p(i),rstfac_p(i))
 
             ! fraction of sunlit and shaded leaves of canopy
@@ -628,7 +675,14 @@ IF (patchtype == 0) THEN
          IF (lai_c(p,pc)+sai_c(p,pc) > 1e-6) THEN
 
             ! soil water strees factor on stomatal resistance
-            CALL eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr_p(:,p),&
+            CALL eroot (nl_soil,trsmx0,porsl,&
+#ifdef Campbell_SOIL_MODEL
+               bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+               theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+               psi0,rootfr_p(:,p),&
                dz_soisno,t_soisno,wliq_soisno,rootr_c(:,p),etrc_c(p),rstfac_c(p))
 
             ! fraction of sunlit and shaded leaves of canopy
@@ -729,8 +783,14 @@ ELSE
       IF (lai+sai > 1e-6) THEN
 
          ! soil water strees factor on stomatal resistance
-         CALL eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr,&
-                     dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
+         CALL eroot (nl_soil,trsmx0,porsl,&
+#ifdef Campbell_SOIL_MODEL
+            bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+            psi0,rootfr,dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
 
          ! fraction of sunlit and shaded leaves of canopy
          fsun = ( 1. - exp(-min(extkb*lai,40.))) / max( min(extkb*lai,40.), 1.e-6 )
@@ -781,7 +841,7 @@ ENDIF
                       sigf,dz_soisno,z_soisno,zi_soisno,&
                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                       frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                      imelt,sm,xmf,fact,psi0,bsw)
+                      imelt,sm,xmf,fact) ! ,psi0,bsw)
 
 !=======================================================================
 ! [6] Correct fluxes to present soil temperature

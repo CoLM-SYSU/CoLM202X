@@ -1,1 +1,0 @@
-../main/LAI_readin_nc.F90

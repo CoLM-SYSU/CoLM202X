@@ -4,7 +4,7 @@
                        sigf,dz_soisno,z_soisno,zi_soisno,&
                        t_soisno,wice_soisno,wliq_soisno,scv,snowdp, &
                        frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg, &
-                       imelt,sm,xmf,fact,psi0,bsw)
+                       imelt,sm,xmf,fact) ! ,psi0,bsw)
                        !TODO: not used, psi0, bsw
 
 !=======================================================================
@@ -45,8 +45,8 @@
 
   real(r8), INTENT(in) :: csol (1:nl_soil) !heat capacity of soil solids [J/(m3 K)]
   real(r8), INTENT(in) :: porsl(1:nl_soil) !soil porosity [-]
-  real(r8), INTENT(in) :: psi0 (1:nl_soil) !soil water suction, negative potential [m]
-  real(r8), INTENT(in) :: bsw  (1:nl_soil) !clapp and hornbereger "b" parameter [-]
+!  real(r8), INTENT(in) :: psi0 (1:nl_soil) !soil water suction, negative potential [m]
+!  real(r8), INTENT(in) :: bsw  (1:nl_soil) !clapp and hornbereger "b" parameter [-]
 
   real(r8), INTENT(in) :: dkdry(1:nl_soil) !thermal conductivity of dry soil [W/m-K]
   real(r8), INTENT(in) :: dksatu(1:nl_soil)!thermal conductivity of saturated soil [W/m-K]

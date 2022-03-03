@@ -1,122 +1,130 @@
 #include <define.h>
 
 PROGRAM CLMINI
-! ======================================================================
-! Initialization of Land Characteristic Parameters and Initial State Variables
-!
-! Reference:
-!     [1] Dai et al., 2003: The Common Land Model (CoLM).
-!         Bull. of Amer. Meter. Soc., 84: 1013-1023
-!     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
-!         photosynthesis and stomatal conductance. Journal of Climate
-!     [3] Dai et al., 2014: The Terrestrial Modeling System (TMS).
-!
-!     Created by Yongjiu Dai Februay 2004
-!     Revised by Yongjiu Dai Februay 2014
-! ======================================================================
+   ! ======================================================================
+   ! Initialization of Land Characteristic Parameters and Initial State Variables
+   !
+   ! Reference:
+   !     [1] Dai et al., 2003: The Common Land Model (CoLM).
+   !         Bull. of Amer. Meter. Soc., 84: 1013-1023
+   !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
+   !         photosynthesis and stomatal conductance. Journal of Climate
+   !     [3] Dai et al., 2014: The Terrestrial Modeling System (TMS).
+   !
+   !     Created by Yongjiu Dai Februay 2004
+   !     Revised by Yongjiu Dai Februay 2014
+   ! ======================================================================
 
-      USE precision
-      USE timemanager
-      USE GlobalVars
-      USE LC_Const
-      USE PFT_Const
+   use precision
+   use mod_namelist
+   use spmd_task
+   use mod_block
+   use mod_pixel
+   use mod_landunit
+   USE mod_landcell
+   use mod_landpatch
+   use mod_srfdata_restart
+   USE GlobalVars
+   USE LC_Const
+   USE PFT_Const
+   USE timemanager
+#ifdef PFT_CLASSIFICATION
+   USE mod_landpft
+#endif
+#ifdef PC_CLASSIFICATION
+   USE mod_landpc
+#endif
+   implicit none
+
+   ! ----------------local variables ---------------------------------
+   character(len=256) :: nlfile
+   character(LEN=256) :: casename ! case name
+   character(LEN=256) :: dir_landdata
+   character(LEN=256) :: dir_restart
+   integer  :: s_year      ! starting date for run in year
+   integer  :: s_month     ! starting date for run in month
+   integer  :: s_day       ! starting date for run in day
+   integer  :: s_julian    ! starting date for run in julian day
+   integer  :: s_seconds   ! starting time of day for run in seconds
+   integer  :: idate(3)    ! starting date
+   logical  :: greenwich   ! true: greenwich time, false: local time
+
+   integer :: start_time, end_time, c_per_sec, time_used
+
+#ifdef USEMPI
+   call spmd_init ()
+#endif
       
-      IMPLICIT NONE
+   if (p_is_master) then
+      call system_clock (start_time)
+   end if
 
-! ----------------local variables ---------------------------------
-      CHARACTER(LEN=256) :: casename ! case name
-      CHARACTER(LEN=256) :: dir_model_landdata
-      CHARACTER(LEN=256) :: dir_restart_hist
-      CHARACTER(LEN=256) :: dir_infolist
-      INTEGER :: s_year      ! starting date for run in year
-      INTEGER :: s_julian    ! starting date for run in julian day
-      INTEGER :: s_month     ! starting month for run 
-      INTEGER :: s_day       ! starting day for run 
-      INTEGER :: s_seconds   ! starting time of day for run in seconds
-      INTEGER :: idate(3)    ! starting date
-      LOGICAL :: greenwich   ! true: greenwich time, false: local time
+   ! ----------------------------------------------------------------------
+   call getarg (1, nlfile)
+   call read_namelist (nlfile)
 
-      INTEGER :: lon_points  ! number of longitude points on model grid
-      INTEGER :: lat_points  ! number of latitude points on model grid
+   casename     = DEF_CASE_NAME        
+   dir_landdata = DEF_dir_landdata 
+   dir_restart  = DEF_dir_restart  
+   greenwich    = DEF_simulation_time%greenwich    
+   s_year       = DEF_simulation_time%start_year 
+   s_month      = DEF_simulation_time%start_month
+   s_day        = DEF_simulation_time%start_day
+   s_seconds    = DEF_simulation_time%start_sec
 
-      CHARACTER(LEN=256) :: finfolist      ! file name of run information
+   CALL monthday2julian(s_year,s_month,s_day,s_julian)
+   idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
 
-!  Required by atmospheric models's initialization (such as GRAPES/WRF/RSM/EMSs) 
-      REAL(r8), allocatable :: tg_xy   (:,:)
-      REAL(r8), allocatable :: albvb_xy(:,:)
-      REAL(r8), allocatable :: albvd_xy(:,:)
-      REAL(r8), allocatable :: albnb_xy(:,:)
-      REAL(r8), allocatable :: albnd_xy(:,:)
-      REAL(r8), allocatable :: trad_xy (:,:)
-      REAL(r8), allocatable :: rib_xy  (:,:)
-      REAL(r8), allocatable :: fm_xy   (:,:)
-      REAL(r8), allocatable :: fh_xy   (:,:)
-      REAL(r8), allocatable :: fq_xy   (:,:)
+   CALL Init_GlovalVars
+   CAll Init_LC_Const
+   CAll Init_PFT_Const
 
-      namelist /clminiexp/ casename,dir_model_landdata,&
-                           dir_restart_hist,dir_infolist,&
-                           lon_points,lat_points,greenwich,&
-                           s_year,s_month,s_day,s_seconds
-! ----------------------------------------------------------------------
-      read (5,clminiexp)
+   call pixel%load_from_file    (dir_landdata)
+   call gblock%load_from_file   (dir_landdata)
+   
+   call landunit_load_from_file (dir_landdata)
 
-      CALL Init_GlovalVars
-      CAll Init_LC_Const
-      CAll Init_PFT_Const
+   CALL pixelset_load_from_file (dir_landdata, 'landcell',  landcell , numcell)
+  
+   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
-      numpatch = 0
-      numpft   = 0
-      numpc    = 0
-      
-      CALL monthday2julian(s_year,s_month,s_day,s_julian)
-      idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
+#ifdef PFT_CLASSIFICATION
+   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft)
+   CALL map_patch_to_pft
+#endif
 
-      allocate ( tg_xy   (lon_points,lat_points) )
-      allocate ( albvb_xy(lon_points,lat_points) )
-      allocate ( albvd_xy(lon_points,lat_points) )
-      allocate ( albnb_xy(lon_points,lat_points) )
-      allocate ( albnd_xy(lon_points,lat_points) )
-      allocate ( trad_xy (lon_points,lat_points) )
-      allocate ( rib_xy  (lon_points,lat_points) )
-      allocate ( fm_xy   (lon_points,lat_points) )
-      allocate ( fh_xy   (lon_points,lat_points) )
-      allocate ( fq_xy   (lon_points,lat_points) )
+#ifdef PC_CLASSIFICATION
+   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
+   CALL map_patch_to_pc
+#endif
 
-      CALL initialize (casename,dir_model_landdata,dir_restart_hist,&
-                       idate,greenwich,lon_points,lat_points,&
-                       tg_xy,albvb_xy,albvd_xy,albnb_xy,albnd_xy,&
-                       trad_xy,rib_xy,fm_xy,fh_xy,fq_xy)
+   CALL initialize (casename, dir_landdata, dir_restart, idate, greenwich)
 
-      finfolist = trim(dir_infolist)//'clmini.infolist'
-      open(100,file=trim(finfolist),form='formatted')
-      write(100,*) 'numpatch  = ', numpatch   !1.1
-      write(100,*) 'numpft    = ', numpft     !1.2
-      write(100,*) 'numpc     = ', numpc      !1.3
-      IF ( greenwich ) THEN
-      write(100,*) 'greenwich =       .true.' !2
-      ELSE
-      write(100,*) 'greenwich =      .false.' !2
-      ENDIF
-      write(100,*) 's_year    = ', s_year     !3
-      write(100,*) 's_month   = ', s_month    !4
-      write(100,*) 's_day     = ', s_day      !5
-      write(100,*) 's_seconds = ', s_seconds  !6
-      write(100,*) '/'
-      CLOSE(100)
+#ifdef USEMPI
+   call mpi_barrier (p_comm_glb, p_err)
+#endif
 
-      deallocate ( tg_xy    )
-      deallocate ( albvb_xy )
-      deallocate ( albvd_xy )
-      deallocate ( albnb_xy )
-      deallocate ( albnd_xy )
-      deallocate ( trad_xy  )
-      deallocate ( rib_xy   )
-      deallocate ( fm_xy    )
-      deallocate ( fh_xy    )
-      deallocate ( fq_xy    )
+   if (p_is_master) then
+      call system_clock (end_time, count_rate = c_per_sec)
+      time_used = (end_time - start_time) / c_per_sec
+      if (time_used >= 3600) then
+         write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
+         101 format (/,'Overall system time used:', I4, ' hours', I3, ' minutes', I3, ' seconds.')
+      elseif (time_used >= 60) then
+         write(*,102) time_used/60, mod(time_used,60)
+         102 format (/,'Overall system time used:', I3, ' minutes', I3, ' seconds.')
+      else 
+         write(*,103) time_used
+         103 format (/,'Overall system time used:', I3, ' seconds.')
+      end if
 
-      write(6,*) 'CLM Initialization Execution Completed'
-
+      write(*,*) 'CLM Initialization Execution Completed'
+   end if
+   
+#ifdef USEMPI
+   call spmd_exit
+#endif
+   
 END PROGRAM CLMINI
 ! ----------------------------------------------------------------------
 ! EOP

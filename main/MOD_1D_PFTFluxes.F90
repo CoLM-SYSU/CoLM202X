@@ -1,5 +1,7 @@
 #include <define.h>
 
+#ifdef PFT_CLASSIFICATION
+
 MODULE MOD_1D_PFTFluxes
 ! -------------------------------
 ! Created by Hua Yuan, 08/2019
@@ -45,23 +47,30 @@ MODULE MOD_1D_PFTFluxes
   ! --------------------------------------------------------------------
 
      USE precision
-     USE GlobalVars
+     USE spmd_task
+     USE mod_landpft
      IMPLICIT NONE
 
-     allocate (taux_p    (numpft))   !wind stress: E-W [kg/m/s2]
-     allocate (tauy_p    (numpft))   !wind stress: N-S [kg/m/s2]
-     allocate (fsenl_p   (numpft))   !sensible heat from leaves [W/m2]
-     allocate (fevpl_p   (numpft))   !evaporation+transpiration from leaves [mm/s]
-     allocate (etr_p     (numpft))   !transpiration rate [mm/s]
-     allocate (fseng_p   (numpft))   !sensible heat flux from ground [W/m2]
-     allocate (fevpg_p   (numpft))   !evaporation heat flux from ground [mm/s]
-     allocate (parsun_p  (numpft))   !solar absorbed by sunlit vegetation [W/m2]
-     allocate (parsha_p  (numpft))   !solar absorbed by shaded vegetation [W/m2]
-     allocate (sabvsun_p (numpft))   !solar absorbed by sunlit vegetation [W/m2]
-     allocate (sabvsha_p (numpft))   !solar absorbed by shaded vegetation [W/m2]
-     allocate (qintr_p   (numpft))   !interception (mm h2o/s)
-     allocate (assim_p   (numpft))   !canopy assimilation rate (mol m-2 s-1)
-     allocate (respc_p   (numpft))   !canopy respiration (mol m-2 s-1)
+     IF (p_is_worker) THEN
+        IF (numpft > 0) THEN
+
+           allocate (taux_p    (numpft))   !wind stress: E-W [kg/m/s2]
+           allocate (tauy_p    (numpft))   !wind stress: N-S [kg/m/s2]
+           allocate (fsenl_p   (numpft))   !sensible heat from leaves [W/m2]
+           allocate (fevpl_p   (numpft))   !evaporation+transpiration from leaves [mm/s]
+           allocate (etr_p     (numpft))   !transpiration rate [mm/s]
+           allocate (fseng_p   (numpft))   !sensible heat flux from ground [W/m2]
+           allocate (fevpg_p   (numpft))   !evaporation heat flux from ground [mm/s]
+           allocate (parsun_p  (numpft))   !solar absorbed by sunlit vegetation [W/m2]
+           allocate (parsha_p  (numpft))   !solar absorbed by shaded vegetation [W/m2]
+           allocate (sabvsun_p (numpft))   !solar absorbed by sunlit vegetation [W/m2]
+           allocate (sabvsha_p (numpft))   !solar absorbed by shaded vegetation [W/m2]
+           allocate (qintr_p   (numpft))   !interception (mm h2o/s)
+           allocate (assim_p   (numpft))   !canopy assimilation rate (mol m-2 s-1)
+           allocate (respc_p   (numpft))   !canopy respiration (mol m-2 s-1)
+
+        ENDIF
+     ENDIF
 
   END SUBROUTINE allocate_1D_PFTFluxes
 
@@ -69,21 +78,33 @@ MODULE MOD_1D_PFTFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
-     deallocate (taux_p    )
-     deallocate (tauy_p    )
-     deallocate (fsenl_p   )
-     deallocate (fevpl_p   )
-     deallocate (etr_p     )
-     deallocate (fseng_p   )
-     deallocate (fevpg_p   )
-     deallocate (parsun_p  )
-     deallocate (parsha_p  )
-     deallocate (sabvsun_p )
-     deallocate (sabvsha_p )
-     deallocate (qintr_p   )
-     deallocate (assim_p   )
-     deallocate (respc_p   )
+     USE spmd_task
+     USE mod_landpft
+
+     IF (p_is_worker) THEN
+        IF (numpft > 0) THEN
+
+           deallocate (taux_p    )
+           deallocate (tauy_p    )
+           deallocate (fsenl_p   )
+           deallocate (fevpl_p   )
+           deallocate (etr_p     )
+           deallocate (fseng_p   )
+           deallocate (fevpg_p   )
+           deallocate (parsun_p  )
+           deallocate (parsha_p  )
+           deallocate (sabvsun_p )
+           deallocate (sabvsha_p )
+           deallocate (qintr_p   )
+           deallocate (assim_p   )
+           deallocate (respc_p   )
+
+        ENDIF
+     ENDIF
+
   END SUBROUTINE deallocate_1D_PFTFluxes
 
 END MODULE MOD_1D_PFTFluxes
+
+#endif
 ! ---------- EOP ------------

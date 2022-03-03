@@ -188,6 +188,7 @@
 
      USE precision
      USE PhysicalConstants, only: tfrz
+     USE mod_landpft
      USE MOD_PFTimeInvars
      USE MOD_PFTimeVars
      USE MOD_1D_PFTFluxes
@@ -251,6 +252,7 @@
      USE MOD_PCTimeVars
      USE MOD_1D_PCFluxes
      USE PFT_Const
+     USE mod_landpc
 
      IMPLICIT NONE
 

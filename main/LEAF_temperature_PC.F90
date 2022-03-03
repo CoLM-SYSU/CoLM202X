@@ -1,5 +1,7 @@
 #include <define.h>
 
+#ifdef PC_CLASSIFICATION
+
 MODULE LEAF_temperature_PC
 
 !-----------------------------------------------------------------------
@@ -2199,3 +2201,5 @@ MODULE LEAF_temperature_PC
   END SUBROUTINE cal_z0_displa
 
 END MODULE LEAF_temperature_PC
+
+#endif

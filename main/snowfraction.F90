@@ -53,6 +53,7 @@ subroutine snowfraction (lai,sai,z0m,zlnd,scv,snowdp,wt,sigf,fsno)
 
 end subroutine snowfraction
  
+#ifdef PFT_CLASSIFICATION
 subroutine snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================
@@ -62,10 +63,9 @@ subroutine snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 !=======================================================================
 
   use precision
+  USE mod_landpft
   USE MOD_PFTimeInvars
-  USE MOD_PCTimeInvars
   USE MOD_PFTimeVars
-  USE MOD_PCTimeVars
   implicit none
 
 ! dummy arguments
@@ -125,7 +125,9 @@ subroutine snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
   end if
 
 end subroutine snowfraction_pftwrap
+#endif
 
+#ifdef PC_CLASSIFICATION
 subroutine snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================
@@ -135,9 +137,8 @@ subroutine snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 !=======================================================================
 
   use precision
-  USE MOD_PFTimeInvars
+  USE mod_landpc
   USE MOD_PCTimeInvars
-  USE MOD_PFTimeVars
   USE MOD_PCTimeVars
   implicit none
 
@@ -194,3 +195,4 @@ subroutine snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
   end if
 
 end subroutine snowfraction_pcwrap
+#endif

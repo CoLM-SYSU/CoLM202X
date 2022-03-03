@@ -24,10 +24,16 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE precision
   USE PhysicalConstants, only: tfrz
   USE MOD_TimeVariables, only: tlai, tsai
+#if(defined PFT_CLASSIFICATION)
+  USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
-  USE MOD_PCTimeInvars
   USE MOD_PFTimeVars
+#endif
+#if(defined PC_CLASSIFICATION)
+  USE mod_landpc
+  USE MOD_PCTimeInvars
   USE MOD_PCTimeVars
+#endif
   USE GlobalVars
   USE ALBEDO
 

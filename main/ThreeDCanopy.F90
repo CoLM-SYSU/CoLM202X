@@ -1,3 +1,4 @@
+#include <define.h>
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -5,14 +6,14 @@
 !
 ! !INTERFACE:
 
+#ifdef PC_CLASSIFICATION
 SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
 
    USE precision
    USE GlobalVars
    USE PFT_Const
-   USE MOD_PFTimeInvars
+   USE mod_landpc
    USE MOD_PCTimeInvars
-   USE MOD_PFTimeVars
    USE MOD_PCTimeVars
 
    IMPLICIT NONE
@@ -120,6 +121,7 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    ssha(2,2) = sum( ssha_c(2,2,:,pc) * pcfrac(:,pc) )
 
 END SUBROUTINE ThreeDCanopy_wrap
+#endif
 
 
 SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &

@@ -19,6 +19,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_TimeVariables
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
+ USE mod_landpatch, only : numpatch
  use omp_lib
 
  IMPLICIT NONE
@@ -65,7 +66,15 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
        ! SOIL INFORMATION AND LAKE DEPTH
          soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
-         porsl(1:,i),     psi0(1:,i),      bsw(1:,i),       hksati(1:,i),    &
+         porsl(1:,i),     psi0(1:,i),                                        &
+#ifdef Campbell_SOIL_MODEL
+         bsw(1:,i),                                                          &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
+         sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
+#endif
+         hksati(1:,i),                                                       &
          csol(1:,i),      dksatu(1:,i),    dkdry(1:,i),     rootfr(1:,m),    &
          lakedepth(i),    dz_lake(1:,i),                                     &  
 

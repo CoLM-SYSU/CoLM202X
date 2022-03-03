@@ -1,7 +1,14 @@
+#include <define.h>
 
- subroutine eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr,&
-                   dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
-                   
+ subroutine eroot (nl_soil,trsmx0,porsl, &
+#ifdef Campbell_SOIL_MODEL
+       bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+       theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+       psi0,rootfr, dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
+           
 !=======================================================================
 ! effective root fraction and maximum possible transpiration rate
 ! Original author : Yongjiu Dai, 08/30/2002
@@ -9,6 +16,9 @@
 
   use precision
   use PhysicalConstants, only : tfrz
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  USE mod_soil_function, only : soil_psi_from_vliq
+#endif
   implicit none
     
 !-----------------------Argument-----------------------------------------
@@ -17,7 +27,17 @@
 
   real(r8), INTENT(in) :: trsmx0            ! max transpiration for moist soil+100% veg.[mm/s]
   real(r8), INTENT(in) :: porsl(1:nl_soil)  ! soil porosity [-]
+#ifdef Campbell_SOIL_MODEL
   real(r8), INTENT(in) :: bsw(1:nl_soil)    ! Clapp-Hornberger "B"
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  REAL(r8), intent(in) :: theta_r  (1:nl_soil)
+  REAL(r8), intent(in) :: alpha_vgm(1:nl_soil)
+  REAL(r8), intent(in) :: n_vgm    (1:nl_soil)
+  REAL(r8), intent(in) :: L_vgm    (1:nl_soil)
+  REAL(r8), intent(in) :: sc_vgm   (1:nl_soil)
+  REAL(r8), intent(in) :: fc_vgm   (1:nl_soil)
+#endif
   real(r8), INTENT(in) :: psi0(1:nl_soil)   ! saturated soil suction (mm) (NEGATIVE)
   real(r8), INTENT(in) :: rootfr(1:nl_soil) ! fraction of roots in a layer, 
   real(r8), INTENT(in) :: dz_soisno(1:nl_soil)   ! layer thickness (m)
@@ -49,7 +69,14 @@
            smpmax = -1.5e5
            s_node = max(wliq_soisno(i)/(1000.*dz_soisno(i)*porsl(i)),0.001)
            s_node = min(1., s_node)
+#ifdef Campbell_SOIL_MODEL
            smp_node = max(smpmax, psi0(i)*s_node**(-bsw(i))) 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           smp_node = soil_psi_from_vliq ( s_node*(porsl(i)-theta_r(i)) + theta_r(i), &
+              porsl(i), theta_r(i), psi0(i), &
+              5, (/alpha_vgm(i), n_vgm(i), L_vgm(i), sc_vgm(i), fc_vgm(i)/))
+#endif
            rresis(i) =(1.-smp_node/smpmax)/(1.-psi0(i)/smpmax) 
            rootr(i) = rootfr(i)*rresis(i)
            roota = roota + rootr(i)

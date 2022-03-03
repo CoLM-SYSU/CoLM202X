@@ -4,6 +4,9 @@ MODULE SOIL_SNOW_hydrology
 
 !-----------------------------------------------------------------------
   use precision
+#ifdef VARIABLY_SATURATED_FLOW
+  USE mod_soil_water
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -28,7 +31,14 @@ MODULE SOIL_SNOW_hydrology
 
   subroutine WATER (ipatch,patchtype  ,lb          ,nl_soil ,deltim,&
              z_soisno    ,dz_soisno   ,zi_soisno                   ,&
-             bsw         ,porsl       ,psi0        ,hksati  ,rootr ,&
+#ifdef Campbell_SOIL_MODEL 
+             bsw         ,                                          &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+             theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm   ,       &
+             sc_vgm      ,fc_vgm      ,                             &
+#endif
+             porsl       ,psi0        ,hksati      ,rootr   ,       &
              t_soisno    ,wliq_soisno ,wice_soisno ,pg_rain ,sm    ,&
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
@@ -51,7 +61,11 @@ MODULE SOIL_SNOW_hydrology
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only: denice, denh2o, tfrz
+  use PhysicalConstants, only : denice, denh2o, tfrz
+
+#ifdef USE_DEPTH_TO_BEDROCK
+   USE MOD_TimeInvariants, only : dbedrock, ibedrock
+#endif
 
   implicit none
     
@@ -76,7 +90,17 @@ MODULE SOIL_SNOW_hydrology
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
         zi_soisno(lb-1:nl_soil) , &! interface level below a "z" level (m)
 
-        bsw(1:nl_soil)   , &! Clapp-Hornberger "B"
+#ifdef Campbell_SOIL_MODEL
+        bsw(1:nl_soil),    &! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r  (1:nl_soil), &
+        alpha_vgm(1:nl_soil), &
+        n_vgm    (1:nl_soil), &
+        L_vgm    (1:nl_soil), &
+        sc_vgm   (1:nl_soil), &
+        fc_vgm   (1:nl_soil), &
+#endif
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
@@ -103,6 +127,10 @@ MODULE SOIL_SNOW_hydrology
         qinfl            , &! infiltration rate (mm h2o/s)
         qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
   
+#ifdef VARIABLY_SATURATED_FLOW
+
+#endif
+
 !-----------------------Local Variables------------------------------
 !                   
   integer j                 ! loop counter
@@ -177,11 +205,44 @@ MODULE SOIL_SNOW_hydrology
       dzmm(1:) = dz_soisno(1:)*1000.
       zimm(0:) = zi_soisno(0:)*1000.
 
+#ifdef VARIABLY_SATURATED_FLOW
+      ! CALL soil_water_movement ( &
+      !    nlev, dt, t_soi, sp_zc, sp_zi, &
+      !    porsl, vl_r, psi_s, hksat, sfun_typ, nprm, prms, wimp, &
+      !    ubc_typ, ubc_val, lbc_typ, lbc_val, &
+      !    ss_dp, zwt, ss_vliq, ss_vice, ss_q, ss_wf, ss_wt)
+
+      nlev = min(ibedrock, nl_soil)
+         
+      sp_zc(1:nlev) = z_soisno (1:nlev)
+      sp_zi(1:nlev) = zi_soisno(1:nlev)
+      IF (ibedrock <= nl_soil) THEN
+
+      ENDIF 
+
+#ifdef Campbell_SOIL_MODEL
+      prms(1,:) = bsw(1:nlev)
+      CALL soil_water_movement ( &
+         nlev, deltim, t_soisno(1:nlev), sp_zc, sp_zi, &
+         porsl, 0., psi0, hksati, 1, prms, wimp, &
+         ubc_typ, ubc_val, lbc_typ, lbc_val, &
+         ss_dp, zwt, ss_vliq, ss_vice, ss_q)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      prms(1,:) = alpha_vgm(1:nlev,ipatch)
+      prms(2,:) = n_vgm    (1:nlev,ipatch)
+      prms(3,:) = L_vgm    (1:nlev,ipatch)
+      prms(4,:) = sc_vgm   (1:nlev,ipatch)
+      prms(5,:) = fc_vgm   (1:nlev,ipatch)
+#endif
+
+#else
       call soilwater(nl_soil,deltim,wimp,smpmin,&
                      qinfl,etr,z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                      t_soisno(1:),vol_liq,vol_ice,icefrac,eff_porosity,&
                      porsl,hksati,bsw,psi0,rootr,&
                      zwt,dwat,qcharge)
+#endif
 
       ! update the mass of liquid water
       do j= 1, nl_soil
@@ -279,7 +340,7 @@ MODULE SOIL_SNOW_hydrology
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only: denice, denh2o  ! physical constant
+  use PhysicalConstants, only : denice, denh2o  ! physical constant
   implicit none
 
 !----------------------- dummy argument --------------------------------
@@ -506,7 +567,7 @@ MODULE SOIL_SNOW_hydrology
 !
 !-----------------------------------------------------------------------
     use precision
-    use PhysicalConstants , only: grav,hfus,tfrz,denh2o,denice
+    use PhysicalConstants , only : grav,hfus,tfrz,denh2o,denice
 
     IMPLICIT NONE
 
@@ -764,7 +825,7 @@ MODULE SOIL_SNOW_hydrology
 
 
     use precision
-    use PhysicalConstants, only: tfrz
+    use PhysicalConstants, only : tfrz
 !
 ! ARGUMENTS:
     IMPLICIT NONE

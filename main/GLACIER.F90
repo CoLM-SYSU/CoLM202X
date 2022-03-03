@@ -294,11 +294,11 @@
       enddo
 
 !#if (defined CLMDEBUG)
-     if(abs(errore)>.2)then 
-     write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
-     write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf
-     endif
-100  format(10(f7.3))
+      if(abs(errore)>.2)then 
+         write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
+         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf
+      endif
+      100  format(10(f7.3))
 !#endif
 
  end subroutine GLACIER_TEMP

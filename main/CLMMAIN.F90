@@ -10,7 +10,15 @@ SUBROUTINE CLMMAIN ( &
 
          ! soil information and lake depth
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
-           porsl,        psi0,         bsw,          hksati,        &
+           porsl,        psi0,                                      &         
+#ifdef Campbell_SOIL_MODEL
+           bsw,                                                     &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
+           sc_vgm,       fc_vgm,                                    &
+#endif
+           hksati,                                                  &
            csol,         dksatu,       dkdry,        rootfr,        &
            lakedepth,    dz_lake,                                   &
 
@@ -104,13 +112,19 @@ SUBROUTINE CLMMAIN ( &
 !=======================================================================
 
   USE precision
+  USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
-  USE MOD_TimeInvariants, only: gridlond
   USE MOD_TimeVariables, only: tlai, tsai
+#ifdef PFT_CLASSIFICATION
+  USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
   USE MOD_PFTimeVars
+#endif
+#ifdef PC_CLASSIFICATION
+  USE mod_landpc
   USE MOD_PCTimeInvars
   USE MOD_PCTimeVars
+#endif
   USE SOIL_SNOW_hydrology
   USE SNOW_Layers_CombineDivide
   USE GLACIER
@@ -151,7 +165,17 @@ SUBROUTINE CLMMAIN ( &
         soil_d_n_alb     ,&! albedo of near infrared of the dry soil
         porsl(nl_soil)   ,&! fraction of soil that is voids [-]
         psi0(nl_soil)    ,&! minimum soil suction [mm]
+#ifdef Campbell_SOIL_MODEL
         bsw(nl_soil)     ,&! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r  (1:nl_soil), &
+        alpha_vgm(1:nl_soil), &
+        n_vgm    (1:nl_soil), &
+        L_vgm    (1:nl_soil), &
+        sc_vgm   (1:nl_soil), &
+        fc_vgm   (1:nl_soil), &
+#endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
         dksatu(nl_soil)  ,&! thermal conductivity of saturated soil [W/m-K]
@@ -475,7 +499,15 @@ ENDIF
       CALL THERMAL (ipatch   ,patchtype         ,lb                ,deltim            ,&
            trsmx0            ,zlnd              ,zsno              ,csoilc            ,&
            dewmx             ,capr              ,cnfac             ,csol              ,&
-           porsl             ,psi0              ,bsw               ,dkdry             ,&
+           porsl             ,psi0              ,                                      &
+#ifdef Campbell_SOIL_MODEL
+           bsw               ,                                                         &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
+           sc_vgm            ,fc_vgm            ,                                      &
+#endif
+           dkdry             ,                                                         &
            dksatu            ,lai               ,laisun            ,laisha            ,&
            sai               ,htop              ,hbot              ,sqrtdi            ,&
            rootfr            ,rstfac            ,effcon            ,vmax25            ,&
@@ -502,7 +534,14 @@ ENDIF
 
       CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
            deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
-           bsw               ,porsl             ,psi0              ,hksati            ,&
+#ifdef Campbell_SOIL_MODEL
+           bsw               ,                                                         &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
+           sc_vgm            ,fc_vgm            ,                                      &
+#endif
+           porsl             ,psi0              ,hksati            ,                   &
            rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,&
            pg_rain           ,sm                ,etr               ,qseva             ,&
            qsdew             ,qsubl             ,qfros             ,rsur              ,&
@@ -808,7 +847,7 @@ ENDIF
 !======================================================================
 
     ! cosine of solar zenith angle 
-    calday = calendarday(idate, gridlond(1))
+    calday = calendarday(idate)
     coszen = orb_coszen(calday,patchlonr,patchlatr)
 
     IF (patchtype <= 5) THEN   !LAND

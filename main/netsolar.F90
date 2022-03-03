@@ -14,12 +14,18 @@
   USE precision
   USE GlobalVars
   USE timemanager, only: isgreenwich
+#ifdef PFT_CLASSIFICATION
+  USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
   USE MOD_PFTimeVars
   USE MOD_1D_PFTFluxes
+#endif
+#ifdef PC_CLASSIFICATION
+  USE mod_landpc
   USE MOD_PCTimeInvars
   USE MOD_PCTimeVars
   USE MOD_1D_PCFluxes
+#endif
 
   IMPLICIT NONE
 
