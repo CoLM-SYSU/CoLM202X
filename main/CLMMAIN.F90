@@ -377,7 +377,7 @@ SUBROUTINE CLMMAIN ( &
 
      REAL(r8) :: a, aa 
      INTEGER ps, pe, pc
-!test: add a comment
+
 !======================================================================
 !  [1] Solar absorbed by vegetation and ground
 !      and precipitation information (rain/snow fall and precip temperature
