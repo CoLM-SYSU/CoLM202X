@@ -53,6 +53,7 @@ OBJS_MAIN = \
 				  ../main/MOD_TimeInvariants.o \
 				  ../main/LAI_empirical.o  \
 				  ../main/LAI_readin.o \
+				  ../main/LAI_varied_readin.o  \
 				  ../main/orb_coszen.o         \
 				  ../main/ThreeDCanopy.o \
 				  ../main/ALBEDO.o    \
@@ -96,4 +97,4 @@ $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
 
 clean :
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod ${EXECUTABLE}

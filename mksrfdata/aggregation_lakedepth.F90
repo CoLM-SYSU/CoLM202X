@@ -29,7 +29,9 @@ SUBROUTINE aggregation_lakedepth ( &
    USE mod_landpatch
    USE ncio_vector
    USE ncio_block
+#ifdef CLMDEBUG 
    USE mod_colm_debug
+#endif
    USE mod_aggregation_lc
    USE mod_utils
 

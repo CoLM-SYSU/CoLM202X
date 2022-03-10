@@ -26,6 +26,7 @@ MODULE GlobalVars
    INTEGER, parameter :: nl_lake  = 10
    INTEGER, parameter :: nl_roof  = 5
    INTEGER, parameter :: nl_wall  = 5
+   INTEGER, parameter :: nvegwcs  = 4  ! number of vegetation water potential nodes
    
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
 !   INTEGER :: numpatch  ! moved to mod_landpatch   !total number of patches of grids

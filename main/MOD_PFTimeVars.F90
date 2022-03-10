@@ -32,6 +32,11 @@ MODULE MOD_PFTimeVars
   REAL(r8), allocatable :: qref_p    (:) !2 m height air specific humidity
   REAL(r8), allocatable :: rst_p     (:) !canopy stomatal resistance (s/m)
   REAL(r8), allocatable :: z0m_p     (:) !effective roughness [m]
+#ifdef PLANT_HYDRAULIC_STRESS
+  real(r8), allocatable :: vegwp_p (:,:) ! vegetation water potential [mm]
+  real(r8), allocatable :: gs0sun_p  (:) ! working copy of sunlit stomata conductance
+  real(r8), allocatable :: gs0sha_p  (:) ! working copy of shalit stomata conductance
+#endif
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PFTimeVars
@@ -57,6 +62,7 @@ CONTAINS
       USE precision
       USE spmd_task
       USE mod_landpft
+      USE GlobalVars
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -77,6 +83,11 @@ CONTAINS
             allocate (qref_p       (numpft)) !2 m height air specific humidity
             allocate (rst_p        (numpft)) !canopy stomatal resistance (s/m)
             allocate (z0m_p        (numpft)) !effective roughness [m]
+#ifdef PLANT_HYDRAULIC_STRESS
+            allocate (vegwp_p      (1:nvegwcs,numpft))
+            allocate (gs0sun_p     (numpft))
+            allocate (gs0sha_p     (numpft))
+#endif
          ENDIF
       ENDIF 
 
@@ -86,6 +97,8 @@ CONTAINS
 
       use ncio_vector
       USE mod_landpft
+      USE GlobalVars
+
       IMPLICIT NONE
 
       character(LEN=*), intent(in) :: file_restart
@@ -106,6 +119,11 @@ CONTAINS
       call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !  
       call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !  
       call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !  
+#ifdef PLANT_HYDRAULIC_STRESS
+      call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
+      call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) ! 
+      call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
+#endif
 
    END SUBROUTINE READ_PFTimeVars 
    
@@ -114,6 +132,7 @@ CONTAINS
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
      USE mod_landpft
      use ncio_vector
+     USE GlobalVars
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -127,6 +146,9 @@ CONTAINS
      CALL ncio_define_pixelset_dimension (file_restart, landpft)
      CALL ncio_define_dimension_vector (file_restart, 'band',   2)
      CALL ncio_define_dimension_vector (file_restart, 'wetdry', 2)
+#ifdef PLANT_HYDRAULIC_STRESS
+     CALL ncio_define_dimension_vector (file_restart, 'vegnodes', nvegwcs)
+#endif
 
      call ncio_write_vector (file_restart, 'tleaf_p  ', 'vector', landpft, tleaf_p  , compress) !  
      call ncio_write_vector (file_restart, 'ldew_p   ', 'vector', landpft, ldew_p   , compress) !  
@@ -144,6 +166,11 @@ CONTAINS
      call ncio_write_vector (file_restart, 'qref_p   ', 'vector', landpft, qref_p   , compress) !  
      call ncio_write_vector (file_restart, 'rst_p    ', 'vector', landpft, rst_p    , compress) !  
      call ncio_write_vector (file_restart, 'z0m_p    ', 'vector', landpft, z0m_p    , compress) !  
+#ifdef PLANT_HYDRAULIC_STRESS
+     call ncio_write_vector (file_restart, 'vegwp_p  ', 'vegnodes', nvegwcs, 'vector', landpft, vegwp_p, compress)
+     call ncio_write_vector (file_restart, 'gs0sun_p ', 'vector', landpft, gs0sun_p , compress) !
+     call ncio_write_vector (file_restart, 'gs0sha_p ', 'vector', landpft, gs0sha_p , compress) !
+#endif
 
    END SUBROUTINE WRITE_PFTimeVars
 
@@ -172,7 +199,12 @@ CONTAINS
             deallocate (tref_p   ) !2 m height air temperature [kelvin]
             deallocate (qref_p   ) !2 m height air specific humidity
             deallocate (rst_p    ) !canopy stomatal resistance (s/m)
-            deallocate (z0m_p    ) !effective roughness [m]                                 
+            deallocate (z0m_p    ) !effective roughness [m]
+#ifdef PLANT_HYDRAULIC_STRESS 
+            deallocate (vegwp_p  ) ! vegetation water potential [mm] 
+            deallocate (gs0sun_p ) ! working copy of sunlit stomata conductance
+            deallocate (gs0sha_p ) ! working copy of shalit stomata conductance
+#endif
          ENDIF
       ENDIF 
 
@@ -200,6 +232,11 @@ CONTAINS
       call check_vector_data ('qref_p   ', qref_p   )      !  
       call check_vector_data ('rst_p    ', rst_p    )      !  
       call check_vector_data ('z0m_p    ', z0m_p    )      !  
+#ifdef PLANT_HYDRAULIC_STRESS
+      call check_vector_data ('vegwp_p  ', vegwp_p  )      !  
+      call check_vector_data ('gs0sun_p ', gs0sun_p )      !
+      call check_vector_data ('gs0sha_p ', gs0sha_p )      !
+#endif
 
    END SUBROUTINE check_PFTimeVars
 #endif

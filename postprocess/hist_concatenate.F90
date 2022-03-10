@@ -54,6 +54,9 @@ program hist_concatenate
       CALL ncio_define_dimension (filehist, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension (filehist, 'band', 2)
       CALL ncio_define_dimension (filehist, 'wetdry', 2)
+#ifdef PLANT_HYDRAULIC_STRESS
+      CALL ncio_define_dimension (filehist, 'vegnodes', nvegwcs)
+#endif
 
    ENDIF
 
@@ -113,7 +116,14 @@ program hist_concatenate
    call hist_concatenate_var_3d (filehist, 'f_wliq_soisno', timelen, 'soilsnow', nl_soil-maxsnl, compress)  ! liquid water in soil layers [kg/m2]
    call hist_concatenate_var_3d (filehist, 'f_wice_soisno', timelen, 'soilsnow', nl_soil-maxsnl, compress)  ! ice lens in soil layers [kg/m2]
    call hist_concatenate_var_3d (filehist, 'f_h2osoi     ', timelen, 'soil', nl_soil, compress)  ! volumetric soil water in layers [m3/m3]
-   call hist_concatenate_var_2d (filehist, 'f_rstfac     ', timelen, compress)  ! factor of soil water stress 
+   call hist_concatenate_var_2d (filehist, 'f_rstfacsun  ', timelen, compress)  ! factor of soil water stress to transpiration on sunlit leaf
+   call hist_concatenate_var_2d (filehist, 'f_rstfacsha  ', timelen, compress)  ! factor of soil water stress to transpiration on shaded leaf
+   call hist_concatenate_var_3d (filehist, 'f_rootr      ', timelen, 'soil', nl_soil, compress)  
+                                           ! fraction of root water uptake from each soil layer (PHS undefined)
+                                           ! water exchange between soil layers and root. Positive: soil->root [mm h2o/s] (PHS defined)
+#ifdef PLANT_HYDRAULIC_STRESS
+   call hist_concatenate_var_3d (filehist, 'f_vegwp      ', timelen, 'vegnodes', nvegwcs, compress)  ! vegetation water potential [mm]
+#endif
    call hist_concatenate_var_2d (filehist, 'f_zwt        ', timelen, compress)  ! the depth to water table [m]
    call hist_concatenate_var_2d (filehist, 'f_wa         ', timelen, compress)  ! water storage in aquifer [mm]
    call hist_concatenate_var_2d (filehist, 'f_wat        ', timelen, compress)  ! total water storage [mm]

@@ -543,12 +543,10 @@ MODULE FRICTION_VELOCITY
   real(r8) wc     ! convective velocity [m/s]
   real(r8) rib    ! bulk Richardson number
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-  real(r8) ustar  ! friction velocity [m/s]
 
 !-----------------------------------------------------------------------
 ! Initial values of u* and convective velocity
 
-        ustar=0.06
         wc=0.5
         if(dthv >= 0.)then
           um=max(ur,0.1)

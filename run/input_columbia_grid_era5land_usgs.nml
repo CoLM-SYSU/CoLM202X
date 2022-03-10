@@ -13,43 +13,40 @@
    
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2003
-   DEF_simulation_time%start_month  = 1
+   DEF_simulation_time%start_month  = 7
    DEF_simulation_time%start_day    = 1
    DEF_simulation_time%start_sec    = 0
    DEF_simulation_time%end_year     = 2003
-   DEF_simulation_time%end_month    = 1
-   DEF_simulation_time%end_day      = 1
+   DEF_simulation_time%end_month    = 7
+   DEF_simulation_time%end_day      = 31
    DEF_simulation_time%end_sec      = 86400
    DEF_simulation_time%spinup_year  = 2000
    DEF_simulation_time%spinup_month = 1
    DEF_simulation_time%spinup_day   = 1
    DEF_simulation_time%spinup_sec   = 0
-   DEF_simulation_time%timestep     = 3600.
+   DEF_simulation_time%timestep     = 1800.
    
-   DEF_dir_rawdata  = '/tera02/zhangsp/data/CLMrawdata_usgs/'
-   DEF_dir_output   = '/tera02/zhangsp/cases'
+   DEF_dir_rawdata  = '/peta01/zhangsp/data/CLMrawdata_usgs/'
+   DEF_dir_output   = '/peta01/zhangsp/cases'
    
    ! ----- land units and land sets -----
    ! for GRIDBASED
-   DEF_file_landgrid = '/tera02/zhangsp/data/landdata/landmask_usgs_4km.nc'
+   DEF_file_landgrid = '/peta01/zhangsp/data/landdata/landmask_era5land.nc'
 
    ! for CATCHMENT
    ! DEF_dir_hydrodata = '/tera02/zhangsp/hillslope/output/columbia'
    ! DEF_max_hband = 25
 
-   ! ----- model settings -----
-   DEF_NVEGWCS                     = 4
-   DEF_PLANT_HYDRAULIC_STRESS      = .TRUE. 
-   DEF_THERMAL_CONDUCTIVITY_SCHEME = 4
-   DEF_SOILPAR_UPS_FIT             = .TRUE.
-   
+   ! LAI setting
+   DEF_LAI_TRUE = .false.
+
    ! ----- history -----
    DEF_nlon_hist = 7200
    DEF_nlat_hist = 3600     
    DEF_WRST_FREQ = 'DAILY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'DAILY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
-   
+   DEF_HIST_mode = 'one' ! history in one or block
    DEF_REST_COMPRESS_LEVEL = 1
    DEF_HIST_COMPRESS_LEVEL = 1
    
@@ -157,7 +154,10 @@
    DEF_hist_vars%wice_soisno  = .true. 
 
    DEF_hist_vars%h2osoi       = .true. 
-   DEF_hist_vars%rstfac       = .true. 
+   DEF_hist_vars%rstfacsun    = .true. 
+   DEF_hist_vars%rstfacsha    = .true.
+   DEF_hist_vars%rootr        = .true.
+   DEF_hist_vars%vegwp        = .true.
    DEF_hist_vars%zwt          = .true. 
    DEF_hist_vars%wa           = .true. 
 

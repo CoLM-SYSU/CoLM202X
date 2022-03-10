@@ -76,6 +76,7 @@
            smp_node = soil_psi_from_vliq ( s_node*(porsl(i)-theta_r(i)) + theta_r(i), &
               porsl(i), theta_r(i), psi0(i), &
               5, (/alpha_vgm(i), n_vgm(i), L_vgm(i), sc_vgm(i), fc_vgm(i)/))
+           smp_node = max(smpmax, smp_node)
 #endif
            rresis(i) =(1.-smp_node/smpmax)/(1.-psi0(i)/smpmax) 
            rootr(i) = rootfr(i)*rresis(i)

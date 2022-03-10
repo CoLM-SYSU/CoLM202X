@@ -1,3 +1,4 @@
+#include <define.h>
 
  subroutine meltf (lb,nl_soil,deltim, &
                    fact,brr,hs,dhsdT, &

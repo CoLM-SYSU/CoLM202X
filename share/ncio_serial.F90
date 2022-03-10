@@ -1027,7 +1027,7 @@ CONTAINS
       INTEGER, intent(in) :: wdata (:,:,:)
       
       CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
-      INTEGER, intent(in), optional :: compress
+      INTEGER, intent(in), optional          :: compress
 
       ! Local variables
       INTEGER :: ncid, varid, dimid(3), status
@@ -1271,7 +1271,7 @@ CONTAINS
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_2d_time ( &
          filename, dataname, itime, wdata, &
-         dim1name, dim2name, dim3name, compress)
+         dim1name, dim2name, dim3name, compress, longname, units)
      
       USE netcdf
       USE precision
@@ -1284,6 +1284,8 @@ CONTAINS
       
       CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
       INTEGER, intent(in), optional :: compress
+      character (len=*), intent(in),optional :: longname
+      character (len=*), intent(in),optional :: units
 
       ! Local variables
       INTEGER :: ncid, varid, dimid(3), status
@@ -1308,6 +1310,14 @@ CONTAINS
             CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_DOUBLE, dimid, varid))
          ENDIF 
 
+         IF (present(longname)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'long_name', trim(longname)))
+         ENDIF
+         
+         IF (present(units)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'units', trim(units)))
+         ENDIF
+
          CALL nccheck (nf90_enddef(ncid))
       ENDIF 
 
@@ -1321,7 +1331,7 @@ CONTAINS
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_3d_time ( &
          filename, dataname, itime, wdata, &
-         dim1name, dim2name, dim3name, dim4name, compress)
+         dim1name, dim2name, dim3name, dim4name, compress, longname, units)
      
       USE netcdf
       USE precision
@@ -1334,7 +1344,8 @@ CONTAINS
       
       CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name, dim4name
       INTEGER, intent(in), optional :: compress
-
+      character (len=*), intent(in),optional :: longname
+      character (len=*), intent(in),optional :: units
       ! Local variables
       INTEGER :: ncid, varid, dimid(4), status
 
@@ -1360,6 +1371,14 @@ CONTAINS
             CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_DOUBLE, dimid, varid))
          ENDIF 
 
+         IF (present(longname)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'long_name', trim(longname)))
+         ENDIF
+         
+         IF (present(units)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'units', trim(units)))
+         ENDIF
+
          CALL nccheck (nf90_enddef(ncid))
       ENDIF 
 
@@ -1373,7 +1392,7 @@ CONTAINS
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_4d_time ( &
          filename, dataname, itime, wdata, &
-         dim1name, dim2name, dim3name, dim4name, dim5name, compress)
+         dim1name, dim2name, dim3name, dim4name, dim5name, compress, longname, units)
      
       USE netcdf
       USE precision
@@ -1387,6 +1406,8 @@ CONTAINS
       CHARACTER(len=*), intent(in), optional :: dim1name, dim2name, dim3name
       CHARACTER(len=*), intent(in), optional :: dim4name, dim5name
       INTEGER, intent(in), optional :: compress
+      character (len=*), intent(in),optional :: longname
+      character (len=*), intent(in),optional :: units
 
       ! Local variables
       INTEGER :: ncid, varid, dimid(5), status
@@ -1413,6 +1434,14 @@ CONTAINS
          ELSE
             CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_DOUBLE, dimid, varid))
          ENDIF 
+
+         IF (present(longname)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'long_name', trim(longname)))
+         ENDIF
+         
+         IF (present(units)) THEN
+            CALL nccheck (nf90_put_att(ncid, varid, 'units', trim(units)))
+         ENDIF
 
          CALL nccheck (nf90_enddef(ncid))
       ENDIF 

@@ -1,26 +1,26 @@
 # Makefile for CLM surface data processing
 
 include ../include/Makeoptions
+VPATH  = ../share 
+HEADER = ../include/define.h
 
 ####################################################################
 .DEFAULT :
 
-OBJS_SHARED =  ../share/precision.o \
-					../share/spmd_task.o \
-					../share/hdf5_io_serial.o \
-					../share/mod_block.o \
-					../share/mod_grid.o  \
-					../share/mod_data_type.o
+OBJS_SHARED = ../share/precision.o ../share/PhysicalConstants.o
 
-OBJS = mod_hydro_data.o
+OBJS = mod_soil_function.o mod_soil_water.o
 
 ####################################################################
 
 main : ${OBJS}
 	@echo 'Compiling modules in hydro completed!'
 
-$(OBJS):%.o : %.F90 ${OBJS_SHARED}
+$(OBJS):%.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
+
+$(OBJS_SHARED) : %.o : %.F90 ${HEADER} 
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
 
 clean :
 	${RM} -f *.o *.mod

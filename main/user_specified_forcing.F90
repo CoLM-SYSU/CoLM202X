@@ -126,6 +126,8 @@ CONTAINS
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(yearstr)//'.nc'
       case ('GSWP2')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
+      case ('GSWP3')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       case ('QIAN')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
       case ('CRUNCEP')
@@ -150,6 +152,33 @@ CONTAINS
          case (8)
             metfilename = trim(metfilename) //'_surface_thermal_radiation_downwards_w_m2.nc'
          END select
+      case ('ERA5')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)
+         select case (var_i)
+         case (1)
+            metfilename = trim(metfilename) // '_2m_temperature.nc4'
+         case (2)
+            metfilename = trim(metfilename) //'_q.nc4'
+         case (3)
+            metfilename = trim(metfilename) //'_surface_pressure.nc4'
+         case (4)
+            metfilename = trim(metfilename) //'_mean_total_precipitation_rate.nc4'
+         case (5)
+            metfilename = trim(metfilename) //'_100m_u_component_of_wind.nc4'
+         case (6)
+            metfilename = trim(metfilename) //'_100m_v_component_of_wind.nc4'
+         case (7)
+            metfilename = trim(metfilename) //'_mean_surface_downward_short_wave_radiation_flux.nc4'
+         case (8)
+            metfilename = trim(metfilename) //'_mean_surface_downward_long_wave_radiation_flux.nc4'
+         END select
+      case ('MSWX')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)//'.nc'
+      case ('WFDE5')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.0.nc'
+         !print *, metfilename
+      !case ('CMFD')
+
       case ('POINT')
          metfilename = '/'//trim(fprefix(1))
       end select
@@ -209,6 +238,15 @@ CONTAINS
                               forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                            endif
 
+                        case ('GSWP3')
+                           if (forcn(1)%blk(ib,jb)%val(i,j)<212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                           if (forcn(4)%blk(ib,jb)%val(i,j)<0.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
                         case ('QIAN')
                            
                            call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
@@ -224,6 +262,14 @@ CONTAINS
 
                         case ('CRUNCEP')  
 
+                           if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                           if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                           ! 12th grade of Typhoon 32.7-36.9 m/s
+                           if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                           if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
                            call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                               es,esdT,qsat_tmp,dqsat_tmpdT)
                            if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
@@ -231,13 +277,38 @@ CONTAINS
                            endif
 
                         case ('ERA5LAND')
-
+                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j) * 1000./3600.
                            call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                               es,esdT,qsat_tmp,dqsat_tmpdT)
                            if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                               forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                            endif
 
+                        case ('ERA5')
+                         !  forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+                        case ('MSWX')
+                           forcn(1)%blk(ib,jb)%val(i,j)=forcn(1)%blk(ib,jb)%val(i,j)+273.15
+                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/10800.
+                           if (forcn(4)%blk(ib,jb)%val(i,j)>1000.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                           es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+                        case ('WFDE5')
+                         !  forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)
+                        !   if (forcn(1)%blk(ib,jb)%val(i,j)<212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                        !   if (forcn(4)%blk(ib,jb)%val(i,j)<0.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                          endif
                         end select
 
                      end do

@@ -57,7 +57,7 @@ contains
       ! get value of fmetdat and deltim
       deltim_int  = int(deltatime)
       deltim_real = deltatime
-
+      
       ! set initial values
       allocate (tstamp_LB(NVAR))
       allocate (tstamp_UB(NVAR))
@@ -220,10 +220,26 @@ contains
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
          ELSEif (trim(dataset) == 'ERA5LAND') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8 * 1000./3600._r8)  ! unit from m/hr to mm/s
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8 * 1000./3600._r8)  ! unit from m/hr to mm/s
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)  
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)  
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
+         ELSEif (trim(dataset) == 'ERA5') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+            call block_data_copy (forcn(5), forc_xy_us )
+            call block_data_copy (forcn(6), forc_xy_vs )
+        ! ELSEif (trim(dataset) == 'MSWX') then
+        !    call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8 ) ! unit from mm/3hr to mm/s
+        !    call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8 )
+        !    call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
+        !    call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+        ! ELSEif (trim(dataset) == 'WFDE5') then
+        !    call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8 ) ! unit from m/hr to mm/s
+        !    call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8 )
+        !    call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
+        !    call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+
          ELSE
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
@@ -497,9 +513,9 @@ contains
       tstamp_LB(1) = timestamp(-1, -1, -1)
 
       IF (trim(DEF_forcing%dataset) == 'ERA5LAND') THEN
-         
          CALL gforc%define_by_name ('ERA5LAND')
-         
+      ELSEIF (trim(DEF_forcing%dataset) == 'ERA5') THEN
+         CALL gforc%define_by_name ('ERA5')
       ELSE
          if (dim2d) then
             call ncio_read_bcast_serial (filename, latname, latxy)

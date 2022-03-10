@@ -23,6 +23,14 @@ SAVE
   REAL(r8), allocatable :: soil_d_v_alb   (:)  !albedo of visible of the dry soil
   REAL(r8), allocatable :: soil_s_n_alb   (:)  !albedo of near infrared of the saturated soil
   REAL(r8), allocatable :: soil_d_n_alb   (:)  !albedo of near infrared of the dry soil
+
+  REAL(r8), allocatable :: vf_quartz (:,:)     ! volumetric fraction of quartz within mineral soil
+  REAL(r8), allocatable :: vf_gravels(:,:)     ! volumetric fraction of gravels
+  REAL(r8), allocatable :: vf_om     (:,:)     ! volumetric fraction of organic matter
+  REAL(r8), allocatable :: vf_sand   (:,:)     ! volumetric fraction of sand
+  REAL(r8), allocatable :: wf_gravels(:,:)     ! gravimetric fraction of gravels
+  REAL(r8), allocatable :: wf_sand   (:,:)     ! gravimetric fraction of sand
+
   REAL(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL
@@ -38,9 +46,14 @@ SAVE
 #endif
   REAL(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
   REAL(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]
+  REAL(r8), allocatable :: k_solids     (:,:)  !thermal conductivity of soil solids [W/m-K]
   REAL(r8), allocatable :: dksatu       (:,:)  !thermal conductivity of saturated soil [W/m-K]
+  real(r8), allocatable :: dksatf       (:,:)  !thermal conductivity of saturated frozen soil [W/m-K]
   REAL(r8), allocatable :: dkdry        (:,:)  !thermal conductivity for dry soil  [W/(m-K)]
-
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+  REAL(r8), allocatable :: BA_alpha     (:,:)  !alpha in Balland and Arp(2005) thermal conductivity scheme
+  REAL(r8), allocatable :: BA_beta      (:,:)  !beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
   REAL(r8), allocatable :: htop           (:)  !canopy top height [m]
   REAL(r8), allocatable :: hbot           (:)  !canopy bottom height [m]
 
@@ -48,6 +61,7 @@ SAVE
   real(r8), allocatable :: dbedrock       (:)  ! depth to bedrock
   integer , allocatable :: ibedrock       (:)  ! bedrock level
 #endif
+
 
   REAL(r8) :: zlnd         ! roughness length for soil [m]
   REAL(r8) :: zsno         ! roughness length for snow [m]
@@ -113,6 +127,12 @@ SAVE
         allocate (soil_s_n_alb         (numpatch))
         allocate (soil_d_n_alb         (numpatch))
 
+        allocate (vf_quartz    (nl_soil,numpatch))
+        allocate (vf_gravels   (nl_soil,numpatch))
+        allocate (vf_om        (nl_soil,numpatch))
+        allocate (vf_sand      (nl_soil,numpatch))
+        allocate (wf_gravels   (nl_soil,numpatch))
+        allocate (wf_sand      (nl_soil,numpatch))
         allocate (porsl        (nl_soil,numpatch))
         allocate (psi0         (nl_soil,numpatch))
 #ifdef Campbell_SOIL_MODEL
@@ -128,9 +148,14 @@ SAVE
 #endif
         allocate (hksati       (nl_soil,numpatch))
         allocate (csol         (nl_soil,numpatch))
+        allocate (k_solids     (nl_soil,numpatch))
         allocate (dksatu       (nl_soil,numpatch))
+        allocate (dksatf       (nl_soil,numpatch))
         allocate (dkdry        (nl_soil,numpatch))
-     
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+        allocate (BA_alpha     (nl_soil,numpatch))
+        allocate (BA_beta      (nl_soil,numpatch))
+#endif
         allocate (htop                 (numpatch))
         allocate (hbot                 (numpatch))
 
@@ -138,7 +163,6 @@ SAVE
         allocate (dbedrock             (numpatch))
         allocate (ibedrock             (numpatch))
 #endif
-
      end if
 
 #ifdef PFT_CLASSIFICATION
@@ -164,7 +188,9 @@ SAVE
      use spmd_task
      use ncio_vector
      use ncio_serial
-     use mod_colm_debug
+#ifdef CLMDEBUG 
+     USE mod_colm_debug
+#endif
      USE mod_landpatch
      USE GlobalVars
 #ifdef PFT_CLASSIFICATION
@@ -198,10 +224,16 @@ SAVE
      call ncio_read_vector (file_restart, 'soil_s_n_alb', landpatch, soil_s_n_alb) ! albedo of near infrared of the saturated soil
      call ncio_read_vector (file_restart, 'soil_d_n_alb', landpatch, soil_d_n_alb) ! albedo of near infrared of the dry soil
 
-     call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl  ) ! fraction of soil that is voids [-]
-     call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0   ) ! minimum soil suction [mm] (NOTE: "-" valued)
+     call ncio_read_vector (file_restart, 'vf_quartz ',   nl_soil, landpatch, vf_quartz ) ! volumetric fraction of quartz within mineral soil
+     call ncio_read_vector (file_restart, 'vf_gravels',   nl_soil, landpatch, vf_gravels) ! volumetric fraction of gravels
+     call ncio_read_vector (file_restart, 'vf_om     ',   nl_soil, landpatch, vf_om     ) ! volumetric fraction of organic matter
+     call ncio_read_vector (file_restart, 'vf_sand   ',   nl_soil, landpatch, vf_sand   ) ! volumetric fraction of sand
+     call ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
+     call ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
+     call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
+     call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL                                         
-     call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw    ) ! clapp and hornbereger "b" parameter [-]
+     call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) 
@@ -213,9 +245,14 @@ SAVE
 #endif                                                             
      call ncio_read_vector (file_restart, 'hksati ' ,     nl_soil, landpatch, hksati ) ! hydraulic conductivity at saturation [mm h2o/s]
      call ncio_read_vector (file_restart, 'csol   ' ,     nl_soil, landpatch, csol   ) ! heat capacity of soil solids [J/(m3 K)]
-     call ncio_read_vector (file_restart, 'dksatu ' ,     nl_soil, landpatch, dksatu ) ! thermal conductivity of saturated soil [W/m-K]
+     call ncio_read_vector (file_restart, 'k_solids',     nl_soil, landpatch, k_solids)! thermal conductivity of soil solids [W/m-K] 
+     call ncio_read_vector (file_restart, 'dksatu ' ,     nl_soil, landpatch, dksatu ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
+     call ncio_read_vector (file_restart, 'dksatf ' ,     nl_soil, landpatch, dksatf ) ! thermal conductivity of frozen saturated soil [W/m-K]
      call ncio_read_vector (file_restart, 'dkdry  ' ,     nl_soil, landpatch, dkdry  ) ! thermal conductivity for dry soil  [W/(m-K)]
-     
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+     call ncio_read_vector (file_restart, 'BA_alpha',     nl_soil, landpatch, BA_alpha)! alpha in Balland and Arp(2005) thermal conductivity scheme
+     call ncio_read_vector (file_restart, 'BA_beta' ,     nl_soil, landpatch, BA_beta )! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
      call ncio_read_vector (file_restart, 'htop' ,    landpatch, htop) !
      call ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot) !
 
@@ -318,23 +355,35 @@ SAVE
      call ncio_write_vector (file_restart, 'soil_s_n_alb', 'vector', landpatch, soil_s_n_alb, compress) ! albedo of near infrared of the saturated soil
      call ncio_write_vector (file_restart, 'soil_d_n_alb', 'vector', landpatch, soil_d_n_alb, compress) ! albedo of near infrared of the dry soil
 
-     call ncio_write_vector (file_restart, 'porsl  ' , 'soil', nl_soil, 'vector', landpatch, porsl , compress) ! fraction of soil that is voids [-]
-     call ncio_write_vector (file_restart, 'psi0   ' , 'soil', nl_soil, 'vector', landpatch, psi0  , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
+     call ncio_write_vector (file_restart, 'vf_quartz ', 'soil', nl_soil, 'vector', landpatch, vf_quartz , compress) ! volumetric fraction of quartz within mineral soil
+     call ncio_write_vector (file_restart, 'vf_gravels', 'soil', nl_soil, 'vector', landpatch, vf_gravels, compress) ! volumetric fraction of gravels
+     call ncio_write_vector (file_restart, 'vf_om     ', 'soil', nl_soil, 'vector', landpatch, vf_om     , compress) ! volumetric fraction of organic matter
+     call ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'vector', landpatch, vf_sand   , compress) ! volumetric fraction of sand
+     call ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'vector', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
+     call ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'vector', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+     call ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'vector', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
+     call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'vector', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL
-     call ncio_write_vector (file_restart, 'bsw    ' , 'soil', nl_soil, 'vector', landpatch, bsw   , compress) ! clapp and hornbereger "b" parameter [-]
+     call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'vector', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'vector', landpatch, theta_r  , compress) 
-     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'vector', landpatch, alpha_vgm, compress) 
-     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'vector', landpatch, L_vgm    , compress) 
-     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'vector', landpatch, n_vgm    , compress) 
-     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, sc_vgm   , compress) 
-     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, fc_vgm   , compress) 
+     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'vector', landpatch, theta_r   , compress) 
+     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'vector', landpatch, alpha_vgm , compress) 
+     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'vector', landpatch, L_vgm     , compress) 
+     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'vector', landpatch, n_vgm     , compress) 
+     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, sc_vgm    , compress) 
+     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, fc_vgm    , compress) 
 #endif
-     call ncio_write_vector (file_restart, 'hksati ' , 'soil', nl_soil, 'vector', landpatch, hksati, compress) ! hydraulic conductivity at saturation [mm h2o/s]
-     call ncio_write_vector (file_restart, 'csol   ' , 'soil', nl_soil, 'vector', landpatch, csol  , compress) ! heat capacity of soil solids [J/(m3 K)]
-     call ncio_write_vector (file_restart, 'dksatu ' , 'soil', nl_soil, 'vector', landpatch, dksatu, compress) ! thermal conductivity of saturated soil [W/m-K]
-     call ncio_write_vector (file_restart, 'dkdry  ' , 'soil', nl_soil, 'vector', landpatch, dkdry , compress) ! thermal conductivity for dry soil  [W/(m-K)]
+     call ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'vector', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
+     call ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'vector', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
+     call ncio_write_vector (file_restart, 'k_solids ' , 'soil', nl_soil, 'vector', landpatch, k_solids  , compress) ! thermal conductivity of soil solids [W/m-K]
+     call ncio_write_vector (file_restart, 'dksatu   ' , 'soil', nl_soil, 'vector', landpatch, dksatu    , compress) ! thermal conductivity of saturated soil [W/m-K]
+     call ncio_write_vector (file_restart, 'dksatf   ' , 'soil', nl_soil, 'vector', landpatch, dksatf    , compress) ! thermal conductivity of saturated soil [W/m-K]
+     call ncio_write_vector (file_restart, 'dkdry    ' , 'soil', nl_soil, 'vector', landpatch, dkdry     , compress) ! thermal conductivity for dry soil  [W/(m-K)]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+     call ncio_write_vector (file_restart, 'BA_alpha ' , 'soil', nl_soil, 'vector', landpatch, BA_alpha  , compress) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+     call ncio_write_vector (file_restart, 'BA_beta  ' , 'soil', nl_soil, 'vector', landpatch, BA_beta   , compress) ! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
 
      call ncio_write_vector (file_restart, 'htop' , 'vector', landpatch, htop) !
      call ncio_write_vector (file_restart, 'hbot' , 'vector', landpatch, hbot) !
@@ -411,6 +460,12 @@ SAVE
            deallocate (soil_s_n_alb)
            deallocate (soil_d_n_alb)
 
+           deallocate (vf_quartz )
+           deallocate (vf_gravels)
+           deallocate (vf_om     )
+           deallocate (vf_sand   )
+           deallocate (wf_gravels)
+           deallocate (wf_sand   )
            deallocate (porsl  )
            deallocate (psi0   )
 #ifdef Campbell_SOIL_MODEL
@@ -426,8 +481,14 @@ SAVE
 #endif
            deallocate (hksati )
            deallocate (csol   )
+           deallocate (k_solids)
            deallocate (dksatu )
+           deallocate (dksatf )
            deallocate (dkdry  )
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           deallocate (BA_alpha )
+           deallocate (BA_beta  )
+#endif
 
            deallocate (htop)
            deallocate (hbot)
@@ -480,6 +541,12 @@ SAVE
       call check_vector_data ('soil_d_v_alb', soil_d_v_alb) ! albedo of visible of the dry soil
       call check_vector_data ('soil_s_n_alb', soil_s_n_alb) ! albedo of near infrared of the saturated soil
       call check_vector_data ('soil_d_n_alb', soil_d_n_alb) ! albedo of near infrared of the dry soil
+      call check_vector_data ('vf_quartz   ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
+      call check_vector_data ('vf_gravels  ', vf_gravels  ) ! volumetric fraction of gravels
+      call check_vector_data ('vf_om       ', vf_om       ) ! volumetric fraction of organic matter
+      call check_vector_data ('vf_sand     ', vf_sand     ) ! volumetric fraction of sand
+      call check_vector_data ('wf_gravels  ', wf_gravels  ) ! gravimetric fraction of gravels
+      call check_vector_data ('wf_sand     ', wf_sand     ) ! gravimetric fraction of sand
       call check_vector_data ('porsl       ', porsl       ) ! fraction of soil that is voids [-]
       call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL
@@ -495,9 +562,15 @@ SAVE
 #endif
       call check_vector_data ('hksati      ', hksati      ) ! hydraulic conductivity at saturation [mm h2o/s]
       call check_vector_data ('csol        ', csol        ) ! heat capacity of soil solids [J/(m3 K)]
-      call check_vector_data ('dksatu      ', dksatu      ) ! thermal conductivity of saturated soil [W/m-K]
+      call check_vector_data ('k_solids    ', k_solids    ) ! thermal conductivity of soil solids [W/m-K]
+      call check_vector_data ('dksatu      ', dksatu      ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
+      call check_vector_data ('dksatf      ', dksatf      ) ! thermal conductivity of frozen saturated soil [W/m-K]
       call check_vector_data ('dkdry       ', dkdry       ) ! thermal conductivity for dry soil  [W/(m-K)]
-      
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      call check_vector_data ('BA_alpha    ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+      call check_vector_data ('BA_beta     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
+
       call check_vector_data ('htop        ', htop        ) 
       call check_vector_data ('hbot        ', hbot        ) 
 

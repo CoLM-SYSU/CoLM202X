@@ -1,9 +1,12 @@
 #include <define.h>
 
 SUBROUTINE IniTimeVar(ipatch, patchtype&
-                     ,porsl,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb&
+                     ,porsl,psi0,hksati,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb&
                      ,z0m,zlnd,chil,rho,tau,z_soisno,dz_soisno&
-                     ,t_soisno,wliq_soisno,wice_soisno,zwt,wa&
+                     ,t_soisno,wliq_soisno,wice_soisno,smp,hk,zwt,wa&
+#ifdef PLANT_HYDRAULIC_STRESS
+                     ,vegwp,gs0sun,gs0sha&
+#endif
                      ,t_grnd,tleaf,ldew,sag,scv&   
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,alb,ssun,ssha,thermk,extkb,extkd&
@@ -24,6 +27,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE precision
   USE PhysicalConstants, only: tfrz
   USE MOD_TimeVariables, only: tlai, tsai
+#ifdef USE_DEPTH_TO_BEDROCK
+  USE MOD_TimeInvariants, only : ibedrock, dbedrock
+#endif
 #if(defined PFT_CLASSIFICATION)
   USE mod_landpft, only : patch_pft_s, patch_pft_e
   USE MOD_PFTimeInvars
@@ -36,6 +42,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #endif
   USE GlobalVars
   USE ALBEDO
+#ifdef VARIABLY_SATURATED_FLOW
+  USE MOD_TimeVariables, only: dpond
+#endif
 
   IMPLICIT NONE 
 
@@ -56,7 +65,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         chil,                   &! leaf angle distribution factor
         rho(2,2),               &! leaf reflectance (iw=iband, il=life and dead)
         tau(2,2),               &! leaf transmittance (iw=iband, il=life and dead)
-        porsl(1:nl_soil)         ! porosity of soil
+        porsl(1:nl_soil),       &! porosity of soil
+        psi0 (1:nl_soil),       &! saturated soil suction (mm) (NEGATIVE)
+        hksati(1:nl_soil)        ! hydraulic conductivity at saturation [mm h2o/s]
 
 #if(defined SOILINI)
   INTEGER, intent(in)  :: nl_soil_ini
@@ -75,6 +86,13 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         t_soisno (maxsnl+1:nl_soil),   &! soil temperature [K]
         wliq_soisno(maxsnl+1:nl_soil), &! liquid water in layers [kg/m2]
         wice_soisno(maxsnl+1:nl_soil), &! ice lens in layers [kg/m2]
+        smp        (1:nl_soil)       , &! soil matrix potential
+        hk         (1:nl_soil)       , &! soil hydraulic conductance
+#ifdef PLANT_HYDRAULIC_STRESS
+        vegwp(1:nvegwcs),       &! vegetation water potential
+        gs0sun,                 &! working copy of sunlit stomata conductance
+        gs0sha,                 &! working copy of shalit stomata conductance
+#endif
         t_grnd,                 &! ground surface temperature [K]
         tleaf,                  &! sunlit leaf temperature [K]
         ldew,                   &! depth of water on foliage [mm]
@@ -113,6 +131,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 
         INTEGER j, snl                      
         REAL(r8) wet(nl_soil), wt, ssw, oro, rhosno_ini, a
+        real(r8) alpha       (1:nl_soil) ! used in calculating hk
+        real(r8) zmm         (1:nl_soil) ! z in mm
+        real(r8) den         (1:nl_soil) !
 
         INTEGER ps, pe, pc
 !-----------------------------------------------------------------------
@@ -173,25 +194,77 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
      ldew  = 0.
      tleaf = t_soisno(1)
      t_grnd = t_soisno(1)
+
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
+
 #else
-! soil temperature and water content
+! soil temperature, water content and matrix potential
      DO j = 1, nl_soil
         IF(patchtype==3)THEN !land ice 
            t_soisno(j) = 253.
            wliq_soisno(j) = 0.
            wice_soisno(j) = dz_soisno(j)*1000.
+           smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
         ELSE
            t_soisno(j) = 283.
            wliq_soisno(j) = dz_soisno(j)*porsl(j)*1000.
            wice_soisno(j) = 0.
+           smp(j) = psi0(j)
         ENDIF
      ENDDO
+
+! soil hydraulic conductivity
+     zmm(1:) = z_soisno(1:)*1000.
+     DO j = 1, nl_soil
+        IF(patchtype==3)THEN !land ice 
+           hk(j) = 0.
+        ELSE
+           if(j<nl_soil)then
+              den(j)   = (zmm(j+1)-zmm(j))
+              alpha(j) = (smp(j+1)-smp(j))/den(j) - 1._r8
+           else
+              alpha(j) = 0._r8
+           end if
+           if(alpha(j) <= 0.)then
+              hk(j) = hksati(j)
+           else
+              hk(j) = hksati(j+1) 
+           end if
+        ENDIF
+     ENDDO
+
+#ifdef USE_DEPTH_TO_BEDROCK
+     IF (patchtype <= 2) THEN
+        IF (ibedrock(ipatch) <= nl_soil) THEN
+           j = ibedrock(ipatch)
+           IF (j == 1) THEN
+              wliq_soisno(j) = dbedrock(ipatch) *porsl(j)*1000.
+           else
+              wliq_soisno(j) = (dbedrock(ipatch) - zi_soi(j-1)) *porsl(j)*1000.
+           ENDIF 
+
+           DO j = ibedrock(ipatch)+1, nl_soil
+              wliq_soisno(j) = 0.
+           ENDDO
+        ENDIF 
+     ENDIF
+#endif
+
 
 ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
 !                    is below the model bottom zi(nl_soil)
 
      wa  = 4800.                             !assuming aquifer capacity is 5000 mm
      zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+#ifdef VARIABLY_SATURATED_FLOW
+     wa = 0.
+     zwt = zi_soi(nl_soil)
+     dpond = 0.
+#endif
 
 ! snow temperature and water content
      t_soisno(maxsnl+1:0) = -999.
@@ -208,6 +281,11 @@ IF (patchtype == 0) THEN
      tleaf  = t_soisno(1)
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
 #endif
 
 #ifdef PFT_CLASSIFICATION
@@ -216,12 +294,22 @@ IF (patchtype == 0) THEN
      sigf_p(ps:pe)   = 1.
      ldew_p(ps:pe)   = 0.
      tleaf_p(ps:pe)  = t_soisno(1)
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
+     gs0sun_p(ps:pe) = 1.0e4
+     gs0sha_p(ps:pe) = 1.0e4
+#endif
      lai_p(ps:pe)    = tlai_p(ps:pe)
      sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
 
      sigf  = 1.
      ldew  = 0.
      tleaf = t_soisno(1)
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
      lai   = tlai(ipatch)
      sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
@@ -231,12 +319,22 @@ IF (patchtype == 0) THEN
      sigf_c(:,pc)   = 1.
      ldew_c(:,pc)   = 0.
      tleaf_c(:,pc)  = t_soisno(1)
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp_c(1:nvegwcs,:,pc) = -2.5e4
+     gs0sun_c(:,pc) = 1.0e4
+     gs0sha_c(:,pc) = 1.0e4
+#endif
      lai_c(:,pc)    = tlai_c(:,pc)
      sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
 
      sigf  = 1.
      ldew  = 0.
      tleaf = t_soisno(1)
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
      lai   = tlai(ipatch)
      sai   = sum(sai_c(:,pc)*pcfrac(:,pc))
 #endif
@@ -245,6 +343,11 @@ ELSE
      sigf   = fveg
      ldew   = 0.
      tleaf  = t_soisno(1)
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
 ENDIF
@@ -277,6 +380,11 @@ ENDIF
      sag    = 0.
      snowdp = 0.
      tleaf  = 300.
+#ifdef PLANT_HYDRAULIC_STRESS
+     vegwp(1:nvegwcs) = -2.5e4
+     gs0sun = 1.0e4
+     gs0sha = 1.0e4
+#endif
      t_grnd = 300.
 
      oro = 0

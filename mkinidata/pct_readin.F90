@@ -7,7 +7,9 @@ SUBROUTINE pct_readin (dir_landdata)
    use spmd_task
    use ncio_vector
    USE mod_landpatch
+#ifdef CLMDEBUG 
    USE mod_colm_debug
+#endif
 #ifdef PFT_CLASSIFICATION
    use mod_landpft
    use MOD_PFTimeInvars, only : pftfrac
@@ -50,7 +52,15 @@ SUBROUTINE pct_readin (dir_landdata)
       
 #ifdef PC_CLASSIFICATION
    lndname = trim(dir_landdata)//'/pct_pcs.nc'
-   CALL ncio_read_vector (lndname, 'pct_pcs', landpc, N_PFT, pcfrac)
+   CALL ncio_read_vector (lndname, 'pct_pcs', N_PFT, landpc, pcfrac)
+
+#ifdef CLMDEBUG
+   IF (p_is_worker) THEN 
+      allocate (sumpct (numpc))
+      sumpct = sum(pcfrac,dim=1)
+   ENDIF
+   CALL check_vector_data ('Sum PFT pct', sumpct)
+#endif
 #endif
 
 END SUBROUTINE pct_readin

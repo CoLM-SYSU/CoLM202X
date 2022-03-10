@@ -26,10 +26,10 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      INTEGER  :: ipatch, ipc, npc, m
+      INTEGER  :: ipatch, ipc, npc, m, npc_glb
       
       IF (p_is_master) THEN
-         write(*,*) 'Making land plant communities :'
+         write(*,'(A)') 'Making land plant community tiles :'
       ENDIF
 
 #ifdef USEMPI
@@ -79,8 +79,23 @@ CONTAINS
          ENDIF
       ENDIF
 
-      landpc%nset = numcell
+      landpc%nset = numpc
       CALL landpc%set_vecgs
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numpc, npc_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', npc_glb, ' plant community tiles on worker.'
+         ENDIF
+      ENDIF
+      
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numpc, ' plant community tiles.'
+#endif
 
    END SUBROUTINE landpc_build
 
@@ -112,7 +127,7 @@ CONTAINS
             ENDIF
          ENDDO
          
-         write(*,'(I10,A14,I5)') numpft, ' pcs on worker', p_iam_glb
+         write(*,'(I10,A14,I5)') numpc, ' pcs on worker', p_iam_glb
 
       ENDIF
 

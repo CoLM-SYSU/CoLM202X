@@ -40,7 +40,8 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_qintr  (:)
    real(r8), allocatable :: a_qinfl  (:)
    real(r8), allocatable :: a_qdrip  (:)
-   real(r8), allocatable :: a_rstfac (:)
+   real(r8), allocatable :: a_rstfacsun (:)
+   real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
@@ -75,7 +76,11 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_t_soisno    (:,:)    
    real(r8), allocatable :: a_wliq_soisno (:,:)
    real(r8), allocatable :: a_wice_soisno (:,:)
-   real(r8), allocatable :: a_h2osoi      (:,:) 
+   real(r8), allocatable :: a_h2osoi      (:,:)
+   real(r8), allocatable :: a_rootr       (:,:)
+#ifdef PLANT_HYDRAULIC_STRESS
+   real(r8), allocatable :: a_vegwp       (:,:)
+#endif
    real(r8), allocatable :: a_t_lake      (:,:) 
    real(r8), allocatable :: a_lake_icefrac(:,:) 
 
@@ -160,7 +165,8 @@ contains
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
             allocate (a_qdrip     (numpatch))
-            allocate (a_rstfac    (numpatch))
+            allocate (a_rstfacsun (numpatch))
+            allocate (a_rstfacsha (numpatch))
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
             allocate (a_wat       (numpatch))
@@ -195,7 +201,11 @@ contains
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
-            allocate (a_h2osoi      (1:nl_soil,       numpatch)) 
+            allocate (a_h2osoi      (1:nl_soil,       numpatch))
+            allocate (a_rootr       (1:nl_soil,       numpatch))
+#ifdef PLANT_HYDRAULIC_STRESS
+            allocate (a_vegwp       (1:nvegwcs,       numpatch))
+#endif
             allocate (a_t_lake      (nl_lake,numpatch)) 
             allocate (a_lake_icefrac(nl_lake,numpatch)) 
 
@@ -279,7 +289,8 @@ contains
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
             deallocate (a_qdrip     )
-            deallocate (a_rstfac    )
+            deallocate (a_rstfacsun )
+            deallocate (a_rstfacsha )
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
@@ -315,6 +326,10 @@ contains
             deallocate (a_wliq_soisno )
             deallocate (a_wice_soisno )
             deallocate (a_h2osoi      ) 
+            deallocate (a_rootr       )
+#ifdef PLANT_HYDRAULIC_STRESS
+            deallocate (a_vegwp       )
+#endif
             deallocate (a_t_lake      ) 
             deallocate (a_lake_icefrac) 
 
@@ -404,7 +419,8 @@ contains
             a_qintr   (:) = spval
             a_qinfl   (:) = spval
             a_qdrip   (:) = spval
-            a_rstfac  (:) = spval
+            a_rstfacsun(:) = spval
+            a_rstfacsha(:) = spval
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
@@ -440,6 +456,10 @@ contains
             a_wliq_soisno  (:,:) = spval
             a_wice_soisno  (:,:) = spval
             a_h2osoi       (:,:) = spval
+            a_rootr        (:,:) = spval
+#ifdef PLANT_HYDRAULIC_STRESS
+            a_vegwp        (:,:) = spval
+#endif
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 
@@ -572,7 +592,8 @@ contains
             call acc1d (qintr  , a_qintr  )
             call acc1d (qinfl  , a_qinfl  )
             call acc1d (qdrip  , a_qdrip  )
-            call acc1d (rstfac , a_rstfac )
+            call acc1d (rstfacsun , a_rstfacsun )
+            call acc1d (rstfacsha , a_rstfacsha )
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )
@@ -617,7 +638,10 @@ contains
             call acc2d (wice_soisno, a_wice_soisno)
 
             call acc2d (h2osoi     , a_h2osoi     )
-
+            call acc2d (rootr      , a_rootr      )
+#ifdef PLANT_HYDRAULIC_STRESS
+            call acc2d (vegwp      , a_vegwp      )
+#endif
             call acc2d (t_lake      , a_t_lake      )
             call acc2d (lake_icefrac, a_lake_icefrac)
 

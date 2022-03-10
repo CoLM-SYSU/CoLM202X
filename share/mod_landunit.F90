@@ -77,6 +77,7 @@ CONTAINS
       LOGICAL, allocatable :: work_done(:)
       INTEGER, allocatable :: blkdsp(:,:), blkcnt(:,:)
       INTEGER :: iblk_p, jblk_p
+      INTEGER :: nunit_glb
 
       IF (p_is_io) THEN 
 
@@ -152,9 +153,9 @@ CONTAINS
                   ENDDO
 #endif
 
-                  IF (sum(nunit_worker) > 0) THEN
-                     write(*,*) 'Found ', sum(nunit_worker), ' on block', iblk, jblk
-                  ENDIF
+                  ! IF (sum(nunit_worker) > 0) THEN
+                  !    write(*,*) 'Found ', sum(nunit_worker), ' on block', iblk, jblk
+                  ! ENDIF
 
                   nunit = nunit + sum(nunit_worker)
                   nunit_worker(:) = 0
@@ -681,20 +682,29 @@ CONTAINS
       IF (allocated(iaddr)) deallocate (iaddr)
 
       IF (p_is_master) THEN
-         write(*,*) 'Making land units :'
+         write(*,'(A)') 'Making land units :'
       ENDIF
       
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif
 
       IF (p_is_io) THEN
-         write(*,'(I10,A12,I5)') numunit, ' units on IO', p_iam_glb
+         CALL mpi_reduce (numunit, nunit_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_io, p_err)
+         IF (p_iam_io == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', nunit_glb, ' units on IO.'
+         ENDIF
+      ENDIF
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numunit, nunit_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', nunit_glb, ' units on worker.'
+         ENDIF
       ENDIF
       
-      IF (p_is_worker) THEN
-         write(*,'(I10,A16,I5)') numunit, ' units on worker', p_iam_glb
-      ENDIF
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numunit, ' units.'
+#endif
 
    END SUBROUTINE landunit_build
 

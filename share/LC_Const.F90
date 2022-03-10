@@ -232,6 +232,67 @@ MODULE LC_Const
           2.012,  1.964,  1.955,  1.953,  1.303,  2.175,  1.631,  2.608,&
           2.608,  1.631,  8.992,  8.992,  8.992,  8.992,  0.978,  2.608/)
 
+#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulics Paramters
+   REAL(r8), parameter, dimension(24) :: kmax_sun0_usgs &
+      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
+          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+
+   REAL(r8), parameter, dimension(24) :: kmax_sha0_usgs &
+      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
+          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+
+   REAL(r8), parameter, dimension(24) :: kmax_xyl0_usgs &
+      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
+          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+
+   REAL(r8), parameter, dimension(24) :: kmax_root0_usgs &
+      = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 0., 2.e-008, 2.e-008,&
+          0., 2.e-008, 2.e-008, 2.e-008, 0., 0./)
+
+   ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O) 
+   REAL(r8), parameter, dimension(24) :: psi50_sun0_usgs &
+      = (/-150000.0,-340000.0,-340000.0,-340000.0,-340000.0,-343636.4,&
+          -340000.0,-393333.3,-366666.7,-340000.0,-270000.0,-380000.0,&
+          -260000.0,-465000.0,-330000.0,-150000.0,-340000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_sha0_usgs &
+      = (/-150000.0,-340000.0,-340000.0,-340000.0,-340000.0,-343636.4,&
+          -340000.0,-393333.3,-366666.7,-340000.0,-270000.0,-380000.0,&
+          -260000.0,-465000.0,-330000.0,-150000.0,-340000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! water potential at 50% loss of xylem tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_xyl0_usgs &
+      = (/-200000.0,-340000.0,-340000.0,-340000.0,-340000.0,-343636.4,&
+          -340000.0,-393333.3,-366666.7,-340000.0,-270000.0,-380000.0,&
+          -260000.0,-465000.0,-330000.0,-200000.0,-340000.0,-347272.7,&
+          -200000.0,-340000.0,-342500.0,-341250.0,-200000.0,-200000.0/) *1
+
+   ! water potential at 50% loss of root tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_root0_usgs &
+      = (/-200000.0,-340000.0,-340000.0,-340000.0,-340000.0,-343636.4,&
+          -340000.0,-393333.3,-366666.7,-340000.0,-270000.0,-380000.0,&
+          -260000.0,-465000.0,-330000.0,-200000.0,-340000.0,-347272.7,&
+          -200000.0,-340000.0,-342500.0,-341250.0,-200000.0,-200000.0/)*1
+
+   ! shape-fitting parameter for vulnerability curve (-)
+   REAL(r8), parameter, dimension(24) :: ck0_usgs &
+      = (/0., 3.95, 3.95, 3.95, 3.95, 3.95, &
+          3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
+          3.95, 3.95, 3.95, 0., 3.95, 3.95, &
+          0., 3.95, 3.95, 3.95, 0., 0./)
+#endif
 
 ! MODIS IGBP Land Use/Land Cover System Legend 
 !---------------------------
@@ -440,6 +501,69 @@ MODULE LC_Const
           1.627,  2.608,  2.608,  2.614,  2.614,  2.614,  2.608,  0.978,&
           2.608,  2.608,  2.608,  2.608,  2.608,  2.608,  2.608,  2.608/)
 
+#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulics Paramters
+   REAL(r8), parameter, dimension(24) :: kmax_sun0_igbp &
+      = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          0., 2.e-008, 0., 0., 0., 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+
+   REAL(r8), parameter, dimension(24) :: kmax_sha0_igbp &
+      = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          0., 2.e-008, 0., 0., 0., 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+
+   REAL(r8), parameter, dimension(24) :: kmax_xyl0_igbp &
+      = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          0., 2.e-008, 0., 0., 0., 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+
+   REAL(r8), parameter, dimension(24) :: kmax_root0_igbp &
+      = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
+          0., 2.e-008, 0., 0., 0., 2.e-008,&
+          2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008/)
+
+   ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O) 
+   REAL(r8), parameter, dimension(24) :: psi50_sun0_igbp &
+      = (/-465000.0,-260000.0,-380000.0,-270000.0,-330000.0,-393333.3,&
+          -393333.3,-340000.0,-340000.0,-340000.0,-343636.4,-340000.0,&
+          -150000.0,-343636.4,-150000.0,-150000.0,-150000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_sha0_igbp &
+      = (/-465000.0,-260000.0,-380000.0,-270000.0,-330000.0,-393333.3,&
+          -393333.3,-340000.0,-340000.0,-340000.0,-343636.4,-340000.0,&
+          -150000.0,-343636.4,-150000.0,-150000.0,-150000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! water potential at 50% loss of xylem tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_xyl0_igbp &
+      = (/-465000.0,-260000.0,-380000.0,-270000.0,-330000.0,-393333.3,&
+          -393333.3,-340000.0,-340000.0,-340000.0,-343636.4,-340000.0,&
+          -200000.0,-343636.4,-200000.0,-200000.0,-200000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! water potential at 50% loss of root tissue conductance (mmH2O)
+   REAL(r8), parameter, dimension(24) :: psi50_root0_igbp &
+      = (/-465000.0,-260000.0,-380000.0,-270000.0,-330000.0,-393333.3,&
+          -393333.3,-340000.0,-340000.0,-340000.0,-343636.4,-340000.0,&
+          -200000.0,-343636.4,-200000.0,-200000.0,-200000.0,-347272.7,&
+          -150000.0,-340000.0,-342500.0,-341250.0,-150000.0,-150000.0/) *1
+
+   ! shape-fitting parameter for vulnerability curve (-)
+   REAL(r8), parameter, dimension(24) :: ck0_igbp &
+      = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
+          3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
+          0., 3.95, 0., 0., 0., 3.95, &
+          0., 3.95, 3.95, 3.95, 0., 0./)
+#endif
+
+  
    REAL(r8), dimension(24) :: &
       patchtypes, &! land water types
       htop0,      &! canopy top height
@@ -467,7 +591,20 @@ MODULE LC_Const
 
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
-      
+
+#ifdef PLANT_HYDRAULIC_STRESS
+   REAL(r8), dimension(24) :: &
+      kmax_sun,   &   
+      kmax_sha,   &   
+      kmax_xyl,   &   
+      kmax_root,  &
+      psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+      psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+      psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+      psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
+      ck           ! shape-fitting parameter for vulnerability curve (-)
+#endif
+
    REAL(r8), PRIVATE, dimension(24) :: &
       roota,      &! root fraction para
       rootb        ! root fraction para
@@ -518,6 +655,17 @@ CONTAINS
       extkn      (:) = extkn_usgs      (:)
       d50        (:) = d50_usgs        (:)
       beta       (:) = beta_usgs       (:)
+#ifdef PLANT_HYDRAULIC_STRESS
+      kmax_sun   (:) = kmax_sun0_usgs  (:)
+      kmax_sha   (:) = kmax_sha0_usgs  (:)
+      kmax_xyl   (:) = kmax_xyl0_usgs  (:)
+      kmax_root  (:) = kmax_root0_usgs (:)
+      psi50_sun  (:) = psi50_sun0_usgs (:)
+      psi50_sha  (:) = psi50_sha0_usgs (:)
+      psi50_xyl  (:) = psi50_xyl0_usgs (:)
+      psi50_root (:) = psi50_root0_usgs(:)
+      ck         (:) = ck0_usgs        (:)
+#endif
       roota      (:) = roota_usgs      (:)
       rootb      (:) = rootb_usgs      (:)
       rho    (1,1,:) = rhol_vis_usgs   (:)
@@ -553,6 +701,17 @@ CONTAINS
       extkn      (:) = extkn_igbp      (:)
       d50        (:) = d50_igbp        (:)
       beta       (:) = beta_igbp       (:)
+#ifdef PLANT_HYDRAULIC_STRESS
+      kmax_sun   (:) = kmax_sun0_igbp  (:)
+      kmax_sha   (:) = kmax_sha0_igbp  (:)
+      kmax_xyl   (:) = kmax_xyl0_igbp  (:)
+      kmax_root  (:) = kmax_root0_igbp (:)
+      psi50_sun  (:) = psi50_sun0_igbp (:)
+      psi50_sha  (:) = psi50_sha0_igbp (:)
+      psi50_xyl  (:) = psi50_xyl0_igbp (:)
+      psi50_root (:) = psi50_root0_igbp(:)
+      ck         (:) = ck0_igbp        (:)
+#endif
       roota      (:) = roota_igbp      (:)
       rootb      (:) = rootb_igbp      (:)
       rho    (1,1,:) = rhol_vis_igbp   (:)

@@ -57,23 +57,20 @@ MODULE mod_namelist
 
 #ifdef CATCHMENT
    CHARACTER(len=256) :: DEF_dir_hydrodata = 'path/to/hydrodata'
-   INTEGER :: DEF_max_hband = 25
+   INTEGER            :: DEF_max_hband = 25
 #endif 
 
-   ! ----- model settings -----
-   INTEGER :: DEF_NVEGWCS                     = 4
-   LOGICAL :: DEF_PLANT_HYDRAULIC_STRESS      = .TRUE. 
-   INTEGER :: DEF_THERMAL_CONDUCTIVITY_SCHEME = 4
-   LOGICAL :: DEF_SOILPAR_UPS_FIT             = .TRUE.
-
+   !add by zhongwang wei @ sysu 2021/12/23 
+   !To allow read satellite observed LAI        
+   logical :: DEF_LAI_TRUE           = .FALSE.    
 
    ! ----- history -----
    INTEGER :: DEF_nlon_hist  = 720
    INTEGER :: DEF_nlat_hist  = 360       
-   CHARACTER(len=256) :: DEF_WRST_FREQ = 'none' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   CHARACTER(len=256) :: DEF_HIST_FREQ = 'none' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
-
+   CHARACTER(len=256) :: DEF_HIST_mode    ='block'
    INTEGER :: DEF_REST_COMPRESS_LEVEL = 1
    INTEGER :: DEF_HIST_COMPRESS_LEVEL = 1
 
@@ -191,7 +188,10 @@ MODULE mod_namelist
       LOGICAL :: wice_soisno  = .true. 
                                        
       LOGICAL :: h2osoi       = .true. 
-      LOGICAL :: rstfac       = .true. 
+      LOGICAL :: rstfacsun    = .true.
+      LOGICAL :: rstfacsha    = .true.
+      LOGICAL :: rootr        = .true.
+      LOGICAL :: vegwp        = .true.
       LOGICAL :: zwt          = .true. 
       LOGICAL :: wa           = .true. 
                                        
@@ -263,15 +263,13 @@ CONTAINS
          DEF_dir_hydrodata,               &
          DEF_max_hband,                   &
 #endif
-         DEF_NVEGWCS,                     &
-         DEF_PLANT_HYDRAULIC_STRESS,      &
-         DEF_THERMAL_CONDUCTIVITY_SCHEME, &
-         DEF_SOILPAR_UPS_FIT,             &       
+         DEF_LAI_TRUE,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_nlon_hist,                   &
          DEF_nlat_hist,                   &
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
+         DEF_HIST_mode,                   &  
          DEF_REST_COMPRESS_LEVEL,         & 
          DEF_HIST_COMPRESS_LEVEL,         & 
          DEF_forcing,                     &
@@ -355,10 +353,8 @@ CONTAINS
       CALL mpi_bcast (DEF_max_hband,       1, mpi_integer,   p_root, p_comm_glb, p_err)
 #endif
 
-      CALL mpi_bcast (DEF_NVEGWCS,                     1, mpi_integer, p_root, p_comm_glb, p_err) 
-      CALL mpi_bcast (DEF_PLANT_HYDRAULIC_STRESS,      1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_SOILPAR_UPS_FIT,             1, mpi_logical, p_root, p_comm_glb, p_err)
+      !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
+      call mpi_bcast (DEF_LAI_TRUE,           1, mpi_logical, p_root, p_comm_glb, p_err)
       
       CALL mpi_bcast (DEF_nlon_hist,  1, mpi_integer, p_root, p_comm_glb, p_err) 
       CALL mpi_bcast (DEF_nlat_hist,  1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -366,6 +362,7 @@ CONTAINS
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_mode,      256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
@@ -458,7 +455,10 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%wice_soisno ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       
       CALL mpi_bcast (DEF_hist_vars%h2osoi      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%rstfac      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%rstfacsun   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%rstfacsha   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%rootr       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%vegwp       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%zwt         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%wa          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       

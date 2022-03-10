@@ -10,7 +10,9 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
+#ifdef CLMDEBUG 
    USE mod_colm_debug
+#endif
    USE mod_aggregation_lc
 
    USE LC_Const
@@ -137,6 +139,8 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
          IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
+
+            pct_pft_one = max(pct_pft_one, 0.)
             
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
@@ -165,7 +169,7 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
-   CALL ncio_write_vector (lndname, 'pct_pcs', 'pft', 'vector', landpc, N_PFT, pct_pcs, 1)
+   CALL ncio_write_vector (lndname, 'pct_pcs', 'pft', N_PFT, 'vector', landpc, pct_pcs, 1)
 
    IF (p_is_worker) THEN
       IF (allocated(pct_pcs    )) deallocate(pct_pcs    )

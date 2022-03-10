@@ -16,6 +16,7 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/MathConstants.o \
 					../share/spmd_task.o \
 					../share/mod_namelist.o \
+					../share/timemanager.o   \
 					../share/mod_utils.o \
 					../share/ncio_serial.o \
 					../share/mod_block.o \
@@ -40,6 +41,7 @@ OBJS = \
 		 mod_aggregation_PFT.o \
 		 mod_landpft.o \
 		 mod_landpc.o \
+		 par_fitting.o \
 		 aggregation_landtype.o \
 		 aggregation_LAI.o \
 		 aggregation_soil_brightness.o \
@@ -62,4 +64,4 @@ $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
 
 clean :
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod ${EXECUTABLE}

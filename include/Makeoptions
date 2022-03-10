@@ -2,7 +2,7 @@
 # mpif90 - ifort 
 # 
 
- FF = /opt/mpich-3.4.2-intel/bin/mpif90 
+ FF = /opt/mpich-3.4.2-intel/bin/mpif90 -qopenmp
 
  NETCDF_LIB = /opt/netcdf/lib
  NETCDF_INC = /opt/netcdf/include

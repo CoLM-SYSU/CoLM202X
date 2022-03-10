@@ -8,6 +8,8 @@ HEADER = ../include/define.h
 
 OBJS =  \
 	precision.o         \
+	GlobalVars.o \
+	LC_Const.o \
 	MathConstants.o     \
 	PhysicalConstants.o \
 	spmd_task.o         \

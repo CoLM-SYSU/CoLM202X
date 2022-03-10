@@ -2,7 +2,7 @@
 
  SUBROUTINE LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
-                               ldew,pg_rain,pg_snow,qintr)
+                               ldew,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 !=======================================================================
 !
@@ -35,6 +35,8 @@
   REAL(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
   REAL(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
   REAL(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
+  real(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
+  real(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
 !-----------------------Local Variabes---------------------------------
 
@@ -158,6 +160,9 @@
     pg_rain = (xsc_rain + thru_rain) / deltim
     pg_snow = (xsc_snow + thru_snow) / deltim
     qintr   = pinf / deltim
+    qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+    qintr_snow = prc_snow + prl_snow - thru_snow / deltim
+
 
 #if(defined CLMDEBUG)
     w = w - ldew - (pg_rain+pg_snow)*deltim
@@ -174,6 +179,8 @@
     pg_rain = prc_rain + prl_rain
     pg_snow = prc_snow + prl_snow
     qintr   = 0.
+    qintr_rain = 0.
+    qintr_snow = 0.
 
  ENDIF
 
@@ -225,7 +232,7 @@
         p = pftclass(i)
         CALL LEAF_interception (deltim,dewmx,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),tleaf_p(i),&
            prc_rain,prc_snow,prl_rain,prl_snow,&
-           ldew_p(i),pg_rain,pg_snow,qintr_p(i))
+           ldew_p(i),pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
         pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
         pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
      ENDDO 
@@ -284,7 +291,7 @@
         CALL LEAF_interception (deltim,dewmx,&
            chil_p(p),sigf_c(p,pc),lai_c(p,pc),sai_c(p,pc),tleaf_c(p,pc),&
            prc_rain,prc_snow,prl_rain,prl_snow,&
-           ldew_c(p,pc),pg_rain,pg_snow,qintr_c(p,pc))
+           ldew_c(p,pc),pg_rain,pg_snow,qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
         pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
         pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
      ENDDO 

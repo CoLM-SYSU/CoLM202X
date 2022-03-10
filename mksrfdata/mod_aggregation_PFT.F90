@@ -271,6 +271,8 @@ CONTAINS
       
 #endif
 
+      pctout = max(pctout, 0.)
+
       IF (present(area)) THEN
          DO ipxl = istt, iend
             area(ipxl) = areaquad (&

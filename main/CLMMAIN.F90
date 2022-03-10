@@ -10,7 +10,8 @@ SUBROUTINE CLMMAIN ( &
 
          ! soil information and lake depth
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
-           porsl,        psi0,                                      &         
+           vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
+           wf_gravels,   wf_sand,      porsl,        psi0,          & 
 #ifdef Campbell_SOIL_MODEL
            bsw,                                                     &
 #endif
@@ -18,13 +19,22 @@ SUBROUTINE CLMMAIN ( &
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
            sc_vgm,       fc_vgm,                                    &
 #endif
-           hksati,                                                  &
-           csol,         dksatu,       dkdry,        rootfr,        &
-           lakedepth,    dz_lake,                                   &
+           hksati,       csol,         k_solids,     dksatu,        &
+           dksatf,       dkdry,                                     &
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha,     BA_beta,                                   &
+#endif
+           rootfr,       lakedepth,    dz_lake,                     &
 
          ! vegetation information
            htop,         hbot,         sqrtdi,                      &
-           effcon,       vmax25,       slti,         hlti,          &
+           effcon,       vmax25,                                    &
+#ifdef PLANT_HYDRAULIC_STRESS
+           kmax_sun,     kmax_sha,     kmax_xyl,     kmax_root,     &
+           psi50_sun,    psi50_sha,    psi50_xyl,    psi50_root,    &
+           ck,                                                      &
+#endif
+           slti,         hlti,                                      &
            shti,         hhti,         trda,         trdm,          &
            trop,         gradm,        binter,       extkn,         &
            chil,         rho,          tau,                         &
@@ -39,18 +49,25 @@ SUBROUTINE CLMMAIN ( &
 
          ! land surface variables required for restart
            z_soisno,     dz_soisno,    t_soisno,     wliq_soisno,   &
-           wice_soisno,  t_grnd,       tleaf,        ldew,          &
+           wice_soisno,  smp,          hk,                          &
+           t_grnd,       tleaf,        ldew,                        &
            sag,          scv,          snowdp,       fveg,          &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
            thermk,       extkb,        extkd,                       &
-
-           zwt,          wa,                                        &
-           t_lake,       lake_icefrac,                              &
+#ifdef PLANT_HYDRAULIC_STRESS
+           vegwp,        gs0sun,       gs0sha,                      &
+#endif
+           zwt,                                                     &
+#ifdef VARIABLY_SATURATED_FLOW
+           dpond,                                                   &
+#endif
+           wa,                                                      &
+           t_lake,       lake_icefrac, savedtke1,                   &
 
          ! additional diagnostic variables for output
-           laisun,       laisha,                                    &
-           rstfac,       h2osoi,       wat,                         &
+           laisun,       laisha,       rootr,                       &
+           rstfacsun,    rstfacsha,    h2osoi,       wat,           &
 
          ! FLUXES
            taux,         tauy,         fsena,        fevpa,         &
@@ -132,6 +149,9 @@ SUBROUTINE CLMMAIN ( &
   USE SIMPLE_OCEAN
   USE ALBEDO
   USE timemanager
+#ifdef USE_DEPTH_TO_BEDROCK
+  USE MOD_TimeInvariants, only : ibedrock
+#endif
  
   IMPLICIT NONE
  
@@ -163,6 +183,13 @@ SUBROUTINE CLMMAIN ( &
         soil_d_v_alb     ,&! albedo of visible of the dry soil
         soil_s_n_alb     ,&! albedo of near infrared of the saturated soil
         soil_d_n_alb     ,&! albedo of near infrared of the dry soil
+
+        vf_quartz (nl_soil), & ! volumetric fraction of quartz within mineral soil
+        vf_gravels(nl_soil), &! volumetric fraction of gravels
+        vf_om     (nl_soil), &! volumetric fraction of organic matter
+        vf_sand   (nl_soil), &! volumetric fraction of sand
+        wf_gravels(nl_soil), &! gravimetric fraction of gravels
+        wf_sand   (nl_soil), &! gravimetric fraction of sand
         porsl(nl_soil)   ,&! fraction of soil that is voids [-]
         psi0(nl_soil)    ,&! minimum soil suction [mm]
 #ifdef Campbell_SOIL_MODEL
@@ -178,8 +205,14 @@ SUBROUTINE CLMMAIN ( &
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
-        dksatu(nl_soil)  ,&! thermal conductivity of saturated soil [W/m-K]
+        k_solids(nl_soil),&! thermal conductivity of minerals soil [W/m-K]
+        dksatu(nl_soil)  ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
+        dksatf(nl_soil)  ,&! thermal conductivity of saturated frozen soil [W/m-K]
         dkdry(nl_soil)   ,&! thermal conductivity for dry soil  [J/(K s m)]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4 
+        BA_alpha(nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
+        BA_beta (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
         rootfr(nl_soil)  ,&! fraction of roots in each soil layer
 
         ! vegetation static, dynamic, derived parameters
@@ -188,6 +221,17 @@ SUBROUTINE CLMMAIN ( &
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
+#ifdef PLANT_HYDRAULIC_STRESS
+        kmax_sun    ,&
+        kmax_sha    ,&
+        kmax_xyl    ,&
+        kmax_root   ,&
+        psi50_sun   ,&! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+        psi50_sha   ,&! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+        psi50_xyl   ,&! water potential at 50% loss of xylem tissue conductance (mmH2O)
+        psi50_root  ,&! water potential at 50% loss of root tissue conductance (mmH2O)
+        ck          ,&! shape-fitting parameter for vulnerability curve (-)
+#endif
         slti        ,&! slope of low temperature inhibition function      [s3] 
         hlti        ,&! 1/2 point of low temperature inhibition function  [s4]
         shti        ,&! slope of high temperature inhibition function     [s1]
@@ -253,10 +297,17 @@ SUBROUTINE CLMMAIN ( &
         t_soisno(maxsnl+1:nl_soil)    ,&! soil + snow layer temperature [K]
         wliq_soisno(maxsnl+1:nl_soil) ,&! liquid water (kg/m2)
         wice_soisno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
+        hk(1:nl_soil)                 ,&! hydraulic conductivity [mm h2o/s]
+        smp(1:nl_soil)                ,&! soil matrix potential [mm]
 
         t_lake(nl_lake)       ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
-
+        savedtke1             ,&! top level eddy conductivity (W/m K)
+#ifdef PLANT_HYDRAULIC_STRESS 
+        vegwp(nvegwcs)        ,&! ground surface temperature [k]
+        gs0sun                ,&! working copy of sunlit stomata conductance
+        gs0sha                ,&! working copy of shalit stomata conductance
+#endif
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
@@ -264,6 +315,9 @@ SUBROUTINE CLMMAIN ( &
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
         zwt         ,&! the depth to water table [m]
+#ifdef VARIABLY_SATURATED_FLOW
+        dpond       ,&! depth of ponding water [mm]
+#endif
         wa          ,&! water storage in aquifer [mm]
 
         fveg        ,&! fraction of vegetation cover
@@ -286,9 +340,11 @@ SUBROUTINE CLMMAIN ( &
   REAL(r8), intent(out) :: &
         laisun      ,&! sunlit leaf area index
         laisha      ,&! shaded leaf area index
-        rstfac      ,&! factor of soil water stress 
+        rstfacsun   ,&! factor of soil water stress
+        rstfacsha   ,&! factor of soil water stress
         wat         ,&! total water storage
-        h2osoi(nl_soil)! volumetric soil water in layers [m3/m3]
+        rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
+        h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
 ! Fluxes
 ! ----------------------------------------------------------------------
@@ -373,7 +429,6 @@ SUBROUTINE CLMMAIN ( &
         qsdew       ,&! ground surface dew formation (mm h2o /s) [+]
         qsubl       ,&! sublimation rate from snow pack (mm h2o /s) [+]
         qfros       ,&! surface dew added to snow pack (mm h2o /s) [+]
-        rootr(1:nl_soil) ,&! root resistance of a layer, all layers add to 1.0
         scvold      ,&! snow cover for previous time step [mm]
         sm          ,&! rate of snowmelt [kg/(m2 s)]
         ssw         ,&! water volumetric content of soil surface layer [m3/m3]
@@ -391,7 +446,10 @@ SUBROUTINE CLMMAIN ( &
         t_precip    ,&! snowfall/rainfall temperature [kelvin]
         bifall      ,&! bulk density of newly fallen dry snow [kg/m3]
         pg_rain     ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
-        pg_snow       ! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        pg_snow     ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        qintr_rain  ,&! rainfall interception (mm h2o/s)
+        qintr_snow  ,&! snowfall interception (mm h2o/s)
+        errw_rsub     ! the possible subsurface runoff deficit after PHS is included
 
   INTEGER snl       ,&! number of snow layers
         imelt(maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
@@ -446,6 +504,9 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
       ENDDO
 
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
+#ifdef VARIABLY_SATURATED_FLOW
+      totwb = totwb + dpond
+#endif
       fiold(:) = 0.0
       IF (snl <0 ) THEN
          fiold(snl+1:0)=wice_soisno(snl+1:0)/(wliq_soisno(snl+1:0)+wice_soisno(snl+1:0))
@@ -460,7 +521,7 @@ IF (patchtype == 0) THEN
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
       CALL LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr)
+                              ldew,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 #endif
 
 #ifdef PFT_CLASSIFICATION
@@ -478,7 +539,7 @@ IF (patchtype == 0) THEN
 ELSE
       CALL LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr)
+                              ldew,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ENDIF
       
       qdrip = pg_rain + pg_snow
@@ -498,8 +559,9 @@ ENDIF
 
       CALL THERMAL (ipatch   ,patchtype         ,lb                ,deltim            ,&
            trsmx0            ,zlnd              ,zsno              ,csoilc            ,&
-           dewmx             ,capr              ,cnfac             ,csol              ,&
-           porsl             ,psi0              ,                                      &
+           dewmx             ,capr              ,cnfac             ,vf_quartz         ,&
+           vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
+           wf_sand           ,csol              ,porsl             ,psi0              ,&
 #ifdef Campbell_SOIL_MODEL
            bsw               ,                                                         &
 #endif
@@ -507,10 +569,19 @@ ENDIF
            theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
            sc_vgm            ,fc_vgm            ,                                      &
 #endif
-           dkdry             ,                                                         &
-           dksatu            ,lai               ,laisun            ,laisha            ,&
+           k_solids          ,dksatu            ,dksatf            ,dkdry             ,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha          ,BA_beta                                                 ,&
+#endif
+           lai               ,laisun            ,laisha                               ,&
            sai               ,htop              ,hbot              ,sqrtdi            ,&
-           rootfr            ,rstfac            ,effcon            ,vmax25            ,&
+           rootfr            ,rstfacsun         ,rstfacsha         ,effcon            ,&
+           vmax25            ,hksati            ,smp               ,hk                ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+           kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&  
+           psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&  
+           ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
+#endif
            slti              ,hlti              ,shti              ,hhti              ,&
            trda              ,trdm              ,trop              ,gradm             ,&
            binter            ,extkn             ,forc_hgt_u        ,forc_hgt_t        ,&
@@ -530,9 +601,21 @@ ENDIF
            trad              ,rst               ,assim             ,respc             ,&
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
-           fm                ,fh                ,fq                                    )
+           fm                ,fh                ,fq                ,pg_rain           ,&
+           pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        )
 
+#ifndef VARIABLY_SATURATED_FLOW
       CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
+           deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
+           bsw               ,porsl             ,psi0              ,hksati            ,&
+           rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
+           pg_rain           ,sm                ,etr               ,qseva             ,&
+           qsdew             ,qsubl             ,qfros             ,rsur              ,&
+           rnof              ,qinfl             ,wtfact            ,pondmx            ,&
+           ssi               ,wimp              ,smpmin            ,zwt               ,&
+           wa                ,qcharge           ,errw_rsub)
+#else
+      CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
            deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
 #ifdef Campbell_SOIL_MODEL
            bsw               ,                                                         &
@@ -542,12 +625,13 @@ ENDIF
            sc_vgm            ,fc_vgm            ,                                      &
 #endif
            porsl             ,psi0              ,hksati            ,                   &
-           rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,&
+           rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
            pg_rain           ,sm                ,etr               ,qseva             ,&
            qsdew             ,qsubl             ,qfros             ,rsur              ,&
-           rnof              ,qinfl             ,wtfact            ,pondmx            ,&
-           ssi               ,wimp              ,smpmin            ,zwt               ,&
-           wa                ,qcharge                                                  )
+           rnof              ,qinfl             ,wtfact            ,ssi               ,&
+           wimp              ,zwt               ,dpond             ,wa                ,&
+           qcharge           ,errw_rsub)
+#endif
 
       IF (snl < 0) THEN
          ! Compaction rate for snow 
@@ -599,7 +683,10 @@ ENDIF
       ! water balance
       ! ----------------------------------------
       endwb=sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof)*deltim
+#ifdef VARIABLY_SATURATED_FLOW
+      endwb = endwb + dpond
+#ENDIF
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       IF(patchtype==2) errorw=0.    !wetland
       xerr=errorw/deltim
 
@@ -608,6 +695,9 @@ ENDIF
          write(6,*) 'Warning: water balance violation', errorw,patchclass
          !stop
       ENDIF
+      if(abs(errw_rsub*deltim)>1.e-3) then
+         write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
+      end if
 #endif
 
 !======================================================================
@@ -669,7 +759,8 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    sm          ,tref        ,qref       ,trad        ,&
                    errore      ,emis        ,z0m        ,zol         ,&
                    rib         ,ustar       ,qstar      ,tstar       ,&
-                   fm          ,fh          ,fq                       )
+                   fm          ,fh          ,fq         ,pg_rain     ,&
+                   pg_snow     ,t_precip)
 
 
       CALL GLACIER_WATER (nl_soil,maxsnl,deltim                      ,&
@@ -723,7 +814,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
          fiold(snl+1:0)=wice_soisno(snl+1:0)/(wliq_soisno(snl+1:0)+wice_soisno(snl+1:0))
       ENDIF
 
-      w_old = sum(wliq_soisno(snl+1:))
+      w_old = sum(wliq_soisno(1:)) + sum(wice_soisno(1:))
 
       pg_rain = prc_rain + prl_rain
       pg_snow = prc_snow + prl_snow
@@ -741,7 +832,6 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            fiold(:0)    ,snl          ,sag             ,scv             ,&
            snowdp       ,lake_icefrac )
 
- 
       CALL laketem ( &
            ! "in" laketem arguments
            ! ---------------------------
@@ -751,14 +841,19 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            forc_q       ,forc_rhoair  ,forc_psrf       ,forc_sols       ,&
            forc_soll    ,forc_solsd   ,forc_solld      ,sabg            ,&
            forc_frl     ,dz_soisno    ,z_soisno        ,zi_soisno       ,&
-           dz_lake      ,lakedepth    ,csol            ,porsl           ,&
-           dkdry        ,dksatu       ,&
+           dz_lake      ,lakedepth    ,vf_quartz       ,vf_gravels      ,&
+           vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
+           porsl        ,csol         ,k_solids        , &
+           dksatu       ,dksatf       ,dkdry           , &
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha     ,BA_beta, &
+#endif
 
            ! "inout" laketem arguments
            ! ---------------------------
            t_grnd       ,scv          ,snowdp          ,t_soisno        ,&
            wliq_soisno  ,wice_soisno  ,imelt           ,t_lake          ,&
-           lake_icefrac ,&
+           lake_icefrac ,savedtke1, &
 
            ! "out" laketem arguments
            ! ---------------------------
@@ -788,9 +883,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ! We assume the land water bodies have zero extra liquid water capacity 
       ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
       ! this unreasonable assumption should be updated in the future version
-      a = (sum(wliq_soisno(snl+1:))-w_old)/deltim
-      aa = qseva-(qsubl-qsdew)
-      rsur = max(0., pg_rain - aa - a)
+      a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
+      aa = qseva+qsubl-qsdew-qfros
+      rsur = max(0., pg_rain + pg_snow - aa - a)
       rnof = rsur
 
       ! Set zero to the empty node
@@ -801,7 +896,6 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
          z_soisno   (maxsnl+1:snl) = 0.
          dz_soisno  (maxsnl+1:snl) = 0.
       ENDIF
-
 
 !======================================================================
 
@@ -859,7 +953,7 @@ ENDIF
 #endif
 
 ! ONLY for soil patches
-!NOTE: lai from remove sensing has already considered snow coverage
+!NOTE: lai from remote sensing has already considered snow coverage
 IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
@@ -948,10 +1042,19 @@ ENDIF
        qdrip = forc_rain + forc_snow
        qintr = 0.
        h2osoi = 0. 
-       rstfac = 0.
+       rstfacsun = 0.
+       rstfacsha = 0.
+       rootr = 0.
        zwt = 0.
+#ifdef VARIABLY_SATURATED_FLOW
+       wa = 0.
+#else
        wa = 4800.
+#endif
        qcharge = 0.
+#ifdef PLANT_HYDRAULIC_STRESS
+       vegwp = -2.5e4
+#endif
     ENDIF
       
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)

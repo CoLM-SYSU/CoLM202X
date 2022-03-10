@@ -188,6 +188,50 @@ MODULE PFT_Const
       =(/  0.0,   2.0,   2.0,   2.0,   1.0,   1.0,   2.0,   2.0,&
            2.0,   1.5,   1.5,   1.5,   2.0,   2.0,   2.0,   3.0/)
 
+#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulics Paramters
+   REAL(r8), parameter :: kmax_sun_p(0:15) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
+          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+
+   REAL(r8), parameter :: kmax_sha_p(0:15) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
+          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+
+   REAL(r8), parameter :: kmax_xyl_p(0:15) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
+          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+
+   REAL(r8), parameter :: kmax_root_p(0:15) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
+          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+
+   ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O) 
+   REAL(r8), parameter :: psi50_sun_p(0:15) &
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,& 
+          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+
+   ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+   REAL(r8), parameter :: psi50_sha_p(0:15) &
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,& 
+          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+
+   ! water potential at 50% loss of xylem tissue conductance (mmH2O)
+   REAL(r8), parameter :: psi50_xyl_p(0:15) &
+      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,&
+          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+
+   ! water potential at 50% loss of root tissue conductance (mmH2O)
+   REAL(r8), parameter :: psi50_root_p(0:15) &
+      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,&
+          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+
+   ! shape-fitting parameter for vulnerability curve (-)
+   REAL(r8), parameter :: ck_p(0:15) &
+      = (/0., 3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, &
+          3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95/)
+#endif
+
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
    INTEGER, PRIVATE :: ROOTFR_SCHEME = 1 
    

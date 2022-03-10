@@ -15,7 +15,10 @@ SUBROUTINE LAI_readin (time, dir_landdata)
    use mod_landpatch
    use MOD_TimeInvariants
    use MOD_TimeVariables
+#ifdef CLMDEBUG 
    use mod_colm_debug
+#endif
+   
    USE GlobalVars
    USE LC_Const
 #ifdef PFT_CLASSIFICATION
@@ -161,10 +164,10 @@ SUBROUTINE LAI_readin (time, dir_landdata)
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 
    lndname = trim(dir_landdata)//'/LAI_pcs'//trim(c)//'.nc'
-   call ncio_read_vector (lndname, 'LAI_pcs', landpc, N_PFT, tlai_c )
+   call ncio_read_vector (lndname, 'LAI_pcs', N_PFT, landpc, tlai_c )
 
    lndname = trim(dir_landdata)//'/SAI_pcs'//trim(c)//'.nc'
-   call ncio_read_vector (lndname, 'SAI_pcs', landpc, N_PFT, tsai_c )
+   call ncio_read_vector (lndname, 'SAI_pcs', N_PFT, landpc, tsai_c )
 
    if (p_is_worker) then
       if (numpatch > 0) then

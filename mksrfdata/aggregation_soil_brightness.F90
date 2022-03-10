@@ -16,7 +16,9 @@ SUBROUTINE aggregation_soil_brightness ( &
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
+#ifdef CLMDEBUG 
    USE mod_colm_debug
+#endif
    USE mod_aggregation_lc
    USE mod_utils
 

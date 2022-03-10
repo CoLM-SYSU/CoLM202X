@@ -26,6 +26,7 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    REAL(r8), Intent(out) :: ssha(2,2)
 
    ! local variables
+   INTEGER :: lbp, ubp;
    REAL(r8), dimension(0:N_PFT-1, 2) :: albd, albi, fabd, fabi, sun_fadd
    REAL(r8), dimension(0:N_PFT-1, 2) :: ftdd, ftid, ftii
    REAL(r8), dimension(0:N_PFT-1, 2) :: rho, tau
@@ -41,6 +42,7 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    ! initialization
    albd=1.; albi=1.; fabd=0.; fabi=0.; 
    ftdd=1.; ftid=0.; ftii=1.; sun_fadd=0.;
+   lbp = 0; ubp = N_PFT-1; 
    csiz(:) = (htop_c(:,pc) - hbot_c(:,pc)) / 2
    chgt(:) = (htop_c(:,pc) + hbot_c(:,pc)) / 2
    lsai(:) = lai_c(:,pc) + sai_c(:,pc)
@@ -58,7 +60,7 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
       ENDIF
    ENDDO 
    
-   CALL ThreeDCanopy(N_PFT, canlay(:), pcfrac(:,pc), csiz, chgt, chil_p(:), czen, &
+   CALL ThreeDCanopy(lbp, ubp, canlay(:), pcfrac(:,pc), csiz, chgt, chil_p(:), czen, &
                      lsai, rho, tau, albg(:,1), albg(:,2), albd, albi, &
                      fabd, fabi, ftdd, ftid, ftii, sun_fadd, psun, &
                      thermk_c(:,pc), fshade_c(:,pc) )
@@ -124,7 +126,7 @@ END SUBROUTINE ThreeDCanopy_wrap
 #endif
 
 
-SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
+SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
                         lsai, rho, tau, albgrd, albgri, albd, albi, &
                         fabd, fabi, ftdd, ftid, ftii, sun_fadd, psun, &
                         thermk, fshade)
@@ -144,31 +146,31 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
    INTEGER, parameter :: numrad = 2
 
 ! !ARGUMENTS:
-   INTEGER , intent(in) :: npft                       !number of vegetated pfts where coszen>0
-   INTEGER , intent(in) :: canlev(0:npft-1)           !canopy level for current pft
-   REAL(r8), intent(in) :: pwtcol(0:npft-1)           !weight of pft wrt corresponding column
-   REAL(r8), intent(in) :: csiz  (0:npft-1)           !
-   REAL(r8), intent(in) :: chgt  (0:npft-1)           !
-   REAL(r8), intent(in) :: chil  (0:npft-1)           !leaf angle distribution parameter
-   REAL(r8), intent(in) :: lsai  (0:npft-1)           !
-   REAL(r8), intent(in) :: rho   (0:npft-1,numrad)    !leaf/stem refl weighted by fraction LAI and SAI
-   REAL(r8), intent(in) :: tau   (0:npft-1,numrad)    !leaf/stem tran weighted by fraction LAI and SAI
+   INTEGER , intent(in) :: lbp, ubp                   !pft bounds
+   INTEGER , intent(in) :: canlev(lbp:ubp)            !canopy level for current pft
+   REAL(r8), intent(in) :: pwtcol(lbp:ubp)            !weight of pft wrt corresponding column
+   REAL(r8), intent(in) :: csiz  (lbp:ubp)            !
+   REAL(r8), intent(in) :: chgt  (lbp:ubp)            !
+   REAL(r8), intent(in) :: chil  (lbp:ubp)            !leaf angle distribution parameter
+   REAL(r8), intent(in) :: lsai  (lbp:ubp)            !
+   REAL(r8), intent(in) :: rho   (lbp:ubp,numrad)     !leaf/stem refl weighted by fraction LAI and SAI
+   REAL(r8), intent(in) :: tau   (lbp:ubp,numrad)     !leaf/stem tran weighted by fraction LAI and SAI
 
    REAL(r8), intent(in) :: coszen                     !cosine solar zenith angle for next time step
    REAL(r8), intent(in) :: albgrd(numrad)             !ground albedo (direct) (column-level)
    REAL(r8), intent(in) :: albgri(numrad)             !ground albedo (diffuse)(column-level)
 
-   REAL(r8), intent(out) :: albd(0:npft-1,numrad)     !surface albedo (direct)
-   REAL(r8), intent(out) :: albi(0:npft-1,numrad)     !surface albedo (diffuse)
-   REAL(r8), intent(out) :: fabd(0:npft-1,numrad)     !flux absorbed by veg per unit direct flux
-   REAL(r8), intent(out) :: fabi(0:npft-1,numrad)     !flux absorbed by veg per unit diffuse flux
-   REAL(r8), intent(out) :: ftdd(0:npft-1,numrad)     !down direct flux below veg per unit dir flx
-   REAL(r8), intent(out) :: ftid(0:npft-1,numrad)     !down diffuse flux below veg per unit dir flx
-   REAL(r8), intent(out) :: ftii(0:npft-1,numrad)     !down diffuse flux below veg per unit dif flx
-   REAL(r8), intent(out) :: sun_fadd(0:npft-1,numrad) !
-   REAL(r8), intent(out) :: psun  (0:npft-1)          !
-   REAL(r8), intent(out) :: thermk(0:npft-1)          !
-   REAL(r8), intent(out) :: fshade(0:npft-1)          !
+   REAL(r8), intent(out) :: albd(lbp:ubp,numrad)      !surface albedo (direct)
+   REAL(r8), intent(out) :: albi(lbp:ubp,numrad)      !surface albedo (diffuse)
+   REAL(r8), intent(out) :: fabd(lbp:ubp,numrad)      !flux absorbed by veg per unit direct flux
+   REAL(r8), intent(out) :: fabi(lbp:ubp,numrad)      !flux absorbed by veg per unit diffuse flux
+   REAL(r8), intent(out) :: ftdd(lbp:ubp,numrad)      !down direct flux below veg per unit dir flx
+   REAL(r8), intent(out) :: ftid(lbp:ubp,numrad)      !down diffuse flux below veg per unit dir flx
+   REAL(r8), intent(out) :: ftii(lbp:ubp,numrad)      !down diffuse flux below veg per unit dif flx
+   REAL(r8), intent(out) :: sun_fadd(lbp:ubp,numrad)  !
+   REAL(r8), intent(out) :: psun  (lbp:ubp)           !
+   REAL(r8), intent(out) :: thermk(lbp:ubp)           !
+   REAL(r8), intent(out) :: fshade(lbp:ubp)           !
 
 ! !LOCAL VARIABLES:
    REAL(selected_real_kind(12)), external::OverlapArea
@@ -246,12 +248,12 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8) :: ftii_lay(nlay)       !diffused layer transmission for diffuse beam
    REAL(r8) :: ftran                !pft transmittance
    REAL(r8) :: gee=0.5_r8           !Ross factor geometric blocking
-   REAL(r8) :: gdir(0:npft-1)       !Ross G factor considering LAD for incident direct radiation
-   REAL(r8) :: gdif(0:npft-1)       !Ross G factor considering LAD for incident diffuse radiation
+   REAL(r8) :: gdir(lbp:ubp)        !Ross G factor considering LAD for incident direct radiation
+   REAL(r8) :: gdif(lbp:ubp)        !Ross G factor considering LAD for incident diffuse radiation
    REAL(r8) :: gdir_lay(nlay)       !Ross G factor considering LAD for incident direct radiation
    REAL(r8) :: gdif_lay(nlay)       !Ross G factor considering LAD for incident diffuse radiation
-   REAL(r8) :: fcad(0:npft-1)       !calibration factor for LAD for direct radiation
-   REAL(r8) :: fcai(0:npft-1)       !calibration factor for LAD for diffuse radiation
+   REAL(r8) :: fcad(lbp:ubp)        !calibration factor for LAD for direct radiation
+   REAL(r8) :: fcai(lbp:ubp)        !calibration factor for LAD for diffuse radiation
    REAL(r8) :: fcad_lay(nlay)       !calibration factor for LAD for direct radiation
    REAL(r8) :: fcai_lay(nlay)       !calibration factor for LAD for diffuse radiation
    REAL(r8) :: pad                  !probabilty function for absorption after two scat
@@ -276,18 +278,18 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8) :: zenith               !zenith angle
    REAL(r8) :: ftdd_col             !unscattered column transmission for direct beam
 
-   REAL(r8) :: shadow_pd(0:npft-1)  !sky shadow area
-   REAL(r8) :: shadow_pi(0:npft-1)  !sky shadow area
-   REAL(r8) :: shadow_sky(0:npft-1) !sky shadow area
-   REAL(r8) :: taud(0:npft-1)       !transmission to direct beam
-   REAL(r8) :: taui(0:npft-1)       !transmission to diffuse beam
-   REAL(r8) :: omega(0:npft-1,numrad)!leaf/stem transmitance weighted by frac veg
-   REAL(r8) :: ftdi(0:npft-1,numrad)!leaf/stem transmitance weighted by frac veg
-   REAL(r8) :: ftdd_orig(0:npft-1,numrad)!leaf/stem transmitance weighted by frac veg
-   REAL(r8) :: ftdi_orig(0:npft-1,numrad)!leaf/stem transmitance weighted by frac veg
-   LOGICAL  :: soilveg(0:npft-1)    !true if pft over soil with veg and cosz > 0
+   REAL(r8) :: shadow_pd(lbp:ubp)   !sky shadow area
+   REAL(r8) :: shadow_pi(lbp:ubp)   !sky shadow area
+   REAL(r8) :: shadow_sky(lbp:ubp)  !sky shadow area
+   REAL(r8) :: taud(lbp:ubp)        !transmission to direct beam
+   REAL(r8) :: taui(lbp:ubp)        !transmission to diffuse beam
+   REAL(r8) :: omega(lbp:ubp,numrad)!leaf/stem transmitance weighted by frac veg
+   REAL(r8) :: ftdi(lbp:ubp,numrad) !leaf/stem transmitance weighted by frac veg
+   REAL(r8) :: ftdd_orig(lbp:ubp,numrad)!leaf/stem transmitance weighted by frac veg
+   REAL(r8) :: ftdi_orig(lbp:ubp,numrad)!leaf/stem transmitance weighted by frac veg
+   LOGICAL  :: soilveg(lbp:ubp)     !true if pft over soil with veg and cosz > 0
 
-   REAL(r8) :: phi1(0:npft-1), phi2(0:npft-1)
+   REAL(r8) :: phi1(lbp:ubp), phi2(lbp:ubp)
 
    ! 11/07/2018: calculate gee FUNCTION consider LAD
    phi1 = 0.5 - 0.633 * chil - 0.33 * chil * chil
@@ -312,7 +314,7 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
    gdir_lay = D0
    gdif_lay = D0
 
-   DO ip=0, npft-1
+   DO ip = lbp, ubp
       shadow_sky(ip) = D1
 
       ! check elai and pft weight are non-zero 
@@ -536,7 +538,7 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
       ! 10/12/2017
       ftdi(:,ib) = D1
 
-      DO ip=0, npft-1
+      DO ip = lbp, ubp
 
          taud(ip)=D0
          taui(ip)=D0
@@ -855,7 +857,7 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
       sum_fabi=D0
       sum_fadd=D0
 
-      DO ip = 0, npft-1
+      DO ip = lbp, ubp
          clev = canlev(ip)
          IF(clev == D0) cycle
          IF(shadow_d(clev) > D0 .and. soilveg(ip)) THEN
@@ -923,7 +925,7 @@ SUBROUTINE ThreeDCanopy(npft, canlev, pwtcol, csiz, chgt, chil, coszen, &
          ENDIF ! ENDIF shadow & soilveg
       ENDDO ! ENDDO ip
 
-      DO ip = 0, npft-1
+      DO ip = lbp, ubp
          clev = canlev(ip)
 
          !IF(shadow_d(clev) > D0 .and. soilveg(ip)) THEN             

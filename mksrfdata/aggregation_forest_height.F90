@@ -21,7 +21,9 @@ SUBROUTINE aggregation_forest_height ( &
    use mod_landpatch
    use ncio_vector
    use ncio_block
+#ifdef CLMDEBUG 
    use mod_colm_debug
+#endif
    use mod_aggregation_lc
    USE mod_utils
 
@@ -290,7 +292,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL ncio_create_file_vector (lndname, landpc)
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
-   CALL ncio_write_vector (lndname, 'htop_pcs', 'pft', 'vector', landpc, N_PFT, htop_pcs, 1)
+   CALL ncio_write_vector (lndname, 'htop_pcs', 'pft', N_PFT, 'vector', landpc, htop_pcs, 1)
    
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)

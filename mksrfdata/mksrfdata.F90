@@ -55,6 +55,7 @@ PROGRAM mksrfdata
    USE mod_landunit
    USE mod_landcell
    USE mod_landpatch
+   USE LC_Const
    USE mod_srfdata_restart
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
@@ -100,6 +101,8 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+
+   CAll Init_LC_Const
 
    ! ...........................................................................
    ! 1. Read in or create the modeling grids coordinates and related information

@@ -2,8 +2,9 @@
 
  SUBROUTINE THERMAL (ipatch      ,patchtype   ,lb          ,deltim     ,&
                      trsmx0      ,zlnd        ,zsno        ,csoilc     ,&
-                     dewmx       ,capr        ,cnfac       ,csol       ,&
-                     porsl       ,psi0        ,                         &
+                     dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
+                     vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
+                     wf_sand     ,csol        ,porsl       ,psi0       ,&
 #ifdef Campbell_SOIL_MODEL
                      bsw         ,                                      &
 #endif
@@ -11,10 +12,19 @@
                      theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm      ,&
                      sc_vgm      ,fc_vgm      ,                         &
 #endif
-                     dkdry       ,                                      &
-                     dksatu      ,lai         ,laisun      ,laisha     ,&
+                     k_solids    ,dksatu      ,dksatf      ,dkdry      ,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+                     BA_alpha    ,BA_beta                              ,&
+#endif
+                     lai         ,laisun      ,laisha                  ,&
                      sai         ,htop        ,hbot        ,sqrtdi     ,&
-                     rootfr      ,rstfac      ,effcon      ,vmax25     ,&
+                     rootfr      ,rstfacsun   ,rstfacsha   ,effcon     ,&
+                     vmax25      ,hksati      ,smp         ,hk         ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+                     kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&   
+                     psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&   
+                     ck          ,vegwp       ,gs0sun      ,gs0sha     ,&   
+#endif
                      slti        ,hlti        ,shti        ,hhti       ,&
                      trda        ,trdm        ,trop        ,gradm      ,&
                      binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
@@ -34,7 +44,8 @@
                      trad        ,rst         ,assim       ,respc      ,&
                      errore      ,emis        ,z0m         ,zol        ,&
                      rib         ,ustar       ,qstar       ,tstar      ,&
-                     fm          ,fh          ,fq                       )
+                     fm          ,fh          ,fq          ,pg_rain    ,&
+                     pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation 
@@ -60,7 +71,7 @@
   USE GlobalVars
   USE PFT_Const
   USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
-                               stefnc,denice,tfrz,vonkar,grav 
+                               stefnc,denice,tfrz,vonkar,grav,cpliq,cpice 
   USE FRICTION_VELOCITY
   USE LEAF_temperature
 #ifdef PFT_CLASSIFICATION
@@ -101,9 +112,15 @@
         cnfac,       &! Crank Nicholson factor between 0 and 1
 
         ! soil physical parameters
-        csol(1:nl_soil),   &! heat capacity of soil solids [J/(m3 K)]
-        porsl(1:nl_soil),  &! soil porosity [-]
-        psi0(1:nl_soil),   &! soil water suction, negative potential [m]
+        vf_quartz (1:nl_soil), &! volumetric fraction of quartz within mineral soil
+        vf_gravels(1:nl_soil), &! volumetric fraction of gravels
+        vf_om     (1:nl_soil), &! volumetric fraction of organic matter
+        vf_sand   (1:nl_soil), &! volumetric fraction of sand
+        wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
+        wf_sand   (1:nl_soil), &! gravimetric fraction of sand
+        csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
+        porsl     (1:nl_soil), &! soil porosity [-]
+        psi0      (1:nl_soil), &! soil water suction, negative potential [m]
 #ifdef Campbell_SOIL_MODEL
         bsw(1:nl_soil),    &! clapp and hornbereger "b" parameter [-]
 #endif
@@ -115,8 +132,15 @@
         sc_vgm   (1:nl_soil), &
         fc_vgm   (1:nl_soil), &
 #endif
-        dkdry(1:nl_soil),  &! thermal conductivity of dry soil [W/m-K]
-        dksatu(1:nl_soil), &! thermal conductivity of saturated soil [W/m-K]
+        k_solids  (1:nl_soil), &! thermal conductivity of minerals soil [W/m-K]
+        dkdry     (1:nl_soil), &! thermal conductivity of dry soil [W/m-K]
+        dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
+        dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
+        hksati    (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+        BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
+        BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme 
+#endif
 
         ! vegetation parameters
         lai,         &! adjusted leaf area index for seasonal variation [-]
@@ -128,6 +152,17 @@
        
         effcon,      &! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25,      &! maximum carboxylation rate at 25 C at canopy top
+#ifdef PLANT_HYDRAULIC_STRESS
+        kmax_sun,   &   
+        kmax_sha,   &   
+        kmax_xyl,   &   
+        kmax_root,  &
+        psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+        psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+        psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+        psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
+        ck,         &! shape-fitting parameter for vulnerability curve (-)
+#endif
         slti,        &! slope of low temperature inhibition function      [s3]
         hlti,        &! 1/2 point of low temperature inhibition function  [s4]
         shti,        &! slope of high temperature inhibition function     [s1]
@@ -151,6 +186,11 @@
         forc_psrf,   &! atmosphere pressure at the surface [pa]
         forc_pco2m,  &! CO2 concentration in atmos. (pascals)
         forc_po2m,   &! O2 concentration in atmos. (pascals)
+        pg_rain,     &! rainfall onto ground including canopy runoff [kg/(m2 s)]
+        pg_snow,     &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        t_precip,    &! snowfall/rainfall temperature [kelvin]
+        qintr_rain,  &! rainfall interception (mm h2o/s)
+        qintr_snow,  &! snowfall interception (mm h2o/s)
 
         ! radiative fluxes
         coszen,      &! cosine of the solar zenith angle
@@ -173,10 +213,17 @@
 
         ! state variables (2)
   REAL(r8), intent(inout) :: &
+#ifdef PLANT_HYDRAULIC_STRESS
+        vegwp(1:nvegwcs),&! vegetation water potential
+        gs0sun,      &!
+        gs0sha,      &!
+#endif
         tleaf,       &! shaded leaf temperature [K]
         t_soisno(lb:nl_soil),   &! soil temperature [K]
         wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
         wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
+        smp(1:nl_soil)         ,&! soil matrix potential [mm]
+        hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
         ldew,        &! depth of water on foliage [kg/(m2 s)] 
         scv,         &! snow cover, water equivalent [mm, kg/m2]
         snowdp        ! snow depth [m]
@@ -187,7 +234,8 @@
   REAL(r8), intent(out) :: &
        laisun,       &! sunlit leaf area index
        laisha,       &! shaded leaf area index
-       rstfac         ! factor of soil water stress 
+       rstfacsun,    &! factor of soil water stress on sunlit leaf
+       rstfacsha      ! factor of soil water stress on shaded leaf
  
         ! Output fluxes
   REAL(r8), intent(out) :: &
@@ -257,7 +305,6 @@
        olru,         &! olrg excluding dwonwelling reflection [W/m2]
        olrb,         &! olrg assuming blackbody emission [W/m2]
        psit,         &! negative potential of soil
-       par,          &! PAR absorbed by canopy [W/m2]
        qg,           &! ground specific humidity [kg/kg]
        qsatg,        &! saturated humidity [kg/kg]
        qsatgdT,      &! d(qsatg)/dT
@@ -266,6 +313,7 @@
        thm,          &! intermediate variable (forc_t+0.0098*forc_hgt_t)
        th,           &! potential temperature (kelvin)
        thv,          &! virtual potential temperature (kelvin)
+       rstfac,       &! factor of soil water stress
        t_grnd,       &! ground surface temperature [K]
        t_grnd_bef,   &! ground surface temperature [K]
        t_soisno_bef(lb:nl_soil), &! soil/snow temperature before update
@@ -275,7 +323,8 @@
        wice0(lb:nl_soil),&! ice mass from previous time-step
        wliq0(lb:nl_soil),&! liquid mass from previous time-step
        wx,           &! patitial volume of ice and water of surface layer
-       xmf            ! total latent heat of phase change of ground water
+       xmf,          &! total latent heat of phase change of ground water
+       hprl           ! precipitation sensible heat from canopy
 
   REAL(r8) :: z0m_g,z0h_g,zol_g,obu_g,rib_g,ustar_g,qstar_g,tstar_g
   REAL(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu
@@ -286,6 +335,8 @@
   REAL(r8), allocatable :: rootr_p (:,:)
   REAL(r8), allocatable :: etrc_p  (:)
   REAL(r8), allocatable :: rstfac_p(:)
+  REAL(r8), allocatable :: rstfacsun_p(:)
+  REAL(r8), allocatable :: rstfacsha_p(:)
   REAL(r8), allocatable :: laisun_p(:)
   REAL(r8), allocatable :: laisha_p(:)
   REAL(r8), allocatable :: fsun_p  (:)
@@ -302,17 +353,21 @@
   REAL(r8), allocatable :: tstar_p (:)
   REAL(r8), allocatable :: fm_p    (:)
   REAL(r8), allocatable :: fh_p    (:)
-  REAL(r8), allocatable :: fq_p    (:)
+  REAL(r8), allocatable :: fq_p    (:) 
+  REAL(r8), allocatable :: hprl_p  (:)
 #endif
 
 #ifdef PC_CLASSIFICATION
   REAL(r8) :: rootr_c (nl_soil,0:N_PFT-1)
   REAL(r8) :: etrc_c  (0:N_PFT-1)
   REAL(r8) :: rstfac_c(0:N_PFT-1)
+  REAL(r8) :: rstfacsun_c(0:N_PFT-1)
+  REAL(r8) :: rstfacsha_c(0:N_PFT-1)
   REAL(r8) :: laisun_c(0:N_PFT-1)
   REAL(r8) :: laisha_c(0:N_PFT-1)
   REAL(r8) :: fsun_c  (0:N_PFT-1)
   REAL(r8) :: sabv_c  (0:N_PFT-1)
+  REAL(r8) :: hprl_c  (0:N_PFT-1)
 #endif
 
 !=======================================================================
@@ -333,7 +388,8 @@
       cgrnds = 0.;  cgrndl = 0.    
       cgrnd  = 0.;  tref   = 0. 
       qref   = 0.;  rst    = 2.0e4
-      assim  = 0.;  respc  = 0. 
+      assim  = 0.;  respc  = 0.
+      hprl   = 0.
 
       emis   = 0.;  z0m    = 0.
       zol    = 0.;  rib    = 0.
@@ -423,7 +479,7 @@ IF (patchtype == 0) THEN
 
       IF (lai+sai > 1e-6) THEN
 
-         ! soil water strees factor on stomatal resistance
+         ! soil water stress factor on stomatal resistance
          CALL eroot (nl_soil,trsmx0,porsl,&
 #ifdef Campbell_SOIL_MODEL
             bsw,&
@@ -440,6 +496,8 @@ IF (patchtype == 0) THEN
          
          laisun = lai*fsun
          laisha = lai*(1-fsun)
+         rstfacsun = rstfac
+         rstfacsha = rstfac
 
          CALL LeafTemp (ipatch,deltim   ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
@@ -449,7 +507,7 @@ IF (patchtype == 0) THEN
                  forc_hgt_t ,forc_hgt_q ,forc_us   ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q    ,forc_psrf  ,forc_rhoair,&
                  parsun     ,parsha     ,sabv      ,frl        ,fsun       ,&
-                 thermk     ,rstfac     ,forc_po2m ,forc_pco2m ,z0h_g      ,&
+                 thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,taux       ,tauy       ,&
@@ -457,7 +515,14 @@ IF (patchtype == 0) THEN
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
                  z0m        ,zol        ,rib       ,ustar      ,qstar      ,&
-                 tstar      ,fm         ,fh        ,fq                      )
+                 tstar      ,fm         ,fh        ,fq         ,rootfr     ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+                 kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
+                 psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
+                 gs0sun      ,gs0sha                                       ,&   
+#endif
+                 qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
+                 hk(1:)      ,hksati(1:),rootr(1:)                         )
       ENDIF
 
     ! equate canopy temperature to air over bareland.
@@ -467,7 +532,11 @@ IF (patchtype == 0) THEN
          laisun = 0.
          laisha = 0.
          ldew   = 0.
-         rstfac = 0.
+         rstfacsun = 0.
+         rstfacsha = 0.
+#ifdef PLANT_HYDRAULIC_STRESS
+         vegwp = -2.5e4
+#endif
       ENDIF
 #endif
 
@@ -480,7 +549,9 @@ IF (patchtype == 0) THEN
 
       allocate ( rootr_p (nl_soil, ps:pe) )
       allocate ( etrc_p  (ps:pe) )
-      allocate ( rstfac_p(ps:pe) ) 
+      allocate ( rstfac_p(ps:pe) )
+      allocate ( rstfacsun_p(ps:pe) )
+      allocate ( rstfacsha_p(ps:pe) )
       allocate ( laisun_p(ps:pe) ) 
       allocate ( laisha_p(ps:pe) ) 
       allocate ( fsun_p  (ps:pe) )
@@ -498,6 +569,7 @@ IF (patchtype == 0) THEN
       allocate ( fm_p    (ps:pe) )
       allocate ( fh_p    (ps:pe) )
       allocate ( fq_p    (ps:pe) )
+      allocate ( hprl_p  (ps:pe) )
 
       ! always DO CALL groundfluxes
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
@@ -539,6 +611,8 @@ IF (patchtype == 0) THEN
 
             laisun_p(i) = lai_p(i)*fsun_p(i)
             laisha_p(i) = lai_p(i)*(1-fsun_p(i))
+            rstfacsun_p(i) = rstfac_p(i)
+            rstfacsha_p(i) = rstfac_p(i)
 
             CALL LeafTemp (ipatch,deltim,csoilc     ,dewmx      ,htvp       ,&
                  lai_p(i)   ,sai_p(i)   ,htop_p(i)  ,hbot_p(i)  ,sqrtdi_p(p),&
@@ -548,7 +622,7 @@ IF (patchtype == 0) THEN
                  forc_hgt_t ,forc_hgt_q ,forc_us    ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q     ,forc_psrf  ,forc_rhoair,&
                  parsun_p(i),parsha_p(i),sabv_p(i)  ,frl        ,fsun_p(i)  ,&
-                 thermk_p(i),rstfac_p(i),forc_po2m  ,forc_pco2m ,z0h_g      ,&
+                 thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),forc_po2m  ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,taux_p(i)  ,tauy_p(i)  ,&
@@ -556,7 +630,14 @@ IF (patchtype == 0) THEN
                  tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
                  fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
                  z0m_p(i)   ,zol_p(i)   ,rib_p(i)   ,ustar_p(i) ,qstar_p(i) ,&
-                 tstar_p(i) ,fm_p(i)    ,fh_p(i)    ,fq_p(i)                 )
+                 tstar_p(i) ,fm_p(i)    ,fh_p(i)    ,fq_p(i)    ,rootfr_p(:,p),&
+#ifdef PLANT_HYDRAULIC_STRESS
+                 kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
+                 psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
+                 gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
+#endif
+                 qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
+                 hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
 
          ELSE 
 
@@ -572,7 +653,8 @@ IF (patchtype == 0) THEN
             laisha_p(i)  = 0.
             ldew_p(i)    = 0.
             rootr_p(:,i) = 0.
-            rstfac_p(i)  = 0.
+            rstfacsun_p(i) = 0.
+            rstfacsha_p(i) = 0.
             rst_p(i)     = 2.0e4
             assim_p(i)   = 0.
             respc_p(i)   = 0.
@@ -581,7 +663,10 @@ IF (patchtype == 0) THEN
             etr_p(i)     = 0.
             dlrad_p(i)   = frl  
             ulrad_p(i)   = frl*(1.-emg) + emg*stefnc*t_grnd**4
-
+            hprl_p(i)    = 0.
+#ifdef PLANT_HYDRAULIC_STRESS
+            vegwp_p(:,i) = -2.5e4
+#endif
          ENDIF
       ENDDO 
    
@@ -617,17 +702,35 @@ IF (patchtype == 0) THEN
       fh     = sum( fh_p    (ps:pe)*pftfrac(ps:pe) )
       fq     = sum( fq_p    (ps:pe)*pftfrac(ps:pe) )
 
+#ifdef PLANT_HYDRAULIC_STRESS
+      DO j = 1, nvegwcs
+         vegwp(j) = sum( vegwp_p(j,ps:pe)*pftfrac(ps:pe) )
+      ENDDO
+
+      IF (etr > 0.) THEN 
+         DO j = 1, nl_soil
+            rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
+         ENDDO 
+      ENDIF
+#else
       IF (etr > 0.) THEN
          DO j = 1, nl_soil
             rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
          ENDDO 
       ENDIF
+#ENDIF
 
-      rstfac = sum( rstfac_p(ps:pe)*pftfrac(ps:pe) )
+      rstfacsun = sum( rstfacsun_p(ps:pe)*pftfrac(ps:pe) )
+      rstfacsha = sum( rstfacsha_p(ps:pe)*pftfrac(ps:pe) )
+      hprl   = sum( hprl_p  (ps:pe)*pftfrac(ps:pe) )
 
       deallocate ( rootr_p  )
       deallocate ( etrc_p   )
       deallocate ( rstfac_p )
+      deallocate ( rstfacsun_p )
+      deallocate ( rstfacsha_p )
+      deallocate ( laisun_p )
+      deallocate ( laisha_p )
       deallocate ( fsun_p   )
       deallocate ( sabv_p   )
       deallocate ( cgrnd_p  )
@@ -643,6 +746,7 @@ IF (patchtype == 0) THEN
       deallocate ( fm_p     )
       deallocate ( fh_p     )
       deallocate ( fq_p     )
+      deallocate ( hprl_p   )
 
 #endif
 
@@ -694,6 +798,8 @@ IF (patchtype == 0) THEN
 
             laisun_c(p) = lai_c(p,pc)*fsun_c(p)
             laisha_c(p) = lai_c(p,pc)*(1-fsun_c(p))
+            rstfacsun_c(p) = rstfac_c(p)
+            rstfacsha_c(p) = rstfac_c(p)
 
          ELSE 
             tleaf_c(p,pc) = forc_t
@@ -701,7 +807,8 @@ IF (patchtype == 0) THEN
             laisha_c(p)   = 0.
             ldew_c(p,pc)  = 0.
             rootr_c(:,p)  = 0.
-            rstfac_c(p)   = 0.
+            rstfacsun_c(p)   = 0.
+            rstfacsha_c(p)   = 0.
          ENDIF
 
       ENDDO 
@@ -718,7 +825,7 @@ IF (patchtype == 0) THEN
            forc_us       ,forc_vs       ,thm           ,th            ,thv           ,&
            forc_q        ,forc_psrf     ,forc_rhoair   ,parsun_c(:,pc),parsha_c(:,pc),&
            fsun_c(:)     ,sabv_c(:)     ,frl           ,thermk_c(:,pc),fshade_c(:,pc),&
-           rstfac_c(:)   ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g         ,&
+           rstfacsun_c(:),rstfacsha_c(:),forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
            ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
            z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,taux          ,tauy          ,&
@@ -726,7 +833,14 @@ IF (patchtype == 0) THEN
            tref          ,qref          ,rst_c(:,pc)   ,assim_c(:,pc) ,respc_c(:,pc) ,&
            fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
            z0m           ,zol           ,rib           ,ustar         ,qstar         ,&
-           tstar         ,fm            ,fh            ,fq                            )
+           tstar         ,fm            ,fh            ,fq            ,rootfr_p(:,:) ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+           kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
+           psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
+           gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&   
+#endif
+           qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp           ,&
+           hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                )
       ELSE 
          laisun_c(:)    = 0.
          laisha_c(:)    = 0.
@@ -738,6 +852,10 @@ IF (patchtype == 0) THEN
          fsenl_c (:,pc) = 0.
          fevpl_c (:,pc) = 0.
          etr_c   (:,pc) = 0.
+         hprl_c  (:)    = 0.
+#ifdef PLANT_HYDRAULIC_STRESS 
+         vegwp_c (:,:,pc) = -2.5e4
+#endif
       ENDIF
 
       laisun = sum( laisun_c(:)   *pcfrac(:,pc) )
@@ -751,14 +869,29 @@ IF (patchtype == 0) THEN
       fevpl  = sum( fevpl_c (:,pc)*pcfrac(:,pc) )
       etr    = sum( etr_c   (:,pc)*pcfrac(:,pc) )
 
+#ifdef PLANT_HYDRAULIC_STRESS
+      DO j = 1, nvegwcs
+         vegwp(j) = sum( vegwp_c(j,:,pc)*pcfrac(:,pc) )
+      ENDDO
+
+      ! loop for each soil layer
+      IF (etr > 0.) THEN
+         DO j = 1, nl_soil
+            rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
+         ENDDO
+      ENDIF
+#else
       ! loop for each soil layer
       IF (etr > 0.) THEN
          DO j = 1, nl_soil
             rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
          ENDDO 
       ENDIF
+#endif
 
-      rstfac = sum( rstfac_c(:)*pcfrac(:,pc) )
+      rstfacsun = sum( rstfacsun_c(:)*pcfrac(:,pc) )
+      rstfacsha = sum( rstfacsha_c(:)*pcfrac(:,pc) )
+      hprl   = sum( hprl_c  (:)   *pcfrac(:,pc) )
 
 #endif
 
@@ -782,7 +915,7 @@ ELSE
 
       IF (lai+sai > 1e-6) THEN
 
-         ! soil water strees factor on stomatal resistance
+         ! soil water stress factor on stomatal resistance
          CALL eroot (nl_soil,trsmx0,porsl,&
 #ifdef Campbell_SOIL_MODEL
             bsw,&
@@ -799,6 +932,8 @@ ELSE
          
          laisun = lai*fsun
          laisha = lai*(1-fsun)
+         rstfacsun = rstfac
+         rstfacsha = rstfac
 
          CALL LeafTemp (ipatch,deltim   ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
@@ -808,7 +943,7 @@ ELSE
                  forc_hgt_t ,forc_hgt_q ,forc_us   ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q    ,forc_psrf  ,forc_rhoair,&
                  parsun     ,parsha     ,sabv      ,frl        ,fsun       ,&
-                 thermk     ,rstfac     ,forc_po2m ,forc_pco2m ,z0h_g      ,&
+                 thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,taux       ,tauy       ,&
@@ -816,8 +951,14 @@ ELSE
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
                  z0m        ,zol        ,rib       ,ustar      ,qstar      ,&
-                 tstar      ,fm         ,fh        ,fq                      )
- 
+                 tstar      ,fm         ,fh        ,fq         ,rootfr     ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+                 kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
+                 psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
+                 gs0sun      ,gs0sha                                       ,&
+#endif
+                 qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
+                 hk(1:)      ,hksati(1:),rootr(1:)                         )
       ENDIF
 
     ! equate canopy temperature to air over bareland.
@@ -827,7 +968,11 @@ ELSE
          laisun = 0.
          laisha = 0.
          ldew   = 0.
-         rstfac = 0.
+         rstfacsun = 0.
+         rstfacsha = 0.
+#ifdef PLANT_HYDRAULIC_STRESS
+         vegwp = -2.5e4
+#endif
       ENDIF
 
 ENDIF
@@ -837,11 +982,15 @@ ENDIF
 !=======================================================================
 
       CALL groundtem (patchtype,lb,nl_soil,deltim,&
-                      capr,cnfac,csol,porsl,dkdry,dksatu,&
+                      capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+                      porsl,csol,k_solids,dksatu,dksatf,dkdry,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+                      BA_alpha,BA_beta,&
+#endif
                       sigf,dz_soisno,z_soisno,zi_soisno,&
                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                       frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                      imelt,sm,xmf,fact) ! ,psi0,bsw)
+                      imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! [6] Correct fluxes to present soil temperature
@@ -891,7 +1040,8 @@ ENDIF
             !- emg*stefnc*t_grnd**4 &
             - emg*stefnc*t_grnd_bef**4 &
             - emg*stefnc*t_grnd_bef**3*(4.*tinc) &
-            - (fseng+fevpg*htvp)
+            - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_grnd) &
+            + cpice * pg_snow * (t_precip - t_grnd)
 
 ! outgoing long-wave radiation from canopy + ground
       olrg = ulrad &
@@ -908,9 +1058,9 @@ ENDIF
 
 ! radiative temperature
       IF (olrg < 0) THEN !fordebug
-         print *, ipatch, olrg, tinc, ulrad
-         write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf
-         olrg = 0.
+         print *, "olrg abnormal value: ",ipatch, olrg, tinc, ulrad
+         write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,fgrnd
+!         olrg = 0.
       ENDIF 
       
       trad = (olrg/stefnc)**0.25
@@ -944,7 +1094,8 @@ ENDIF
 
       errore = sabv + sabg + frl - olrg - fsena - lfevpa - fgrnd
       !print *, "errore 1:", errore     !one way to check energy
-      errore = sabv + sabg + frl - olrg - fsena - lfevpa - xmf
+      errore = sabv + sabg + frl - olrg - fsena - lfevpa - xmf + hprl + &
+             cpliq * pg_rain * (t_precip - t_grnd) + cpice * pg_snow * (t_precip - t_grnd)
       DO j = lb, nl_soil
          errore = errore - (t_soisno(j)-t_soisno_bef(j))/fact(j)
       ENDDO
@@ -953,7 +1104,7 @@ ENDIF
 #if (defined CLMDEBUG)
       IF (abs(errore) > .5) THEN 
       write(6,*) 'THERMAL.F90: energy balance violation'
-      write(6,*) ipatch,errore,'=',sabv+sabg+frl-olrg-fsenl-fseng-hvap*fevpl-htvp*fevpg-xmf
+      write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
       ENDIF
 100   format(10(f15.3))
 #endif

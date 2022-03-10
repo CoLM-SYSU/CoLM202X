@@ -152,6 +152,27 @@ CONTAINS
 
       ENDIF
 
+      IF (trim(gridname) == 'ERA5') THEN
+         nlat = 721
+         nlon = 1440
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         del_lat = 180.0 / (nlat-1)
+         DO ilat = 1, nlat
+            lat(ilat) = 90.0 - del_lat * (ilat-1)
+         ENDDO
+
+         del_lon = 360.0 / nlon
+         DO ilon = 1, nlon
+            lon(ilon) = (ilon-1) * del_lon
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
    END SUBROUTINE grid_define_by_name
 
    !-----------------------------------------------------

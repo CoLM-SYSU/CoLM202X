@@ -36,6 +36,7 @@ subroutine dbedrock_readin (dir_landdata)
             ibedrock(ipatch) = 0
          else
             
+            dbedrock(ipatch) = dbedrock(ipatch) / 100.0 ! from cm to meter
             dbedrock(ipatch) = max(dbedrock(ipatch), dz_soi(1))
 
             ibd = 1

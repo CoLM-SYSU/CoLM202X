@@ -83,7 +83,12 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_3d) :: f_wliq_soisno  ! liquid water in soil layers [kg/m2]
    type(block_data_real8_3d) :: f_wice_soisno  ! ice lens in soil layers [kg/m2]
    type(block_data_real8_3d) :: f_h2osoi       ! volumetric soil water in layers [m3/m3]
-   type(block_data_real8_2d) :: f_rstfac       ! factor of soil water stress 
+   type(block_data_real8_3d) :: f_rootr        ! water exchange between soil layers and root
+#ifdef PLANT_HYDRAULIC_STRESS
+   type(block_data_real8_3d) :: f_vegwp        ! vegetation water potential [mm]
+#endif
+   type(block_data_real8_2d) :: f_rstfacsun    ! factor of soil water stress
+   type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
    type(block_data_real8_2d) :: f_zwt          ! the depth to water table [m]
    type(block_data_real8_2d) :: f_wa           ! water storage in aquifer [mm]
    type(block_data_real8_2d) :: f_wat          ! total water storage [mm]
@@ -205,7 +210,12 @@ CONTAINS
          call allocate_block_data (grid, f_wliq_soisno, nl_soil-maxsnl, maxsnl+1)  ! liquid water in soil layers [kg/m2]
          call allocate_block_data (grid, f_wice_soisno, nl_soil-maxsnl, maxsnl+1)  ! ice lens in soil layers [kg/m2]
          call allocate_block_data (grid, f_h2osoi     , nl_soil)  ! volumetric soil water in layers [m3/m3]
-         call allocate_block_data (grid, f_rstfac)  ! factor of soil water stress 
+         call allocate_block_data (grid, f_rootr      , nl_soil)  ! water exchange between soil layers and root
+#ifdef PLANT_HYDRAULIC_STRESS
+         call allocate_block_data (grid, f_vegwp      , nvegwcs)  ! vegetation water potential [mm]
+#endif
+         call allocate_block_data (grid, f_rstfacsun)  ! factor of soil water stress
+         call allocate_block_data (grid, f_rstfacsha)  ! factor of soil water stress
          call allocate_block_data (grid, f_zwt   )  ! the depth to water table [m]
          call allocate_block_data (grid, f_wa    )  ! water storage in aquifer [mm]
          call allocate_block_data (grid, f_wat   )  ! total water storage [mm]

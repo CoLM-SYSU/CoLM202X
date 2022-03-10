@@ -43,13 +43,18 @@ PROGRAM CLM
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
+#if(defined CaMa_Flood)
+   use colm_CaMaMod
+#endif
+#ifdef vsf_statistics
+   USE mod_soil_water, only : count_iters
+#endif
 
 
    IMPLICIT NONE
 
    ! ----------------local variables ---------------------------------
    character(LEN=256) :: nlfile
-
    character(LEN=256) :: casename   
    character(len=256) :: dir_landdata
    character(len=256) :: dir_forcing
@@ -79,6 +84,10 @@ PROGRAM CLM
 
 #ifdef USEMPI
    call spmd_init ()
+#endif
+
+#ifdef vsf_statistics
+   count_iters(:) = 0
 #endif
 
    if (p_is_master) then
@@ -174,6 +183,10 @@ PROGRAM CLM
    call allocate_2D_Fluxes (ghist)
    call allocate_1D_Fluxes ()
 
+#if(defined CaMa_Flood)
+    call colm_CaMa_init
+#endif
+
    ! ======================================================================
    ! begin time stepping loop
    ! ======================================================================
@@ -218,9 +231,17 @@ PROGRAM CLM
       ! READ in Leaf area index and stem area index
       ! Update every 8 days (time interval of the MODIS LAI data) 
       ! ----------------------------------------------------------------------
-      Julian_8day = int(calendarday(idate)-1)/8*8 + 1
-      if(Julian_8day /= Julian_8day_p)then
-         CALL LAI_readin (Julian_8day,dir_landdata)
+      !zhongwang wei, 20210927: add option to read non-climatological mean LAI            
+      if (DEF_LAI_TRUE) then
+         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
+         if(Julian_8day /= Julian_8day_p)then
+            CALL LAI_varied_readin(itstamp%year, Julian_8day,dir_landdata)
+         endif
+      else
+         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
+         if(Julian_8day /= Julian_8day_p)then
+            CALL LAI_readin (Julian_8day,dir_landdata)
+         endif
       endif
 #else
       ! 08/03/2019, yuan: read global LAI/SAI data
@@ -229,7 +250,14 @@ PROGRAM CLM
          CALL LAI_readin (month, dir_landdata)
       END IF
 #endif
+
 #endif
+
+!!!! need to acc runoff here!!!
+#if(defined CaMa_Flood)
+call colm_CaMa_drv
+#endif
+
    
       ! Write out the model variables for restart run and the histroy file
       ! ----------------------------------------------------------------------
@@ -272,9 +300,25 @@ PROGRAM CLM
    call mpi_barrier (p_comm_glb, p_err)
 #endif
 
+#if(defined CaMa_Flood) 
+   call colm_cama_exit
+#endif
+
    if (p_is_master) then
       write(*,'(/,A25)') 'CLM Execution Completed.'
    end if
+
+#ifdef vsf_statistics
+   IF (p_is_worker) THEN
+#ifdef USEMPI
+      CALL mpi_allreduce (MPI_IN_PLACE, count_iters, size(count_iters), &
+         MPI_INTEGER, MPI_SUM, p_comm_worker, p_err)
+#endif
+      IF (p_iam_worker == 0) THEN
+         write(*,*) 'iteration stat ', count_iters(:)
+      ENDIF
+   ENDIF
+#endif
          
    101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.') 
    102 format (/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')

@@ -590,14 +590,6 @@ CONTAINS
          ENDDO
 #endif
 
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               deallocate (pbuff(iproc)%val)
-            ENDIF
-         ENDDO
-
-         deallocate (pbuff)
-
       ENDIF 
 
       IF (p_is_io) THEN
@@ -656,6 +648,16 @@ CONTAINS
          ENDDO
       
       ENDIF
+
+      IF (p_is_worker) THEN
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+         deallocate (pbuff)
+      ENDIF
+
 
    END SUBROUTINE map_p2g_2d
 
@@ -745,14 +747,6 @@ CONTAINS
          ENDDO
 #endif
 
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               deallocate (pbuff(iproc)%val)
-            ENDIF
-         ENDDO
-
-         deallocate (pbuff)
-
       ENDIF
 
       IF (p_is_io) THEN
@@ -810,6 +804,15 @@ CONTAINS
 
          ENDDO
       
+      ENDIF
+
+      IF (p_is_worker) THEN
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+         deallocate (pbuff)
       ENDIF
 
    END SUBROUTINE map_p2g_3d
@@ -904,14 +907,6 @@ CONTAINS
          ENDDO
 #endif
 
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               deallocate (pbuff(iproc)%val)
-            ENDIF
-         ENDDO
-
-         deallocate (pbuff)
-
       ENDIF
 
       IF (p_is_io) THEN
@@ -974,6 +969,15 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF 
+
+      IF (p_is_worker) THEN
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+         deallocate (pbuff)
+      ENDIF
 
    END SUBROUTINE map_p2g_4d
 

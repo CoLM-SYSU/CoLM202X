@@ -140,7 +140,7 @@ SUBROUTINE HTOP_readin (dir_landdata)
       lndname = trim(dir_landdata)//'/htop_patches.nc'
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
       lndname = trim(dir_landdata)//'/htop_pcs.nc'
-      CALL ncio_read_vector (lndname, 'htop_pcs'    , landpc, N_PFT, htoppc)
+      CALL ncio_read_vector (lndname, 'htop_pcs'    , N_PFT, landpc, htoppc)
 
       IF (p_is_worker) THEN
          do npatch = 1, numpatch

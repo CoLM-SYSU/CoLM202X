@@ -45,10 +45,11 @@ CONTAINS
       INTEGER  :: ipatch, ipft, npatch, npft
       REAL(r8) :: sumarea
       LOGICAL, allocatable :: patchmask (:)
+      INTEGER  :: npft_glb 
 
 
       IF (p_is_master) THEN
-         write(*,*) 'Making land plant function types :'
+         write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
 
 #ifdef USEMPI
@@ -153,6 +154,21 @@ CONTAINS
 
       landpft%nset = numpft
       CALL landpft%set_vecgs
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numpft, npft_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', npft_glb, ' pft tiles on worker.'
+         ENDIF
+      ENDIF
+      
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numpft, ' pft tiles.'
+#endif
 
       IF (allocated(pctpft_patch)) deallocate (pctpft_patch)
       IF (allocated(pctpft_one  )) deallocate (pctpft_one  )

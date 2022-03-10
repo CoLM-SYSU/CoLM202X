@@ -1,11 +1,15 @@
+#include <define.h>
 
- subroutine groundtem (patchtype,lb,nl_soil,deltim, &
-                       capr,cnfac,csol,porsl,dkdry,dksatu, &
+ subroutine groundtem (itypwat,lb,nl_soil,deltim,&
+                       capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+                       porsl,csol,k_solids,dksatu,dksatf,dkdry,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+                       BA_alpha,BA_beta,&
+#endif
                        sigf,dz_soisno,z_soisno,zi_soisno,&
-                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp, &
-                       frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg, &
-                       imelt,sm,xmf,fact) ! ,psi0,bsw)
-                       !TODO: not used, psi0, bsw
+                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
+                       frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg,&
+                       imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! Snow and soil temperatures
@@ -15,7 +19,7 @@
 !   the algorithm of Johansen (as reported by Farouki 1981), and of snow is from
 !   the formulation used in SNTHERM (Jordan 1991).
 ! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top),  F= 0 (base of the soil column).
+!   F = Rnet - Hg - LEg + Hpr(top),  F= 0 (base of the soil column).
 ! o Soil / snow temperature is predicted from heat conduction
 !   in 10 soil layers and up to 5 snow layers.
 !   The thermal conductivities at the interfaces between two neighbor layers
@@ -26,30 +30,40 @@
 !
 ! Phase change (see meltf.F90)
 ! 
-! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
+! Modified by Nan Wei, 07/21/2017, interaction btw prec and land surface
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only: stefnc
-  use SOIL_thermal_parameters
+  use PhysicalConstants, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
 
   implicit none
 
   integer, INTENT(in) :: lb           !lower bound of array
   integer, INTENT(in) :: nl_soil      !upper bound of array
-  integer, INTENT(in) :: patchtype    !land water type (0=soil,1=urban or built-up,2=wetland,
+  integer, INTENT(in) :: itypwat      !land water type (0=soil,1=urban or built-up,2=wetland,
                                       !3=land ice, 4=deep lake, 5=shallow lake)
   real(r8), INTENT(in) :: deltim      !seconds in a time step [second]
   real(r8), INTENT(in) :: capr        !tuning factor to turn first layer T into surface T
   real(r8), INTENT(in) :: cnfac       !Crank Nicholson factor between 0 and 1
 
-  real(r8), INTENT(in) :: csol (1:nl_soil) !heat capacity of soil solids [J/(m3 K)]
-  real(r8), INTENT(in) :: porsl(1:nl_soil) !soil porosity [-]
-!  real(r8), INTENT(in) :: psi0 (1:nl_soil) !soil water suction, negative potential [m]
-!  real(r8), INTENT(in) :: bsw  (1:nl_soil) !clapp and hornbereger "b" parameter [-]
+  real(r8), INTENT(in) :: vf_quartz (1:nl_soil) ! volumetric fraction of quartz within mineral soil
+  real(r8), INTENT(in) :: vf_gravels(1:nl_soil) ! volumetric fraction of gravels
+  real(r8), INTENT(in) :: vf_om     (1:nl_soil) ! volumetric fraction of organic matter
+  real(r8), INTENT(in) :: vf_sand   (1:nl_soil) ! volumetric fraction of sand
+  real(r8), INTENT(in) :: wf_gravels(1:nl_soil) ! gravimetric fraction of gravels
+  real(r8), INTENT(in) :: wf_sand   (1:nl_soil) ! gravimetric fraction of sand
 
-  real(r8), INTENT(in) :: dkdry(1:nl_soil) !thermal conductivity of dry soil [W/m-K]
-  real(r8), INTENT(in) :: dksatu(1:nl_soil)!thermal conductivity of saturated soil [W/m-K]
+  real(r8), INTENT(in) :: porsl(1:nl_soil) ! soil porosity [-]
+  real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil solids [J/(m3 K)]
+  real(r8), INTENT(in) :: k_solids(1:nl_soil) ! thermal conductivity of minerals soil [W/m-K]
+  real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
+  real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
+  real(r8), INTENT(in) :: dkdry(1:nl_soil)  ! thermal conductivity of dry soil [W/m-K]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+  real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+  real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif 
 
   real(r8), INTENT(in) :: sigf     !fraction of veg cover, excluding snow-covered veg [-]
   real(r8), INTENT(in) :: dz_soisno(lb:nl_soil)   !layer thickiness [m]
@@ -64,6 +78,9 @@
   real(r8), INTENT(in) :: cgrnd    !deriv. of soil energy flux wrt to soil temp [w/m2/k]
   real(r8), INTENT(in) :: htvp     !latent heat of vapor of water (or sublimation) [j/kg]
   real(r8), INTENT(in) :: emg      !ground emissivity (0.97 for snow,
+  real(r8), INTENT(in) :: pg_rain  ! rainfall onto ground including canopy runoff [kg/(m2 s)]
+  real(r8), INTENT(in) :: pg_snow  ! snowfall onto ground including canopy runoff [kg/(m2 s)]
+  real(r8), INTENT(in) :: t_precip ! snowfall/rainfall temperature [kelvin]
 
   real(r8), INTENT(inout) :: t_soisno (lb:nl_soil)   !soil temperature [K]
   real(r8), INTENT(inout) :: wice_soisno(lb:nl_soil) !ice lens [kg/m2]
@@ -71,14 +88,16 @@
   real(r8), INTENT(inout) :: scv      !snow cover, water equivalent [mm, kg/m2]
   real(r8), INTENT(inout) :: snowdp   !snow depth [m]
 
-  real(r8), INTENT(out) :: sm         !rate of snowmelt [kg/(m2 s)]
-  real(r8), INTENT(out) :: xmf        !total latent heat of phase change of ground water
-  real(r8), INTENT(out) :: fact(lb:nl_soil)  !used in computing tridiagonal matrix
-  integer,  INTENT(out) :: imelt(lb:nl_soil) !flag for melting or freezing [-]
+  real(r8), INTENT(out) :: sm       !rate of snowmelt [kg/(m2 s)]
+  real(r8), INTENT(out) :: xmf      !total latent heat of phase change of ground water
+  real(r8), INTENT(out) :: fact(lb:nl_soil) !used in computing tridiagonal matrix
+  integer,  INTENT(out) :: imelt(lb:nl_soil)!flag for melting or freezing [-]
 
 !------------------------ local variables ------------------------------
-  real(r8) cv(lb:nl_soil)     !heat capacity [J/(m2 K)]
-  real(r8) tk(lb:nl_soil)     !thermal conductivity [W/(m K)]
+  real(r8) cv(lb:nl_soil)     ! heat capacity [J/(m2 K)]
+  real(r8) tk(lb:nl_soil)     ! thermal conductivity [W/(m K)]
+  real(r8) hcap(1:nl_soil)    ! J/(m3 K)
+  real(r8) thk(lb:nl_soil)     ! W/(m K)
 
   real(r8) at(lb:nl_soil)     !"a" vector for tridiagonal matrix
   real(r8) bt(lb:nl_soil)     !"b" vector for tridiagonal matrix
@@ -94,31 +113,83 @@
   real(r8) hs                 !net energy flux into the surface (w/m2)
   real(r8) dhsdt              !d(hs)/dT
   real(r8) brr(lb:nl_soil)    !temporay set
-
+  real(r8) vf_water(1:nl_soil) ! volumetric fraction liquid water within soil
+  real(r8) vf_ice(1:nl_soil)   ! volumetric fraction ice len within soil
+  real(r8) rhosnow  ! partitial density of water (ice + liquid)
   integer i,j
 
 !=======================================================================
-! heat capacity 
-      call hCapacity (patchtype,lb,nl_soil,csol,porsl,wice_soisno,wliq_soisno,scv,dz_soisno,cv)
+! soil ground and wetland heat capacity 
+      do i = 1, nl_soil
+         vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
+         vf_ice(i) = wice_soisno(i)/(dz_soisno(i)*denice)
+         CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
+                             wf_gravels(i),wf_sand(i),k_solids(i),&
+                             csol(i),dkdry(i),dksatu(i),dksatf(i),&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4 
+                             BA_alpha(i),BA_beta(i),&
+#endif
+                             t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
+         cv(i) = hcap(i)*dz_soisno(i)
+      enddo
+      if(lb==1 .AND. scv>0.) cv(1) = cv(1) + cpice*scv
 
-! thermal conductivity
-      if(zi_soisno(0) < 0.)then
-         print*,'[groundtem],zi_soisno(0)',zi_soisno(0)
-         stop
+! Snow heat capacity
+      if(lb <= 0)then
+        cv(:0) = cpliq*wliq_soisno(:0) + cpice*wice_soisno(:0)
+      endif
+
+! Snow thermal conductivity
+      if(lb <= 0)then
+        do i = lb, 0
+          rhosnow = (wice_soisno(i)+wliq_soisno(i))/dz_soisno(i)
+
+        ! presently option [1] is the default option
+        ! [1] Jordan (1991) pp. 18
+          thk(i) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
+
+        ! [2] Sturm et al (1997)
+        ! thk(i) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
+        ! [3] Ostin and Andersson presented in Sturm et al., (1997)
+        ! thk(i) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
+        ! [4] Jansson(1901) presented in Sturm et al. (1997)
+        ! thk(i) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
+        ! [5] Douville et al., (1995)
+        ! thk(i) = 2.2*(rhosnow/denice)**1.88
+        ! [6] van Dusen (1992) presented in Sturm et al. (1997)
+        ! thk(i) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
+          
+        enddo
       endif
       
-      call hConductivity (patchtype,lb,nl_soil,&
-                          dkdry,dksatu,porsl,dz_soisno,z_soisno,zi_soisno,&
-                          t_soisno,wice_soisno,wliq_soisno,tk)
+! Thermal conductivity at the layer interface
+      do i = lb, nl_soil-1
 
+! the following consideration is try to avoid the snow conductivity
+! to be dominant in the thermal conductivity of the interface.
+! Because when the distance of bottom snow node to the interfacee
+! is larger than that of interface to top soil node,
+! the snow thermal conductivity will be dominant, and the result is that
+! lees heat tranfer between snow and soil
+         if((i==0) .AND. (z_soisno(i+1)-zi_soisno(i)<zi_soisno(i)-z_soisno(i)))then
+            tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
+            tk(i) = max(0.5*thk(i+1),tk(i))
+         else
+            tk(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
+                  /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
+         endif
+      enddo
+      tk(nl_soil) = 0.
+     
 ! net ground heat flux into the surface and its temperature derivative
       hs = sabg + dlrad*emg &
 ! 08/19/2021, yuan: remove sigf, LAI->100% cover
          !+ (1.-sigf)*emg*frl - emg*stefnc*t_soisno(lb)**4 &
          - emg*stefnc*t_soisno(lb)**4 &
-         - (fseng+fevpg*htvp) 
+         - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_soisno(lb)) &
+         + cpice * pg_snow * (t_precip - t_soisno(lb))
 
-      dhsdT = - cgrnd - 4.*emg * stefnc * t_soisno(lb)**3
+      dhsdT = - cgrnd - 4.*emg * stefnc * t_soisno(lb)**3 - cpliq * pg_rain - cpice * pg_snow
       t_soisno_bef(lb:) = t_soisno(lb:)
 
       j       = lb
@@ -162,7 +233,6 @@
 ! solve for t_soisno
       i = size(at)
       call tridia (i ,at ,bt ,ct ,rt ,t_soisno) 
-
 !=======================================================================
 ! melting or freezing 
 !=======================================================================
@@ -183,7 +253,6 @@
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf)
-
 !-----------------------------------------------------------------------
 
  end subroutine groundtem

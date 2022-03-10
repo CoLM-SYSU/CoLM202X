@@ -24,6 +24,8 @@ MODULE MOD_1D_PCFluxes
   REAL(r8), allocatable :: sabvsun_c (:,:) !solar absorbed by sunlit vegetation [W/m2]
   REAL(r8), allocatable :: sabvsha_c (:,:) !solar absorbed by shaded vegetation [W/m2]
   REAL(r8), allocatable :: qintr_c   (:,:) !interception (mm h2o/s)
+  REAL(r8), allocatable :: qintr_rain_c(:,:)!rainfall interception (mm h2o/s)
+  REAL(r8), allocatable :: qintr_snow_c(:,:)!snowfall interception (mm h2o/s)
   REAL(r8), allocatable :: assim_c   (:,:) !canopy assimilation rate (mol m-2 s-1)
   REAL(r8), allocatable :: respc_c   (:,:) !canopy respiration (mol m-2 s-1)
 
@@ -63,6 +65,8 @@ MODULE MOD_1D_PCFluxes
            allocate (sabvsun_c (0:N_PFT-1,numpc)) !solar absorbed by sunlit vegetation [W/m2]
            allocate (sabvsha_c (0:N_PFT-1,numpc)) !solar absorbed by shaded vegetation [W/m2]
            allocate (qintr_c   (0:N_PFT-1,numpc)) !interception (mm h2o/s)
+           allocate (qintr_rain_c(0:N_PFT-1,numpc))
+           allocate (qintr_snow_c(0:N_PFT-1,numpc))
            allocate (assim_c   (0:N_PFT-1,numpc)) !canopy assimilation rate (mol m-2 s-1)
            allocate (respc_c   (0:N_PFT-1,numpc)) !canopy respiration (mol m-2 s-1)
 
@@ -91,6 +95,8 @@ MODULE MOD_1D_PCFluxes
            deallocate (sabvsun_c )
            deallocate (sabvsha_c )
            deallocate (qintr_c   )
+           deallocate (qintr_rain_c)
+           deallocate (qintr_snow_c)
            deallocate (assim_c   )
            deallocate (respc_c   )
            

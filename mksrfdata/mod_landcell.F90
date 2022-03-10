@@ -27,7 +27,11 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      INTEGER :: icell
+      INTEGER :: icell, ncell_glb
+
+      IF (p_is_master) THEN
+         write(*,'(A)') 'Making land celles :'
+      ENDIF
 
       IF (p_is_worker) THEN
 
@@ -50,6 +54,21 @@ CONTAINS
 
       landcell%nset = numcell
       CALL landcell%set_vecgs 
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numcell, ncell_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', ncell_glb, ' cells on worker.'
+         ENDIF
+      ENDIF
+
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numunit, ' cells.'
+#endif
 
    END SUBROUTINE landcell_build
 #endif
@@ -84,9 +103,10 @@ CONTAINS
       INTEGER, allocatable :: unum_tmp(:), ltyp_tmp(:), istt_tmp(:), iend_tmp(:), iunt_tmp(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL, allocatable :: worker_done(:)
+      INTEGER :: ncell_glb
 
       IF (p_is_master) THEN
-         write(*,*) 'Making land celles :'
+         write(*,'(A)') 'Making land celles :'
       ENDIF
 
 #ifdef USEMPI
@@ -289,13 +309,27 @@ CONTAINS
          ENDDO
 #endif
 
-         write(*,'(I10,A16,I5)') numcell, ' cells on worker', p_iam_glb
 
       ENDIF
 
       landcell%nset = numcell
       CALL landcell%set_vecgs 
          
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numcell, ncell_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', ncell_glb, ' cells on worker.'
+         ENDIF
+      ENDIF
+
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numunit, ' cells.'
+#endif
+
    END SUBROUTINE landcell_build
 #endif
 

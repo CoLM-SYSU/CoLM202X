@@ -2,9 +2,13 @@
 
 include ../include/Makeoptions
 
-VPATH = ../share : ../mksrfdata : ../main
+VPATH = ../share : ../mksrfdata : ../main : ../hydro
 
 HEADER = ../include/define.h
+
+
+DEF  = $(shell grep -i cama_flood ../include/define.h)
+CaMa = $(word 1, ${DEF})
 
 # Name of executable
 EXECUTABLE = clm.x
@@ -26,11 +30,11 @@ OBJS_SHARED = \
 				  ../share/mod_block.o          \
 				  ../share/mod_grid.o           \
 				  ../share/mod_pixel.o          \
-				  ../share/mod_pixelset.o          \
 				  ../share/mod_data_type.o      \
 				  ../share/ncio_block.o  \
 				  ../share/mod_hydro_data.o \
 				  ../share/mod_landunit.o   \
+				  ../share/mod_pixelset.o          \
 				  ../share/ncio_vector.o \
 				  ../share/mod_colm_debug.o
 
@@ -42,6 +46,10 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landpatch.o \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o
+
+OBJS_HYDRO = \
+				  ../hydro/mod_soil_function.o \
+				  ../hydro/mod_soil_water.o
 
 OBJS =  \
 		  PFT_Const.o \
@@ -56,18 +64,21 @@ OBJS =  \
 		  MOD_1D_PFTFluxes.o          \
 		  MOD_1D_PCFluxes.o           \
 		  MOD_1D_Fluxes.o             \
+		  MOD_1D_cama_Fluxes.o        \
 		  MOD_1D_Forcing.o            \
 		  MOD_2D_Fluxes.o             \
+		  MOD_2D_cama_Fluxes.o        \
 		  MOD_2D_Forcing.o            \
 		  user_specified_forcing.o    \
 		  mod_forcing.o               \
 		  ThreeDCanopy.o              \
 		  ALBEDO.o                    \
 		  ASSIM_STOMATA_conductance.o \
+		  PlantHydraulic.o            \
 		  FRICTION_VELOCITY.o         \
 		  LEAF_temperature.o          \
 		  LEAF_temperature_PC.o       \
-		  SOIL_thermal_parameters.o   \
+		  soil_hcap_cond.o            \
 		  SOIL_SNOW_hydrology.o       \
 		  SNOW_Layers_CombineDivide.o \
 		  GLACIER.o                   \
@@ -78,6 +89,7 @@ OBJS =  \
 		  groundtem.o                 \
 		  LAI_empirical.o             \
 		  LAI_readin.o                \
+		  LAI_varied_readin.o         \
 		  LEAF_interception.o         \
 		  meltf.o                     \
 		  netsolar.o                  \
@@ -91,18 +103,23 @@ OBJS =  \
 		  tridia.o                    \
 		  wetbulb.o                   \
 		  MOD_1D_Acc_Fluxes.o         \
+		  MOD_1D_Acc_cama_Fluxes.o         \
 		  mod_hist.o                  \
+		  colm_CaMaMod.o              \
 		  CLMDRIVER.o                 \
 		  CLMMAIN.o                   \
 		  CLM.o                       
 
 ####################################################################
+ifneq (${CaMa},\#define)
+# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
-# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
-
-${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS} 
-	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS} -o $@ ${LDFLAGS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS} 
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM completed!'
+
+$(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
@@ -112,8 +129,37 @@ $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../mksrfdata
-
+else
 ####################################################################
+# The global river model CaMa-Flood (version 4.0.1)
+CaMa_DIR = ../CaMa_v404
+
+# CaMa Flood Model modules directories
+CaMa_MODS = -I$(CaMa_DIR)/src
+
+# CaMa Flood Model libs (static) directories
+CaMa_LIBS = $(CaMa_DIR)/src/libcama.a
+#--------------------------------------------
+
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS}
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS} ${CaMa_LIBS} -o $@ ${LDFLAGS}
+	@echo 'making CLM with CaMa Flood Model completed!'
+	
+$(OBJS) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
+
+$(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
+
+$(OBJS_SHARED) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
+
+$(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../mksrfdata
+	
+$(OBJS_MKCAMA) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../CaMa_v401/src
+endif
 
 clean :
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod ${EXECUTABLE}

@@ -40,8 +40,7 @@ MODULE LAKE
             snowdp    , lake_icefrac ) 
 
 !=======================================================================
-! Add new snow nodes. 
-! Created by Yongjiu Dai, December, 2012
+! Add new snow nodes.        ! Created by Yongjiu Dai, December, 2012
 !                            April, 2014
 ! Revised by Nan Wei,          May, 2014
 !=======================================================================
@@ -53,8 +52,8 @@ MODULE LAKE
   integer, INTENT(in) :: maxsnl    ! maximum number of snow layers
   integer, INTENT(in) :: nl_lake   ! number of soil layers
   real(r8), INTENT(in) :: deltim   ! seconds in a time step [second]
-  real(r8), INTENT(in) :: pg_rain  ! liquid water onto ground [kg/(m2 s)]
-  real(r8), INTENT(in) :: pg_snow  ! ice onto ground [kg/(m2 s)]
+  real(r8), INTENT(inout) :: pg_rain  ! liquid water onto ground [kg/(m2 s)]
+  real(r8), INTENT(inout) :: pg_snow  ! ice onto ground [kg/(m2 s)]
   real(r8), INTENT(in) :: t_precip ! snowfall/rainfall temperature [kelvin]
   real(r8), INTENT(in) :: bifall   ! bulk density of newly fallen dry snow [kg/m3]
 
@@ -103,31 +102,33 @@ MODULE LAKE
           h = denh2o*dz_lake(1)*(1-lake_icefrac(1))*hfus                    !all lake surface water frozen
           sag = 0.0
 
-          if (lake_icefrac(1) >= 0.999) then
+          if (lake_icefrac(1) > 0.999) then
               ! all rainfall frozen, release heat to warm up frozen lake surface 
               if (a+b<=c) then 
                   tw=min(tfrz,t_precip)
-                  t_lake(1)=(a+b+cpice*(pg_rain+pg_snow)*deltim*tw+cpice*denh2o*dz_lake(1)*t_lake(1))/&
-                            (cpice*denh2o*dz_lake(1)+cpice*(pg_rain+pg_snow)*deltim)
+                  t_lake(1)=(a+b+cpice*(pg_rain+pg_snow)*deltim*tw+cpice*denh2o*dz_lake(1)*t_lake(1)*lake_icefrac(1))/&
+                            (cpice*denh2o*dz_lake(1)*lake_icefrac(1)+cpice*(pg_rain+pg_snow)*deltim)
                   scv = scv+pg_rain*deltim
                   snowdp = snowdp + pg_rain*deltim/bifall
+                  pg_snow = pg_snow+pg_rain
+                  pg_rain = 0.0
               ! prec tem at tfrz, partial rainfall frozen ->release heat -> warm up lake surface to tfrz (no latent heat)
               else if (a<=c) then
                   t_lake(1)=tfrz
                   scv = scv + (c-a)/hfus
                   snowdp = snowdp + (c-a)/(hfus*bifall)
+                  pg_snow = pg_snow + min(pg_rain,(c-a)/(hfus*deltim))
+                  pg_rain = max(0.0,pg_rain - (c-a)/(hfus*deltim))
               ! lake surface tem at tfrz, partial lake surface melt -> absorb heat -> cool down rainfall to tfrz (no latent heat)
               else if (a<=c+d) then
                   t_lake(1)=tfrz
                   wice_lake(1) = denh2o*dz_lake(1) - (a-c)/hfus
                   wliq_lake(1) = (a-c)/hfus
-                  lake_icefrac(1) = (wice_lake(1)+scv)/(wice_lake(1) + wliq_lake(1)+scv)
+                  lake_icefrac(1) = wice_lake(1)/(wice_lake(1) + wliq_lake(1))
               ! all lake surface melt, absorb heat to cool down rainfall 
               else  !(a>c+d)
                   t_lake(1)=(cpliq*pg_rain*deltim*t_precip+cpliq*denh2o*dz_lake(1)*tfrz-c-d)/&
                             (cpliq*denh2o*dz_lake(1)+cpliq*pg_rain*deltim)
-                  scv = 0.0
-                  snowdp = 0.0
                   lake_icefrac(1) = 0.0
               end if
 
@@ -148,19 +149,16 @@ MODULE LAKE
           else if (lake_icefrac(1) >= 0.001) then
               if (pg_rain > 0.0 .and. pg_snow > 0.0) then
                   t_lake(1)=tfrz
-                  lake_icefrac(1) = (denh2o*dz_lake(1)*lake_icefrac(1)+scv)/(denh2o*dz_lake(1)+scv)
               else if (pg_rain > 0.0) then
                   if (a>=d) then
                       t_lake(1)=(cpliq*pg_rain*deltim*t_precip+cpliq*denh2o*dz_lake(1)*tfrz-d)/&
                                 (cpliq*denh2o*dz_lake(1)+cpliq*pg_rain*deltim)
-                      scv = 0.0
-                      snowdp = 0.0
                       lake_icefrac(1) = 0.0
                   else
                       t_lake(1)=tfrz
                       wice_lake(1) = denh2o*dz_lake(1)*lake_icefrac(1) - a/hfus
                       wliq_lake(1) = denh2o*dz_lake(1)*(1-lake_icefrac(1)) + a/hfus
-                      lake_icefrac(1) = (wice_lake(1)+scv)/(wice_lake(1) + wliq_lake(1)+scv)
+                      lake_icefrac(1) = wice_lake(1)/(wice_lake(1) + wliq_lake(1))
                   end if
               else if (pg_snow > 0.0) then
                   if (e>=h) then
@@ -171,7 +169,7 @@ MODULE LAKE
                       t_lake(1)=tfrz
                       wice_lake(1) = denh2o*dz_lake(1)*lake_icefrac(1) + e/hfus
                       wliq_lake(1) = denh2o*dz_lake(1)*(1-lake_icefrac(1)) - e/hfus
-                      lake_icefrac(1) = (wice_lake(1)+scv)/(wice_lake(1) + wliq_lake(1)+scv)
+                      lake_icefrac(1) = wice_lake(1)/(wice_lake(1) + wliq_lake(1))
                   end if
               end if
 
@@ -179,21 +177,25 @@ MODULE LAKE
               ! all snowfall melt, absorb heat to cool down lake surface water
               if (e+f<=g) then
                   tw=max(tfrz,t_precip)
-                  t_lake(1)=(cpliq*denh2o*dz_lake(1)*t_lake(1)+cpliq*(pg_rain+pg_snow)*deltim*tw-e-f)/&
-                            (cpliq*(pg_rain+pg_snow)*deltim+cpliq*denh2o*dz_lake(1))
-                  scv = 0.0
-                  snowdp = 0.0
+                  t_lake(1)=(cpliq*denh2o*dz_lake(1)*t_lake(1)*(1-lake_icefrac(1))+cpliq*(pg_rain+pg_snow)*deltim*tw-e-f)/&
+                            (cpliq*(pg_rain+pg_snow)*deltim+cpliq*denh2o*dz_lake(1)*(1-lake_icefrac(1)))
+                  scv = scv - pg_snow*deltim
+                  snowdp = snowdp - dz_snowf*deltim
+                  pg_rain = pg_rain + pg_snow
+                  pg_snow = 0.0
               ! prec tem at tfrz, partial snowfall melt ->absorb heat -> cool down lake surface to tfrz (no latent heat)
               else if (e<=g) then
                   t_lake(1) = tfrz
                   scv = scv - (g-e)/hfus
                   snowdp = snowdp - (g-e)/(hfus*bifall)
+                  pg_rain = pg_rain + min(pg_snow, (g-e)/(hfus*deltim))
+                  pg_snow = max(0.0, pg_snow - (g-e)/(hfus*deltim))
               ! lake surface tem at tfrz, partial lake surface frozen -> release heat -> warm up snowfall to tfrz (no latent heat)
               else if (e<=g+h) then
                   t_lake(1) = tfrz
                   wice_lake(1) = (e-g)/hfus
                   wliq_lake(1) = denh2o*dz_lake(1) - (e-g)/hfus
-                  lake_icefrac(1) = (wice_lake(1)+scv)/(wice_lake(1) + wliq_lake(1)+scv)
+                  lake_icefrac(1) = wice_lake(1)/(wice_lake(1) + wliq_lake(1))
               ! all lake surface frozen, release heat to warm up snowfall
               else       !(e>g+h)
                   t_lake(1) = (g+h+cpice*denh2o*dz_lake(1)*tfrz+cpice*pg_snow*deltim*t_precip)/&
@@ -240,20 +242,25 @@ MODULE LAKE
   subroutine laketem (&
            ! "in" arguments
            ! -------------------
-           patchtype    , maxsnl      , nl_soil      , nl_lake   ,&
+           itypwat      , maxsnl      , nl_soil      , nl_lake   ,&
            dlat         , deltim      , forc_hgt_u   , forc_hgt_t,&
            forc_hgt_q   , forc_us     , forc_vs      , forc_t    ,&
            forc_q       , forc_rhoair , forc_psrf    , forc_sols ,&
            forc_soll    , forc_solsd  , forc_solld   , sabg      ,&
            forc_frl     , dz_soisno   , z_soisno     , zi_soisno ,&
-           dz_lake      , lakedepth   , csol         , porsl     ,&
-           dkdry        , dksatu      , &
+           dz_lake      , lakedepth   , vf_quartz    , vf_gravels,&
+           vf_om        , vf_sand     , wf_gravels   , wf_sand   ,&
+           porsl        , csol        , k_solids     , &
+           dksatu       , dksatf      , dkdry        , &
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha     , BA_beta     , &
+#endif
 
            ! "inout" arguments
            ! -------------------
            t_grnd       , scv         , snowdp       , t_soisno  ,&
            wliq_soisno  , wice_soisno , imelt_soisno , t_lake    ,&
-           lake_icefrac , &
+           lake_icefrac , savedtke1, &
 
            ! "out" arguments
            ! -------------------
@@ -269,7 +276,7 @@ MODULE LAKE
 ! purpose: lake temperature and snow on frozen lake
 ! initial  Yongjiu Dai, 2000
 !          Zack Subin, 2009
-!          Yongjiu Dai, /12/2012/, /04/2014/
+!          Yongjiu Dai, /12/2012/, /04/2014/, 06/2018
 !          Nan Wei, /05/2014/
 !
 ! ------------------------ notes ----------------------------------
@@ -316,11 +323,10 @@ MODULE LAKE
   use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
   use FRICTION_VELOCITY
-  use SOIL_thermal_parameters
 
   IMPLICIT NONE
 ! ------------------------ input/output variables -----------------
-  integer, INTENT(in) :: patchtype! land water type (4=deep lake, 5=shallow lake)
+  integer, INTENT(in) :: itypwat  ! land water type (4=deep lake, 5=shallow lake)
   integer, INTENT(in) :: maxsnl   ! maximum number of snow layers
   integer, INTENT(in) :: nl_soil  ! number of soil layers
   integer, INTENT(in) :: nl_lake  ! number of lake layers
@@ -350,10 +356,23 @@ MODULE LAKE
   real(r8), INTENT(in) :: dz_lake(nl_lake)  ! lake layer thickness (m)
   real(r8), INTENT(in) :: lakedepth         ! column lake depth (m)
 
-  real(r8), INTENT(in) :: csol  (1:nl_soil) ! heat capacity of soil soilds [J/(m3 K)]
-  real(r8), INTENT(in) :: porsl (1:nl_soil) ! soil porosity
-  real(r8), INTENT(in) :: dkdry (1:nl_soil) ! thermal conductivity for dry soil [W/m-K]
-  real(r8), INTENT(in) :: dksatu(1:nl_soil) ! Thermal conductivity of saturated soil [W/m-K]
+  real(r8), INTENT(in) :: vf_quartz (1:nl_soil) ! volumetric fraction of quartz within mineral soil
+  real(r8), INTENT(in) :: vf_gravels(1:nl_soil) ! volumetric fraction of gravels
+  real(r8), INTENT(in) :: vf_om     (1:nl_soil) ! volumetric fraction of organic matter
+  real(r8), INTENT(in) :: vf_sand   (1:nl_soil) ! volumetric fraction of sand
+  real(r8), INTENT(in) :: wf_gravels(1:nl_soil) ! gravimetric fraction of gravels
+  real(r8), INTENT(in) :: wf_sand   (1:nl_soil) ! gravimetric fraction of sand
+  real(r8), INTENT(in) :: porsl(1:nl_soil) ! soil porosity [-]
+
+  real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil solids [J/(m3 K)]
+  real(r8), INTENT(in) :: k_solids(1:nl_soil) ! thermal conductivity of mineralssoil [W/m-K]
+  real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
+  real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
+  real(r8), INTENT(in) :: dkdry(1:nl_soil)  ! thermal conductivity of dry soil [W/m-K]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+  real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+  real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
 
   real(r8), INTENT(inout) :: t_grnd  ! surface temperature (kelvin)
   real(r8), INTENT(inout) :: scv     ! snow water equivalent [mm]
@@ -366,6 +385,7 @@ MODULE LAKE
 
   real(r8), INTENT(inout) :: t_lake(nl_lake)       ! lake temperature (kelvin)
   real(r8), INTENT(inout) :: lake_icefrac(nl_lake) ! lake mass fraction of lake layer that is frozen
+  real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K) 
 
   real(r8), INTENT(out) :: taux   ! wind stress: E-W [kg/m/s**2]
   real(r8), INTENT(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
@@ -451,8 +471,10 @@ MODULE LAKE
   real(r8) z0hg     ! roughness length over ground, sensible heat [m]
   real(r8) z0qg     ! roughness length over ground, latent heat [m]
 
-  real(r8) wliq_lake(nl_lake) ! lake liquid water (kg/m2)
-  real(r8) wice_lake(nl_lake) ! lake ice lens (kg/m2)
+  real(r8) wliq_lake(nl_lake)  ! lake liquid water (kg/m2)
+  real(r8) wice_lake(nl_lake)  ! lake ice lens (kg/m2)
+  real(r8) vf_water(1:nl_soil) ! volumetric fraction liquid water within underlying soil
+  real(r8) vf_ice(1:nl_soil)   ! volumetric fraction ice len within underlying soil
 
   real(r8) fgrnd1  ! ground heat flux into the first snow/lake layer [W/m2]
 
@@ -491,6 +513,8 @@ MODULE LAKE
   real(r8) tk_lake(1:nl_lake)          ! thermal conductivity at layer node [W/(m K)]
   real(r8) cv_soisno(maxsnl+1:nl_soil) ! heat capacity of soil/snow [J/(m2 K)] 
   real(r8) tk_soisno(maxsnl+1:nl_soil) ! thermal conductivity of soil/snow [W/(m K)] (at interface below, except for j=0) 
+  real(r8) hcap(1:nl_soil)           ! J/(m3 K)
+  real(r8) thk(maxsnl+1:nl_soil)     ! W/(m K)
   real(r8) tktopsoil                   ! thermal conductivity of the top soil layer [W/(m K)]
 
   real(r8) t_soisno_bef(maxsnl+1:nl_soil) ! beginning soil/snow temp for E cons. check [K]
@@ -550,7 +574,7 @@ MODULE LAKE
   real(r8) h_fin     ! 
   real(r8) h_finDT   ! 
   real(r8) del_T_grnd   ! 
-  real(r8) savedtke1
+!  real(r8) savedtke1
 
   integer iter       ! iteration index
   integer convernum  ! number of time when del_T_grnd < 0.01
@@ -577,7 +601,7 @@ MODULE LAKE
 ! ======================================================================
 
 ! constants for lake temperature model
-      za = (/0.6, 0.5/)    
+      za = (/0.5, 0.6/)    
       cwat = cpliq*denh2o     ! water heat capacity per unit volume
       cice_eff = cpice*denh2o ! use water density because layer depth is not adjusted for freezing
       cfus = hfus*denh2o      ! latent heat per unit volume
@@ -635,38 +659,6 @@ MODULE LAKE
          betaprime = 1.0
       end if
 
-      if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0)) then      !no snow cover, unfrozen layer lakes
-         do j = 1, nl_lake
-            ! extinction coefficient from surface data (1/m), if no eta from surface data,
-            ! set eta, the extinction coefficient, according to L Hakanson, Aquatic Sciences, 1995
-            ! (regression of secchi depth with lake depth for small glacial basin lakes), and the
-            ! Poole & Atkins expression for extinction coeffient of 1.7 / secchi Depth (m).
-
-            eta = 1.1925*max(lakedepth,1.)**(-0.424)
-
-            zin  = z_lake(j) - 0.5*dz_lake(j)
-            zout = z_lake(j) + 0.5*dz_lake(j)
-            rsfin  = exp( -eta*max(  zin-za(idlak),0. ) )  ! the radiation within surface layer (z<za)
-            rsfout = exp( -eta*max( zout-za(idlak),0. ) )  ! is considered fixed at (1-beta)*sabg
-                                                           ! i.e, max(z-za, 0)
-            ! Let rsfout for bottom layer go into soil.
-            ! This looks like it should be robust even for pathological cases,
-            ! like lakes thinner than za(idlak).
-
-            phi(j) = (rsfin-rsfout) * sabg * (1.-betaprime)
-            if (j == nl_lake) phi_soil = rsfout * sabg * (1.-betaprime)
-         end do
-      else if (snl == 0) then     !no snow-covered layers, but partially frozen 
-          phi(1) = sabg * (1.-betaprime)
-          phi(2:nl_lake) = 0.
-          phi_soil = 0.
-       else   ! snow covered, this should be improved upon; Mironov 2002 suggests that SW can penetrate thin ice and may
-            ! cause spring convection.
-         phi(:) = 0.
-         phi_soil = 0.
-      end if
-
-
       call qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 ! potential temperatur at the reference height
       beta1=1.       ! -  (in computing W_*)
@@ -688,7 +680,6 @@ MODULE LAKE
 ! Roughness lengths, allow all roughness lengths to be prognostic
       ustar=0.06
       wc=0.5
-      z0mg = 0.04
 
     ! Kinematic viscosity of dry air (m2/s)- Andreas (1989) CRREL Rep. 89-11
       visa=1.326e-5*(1.+6.542e-3*(forc_t-tfrz) &
@@ -713,149 +704,12 @@ MODULE LAKE
 
       call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
 
-! ----------------------------------------------------------------------
-
       if (snl == 0) then
          dzsur = dz_lake(1)/2.
       else
          dzsur = z_soisno(lb)-zi_soisno(lb-1)
       end if
 
-!------------------------------------------------------------
-! Lake density
-!------------------------------------------------------------
-
-      do j = 1, nl_lake
-         rhow(j) = (1.-lake_icefrac(j))*denh2o*(1.0-1.9549e-05*(abs(t_lake(j)-277.))**1.68) &
-                     + lake_icefrac(j)*denice
-         ! allow for ice fraction; assume constant ice density.
-         ! this is not the correct average-weighting but that's OK because the density will only
-         ! be used for convection for lakes with ice, and the ice fraction will dominate the
-         ! density differences between layers.
-         ! using this average will make sure that surface ice is treated properly during
-         ! convective mixing.
-      end do
-
-!------------------------------------------------------------
-! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
-!------------------------------------------------------------
-
-      do j = 1, nl_lake
-         cv_lake(j) = dz_lake(j) * (cwat*(1.-lake_icefrac(j)) + cice_eff*lake_icefrac(j))
-      end do
-
-      call hConductivity_lake(nl_lake,snl,t_grnd,&
-                              z_lake,t_lake,lake_icefrac,rhow,&
-                              dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake,savedtke1)
-
-!------------------------------------------------------------
-! Set the thermal properties of the snow above frozen lake and underlying soil 
-! and check initial energy content.
-!------------------------------------------------------------
-
-      lb = snl+1
-      call hCapacity (patchtype,lb,nl_soil,csol,porsl,&
-                      wice_soisno(lb:),wliq_soisno(lb:),scv,dz_soisno(lb:),cv_soisno(lb:))
-
-
-      call hConductivity (patchtype,lb,nl_soil,&
-                          dkdry,dksatu,porsl,&
-                          dz_soisno(lb:),z_soisno(lb:),zi_soisno(lb-1:),&
-                          t_soisno(lb:),wice_soisno(lb:),wliq_soisno(lb:),&
-                          tk_soisno(lb:),tktopsoil)
-
-
-! Sum cv_lake*t_lake for energy check
-! Include latent heat term, and use tfrz as reference temperature
-! to prevent abrupt change in heat content due to changing heat capacity with phase change.
-
-      ! This will need to be over all soil / lake / snow layers. Lake is below.
-      ocvts = 0.
-      do j = 1, nl_lake
-         ocvts = ocvts + cv_lake(j)*(t_lake(j)-tfrz) + cfus*dz_lake(j)*(1.-lake_icefrac(j))
-      end do
-
-      ! Now do for soil / snow layers
-      do j = lb, nl_soil
-         ocvts = ocvts + cv_soisno(j)*(t_soisno(j)-tfrz) + hfus*wliq_soisno(j)
-         if (j == 1 .and. scv > 0. .and. j == lb) then
-            ocvts = ocvts - scv*hfus
-         end if
-      end do
-
-      ! Set up solar source terms (phix)
-      phix(:) = 0.
-      phix(1:nl_lake) = phi(1:nl_lake)         !lake layer
-      phix(nl_lake+1) = phi_soil               !top soil layer
-
-      ! Set up interface depths(zx), and temperatures (tx).
-
-      do j = lb, nl_lake+nl_soil
-         jprime = j - nl_lake
-         if (j <= 0) then                      !snow layer
-            zx(j) = z_soisno(j)
-            tx(j) = t_soisno(j)
-         else if (j <= nl_lake) then           !lake layer
-            zx(j) = z_lake(j)
-            tx(j) = t_lake(j)
-         else                                  !soil layer
-            zx(j) = z_lake(nl_lake) + dz_lake(nl_lake)/2. + z_soisno(jprime)
-            tx(j) = t_soisno(jprime)
-         end if
-      end do
-
-      tx_bef = tx
-
-
-! Heat capacity and resistance of snow without snow layers (<1cm) is ignored during diffusion,
-! but its capacity to absorb latent heat may be used during phase change.
-
-      do j = lb, nl_lake+nl_soil
-         jprime = j - nl_lake
-
-         ! heat capacity [J/(m2 K)]
-         if (j <= 0) then                      !snow layer
-            cvx(j) = cv_soisno(j)
-         else if (j <= nl_lake) then           !lake layer
-            cvx(j) = cv_lake(j)
-         else                                  !soil layer
-            cvx(j) = cv_soisno(jprime)
-         end if
-
-! Determine interface thermal conductivities at layer interfaces [W/(m K)]
-
-         if (j < 0) then                       !non-bottom snow layer
-            tkix(j) = tk_soisno(j)
-         else if (j == 0) then                 !bottom snow layer
-            dzp = zx(j+1) - zx(j)
-            tkix(j) = tk_lake(1)*tk_soisno(j)*dzp &
-                    /(tk_soisno(j)*z_lake(1) + tk_lake(1)*(-zx(j)))
-                               ! tk_soisno(0) is the conductivity at the middle of that layer
-         else if (j < nl_lake) then            !non-bottom lake layer
-            tkix(j) = (tk_lake(j)*tk_lake(j+1) * (dz_lake(j+1)+dz_lake(j))) &
-                    / (tk_lake(j)*dz_lake(j+1) + tk_lake(j+1)*dz_lake(j))
-         else if (j == nl_lake) then           !bottom lake layer
-            dzp = zx(j+1) - zx(j)
-            tkix(j) = (tktopsoil*tk_lake(j)*dzp &
-                    / (tktopsoil*dz_lake(j)/2. + tk_lake(j)*z_soisno(1)))
-         else !soil layer
-            tkix(j) = tk_soisno(jprime)
-         end if
-
-      end do
-
-! Determine heat diffusion through the layer interface and factor used in computing
-! tridiagonal matrix and set up vector r and vectors a, b, c that define tridiagonal
-! matrix and solve system
-
-      do j = lb, nl_lake+nl_soil
-         factx(j) = deltim/cvx(j)
-         if (j < nl_lake+nl_soil) then         !top or interior layer
-            fnx(j) = tkix(j)*(tx(j+1)-tx(j))/(zx(j+1)-zx(j))
-         else                                  !bottom soil layer
-            fnx(j) = 0. !not used
-         end if
-      end do
 
       iter = 1
       del_T_grnd = 1.0    ! t_grnd diff
@@ -874,7 +728,7 @@ MODULE LAKE
          t_grnd_bef = t_grnd
 
          if (t_grnd_bef > tfrz .and. t_lake(1) > tfrz .and. snl == 0) then
-            tksur = tkwat       !water molecular conductivity
+            tksur = savedtke1       !water molecular conductivity
             tsur = t_lake(1)
             htvp = hvap
          else if (snl == 0) then !frozen but no snow layers
@@ -886,7 +740,7 @@ MODULE LAKE
           ! need to calculate thermal conductivity of the top snow layer
             rhosnow = (wice_soisno(lb)+wliq_soisno(lb))/dz_soisno(lb)
             tksur = tkair + (7.75e-5*rhosnow + 1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
-            tsur = tx(lb)
+            tsur = t_soisno(lb)
             htvp = hsub
          end if
 
@@ -970,7 +824,7 @@ MODULE LAKE
 !*to freezing temperature, then this value should be used in the derivative correction term.
 !*Allow convection if ground temp is colder than lake but warmer than 4C, or warmer than
 !*lake which is warmer than freezing but less than 4C.
-    tdmax = tfrz +4.
+    tdmax = tfrz + 4.0
     if ( (snl < 0 .or. t_lake(1) <= tfrz) .and. t_grnd > tfrz) then
        t_grnd_bef = t_grnd
        t_grnd = tfrz
@@ -1003,6 +857,204 @@ MODULE LAKE
 ! snow and lake and soil layer temperature
 !------------------------------------------------------------
        
+!------------------------------------------------------------
+! Lake density
+!------------------------------------------------------------
+
+      do j = 1, nl_lake
+         rhow(j) = (1.-lake_icefrac(j))*denh2o*(1.0-1.9549e-05*(abs(t_lake(j)-277.))**1.68) &
+                     + lake_icefrac(j)*denice
+         ! allow for ice fraction; assume constant ice density.
+         ! this is not the correct average-weighting but that's OK because the density will only
+         ! be used for convection for lakes with ice, and the ice fraction will dominate the
+         ! density differences between layers.
+         ! using this average will make sure that surface ice is treated properly during
+         ! convective mixing.
+      end do
+
+!------------------------------------------------------------
+! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
+!------------------------------------------------------------
+
+      do j = 1, nl_lake
+         cv_lake(j) = dz_lake(j) * (cwat*(1.-lake_icefrac(j)) + cice_eff*lake_icefrac(j))
+      end do
+
+      call hConductivity_lake(nl_lake,snl,t_grnd,&
+                              z_lake,t_lake,lake_icefrac,rhow,&
+                              dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake,savedtke1)
+
+!------------------------------------------------------------
+! Set the thermal properties of the snow above frozen lake and underlying soil 
+! and check initial energy content.
+!------------------------------------------------------------
+
+      lb = snl+1
+      do i = 1, nl_soil
+         vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
+         vf_ice(i) = wice_soisno(i)/(dz_soisno(i)*denice)
+         CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
+                             wf_gravels(i),wf_sand(i),k_solids(i),&
+                             csol(i),dkdry(i),dksatu(i),dksatf(i),&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+                             BA_alpha(i),BA_beta(i),&
+#ENDIF
+                             t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
+         cv_soisno(i) = hcap(i)*dz_soisno(i)
+      enddo
+
+! Snow heat capacity and conductivity
+      if(lb <=0 )then
+        do j = lb, 0
+           cv_soisno(j) = cpliq*wliq_soisno(j) + cpice*wice_soisno(j)
+           rhosnow = (wice_soisno(j)+wliq_soisno(j))/dz_soisno(j)
+           thk(j) = tkair + (7.75e-5*rhosnow + 1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
+        enddo
+      endif
+
+! Thermal conductivity at the layer interface
+      do i = lb, nl_soil-1
+
+! the following consideration is try to avoid the snow conductivity 
+! to be dominant in the thermal conductivity of the interface. 
+! Because when the distance of bottom snow node to the interfacee 
+! is larger than that of interface to top soil node,
+! the snow thermal conductivity will be dominant, and the result is that 
+! lees heat tranfer between snow and soil 
+
+! modified by Nan Wei, 08/25/2014
+         if (i /= 0) then
+            tk_soisno(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
+                  /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
+         else 
+            tk_soisno(i) = thk(i)
+         end if
+      end do
+      tk_soisno(nl_soil) = 0.
+      tktopsoil = thk(1)
+
+! Sum cv_lake*t_lake for energy check
+! Include latent heat term, and use tfrz as reference temperature
+! to prevent abrupt change in heat content due to changing heat capacity with phase change.
+
+      ! This will need to be over all soil / lake / snow layers. Lake is below.
+      ocvts = 0.
+      do j = 1, nl_lake
+         ocvts = ocvts + cv_lake(j)*(t_lake(j)-tfrz) + cfus*dz_lake(j)*(1.-lake_icefrac(j))
+      end do
+
+      ! Now do for soil / snow layers
+      do j = lb, nl_soil
+         ocvts = ocvts + cv_soisno(j)*(t_soisno(j)-tfrz) + hfus*wliq_soisno(j)
+         if (j == 1 .and. scv > 0. .and. j == lb) then
+            ocvts = ocvts - scv*hfus
+         end if
+      end do
+
+      ! Set up solar source terms (phix)
+
+      if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0)) then      !no snow cover, unfrozen layer lakes
+         do j = 1, nl_lake
+            ! extinction coefficient from surface data (1/m), if no eta from surface data,
+            ! set eta, the extinction coefficient, according to L Hakanson, Aquatic Sciences, 1995
+            ! (regression of secchi depth with lake depth for small glacial basin lakes), and the
+            ! Poole & Atkins expression for extinction coeffient of 1.7 / secchi Depth (m).
+
+            eta = 1.1925*max(lakedepth,1.)**(-0.424)
+            zin  = z_lake(j) - 0.5*dz_lake(j)
+            zout = z_lake(j) + 0.5*dz_lake(j)
+            rsfin  = exp( -eta*max(  zin-za(idlak),0. ) )  ! the radiation within surface layer (z<za)
+            rsfout = exp( -eta*max( zout-za(idlak),0. ) )  ! is considered fixed at (1-beta)*sabg
+                                                           ! i.e, max(z-za, 0)
+            ! Let rsfout for bottom layer go into soil.
+            ! This looks like it should be robust even for pathological cases,
+            ! like lakes thinner than za(idlak).
+
+            phi(j) = (rsfin-rsfout) * sabg * (1.-betaprime)
+            if (j == nl_lake) phi_soil = rsfout * sabg * (1.-betaprime)
+         end do
+      else if (snl == 0) then     !no snow-covered layers, but partially frozen 
+          phi(1) = sabg * (1.-betaprime)
+          phi(2:nl_lake) = 0.
+          phi_soil = 0.
+      else   ! snow covered, this should be improved upon; Mironov 2002 suggests that SW can penetrate thin ice and may
+            ! cause spring convection.
+         phi(:) = 0.
+         phi_soil = 0.
+      end if
+
+      phix(:) = 0.
+      phix(1:nl_lake) = phi(1:nl_lake)         !lake layer
+      phix(nl_lake+1) = phi_soil               !top soil layer
+
+      ! Set up interface depths(zx), and temperatures (tx).
+
+      do j = lb, nl_lake+nl_soil
+         jprime = j - nl_lake
+         if (j <= 0) then                      !snow layer
+            zx(j) = z_soisno(j)
+            tx(j) = t_soisno(j)
+         else if (j <= nl_lake) then           !lake layer
+            zx(j) = z_lake(j)
+            tx(j) = t_lake(j)
+         else                                  !soil layer
+            zx(j) = z_lake(nl_lake) + dz_lake(nl_lake)/2. + z_soisno(jprime)
+            tx(j) = t_soisno(jprime)
+         end if
+      end do
+
+      tx_bef = tx
+
+
+! Heat capacity and resistance of snow without snow layers (<1cm) is ignored during diffusion,
+! but its capacity to absorb latent heat may be used during phase change.
+
+      do j = lb, nl_lake+nl_soil
+         jprime = j - nl_lake
+
+         ! heat capacity [J/(m2 K)]
+         if (j <= 0) then                      !snow layer
+            cvx(j) = cv_soisno(j)
+         else if (j <= nl_lake) then           !lake layer
+            cvx(j) = cv_lake(j)
+         else                                  !soil layer
+            cvx(j) = cv_soisno(jprime)
+         end if
+
+! Determine interface thermal conductivities at layer interfaces [W/(m K)]
+
+         if (j < 0) then                       !non-bottom snow layer
+            tkix(j) = tk_soisno(j)
+         else if (j == 0) then                 !bottom snow layer
+            dzp = zx(j+1) - zx(j)
+            tkix(j) = tk_lake(1)*tk_soisno(j)*dzp &
+                    /(tk_soisno(j)*z_lake(1) + tk_lake(1)*(-zx(j)))
+                               ! tk_soisno(0) is the conductivity at the middle of that layer
+         else if (j < nl_lake) then            !non-bottom lake layer
+            tkix(j) = (tk_lake(j)*tk_lake(j+1) * (dz_lake(j+1)+dz_lake(j))) &
+                    / (tk_lake(j)*dz_lake(j+1) + tk_lake(j+1)*dz_lake(j))
+         else if (j == nl_lake) then           !bottom lake layer
+            dzp = zx(j+1) - zx(j)
+            tkix(j) = (tktopsoil*tk_lake(j)*dzp &
+                    / (tktopsoil*dz_lake(j)/2. + tk_lake(j)*z_soisno(1)))
+         else !soil layer
+            tkix(j) = tk_soisno(jprime)
+         end if
+
+      end do
+
+! Determine heat diffusion through the layer interface and factor used in computing
+! tridiagonal matrix and set up vector r and vectors a, b, c that define tridiagonal
+! matrix and solve system
+
+      do j = lb, nl_lake+nl_soil
+         factx(j) = deltim/cvx(j)
+         if (j < nl_lake+nl_soil) then         !top or interior layer
+            fnx(j) = tkix(j)*(tx(j+1)-tx(j))/(zx(j+1)-zx(j))
+         else                                  !bottom soil layer
+            fnx(j) = 0. !not used
+         end if
+      end do
 
          do j = lb, nl_lake+nl_soil
             if (j == lb) then                     ! top layer
@@ -1229,7 +1281,7 @@ MODULE LAKE
          nav = 0.
          iceav = 0.
 
-         if (rhow(j)>rhow(j+1) .or. (lake_icefrac(j)<=1.0 .and. lake_icefrac(j+1)>0.)) then
+         if (rhow(j)>rhow(j+1) .or. (lake_icefrac(j)<1.0 .and. lake_icefrac(j+1)>0.)) then
             do i = 1, j+1
                qav = qav + dz_lake(i)*(t_lake(i)-tfrz) * & 
                        ((1. - lake_icefrac(i))*cwat + lake_icefrac(i)*cice_eff)
@@ -1516,6 +1568,7 @@ MODULE LAKE
               scv = 0.
               snowdp = 0.
               snl = 0
+        ! lake partially freezing to melt all snow
            else if(c+d >= a+b)then
               t_lake(1) = tfrz
               sm = sm + scv/deltim
@@ -1523,11 +1576,12 @@ MODULE LAKE
               snowdp = 0.
               snl = 0
               lake_icefrac(1) = (a+b-c)/d
-            !  snow do not melt while lake freezing
-            else if(c+d < a) then
-             t_lake(1) = (c+d + cpice*(sumsnowice*t_ave+denh2o*dz_lake(1)*tfrz) + cpliq*sumsnowliq*t_ave)/&
-                        (cpice*(sumsnowice+denh2o*dz_lake(1))+cpliq*sumsnowliq)
-             lake_icefrac(1) = 1.0
+
+        !  snow do not melt while all lake freezing
+        !    else if(c+d < a) then
+        !     t_lake(1) = (c+d + cpice*(sumsnowice*t_ave+denh2o*dz_lake(1)*tfrz) + cpliq*sumsnowliq*t_ave)/&
+        !                (cpice*(sumsnowice+denh2o*dz_lake(1))+cpliq*sumsnowliq)
+        !     lake_icefrac(1) = 1.0
             end if
       end if
 
@@ -1552,6 +1606,7 @@ MODULE LAKE
 
          if (wliq_soisno(j) > porsl(j)*denh2o*dz_soisno(j)) then
              wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
+             wice_soisno(j) = 0.0
          endif
       end do
 
@@ -1588,7 +1643,7 @@ MODULE LAKE
   real(r8) kva    ! kinematic viscosity of air at ground temperature and forcing pressure
   real(r8) sqre0  ! root of roughness Reynolds number
 
-      if ((t_grnd > tfrz .and. snl == 0)) then
+      if (t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0) then
           kva = kva0 * (t_grnd/293.15)**1.5 * 1.013e5/forc_psrf ! kinematic viscosity of air
           z0mg = max(cus*kva/max(ustar,1.e-4),cur*ustar*ustar/grav) ! momentum roughness length
           z0mg = max(z0mg, 1.0e-5) ! This limit is redundant with current values.
@@ -1696,7 +1751,6 @@ MODULE LAKE
             if (lakedepth >= depthcrit) then
                kme(j) = kme(j) * mixfact    ! Mixing enhancement factor for lake deep than 25m.
             end if
-
             tk_lake(j) = kme(j)*cwat
          else
             kme(j) = km
@@ -1711,7 +1765,6 @@ MODULE LAKE
       end do
 
       kme(nl_lake) = kme(nl_lake-1)
-
        savedtke1 = kme(1)*cwat
 
       if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0) ) then

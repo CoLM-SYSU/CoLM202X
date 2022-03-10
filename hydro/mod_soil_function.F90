@@ -14,6 +14,8 @@ module mod_soil_function
    ! Modified van Genuchten & Mualem model by introducing an air-entry value 
    ! Ippisch et al. (2006), Advances in Water Resources, 29(12), 1780-1789. 
 
+   REAL(r8), parameter :: minsmp = -1.e8
+
    PUBLIC :: get_derived_parameters_vGM 
 
    public :: soil_psi_from_vliq 
@@ -115,6 +117,9 @@ contains
       soil_psi_from_vliq = - ((esat*prms(4))**(- 1.0_r8/m_vgm) - 1.0_r8)**(1.0_r8/prms(2)) &
          / prms(1)
 #endif
+
+      soil_psi_from_vliq = max(soil_psi_from_vliq, minsmp) 
+      
 
    end function soil_psi_from_vliq
 

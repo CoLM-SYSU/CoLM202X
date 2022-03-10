@@ -17,7 +17,16 @@ SAVE
       real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
       real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]
       real(r8), allocatable :: h2osoi (:,:)     ! volumetric soil water in layers [m3/m3]
-      real(r8), allocatable :: rstfac   (:)     ! factor of soil water stress 
+      real(r8), allocatable :: smp(:,:)         ! soil matrix potential [mm]
+      real(r8), allocatable :: hk (:,:)         ! hydraulic conductivity [mm h2o/s]
+      real(r8), allocatable :: rootr(:,:)       ! water exchange between soil and root. Positive: soil->root [?]
+#ifdef PLANT_HYDRAULIC_STRESS
+      real(r8), allocatable :: vegwp(:,:)       ! vegetation water potential [mm]
+      real(r8), allocatable :: gs0sun   (:)     ! working copy of sunlit stomata conductance
+      real(r8), allocatable :: gs0sha   (:)     ! working copy of shalit stomata conductance
+#endif
+      real(r8), allocatable :: rstfacsun(:)     ! factor of soil water stress on sunlit leaf
+      real(r8), allocatable :: rstfacsha(:)     ! factor of soil water stress on shaded leaf
       real(r8), allocatable :: t_grnd   (:)     ! ground surface temperature [K]
 
       real(r8), allocatable :: tleaf    (:)     ! leaf temperature [K]
@@ -45,9 +54,13 @@ SAVE
       real(r8), allocatable :: zwt      (:)     ! the depth to water table [m]
       real(r8), allocatable :: wa       (:)     ! water storage in aquifer [mm]
       real(r8), allocatable :: wat      (:)     ! total water storage [mm]
+#ifdef VARIABLY_SATURATED_FLOW
+      real(r8), allocatable :: dpond    (:)     ! depth of ponding water
+#endif
 
       real(r8), allocatable :: t_lake(:,:)      ! lake layer teperature [K]
       real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
+      real(r8), allocatable :: savedtke1(:)     ! top level eddy conductivity (W/m K) 
 
       real(r8), allocatable :: trad     (:) ! radiative temperature of surface [K]
       real(r8), allocatable :: tref     (:) ! 2 m height air temperature [kelvin]
@@ -110,8 +123,17 @@ SAVE
         allocate (t_soisno   (maxsnl+1:nl_soil,numpatch))
         allocate (wliq_soisno(maxsnl+1:nl_soil,numpatch))
         allocate (wice_soisno(maxsnl+1:nl_soil,numpatch))
-        allocate (h2osoi     (1:nl_soil,       numpatch))
-        allocate (rstfac               (numpatch))
+        allocate (smp        (1:nl_soil,numpatch))
+        allocate (hk         (1:nl_soil,numpatch))
+        allocate (h2osoi     (1:nl_soil,numpatch))
+        allocate (rootr      (1:nl_soil,numpatch))
+#ifdef PLANT_HYDRAULIC_STRESS
+        allocate (vegwp      (1:nvegwcs,numpatch))
+        allocate (gs0sun               (numpatch))
+        allocate (gs0sha               (numpatch))
+#endif
+        allocate (rstfacsun            (numpatch))
+        allocate (rstfacsha            (numpatch))
         allocate (t_grnd               (numpatch))
         allocate (tleaf                (numpatch))
         allocate (ldew                 (numpatch))
@@ -138,9 +160,13 @@ SAVE
         allocate (zwt                  (numpatch))
         allocate (wa                   (numpatch))
         allocate (wat                  (numpatch))
+#ifdef VARIABLY_SATURATED_FLOW
+        allocate (dpond                (numpatch))
+#endif
 
         allocate (t_lake       (nl_lake,numpatch))    !new lake scheme
         allocate (lake_icefrac (nl_lake,numpatch))    !new lake scheme
+        allocate (savedtke1            (numpatch))    !new lake scheme
 
         allocate (trad                 (numpatch))
         allocate (tref                 (numpatch))
@@ -198,8 +224,17 @@ SAVE
            deallocate (t_soisno    )
            deallocate (wliq_soisno )
            deallocate (wice_soisno )
+           deallocate (smp )
+           deallocate (hk  )
            deallocate (h2osoi )
-           deallocate (rstfac )
+           deallocate (rootr  )
+           deallocate (rstfacsun )
+           deallocate (rstfacsha )
+#ifdef PLANT_HYDRAULIC_STRESS 
+           deallocate (vegwp  )
+           deallocate (gs0sun )
+           deallocate (gs0sha )
+#endif
            deallocate (t_grnd )
            deallocate (tleaf  )
            deallocate (ldew   )
@@ -226,9 +261,13 @@ SAVE
            deallocate (zwt    )
            deallocate (wa     )
            deallocate (wat    )
+#ifdef VARIABLY_SATURATED_FLOW
+           deallocate (dpond  )
+#endif
 
            deallocate (t_lake )      ! new lake scheme
            deallocate (lake_icefrac) ! new lake scheme
+           deallocate (savedtke1)    ! new lake scheme
 
            deallocate (trad   )
            deallocate (tref   )
@@ -329,7 +368,12 @@ SAVE
      
      CALL ncio_define_dimension_vector (file_restart, 'snow',     -maxsnl       )
      CALL ncio_define_dimension_vector (file_restart, 'soilsnow', nl_soil-maxsnl)
+     CALL ncio_define_dimension_vector (file_restart, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, 'lake',     nl_lake)
+
+#ifdef PLANT_HYDRAULIC_STRESS
+     CALL ncio_define_dimension_vector (file_restart, 'vegnodes', nvegwcs)
+#endif
      
      CALL ncio_define_dimension_vector (file_restart, 'band',   2)
      CALL ncio_define_dimension_vector (file_restart, 'wetdry', 2)
@@ -340,6 +384,13 @@ SAVE
      call ncio_write_vector (file_restart, 't_soisno'   , 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, t_soisno   , compress) !  soil temperature [K]
      call ncio_write_vector (file_restart, 'wliq_soisno', 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, wliq_soisno, compress) !  liquid water in layers [kg/m2]
      call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, wice_soisno, compress) !  ice lens in layers [kg/m2]
+     call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'vector', landpatch, smp, compress) !  soil matrix potential [mm]
+     call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'vector', landpatch, hk, compress) !  hydraulic conductivity [mm h2o/s]
+#ifdef PLANT_HYDRAULIC_STRESS
+     call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'vector', landpatch, vegwp, compress) !  vegetation water potential [mm]
+     call ncio_write_vector (file_restart, 'gs0sun  ',    'vector', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
+     call ncio_write_vector (file_restart, 'gs0sha  ',    'vector', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
+#endif
      call ncio_write_vector (file_restart, 't_grnd  '   , 'vector', landpatch, t_grnd    , compress) !  ground surface temperature [K]
      call ncio_write_vector (file_restart, 'tleaf   '   , 'vector', landpatch, tleaf     , compress) !  leaf temperature [K]
      call ncio_write_vector (file_restart, 'ldew    '   , 'vector', landpatch, ldew      , compress) !  depth of water on foliage [mm]
@@ -363,9 +414,13 @@ SAVE
      call ncio_write_vector (file_restart, 'extkd   '   , 'vector', landpatch, extkd     , compress) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_write_vector (file_restart, 'zwt     '   , 'vector', landpatch, zwt       , compress) !  the depth to water table [m]
      call ncio_write_vector (file_restart, 'wa      '   , 'vector', landpatch, wa        , compress) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
+     call ncio_write_vector (file_restart, 'dpond   '   , 'vector', landpatch, dpond     , compress) ! depth of ponding water
+#endif
 
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'vector', landpatch, t_lake      , compress) !
      call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'vector', landpatch, lake_icefrac, compress) !
+     call ncio_write_vector (file_restart, 'savedtke1  ', 'vector', landpatch, savedtke1   , compress) !
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM) 
      call ncio_write_vector (file_restart, 'trad ', 'vector', landpatch, trad , compress) !     radiative temperature of surface [K]
@@ -405,7 +460,9 @@ SAVE
      use mod_namelist
      use spmd_task
      use ncio_vector
-     use mod_colm_debug
+#ifdef CLMDEBUG 
+   USE mod_colm_debug
+#endif
      USE mod_landpatch
      USE GlobalVars
 #ifdef PFT_CLASSIFICATION
@@ -442,6 +499,13 @@ SAVE
      call ncio_read_vector (file_restart, 't_soisno'   , nl_soil-maxsnl, landpatch, t_soisno   ) !  soil temperature [K]
      call ncio_read_vector (file_restart, 'wliq_soisno', nl_soil-maxsnl, landpatch, wliq_soisno) !  liquid water in layers [kg/m2]
      call ncio_read_vector (file_restart, 'wice_soisno', nl_soil-maxsnl, landpatch, wice_soisno) !  ice lens in layers [kg/m2]
+     call ncio_read_vector (file_restart, 'smp',         nl_soil,        landpatch, smp        ) !  soil matrix potential [mm]
+     call ncio_read_vector (file_restart, 'hk',          nl_soil,        landpatch, hk         ) !  hydraulic conductivity [mm h2o/s]
+#ifdef PLANT_HYDRAULIC_STRESS
+     call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) !  vegetation water potential [mm]
+     call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) !  working copy of sunlit stomata conductance
+     call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) !  working copy of shalit stomata conductance
+#endif
      call ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) !  ground surface temperature [K]
      call ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) !  leaf temperature [K]
      call ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) !  depth of water on foliage [mm]
@@ -465,9 +529,13 @@ SAVE
      call ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) !  the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
+     call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
+#endif
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
+     call ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1) !
 
      ! Additional variables required by reginal model (such as WRF ) RSM) 
      call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) !     radiative temperature of surface [K]
@@ -532,6 +600,13 @@ SAVE
      call check_vector_data ('t_soisno    ', t_soisno   ) !  soil temperature [K]
      call check_vector_data ('wliq_soisno ', wliq_soisno) !  liquid water in layers [kg/m2]
      call check_vector_data ('wice_soisno ', wice_soisno) !  ice lens in layers [kg/m2]
+     call check_vector_data ('smp         ', smp        ) !  soil matrix potential [mm]
+     call check_vector_data ('hk          ', hk         ) !  hydraulic conductivity [mm h2o/s]
+#ifdef PLANT_HYDRAULIC_STRESS
+     call check_vector_data ('vegwp       ', vegwp      ) !  vegetation water potential [mm]
+     call check_vector_data ('gs0sun      ', gs0sun     ) !  working copy of sunlit stomata conductance
+     call check_vector_data ('gs0sha      ', gs0sha     ) !  working copy of shalit stomata conductance
+#endif
      call check_vector_data ('t_grnd      ', t_grnd     ) !  ground surface temperature [K]
      call check_vector_data ('tleaf       ', tleaf      ) !  leaf temperature [K]
      call check_vector_data ('ldew        ', ldew       ) !  depth of water on foliage [mm]
@@ -555,8 +630,12 @@ SAVE
      call check_vector_data ('extkd       ', extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call check_vector_data ('zwt         ', zwt        ) !  the depth to water table [m]
      call check_vector_data ('wa          ', wa         ) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
+     call check_vector_data ('dpond       ', dpond      ) !  depth of ponding water
+#endif
      call check_vector_data ('t_lake      ', t_lake      ) !
      call check_vector_data ('lake_icefrc ', lake_icefrac) !
+     call check_vector_data ('savedtke1   ', savedtke1   ) !
 
 #if (defined PFT_CLASSIFICATION)
      CALL check_PFTimeVars

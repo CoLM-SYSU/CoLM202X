@@ -50,11 +50,12 @@ CONTAINS
 #ifdef PFT_CLASSIFICATION
       INTEGER, allocatable :: ptype(:)
 #endif
+      INTEGER :: npatch_glb
 
       INTEGER :: iblk, jblk
 
       IF (p_is_master) THEN
-         write(*,*) 'Making land patches :'
+         write(*,'(A)') 'Making land patches :'
       ENDIF
 
 #ifdef USEMPI
@@ -314,8 +315,6 @@ CONTAINS
          ENDDO
 #endif
 
-         write(*,'(I10,A18,I5)') numpatch, ' patches on worker', p_iam_glb
-
       ENDIF
 
       landpatch%nset = numpatch
@@ -330,6 +329,21 @@ CONTAINS
          
       CALL landpatch%pset_pack (msk, numpatch)
 #endif 
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches on worker.'
+         ENDIF
+      ENDIF
+      
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
+#endif
 
    END SUBROUTINE landpatch_build
 
