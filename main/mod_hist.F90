@@ -1593,7 +1593,7 @@ end subroutine flux_map_and_write_2d_cama
 
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
-      integer :: xdsp, ydsp, xcnt, ycnt
+      integer :: xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
       integer :: rmesg(3), smesg(3), isrc
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
@@ -1605,6 +1605,7 @@ end subroutine flux_map_and_write_2d_cama
             allocate (vdata (hist_block_info%ginfo%nlon, hist_block_info%ginfo%nlat))
             vdata(:,:) = spval
 
+#ifdef USEMPI
             do idata = 1, hist_block_info%ndatablk
                call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, &
                   hist_data_id, p_comm_glb, p_stat, p_err)
@@ -1613,8 +1614,8 @@ end subroutine flux_map_and_write_2d_cama
                ixseg = rmesg(2)
                iyseg = rmesg(3)
                      
-               xdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ydsp = hist_block_info%ysegs(iyseg)%gdsp
+               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt = hist_block_info%xsegs(ixseg)%cnt
                ycnt = hist_block_info%ysegs(iyseg)%cnt
 
@@ -1623,10 +1624,29 @@ end subroutine flux_map_and_write_2d_cama
                call mpi_recv (rbuf, xcnt*ycnt, MPI_DOUBLE, &
                   isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
-               vdata (xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt) = rbuf
+               vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = rbuf
                deallocate (rbuf)
 
             end do
+#else
+            do iyseg = 1, hist_block_info%nyseg
+               do ixseg = 1, hist_block_info%nxseg
+                  iblk = hist_block_info%xsegs(ixseg)%blk
+                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
+                     xcnt = hist_block_info%xsegs(ixseg)%cnt
+                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+
+                     vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                        wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                  ENDIF
+               ENDDO
+            end do
+#endif
 
             IF (present(longname) .and. present(units)) THEN
                call ncio_write_serial_time (filename, dataname, itime, vdata, &
@@ -1637,8 +1657,10 @@ end subroutine flux_map_and_write_2d_cama
             ENDIF
 
             deallocate (vdata)
+         ENDIF
 
-         elseif (p_is_io) then
+#ifdef USEMPI
+         if (p_is_io) then
             do iyseg = 1, hist_block_info%nyseg
                do ixseg = 1, hist_block_info%nxseg
 
@@ -1647,13 +1669,13 @@ end subroutine flux_map_and_write_2d_cama
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ydsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
                      xcnt = hist_block_info%xsegs(ixseg)%cnt
                      ycnt = hist_block_info%ysegs(iyseg)%cnt
 
                      allocate (sbuf (xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
+                     sbuf = wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
 
                      smesg = (/p_iam_glb, ixseg, iyseg/)
                      call mpi_send (smesg, 3, MPI_INTEGER, &
@@ -1667,6 +1689,7 @@ end subroutine flux_map_and_write_2d_cama
                end do
             end do
          end if
+#endif
 
          hist_data_id = hist_data_id + 1
 
@@ -1720,7 +1743,7 @@ end subroutine flux_map_and_write_2d_cama
 
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
-      integer :: xdsp, ydsp, xcnt, ycnt, ndim1
+      integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp 
       integer :: rmesg(4), smesg(4), isrc
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
@@ -1728,7 +1751,8 @@ end subroutine flux_map_and_write_2d_cama
       if (trim(DEF_HIST_mode) == 'one') then
 
          if (p_is_master) then
-                  
+            
+#ifdef USEMPI
             do idata = 1, hist_block_info%ndatablk
             
                call mpi_recv (rmesg, 4, MPI_INTEGER, MPI_ANY_SOURCE, &
@@ -1739,8 +1763,8 @@ end subroutine flux_map_and_write_2d_cama
                iyseg = rmesg(3)
                ndim1 = rmesg(4)
                
-               xdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ydsp = hist_block_info%ysegs(iyseg)%gdsp
+               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt = hist_block_info%xsegs(ixseg)%cnt
                ycnt = hist_block_info%ysegs(iyseg)%cnt
 
@@ -1754,10 +1778,33 @@ end subroutine flux_map_and_write_2d_cama
                   vdata(:,:,:) = spval
                ENDIF
 
-               vdata (:,xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
+               vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
 
                deallocate (rbuf)
             end do
+#else
+            ndim1 = wdata%ub1 - wdata%lb1 + 1
+            allocate (vdata (ndim1, hist_block_info%ginfo%nlon, hist_block_info%ginfo%nlat))
+            vdata(:,:,:) = spval
+                  
+            do iyseg = 1, hist_block_info%nyseg
+               do ixseg = 1, hist_block_info%nxseg
+                  iblk = hist_block_info%xsegs(ixseg)%blk
+                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
+                     xcnt = hist_block_info%xsegs(ixseg)%cnt
+                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+
+                     vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                        wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                  ENDIF
+               end do
+            ENDDO
+#endif
 
             call ncio_define_dimension (filename, dim1name, ndim1) 
 
@@ -1770,8 +1817,10 @@ end subroutine flux_map_and_write_2d_cama
             ENDIF
 
             deallocate (vdata)
+         ENDIF
 
-         elseif (p_is_io) then
+#ifdef USEMPI
+         if (p_is_io) then
 
             do iyseg = 1, hist_block_info%nyseg
                do ixseg = 1, hist_block_info%nxseg
@@ -1781,14 +1830,14 @@ end subroutine flux_map_and_write_2d_cama
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ydsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
                      xcnt = hist_block_info%xsegs(ixseg)%cnt
                      ycnt = hist_block_info%ysegs(iyseg)%cnt
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
 
                      allocate (sbuf (ndim1,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
+                     sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
 
                      smesg = (/p_iam_glb, ixseg, iyseg, ndim1/)
                      call mpi_send (smesg, 4, MPI_INTEGER, &
@@ -1801,6 +1850,7 @@ end subroutine flux_map_and_write_2d_cama
                end do
             end do
          end if
+#endif
 
          hist_data_id = hist_data_id + 1
 
@@ -1855,7 +1905,7 @@ end subroutine flux_map_and_write_2d_cama
       character (len=*), intent(in), optional :: units
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
-      integer :: xdsp, ydsp, xcnt, ycnt, ndim1, ndim2
+      integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
       integer :: rmesg(5), smesg(5), isrc
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:,:), sbuf(:,:,:,:), vdata(:,:,:,:)
@@ -1864,6 +1914,7 @@ end subroutine flux_map_and_write_2d_cama
 
          if (p_is_master) then
                
+#ifdef USEMPI
             do idata = 1, hist_block_info%ndatablk
 
                call mpi_recv (rmesg, 5, MPI_INTEGER, MPI_ANY_SOURCE, &
@@ -1875,8 +1926,8 @@ end subroutine flux_map_and_write_2d_cama
                ndim1 = rmesg(4)
                ndim2 = rmesg(4)
 
-               xdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ydsp = hist_block_info%ysegs(iyseg)%gdsp
+               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt = hist_block_info%xsegs(ixseg)%cnt
                ycnt = hist_block_info%ysegs(iyseg)%cnt
 
@@ -1890,10 +1941,35 @@ end subroutine flux_map_and_write_2d_cama
                   vdata(:,:,:,:) = spval
                ENDIF 
 
-               vdata (:,:,xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
+               vdata (:,:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
 
                deallocate (rbuf)
             end do
+#else
+            ndim1 = wdata%ub1 - wdata%lb1 + 1
+            ndim2 = wdata%ub2 - wdata%lb2 + 1
+            allocate (vdata (ndim1,ndim2,hist_block_info%ginfo%nlon,hist_block_info%ginfo%nlat))
+            vdata(:,:,:,:) = spval
+
+            do iyseg = 1, hist_block_info%nyseg
+               do ixseg = 1, hist_block_info%nxseg
+                  iblk = hist_block_info%xsegs(ixseg)%blk
+                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
+                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
+                     xcnt = hist_block_info%xsegs(ixseg)%cnt
+                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+
+                     vdata (:,:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                        wdata%blk(iblk,jblk)%val(:,:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+                  ENDIF
+               ENDDO
+            ENDDO
+
+#endif
             
             call ncio_define_dimension (filename, dim1name, ndim1) 
             call ncio_define_dimension (filename, dim2name, ndim2) 
@@ -1907,8 +1983,10 @@ end subroutine flux_map_and_write_2d_cama
             ENDIF
 
             deallocate (vdata)
+         ENDIF
 
-         elseif (p_is_io) then
+#ifdef USEMPI
+         if (p_is_io) then
 
             do iyseg = 1, hist_block_info%nyseg
                do ixseg = 1, hist_block_info%nxseg
@@ -1918,15 +1996,15 @@ end subroutine flux_map_and_write_2d_cama
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ydsp = hist_block_info%ysegs(iyseg)%bdsp
+                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
+                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
                      xcnt = hist_block_info%xsegs(ixseg)%cnt
                      ycnt = hist_block_info%ysegs(iyseg)%cnt
 
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
                      ndim2 = size(wdata%blk(iblk,jblk)%val,2)
                      allocate (sbuf (ndim1,ndim2,xcnt,ycnt))
-                     sbuf = wdata%blk(iblk,jblk)%val(:,:,xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
+                     sbuf = wdata%blk(iblk,jblk)%val(:,:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
 
                      smesg = (/p_iam_glb, ixseg, iyseg, ndim1, ndim2/)
                      call mpi_send (smesg, 5, MPI_INTEGER, &
@@ -1939,6 +2017,7 @@ end subroutine flux_map_and_write_2d_cama
                end do
             end do
          end if
+#endif
 
          hist_data_id = hist_data_id + 1
 

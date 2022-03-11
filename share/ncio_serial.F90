@@ -9,6 +9,8 @@ MODULE ncio_serial
 
    PUBLIC :: ncio_create_file
 
+   PUBLIC :: ncio_put_attr
+
    PUBLIC :: ncio_inquire_length
 
    INTERFACE ncio_read_serial
@@ -89,6 +91,27 @@ CONTAINS
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_create_file
+
+   ! ----
+   SUBROUTINE ncio_put_attr (filename, varname, attrname, attrval)
+
+      USE netcdf
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in)  :: filename, varname, attrname, attrval
+
+      ! Local Variables
+      INTEGER :: ncid, varid
+
+      CALL nccheck( nf90_open (trim(filename), NF90_WRITE, ncid) )
+      CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
+      CALL nccheck (nf90_redef (ncid))
+      CALL nccheck (nf90_put_att (ncid, varid, trim(attrname), trim(attrval)))
+      CALL nccheck (nf90_enddef (ncid))
+      CALL nccheck( nf90_close (ncid))
+
+   END SUBROUTINE ncio_put_attr
+
 
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_varsize (filename, dataname, varsize)

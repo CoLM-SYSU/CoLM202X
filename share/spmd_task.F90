@@ -107,7 +107,7 @@ CONTAINS
       CHARACTER(len=5)   :: cnum
 
       ! 1. Determine number of groups
-      ngrp = (p_np_glb-1) / groupsize
+      ngrp = max((p_np_glb-1) / groupsize, 1)
       ngrp = min(ngrp, numblocks)
 
       IF (ngrp <= 0) THEN

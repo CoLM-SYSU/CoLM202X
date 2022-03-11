@@ -1,7 +1,5 @@
 #include <define.h>
 
-#ifdef PC_CLASSIFICATION
-
 MODULE LEAF_temperature_PC
 
 !-----------------------------------------------------------------------
@@ -70,7 +68,7 @@ MODULE LEAF_temperature_PC
   USE FRICTION_VELOCITY
   USE ASSIM_STOMATA_conductance
 #ifdef PLANT_HYDRAULIC_STRESS
-  use PlantHydraulic, only : PlantHydraulicStress_twoleaf
+  USE PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
   IMPLICIT NONE
  
@@ -184,7 +182,7 @@ MODULE LEAF_temperature_PC
         ldew,       &! depth of water on foliage [mm]
         rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha    ! factor of soil water stress to transpiration on shaded leaf
-
+  
   REAL(r8), intent(inout) :: &
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
@@ -327,7 +325,7 @@ MODULE LEAF_temperature_PC
    ! .................................................................
 
    INTEGER , parameter :: nlay = 3
-   ! REAL(r8), parameter :: pi   = 3.14159265358979323846_r8  !pi
+!   REAL(r8), parameter :: pi   = 3.14159265358979323846_r8  !pi
 
    REAL(r8), parameter :: &
         c1   = 0.320,  &! parameter to calculate drag coefficients of Massman's method
@@ -988,17 +986,17 @@ MODULE LEAF_temperature_PC
           
                 clev = canlev(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
-              
+
 #ifdef PLANT_HYDRAULIC_STRESS
-            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&   
-                     dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&   
-                     qaf(clev) ,tl(i)     ,tl(i)      ,rbsun      ,rbsha      ,&   
-                     raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&   
-                     cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&   
+            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
+                     dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
+                     qaf(clev) ,tl(i)     ,tl(i)      ,rbsun      ,rbsha      ,&
+                     raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&
+                     cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&
                      sai(i)    ,kmax_sun(i),kmax_sha(i),kmax_xyl(i),kmax_root(i),&
-                     psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&   
-                     ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&   
-                     etrsun(i) ,etrsha(i) ,rootr(:,i) ,sigf(i)    ,qg         ,&   
+                     psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&
+                     ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&
+                     etrsun(i) ,etrsha(i) ,rootr(:,i) ,sigf(i)    ,qg         ,&
                      qm        ,gs0sun(i) ,gs0sha(i)  ,k_soil_root,k_ax_root  )
             etr(i) = etrsun(i) + etrsha(i)
 #endif
@@ -1016,7 +1014,7 @@ MODULE LEAF_temperature_PC
                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,&
-                   parsha(i)  ,rbsha      ,raw       ,rstfacsha(i),cintsha(:,i),&
+                   parsha(i)  ,rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
                    assimsha(i),respcsha(i),rssha(i)     )
 
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -1027,8 +1025,8 @@ MODULE LEAF_temperature_PC
 
             gb_mol_sun(i) = 1./rbsun * tprcor/tl(i) / cintsun(3,i) * 1.e6  ! leaf to canopy
             gb_mol_sha(i) = 1./rbsha * tprcor/tl(i) / cintsha(3,i) * 1.e6  ! leaf to canopy
-#endif
-
+#endif             
+             
              ELSE
                 rssun(i) = 2.e4; assimsun(i) = 0.; respcsun(i) = 0.
                 rssha(i) = 2.e4; assimsha(i) = 0.; respcsha(i) = 0.
@@ -1134,7 +1132,7 @@ MODULE LEAF_temperature_PC
           ! to solve taf(:) and qaf(:)
           IF (numlay .eq. 1) THEN 
 
-             taf(toplay) = wta0(toplay)*thm + wtg0(toplay)*tg + wtll(toplay)
+             taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg +  wtll(toplay)
              qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
              fact = 1.
              facq = 1.
@@ -1151,7 +1149,7 @@ MODULE LEAF_temperature_PC
              facq  = 1. - wtgq0(toplay)*wtaq0(botlay)
              qaf(toplay) = ( wtaq0(toplay)*qm + wtgq0(toplay)*tmpw1 + wtlql(toplay) ) / facq
              
-             taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
+             taf(botlay) =  wta0(botlay)*taf(toplay) +  wtg0(botlay)*tg +  wtll(botlay)
              qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
 
           ENDIF
@@ -1159,7 +1157,7 @@ MODULE LEAF_temperature_PC
           IF (numlay .eq. 3) THEN 
 
              tmpw1 = wta0(3)*thm + wtll(3)
-             tmpw2 = wtg0(1)*tg + wtll(1)
+             tmpw2 = wtg0(1)*tg  + wtll(1)
              fact  = 1. - wta0(2)*wtg0(3) - wtg0(2)*wta0(1) 
              taf(2) = ( wta0(2)*tmpw1 + wtg0(2)*tmpw2 + wtll(2) ) / fact
 
@@ -1168,10 +1166,10 @@ MODULE LEAF_temperature_PC
              facq  = 1. - wtaq0(2)*wtgq0(3) - wtgq0(2)*wtaq0(1)
              qaf(2) = ( wtaq0(2)*tmpw1 + wtgq0(2)*tmpw2 + wtlql(2) ) / facq
 
-             taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
+             taf(1) =  wta0(1)*taf(2) +  wtg0(1)*tg +  wtll(1)
              qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
              
-             taf(3) = wta0(3)*thm + wtg0(3)*taf(2) + wtll(3)
+             taf(3) = wta0(3)*thm +  wtg0(3)*taf(2) +  wtll(3)
              qaf(3) = wtaq0(3)*qm + wtgq0(3)*qaf(2) + wtlql(3)
 
           ENDIF
@@ -1285,7 +1283,7 @@ MODULE LEAF_temperature_PC
                        * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
                        * ( qsatl(i) - qaf(clev) )
 #endif
-                ! 09/25/2017: re-written 
+                ! 09/25/2017: re-written
                 IF (numlay < 3 .or. clev == 2) THEN
                    etr_dtl(i) = rhoair * (1.-fwet(i)) * delta(i) &
                       * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
@@ -1310,12 +1308,12 @@ MODULE LEAF_temperature_PC
                    etr(i) = etrc(i)
                    etr_dtl(i) = 0.
                 ENDIF
-#ENDIF
- 
+#endif
+
                 evplwet(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
                            * ( qsatl(i) - qaf(clev) )
 
-                ! 09/25/2017: re-written 
+                ! 09/25/2017: re-written
                 IF (numlay < 3 .or. clev == 2) THEN
                    evplwet_dtl(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
                       * (1. - wtlq0(i)/facq)*qsatlDT(i)
@@ -1331,7 +1329,7 @@ MODULE LEAF_temperature_PC
                          * (1. - wtgq0(3)*wtaq0(2)*wtlq0(i)/facq - wtlq0(i))*qsatlDT(i)
                    ENDIF
                 ENDIF
- 
+
                 ! 03/02/2018: convert evplwet from fc to whole area
                 ! because ldew right now is for the whole area
                 ! 09/05/2019: back to fc area
@@ -1340,17 +1338,17 @@ MODULE LEAF_temperature_PC
 ! 01/07/2020, yuan: bug? 不会产生计算的错误
                    evplwet_dtl(i) = 0.
                 ENDIF
-  
+
                 fevpl(i) = etr(i) + evplwet(i)
                 fevpl_dtl(i) = etr_dtl(i) + evplwet_dtl(i)
- 
+
                 erre(i) = 0.
                 fevpl_noadj(i) = fevpl(i)
-                IF ( fevpl(i)*fevpl_bef(i) < 0. ) THEN 
+                IF ( fevpl(i)*fevpl_bef(i) < 0. ) THEN
                    erre(i)  = -0.9*fevpl(i)
                    fevpl(i) =  0.1*fevpl(i)
                 ENDIF
- 
+
 !-----------------------------------------------------------------------
 ! difference of temperatures by quasi-newton-raphson method for the non-linear system equations
 !-----------------------------------------------------------------------
@@ -1417,8 +1415,10 @@ MODULE LEAF_temperature_PC
  
           IF (numlay .eq. 1) THEN 
 
-             taf(toplay) =  wta0(toplay)*thm + wtg0(toplay)*tg + wtll(toplay)
+             taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
              qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+             fact = 1.
+             facq = 1.
 
           ENDIF
           
@@ -1553,6 +1553,7 @@ MODULE LEAF_temperature_PC
                + fsenl_dtl(i) + hvap*fevpl_dtl(i) + cpliq*qintr_rain(i) + cpice*qintr_snow(i)) &
                ! add the imbalanced energy below due to q adjustment to sensibel heat
                + hvap*erre(i)
+ 
              etr0(i)    = etr(i)
              etr(i)     = etr(i)     +     etr_dtl(i)*dtl(it-1,i)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -1577,7 +1578,8 @@ MODULE LEAF_temperature_PC
              
              fevpl(i) = fevpl(i) - elwdif
              fsenl(i) = fsenl(i) + hvap*elwdif
-             hprl(i) = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i)) 
+             hprl(i) = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))
+
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
@@ -1620,15 +1622,6 @@ MODULE LEAF_temperature_PC
 ! fluxes from ground to canopy space
 !-----------------------------------------------------------------------
 
-! for check purpose ONLY
-! taf = wta0*thm + wtg0*tg + wtl0*tl 
-! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
-! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
-! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
-! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
-! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
-! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
-       
        fseng = cpair*rhoair*cgh(botlay)*(tg-taf(botlay))
        fevpg = rhoair*cgw(botlay)*(qg-qaf(botlay))
 
@@ -1636,8 +1629,14 @@ MODULE LEAF_temperature_PC
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
 
-       cgrnds = cpair*rhoair*cgh(botlay)*(1.-wtg0(botlay))
-       cgrndl = rhoair*cgw(botlay)*(1.-wtgq0(botlay))*dqgdT
+       !NOTE: 当numlay<3时，无论如何计算求解，/fact一致
+       IF (numlay < 3) THEN
+          cgrnds = cpair*rhoair*cgh(botlay)*(1.-wtg0(botlay)/fact)
+          cgrndl = rhoair*cgw(botlay)*(1.-wtgq0(botlay)/fact)*dqgdT
+       ELSE
+          cgrnds = cpair*rhoair*cgh(botlay)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
+          cgrndl = rhoair*cgw(botlay)*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgdT
+       ENDIF
        cgrnd  = cgrnds + cgrndl*htvp
 
 !-----------------------------------------------------------------------
@@ -2295,5 +2294,3 @@ MODULE LEAF_temperature_PC
   END SUBROUTINE cal_z0_displa
 
 END MODULE LEAF_temperature_PC
-
-#endif

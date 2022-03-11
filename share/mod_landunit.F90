@@ -643,6 +643,9 @@ CONTAINS
          blkcnt(:,:) = 0
          DO iu = 1, numunit
 
+            xblk = lunit(iu)%xblk
+            yblk = lunit(iu)%yblk
+
             blkcnt(xblk,yblk) = blkcnt(xblk,yblk) + 1
             ju = blkdsp(xblk,yblk) + blkcnt(xblk,yblk)
 

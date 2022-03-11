@@ -173,7 +173,7 @@ CONTAINS
       iend = landpatch%iend(ipatch)
 
       npxl = iend - istt + 1
-      allocate (pctout (0:N_PFT-1,npxl))
+      allocate (pctout (0:N_PFT-1,istt:iend))
 
       IF (present(data2)) allocate (dout2 (istt:iend))
       IF (present(data3)) allocate (dout3 (0:N_PFT-1,istt:iend))

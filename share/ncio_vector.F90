@@ -144,6 +144,12 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:), rbuff(:)
+         
+      IF (p_is_worker) THEN
+         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+            allocate (rdata (pixelset%nset))
+         ENDIF
+      ENDIF
 
       IF (p_is_io) THEN
 
@@ -180,10 +186,6 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_worker) THEN
          
-         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
-            allocate (rdata (pixelset%nset))
-         ENDIF
-
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
@@ -239,6 +241,12 @@ CONTAINS
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
 
+      IF (p_is_worker) THEN
+         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+            allocate (rdata (ndim1, pixelset%nset))
+         ENDIF
+      ENDIF
+
       IF (p_is_io) THEN
 
          DO jblk = 1, gblock%nyblk
@@ -274,10 +282,6 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_worker) THEN
          
-         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
-            allocate (rdata (ndim1, pixelset%nset))
-         ENDIF
-
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
@@ -332,6 +336,12 @@ CONTAINS
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
 
+      IF (p_is_worker) THEN
+         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+            allocate (rdata (ndim1,ndim2, pixelset%nset))
+         ENDIF
+      ENDIF
+
       IF (p_is_io) THEN
 
          DO jblk = 1, gblock%nyblk
@@ -366,10 +376,6 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
-         
-         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
-            allocate (rdata (ndim1,ndim2, pixelset%nset))
-         ENDIF
 
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
@@ -425,6 +431,12 @@ CONTAINS
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
 
+      IF (p_is_worker) THEN
+         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+            allocate (rdata (ndim1,ndim2,ndim3, pixelset%nset))
+         ENDIF
+      ENDIF
+
       IF (p_is_io) THEN
 
          DO jblk = 1, gblock%nyblk
@@ -460,10 +472,6 @@ CONTAINS
 #ifdef USEMPI
       IF (p_is_worker) THEN
          
-         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
-            allocate (rdata (ndim1,ndim2,ndim3, pixelset%nset))
-         ENDIF
-
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN

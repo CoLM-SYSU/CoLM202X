@@ -809,6 +809,16 @@ IF (patchtype == 0) THEN
             rootr_c(:,p)  = 0.
             rstfacsun_c(p)   = 0.
             rstfacsha_c(p)   = 0.
+            rst_c(p,pc) = 2.0e4
+            assim_c(p,pc) = 0.
+            respc_c(p,pc) = 0.
+            fsenl_c(p,pc) = 0.
+            fevpl_c(p,pc) = 0.
+            etr_c(p,pc) = 0.
+            hprl_c(p)    = 0.
+#ifdef PLANT_HYDRAULIC_STRESS 
+            vegwp_c (:,p,pc) = -2.5e4
+#endif
          ENDIF
 
       ENDDO 
