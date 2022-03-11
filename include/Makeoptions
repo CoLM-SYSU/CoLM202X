@@ -9,7 +9,7 @@
 
  MOD_CMD = -module 
 
- FOPTS = -g -traceback -r8 -free -check uninit
+ FOPTS = -g -traceback -r8 -free -check uninit -check bounds
 
  INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
                -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
