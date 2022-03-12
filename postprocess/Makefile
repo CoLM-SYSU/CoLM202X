@@ -2,13 +2,15 @@
 
 include ../include/Makeoptions
 
+VPATH  = ../share
+HEADER = ../include/define.h
+
 # Name of executable
 EXECUTABLE = hist_concatenate.x
 
 ####################################################################
 .DEFAULT :
 
-HEADER = ../include/define.h
 
 OBJS_SHARED = \
 				  ../share/precision.o \
@@ -21,22 +23,20 @@ OBJS_SHARED = \
 				  ../share/mod_block.o \
 				  ../share/mod_grid.o 
 
-OBJS = mod_hist_nc.o \
-		 hist_concatenate.o
+OBJS = mod_concatenate.o hist_concatenate.o
 
 ####################################################################
 
 # Compile CoLM decoupled with river routing scheme (CaMa-Flood)
 
-${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS}
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS} -o $@ ${LDFLAGS}
 
-$(OBJS):%.o:%.F90
+$(OBJS):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
-
 ####################################################################
 
 clean :
