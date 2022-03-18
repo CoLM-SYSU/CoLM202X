@@ -190,7 +190,7 @@ SUBROUTINE aggregation_forest_height ( &
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 
-         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+         IF (landpatch%ltyp(ipatch) == 1) THEN
             DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
                p = landpft%ltyp(ip)
                sumarea = sum(pct_one(p,:) * area_one)
@@ -200,6 +200,11 @@ SUBROUTINE aggregation_forest_height ( &
                   htop_pfts(ip) = htop_patches(ipatch)
                ENDIF
             ENDDO
+#ifdef CROP
+         ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+            ip = patch_pft_s(ipatch)
+            htop_pfts(ip) = htop_patches(ipatch)
+#endif
          ENDIF
       ENDDO
 

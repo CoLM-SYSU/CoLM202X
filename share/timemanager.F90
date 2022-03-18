@@ -53,6 +53,7 @@ MODULE timemanager
    END INTERFACE
    
    LOGICAL, SAVE :: isgreenwich
+   public get_calday
  
 CONTAINS
    
@@ -527,4 +528,26 @@ CONTAINS
 
    END FUNCTION calendarday_stamp
 
+   INTEGER FUNCTION get_calday(mmdd,isleap)
+
+      IMPLICIT NONE
+      INTEGER, intent(in) :: mmdd
+      LOGICAL, intent(in) :: isleap
+
+      INTEGER, dimension(0:12) :: daysofmonth_noleap &
+                               = (/0,31,28,31,30,31,30,31,31,30,31,30,31/)
+      INTEGER, dimension(0:12) :: daysofmonth_leap &
+                               = (/0,31,29,31,30,31,30,31,31,30,31,30,31/)
+      INTEGER imonth, iday
+
+      imonth = mmdd / 100
+      iday   = mod(mmdd,100)
+      IF(isleap)THEN
+         get_calday = sum(daysofmonth_leap(0:imonth-1)) + iday
+      ELSE
+         get_calday = sum(daysofmonth_noleap(0:imonth-1)) + iday
+      END IF
+      RETURN
+   END FUNCTION get_calday
+      
 END MODULE timemanager

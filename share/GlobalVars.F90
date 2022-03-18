@@ -18,7 +18,12 @@ MODULE GlobalVars
 #endif
    
    ! number of plant functional types
+#ifndef CROP
    INTEGER, parameter :: N_PFT    = 16 
+#else
+   INTEGER, parameter :: N_PFT    = 15
+   INTEGER, parameter :: N_CFT    = 64
+#endif
    
    ! vertical layer number
    INTEGER, parameter :: maxsnl   = -5

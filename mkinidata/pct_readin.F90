@@ -30,6 +30,11 @@ SUBROUTINE pct_readin (dir_landdata)
    lndname = trim(dir_landdata)//'/pct_pfts.nc'
    call ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac) 
 
+#if (defined CROP) 
+   lndname = trim(dir_landdata)//'/pct_crops.nc'
+   call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop) 
+#endif
+
 #ifdef CLMDEBUG
    IF (p_is_worker) THEN 
       npatch = count(landpatch%ltyp == 1)
@@ -46,6 +51,9 @@ SUBROUTINE pct_readin (dir_landdata)
    ENDIF
 
    CALL check_vector_data ('Sum PFT pct', sumpct)
+#if (defined CROP) 
+   CALL check_vector_data ('CROP pct', pctcrop)
+#endif
 
 #endif
 #endif

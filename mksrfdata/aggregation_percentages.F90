@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
+SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    
    USE precision
    USE GlobalVars
@@ -79,7 +79,7 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
       allocate(pct_pfts (numpft))
       
       DO ipatch = 1, numpatch
-         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+         IF (landpatch%ltyp(ipatch) == 1) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
 
@@ -95,6 +95,10 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
             pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) =    &
                pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   & 
                / sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
+#ifdef CROP
+         ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+            pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = 1.
+#endif
          ENDIF
       ENDDO
 
@@ -118,6 +122,14 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
       IF (allocated(area_one   )) deallocate(area_one   )
       IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
    ENDIF
+
+#if (defined CROP) 
+   lndname = trim(dir_model_landdata)//'/pct_crops.nc'
+   CALL ncio_create_file_vector (lndname, landpatch)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'pct_crops', 'vector', landpatch, pctcrop, 1)
+#endif
+
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -136,7 +148,7 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
       
       DO ipatch = 1, numpatch
 
-         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+         IF (landpatch%ltyp(ipatch) == 1) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
 
@@ -180,4 +192,4 @@ SUBROUTINE aggregation_landtype (gland, dir_rawdata, dir_model_landdata)
    
 #endif
 
-END SUBROUTINE aggregation_landtype
+END SUBROUTINE aggregation_percentages

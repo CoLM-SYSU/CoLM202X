@@ -134,6 +134,9 @@ PROGRAM mksrfdata
 #endif
 #ifdef PFT_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
+#if (defined CROP) 
+   CALL gcrop%define_by_ndims (720,360)
+#endif
 #endif
 #ifdef PC_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
@@ -145,6 +148,9 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (ghband)
 #endif
    CALL pixel%assimilate_grid (gpatch)
+#if (defined CROP) 
+   CALL pixel%assimilate_grid (gcrop )
+#endif
 
    ! map pixels to grid coordinates
    CALL pixel%map_to_grid (gunit)
@@ -152,6 +158,9 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (ghband)
 #endif
    CALL pixel%map_to_grid (gpatch)
+#if (defined CROP) 
+   CALL pixel%map_to_grid (gcrop )
+#endif
 
    ! build land units 
    CALL landunit_build (gunit)
@@ -206,7 +215,7 @@ PROGRAM mksrfdata
    CALL aggregation_dbedrock        (gpatch, dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_landtype        (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_percentages     (gpatch, dir_rawdata, dir_landdata)
    
    CALL aggregation_LAI             (gpatch, dir_rawdata, dir_landdata)
 

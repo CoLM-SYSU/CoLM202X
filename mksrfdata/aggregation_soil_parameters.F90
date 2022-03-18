@@ -36,7 +36,7 @@ SUBROUTINE aggregation_soil_parameters ( &
    ! ---------------------------------------------------------------
    CHARACTER(len=256) :: lndname
    CHARACTER(len=256) :: c
-   INTEGER :: nsl, ipatch, L, np, LL
+   INTEGER :: nsl, ipatch, L, np, LL, istt, iend
 
    TYPE (block_data_real8_2d) :: vf_quartz_mineral_s_grid
    TYPE (block_data_real8_2d) :: vf_gravels_s_grid
@@ -295,8 +295,11 @@ SUBROUTINE aggregation_soil_parameters ( &
                ! the parameter values of Balland and Arp (2005) Ke-Sr relationship,
                ! modified by Barry-Macaulay et al.(2015), Evaluation of soil thermal conductivity models
 
-               allocate(BA_alpha_one  (size(vf_gravels_s_one)))
-               allocate(BA_beta_one   (size(vf_gravels_s_one)))
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
+
+               allocate(BA_alpha_one  (istt:iend))
+               allocate(BA_beta_one   (istt:iend))
                where ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
                        BA_alpha_one = 0.38
                        BA_beta_one = 35.0
@@ -314,14 +317,14 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SOILPAR_UPS_FIT
                np = size(BA_alpha_one)
                IF( np > 1 ) then
-                  allocate ( ydatb  (1:np,npointb) )
+                  allocate ( ydatb  (istt:iend,npointb) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacb  (1:np,     nb) )           ! calculated in Ke_Sr_dist
+                  allocate ( fjacb  (istt:iend,nb) )           ! calculated in Ke_Sr_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecb  (1:np)         )           ! calculated in Ke_Sr_dist 
+                  allocate ( fvecb  (istt:iend)    )           ! calculated in Ke_Sr_dist 
 
 ! Ke-Sr relationship at fine grids for each patch
-                  do LL = 1,np
+                  do LL = istt,iend
                      ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
                                  - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
                                  - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
@@ -334,16 +337,16 @@ SUBROUTINE aggregation_soil_parameters ( &
                   maxfev = 100 * ( nb + 1 )
                   isiter = 1
 
-                  call lmder ( Ke_Sr_dist, np, nb, xb, fvecb(1:np), fjacb(1:np,:), ldfjac, ftol, xtol, gtol, maxfev, &
+                  call lmder ( Ke_Sr_dist, np, nb, xb, fvecb, fjacb, ldfjac, ftol, xtol, gtol, maxfev, &
                         diagb, mode, factor, nprint, info, nfev, njev, ipvtb, qtfb,&
-                        xdatsr,npointb,ydatb(1:np,:), np, vf_gravels_s_patches (ipatch), isiter,&
+                        xdatsr,npointb,ydatb, np, vf_gravels_s_patches (ipatch), isiter,&
                         vf_om_s_patches(ipatch),vf_sand_s_patches(ipatch),vf_gravels_s_patches(ipatch))
 
-                  ydatb(1,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
+                  ydatb(istt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
                              - vf_gravels_s_patches(ipatch))) * ((1.0/(1.0+exp(-xb(2)*xdatsr)))**3 &
                              - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_patches(ipatch))
 
-                  if ( all(ydatb(1,:) >= 0.) .and. all(ydatb(1,:) <= 1.) .and. isiter == 1 ) then
+                  if ( all(ydatb(istt,:) >= 0.) .and. all(ydatb(istt,:) <= 1.) .and. isiter == 1 ) then
                        BA_alpha_patches(ipatch) = xb(1)
                        BA_beta_patches (ipatch) = xb(2)
                   end if
@@ -619,15 +622,18 @@ SUBROUTINE aggregation_soil_parameters ( &
 
 #ifdef SOILPAR_UPS_FIT
                np = size(theta_r_one)
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
+
                IF( np > 1 ) then
-                  allocate ( ydatv  (1:np,npointw) )
+                  allocate ( ydatv  (istt:iend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacv  (1:np,     nv) )           ! calculated in SW_VG_dist
+                  allocate ( fjacv  (istt:iend,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecv  (1:np)         )           ! calculated in SW_VG_dist 
+                  allocate ( fvecv  (istt:iend)    )           ! calculated in SW_VG_dist 
 
 ! SW VG retentions at fine grids for each patch
-                  do LL = 1,np
+                  do LL = istt,iend
                      ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
                                  * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
                   end do                  
@@ -640,9 +646,9 @@ SUBROUTINE aggregation_soil_parameters ( &
                   maxfev = 100 * ( nv + 1 )
                   isiter = 1
 
-                  call lmder ( SW_VG_dist, np, nv, xv, fvecv(1:np), fjacv(1:np,:), ldfjac, ftol, xtol, gtol, maxfev, &
+                  call lmder ( SW_VG_dist, np, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
                         diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
-                        xdat, npointw, ydatv(1:np,:), np, theta_s_patches(ipatch), isiter)
+                        xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
 
                   if ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
                        xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) then
@@ -762,15 +768,18 @@ SUBROUTINE aggregation_soil_parameters ( &
 
 #ifdef SOILPAR_UPS_FIT
                np = size(psi_s_one)
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
+
                IF( np > 1 ) then
-                  allocate ( ydatc  (1:np,npointw) )
+                  allocate ( ydatc  (istt:iend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacc  (1:np,     nc) )           ! calculated in SW_CB_dist
+                  allocate ( fjacc  (istt:iend,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecc  (1:np)         )           ! calculated in SW_CB_dist 
+                  allocate ( fvecc  (istt:iend)    )           ! calculated in SW_CB_dist 
 
 ! SW CB retentions at fine grids for each patch
-                  do LL = 1,np
+                  do LL = istt,iend
                      ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
                   end do                  
                   
@@ -781,9 +790,9 @@ SUBROUTINE aggregation_soil_parameters ( &
                   maxfev = 100 * ( nc + 1 )
                   isiter = 1
 
-                  call lmder ( SW_CB_dist, np, nc, xc, fvecc(1:np), fjacc(1:np,:), ldfjac, ftol, xtol, gtol, maxfev, &
+                  call lmder ( SW_CB_dist, np, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
                         diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
-                        xdat, npointw, ydatc(1:np,:), np, theta_s_patches(ipatch), isiter)
+                        xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
 
                   if( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)then
                         psi_s_patches (ipatch) = xc(1)
