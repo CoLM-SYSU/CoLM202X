@@ -384,6 +384,11 @@ SUBROUTINE aggregation_LAI (gland, dir_rawdata, dir_model_landdata)
                      LAI_pfts(ip) = LAI_patches(ipatch)
                   ENDIF
                ENDDO
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               ip = patch_pft_s(ipatch)
+               LAI_pfts(ip) = LAI_patches(ipatch)
+#endif
             ENDIF
          ENDDO
 
@@ -467,6 +472,11 @@ SUBROUTINE aggregation_LAI (gland, dir_rawdata, dir_model_landdata)
                      SAI_pfts(ip) = SAI_patches(ipatch)
                   ENDIF
                ENDDO
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               ip = patch_pft_s(ipatch)
+               SAI_pfts(ip) = SAI_patches(ipatch)
+#endif
             ENDIF
          ENDDO
 

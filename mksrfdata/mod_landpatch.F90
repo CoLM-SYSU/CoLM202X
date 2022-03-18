@@ -14,6 +14,12 @@ MODULE mod_landpatch
    TYPE(grid_type)     :: gpatch
    TYPE(pixelset_type) :: landpatch
 
+#if (defined CROP) 
+   TYPE(grid_type) :: gcrop
+   REAL(r8), allocatable :: pctcrop   (:)
+   INTEGER,  allocatable :: cropclass (:)
+#endif
+
 CONTAINS
    
    ! -------------------------------
@@ -31,6 +37,9 @@ CONTAINS
       USE mod_namelist
       USE ncio_block
       USE mod_modis_data
+#if (defined CROP) 
+      USE mod_pixelsetshadow
+#endif
 
       IMPLICIT NONE
 
@@ -47,10 +56,11 @@ CONTAINS
       INTEGER, allocatable :: unum_tmp(:), ltyp_tmp(:), istt_tmp(:), iend_tmp(:), iunt_tmp(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL, allocatable :: worker_done(:)
-#ifdef PFT_CLASSIFICATION
-      INTEGER, allocatable :: ptype(:)
-#endif
       INTEGER :: npatch_glb
+#if (defined CROP) 
+      TYPE(block_data_real8_3d) :: cropdata
+      INTEGER :: cropfilter(1)
+#endif
 
       INTEGER :: iblk, jblk
 
@@ -228,7 +238,15 @@ CONTAINS
             DO ipxl = istt, iend
                IF (ltype(ipxl) > 0) THEN
                   IF (patchtypes(ltype(ipxl)) == 0) THEN
+#if (defined CROP) 
+                     !12  Croplands
+                     !14  Cropland/Natural Vegetation Mosaics  ?
+                     IF (ltype(ipxl) /= 12) THEN
+                        ltype(ipxl) = 1
+                     ENDIF
+#else
                      ltype(ipxl) = 1
+#endif
                   ENDIF
                ENDIF
             ENDDO
@@ -330,6 +348,21 @@ CONTAINS
       CALL landpatch%pset_pack (msk, numpatch)
 #endif 
 
+#if (defined CROP) 
+      IF (p_is_io) THEN
+         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
+         CALL allocate_block_data (gcrop, cropdata, N_CFT)
+         CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
+      ENDIF
+
+      cropfilter = (/ 12 /)
+
+      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, 1, cropfilter, &
+         pctcrop, cropclass)
+
+      numpatch = landpatch%nset
+#endif
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 
@@ -339,7 +372,7 @@ CONTAINS
             write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches on worker.'
          ENDIF
       ENDIF
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'

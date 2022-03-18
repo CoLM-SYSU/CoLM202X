@@ -80,7 +80,11 @@ contains
       integer, intent(in) :: lat_points
 
       call ghist%define_by_ndims (lon_points, lat_points)
+#ifndef CROP
       call mp2g_hist%build (landpatch, ghist)
+#else
+      call mp2g_hist%build (landpatch, ghist, pctcrop)
+#endif
 
       call allocate_acc_fluxes ()
       call FLUSH_acc_fluxes ()
@@ -210,12 +214,7 @@ contains
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
 
-
-         if (trim(DEF_HIST_mode) == 'one') then
-            call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
-         elseif (trim(DEF_HIST_mode) == 'block') then
-            call hist_write_time (file_hist, 'time_component', ghist, idate, itime_in_file)         
-         endif
+         call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
 
          if (p_is_worker) then
             if (numpatch > 0) then

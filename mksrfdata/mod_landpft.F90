@@ -79,7 +79,7 @@ CONTAINS
          patchmask (:) = .true.
 
          DO ipatch = 1, numpatch
-            IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+            IF (landpatch%ltyp(ipatch) == 1) THEN
                
                CALL aggregation_pft_request_data (ipatch, gpatch, pctpft, pctpft_one, area_one)
 
@@ -101,6 +101,9 @@ CONTAINS
 
          npatch = count(patchmask)
          numpft = count(pctpft_patch > 0.)
+#ifdef CROP            
+         numpft = numpft + count(landpatch%ltyp == 12) 
+#endif
 
          allocate (patch_pft_s (npatch))
          allocate (patch_pft_e (npatch))
@@ -120,7 +123,7 @@ CONTAINS
                IF (patchmask(ipatch)) THEN
                   npatch = npatch + 1
 
-                  IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+                  IF (landpatch%ltyp(ipatch) == 1) THEN
                      patch_pft_s(npatch) = npft + 1
                      patch_pft_e(npatch) = npft + count(pctpft_patch(:,ipatch) > 0)
 
@@ -137,6 +140,20 @@ CONTAINS
                            pft2patch(npft) = npatch
                         ENDIF
                      ENDDO
+#ifdef CROP
+                  ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+                     npft = npft + 1
+                     patch_pft_s(npatch) = npft
+                     patch_pft_e(npatch) = npft
+                     
+                     landpft%iunt(npft) = landpatch%iunt(ipatch)
+                     landpft%unum(npft) = landpatch%unum(ipatch)
+                     landpft%istt(npft) = landpatch%istt(ipatch)
+                     landpft%iend(npft) = landpatch%iend(ipatch)
+                     landpft%ltyp(npft) = cropclass(ipatch) + N_PFT - 1
+
+                     pft2patch(npft) = npatch
+#endif
                   ELSE
                      patch_pft_s(npatch) = -1
                      patch_pft_e(npatch) = -1
@@ -145,8 +162,6 @@ CONTAINS
             ENDDO
 
          ENDIF
-
-         write(*,'(I10,A15,I5)') numpft, ' pfts on worker', p_iam_glb
 
       ENDIF
       
@@ -183,7 +198,7 @@ CONTAINS
       USE mod_landpatch
       IMPLICIT NONE
 
-      INTEGER :: ipatch, ipft, jpatch
+      INTEGER :: ipatch, ipft
       
       IF (p_is_worker) THEN
 
@@ -195,12 +210,13 @@ CONTAINS
 
          ipft = 1
          DO ipatch = 1, numpatch
-            IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+            IF (landpatch%ltyp(ipatch) == 1) THEN
                   
                patch_pft_s(ipatch) = ipft
 
                DO WHILE (ipft <= numpft)
-                  IF (landpft%unum(ipft) == landpatch%unum(ipatch)) THEN
+                  IF ((landpft%unum(ipft) == landpatch%unum(ipatch))  &
+                     .and. (landpft%istt(ipft) == landpatch%istt(ipatch))) THEN
                      pft2patch  (ipft  ) = ipatch
                      patch_pft_e(ipatch) = ipft
                      ipft = ipft + 1
@@ -208,10 +224,18 @@ CONTAINS
                      exit
                   ENDIF
                ENDDO
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               patch_pft_s(ipatch) = ipft
+               patch_pft_e(ipatch) = ipft
+               pft2patch  (ipft  ) = ipatch
+               ipft = ipft + 1
+#endif
             ELSE
                patch_pft_s(ipatch) = -1
                patch_pft_e(ipatch) = -1
             ENDIF
+         
          ENDDO
 
       ENDIF

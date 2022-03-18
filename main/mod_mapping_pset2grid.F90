@@ -35,7 +35,7 @@ MODULE mod_mapping_pset2grid
 CONTAINS
    
    !------------------------------------------
-   SUBROUTINE mapping_pset2grid_build (this, pixelset, fgrid)
+   SUBROUTINE mapping_pset2grid_build (this, pixelset, fgrid, pctpset)
 
       USE precision
       USE mod_namelist
@@ -53,6 +53,7 @@ CONTAINS
 
       TYPE(pixelset_type), intent(in) :: pixelset
       TYPE(grid_type),     intent(in) :: fgrid
+      REAL(r8), optional,  intent(in) :: pctpset (:)
 
       ! Local variables
       TYPE(pointer_real8_1d), allocatable :: afrac(:)
@@ -301,6 +302,10 @@ CONTAINS
             allocate (this%gweight(iset)%val (ng))
 
             this%gweight(iset)%val = afrac(iset)%val(1:ng)
+
+            IF (present(pctpset)) THEN
+               this%gweight(iset)%val = this%gweight(iset)%val * pctpset(iset)
+            ENDIF
 
             DO ig = 1, gfrom(iset)%ng
                ilon = gfrom(iset)%ilon(ig)
