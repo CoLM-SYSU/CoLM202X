@@ -204,6 +204,9 @@ PROGRAM CLM
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
+!#if(defined BGC)
+!    call NDEP_readin (lon_points,lat_points,numpatch,dir_model_landdata,idate)
+!#endif
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------

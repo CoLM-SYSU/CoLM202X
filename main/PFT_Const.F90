@@ -7,6 +7,7 @@ MODULE PFT_Const
 
    USE precision
    USE GlobalVars
+   USE timemanager, only: get_calday
 
    IMPLICIT NONE
    SAVE
@@ -29,215 +30,1652 @@ MODULE PFT_Const
 !13  c3 non-arctic grass
 !14  c4 grass
 !15  c3 crop
+!16  c3_irrigated
+!17  temperate_corn
+!18  irrigated_temperate_corn
+!19  spring_wheat
+!20  irrigated_spring_wheat
+!21  winter_wheat
+!22  irrigated_winter_wheat
+!23  temperate_soybean
+!24  irrigated_temperate_soybean
+!25  barley
+!26  irrigated_barley
+!27  winter_barley
+!28  irrigated_winter_barley
+!29  rye
+!30  irrigated_rye
+!31  winter_rye
+!32  irrigated_winter_rye
+!33  cassava
+!34  irrigated_cassava
+!35  citrus
+!36  irrigated_citrus
+!37  cocoa
+!38  irrigated_cocoa
+!39  coffee
+!40  irrigated_coffee
+!41  cotton
+!42  irrigated_cotton
+!43  datepalm
+!44  irrigated_datepalm
+!45  foddergrass
+!46  irrigated_foddergrass
+!47  grapes
+!48  irrigated_grapes
+!49  groundnuts
+!50  irrigated_groundnuts
+!51  millet
+!52  irrigated_millet
+!53  oilpalm
+!54  irrigated_oilpalm
+!55  potatoes
+!56  irrigated_potatoes
+!57  pulses
+!58  irrigated_pulses
+!59  rapeseed
+!60  irrigated_rapeseed
+!61  rice
+!62  irrigated_rice
+!63  sorghum
+!64  irrigated_sorghum
+!65  sugarbeet
+!66  irrigated_sugarbeet
+!67  sugarcane
+!68  irrigated_sugarcane
+!69  sunflower
+!70  irrigated_sunflower
+!71  miscanthus
+!72  irrigated_miscanthus
+!73  switchgrass
+!74  irrigated_switchgrass
+!75  tropical_corn
+!76  irrigated_tropical_corn
+!77  tropical_soybean
+!78  irrigated_tropical_soybean
    
    ! canopy layer number
-   INTEGER , parameter :: canlay(0:15) &
-      = (/0, 2, 2, 2, 2, 2, 2, 2, &
-          2, 1, 1, 1, 1, 1, 1, 1 /)
+   INTEGER , parameter :: canlay(0:N_PFT+N_CFT-1) &
+      = (/0, 2, 2, 2, 2, 2, 2, 2 &
+        , 2, 1, 1, 1, 1, 1, 1, 1 &
+#ifdef CROP
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1, 1 &
+        , 1, 1, 1, 1, 1, 1, 1    &
+#endif
+         /)
 
    ! canopy top height
-   REAL(r8), parameter :: htop0_p(0:15) &
-      =(/ 0.5,  17.0,  17.0,  14.0,  35.0,  35.0,  18.0,  20.0,&
-         20.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5/)
+   REAL(r8), parameter :: htop0_p(0:N_PFT+N_CFT-1) &
+      =(/ 0.5,  17.0,  17.0,  14.0,  35.0,  35.0,  18.0,  20.0&
+        ,20.0,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+#ifdef CROP
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5&
+        , 0.5,   0.5,   0.5,   0.5,   0.5,   0.5,   0.5    &
+#endif
+         /)
 
    ! canopy bottom height
-   REAL(r8), parameter :: hbot0_p(0:15) &
+   REAL(r8), parameter :: hbot0_p(0:N_PFT+N_CFT-1) &
 ! 01/06/2020, yuan: adjust htop: grass/shrub -> 0, tree->1
-      !=(/0.01,   8.5,   8.5,   7.0,   1.0,   1.0,  10.0,  11.5,&
+      !=(/0.01,   8.5,   8.5,   7.0,   1.0,   1.0,  10.0,  11.5&
       !   11.5,   0.1,   0.1,   0.1,  0.01,  0.01,  0.01,  0.01/)
-      =(/0.00,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,&
-          1.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0/)
+      =(/0.00,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0&
+        , 1.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+#ifdef CROP
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0&
+        , 0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0    &
+#endif
+         /)
 
    ! defulat vegetation fractional cover
-   REAL(r8), parameter :: fveg0_p(0:15) &
+   REAL(r8), parameter :: fveg0_p(0:N_PFT+N_CFT-1) &
       = 1.0 !(/.../)
 
    ! default stem area index
-   REAL(r8), parameter :: sai0_p(0:15) &
-      =(/0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,&
-         2.0, 0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2/)
+   REAL(r8), parameter :: sai0_p(0:N_PFT+N_CFT-1) &
+      =(/0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0&
+       , 2.0, 0.5, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2&
+#ifdef CROP
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2&
+       , 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2    &
+#endif
+         /)
 
    ! ratio to calculate roughness length z0m
-   REAL(r8), parameter :: z0mr_p(0:15) = 0.1 
+   REAL(r8), parameter :: z0mr_p(0:N_PFT+N_CFT-1) = 0.1 
    
    ! ratio to calculate displacement height d 
-   REAL(r8), parameter :: displar_p(0:15) = 0.667
+   REAL(r8), parameter :: displar_p(0:N_PFT+N_CFT-1) = 0.667
 
    ! inverse&sqrt leaf specific dimension size 4 cm
-   REAL(r8), parameter :: sqrtdi_p(0:15) = 5.0
+   REAL(r8), parameter :: sqrtdi_p(0:N_PFT+N_CFT-1) = 5.0
       
    ! leaf angle distribution parameter
-   REAL(r8), parameter :: chil_p(0:15) &
-      = (/-0.300,  0.010,  0.010,  0.010,  0.100,  0.100,  0.010,  0.250,&
-           0.250,  0.010,  0.250,  0.250, -0.300, -0.300, -0.300, -0.300/)
+   REAL(r8), parameter :: chil_p(0:N_PFT+N_CFT-1) &
+      = (/-0.300,  0.010,  0.010,  0.010,  0.100,  0.100,  0.010,  0.250&
+         , 0.250,  0.010,  0.250,  0.250, -0.300, -0.300, -0.300, -0.300&
+#ifdef CROP
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300&
+         ,-0.300, -0.300, -0.300, -0.300, -0.300, -0.300, -0.300    &
+#endif
+         /)
 
    ! reflectance of green leaf in virsible band 
-   REAL(r8), parameter :: rhol_vis_p(0:15) &
-      = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.100,  0.100,  0.100,&
-          0.100,  0.070,  0.100,  0.100,  0.110,  0.110,  0.110,  0.110/)
+   REAL(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
+      = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.100,  0.100,  0.100&
+        , 0.100,  0.070,  0.100,  0.100,  0.110,  0.110,  0.110,  0.110&
+#ifdef CROP
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110&
+        , 0.110,  0.110,  0.110,  0.110,  0.110,  0.110,  0.110    &
+#endif
+         /)
 
    ! reflectance of dead leaf in virsible band 
-   REAL(r8), parameter :: rhos_vis_p(0:15) &
-      = (/0.310,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,&
-          0.160,  0.160,  0.160,  0.160,  0.310,  0.310,  0.310,  0.310/)
+   REAL(r8), parameter :: rhos_vis_p(0:N_PFT+N_CFT-1) &
+      = (/0.310,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160&
+        , 0.160,  0.160,  0.160,  0.160,  0.310,  0.310,  0.310,  0.310&
+#ifdef CROP
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310&
+        , 0.310,  0.310,  0.310,  0.310,  0.310,  0.310,  0.310    &
+#endif
+         /)
 
    ! reflectance of green leaf in near infrared band 
-   REAL(r8), parameter :: rhol_nir_p(0:15) &
-      = (/0.350,  0.350,  0.350,  0.350,  0.450,  0.450,  0.450,  0.450,&
-          0.450,  0.350,  0.450,  0.450,  0.350,  0.350,  0.350,  0.350/)
+   REAL(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
+      = (/0.350,  0.350,  0.350,  0.350,  0.450,  0.450,  0.450,  0.450&
+        , 0.450,  0.350,  0.450,  0.450,  0.350,  0.350,  0.350,  0.350&
+#ifdef CROP
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350&
+        , 0.350,  0.350,  0.350,  0.350,  0.350,  0.350,  0.350    &
+#endif
+         /)
 
    ! reflectance of dead leaf in near infrared band 
-   REAL(r8), parameter :: rhos_nir_p(0:15) &
-      = (/0.530,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390,&
-          0.390,  0.390,  0.390,  0.390,  0.530,  0.530,  0.530,  0.530/)
+   REAL(r8), parameter :: rhos_nir_p(0:N_PFT+N_CFT-1) &
+      = (/0.530,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390&
+        , 0.390,  0.390,  0.390,  0.390,  0.530,  0.530,  0.530,  0.530&
+#ifdef CROP
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530&
+        , 0.530,  0.530,  0.530,  0.530,  0.530,  0.530,  0.530    &
+#endif
+         /)
 
    ! transmittance of green leaf in visible band 
-   REAL(r8), parameter :: taul_vis_p(0:15) &
-      = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,&
-          0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050/)
+   REAL(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
+      = (/0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+#ifdef CROP
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050&
+        , 0.050,  0.050,  0.050,  0.050,  0.050,  0.050,  0.050    &
+#endif
+         /)
 
    ! transmittance of dead leaf in visible band 
-   REAL(r8), parameter :: taus_vis_p(0:15) &
-      = (/0.120,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,&
-          0.001,  0.001,  0.001,  0.001,  0.120,  0.120,  0.120,  0.120/)
+   REAL(r8), parameter :: taus_vis_p(0:N_PFT+N_CFT-1) &
+      = (/0.120,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001&
+        , 0.001,  0.001,  0.001,  0.001,  0.120,  0.120,  0.120,  0.120&
+#ifdef CROP
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120&
+        , 0.120,  0.120,  0.120,  0.120,  0.120,  0.120,  0.120    &
+#endif
+         /)
 
    ! transmittance of green leaf in near infrared band 
-   REAL(r8), parameter :: taul_nir_p(0:15) &
-      = (/0.340,  0.100,  0.100,  0.100,  0.250,  0.250,  0.250,  0.250,&
-          0.250,  0.100,  0.250,  0.250,  0.340,  0.340,  0.340,  0.340/)
+   REAL(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
+      = (/0.340,  0.100,  0.100,  0.100,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.100,  0.250,  0.250,  0.340,  0.340,  0.340,  0.340&
+#ifdef CROP
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340&
+        , 0.340,  0.340,  0.340,  0.340,  0.340,  0.340,  0.340    &
+#endif
+         /)
 
    ! transmittance of dead leaf in near infrared band 
-   REAL(r8), parameter :: taus_nir_p(0:15) &
-      = (/0.250,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,&
-          0.001,  0.001,  0.001,  0.001,  0.250,  0.250,  0.250,  0.250/)
+   REAL(r8), parameter :: taus_nir_p(0:N_PFT+N_CFT-1) &
+      = (/0.250,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001&
+        , 0.001,  0.001,  0.001,  0.001,  0.250,  0.250,  0.250,  0.250&
+#ifdef CROP
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250&
+        , 0.250,  0.250,  0.250,  0.250,  0.250,  0.250,  0.250    &
+#endif
+         /)
 
    ! maximum carboxylation rate at 25 C at canopy top
    ! /06/03/2014/ based on Bonan et al., 2010 (Table 2)
-   REAL(r8), parameter :: vmax25_p(0:15) &
-      = (/ 52.0, 61.0, 54.0, 57.0, 72.0, 72.0, 52.0, 52.0,&
-           52.0, 72.0, 52.0, 52.0, 52.0, 52.0, 52.0, 57.0/) * 1.e-6
+   REAL(r8), parameter :: vmax25_p(0:N_PFT+N_CFT-1) &
+!      = (/ 52.0, 61.0, 54.0, 57.0, 72.0, 72.0, 52.0, 52.0&
+      = (/ 52.0, 61.0, 54.0, 57.0, 30.0, 72.0, 52.0, 52.0&
+         , 52.0, 72.0, 52.0, 52.0, 52.0, 52.0, 52.0, 57.0&
+#ifdef CROP
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
+         , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0    &
+#endif
+         /) * 1.e-6
 
    ! quantum efficiency
-   REAL(r8), parameter :: effcon_p(0:15) &
-      = (/0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08,&
-          0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.05, 0.08/)
+   REAL(r8), parameter :: effcon_p(0:N_PFT+N_CFT-1) &
+      = (/0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.05, 0.08&
+#ifdef CROP
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08&
+        , 0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08      &
+#endif
+         /)
 
    ! conductance-photosynthesis slope parameter
-   REAL(r8), parameter :: gradm_p(0:15) &
-      = (/9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0,&
-          9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 4.0, 9.0/)
+   REAL(r8), parameter :: gradm_p(0:N_PFT+N_CFT-1) &
+      = (/9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 4.0, 9.0&
+#ifdef CROP
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0&
+        , 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0      &
+#endif
+         /)
 
    ! conductance-photosynthesis intercept
-   REAL(r8), parameter :: binter_p(0:15) &
-      = (/0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,&
-          0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.04, 0.01/)
+   REAL(r8), parameter :: binter_p(0:N_PFT+N_CFT-1) &
+      = (/0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.04, 0.01&
+#ifdef CROP
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01&
+        , 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01      &
+#endif
+         /)
 
    ! respiration fraction
-   REAL(r8), parameter :: respcp_p(0:15) &
-      = (/0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015,&
-          0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.025, 0.015/)
+   REAL(r8), parameter :: respcp_p(0:N_PFT+N_CFT-1) &
+      = (/0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.025, 0.015&
+#ifdef CROP
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015&
+        , 0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015      &
+#endif
+         /)
 
    ! slope of high temperature inhibition FUNCTION (s1)
-   REAL(r8), parameter :: shti_p(0:15) = 0.3
+   REAL(r8), parameter :: shti_p(0:N_PFT+N_CFT-1) = 0.3
 
    ! slope of low temperature inhibition FUNCTION (s3) 
-   REAL(r8), parameter :: slti_p(0:15) = 0.2
+   REAL(r8), parameter :: slti_p(0:N_PFT+N_CFT-1) = 0.2
 
    ! temperature coefficient in gs-a model (s5)
-   REAL(r8), parameter :: trda_p(0:15) = 1.3
+   REAL(r8), parameter :: trda_p(0:N_PFT+N_CFT-1) = 1.3
    
    ! temperature coefficient in gs-a model (s6)
-   REAL(r8), parameter :: trdm_p(0:15) = 328.0
+   REAL(r8), parameter :: trdm_p(0:N_PFT+N_CFT-1) = 328.0
 
    ! temperature coefficient in gs-a model (273.16+25)
-   REAL(r8), parameter :: trop_p(0:15) = 298.0
+   REAL(r8), parameter :: trop_p(0:N_PFT+N_CFT-1) = 298.0
 
    ! 1/2 point of high temperature inhibition FUNCTION (s2)
-   REAL(r8), parameter :: hhti_p(0:15) &
-      =(/308.0, 303.0, 303.0, 303.0, 313.0, 313.0, 311.0, 311.0,&
-         311.0, 313.0, 313.0, 303.0, 303.0, 308.0, 313.0, 308.0/)
+   REAL(r8), parameter :: hhti_p(0:N_PFT+N_CFT-1) &
+      =(/308.0, 303.0, 303.0, 303.0, 313.0, 313.0, 311.0, 311.0&
+        ,311.0, 313.0, 313.0, 303.0, 303.0, 308.0, 313.0, 308.0&
+#ifdef CROP
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0&
+        ,308.0, 308.0, 308.0, 308.0, 308.0, 308.0, 308.0      &
+#endif
+         /)
 
    ! 1/2 point of low temperature inhibition FUNCTION (s4)
-   REAL(r8), parameter :: hlti_p(0:15) &
-      =(/281.0, 278.0, 278.0, 278.0, 288.0, 288.0, 283.0, 283.0,&
-         283.0, 283.0, 283.0, 278.0, 278.0, 281.0, 288.0, 281.0/)
+   REAL(r8), parameter :: hlti_p(0:N_PFT+N_CFT-1) &
+      =(/281.0, 278.0, 278.0, 278.0, 288.0, 288.0, 283.0, 283.0&
+        ,283.0, 283.0, 283.0, 278.0, 278.0, 281.0, 288.0, 281.0&
+#ifdef CROP
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0&
+        ,281.0, 281.0, 281.0, 281.0, 281.0, 281.0, 281.0      &
+#endif
+         /)
 
    ! coefficient of leaf nitrogen allocation
-   REAL(r8), parameter :: extkn_p(0:15) = 0.5
+   REAL(r8), parameter :: extkn_p(0:N_PFT+N_CFT-1) = 0.5
 
    REAL(r8) :: &
-      rho_p(2,2,0:15), &!leaf reflectance
-      tau_p(2,2,0:15)   !leaf transmittance
+#ifndef CROP
+      rho_p(2,2,0:N_PFT-1), &!leaf reflectance
+      tau_p(2,2,0:N_PFT-1)   !leaf transmittance
+#else
+      rho_p(2,2,0:N_PFT+N_CFT-1), &!leaf reflectance
+      tau_p(2,2,0:N_PFT+N_CFT-1)   !leaf transmittance
+#endif
 
    ! depth at 50% roots
-   REAL(r8), parameter, dimension(0:15) :: d50_p &
-      =(/27.0,  21.0,  12.0,  12.0,  15.0,  23.0,  16.0,  23.0,&
-         12.0,  23.5,  23.5,  23.5,   9.0,   7.0,  16.0,  22.0/)
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: d50_p &
+      =(/27.0,  21.0,  12.0,  12.0,  15.0,  23.0,  16.0,  23.0&
+        ,12.0,  23.5,  23.5,  23.5,   9.0,   7.0,  16.0,  22.0&
+#ifdef CROP
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0&
+        ,22.0,  22.0,  22.0,  22.0,  22.0,  22.0,  22.0      &
+#endif
+         /)
 
    ! coefficient of root profile
-   REAL(r8), parameter, dimension(0:15) :: beta_p &
-      =(/-2.051, -1.835, -1.880, -1.880, -1.632, -1.757, -1.681, -1.757,&
-         -1.880, -1.623, -1.623, -1.623, -2.621, -1.176, -1.452, -1.796/)
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: beta_p &
+      =(/-2.051, -1.835, -1.880, -1.880, -1.632, -1.757, -1.681, -1.757&
+       , -1.880, -1.623, -1.623, -1.623, -2.621, -1.176, -1.452, -1.796&
+#ifdef CROP
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796&
+       , -1.796, -1.796, -1.796, -1.796, -1.796, -1.796, -1.796      &
+#endif
+         /)
+
+   ! woody (1) or grass (0)
+   INTEGER , parameter, dimension(0:N_PFT+N_CFT-1) :: woody &
+      =(/0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 &
+#ifdef CROP
+       , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 &
+       , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 &
+       , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 &
+       , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0      &
+#endif
+         /)
 
    !设定PFT的根分布参数 
-   REAL(r8), PRIVATE, parameter :: roota(0:15) &
-      =(/  0.0,   7.0,   7.0,   7.0,   7.0,   7.0,   6.0,   6.0,&
-           6.0,   7.0,   7.0,   7.0,  11.0,  11.0,  11.0,   6.0/)
+   REAL(r8), PRIVATE, parameter :: roota(0:N_PFT+N_CFT-1) &
+      =(/  0.0,   7.0,   7.0,   7.0,   7.0,   7.0,   6.0,   6.0&
+        ,  6.0,   7.0,   7.0,   7.0,  11.0,  11.0,  11.0,   6.0&
+#ifdef CROP
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0&
+        ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0      &
+#endif
+         /)
    
-   REAL(r8), PRIVATE, parameter :: rootb(0:15) &
-      =(/  0.0,   2.0,   2.0,   2.0,   1.0,   1.0,   2.0,   2.0,&
-           2.0,   1.5,   1.5,   1.5,   2.0,   2.0,   2.0,   3.0/)
+   REAL(r8), PRIVATE, parameter :: rootb(0:N_PFT+N_CFT-1) &
+      =(/  0.0,   2.0,   2.0,   2.0,   1.0,   1.0,   2.0,   2.0&
+        ,  2.0,   1.5,   1.5,   1.5,   2.0,   2.0,   2.0,   3.0&
+#ifdef CROP
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0&
+        ,  3.0,   3.0,   3.0,   3.0,   3.0,   3.0,   3.0      &
+#endif
+         /)
+
+
+!   bgc PFT constants
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: grperc = 0.11_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: grpnow = 1._r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: lf_flab = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: lf_fcel = 0.5_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: lf_flig = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fr_flab = 0.25_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fr_fcel = 0.5_r8
+
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fr_flig = 0.25_r8
+
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isshrub & ! True => is a shrub
+      =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .True.,  .True.,  .True.,  .False., .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isgrass & ! True => is a grass
+      =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .True.,  .True.,  .True.,  .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isbetr  & ! True => is tropical broadleaf evergreen tree
+      =(/.False., .False., .False., .False., .True.,  .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isbdtr  & ! True => is a broadleaf deciduous tree
+      =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isevg   & ! True => is a evergreen tree
+      =(/.False., .True.,  .True.,  .False., .True.,  .True.,  .False., .False. &
+       , .False., .True.,  .False., .False., .False., .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: issed   & ! True => is a seasonal deciduous tree
+      =(/.False., .False., .False., .True.,  .False., .False., .False., .True.  &
+       , .True.,  .False., .False., .True.,  .True.,  .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isstd   & ! True => is a stress deciduous tree
+      =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
+       , .False., .False., .True.,  .False., .False., .True.,  .True.,  .True.  & 
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isbare  & ! True => is a bare land
+      =(/.True.,  .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: iscrop  & ! True => is a crop land
+      =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .True.  &
+#ifdef CROP
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True. &
+       ,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.      &
+#endif
+         /)
+
+   LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isnatveg &! True => is a natural vegetation
+      =(/.False., .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.  &
+       , .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .True.,  .False. &
+#ifdef CROP
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False., .False. &
+       , .False., .False., .False., .False., .False., .False., .False.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fsr_pft &
+      =(/   0.,   0.26,   0.26,   0.26,   0.25,   0.25,   0.25,   0.25 &
+       ,  0.25,   0.28,   0.28,   0.28,   0.33,   0.33,   0.33,   0.33 &
+#ifdef CROP
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33 &
+       ,  0.33,   0.33,   0.33,   0.33,   0.33,   0.33,   0.33      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fd_pft &
+      =(/   0.,     24.,     24.,     24.,     24.,     24.,     24.,     24. &
+       ,   24.,     24.,     24.,     24.,     24.,     24.,     24.,     24. &
+#ifdef CROP
+       ,   24.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.,      0. &
+       ,    0.,      0.,      0.,      0.,      0.,      0.,      0.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: leafcn &
+      =(/              1.,              58.,              58., 25.8131130614352 &
+       ,  29.603315571344,  29.603315571344, 23.4521575984991, 23.4521575984991 &
+       , 23.4521575984991, 36.4166059723234, 23.2558139534884, 23.2558139534884 &
+       , 28.0269058295964, 28.0269058295964, 35.3606789250354, 28.0269058295964 &
+#ifdef CROP
+       ,               25.,               25.,               25.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               25. &
+       ,               25.,               20.,               20.,               20. &
+       ,               20.,               20.,               20.,               25. &
+       ,               25.,               20.,               20.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: frootcn &
+      =(/   1.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+#ifdef CROP
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.,     42.&
+       ,   42.,     42.,     42.,     42.,     42.,     42.,     42.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: livewdcn &
+      =(/   1.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,      0.,      0.,      0.,      0.&
+#ifdef CROP
+       ,    0.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: deadwdcn &
+      =(/   1.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,      0.,      0.,      0.,      0.& 
+#ifdef CROP
+       ,    0.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
+       ,  500.,    500.,    500.,    500.,    500.,    500.,    500.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: graincn &
+      =(/-999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.&
+       , -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.,   -999.&
+#ifdef CROP
+       , -999.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.,     50.&
+       ,   50.,     50.,     50.,     50.,     50.,     50.,     50.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: lflitcn &
+      =(/   1.,     70.,     80.,     50.,     60.,     60.,     50.,     50.&
+       ,   50.,     60.,     50.,     50.,     50.,     50.,     50.,     50.&
+#ifdef CROP
+       ,   50.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.,     25.&
+       ,   25.,     25.,     25.,     25.,     25.,     25.,     25.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: leaf_long &
+      =(/            0., 3.30916666666667, 3.30916666666667, 0.506666666666667&
+    ,            1.4025,           1.4025, 0.48333333333333, 0.483333333333333&
+    , 0.483333333333333, 1.32333333333333,             0.39,              0.39&
+    , 0.320833333333333, 0.32083333333333,             0.14, 0.320833333333333&
+#ifdef CROP
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.,                1.&
+    ,                1.,               1.,               1.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: cc_leaf  &
+      =(/   0.,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: cc_lstem &
+      =(/   0.,     0.3,     0.3,     0.3,    0.27,    0.27,    0.27,    0.27&
+      ,   0.27,    0.35,    0.35,    0.35,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: cc_dstem &
+      =(/   0.,     0.3,     0.3,     0.3,    0.27,    0.27,    0.27,    0.27&
+      ,   0.27,    0.35,    0.35,    0.35,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: cc_other &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.45,    0.45&
+      ,   0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_leaf  &
+      =(/   0.,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_lstem &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.35,    0.35&
+      ,   0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_lroot &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1&
+      ,   0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2&
+#ifdef CROP
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_root  &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1&
+      ,   0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2&
+#ifdef CROP
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_droot &
+      =(/   0.,    0.15,    0.15,    0.15,    0.13,    0.13,     0.1,     0.1&
+      ,   0.13,    0.17,    0.17,    0.17,     0.2,     0.2,     0.2,     0.2&
+#ifdef CROP
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2&
+      ,    0.2,     0.2,     0.2,     0.2,     0.2,     0.2,     0.2      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fm_other &
+      =(/   0.,     0.5,     0.5,     0.5,    0.45,    0.45,    0.35,    0.35&
+      ,   0.45,    0.55,    0.55,    0.55,     0.8,     0.8,     0.8,     0.8&
+#ifdef CROP
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8&
+      ,    0.8,     0.8,     0.8,     0.8,     0.8,     0.8,     0.8      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: froot_leaf         &
+      =(/   0.,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5&
+      ,    1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5,     1.5&
+#ifdef CROP
+      ,     1.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.,      2.&
+      ,     2.,      2.,      2.,      2.,      2.,      2.,      2.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: croot_stem         &
+      =(/  0.3,     0.3,     0.3,     0.3,     0.3,     0.3,     0.3,     0.3&
+      ,    0.3,     0.3,     0.3,     0.3,      0.,      0.,      0.,      0.&
+#ifdef CROP
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: stem_leaf          &
+      =(/   0.,     2.3,     2.3,      1.,     2.3,     1.5,      1.,     2.3&
+      ,    2.3,     1.4,    0.24,    0.24,      0.,      0.,      0.,      0.&
+#ifdef CROP
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: flivewd            &
+      =(/   0.,     0.1,     0.1,     0.1,     0.1,     0.1,     0.1,     0.1&
+      ,    0.1,     0.5,     0.5,     0.1,      0.,      0.,      0.,      0.&
+#ifdef CROP
+      ,     0.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: fcur2              &
+      =(/   0.,      1.,      1.,      0.,      1.,      1.,      0.,      0.&
+      ,     0.,      1.,      0.,      0.,      0.,      0.,      0.,      0.&
+#ifdef CROP
+      ,     0.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.,      1.&
+      ,     1.,      1.,      1.,      1.,      1.,      1.,      1.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: dsladlai             &
+      =(/   0., 0.00125,   0.001,   0.003, 0.00122,  0.0015,  0.0027,  0.0027&
+      , 0.0027,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+#ifdef CROP
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.,      0.&
+      ,     0.,      0.,      0.,      0.,      0.,      0.,      0.      &
+#endif
+         /)
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: slatop             &
+      =(/   0.,    0.01,    0.01, 0.02018,   0.019,   0.019,  0.0308,  0.0308&
+      , 0.0308, 0.01798, 0.03072, 0.03072, 0.04024, 0.04024, 0.03846, 0.04024&
+#ifdef CROP
+      ,  0.035,    0.05,    0.05,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,    0.05,    0.05,   0.035,   0.035,   0.035&
+      ,  0.035,   0.035,   0.035,    0.05,    0.05,   0.035,   0.035      &
+#endif
+         /)
+!--- crop variables
+
+   REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: minplanttemp       &
+     =(/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9&
+      , -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9&
+#ifdef CROP
+      , -999.9, 279.15, 279.15, 272.15, 272.15, 278.15, 278.15, 279.15&
+      , 279.15, 272.15, 272.15, 278.15, 278.15, 272.15, 272.15, 278.15&
+      , 278.15, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9&
+      , -999.9, 283.15, 283.15, -999.9, -999.9, -999.9, -999.9, -999.9&
+      , -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9&
+      , -999.9, -999.9, -999.9, -999.9, -999.9, 283.15, 283.15, -999.9&
+      , -999.9, -999.9, -999.9, 283.15, 283.15, -999.9, -999.9, -999.9&
+      , -999.9, -999.9, -999.9, 283.15, 283.15, 283.15, 283.15       &
+#endif
+         /)
+
+   INTEGER, parameter, dimension(0:N_PFT+N_CFT-1,1:2) :: minplantymd   &
+     =(/(/-999, -999, -999, -999, -999, -999, -999, -999 & ! north hemisphere
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999,  401,  401,  401,  401,  901,  901,  501 &
+      ,    501,  401,  401,  901,  901,  401,  401,  901 &
+      ,    901, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999,  401,  401, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999,  101,  101, -999 &
+      ,   -999, -999, -999,  101,  101, -999, -999, -999 &
+      ,   -999, -999, -999,  320,  320,  415,  415       &
+#endif
+         /)&
+      , (/-999, -999, -999, -999, -999, -999, -999, -999 & ! south hemisphere
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999, 1001, 1001, 1001, 1001,  301,  301, 1101 &
+      ,   1101, 1001, 1001,  301,  301, 1001, 1001,  301 &
+      ,    301, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999,  901,  901, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, 1015, 1015, -999 &
+      ,   -999, -999, -999,  801,  801, -999, -999, -999 &
+      ,   -999, -999, -999,  920,  920, 1015, 1015       &
+#endif
+         /)/)
+
+   INTEGER, dimension(0:N_PFT+N_CFT-1,1:2) :: minplantjday
+
+   INTEGER, parameter, dimension(0:N_PFT+N_CFT-1,1:2) :: maxplantymd   &
+     =(/(/-999, -999, -999, -999, -999, -999, -999, -999 & ! north hemisphere
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999,  615,  615,  615,  615, 1130, 1130,  615 &
+      ,    615,  615,  615, 1130, 1130,  615,  615, 1130 &
+      ,   1130, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999,  531,  531, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999,  228,  228, -999 &
+      ,   -999, -999, -999,  331,  331, -999, -999, -999 &
+      ,   -999, -999, -999,  415,  415,  701,  701       &
+#endif
+         /)&
+      , (/-999, -999, -999, -999, -999, -999, -999, -999 & ! south hemispehre
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999, 1215, 1215, 1215, 1215,  530,  530, 1215 &
+      ,   1215, 1215, 1215,  530,  530, 1215, 1215,  530 &
+      ,    530, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, 1130, 1130, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, 1231, 1231, -999 &
+      ,   -999, -999, -999, 1031, 1031, -999, -999, -999 &
+      ,   -999, -999, -999, 1015, 1015, 1231, 1231
+#endif
+         /)/)
+
+   INTEGER, dimension(0:N_PFT+N_CFT-1,1:2) :: maxplantjday
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: hybgdd &
+      = (/-999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999, 1700, 1700, 1700, 1700, 1700, 1700, 1900 &
+      ,   1900, 1700, 1700, 1700, 1700, 1700, 1700, 1700 &
+      ,   1700, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, 1700, 1700, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, 2100, 2100, -999 &
+      ,   -999, -999, -999, 4300, 4300, -999, -999, -999 &
+      ,   -999, -999, -999, 1800, 1800, 2100, 2100       &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: manunitro  &   ! Max fertilizer to be applied in total (kg N/m2)
+      = (/  0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
+      ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
+#ifdef CROP
+      ,     0., 0.0150, 0.0150, 0.0080, 0.0080, 0.0080, 0.0080, 0.0025 &
+      , 0.0025, 0.0080, 0.0080, 0.0080, 0.0080, 0.0080, 0.0080, 0.0080 &
+      , 0.0080,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
+      ,     0.,   0.02,   0.02,     0.,     0.,     0.,     0.,     0. &
+      ,     0.,     0.,     0.,     0.,     0.,     0.,     0.,     0. &
+      ,     0.,     0.,     0.,     0.,     0.,   0.02,   0.02,     0. &
+      ,     0.,     0.,     0.,   0.04,   0.04,     0.,     0.,     0. &
+      ,     0.,     0.,     0.,   0.03,   0.03,   0.05,   0.05      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: planttemp  &  ! planting temperature used in CNPhenology (K)
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9, 283.15, 283.15, 280.15, 280.15, -999.9, -999.9, 286.15 &
+      ,   286.15, 280.15, 280.15, -999.9, -999.9, 280.15, 280.15, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, 294.15, 294.15, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, 294.15, 294.15, -999.9 &
+      ,   -999.9, -999.9, -999.9, 294.15, 294.15, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, 294.15, 294.15, 294.15, 294.15      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: lfemerg   & ! parameter used in CNPhenology
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,   0.03,   0.03,   0.05,   0.05,   0.03,   0.03,   0.03 &
+      ,     0.03,   0.05,   0.05,   0.05,   0.05,   0.05,   0.05,   0.05 &
+      ,     0.05, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,   0.03,   0.03, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,   0.01,   0.01, -999.9 &
+      ,   -999.9, -999.9, -999.9,   0.03,   0.03, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,   0.03,   0.03,   0.03,   0.03      &
+#endif
+         /)
+
+    INTEGER, parameter, dimension(0:N_PFT+N_CFT-1) :: mxmat   & ! parameter used in CNPhenology
+      = (/-999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+#ifdef CROP
+      ,   -999,  165,  165,  150,  150,  330,  330,  150 &
+      ,    150,  150,  150,  265,  265,  150,  150,  265 &
+      ,    265, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999,  160,  160, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999, -999, -999, -999 &
+      ,   -999, -999, -999, -999, -999,  150,  150, -999 &
+      ,   -999, -999, -999,  300,  300, -999, -999, -999 &
+      ,   -999, -999, -999,  160,  160,  150,  150      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: grnfill  & ! parameter used in CNPhenology
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,   0.65,   0.65,    0.6,    0.6,    0.4,    0.4,    0.5 &
+      ,      0.5,    0.6,    0.6,    0.4,    0.4,    0.6,    0.6,    0.4 &
+      ,      0.4, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,    0.5,    0.5, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,    0.4,    0.4, -999.9 &
+      ,   -999.9, -999.9, -999.9,   0.65,   0.65, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,    0.5,    0.5,    0.5,    0.5      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: mxtmp   & ! parmaeter used in accFlds
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,    30.,    30.,    26.,    26.,    26.,    26.,    30. &
+      ,      30.,    26.,    26.,    26.,    26.,    26.,    26.,    26. &
+      ,      26., -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,    30.,    30., -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,    30.,    30., -999.9 &
+      ,   -999.9, -999.9, -999.9,    30.,    30., -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9,    30.,    30.,    30.,    30.       &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: baset   & ! parameter used in accFlds
+      = (/0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
+      ,   0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
+#ifdef CROP
+      ,   0.,  8.,  8.,  0.,  0.,  0.,  0., 10. &
+      ,   10., 0.,  0.,  0.,  0.,  0.,  0.,  0. &
+      ,   0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
+      ,   0., 10., 10.,  0.,  0.,  0.,  0.,  0. &
+      ,   0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
+      ,   0.,  0.,  0.,  0.,  0., 10., 10.,  0. &
+      ,   0.,  0.,  0., 10., 10.,  0.,  0.,  0. &
+      ,   0.,  0.,  0., 10., 10., 10., 10.      &     
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: gddmin  & ! parameter used in CNPhenology
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.,    50. &
+      ,      50.,    50.,    50.,    50.,    50.,    50.,    50.      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: aleaff = 0._r8 ! ! parameter used in CNAllocation
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: astemf  & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9, -999.9, -999.9,   0.05,   0.05,   0.05,   0.05,    0.3 &
+      ,      0.3,   0.05,   0.05,   0.05,   0.05,   0.05,   0.05,   0.05 &
+      ,     0.05, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,    0.3,    0.3, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,   0.05,   0.05, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,    0.3,    0.3      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: arooti  & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,    0.1,    0.1,   0.05,   0.05,    0.2,    0.2,    0.2 &
+      ,      0.2,    0.3,    0.3,    0.3,    0.3,    0.3,    0.3,    0.3 &
+      ,      0.3, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,    0.2,    0.2, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,    0.1,    0.1, -999.9 &
+      ,   -999.9, -999.9, -999.9,    0.1,    0.1, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,    0.1,    0.1,    0.2,    0.2      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: arootf  & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,   0.05,   0.05, -999.9, -999.9, -999.9, -999.9,    0.2 &
+      ,      0.2, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,    0.2,    0.2, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,   0.05,   0.05, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,   0.05,   0.05,    0.2,    0.2      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) ::fleafi   & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,    0.6,    0.6,    0.9,    0.9,    0.8,    0.8,   0.85 &
+      ,     0.85,   0.75,   0.75,  0.425,  0.425,   0.75,   0.75,  0.425 &
+      ,    0.425, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,   0.85,   0.85, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,   0.75,   0.75, -999.9 &
+      ,   -999.9, -999.9, -999.9,    0.6,    0.6, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,    0.6,    0.6,   0.85,   0.85      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: bfact   & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1 &
+      ,      0.1,    0.1,    0.1,    0.1,    0.1,    0.1,    0.1      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: declfact & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05 &
+      ,     1.05,   1.05,   1.05,   1.05,   1.05,   1.05,   1.05      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: allconss & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,     2.,     2.,     1.,     1.,     1.,     1.,     5. &
+      ,       5.,     1.,     1.,     1.,     1.,     1.,     1.,     1. &
+      ,       1., -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,     5.,     5., -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,     1.,     1., -999.9 &
+      ,   -999.9, -999.9, -999.9,     2.,     2., -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,     2.,     2.,     5.,     5.      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: allconsl & ! parameter used in CNAllocation
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+      ,   -999.9,     5.,     5.,     3.,     3.,     3.,     3.,     2. &
+      ,       2.,     3.,     3.,     3.,     3.,     3.,     3.,     3. &
+      ,       3., -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9,     2.,     2., -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9, -999.9, -999.9,     3.,     3., -999.9 &
+      ,   -999.9, -999.9, -999.9,     5.,     5., -999.9, -999.9, -999.9 &
+      ,   -999.9, -999.9, -999.9,     5.,     5.,     2.,     2.      &
+#endif
+         /)
+
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: fleafcn & ! C:N during grain fill; leaf
+      = (/999., 999., 999., 999., 999., 999., 999., 999. &
+      ,   999., 999., 999., 999., 999., 999., 999., 999. &
+#ifdef CROP
+      ,   999.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.,  65. &
+      ,    65.,  65.,  65.,  65.,  65.,  65.,  65.      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: fstemcn & ! C:N during grain fill; stem
+      = (/999., 999., 999., 999., 999., 999., 999., 999. &
+      ,   999., 999., 999., 999., 999., 999., 999., 999. &
+#ifdef CROP
+      ,   999., 120., 120., 100., 100., 100., 100., 130. &
+      ,   130., 100., 100., 100., 100., 100., 100., 100. &
+      ,   100., 999., 999., 999., 999., 999., 999., 999. &
+      ,   999., 130., 130., 999., 999., 999., 999., 999. &
+      ,   999., 999., 999., 999., 999., 999., 999., 999. &
+      ,   999., 999., 999., 999., 999., 100., 100., 999. &
+      ,   999., 999., 999., 120., 120., 999., 999., 999. &
+      ,   999., 999., 999., 120., 120., 130., 130.      &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: ffrootcn & ! C:N during grain fill; fine root
+      = (/999., 999., 999., 999., 999., 999., 999., 999. &
+        , 999., 999., 999., 999., 999., 999., 999., 999. &
+#ifdef CROP
+        , 999.,   0.,   0.,  40.,  40.,  40.,  40.,   0. &
+        ,   0.,  40.,  40.,  40.,  40.,  40.,  40.,  40. &
+        ,  40., 999., 999., 999., 999., 999., 999., 999. &
+        , 999.,   0.,   0., 999., 999., 999., 999., 999. &
+        , 999., 999., 999., 999., 999., 999., 999., 999. &
+        , 999., 999., 999., 999., 999.,  40.,  40., 999. &
+        , 999., 999., 999.,   0.,   0., 999., 999., 999. &
+        , 999., 999., 999.,   0.,   0.,   0.,   0.       &
+#endif
+         /)
+
+    REAL(r8),parameter, dimension(0:N_PFT+N_CFT-1) :: laimx    & ! maximum leaf area index
+      = (/-999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+        , -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+#ifdef CROP
+        , -999.9,     5.,     5.,     7.,     7.,     7.,     7.,     6. &
+        ,     6.,     7.,     7.,     7.,     7.,     7.,     7.,     7. &
+        ,     7., -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+        , -999.9,     6.,     6., -999.9, -999.9, -999.9, -999.9, -999.9 &
+        , -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9, -999.9 &
+        , -999.9, -999.9, -999.9, -999.9, -999.9,     7.,     7., -999.9 &
+        , -999.9, -999.9, -999.9,     5.,     5., -999.9, -999.9, -999.9 &
+        , -999.9, -999.9, -999.9,     5.,     5.,     6.,      6.        &
+#endif
+         /)
+#ifdef CROP
+    INTEGER, parameter, dimension(0:N_PFT+N_CFT-1) :: mergetoclmpft & ! merge crop functional types
+      = (/0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18 &
+      ,  19, 20, 21, 22, 23, 24, 19, 20, 21, 22, 19, 20, 21, 22, 61, 62, 19, 20, 61 &
+      ,  62, 61, 62, 41, 42, 41, 42, 19, 20, 19, 20, 61, 62, 75, 76, 61, 62, 19, 20 &
+      ,  19, 20, 19, 20, 61, 62, 75, 76, 19, 20, 67, 68, 19, 20, 75, 76, 75, 76, 75 &
+      ,  76, 77, 78/)
+#endif
+!   end bgc variables
 
 #ifdef PLANT_HYDRAULIC_STRESS
 ! Plant Hydraulics Paramters
-   REAL(r8), parameter :: kmax_sun_p(0:15) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
-          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+   REAL(r8), parameter :: kmax_sun_p(0:N_PFT+N_CFT-1) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#ifdef CROP
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#endif
+         /)
 
-   REAL(r8), parameter :: kmax_sha_p(0:15) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
-          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+   REAL(r8), parameter :: kmax_sha_p(0:N_PFT+N_CFT-1) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#ifdef CROP
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#endif
+         /)
+   REAL(r8), parameter :: kmax_xyl_p(0:N_PFT+N_CFT-1) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#ifdef CROP
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#endif
+         /)
 
-   REAL(r8), parameter :: kmax_xyl_p(0:15) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
-          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
-
-   REAL(r8), parameter :: kmax_root_p(0:15) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,&
-          2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008/)
+   REAL(r8), parameter :: kmax_root_p(0:N_PFT+N_CFT-1) &
+      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#ifdef CROP
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+         ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+#endif
+         /)
 
    ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O) 
-   REAL(r8), parameter :: psi50_sun_p(0:15) &
-      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,& 
-          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+   REAL(r8), parameter :: psi50_sun_p(0:N_PFT+N_CFT-1) &
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000& 
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+#ifdef CROP
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000&
+#endif
+         /)
 
    ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
-   REAL(r8), parameter :: psi50_sha_p(0:15) &
-      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,& 
-          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+   REAL(r8), parameter :: psi50_sha_p(0:N_PFT+N_CFT-1) &
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000& 
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+#ifdef CROP
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000&
+#endif
+         /)
 
    ! water potential at 50% loss of xylem tissue conductance (mmH2O)
-   REAL(r8), parameter :: psi50_xyl_p(0:15) &
-      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,&
-          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+   REAL(r8), parameter :: psi50_xyl_p(0:N_PFT+N_CFT-1) &
+      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+#ifdef CROP
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000&
+#endif
+         /)
 
    ! water potential at 50% loss of root tissue conductance (mmH2O)
-   REAL(r8), parameter :: psi50_root_p(0:15) &
-      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000,&
-          -200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000/)*1.0 
+   REAL(r8), parameter :: psi50_root_p(0:N_PFT+N_CFT-1) &
+      = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+#ifdef CROP
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
+         ,-340000, -340000, -340000, -340000, -340000, -340000, -340000&
+#endif
+         /)
 
    ! shape-fitting parameter for vulnerability curve (-)
-   REAL(r8), parameter :: ck_p(0:15) &
-      = (/0., 3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, &
-          3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95/)
+   REAL(r8), parameter :: ck_p(0:N_PFT+N_CFT-1) &
+      = (/0., 3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95  &
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+#ifdef CROP
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
+         ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95&
+#endif
+         /)
 #endif
 
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
    INTEGER, PRIVATE :: ROOTFR_SCHEME = 1 
    
    !fraction of roots in each soil layer 
-   REAL(r8), dimension(nl_soil,16) :: &
-      rootfr_p(1:nl_soil, 0:15) 
+#ifdef CROP
+   REAL(r8), dimension(nl_soil,N_PFT+N_CFT) :: &
+      rootfr_p(1:nl_soil, 0:N_PFT+N_CFT-1)
+#else
+   REAL(r8), dimension(nl_soil,N_PFT) :: &
+      rootfr_p(1:nl_soil, 0:N_PFT-1) 
+#endif
 
    INTEGER, PRIVATE :: i, nsl
    
@@ -260,7 +1698,11 @@ CONTAINS
       tau_p(2,2,:) = taus_nir_p(:)
 
 IF (ROOTFR_SCHEME == 1) THEN
+#ifdef CROP
+      DO i = 0, N_PFT+N_CFT-1
+#else
       DO i = 0, N_PFT-1
+#endif
          rootfr_p(1,i)=1./(1.+(z_soih(1)*100./d50_p(i))**beta_p(i)) 
          rootfr_p(nl_soil,i)=1.-1./(1.+(z_soih(nl_soil-1)*100./d50_p(i))**beta_p(i)) 
 
@@ -271,7 +1713,11 @@ IF (ROOTFR_SCHEME == 1) THEN
       ENDDO 
 ELSE
       ! PFT rootfr_p (Zeng, 2001)
+#ifdef CROP
+      DO i = 0, N_PFT+N_CFT-1
+#else
       DO i = 0, N_PFT-1
+#endif
          rootfr_p(1,i) = 1. - 0.5*( &
               exp(-roota(i) * z_soih(1)) &
             + exp(-rootb(i) * z_soih(1)) )
@@ -289,6 +1735,15 @@ ELSE
          ENDDO
       ENDDO
 ENDIF
+
+#ifdef CROP
+   DO i = 0, N_PFT+N_CFT-1
+      minplantjday(i,1) = get_calday(minplantymd(i,1),.false.)
+      minplantjday(i,2) = get_calday(minplantymd(i,2),.false.)
+      maxplantjday(i,1) = get_calday(maxplantymd(i,1),.false.)
+      maxplantjday(i,2) = get_calday(maxplantymd(i,2),.false.)
+   END DO
+#endif
    
    END SUBROUTINE Init_PFT_Const
 

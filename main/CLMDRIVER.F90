@@ -20,6 +20,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
  USE mod_landpatch, only : numpatch
+! use MOD_PFTimeInvars
  use omp_lib
 
  IMPLICIT NONE
@@ -156,6 +157,11 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
          dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
 
+#if(defined BGC)
+         if(patchtype(i) .eq. 0)then
+            CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
+         end if
+#endif
       ENDDO
 #ifdef OPENMP
 !$OMP END PARALLEL DO

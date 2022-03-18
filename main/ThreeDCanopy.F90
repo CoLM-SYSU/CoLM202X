@@ -27,12 +27,21 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
 
    ! local variables
    INTEGER :: lbp, ubp;
+#ifndef CROP
    REAL(r8), dimension(0:N_PFT-1, 2) :: albd, albi, fabd, fabi, fadd
    REAL(r8), dimension(0:N_PFT-1, 2) :: ftdd, ftid, ftii
    REAL(r8), dimension(0:N_PFT-1, 2) :: rho, tau
    REAL(r8), dimension(0:N_PFT-1)    :: csiz, chgt, lsai
    REAL(r8), dimension(0:N_PFT-1)    :: fsun_id, fsun_ii, psun
    REAL(r8), dimension(0:N_PFT-1)    :: phi1, phi2, gdir
+#else
+   REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: albd, albi, fabd, fabi, fadd
+   REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: ftdd, ftid, ftii
+   REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: rho, tau
+   REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: csiz, chgt, lsai 
+   REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: fsun_id, fsun_ii, psun
+   REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: phi1, phi2, gdir
+#endif
 
    INTEGER p, pc
 

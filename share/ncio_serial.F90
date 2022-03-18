@@ -36,6 +36,7 @@ MODULE ncio_serial
       MODULE procedure ncio_read_bcast_serial_int32_2d 
       MODULE procedure ncio_read_bcast_serial_real8_1d 
       MODULE procedure ncio_read_bcast_serial_real8_2d 
+      MODULE procedure ncio_read_bcast_serial_logical_1d 
    END INTERFACE ncio_read_bcast_serial
 
    PUBLIC :: ncio_define_dimension
@@ -45,6 +46,7 @@ MODULE ncio_serial
       MODULE procedure ncio_write_serial_real8_0d 
       MODULE procedure ncio_write_serial_int32_1d 
       MODULE procedure ncio_write_serial_real8_1d 
+      MODULE procedure ncio_write_serial_logical_1d 
       MODULE procedure ncio_write_serial_int8_2d 
       MODULE procedure ncio_write_serial_int16_2d 
       MODULE procedure ncio_write_serial_int32_2d 
@@ -647,6 +649,39 @@ CONTAINS
    END SUBROUTINE ncio_read_bcast_serial_real8_2d
    
    ! -------------------------------
+   SUBROUTINE ncio_read_bcast_serial_logical_1d (filename, dataname, rdata)
+
+      USE spmd_task
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      LOGICAL, allocatable, intent(out) :: rdata (:)
+      INTEGER :: vlen, i
+      INTEGER, allocatable :: rdata_int(:)
+
+      IF (p_is_master) THEN
+         CALL ncio_read_serial_int32_1d(filename, dataname, rdata_int)
+         vlen = size(rdata_int)
+         allocate(rdata(vlen))
+         do i = 1, vlen
+            if(rdata_int(i) .eq. 1) then
+               rdata(i) = .true.
+            else
+               rdata(i) = .false.
+            end if
+         end do
+      ENDIF
+      
+#ifdef USEMPI
+      CALL mpi_bcast (vlen, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      IF (.not. p_is_master)  allocate (rdata (vlen))
+      CALL mpi_bcast (rdata, vlen, MPI_INTEGER, p_root, p_comm_glb, p_err)
+#endif
+
+   END SUBROUTINE ncio_read_bcast_serial_logical_1d
+
+   ! -------------------------------
    SUBROUTINE ncio_define_dimension (filename, dimname, dimlen)
 
       USE netcdf
@@ -816,6 +851,60 @@ CONTAINS
 
    END SUBROUTINE ncio_write_serial_real8_1d
 
+   !---------------------------------------------------------
+   SUBROUTINE ncio_write_serial_logical_1d (filename, dataname, wdata, dimname, compress)
+
+      USE netcdf
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      LOGICAL, intent(in) :: wdata (:)
+
+      CHARACTER(len=*), intent(in), optional :: dimname
+      INTEGER, intent(in), optional :: compress
+
+      ! Local variables
+      INTEGER :: ncid, varid, dimid, status, i, varsize
+      INTEGER, allocatable :: wdata_int(:)
+
+      CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
+      status = nf90_inq_varid(ncid, trim(dataname), varid)
+      IF (status /= NF90_NOERR) THEN
+         IF (.not. present(dimname)) THEN
+            write(*,*) 'Warning: no dimension name for ', trim(dataname)
+            RETURN
+         ENDIF 
+
+         CALL nccheck (nf90_inq_dimid(ncid, trim(dimname), dimid))
+
+         CALL nccheck (nf90_redef(ncid))
+         IF (present(compress)) THEN 
+            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT, dimid, varid, &
+               deflate_level = compress))
+         ELSE
+            CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_INT, dimid, varid))
+         ENDIF 
+
+         CALL nccheck (nf90_enddef(ncid))
+      ENDIF 
+
+      CALL nccheck( nf90_inquire_dimension(ncid, dimid, len = varsize) )
+      allocate(wdata_int(varsize))
+      do i = 1, varsize
+         if(wdata(i))then
+            wdata_int(i) = 1
+         else
+            wdata_int(i) = 0
+         end if
+      end do
+
+      CALL nccheck( nf90_put_var(ncid, varid, wdata_int) )
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_write_serial_logical_1d
+
+   !---------------------------------------------------------
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int8_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)

@@ -9,6 +9,7 @@ MODULE ncio_vector
 
    interface ncio_read_vector
       MODULE procedure ncio_read_vector_int32_1d 
+      MODULE procedure ncio_read_vector_logical_1d 
       MODULE procedure ncio_read_vector_real8_1d 
       MODULE procedure ncio_read_vector_real8_2d 
       MODULE procedure ncio_read_vector_real8_3d 
@@ -21,6 +22,7 @@ MODULE ncio_vector
 
    interface ncio_write_vector
       MODULE procedure ncio_write_vector_int32_1d 
+      MODULE procedure ncio_write_vector_logical_1d 
       MODULE procedure ncio_write_vector_int32_3d 
       MODULE procedure ncio_write_vector_real8_1d 
       MODULE procedure ncio_write_vector_real8_2d 
@@ -123,6 +125,113 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_read_vector_int32_1d
+
+   !---------------------------------------------------------
+   !---------------------------------------------------------
+   SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata)
+
+      USE ncio_serial
+      USE spmd_task
+      USE mod_block
+      USE mod_pixelset
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      TYPE(pixelset_type), intent(in) :: pixelset
+
+      LOGICAL, allocatable, intent(inout) :: rdata (:)
+
+      ! Local variables
+      INTEGER :: iblk, jblk, istt, iend, i
+      CHARACTER(len=256) :: fileblock
+      INTEGER, allocatable :: sbuff(:), rbuff(:)
+
+      IF (p_is_io) THEN
+
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
+               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+                  IF (pixelset%nonzero(iblk,jblk)) THEN
+
+                     allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                     CALL get_filename_block (filename, iblk, jblk, fileblock)
+                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+
+#ifdef USEMPI
+                     CALL mpi_scatterv ( &
+                        sbuff, pixelset%vecgs%vcnt(:,iblk,jblk), &
+                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER, &
+                        MPI_IN_PLACE, 0, MPI_INTEGER, &
+                        p_root, p_comm_group, p_err)
+#else
+                     IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+                        allocate (rdata (pixelset%nset))
+                     ENDIF
+
+                     istt = pixelset%vecgs%vstt(iblk,jblk)
+                     iend = pixelset%vecgs%vend(iblk,jblk)
+                     do i = istt, iend
+                        if(sbuff(i-istt+1) .eq. 1) then
+                           rdata(i) = .true.
+                        else
+                           rdata(i) = .false.
+                        end if
+                     end do
+#endif
+
+                     deallocate (sbuff)
+
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+
+      ENDIF
+
+#ifdef USEMPI
+      IF (p_is_worker) THEN
+         
+         IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
+            allocate (rdata (pixelset%nset))
+         ENDIF
+
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
+               IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
+                  IF (pixelset%nonzero(iblk,jblk)) THEN
+
+                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
+                        allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                     ENDIF
+
+                     CALL mpi_scatterv ( &
+                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
+                        p_root, p_comm_group, p_err)
+
+                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
+                        istt = pixelset%vecgs%vstt(iblk,jblk)
+                        iend = pixelset%vecgs%vend(iblk,jblk)
+                        do i = istt, iend
+                           if(rbuff(i-istt+1) .eq. 1)then
+                              rdata(i) = .true.
+                           else
+                              rdata(i) = .false.
+                           end if
+                        end do
+                        deallocate (rbuff)
+                     ENDIF
+
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+
+      ENDIF
+#endif
+
+   END SUBROUTINE ncio_read_vector_logical_1d
 
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_1d (filename, dataname, pixelset, rdata)
@@ -702,6 +811,112 @@ CONTAINS
 #endif
 
    END SUBROUTINE ncio_write_vector_int32_1d
+
+   !---------------------------------------------------------
+   SUBROUTINE ncio_write_vector_logical_1d ( &
+         filename, dataname, dimname, pixelset, wdata, compress_level)
+
+      USE ncio_serial
+      USE spmd_task
+      USE mod_block
+      USE mod_pixelset
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      CHARACTER(len=*), intent(in) :: dimname
+      TYPE(pixelset_type), intent(in) :: pixelset
+      LOGICAL, intent(in) :: wdata (:)
+
+      INTEGER, intent(in), optional :: compress_level
+
+      ! Local variables
+      INTEGER :: iblk, jblk, istt, iend, i
+      CHARACTER(len=256) :: fileblock
+      INTEGER, allocatable :: sbuff(:), rbuff(:)
+
+      IF (p_is_io) THEN
+
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
+               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+                  IF (pixelset%nonzero(iblk,jblk)) THEN
+
+                     allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
+#ifdef USEMPI
+                     CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
+                        rbuff, pixelset%vecgs%vcnt(:,iblk,jblk), &
+                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER, &
+                        p_root, p_comm_group, p_err)
+#else
+                     istt = pixelset%vecgs%vstt(iblk,jblk)
+                     iend = pixelset%vecgs%vend(iblk,jblk)
+                     do i = istt, iend
+                        if(wdata(i))then
+                           rbuff(i-istt+1) = 1
+                        else
+                           rbuff(i-istt+1) = 0
+                        end if
+                     end do
+#endif
+
+                     CALL get_filename_block (filename, iblk, jblk, fileblock)
+
+                     IF (present(compress_level)) THEN
+                        CALL ncio_write_serial (fileblock, dataname, rbuff, dimname, &
+                           compress = compress_level)
+                     ELSE
+                        CALL ncio_write_serial (fileblock, dataname, rbuff, dimname)
+                     ENDIF
+
+                     deallocate (rbuff)
+
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+
+      ENDIF
+               
+#ifdef USEMPI
+      IF (p_is_worker) THEN
+
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
+               IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
+                  IF (pixelset%nonzero(iblk,jblk)) THEN
+
+                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
+                        allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                        istt = pixelset%vecgs%vstt(iblk,jblk)
+                        iend = pixelset%vecgs%vend(iblk,jblk)
+                        do i = istt, iend
+                           if(wdata(i))then
+                             sbuff(i-istt+1) = 1
+                           else
+                             sbuff(i-istt+1) = 0
+                           end if
+                        end do
+                     ENDIF
+
+                     CALL mpi_gatherv ( &
+                        sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
+                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        p_root, p_comm_group, p_err)
+
+                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
+                        deallocate (sbuff)
+                     ENDIF
+
+                  ENDIF
+               ENDIF
+            ENDDO
+         ENDDO
+
+      ENDIF
+#endif
+
+   END SUBROUTINE ncio_write_vector_logical_1d
 
    !---------------------------------------------------------
    SUBROUTINE ncio_write_vector_int32_3d ( &

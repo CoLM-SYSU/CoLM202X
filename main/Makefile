@@ -2,7 +2,7 @@
 
 include ../include/Makeoptions
 
-VPATH = ../share : ../mksrfdata : ../main : ../hydro
+VPATH = ../share : ../mksrfdata : ../main : ../hydro 
 
 HEADER = ../include/define.h
 
@@ -102,6 +102,33 @@ OBJS =  \
 		  THERMAL.o                   \
 		  tridia.o                    \
 		  wetbulb.o                   \
+                  bgc_CNCStateUpdate1Mod.o    \
+                  bgc_CNCStateUpdate2Mod.o    \
+                  bgc_CNCStateUpdate3Mod.o    \
+                  bgc_CNNStateUpdate1Mod.o    \
+                  bgc_CNNStateUpdate2Mod.o    \
+                  bgc_CNNStateUpdate3Mod.o    \
+                  bgc_SoilBiogeochemNStateUpdate1Mod.o \
+                  bgc_soil_SoilBiogeochemCompetitionMod.o  \
+                  bgc_soil_SoilBiogeochemDecompCascadeBGCMod.o  \
+                  bgc_soil_SoilBiogeochemDecompMod.o  \
+                  bgc_soil_SoilBiogeochemLittVertTranspMod.o  \
+                  bgc_soil_SoilBiogeochemNLeachingMod.o  \
+                  bgc_soil_SoilBiogeochemPotentialMod.o  \
+                  bgc_soil_SoilBiogeochemVerticalProfileMod.o  \
+                  bgc_veg_CNGapMortalityMod.o  \
+                  bgc_veg_CNGRespMod.o  \
+                  bgc_veg_CNMRespMod.o  \
+                  bgc_DaylengthMod.o \
+                  bgc_veg_CNPhenologyMod.o  \
+                  bgc_veg_NutrientCompetitionMod.o  \
+                  bgc_veg_CNVegStructUpdateMod.o \
+                  bgc_CNSummaryMod.o  \
+                  bgc_CNAnnualUpdateMod.o \
+                  bgc_CNZeroFluxesMod.o \
+                  bgc_CNBalanceCheckMod.o \
+                  bgc_CNSASUMod.o \
+                  bgc_driver.o \
 		  MOD_1D_Acc_Fluxes.o         \
 		  MOD_1D_Acc_cama_Fluxes.o         \
 		  mod_hist.o                  \
@@ -120,6 +147,9 @@ ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS}
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
+
+$(OBJS_BGC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
@@ -150,6 +180,9 @@ $(OBJS) : %.o : %.F90 ${HEADER}
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
+
+$(OBJS_BGC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share

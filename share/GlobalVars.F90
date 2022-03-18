@@ -18,16 +18,61 @@ MODULE GlobalVars
 #endif
    
    ! number of plant functional types
+#ifndef CROP
    INTEGER, parameter :: N_PFT    = 16 
+   INTEGER, parameter :: N_CFT    = 0
+#else
+   INTEGER, parameter :: N_PFT    = 15
+   INTEGER, parameter :: N_CFT    = 64
+#endif
    
    ! vertical layer number
    INTEGER, parameter :: maxsnl   = -5
    INTEGER, parameter :: nl_soil  = 10
+   INTEGER, parameter :: nl_soil_full  = 15
+   
    INTEGER, parameter :: nl_lake  = 10
    INTEGER, parameter :: nl_roof  = 5
    INTEGER, parameter :: nl_wall  = 5
    INTEGER, parameter :: nvegwcs  = 4  ! number of vegetation water potential nodes
-   
+
+   ! bgc variables
+   integer, parameter :: ndecomp_pools = 7
+   integer, parameter :: ndecomp_transitions = 10
+   integer, parameter :: npcropmin = 17
+   real(r8),parameter :: zmin_bedrock = 0.4
+   integer, parameter :: nbedrock = 10
+   integer, parameter :: ndecomp_pools_vr = ndecomp_pools * nl_soil
+
+   ! crop index
+   integer, parameter :: noveg                = 0
+   integer, parameter :: nbrdlf_evr_shrub     = 9
+   integer, parameter :: nbrdlf_dcd_brl_shrub = 11
+   integer, parameter :: nc3crop              = 15
+   integer, parameter :: nc3irrig             = 16
+   integer, parameter :: ntmp_corn            = 17 ! temperate_corn
+   integer, parameter :: nirrig_tmp_corn      = 18 ! irrigated temperate corn
+   integer, parameter :: nswheat              = 19 ! spring wheat
+   integer, parameter :: nirrig_swheat        = 20 ! irrigated spring wheat
+   integer, parameter :: nwwheat              = 21 ! winter wheat
+   integer, parameter :: nirrig_wwheat        = 22 ! irrigated winter wheat
+   integer, parameter :: ntmp_soybean         = 23 ! temperate soybean
+   integer, parameter :: nirrig_tmp_soybean   = 24 ! irrigated temperate soybean
+   integer, parameter :: ncotton              = 41 ! cotton
+   integer, parameter :: nirrig_cotton        = 42 ! irrigated cotton
+   integer, parameter :: nrice                = 61 ! rice
+   integer, parameter :: nirrig_rice          = 62 ! irrigated rice
+   integer, parameter :: nsugarcane           = 67 ! sugarcane
+   integer, parameter :: nirrig_sugarcane     = 68 ! irrigated sugarcane
+   integer, parameter :: nmiscanthus          = 71 ! miscanthus
+   integer, parameter :: nirrig_miscanthus    = 72 ! irrigated miscanthus
+   integer, parameter :: nswitchgrass         = 73 ! switchgrass
+   integer, parameter :: nirrig_switchgrass   = 74 ! irrigated switchgrass
+   integer, parameter :: ntrp_corn            = 75 ! tropical corn
+   integer, parameter :: nirrig_trp_corn      = 76 ! irrigated tropical corn
+   integer, parameter :: ntrp_soybean         = 77 ! tropical soybean
+   integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
+
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
 !   INTEGER :: numpatch  ! moved to mod_landpatch   !total number of patches of grids
 !   INTEGER :: numpft    ! moved to mod_landpft     !total number of PFT patches of grids
@@ -72,6 +117,8 @@ CONTAINS
       DO nsl = 2, nl_soil
          zi_soi(nsl) = zi_soi(nsl-1) + dz_soi(nsl)
       ENDDO
+
+!      ndecomp_pools_vr = ndecomp_pools * nl_soil
 
    END SUBROUTINE Init_GlovalVars
 

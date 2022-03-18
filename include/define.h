@@ -3,8 +3,8 @@
 #define	PFT_CLASSIFICATION       
 #define LANDONLY
 
-#define VARIABLY_SATURATED_FLOW
-#define USE_DEPTH_TO_BEDROCK
+#undef VARIABLY_SATURATED_FLOW
+#undef USE_DEPTH_TO_BEDROCK
 #define Campbell_SOIL_MODEL
 #undef  vanGenuchten_Mualem_SOIL_MODEL
 #undef SOILPAR_UPS_FIT
@@ -21,6 +21,8 @@
 #define	CLMDEBUG                  
 #define  USEMPI
 #undef  CaMa_Flood
+#undef  CROP
+#define BGC
 
 #ifndef VARIABLY_SATURATED_FLOW
 #undef  USE_DEPTH_TO_BEDROCK
