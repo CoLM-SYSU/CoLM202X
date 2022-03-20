@@ -42,7 +42,7 @@ OBJS = \
 		 mod_landpft.o \
 		 mod_landpc.o \
 		 par_fitting.o \
-		 aggregation_landtype.o \
+		 aggregation_percentages.o \
 		 aggregation_LAI.o \
 		 aggregation_soil_brightness.o \
 		 aggregation_lakedepth.o \

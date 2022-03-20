@@ -21,7 +21,7 @@
 #define	CLMDEBUG                  
 #define  USEMPI
 #undef  CaMa_Flood
-#undef  CROP
+#define CROP
 #define BGC
 
 #ifndef VARIABLY_SATURATED_FLOW
