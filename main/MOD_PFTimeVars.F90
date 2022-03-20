@@ -2398,12 +2398,12 @@ CONTAINS
 
 #ifdef CROP
 ! crop variables 
-      call check_vector_data ('croplive_p             ', croplive_p             )
+!      call check_vector_data ('croplive_p             ', croplive_p             )
       call check_vector_data ('gddtsoi_p              ', gddtsoi_p              )
       call check_vector_data ('huileaf_p              ', huileaf_p              )
       call check_vector_data ('gddplant_p             ', gddplant_p             )
       call check_vector_data ('huigrain_p             ', huigrain_p             )
-      call check_vector_data ('peaklai_p              ', peaklai_p              )
+!      call check_vector_data ('peaklai_p              ', peaklai_p              )
       call check_vector_data ('aroot_p                ', aroot_p                )
       call check_vector_data ('astem_p                ', astem_p                )
       call check_vector_data ('arepr_p                ', arepr_p                )
@@ -2412,8 +2412,8 @@ CONTAINS
       call check_vector_data ('aleafi_p               ', aleafi_p               )
       call check_vector_data ('gddmaturity_p          ', gddmaturity_p          )
 
-      call check_vector_data ('cropplant_p            ', cropplant_p            )
-      call check_vector_data ('idop_p                 ', idop_p                 )
+!      call check_vector_data ('cropplant_p            ', cropplant_p            )
+!      call check_vector_data ('idop_p                 ', idop_p                 )
       call check_vector_data ('a5tmin_p               ', a5tmin_p               )
       call check_vector_data ('a10tmin_p              ', a10tmin_p              )
       call check_vector_data ('t10_p                  ', t10_p                  )

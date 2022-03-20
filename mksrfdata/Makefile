@@ -1,6 +1,8 @@
 # Makefile for CLM surface data processing
 
 include ../include/Makeoptions
+ 
+INCLUDE_DIR = -I../include -I../share -I${NETCDF_INC}
 
 VPATH = ../share
 
@@ -35,6 +37,7 @@ OBJS_SHARED =  ../share/precision.o \
 OBJS = \
 		 mod_srfdata_restart.o \
 		 mod_modis_data.o \
+		 mod_pixelsetshadow.o \
 		 mod_landcell.o \
 		 mod_landpatch.o \
 		 mod_aggregation_LC.o \

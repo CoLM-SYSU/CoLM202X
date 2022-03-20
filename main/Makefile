@@ -1,8 +1,11 @@
 # Makefile for CLM main program
 
 include ../include/Makeoptions
+ 
+INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
+               -I../mkinidata -I./hydro -I${NETCDF_INC}
 
-VPATH = ../share : ../mksrfdata : ../main : ../hydro 
+VPATH = ../share : ../mksrfdata : ../main : hydro
 
 HEADER = ../include/define.h
 
@@ -41,6 +44,7 @@ OBJS_SHARED = \
 OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_srfdata_restart.o \
 				  ../mksrfdata/mod_modis_data.o \
+				  ../mksrfdata/mod_pixelsetshadow.o \
 				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landcell.o \
 				  ../mksrfdata/mod_landpatch.o \
@@ -48,8 +52,8 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landpc.o
 
 OBJS_HYDRO = \
-				  ../hydro/mod_soil_function.o \
-				  ../hydro/mod_soil_water.o
+				  hydro/mod_soil_function.o \
+				  hydro/mod_soil_water.o
 
 OBJS =  \
 		  PFT_Const.o \
@@ -146,10 +150,7 @@ ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_HYDRO} ${OBJS}
 	@echo 'making CLM completed!'
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
-
-$(OBJS_BGC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}hydro
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
@@ -179,10 +180,7 @@ $(OBJS) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
-
-$(OBJS_BGC) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}hydro
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share

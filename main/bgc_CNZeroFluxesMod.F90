@@ -136,6 +136,8 @@ use MOD_1D_PFTFluxes, only:             &
    livecrootc_to_deadcrootc_p           , &
    crop_seedc_to_leaf_p                 , &
 
+   hrv_xsmrpool_to_atm_p                , &
+
    xsmrpool_to_atm_p                    , &
    livestemc_to_litter_p                , &
    grainc_to_food_p                     , &
@@ -610,6 +612,8 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
      livestemc_to_deadstemc_p(m)              = 0._r8
      livecrootc_to_deadcrootc_p(m)            = 0._r8
      crop_seedc_to_leaf_p(m)                  = 0._r8
+
+     hrv_xsmrpool_to_atm_p(m)                 = 0._r8 
   
      xsmrpool_to_atm_p(m)                     = 0._r8
      livestemc_to_litter_p(m)                 = 0._r8

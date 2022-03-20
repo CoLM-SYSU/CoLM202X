@@ -1,8 +1,10 @@
 # Makefile for CLM initial data processing
 
 include ../include/Makeoptions
+ 
+INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main -I../main/hydro -I${NETCDF_INC}
 
-VPATH = ../share : ../mksrfdata : ../main : ../hydro
+VPATH = ../share : ../mksrfdata : ../main : ../main/hydro
 
 HEADER = ../include/define.h
 
@@ -37,6 +39,7 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_srfdata_restart.o \
 				  ../mksrfdata/mod_landcell.o \
 				  ../mksrfdata/mod_modis_data.o \
+		 		  ../mksrfdata/mod_pixelsetshadow.o \
 				  ../mksrfdata/mod_landpatch.o \
 				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landpft.o \
@@ -60,7 +63,7 @@ OBJS_MAIN = \
 				  ../main/snowfraction.o
 
 OBJS_HYDRO = \
-				  ../hydro/mod_soil_function.o
+				  ../main/hydro/mod_soil_function.o
 
 OBJS = \
 		 pct_readin.o       \
@@ -94,7 +97,7 @@ $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../hydro
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/hydro
 
 clean :
 	${RM} -f *.o *.mod ${EXECUTABLE}

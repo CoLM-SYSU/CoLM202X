@@ -22,7 +22,6 @@ MODULE ncio_vector
 
    interface ncio_write_vector
       MODULE procedure ncio_write_vector_int32_1d 
-      MODULE procedure ncio_write_vector_logical_1d 
       MODULE procedure ncio_write_vector_int32_3d 
       MODULE procedure ncio_write_vector_real8_1d 
       MODULE procedure ncio_write_vector_real8_2d 
@@ -127,7 +126,6 @@ CONTAINS
    END SUBROUTINE ncio_read_vector_int32_1d
 
    !---------------------------------------------------------
-   !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata)
 
       USE ncio_serial
@@ -145,7 +143,7 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend, i
       CHARACTER(len=256) :: fileblock
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
+      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -161,8 +159,8 @@ CONTAINS
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
                         sbuff, pixelset%vecgs%vcnt(:,iblk,jblk), &
-                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER, &
-                        MPI_IN_PLACE, 0, MPI_INTEGER, &
+                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER1, &
+                        MPI_IN_PLACE, 0, MPI_INTEGER1, &
                         p_root, p_comm_group, p_err)
 #else
                      IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -171,13 +169,7 @@ CONTAINS
 
                      istt = pixelset%vecgs%vstt(iblk,jblk)
                      iend = pixelset%vecgs%vend(iblk,jblk)
-                     do i = istt, iend
-                        if(sbuff(i-istt+1) .eq. 1) then
-                           rdata(i) = .true.
-                        else
-                           rdata(i) = .false.
-                        end if
-                     end do
+                     rdata(istt:iend) = (sbuff == 1)
 #endif
 
                      deallocate (sbuff)
@@ -206,20 +198,14 @@ CONTAINS
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
-                        rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
+                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER1, & ! insignificant on workers
+                        rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER1, &
                         p_root, p_comm_group, p_err)
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
-                        do i = istt, iend
-                           if(rbuff(i-istt+1) .eq. 1)then
-                              rdata(i) = .true.
-                           else
-                              rdata(i) = .false.
-                           end if
-                        end do
+                        rdata(istt:iend) = (rbuff == 1)
                         deallocate (rbuff)
                      ENDIF
 
@@ -833,7 +819,7 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend, i
       CHARACTER(len=256) :: fileblock
-      INTEGER, allocatable :: sbuff(:), rbuff(:)
+      INTEGER(1), allocatable :: sbuff(:), rbuff(:)
 
       IF (p_is_io) THEN
 
@@ -844,9 +830,9 @@ CONTAINS
 
                      allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
 #ifdef USEMPI
-                     CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
+                     CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER1, &
                         rbuff, pixelset%vecgs%vcnt(:,iblk,jblk), &
-                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER, &
+                        pixelset%vecgs%vdsp(:,iblk,jblk), MPI_INTEGER1, &
                         p_root, p_comm_group, p_err)
 #else
                      istt = pixelset%vecgs%vstt(iblk,jblk)
@@ -900,8 +886,8 @@ CONTAINS
                      ENDIF
 
                      CALL mpi_gatherv ( &
-                        sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER1, &
+                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER1, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
