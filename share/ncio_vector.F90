@@ -8,8 +8,8 @@ MODULE ncio_vector
    ! PUBLIC subroutines
 
    interface ncio_read_vector
-      MODULE procedure ncio_read_vector_int32_1d 
       MODULE procedure ncio_read_vector_logical_1d 
+      MODULE procedure ncio_read_vector_int32_1d 
       MODULE procedure ncio_read_vector_real8_1d 
       MODULE procedure ncio_read_vector_real8_2d 
       MODULE procedure ncio_read_vector_real8_3d 
@@ -21,6 +21,7 @@ MODULE ncio_vector
    PUBLIC :: ncio_define_dimension_vector 
 
    interface ncio_write_vector
+      MODULE procedure ncio_write_vector_logical_1d
       MODULE procedure ncio_write_vector_int32_1d 
       MODULE procedure ncio_write_vector_int32_3d 
       MODULE procedure ncio_write_vector_real8_1d 
@@ -32,7 +33,8 @@ MODULE ncio_vector
 CONTAINS
    
    !---------------------------------------------------------
-   SUBROUTINE ncio_read_vector_int32_1d (filename, dataname, pixelset, rdata)
+   SUBROUTINE ncio_read_vector_int32_1d ( &
+         filename, dataname, pixelset, rdata, defval)
 
       USE ncio_serial
       USE spmd_task
@@ -45,11 +47,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       INTEGER, allocatable, intent(inout) :: rdata (:)
+      INTEGER, intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER, allocatable :: sbuff(:), rbuff(:)
+      LOGICAL :: fexists
 
       IF (p_is_io) THEN
 
@@ -60,7 +64,13 @@ CONTAINS
 
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
@@ -126,7 +136,8 @@ CONTAINS
    END SUBROUTINE ncio_read_vector_int32_1d
 
    !---------------------------------------------------------
-   SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata)
+   SUBROUTINE ncio_read_vector_logical_1d (filename, dataname, pixelset, rdata, &
+         defval)
 
       USE ncio_serial
       USE spmd_task
@@ -139,11 +150,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       LOGICAL, allocatable, intent(inout) :: rdata (:)
+      LOGICAL, intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend, i
       CHARACTER(len=256) :: fileblock
       INTEGER(1), allocatable :: sbuff(:), rbuff(:)
+      LOGICAL :: fexists
 
       IF (p_is_io) THEN
 
@@ -154,7 +167,13 @@ CONTAINS
 
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
@@ -220,7 +239,8 @@ CONTAINS
    END SUBROUTINE ncio_read_vector_logical_1d
 
    !---------------------------------------------------------
-   SUBROUTINE ncio_read_vector_real8_1d (filename, dataname, pixelset, rdata)
+   SUBROUTINE ncio_read_vector_real8_1d (filename, dataname, pixelset, rdata, &
+         defval)
 
       USE precision
       USE ncio_serial
@@ -234,11 +254,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       REAL(r8), allocatable, intent(inout) :: rdata (:)
+      REAL(r8), intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:), rbuff(:)
+      LOGICAL :: fexists
          
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -255,7 +277,13 @@ CONTAINS
 
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
@@ -315,7 +343,7 @@ CONTAINS
 
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_2d ( &
-         filename, dataname, ndim1, pixelset, rdata)
+         filename, dataname, ndim1, pixelset, rdata, defval)
 
       USE precision
       USE ncio_serial
@@ -330,11 +358,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       REAL(r8), allocatable, intent(inout) :: rdata (:,:)
+      REAL(r8), intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -351,7 +381,13 @@ CONTAINS
 
                      allocate (sbuff (ndim1, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:,:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
@@ -410,7 +446,7 @@ CONTAINS
 
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_3d ( &
-         filename, dataname, ndim1, ndim2, pixelset, rdata)
+         filename, dataname, ndim1, ndim2, pixelset, rdata, defval)
 
       USE precision
       USE ncio_serial
@@ -425,11 +461,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       REAL(r8), allocatable, intent(inout) :: rdata (:,:,:)
+      REAL(r8), intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -446,7 +484,13 @@ CONTAINS
 
                      allocate (sbuff (ndim1,ndim2, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:,:,:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &
@@ -505,7 +549,7 @@ CONTAINS
    
    !---------------------------------------------------------
    SUBROUTINE ncio_read_vector_real8_4d ( &
-         filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata)
+         filename, dataname, ndim1, ndim2, ndim3, pixelset, rdata, defval)
 
       USE precision
       USE ncio_serial
@@ -520,11 +564,13 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       REAL(r8), allocatable, intent(inout) :: rdata (:,:,:,:)
+      REAL(r8), intent(in), optional :: defval
 
       ! Local variables
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -541,7 +587,13 @@ CONTAINS
 
                      allocate (sbuff (ndim1,ndim2,ndim3, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     
+                     inquire (file=trim(fileblock), exist=fexists)
+                     IF (fexists) THEN 
+                        CALL ncio_read_serial (fileblock, dataname, sbuff)
+                     ELSEIF (present(defval)) THEN
+                        sbuff(:,:,:,:) = defval
+                     ENDIF
 
 #ifdef USEMPI
                      CALL mpi_scatterv ( &

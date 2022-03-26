@@ -349,7 +349,10 @@ do j = 1, nl_soil
    smin_no3_runoff(i)     = smin_no3_runoff(i)     + smin_no3_runoff_vr(j,i) * dz_soi(j)
    sminn_leached(i)       = sminn_leached(i)       + sminn_leached_vr(j,i) * dz_soi(j)
    f_n2o_nit(i)           = f_n2o_nit(i)           + f_n2o_nit_vr(j,i) * dz_soi(j)
-   denit(i)               = denit(i)               + f_denit_vr(j,i) * dz_soi(j) &
+   denit(i)               = denit(i)               &
+#ifdef NITRIF
+                          + f_denit_vr(j,i) * dz_soi(j) &
+#endif
                           + sminn_to_denit_excess_vr(j,i) * dz_soi(j) 
    do k = 1, ndecomp_transitions
       denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)

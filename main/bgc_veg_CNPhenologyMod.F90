@@ -213,9 +213,9 @@ subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz
      ! set time steps
 
    stepperday = 86400._r8 / deltim
-#ifdef CROP
    do m = ps , pe
       tempavg_tref_p(m) = tempavg_tref_p(m) + tref_p(m) * (deltim/86400._r8/dayspyr)
+#ifdef CROP
       if(idate(3) .eq. 1800 .or. tref_max_inst_p(m) .eq. spval)then
          tref_max_inst_p(m) = tref_p(m)
       else
@@ -231,11 +231,11 @@ subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz
          tref_max_p(m) = tref_max_inst_p(m)
          tref_min_p(m) = tref_min_inst_p(m)
       end if
-   end do
 #endif
+   end do
 
    accumnstep(i) = accumnstep(i) + 1
-
+   prec_today(i) = forc_prc(i) + forc_prl(i)
 #ifdef CROP
 
    nsteps = amin1(5._r8 * stepperday, accumnstep(i))

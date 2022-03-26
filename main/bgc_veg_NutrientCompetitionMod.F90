@@ -1,3 +1,4 @@
+#include <define.h>
 module bgc_veg_NutrientCompetitionMod
 
     use precision
