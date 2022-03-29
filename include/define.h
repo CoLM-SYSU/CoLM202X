@@ -24,7 +24,7 @@
 #define  CaMa_Flood
 
 #define CROP
-#undef BGC
+#define BGC
 
 #ifndef PFT_CLASSIFICATION
 #undef CROP

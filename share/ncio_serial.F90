@@ -165,6 +165,7 @@ CONTAINS
       IF (status == nf90_noerr) THEN
          status = nf90_inq_varid(ncid, trim(dataname), varid)
          ncio_var_exist = (status == nf90_noerr)
+         CALL nccheck( nf90_close(ncid) )
       ELSE
          ncio_var_exist = .false.
       ENDIF
