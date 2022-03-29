@@ -2,6 +2,8 @@
 
 include ../include/Makeoptions
 
+INCLUDE_DIR = -I../include -I../share -I../main -I${NETCDF_INC}
+
 VPATH  = ../share
 HEADER = ../include/define.h
 

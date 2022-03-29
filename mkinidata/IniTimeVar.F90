@@ -310,7 +310,6 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
            wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
 !          wliq_soisno(j) = porsl(j)*wet(j)*dz_soisno(j)*1000.
         ENDIF
-!        smp(j) = 0.
      ENDDO
 
      snowdp = snow_d

@@ -192,6 +192,9 @@ MODULE mod_namelist
       LOGICAL :: rstfacsha    = .true.
       LOGICAL :: rootr        = .true.
       LOGICAL :: vegwp        = .true.
+#ifdef VARIABLY_SATURATED_FLOW
+      LOGICAL :: dpond        = .true. 
+#endif
       LOGICAL :: zwt          = .true. 
       LOGICAL :: wa           = .true. 
                                        
@@ -459,6 +462,9 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%rstfacsha   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%rootr       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%vegwp       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#ifdef VARIABLY_SATURATED_FLOW
+      CALL mpi_bcast (DEF_hist_vars%dpond       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#endif
       CALL mpi_bcast (DEF_hist_vars%zwt         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%wa          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       

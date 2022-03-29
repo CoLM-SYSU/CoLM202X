@@ -57,6 +57,33 @@ MODULE mod_grid
       INTEGER, allocatable :: ilon(:)
    END TYPE grid_list_type
 
+   type :: segment_type
+      integer :: blk
+      integer :: cnt
+      integer :: bdsp
+      integer :: gdsp
+   end type segment_type
+
+   type :: grid_info_type
+      integer :: nlat, nlon
+      real(r8), allocatable :: lat_s(:)
+      real(r8), allocatable :: lat_n(:)
+      real(r8), allocatable :: lon_w(:)
+      real(r8), allocatable :: lon_e(:)
+      real(r8), allocatable :: lon_c(:) !grid center
+      real(r8), allocatable :: lat_c(:) !grid center
+   end type grid_info_type
+
+   TYPE :: grid_concat_type
+      integer :: ndatablk
+      integer :: nxseg, nyseg
+      type(segment_type), allocatable :: xsegs(:), ysegs(:)
+      type(grid_info_type) :: ginfo
+   CONTAINS
+      procedure, PUBLIC :: set => set_grid_concat
+      final :: grid_concat_free_mem
+   END TYPE grid_concat_type
+
 CONTAINS
 
    ! --------------------------------
@@ -594,5 +621,176 @@ CONTAINS
       IF (allocated (this%rlat))   deallocate (this%rlat) 
 
    END SUBROUTINE grid_free_mem
+
+   !----------
+   subroutine set_grid_concat (this, grid)
+
+      use mod_block
+      USE mod_utils
+      implicit none
+
+      class(grid_concat_type) :: this
+      type(grid_type), intent(in) :: grid
+
+      ! Local variables
+      integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
+      integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
+
+      ilat_l = findloc(grid%yblk /= 0, .true., dim=1)
+      ilat_u = findloc(grid%yblk /= 0, .true., dim=1, back=.true.)
+
+      this%ginfo%nlat = ilat_u - ilat_l + 1
+      allocate (this%ginfo%lat_s (this%ginfo%nlat))
+      allocate (this%ginfo%lat_n (this%ginfo%nlat))
+      allocate (this%ginfo%lat_c (this%ginfo%nlat))
+
+      this%nyseg = 0
+      jblk  = 0
+      ilatloc = 0
+      do ilat = ilat_l, ilat_u
+         if (grid%yblk(ilat) /= jblk) then
+            this%nyseg = this%nyseg + 1
+            jblk  = grid%yblk(ilat)
+         end if
+
+         ilatloc = ilatloc + 1
+         this%ginfo%lat_s(ilatloc) = grid%lat_s(ilat)
+         this%ginfo%lat_n(ilatloc) = grid%lat_n(ilat)
+         this%ginfo%lat_c(ilatloc) = (grid%lat_s(ilat)+grid%lat_n(ilat)) * 0.5
+      end do
+
+      allocate (this%ysegs (this%nyseg))
+
+      iyseg = 0
+      jblk  = 0
+      do ilat = ilat_l, ilat_u
+         if (grid%yblk(ilat) /= jblk) then
+            iyseg = iyseg + 1
+            jblk  = grid%yblk(ilat)
+            this%ysegs(iyseg)%blk  = jblk
+            this%ysegs(iyseg)%bdsp = grid%yloc(ilat) - 1
+            this%ysegs(iyseg)%gdsp = ilat - ilat_l
+            this%ysegs(iyseg)%cnt  = 1
+         else
+            this%ysegs(iyseg)%cnt  = this%ysegs(iyseg)%cnt + 1
+         end if
+      end do
+
+      if (all(grid%xblk > 0)) then
+         ilon_w = 1
+         ilon_e = grid%nlon
+      else
+         ilon_w = findloc(grid%xblk /= 0, .true., dim=1)
+         do while (.true.)
+            ilon = ilon_w - 1
+            if (ilon == 0) ilon = grid%nlon
+
+            if (grid%xblk(ilon) /= 0) then
+               ilon_w = ilon
+            else
+               exit
+            end if
+         end do
+
+         ilon_e = ilon_w
+         do while (.true.)
+            ilon = mod(ilon_e,grid%nlon) + 1
+
+            if (grid%xblk(ilon) /= 0) then
+               ilon_e = ilon
+            else
+               exit
+            end if
+         end do
+      end if
+
+      this%ginfo%nlon = ilon_e - ilon_w + 1
+      if (this%ginfo%nlon <= 0) THEN
+         this%ginfo%nlon = this%ginfo%nlon + grid%nlon
+      ENDIF
+
+      allocate (this%ginfo%lon_w (this%ginfo%nlon))
+      allocate (this%ginfo%lon_e (this%ginfo%nlon))
+      allocate (this%ginfo%lon_c (this%ginfo%nlon))
+
+      this%nxseg = 0
+      ilon = ilon_w - 1
+      iblk = 0
+      ilonloc = 0
+      do while (.true.) 
+         ilon = mod(ilon,grid%nlon) + 1
+         if (grid%xblk(ilon) /= iblk) then
+            this%nxseg = this%nxseg + 1
+            iblk = grid%xblk(ilon)
+         end if
+
+         ilonloc = ilonloc + 1
+         this%ginfo%lon_w(ilonloc) = grid%lon_w(ilon)
+         this%ginfo%lon_e(ilonloc) = grid%lon_e(ilon)
+
+         this%ginfo%lon_c(ilonloc) = (grid%lon_w(ilon) + grid%lon_e(ilon)) * 0.5
+         IF (grid%lon_w(ilon) > grid%lon_e(ilon)) THEN
+            this%ginfo%lon_c(ilonloc) = this%ginfo%lon_c(ilonloc) + 180.0
+            CALL normalize_longitude (this%ginfo%lon_c(ilonloc))
+         ENDIF
+
+         if (ilon == ilon_e) exit
+      end do
+
+      allocate (this%xsegs (this%nxseg))
+
+      ixseg = 0
+      iblk = 0
+      ilon = ilon_w - 1
+      ilonloc = 0
+      do while (.true.) 
+         ilon = mod(ilon,grid%nlon) + 1
+         ilonloc = ilonloc + 1
+         if (grid%xblk(ilon) /= iblk) then
+            ixseg = ixseg + 1
+            iblk = grid%xblk(ilon)
+            this%xsegs(ixseg)%blk  = iblk
+            this%xsegs(ixseg)%bdsp = grid%xloc(ilon) - 1
+            this%xsegs(ixseg)%gdsp = ilonloc - 1
+            this%xsegs(ixseg)%cnt = 1
+         else
+            this%xsegs(ixseg)%cnt = this%xsegs(ixseg)%cnt + 1
+         end if
+
+         if (ilon == ilon_e) exit
+      end do
+
+      this%ndatablk = 0
+
+      do iyseg = 1, this%nyseg
+         do ixseg = 1, this%nxseg
+            iblk = this%xsegs(ixseg)%blk
+            jblk = this%ysegs(iyseg)%blk
+            if (gblock%pio(iblk,jblk) >= 0) then
+               this%ndatablk = this%ndatablk + 1
+            end if
+         end do
+      end do
+
+   end subroutine set_grid_concat
+
+   !-------
+   SUBROUTINE grid_concat_free_mem (this)
+
+      IMPLICIT NONE
+
+      TYPE(grid_concat_type) :: this
+
+      IF (allocated(this%xsegs)) deallocate(this%xsegs)
+      IF (allocated(this%ysegs)) deallocate(this%ysegs)
+
+      IF (allocated(this%ginfo%lat_s)) deallocate(this%ginfo%lat_s)
+      IF (allocated(this%ginfo%lat_n)) deallocate(this%ginfo%lat_n)
+      IF (allocated(this%ginfo%lat_c)) deallocate(this%ginfo%lat_c)
+      IF (allocated(this%ginfo%lon_w)) deallocate(this%ginfo%lon_w)
+      IF (allocated(this%ginfo%lon_e)) deallocate(this%ginfo%lon_e)
+      IF (allocated(this%ginfo%lon_c)) deallocate(this%ginfo%lon_c)
+
+   END SUBROUTINE grid_concat_free_mem
 
 END MODULE mod_grid

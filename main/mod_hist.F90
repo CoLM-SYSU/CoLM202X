@@ -8,56 +8,17 @@ module mod_hist
    USE mod_namelist
    USE GlobalVars, only : spval
 
-#if(defined CaMa_Flood)
-   USE YOS_CMF_INPUT,      ONLY: NX, NY
-   USE YOS_CMF_MAP,        ONLY: D1LON, D1LAT
-   USE MOD_1D_cama_Fluxes
-   USE CMF_CALC_DIAG_MOD,  ONLY: CMF_DIAG_AVERAGE, CMF_DIAG_RESET
-#endif
-
    type(grid_type), target :: ghist
    type(mapping_pset2grid_type) :: mp2g_hist
 
    public :: hist_init
    public :: hist_out
    public :: hist_final
-#if(defined CaMa_Flood)
-   public :: var_out
-#endif
 
-!------------------------------------------------------------------
+   TYPE(grid_concat_type) :: hist_concat
 
-!>>>>>add by zhongwang wei 
-type :: segment_type
-   integer :: blk
-   integer :: cnt
-   integer :: bdsp
-   integer :: gdsp
-end type segment_type
+   integer :: hist_data_id
 
-type :: grid_info_type
-   integer :: nlat, nlon
-   real(r8), allocatable :: lat_s(:)
-   real(r8), allocatable :: lat_n(:)
-   real(r8), allocatable :: lon_w(:)
-   real(r8), allocatable :: lon_e(:)
-   real(r8), allocatable :: lon_c(:) !grid center
-   real(r8), allocatable :: lat_c(:) !grid center
-end type grid_info_type
-
-TYPE :: block_info_type
-   integer :: ndatablk
-   integer :: nxseg, nyseg
-   type(segment_type), allocatable :: xsegs(:), ysegs(:)
-   type(grid_info_type) :: ginfo
-CONTAINS
-   final :: block_info_free_mem
-END TYPE block_info_type
-
-TYPE(block_info_type) :: hist_block_info
-
-integer :: hist_data_id
-!<<<<<add by zhongwang wei
 !--------------------------------------------------------------------------
 contains
 
@@ -70,9 +31,6 @@ contains
       USE mod_landpatch
       use mod_mapping_pset2grid
       use MOD_1D_Acc_Fluxes
-#if(defined CaMa_Flood)
-      use MOD_1D_Acc_cama_Fluxes
-#endif
       implicit none
 
       character(len=*), intent(in) :: dir_hist
@@ -88,14 +46,11 @@ contains
 
       call allocate_acc_fluxes ()
       call FLUSH_acc_fluxes ()
-#if(defined CaMa_Flood)
-      call allocate_acc_cama_fluxes ()
-      call FLUSH_acc_cama_fluxes ()
-#endif
 
       !>>>>>add by zhongwang wei 
+      call hist_concat%set (ghist)
+
       if (trim(DEF_HIST_mode) == 'one') then
-         call set_hist_block_info (ghist, hist_block_info)
          hist_data_id = 1000
       end if
       !<<<<<add by zhongwang wei
@@ -107,14 +62,9 @@ contains
    subroutine hist_final ()
 
       use MOD_1D_Acc_Fluxes
-      use MOD_1D_Acc_cama_Fluxes
-
       implicit none
       
       call deallocate_acc_fluxes ()
-#if(defined CaMa_Flood)
-      call deallocate_acc_cama_fluxes()
-#endif
 
    end subroutine hist_final
 
@@ -142,14 +92,7 @@ contains
       use GlobalVars, only : spval
       USE MOD_TimeInvariants, only : patchtype
 #if(defined CaMa_Flood)
-      USE YOS_CMF_DIAG,       ONLY: D2OUTFLW_AVG
-      USE YOS_CMF_PROG,       ONLY: D2RIVSTO,     D2FLDSTO,     D2GDWSTO, &
-      & d2damsto !!! added
-      USE YOS_CMF_DIAG,       ONLY: D2RIVDPH,     D2FLDDPH,     D2FLDFRC,     D2FLDARE,     D2SFCELV,     D2STORGE, &
-      & D2OUTFLW_AVG, D2RIVOUT_AVG, D2FLDOUT_AVG, D2PTHOUT_AVG, D1PTHFLW_AVG, &
-      & D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,               &
-      & D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX, &
-      & d2daminf_avg   !!! added
+      use MOD_CaMa_Variables
 #endif
       IMPLICIT NONE
 
@@ -165,6 +108,10 @@ contains
       logical :: lwrite
       character(LEN=256) :: file_hist
       integer :: itime_in_file
+#if(defined CaMa_Flood)
+      character(LEN=256) :: file_hist_cama
+      integer :: itime_in_file_cama
+#endif
       integer :: month, day
       integer :: days_month(1:12)
       character(len=10) :: cdate
@@ -213,8 +160,12 @@ contains
          end if
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
-
          call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
+
+#if(defined CaMa_Flood)
+         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
+         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
+#endif
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -590,7 +541,14 @@ contains
             a_vegwp, f_vegwp, file_hist, 'f_vegwp', 'vegnodes', itime_in_file, sumwt, filter)
 #endif
 
-         ! water depth [m]
+#ifdef VARIABLY_SATURATED_FLOW
+         ! depth of ponding water [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%dpond, &
+            a_dpond, f_dpond, file_hist, 'f_dpond', itime_in_file, sumwt, filter, &
+            'depth of ponding water','m')
+#endif
+
+         ! water table depth [m]
          call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
             a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
             'the depth to water table','m')
@@ -786,38 +744,7 @@ contains
             'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
 
 #if(defined CaMa_Flood)
-if (p_is_master) then
-         !*** average variable
-         CALL CMF_DIAG_AVERAGE
-         !*** write output data
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%rivout,D2RIVOUT_AVG, file_hist, 'rivout', itime_in_file,'river discharge','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%rivsto,D2RIVSTO, file_hist, 'rivsto', itime_in_file,'river storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%rivdph,D2RIVDPH, file_hist, 'rivdph', itime_in_file,'river depth','m')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%rivvel,D2RIVVEL_AVG, file_hist, 'rivvel', itime_in_file,'river velocity','m/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldout,D2FLDOUT_AVG, file_hist, 'fldout', itime_in_file,'floodplain discharge','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldsto, D2FLDSTO, file_hist, 'fldsto', itime_in_file,'floodplain storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%flddph, D2FLDDPH, file_hist, 'flddph', itime_in_file,'floodplain depth','m')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldfrc, D2FLDFRC, file_hist, 'fldfrc', itime_in_file,'flooded fraction','0-1')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldare, D2FLDARE, file_hist, 'fldare', itime_in_file,'flooded area','m2')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%sfcelv, D2SFCELV, file_hist, 'sfcelv', itime_in_file,'water surface elevation','m')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%totout,D2OUTFLW_AVG, file_hist, 'totout', itime_in_file,'discharge (river+floodplain)','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%outflw,D2OUTFLW_AVG, file_hist, 'outflw', itime_in_file,'discharge (river+floodplain)','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%totsto,D2STORGE, file_hist, 'totsto', itime_in_file,'total storage (river+floodplain)','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%storge,D2STORGE, file_hist, 'storge', itime_in_file,'total storage (river+floodplain)','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%pthout,D2PTHOUT_AVG, file_hist, 'pthout', itime_in_file,'net bifurcation discharge','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gdwsto,D2GDWSTO, file_hist, 'gdwsto', itime_in_file,'ground water storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gwsto,D2GDWSTO, file_hist, 'gwsto', itime_in_file,'ground water storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gwout,D2GDWRTN_AVG, file_hist, 'gwout', itime_in_file,'ground water discharge','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%runoff,D2RUNOFF_AVG, file_hist, 'runoff', itime_in_file,'Surface runoff','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%runoffsub,D2ROFSUB_AVG  , file_hist, 'runoffsub', itime_in_file,'sub-surface runoff','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxsto,D2STORGE_MAX, file_hist, 'maxsto', itime_in_file,'daily maximum storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxflw,D2OUTFLW_MAX, file_hist, 'maxflw', itime_in_file,'daily maximum discharge','m3/s')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%maxdph,D2RIVDPH_MAX, file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%damsto,d2damsto, file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf,d2daminf_avg, file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
-         !*** reset variable
-         CALL CMF_DIAG_RESET
-endif
+         CALL hist_out_cama (file_hist_cama, itime_in_file_cama)
 #endif
 
          if (allocated(filter)) deallocate(filter)
@@ -829,189 +756,6 @@ endif
 
    END SUBROUTINE hist_out
    
-   ! -------
-#if(defined CaMa_Flood)
-   subroutine flux_map_and_write_2d_cama (is_hist,var_in, file_hist, varname, itime_in_file,longname,units)
-   USE YOS_CMF_MAP,        ONLY: NSEQALL
-   USE PARKIND1,            ONLY: JPRM
-   USE CMF_UTILS_MOD,           ONLY: VEC2MAPD
-   use ncio_serial
-
-   IMPLICIT NONE
-   logical, intent(in) :: is_hist
-   real(r8), INTENT(in) ::  var_in (NSEQALL, 1) 
-   character(len=*), intent(in) :: file_hist
-   character(len=*), intent(in) :: varname
-   integer, intent(in) :: itime_in_file
-   character (len=*), intent(in),optional :: longname
-   character (len=*), intent(in),optional :: units
-
-   REAL(r8)      :: R2OUT(NX,NY)
-   integer :: compress
-
-   if (.not. is_hist) return
-   CALL VEC2MAPD(var_in,R2OUT)
-   compress = DEF_HIST_COMPRESS_LEVEL 
-   call ncio_write_serial_time (file_hist, varname, itime_in_file, R2OUT, 'lon_cama', 'lat_cama', 'time',compress,longname,units)
-end subroutine flux_map_and_write_2d_cama
-
-
-   SUBROUTINE var_out (runoff_2d)
-
-   !=======================================================================
-   ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-   !=======================================================================
-
-   use precision
-   use mod_namelist
-   use timemanager
-   use spmd_task
-   use mod_2d_cama_fluxes
-   use MOD_1D_cama_Fluxes
-   use mod_block
-   use mod_data_type
-   use mod_landpatch
-   use mod_mapping_pset2grid
-   use mod_colm_debug
-   USE MOD_TimeInvariants, only : patchtype
-   USE MOD_1D_Acc_cama_Fluxes
-
-   !use GlobalVars, only : spval
-   IMPLICIT NONE
-   real(r8), INTENT(out) ::  runoff_2d (DEF_nlon_hist, DEF_nlat_hist)
-
-   type(block_data_real8_2d) :: sumwt
-   real(r8), allocatable     ::  vectmp(:)  
-   logical,  allocatable     ::  filter(:)
-   integer :: xblk, yblk, xloc, yloc
-   integer :: iblk, jblk, idata, ixseg, iyseg
-   integer :: rmesg(3), smesg(3), isrc
-   real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
-   integer :: xdsp, ydsp, xcnt, ycnt
-   character(len=256) :: fileblock
-
-   if(p_is_master)then 
-      runoff_2d(:,:) = spval
-   endif 
-
-   call FLUSH_acc_cama_fluxes ()
-
-   call accumulate_cama_fluxes 
-
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-   if (p_is_worker) then
-      if (numpatch > 0) then
-         allocate (filter (numpatch))
-         allocate (vectmp (numpatch))
-      end if
-   end if
-   if (p_is_io) then
-      call allocate_block_data (ghist, sumwt)
-   end if
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-   ! ------------------------------------------------------------------------------------------
-   ! Mapping the fluxes and state variables at patch [numpatch] to grid 
-   ! ------------------------------------------------------------------------------------------
-   if (p_is_worker) then
-      if (numpatch > 0) then
-         filter(:) = patchtype < 99
-         vectmp (:) = 1.
-      end if
-   end if
-
-   call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
-   
-   call mp2g_hist%map (a_rnof_cama, f_rnof_cama, spv = spval, msk = filter)   
-
-   if (p_is_io) then
-      do yblk = 1, gblock%nyblk
-         do xblk = 1, gblock%nxblk
-            if (gblock%pio(xblk,yblk) == p_iam_glb) then
-               do yloc = 1, ghist%ycnt(yblk) 
-                  do xloc = 1, ghist%xcnt(xblk) 
-
-                     if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
-                        IF (f_rnof_cama%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
-                           f_rnof_cama%blk(xblk,yblk)%val(xloc,yloc) &
-                              = f_rnof_cama%blk(xblk,yblk)%val(xloc,yloc) &
-                              / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                        ENDIF
-                     else
-                        f_rnof_cama%blk(xblk,yblk)%val(xloc,yloc) = spval
-                     end if
-
-                  end do
-               end do
-
-            end if
-         end do
-      end do
-   end if
-
-#ifdef USEMPI
-        CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-        if (p_is_master) then
-            do idata = 1, hist_block_info%ndatablk
-                call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, 10011, p_comm_glb, p_stat, p_err)
-                isrc  = rmesg(1)
-                ixseg = rmesg(2)
-                iyseg = rmesg(3)
-
-                xdsp = hist_block_info%xsegs(ixseg)%gdsp
-                ydsp = hist_block_info%ysegs(iyseg)%gdsp
-                xcnt = hist_block_info%xsegs(ixseg)%cnt
-                ycnt = hist_block_info%ysegs(iyseg)%cnt
-
-                allocate (rbuf(xcnt,ycnt))
-                call mpi_recv (rbuf, xcnt * ycnt, MPI_DOUBLE, &
-                        isrc, 10011, p_comm_glb, p_stat, p_err)
-                runoff_2d (xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt) = rbuf
-                deallocate (rbuf)
-            end do
-
-        elseif (p_is_io) then
-            do iyseg = 1, hist_block_info%nyseg
-                do ixseg = 1, hist_block_info%nxseg
-
-                    iblk = hist_block_info%xsegs(ixseg)%blk
-                    jblk = hist_block_info%ysegs(iyseg)%blk
-
-                    if (gblock%pio(iblk,jblk) == p_iam_glb) then
-                       xdsp = hist_block_info%xsegs(ixseg)%bdsp
-                       ydsp = hist_block_info%ysegs(iyseg)%bdsp
-                       xcnt = hist_block_info%xsegs(ixseg)%cnt
-                       ycnt = hist_block_info%ysegs(iyseg)%cnt
-
-                        allocate (sbuf (xcnt,ycnt))
-                        sbuf = f_rnof_cama%blk(iblk,jblk)%val(xdsp+1:xdsp+xcnt,ydsp+1:ydsp+ycnt)
-
-                        smesg = (/p_iam_glb, ixseg, iyseg/)
-                        call mpi_send (smesg, 3, MPI_INTEGER, &
-                        p_root, 10011, p_comm_glb, p_err) 
-                        call mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
-                        p_root, 10011, p_comm_glb, p_err)
-
-                        deallocate (sbuf)
-
-                    end if
-                end do
-            end do
-        end if
-
-
-   if (allocated(filter)) deallocate(filter)
-   if (allocated(vectmp)) deallocate(vectmp)
-
-   END SUBROUTINE var_out
-
-#endif
-
    ! -------
    subroutine flux_map_and_write_2d ( is_hist, &
          acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, longname, units)
@@ -1332,160 +1076,6 @@ end subroutine flux_map_and_write_2d_cama
 
    end subroutine flux_map_and_write_ln
 
-   subroutine set_hist_block_info (ghist, block_info)
-
-      use mod_grid
-      use mod_block
-      USE mod_utils
-      implicit none
-
-      type(grid_type), intent(in) :: ghist
-      TYPE(block_info_type), intent(out) :: block_info
-
-      ! Local variables
-      integer :: ilat_l, ilat_u, ilat, ilatloc, jblk, iyseg
-      integer :: ilon_w, ilon_e, ilon, ilonloc, iblk, ixseg
-
-      ilat_l = findloc(ghist%yblk /= 0, .true., dim=1)
-      ilat_u = findloc(ghist%yblk /= 0, .true., dim=1, back=.true.)
-
-      block_info%ginfo%nlat = ilat_u - ilat_l + 1
-      allocate (block_info%ginfo%lat_s (block_info%ginfo%nlat))
-      allocate (block_info%ginfo%lat_n (block_info%ginfo%nlat))
-      allocate (block_info%ginfo%lat_c (block_info%ginfo%nlat))
-
-      block_info%nyseg = 0
-      jblk  = 0
-      ilatloc = 0
-      do ilat = ilat_l, ilat_u
-         if (ghist%yblk(ilat) /= jblk) then
-            block_info%nyseg = block_info%nyseg + 1
-            jblk  = ghist%yblk(ilat)
-         end if
-
-         ilatloc = ilatloc + 1
-         block_info%ginfo%lat_s(ilatloc) = ghist%lat_s(ilat)
-         block_info%ginfo%lat_n(ilatloc) = ghist%lat_n(ilat)
-         block_info%ginfo%lat_c(ilatloc) = (ghist%lat_s(ilat)+ghist%lat_n(ilat)) * 0.5
-      end do
-
-      allocate (block_info%ysegs (block_info%nyseg))
-
-      iyseg = 0
-      jblk  = 0
-      do ilat = ilat_l, ilat_u
-         if (ghist%yblk(ilat) /= jblk) then
-            iyseg = iyseg + 1
-            jblk  = ghist%yblk(ilat)
-            block_info%ysegs(iyseg)%blk  = jblk
-            block_info%ysegs(iyseg)%bdsp = ghist%yloc(ilat) - 1
-            block_info%ysegs(iyseg)%gdsp = ilat - ilat_l
-            block_info%ysegs(iyseg)%cnt  = 1
-         else
-            block_info%ysegs(iyseg)%cnt  = block_info%ysegs(iyseg)%cnt + 1
-         end if
-      end do
-
-      if (all(ghist%xblk > 0)) then
-         ilon_w = 1
-         ilon_e = ghist%nlon
-      else
-         ilon_w = findloc(ghist%xblk /= 0, .true., dim=1)
-         do while (.true.)
-            ilon = ilon_w - 1
-            if (ilon == 0) ilon = ghist%nlon
-
-            if (ghist%xblk(ilon) /= 0) then
-               ilon_w = ilon
-            else
-               exit
-            end if
-         end do
-
-         ilon_e = ilon_w
-         do while (.true.)
-            ilon = mod(ilon_e,ghist%nlon) + 1
-
-            if (ghist%xblk(ilon) /= 0) then
-               ilon_e = ilon
-            else
-               exit
-            end if
-         end do
-      end if
-
-      block_info%ginfo%nlon = ilon_e - ilon_w + 1
-      if (block_info%ginfo%nlon <= 0) THEN
-         block_info%ginfo%nlon = block_info%ginfo%nlon + ghist%nlon
-      ENDIF
-
-      allocate (block_info%ginfo%lon_w (block_info%ginfo%nlon))
-      allocate (block_info%ginfo%lon_e (block_info%ginfo%nlon))
-      allocate (block_info%ginfo%lon_c (block_info%ginfo%nlon))
-
-      block_info%nxseg = 0
-      ilon = ilon_w - 1
-      iblk = 0
-      ilonloc = 0
-      do while (.true.) 
-         ilon = mod(ilon,ghist%nlon) + 1
-         if (ghist%xblk(ilon) /= iblk) then
-            block_info%nxseg = block_info%nxseg + 1
-            iblk = ghist%xblk(ilon)
-         end if
-
-         ilonloc = ilonloc + 1
-         block_info%ginfo%lon_w(ilonloc) = ghist%lon_w(ilon)
-         block_info%ginfo%lon_e(ilonloc) = ghist%lon_e(ilon)
-
-         block_info%ginfo%lon_c(ilonloc) = (ghist%lon_w(ilon) + ghist%lon_e(ilon)) * 0.5
-         IF (ghist%lon_w(ilon) > ghist%lon_e(ilon)) THEN
-            block_info%ginfo%lon_c(ilonloc) = block_info%ginfo%lon_c(ilonloc) + 180.0
-            CALL normalize_longitude (block_info%ginfo%lon_c(ilonloc))
-         ENDIF
-
-         if (ilon == ilon_e) exit
-      end do
-
-      allocate (block_info%xsegs (block_info%nxseg))
-
-      ixseg = 0
-      iblk = 0
-      ilon = ilon_w - 1
-      ilonloc = 0
-      do while (.true.) 
-         ilon = mod(ilon,ghist%nlon) + 1
-         ilonloc = ilonloc + 1
-         if (ghist%xblk(ilon) /= iblk) then
-            ixseg = ixseg + 1
-            iblk = ghist%xblk(ilon)
-            block_info%xsegs(ixseg)%blk  = iblk
-            block_info%xsegs(ixseg)%bdsp = ghist%xloc(ilon) - 1
-            block_info%xsegs(ixseg)%gdsp = ilonloc - 1
-            block_info%xsegs(ixseg)%cnt = 1
-         else
-            block_info%xsegs(ixseg)%cnt = block_info%xsegs(ixseg)%cnt + 1
-         end if
-
-         if (ilon == ilon_e) exit
-      end do
-
-      block_info%ndatablk = 0
-
-      do iyseg = 1, block_info%nyseg
-         do ixseg = 1, block_info%nxseg
-            iblk = block_info%xsegs(ixseg)%blk
-            jblk = block_info%ysegs(iyseg)%blk
-            if (gblock%pio(iblk,jblk) >= 0) then
-               block_info%ndatablk = block_info%ndatablk + 1
-            end if
-         end do
-      end do
-
-   end subroutine set_hist_block_info
-
-
-
    !------------------------------
    subroutine hist_write_time ( &
          filename, dataname, grid, time, itime)
@@ -1515,22 +1105,15 @@ end subroutine flux_map_and_write_2d_cama
             if (.not. fexists) then
                call ncio_create_file (trim(filename))
                CALL ncio_define_dimension(filename, 'time', 0)
-               call ncio_define_dimension(filename, 'lat' , hist_block_info%ginfo%nlat)
-               call ncio_define_dimension(filename, 'lon' , hist_block_info%ginfo%nlon)
-#if(defined CaMa_Flood)
-               call ncio_define_dimension(filename,'lat_cama', NY)
-               call ncio_define_dimension(filename,'lon_cama', NX)
-#endif
-               call ncio_write_serial (filename, 'lat_s', hist_block_info%ginfo%lat_s, 'lat')
-               call ncio_write_serial (filename, 'lat_n', hist_block_info%ginfo%lat_n, 'lat')
-               call ncio_write_serial (filename, 'lon_w', hist_block_info%ginfo%lon_w, 'lon')
-               call ncio_write_serial (filename, 'lon_e', hist_block_info%ginfo%lon_e, 'lon')
-               call ncio_write_serial (filename, 'lat',   hist_block_info%ginfo%lat_c, 'lat')
-               call ncio_write_serial (filename, 'lon',   hist_block_info%ginfo%lon_c, 'lon')
-#if(defined CaMa_Flood)
-               call ncio_write_serial (filename, 'lat_cama', D1LAT,'lat_cama')
-               call ncio_write_serial (filename, 'lon_cama', D1LON,'lon_cama')
-#endif
+               call ncio_define_dimension(filename, 'lat' , hist_concat%ginfo%nlat)
+               call ncio_define_dimension(filename, 'lon' , hist_concat%ginfo%nlon)
+               
+               call ncio_write_serial (filename, 'lat_s', hist_concat%ginfo%lat_s, 'lat')
+               call ncio_write_serial (filename, 'lat_n', hist_concat%ginfo%lat_n, 'lat')
+               call ncio_write_serial (filename, 'lon_w', hist_concat%ginfo%lon_w, 'lon')
+               call ncio_write_serial (filename, 'lon_e', hist_concat%ginfo%lon_e, 'lon')
+               call ncio_write_serial (filename, 'lat',   hist_concat%ginfo%lat_c, 'lat')
+               call ncio_write_serial (filename, 'lon',   hist_concat%ginfo%lon_c, 'lon')
             endif
       
             call ncio_write_time (filename, dataname, time, itime)
@@ -1601,11 +1184,11 @@ end subroutine flux_map_and_write_2d_cama
 
          if (p_is_master) then
 
-            allocate (vdata (hist_block_info%ginfo%nlon, hist_block_info%ginfo%nlat))
+            allocate (vdata (hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
             vdata(:,:) = spval
 
 #ifdef USEMPI
-            do idata = 1, hist_block_info%ndatablk
+            do idata = 1, hist_concat%ndatablk
                call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, &
                   hist_data_id, p_comm_glb, p_stat, p_err)
 
@@ -1613,10 +1196,10 @@ end subroutine flux_map_and_write_2d_cama
                ixseg = rmesg(2)
                iyseg = rmesg(3)
                      
-               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-               xcnt = hist_block_info%xsegs(ixseg)%cnt
-               ycnt = hist_block_info%ysegs(iyseg)%cnt
+               xgdsp = hist_concat%xsegs(ixseg)%gdsp
+               ygdsp = hist_concat%ysegs(iyseg)%gdsp
+               xcnt = hist_concat%xsegs(ixseg)%cnt
+               ycnt = hist_concat%ysegs(iyseg)%cnt
 
                allocate (rbuf(xcnt,ycnt))
 
@@ -1628,17 +1211,17 @@ end subroutine flux_map_and_write_2d_cama
 
             end do
 #else
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xgdsp = hist_concat%xsegs(ixseg)%gdsp
+                     ygdsp = hist_concat%ysegs(iyseg)%gdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
 
                      vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
                         wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
@@ -1660,18 +1243,18 @@ end subroutine flux_map_and_write_2d_cama
 
 #ifdef USEMPI
          if (p_is_io) then
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
 
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
 
                      allocate (sbuf (xcnt,ycnt))
                      sbuf = wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
@@ -1752,7 +1335,7 @@ end subroutine flux_map_and_write_2d_cama
          if (p_is_master) then
             
 #ifdef USEMPI
-            do idata = 1, hist_block_info%ndatablk
+            do idata = 1, hist_concat%ndatablk
             
                call mpi_recv (rmesg, 4, MPI_INTEGER, MPI_ANY_SOURCE, &
                   hist_data_id, p_comm_glb, p_stat, p_err)
@@ -1762,10 +1345,10 @@ end subroutine flux_map_and_write_2d_cama
                iyseg = rmesg(3)
                ndim1 = rmesg(4)
                
-               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-               xcnt = hist_block_info%xsegs(ixseg)%cnt
-               ycnt = hist_block_info%ysegs(iyseg)%cnt
+               xgdsp = hist_concat%xsegs(ixseg)%gdsp
+               ygdsp = hist_concat%ysegs(iyseg)%gdsp
+               xcnt = hist_concat%xsegs(ixseg)%cnt
+               ycnt = hist_concat%ysegs(iyseg)%cnt
 
                allocate (rbuf (ndim1,xcnt,ycnt))
 
@@ -1773,7 +1356,7 @@ end subroutine flux_map_and_write_2d_cama
                   isrc, hist_data_id, p_comm_glb, p_stat, p_err)
 
                IF (idata == 1) THEN
-                  allocate (vdata (ndim1, hist_block_info%ginfo%nlon, hist_block_info%ginfo%nlat))
+                  allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
                   vdata(:,:,:) = spval
                ENDIF
 
@@ -1783,20 +1366,20 @@ end subroutine flux_map_and_write_2d_cama
             end do
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
-            allocate (vdata (ndim1, hist_block_info%ginfo%nlon, hist_block_info%ginfo%nlat))
+            allocate (vdata (ndim1, hist_concat%ginfo%nlon, hist_concat%ginfo%nlat))
             vdata(:,:,:) = spval
                   
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xgdsp = hist_concat%xsegs(ixseg)%gdsp
+                     ygdsp = hist_concat%ysegs(iyseg)%gdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
 
                      vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
                         wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
@@ -1821,18 +1404,18 @@ end subroutine flux_map_and_write_2d_cama
 #ifdef USEMPI
          if (p_is_io) then
 
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
 
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
 
                      allocate (sbuf (ndim1,xcnt,ycnt))
@@ -1914,7 +1497,7 @@ end subroutine flux_map_and_write_2d_cama
          if (p_is_master) then
                
 #ifdef USEMPI
-            do idata = 1, hist_block_info%ndatablk
+            do idata = 1, hist_concat%ndatablk
 
                call mpi_recv (rmesg, 5, MPI_INTEGER, MPI_ANY_SOURCE, &
                   hist_data_id, p_comm_glb, p_stat, p_err)
@@ -1925,10 +1508,10 @@ end subroutine flux_map_and_write_2d_cama
                ndim1 = rmesg(4)
                ndim2 = rmesg(4)
 
-               xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-               ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-               xcnt = hist_block_info%xsegs(ixseg)%cnt
-               ycnt = hist_block_info%ysegs(iyseg)%cnt
+               xgdsp = hist_concat%xsegs(ixseg)%gdsp
+               ygdsp = hist_concat%ysegs(iyseg)%gdsp
+               xcnt = hist_concat%xsegs(ixseg)%cnt
+               ycnt = hist_concat%ysegs(iyseg)%cnt
 
                allocate (rbuf (ndim1,ndim2,xcnt,ycnt))
 
@@ -1936,7 +1519,7 @@ end subroutine flux_map_and_write_2d_cama
                   isrc, hist_data_id, p_comm_glb, p_stat, p_err)
             
                IF (idata == 1) THEN
-                  allocate (vdata (ndim1,ndim2,hist_block_info%ginfo%nlon,hist_block_info%ginfo%nlat))
+                  allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
                   vdata(:,:,:,:) = spval
                ENDIF 
 
@@ -1947,20 +1530,20 @@ end subroutine flux_map_and_write_2d_cama
 #else
             ndim1 = wdata%ub1 - wdata%lb1 + 1
             ndim2 = wdata%ub2 - wdata%lb2 + 1
-            allocate (vdata (ndim1,ndim2,hist_block_info%ginfo%nlon,hist_block_info%ginfo%nlat))
+            allocate (vdata (ndim1,ndim2,hist_concat%ginfo%nlon,hist_concat%ginfo%nlat))
             vdata(:,:,:,:) = spval
 
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xgdsp = hist_block_info%xsegs(ixseg)%gdsp
-                     ygdsp = hist_block_info%ysegs(iyseg)%gdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xgdsp = hist_concat%xsegs(ixseg)%gdsp
+                     ygdsp = hist_concat%ysegs(iyseg)%gdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
 
                      vdata (:,:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
                         wdata%blk(iblk,jblk)%val(:,:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
@@ -1987,18 +1570,18 @@ end subroutine flux_map_and_write_2d_cama
 #ifdef USEMPI
          if (p_is_io) then
 
-            do iyseg = 1, hist_block_info%nyseg
-               do ixseg = 1, hist_block_info%nxseg
+            do iyseg = 1, hist_concat%nyseg
+               do ixseg = 1, hist_concat%nxseg
 
-                  iblk = hist_block_info%xsegs(ixseg)%blk
-                  jblk = hist_block_info%ysegs(iyseg)%blk
+                  iblk = hist_concat%xsegs(ixseg)%blk
+                  jblk = hist_concat%ysegs(iyseg)%blk
 
                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
 
-                     xbdsp = hist_block_info%xsegs(ixseg)%bdsp
-                     ybdsp = hist_block_info%ysegs(iyseg)%bdsp
-                     xcnt = hist_block_info%xsegs(ixseg)%cnt
-                     ycnt = hist_block_info%ysegs(iyseg)%cnt
+                     xbdsp = hist_concat%xsegs(ixseg)%bdsp
+                     ybdsp = hist_concat%ysegs(iyseg)%bdsp
+                     xcnt = hist_concat%xsegs(ixseg)%cnt
+                     ycnt = hist_concat%ysegs(iyseg)%cnt
 
                      ndim1 = size(wdata%blk(iblk,jblk)%val,1)
                      ndim2 = size(wdata%blk(iblk,jblk)%val,2)
@@ -2105,23 +1688,5 @@ end subroutine flux_map_and_write_2d_cama
       call ncio_write_serial (fileblock, 'lon_e', lon_e, 'lon')
 
    end subroutine hist_write_grid_info
-
-   SUBROUTINE block_info_free_mem (this)
-
-      IMPLICIT NONE
-
-      TYPE(block_info_type) :: this
-
-      IF (allocated(this%xsegs)) deallocate(this%xsegs)
-      IF (allocated(this%ysegs)) deallocate(this%ysegs)
-
-      IF (allocated(this%ginfo%lat_s)) deallocate(this%ginfo%lat_s)
-      IF (allocated(this%ginfo%lat_n)) deallocate(this%ginfo%lat_n)
-      IF (allocated(this%ginfo%lat_c)) deallocate(this%ginfo%lat_c)
-      IF (allocated(this%ginfo%lon_w)) deallocate(this%ginfo%lon_w)
-      IF (allocated(this%ginfo%lon_e)) deallocate(this%ginfo%lon_e)
-      IF (allocated(this%ginfo%lon_c)) deallocate(this%ginfo%lon_c)
-
-   END SUBROUTINE block_info_free_mem
 
 end module mod_hist

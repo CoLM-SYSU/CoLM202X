@@ -11,6 +11,7 @@ MODULE ncio_serial
 
    PUBLIC :: ncio_put_attr
 
+   PUBLIC :: ncio_var_exist
    PUBLIC :: ncio_inquire_length
 
    INTERFACE ncio_read_serial
@@ -147,6 +148,28 @@ CONTAINS
       deallocate (dimids)
 
    END SUBROUTINE ncio_inquire_varsize
+
+   !---------------------------------------------------------
+   LOGICAL function ncio_var_exist (filename, dataname)
+
+      USE netcdf
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+
+      ! Local variables
+      INTEGER :: ncid, varid, status
+
+      status = nf90_open(trim(filename), NF90_NOWRITE, ncid)
+      IF (status == nf90_noerr) THEN
+         status = nf90_inq_varid(ncid, trim(dataname), varid)
+         ncio_var_exist = (status == nf90_noerr)
+      ELSE
+         ncio_var_exist = .false.
+      ENDIF
+
+   END FUNCTION ncio_var_exist
 
    !---------------------------------------------------------
    SUBROUTINE ncio_inquire_length (filename, dataname, length)

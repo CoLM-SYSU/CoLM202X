@@ -53,7 +53,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER, allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: fexists
 
       IF (p_is_io) THEN
 
@@ -65,8 +64,7 @@ CONTAINS
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:) = defval
@@ -156,7 +154,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend, i
       CHARACTER(len=256) :: fileblock
       INTEGER(1), allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: fexists
 
       IF (p_is_io) THEN
 
@@ -168,8 +165,7 @@ CONTAINS
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:) = defval
@@ -260,7 +256,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:), rbuff(:)
-      LOGICAL :: fexists
          
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -278,8 +273,7 @@ CONTAINS
                      allocate (sbuff (pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:) = defval
@@ -364,7 +358,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
-      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -382,8 +375,7 @@ CONTAINS
                      allocate (sbuff (ndim1, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:,:) = defval
@@ -467,7 +459,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
-      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -485,8 +476,7 @@ CONTAINS
                      allocate (sbuff (ndim1,ndim2, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:,:,:) = defval
@@ -570,7 +560,6 @@ CONTAINS
       INTEGER :: iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
-      LOGICAL :: fexists
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
@@ -588,8 +577,7 @@ CONTAINS
                      allocate (sbuff (ndim1,ndim2,ndim3, pixelset%vecgs%vlen(iblk,jblk)))
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+                     IF (ncio_var_exist(fileblock,dataname)) THEN 
                         CALL ncio_read_serial (fileblock, dataname, sbuff)
                      ELSEIF (present(defval)) THEN
                         sbuff(:,:,:,:) = defval

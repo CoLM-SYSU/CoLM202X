@@ -8,6 +8,9 @@ MODULE MOD_1D_PCFluxes
 ! -------------------------------
 
   USE precision
+#ifdef BGC
+  USE MOD_1D_BGCPFTFluxes
+#endif
   IMPLICIT NONE
   SAVE
 

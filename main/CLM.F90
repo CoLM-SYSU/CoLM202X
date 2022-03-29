@@ -184,7 +184,7 @@ PROGRAM CLM
    call allocate_1D_Fluxes ()
 
 #if(defined CaMa_Flood)
-    call colm_CaMa_init
+    call colm_CaMa_init (720, 360)
 #endif
 
    ! ======================================================================
@@ -204,9 +204,6 @@ PROGRAM CLM
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
-!#if(defined BGC)
-!    call NDEP_readin (lon_points,lat_points,numpatch,dir_model_landdata,idate)
-!#endif
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
@@ -221,7 +218,7 @@ PROGRAM CLM
 
       ! Get leaf area index
       ! ----------------------------------------------------------------------
-#if(!defined DYN_PHENOLOGY)
+#if(defined DYN_PHENOLOGY)
       ! Update once a day
       dolai = .false.
       Julian_1day = int(calendarday(idate)-1)/1*1 + 1

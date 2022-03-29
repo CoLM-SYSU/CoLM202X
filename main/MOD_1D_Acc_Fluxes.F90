@@ -42,6 +42,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_qdrip  (:)
    real(r8), allocatable :: a_rstfacsun (:)
    real(r8), allocatable :: a_rstfacsha (:)
+#ifdef VARIABLY_SATURATED_FLOW
+   real(r8), allocatable :: a_dpond  (:)
+#endif
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
@@ -167,6 +170,9 @@ contains
             allocate (a_qdrip     (numpatch))
             allocate (a_rstfacsun (numpatch))
             allocate (a_rstfacsha (numpatch))
+#ifdef VARIABLY_SATURATED_FLOW
+            allocate (a_dpond     (numpatch))
+#endif
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
             allocate (a_wat       (numpatch))
@@ -291,6 +297,9 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
+#ifdef VARIABLY_SATURATED_FLOW
+            deallocate (a_dpond     )
+#endif
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
@@ -421,6 +430,9 @@ contains
             a_qdrip   (:) = spval
             a_rstfacsun(:) = spval
             a_rstfacsha(:) = spval
+#ifdef VARIABLY_SATURATED_FLOW
+            a_dpond   (:) = spval
+#endif
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
@@ -594,6 +606,9 @@ contains
             call acc1d (qdrip  , a_qdrip  )
             call acc1d (rstfacsun , a_rstfacsun )
             call acc1d (rstfacsha , a_rstfacsha )
+#ifdef VARIABLY_SATURATED_FLOW
+            call acc1d (dpond  , a_dpond  )
+#endif
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )

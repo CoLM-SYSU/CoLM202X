@@ -2,10 +2,9 @@
 
 include ../include/Makeoptions
  
-INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main -I../main/hydro -I${NETCDF_INC}
-
-VPATH = ../share : ../mksrfdata : ../main : ../main/hydro
-
+INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main \
+				  -I../main/hydro -I../main/bgc -I${NETCDF_INC}
+VPATH = ../share : ../mksrfdata : ../main : ../main/hydro : ../main/bgc
 HEADER = ../include/define.h
 
 # name of executable
@@ -45,15 +44,29 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o
 
+BASIC =  \
+		  ../main/PFT_Const.o \
+		  ../main/MOD_PFTimeVars.o \
+		  ../main/MOD_PFTimeInvars.o \
+		  ../main/MOD_PCTimeVars.o \
+		  ../main/MOD_PCTimeInvars.o \
+		  ../main/MOD_TimeInvariants.o        \
+		  ../main/MOD_TimeVariables.o    \
+		  ../main/MOD_1D_PFTFluxes.o          \
+		  ../main/MOD_1D_PCFluxes.o           \
+		  ../main/MOD_1D_Fluxes.o \
+		  ../main/MOD_1D_Forcing.o         
+
+BASIC_BGC = \
+			  ../main/bgc/MOD_1D_BGCFluxes.o  \
+			  ../main/bgc/MOD_1D_BGCPFTFluxes.o  \
+			  ../main/bgc/MOD_2D_BGCFluxes.o  \
+			  ../main/bgc/MOD_BGCPFTimeVars.o  \
+			  ../main/bgc/MOD_BGCTimeInvars.o  \
+			  ../main/bgc/MOD_BGCTimeVars.o 
+
 
 OBJS_MAIN = \
-				  ../main/PFT_Const.o \
-				  ../main/MOD_PFTimeVars.o \
-				  ../main/MOD_PFTimeInvars.o \
-				  ../main/MOD_PCTimeVars.o \
-				  ../main/MOD_PCTimeInvars.o \
-				  ../main/MOD_TimeVariables.o \
-				  ../main/MOD_TimeInvariants.o \
 				  ../main/LAI_empirical.o  \
 				  ../main/LAI_readin.o \
 				  ../main/LAI_varied_readin.o  \
@@ -80,8 +93,11 @@ OBJS = \
 
 all: ${EXECUTABLE}
 
-${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} 
-	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} -o $@ ${LDFLAGS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
+	${BASIC} ${BASIC_BGC} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} 
+	\
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
+	${BASIC} ${BASIC_BGC} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM initial data completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
@@ -92,6 +108,12 @@ $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../mksrfdata
+
+$(BASIC_BGC) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/bgc
+
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main
 
 $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main

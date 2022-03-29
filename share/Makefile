@@ -3,6 +3,8 @@
 ####################################################################
 
 include ../include/Makeoptions
+ 
+INCLUDE_DIR = -I../include -I${NETCDF_INC}
 
 HEADER = ../include/define.h
 

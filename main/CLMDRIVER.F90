@@ -20,7 +20,6 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
  USE mod_landpatch, only : numpatch
-! use MOD_PFTimeInvars
  use omp_lib
 
  IMPLICIT NONE

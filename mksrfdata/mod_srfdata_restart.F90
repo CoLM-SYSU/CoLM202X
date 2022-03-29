@@ -502,6 +502,10 @@ CONTAINS
 
       numset = pixelset%nset
 
+#ifdef CLMDEBUG 
+      IF (p_is_io)     write(*,*) numset, trim(psetname), ' on group', p_iam_io
+#endif
+
    END SUBROUTINE pixelset_load_from_file
 
 END MODULE mod_srfdata_restart

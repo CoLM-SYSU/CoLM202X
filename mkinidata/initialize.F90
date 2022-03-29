@@ -328,44 +328,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #endif
 
    if (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Invariants')
-!=======
-!#ifdef CROP
-!            do np = 1, N_CFT
-!               IF (pctcft(i,j,np) > 0.) THEN
-!!                  print*,'pctcft is greater than 0'
-
-!                  npatch             = npatch + 1 !subgrid patch number
-!                  patch2lon(npatch)  = i !patch longitude index
-!                  patch2lat(npatch)  = j !patch latitude index
-!                  patchclass(npatch) = 1 !no meaning here
-!                  patchlatr(npatch)  = latixy(i,j) !latitude in radians
-!                  patchlonr(npatch)  = longxy(i,j) !longitude in radians
-
-!                  patchfrac(npatch)  = pctcft(i,j,np)*landfrac(i,j) !patch weight
-!                  patchtype(npatch)  = 0                       !soil patch
-!                  grid_patch_e(i,j)  = npatch
-!                  patch_pft_s(npatch)= -1
-
-!                  IF (l.ne.i .OR. m.ne.j) THEN
-!                     l = i; m = j; grid_patch_s(i,j) = npatch
-!                  ENDIF
-
-!                  npft            = npft + 1
-!                  pftclass(npft)  = np + N_PFT - 1   ! PFT: 0~N_PFT-1; CFT: N_PFT ~ N_PFT + N_CFT-1
-!                  pftfrac(npft)   = 1.
-!                  pft2patch(npft) = npatch
-!
-!                  IF (patch_pft_s(npatch) == -1) THEN
-!                      patch_pft_s(npatch) = npft
-!                  ENDIF 
-
-!                  patch_pft_e(npatch)= npft
-!               ENDIF
-!            ENDDO
-!         ENDDO
-!      ENDDO
-!#endif
-!>>>>>>> origin/CoLM202X-BGC
 
    ! ----------------------------------------------------------------------
    ! [4] INITIALIZE TIME-VARYING VARIABLES 

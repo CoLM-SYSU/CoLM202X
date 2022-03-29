@@ -2,17 +2,15 @@
 # mpif90 - ifort 
 # 
 
- FF = /opt/mpich-3.4.2-intel/bin/mpif90 -qopenmp
+ FF = /opt/mpich-3.4.2-intel/bin/mpif90
 
  NETCDF_LIB = /opt/netcdf/lib
  NETCDF_INC = /opt/netcdf/include
 
  MOD_CMD = -module 
 
- FOPTS = -g -traceback -r8 -free -check uninit -check bounds
+ FOPTS = -qopenmp -g -traceback -r8 -free -check uninit -check bounds
 
- INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
-               -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
  LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 # =======================================================
