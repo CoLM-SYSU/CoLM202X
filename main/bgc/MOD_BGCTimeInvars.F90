@@ -272,6 +272,7 @@ SAVE
 
      CALL ncio_define_pixelset_dimension (file_restart, landpatch)
      CALL ncio_define_dimension_vector (file_restart, 'soil', nl_soil)
+     call ncio_define_dimension_vector (file_restart, 'ndecomp_transitions',ndecomp_transitions)
      
      call ncio_write_vector       (file_restart, 'rf_decomp      ', 'soil'   , nl_soil  , &
                           'ndecomp_transitions', ndecomp_transitions,'vector', landpatch, rf_decomp      , compress)

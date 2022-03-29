@@ -176,7 +176,7 @@ SAVE
      CALL allocate_PCTimeInvars
 #endif
 
-#ifdef BGV
+#ifdef BGC
      CALL allocate_BGCTimeInvars
 #endif
 

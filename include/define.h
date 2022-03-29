@@ -3,8 +3,8 @@
 #define	PFT_CLASSIFICATION       
 #define LANDONLY
 
-#define VARIABLY_SATURATED_FLOW
-#define USE_DEPTH_TO_BEDROCK
+#undef VARIABLY_SATURATED_FLOW
+#undef USE_DEPTH_TO_BEDROCK
 #define Campbell_SOIL_MODEL
 #undef  vanGenuchten_Mualem_SOIL_MODEL
 #undef SOILPAR_UPS_FIT
@@ -12,7 +12,7 @@
 #undef  CoLM_hydro_DEBUG
 #undef vsf_statistics
 
-#undef PLANT_HYDRAULIC_STRESS
+#define PLANT_HYDRAULIC_STRESS
 #undef  DYN_PHENOLOGY             
 #undef	SOILINI                   
 #undef	SOIL_REFL_GUESSED         
@@ -24,7 +24,7 @@
 #define  CaMa_Flood
 
 #define CROP
-#define BGC
+#undef BGC
 
 #ifndef PFT_CLASSIFICATION
 #undef CROP
