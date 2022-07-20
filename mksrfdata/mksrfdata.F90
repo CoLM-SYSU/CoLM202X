@@ -52,8 +52,8 @@ PROGRAM mksrfdata
    USE mod_block
    USE mod_pixel
    USE mod_grid
-   USE mod_landunit
-   USE mod_landcell
+   USE mod_landbasin
+   USE mod_hydrounit
    USE mod_landpatch
    USE LC_Const
    USE mod_srfdata_restart
@@ -75,7 +75,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gunit
+   TYPE (grid_type) :: gbasin, gridlai
 
    INTEGER :: start_time, end_time, c_per_sec, time_used
 
@@ -112,17 +112,17 @@ PROGRAM mksrfdata
    CALL pixel%set_edges (edges, edgen, edgew, edgee) 
    CALL pixel%assimilate_gblock ()
 
-   ! define grid coordinates of land units
+   ! define grid coordinates of land basins
 #ifdef GRIDBASED
-   CALL gunit%define_from_file (DEF_file_landgrid)
+   CALL gbasin%define_from_file (DEF_file_landgrid)
 #endif
 #ifdef CATCHMENT
-   CALL gunit%define_by_name ('merit_90m')
+   CALL gbasin%define_by_name ('merit_90m')
 #endif
 
-   ! define grid coordinates of height bands in catchment
+   ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
-   CALL ghband%define_by_name ('merit_90m')
+   CALL ghydru%define_by_name ('merit_90m')
 #endif
 
    ! define grid coordinates of land types
@@ -142,31 +142,40 @@ PROGRAM mksrfdata
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 
+   ! define grid for land characteristics
+   CALL gridlai%define_by_name ('colm_500m')
+
    ! assimilate grids to build pixels
-   CALL pixel%assimilate_grid (gunit)
+#ifndef SinglePoint
+   CALL pixel%assimilate_grid (gbasin)
+#endif
 #ifdef CATCHMENT
-   CALL pixel%assimilate_grid (ghband)
+   CALL pixel%assimilate_grid (ghydru)
 #endif
    CALL pixel%assimilate_grid (gpatch)
 #if (defined CROP) 
    CALL pixel%assimilate_grid (gcrop )
 #endif
+   CALL pixel%assimilate_grid (gridlai)
 
    ! map pixels to grid coordinates
-   CALL pixel%map_to_grid (gunit)
+#ifndef SinglePoint
+   CALL pixel%map_to_grid (gbasin)
+#endif
 #ifdef CATCHMENT
-   CALL pixel%map_to_grid (ghband)
+   CALL pixel%map_to_grid (ghydru)
 #endif
    CALL pixel%map_to_grid (gpatch)
 #if (defined CROP) 
    CALL pixel%map_to_grid (gcrop )
 #endif
+   CALL pixel%map_to_grid (gridlai)
 
-   ! build land units 
-   CALL landunit_build (gunit)
+   ! build land basins 
+   CALL landbasin_build (gbasin)
    
-   ! build land cells
-   CALL landcell_build 
+   ! build hydro units 
+   CALL hydrounit_build 
 
    ! build land patches
    CALL landpatch_build
@@ -187,9 +196,9 @@ PROGRAM mksrfdata
    
    CALL pixel%save_to_file     (dir_landdata)
 
-   CALL landunit_save_to_file  (dir_landdata)
+   CALL landbasin_save_to_file  (dir_landdata)
 
-   CALL pixelset_save_to_file  (dir_landdata, 'landcell',  landcell)
+   CALL pixelset_save_to_file  (dir_landdata, 'hydrounit', hydrounit)
    
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
@@ -207,19 +216,19 @@ PROGRAM mksrfdata
 
    CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_brightness (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_lakedepth       (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
    
 #ifdef USE_DEPTH_TO_BEDROCK
-   CALL aggregation_dbedrock        (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_percentages     (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
    
-   CALL aggregation_LAI             (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
-   CALL aggregation_forest_height   (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
    ! ................................................................
    ! 4. Free memories. 

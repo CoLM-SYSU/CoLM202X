@@ -15,6 +15,9 @@ MODULE ncio_block
       MODULE procedure ncio_read_block_int32_2d_time 
       MODULE procedure ncio_read_block_real8_2d_time 
    END interface ncio_read_block_time
+#ifdef SinglePoint
+   PUBLIC :: ncio_read_site_time
+#endif
 
 CONTAINS
 
@@ -323,5 +326,42 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE ncio_read_block_real8_2d_time
+
+   ! ----
+#ifdef SinglePoint
+   SUBROUTINE ncio_read_site_time (filename, dataname, itime, rdata)
+     
+      USE netcdf
+      USE mod_block
+      USE mod_data_type
+      USE spmd_task
+      IMPLICIT NONE
+      
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: dataname
+      INTEGER, intent(in) :: itime
+
+      TYPE (block_data_real8_2d), intent(inout) :: rdata
+
+      ! Local variables
+      INTEGER :: start3(3), count3(3)
+      INTEGER :: ncid, varid
+
+      IF (p_is_io) THEN
+                     
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         
+         start3 = (/1, 1, itime/)
+         count3 = (/1, 1, 1/)
+         CALL nccheck (nf90_get_var(ncid, varid, &
+            rdata%blk(site_xblk,site_yblk)%val, start3, count3) )
+                
+         CALL nccheck( nf90_close(ncid) )
+
+      ENDIF
+
+   END SUBROUTINE ncio_read_site_time
+#endif
 
 END MODULE ncio_block

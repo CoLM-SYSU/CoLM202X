@@ -27,11 +27,11 @@ SUBROUTINE pct_readin (dir_landdata)
    INTEGER :: npatch, ipatch
 
 #ifdef PFT_CLASSIFICATION
-   lndname = trim(dir_landdata)//'/pct_pfts.nc'
+   lndname = trim(dir_landdata)//'/pctpft/pct_pfts.nc'
    call ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac) 
 
 #if (defined CROP) 
-   lndname = trim(dir_landdata)//'/pct_crops.nc'
+   lndname = trim(dir_landdata)//'/pctpft/pct_crops.nc'
    call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop) 
 #endif
 
@@ -59,7 +59,7 @@ SUBROUTINE pct_readin (dir_landdata)
 #endif
       
 #ifdef PC_CLASSIFICATION
-   lndname = trim(dir_landdata)//'/pct_pcs.nc'
+   lndname = trim(dir_landdata)//'/pctpft/pct_pcs.nc'
    CALL ncio_read_vector (lndname, 'pct_pcs', N_PFT, landpc, pcfrac)
 
 #ifdef CLMDEBUG

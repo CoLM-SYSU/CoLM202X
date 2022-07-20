@@ -15,7 +15,7 @@ CONTAINS
       USE mod_data_type
       USE mod_pixel
       USE mod_pixelset
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_utils
       IMPLICIT NONE
 
@@ -120,8 +120,8 @@ CONTAINS
                allocate (msk   (istt:iend))
 
                DO ipxl = istt, iend
-                  xlist(ipxl) = gshadow%xgrd(landunit(iu)%ilon(ipxl))
-                  ylist(ipxl) = gshadow%ygrd(landunit(iu)%ilat(ipxl))
+                  xlist(ipxl) = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
+                  ylist(ipxl) = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
 
                   xblk = gshadow%xblk(xlist(ipxl))
                   yblk = gshadow%yblk(ylist(ipxl))
@@ -165,8 +165,8 @@ CONTAINS
 
 #else
                DO ipxl = istt, iend
-                  ilon = gshadow%xgrd(landunit(iu)%ilon(ipxl))
-                  ilat = gshadow%ygrd(landunit(iu)%ilat(ipxl))
+                  ilon = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
+                  ilat = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
                   xblk = gshadow%xblk(ilon)
                   yblk = gshadow%yblk(ilat)
                   xloc = gshadow%xloc(ilon)
@@ -179,8 +179,8 @@ CONTAINS
                allocate (areapixel(istt:iend))
                DO ipxl = istt, iend
                   areapixel(ipxl) = areaquad (&
-                     pixel%lat_s(landunit(iu)%ilat(ipxl)), pixel%lat_n(landunit(iu)%ilat(ipxl)), &
-                     pixel%lon_w(landunit(iu)%ilon(ipxl)), pixel%lon_e(landunit(iu)%ilon(ipxl)) )
+                     pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
+                     pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
                ENDDO
 
                areatotal = sum(areapixel)

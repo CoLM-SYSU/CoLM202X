@@ -179,18 +179,20 @@ contains
          where (is_permeable)
             etroot = etr * rootr / sumroot
          END where
+         deficit = 0.
+      ELSE
+         deficit = etr*dt
       ENDIF
 
-      deficit = 0.
       do ilev = 1, izwt-1
          IF (is_permeable(ilev)) THEN
 
             ss_vliq(ilev) = (ss_vliq(ilev) * sp_dz(ilev) &
                - etroot(ilev)*dt - deficit) / sp_dz(ilev)
 
-            IF (ss_vliq(ilev) < vl_r(ilev)) THEN
-               deficit = (vl_r(ilev) - ss_vliq(ilev)) * sp_dz(ilev)
-               ss_vliq(ilev) = vl_r(ilev)
+            IF (ss_vliq(ilev) < 0.) THEN
+               deficit = - ss_vliq(ilev) * sp_dz(ilev)
+               ss_vliq(ilev) = 0.
             ELSE
                deficit = 0.
             ENDIF
@@ -251,7 +253,7 @@ contains
             lbc_typ_sub = bc_drainage
          
             wa = wa - flxbtm * dt
-            IF (wa >= 0.) THEN
+            IF (wa > 0.) THEN
                lbc_typ_sub = bc_fix_flux
                flxbtm = - wa / dt
                zwt = sp_zi(nlev)
@@ -261,8 +263,9 @@ contains
             ENDIF
          else
             lbc_typ_sub = bc_fix_flux
-            lbc_val_sub = flxbtm
          end if
+            
+         lbc_val_sub = flxbtm
 
          call Richards_solver ( &
             lb, ub, dt, sp_zc(lb:ub), sp_zi(lb-1:ub), &
@@ -271,7 +274,9 @@ contains
             ss_dp, wa, ss_vliq(lb:ub), ss_wt(lb:ub), ss_q(lb-1:ub), &
             tol_q, tol_z, tol_v, tol_p)
 
-         flxbtm = flxbtm - ss_q(ub)
+         IF (lbc_typ_sub /= bc_drainage) THEN
+            flxbtm = flxbtm - ss_q(ub)
+         ENDIF
 
          ub = lb - 1
       end do soilcolumn 
@@ -291,15 +296,7 @@ contains
             ENDIF 
          end do
 
-         IF (.not. is_sat) THEN
-            DO WHILE (ilev > 1)
-               ilev = ilev - 1
-               IF (is_permeable(ilev)) THEN
-                  ss_vliq(ilev) = (ss_vliq(ilev)*(sp_dz(ilev)-ss_wt(ilev)) &
-                     + porsl(ilev)*ss_wt(ilev)) / sp_dz(ilev)
-               ENDIF
-            ENDDO
-         ELSE
+         IF (is_sat) THEN
             zwt = 0._r8
          ENDIF
       ELSE
@@ -308,11 +305,18 @@ contains
             nprm, prms(:,nlev), tol_v, tol_z, &
             wa, sp_zi(nlev), zwt) 
       ENDIF
+      
+      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+      DO ilev = izwt-1, 1, -1
+         IF (is_permeable(ilev)) THEN
+            ss_vliq(ilev) = (ss_vliq(ilev)*(sp_dz(ilev)-ss_wt(ilev)) &
+               + porsl(ilev)*ss_wt(ilev)) / sp_dz(ilev)
+         ENDIF
+      ENDDO
 
       qinfl = rain - (ss_dp - dp_m1)/dt 
       
       ! total water mass
-      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
       w_sum_after = ss_dp
       DO ilev = 1, nlev
          IF (is_permeable(ilev)) THEN
@@ -335,7 +339,7 @@ contains
       IF (wblc > 1.0e-3) THEN
          rsubst = rsubst - wblc/dt
 #ifdef  CoLM_hydro_DEBUG
-         write(*,*) 'runoff adjustment: reduced by ', wblc/dt, ' to ', rsubst 
+         write(*,*) 'runoff adjustment: reduced by ', wblc/dt, ' to ', rsubst
 #endif
       ENDIF
 
@@ -558,18 +562,18 @@ contains
                      vl_s, vl_r, psi_s, hksat, nprm, prms, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      q_this, q_wf_0, q_wt_0, &
-                     ss_wf, ss_vl, ss_wt, ss_dp, zwt, &
+                     ss_wf, ss_vl, ss_wt, ss_dp, waquifer, zwt, &
                      wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
                      tol_q, tol_z, tol_v)
                   
                end if
 
 #if (defined CoLM_hydro_DEBUG)
-               if (iter == max_iters_richards) then
-                  write(*,*) 'Warning : Richards_solver : not converged.'
-                  write(*, 100) dt_this, iter, f2_norm(iter)/dt_this, tol_richards
-                  100 format (' ', ES11.4, ' ', I12, '  ', ES12.4, '  (', ES11.4,')')
-               end if
+               ! if (iter == max_iters_richards) then
+               !    write(*,*) 'Warning : Richards_solver : not converged.'
+               !    write(*, 100) dt_this, iter, f2_norm(iter)/dt_this, tol_richards
+               !    100 format (' ', ES11.4, ' ', I12, '  ', ES12.4, '  (', ES11.4,')')
+               ! end if
 #endif
 
                dt_done = dt_done + dt_this
@@ -736,7 +740,7 @@ contains
 
                   if (jsbl(ilev) == 2) then
                      ss_vl(ilev) = ss_vl(ilev) - dv(ilev) 
-                     ss_vl(ilev) = max(ss_vl(ilev), vl_r(ilev)+tol_v)
+                     ss_vl(ilev) = max(ss_vl(ilev), tol_v)
                      ss_vl(ilev) = min(ss_vl(ilev), vl_s(ilev))
                   end if
 
@@ -790,7 +794,7 @@ contains
 
 #ifdef  CoLM_hydro_DEBUG
          IF (abs(werr) > 1.0e-3) then
-             write(*,*) 'water balance overall: ', werr
+             write(*,*)  'Richards solver water balance violation: ', werr
          ENDIF 
 #endif
 
@@ -1060,7 +1064,7 @@ contains
          lb, ub, dt, dz, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
-         q, q_wf, q_wt, wf, vl, wt, dp, zwt, &
+         q, q_wf, q_wt, wf, vl, wt, dp, waquifer, zwt, &
          wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
          tol_q, tol_z, tol_v)
 
@@ -1093,6 +1097,7 @@ contains
       real(r8), intent(inout) :: vl (lb:ub)
       real(r8), intent(inout) :: wt (lb:ub)
       real(r8), intent(inout) :: dp
+      real(r8), intent(inout) :: waquifer
       real(r8), intent(inout) :: zwt
 
       real(r8), intent(in) :: wf_m1 (lb:ub)
@@ -1108,7 +1113,7 @@ contains
       ! Local variables
       integer  :: ilev
       real(r8) :: air_m1, wa_m1, dwat, dwat_s
-      real(r8) :: alp, zwf_this, zwt_this, waquifer, vl_wa
+      real(r8) :: alp, zwf_this, zwt_this, vl_wa
 
       real(r8) :: dmss, mblc
 
@@ -1122,8 +1127,8 @@ contains
       do ilev = lb, ub
 
          dwat = (q(ilev-1) - q(ilev)) * dt 
-         wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * (vl_s(ilev)-vl_r(ilev)-tol_v) &
-            + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * (vl_m1(ilev)-vl_r(ilev)-tol_v)
+         wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
+            + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
          if (dwat <= - wa_m1) then
             q(ilev) = q(ilev-1) + wa_m1/dt
          end if
@@ -1135,8 +1140,8 @@ contains
          q(ub) = lbc_val
          DO ilev = ub, lb, -1
             dwat = (q(ilev-1) - q(ilev)) * dt 
-            wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * (vl_s(ilev)-vl_r(ilev)-tol_v) &
-               + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * (vl_m1(ilev)-vl_r(ilev)-tol_v)
+            wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
+               + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
             if (dwat <= - wa_m1) then
                q(ilev-1) = q(ilev) - wa_m1/dt
             end if
@@ -1422,7 +1427,7 @@ contains
          end if
 
          vl = min(vl, vl_s)
-         vl = max(vl, vl_r  + tol_v)
+         vl = max(vl, tol_v)
 
          if (is_update_psi_hk) then 
             psi = soil_psi_from_vliq (vl,  vl_s, vl_r, psi_s, nprm, prms)

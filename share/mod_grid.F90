@@ -200,6 +200,117 @@ CONTAINS
 
       ENDIF
 
+      IF (trim(gridname) == 'PRINCETON') THEN
+         nlat = 180
+         nlon = 360
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         del_lat = 180.0 / nlat
+         DO ilat = 1, nlat
+            lat(ilat) = -90.0 + del_lat * (ilat-1)
+         ENDDO
+
+         del_lon = 360.0 / nlon
+         DO ilon = 1, nlon
+            lon(ilon) =(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
+      IF (trim(gridname) == 'JRA55') THEN
+         nlat = 320
+         nlon = 640
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         del_lat = 180.0 / nlat
+         del_lat=0.5625
+         DO ilat = 1, nlat
+            lat(ilat) =  90.0 - del_lat * (ilat-1)
+         ENDDO
+
+         del_lon = 360.0 / nlon
+         del_lon=0.5625
+         DO ilon = 1, nlon
+            lon(ilon) =(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
+
+      IF (trim(gridname) == 'GDAS') THEN
+         nlat = 600
+         nlon = 1440
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         !del_lat = 180.0 / nlat
+         del_lat=0.25
+         DO ilat = 1, nlat
+            lat(ilat) = -60.0 + del_lat * (ilat-1)
+         ENDDO
+
+         !del_lon = 360.0 / nlon
+         del_lon=0.25
+         DO ilon = 1, nlon
+            lon(ilon) =-180.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
+      IF (trim(gridname) == 'CLDAS') THEN
+         nlat = 1040
+         nlon = 1600
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         del_lat=0.0625
+         DO ilat = 1, nlat
+            lat(ilat) = del_lat * (ilat-1)
+         ENDDO
+
+         del_lon=0.0625
+         DO ilon = 1, nlon
+            lon(ilon) =60.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
+
+      IF (trim(gridname) == 'CMFD') THEN
+         nlat = 400
+         nlon = 700
+
+         allocate (lon(nlon))
+         allocate (lat(nlat))
+
+         del_lat=0.1
+         DO ilat = 1, nlat
+            lat(ilat) = 15.0+del_lat * (ilat-1)
+         ENDDO
+
+         del_lon=0.1
+         DO ilon = 1, nlon
+            lon(ilon) =70.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
+         ENDDO
+
+         call this%define_by_center (lat, lon)
+
+      ENDIF
+
    END SUBROUTINE grid_define_by_name
 
    !-----------------------------------------------------
@@ -487,7 +598,7 @@ CONTAINS
 
       ilon_e = ilon - 1
       IF (ilon_e == 0) ilon_e = this%nlon
-
+     print *,ilon,this%nlon
       ilon = mod(ilon,this%nlon) + 1
       DO while (.true.)
          IF (lon_between_floor(this%lon_w(ilon), edgew, edgee)) THEN

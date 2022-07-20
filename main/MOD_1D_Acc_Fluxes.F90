@@ -44,6 +44,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_rstfacsha (:)
 #ifdef VARIABLY_SATURATED_FLOW
    real(r8), allocatable :: a_dpond  (:)
+#ifdef USE_DEPTH_TO_BEDROCK
+   real(r8), allocatable :: a_dwatsub(:)
+#endif
 #endif
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
@@ -56,6 +59,10 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_t_grnd(:) 
    real(r8), allocatable :: a_tleaf (:) 
    real(r8), allocatable :: a_ldew  (:) 
+!#ifdef CLM5_INTERCEPTION
+   real(r8), allocatable :: a_ldew_rain  (:) 
+   real(r8), allocatable :: a_ldew_snow  (:) 
+!#endif
    real(r8), allocatable :: a_scv   (:) 
    real(r8), allocatable :: a_snowdp(:) 
    real(r8), allocatable :: a_fsno  (:) 
@@ -172,6 +179,9 @@ contains
             allocate (a_rstfacsha (numpatch))
 #ifdef VARIABLY_SATURATED_FLOW
             allocate (a_dpond     (numpatch))
+#ifdef USE_DEPTH_TO_BEDROCK
+            allocate (a_dwatsub   (numpatch))
+#endif
 #endif
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
@@ -183,6 +193,10 @@ contains
 
             allocate (a_t_grnd    (numpatch)) 
             allocate (a_tleaf     (numpatch)) 
+!#ifdef CLM5_INTERCEPTION
+            allocate (a_ldew_rain      (numpatch)) 
+            allocate (a_ldew_snow      (numpatch)) 
+!#endif
             allocate (a_ldew      (numpatch)) 
             allocate (a_scv       (numpatch)) 
             allocate (a_snowdp    (numpatch)) 
@@ -299,6 +313,9 @@ contains
             deallocate (a_rstfacsha )
 #ifdef VARIABLY_SATURATED_FLOW
             deallocate (a_dpond     )
+#ifdef USE_DEPTH_TO_BEDROCK
+            deallocate (a_dwatsub   )
+#endif
 #endif
             deallocate (a_zwt       )
             deallocate (a_wa        )
@@ -309,7 +326,11 @@ contains
             deallocate (a_qcharge   )
 
             deallocate (a_t_grnd    ) 
-            deallocate (a_tleaf     ) 
+            deallocate (a_tleaf     )
+!#ifdef CLM5_INTERCEPTION
+            deallocate (a_ldew_rain      ) 
+            deallocate (a_ldew_snow      ) 
+!#endif
             deallocate (a_ldew      ) 
             deallocate (a_scv       ) 
             deallocate (a_snowdp    ) 
@@ -432,6 +453,9 @@ contains
             a_rstfacsha(:) = spval
 #ifdef VARIABLY_SATURATED_FLOW
             a_dpond   (:) = spval
+#ifdef USE_DEPTH_TO_BEDROCK
+            a_dwatsub (:) = spval
+#endif
 #endif
             a_zwt     (:) = spval
             a_wa      (:) = spval
@@ -443,6 +467,10 @@ contains
 
             a_t_grnd  (:) = spval
             a_tleaf   (:) = spval
+!#ifdef CLM5_INTERCEPTION
+            a_ldew_rain    (:) = spval
+            a_ldew_snow    (:) = spval
+!#endif
             a_ldew    (:) = spval
             a_scv     (:) = spval
             a_snowdp  (:) = spval
@@ -608,6 +636,9 @@ contains
             call acc1d (rstfacsha , a_rstfacsha )
 #ifdef VARIABLY_SATURATED_FLOW
             call acc1d (dpond  , a_dpond  )
+#ifdef USE_DEPTH_TO_BEDROCK
+            call acc1d (dwatsub, a_dwatsub)
+#endif
 #endif
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
@@ -619,6 +650,10 @@ contains
 
             call acc1d (t_grnd , a_t_grnd )
             call acc1d (tleaf  , a_tleaf  )
+!#ifdef CLM5_INTERCEPTION
+            call acc1d (ldew_rain   , a_ldew_rain   )
+            call acc1d (ldew_snow   , a_ldew_snow   )
+!#endif
             call acc1d (ldew   , a_ldew   )
             call acc1d (scv    , a_scv    )
             call acc1d (snowdp , a_snowdp )

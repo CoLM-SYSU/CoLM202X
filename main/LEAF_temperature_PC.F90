@@ -31,7 +31,7 @@ MODULE LEAF_temperature_PC
               frl     ,thermk  ,fshade  ,rstfacsun,rstfacsha,po2m  ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,& 
               sigf    ,etrc    ,tg      ,qg      ,dqgdT   ,emg     ,&
-              z0mpc   ,tl      ,ldew    ,taux    ,tauy    ,fseng   ,&
+               z0mpc   ,tl      ,ldew, ldew_rain,ldew_snow    ,taux    ,tauy    ,fseng   ,&
               fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
               rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
@@ -180,6 +180,8 @@ MODULE LEAF_temperature_PC
   REAL(r8), dimension(npft), intent(inout) :: &
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
+        ldew_rain,       &! depth of rain on foliage [mm]
+        ldew_snow,       &! depth of snow on foliage [mm]
         rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha    ! factor of soil water stress to transpiration on shaded leaf
   
@@ -462,7 +464,8 @@ MODULE LEAF_temperature_PC
 
        DO i = 1, npft
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-             CALL dewfraction (sigf(i),lai(i),sai(i),dewmx,ldew(i),fwet(i),fdry(i))
+      CALL dewfraction (sigf(i),lai(i),sai(i),dewmx,ldew(i),ldew_rain(i),ldew_snow(i),fwet(i),fdry(i))
+
              CALL qsadv(tl(i),psrf,ei(i),deiDT(i),qsatl(i),qsatlDT(i))
           ENDIF
        ENDDO
@@ -1583,8 +1586,20 @@ MODULE LEAF_temperature_PC
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-
-             ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
+!#ifdef CLM5_INTERCEPTION
+   if (ldew_rain(i).gt.evplwet(i)*deltim) then
+      ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
+      ldew_snow(i) = ldew_snow(i)
+      ldew=ldew_rain(i)+ldew_snow(i)
+   else
+      ldew_rain(i) = 0.0
+      ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
+      ldew(i)      = ldew_snow(i)
+   endif
+!#else
+!       ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
+!#endif
+            ! ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
 
 !-----------------------------------------------------------------------
 ! balance check
@@ -1650,9 +1665,12 @@ MODULE LEAF_temperature_PC
 !----------------------------------------------------------------------         
 
 
+!#ifdef CLM5_INTERCEPTION
 
-  SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
-       
+  SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
+!#else
+!   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
+!#endif
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
@@ -1669,7 +1687,10 @@ MODULE LEAF_temperature_PC
   REAL(r8), intent(in) :: sai    !stem area index  [-]
   REAL(r8), intent(in) :: dewmx  !maximum allowed dew [0.1 mm]
   REAL(r8), intent(in) :: ldew   !depth of water on foliage [kg/m2/s]
-
+!#ifdef CLM5_INTERCEPTION
+  REAL(r8), intent(in) :: ldew_rain   !depth of water on foliage [kg/m2/s]
+  REAL(r8), intent(in) :: ldew_snow   !depth of water on foliage [kg/m2/s]
+!#endif
   REAL(r8), intent(out) :: fwet  !fraction of foliage covered by water [-]
   REAL(r8), intent(out) :: fdry  !fraction of foliage that is green and dry [-]
 

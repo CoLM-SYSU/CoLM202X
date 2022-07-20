@@ -2,13 +2,14 @@
 
 module mod_modis_data
 
-   USE GlobalVars, only : N_PFT
    implicit none
 
    integer, parameter :: nxbox = 1200
    integer, parameter :: nybox = 1200
    integer, parameter :: nxglb = 86400
    integer, parameter :: nyglb = 43200
+   
+   INTEGER, parameter :: N_PFT_modis = 16
    
    interface modis_read_data
       MODULE procedure modis_read_data_int32
@@ -326,15 +327,15 @@ contains
 
                      inquire(file=file_modis, exist=fexists)
                      if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT-1))
+                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
                         CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
                         CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                         CALL nccheck( nf90_get_var(ncid, varid, dcache, &
-                           (/i0,j0,1/), (/i1-i0+1,j1-j0+1,N_PFT/)) )
+                           (/i0,j0,1/), (/i1-i0+1,j1-j0+1,N_PFT_modis/)) )
                         CALL nccheck( nf90_close(ncid) )
 
-                        DO ipft = 0, N_PFT-1
+                        DO ipft = 0, N_PFT_modis-1
                            rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
                         ENDDO
 
@@ -495,15 +496,15 @@ contains
 
                      inquire(file=file_modis, exist=fexists)
                      if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT-1))
+                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
                         CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
                         CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                         CALL nccheck( nf90_get_var(ncid, varid, dcache, &
-                           (/i0,j0,1,time/), (/i1-i0+1,j1-j0+1,N_PFT,1/)) )
+                           (/i0,j0,1,time/), (/i1-i0+1,j1-j0+1,N_PFT_modis,1/)) )
                         CALL nccheck( nf90_close(ncid) )
 
-                        DO ipft = 0, N_PFT-1
+                        DO ipft = 0, N_PFT_modis-1
                            rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
                         ENDDO
 

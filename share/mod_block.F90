@@ -32,6 +32,10 @@ MODULE mod_block
    ! ---- Instance ----
    TYPE (block_type) :: gblock
    
+#ifdef SinglePoint
+   INTEGER :: site_xblk, site_yblk
+#endif
+
    ! ---- PUBLIC SUBROUTINE ----
    PUBLIC :: get_filename_block
 
@@ -57,7 +61,7 @@ CONTAINS
       INTEGER, parameter :: iset(23) = &
          (/1,  2,  3,  4,  5,  6,  9, 10, 12,  15,  18, &
           20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360/)
-   
+
       IF ((findloc(iset,nyblk_in,dim=1) <= 0) .or. &
          (findloc(iset,nxblk_in,dim=1) <= 0) ) THEN
 
@@ -222,7 +226,7 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename
-      INTEGER, allocatable :: nunits_io(:), nunitblk(:,:)
+      INTEGER, allocatable :: nbasin_io(:), nbasinblk(:,:)
       INTEGER :: numblocks, iblk, jblk, iproc, jproc
          
       filename = trim(dir_landdata) // '/block.nc'
@@ -240,9 +244,9 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_master) THEN
-         filename = trim(dir_landdata) // '/landunit.nc'
-         CALL ncio_read_serial (filename, 'nunits_blk', nunitblk)
-         numblocks = count(nunitblk > 0)
+         filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
+         CALL ncio_read_serial (filename, 'nbasin_blk', nbasinblk)
+         numblocks = count(nbasinblk > 0)
       ENDIF 
 
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
@@ -251,25 +255,25 @@ CONTAINS
 
       IF (p_is_master) THEN
 
-         allocate (nunits_io (0:p_np_io-1))
-         nunits_io(:) = 0
+         allocate (nbasin_io (0:p_np_io-1))
+         nbasin_io(:) = 0
 
          jproc = -1
          DO jblk = 1, this%nyblk
             DO iblk = 1, this%nxblk
-               IF (nunitblk(iblk,jblk) > 0) THEN
-                  iproc = minloc(nunits_io, dim=1) - 1
+               IF (nbasinblk(iblk,jblk) > 0) THEN
+                  iproc = minloc(nbasin_io, dim=1) - 1
                   this%pio(iblk,jblk) = p_address_io(iproc)
-                  nunits_io(iproc) = nunits_io(iproc) + nunitblk(iblk,jblk)
-               ELSEIF (nunitblk(iblk,jblk) == 0) THEN
+                  nbasin_io(iproc) = nbasin_io(iproc) + nbasinblk(iblk,jblk)
+               ELSEIF (nbasinblk(iblk,jblk) == 0) THEN
                   jproc = mod(jproc+1, p_np_io)
                   this%pio(iblk,jblk) = p_address_io(jproc)
                ENDIF
             ENDDO
          ENDDO
 
-         deallocate (nunitblk )
-         deallocate (nunits_io)
+         deallocate (nbasinblk)
+         deallocate (nbasin_io)
       ENDIF
 
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &

@@ -4,6 +4,8 @@ MODULE LEAF_temperature
 
 !-----------------------------------------------------------------------
  USE precision
+ USE mod_namelist,only:DEF_Interception_scheme
+
  IMPLICIT NONE
  SAVE
 
@@ -30,7 +32,7 @@ MODULE LEAF_temperature
               parsha  ,sabv    ,frl     ,fsun    ,thermk  ,rstfacsun, rstfacsha, &
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
-              dqgdT   ,emg     ,tl      ,ldew    ,taux    ,tauy    ,&
+              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow   ,taux    ,tauy    ,&
               fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
@@ -71,6 +73,7 @@ MODULE LEAF_temperature
 #ifdef PLANT_HYDRAULIC_STRESS
   use PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
+USE PhysicalConstants, only: tfrz
 
   IMPLICIT NONE
  
@@ -174,6 +177,9 @@ MODULE LEAF_temperature
 #endif
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
+        ldew_rain,       &! depth of rain on foliage [mm]
+        ldew_snow,       &! depth of snow on foliage [mm]
+
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
@@ -370,10 +376,9 @@ MODULE LEAF_temperature
        clai = 0.0
 
        ! loop
-       CALL dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
-
+      CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
        ! loop
-       CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
+      CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -868,21 +873,69 @@ MODULE LEAF_temperature
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
+ if (DEF_Interception_scheme .eq. 1) then
+      ldew = max(0., ldew-evplwet*deltim)
 
-       ldew = max(0., ldew-evplwet*deltim)
+ elseif (DEF_Interception_scheme .eq. 2) then!CLM4.5
+      ldew = max(0., ldew-evplwet*deltim)
+
+ elseif (DEF_Interception_scheme .eq. 3) then !CLM5
+      if (ldew_rain.gt.evplwet*deltim) then
+         ldew_rain = ldew_rain-evplwet*deltim
+         ldew_snow = ldew_snow
+         ldew=ldew_rain+ldew_snow
+      else
+         ldew_rain = 0.0
+         ldew_snow = max(0., ldew-evplwet*deltim)
+         ldew      = ldew_snow
+      endif
+
+ elseif (DEF_Interception_scheme .eq. 4) then !Noah-MP
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+
+   elseif (DEF_Interception_scheme .eq. 5) then !MATSIRO
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+   
+   elseif (DEF_Interception_scheme .eq. 6) then !VIC
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+
+   else 
+      call abort
+
+ endif
+
 
 !-----------------------------------------------------------------------
 ! 2 m height air temperature
 !-----------------------------------------------------------------------
-
        tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar) 
        qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
-
   END SUBROUTINE LeafTemp
 !----------------------------------------------------------------------         
 
+SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
-  SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
        
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
@@ -900,17 +953,20 @@ MODULE LEAF_temperature
   REAL(r8), intent(in) :: sai    !stem area index  [-]
   REAL(r8), intent(in) :: dewmx  !maximum allowed dew [0.1 mm]
   REAL(r8), intent(in) :: ldew   !depth of water on foliage [kg/m2/s]
-
+  REAL(r8), intent(in) :: ldew_rain   !depth of rain on foliage [kg/m2/s]
+  REAL(r8), intent(in) :: ldew_snow   !depth of snow on foliage [kg/m2/s]
   REAL(r8), intent(out) :: fwet  !fraction of foliage covered by water [-]
   REAL(r8), intent(out) :: fdry  !fraction of foliage that is green and dry [-]
 
   REAL(r8) lsai                  !lai + sai
   REAL(r8) dewmxi                !inverse of maximum allowed dew [1/mm]
   REAL(r8) vegt                  !sigf*lsai
-!
+  REAL(r8) satcap_rain,satcap_snow           !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet 
 ! including stem area which contribute to evaporation
+  if (DEF_Interception_scheme .eq. 1) then !CoLM2014
+
       lsai = lai + sai
       dewmxi = 1.0/dewmx
       vegt   =  lsai
@@ -919,10 +975,58 @@ MODULE LEAF_temperature
       IF(ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
 
-! Check for maximum limit of fwet
+      ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)
 
       ENDIF
+   elseif (DEF_Interception_scheme .eq. 2) then !CLM4.5
+      lsai = lai + sai
+      dewmxi = 1.0/dewmx
+      vegt   =  lsai
+
+      fwet = 0
+      IF(ldew > 0.) THEN
+         fwet = ((dewmxi/vegt)*ldew)**.666666666666
+
+      ! Check for maximum limit of fwet
+         fwet = min(fwet,1.0)
+      ENDIF
+   elseif (DEF_Interception_scheme .eq. 3) then !CLM5
+
+   elseif (DEF_Interception_scheme .eq. 4) then !Noah-MP
+      lsai = lai + sai
+      satcap_rain = dewmx*lsai
+      satcap_snow = satcap_rain*60.0
+      IF(ldew_snow > 0. .and. ldew_snow>ldew_rain) THEN
+         fwet=(ldew_snow/satcap_snow)**.666666666666
+      elseif (ldew_rain > 0. .and. ldew_snow<=ldew_rain) then
+         fwet=(ldew_rain/satcap_rain)**.666666666666
+      else
+         fwet=0.0
+      endif
+      ! Check for maximum limit of fwet
+      fwet = min(fwet,1.0)
+   elseif (DEF_Interception_scheme .eq. 5) then !Matsiro
+   IF(ldew > 0.) THEN
+      satcap_rain=0.2*lsai
+      satcap_snow=0.2*lsai
+      fwet=(ldew/(satcap_rain))**.666666666666
+   else
+      fwet=0.0
+   endif
+   fwet = min(fwet,1.0)
+
+   elseif (DEF_Interception_scheme .eq. 6) then !VIC
+      IF(ldew > 0.) THEN
+         fwet=(ldew/(lsai*0.2))**.666666666666
+      else
+         fwet=0.0
+      endif
+
+   else
+      call abort
+   endif
+
 
 ! fdry is the fraction of lai which is dry because only leaves can 
 ! transpire. Adjusted for stem area which does not transpire
@@ -930,6 +1034,7 @@ MODULE LEAF_temperature
 
 
   END SUBROUTINE dewfraction
+
 !----------------------------------------------------------------------         
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)

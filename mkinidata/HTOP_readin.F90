@@ -24,6 +24,9 @@ SUBROUTINE HTOP_readin (dir_landdata)
       USE MOD_PCTimeVars
 #endif
       USE ncio_vector
+#ifdef SinglePoint
+      USE mod_single_srfdata
+#endif
 
       IMPLICIT NONE
 
@@ -31,16 +34,17 @@ SUBROUTINE HTOP_readin (dir_landdata)
 
       ! Local Variables
       character(LEN=256) :: c
-      character(LEN=256) :: lndname
+      character(LEN=256) :: landdir, lndname
       integer :: i,j,t,p,ps,pe,m,n,npatch
 
       REAL(r8), allocatable :: htoplc  (:)
       REAL(r8), allocatable :: htoppft (:)
-      REAL(r8), allocatable :: htoppc(:,:)
+
+      landdir = trim(dir_landdata) // '/htop'
 
 
 #ifdef USGS_CLASSIFICATION
-      ! lndname = trim(dir_landdata)//'/tree_height_patches.nc'
+      ! lndname = trim(landdir)//'/tree_height_patches.nc'
       
       ! CALL ncio_read_vector (lndname, 'tree_height_patches', landpatch, htoplc)
 
@@ -58,9 +62,19 @@ SUBROUTINE HTOP_readin (dir_landdata)
 #endif
 
 #ifdef IGBP_CLASSIFICATION
-      lndname = trim(dir_landdata)//'/htop_patches.nc'
+#ifdef SinglePoint
+      IF (USE_SITE_htop) THEN
+         allocate (htoplc (numpatch))
+         htoplc(:) = SITE_htop
+      ELSE
+         lndname = trim(landdir)//'/htop_patches.nc'
+         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
+      ENDIF
+#else
+      lndname = trim(landdir)//'/htop_patches.nc'
       
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
+#endif
 
       IF (p_is_worker) THEN 
          do npatch = 1, numpatch
@@ -88,10 +102,33 @@ SUBROUTINE HTOP_readin (dir_landdata)
 
 
 #ifdef PFT_CLASSIFICATION
-      lndname = trim(dir_landdata)//'/htop_patches.nc'
+#ifdef SinglePoint
+      IF (USE_SITE_htop) THEN
+         allocate(htoplc(1))
+         htoplc(:) = SITE_htop
+
+         IF (numpft > 0) THEN
+            allocate(htoppft(numpft))
+            IF (landpatch%ltyp(1) == 1) THEN
+               htoppft = pack(htoppft, SITE_pctpfts > 0.)
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               htoppft = SITE_htop
+#endif
+            ENDIF
+         ENDIF
+      ELSE
+         lndname = trim(landdir)//'/htop_patches.nc'
+         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
+         lndname = trim(landdir)//'/htop_pfts.nc'
+         CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)
+      ENDIF
+#else
+      lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
-      lndname = trim(dir_landdata)//'/htop_pfts.nc'
+      lndname = trim(landdir)//'/htop_pfts.nc'
       CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)
+#endif
 
       IF (p_is_worker) THEN 
          do npatch = 1, numpatch
@@ -117,7 +154,7 @@ SUBROUTINE HTOP_readin (dir_landdata)
                   IF ( n>0 .and. n<9 .and. htoppft(p)>2.) THEN
                      htop_p(p) = htoppft(p)
                      hbot_p(p) = htoppft(p)*hbot0_p(n)/htop0_p(n)
-                     hbot_p(p) = max(1., hbot_p(n))
+                     hbot_p(p) = max(1., hbot_p(p)) !weinan
                   ENDIF
                ENDDO
 
@@ -137,10 +174,18 @@ SUBROUTINE HTOP_readin (dir_landdata)
 #endif
 
 #ifdef PC_CLASSIFICATION
-      lndname = trim(dir_landdata)//'/htop_patches.nc'
+#ifdef SinglePoint
+      IF (USE_SITE_htop) THEN
+         allocate(htoplc(1))
+         htoplc(:) = SITE_htop
+      ELSE
+         lndname = trim(landdir)//'/htop_patches.nc'
+         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
+      ENDIF
+#else
+      lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
-      lndname = trim(dir_landdata)//'/htop_pcs.nc'
-      CALL ncio_read_vector (lndname, 'htop_pcs'    , N_PFT, landpc, htoppc)
+#endif
 
       IF (p_is_worker) THEN
          do npatch = 1, numpatch
@@ -167,7 +212,6 @@ SUBROUTINE HTOP_readin (dir_landdata)
       ENDIF 
       
       IF (allocated(htoplc)) deallocate(htoplc)
-      IF (allocated(htoppc)) deallocate(htoppc)
 #endif
 
 END SUBROUTINE HTOP_readin

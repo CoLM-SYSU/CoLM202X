@@ -32,6 +32,35 @@ CONTAINS
          write(*,'(A)') 'Making land plant community tiles :'
       ENDIF
 
+#ifdef SinglePoint
+      IF (patchtypes(SITE_landtype) == 0) THEN
+         numpc = 1
+         allocate (patch2pc (1))
+         allocate (pc2patch (1))
+         patch2pc(1) = 1
+         pc2patch(1) = 1
+            
+         allocate (landpc%unum (numpc))
+         allocate (landpc%iunt (numpc))
+         allocate (landpc%ltyp (numpc))
+         allocate (landpc%istt (numpc))
+         allocate (landpc%iend (numpc))
+                  
+         landpc%iunt(1) = 1
+         landpc%unum(1) = 1
+         landpc%istt(1) = 1
+         landpc%iend(1) = 1
+         landpc%ltyp(1) = SITE_landtype
+      ELSE
+         numpc = 0
+      ENDIF
+
+      landpc%nset = numpc
+      CALL landpc%set_vecgs
+
+      RETURN
+#endif
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif

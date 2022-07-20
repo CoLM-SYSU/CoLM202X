@@ -19,6 +19,8 @@ module colm_CaMaMod
    use spmd_task
    use CMF_CTRL_TIME_MOD    
    use GlobalVars, only : spval
+   use MOD_1D_Fluxes
+
    IMPLICIT NONE
    !** local variables
    INTEGER i,j
@@ -41,32 +43,23 @@ module colm_CaMaMod
    end interface
 CONTAINS
 
-   subroutine colm_CaMa_init (nlon_cama, nlat_cama)
+   subroutine colm_CaMa_init !(nlon_cama, nlat_cama)
 
       use CMF_CTRL_OUTPUT_MOD
       USE mod_landpatch
       USE MOD_CaMa_Variables
       implicit none
 
-      INTEGER, intent(in) :: nlon_cama, nlat_cama
-
+      !INTEGER, intent(in) :: nlon_cama, nlat_cama
+      INTEGER nlon_cama, nlat_cama
       integer dtime
       integer nnn,i,j,IX,IY,mmm
       !*** local variables
       INTEGER(KIND=JPIM)          :: JF
-
-      CALL gcama%define_by_ndims (nlon_cama, nlat_cama) 
-      call mp2g_cama%build (landpatch, gcama)
-      call mg2p_cama%build (gcama, landpatch)
-
-      CALL cama_gather%set (gcama)
-
-      call allocate_2D_cama_Fluxes  (gcama)
-      call allocate_acc_cama_Fluxes ()
-      call FLUSH_acc_cama_fluxes    ()
-
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       if(p_is_master)then 
-         allocate (runoff_2d (cama_gather%ginfo%nlon,cama_gather%ginfo%nlat))
          !*** 1a. Namelist handling
          CALL CMF_DRV_INPUT
          DT       = DEF_simulation_time%timestep
@@ -80,11 +73,9 @@ CONTAINS
          EMON     = DEF_simulation_time%end_month                        	!  month       
          EDAY     = DEF_simulation_time%end_day                        	!  day         
          EHOUR    = DEF_simulation_time%end_sec/3600                        	!  hour 
-         print *,EHOUR       
          LLEAPYR  = DEF_forcing%leapyear
          RMIS     = spval
          DMIS     = spval
-         print *,DTIN,DT,IFRQ_INP
 
          !*** 1b. INITIALIZATION
          !CALL CMF_OUTPUT_INIT
@@ -152,6 +143,24 @@ CONTAINS
                stop
             END SELECT
          end do
+      endif
+      CALL mpi_bcast (NX      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (NY      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+
+      nlon_cama=NX
+      nlat_cama=NY
+      CALL gcama%define_by_ndims (nlon_cama, nlat_cama) 
+      call mp2g_cama%build (landpatch, gcama)
+      call mg2p_cama%build (gcama, landpatch)
+
+      CALL cama_gather%set (gcama)
+
+      call allocate_2D_cama_Fluxes  (gcama)
+      call allocate_acc_cama_Fluxes ()
+      call FLUSH_acc_cama_fluxes    ()
+
+      if(p_is_master)then 
+         allocate (runoff_2d (cama_gather%ginfo%nlon,cama_gather%ginfo%nlat))
          !*** 1c. allocate data buffer for input forcing
          ALLOCATE (ZBUFF(NXIN,NYIN,2))
          ALLOCATE (Effarea(NX,NY))
@@ -193,10 +202,14 @@ CONTAINS
    ! -----
    subroutine colm_cama_drv
       implicit none
-      
+    !  call colm2cama_real8 (rnof, f_rnof_cama, runoff_2d)
+      CALL flush_acc_cama_fluxes 
+      call accumulate_cama_fluxes
       call colm2cama_real8 (a_rnof_cama, f_rnof_cama, runoff_2d)
-      CALL flush_acc_cama_fluxes
-
+      !CALL flush_acc_cama_fluxes !may not need
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       if(p_is_master)then
          do j = 1, cama_gather%ginfo%nlat
             do i = 1, cama_gather%ginfo%nlon
@@ -205,13 +218,14 @@ CONTAINS
                ZBUFF(i,j,2)=0.D0
             enddo
          enddo
-
+   
          ! Simulating the hydrodynamics in continental-scale rivers
          ! ----------------------------------------------------------------------
          ISTEPADV=INT(DTIN/DT,JPIM)
          !*  2a Read forcing from file, This is only relevant in Stand-alone mode 
          !CALL CMF_FORCING_GET(ZBUFF(:,:,:))
          !*  2b Interporlate runoff & send to CaMa-Flood 
+         
          CALL CMF_FORCING_PUT(ZBUFF(:,:,:))
          !*  2c  Advance CaMa-Flood model for ISTEPADV
          CALL CMF_DRV_ADVANCE(ISTEPADV)
@@ -223,6 +237,9 @@ CONTAINS
    end subroutine colm_cama_drv
 
    subroutine colm_cama_exit
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       !*** 3a. finalize CaMa-Flood 
       call deallocate_acc_cama_Fluxes ()
       if(p_is_master)then

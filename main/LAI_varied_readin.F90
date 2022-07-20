@@ -37,7 +37,7 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
 
    ! Local variables
    character(LEN=256) :: c,c1
-   character(LEN=256) :: lndname
+   character(LEN=256) :: landdir, lndname
    integer :: m, npatch
    integer :: YY   
 
@@ -50,6 +50,7 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
 
    ! READ in Leaf area index and stem area index
 
+   landdir = trim(dir_landdata) // '/LAI'
 
 
 #ifdef USGS_CLASSIFICATION
@@ -57,8 +58,7 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
    write(c,'(i3.3)') time
    write(c1,'(i4.4)') YY
 
-   !lndname = trim(dir_landdata)//'/LAI_patches'//trim(c)//'.nc'
-   lndname = trim(dir_landdata)//'/LAI/'//trim(c1)//'/model_LAI_patches.'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/'//trim(c1)//'/LAI_patches.'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
    if (p_is_worker) then
@@ -92,11 +92,11 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
 #ifdef IGBP_CLASSIFICATION
 
    write(c,'(i2.2)') time
-   lndname = trim(dir_landdata)//'/LAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/LAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
 
    write(c,'(i2.2)') time
-   lndname = trim(dir_landdata)//'/SAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/SAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 
    if (p_is_worker) then
@@ -131,16 +131,16 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
 #ifdef PFT_CLASSIFICATION
 
    write(c,'(i2.2)') time
-   lndname = trim(dir_landdata)//'/LAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/LAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
    
-   lndname = trim(dir_landdata)//'/SAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/SAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
    
-   lndname = trim(dir_landdata)//'/LAI_pfts'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/LAI_pfts'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
    
-   lndname = trim(dir_landdata)//'/SAI_pfts'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/SAI_pfts'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
 
    if (p_is_worker) then
@@ -160,16 +160,16 @@ SUBROUTINE LAI_varied_readin (YY,time, dir_landdata)
 #ifdef PC_CLASSIFICATION
 
    write(c,'(i2.2)') time
-   lndname = trim(dir_landdata)//'/LAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/LAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
    
-   lndname = trim(dir_landdata)//'/SAI_patches'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/SAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 
-   lndname = trim(dir_landdata)//'/LAI_pcs'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/LAI_pcs'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_pcs', N_PFT, landpc, tlai_c )
 
-   lndname = trim(dir_landdata)//'/SAI_pcs'//trim(c)//'.nc'
+   lndname = trim(landdir)//'/SAI_pcs'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_pcs', N_PFT, landpc, tsai_c )
 
    if (p_is_worker) then

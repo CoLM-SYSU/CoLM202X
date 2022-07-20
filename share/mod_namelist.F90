@@ -18,9 +18,33 @@ MODULE mod_namelist
 
    TYPE (nl_domain_type) :: DEF_domain
 
-   INTEGER :: DEF_nx_blocks
-   INTEGER :: DEF_ny_blocks
+   INTEGER :: DEF_nx_blocks = 1
+   INTEGER :: DEF_ny_blocks = 1
    INTEGER :: DEF_PIO_groupsize
+
+#ifdef SinglePoint
+   REAL(r8) :: SITE_lon_location = 0.
+   REAL(r8) :: SITE_lat_location = 0.
+   
+   INTEGER  :: SITE_landtype = 1
+   CHARACTER(len=256) :: SITE_fsrfdata
+
+#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+   REAL(r8) :: SITE_pct_pfts(0:N_PFT-1) = 1./N_PFT
+#ifdef CROP
+   REAL(r8) :: SITE_pctcrop (N_CFT) = 1./N_CFT
+#endif
+#endif
+   LOGICAL  :: USE_SITE_htop            = .true.
+   LOGICAL  :: USE_SITE_LAI             = .true.
+   LOGICAL  :: USE_SITE_lakedepth       = .true.
+   LOGICAL  :: USE_SITE_soilreflectance = .true.
+   LOGICAL  :: USE_SITE_soilparameters  = .true.
+#ifdef USE_DEPTH_TO_BEDROCK
+   LOGICAL  :: USE_SITE_dbedrock = .true.
+#endif
+   LOGICAL  :: USE_SITE_Forcing  = .false.
+#endif
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -37,6 +61,7 @@ MODULE mod_namelist
       INTEGER  :: spinup_month= 1
       INTEGER  :: spinup_day  = 1
       INTEGER  :: spinup_sec  = 0
+      INTEGER  :: spinup_repeat = 2
       REAL(r8) :: timestep    = 3600.
    END TYPE nl_simulation_time_type
 
@@ -62,11 +87,13 @@ MODULE mod_namelist
 
    !add by zhongwang wei @ sysu 2021/12/23 
    !To allow read satellite observed LAI        
-   logical :: DEF_LAI_TRUE           = .FALSE.    
+   logical :: DEF_LAI_CLIM = .FALSE.      
+   INTEGER            :: DEF_Interception_scheme    = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+                 
 
    ! ----- history -----
-   INTEGER :: DEF_nlon_hist  = 720
-   INTEGER :: DEF_nlat_hist  = 360       
+   REAL(r8) :: DEF_hist_lon_res = 0.5
+   REAL(r8) :: DEF_hist_lat_res = 0.5       
    CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
@@ -194,6 +221,9 @@ MODULE mod_namelist
       LOGICAL :: vegwp        = .true.
 #ifdef VARIABLY_SATURATED_FLOW
       LOGICAL :: dpond        = .true. 
+#ifdef USE_DEPTH_TO_BEDROCK
+      LOGICAL :: dwatsub      = .true. 
+#endif
 #endif
       LOGICAL :: zwt          = .true. 
       LOGICAL :: wa           = .true. 
@@ -249,9 +279,30 @@ CONTAINS
       INTEGER :: ivar
       INTEGER :: ierr
 
-      namelist /nl_colm/                &
-         DEF_CASE_NAME,                   &
-         DEF_domain,                      &
+      namelist /nl_colm/          &
+         DEF_CASE_NAME,           &
+         DEF_domain,              &
+#ifdef SinglePoint
+         SITE_lon_location,       &
+         SITE_lat_location,       &
+         SITE_fsrfdata,           &
+         SITE_landtype,           &
+#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+         SITE_pct_pfts,           &
+#ifdef CROP
+         SITE_pctcrop,            &
+#endif
+#endif
+         USE_SITE_htop,            &
+         USE_SITE_LAI,             &
+         USE_SITE_lakedepth,       &
+         USE_SITE_soilreflectance, &
+         USE_SITE_soilparameters,  &
+#ifdef USE_DEPTH_TO_BEDROCK
+         USE_SITE_dbedrock,       &
+#endif
+         USE_SITE_Forcing,        &
+#endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
          DEF_PIO_groupsize,               &
@@ -266,9 +317,11 @@ CONTAINS
          DEF_dir_hydrodata,               &
          DEF_max_hband,                   &
 #endif
-         DEF_LAI_TRUE,                    &   !add by zhongwang wei @ sysu 2021/12/23        
-         DEF_nlon_hist,                   &
-         DEF_nlat_hist,                   &
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
+        
+         DEF_hist_lon_res,                &
+         DEF_hist_lat_res,                &
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
@@ -282,15 +335,6 @@ CONTAINS
       ! ----- open the namelist file -----
       IF (p_is_master) THEN
 
-         inquire(file=nlfile, exist=fexists)
-         IF (.not. fexists) THEN
-            write(*,*) "The namelist file "//trim(nlfile)//" is missing."
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#endif
-         ENDIF
-
-         ! ----- read make surface data namelist -----
          open(10, status='OLD', file=nlfile, form="FORMATTED")
          read(10, nml=nl_colm, iostat=ierr)
          IF (ierr /= 0) THEN
@@ -310,6 +354,16 @@ CONTAINS
          CALL system('mkdir -p ' // trim(adjustl(DEF_dir_landdata)))
          CALL system('mkdir -p ' // trim(adjustl(DEF_dir_restart )))
          CALL system('mkdir -p ' // trim(adjustl(DEF_dir_history )))
+
+#ifdef SinglePoint
+         DEF_domain%edges = floor(SITE_lat_location)
+         DEF_domain%edgen = DEF_domain%edges + 1.0
+         DEF_domain%edgew = floor(SITE_lon_location)
+         DEF_domain%edgee = DEF_domain%edgew + 1.0
+
+         DEF_nx_blocks = 360
+         DEF_ny_blocks = 180
+#endif
 
       ENDIF
          
@@ -357,10 +411,12 @@ CONTAINS
 #endif
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
-      call mpi_bcast (DEF_LAI_TRUE,           1, mpi_logical, p_root, p_comm_glb, p_err)
-      
-      CALL mpi_bcast (DEF_nlon_hist,  1, mpi_integer, p_root, p_comm_glb, p_err) 
-      CALL mpi_bcast (DEF_nlat_hist,  1, mpi_integer, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      !zhongwang wei, 20220520: add option to choose different canopy interception schemes
+      call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err) 
+      CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
@@ -464,6 +520,9 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%vegwp       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
 #ifdef VARIABLY_SATURATED_FLOW
       CALL mpi_bcast (DEF_hist_vars%dpond       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#ifdef USE_DEPTH_TO_BEDROCK
+      CALL mpi_bcast (DEF_hist_vars%dwatsub     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#endif
 #endif
       CALL mpi_bcast (DEF_hist_vars%zwt         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%wa          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)

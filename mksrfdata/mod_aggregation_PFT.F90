@@ -2,7 +2,7 @@
 
 MODULE mod_aggregation_pft
 
-   USE GlobalVars, only : N_PFT
+   USE mod_modis_data, only : N_PFT_modis
    IMPLICIT NONE
 
    PUBLIC :: aggregation_pft_request_data
@@ -61,7 +61,7 @@ CONTAINS
                CALL mpi_recv (ylist, nreq, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                
-               allocate (pbuff (N_PFT,nreq))
+               allocate (pbuff (N_PFT_modis,nreq))
 
                DO ireq = 1, nreq
                   xblk = grid%xblk(xlist(ireq))
@@ -73,7 +73,7 @@ CONTAINS
                ENDDO
 
                idest = isrc
-               CALL mpi_send (pbuff, N_PFT*nreq, MPI_REAL8, &
+               CALL mpi_send (pbuff, N_PFT_modis*nreq, MPI_REAL8, &
                   idest, mpi_tag_data, p_comm_glb, p_err)
 
                deallocate(pbuff)
@@ -97,7 +97,7 @@ CONTAINS
                ENDIF
 
                IF (present(data3)) THEN
-                  allocate (sbuff3(N_PFT,nreq))
+                  allocate (sbuff3(N_PFT_modis,nreq))
                   DO ireq = 1, nreq
                      xblk = grid%xblk(xlist(ireq))
                      yblk = grid%yblk(ylist(ireq))
@@ -108,7 +108,7 @@ CONTAINS
                   ENDDO
 
                   idest = isrc
-                  CALL mpi_send (sbuff3, N_PFT*nreq, MPI_REAL8, &
+                  CALL mpi_send (sbuff3, N_PFT_modis*nreq, MPI_REAL8, &
                      idest, mpi_tag_data, p_comm_glb, p_err)
 
                   deallocate(sbuff3)
@@ -140,7 +140,7 @@ CONTAINS
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_pixelset
       USE mod_landpatch
       USE mod_utils
@@ -173,10 +173,10 @@ CONTAINS
       iend = landpatch%iend(ipatch)
 
       npxl = iend - istt + 1
-      allocate (pctout (0:N_PFT-1,istt:iend))
+      allocate (pctout (0:N_PFT_modis-1,istt:iend))
 
       IF (present(data2)) allocate (dout2 (istt:iend))
-      IF (present(data3)) allocate (dout3 (0:N_PFT-1,istt:iend))
+      IF (present(data3)) allocate (dout3 (0:N_PFT_modis-1,istt:iend))
       IF (present (area)) allocate (area (istt:iend))
 
 #ifdef USEMPI
@@ -187,8 +187,8 @@ CONTAINS
       allocate (msk   (istt:iend))
 
       DO ipxl = istt, iend
-         xlist(ipxl) = grid%xgrd(landunit(iu)%ilon(ipxl))
-         ylist(ipxl) = grid%ygrd(landunit(iu)%ilat(ipxl))
+         xlist(ipxl) = grid%xgrd(landbasin(iu)%ilon(ipxl))
+         ylist(ipxl) = grid%ygrd(landbasin(iu)%ilat(ipxl))
 
          xblk = grid%xblk(xlist(ipxl))
          yblk = grid%yblk(ylist(ipxl))
@@ -206,7 +206,7 @@ CONTAINS
             CALL mpi_send (smesg, 2, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
 
             allocate (ibuf       (nreq))
-            allocate (rbuf3 (N_PFT,nreq))
+            allocate (rbuf3 (N_PFT_modis,nreq))
 
             ibuf = pack(xlist, msk)
             CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
@@ -215,7 +215,7 @@ CONTAINS
             CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
 
             isrc = idest
-            CALL mpi_recv (rbuf3, N_PFT*nreq, MPI_REAL8, &
+            CALL mpi_recv (rbuf3, N_PFT_modis*nreq, MPI_REAL8, &
                isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
             CALL unpack_inplace (rbuf3, msk, pctout)
@@ -230,7 +230,7 @@ CONTAINS
             ENDIF
 
             IF (present(data3) .and. present(dout3)) THEN
-               CALL mpi_recv (rbuf3, N_PFT*nreq, MPI_REAL8, &
+               CALL mpi_recv (rbuf3, N_PFT_modis*nreq, MPI_REAL8, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                CALL unpack_inplace (rbuf3, msk, dout3)
@@ -250,8 +250,8 @@ CONTAINS
       
       DO ipxl = istt, iend
 
-         ilon = grid%xgrd(landunit(iu)%ilon(ipxl))
-         ilat = grid%ygrd(landunit(iu)%ilat(ipxl))
+         ilon = grid%xgrd(landbasin(iu)%ilon(ipxl))
+         ilat = grid%ygrd(landbasin(iu)%ilat(ipxl))
          xblk = grid%xblk(ilon)
          yblk = grid%yblk(ilat)
          xloc = grid%xloc(ilon)
@@ -276,8 +276,8 @@ CONTAINS
       IF (present(area)) THEN
          DO ipxl = istt, iend
             area(ipxl) = areaquad (&
-               pixel%lat_s(landunit(iu)%ilat(ipxl)), pixel%lat_n(landunit(iu)%ilat(ipxl)), &
-               pixel%lon_w(landunit(iu)%ilon(ipxl)), pixel%lon_e(landunit(iu)%ilon(ipxl)) )
+               pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
+               pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
          ENDDO
       ENDIF
 

@@ -14,6 +14,7 @@ program hist_concatenate
 
    ! Local variables 
    TYPE(grid_type) :: ghist
+   INTEGER :: lon_points, lat_points
    character(len=256) :: nlfile, filename
    character(len=256) :: filehist
    INTEGER :: timelen
@@ -41,7 +42,10 @@ program hist_concatenate
       gblock%nyblk = size(gblock%lat_s)
 
       ! Define grid of history data.
-      call ghist%define_by_ndims (DEF_nlon_hist, DEF_nlat_hist)
+      lon_points = nint(360.0/DEF_hist_lon_res)
+      lat_points = nint(180.0/DEF_hist_lat_res)
+
+      call ghist%define_by_ndims (lon_points, lat_points)
          
       call set_hist_block_info (ghist, hist_block_info)
 

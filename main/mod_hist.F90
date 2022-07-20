@@ -7,6 +7,7 @@ module mod_hist
    use mod_mapping_pset2grid
    USE mod_namelist
    USE GlobalVars, only : spval
+   USE ncio_serial
 
    type(grid_type), target :: ghist
    type(mapping_pset2grid_type) :: mp2g_hist
@@ -23,7 +24,7 @@ module mod_hist
 contains
 
    !---------------------------------------
-   subroutine hist_init (dir_hist, lon_points, lat_points)
+   subroutine hist_init (dir_hist, lon_res, lat_res)
 
       USE GlobalVars
       use spmd_task
@@ -34,8 +35,14 @@ contains
       implicit none
 
       character(len=*), intent(in) :: dir_hist
-      integer, intent(in) :: lon_points
-      integer, intent(in) :: lat_points
+      REAL(r8), intent(in) :: lon_res
+      REAL(r8), intent(in) :: lat_res
+
+      ! Local Variables
+      INTEGER :: lon_points, lat_points
+
+      lon_points = nint(360.0/lon_res)
+      lat_points = nint(180.0/lat_res)
 
       call ghist%define_by_ndims (lon_points, lat_points)
 #ifndef CROP
@@ -49,6 +56,10 @@ contains
 
       !>>>>>add by zhongwang wei 
       call hist_concat%set (ghist)
+#ifdef SinglePoint
+      hist_concat%ginfo%lat_c(:) = SITE_lat_location
+      hist_concat%ginfo%lon_c(:) = SITE_lon_location
+#endif
 
       if (trim(DEF_HIST_mode) == 'one') then
          hist_data_id = 1000
@@ -80,7 +91,6 @@ contains
       use mod_namelist
       use timemanager
       use spmd_task
-      use ncio_serial
       use mod_2d_fluxes
       use MOD_1D_Acc_Fluxes
       use mod_block
@@ -91,6 +101,9 @@ contains
       use mod_colm_debug
       use GlobalVars, only : spval
       USE MOD_TimeInvariants, only : patchtype
+#ifdef USE_DEPTH_TO_BEDROCK
+      USE MOD_TimeInvariants, only : ibedrock
+#endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Variables
 #endif
@@ -406,7 +419,14 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%ldew, &
             a_ldew, f_ldew, file_hist, 'f_ldew', itime_in_file, sumwt, filter, &
             'depth of water on foliage','mm')
-
+!#ifdef CLM5_INTERCEPTION
+!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_rain, &
+!         a_ldew, f_ldew_rain, file_hist, 'f_ldew_rain', itime_in_file, sumwt, filter, &
+!         'depth of rain on foliage','mm')
+!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_snow, &
+!         a_ldew, f_ldew_snow, file_hist, 'f_ldew_snow', itime_in_file, sumwt, filter, &
+!         'depth of snow on foliage','mm')
+!#endif
          ! snow cover, water equivalent [mm]
          call flux_map_and_write_2d ( DEF_hist_vars%scv, &
             a_scv, f_scv, file_hist, 'f_scv', itime_in_file, sumwt, filter, &
@@ -533,7 +553,8 @@ contains
          ! fraction of root water uptake from each soil layer, all layers add to 1, when PHS is not defined
          ! water exchange between soil layers and root. Positive: soil->root [mm h2o/s], when PHS is defined
          call flux_map_and_write_3d ( DEF_hist_vars%rootr, &
-            a_rootr, f_rootr, file_hist, 'f_rootr', 'soil', itime_in_file, sumwt, filter)
+            a_rootr, f_rootr, file_hist, 'f_rootr', 'soil', itime_in_file, sumwt, filter, &
+            'root water uptake', 'mm h2o/s')
 
 #ifdef PLANT_HYDRAULIC_STRESS
          ! vegetation water potential [mm]
@@ -545,9 +566,10 @@ contains
          ! depth of ponding water [m]
          call flux_map_and_write_2d ( DEF_hist_vars%dpond, &
             a_dpond, f_dpond, file_hist, 'f_dpond', itime_in_file, sumwt, filter, &
-            'depth of ponding water','m')
+            'depth of ponding water','mm')
 #endif
 
+#ifndef USE_DEPTH_TO_BEDROCK
          ! water table depth [m]
          call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
             a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
@@ -557,6 +579,40 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%wa, &
             a_wa, f_wa, file_hist, 'f_wa', itime_in_file, sumwt, filter, &
             'water storage in aquifer','mm')
+#else
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               filter(:) = (patchtype <= 2) .and. (ibedrock <= nl_soil)
+               vectmp(:) = 1.
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+         
+         ! water table depth [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%dwatsub, &
+            a_dwatsub, f_dwatsub, file_hist, 'f_dwatsub', itime_in_file, sumwt, filter, &
+            'depth of saturated subsurface water above bedrock','m')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               filter(:) = (patchtype <= 2) .and. (ibedrock > nl_soil)
+               vectmp(:) = 1.
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+         
+         ! water table depth [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
+            a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
+            'the depth to water table','m')
+
+         ! water storage in aquifer [mm]
+         call flux_map_and_write_2d ( DEF_hist_vars%wa, &
+            a_wa, f_wa, file_hist, 'f_wa', itime_in_file, sumwt, filter, &
+            'water storage in aquifer','mm')
+#endif
 
          ! -----------------------------------------------
          ! Land water bodies' ice fraction and temperature
@@ -606,7 +662,7 @@ contains
          ! q* in similarity theory [kg/kg]
          call flux_map_and_write_2d ( DEF_hist_vars%qstar, &
             a_qstar, f_qstar, file_hist, 'f_qstar', itime_in_file, sumwt, filter, &
-            'q* in similarity theory')
+            'q* in similarity theory', 'kg/kg')
 
          ! dimensionless height (z/L) used in Monin-Obukhov theory
          call flux_map_and_write_2d ( DEF_hist_vars%zol, &
@@ -758,7 +814,8 @@ contains
    
    ! -------
    subroutine flux_map_and_write_2d ( is_hist, &
-         acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, longname, units)
+         acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, &
+         longname, units)
 
       use precision
       use spmd_task
@@ -777,9 +834,9 @@ contains
       type(block_data_real8_2d), intent(inout) :: flux_xy
       character(len=*), intent(in) :: file_hist
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: itime_in_file
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+      integer,          intent(in) :: itime_in_file
+      character(len=*), intent(in) :: longname
+      character(len=*), intent(in) :: units
  
       type(block_data_real8_2d), intent(in) :: sumwt
       logical, intent(in) :: filter(:)
@@ -823,11 +880,12 @@ contains
       end if
       
       compress = DEF_HIST_COMPRESS_LEVEL 
-      IF (present(longname) .and. present(units)) THEN
-         call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
-            compress, longname, units) 
-      ELSE
-         call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, compress) 
+      call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, compress) 
+
+      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
       ENDIF
 
    end subroutine flux_map_and_write_2d
@@ -859,8 +917,8 @@ contains
       
       type(block_data_real8_2d), intent(in) :: sumwt
       logical, intent(in) :: filter(:)
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+      character (len=*), intent(in) :: longname
+      character (len=*), intent(in) :: units
 
       ! Local variables
       integer :: xblk, yblk, xloc, yloc, i1
@@ -903,12 +961,13 @@ contains
       end if
       
       compress = DEF_HIST_COMPRESS_LEVEL 
-      IF (present(longname) .and. present(units)) THEN
-         call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
-            itime_in_file, flux_xy, compress, longname, units) 
-      ELSE
-         call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
-            itime_in_file, flux_xy, compress) 
+      call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
+         itime_in_file, flux_xy, compress) 
+
+      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
       ENDIF
 
    end subroutine flux_map_and_write_3d
@@ -940,8 +999,8 @@ contains
       
       type(block_data_real8_2d), intent(in) :: sumwt
       logical, intent(in) :: filter(:)
-      character (len=*), intent(in),optional :: longname
-      character (len=*), intent(in),optional :: units
+      character (len=*), intent(in) :: longname
+      character (len=*), intent(in) :: units
 
       ! Local variables
       integer :: xblk, yblk, xloc, yloc, i1, i2
@@ -986,19 +1045,21 @@ contains
       end if
       
       compress = DEF_HIST_COMPRESS_LEVEL 
-      IF (present(longname) .and. present(units)) THEN
-         call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
-            ghist, itime_in_file, flux_xy, compress, longname, units) 
-      ELSE
-         call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
-            ghist, itime_in_file, flux_xy, compress) 
+      call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
+         ghist, itime_in_file, flux_xy, compress) 
+
+      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
       ENDIF
 
    end subroutine flux_map_and_write_4d
 
    ! -------
    subroutine flux_map_and_write_ln ( is_hist, &
-         acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, longname, units)
+         acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, &
+         longname, units)
 
       use precision
       use spmd_task
@@ -1066,12 +1127,13 @@ contains
       end if
       
       compress = DEF_HIST_COMPRESS_LEVEL 
-      IF (present(longname) .and. present(units)) THEN
-         call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
-            compress, longname, units) 
-      ELSE
-         call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
-            compress) 
+      call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
+         compress) 
+
+      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
       ENDIF
 
    end subroutine flux_map_and_write_ln
@@ -1084,7 +1146,6 @@ contains
       use mod_grid
       use mod_block
       use spmd_task
-      use ncio_serial
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -1107,15 +1168,16 @@ contains
                CALL ncio_define_dimension(filename, 'time', 0)
                call ncio_define_dimension(filename, 'lat' , hist_concat%ginfo%nlat)
                call ncio_define_dimension(filename, 'lon' , hist_concat%ginfo%nlon)
-               
+
+               call ncio_write_serial (filename, 'lat',   hist_concat%ginfo%lat_c, 'lat')
+               call ncio_write_serial (filename, 'lon',   hist_concat%ginfo%lon_c, 'lon')
+#ifndef SinglePoint
                call ncio_write_serial (filename, 'lat_s', hist_concat%ginfo%lat_s, 'lat')
                call ncio_write_serial (filename, 'lat_n', hist_concat%ginfo%lat_n, 'lat')
                call ncio_write_serial (filename, 'lon_w', hist_concat%ginfo%lon_w, 'lon')
                call ncio_write_serial (filename, 'lon_e', hist_concat%ginfo%lon_e, 'lon')
-               call ncio_write_serial (filename, 'lat',   hist_concat%ginfo%lat_c, 'lat')
-               call ncio_write_serial (filename, 'lon',   hist_concat%ginfo%lon_c, 'lon')
+#endif
             endif
-      
             call ncio_write_time (filename, dataname, time, itime)
 
          ENDIF
@@ -1152,14 +1214,13 @@ contains
 
    !----------------------------------------------------------------------------
    subroutine hist_write_var_real8_2d ( &
-         filename, dataname, grid, itime, wdata, compress, longname, units)
+         filename, dataname, grid, itime, wdata, compress)
 
       use mod_namelist
       use mod_block
       use mod_grid
       use mod_data_type
       use spmd_task
-      use ncio_serial
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -1170,8 +1231,6 @@ contains
       type (block_data_real8_2d), intent(in) :: wdata
 
       integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
 
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
@@ -1230,13 +1289,8 @@ contains
             end do
 #endif
 
-            IF (present(longname) .and. present(units)) THEN
-               call ncio_write_serial_time (filename, dataname, itime, vdata, &
-                  'lon', 'lat', 'time',compress, longname, units)
-            ELSE
-               call ncio_write_serial_time (filename, dataname, itime, vdata, &
-                  'lon', 'lat', 'time',compress)
-            ENDIF
+            call ncio_write_serial_time (filename, dataname, itime, vdata, &
+               'lon', 'lat', 'time', compress)
 
             deallocate (vdata)
          ENDIF
@@ -1301,14 +1355,13 @@ contains
 
    !----------------------------------------------------------------------------
    subroutine hist_write_var_real8_3d ( &
-         filename, dataname, dim1name, grid, itime, wdata, compress, longname, units)
+         filename, dataname, dim1name, grid, itime, wdata, compress)
 
       use mod_namelist
       use mod_block
       use mod_grid
       use mod_data_type
       use spmd_task
-      use ncio_serial
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -1320,8 +1373,6 @@ contains
       type (block_data_real8_3d), intent(in) :: wdata
 
       integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
 
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
@@ -1390,13 +1441,8 @@ contains
 
             call ncio_define_dimension (filename, dim1name, ndim1) 
 
-            IF (present(longname) .and. present(units)) THEN
-               call ncio_write_serial_time (filename, dataname, itime, &
-                  vdata, dim1name, 'lon', 'lat', 'time', compress, longname, units)
-            ELSE
-               call ncio_write_serial_time (filename, dataname, itime, &
-                  vdata, dim1name, 'lon', 'lat', 'time', compress)
-            ENDIF
+            call ncio_write_serial_time (filename, dataname, itime, &
+               vdata, dim1name, 'lon', 'lat', 'time', compress)
 
             deallocate (vdata)
          ENDIF
@@ -1464,14 +1510,13 @@ contains
 
    !----------------------------------------------------------------------------
    subroutine hist_write_var_real8_4d ( &
-         filename, dataname, dim1name, dim2name, grid, itime, wdata, compress, longname, units)
+         filename, dataname, dim1name, dim2name, grid, itime, wdata, compress)
 
       use mod_namelist
       use mod_block
       use mod_grid
       use mod_data_type
       use spmd_task
-      use ncio_serial
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -1483,8 +1528,7 @@ contains
       type (block_data_real8_4d), intent(in) :: wdata
 
       integer, intent(in) :: compress
-      character (len=*), intent(in), optional :: longname
-      character (len=*), intent(in), optional :: units
+
       ! Local variables
       integer :: iblk, jblk, idata, ixseg, iyseg
       integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
@@ -1556,13 +1600,8 @@ contains
             call ncio_define_dimension (filename, dim1name, ndim1) 
             call ncio_define_dimension (filename, dim2name, ndim2) 
 
-            IF (present(longname) .and. present(units)) THEN
-               call ncio_write_serial_time (filename, dataname, itime, vdata, dim1name, dim2name, &
-                  'lon', 'lat', 'time', compress, longname, units)
-            ELSE
-               call ncio_write_serial_time (filename, dataname, itime, vdata, dim1name, dim2name, &
+            call ncio_write_serial_time (filename, dataname, itime, vdata, dim1name, dim2name, &
                   'lon', 'lat', 'time', compress)
-            ENDIF
 
             deallocate (vdata)
          ENDIF
@@ -1617,14 +1656,8 @@ contains
                      call ncio_define_dimension (fileblock, dim1name, wdata%ub1-wdata%lb1+1)
                      call ncio_define_dimension (fileblock, dim2name, wdata%ub2-wdata%lb2+1)
 
-                     IF (present(longname) .and. present(units)) THEN
-                        call ncio_write_serial_time (fileblock, dataname, itime, &
-                           wdata%blk(iblk,jblk)%val, dim1name, dim2name, 'lon', 'lat', 'time', compress, &
-                           longname, units)
-                     else
-                        call ncio_write_serial_time (fileblock, dataname, itime, &
-                           wdata%blk(iblk,jblk)%val, dim1name, dim2name, 'lon', 'lat', 'time', compress)
-                     end if
+                     call ncio_write_serial_time (fileblock, dataname, itime, &
+                        wdata%blk(iblk,jblk)%val, dim1name, dim2name, 'lon', 'lat', 'time', compress)
 
                   end if
                end do
@@ -1640,7 +1673,6 @@ contains
 
       use mod_block
       use mod_grid
-      use ncio_serial
       implicit none
 
       character(len=*), intent(in) :: fileblock

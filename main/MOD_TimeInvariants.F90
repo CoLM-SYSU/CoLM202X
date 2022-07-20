@@ -524,7 +524,7 @@ SAVE
       IMPLICIT NONE
       
       if (p_is_master) then
-         write(*,'(/,A29)') 'Checking Time Invariantes ...'
+         write(*,'(/,A29)') 'Checking Time Invariants ...'
       end if
 
 #ifdef USEMPI

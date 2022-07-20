@@ -34,7 +34,7 @@ PROGRAM CLM
 
    use mod_block
    use mod_pixel
-   use mod_landcell
+   use mod_hydrounit
    use mod_landpatch
    use mod_srfdata_restart
 #ifdef PFT_CLASSIFICATION
@@ -49,7 +49,9 @@ PROGRAM CLM
 #ifdef vsf_statistics
    USE mod_soil_water, only : count_iters
 #endif
-
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -98,6 +100,10 @@ PROGRAM CLM
 
    call read_namelist (nlfile)
 
+#ifdef SinglePoint
+   CALL read_surface_data_single (SITE_fsrfdata)
+#endif
+
    casename     = DEF_CASE_NAME
    dir_landdata = DEF_dir_landdata
    dir_forcing  = DEF_dir_forcing
@@ -135,9 +141,9 @@ PROGRAM CLM
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
 
-   call landunit_load_from_file (dir_landdata)
+   call landbasin_load_from_file (dir_landdata)
 
-   call pixelset_load_from_file (dir_landdata, 'landcell', landcell, numcell)
+   call pixelset_load_from_file (dir_landdata, 'hydrounit', hydrounit, numhru)
    
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
@@ -179,27 +185,31 @@ PROGRAM CLM
    call allocate_1D_Forcing ()
 
    ! Initialize history data module
-   call hist_init (dir_hist, DEF_nlon_hist, DEF_nlat_hist)
+   print*, dir_hist, DEF_hist_lon_res, DEF_hist_lat_res
+   call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
    call allocate_2D_Fluxes (ghist)
    call allocate_1D_Fluxes ()
-
+print *,'call colm_CaMa_init'
 #if(defined CaMa_Flood)
-    call colm_CaMa_init (720, 360)
+    call colm_CaMa_init
 #endif
+print *,' done call colm_CaMa_init'
 
    ! ======================================================================
    ! begin time stepping loop
    ! ======================================================================
 
    TIMELOOP : DO while (itstamp < etstamp)
+      
+      CALL julian2monthday (idate(1), idate(2), month_p, mday_p)
+
       if (p_is_master) then
-         write(*,100) itstamp%year, itstamp%day, itstamp%sec
-         100 format(/, 'TIMELOOP = ', I5, I4, I6)
+         write(*,100) idate(1), month_p, mday_p, idate(3)
+         100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
       end if
 
       Julian_1day_p = int(calendarday(idate)-1)/1*1 + 1
       Julian_8day_p = int(calendarday(idate)-1)/8*8 + 1
-      CALL julian2monthday (idate(1), idate(2), month_p, mday_p)
 
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
@@ -226,31 +236,22 @@ PROGRAM CLM
          dolai = .true.
       endif
 #else
-#ifdef USGS_CLASSIFICATION
-
       ! READ in Leaf area index and stem area index
       ! Update every 8 days (time interval of the MODIS LAI data) 
       ! ----------------------------------------------------------------------
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI            
-      if (DEF_LAI_TRUE) then
+      IF (DEF_LAI_CLIM) then
+         ! yuan, 08/03/2019: read global LAI/SAI data
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         IF (month /= month_p) THEN 
+            CALL LAI_readin (idate(1), month, dir_landdata)
+         END IF
+      ELSE
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
-            CALL LAI_varied_readin(itstamp%year, Julian_8day,dir_landdata)
-         endif
-      else
-         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
-         if(Julian_8day /= Julian_8day_p)then
-            CALL LAI_readin (Julian_8day,dir_landdata)
-         endif
-      endif
-#else
-      ! 08/03/2019, yuan: read global LAI/SAI data
-      CALL julian2monthday (idate(1), idate(2), month, mday)
-      IF (month /= month_p) THEN 
-         CALL LAI_readin (month, dir_landdata)
-      END IF
-#endif
-
+            CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
+         ENDIF
+      ENDIF
 #endif
 
 !!!! need to acc runoff here!!!
@@ -295,6 +296,7 @@ call colm_CaMa_drv
    call deallocate_1D_Fluxes      ()
 
    call hist_final ()
+
 
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)

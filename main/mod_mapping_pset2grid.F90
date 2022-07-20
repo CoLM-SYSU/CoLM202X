@@ -44,7 +44,7 @@ CONTAINS
       USE mod_grid
       USE mod_pixelset
       USE mod_data_type
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_utils
       USE spmd_task
       IMPLICIT NONE
@@ -141,8 +141,8 @@ CONTAINS
             gfrom(iset)%ng = 0
             DO ipxl = pixelset%istt(iset), pixelset%iend(iset)
 
-               ilat = landunit(iu)%ilat(ipxl)
-               ilon = landunit(iu)%ilon(ipxl)
+               ilat = landbasin(iu)%ilat(ipxl)
+               ilon = landbasin(iu)%ilon(ipxl)
 
                DO iy = ys(ilat), yn(ilat), fgrid%yinc
                      

@@ -406,11 +406,6 @@ SAVE
 
       IMPLICIT NONE
       
-      if (p_is_master) then
-         write(*,'(/,A29)') 'Checking Time Invariantes ...'
-      end if
-
-
       call check_vector_data ('rf_decomp      ',  rf_decomp      )
       call check_vector_data ('pathfrac_decomp',  pathfrac_decomp)
       call check_vector_data ('gdp_lf         ',  gdp_lf         )

@@ -203,6 +203,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    zlnd   = 0.01    !Roughness length for soil [m]
    zsno   = 0.0024  !Roughness length for snow [m]
    csoilc = 0.004   !Drag coefficient for soil under canopy [-]
+!#ifdef CLM5_INTERCEPTION
+ !  dewmx_rain =0.1  !maximum dew for rain
+!  dewmx_snow =6.0  !maximum dew for snow 
+!#else
+!   dewmx  = 0.1     !maximum dew
+!#endif
    dewmx  = 0.1     !maximum dew
    wtfact = 0.38    !Maximum saturated fraction (global mean; see Niu et al., 2005)
    capr   = 0.34    !Tuning factor to turn first layer T into surface T
@@ -433,28 +439,17 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       end if
 #else
 
-#ifdef USGS_CLASSIFICATION
-      if (DEF_LAI_TRUE) then
+      IF (DEF_LAI_CLIM) then
+         ! yuan, 08/03/2019: read global LAI/SAI data
+         CALL julian2monthday (year, jday, month, mday)
+         CALL LAI_readin (year, month, dir_landdata)
+      ELSE
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
-         CALL LAI_varied_readin (year, Julian_8day,dir_landdata)
+         CALL LAI_readin (year, Julian_8day, dir_landdata)
+      ENDIF
 #ifdef CLMDEBUG
-         CALL check_vector_data ('LAI ', tlai)
-         CALL check_vector_data ('SAI ', tsai)
-#endif
-
-      else
-         ! READ in Leaf area index and stem area index
-         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
-         CALL LAI_readin (Julian_8day, dir_landdata)
-#ifdef CLMDEBUG
-         CALL check_vector_data ('LAI ', tlai)
-         CALL check_vector_data ('SAI ', tsai)
-#endif
-      endif
-#else
-! yuan, 08/03/2019: read global LAI/SAI data
-      CALL julian2monthday (year, jday, month, mday)
-      CALL LAI_readin (month, dir_landdata)
+      CALL check_vector_data ('LAI ', tlai)
+      CALL check_vector_data ('SAI ', tsai)
 #endif
 
 #endif
@@ -487,7 +482,11 @@ CALL check_vector_data ('porsl', porsl)
 #ifdef PLANT_HYDRAULIC_STRESS
             ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
 #endif
-            ,t_grnd(i),tleaf(i),ldew(i),sag(i),scv(i)&
+!#ifdef CLM5_INTERCEPTION
+            ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
+!#else
+!            ,t_grnd(i),tleaf(i),ldew(i),sag(i),scv(i)&
+!#endif
             ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
             ,alb(1:,1:,i),ssun(1:,1:,i),ssha(1:,1:,i)&
             ,thermk(i),extkb(i),extkd(i)&

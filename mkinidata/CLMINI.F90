@@ -20,8 +20,8 @@ PROGRAM CLMINI
    use spmd_task
    use mod_block
    use mod_pixel
-   use mod_landunit
-   USE mod_landcell
+   use mod_landbasin
+   USE mod_hydrounit
    use mod_landpatch
    use mod_srfdata_restart
    USE GlobalVars
@@ -33,6 +33,9 @@ PROGRAM CLMINI
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
+#endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
 #endif
    implicit none
 
@@ -63,6 +66,10 @@ PROGRAM CLMINI
    call getarg (1, nlfile)
    call read_namelist (nlfile)
 
+#ifdef SinglePoint
+   CALL read_surface_data_single (SITE_fsrfdata)
+#endif
+
    casename     = DEF_CASE_NAME        
    dir_landdata = DEF_dir_landdata 
    dir_restart  = DEF_dir_restart  
@@ -78,13 +85,10 @@ PROGRAM CLMINI
    CALL Init_GlovalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
-
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
-   
-   call landunit_load_from_file (dir_landdata)
-
-   CALL pixelset_load_from_file (dir_landdata, 'landcell',  landcell , numcell)
+   call landbasin_load_from_file (dir_landdata)
+   CALL pixelset_load_from_file (dir_landdata, 'hydrounit', hydrounit, numhru)
   
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 

@@ -32,7 +32,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: lndname
+   CHARACTER(len=256) :: landdir, lndname
 
    TYPE (block_data_int32_2d) :: isc 
    TYPE (block_data_real8_2d) :: a_s_v_refl
@@ -71,14 +71,24 @@ SUBROUTINE aggregation_soil_brightness ( &
    soil_d_n_refl = (/ 0.63, 0.59, 0.55, 0.51, 0.49, 0.47, 0.45, 0.43, 0.41, 0.39, &
       0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
 
+   landdir = trim(dir_model_landdata) // '/soil/'
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
    IF (p_is_master) THEN
       write(*,'(/, A29)') 'Aggregate Soil Brightness ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef SinglePoint
+   IF (USE_SITE_soilreflectance) THEN
+      RETURN
+   ENDIF
+#endif
 
    ! ........................................
    ! ...  aggregate the soil parameters from the resolution of raw data to modelling resolution
@@ -273,25 +283,25 @@ SUBROUTINE aggregation_soil_brightness ( &
 #endif
 
    ! (1) Write-out the albedo of visible of the saturated soil
-   lndname = trim(dir_model_landdata)//'/soil_s_v_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'vector', landpatch, soil_s_v_alb, 1)
 
    ! (2) Write-out the albedo of visible of the dry soil
-   lndname = trim(dir_model_landdata)//'/soil_d_v_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'vector', landpatch, soil_d_v_alb, 1)
 
    ! (3) Write-out the albedo of near infrared of the saturated soil
-   lndname = trim(dir_model_landdata)//'/soil_s_n_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'vector', landpatch, soil_s_n_alb, 1)
 
    ! (4) Write-out the albedo of near infrared of the dry soil
-   lndname = trim(dir_model_landdata)//'/soil_d_n_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'vector', landpatch, soil_d_n_alb, 1)

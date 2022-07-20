@@ -36,7 +36,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 
    ! local variables:
    ! ----------------------------------------------------------------------
-   CHARACTER(len=256) :: lndname
+   CHARACTER(len=256) :: landdir, lndname
 
    ! for IGBP data
    CHARACTER(len=256) :: dir_modis
@@ -54,16 +54,37 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    INTEGER  :: ipatch, ipc, ipft, p
    REAL(r8) :: sumarea
       
+   landdir = trim(dir_model_landdata) // '/pctpft/'
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   IF (p_is_master) THEN
+      write(*,'(/, A43)') 'Aggregate plant FUNCTION TYPE fractions ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
+   ENDIF
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   IF (p_is_master) THEN
-      write(*,'(/, A43)') 'Aggregate plant FUNCTION TYPE fractions ...'
-   ENDIF
-
 
 #ifdef PFT_CLASSIFICATION
+
+#ifdef SinglePoint
+
+   IF (landpatch%ltyp(1) == 1) THEN
+      allocate(pct_pfts (numpft))
+      pct_pfts = pack(SITE_pctpfts, SITE_pctpfts > 0.)
+      pct_pfts = pct_pfts / sum(pct_pfts)
+#ifdef CROP
+   ELSEIF (landpatch%ltyp(1) == 12) THEN
+      allocate(pct_pfts (numpft))
+      pct_pfts(:) = 1.
+#endif
+   ENDIF
+
+#else
+
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
       
    IF (p_is_io) THEN
@@ -107,11 +128,17 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#endif
+
 #ifdef CLMDEBUG 
    CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
-   lndname = trim(dir_model_landdata)//'/pct_pfts.nc'
+   lndname = trim(landdir)//'/pct_pfts.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpft)
    CALL ncio_write_vector (lndname, 'pct_pfts', 'vector', landpft, pct_pfts, 1)
@@ -124,7 +151,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #if (defined CROP) 
-   lndname = trim(dir_model_landdata)//'/pct_crops.nc'
+   lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'pct_crops', 'vector', landpatch, pctcrop, 1)
@@ -133,6 +160,16 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
 
 #ifdef PC_CLASSIFICATION
+
+#ifdef SinglePoint
+
+   IF (patchtypes(SITE_landtype) == 0) THEN
+      allocate(pct_pcs (0:N_PFT-1,1))
+      pct_pcs(:,1) = SITE_pctpfts
+      pct_pcs(:,1) = pct_pcs(:,1) / sum(pct_pcs(:,1))
+   ENDIF
+
+#else
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
       
    IF (p_is_io) THEN
@@ -170,6 +207,11 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+#endif
+
    ! ---------------------------------------------------
    ! write out the plant leaf area index of grid patches
    ! ---------------------------------------------------
@@ -177,7 +219,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif
 
-   lndname = trim(dir_model_landdata)//'/pct_pcs.nc'
+   lndname = trim(landdir)//'/pct_pcs.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)

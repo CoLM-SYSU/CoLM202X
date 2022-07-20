@@ -17,6 +17,9 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 #ifdef CLMDEBUG 
    use mod_colm_debug
 #endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -57,9 +60,12 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    integer  :: ipatch, m, nsl  ! indices
 
    character(len=256) :: c
-   character(len=256) :: lndname
+   character(len=256) :: landdir, lndname
+   LOGICAL :: is_singlepoint
 
    ! ...............................................................
+
+   landdir = trim(dir_landdata) // '/soil'
 
    if (p_is_worker) then
 
@@ -100,99 +106,140 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
+#ifdef SinglePoint
+   is_singlepoint = USE_SITE_soilparameters
+#else
+   is_singlepoint = .false.
+#endif
+
    DO nsl = 1, 8
+
+#ifdef SinglePoint
+      IF (USE_SITE_soilparameters) THEN
+         soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl) 
+         soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
+         soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
+         soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
+         soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
+         soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
+         soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
+#ifdef Campbell_SOIL_MODEL
+         soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
+         soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
+         soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
+         soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
+         soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
+#endif
+         soil_k_s_l     (:) = SITE_soil_k_s      (nsl) 
+         soil_csol_l    (:) = SITE_soil_csol     (nsl)
+         soil_k_solids_l(:) = SITE_soil_k_solids (nsl)
+         soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
+         soil_tksatf_l  (:) = SITE_soil_tksatf   (nsl)
+         soil_tkdry_l   (:) = SITE_soil_tkdry    (nsl)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
+         soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
+#endif
+      ENDIF
+#endif
       
       write(c,'(i1)') nsl 
 
+      IF (.not. is_singlepoint) THEN
+
       ! (1) read in the volumetric fraction of quartz within mineral soil
-      lndname = trim(dir_landdata)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', landpatch, soil_vf_quartz_mineral_s_l)
 
       ! (2) read in the volumetric fraction of gravels
-      lndname = trim(dir_landdata)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_vf_gravels_s_l)
 
       ! (3) read in the volumetric fraction of organic matter
-      lndname = trim(dir_landdata)//'/vf_om_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', landpatch, soil_vf_om_s_l)
 
       ! (4) read in the volumetric fraction of sand
-      lndname = trim(dir_landdata)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', landpatch, soil_vf_sand_s_l)
 
       ! (5) read in the gravimetric fraction of gravels
-      lndname = trim(dir_landdata)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_wf_gravels_s_l)
 
       ! (6) read in the gravimetric fraction of sand
-      lndname = trim(dir_landdata)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', landpatch, soil_wf_sand_s_l)
 
       ! (7) read in the saturated water content [cm3/cm3]
-      lndname = trim(dir_landdata)//'/theta_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'theta_s_l'//trim(c)//'_patches', landpatch, soil_theta_s_l)
 
 #ifdef Campbell_SOIL_MODEL
       ! (8) read in the matric potential at saturation [cm]
-      lndname = trim(dir_landdata)//'/psi_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'psi_s_l'//trim(c)//'_patches', landpatch, soil_psi_s_l)
 
       ! (9) read in the pore size distribution index [dimensionless]
-      lndname = trim(dir_landdata)//'/lambda_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', landpatch, soil_lambda_l)
 #endif
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       ! (10) read in residual water content [cm3/cm3]
-      lndname = trim(dir_landdata)//'/theta_r_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', landpatch, soil_theta_r_l)
       
       ! (11) read in alpha in VGM model
-      lndname = trim(dir_landdata)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', landpatch, soil_alpha_vgm_l)
       
       ! (12) read in L in VGM model
-      lndname = trim(dir_landdata)//'/L_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', landpatch, soil_L_vgm_l)
       
       ! (13) read in n in VGM model
-      lndname = trim(dir_landdata)//'/n_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', landpatch, soil_n_vgm_l)
 #endif
 
       ! (14) read in the saturated hydraulic conductivity [cm/day]
-      lndname = trim(dir_landdata)//'/k_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'k_s_l'//trim(c)//'_patches', landpatch, soil_k_s_l)
 
       ! (15) read in the heat capacity of soil solids [J/(m3 K)]
-      lndname = trim(dir_landdata)//'/csol_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'csol_l'//trim(c)//'_patches', landpatch, soil_csol_l)
 
       ! (16) read in the thermal conductivity of unfrozen saturated soil [W/m-K]
-      lndname = trim(dir_landdata)//'/tksatu_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'tksatu_l'//trim(c)//'_patches', landpatch, soil_tksatu_l)
 
       ! (17) read in the thermal conductivity of frozen saturated soil [W/m-K]
-      lndname = trim(dir_landdata)//'/tksatf_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'tksatf_l'//trim(c)//'_patches', landpatch, soil_tksatf_l)
 
       ! (18) read in the thermal conductivity for dry soil [W/(m-K)]
-      lndname = trim(dir_landdata)//'/tkdry_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'tkdry_l'//trim(c)//'_patches', landpatch, soil_tkdry_l)
 
       ! (19) read in the thermal conductivity of solid soil [W/m-K]
-      lndname = trim(dir_landdata)//'/k_solids_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'k_solids_l'//trim(c)//'_patches', landpatch, soil_k_solids_l)
 
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       ! (20) read in the parameter alpha in the Balland V. and P. A. Arp (2005) model
-      lndname = trim(dir_landdata)//'/BA_alpha_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', landpatch, soil_BA_alpha_l)
 
       ! (21) read in the parameter beta in the Balland V. and P. A. Arp (2005) model
-      lndname = trim(dir_landdata)//'/BA_beta_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', landpatch, soil_BA_beta_l)
 #endif
+      ENDIF
 
       if (p_is_worker) then
 
@@ -376,21 +423,38 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    end if
 #elif(defined SOIL_REFL_READ)
 
-   ! (1) Read in the albedo of visible of the saturated soil
-   lndname = trim(dir_landdata)//'/soil_s_v_alb_patches.nc'
-   call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
+#ifdef SinglePoint
+   is_singlepoint = USE_SITE_soilreflectance
+#else
+   is_singlepoint = .false.
+#endif
+
+#ifdef SinglePoint
+   IF (USE_SITE_soilreflectance) THEN
+      soil_s_v_alb(:) = SITE_soil_s_v_alb(:)
+      soil_d_v_alb(:) = SITE_soil_d_v_alb(:)
+      soil_s_n_alb(:) = SITE_soil_s_n_alb(:)
+      soil_d_n_alb(:) = SITE_soil_d_n_alb(:)
+   ENDIF
+#endif
+
+   IF (.not. is_singlepoint) THEN
+      ! (1) Read in the albedo of visible of the saturated soil
+      lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
+      call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
 
    ! (2) Read in the albedo of visible of the dry soil
-   lndname = trim(dir_landdata)//'/soil_d_v_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
    call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
 
    ! (3) Read in the albedo of near infrared of the saturated soil
-   lndname = trim(dir_landdata)//'/soil_s_n_alb_patches.nc'
+   lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
    call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
 
-   ! (4) Read in the albedo of near infrared of the dry soil
-   lndname = trim(dir_landdata)//'/soil_d_n_alb_patches.nc'
-   call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+      ! (4) Read in the albedo of near infrared of the dry soil
+      lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
+      call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+   ENDIF
 
 #endif
 

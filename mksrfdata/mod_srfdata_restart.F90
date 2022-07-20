@@ -7,8 +7,8 @@ MODULE mod_srfdata_restart
    INTEGER, parameter, PRIVATE :: rcompress = 1
 
    ! ----- subroutines -----
-   PUBLIC :: landunit_save_to_file
-   PUBLIC :: landunit_load_from_file
+   PUBLIC :: landbasin_save_to_file
+   PUBLIC :: landbasin_load_from_file
    
    PUBLIC :: pixelset_save_to_file
    PUBLIC :: pixelset_load_from_file
@@ -16,11 +16,11 @@ MODULE mod_srfdata_restart
 CONTAINS
    
    ! -----------------------
-   SUBROUTINE landunit_save_to_file (dir_landdata)
+   SUBROUTINE landbasin_save_to_file (dir_landdata)
 
       USE spmd_task
       USE ncio_serial
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_block
       IMPLICIT NONE
 
@@ -28,22 +28,25 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock
-      INTEGER :: iu, ju, nunit, ulen, iblk, jblk, iworker
-      INTEGER, allocatable :: nunit_worker(:), ndsp_worker(:)
-      INTEGER, allocatable :: unitnum(:)
+      INTEGER :: iu, ju, nbasin, ulen, iblk, jblk, iworker
+      INTEGER, allocatable :: nbasin_worker(:), ndsp_worker(:)
+      INTEGER, allocatable :: basinnum(:)
       INTEGER, allocatable :: npxlall(:)
-      INTEGER, allocatable :: unitpixels(:,:,:)
+      INTEGER, allocatable :: basinpixels(:,:,:)
       INTEGER, allocatable :: rbuf(:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
-
       IF (p_is_master) THEN
-         write(*,*) 'Saving land units ...'
+         write(*,*) 'Saving land basins ...'
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/landbasin')
       ENDIF
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif 
 
-      filename = trim(dir_landdata) // '/landunit.nc'
+      filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
 
       DO jblk = 1, gblock%nyblk
          DO iblk = 1, gblock%nxblk
@@ -52,12 +55,12 @@ CONTAINS
             IF (p_is_worker) THEN
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
 #endif
-                  nunit = 0
+                  nbasin = 0
                   ulen  = 0
-                  DO iu = 1, numunit
-                     IF ((landunit(iu)%xblk == iblk) .and. (landunit(iu)%yblk == jblk)) THEN
-                        nunit = nunit + 1
-                        ulen  = max(ulen, landunit(iu)%npxl)
+                  DO iu = 1, numbasin
+                     IF ((landbasin(iu)%xblk == iblk) .and. (landbasin(iu)%yblk == jblk)) THEN
+                        nbasin = nbasin + 1
+                        ulen  = max(ulen, landbasin(iu)%npxl)
                      ENDIF 
                   ENDDO
                   
@@ -65,42 +68,42 @@ CONTAINS
                   CALL mpi_allreduce (MPI_IN_PLACE, ulen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
 #endif
 
-                  IF (nunit > 0) THEN
+                  IF (nbasin > 0) THEN
 
-                     allocate (unitnum (nunit))
-                     allocate (npxlall (nunit))
-                     allocate (unitpixels (2,ulen,nunit))
+                     allocate (basinnum (nbasin))
+                     allocate (npxlall (nbasin))
+                     allocate (basinpixels (2,ulen,nbasin))
 
                      ju = 0
-                     DO iu = 1, numunit
-                        IF ((landunit(iu)%xblk == iblk) .and. (landunit(iu)%yblk == jblk)) THEN
+                     DO iu = 1, numbasin
+                        IF ((landbasin(iu)%xblk == iblk) .and. (landbasin(iu)%yblk == jblk)) THEN
                            ju = ju + 1
-                           unitnum(ju) = landunit(iu)%num
-                           npxlall(ju) = landunit(iu)%npxl
+                           basinnum(ju) = landbasin(iu)%num
+                           npxlall(ju) = landbasin(iu)%npxl
 
-                           unitpixels(1,1:npxlall(ju),ju) = landunit(iu)%ilon
-                           unitpixels(2,1:npxlall(ju),ju) = landunit(iu)%ilat
+                           basinpixels(1,1:npxlall(ju),ju) = landbasin(iu)%ilon
+                           basinpixels(2,1:npxlall(ju),ju) = landbasin(iu)%ilat
                         ENDIF
                      ENDDO
                   ENDIF
 
 #ifdef USEMPI 
-                  CALL mpi_gather (nunit, 1, MPI_INTEGER, &
-                     nunit_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
+                  CALL mpi_gather (nbasin, 1, MPI_INTEGER, &
+                     nbasin_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
                   
-                  CALL mpi_gatherv (unitnum, nunit, MPI_INTEGER, &
-                     unitnum, nunit_worker, ndsp_worker, MPI_INTEGER, &
+                  CALL mpi_gatherv (basinnum, nbasin, MPI_INTEGER, &
+                     basinnum, nbasin_worker, ndsp_worker, MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
          
-                  CALL mpi_gatherv (npxlall, nunit, MPI_INTEGER, &
-                     npxlall, nunit_worker, ndsp_worker, MPI_INTEGER, &
+                  CALL mpi_gatherv (npxlall, nbasin, MPI_INTEGER, &
+                     npxlall, nbasin_worker, ndsp_worker, MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
 
-                 ! CALL mpi_gatherv (unitpixels, nunit*2*ulen, MPI_INTEGER, &
-                 !    unitpixels, nunit_worker, ndsp_worker, MPI_INTEGER, &
+                 ! CALL mpi_gatherv (basinpixels, nbasin*2*ulen, MPI_INTEGER, &
+                 !    basinpixels, nbasin_worker, ndsp_worker, MPI_INTEGER, &
                  !    p_root, p_comm_group, p_err)
-                  DO iu = 1, nunit
-                     CALL mpi_send (unitpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
+                  DO iu = 1, nbasin
+                     CALL mpi_send (basinpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
                         p_root, mpi_tag_data, p_comm_group, p_err) 
                   ENDDO
                ENDIF
@@ -114,36 +117,36 @@ CONTAINS
                   ulen = 0
                   CALL mpi_allreduce (MPI_IN_PLACE, ulen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
 
-                  allocate (nunit_worker (0:p_np_group-1))
-                  nunit_worker(0) = 0                  
+                  allocate (nbasin_worker (0:p_np_group-1))
+                  nbasin_worker(0) = 0                  
                   CALL mpi_gather (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                     nunit_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
+                     nbasin_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
                   
-                  nunit = sum(nunit_worker)
+                  nbasin = sum(nbasin_worker)
 
                   allocate (ndsp_worker(0:p_np_group-1))
                   ndsp_worker(0) = 0
                   DO iworker = 1, p_np_group-1
-                     ndsp_worker(iworker) = ndsp_worker(iworker-1) + nunit_worker(iworker-1)
+                     ndsp_worker(iworker) = ndsp_worker(iworker-1) + nbasin_worker(iworker-1)
                   ENDDO
 
-                  allocate (unitnum (nunit))
+                  allocate (basinnum (nbasin))
                   CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                     unitnum, nunit_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
+                     basinnum, nbasin_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
          
-                  allocate (npxlall (nunit))
+                  allocate (npxlall (nbasin))
                   CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                     npxlall, nunit_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
+                     npxlall, nbasin_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
          
-                  allocate (unitpixels (2, ulen, nunit))
+                  allocate (basinpixels (2, ulen, nbasin))
                   ! CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                  !    unitpixels, nunit_worker*2*ulen, ndsp_worker*2*ulen, MPI_INTEGER, &
+                  !    basinpixels, nbasin_worker*2*ulen, ndsp_worker*2*ulen, MPI_INTEGER, &
                   !    p_root, p_comm_group, p_err)
                   DO iworker = 1, p_np_group-1 
-                     DO iu = ndsp_worker(iworker)+1, ndsp_worker(iworker)+nunit_worker(iworker)
-                        CALL mpi_recv (unitpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
+                     DO iu = ndsp_worker(iworker)+1, ndsp_worker(iworker)+nbasin_worker(iworker)
+                        CALL mpi_recv (basinpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
                            iworker, mpi_tag_data, p_comm_group, p_stat, p_err)
                      ENDDO
                   ENDDO
@@ -153,27 +156,27 @@ CONTAINS
 
             IF (p_is_io) THEN
                IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
-                  IF (nunit > 0) THEN
+                  IF (nbasin > 0) THEN
                      CALL get_filename_block (filename, iblk, jblk, fileblock)
                      CALL ncio_create_file (fileblock)
 
-                     CALL ncio_define_dimension (fileblock, 'landunit', nunit)
+                     CALL ncio_define_dimension (fileblock, 'landbasin', nbasin)
                      CALL ncio_define_dimension (fileblock, 'np_max',   ulen )
                      CALL ncio_define_dimension (fileblock, 'ncoor',    2    )
 
-                     CALL ncio_write_serial (fileblock, 'unitnum', unitnum,   'landunit')
-                     CALL ncio_write_serial (fileblock, 'npxl',    npxlall,   'landunit')
-                     CALL ncio_write_serial (fileblock, 'pixel',   unitpixels, &
-                        'ncoor', 'np_max', 'landunit', compress = 1)
+                     CALL ncio_write_serial (fileblock, 'basinnum', basinnum,   'landbasin')
+                     CALL ncio_write_serial (fileblock, 'npxl',    npxlall,   'landbasin')
+                     CALL ncio_write_serial (fileblock, 'pixel',   basinpixels, &
+                        'ncoor', 'np_max', 'landbasin', compress = 1)
                   ENDIF
                ENDIF
             ENDIF
                      
-            IF (allocated (unitnum))     deallocate(unitnum)
+            IF (allocated (basinnum))     deallocate(basinnum)
             IF (allocated (npxlall))     deallocate(npxlall)
-            IF (allocated (unitpixels))  deallocate(unitpixels)
+            IF (allocated (basinpixels))  deallocate(basinpixels)
             
-            IF (allocated (nunit_worker))  deallocate(nunit_worker)
+            IF (allocated (nbasin_worker))  deallocate(nbasin_worker)
             IF (allocated (ndsp_worker ))  deallocate(ndsp_worker )
 
 #ifdef USEMPI
@@ -186,107 +189,112 @@ CONTAINS
          CALL ncio_create_file (filename)
          CALL ncio_define_dimension (filename, 'xblk', gblock%nxblk)
          CALL ncio_define_dimension (filename, 'yblk', gblock%nyblk)
-         CALL ncio_write_serial (filename, 'nunits_blk', nunits_blk, 'xblk', 'yblk')
+         CALL ncio_write_serial (filename, 'nbasin_blk', nbasin_blk, 'xblk', 'yblk')
       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
 
-      IF (p_is_master) write(*,*) 'SAVE land units done.'
+      IF (p_is_master) write(*,*) 'SAVE land basins done.'
 
-   END SUBROUTINE landunit_save_to_file
+   END SUBROUTINE landbasin_save_to_file
 
    !------------------------------------
-   SUBROUTINE landunit_load_from_file (dir_landdata)
+   SUBROUTINE landbasin_load_from_file (dir_landdata)
 
       USE spmd_task
       USE mod_namelist
       USE mod_block
       USE ncio_serial
-      USE mod_landunit
+      USE mod_landbasin
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock
-      INTEGER :: iblk, jblk, iu, nunit, ndsp
-      INTEGER, allocatable :: unitnum(:), npxl(:), pixels(:,:,:)
+      INTEGER :: iblk, jblk, iu, nbasin, ndsp
+      INTEGER, allocatable :: basinnum(:), npxl(:), pixels(:,:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
       
       IF (p_is_master) THEN
-         write(*,*) 'Loading land units ...'
+         write(*,*) 'Loading land basins ...'
       ENDIF
          
-      filename = trim(dir_landdata) // '/landunit.nc'
-      CALL ncio_read_bcast_serial (filename, 'nunits_blk', nunits_blk)
+      filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
+      CALL ncio_read_bcast_serial (filename, 'nbasin_blk', nbasin_blk)
 
       IF (p_is_io) THEN
 
-         numunit = sum(nunits_blk, mask = gblock%pio == p_iam_glb)
+         numbasin = sum(nbasin_blk, mask = gblock%pio == p_iam_glb)
 
-         IF (numunit > 0) THEN
+         IF (numbasin > 0) THEN
 
-            allocate (landunit (numunit))
+            allocate (landbasin (numbasin))
 
             ndsp = 0
             DO jblk = 1, gblock%nyblk
                DO iblk = 1, gblock%nxblk
                   IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
 
-                     nunit = nunits_blk(iblk,jblk)
+                     nbasin = nbasin_blk(iblk,jblk)
 
-                     IF (nunit > 0) THEN
+                     IF (nbasin > 0) THEN
                      
                         CALL get_filename_block (filename, iblk, jblk, fileblock)
-                        CALL ncio_read_serial (fileblock, 'unitnum', unitnum)
+                        CALL ncio_read_serial (fileblock, 'basinnum', basinnum)
                         CALL ncio_read_serial (fileblock, 'npxl',    npxl   )
                         CALL ncio_read_serial (fileblock, 'pixel',   pixels )
 
-                        DO iu = 1, nunit
-                           landunit(iu+ndsp)%num  = unitnum(iu)
-                           landunit(iu+ndsp)%npxl = npxl(iu)
-                           landunit(iu+ndsp)%xblk = iblk
-                           landunit(iu+ndsp)%yblk = jblk
+                        DO iu = 1, nbasin
+                           landbasin(iu+ndsp)%num  = basinnum(iu)
+                           landbasin(iu+ndsp)%npxl = npxl(iu)
+                           landbasin(iu+ndsp)%xblk = iblk
+                           landbasin(iu+ndsp)%yblk = jblk
 
-                           allocate (landunit(iu+ndsp)%ilon (npxl(iu)))
-                           allocate (landunit(iu+ndsp)%ilat (npxl(iu)))
+                           allocate (landbasin(iu+ndsp)%ilon (npxl(iu)))
+                           allocate (landbasin(iu+ndsp)%ilat (npxl(iu)))
 
-                           landunit(iu+ndsp)%ilon = pixels(1,1:npxl(iu),iu)
-                           landunit(iu+ndsp)%ilat = pixels(2,1:npxl(iu),iu)
+                           landbasin(iu+ndsp)%ilon = pixels(1,1:npxl(iu),iu)
+                           landbasin(iu+ndsp)%ilat = pixels(2,1:npxl(iu),iu)
                         ENDDO
 
-                        ndsp = ndsp + nunit
+                        ndsp = ndsp + nbasin
                      ENDIF
                   ENDIF
                ENDDO
             ENDDO
          ENDIF
          
-         IF (allocated(unitnum)) deallocate(unitnum)
+         IF (allocated(basinnum)) deallocate(basinnum)
          IF (allocated(npxl   )) deallocate(npxl   )
          IF (allocated(pixels )) deallocate(pixels )
             
       ENDIF
 
+#ifdef SinglePoint
+      site_xblk = landbasin(1)%xblk
+      site_yblk = landbasin(1)%yblk
+#endif
+
 #ifdef CLMDEBUG 
-      IF (p_is_io)     write(*,*) numunit, ' units on group', p_iam_io
+      IF (p_is_io)     write(*,*) numbasin, ' basins on group', p_iam_io
 #endif
 
 #ifdef USEMPI
-      CALL scatter_landunit_from_io_to_worker
+      CALL scatter_landbasin_from_io_to_worker
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       
       IF (p_is_master) THEN
-         write(*,*) 'Loading landunit done.'
+         write(*,*) 'Loading landbasin done.'
       ENDIF
       
-   END SUBROUTINE landunit_load_from_file 
+   END SUBROUTINE landbasin_load_from_file 
 
    !------------------------------------------------
    SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset)
@@ -307,12 +315,15 @@ CONTAINS
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
       IF (p_is_master) THEN
          write(*,*) 'Saving Pixel Sets ' // trim(psetname) // ' ...'
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/' // trim(psetname))
       ENDIF
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
 
       CALL ncio_create_file_vector (filename, pixelset)
       CALL ncio_define_pixelset_dimension (filename, pixelset)
@@ -338,7 +349,7 @@ CONTAINS
       USE mod_block
       USE ncio_serial
       USE ncio_vector
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_pixelset
       IMPLICIT NONE
 
@@ -363,7 +374,7 @@ CONTAINS
          write(*,*) 'Loading Pixel Sets ' // trim(psetname) // ' ...'
       ENDIF
       
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
 
       IF (p_is_io) THEN
 
@@ -421,21 +432,21 @@ CONTAINS
 
             iu = 1
             ju = 1
-            iblk = landunit(iu)%xblk
-            jblk = landunit(iu)%yblk
+            iblk = landbasin(iu)%xblk
+            jblk = landbasin(iu)%yblk
             DO iset = 1, pixelset%nset
-               DO WHILE (pixelset%unum(iset) /= landunit(iu)%num)
+               DO WHILE (pixelset%unum(iset) /= landbasin(iu)%num)
                   iu = iu + 1
                   ju = ju + 1
-                  IF ((landunit(iu)%xblk /= iblk) .or. (landunit(iu)%yblk /= jblk)) THEN
+                  IF ((landbasin(iu)%xblk /= iblk) .or. (landbasin(iu)%yblk /= jblk)) THEN
                      ju = 1
-                     iblk = landunit(iu)%xblk
-                     jblk = landunit(iu)%yblk
+                     iblk = landbasin(iu)%xblk
+                     jblk = landbasin(iu)%yblk
                   ENDIF
                ENDDO
 
-               nave = nunits_blk(iblk,jblk) / (p_np_group-1)
-               nres = mod(nunits_blk(iblk,jblk), p_np_group-1)
+               nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
+               nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
                left = (nave+1) * nres
                IF (ju <= left) THEN
                   iworker(iset) = (ju-1) / (nave+1) + 1
@@ -491,7 +502,7 @@ CONTAINS
             allocate (pixelset%iunt (pixelset%nset))
             iu = 1
             DO iset = 1, pixelset%nset
-               DO WHILE (pixelset%unum(iset) /= landunit(iu)%num)
+               DO WHILE (pixelset%unum(iset) /= landbasin(iu)%num)
                   iu = iu + 1
                ENDDO
                pixelset%iunt(iset) = iu

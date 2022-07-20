@@ -1,9 +1,9 @@
 #include <define.h>
 
-#ifdef CLMDEBUG
 
 MODULE mod_colm_debug
 
+#ifdef CLMDEBUG
    IMPLICIT NONE
 
    interface check_block_data
@@ -462,6 +462,6 @@ CONTAINS
 
    END SUBROUTINE check_vector_data_real8_4d
 
-END MODULE mod_colm_debug
-
 #endif
+
+END MODULE mod_colm_debug

@@ -7,7 +7,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #ifdef PLANT_HYDRAULIC_STRESS
                      ,vegwp,gs0sun,gs0sha&
 #endif
-                     ,t_grnd,tleaf,ldew,sag,scv&   
+                     ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&   
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,alb,ssun,ssha,thermk,extkb,extkd&
                      ,trad,tref,qref,rst,emis,zol,rib&
@@ -125,6 +125,10 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #endif
         t_grnd,                 &! ground surface temperature [K]
         tleaf,                  &! sunlit leaf temperature [K]
+!#ifdef CLM5_INTERCEPTION
+       ldew_rain,               &! depth of rain on foliage [mm]
+       ldew_snow,               &! depth of snow on foliage [mm]   
+!#endif
         ldew,                   &! depth of water on foliage [mm]
         sag,                    &! non dimensional snow age [-]
         scv,                    &! snow cover, water equivalent [mm]
@@ -337,7 +341,10 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         z_soisno   (maxsnl+1:snl) = 0.
         dz_soisno  (maxsnl+1:snl) = 0.
      ENDIF
-
+!#ifdef CLM5_INTERCEPTION
+   ldew_rain  = 0.
+   ldew_snow  = 0.
+!#endif
      ldew  = 0.
      tleaf = t_soisno(1)
      t_grnd = t_soisno(1)
@@ -424,7 +431,11 @@ IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
      sigf   = fveg
-     ldew   = 0.
+!#ifdef CLM5_INTERCEPTION
+     ldew_rain  = 0.
+     ldew_snow  = 0.
+!#endif
+     ldew  = 0.
      tleaf  = t_soisno(1)
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
@@ -439,6 +450,10 @@ IF (patchtype == 0) THEN
      ps = patch_pft_s(ipatch)      
      pe = patch_pft_e(ipatch)
      sigf_p(ps:pe)   = 1.
+!#ifdef CLM5_INTERCEPTION
+     ldew_p_rain(ps:pe)  = 0.
+     ldew_p_snow(ps:pe)  = 0.
+!#endif
      ldew_p(ps:pe)   = 0.
      tleaf_p(ps:pe)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -450,6 +465,10 @@ IF (patchtype == 0) THEN
      sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
 
      sigf  = 1.
+!#ifdef CLM5_INTERCEPTION
+     ldew_rain  = 0.
+     ldew_snow  = 0.
+!#endif
      ldew  = 0.
      tleaf = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -464,6 +483,10 @@ IF (patchtype == 0) THEN
 #ifdef PC_CLASSIFICATION
      pc = patch2pc(ipatch)
      sigf_c(:,pc)   = 1.
+!#ifdef CLM5_INTERCEPTION
+     ldew_c_rain(:,pc)  = 0.
+     ldew_c_snow(:,pc)  = 0. 
+!#endif
      ldew_c(:,pc)   = 0.
      tleaf_c(:,pc)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -475,6 +498,10 @@ IF (patchtype == 0) THEN
      sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
 
      sigf  = 1.
+!#ifdef CLM5_INTERCEPTION
+     ldew_rain  = 0.
+     ldew_snow  = 0.
+!#endif
      ldew  = 0.
      tleaf = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -488,7 +515,11 @@ IF (patchtype == 0) THEN
 
 ELSE
      sigf   = fveg
-     ldew   = 0.
+!#ifdef CLM5_INTERCEPTION
+     ldew_rain  = 0.
+     ldew_snow  = 0. 
+!#endif
+     ldew  = 0.
      tleaf  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
      vegwp(1:nvegwcs) = -2.5e4
@@ -522,7 +553,11 @@ ENDIF
      dz_soisno(maxsnl+1:0) = 0.
      sigf   = 0.
      fsno   = 0.
-     ldew   = 0.
+!#ifdef CLM5_INTERCEPTION
+     ldew_rain  = 0.
+     ldew_snow  = 0.
+!#endif
+     ldew  = 0.
      scv    = 0.
      sag    = 0.
      snowdp = 0.

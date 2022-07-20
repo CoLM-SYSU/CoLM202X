@@ -149,7 +149,7 @@ CONTAINS
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_landunit
+      USE mod_landbasin
       USE mod_pixelset
       USE mod_landpatch
       USE mod_utils
@@ -211,8 +211,8 @@ CONTAINS
       allocate (msk   (istt:iend))
 
       DO ipxl = istt, iend
-         xlist(ipxl) = grid_in%xgrd(landunit(iu)%ilon(ipxl))
-         ylist(ipxl) = grid_in%ygrd(landunit(iu)%ilat(ipxl))
+         xlist(ipxl) = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
+         ylist(ipxl) = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
 
          xblk = grid_in%xblk(xlist(ipxl))
          yblk = grid_in%yblk(ylist(ipxl))
@@ -276,8 +276,8 @@ CONTAINS
       
       DO ipxl = istt, iend
 
-         ilon = grid_in%xgrd(landunit(iu)%ilon(ipxl))
-         ilat = grid_in%ygrd(landunit(iu)%ilat(ipxl))
+         ilon = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
+         ilat = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
          xblk = grid_in%xblk(ilon)
          yblk = grid_in%yblk(ilat)
          xloc = grid_in%xloc(ilon)
@@ -304,8 +304,8 @@ CONTAINS
       IF (present(areall)) THEN
          DO ipxl = istt, iend
             areall(ipxl) = areaquad (&
-               pixel%lat_s(landunit(iu)%ilat(ipxl)), pixel%lat_n(landunit(iu)%ilat(ipxl)), &
-               pixel%lon_w(landunit(iu)%ilon(ipxl)), pixel%lon_e(landunit(iu)%ilon(ipxl)) )
+               pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
+               pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
          ENDDO
       ENDIF
 

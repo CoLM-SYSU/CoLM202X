@@ -3,6 +3,7 @@
 module mod_forcing
 
    use precision
+   USE mod_namelist
    use mod_grid
    use mod_mapping_grid2pset
    use user_specified_forcing
@@ -17,6 +18,11 @@ module mod_forcing
    ! local variables
    integer  :: deltim_int                ! model time step length
    real(r8) :: deltim_real               ! model time step length
+
+#ifdef SinglePoint
+   TYPE(timestamp), allocatable :: forctime (:)
+   INTEGER, allocatable :: iforctime(:)
+#endif
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
    type(timestamp), allocatable :: tstamp_UB(:)  ! time stamp of up boundary data
@@ -85,6 +91,13 @@ contains
          call allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
 
       end if
+
+#ifdef SinglePoint
+      IF (USE_SITE_Forcing) THEN
+         CALL metread_time (dir_forcing)
+         allocate (iforctime(NVAR))
+      ENDIF
+#endif
 
    end subroutine forcing_init
 
@@ -229,16 +242,16 @@ contains
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-        ! ELSEif (trim(dataset) == 'MSWX') then
-        !    call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8 ) ! unit from mm/3hr to mm/s
-        !    call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8 )
-        !    call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
-        !    call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
-        ! ELSEif (trim(dataset) == 'WFDE5') then
-        !    call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8 ) ! unit from m/hr to mm/s
-        !    call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8 )
-        !    call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
-        !    call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSEif (trim(dataset) == 'CRUJRA') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+            call block_data_copy (forcn(5), forc_xy_us )
+            call block_data_copy (forcn(6), forc_xy_vs )
+         ELSEif (trim(dataset) == 'JRA55') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+            call block_data_copy (forcn(5), forc_xy_us )
+            call block_data_copy (forcn(6), forc_xy_vs )         
 
          ELSE
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
@@ -422,6 +435,7 @@ contains
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
       use user_specified_forcing
+      USE mod_namelist
       use mod_data_type
       use ncio_block
       use mod_colm_debug
@@ -453,7 +467,15 @@ contains
 
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
+#ifdef SinglePoint
+            IF (USE_SITE_Forcing) THEN
+               CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+            ELSE
+               call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+            ENDIF
+#else
             call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+#endif
 
             call block_data_copy (metdata, forcn_LB(ivar))
          end if
@@ -468,10 +490,19 @@ contains
             if (year <= endyr) then
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
+#ifdef SinglePoint
+               IF (USE_SITE_Forcing) THEN
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ELSE
+                  call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+               ENDIF
+#else
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
+#endif
 
                call block_data_copy (metdata, forcn_UB(ivar))
             else
+               write(*,*) year, endyr
                print *, 'NOTE: reaching the end of forcing data, always reuse the last time step data!'
             end if
             if (ivar == 7) then  ! calculate time average coszen, for shortwave radiation
@@ -505,8 +536,18 @@ contains
       real(r8), allocatable :: lonxy (:,:)    ! longitude values in 2d
       real(r8), allocatable :: lon_in(:) 
       real(r8), allocatable :: lat_in(:)
+      LOGICAL :: use_site_forc
 
-      mtstamp = idate
+      use_site_forc = .false.
+#ifdef SinglePoint
+      use_site_forc = USE_SITE_Forcing
+#endif
+
+      IF (use_site_forc) THEN
+         CALL gforc%define_by_ndims (360, 180)
+      ELSE
+      
+         mtstamp = idate
 
       call setstampLB(mtstamp, 1, year, month, day, time_i)
       filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
@@ -516,6 +557,16 @@ contains
          CALL gforc%define_by_name ('ERA5LAND')
       ELSEIF (trim(DEF_forcing%dataset) == 'ERA5') THEN
          CALL gforc%define_by_name ('ERA5')
+      ELSEIF (trim(DEF_forcing%dataset) == 'PRINCETON') THEN
+         CALL gforc%define_by_name ('PRINCETON')
+      ELSEIF (trim(DEF_forcing%dataset) == 'JRA55') THEN
+         CALL gforc%define_by_name ('JRA55')
+      ELSEIF (trim(DEF_forcing%dataset) == 'CMFD') THEN
+         CALL gforc%define_by_name ('CMFD')
+      ELSEIF (trim(DEF_forcing%dataset) == 'CLDAS') THEN
+         CALL gforc%define_by_name ('CLDAS')
+      ELSEIF (trim(DEF_forcing%dataset) == 'GDAS') THEN
+            CALL gforc%define_by_name ('GDAS')
       ELSE
          if (dim2d) then
             call ncio_read_bcast_serial (filename, latname, latxy)
@@ -542,12 +593,70 @@ contains
             deallocate (lon_in)
          end if
       ENDIF
+      ENDIF
 
       call gforc%set_rlon ()
       call gforc%set_rlat ()
 
    END SUBROUTINE metread_latlon
 
+#ifdef SinglePoint
+   !-------------------------------------------------
+   SUBROUTINE metread_time (dir_forcing)
+
+      use spmd_task
+      use ncio_serial
+      use user_specified_forcing
+      USE mod_namelist
+      implicit none
+
+      character(len=*), intent(in) :: dir_forcing
+
+      ! Local variables
+      character(len=256) :: filename
+      character(len=256) :: timeunit, timestr
+      REAL(r8), allocatable :: forctime_sec (:)
+      INTEGER :: year, month, day, hour, minute, second
+      INTEGER :: itime, maxday
+
+      filename = trim(dir_forcing)//trim(fprefix(1))
+
+      CALL ncio_read_serial (filename, 'time', forctime_sec)
+      CALL ncio_get_attr    (filename, 'time', 'units', timeunit)
+
+      timestr = timeunit(15:18) // ' ' // timeunit(20:21) // ' ' // timeunit(23:24) &
+         // ' ' // timeunit(26:27) // ' ' // timeunit(29:30) // ' ' // timeunit(32:33)
+      read(timestr,*) year, month, day, hour, minute, second
+
+      allocate (forctime (size(forctime_sec)))
+
+      forctime(1)%year = year
+      forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
+      forctime(1)%sec  = hour*3600 + minute*60 + second + forctime_sec(1)
+
+      DO itime = 1, size(forctime)
+         IF (itime > 1) THEN
+            forctime(itime) = forctime(itime-1)
+            forctime(itime)%sec = forctime(itime)%sec + forctime_sec(itime) - forctime_sec(itime-1)
+         ENDIF
+
+         DO WHILE (forctime(itime)%sec > 86400)
+            forctime(itime)%sec = forctime(itime)%sec - 86400
+            IF( isleapyear(forctime(itime)%year) ) THEN
+               maxday = 366
+            ELSE
+               maxday = 365
+            ENDIF
+            forctime(itime)%day = forctime(itime)%day + 1
+            IF(forctime(itime)%day > maxday) THEN
+               forctime(itime)%year = forctime(itime)%year + 1
+               forctime(itime)%day = 1
+            ENDIF
+         ENDDO
+      ENDDO
+
+   END SUBROUTINE metread_time
+#endif
 
    ! ------------------------------------------------------------
    ! FUNCTION: 
@@ -582,6 +691,27 @@ contains
       year = mtstamp%year
       day  = mtstamp%day
       sec  = mtstamp%sec
+
+#ifdef SinglePoint
+      IF (USE_SITE_Forcing) THEN
+         time_i = 0
+         DO i = 1, size(forctime)
+            IF (mtstamp < forctime(i)) THEN
+               time_i = i - 1
+               exit
+            ENDIF
+         ENDDO
+         IF (time_i <= 0) THEN
+            write(*,*) 'Error: Forcing does not cover simulation period!'
+            stop
+         ELSE
+            iforctime(var_i) = time_i
+            tstamp_LB(var_i) = forctime(iforctime(var_i))
+         ENDIF
+
+         RETURN
+      ENDIF
+#endif
 
       tstamp_LB(var_i)%year = year
       tstamp_LB(var_i)%day  = day
@@ -787,13 +917,29 @@ contains
          integer :: day, sec
          integer :: months(0:12)
 
-         ! calculate the time stamp
+#ifdef SinglePoint
+      IF (USE_SITE_Forcing) THEN
          if ( tstamp_UB(var_i) == 'NULL' ) then
-            tstamp_UB(var_i) = tstamp_LB(var_i) + dtime(var_i)
-         else 
-            tstamp_LB(var_i) = tstamp_UB(var_i)
-            tstamp_UB(var_i) = tstamp_UB(var_i) + dtime(var_i)
-         end if
+            tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
+         ELSE
+            iforctime(var_i) = iforctime(var_i) + 1
+            tstamp_LB(var_i) = forctime(iforctime(var_i))
+            tstamp_UB(var_i) = forctime(iforctime(var_i) + 1)
+         ENDIF
+
+         time_i = iforctime(var_i)
+         year = tstamp_UB(var_i)%year
+         RETURN
+      ENDIF
+#endif
+
+      ! calculate the time stamp
+      if ( tstamp_UB(var_i) == 'NULL' ) then
+         tstamp_UB(var_i) = tstamp_LB(var_i) + dtime(var_i)
+      else 
+         tstamp_LB(var_i) = tstamp_UB(var_i)
+         tstamp_UB(var_i) = tstamp_UB(var_i) + dtime(var_i)
+      end if
 
          ! calcualte initial year, day, and second values
          year = tstamp_UB(var_i)%year

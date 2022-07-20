@@ -50,7 +50,7 @@ SUBROUTINE CLMMAIN ( &
          ! land surface variables required for restart
            z_soisno,     dz_soisno,    t_soisno,     wliq_soisno,   &
            wice_soisno,  smp,          hk,                          &
-           t_grnd,       tleaf,        ldew,                        &
+           t_grnd,       tleaf,        ldew,     ldew_rain,      ldew_snow,             &
            sag,          scv,          snowdp,       fveg,          &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
@@ -152,7 +152,8 @@ SUBROUTINE CLMMAIN ( &
 #ifdef USE_DEPTH_TO_BEDROCK
   USE MOD_TimeInvariants, only : ibedrock
 #endif
- 
+USE mod_namelist,only:DEF_Interception_scheme
+
   IMPLICIT NONE
  
 ! ------------------------ Dummy Argument ------------------------------
@@ -311,6 +312,8 @@ SUBROUTINE CLMMAIN ( &
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
+        ldew_rain   ,&
+        ldew_snow   ,&
         sag         ,&! non dimensional snow age [-]
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
@@ -519,27 +522,81 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
-      CALL LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
+if (DEF_Interception_scheme==1) then
+   CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                              
+ELSEIF (DEF_Interception_scheme==2) then
+   CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+ELSEIF (DEF_Interception_scheme==3) then
+   CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+ELSEIF (DEF_Interception_scheme==4) then
+   CALL LEAF_interception_noahmp (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+ELSEIF  (DEF_Interception_scheme==5) then
+   CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+
+ELSEIF  (DEF_Interception_scheme==6) then
+   CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+endif
+
 #endif
 
 #ifdef PFT_CLASSIFICATION
-      CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,&
+      CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr)
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                            
 #endif
 
 #ifdef PC_CLASSIFICATION
-      CALL LEAF_interception_pcwrap (ipatch,deltim,dewmx,&
+      CALL LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr)
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 #endif
 
 ELSE
-      CALL LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   if (DEF_Interception_scheme==1) then
+      CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                                 
+   ELSEIF (DEF_Interception_scheme==2) then
+      CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   ELSEIF (DEF_Interception_scheme==3) then
+      CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   ELSEIF (DEF_Interception_scheme==4) then
+      CALL LEAF_interception_noahmp (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   ELSEIF  (DEF_Interception_scheme==5) then
+      CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   
+   ELSEIF  (DEF_Interception_scheme==6) then
+      CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   endif   
+
+   !   CALL LEAF_interception (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tleaf,&
+   !                           prc_rain,prc_snow,prl_rain,prl_snow,&
+   !                           ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ENDIF
       
       qdrip = pg_rain + pg_snow
@@ -592,7 +649,7 @@ ENDIF
            extkb             ,extkd             ,thermk            ,fsno              ,&
            sigf              ,dz_soisno(lb:)    ,z_soisno(lb:)     ,zi_soisno(lb-1:)  ,&
            tleaf             ,t_soisno(lb:)     ,wice_soisno(lb:)  ,wliq_soisno(lb:)  ,&
-           ldew              ,scv               ,snowdp            ,imelt(lb:)        ,&
+           ldew, ldew_rain, ldew_snow,    scv         ,snowdp      ,imelt(lb:)      ,&
            taux              ,tauy              ,fsena             ,fevpa             ,&
            lfevpa            ,fsenl             ,fevpl             ,etr               ,&
            fseng             ,fevpg             ,olrg              ,fgrnd             ,&
@@ -1027,16 +1084,18 @@ ENDIF
        extkb = 0.0
        extkd = 0.0
 
-       tleaf = forc_t
-       ldew  = 0.0
-       fsenl = 0.0
-       fevpl = 0.0
-       etr   = 0.0
-       assim = 0.0
-       respc = 0.0
+      tleaf = forc_t
+      ldew_rain  = 0.0
+      ldew_snow  = 0.0
+      ldew  = 0.0
+      fsenl = 0.0
+      fevpl = 0.0
+      etr   = 0.0
+      assim = 0.0
+      respc = 0.0
 
-       zerr=0.
-       xerr=0.
+      zerr=0.
+      xerr=0.
 
        qinfl = 0.
        qdrip = forc_rain + forc_snow

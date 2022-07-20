@@ -103,6 +103,9 @@ contains
       if (vliq >= porsl) then
          soil_psi_from_vliq = psi_s
          return
+      ELSEIF (vliq <= vl_r) THEN
+         soil_psi_from_vliq = minsmp
+         RETURN
       end if
 
 #ifdef Campbell_SOIL_MODEL

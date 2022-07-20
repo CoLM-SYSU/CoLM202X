@@ -6,10 +6,14 @@ subroutine dbedrock_readin (dir_landdata)
 
    use precision
    use spmd_task
+   USE mod_namelist
    use mod_landpatch
    use ncio_vector
    USE GlobalVars, only : nl_soil, dz_soi
    use MOD_TimeInvariants, only : dbedrock, ibedrock
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -20,11 +24,17 @@ subroutine dbedrock_readin (dir_landdata)
    integer  :: ipatch, L, ibd
    real(r8) :: dres
 
-   ! Read bedrock
-  
-   lndname = trim(dir_landdata)//'/dbedrock_patches.nc'
-
+#ifdef SinglePoint
+   IF (USE_SITE_dbedrock) THEN
+      dbedrock(:) = SITE_dbedrock
+   ELSE
+      lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
+      call ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock) 
+   ENDIF
+#else
+   lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
    call ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock) 
+#endif
 
    if (p_is_worker) then
 

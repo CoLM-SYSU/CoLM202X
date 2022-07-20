@@ -107,8 +107,11 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          z_soisno(maxsnl+1:,i),            dz_soisno(maxsnl+1:,i),           &
          t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
          wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
-
-         t_grnd(i),       tleaf(i),        ldew(i),         &
+!#ifdef CLM5_INTERCEPTION
+         t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
+!#else  
+!         t_grnd(i),       tleaf(i),        ldew(i),         &
+!#endif
          sag(i),          scv(i),          snowdp(i),       fveg(i),         &
          fsno(i),         sigf(i),         green(i),        lai(i),          &
          sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &

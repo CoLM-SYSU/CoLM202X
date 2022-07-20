@@ -21,6 +21,10 @@ MODULE MOD_PFTimeVars
   ! for PFT_CLASSIFICATION
   REAL(r8), allocatable :: tleaf_p   (:) !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p    (:) !depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+  real(r8), allocatable :: ldew_p_rain     (:)     ! depth of rain on foliage [mm]
+  real(r8), allocatable :: ldew_p_snow     (:)     ! depth of snow on foliage [mm]
+!#endif
   REAL(r8), allocatable :: sigf_p    (:) !fraction of veg cover, excluding snow-covered veg [-]
   REAL(r8), allocatable :: tlai_p    (:) !leaf area index
   REAL(r8), allocatable :: lai_p     (:) !leaf area index
@@ -74,6 +78,10 @@ CONTAINS
          IF (numpft > 0) THEN
             allocate (tleaf_p      (numpft)) !leaf temperature [K]
             allocate (ldew_p       (numpft)) !depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+            allocate (ldew_p_rain       (numpft)) !depth of rain on foliage [mm]
+            allocate (ldew_p_snow       (numpft)) !depth of snow on foliage [mm]
+!#endif
             allocate (sigf_p       (numpft)) !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_p       (numpft)) !leaf area index
             allocate (lai_p        (numpft)) !leaf area index
@@ -116,6 +124,10 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !  
       call ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !  
+!#ifdef CLM5_INTERCEPTION
+      call ncio_read_vector (file_restart, 'ldew_p_rain   ', landpft, ldew_p_rain     ) !  
+      call ncio_read_vector (file_restart, 'ldew_p_snow   ', landpft, ldew_p_snow     ) !  
+!#endif
       call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !  
       call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !  
       call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !  
@@ -169,6 +181,10 @@ CONTAINS
 
      call ncio_write_vector (file_restart, 'tleaf_p  ', 'vector', landpft, tleaf_p  , compress) !  
      call ncio_write_vector (file_restart, 'ldew_p   ', 'vector', landpft, ldew_p   , compress) !  
+!#ifdef CLM5_INTERCEPTION
+      call ncio_write_vector (file_restart, 'ldew_p_rain   ', 'vector', landpft, ldew_p_rain   , compress) !  
+      call ncio_write_vector (file_restart, 'ldew_p_snow   ', 'vector', landpft, ldew_p_snow   , compress) !  
+!#endif
      call ncio_write_vector (file_restart, 'sigf_p   ', 'vector', landpft, sigf_p   , compress) !  
      call ncio_write_vector (file_restart, 'tlai_p   ', 'vector', landpft, tlai_p   , compress) !  
      call ncio_write_vector (file_restart, 'lai_p    ', 'vector', landpft, lai_p    , compress) !  
@@ -247,6 +263,10 @@ CONTAINS
 
       call check_vector_data ('tleaf_p  ', tleaf_p  )      !  
       call check_vector_data ('ldew_p   ', ldew_p   )      !  
+!#ifdef CLM5_INTERCEPTION
+      call check_vector_data ('ldew_p_rain   ', ldew_p_rain   )      !  
+      call check_vector_data ('ldew_p_snow   ', ldew_p_snow   )      !  
+!#endif
       call check_vector_data ('sigf_p   ', sigf_p   )      !  
       call check_vector_data ('tlai_p   ', tlai_p   )      !  
       call check_vector_data ('lai_p    ', lai_p    )      !  

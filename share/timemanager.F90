@@ -549,5 +549,32 @@ CONTAINS
       END IF
       RETURN
    END FUNCTION get_calday
+
+   INTEGER FUNCTION minutes_since_1900 (year, julianday, second)
+
+      IMPLICIT NONE
+      INTEGER, intent(in) :: year, julianday, second
+
+      INTEGER :: minutes_allyear = 8760
+      INTEGER :: refyear(10) = (/1, 1900, 1950, 1980, 1990, 2000, 2005, 2010, 2015, 2020/)
+      INTEGER :: refval (10) = (/-998776800,0,26297280,42075360,47335680,52594560,55225440,&
+                                 57854880,60484320,63113760/)
+      INTEGER :: iref, iyear
+
+      iref = findloc(refyear <= year, .true., back=.true., dim=1)
+      minutes_since_1900 = refval(iref)
+      DO iyear = refyear(iref), year-1
+         IF (isleapyear(iyear)) THEN
+            minutes_since_1900 = minutes_since_1900 + 527040
+         ELSE
+            minutes_since_1900 = minutes_since_1900 + 525600
+         ENDIF
+      ENDDO
+
+      minutes_since_1900 = minutes_since_1900 + (julianday-1) * 1440
+      minutes_since_1900 = minutes_since_1900 + second/60
+
+   END FUNCTION minutes_since_1900
+
       
 END MODULE timemanager

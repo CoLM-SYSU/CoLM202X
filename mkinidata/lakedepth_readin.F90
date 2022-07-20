@@ -8,6 +8,9 @@ SUBROUTINE lakedepth_readin (dir_landdata)
    use mod_landpatch
    use ncio_vector
    use MOD_TimeInvariants, only : lakedepth, dz_lake
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -47,9 +50,17 @@ SUBROUTINE lakedepth_readin (dir_landdata)
    ! -----------------------------------------------------------
 
    ! Read lakedepth
-  
-   lndname = trim(dir_landdata)//'/lakedepth_patches.nc'
+#ifdef SinglePoint
+   IF (USE_SITE_lakedepth) THEN
+      lakedepth(:) = SITE_lakedepth
+   ELSE
+      lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
+      call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth) 
+   ENDIF
+#else
+   lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
    call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth) 
+#endif
 
    ! Define lake levels
    if (p_is_worker) then

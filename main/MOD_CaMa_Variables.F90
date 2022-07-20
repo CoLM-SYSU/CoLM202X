@@ -8,7 +8,7 @@ module MOD_CaMa_Variables
    use mod_data_type
    USE mod_mapping_pset2grid
    USE mod_mapping_grid2pset
-
+   USE YOS_CMF_INPUT,           ONLY:RMIS,DMIS
    real(r8) :: nacc              ! number of accumulation
    real(r8), allocatable     :: a_rnof_cama (:) ! on worker : total runoff [mm/s]
    type(block_data_real8_2d) :: f_rnof_cama     ! on IO     : total runoff [mm/s]
@@ -201,12 +201,15 @@ contains
          D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,               &
          D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX, &
          d2daminf_avg   !!! added
+      use mod_2d_fluxes
 
       IMPLICIT NONE
       
       character(LEN=*), intent(in) :: file_hist
       integer, intent(in) :: itime_in_file
-
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       if (p_is_master) then
          !*** average variable
          CALL CMF_DIAG_AVERAGE
@@ -355,7 +358,13 @@ contains
 
       compress = DEF_HIST_COMPRESS_LEVEL 
       call ncio_write_serial_time (file_hist, varname,  &
-         itime_in_file, R2OUT, 'lon_cama', 'lat_cama', 'time',compress,longname,units)
+         itime_in_file, R2OUT, 'lon_cama', 'lat_cama', 'time',compress)
+
+      IF (itime_in_file == 1) THEN
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value',DMIS)
+      ENDIF
 
    end subroutine flux_map_and_write_2d_cama
 

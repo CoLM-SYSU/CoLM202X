@@ -35,7 +35,7 @@
                      extkb       ,extkd       ,thermk      ,fsno       ,&
                      sigf        ,dz_soisno   ,z_soisno    ,zi_soisno  ,&
                      tleaf       ,t_soisno    ,wice_soisno ,wliq_soisno,&
-                     ldew        ,scv         ,snowdp      ,imelt      ,&
+                     ldew, ldew_rain, ldew_snow,    scv         ,snowdp      ,imelt      ,&
                      taux        ,tauy        ,fsena       ,fevpa      ,&
                      lfevpa      ,fsenl       ,fevpl       ,etr        ,&
                      fseng       ,fevpg       ,olrg        ,fgrnd      ,&
@@ -224,7 +224,10 @@
         wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
         smp(1:nl_soil)         ,&! soil matrix potential [mm]
         hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
+
         ldew,        &! depth of water on foliage [kg/(m2 s)] 
+        ldew_rain,        &! depth of rain on foliage [kg/(m2 s)] 
+        ldew_snow,        &! depth of rain on foliage [kg/(m2 s)] 
         scv,         &! snow cover, water equivalent [mm, kg/m2]
         snowdp        ! snow depth [m]
 
@@ -508,7 +511,7 @@ IF (patchtype == 0) THEN
                  thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
-                 emg        ,tleaf      ,ldew      ,taux       ,tauy       ,&
+                 emg        ,tleaf      ,ldew, ldew_rain, ldew_snow      ,taux       ,tauy       ,&
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
@@ -529,6 +532,8 @@ IF (patchtype == 0) THEN
          tleaf  = forc_t
          laisun = 0.
          laisha = 0.
+         ldew_rain   = 0.
+         ldew_snow   = 0.
          ldew   = 0.
          rstfacsun = 0.
          rstfacsha = 0.
@@ -621,7 +626,7 @@ IF (patchtype == 0) THEN
                  thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),forc_po2m  ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
-                 emg        ,tleaf_p(i) ,ldew_p(i)  ,taux_p(i)  ,tauy_p(i)  ,&
+                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_p_rain(i)  ,ldew_p_snow(i)  ,taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
                  tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
                  fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
@@ -647,6 +652,8 @@ IF (patchtype == 0) THEN
             tleaf_p(i)   = forc_t
             laisun_p(i)  = 0.
             laisha_p(i)  = 0.
+            ldew_p_rain(i)    = 0.
+            ldew_p_snow(i)    = 0.
             ldew_p(i)    = 0.
             rootr_p(:,i) = 0.
             rstfacsun_p(i) = 0.
@@ -671,6 +678,8 @@ IF (patchtype == 0) THEN
       dlrad  = sum( dlrad_p (ps:pe)*pftfrac(ps:pe) )
       ulrad  = sum( ulrad_p (ps:pe)*pftfrac(ps:pe) )
       tleaf  = sum( tleaf_p (ps:pe)*pftfrac(ps:pe) )
+      ldew_rain   = sum( ldew_p_rain  (ps:pe)*pftfrac(ps:pe) )
+      ldew_snow   = sum( ldew_p_snow  (ps:pe)*pftfrac(ps:pe) )     
       ldew   = sum( ldew_p  (ps:pe)*pftfrac(ps:pe) )
       tref   = sum( tref_p  (ps:pe)*pftfrac(ps:pe) )
       qref   = sum( qref_p  (ps:pe)*pftfrac(ps:pe) )
@@ -799,6 +808,8 @@ IF (patchtype == 0) THEN
             tleaf_c(p,pc) = forc_t
             laisun_c(p)   = 0.
             laisha_c(p)   = 0.
+            ldew_c_rain(p,pc)  = 0.
+            ldew_c_snow(p,pc)  = 0.
             ldew_c(p,pc)  = 0.
             rootr_c(:,p)  = 0.
             rstfacsun_c(p)   = 0.
@@ -832,7 +843,7 @@ IF (patchtype == 0) THEN
            rstfacsun_c(:),rstfacsha_c(:),forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
            ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
-           z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,taux          ,tauy          ,&
+           z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,ldew_c_rain(:,pc)  ,ldew_c_snow(:,pc)  ,taux          ,tauy          ,&
            fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
            tref          ,qref          ,rst_c(:,pc)   ,assim_c(:,pc) ,respc_c(:,pc) ,&
            fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
@@ -849,6 +860,8 @@ IF (patchtype == 0) THEN
          laisun_c(:)    = 0.
          laisha_c(:)    = 0.
          tleaf_c (:,pc) = forc_t
+         ldew_c_rain  (:,pc) = 0.
+         ldew_c_snow  (:,pc) = 0.
          ldew_c  (:,pc) = 0.
          rst_c   (:,pc) = 2.0e4
          assim_c (:,pc) = 0.
@@ -865,6 +878,8 @@ IF (patchtype == 0) THEN
       laisun = sum( laisun_c(:)   *pcfrac(:,pc) )
       laisha = sum( laisha_c(:)   *pcfrac(:,pc) )
       tleaf  = sum( tleaf_c (:,pc)*pcfrac(:,pc) )
+      ldew_rain   = sum( ldew_c_rain  (:,pc)*pcfrac(:,pc) )
+      ldew_snow   = sum( ldew_c_snow  (:,pc)*pcfrac(:,pc) )
       ldew   = sum( ldew_c  (:,pc)*pcfrac(:,pc) )
       rst    = sum( rst_c   (:,pc)*pcfrac(:,pc) )
       assim  = sum( assim_c (:,pc)*pcfrac(:,pc) )
@@ -950,7 +965,7 @@ ELSE
                  thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
-                 emg        ,tleaf      ,ldew      ,taux       ,tauy       ,&
+                 emg        ,tleaf      ,ldew,ldew_rain,ldew_snow      ,taux       ,tauy       ,&
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
@@ -971,6 +986,8 @@ ELSE
          tleaf  = forc_t
          laisun = 0.
          laisha = 0.
+         ldew_rain  = 0.
+         ldew_snow  = 0.
          ldew   = 0.
          rstfacsun = 0.
          rstfacsha = 0.

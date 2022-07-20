@@ -44,19 +44,24 @@ SUBROUTINE aggregation_lakedepth ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: lndname
+   CHARACTER(len=256) :: landdir, lndname
    INTEGER :: L, ipatch
 
    TYPE (block_data_real8_2d) :: lakedepth
    REAL(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
 
+   landdir = trim(dir_model_landdata) // '/lakedepth/'
+
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
    IF (p_is_master) THEN
       write(*,'(/, A24)') 'Aggregate lake depth ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
    ! ................................................
    ! ... (2) global lake coverage and lake depth
@@ -72,6 +77,12 @@ SUBROUTINE aggregation_lakedepth ( &
       CALL aggregation_lc_data_daemon (gland, lakedepth)
 #endif
    ENDIF
+
+#ifdef SinglePoint
+   IF (USE_SITE_lakedepth) THEN
+      RETURN
+   ENDIF
+#endif
 
    !   ---------------------------------------------------------------
    !   aggregate the lake depth from the resolution of raw data to modelling resolution
@@ -107,12 +118,16 @@ SUBROUTINE aggregation_lakedepth ( &
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 
    ! Write-out the lake depth of the lake pacth in the gridcell
-   lndname = trim(dir_model_landdata)//'/lakedepth_patches.nc'
+   lndname = trim(landdir)//'/lakedepth_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'vector', landpatch, lakedepth_patches, 1)

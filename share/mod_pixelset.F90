@@ -57,7 +57,7 @@ CONTAINS
       USE precision
       USE mod_utils
       USE mod_pixel
-      USE mod_landunit
+      USE mod_landbasin
 
       IMPLICIT NONE
       CLASS(pixelset_type) :: this
@@ -78,17 +78,17 @@ CONTAINS
          allocate (area (istt:iend))
          DO ipxl = istt, iend 
             area(ipxl) = areaquad (&
-               pixel%lat_s(landunit(iu)%ilat(ipxl)), &
-               pixel%lat_n(landunit(iu)%ilat(ipxl)), &
-               pixel%lon_w(landunit(iu)%ilon(ipxl)), &
-               pixel%lon_e(landunit(iu)%ilon(ipxl)) )
+               pixel%lat_s(landbasin(iu)%ilat(ipxl)), &
+               pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
+               pixel%lon_w(landbasin(iu)%ilon(ipxl)), &
+               pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
          ENDDO
 
          npxl = iend - istt + 1
          rlat(iset) = get_pixelset_rlat ( &
-            npxl, landunit(iu)%ilat(istt:iend), area)
+            npxl, landbasin(iu)%ilat(istt:iend), area)
          rlon(iset) = get_pixelset_rlon ( &
-            npxl, landunit(iu)%ilon(istt:iend), area)
+            npxl, landbasin(iu)%ilon(istt:iend), area)
 
          deallocate (area)
 
@@ -192,7 +192,7 @@ CONTAINS
 
       USE mod_block
       USE spmd_task
-      USE mod_landunit
+      USE mod_landbasin
       IMPLICIT NONE
 
       class(pixelset_type)  :: this
@@ -224,13 +224,13 @@ CONTAINS
          xblk = 0
          yblk = 0
          DO iset = 1, size(this%unum)
-            DO WHILE (this%unum(iset) /= landunit(iu)%num)
+            DO WHILE (this%unum(iset) /= landbasin(iu)%num)
                iu = iu + 1
             ENDDO 
 
-            IF ((landunit(iu)%xblk /= xblk) .or. (landunit(iu)%yblk /= yblk)) THEN
-               xblk = landunit(iu)%xblk
-               yblk = landunit(iu)%yblk
+            IF ((landbasin(iu)%xblk /= xblk) .or. (landbasin(iu)%yblk /= yblk)) THEN
+               xblk = landbasin(iu)%xblk
+               yblk = landbasin(iu)%yblk
                this%vecgs%vstt(xblk,yblk) = iset
             ENDIF
 

@@ -40,6 +40,10 @@ SAVE
 
       real(r8), allocatable :: tleaf    (:)     ! leaf temperature [K]
       real(r8), allocatable :: ldew     (:)     ! depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+      real(r8), allocatable :: ldew_rain     (:)     ! depth of rain on foliage [mm]
+      real(r8), allocatable :: ldew_snow     (:)     ! depth of rain on foliage [mm]
+!#endif
       real(r8), allocatable :: sag      (:)     ! non dimensional snow age [-]
       real(r8), allocatable :: scv      (:)     ! snow cover, water equivalent [mm]
       real(r8), allocatable :: snowdp   (:)     ! snow depth [meter]
@@ -65,6 +69,9 @@ SAVE
       real(r8), allocatable :: wat      (:)     ! total water storage [mm]
 #ifdef VARIABLY_SATURATED_FLOW
       real(r8), allocatable :: dpond    (:)     ! depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+      real(r8), allocatable :: dwatsub  (:)     ! depth of saturated subsurface water above bedrock
+#endif
 #endif
 
       real(r8), allocatable :: t_lake(:,:)      ! lake layer teperature [K]
@@ -140,6 +147,10 @@ SAVE
         allocate (t_grnd               (numpatch))
         allocate (tleaf                (numpatch))
         allocate (ldew                 (numpatch))
+!#ifdef CLM5_INTERCEPTION
+        allocate (ldew_rain                 (numpatch))
+        allocate (ldew_snow                 (numpatch))
+!#endif
         allocate (sag                  (numpatch))
         allocate (scv                  (numpatch))
         allocate (snowdp               (numpatch))
@@ -165,6 +176,9 @@ SAVE
         allocate (wat                  (numpatch))
 #ifdef VARIABLY_SATURATED_FLOW
         allocate (dpond                (numpatch))
+#ifdef USE_DEPTH_TO_BEDROCK
+        allocate (dwatsub              (numpatch))
+#endif
 #endif
 
         allocate (t_lake       (nl_lake,numpatch))    !new lake scheme
@@ -239,6 +253,10 @@ SAVE
            deallocate (t_grnd )
            deallocate (tleaf  )
            deallocate (ldew   )
+!#ifdef CLM5_INTERCEPTION
+           deallocate (ldew_rain   )
+           deallocate (ldew_snow   )   
+!#endif
            deallocate (sag    )
            deallocate (scv    )
            deallocate (snowdp )
@@ -264,6 +282,9 @@ SAVE
            deallocate (wat    )
 #ifdef VARIABLY_SATURATED_FLOW
            deallocate (dpond  )
+#ifdef USE_DEPTH_TO_BEDROCK
+           deallocate (dwatsub)
+#endif
 #endif
 
            deallocate (t_lake )      ! new lake scheme
@@ -393,6 +414,10 @@ SAVE
      call ncio_write_vector (file_restart, 't_grnd  '   , 'vector', landpatch, t_grnd    , compress) !  ground surface temperature [K]
      call ncio_write_vector (file_restart, 'tleaf   '   , 'vector', landpatch, tleaf     , compress) !  leaf temperature [K]
      call ncio_write_vector (file_restart, 'ldew    '   , 'vector', landpatch, ldew      , compress) !  depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+     call ncio_write_vector (file_restart, 'ldew_rain    '   , 'vector', landpatch, ldew_rain      , compress) !  depth of water on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_snow    '   , 'vector', landpatch, ldew_snow      , compress) !  depth of water on foliage [mm]
+!#endif
      call ncio_write_vector (file_restart, 'sag     '   , 'vector', landpatch, sag       , compress) !  non dimensional snow age [-]
      call ncio_write_vector (file_restart, 'scv     '   , 'vector', landpatch, scv       , compress) !  snow cover, water equivalent [mm]
      call ncio_write_vector (file_restart, 'snowdp  '   , 'vector', landpatch, snowdp    , compress) !  snow depth [meter]
@@ -415,6 +440,9 @@ SAVE
      call ncio_write_vector (file_restart, 'wa      '   , 'vector', landpatch, wa        , compress) !  water storage in aquifer [mm]
 #ifdef VARIABLY_SATURATED_FLOW
      call ncio_write_vector (file_restart, 'dpond   '   , 'vector', landpatch, dpond     , compress) ! depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+     call ncio_write_vector (file_restart, 'dwatsub '   , 'vector', landpatch, dwatsub   , compress) ! depth of saturated subsurface water above bedrock
+#endif
 #endif
 
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'vector', landpatch, t_lake      , compress) !
@@ -507,6 +535,10 @@ SAVE
      call ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) !  ground surface temperature [K]
      call ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) !  leaf temperature [K]
      call ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) !  depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+     call ncio_read_vector (file_restart, 'ldew_rain    '   , landpatch, ldew_rain       ) !  depth of water on foliage [mm]
+     call ncio_read_vector (file_restart, 'ldew_snow    '   , landpatch, ldew_snow       ) !  depth of water on foliage [mm]
+!#endif
      call ncio_read_vector (file_restart, 'sag     '   , landpatch, sag        ) !  non dimensional snow age [-]
      call ncio_read_vector (file_restart, 'scv     '   , landpatch, scv        ) !  snow cover, water equivalent [mm]
      call ncio_read_vector (file_restart, 'snowdp  '   , landpatch, snowdp     ) !  snow depth [meter]
@@ -529,6 +561,9 @@ SAVE
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) !  water storage in aquifer [mm]
 #ifdef VARIABLY_SATURATED_FLOW
      call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+     call ncio_read_vector (file_restart, 'dwatsub '   , landpatch, dwatsub    ) ! depth of saturated subsurface water above bedrock
+#endif
 #endif
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
@@ -607,6 +642,10 @@ SAVE
      call check_vector_data ('t_grnd      ', t_grnd     ) !  ground surface temperature [K]
      call check_vector_data ('tleaf       ', tleaf      ) !  leaf temperature [K]
      call check_vector_data ('ldew        ', ldew       ) !  depth of water on foliage [mm]
+!#ifdef CLM5_INTERCEPTION
+     call check_vector_data ('ldew_rain        ', ldew_rain       ) !  depth of water on foliage [mm]
+     call check_vector_data ('ldew_snow        ', ldew_snow       ) !  depth of water on foliage [mm]
+!#endif
      call check_vector_data ('sag         ', sag        ) !  non dimensional snow age [-]
      call check_vector_data ('scv         ', scv        ) !  snow cover, water equivalent [mm]
      call check_vector_data ('snowdp      ', snowdp     ) !  snow depth [meter]
@@ -629,6 +668,9 @@ SAVE
      call check_vector_data ('wa          ', wa         ) !  water storage in aquifer [mm]
 #ifdef VARIABLY_SATURATED_FLOW
      call check_vector_data ('dpond       ', dpond      ) !  depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+     call check_vector_data ('dwatsub     ', dwatsub    ) !  depth of saturated subsurface water above bedrock
+#endif
 #endif
      call check_vector_data ('t_lake      ', t_lake      ) !
      call check_vector_data ('lake_icefrc ', lake_icefrac) !

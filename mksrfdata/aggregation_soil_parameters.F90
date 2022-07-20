@@ -34,7 +34,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: lndname
+   CHARACTER(len=256) :: landdir, lndname
    CHARACTER(len=256) :: c
    INTEGER :: nsl, ipatch, L, np, LL, istt, iend
 
@@ -157,6 +157,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
    external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
 #endif
+      
+   landdir = trim(dir_model_landdata) // '/soil'
 
    ! ........................................
    ! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
@@ -164,11 +166,20 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
    IF (p_is_master) THEN
       write(*,'(/, A29)') 'Aggregate Soil Parameters ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       
+#ifdef SinglePoint
+   IF (USE_SITE_soilparameters) THEN
+      RETURN
+   ENDIF
+#endif
+
    IF (p_is_worker) THEN
 
       allocate ( vf_quartz_mineral_s_patches(numpatch) )
@@ -241,16 +252,19 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('vf_quartz_mineral_s lev '//trim(c), vf_quartz_mineral_s_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, vf_quartz_mineral_s_patches, 1)
-
 
       ! (2) volumetric fraction of gravels
       ! (3) volumetric fraction of sand
@@ -393,6 +407,10 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('vf_gravels_s lev '//trim(c), vf_gravels_s_patches)
       CALL check_vector_data ('vf_sand_s lev '//trim(c), vf_sand_s_patches)
@@ -403,32 +421,32 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
 #endif
 
-      lndname = trim(dir_model_landdata)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, vf_gravels_s_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'vector',&
                               landpatch, vf_sand_s_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/vf_om_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'vector',&
                               landpatch, vf_om_s_patches, 1)
 
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-      lndname = trim(dir_model_landdata)//'/BA_alpha_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, BA_alpha_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/BA_beta_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'vector',&
@@ -471,11 +489,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('wf_gravels_s lev '//trim(c), wf_gravels_s_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
@@ -518,11 +540,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('wf_sand_s lev '//trim(c), wf_sand_s_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'vector',& 
@@ -565,11 +591,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('L VGM lev '//trim(c), L_vgm_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/L_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'vector', landpatch, L_vgm_patches, 1)
@@ -698,6 +728,10 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('theta_r lev '//trim(c), theta_r_patches)
       CALL check_vector_data ('alpha VGM lev '//trim(c), alpha_vgm_patches)
@@ -705,22 +739,22 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/theta_r_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'vector', landpatch, theta_r_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'vector', landpatch, alpha_vgm_patches, 1)
       
-      lndname = trim(dir_model_landdata)//'/n_vgm_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'vector', landpatch, n_vgm_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/theta_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
@@ -834,23 +868,27 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
       CALL check_vector_data ('psi_s lev '//trim(c), psi_s_patches)
       CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/theta_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/psi_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'vector', landpatch, psi_s_patches, 1)
 
-      lndname = trim(dir_model_landdata)//'/lambda_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'vector', landpatch, lambda_patches, 1)
@@ -890,11 +928,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('k_s lev '//trim(c), k_s_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/k_s_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'vector', landpatch, k_s_patches, 1)
@@ -933,11 +975,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('csol lev '//trim(c), csol_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/csol_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'vector', landpatch, csol_patches, 1)
@@ -976,11 +1022,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('tksatu lev '//trim(c), tksatu_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/tksatu_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'vector', landpatch, tksatu_patches, 1)
@@ -1019,11 +1069,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('tksatf lev '//trim(c), tksatf_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/tksatf_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'vector', landpatch, tksatf_patches, 1)
@@ -1062,11 +1116,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('tkdry lev '//trim(c), tkdry_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/tkdry_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'vector', landpatch, tkdry_patches, 1)
@@ -1105,11 +1163,15 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
       ENDIF
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
       CALL check_vector_data ('k_solids lev '//trim(c), k_solids_patches)
 #endif
 
-      lndname = trim(dir_model_landdata)//'/k_solids_l'//trim(c)//'_patches.nc'
+      lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'vector', landpatch, k_solids_patches, 1)

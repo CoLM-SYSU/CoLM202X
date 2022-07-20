@@ -24,20 +24,31 @@ SUBROUTINE aggregation_dbedrock ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: lndname
+   CHARACTER(len=256) :: landdir, lndname
 
    TYPE (block_data_real8_2d) :: dbedrock
    REAL(r8), allocatable :: dbedrock_patches(:)
    REAL(r8), allocatable :: dbedrock_one(:), area_one(:)
    INTEGER :: ipatch
 
+   landdir = trim(dir_model_landdata) // '/dbedrock/'
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   IF (p_is_master) THEN
+      write(*,'(/, A30)') 'Aggregate depth to bedrock ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
+   ENDIF
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   IF (p_is_master) THEN
-      write(*,'(/, A30)') 'Aggregate depth to bedrock ...'
+#ifdef SinglePoint
+   IF (USE_SITE_dbedrock) THEN
+      RETURN
    ENDIF
+#endif
 
    ! ................................................
    ! ... (2) global depth to bedrock
@@ -74,12 +85,16 @@ SUBROUTINE aggregation_dbedrock ( &
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('dbedrock_patches ', dbedrock_patches, -9999.0)
 #endif
 
    ! Write-out the depth of the pacth in the gridcell
-   lndname = trim(dir_model_landdata)//'/dbedrock_patches.nc'
+   lndname = trim(landdir)//'/dbedrock_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'dbedrock_patches', 'vector', landpatch, dbedrock_patches, 1)

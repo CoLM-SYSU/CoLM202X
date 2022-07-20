@@ -52,6 +52,67 @@ CONTAINS
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
 
+#ifdef SinglePoint
+      IF (landpatch%ltyp(1) == 1) THEN
+         numpft = count(SITE_pctpfts > 0.)
+#ifdef CROP
+      ELSEIF (landpatch%ltyp(1) == 12) THEN
+         numpft = numpatch
+#endif
+      ELSE
+         numpft = 0
+      ENDIF
+
+      allocate (patch_pft_s (numpatch))
+      allocate (patch_pft_e (numpatch))
+
+      IF (numpft > 0) THEN
+         allocate (landpft%iunt (numpft))
+         allocate (landpft%unum (numpft))
+         allocate (landpft%ltyp (numpft))
+         allocate (landpft%istt (numpft))
+         allocate (landpft%iend (numpft))
+                  
+         landpft%iunt(:) = 1
+         landpft%unum(:) = 1
+         landpft%istt(:) = 1
+         landpft%iend(:) = 1
+            
+         allocate(pft2patch (numpft))
+
+         IF (landpatch%ltyp(1) == 1) THEN
+            npft = 0
+            DO ipft = 0, N_PFT-1
+               IF (SITE_pctpfts(ipft) > 0.) THEN
+                  npft = npft + 1
+                  landpft%ltyp(npft) = ipft
+               ENDIF
+            ENDDO
+            
+            pft2patch  (:) = 1
+            patch_pft_s(:) = 1 
+            patch_pft_e(:) = numpft
+#ifdef CROP
+         ELSEIF (landpatch%ltyp(1) == 12) THEN
+            DO ipft = 1, numpft
+               landpft%ltyp(ipft) = cropclass(ipft) + N_PFT - 1
+               pft2patch   (ipft) = ipft
+               patch_pft_s (ipft) = ipft 
+               patch_pft_e (ipft) = ipft
+            ENDDO
+#endif
+         ENDIF
+      ELSE
+         patch_pft_s(:) = -1
+         patch_pft_e(:) = -1
+      ENDIF
+      
+      landpft%nset = numpft
+      CALL landpft%set_vecgs
+
+      RETURN
+#endif
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif

@@ -267,11 +267,10 @@ MODULE SOIL_SNOW_hydrology
 
   endif
 
-!-----------------------------------------------------------------------
-
   end subroutine WATER
 #endif
 
+!-----------------------------------------------------------------------
 #ifdef VARIABLY_SATURATED_FLOW
   subroutine WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
              z_soisno    ,dz_soisno   ,zi_soisno                    ,&
@@ -311,6 +310,7 @@ MODULE SOIL_SNOW_hydrology
 
 #ifdef USE_DEPTH_TO_BEDROCK
    USE MOD_TimeInvariants, only : dbedrock, ibedrock
+   USE MOD_TimeVariables , only : dwatsub
 #endif
 
   implicit none
@@ -388,7 +388,7 @@ MODULE SOIL_SNOW_hydrology
        vol_ice(1:nl_soil), &! partitial volume of ice lens in layer
        icefrac(1:nl_soil)   ! ice fraction (-)
 
-  real(r8) :: err_solver, w_sum, resi(1:nl_soil)
+  real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
   REAL(r8) :: qraing
 
   INTEGER  :: nlev
@@ -426,7 +426,8 @@ MODULE SOIL_SNOW_hydrology
 !=======================================================================
 
       if (lb>=1)then
-         gwat = pg_rain + sm - qseva + qsdew
+         ! gwat = pg_rain + sm - qseva + qsdew
+         gwat = pg_rain + sm + qsdew
       else
          call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
@@ -439,10 +440,21 @@ MODULE SOIL_SNOW_hydrology
 
   if(patchtype<=1)then   ! soil ground only
 
+     IF (ipatch == 952634) THEN
+        write(*,*) 'stop here'
+     ENDIF
+
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + dpond
       
-      resi(1:nlev) = 0.
+      ! Renew the ice and liquid mass due to condensation
+      if(lb >= 1)then
+         ! make consistent with how evap_grnd removed in infiltration
+         wliq_soisno(1) = max(0., wliq_soisno(1) - qseva * deltim)
+         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
+      end if
+
+      wresi(1:nlev) = 0.
       ! porosity of soil, partitial volume of ice and liquid
       do j = 1, nlev
          vol_ice(j) = min(porsl(j), wice_soisno(j)/(dz_soisno(j)*denice))
@@ -456,8 +468,8 @@ MODULE SOIL_SNOW_hydrology
          is_permeable(j) = eff_porosity(j) > max(wimp, theta_r(j))
          IF (is_permeable(j)) THEN
             vol_liq(j) = min(eff_porosity(j), wliq_soisno(j)/(dz_soisno(j)*denh2o))
-            vol_liq(j) = max(theta_r(j), vol_liq(j))
-            resi(j) = wliq_soisno(j) - dz_soisno(j) * denh2o * vol_liq(j)
+            vol_liq(j) = max(0., vol_liq(j))
+            wresi(j) = wliq_soisno(j) - dz_soisno(j) * denh2o * vol_liq(j)
          ENDIF
       enddo
 
@@ -493,8 +505,8 @@ MODULE SOIL_SNOW_hydrology
          IF (is_permeable(nlev)) THEN
             vol_liq(nlev) = min(eff_porosity(nlev), &
                wliq_soisno(nlev)/denh2o / ((sp_zi(nlev)-sp_zi(nlev-1))/1000.0))
-            vol_liq(nlev) = max(theta_r(nlev), vol_liq(nlev))
-            resi(nlev) = wliq_soisno(nlev) - (sp_zi(nlev)-sp_zi(nlev-1))/1000.0 * denh2o * vol_liq(nlev)
+            vol_liq(nlev) = max(0., vol_liq(nlev))
+            wresi(nlev) = wliq_soisno(nlev) - (sp_zi(nlev)-sp_zi(nlev-1))/1000.0 * denh2o * vol_liq(nlev)
          ENDIF
       ENDIF 
 #endif
@@ -550,8 +562,13 @@ MODULE SOIL_SNOW_hydrology
                IF ((zwtmm > sp_zi(j-1)) .and. (is_permeable(j))) THEN
                   vol_liq(j) = (wliq_soisno(j)*1000.0/denh2o - eff_porosity(j)*(sp_zi(j)-zwtmm))  &
                      / (zwtmm - sp_zi(j-1))
-                  vol_liq(j) = max(theta_r(j), min(eff_porosity(j), vol_liq(j)))
-                  resi(j) = wliq_soisno(j) - eff_porosity(j)*(sp_zi(j)-zwtmm) &
+                  IF (vol_liq(j) < 0.) THEN
+                     zwtmm = sp_zi(j)
+                     vol_liq(j) = wliq_soisno(j)*1000.0/denh2o / (sp_zi(j) - sp_zi(j-1))
+                  ENDIF
+
+                  vol_liq(j) = max(0., min(eff_porosity(j), vol_liq(j)))
+                  wresi(j) = wliq_soisno(j) - eff_porosity(j)*(sp_zi(j)-zwtmm) &
                      - vol_liq(j) * (zwtmm - sp_zi(j-1))
                ENDIF
 
@@ -583,25 +600,23 @@ MODULE SOIL_SNOW_hydrology
                wliq_soisno(j) = denh2o * (vol_liq(j)*(sp_zi(j)-sp_zi(j-1)))/1000.0
             ENDIF
       
-            wliq_soisno(j) = wliq_soisno(j) + resi(j)
+            wliq_soisno(j) = wliq_soisno(j) + wresi(j)
          ENDIF
       ENDDO
       
       zwt = zwtmm/1000.0
+#ifdef USE_DEPTH_TO_BEDROCK
+      IF (ibedrock(ipatch) <= nl_soil) THEN
+         dwatsub(ipatch) = max(dbedrock(ipatch)-zwt, 0._r8)
+      ENDIF
+#endif
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
 
-      ! Renew the ice and liquid mass due to condensation
-      if(lb >= 1)then
-         ! make consistent with how evap_grnd removed in infiltration
-     !    wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew * deltim)
-         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
-      end if
-
       if(lb >= 1)then
          err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
-                    - (gwat+qfros-qsubl-etr-rnof)*deltim
+                    - (gwat+qfros-qseva-qsubl-etr-rnof)*deltim
       else
          err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
                     - (gwat-etr-rnof)*deltim
@@ -611,8 +626,8 @@ MODULE SOIL_SNOW_hydrology
      if(abs(err_solver) > 1.e-3)then
         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
      endif
-     IF (any(wliq_soisno < 0)) THEN
-        write(*,*) 'Warning: negative'
+     IF (any(wliq_soisno < -1.e-3)) THEN
+        write(*,*) 'Warning: negative', wliq_soisno(1:nlev)
      ENDIF
 #endif
 

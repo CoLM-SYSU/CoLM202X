@@ -46,7 +46,7 @@ SUBROUTINE aggregation_forest_height ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   character(len=256) :: lndname
+   character(len=256) :: landdir, lndname
    integer :: L, ipatch, p
 
    type (block_data_real8_2d) :: tree_height
@@ -61,13 +61,24 @@ SUBROUTINE aggregation_forest_height ( &
    INTEGER  :: ip, ipft
    REAL(r8) :: sumarea
 
+   landdir = trim(dir_model_landdata) // '/htop/'
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   if (p_is_master) then
+      write(*,'(/, A24)') 'Aggregate forest height ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
+   end if
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   if (p_is_master) then
-      write(*,'(/, A24)') 'Aggregate forest height ...'
-   end if
+#ifdef SinglePoint
+   IF (USE_SITE_htop) THEN
+      RETURN
+   ENDIF
+#endif
 
 #ifdef USGS_CLASSIFICATION
    lndname = trim(dir_rawdata)//'/Forest_Height.nc' 
@@ -100,11 +111,15 @@ SUBROUTINE aggregation_forest_height ( &
 #endif
    end if
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    call check_vector_data ('htop_patches ', tree_height_patches)
 #endif 
 
-   lndname = trim(dir_model_landdata)//'/htop_patches.nc'
+   lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, tree_height_patches, 1)
@@ -146,11 +161,15 @@ SUBROUTINE aggregation_forest_height ( &
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
 #endif
 
-   lndname = trim(dir_model_landdata)//'/htop_patches.nc'
+   lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
@@ -213,17 +232,21 @@ SUBROUTINE aggregation_forest_height ( &
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
 
-   lndname = trim(dir_model_landdata)//'/htop_patches.nc'
+   lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
    
-   lndname = trim(dir_model_landdata)//'/htop_pfts.nc'
+   lndname = trim(landdir)//'/htop_pfts.nc'
    CALL ncio_create_file_vector (lndname, landpft)
    CALL ncio_define_pixelset_dimension (lndname, landpft)
    CALL ncio_write_vector (lndname, 'htop_pfts', 'vector', landpft, htop_pfts, 1)
@@ -283,17 +306,21 @@ SUBROUTINE aggregation_forest_height ( &
 #endif
    ENDIF
 
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pcs     ', htop_pcs    )
 #endif
 
-   lndname = trim(dir_model_landdata)//'/htop_patches.nc'
+   lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
 
-   lndname = trim(dir_model_landdata)//'/htop_pcs.nc'
+   lndname = trim(landdir)//'/htop_pcs.nc'
    CALL ncio_create_file_vector (lndname, landpc)
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
