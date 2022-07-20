@@ -315,24 +315,28 @@ subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz
      ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
    do m = ps , pe
       ivt = pftclass(m)
-      if (idate(2) == 1 .and. idate(3) ==1800 .and. nyrs_crop_active_p(m) == 0) then ! YR 1:
-         gdd020_p(m)  = 0._r8                             ! set gdd..20 variables to 0
-         gdd820_p(m)  = 0._r8                             ! and crops will not be planted
-         gdd1020_p(m) = 0._r8
-      end if
-      if (isendofyear(idate,deltim)) then        ! <-- END of EVERY YR:
-         nyrs_crop_active_p(m) = nyrs_crop_active_p(m) + 1
-         if (nyrs_crop_active_p(m) == 1) then                     ! <-- END of YR 1
-            gdd020_p(m)  = gdd0_p(m)                                ! <-- END of YR 1
-            gdd820_p(m)  = gdd8_p(m)                                ! <-- END of YR 1
-            gdd1020_p(m) = gdd10_p(m)                               ! <-- END of YR 1
+      if (idate(2) == 1 .and. idate(3) ==1800)then
+         if(nyrs_crop_active_p(m) == 0) then ! YR 1:
+            gdd020_p(m)  = 0._r8                      ! set gdd..20 variables to 0
+            gdd820_p(m)  = 0._r8                      ! and crops will not be planted
+            gdd1020_p(m) = 0._r8
+         else
+            if (nyrs_crop_active_p(m) == 1) then                  ! <-- END of YR 1
+               gdd020_p(m)  = gdd0_p(m)                           ! <-- END of YR 1
+               gdd820_p(m)  = gdd8_p(m)                           ! <-- END of YR 1
+               gdd1020_p(m) = gdd10_p(m)                          ! <-- END of YR 1
+            else
+               gdd020_p(m)  = (yravgm1* gdd020_p(m)  + gdd0_p(m))  / yravg  ! gdd..20 must be long term avgs
+               gdd820_p(m)  = (yravgm1* gdd820_p(m)  + gdd8_p(m))  / yravg  ! so ignore results for yrs 1 & 2
+               gdd1020_p(m) = (yravgm1* gdd1020_p(m) + gdd10_p(m)) / yravg
+            end if
          end if                                                 ! <-- END of YR 1
-         gdd020_p(m)  = (yravgm1* gdd020_p(m)  + gdd0_p(m))  / yravg  ! gdd..20 must be long term avgs
-         gdd820_p(m)  = (yravgm1* gdd820_p(m)  + gdd8_p(m))  / yravg  ! so ignore results for yrs 1 & 2
-         gdd1020_p(m) = (yravgm1* gdd1020_p(m) + gdd10_p(m)) / yravg
          gdd0_p (m) = 0._r8
          gdd8_p (m) = 0._r8
          gdd10_p(m) = 0._r8
+      end if
+      if (isendofyear(idate,deltim)) then        ! <-- END of EVERY YR:
+         nyrs_crop_active_p(m) = nyrs_crop_active_p(m) + 1
       end if
       
    end do

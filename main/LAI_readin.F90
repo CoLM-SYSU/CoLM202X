@@ -128,14 +128,18 @@ SUBROUTINE LAI_readin (time, dir_landdata)
 #ifdef PFT_CLASSIFICATION
 
    write(c,'(i2.2)') time
+#ifndef LAIfdbk
    lndname = trim(dir_landdata)//'/LAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+#endif
    
    lndname = trim(dir_landdata)//'/SAI_patches'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
    
+#ifndef LAIfdbk
    lndname = trim(dir_landdata)//'/LAI_pfts'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
+#endif
    
    lndname = trim(dir_landdata)//'/SAI_pfts'//trim(c)//'.nc'
    call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )

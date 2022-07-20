@@ -200,6 +200,217 @@ program hist_concatenate
    call hist_concatenate_var_2d (filehist, 'f_xy_snow', timelen, compress, &  
       'snow','mm/s')
 
+#ifdef BGC
+         ! leaf carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_leafc', timelen, compress, &
+             'leaf carbon display pool','gC/m2')
+
+         ! leaf carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_leafc_storage', timelen, compress, &
+             'leaf carbon storage pool','gC/m2')
+
+         ! leaf carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_leafc_xfer', timelen, compress, &
+             'leaf carbon transfer pool','gC/m2')
+
+         ! fine root carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_frootc', timelen, compress, &
+             'fine root carbon display pool','gC/m2')
+
+         ! fine root carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_frootc_storage', timelen, compress, &
+             'fine root carbon storage pool','gC/m2')
+
+         ! fine root carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_frootc_xfer', timelen, compress, &
+             'fine root carbon transfer pool','gC/m2')
+
+         ! live stem carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemc', timelen, compress, &
+             'live stem carbon display pool','gC/m2')
+
+         ! live stem carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemc_storage', timelen, compress, &
+             'live stem carbon storage pool','gC/m2')
+
+         ! live stem carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemc_xfer', timelen, compress, &
+             'live stem carbon transfer pool','gC/m2')
+
+         ! dead stem carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemc', timelen, compress, &
+             'dead stem carbon display pool','gC/m2')
+
+         ! dead stem carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemc_storage', timelen, compress, &
+             'dead stem carbon storage pool','gC/m2')
+
+         ! dead stem carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemc_xfer', timelen, compress, &
+             'dead stem carbon transfer pool','gC/m2')
+
+         ! live coarse root carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootc', timelen, compress, &
+             'live coarse root carbon display pool','gC/m2')
+
+         ! live coarse root carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootc_storage', timelen, compress, &
+             'live coarse root carbon storage pool','gC/m2')
+
+         ! live coarse root carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootc_xfer', timelen, compress, &
+             'live coarse root carbon transfer pool','gC/m2')
+
+         ! dead coarse root carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootc', timelen, compress, &
+             'dead coarse root carbon display pool','gC/m2')
+
+         ! dead coarse root carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootc_storage', timelen, compress, &
+             'dead coarse root carbon storage pool','gC/m2')
+
+         ! dead coarse root carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootc_xfer', timelen, compress, &
+             'dead coarse root carbon transfer pool','gC/m2')
+
+         ! grain carbon display pool
+   call hist_concatenate_var_2d (filehist, 'f_grainc', timelen, compress, &
+             'grain carbon display pool','gC/m2')
+
+         ! grain carbon storage pool
+   call hist_concatenate_var_2d (filehist, 'f_grainc_storage', timelen, compress, &
+             'grain carbon storage pool','gC/m2')
+
+         ! grain carbon transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_grainc_xfer', timelen, compress, &
+             'grain carbon transfer pool','gC/m2')
+
+         ! leaf nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_leafn', timelen, compress, &
+             'leaf nitrogen display pool','gN/m2')
+
+         ! leaf nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_leafn_storage', timelen, compress, &
+             'leaf nitrogen storage pool','gN/m2')
+
+         ! leaf nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_leafn_xfer', timelen, compress, &
+             'leaf nitrogen transfer pool','gN/m2')
+
+         ! fine root nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_frootn', timelen, compress, &
+             'fine root nitrogen display pool','gN/m2')
+
+         ! fine root nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_frootn_storage', timelen, compress, &
+             'fine root nitrogen storage pool','gN/m2')
+
+         ! fine root nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_frootn_xfer', timelen, compress, &
+             'fine root nitrogen transfer pool','gN/m2')
+
+         ! live stem nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemn', timelen, compress, &
+             'live stem nitrogen display pool','gN/m2')
+
+         ! live stem nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemn_storage', timelen, compress, &
+             'live stem nitrogen storage pool','gN/m2')
+
+         ! live stem nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_livestemn_xfer', timelen, compress, &
+             'live stem nitrogen transfer pool','gN/m2')
+
+         ! dead stem nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemn', timelen, compress, &
+             'dead stem nitrogen display pool','gN/m2')
+
+         ! dead stem nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemn_storage', timelen, compress, &
+             'dead stem nitrogen storage pool','gN/m2')
+
+         ! dead stem nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_deadstemn_xfer', timelen, compress, &
+             'dead stem nitrogen transfer pool','gN/m2')
+
+         ! live coarse root nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootn', timelen, compress, &
+             'live coarse root nitrogen display pool','gN/m2')
+
+         ! live coarse root nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootn_storage', timelen, compress, &
+             'live coarse root nitrogen storage pool','gN/m2')
+
+         ! live coarse root nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_livecrootn_xfer', timelen, compress, &
+             'live coarse root nitrogen transfer pool','gN/m2')
+
+         ! dead coarse root nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootn', timelen, compress, &
+             'dead coarse root nitrogen display pool','gN/m2')
+
+         ! dead coarse root nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootn_storage', timelen, compress, &
+             'dead coarse root nitrogen storage pool','gN/m2')
+
+         ! dead coarse root nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_deadcrootn_xfer', timelen, compress, &
+             'dead coarse root nitrogen transfer pool','gN/m2')
+
+         ! grain nitrogen display pool
+   call hist_concatenate_var_2d (filehist, 'f_grainn', timelen, compress, &
+             'grain nitrogen display pool','gN/m2')
+
+         ! grain nitrogen storage pool
+   call hist_concatenate_var_2d (filehist, 'f_grainn_storage', timelen, compress, &
+             'grain nitrogen storage pool','gN/m2')
+
+         ! grain nitrogen transfer pool
+   call hist_concatenate_var_2d (filehist, 'f_grainn_xfer', timelen, compress, &
+             'grain nitrogen transfer pool','gN/m2')
+
+         ! retranslocation nitrogen pool
+   call hist_concatenate_var_2d (filehist, 'f_retrasn', timelen, compress, &
+             'retranslocation nitrogen pool','gN/m2')
+
+         ! gross primary productivity
+   call hist_concatenate_var_2d (filehist, 'f_gpp', timelen, compress, &
+             'gross primary productivity','gC/m2/s')
+
+         ! gross primary productivity
+   call hist_concatenate_var_2d (filehist, 'f_downreg', timelen, compress, &
+             'gpp downregulation due to N limitation','unitless')
+
+         ! autotrophic respiration
+   call hist_concatenate_var_2d (filehist, 'f_ar ', timelen, compress, &
+             'autotrophic respiration','gC/m2/s')
+
+#ifdef CROP
+         ! crop phase
+   call hist_concatenate_var_2d (filehist, 'f_cphase', timelen, compress, &
+             'crop phase','unitless')
+
+         ! 1-yr crop production carbon
+   call hist_concatenate_var_2d (filehist, 'f_cropprod1c', timelen, compress, &
+             '1-yr crop production carbon','gC/m2')
+
+         ! loss rate of 1-yr crop production carbon
+   call hist_concatenate_var_2d (filehist, 'f_cropprod1c_loss', timelen, compress, &
+             'loss rate of 1-yr crop production carbon','gC/m2/s')
+
+         ! crop seed deficit
+   call hist_concatenate_var_2d (filehist, 'f_cropseedc_deficit', timelen, compress, &
+             'crop seed deficit','gC/m2/s')
+
+         ! grain to crop production carbon
+   call hist_concatenate_var_2d (filehist, 'f_grainc_to_cropprodc', timelen, compress, &
+             'grain to crop production carbon','gC/m2/s')
+
+         ! grain to crop seed carbon
+   call hist_concatenate_var_2d (filehist, 'f_grainc_to_seed', timelen, compress, &
+             'grain to crop seed carbon','gC/m2/s')
+#endif
+#endif
    !--------------------------------------------------------------
    call hist_concatenate_var_3d (filehist, 'f_t_soisno   ', timelen, 'soilsnow', &
       nl_soil-maxsnl, compress, 'soil temperature','K')
@@ -239,6 +450,68 @@ program hist_concatenate
    call hist_concatenate_var_3d (filehist, 'f_lake_icefrac', timelen, 'lake', &
       nl_lake, compress, 'lake ice fraction cover','0-1')
 
+#ifdef BGC
+         ! litter 1 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr1c_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 1 carbon density in soil layers','gC/m3')
+
+         ! litter 2 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr2c_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 2 carbon density in soil layers','gC/m3')
+
+         ! litter 3 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr3c_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 3 carbon density in soil layers','gC/m3')
+
+         ! soil 1 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil1c_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 1 carbon density in soil layers','gC/m3')
+
+         ! soil 2 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil2c_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 2 carbon density in soil layers','gC/m3')
+
+         ! soil 3 carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil3c_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 3 carbon density in soil layers','gC/m3')
+
+         ! coarse woody debris carbon density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_cwdc_vr', timelen, 'soil', &
+      nl_soil, compress, 'coarse woody debris carbon density in soil layers','gC/m3')
+
+         ! litter 1 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr1n_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 1 nitrogen density in soil layers','gN/m3')
+
+         ! litter 2 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr2n_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 2 nitrogen density in soil layers','gN/m3')
+
+         ! litter 3 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_litr3n_vr', timelen, 'soil', &
+      nl_soil, compress, 'litter 3 nitrogen density in soil layers','gN/m3')
+
+         ! soil 1 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil1n_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 1 nitrogen density in soil layers','gN/m3')
+
+         ! soil 2 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil2n_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 2 nitrogen density in soil layers','gN/m3')
+
+         ! soil 3 nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_soil3n_vr', timelen, 'soil', &
+      nl_soil, compress, 'soil 3 nitrogen density in soil layers','gN/m3')
+
+         ! coarse woody debris nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_cwdn_vr', timelen, 'soil', &
+      nl_soil, compress, 'coarse woody debris nitrogen density in soil layers','gN/m3')
+
+         ! mineral nitrogen density in soil layers
+   call hist_concatenate_var_3d (filehist, 'f_sminn_vr', timelen, 'soil', &
+      nl_soil, compress, 'mineral nitrogen density in soil layers','gN/m3')
+
+#endif
    call hist_concatenate_var_2d (filehist, 'f_ustar  ', timelen, compress, & 
       'u* in similarity theory','m/s')
 
