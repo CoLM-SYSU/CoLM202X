@@ -1,7 +1,7 @@
 # make all source files
 
 all : 
-	cd CaMa_v404/src && make
+	cd CaMa_v405/src && make
 	cd share && make
 	cd mksrfdata && make
 	cd mkinidata && make
@@ -14,4 +14,4 @@ clean :
 	cd mkinidata && make clean
 	cd main && make clean
 	cd postprocess && make clean
-	cd CaMa_v404/src && make clean
+	cd CaMa_v405/src && make clean

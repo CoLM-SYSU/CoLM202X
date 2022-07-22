@@ -6,6 +6,9 @@ MODULE MOD_1D_Fluxes
 ! -------------------------------
 
   USE precision
+#ifdef BGC
+  USE MOD_1D_BGCFluxes
+#endif
   IMPLICIT NONE
   SAVE
 

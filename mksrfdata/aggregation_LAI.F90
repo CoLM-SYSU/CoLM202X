@@ -58,7 +58,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    TYPE (block_data_real8_2d) :: LAI          ! plant leaf area index (m2/m2)
    REAL(r8), allocatable :: LAI_patches(:), lai_one(:), area_one(:)
    INTEGER :: itime, ntime, Julian_day, ipatch
-   CHARACTER(LEN=4) :: c3, cyear
+   CHARACTER(LEN=4) :: c2, c3, cyear
    integer :: start_year, end_year, YY   
 
    ! for IGBP data

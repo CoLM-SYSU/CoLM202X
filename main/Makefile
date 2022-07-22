@@ -32,7 +32,7 @@ OBJS_SHARED = \
 				  ../share/mod_data_type.o      \
 				  ../share/ncio_block.o  \
 				  ../share/mod_hydro_data.o \
-				  ../share/mod_landunit.o   \
+				  ../share/mod_landbasin.o   \
 				  ../share/mod_pixelset.o          \
 				  ../share/ncio_vector.o \
 				  ../share/mod_colm_debug.o
@@ -41,11 +41,12 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_srfdata_restart.o \
 				  ../mksrfdata/mod_modis_data.o \
 				  ../mksrfdata/mod_pixelsetshadow.o \
-				  ../mksrfdata/mod_landcell.o \
+				  ../mksrfdata/mod_hydrounit.o \
 				  ../mksrfdata/mod_landpatch.o \
 				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landpft.o \
-				  ../mksrfdata/mod_landpc.o  
+				  ../mksrfdata/mod_landpc.o  \
+				  ../mksrfdata/mod_single_srfdata.o
 
 OBJS_HYDRO = \
 				  hydro/mod_soil_function.o \

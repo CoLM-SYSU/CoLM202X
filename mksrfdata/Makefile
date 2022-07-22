@@ -17,6 +17,8 @@ HEADER = ../include/define.h
 OBJS_SHARED =  ../share/precision.o \
 					../share/MathConstants.o \
 					../share/spmd_task.o \
+					../share/GlobalVars.o \
+					../share/LC_Const.o  \
 					../share/mod_namelist.o \
 					../share/timemanager.o   \
 					../share/mod_utils.o \
@@ -27,18 +29,16 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_data_type.o \
 					../share/ncio_block.o \
 					../share/mod_hydro_data.o \
-					../share/mod_landunit.o \
+					../share/mod_landbasin.o \
 					../share/mod_pixelset.o \
 					../share/ncio_vector.o \
-					../share/mod_colm_debug.o \
-					../share/GlobalVars.o \
-					../share/LC_Const.o
+					../share/mod_colm_debug.o
 
 OBJS = \
 		 mod_srfdata_restart.o \
 		 mod_modis_data.o \
 		 mod_pixelsetshadow.o \
-		 mod_landcell.o \
+		 mod_hydrounit.o \
 		 mod_landpatch.o \
 		 mod_aggregation_LC.o \
 		 mod_aggregation_PFT.o \

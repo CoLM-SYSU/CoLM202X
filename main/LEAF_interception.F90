@@ -1217,9 +1217,9 @@ END SUBROUTINE LEAF_interception_vic
 
 
 #ifdef PFT_CLASSIFICATION
- SUBROUTINE LEAF_interception_pftwrap (ipatch,deltim,dewmx,&
+ SUBROUTINE LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 
 !=======================================================================
@@ -1239,6 +1239,13 @@ END SUBROUTINE LEAF_interception_vic
      INTEGER,  intent(in) :: ipatch    !patch index
      REAL(r8), intent(in) :: deltim    !seconds in a time step [second]
      REAL(r8), intent(in) :: dewmx     !maximum dew [mm]
+     REAL(r8), intent(in) :: forc_us   !wind speed
+     REAL(r8), intent(in) :: forc_vs   !wind speed
+     REAL(r8), intent(in) :: forc_t    !air temperature
+     REAL(r8), intent(in) :: z0m       ! roughness length
+     REAL(r8), intent(in) :: hu        ! forcing height of U
+     REAL(r8), intent(in) :: ldew_rain ! depth of water on foliage [mm]
+     REAL(r8), intent(in) :: ldew_snow ! depth of water on foliage [mm]
      REAL(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
      REAL(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
      REAL(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
@@ -1262,9 +1269,9 @@ END SUBROUTINE LEAF_interception_vic
 
      DO i = ps, pe
         p = pftclass(i)
-        CALL LEAF_interception (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),tleaf_p(i),&
+        CALL LEAF_interception_CoLM (deltim,dewmx,forc_us,forc_vs,chil_p(p),sigf_p(i),lai_p(i),sai_p(i),forc_t,tleaf_p(i),&
            prc_rain,prc_snow,prl_rain,prl_snow,&
-           ldew_p(i),ldew_rain_p(i),ldew_snow_p(i),z0m(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
+           ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
         pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
         pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
      ENDDO 

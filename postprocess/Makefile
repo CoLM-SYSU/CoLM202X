@@ -19,6 +19,7 @@ OBJS_SHARED = \
 				  ../share/MathConstants.o \
 				  ../share/spmd_task.o \
 				  ../share/mod_utils.o \
+				  ../share/timemanager.o \
 				  ../share/GlobalVars.o \
 				  ../share/mod_namelist.o \
 				  ../share/ncio_serial.o \

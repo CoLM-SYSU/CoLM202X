@@ -1,3 +1,5 @@
+#include <define.h>
+
 MODULE ncio_block
 
    USE netcdf 

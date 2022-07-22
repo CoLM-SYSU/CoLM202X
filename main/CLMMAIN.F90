@@ -553,7 +553,7 @@ endif
 #endif
 
 #ifdef PFT_CLASSIFICATION
-      CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,&
+      CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
                             

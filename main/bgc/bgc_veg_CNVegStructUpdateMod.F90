@@ -8,7 +8,7 @@ use GlobalVars, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub,
                               nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                               nswitchgrass, nirrig_switchgrass, noveg
 
-use MOD_PFTimeVars, only: tlai_p, tsai_p, leafc_p, deadstemc_p, peaklai_p, harvdate_p
+use MOD_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, peaklai_p, harvdate_p
 use MOD_PFTimeInvars, only: pftclass
 use MOD_TimeVariables, only: farea_burned
 use PFT_Const, only : dsladlai, slatop, laimx, woody
@@ -86,6 +86,7 @@ contains
                tlai_p(m) = slatop(ivt) * leafc_p(m)
 !            end if
             tlai_p(m) = max(0._r8, tlai_p(m))
+            lai_p (m) = tlai_p(m)
 #endif
 
             ! update the stem area index and height based on LAI, stem mass, and veg type.

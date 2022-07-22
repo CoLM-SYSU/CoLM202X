@@ -16,18 +16,18 @@ OBJS =  \
 	PhysicalConstants.o \
 	spmd_task.o         \
 	mod_namelist.o      \
-	ncio_serial.o       \
 	mod_utils.o         \
+	timemanager.o       \
+	ncio_serial.o       \
 	mod_block.o         \
 	mod_grid.o          \
 	mod_pixel.o         \
 	mod_data_type.o     \
 	ncio_block.o        \
 	mod_hydro_data.o    \
-	mod_landunit.o      \
+	mod_landbasin.o     \
 	mod_pixelset.o      \
 	ncio_vector.o       \
-	timemanager.o       \
 	mod_colm_debug.o     
 
 

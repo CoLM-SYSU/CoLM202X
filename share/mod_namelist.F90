@@ -209,7 +209,63 @@ MODULE mod_namelist
       LOGICAL :: trad         = .true. 
       LOGICAL :: tref         = .true. 
       LOGICAL :: qref         = .true. 
-                                       
+#ifdef BGC
+      LOGICAL :: leafc              = .true.
+      LOGICAL :: leafc_storage      = .true.
+      LOGICAL :: leafc_xfer         = .true.
+      LOGICAL :: frootc             = .true.
+      LOGICAL :: frootc_storage     = .true.
+      LOGICAL :: frootc_xfer        = .true.
+      LOGICAL :: livestemc          = .true.
+      LOGICAL :: livestemc_storage  = .true.
+      LOGICAL :: livestemc_xfer     = .true.
+      LOGICAL :: deadstemc          = .true.
+      LOGICAL :: deadstemc_storage  = .true.
+      LOGICAL :: deadstemc_xfer     = .true.
+      LOGICAL :: livecrootc         = .true.
+      LOGICAL :: livecrootc_storage = .true.
+      LOGICAL :: livecrootc_xfer    = .true.
+      LOGICAL :: deadcrootc         = .true.
+      LOGICAL :: deadcrootc_storage = .true.
+      LOGICAL :: deadcrootc_xfer    = .true.
+      LOGICAL :: grainc             = .true.
+      LOGICAL :: grainc_storage     = .true.
+      LOGICAL :: grainc_xfer        = .true.
+      LOGICAL :: leafn              = .true.
+      LOGICAL :: leafn_storage      = .true.
+      LOGICAL :: leafn_xfer         = .true.
+      LOGICAL :: frootn             = .true.
+      LOGICAL :: frootn_storage     = .true.
+      LOGICAL :: frootn_xfer        = .true.
+      LOGICAL :: livestemn          = .true.
+      LOGICAL :: livestemn_storage  = .true.
+      LOGICAL :: livestemn_xfer     = .true.
+      LOGICAL :: deadstemn          = .true.
+      LOGICAL :: deadstemn_storage  = .true.
+      LOGICAL :: deadstemn_xfer     = .true.
+      LOGICAL :: livecrootn         = .true.
+      LOGICAL :: livecrootn_storage = .true.
+      LOGICAL :: livecrootn_xfer    = .true.
+      LOGICAL :: deadcrootn         = .true.
+      LOGICAL :: deadcrootn_storage = .true.
+      LOGICAL :: deadcrootn_xfer    = .true.
+      LOGICAL :: grainn             = .true.
+      LOGICAL :: grainn_storage     = .true.
+      LOGICAL :: grainn_xfer        = .true.
+      LOGICAL :: retrasn            = .true.
+      LOGICAL :: gpp                = .true.
+      LOGICAL :: downreg            = .true.
+      LOGICAL :: ar                 = .true.
+#ifdef CROP
+      LOGICAL :: cphase             = .true.
+      LOGICAL :: cropprod1c         = .true.
+      LOGICAL :: cropprod1c_loss    = .true.
+      LOGICAL :: cropseedc_deficit  = .true.
+      LOGICAL :: grainc_to_cropprodc= .true.
+      LOGICAL :: grainc_to_seed     = .true.
+#endif
+#endif
+
       LOGICAL :: t_soisno     = .true. 
       LOGICAL :: wliq_soisno  = .true. 
       LOGICAL :: wice_soisno  = .true. 
@@ -230,6 +286,25 @@ MODULE mod_namelist
                                        
       LOGICAL :: t_lake       = .true. 
       LOGICAL :: lake_icefrac = .true. 
+
+#ifdef BGC
+      LOGICAL :: litr1c_vr    = .true.
+      LOGICAL :: litr2c_vr    = .true.
+      LOGICAL :: litr3c_vr    = .true.
+      LOGICAL :: soil1c_vr    = .true.
+      LOGICAL :: soil2c_vr    = .true.
+      LOGICAL :: soil3c_vr    = .true.
+      LOGICAL :: cwdc_vr      = .true.
+      LOGICAL :: litr1n_vr    = .true.
+      LOGICAL :: litr2n_vr    = .true.
+      LOGICAL :: litr3n_vr    = .true.
+      LOGICAL :: soil1n_vr    = .true.
+      LOGICAL :: soil2n_vr    = .true.
+      LOGICAL :: soil3n_vr    = .true.
+      LOGICAL :: cwdn_vr      = .true.
+      LOGICAL :: sminn_vr     = .true.
+#endif
+   
                                        
       LOGICAL :: ustar        = .true. 
       LOGICAL :: tstar        = .true. 
@@ -508,6 +583,62 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%trad        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%tref        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%qref        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#ifdef BGC
+      CALL mpi_bcast (DEF_hist_vars%leafc              ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_storage      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_xfer         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootc             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootc_storage     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootc_xfer        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemc          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemc_storage  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemc_xfer     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemc          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemc_storage  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemc_xfer     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootc         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootc_storage ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootc_xfer    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootc         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootc_storage ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootc_xfer    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_storage     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_xfer        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafn              ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafn_storage      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafn_xfer         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootn             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootn_storage     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%frootn_xfer        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemn          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemn_storage  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livestemn_xfer     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemn          ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemn_storage  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadstemn_xfer     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootn         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootn_storage ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%livecrootn_xfer    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootn         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootn_storage ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%deadcrootn_xfer    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainn             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainn_storage     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainn_xfer        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%retrasn            ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp                ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%downreg            ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%ar                 ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#ifdef CROP
+      CALL mpi_bcast (DEF_hist_vars%cphase             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprod1c         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprod1c_loss    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropseedc_deficit  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_to_cropprodc,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_to_seed     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#endif
+#endif
       
       CALL mpi_bcast (DEF_hist_vars%t_soisno    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%wliq_soisno ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
@@ -530,6 +661,24 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%t_lake      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%lake_icefrac,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       
+#ifdef BGC
+      CALL mpi_bcast (DEF_hist_vars%litr1c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%litr2c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%litr3c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil1c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil2c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil3c_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cwdc_vr     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%litr1n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%litr2n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%litr3n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil1n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil2n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%soil3n_vr   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cwdn_vr     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%sminn_vr    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+#endif
+
       CALL mpi_bcast (DEF_hist_vars%ustar       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%tstar       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%qstar       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)

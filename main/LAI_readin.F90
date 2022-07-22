@@ -169,14 +169,18 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
 
    IF (.not. is_singlepoint) THEN
       write(ctime,'(i2.2)') time
+#ifndef LAIfdbk
       lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+#endif
 
       lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 
+#ifndef LAIfdbk
       lndname = trim(landdir)//'/LAI_pfts'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
+#endif
 
       lndname = trim(landdir)//'/SAI_pfts'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )

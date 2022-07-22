@@ -83,6 +83,63 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_rain (:)
    real(r8), allocatable :: a_snow (:)  
 
+#ifdef BGC
+   real(r8), allocatable :: a_leafc              (:)
+   real(r8), allocatable :: a_leafc_storage      (:)
+   real(r8), allocatable :: a_leafc_xfer         (:)
+   real(r8), allocatable :: a_frootc             (:)
+   real(r8), allocatable :: a_frootc_storage     (:)
+   real(r8), allocatable :: a_frootc_xfer        (:)
+   real(r8), allocatable :: a_livestemc          (:)
+   real(r8), allocatable :: a_livestemc_storage  (:)
+   real(r8), allocatable :: a_livestemc_xfer     (:)
+   real(r8), allocatable :: a_deadstemc          (:)
+   real(r8), allocatable :: a_deadstemc_storage  (:)
+   real(r8), allocatable :: a_deadstemc_xfer     (:)
+   real(r8), allocatable :: a_livecrootc         (:)
+   real(r8), allocatable :: a_livecrootc_storage (:)
+   real(r8), allocatable :: a_livecrootc_xfer    (:)
+   real(r8), allocatable :: a_deadcrootc         (:)
+   real(r8), allocatable :: a_deadcrootc_storage (:)
+   real(r8), allocatable :: a_deadcrootc_xfer    (:)
+   real(r8), allocatable :: a_grainc             (:)
+   real(r8), allocatable :: a_grainc_storage     (:)
+   real(r8), allocatable :: a_grainc_xfer        (:)
+   real(r8), allocatable :: a_leafn              (:)
+   real(r8), allocatable :: a_leafn_storage      (:)
+   real(r8), allocatable :: a_leafn_xfer         (:)
+   real(r8), allocatable :: a_frootn             (:)
+   real(r8), allocatable :: a_frootn_storage     (:)
+   real(r8), allocatable :: a_frootn_xfer        (:)
+   real(r8), allocatable :: a_livestemn          (:)
+   real(r8), allocatable :: a_livestemn_storage  (:)
+   real(r8), allocatable :: a_livestemn_xfer     (:)
+   real(r8), allocatable :: a_deadstemn          (:)
+   real(r8), allocatable :: a_deadstemn_storage  (:)
+   real(r8), allocatable :: a_deadstemn_xfer     (:)
+   real(r8), allocatable :: a_livecrootn         (:)
+   real(r8), allocatable :: a_livecrootn_storage (:)
+   real(r8), allocatable :: a_livecrootn_xfer    (:)
+   real(r8), allocatable :: a_deadcrootn         (:)
+   real(r8), allocatable :: a_deadcrootn_storage (:)
+   real(r8), allocatable :: a_deadcrootn_xfer    (:)
+   real(r8), allocatable :: a_grainn             (:)
+   real(r8), allocatable :: a_grainn_storage     (:)
+   real(r8), allocatable :: a_grainn_xfer        (:)
+   real(r8), allocatable :: a_retransn           (:)
+   real(r8), allocatable :: a_gpp                (:)
+   real(r8), allocatable :: a_downreg            (:)
+   real(r8), allocatable :: a_ar                 (:)
+#ifdef CROP
+   real(r8), allocatable :: a_cphase             (:)
+   real(r8), allocatable :: a_cropprod1c         (:)
+   real(r8), allocatable :: a_cropprod1c_loss    (:)
+   real(r8), allocatable :: a_cropseedc_deficit  (:)
+   real(r8), allocatable :: a_grainc_to_cropprodc(:)
+   real(r8), allocatable :: a_grainc_to_seed     (:)
+#endif
+#endif
+
    real(r8), allocatable :: a_t_soisno    (:,:)    
    real(r8), allocatable :: a_wliq_soisno (:,:)
    real(r8), allocatable :: a_wice_soisno (:,:)
@@ -93,6 +150,25 @@ module MOD_1D_Acc_Fluxes
 #endif
    real(r8), allocatable :: a_t_lake      (:,:) 
    real(r8), allocatable :: a_lake_icefrac(:,:) 
+
+#ifdef BGC
+   real(r8), allocatable :: a_litr1c_vr   (:,:)
+   real(r8), allocatable :: a_litr2c_vr   (:,:)
+   real(r8), allocatable :: a_litr3c_vr   (:,:)
+   real(r8), allocatable :: a_soil1c_vr   (:,:)
+   real(r8), allocatable :: a_soil2c_vr   (:,:)
+   real(r8), allocatable :: a_soil3c_vr   (:,:)
+   real(r8), allocatable :: a_cwdc_vr     (:,:)
+   real(r8), allocatable :: a_litr1n_vr   (:,:)
+   real(r8), allocatable :: a_litr2n_vr   (:,:)
+   real(r8), allocatable :: a_litr3n_vr   (:,:)
+   real(r8), allocatable :: a_soil1n_vr   (:,:)
+   real(r8), allocatable :: a_soil2n_vr   (:,:)
+   real(r8), allocatable :: a_soil3n_vr   (:,:)
+   real(r8), allocatable :: a_cwdn_vr     (:,:)
+   real(r8), allocatable :: a_sminn_vr    (:,:)
+   real(r8), allocatable :: decomp_vr_tmp (:,:)
+#endif
 
    real(r8), allocatable :: a_ustar(:) 
    real(r8), allocatable :: a_tstar(:)
@@ -218,6 +294,62 @@ contains
             allocate (a_rain      (numpatch))
             allocate (a_snow      (numpatch))  
 
+#ifdef BGC
+            allocate (a_leafc              (numpatch))
+            allocate (a_leafc_storage      (numpatch))
+            allocate (a_leafc_xfer         (numpatch))
+            allocate (a_frootc             (numpatch))
+            allocate (a_frootc_storage     (numpatch))
+            allocate (a_frootc_xfer        (numpatch))
+            allocate (a_livestemc          (numpatch))
+            allocate (a_livestemc_storage  (numpatch))
+            allocate (a_livestemc_xfer     (numpatch))
+            allocate (a_deadstemc          (numpatch))
+            allocate (a_deadstemc_storage  (numpatch))
+            allocate (a_deadstemc_xfer     (numpatch))
+            allocate (a_livecrootc         (numpatch))
+            allocate (a_livecrootc_storage (numpatch))
+            allocate (a_livecrootc_xfer    (numpatch))
+            allocate (a_deadcrootc         (numpatch))
+            allocate (a_deadcrootc_storage (numpatch))
+            allocate (a_deadcrootc_xfer    (numpatch))
+            allocate (a_grainc             (numpatch))
+            allocate (a_grainc_storage     (numpatch))
+            allocate (a_grainc_xfer        (numpatch))
+            allocate (a_leafn              (numpatch))
+            allocate (a_leafn_storage      (numpatch))
+            allocate (a_leafn_xfer         (numpatch))
+            allocate (a_frootn             (numpatch))
+            allocate (a_frootn_storage     (numpatch))
+            allocate (a_frootn_xfer        (numpatch))
+            allocate (a_livestemn          (numpatch))
+            allocate (a_livestemn_storage  (numpatch))
+            allocate (a_livestemn_xfer     (numpatch))
+            allocate (a_deadstemn          (numpatch))
+            allocate (a_deadstemn_storage  (numpatch))
+            allocate (a_deadstemn_xfer     (numpatch))
+            allocate (a_livecrootn         (numpatch))
+            allocate (a_livecrootn_storage (numpatch))
+            allocate (a_livecrootn_xfer    (numpatch))
+            allocate (a_deadcrootn         (numpatch))
+            allocate (a_deadcrootn_storage (numpatch))
+            allocate (a_deadcrootn_xfer    (numpatch))
+            allocate (a_grainn             (numpatch))
+            allocate (a_grainn_storage     (numpatch))
+            allocate (a_grainn_xfer        (numpatch))
+            allocate (a_retransn           (numpatch))
+            allocate (a_gpp                (numpatch))
+            allocate (a_downreg            (numpatch))
+            allocate (a_ar                 (numpatch))
+#ifdef CROP
+            allocate (a_cphase             (numpatch))
+            allocate (a_cropprod1c         (numpatch))
+            allocate (a_cropprod1c_loss    (numpatch))
+            allocate (a_cropseedc_deficit  (numpatch))
+            allocate (a_grainc_to_cropprodc(numpatch))
+            allocate (a_grainc_to_seed     (numpatch))
+#endif
+#endif
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
@@ -228,6 +360,25 @@ contains
 #endif
             allocate (a_t_lake      (nl_lake,numpatch)) 
             allocate (a_lake_icefrac(nl_lake,numpatch)) 
+
+#ifdef BGC
+            allocate (a_litr1c_vr   (1:nl_soil,       numpatch))
+            allocate (a_litr2c_vr   (1:nl_soil,       numpatch))
+            allocate (a_litr3c_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil1c_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil2c_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil3c_vr   (1:nl_soil,       numpatch))
+            allocate (a_cwdc_vr     (1:nl_soil,       numpatch))
+            allocate (a_litr1n_vr   (1:nl_soil,       numpatch))
+            allocate (a_litr2n_vr   (1:nl_soil,       numpatch))
+            allocate (a_litr3n_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil1n_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil2n_vr   (1:nl_soil,       numpatch))
+            allocate (a_soil3n_vr   (1:nl_soil,       numpatch))
+            allocate (a_cwdn_vr     (1:nl_soil,       numpatch))
+            allocate (a_sminn_vr    (1:nl_soil,       numpatch))
+            allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
+#endif
 
             allocate (a_ustar     (numpatch)) 
             allocate (a_tstar     (numpatch))
@@ -351,6 +502,62 @@ contains
             deallocate (a_qref      )
             deallocate (a_rain      )
             deallocate (a_snow      )  
+#ifdef BGC
+            deallocate (a_leafc              )
+            deallocate (a_leafc_storage      )
+            deallocate (a_leafc_xfer         )
+            deallocate (a_frootc             )
+            deallocate (a_frootc_storage     )
+            deallocate (a_frootc_xfer        )
+            deallocate (a_livestemc          )
+            deallocate (a_livestemc_storage  )
+            deallocate (a_livestemc_xfer     )
+            deallocate (a_deadstemc          )
+            deallocate (a_deadstemc_storage  )
+            deallocate (a_deadstemc_xfer     )
+            deallocate (a_livecrootc         )
+            deallocate (a_livecrootc_storage )
+            deallocate (a_livecrootc_xfer    )
+            deallocate (a_deadcrootc         )
+            deallocate (a_deadcrootc_storage )
+            deallocate (a_deadcrootc_xfer    )
+            deallocate (a_grainc             )
+            deallocate (a_grainc_storage     )
+            deallocate (a_grainc_xfer        )
+            deallocate (a_leafn              )
+            deallocate (a_leafn_storage      )
+            deallocate (a_leafn_xfer         )
+            deallocate (a_frootn             )
+            deallocate (a_frootn_storage     )
+            deallocate (a_frootn_xfer        )
+            deallocate (a_livestemn          )
+            deallocate (a_livestemn_storage  )
+            deallocate (a_livestemn_xfer     )
+            deallocate (a_deadstemn          )
+            deallocate (a_deadstemn_storage  )
+            deallocate (a_deadstemn_xfer     )
+            deallocate (a_livecrootn         )
+            deallocate (a_livecrootn_storage )
+            deallocate (a_livecrootn_xfer    )
+            deallocate (a_deadcrootn         )
+            deallocate (a_deadcrootn_storage )
+            deallocate (a_deadcrootn_xfer    )
+            deallocate (a_grainn             )
+            deallocate (a_grainn_storage     )
+            deallocate (a_grainn_xfer        )
+            deallocate (a_retransn           )
+            deallocate (a_gpp                )
+            deallocate (a_downreg            )
+            deallocate (a_ar                 )
+#ifdef CROP
+            deallocate (a_cphase             )
+            deallocate (a_cropprod1c         )
+            deallocate (a_cropprod1c_loss    )
+            deallocate (a_cropseedc_deficit  )
+            deallocate (a_grainc_to_cropprodc)
+            deallocate (a_grainc_to_seed     )
+#endif
+#endif
 
             deallocate (a_t_soisno    )    
             deallocate (a_wliq_soisno )
@@ -362,6 +569,23 @@ contains
 #endif
             deallocate (a_t_lake      ) 
             deallocate (a_lake_icefrac) 
+#ifdef BGC
+            deallocate (a_litr1c_vr   )
+            deallocate (a_litr2c_vr   )
+            deallocate (a_litr3c_vr   )
+            deallocate (a_soil1c_vr   )
+            deallocate (a_soil2c_vr   )
+            deallocate (a_soil3c_vr   )
+            deallocate (a_cwdc_vr     )
+            deallocate (a_litr1n_vr   )
+            deallocate (a_litr2n_vr   )
+            deallocate (a_litr3n_vr   )
+            deallocate (a_soil1n_vr   )
+            deallocate (a_soil2n_vr   )
+            deallocate (a_soil3n_vr   )
+            deallocate (a_cwdn_vr     )
+            deallocate (a_sminn_vr    )
+#endif
 
             deallocate (a_ustar     ) 
             deallocate (a_tstar     )
@@ -491,6 +715,62 @@ contains
             a_qref      (:) = spval 
             a_rain      (:) = spval
             a_snow      (:) = spval
+#ifdef BGC
+            a_leafc              (:) = spval
+            a_leafc_storage      (:) = spval
+            a_leafc_xfer         (:) = spval
+            a_frootc             (:) = spval
+            a_frootc_storage     (:) = spval
+            a_frootc_xfer        (:) = spval
+            a_livestemc          (:) = spval
+            a_livestemc_storage  (:) = spval
+            a_livestemc_xfer     (:) = spval
+            a_deadstemc          (:) = spval
+            a_deadstemc_storage  (:) = spval
+            a_deadstemc_xfer     (:) = spval
+            a_livecrootc         (:) = spval
+            a_livecrootc_storage (:) = spval
+            a_livecrootc_xfer    (:) = spval
+            a_deadcrootc         (:) = spval
+            a_deadcrootc_storage (:) = spval
+            a_deadcrootc_xfer    (:) = spval
+            a_grainc             (:) = spval
+            a_grainc_storage     (:) = spval
+            a_grainc_xfer        (:) = spval
+            a_leafn              (:) = spval
+            a_leafn_storage      (:) = spval
+            a_leafn_xfer         (:) = spval
+            a_frootn             (:) = spval
+            a_frootn_storage     (:) = spval
+            a_frootn_xfer        (:) = spval
+            a_livestemn          (:) = spval
+            a_livestemn_storage  (:) = spval
+            a_livestemn_xfer     (:) = spval
+            a_deadstemn          (:) = spval
+            a_deadstemn_storage  (:) = spval
+            a_deadstemn_xfer     (:) = spval
+            a_livecrootn         (:) = spval
+            a_livecrootn_storage (:) = spval
+            a_livecrootn_xfer    (:) = spval
+            a_deadcrootn         (:) = spval
+            a_deadcrootn_storage (:) = spval
+            a_deadcrootn_xfer    (:) = spval
+            a_grainn             (:) = spval
+            a_grainn_storage     (:) = spval
+            a_grainn_xfer        (:) = spval
+            a_retransn           (:) = spval
+            a_gpp                (:) = spval
+            a_downreg            (:) = spval
+            a_ar                 (:) = spval
+#ifdef CROP
+            a_cphase             (:) = spval
+            a_cropprod1c         (:) = spval
+            a_cropprod1c_loss    (:) = spval
+            a_cropseedc_deficit  (:) = spval
+            a_grainc_to_cropprodc(:) = spval
+            a_grainc_to_seed     (:) = spval
+#endif
+#endif
 
             a_t_soisno     (:,:) = spval 
             a_wliq_soisno  (:,:) = spval
@@ -502,6 +782,23 @@ contains
 #endif
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
+#ifdef BGC
+            a_litr1c_vr    (:,:) = spval
+            a_litr2c_vr    (:,:) = spval
+            a_litr3c_vr    (:,:) = spval
+            a_soil1c_vr    (:,:) = spval
+            a_soil2c_vr    (:,:) = spval
+            a_soil3c_vr    (:,:) = spval
+            a_cwdc_vr      (:,:) = spval
+            a_litr1n_vr    (:,:) = spval
+            a_litr2n_vr    (:,:) = spval
+            a_litr3n_vr    (:,:) = spval
+            a_soil1n_vr    (:,:) = spval
+            a_soil2n_vr    (:,:) = spval
+            a_soil3n_vr    (:,:) = spval
+            a_cwdn_vr      (:,:) = spval
+            a_sminn_vr     (:,:) = spval
+#endif
 
             a_ustar (:) = spval 
             a_tstar (:) = spval
@@ -683,6 +980,62 @@ contains
             call acc1d (forc_rain, a_rain )
             call acc1d (forc_snow, a_snow )
 
+#ifdef BGC
+            call acc1d (leafc              , a_leafc               )
+            call acc1d (leafc_storage      , a_leafc_storage       )
+            call acc1d (leafc_xfer         , a_leafc_xfer          )
+            call acc1d (frootc             , a_frootc              )
+            call acc1d (frootc_storage     , a_frootc_storage      )
+            call acc1d (frootc_xfer        , a_frootc_xfer         )
+            call acc1d (livestemc          , a_livestemc           )
+            call acc1d (livestemc_storage  , a_livestemc_storage   )
+            call acc1d (livestemc_xfer     , a_livestemc_xfer      )
+            call acc1d (deadstemc          , a_deadstemc           )
+            call acc1d (deadstemc_storage  , a_deadstemc_storage   )
+            call acc1d (deadstemc_xfer     , a_deadstemc_xfer      )
+            call acc1d (livecrootc         , a_livecrootc          )
+            call acc1d (livecrootc_storage , a_livecrootc_storage  )
+            call acc1d (livecrootc_xfer    , a_livecrootc_xfer     )
+            call acc1d (deadcrootc         , a_deadcrootc          )
+            call acc1d (deadcrootc_storage , a_deadcrootc_storage  )
+            call acc1d (deadcrootc_xfer    , a_deadcrootc_xfer     )
+            call acc1d (grainc             , a_grainc              )
+            call acc1d (grainc_storage     , a_grainc_storage      )
+            call acc1d (grainc_xfer        , a_grainc_xfer         )
+            call acc1d (leafn              , a_leafn               )
+            call acc1d (leafn_storage      , a_leafn_storage       )
+            call acc1d (leafn_xfer         , a_leafn_xfer          )
+            call acc1d (frootn             , a_frootn              )
+            call acc1d (frootn_storage     , a_frootn_storage      )
+            call acc1d (frootn_xfer        , a_frootn_xfer         )
+            call acc1d (livestemn          , a_livestemn           )
+            call acc1d (livestemn_storage  , a_livestemn_storage   )
+            call acc1d (livestemn_xfer     , a_livestemn_xfer      )
+            call acc1d (deadstemn          , a_deadstemn           )
+            call acc1d (deadstemn_storage  , a_deadstemn_storage   )
+            call acc1d (deadstemn_xfer     , a_deadstemn_xfer      )
+            call acc1d (livecrootn         , a_livecrootn          )
+            call acc1d (livecrootn_storage , a_livecrootn_storage  )
+            call acc1d (livecrootn_xfer    , a_livecrootn_xfer     )
+            call acc1d (deadcrootn         , a_deadcrootn          )
+            call acc1d (deadcrootn_storage , a_deadcrootn_storage  )
+            call acc1d (deadcrootn_xfer    , a_deadcrootn_xfer     )
+            call acc1d (grainn             , a_grainn              )
+            call acc1d (grainn_storage     , a_grainn_storage      )
+            call acc1d (grainn_xfer        , a_grainn_xfer         )
+            call acc1d (retransn           , a_retransn            )
+            call acc1d (gpp                , a_gpp                 )
+            call acc1d (downreg            , a_downreg             )
+            call acc1d (ar                 , a_ar                  )
+#ifdef CROP
+            call acc1d (cphase             , a_cphase             )
+            call acc1d (cropprod1c         , a_cropprod1c         )
+            call acc1d (cropprod1c_loss    , a_cropprod1c_loss    )
+            call acc1d (cropseedc_deficit  , a_cropseedc_deficit  )
+            call acc1d (grainc_to_cropprodc, a_grainc_to_cropprodc)
+            call acc1d (grainc_to_seed     , a_grainc_to_seed     )
+#endif
+#endif
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)
             call acc2d (wice_soisno, a_wice_soisno)
@@ -694,7 +1047,93 @@ contains
 #endif
             call acc2d (t_lake      , a_t_lake      )
             call acc2d (lake_icefrac, a_lake_icefrac)
-
+#ifdef BGC
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_met_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr1c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_cel_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr2c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_lig_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr3c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil1,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil1c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil2,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil2c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_soil3,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil3c_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_cpools_vr(j,i_cwd,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_cwdc_vr     )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_met_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr1n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_cel_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr2n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_lig_lit,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_litr3n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil1,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil1n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil2,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil2n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_soil3,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_soil3n_vr   )
+            do i = 1, numpatch
+               do j = 1, nl_soil
+                  decomp_vr_tmp(j,i)  = decomp_npools_vr(j,i_cwd,i)
+               end do
+            end do
+            call acc2d (decomp_vr_tmp, a_cwdn_vr     )
+            call acc2d (sminn_vr    , a_sminn_vr    )
+#endif
             allocate (r_ustar (numpatch))
             allocate (r_tstar (numpatch))
             allocate (r_qstar (numpatch))

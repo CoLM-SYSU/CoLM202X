@@ -57,6 +57,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE precision
   USE PhysicalConstants, only: tfrz
   USE MOD_TimeVariables, only: tlai, tsai
+  USE PFT_Const, only: isevg, woody, leafcn, deadwdcn
 #ifdef USE_DEPTH_TO_BEDROCK
   USE MOD_TimeInvariants, only : ibedrock, dbedrock
 #endif
@@ -280,7 +281,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 
 #endif
         
-        INTEGER j, snl                      
+        INTEGER j, snl, m, ivt                      
         REAL(r8) wet(nl_soil), wt, ssw, oro, rhosno_ini, a
         real(r8) alpha       (1:nl_soil) ! used in calculating hk
         real(r8) zmm         (1:nl_soil) ! z in mm
@@ -706,8 +707,37 @@ ENDIF
 
 #if(defined PFT_CLASSIFICATION)
     IF (patchtype == 0) THEN
-       leafc_p                  (ps:pe) = 0.0
-       leafc_storage_p          (ps:pe) = 0.0
+       do m = ps, pe
+          ivt = pftclass(m)
+          if(ivt .eq.  0)then  !no vegetation
+             leafc_p                  (m) = 0.0
+             leafc_storage_p          (m) = 0.0
+             leafn_p                  (m) = 0.0
+             leafn_storage_p          (m) = 0.0
+          else
+             if(isevg(ivt))then
+                leafc_p               (m) = 100.0
+                leafc_storage_p       (m) = 0.0
+             else if(ivt >= npcropmin) then
+                leafc_p               (m) = 0.0
+                leafc_storage_p       (m) = 0.0
+             else
+                leafc_p               (m) = 0.0
+                leafc_storage_p       (m) = 100.0
+             end if
+             leafn_p                  (m) = leafc_p        (m) / leafcn  (ivt)
+             leafn_storage_p          (m) = leafc_storage_p(m) / leafcn  (ivt)
+          end if
+          if(woody(ivt) .eq. 1)then
+             deadstemc_p              (m) = 0.1
+             deadstemn_p              (m) = deadstemc_p    (m) / deadwdcn(ivt)
+          else
+             deadstemc_p              (m) = 0.0
+             deadstemn_p              (m) = 0.0
+          end if
+          totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
+          totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+       end do
        leafc_xfer_p             (ps:pe) = 0.0
        frootc_p                 (ps:pe) = 0.0
        frootc_storage_p         (ps:pe) = 0.0
@@ -715,7 +745,6 @@ ENDIF
        livestemc_p              (ps:pe) = 0.0
        livestemc_storage_p      (ps:pe) = 0.0
        livestemc_xfer_p         (ps:pe) = 0.0
-       deadstemc_p              (ps:pe) = 0.0
        deadstemc_storage_p      (ps:pe) = 0.0
        deadstemc_xfer_p         (ps:pe) = 0.0
        livecrootc_p             (ps:pe) = 0.0
@@ -734,8 +763,6 @@ ENDIF
        cpool_p                  (ps:pe) = 0.0
        cropprod1c_p             (ps:pe) = 0.0
 
-       leafn_p                  (ps:pe) = 0.0
-       leafn_storage_p          (ps:pe) = 0.0
        leafn_xfer_p             (ps:pe) = 0.0
        frootn_p                 (ps:pe) = 0.0
        frootn_storage_p         (ps:pe) = 0.0
@@ -743,7 +770,6 @@ ENDIF
        livestemn_p              (ps:pe) = 0.0
        livestemn_storage_p      (ps:pe) = 0.0
        livestemn_xfer_p         (ps:pe) = 0.0
-       deadstemn_p              (ps:pe) = 0.0
        deadstemn_storage_p      (ps:pe) = 0.0
        deadstemn_xfer_p         (ps:pe) = 0.0
        livecrootn_p             (ps:pe) = 0.0
@@ -824,7 +850,7 @@ ENDIF
        cumvd_p                  (ps:pe) = spval
        hdidx_p                  (ps:pe) = spval
        vf_p                     (ps:pe) = 0._r8
-       cphase_p                 (ps:pe) = 0._r8
+       cphase_p                 (ps:pe) = 4._r8
        fert_counter_p           (ps:pe) = 0._r8
        fert_p                   (ps:pe) = 0._r8
        tref_min_p               (ps:pe) = 273.15_r8

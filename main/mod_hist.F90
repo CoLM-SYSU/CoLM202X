@@ -502,6 +502,345 @@ contains
             a_qref, f_qref, file_hist, 'f_qref', itime_in_file, sumwt, filter, &
             '2 m height air specific humidity','kg/kg')
 
+#ifdef BGC
+         ! leaf carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc, &
+             a_leafc, f_leafc, file_hist, 'f_leafc', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool','gC/m2')
+
+         ! leaf carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_storage, &
+             a_leafc_storage, f_leafc_storage, file_hist, 'f_leafc_storage', itime_in_file, sumwt, filter, &
+             'leaf carbon storage pool','gC/m2')
+
+         ! leaf carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_xfer, &
+             a_leafc_xfer, f_leafc_xfer, file_hist, 'f_leafc_xfer', itime_in_file, sumwt, filter, &
+             'leaf carbon transfer pool','gC/m2')
+
+         ! fine root carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootc, &
+             a_frootc, f_frootc, file_hist, 'f_frootc', itime_in_file, sumwt, filter, &
+             'fine root carbon display pool','gC/m2')
+
+         ! fine root carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootc_storage, &
+             a_frootc_storage, f_frootc_storage, file_hist, 'f_frootc_storage', itime_in_file, sumwt, filter, &
+             'fine root carbon storage pool','gC/m2')
+
+         ! fine root carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootc_xfer, &
+             a_frootc_xfer, f_frootc_xfer, file_hist, 'f_frootc_xfer', itime_in_file, sumwt, filter, &
+             'fine root carbon transfer pool','gC/m2')
+
+         ! live stem carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemc, &
+             a_livestemc, f_livestemc, file_hist, 'f_livestemc', itime_in_file, sumwt, filter, &
+             'live stem carbon display pool','gC/m2')
+
+         ! live stem carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemc_storage, &
+             a_livestemc_storage, f_livestemc_storage, file_hist, 'f_livestemc_storage', itime_in_file, sumwt, filter, &
+             'live stem carbon storage pool','gC/m2')
+
+         ! live stem carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemc_xfer, &
+             a_livestemc_xfer, f_livestemc_xfer, file_hist, 'f_livestemc_xfer', itime_in_file, sumwt, filter, &
+             'live stem carbon transfer pool','gC/m2')
+
+         ! dead stem carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemc, &
+             a_deadstemc, f_deadstemc, file_hist, 'f_deadstemc', itime_in_file, sumwt, filter, &
+             'dead stem carbon display pool','gC/m2')
+
+         ! dead stem carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemc_storage, &
+             a_deadstemc_storage, f_deadstemc_storage, file_hist, 'f_deadstemc_storage', itime_in_file, sumwt, filter, &
+             'dead stem carbon storage pool','gC/m2')
+
+         ! dead stem carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemc_xfer, &
+             a_deadstemc_xfer, f_deadstemc_xfer, file_hist, 'f_deadstemc_xfer', itime_in_file, sumwt, filter, &
+             'dead stem carbon transfer pool','gC/m2')
+
+         ! live coarse root carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootc, &
+             a_livecrootc, f_livecrootc, file_hist, 'f_livecrootc', itime_in_file, sumwt, filter, &
+             'live coarse root carbon display pool','gC/m2')
+
+         ! live coarse root carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootc_storage, &
+             a_livecrootc_storage, f_livecrootc_storage, file_hist, 'f_livecrootc_storage', itime_in_file, sumwt, filter, &
+             'live coarse root carbon storage pool','gC/m2')
+
+         ! live coarse root carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootc_xfer, &
+             a_livecrootc_xfer, f_livecrootc_xfer, file_hist, 'f_livecrootc_xfer', itime_in_file, sumwt, filter, &
+             'live coarse root carbon transfer pool','gC/m2')
+
+         ! dead coarse root carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootc, &
+             a_deadcrootc, f_deadcrootc, file_hist, 'f_deadcrootc', itime_in_file, sumwt, filter, &
+             'dead coarse root carbon display pool','gC/m2')
+
+         ! dead coarse root carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootc_storage, &
+             a_deadcrootc_storage, f_deadcrootc_storage, file_hist, 'f_deadcrootc_storage', itime_in_file, sumwt, filter, &
+             'dead coarse root carbon storage pool','gC/m2')
+
+         ! dead coarse root carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootc_xfer, &
+             a_deadcrootc_xfer, f_deadcrootc_xfer, file_hist, 'f_deadcrootc_xfer', itime_in_file, sumwt, filter, &
+             'dead coarse root carbon transfer pool','gC/m2')
+
+         ! grain carbon display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainc, &
+             a_grainc, f_grainc, file_hist, 'f_grainc', itime_in_file, sumwt, filter, &
+             'grain carbon display pool','gC/m2')
+
+         ! grain carbon storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainc_storage, &
+             a_grainc_storage, f_grainc_storage, file_hist, 'f_grainc_storage', itime_in_file, sumwt, filter, &
+             'grain carbon storage pool','gC/m2')
+
+         ! grain carbon transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainc_xfer, &
+             a_grainc_xfer, f_grainc_xfer, file_hist, 'f_grainc_xfer', itime_in_file, sumwt, filter, &
+             'grain carbon transfer pool','gC/m2')
+
+         ! leaf nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafn, &
+             a_leafn, f_leafn, file_hist, 'f_leafn', itime_in_file, sumwt, filter, &
+             'leaf nitrogen display pool','gN/m2')
+
+         ! leaf nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafn_storage, &
+             a_leafn_storage, f_leafn_storage, file_hist, 'f_leafn_storage', itime_in_file, sumwt, filter, &
+             'leaf nitrogen storage pool','gN/m2')
+
+         ! leaf nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%leafn_xfer, &
+             a_leafn_xfer, f_leafn_xfer, file_hist, 'f_leafn_xfer', itime_in_file, sumwt, filter, &
+             'leaf nitrogen transfer pool','gN/m2')
+
+         ! fine root nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootn, &
+             a_frootn, f_frootn, file_hist, 'f_frootn', itime_in_file, sumwt, filter, &
+             'fine root nitrogen display pool','gN/m2')
+
+         ! fine root nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootn_storage, &
+             a_frootn_storage, f_frootn_storage, file_hist, 'f_frootn_storage', itime_in_file, sumwt, filter, &
+             'fine root nitrogen storage pool','gN/m2')
+
+         ! fine root nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%frootn_xfer, &
+             a_frootn_xfer, f_frootn_xfer, file_hist, 'f_frootn_xfer', itime_in_file, sumwt, filter, &
+             'fine root nitrogen transfer pool','gN/m2')
+
+         ! live stem nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemn, &
+             a_livestemn, f_livestemn, file_hist, 'f_livestemn', itime_in_file, sumwt, filter, &
+             'live stem nitrogen display pool','gN/m2')
+
+         ! live stem nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemn_storage, &
+             a_livestemn_storage, f_livestemn_storage, file_hist, 'f_livestemn_storage', itime_in_file, sumwt, filter, &
+             'live stem nitrogen storage pool','gN/m2')
+
+         ! live stem nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livestemn_xfer, &
+             a_livestemn_xfer, f_livestemn_xfer, file_hist, 'f_livestemn_xfer', itime_in_file, sumwt, filter, &
+             'live stem nitrogen transfer pool','gN/m2')
+
+         ! dead stem nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemn, &
+             a_deadstemn, f_deadstemn, file_hist, 'f_deadstemn', itime_in_file, sumwt, filter, &
+             'dead stem nitrogen display pool','gN/m2')
+
+         ! dead stem nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemn_storage, &
+             a_deadstemn_storage, f_deadstemn_storage, file_hist, 'f_deadstemn_storage', itime_in_file, sumwt, filter, &
+             'dead stem nitrogen storage pool','gN/m2')
+
+         ! dead stem nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadstemn_xfer, &
+             a_deadstemn_xfer, f_deadstemn_xfer, file_hist, 'f_deadstemn_xfer', itime_in_file, sumwt, filter, &
+             'dead stem nitrogen transfer pool','gN/m2')
+
+         ! live coarse root nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootn, &
+             a_livecrootn, f_livecrootn, file_hist, 'f_livecrootn', itime_in_file, sumwt, filter, &
+             'live coarse root nitrogen display pool','gN/m2')
+
+         ! live coarse root nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootn_storage, &
+             a_livecrootn_storage, f_livecrootn_storage, file_hist, 'f_livecrootn_storage', itime_in_file, sumwt, filter, &
+             'live coarse root nitrogen storage pool','gN/m2')
+
+         ! live coarse root nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%livecrootn_xfer, &
+             a_livecrootn_xfer, f_livecrootn_xfer, file_hist, 'f_livecrootn_xfer', itime_in_file, sumwt, filter, &
+             'live coarse root nitrogen transfer pool','gN/m2')
+
+         ! dead coarse root nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootn, &
+             a_deadcrootn, f_deadcrootn, file_hist, 'f_deadcrootn', itime_in_file, sumwt, filter, &
+             'dead coarse root nitrogen display pool','gN/m2')
+
+         ! dead coarse root nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootn_storage, &
+             a_deadcrootn_storage, f_deadcrootn_storage, file_hist, 'f_deadcrootn_storage', itime_in_file, sumwt, filter, &
+             'dead coarse root nitrogen storage pool','gN/m2')
+
+         ! dead coarse root nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%deadcrootn_xfer, &
+             a_deadcrootn_xfer, f_deadcrootn_xfer, file_hist, 'f_deadcrootn_xfer', itime_in_file, sumwt, filter, &
+             'dead coarse root nitrogen transfer pool','gN/m2')
+
+         ! grain nitrogen display pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainn, &
+             a_grainn, f_grainn, file_hist, 'f_grainn', itime_in_file, sumwt, filter, &
+             'grain nitrogen display pool','gN/m2')
+
+         ! grain nitrogen storage pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainn_storage, &
+             a_grainn_storage, f_grainn_storage, file_hist, 'f_grainn_storage', itime_in_file, sumwt, filter, &
+             'grain nitrogen storage pool','gN/m2')
+
+         ! grain nitrogen transfer pool
+         call flux_map_and_write_2d ( DEF_hist_vars%grainn_xfer, &
+             a_grainn_xfer, f_grainn_xfer, file_hist, 'f_grainn_xfer', itime_in_file, sumwt, filter, &
+             'grain nitrogen transfer pool','gN/m2')
+
+         ! retranslocation nitrogen pool
+         call flux_map_and_write_2d ( DEF_hist_vars%retrasn, &
+             a_retransn, f_retransn, file_hist, 'f_retrasn', itime_in_file, sumwt, filter, &
+             'retranslocation nitrogen pool','gN/m2')
+
+         ! gross primary productivity
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp, &
+             a_gpp, f_gpp, file_hist, 'f_gpp', itime_in_file, sumwt, filter, &
+             'gross primary productivity','gC/m2/s')
+
+         ! gross primary productivity
+         call flux_map_and_write_2d ( DEF_hist_vars%downreg, &
+             a_downreg, f_downreg, file_hist, 'f_downreg', itime_in_file, sumwt, filter, &
+             'gpp downregulation due to N limitation','unitless')
+
+         ! autotrophic respiration
+         call flux_map_and_write_2d ( DEF_hist_vars%ar , &
+             a_ar , f_ar , file_hist, 'f_ar', itime_in_file, sumwt, filter, &
+             'autotrophic respiration','gC/m2/s')
+
+#ifdef CROP
+         ! crop phase
+         call flux_map_and_write_2d ( DEF_hist_vars%cphase, &
+             a_cphase, f_cphase, file_hist, 'f_cphase', itime_in_file, sumwt, filter, &
+             'crop phase','unitless')
+
+         ! 1-yr crop production carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprod1c, &
+             a_cropprod1c, f_cropprod1c, file_hist, 'f_cropprod1c', itime_in_file, sumwt, filter, &
+             '1-yr crop production carbon','gC/m2')
+
+         ! loss rate of 1-yr crop production carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprod1c_loss, &
+             a_cropprod1c_loss, f_cropprod1c_loss, file_hist, 'f_cropprod1c_loss', itime_in_file, sumwt, filter, &
+             'loss rate of 1-yr crop production carbon','gC/m2/s')
+
+         ! crop seed deficit
+         call flux_map_and_write_2d ( DEF_hist_vars%cropseedc_deficit, &
+             a_cropseedc_deficit, f_cropseedc_deficit, file_hist, 'f_cropseedc_deficit', itime_in_file, sumwt, filter, &
+             'crop seed deficit','gC/m2/s')
+
+         ! grain to crop production carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%grainc_to_cropprodc, &
+             a_grainc_to_cropprodc, f_grainc_to_cropprodc, file_hist, 'f_grainc_to_cropprodc', itime_in_file, sumwt, filter, &
+             'grain to crop production carbon','gC/m2/s')
+
+         ! grain to crop seed carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%grainc_to_seed, &
+             a_grainc_to_seed, f_grainc_to_seed, file_hist, 'f_grainc_to_seed', itime_in_file, sumwt, filter, &
+             'grain to crop seed carbon','gC/m2/s')
+#endif
+
+         ! litter 1 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr1c_vr, &
+            a_litr1c_vr, f_litr1c_vr, file_hist, 'f_litr1c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 1 carbon density in soil layers','gC/m3')
+
+         ! litter 2 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr2c_vr, &
+            a_litr2c_vr, f_litr2c_vr, file_hist, 'f_litr2c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 2 carbon density in soil layers','gC/m3')
+
+         ! litter 3 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr3c_vr, &
+            a_litr3c_vr, f_litr3c_vr, file_hist, 'f_litr3c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 3 carbon density in soil layers','gC/m3')
+
+         ! soil 1 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil1c_vr, &
+            a_soil1c_vr, f_soil1c_vr, file_hist, 'f_soil1c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 1 carbon density in soil layers','gC/m3')
+
+         ! soil 2 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil2c_vr, &
+            a_soil2c_vr, f_soil2c_vr, file_hist, 'f_soil2c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 2 carbon density in soil layers','gC/m3')
+
+         ! soil 3 carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil3c_vr, &
+            a_soil3c_vr, f_soil3c_vr, file_hist, 'f_soil3c_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 3 carbon density in soil layers','gC/m3')
+
+         ! coarse woody debris carbon density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%cwdc_vr, &
+            a_cwdc_vr, f_cwdc_vr, file_hist, 'f_cwdc_vr', 'soil', &
+            itime_in_file, sumwt, filter,'coarse woody debris carbon density in soil layers','gC/m3')
+
+         ! litter 1 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr1n_vr, &
+            a_litr1n_vr, f_litr1n_vr, file_hist, 'f_litr1n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 1 nitrogen density in soil layers','gN/m3')
+
+         ! litter 2 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr2n_vr, &
+            a_litr2n_vr, f_litr2n_vr, file_hist, 'f_litr2n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 2 nitrogen density in soil layers','gN/m3')
+
+         ! litter 3 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%litr3n_vr, &
+            a_litr3n_vr, f_litr3n_vr, file_hist, 'f_litr3n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'litter 3 nitrogen density in soil layers','gN/m3')
+
+         ! soil 1 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil1n_vr, &
+            a_soil1n_vr, f_soil1n_vr, file_hist, 'f_soil1n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 1 nitrogen density in soil layers','gN/m3')
+
+         ! soil 2 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil2n_vr, &
+            a_soil2n_vr, f_soil2n_vr, file_hist, 'f_soil2n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 2 nitrogen density in soil layers','gN/m3')
+
+         ! soil 3 nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%soil3n_vr, &
+            a_soil3n_vr, f_soil3n_vr, file_hist, 'f_soil3n_vr', 'soil', &
+            itime_in_file, sumwt, filter,'soil 3 nitrogen density in soil layers','gN/m3')
+
+         ! coarse woody debris nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%cwdn_vr, &
+            a_cwdn_vr, f_cwdn_vr, file_hist, 'f_cwdn_vr', 'soil', &
+            itime_in_file, sumwt, filter,'coarse woody debris nitrogen density in soil layers','gN/m3')
+
+         ! mineral nitrogen density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%sminn_vr, &
+            a_sminn_vr, f_sminn_vr, file_hist, 'f_sminn_vr', 'soil', &
+            itime_in_file, sumwt, filter,'mineral nitrogen density in soil layers','gN/m3')
+
+#endif
          ! --------------------------------------------------------------------
          ! Temperature and water (excluding land water bodies and ocean patches)
          ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; land water bodies => 4; ocean => 99]
@@ -559,7 +898,8 @@ contains
 #ifdef PLANT_HYDRAULIC_STRESS
          ! vegetation water potential [mm]
          call flux_map_and_write_3d ( DEF_hist_vars%vegwp, &
-            a_vegwp, f_vegwp, file_hist, 'f_vegwp', 'vegnodes', itime_in_file, sumwt, filter)
+            a_vegwp, f_vegwp, file_hist, 'f_vegwp', 'vegnodes', itime_in_file, sumwt, filter, &
+            'vegetation water potential', 'mm')
 #endif
 
 #ifdef VARIABLY_SATURATED_FLOW

@@ -84,7 +84,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    real(r8) :: calday                   ! Julian cal day (1.xx to 365.xx)
    integer  :: year, jday, msec               ! Julian day and seconds
-   integer  :: i,j,ipatch,nsl  ! indices
+   integer  :: i,j,ipatch,nsl,ps,pe,ivt  ! indices
 
    integer :: Julian_8day
    integer :: ltyp
@@ -450,6 +450,28 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef CLMDEBUG
       CALL check_vector_data ('LAI ', tlai)
       CALL check_vector_data ('SAI ', tsai)
+#endif
+
+#ifdef CROP
+      if (p_is_worker) then
+         do i = 1, numpatch
+            if(patchtype(i) .eq.  0)then
+               ps = patch_pft_s(i)
+               pe = patch_pft_e(i)
+               do m = ps, pe
+                  ivt = pftclass(m)
+                  if(ivt >= npcropmin)then
+                    leafc_p (m) = 0._r8
+                    frootc_p(m) = 0._r8
+                    tlai    (i) = 0._r8
+                    tsai    (i) = 0._r8
+                    tlai_p  (m) = 0._r8
+                    tsai_p  (m) = 0._r8
+                  end if 
+               end do
+            end if
+         end do
+      end if
 #endif
 
 #endif
