@@ -1,435 +1,1411 @@
-
 #include <define.h>
 
-SUBROUTINE aggregation_soil_parameters ( dir_rawdata,dir_model_landdata, &
-                                         lon_points,lat_points, &
-                                         nrow_start,nrow_end,ncol_start,ncol_end, &
-                                         nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                                         READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
-! ----------------------------------------------------------------------
-! Creates land model surface dataset from original "raw" data files -
-!     data with 30 arc seconds resolution
-!
-! Created by Yongjiu Dai, 02/2014
-! ----------------------------------------------------------------------
-use precision
-USE GlobalVars
+SUBROUTINE aggregation_soil_parameters ( &
+      gland, dir_rawdata, dir_model_landdata)
+   ! ----------------------------------------------------------------------
+   ! Creates land model surface dataset from original "raw" data files -
+   !     data with 30 arc seconds resolution
+   !
+   ! Created by Yongjiu Dai, 02/2014
+   ! ----------------------------------------------------------------------
+   USE precision
+   USE GlobalVars
+   USE mod_namelist
+   USE spmd_task
+   USE mod_grid
+   USE mod_landpatch
+   USE ncio_block
+   USE ncio_vector
+   USE mod_aggregation_lc
+#ifdef CLMDEBUG 
+   USE mod_colm_debug
+#endif
+   USE mod_utils
+#ifdef SOILPAR_UPS_FIT
+   USE par_fitting
+#endif
 
-IMPLICIT NONE
+   IMPLICIT NONE
 
-! arguments:
-      character(LEN=256), intent(in) :: dir_rawdata
-      character(LEN=256), intent(in) :: dir_model_landdata
+   ! arguments:
+   TYPE(grid_type),  intent(in) :: gland
+   CHARACTER(LEN=*), intent(in) :: dir_rawdata
+   CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
-      integer, intent(in) :: lon_points ! number of model longitude grid points
-      integer, intent(in) :: lat_points ! model  of model latitude grid points
-      integer, intent(in) :: nrow_start
-      integer, intent(in) :: nrow_end
-      integer, intent(in) :: ncol_start
-      integer, intent(in) :: ncol_end
-      integer, intent(in) :: nx_fine_gridcell
-      integer, intent(in) :: ny_fine_gridcell
+   ! local variables:
+   ! ---------------------------------------------------------------
+   CHARACTER(len=256) :: landdir, lndname
+   CHARACTER(len=256) :: c
+   INTEGER :: nsl, ipatch, L, np, LL, istt, iend
 
-      integer, intent(in) :: READ_row_UB(lat_points)  ! north boundary index for fine gird cell
-      integer, intent(in) :: READ_col_UB(lon_points)  ! west boundary index for fine gird cell  
-      integer, intent(in) :: READ_row_LB(lat_points)  ! south boundary index for fine gird cell
-      integer, intent(in) :: READ_col_LB(lon_points)  ! east boundary index for fine gird cell
+   TYPE (block_data_real8_2d) :: vf_quartz_mineral_s_grid
+   TYPE (block_data_real8_2d) :: vf_gravels_s_grid
+   TYPE (block_data_real8_2d) :: vf_om_s_grid
+   TYPE (block_data_real8_2d) :: vf_sand_s_grid
+   TYPE (block_data_real8_2d) :: wf_gravels_s_grid
+   TYPE (block_data_real8_2d) :: wf_sand_s_grid
+   TYPE (block_data_real8_2d) :: theta_s_grid
+#ifdef Campbell_SOIL_MODEL
+   TYPE (block_data_real8_2d) :: psi_s_grid  
+   TYPE (block_data_real8_2d) :: lambda_grid 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   TYPE (block_data_real8_2d) :: theta_r_grid 
+   TYPE (block_data_real8_2d) :: alpha_vgm_grid 
+   TYPE (block_data_real8_2d) :: L_vgm_grid 
+   TYPE (block_data_real8_2d) :: n_vgm_grid 
+#endif
+   TYPE (block_data_real8_2d) :: k_s_grid    
+   TYPE (block_data_real8_2d) :: csol_grid   
+   TYPE (block_data_real8_2d) :: tksatu_grid
+   TYPE (block_data_real8_2d) :: tksatf_grid 
+   TYPE (block_data_real8_2d) :: tkdry_grid 
+   TYPE (block_data_real8_2d) :: k_solids_grid
 
-      real(r8), intent(in) :: area_fine_gridcell(nlon,nlat)  ! rwadata fine cell area (km**2)
+   REAL(r8), allocatable :: vf_quartz_mineral_s_patches (:)
+   REAL(r8), allocatable :: vf_gravels_s_patches (:)
+   REAL(r8), allocatable :: vf_om_s_patches (:)
+   REAL(r8), allocatable :: vf_sand_s_patches (:)
+   REAL(r8), allocatable :: wf_gravels_s_patches (:)
+   REAL(r8), allocatable :: wf_sand_s_patches (:)
+   REAL(r8), allocatable :: theta_s_patches (:) 
+#ifdef Campbell_SOIL_MODEL
+   REAL(r8), allocatable :: psi_s_patches   (:) 
+   REAL(r8), allocatable :: lambda_patches  (:) 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   REAL(r8), allocatable :: theta_r_patches (:) 
+   REAL(r8), allocatable :: alpha_vgm_patches  (:) 
+   REAL(r8), allocatable :: L_vgm_patches  (:) 
+   REAL(r8), allocatable :: n_vgm_patches  (:) 
+#endif
+   REAL(r8), allocatable :: k_s_patches     (:) 
+   REAL(r8), allocatable :: csol_patches    (:) 
+   REAL(r8), allocatable :: tksatu_patches  (:)
+   REAL(r8), allocatable :: tksatf_patches  (:) 
+   REAL(r8), allocatable :: tkdry_patches   (:) 
+   REAL(r8), allocatable :: k_solids_patches  (:)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+   REAL(r8), allocatable :: BA_alpha_patches  (:)
+   REAL(r8), allocatable :: BA_beta_patches  (:)
+#endif
 
-! local variables:
+   REAL(r8), allocatable :: vf_quartz_mineral_s_one (:)
+   REAL(r8), allocatable :: vf_gravels_s_one (:)
+   REAL(r8), allocatable :: vf_om_s_one (:)
+   REAL(r8), allocatable :: vf_sand_s_one (:)
+   REAL(r8), allocatable :: wf_gravels_s_one (:)
+   REAL(r8), allocatable :: wf_sand_s_one (:) 
+   REAL(r8), allocatable :: theta_s_one (:) 
+#ifdef Campbell_SOIL_MODEL
+   REAL(r8), allocatable :: psi_s_one   (:) 
+   REAL(r8), allocatable :: lambda_one  (:) 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   REAL(r8), allocatable :: theta_r_one  (:) 
+   REAL(r8), allocatable :: alpha_vgm_one  (:) 
+   REAL(r8), allocatable :: L_vgm_one  (:) 
+   REAL(r8), allocatable :: n_vgm_one  (:) 
+#endif
+   REAL(r8), allocatable :: k_s_one     (:) 
+   REAL(r8), allocatable :: csol_one    (:) 
+   REAL(r8), allocatable :: tksatu_one  (:)
+   REAL(r8), allocatable :: tksatf_one  (:) 
+   REAL(r8), allocatable :: tkdry_one   (:) 
+   REAL(r8), allocatable :: k_solids_one  (:)
+   REAL(r8), allocatable :: area_one   (:)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+   REAL(r8), allocatable :: BA_alpha_one  (:)
+   REAL(r8), allocatable :: BA_beta_one  (:)
+#endif
+
+#ifdef SOILPAR_UPS_FIT
+! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
 ! ---------------------------------------------------------------
-      character(len=256) lndname
-      character(len=1) land_chr1(nlon)
-      character(len=2) land_chr2(nlon)
-      character(len=256) c
-      CHARACTER(len=256) suffix
+   integer, parameter   :: npointw  = 24      
+   integer, parameter   :: npointb  = 20
+   real(r8),parameter   :: xdat(npointw) = (/1.,5.,10.,20.,30.,40.,50.,60.,70.,90.,110.,130.,150.,&
+                                170.,210.,300.,345.,690.,1020.,5100.,15300.,20000.,100000.,1000000./)
+                           !  points of soil pressure heads used for fitting SW retention curves
 
-      real(r8) tmp(nlon)
-      integer iunit
-      integer length
-      integer i, j, L
-      integer i1, i2, j1, j2
-      integer nrow, ncol, ncol_mod, nrow_mod
-      integer LL, LL0, np
-      integer n_fine_gridcell
-      integer nsl, MODEL_SOIL_LAYER
+   real(r8),parameter   :: xdatsr(npointb)=(/0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,&
+                                             0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0/)
+                           !  points of soil saturation levels (Sr) used for fitting Ke-Sr relationship
 
-      integer, allocatable :: landtypes (:,:)
-      integer, allocatable :: num_patches(:) 
+   real(r8),allocatable :: ydatc(:,:)     ! the Campbell SW retentions at fine grids 
+   real(r8),allocatable :: ydatv(:,:)     ! the van Genuchten SW retentions at fine grids
+   real(r8),allocatable :: ydatb(:,:)     ! the Balland and Arp (2005) Ke-Sr relationship at fine grids
 
-      real(r8), allocatable :: theta_s_l      (:,:)
-      real(r8), allocatable :: psi_s_l        (:,:)
-      real(r8), allocatable :: lambda_l       (:,:)
-      real(r8), allocatable :: k_s_l          (:,:)
-      real(r8), allocatable :: csol_l         (:,:)
-      real(r8), allocatable :: tksatu_l       (:,:)
-      real(r8), allocatable :: tkdry_l        (:,:)
-     
-      real(r8), allocatable :: a_theta_s_l    (:,:) 
-      real(r8), allocatable :: a_psi_s_l      (:,:) 
-      real(r8), allocatable :: a_lambda_l     (:,:) 
-      real(r8), allocatable :: a_k_s_l        (:,:) 
-      real(r8), allocatable :: a_csol_l       (:,:) 
-      real(r8), allocatable :: a_tksatu_l     (:,:) 
-      real(r8), allocatable :: a_tkdry_l      (:,:)
+   integer, parameter   :: nc = 2         ! the number of fitted parameters in Campbell SW retention curve (psi and lambda)
+   integer, parameter   :: nv = 3         ! the number of fitted parameters in van Genuchten SW retention curve 
+                                          ! (theta_r, alpha and n)
+   integer, parameter   :: nb = 2         ! the number of fitted parameters in Ke-Sr relationship (alpha and beta)
 
-      real(r8), allocatable :: soil_theta_s_l (:,:,:) 
-      real(r8), allocatable :: soil_psi_s_l   (:,:,:) 
-      real(r8), allocatable :: soil_lambda_l  (:,:,:) 
-      real(r8), allocatable :: soil_k_s_l     (:,:,:) 
-      real(r8), allocatable :: soil_csol_l    (:,:,:) 
-      real(r8), allocatable :: soil_tksatu_l  (:,:,:) 
-      real(r8), allocatable :: soil_tkdry_l   (:,:,:) 
+! Variables needed for Levenberg–Marquardt algorithm in MINPACK library      
+   real(r8),parameter   :: factor = 0.01
+   real(r8),parameter   :: ftol = 1.0e-3
+   real(r8),parameter   :: xtol = 1.0e-4
+   real(r8),parameter   :: gtol = 0.0
+   integer, parameter   :: mode = 1
+   integer, parameter   :: nprint = 0
+   integer              :: ldfjac,info,ipvtc(nc),ipvtv(nv),ipvtb(nb),maxfev,nfev,njev
+   real(r8)             :: xc(nc),xv(nv),xb(nb),diagc(nc),diagv(nv),diagb(nb),qtfc(nc),qtfv(nv),qtfb(nb)
+   real(r8),allocatable :: fjacc(:,:),fvecc(:),fjacv(:,:),fvecv(:),fjacb(:,:),fvecb(:)
+   integer isiter                         ! flags to tell whether the iteration is completed, 1=Yes, 0=No
 
-      real(r8), external :: median
-
-! ........................................
-! ... [1] gloabl land cover types
-! ........................................
-      iunit = 100
-      inquire(iolength=length) land_chr1
-      allocate (landtypes(nlon,nlat))
-
-#if(defined USE_POINT_DATA)
-
-!TODO: need modification for point case
-#if(defined USGS_CLASSIFICATION)
-      landtypes(ncol_start,nrow_start) = USGS_CLASSIFICATION
-#endif
-
-#if(defined IGBP_CLASSIFICATION)
-      landtypes(ncol_start,nrow_start) = IGBP_CLASSIFICATION
-#endif
-
-#else
-
-#if(defined USGS_CLASSIFICATION)
-     ! GLCC USGS classification
-     ! -------------------
-      lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/landtypes_usgs_update.bin'
-#else
-      lndname = trim(dir_rawdata)//'landtypes/landtypes-modis-igbp-2005.bin'
+   external SW_CB_dist                    ! the objective function to be fitted for Campbell SW retention curve
+   external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
+   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
 #endif
       
-      print*,lndname
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-      do nrow = nrow_start, nrow_end
-         read(iunit,rec=nrow,err=100) land_chr1
-         landtypes(:,nrow) = ichar(land_chr1(:)) 
-      enddo
-      close (iunit)
+   landdir = trim(dir_model_landdata) // '/soil'
 
+   ! ........................................
+   ! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
+   ! ........................................
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   IF (p_is_master) THEN
+      write(*,'(/, A29)') 'Aggregate Soil Parameters ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
+   ENDIF
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+      
+#ifdef SinglePoint
+   IF (USE_SITE_soilparameters) THEN
+      RETURN
+   ENDIF
 #endif
 
-#ifdef USGS_CLASSIFICATION
-      suffix        = ''
-#else
-      suffix        = '.igbp'
+   IF (p_is_worker) THEN
+
+      allocate ( vf_quartz_mineral_s_patches(numpatch) )
+      allocate ( vf_gravels_s_patches (numpatch) )
+      allocate ( vf_om_s_patches (numpatch) )
+      allocate ( vf_sand_s_patches (numpatch) )
+      allocate ( wf_gravels_s_patches (numpatch) )
+      allocate ( wf_sand_s_patches (numpatch) )
+      allocate ( theta_s_patches(numpatch) )
+#ifdef Campbell_SOIL_MODEL
+      allocate ( psi_s_patches  (numpatch) )
+      allocate ( lambda_patches (numpatch) )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      allocate ( theta_r_patches   (numpatch) )
+      allocate ( alpha_vgm_patches (numpatch) )
+      allocate ( L_vgm_patches     (numpatch) )
+      allocate ( n_vgm_patches     (numpatch) )
+#endif
+      allocate ( k_s_patches    (numpatch) )
+      allocate ( csol_patches   (numpatch) )
+      allocate ( tksatu_patches (numpatch) )
+      allocate ( tksatf_patches (numpatch) )
+      allocate ( tkdry_patches  (numpatch) )
+      allocate ( k_solids_patches  (numpatch) )
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      allocate ( BA_alpha_patches  (numpatch) )
+      allocate ( BA_beta_patches  (numpatch) )
 #endif
 
+   ENDIF
 
-! ........................................
-! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
-! ........................................
-      n_fine_gridcell = nx_fine_gridcell * ny_fine_gridcell
+   DO nsl = 1, 8
 
-      allocate ( num_patches (0:N_land_classification) )
+      write(c,'(i1)') nsl
 
-      allocate ( theta_s_l (nlon,nlat) )
-      allocate ( psi_s_l   (nlon,nlat) )
-      allocate ( lambda_l  (nlon,nlat) )
-      allocate ( k_s_l     (nlon,nlat) )
-      allocate ( csol_l    (nlon,nlat) )
-      allocate ( tksatu_l  (nlon,nlat) )
-      allocate ( tkdry_l   (nlon,nlat) )
-
-      allocate ( a_theta_s_l (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_psi_s_l   (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_lambda_l  (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_k_s_l     (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_csol_l    (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_tksatu_l  (0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( a_tkdry_l   (0:N_land_classification,1:n_fine_gridcell) )
-
-      allocate ( soil_theta_s_l (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_psi_s_l   (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_lambda_l  (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_k_s_l     (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_csol_l    (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_tksatu_l  (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( soil_tkdry_l   (0:N_land_classification,1:lon_points,1:lat_points) )
-
-      iunit = 100
-      DO nsl = 1, 8
-         MODEL_SOIL_LAYER = nsl
-         write(c,'(i1)') MODEL_SOIL_LAYER
-
-! (1) Read in the saturated water content [cm3/cm3]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/theta_s_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) theta_s_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (2) Read in the matric potential at saturation [cm]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/psi_s_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) psi_s_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (3) Read in the pore size distribution index [dimensionless]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/lambda_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) lambda_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (4) Read in the saturated hydraulic conductivity [cm/day]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/k_s_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) k_s_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (5) Read in the heat capacity of soil solids [J/(m3 K)]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/csol_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) csol_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (6) Read in the thermal conductivity of saturated soil [W/m-K]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/tksatu_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) tksatu_l(:,nrow)
-         enddo
-         close(iunit)
-
-! (7) Read in the thermal conductivity for dry soil [W/(m-K)]
-         inquire(iolength=length) tmp
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/tkdry_l'//trim(c)//trim(suffix)
-         print*,lndname
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = nrow_start, nrow_end
-            read(iunit,rec=nrow,err=100) tkdry_l(:,nrow)
-         enddo
-         close(iunit)
-
-
-#ifdef OPENMP
-print *, 'OPENMP enabled, threads num = ', OPENMP
-!$OMP PARALLEL DO NUM_THREADS(OPENMP) SCHEDULE(DYNAMIC,1) &
-!$OMP PRIVATE(i,j,i1,i2,j1,j2,nrow,ncol,ncol_mod,nrow_mod,L,LL,LL0,num_patches,np) &
-!$OMP PRIVATE(a_theta_s_l,a_psi_s_l,a_lambda_l,a_k_s_l,a_csol_l,a_tksatu_l,a_tkdry_l)  
+      ! (1) volumetric fraction of quartz within mineral soil
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, vf_quartz_mineral_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/vf_quartz_mineral_s.nc'
+         CALL ncio_read_block (lndname, 'vf_quartz_mineral_s_l'//trim(c), gland, vf_quartz_mineral_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, vf_quartz_mineral_s_grid)
 #endif
-         do j = 1, lat_points
+      ENDIF
+      
+      IF (p_is_worker) THEN
 
-#if(defined USER_GRID)
-            j1 = READ_row_UB(j)   ! read upper boundary of latitude 
-            j2 = READ_row_LB(j)   ! read lower boundary of latitude
-#else
-            j1 = nrow_start + (j-1)*ny_fine_gridcell
-            j2 = nrow_start - 1 + j*ny_fine_gridcell
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, vf_quartz_mineral_s_grid, &
+                                                 vf_quartz_mineral_s_one, area_one)
+               vf_quartz_mineral_s_patches (ipatch) = sum (vf_quartz_mineral_s_one * (area_one/sum(area_one)))
+            ELSE
+               vf_quartz_mineral_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(vf_quartz_mineral_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in vf_quartz_mineral_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
 #endif
-            do i = 1, lon_points
+      ENDIF
 
-#if(defined USER_GRID)
-               i1 = READ_col_UB(i)   ! read upper boundary of longitude 
-               i2 = READ_col_LB(i)   ! read lower boundary of longitude
-#else            
-               i1 = ncol_start + (i-1)*nx_fine_gridcell 
-               i2 = ncol_start -1 + i*nx_fine_gridcell
-#endif
-               num_patches(:) = 0
-               do nrow = j1, j2                    
-                  if(i1 > i2) i2 = i2 + nlon   ! for coarse grid crosses the dateline     
-                  do ncol = i1, i2
-
-                     ncol_mod = mod(ncol,nlon)
-                     nrow_mod = nrow
-                     if(ncol_mod == 0) ncol_mod = nlon
-                     L = landtypes(ncol_mod,nrow)
-                     
-                     IF (L == 0) cycle
-
-                     num_patches(L) = num_patches(L) + 1
-                     LL = num_patches(L) 
-! yuan, 07/30/2019: total grid soil info stored to position 0 (original: ocean)
-                     num_patches(0) = num_patches(0) + 1
-                     LL0 = num_patches(0) 
-
-                     a_theta_s_l (L,LL) = theta_s_l(ncol_mod,nrow_mod) 
-                     a_psi_s_l   (L,LL) = psi_s_l  (ncol_mod,nrow_mod)
-                     a_lambda_l  (L,LL) = lambda_l (ncol_mod,nrow_mod)
-                     a_k_s_l     (L,LL) = k_s_l    (ncol_mod,nrow_mod)
-                     a_csol_l    (L,LL) = csol_l   (ncol_mod,nrow_mod)
-                     a_tksatu_l  (L,LL) = tksatu_l (ncol_mod,nrow_mod)
-                     a_tkdry_l   (L,LL) = tkdry_l  (ncol_mod,nrow_mod)
-
-                     a_theta_s_l (0,LL0) = theta_s_l(ncol_mod,nrow_mod) 
-                     a_psi_s_l   (0,LL0) = psi_s_l  (ncol_mod,nrow_mod)
-                     a_lambda_l  (0,LL0) = lambda_l (ncol_mod,nrow_mod)
-                     a_k_s_l     (0,LL0) = k_s_l    (ncol_mod,nrow_mod)
-                     a_csol_l    (0,LL0) = csol_l   (ncol_mod,nrow_mod)
-                     a_tksatu_l  (0,LL0) = tksatu_l (ncol_mod,nrow_mod)
-                     a_tkdry_l   (0,LL0) = tkdry_l  (ncol_mod,nrow_mod)
-
-                  enddo
-               enddo
-
-               do L = 0, N_land_classification 
-
-                  if(L.ge.0)then  ! include (0) to calculate the whole grid
-                     np = num_patches(L) 
-                     if(np == 0)then
-                        soil_theta_s_l (L,i,j) = -1.0e36
-                        soil_psi_s_l   (L,i,j) = -1.0e36
-                        soil_lambda_l  (L,i,j) = -1.0e36
-                        soil_k_s_l     (L,i,j) = -1.0e36
-                        soil_csol_l    (L,i,j) = -1.0e36
-                        soil_tksatu_l  (L,i,j) = -1.0e36
-                        soil_tkdry_l   (L,i,j) = -1.0e36
-                     else if(np == 1) then
-                        soil_theta_s_l (L,i,j) = a_theta_s_l(L,1)
-                        soil_psi_s_l   (L,i,j) = a_psi_s_l  (L,1)
-                        soil_lambda_l  (L,i,j) = a_lambda_l (L,1)
-                        soil_k_s_l     (L,i,j) = a_k_s_l    (L,1)
-                        soil_csol_l    (L,i,j) = a_csol_l   (L,1)
-                        soil_tksatu_l  (L,i,j) = a_tksatu_l (L,1)
-                        soil_tkdry_l   (L,i,j) = a_tkdry_l  (L,1)
-                     else
-                        soil_theta_s_l (L,i,j) = median ( a_theta_s_l(L,1:np), np) 
-                        soil_psi_s_l   (L,i,j) = median ( a_psi_s_l  (L,1:np), np)
-                        soil_lambda_l  (L,i,j) = median ( a_lambda_l (L,1:np), np)
-                        soil_k_s_l     (L,i,j) = median ( a_k_s_l    (L,1:np), np)
-                        soil_csol_l    (L,i,j) = median ( a_csol_l   (L,1:np), np)
-                        soil_tksatu_l  (L,i,j) = median ( a_tksatu_l (L,1:np), np)
-                        soil_tkdry_l   (L,i,j) = median ( a_tkdry_l  (L,1:np), np)
-                     endif
-
-                  else          ! OCEAN
-                     soil_theta_s_l (L,i,j) = -1.0e36
-                     soil_psi_s_l   (L,i,j) = -1.0e36
-                     soil_lambda_l  (L,i,j) = -1.0e36
-                     soil_k_s_l     (L,i,j) = -1.0e36
-                     soil_csol_l    (L,i,j) = -1.0e36
-                     soil_tksatu_l  (L,i,j) = -1.0e36
-                     soil_tkdry_l   (L,i,j) = -1.0e36
-                  endif
-               enddo
-
-            enddo
-         enddo
-#ifdef OPENMP
-!$OMP END PARALLEL DO
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-! (1) Write-out the saturated water content [cm3/cm3]
-         lndname = trim(dir_model_landdata)//'model_theta_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_theta_s_l
-         close(iunit)
+#ifdef CLMDEBUG
+      CALL check_vector_data ('vf_quartz_mineral_s lev '//trim(c), vf_quartz_mineral_s_patches)
+#endif
 
-! (2) Write-out the matric potential at saturation [cm]
-         lndname = trim(dir_model_landdata)//'model_psi_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_psi_s_l
-         close(iunit)
+      lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, vf_quartz_mineral_s_patches, 1)
 
-! (3) Write-out the pore size distribution index [dimensionless]
-         lndname = trim(dir_model_landdata)//'model_lambda_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_lambda_l
-         close(iunit)
+      ! (2) volumetric fraction of gravels
+      ! (3) volumetric fraction of sand
+      ! (4) volumetric fraction of organic matter
+      ! with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model if defined THERMAL_CONDUCTIVITY_SCHEME_4 
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, vf_gravels_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/vf_gravels_s.nc'
+         CALL ncio_read_block (lndname, 'vf_gravels_s_l'//trim(c), gland, vf_gravels_s_grid)
 
-! (4) Write-out the saturated hydraulic conductivity [cm/day]
-         lndname = trim(dir_model_landdata)//'model_k_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_k_s_l
-         close(iunit)
+         CALL allocate_block_data (gland, vf_sand_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/vf_sand_s.nc'
+         CALL ncio_read_block (lndname, 'vf_sand_s_l'//trim(c), gland, vf_sand_s_grid)
 
-! (5) Write-out the heat capacity of soil solids [J/(m3 K)]
-         lndname = trim(dir_model_landdata)//'model_csol_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_csol_l
-         close(iunit)
+         CALL allocate_block_data (gland, vf_om_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/vf_om_s.nc'
+         CALL ncio_read_block (lndname, 'vf_om_s_l'//trim(c), gland, vf_om_s_grid)
 
-! (6) Write-out the thermal conductivity of saturated soil [W/m-K]
-         lndname = trim(dir_model_landdata)//'model_tksatu_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_tksatu_l
-         close(iunit)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, data_in1 = vf_gravels_s_grid, data_in2 = vf_sand_s_grid, &
+                                                 data_in3 = vf_om_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
 
-! (7) Write-out the thermal conductivity for dry soil [W/(m-K)]
-         lndname = trim(dir_model_landdata)//'model_tkdry_l'//trim(c)//trim(suffix)//'.bin'
-         print*,lndname
-         open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-         write(iunit,err=100) soil_tkdry_l
-         close(iunit)
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
 
-      ENDDO
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
+                                 data_in1 = vf_gravels_s_grid, data_out1 = vf_gravels_s_one, &
+                                 data_in2 = vf_sand_s_grid,    data_out2 = vf_sand_s_one, &
+                                 data_in3 = vf_om_s_grid,      data_out3 = vf_om_s_one)
 
-! Deallocate the allocatable array
-! --------------------------------
-      deallocate ( num_patches )
+               vf_gravels_s_patches (ipatch) = sum (vf_gravels_s_one * (area_one/sum(area_one)))
+               vf_sand_s_patches (ipatch) = sum (vf_sand_s_one * (area_one/sum(area_one)))
+               vf_om_s_patches (ipatch) = sum (vf_om_s_one * (area_one/sum(area_one)))
 
-      deallocate ( theta_s_l   )
-      deallocate ( psi_s_l     )
-      deallocate ( lambda_l    )
-      deallocate ( k_s_l       )
-      deallocate ( csol_l      )
-      deallocate ( tksatu_l    )
-      deallocate ( tkdry_l     )
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+               ! the parameter values of Balland and Arp (2005) Ke-Sr relationship,
+               ! modified by Barry-Macaulay et al.(2015), Evaluation of soil thermal conductivity models
 
-      deallocate ( a_theta_s_l )
-      deallocate ( a_psi_s_l   )
-      deallocate ( a_lambda_l  )
-      deallocate ( a_k_s_l     )
-      deallocate ( a_csol_l    )
-      deallocate ( a_tksatu_l  )
-      deallocate ( a_tkdry_l   )
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
 
-      deallocate ( soil_theta_s_l )
-      deallocate ( soil_psi_s_l   )
-      deallocate ( soil_lambda_l  )
-      deallocate ( soil_k_s_l     )
-      deallocate ( soil_csol_l    )
-      deallocate ( soil_tksatu_l  )
-      deallocate ( soil_tkdry_l   )
+               allocate(BA_alpha_one  (istt:iend))
+               allocate(BA_beta_one   (istt:iend))
+               where ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
+                       BA_alpha_one = 0.38
+                       BA_beta_one = 35.0
+               elsewhere ((vf_gravels_s_one + vf_sand_s_one) > 0.25)
+                       BA_alpha_one = 0.24
+                       BA_beta_one = 26.0
+               elsewhere
+                       BA_alpha_one = 0.2
+                       BA_beta_one = 10.0
+               end where
 
-      deallocate ( landtypes )
+               BA_alpha_patches (ipatch) = median (BA_alpha_one, size(BA_alpha_one), spval)
+               BA_beta_patches (ipatch) = median (BA_beta_one, size(BA_beta_one), spval)
 
-      go to 1000
-100   print 101,nrow,lndname
-101   format(' record =',i8,',  error occured on file: ',a50)
-1000  continue
+#ifdef SOILPAR_UPS_FIT
+               np = size(BA_alpha_one)
+               IF( np > 1 ) then
+                  allocate ( ydatb  (istt:iend,npointb) )
+! the jacobian matrix required in Levenberg–Marquardt fitting method
+                  allocate ( fjacb  (istt:iend,nb) )           ! calculated in Ke_Sr_dist
+! the values of objective functions to be fitted 
+                  allocate ( fvecb  (istt:iend)    )           ! calculated in Ke_Sr_dist 
+
+! Ke-Sr relationship at fine grids for each patch
+                  do LL = istt,iend
+                     ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
+                                 - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
+                                 - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
+                  end do                  
+                  
+! Fitting the parameters in the Balland and Arp (2005) Ke-Sr relationship            
+                  ldfjac = np
+                  xb(1) = BA_alpha_patches (ipatch)  
+                  xb(2) = BA_beta_patches (ipatch)
+                  maxfev = 100 * ( nb + 1 )
+                  isiter = 1
+
+                  call lmder ( Ke_Sr_dist, np, nb, xb, fvecb, fjacb, ldfjac, ftol, xtol, gtol, maxfev, &
+                        diagb, mode, factor, nprint, info, nfev, njev, ipvtb, qtfb,&
+                        xdatsr,npointb,ydatb, np, vf_gravels_s_patches (ipatch), isiter,&
+                        vf_om_s_patches(ipatch),vf_sand_s_patches(ipatch),vf_gravels_s_patches(ipatch))
+
+                  ydatb(istt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
+                             - vf_gravels_s_patches(ipatch))) * ((1.0/(1.0+exp(-xb(2)*xdatsr)))**3 &
+                             - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_patches(ipatch))
+
+                  if ( all(ydatb(istt,:) >= 0.) .and. all(ydatb(istt,:) <= 1.) .and. isiter == 1 ) then
+                       BA_alpha_patches(ipatch) = xb(1)
+                       BA_beta_patches (ipatch) = xb(2)
+                  end if
+
+                  deallocate(ydatb)
+                  deallocate(fjacb)
+                  deallocate(fvecb)
+
+               ENDIF 
+#endif
+               deallocate(BA_alpha_one)
+               deallocate(BA_beta_one)
+#endif
+
+            ELSE
+               vf_gravels_s_patches (ipatch) = -1.0e36_r8
+               vf_sand_s_patches (ipatch) = -1.0e36_r8
+               vf_om_s_patches (ipatch) = -1.0e36_r8
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+               BA_alpha_patches (ipatch) = -1.0e36_r8
+               BA_beta_patches (ipatch) = -1.0e36_r8
+#endif
+            ENDIF
+
+            IF (isnan(vf_gravels_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in vf_gravels_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(vf_sand_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in vf_sand_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(vf_om_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in vf_om_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('vf_gravels_s lev '//trim(c), vf_gravels_s_patches)
+      CALL check_vector_data ('vf_sand_s lev '//trim(c), vf_sand_s_patches)
+      CALL check_vector_data ('vf_om_s lev '//trim(c), vf_om_s_patches)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      CALL check_vector_data ('BA_alpha lev '//trim(c), BA_alpha_patches)
+      CALL check_vector_data ('BA_beta lev '//trim(c), BA_beta_patches)
+#endif
+#endif
+
+      lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, vf_gravels_s_patches, 1)
+
+      lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'vector',&
+                              landpatch, vf_sand_s_patches, 1)
+
+      lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'vector',&
+                              landpatch, vf_om_s_patches, 1)
+
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, BA_alpha_patches, 1)
+
+      lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'vector',&
+                              landpatch, BA_beta_patches, 1)
+#endif
+
+      ! (5) gravimetric fraction of gravels
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, wf_gravels_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/wf_gravels_s.nc'
+         CALL ncio_read_block (lndname, 'wf_gravels_s_l'//trim(c), gland, wf_gravels_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, wf_gravels_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, wf_gravels_s_grid, &
+                                                 wf_gravels_s_one, area_one)
+               wf_gravels_s_patches (ipatch) = sum (wf_gravels_s_one * (area_one/sum(area_one)))
+            ELSE
+               wf_gravels_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(wf_gravels_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in wf_gravels_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('wf_gravels_s lev '//trim(c), wf_gravels_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, wf_gravels_s_patches, 1)
+
+
+      ! (6) gravimetric fraction of sand
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, wf_sand_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/wf_sand_s.nc'
+         CALL ncio_read_block (lndname, 'wf_sand_s_l'//trim(c), gland, wf_sand_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, wf_sand_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, wf_sand_s_grid, &
+                                                 wf_sand_s_one, area_one)
+               wf_sand_s_patches (ipatch) = sum (wf_sand_s_one * (area_one/sum(area_one)))
+            ELSE
+               wf_sand_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(wf_sand_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in wf_sand_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('wf_sand_s lev '//trim(c), wf_sand_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, wf_sand_s_patches, 1)
+
+
+#ifdef vanGenuchten_Mualem_SOIL_MODEL                           
+      ! (7) VGM's pore-connectivity parameter (L)
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, L_vgm_grid)
+         lndname = trim(dir_rawdata)//'/soil/VGM_L.nc'
+         CALL ncio_read_block (lndname, 'VGM_L_l'//trim(c), gland, L_vgm_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, L_vgm_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, L_vgm_grid, L_vgm_one)
+               L_vgm_patches (ipatch) = median (L_vgm_one, size(L_vgm_one), spval)
+            ELSE
+               L_vgm_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(L_vgm_patches(ipatch))) THEN
+               write(*,*) "NAN appears in L_vgm_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('L VGM lev '//trim(c), L_vgm_patches)
+#endif
+
+      lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'vector', landpatch, L_vgm_patches, 1)
+
+
+      ! (8) VGM's residual water content (theta_r) [cm3/cm3]
+      ! (9) VGM's parameter corresponding approximately to the inverse of the air-entry value (alpha)
+      ! (10) VGM's shape parameter (n)
+      ! (11) saturated water content [cm3/cm3]
+
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, theta_r_grid)
+         lndname = trim(dir_rawdata)//'/soil/VGM_theta_r.nc'
+         CALL ncio_read_block (lndname, 'VGM_theta_r_l'//trim(c), gland, theta_r_grid)
+
+         CALL allocate_block_data (gland, alpha_vgm_grid)
+         lndname = trim(dir_rawdata)//'/soil/VGM_alpha.nc'
+         CALL ncio_read_block (lndname, 'VGM_alpha_l'//trim(c), gland, alpha_vgm_grid)
+
+         CALL allocate_block_data (gland, n_vgm_grid)
+         lndname = trim(dir_rawdata)//'/soil/VGM_n.nc'
+         CALL ncio_read_block (lndname, 'VGM_n_l'//trim(c), gland, n_vgm_grid)
+
+         CALL allocate_block_data (gland, theta_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/theta_s.nc'
+         CALL ncio_read_block (lndname, 'theta_s_l'//trim(c), gland, theta_s_grid)
+
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, data_in1 = theta_r_grid, data_in2 = alpha_vgm_grid, &
+                                                 data_in3 = n_vgm_grid, data_in4 = theta_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
+                      data_in1 = theta_r_grid,   data_out1 = theta_r_one, &
+                      data_in2 = alpha_vgm_grid, data_out2 = alpha_vgm_one, &
+                      data_in3 = n_vgm_grid,     data_out3 = n_vgm_one, &
+                      data_in4 = theta_s_grid,   data_out4 = theta_s_one)
+               theta_r_patches (ipatch) = median (theta_r_one, size(theta_r_one), spval)
+               alpha_vgm_patches (ipatch) = median (alpha_vgm_one, size(alpha_vgm_one), spval)
+               n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval) 
+               theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))
+
+#ifdef SOILPAR_UPS_FIT
+               np = size(theta_r_one)
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
+
+               IF( np > 1 ) then
+                  allocate ( ydatv  (istt:iend,npointw) )
+! the jacobian matrix required in Levenberg–Marquardt fitting method
+                  allocate ( fjacv  (istt:iend,nv) )           ! calculated in SW_VG_dist
+! the values of objective functions to be fitted 
+                  allocate ( fvecv  (istt:iend)    )           ! calculated in SW_VG_dist 
+
+! SW VG retentions at fine grids for each patch
+                  do LL = istt,iend
+                     ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
+                                 * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
+                  end do                  
+                  
+! Fitting the van Genuchten SW retention parameters             
+                  ldfjac = np
+                  xv(1) = theta_r_patches (ipatch)  
+                  xv(2) = alpha_vgm_patches (ipatch) 
+                  xv(3) = n_vgm_patches (ipatch)
+                  maxfev = 100 * ( nv + 1 )
+                  isiter = 1
+
+                  call lmder ( SW_VG_dist, np, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
+                        diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
+                        xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
+
+                  if ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
+                       xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) then
+                       theta_r_patches(ipatch)   = xv(1)
+                       alpha_vgm_patches(ipatch) = xv(2)
+                       n_vgm_patches(ipatch)     = xv(3)
+                  end if
+
+                  deallocate(ydatv)
+                  deallocate(fjacv)
+                  deallocate(fvecv)
+
+               ENDIF 
+#endif
+
+            ELSE
+               theta_r_patches (ipatch) = -1.0e36_r8
+               alpha_vgm_patches (ipatch) = -1.0e36_r8
+               n_vgm_patches (ipatch) = -1.0e36_r8
+               theta_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(theta_r_patches(ipatch))) THEN
+                write(*,*) "NAN appears in theta_r_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(alpha_vgm_patches(ipatch))) THEN
+                write(*,*) "NAN appears in alpha_vgm_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(n_vgm_patches(ipatch))) THEN
+                write(*,*) "NAN appears in n_vgm_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(theta_s_patches(ipatch))) THEN
+                write(*,*) "NAN appears in theta_s_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('theta_r lev '//trim(c), theta_r_patches)
+      CALL check_vector_data ('alpha VGM lev '//trim(c), alpha_vgm_patches)
+      CALL check_vector_data ('n VGM lev '//trim(c), n_vgm_patches)
+      CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'vector', landpatch, theta_r_patches, 1)
+
+      lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'vector', landpatch, alpha_vgm_patches, 1)
+      
+      lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'vector', landpatch, n_vgm_patches, 1)
+
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+      
+#endif
+
+#ifdef Campbell_SOIL_MODEL
+      ! (11) saturated water content [cm3/cm3]
+      ! (12) matric potential at saturation (psi_s) [cm]
+      ! (13) pore size distribution index [dimensionless] 
+
+      IF (p_is_io) THEN
+
+         CALL allocate_block_data (gland, theta_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/theta_s.nc'
+         CALL ncio_read_block (lndname, 'theta_s_l'//trim(c), gland, theta_s_grid)
+
+         CALL allocate_block_data (gland, psi_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/psi_s.nc'
+         CALL ncio_read_block (lndname, 'psi_s_l'//trim(c), gland, psi_s_grid)
+
+         CALL allocate_block_data (gland, lambda_grid)
+         lndname = trim(dir_rawdata)//'/soil/lambda.nc'
+         CALL ncio_read_block (lndname, 'lambda_l'//trim(c), gland, lambda_grid)
+
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, data_in1 = theta_s_grid, &
+                                  data_in2 = psi_s_grid, data_in3 = lambda_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
+                            data_in1 = theta_s_grid, data_out1 = theta_s_one, &
+                            data_in2 = psi_s_grid,   data_out2 = psi_s_one, &
+                            data_in3 = lambda_grid,  data_out3 = lambda_one)
+               theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))
+               psi_s_patches (ipatch) = median (psi_s_one, size(psi_s_one), spval)
+               lambda_patches (ipatch) = median (lambda_one, size(lambda_one), spval)
+
+#ifdef SOILPAR_UPS_FIT
+               np = size(psi_s_one)
+               istt = landpatch%istt(ipatch)
+               iend = landpatch%iend(ipatch)
+
+               IF( np > 1 ) then
+                  allocate ( ydatc  (istt:iend,npointw) )
+! the jacobian matrix required in Levenberg–Marquardt fitting method
+                  allocate ( fjacc  (istt:iend,nc) )           ! calculated in SW_CB_dist
+! the values of objective functions to be fitted 
+                  allocate ( fvecc  (istt:iend)    )           ! calculated in SW_CB_dist 
+
+! SW CB retentions at fine grids for each patch
+                  do LL = istt,iend
+                     ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
+                  end do                  
+                  
+! Fitting the Campbell SW retention parameters             
+                  ldfjac = np
+                  xc(1) = psi_s_patches (ipatch)  
+                  xc(2) = lambda_patches (ipatch) 
+                  maxfev = 100 * ( nc + 1 )
+                  isiter = 1
+
+                  call lmder ( SW_CB_dist, np, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
+                        diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
+                        xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
+
+                  if( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)then
+                        psi_s_patches (ipatch) = xc(1)
+                        lambda_patches(ipatch) = xc(2)
+                  end if
+
+                  deallocate(ydatc)
+                  deallocate(fjacc)
+                  deallocate(fvecc)
+
+               ENDIF 
+#endif
+
+            ELSE
+               theta_s_patches (ipatch) = -1.0e36_r8
+               psi_s_patches (ipatch) = -1.0e36_r8
+               lambda_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(theta_s_patches(ipatch))) THEN
+                write(*,*) "NAN appears in theta_s_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(psi_s_patches(ipatch))) THEN
+                write(*,*) "NAN appears in psi_s_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+            IF (isnan(lambda_patches(ipatch))) THEN
+                write(*,*) "NAN appears in lambda_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
+      CALL check_vector_data ('psi_s lev '//trim(c), psi_s_patches)
+      CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
+#endif
+
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+
+      lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'vector', landpatch, psi_s_patches, 1)
+
+      lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'vector', landpatch, lambda_patches, 1)
+#endif
+
+      ! (14) saturated hydraulic conductivity [cm/day]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, k_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/k_s.nc'
+         CALL ncio_read_block (lndname, 'k_s_l'//trim(c), gland, k_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, k_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, k_s_grid, k_s_one, area_one)
+               k_s_patches (ipatch) = product(k_s_one**(area_one/sum(area_one)))
+            ELSE
+               k_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(k_s_patches(ipatch))) THEN
+                write(*,*) "NAN appears in k_s_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('k_s lev '//trim(c), k_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'vector', landpatch, k_s_patches, 1)
+
+      ! (15) heat capacity of soil solids [J/(m3 K)]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, csol_grid)
+         lndname = trim(dir_rawdata)//'/soil/csol.nc'
+         CALL ncio_read_block (lndname, 'csol_l'//trim(c), gland, csol_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, csol_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, csol_grid, csol_one, area_one)
+               csol_patches (ipatch) = sum(csol_one*(area_one/sum(area_one)))
+            ELSE
+               csol_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(csol_patches(ipatch))) THEN
+                write(*,*) "NAN appears in csol_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('csol lev '//trim(c), csol_patches)
+#endif
+
+      lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'vector', landpatch, csol_patches, 1)
+
+      ! (16) thermal conductivity of unfrozen saturated soil [W/m-K]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, tksatu_grid)
+         lndname = trim(dir_rawdata)//'/soil/tksatu.nc'
+         CALL ncio_read_block (lndname, 'tksatu_l'//trim(c), gland, tksatu_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, tksatu_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, tksatu_grid, tksatu_one, area_one)
+               tksatu_patches (ipatch) = product(tksatu_one**(area_one/sum(area_one)))
+            ELSE
+               tksatu_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(tksatu_patches(ipatch))) THEN
+                write(*,*) "NAN appears in tksatu_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('tksatu lev '//trim(c), tksatu_patches)
+#endif
+
+      lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'vector', landpatch, tksatu_patches, 1)
+
+      ! (17) thermal conductivity of frozen saturated soil [W/m-K]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, tksatf_grid)
+         lndname = trim(dir_rawdata)//'/soil/tksatf.nc'
+         CALL ncio_read_block (lndname, 'tksatf_l'//trim(c), gland, tksatf_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, tksatf_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, tksatf_grid, tksatf_one, area_one)
+               tksatf_patches (ipatch) = product(tksatf_one**(area_one/sum(area_one)))
+            ELSE
+               tksatf_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(tksatf_patches(ipatch))) THEN
+                write(*,*) "NAN appears in tksatf_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('tksatf lev '//trim(c), tksatf_patches)
+#endif
+
+      lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'vector', landpatch, tksatf_patches, 1)
+
+      ! (18) thermal conductivity for dry soil [W/(m-K)]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, tkdry_grid)
+         lndname = trim(dir_rawdata)//'/soil/tkdry.nc'
+         CALL ncio_read_block (lndname, 'tkdry_l'//trim(c), gland, tkdry_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, tkdry_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, tkdry_grid, tkdry_one, area_one)
+               tkdry_patches (ipatch) = product(tkdry_one**(area_one/sum(area_one)))
+            ELSE
+               tkdry_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(tkdry_patches(ipatch))) THEN
+                write(*,*) "NAN appears in tkdry_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('tkdry lev '//trim(c), tkdry_patches)
+#endif
+
+      lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'vector', landpatch, tkdry_patches, 1)
+
+      ! (19) thermal conductivity of soil solids [W/m-K]
+      IF (p_is_io) THEN
+         CALL allocate_block_data (gland, k_solids_grid)
+         lndname = trim(dir_rawdata)//'/soil/k_solids.nc'
+         CALL ncio_read_block (lndname, 'k_solids_l'//trim(c), gland, k_solids_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, k_solids_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, k_solids_grid, k_solids_one, area_one)
+               k_solids_patches (ipatch) = product(k_solids_one**(area_one/sum(area_one)))
+            ELSE
+               k_solids_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(k_solids_patches(ipatch))) THEN
+                write(*,*) "NAN appears in k_solids_patches."
+                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('k_solids lev '//trim(c), k_solids_patches)
+#endif
+
+      lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'vector', landpatch, k_solids_patches, 1)
+
+   ENDDO
+
+
+   ! Deallocate the allocatable array
+   ! --------------------------------
+
+   IF (p_is_worker) THEN
+
+      deallocate ( vf_quartz_mineral_s_patches )
+      deallocate ( vf_gravels_s_patches )
+      deallocate ( vf_om_s_patches )
+      deallocate ( vf_sand_s_patches )
+      deallocate ( wf_gravels_s_patches )
+      deallocate ( wf_sand_s_patches )
+      deallocate ( theta_s_patches )
+      deallocate ( psi_s_patches   )
+#ifdef Campbell_SOIL_MODEL
+      deallocate ( lambda_patches  )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      deallocate ( theta_r_patches  )
+      deallocate ( alpha_vgm_patches)
+      deallocate ( L_vgm_patches    )
+      deallocate ( n_vgm_patches    )
+#endif
+      deallocate ( k_s_patches     )
+      deallocate ( csol_patches    )
+      deallocate ( tksatu_patches  )
+      deallocate ( tkdry_patches   )
+      deallocate ( tksatf_patches  )
+      deallocate ( k_solids_patches)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      deallocate ( BA_alpha_patches)
+      deallocate ( BA_beta_patches )
+#endif
+
+      IF (allocated(vf_quartz_mineral_s_one)) deallocate (vf_quartz_mineral_s_one)
+      IF (allocated(vf_gravels_s_one))        deallocate (vf_gravels_s_one)
+      IF (allocated(vf_om_s_one))             deallocate (vf_om_s_one)
+      IF (allocated(vf_sand_s_one))           deallocate (vf_sand_s_one)
+      IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
+      IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one) 
+      IF (allocated(theta_s_one))             deallocate (theta_s_one)
+      IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )
+#ifdef Campbell_SOIL_MODEL
+      IF (allocated(lambda_one ))     deallocate (lambda_one )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      IF (allocated ( theta_r_one  )) deallocate ( theta_r_one  )
+      IF (allocated ( alpha_vgm_one)) deallocate ( alpha_vgm_one)
+      IF (allocated ( L_vgm_one    )) deallocate ( L_vgm_one    )
+      IF (allocated ( n_vgm_one    )) deallocate ( n_vgm_one    )
+#endif
+      IF (allocated(k_s_one    ))     deallocate (k_s_one    )
+      IF (allocated(csol_one   ))     deallocate (csol_one   )
+      IF (allocated(tksatu_one ))     deallocate (tksatu_one )
+      IF (allocated(tkdry_one  ))     deallocate (tkdry_one  )
+      IF (allocated(tksatf_one ))     deallocate (tksatf_one)
+      IF (allocated(k_solids_one))    deallocate (k_solids_one)
+      IF (allocated(area_one))        deallocate (area_one)
+
+   ENDIF
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
 END SUBROUTINE aggregation_soil_parameters
+
+#ifdef SOILPAR_UPS_FIT
+
+SUBROUTINE Ke_Sr_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatb, nptf, phi, isiter, &
+                        vf_om_s, vf_sand_s, vf_gravels_s )
+
+!=================================================================
+! This is the subroutine for calculating the function/jacobian matrix 
+! of the distance between the fitted and prescribed Ke-Sr relationship 
+! for the Balland V. and P. A. Arp (2005) model.
+!
+! Nan Wei, 02/2020
+! ----------------------------------------------------------------
+
+      use precision
+      implicit none
+
+      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatb(nptf,npoint),phi
+      real(r8) vf_om_s, vf_sand_s, vf_gravels_s
+
+      if ( iflag == 0 ) then
+
+         print*,x
+
+      else if ( iflag == 1 ) then
+
+         if (x(2) <= 0.0) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fvec(i) = sum((xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:))**2)
+         end do
+
+      else if ( iflag == 2 ) then
+
+         if (x(2) <= 0.0) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fjac(i,1) = sum(-2.0*(xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:)) * &
+                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) * &
+                      xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * log(xdat) * 0.5 * vf_sand_s)
+            fjac(i,2) = sum(2.0*(xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:)) * &
+                      xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * (1.0-vf_om_s) * &
+                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(-vf_om_s) * 3.0 * &
+                      (1.0/(1.0+exp(-x(2)*xdat)))**4 * exp(-x(2)*xdat) * xdat)
+         end do
+
+      end if
+
+end subroutine Ke_Sr_dist
+
+subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
+
+!=================================================================
+! This is the subroutine for calculating the function/jacobian matrix 
+! of the distance between the fitted and prescribed SW retention curves 
+! for the Campbell model.
+!
+! Nan Wei, 06/2019
+! ----------------------------------------------------------------
+
+      use precision
+      implicit none
+
+      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatc(nptf,npoint),phi
+
+      if ( iflag == 0 ) then
+
+         print*,x
+
+      else if ( iflag == 1 ) then
+
+         if (x(1) >= 0.0) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fvec(i) = sum(((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))**2)
+         end do
+
+      else if ( iflag == 2 ) then
+
+         if (x(1) >= 0.0) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fjac(i,1) = sum(2.0*((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))*&
+                        phi * x(2) * (-1.0*xdat/x(1))**(-1.0*x(2)) / x(1))
+            fjac(i,2) = sum(-2.0*((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))*&
+                        phi * (-1.0*xdat/x(1))**(-1.0*x(2)) * log(-1.0*xdat/x(1)))
+         end do
+
+      end if
+
+end subroutine SW_CB_dist
+
+subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter )
+
+!=================================================================
+! This is the subroutine for calculating the function/jacobian matrix 
+! of the distance between the fitted and prescribed SW retention curves 
+! for the van Genuchten model.
+!
+! Nan Wei, 06/2019
+! ----------------------------------------------------------------
+
+      use precision
+      implicit none
+
+      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatv(nptf,npoint),phi
+
+      if ( iflag == 0 ) then
+
+         print*,x
+
+      else if ( iflag == 1 ) then
+
+         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))**2)
+         end do
+
+      else if ( iflag == 2 ) then
+
+         if (x(2) <= 0.0 .or. x(3) <= 0.1) then
+             isiter = 0
+             return
+         end if
+
+         do i = 1, m
+            fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
+                        (1 - (1+(x(2)*xdat)**x(3))**(1.0/x(3)-1)))
+            fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
+                        (phi - x(1)) * (1 - x(3)) * (1+(x(2)*xdat)**x(3))**(1.0/x(3)-2) * x(2)**(x(3)-1) * xdat**x(3))
+            fjac(i,3) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
+                        (phi - x(1)) * (1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) *&
+                        ((1.0-x(3))*(x(2)*xdat)**x(3)*log(x(2)*xdat)/(x(3)*(1+(x(2)*xdat)**x(3))) &
+                        - log(1+(x(2)*xdat)**x(3))/x(3)**2))
+         end do
+
+      end if
+
+end subroutine SW_VG_dist
+
+#endif
 !-----------------------------------------------------------------------
 !EOP

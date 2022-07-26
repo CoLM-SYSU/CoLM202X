@@ -1,326 +1,462 @@
 #include <define.h>
 
-SUBROUTINE soil_parameters_readin (lon_points,lat_points,dir_model_landdata)
-! ======================================================================
-! Read in soil parameters in (patches,lon_points,lat_points) and
-! => 1d vector [numpatch]
-!
-! Created by Yongjiu Dai, 03/2014
-!             
-! ======================================================================
+SUBROUTINE soil_parameters_readin (dir_landdata)
+   ! ======================================================================
+   ! Read in soil parameters in (patches,lon_points,lat_points) and
+   ! => 1d vector [numpatch]
+   !
+   ! Created by Yongjiu Dai, 03/2014
+   !             
+   ! ======================================================================
    use precision
+   USE GlobalVars, only : nl_soil
+   use spmd_task
+   use ncio_vector
+   use mod_landpatch
    use MOD_TimeInvariants
-   USE GlobalVars
+#ifdef CLMDEBUG 
+   use mod_colm_debug
+#endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
-! ----------------------------------------------------------------------
-   character(LEN=256), INTENT(in) :: dir_model_landdata
-   integer, INTENT(in) :: lon_points ! number of longitude points on model grid
-   integer, INTENT(in) :: lat_points ! number of latitude points on model grid
+   ! ----------------------------------------------------------------------
+   
+   character(LEN=*), INTENT(in) :: dir_landdata
 
-! ------------------------ local variables -----------------------------
-  real(r8), allocatable :: soil_theta_s_l (:,:,:)  ! saturated water content (cm3/cm3)
-  real(r8), allocatable :: soil_psi_s_l   (:,:,:)  ! matric potential at saturation (cm)
-  real(r8), allocatable :: soil_lambda_l  (:,:,:)  ! pore size distribution index (dimensionless)
-  real(r8), allocatable :: soil_k_s_l     (:,:,:)  ! saturated hydraulic conductivity (cm/day)
-  real(r8), allocatable :: soil_csol_l    (:,:,:)  ! heat capacity of soil solids [J/(m3 K)]
-  real(r8), allocatable :: soil_tksatu_l  (:,:,:)  ! thermal conductivity of saturated unforzen soil [W/m-K]
-  real(r8), allocatable :: soil_tkdry_l   (:,:,:)  ! thermal conductivity for dry soil  [W/(m-K)]
-#if(defined SOIL_REFL_READ)
-  real(r8), allocatable :: s_v_alb        (:,:,:)  ! saturated visible soil reflectance
-  real(r8), allocatable :: d_v_alb        (:,:,:)  ! dry visible soil reflectance
-  real(r8), allocatable :: s_n_alb        (:,:,:)  ! saturated near infrared soil reflectance
-  real(r8), allocatable :: d_n_alb        (:,:,:)  ! dry near infrared soil reflectance
+   ! Local Variables
+
+   real(r8), allocatable :: soil_vf_quartz_mineral_s_l (:) ! volumetric fraction of quartz within mineral soil
+   real(r8), allocatable :: soil_vf_gravels_s_l        (:) ! volumetric fraction of gravels
+   real(r8), allocatable :: soil_vf_om_s_l             (:) ! volumetric fraction of organic matter
+   real(r8), allocatable :: soil_vf_sand_s_l           (:) ! volumetric fraction of sand
+   real(r8), allocatable :: soil_wf_gravels_s_l        (:) ! gravimetric fraction of gravels
+   real(r8), allocatable :: soil_wf_sand_s_l           (:) ! gravimetric fraction of sand
+   real(r8), allocatable :: soil_theta_s_l             (:) ! saturated water content (cm3/cm3)
+#ifdef Campbell_SOIL_MODEL
+   real(r8), allocatable :: soil_psi_s_l               (:) ! matric potential at saturation (cm)
+   real(r8), allocatable :: soil_lambda_l              (:) ! pore size distribution index (dimensionless)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   real(r8), allocatable :: soil_theta_r_l   (:)  ! residual water content (cm3/cm3)
+   real(r8), allocatable :: soil_alpha_vgm_l (:)  
+   real(r8), allocatable :: soil_L_vgm_l     (:)  
+   real(r8), allocatable :: soil_n_vgm_l     (:)  
+#endif
+   real(r8), allocatable :: soil_k_s_l     (:)  ! saturated hydraulic conductivity (cm/day)
+   real(r8), allocatable :: soil_csol_l    (:)  ! heat capacity of soil solids [J/(m3 K)]
+   real(r8), allocatable :: soil_k_solids_l(:)  ! thermal conductivity of minerals soil [W/m-K]
+   real(r8), allocatable :: soil_tksatu_l  (:)  ! thermal conductivity of saturated unforzen soil [W/m-K]
+   real(r8), allocatable :: soil_tksatf_l  (:)  ! thermal conductivity of saturated forzen soil [W/m-K]
+   real(r8), allocatable :: soil_tkdry_l   (:)  ! thermal conductivity for dry soil  [W/(m-K)]
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+   real(r8), allocatable :: soil_BA_alpha_l(:)  ! alpha in Balland and Arp(2005) thermal conductivity scheme
+   real(r8), allocatable :: soil_BA_beta_l (:)  ! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
 
-  real(r8) :: a                        !
-  integer  :: i,j,k,l,m,t,npatch,np,nsl  ! indices
+   integer  :: ipatch, m, nsl  ! indices
 
-  character(len=256) :: c
-  CHARACTER(len=256) :: suffix
-  character(len=256) :: lndname
-  integer iunit
-  integer MODEL_SOIL_LAYER
+   character(len=256) :: c
+   character(len=256) :: landdir, lndname
+   LOGICAL :: is_singlepoint
 
-#ifdef USGS_CLASSIFICATION
-  suffix        = ''
-#else
-  suffix        = '.igbp'
+   ! ...............................................................
+
+   landdir = trim(dir_landdata) // '/soil'
+
+   if (p_is_worker) then
+
+      if (numpatch > 0) then
+
+         allocate ( soil_vf_quartz_mineral_s_l (numpatch) )
+         allocate ( soil_vf_gravels_s_l        (numpatch) )
+         allocate ( soil_vf_om_s_l             (numpatch) )
+         allocate ( soil_vf_sand_s_l           (numpatch) )
+         allocate ( soil_wf_gravels_s_l        (numpatch) )
+         allocate ( soil_wf_sand_s_l           (numpatch) )
+         allocate ( soil_theta_s_l             (numpatch) )
+#ifdef Campbell_SOIL_MODEL
+         allocate ( soil_psi_s_l               (numpatch) )
+         allocate ( soil_lambda_l              (numpatch) )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         allocate ( soil_theta_r_l   (numpatch) )  
+         allocate ( soil_alpha_vgm_l (numpatch) )  
+         allocate ( soil_L_vgm_l     (numpatch) )  
+         allocate ( soil_n_vgm_l     (numpatch) )  
+#endif
+         allocate ( soil_k_s_l     (numpatch) )
+         allocate ( soil_csol_l    (numpatch) )
+         allocate ( soil_k_solids_l(numpatch) )
+         allocate ( soil_tksatu_l  (numpatch) )
+         allocate ( soil_tksatf_l  (numpatch) )
+         allocate ( soil_tkdry_l   (numpatch) )
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         allocate ( soil_BA_alpha_l(numpatch) )
+         allocate ( soil_BA_beta_l (numpatch) )
+#endif
+      end if
+
+   end if
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-! ...............................................................
-
-      iunit = 100
-      DO nsl = 1, 8
-         MODEL_SOIL_LAYER = nsl 
-         write(c,'(i1)') MODEL_SOIL_LAYER
-
-         allocate ( soil_theta_s_l (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_psi_s_l   (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_lambda_l  (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_k_s_l     (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_csol_l    (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_tksatu_l  (0:N_land_classification,1:lon_points,1:lat_points) )
-         allocate ( soil_tkdry_l   (0:N_land_classification,1:lon_points,1:lat_points) )
-
-! (1) read in the saturated water content [cm3/cm3]
-         lndname = trim(dir_model_landdata)//'model_theta_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_theta_s_l
-         close(iunit)
-
-! (2) read in the matric potential at saturation [cm]
-         lndname = trim(dir_model_landdata)//'model_psi_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_psi_s_l
-         close(iunit)
-
-! (3) read in the pore size distribution index [dimensionless]
-         lndname = trim(dir_model_landdata)//'model_lambda_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_lambda_l
-         close(iunit)
-
-! (4) read in the saturated hydraulic conductivity [cm/day]
-         lndname = trim(dir_model_landdata)//'model_k_s_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_k_s_l
-         close(iunit)
-
-! (5) read in the heat capacity of soil solids [J/(m3 K)]
-         lndname = trim(dir_model_landdata)//'model_csol_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_csol_l
-         close(iunit)
-
-! (6) read in the thermal conductivity of saturated soil [W/m-K]
-         lndname = trim(dir_model_landdata)//'model_tksatu_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_tksatu_l
-         close(iunit)
-
-! (7) read in the thermal conductivity for dry soil [W/(m-K)]
-         lndname = trim(dir_model_landdata)//'model_tkdry_l'//trim(c)//trim(suffix)//'.bin'
-         print*,trim(lndname)
-         OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-         READ(iunit,err=100) soil_tkdry_l
-         close(iunit)
-
-
-         do npatch = 1, numpatch
-            i = patch2lon(npatch)
-            j = patch2lat(npatch)
-! yuan, 12/28/2019: Bug, add patchtype
-            t = patchtype(npatch)
-            m = patchclass(npatch)
-! for PFT structure, all the patches share the same soil data, storted at
-! position 0 of array (0:N_land_classification,:,:)
-#ifdef PFT_CLASSIFICATION
-            IF( t == 0 ) THEN     
-                porsl (nsl,npatch) =    soil_theta_s_l  (0,i,j)               ! cm/cm
-                psi0  (nsl,npatch) =    soil_psi_s_l    (0,i,j) * 10.         ! cm -> mm
-                bsw   (nsl,npatch) = 1./soil_lambda_l   (0,i,j)               ! dimensionless
-                hksati(nsl,npatch) =    soil_k_s_l      (0,i,j) * 10./86400.  ! cm/day -> mm/s
-                csol  (nsl,npatch) =    soil_csol_l     (0,i,j)               ! J/(m2 K)
-                dksatu(nsl,npatch) =    soil_tksatu_l   (0,i,j)               ! W/(m K)
-                dkdry (nsl,npatch) =    soil_tkdry_l    (0,i,j)               ! W/(m K)
-            ELSE
-                porsl (nsl,npatch) =    soil_theta_s_l  (m,i,j)               ! cm/cm
-                psi0  (nsl,npatch) =    soil_psi_s_l    (m,i,j) * 10.         ! cm -> mm
-                bsw   (nsl,npatch) = 1./soil_lambda_l   (m,i,j)               ! dimensionless
-                hksati(nsl,npatch) =    soil_k_s_l      (m,i,j) * 10./86400.  ! cm/day -> mm/s
-                csol  (nsl,npatch) =    soil_csol_l     (m,i,j)               ! J/(m2 K)
-                dksatu(nsl,npatch) =    soil_tksatu_l   (m,i,j)               ! W/(m K)
-                dkdry (nsl,npatch) =    soil_tkdry_l    (m,i,j)               ! W/(m K)
-            END IF
+#ifdef SinglePoint
+   is_singlepoint = USE_SITE_soilparameters
 #else
-            if( m == 0 )then     
-                ! ocean
-                porsl (nsl,npatch) = -1.e36
-                psi0  (nsl,npatch) = -1.e36
-                bsw   (nsl,npatch) = -1.e36
-                hksati(nsl,npatch) = -1.e36
-                csol  (nsl,npatch) = -1.e36
-                dksatu(nsl,npatch) = -1.e36
-                dkdry (nsl,npatch) = -1.e36
-            else
-                porsl (nsl,npatch) =    soil_theta_s_l  (m,i,j)               ! cm/cm
-                psi0  (nsl,npatch) =    soil_psi_s_l    (m,i,j) * 10.         ! cm -> mm
-                bsw   (nsl,npatch) = 1./soil_lambda_l   (m,i,j)               ! dimensionless
-                hksati(nsl,npatch) =    soil_k_s_l      (m,i,j) * 10./86400.  ! cm/day -> mm/s
-                csol  (nsl,npatch) =    soil_csol_l     (m,i,j)               ! J/(m2 K)
-                dksatu(nsl,npatch) =    soil_tksatu_l   (m,i,j)               ! W/(m K)
-                dkdry (nsl,npatch) =    soil_tkdry_l    (m,i,j)               ! W/(m K)
+   is_singlepoint = .false.
+#endif
+
+   DO nsl = 1, 8
+
+#ifdef SinglePoint
+      IF (USE_SITE_soilparameters) THEN
+         soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl) 
+         soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
+         soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
+         soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
+         soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
+         soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
+         soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
+#ifdef Campbell_SOIL_MODEL
+         soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
+         soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
+         soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
+         soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
+         soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
+#endif
+         soil_k_s_l     (:) = SITE_soil_k_s      (nsl) 
+         soil_csol_l    (:) = SITE_soil_csol     (nsl)
+         soil_k_solids_l(:) = SITE_soil_k_solids (nsl)
+         soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
+         soil_tksatf_l  (:) = SITE_soil_tksatf   (nsl)
+         soil_tkdry_l   (:) = SITE_soil_tkdry    (nsl)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
+         soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
+#endif
+      ENDIF
+#endif
+      
+      write(c,'(i1)') nsl 
+
+      IF (.not. is_singlepoint) THEN
+
+      ! (1) read in the volumetric fraction of quartz within mineral soil
+      lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', landpatch, soil_vf_quartz_mineral_s_l)
+
+      ! (2) read in the volumetric fraction of gravels
+      lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_vf_gravels_s_l)
+
+      ! (3) read in the volumetric fraction of organic matter
+      lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', landpatch, soil_vf_om_s_l)
+
+      ! (4) read in the volumetric fraction of sand
+      lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', landpatch, soil_vf_sand_s_l)
+
+      ! (5) read in the gravimetric fraction of gravels
+      lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', landpatch, soil_wf_gravels_s_l)
+
+      ! (6) read in the gravimetric fraction of sand
+      lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', landpatch, soil_wf_sand_s_l)
+
+      ! (7) read in the saturated water content [cm3/cm3]
+      lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'theta_s_l'//trim(c)//'_patches', landpatch, soil_theta_s_l)
+
+#ifdef Campbell_SOIL_MODEL
+      ! (8) read in the matric potential at saturation [cm]
+      lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'psi_s_l'//trim(c)//'_patches', landpatch, soil_psi_s_l)
+
+      ! (9) read in the pore size distribution index [dimensionless]
+      lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', landpatch, soil_lambda_l)
+#endif
+
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      ! (10) read in residual water content [cm3/cm3]
+      lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', landpatch, soil_theta_r_l)
+      
+      ! (11) read in alpha in VGM model
+      lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', landpatch, soil_alpha_vgm_l)
+      
+      ! (12) read in L in VGM model
+      lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', landpatch, soil_L_vgm_l)
+      
+      ! (13) read in n in VGM model
+      lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', landpatch, soil_n_vgm_l)
+#endif
+
+      ! (14) read in the saturated hydraulic conductivity [cm/day]
+      lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'k_s_l'//trim(c)//'_patches', landpatch, soil_k_s_l)
+
+      ! (15) read in the heat capacity of soil solids [J/(m3 K)]
+      lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'csol_l'//trim(c)//'_patches', landpatch, soil_csol_l)
+
+      ! (16) read in the thermal conductivity of unfrozen saturated soil [W/m-K]
+      lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'tksatu_l'//trim(c)//'_patches', landpatch, soil_tksatu_l)
+
+      ! (17) read in the thermal conductivity of frozen saturated soil [W/m-K]
+      lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'tksatf_l'//trim(c)//'_patches', landpatch, soil_tksatf_l)
+
+      ! (18) read in the thermal conductivity for dry soil [W/(m-K)]
+      lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'tkdry_l'//trim(c)//'_patches', landpatch, soil_tkdry_l)
+
+      ! (19) read in the thermal conductivity of solid soil [W/m-K]
+      lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'k_solids_l'//trim(c)//'_patches', landpatch, soil_k_solids_l)
+
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      ! (20) read in the parameter alpha in the Balland V. and P. A. Arp (2005) model
+      lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', landpatch, soil_BA_alpha_l)
+
+      ! (21) read in the parameter beta in the Balland V. and P. A. Arp (2005) model
+      lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', landpatch, soil_BA_beta_l)
+#endif
+      ENDIF
+
+      if (p_is_worker) then
+
+         do ipatch = 1, numpatch
+            m = landpatch%ltyp(ipatch)
+            if( m == 0 )then     ! ocean
+               vf_quartz (nsl,ipatch) = -1.e36
+               vf_gravels(nsl,ipatch) = -1.e36
+               vf_om     (nsl,ipatch) = -1.e36
+               vf_sand   (nsl,ipatch) = -1.e36
+               wf_gravels(nsl,ipatch) = -1.e36
+               wf_sand   (nsl,ipatch) = -1.e36
+               porsl     (nsl,ipatch) = -1.e36
+#ifdef Campbell_SOIL_MODEL
+               psi0      (nsl,ipatch) = -1.e36
+               bsw       (nsl,ipatch) = -1.e36
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+               theta_r   (nsl,ipatch) = -1.e36
+               alpha_vgm (nsl,ipatch) = -1.e36
+               L_vgm     (nsl,ipatch) = -1.e36
+               n_vgm     (nsl,ipatch) = -1.e36
+#endif
+               hksati    (nsl,ipatch) = -1.e36
+               csol      (nsl,ipatch) = -1.e36
+               k_solids  (nsl,ipatch) = -1.e36
+               dksatu    (nsl,ipatch) = -1.e36
+               dksatf    (nsl,ipatch) = -1.e36
+               dkdry     (nsl,ipatch) = -1.e36
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+               BA_alpha  (nsl,ipatch) = -1.e36
+               BA_beta   (nsl,ipatch) = -1.e36
+#endif
+            else                 ! non ocean
+               vf_quartz  (nsl,ipatch) = soil_vf_quartz_mineral_s_l(ipatch)
+               vf_gravels (nsl,ipatch) = soil_vf_gravels_s_l       (ipatch)
+               vf_om      (nsl,ipatch) = soil_vf_om_s_l            (ipatch)
+               vf_sand    (nsl,ipatch) = soil_vf_sand_s_l          (ipatch)
+               wf_gravels (nsl,ipatch) = soil_wf_gravels_s_l       (ipatch)
+               wf_sand    (nsl,ipatch) = soil_wf_sand_s_l          (ipatch)
+               porsl      (nsl,ipatch) = soil_theta_s_l            (ipatch)        ! cm/cm
+#ifdef Campbell_SOIL_MODEL
+               psi0       (nsl,ipatch) = soil_psi_s_l              (ipatch) * 10.  ! cm -> mm
+               bsw        (nsl,ipatch) = 1./soil_lambda_l          (ipatch)        ! dimensionless
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+               psi0       (nsl,ipatch) = -10.      ! mm
+               theta_r    (nsl,ipatch) = soil_theta_r_l  (ipatch)
+               alpha_vgm  (nsl,ipatch) = soil_alpha_vgm_l(ipatch)
+               L_vgm      (nsl,ipatch) = soil_L_vgm_l    (ipatch)
+               n_vgm      (nsl,ipatch) = soil_n_vgm_l    (ipatch)
+#endif
+               hksati     (nsl,ipatch) = soil_k_s_l      (ipatch) * 10./86400.  ! cm/day -> mm/s
+               csol       (nsl,ipatch) = soil_csol_l     (ipatch)               ! J/(m2 K)
+               k_solids   (nsl,ipatch) = soil_k_solids_l (ipatch)               ! W/(m K)
+               dksatu     (nsl,ipatch) = soil_tksatu_l   (ipatch)               ! W/(m K)
+               dksatf     (nsl,ipatch) = soil_tksatf_l   (ipatch)               ! W/(m K)
+               dkdry      (nsl,ipatch) = soil_tkdry_l    (ipatch)               ! W/(m K)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+               BA_alpha   (nsl,ipatch) = soil_BA_alpha_l (ipatch)
+               BA_beta    (nsl,ipatch) = soil_BA_beta_l  (ipatch)
+#endif
             endif
-#endif
          end do
 
-         deallocate ( soil_theta_s_l )
-         deallocate ( soil_psi_s_l   )
-         deallocate ( soil_lambda_l  )
+      end if
+
+   ENDDO
+         
+   if (p_is_worker) then
+
+      if (numpatch > 0) then
+         deallocate ( soil_vf_quartz_mineral_s_l )
+         deallocate ( soil_vf_gravels_s_l        )
+         deallocate ( soil_vf_om_s_l             )
+         deallocate ( soil_vf_sand_s_l           )
+         deallocate ( soil_wf_gravels_s_l        )
+         deallocate ( soil_wf_sand_s_l           )
+         deallocate ( soil_theta_s_l             )
+#ifdef Campbell_SOIL_MODEL
+         deallocate ( soil_psi_s_l               )
+         deallocate ( soil_lambda_l              )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         deallocate ( soil_theta_r_l   )
+         deallocate ( soil_alpha_vgm_l )
+         deallocate ( soil_L_vgm_l     )
+         deallocate ( soil_n_vgm_l     )
+#endif
          deallocate ( soil_k_s_l     )
          deallocate ( soil_csol_l    )
+         deallocate ( soil_k_solids_l)
          deallocate ( soil_tksatu_l  )
+         deallocate ( soil_tksatf_l  )
          deallocate ( soil_tkdry_l   )
-
-      ENDDO
-
-      ! The parameters of the top NINTH soil layers were given by datasets
-      ! [0-0.045 (LAYER 1-2), 0.045-0.091, 0.091-0.166, 0.166-0.289, 
-      !  0.289-0.493, 0.493-0.829, 0.829-1.383 and 1.383-2.296 m].
-      ! The NINTH layer's soil parameters will assigned to the bottom soil layer (2.296 - 3.8019m).
-
-      porsl (10,:) = porsl (8,:)
-      psi0  (10,:) = psi0  (8,:)
-      bsw   (10,:) = bsw   (8,:)
-      hksati(10,:) = hksati(8,:)
-      csol  (10,:) = csol  (8,:)
-      dksatu(10,:) = dksatu(8,:)
-      dkdry (10,:) = dkdry (8,:)
-
-      porsl ( 9,:) = porsl (8,:)
-      psi0  ( 9,:) = psi0  (8,:)
-      bsw   ( 9,:) = bsw   (8,:)
-      hksati( 9,:) = hksati(8,:)
-      csol  ( 9,:) = csol  (8,:)
-      dksatu( 9,:) = dksatu(8,:)
-      dkdry ( 9,:) = dkdry (8,:)
-
-      do nsl = 8, 3, -1
-         porsl (nsl,:) = porsl (nsl-1,:)
-         psi0  (nsl,:) = psi0  (nsl-1,:)
-         bsw   (nsl,:) = bsw   (nsl-1,:)
-         hksati(nsl,:) = hksati(nsl-1,:)
-         csol  (nsl,:) = csol  (nsl-1,:)
-         dksatu(nsl,:) = dksatu(nsl-1,:)
-         dkdry (nsl,:) = dkdry (nsl-1,:)
-      enddo
-
-      porsl (2,:) = porsl (1,:)
-      psi0  (2,:) = psi0  (1,:)
-      bsw   (2,:) = bsw   (1,:)
-      hksati(2,:) = hksati(1,:)
-      csol  (2,:) = csol  (1,:)
-      dksatu(2,:) = dksatu(1,:)
-      dkdry (2,:) = dkdry (1,:)
-
-#if(defined CLMDEBUG)
-      print*,'porsl  =', minval(porsl , mask = porsl  .gt. -1.0e30), maxval(porsl , mask = porsl  .gt. -1.0e30)
-      print*,'psi0   =', minval(psi0  , mask = psi0   .gt. -1.0e30), maxval(psi0  , mask = psi0   .gt. -1.0e30)
-      print*,'bsw    =', minval(bsw   , mask = bsw    .gt.  0.0   ), maxval(bsw   , mask = bsw    .gt.  0.0   )
-      print*,'hksati =', minval(hksati, mask = hksati .gt. -1.0e30), maxval(hksati, mask = hksati .gt. -1.0e30)
-      print*,'csol   =', minval(csol  , mask = csol   .gt. -1.0e30), maxval(csol  , mask = csol   .gt. -1.0e30)
-      print*,'dksatu =', minval(dksatu, mask = dksatu .gt. -1.0e30), maxval(dksatu, mask = dksatu .gt. -1.0e30)
-      print*,'dkdry  =', minval(dkdry , mask = dkdry  .gt. -1.0e30), maxval(dkdry , mask = dkdry  .gt. -1.0e30)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         deallocate ( soil_BA_alpha_l)
+         deallocate ( soil_BA_beta_l )
 #endif
+      end if
 
-! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the sarurated(_s) and dry(_d) soil
-#if(defined SOIL_REFL_GUESSED)
-      do i = 1, numpatch
-         CALL soil_color_refl(mxy_patch(i),soil_s_v_alb(i),soil_d_v_alb(i),soil_s_n_alb(i),soil_d_n_alb(i))
+   end if
+
+   ! The parameters of the top NINTH soil layers were given by datasets
+   ! [0-0.045 (LAYER 1-2), 0.045-0.091, 0.091-0.166, 0.166-0.289, 
+   !  0.289-0.493, 0.493-0.829, 0.829-1.383 and 1.383-2.296 m].
+   ! The NINTH layer's soil parameters will assigned to the bottom soil layer (2.296 - 3.8019m).
+
+   if (p_is_worker) then
+
+      do nsl = 9, 2, -1
+         vf_quartz  (nsl,:) = vf_quartz (nsl-1,:)
+         vf_gravels (nsl,:) = vf_gravels(nsl-1,:)
+         vf_om      (nsl,:) = vf_om     (nsl-1,:)
+         vf_sand    (nsl,:) = vf_sand   (nsl-1,:)
+         wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
+         wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
+         porsl      (nsl,:) = porsl     (nsl-1,:)
+#ifdef Campbell_SOIL_MODEL         
+         psi0       (nsl,:) = psi0      (nsl-1,:)
+         bsw        (nsl,:) = bsw       (nsl-1,:)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         theta_r    (nsl,:) = theta_r   (nsl-1,:)
+         alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
+         L_vgm      (nsl,:) = L_vgm     (nsl-1,:)
+         n_vgm      (nsl,:) = n_vgm     (nsl-1,:)
+#endif
+         hksati     (nsl,:) = hksati    (nsl-1,:)
+         csol       (nsl,:) = csol      (nsl-1,:)
+         k_solids   (nsl,:) = k_solids  (nsl-1,:)
+         dksatu     (nsl,:) = dksatu    (nsl-1,:)
+         dksatf     (nsl,:) = dksatf    (nsl-1,:)
+         dkdry      (nsl,:) = dkdry     (nsl-1,:)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         BA_alpha   (nsl,:) = BA_alpha  (nsl-1,:)
+         BA_beta    (nsl,:) = BA_beta   (nsl-1,:)
+#endif
       enddo
-#elif(defined SOIL_REFL_READ)
-      allocate ( s_v_alb (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( d_v_alb (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( s_n_alb (0:N_land_classification,1:lon_points,1:lat_points) )
-      allocate ( d_n_alb (0:N_land_classification,1:lon_points,1:lat_points) )
 
-! (1) Read in the albedo of visible of the saturated soil
-      lndname = trim(dir_model_landdata)//'soil_s_v_alb'//trim(suffix)//'.bin'
-      print*,lndname
-      OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-      read(iunit,err=100) s_v_alb
-      close(iunit)
-
-! (1) Read in the albedo of visible of the dry soil
-      lndname = trim(dir_model_landdata)//'soil_d_v_alb'//trim(suffix)//'.bin'
-      print*,lndname
-      OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-      read(iunit,err=100) d_v_alb
-      close(iunit)
-
-! (3) Read in the albedo of near infrared of the saturated soil
-      lndname = trim(dir_model_landdata)//'soil_s_n_alb'//trim(suffix)//'.bin'
-      print*,lndname
-      OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-      read(iunit,err=100) s_n_alb
-      close(iunit)
-
-! (4) Read in the albedo of near infrared of the dry soil
-      lndname = trim(dir_model_landdata)//'soil_d_n_alb'//trim(suffix)//'.bin'
-      print*,lndname
-      OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-      read(iunit,err=100) d_n_alb
-      close(iunit)
-
-
-      do npatch = 1, numpatch
-      !DO npatch = 275192,275192
-         i = patch2lon(npatch)
-         j = patch2lat(npatch)
-! yuan, 12/28/2019: Bug, add patchtype
-         t = patchtype(npatch)
-         m = patchclass(npatch)
-         !if( m == 0 )then 
-! for PFT structure, all the patches share the same soil data, storted at
-! position 0 of array (0:N_land_classification,:,:)
-#ifdef PFT_CLASSIFICATION
-         IF ( t == 0 ) THEN 
-             ! ocean 
-             soil_s_v_alb (npatch) = s_v_alb (0,i,j)
-             soil_d_v_alb (npatch) = d_v_alb (0,i,j)
-             soil_s_n_alb (npatch) = s_n_alb (0,i,j)
-             soil_d_n_alb (npatch) = d_n_alb (0,i,j)
-         ELSE
-             soil_s_v_alb (npatch) = s_v_alb (m,i,j)
-             soil_d_v_alb (npatch) = d_v_alb (m,i,j)
-             soil_s_n_alb (npatch) = s_n_alb (m,i,j)
-             soil_d_n_alb (npatch) = d_n_alb (m,i,j)
-         END IF
-#else
-         if( m == 0 )then 
-             soil_s_v_alb (npatch) = -1.e36
-             soil_d_v_alb (npatch) = -1.e36
-             soil_s_n_alb (npatch) = -1.e36
-             soil_d_n_alb (npatch) = -1.e36
-          else
-             soil_s_v_alb (npatch) = s_v_alb (m,i,j)
-             soil_d_v_alb (npatch) = d_v_alb (m,i,j)
-             soil_s_n_alb (npatch) = s_n_alb (m,i,j)
-             soil_d_n_alb (npatch) = d_n_alb (m,i,j)
-          end if
+      do nsl = nl_soil, 10, -1
+         vf_quartz  (nsl,:) = vf_quartz (9,:)
+         vf_gravels (nsl,:) = vf_gravels(9,:)
+         vf_om      (nsl,:) = vf_om     (9,:)
+         vf_sand    (nsl,:) = vf_sand   (9,:)
+         wf_gravels (nsl,:) = wf_gravels(9,:)
+         wf_sand    (nsl,:) = wf_sand   (9,:)
+         porsl      (nsl,:) = porsl     (9,:)
+#ifdef Campbell_SOIL_MODEL
+         psi0       (nsl,:) = psi0      (9,:)
+         bsw        (nsl,:) = bsw       (9,:)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         theta_r    (nsl,:) = theta_r   (9,:)
+         alpha_vgm  (nsl,:) = alpha_vgm (9,:)
+         L_vgm      (nsl,:) = L_vgm     (9,:)
+         n_vgm      (nsl,:) = n_vgm     (9,:)
+#endif
+         hksati     (nsl,:) = hksati    (9,:)
+         csol       (nsl,:) = csol      (9,:)
+         k_solids   (nsl,:) = k_solids  (9,:)
+         dksatu     (nsl,:) = dksatu    (9,:)
+         dksatf     (nsl,:) = dksatf    (9,:)
+         dkdry      (nsl,:) = dkdry     (9,:)
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         BA_alpha   (nsl,:) = BA_alpha  (9,:)
+         BA_beta    (nsl,:) = BA_beta   (9,:)
 #endif
       end do
 
-      deallocate ( s_v_alb )
-      deallocate ( d_v_alb )
-      deallocate ( s_n_alb )
-      deallocate ( d_n_alb )
+   end if
+
+   ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the sarurated(_s) and dry(_d) soil
+#if(defined SOIL_REFL_GUESSED)
+   if (p_is_worker) then
+      do ipatch = 1, numpatch
+         m = landpatch%ltyp(ipatch)
+         CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
+            soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
+      enddo
+   end if
+#elif(defined SOIL_REFL_READ)
+
+#ifdef SinglePoint
+   is_singlepoint = USE_SITE_soilreflectance
+#else
+   is_singlepoint = .false.
 #endif
 
-#if(defined CLMDEBUG)
-      print*,'soil_s_v_alb =', minval(soil_s_v_alb, mask = soil_s_v_alb .gt. -1.e30), &
-                               maxval(soil_s_v_alb, mask = soil_s_v_alb .gt. -1.e30)
-      print*,'soil_d_v_alb =', minval(soil_d_v_alb, mask = soil_d_v_alb .gt. -1.e30), &
-                               maxval(soil_d_v_alb, mask = soil_d_v_alb .gt. -1.e30)
-      print*,'soil_s_n_alb =', minval(soil_s_n_alb, mask = soil_s_n_alb .gt. -1.e30), &
-                               maxval(soil_s_n_alb, mask = soil_s_n_alb .gt. -1.e30)
-      print*,'soil_d_n_alb =', minval(soil_d_n_alb, mask = soil_d_n_alb .gt. -1.e30), &
-                               maxval(soil_d_n_alb, mask = soil_d_n_alb .gt. -1.e30)
+#ifdef SinglePoint
+   IF (USE_SITE_soilreflectance) THEN
+      soil_s_v_alb(:) = SITE_soil_s_v_alb(:)
+      soil_d_v_alb(:) = SITE_soil_d_v_alb(:)
+      soil_s_n_alb(:) = SITE_soil_s_n_alb(:)
+      soil_d_n_alb(:) = SITE_soil_d_n_alb(:)
+   ENDIF
 #endif
 
-      go to 1000
-100   print 101,lndname
-101   format(' error occured on file: ',a50)
-1000  continue
+   IF (.not. is_singlepoint) THEN
+      ! (1) Read in the albedo of visible of the saturated soil
+      lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
+      call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
 
+   ! (2) Read in the albedo of visible of the dry soil
+   lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
+   call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
+
+   ! (3) Read in the albedo of near infrared of the saturated soil
+   lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
+   call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
+
+      ! (4) Read in the albedo of near infrared of the dry soil
+      lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
+      call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+   ENDIF
+
+#endif
 
 END SUBROUTINE soil_parameters_readin
 ! --------------------------------------------------

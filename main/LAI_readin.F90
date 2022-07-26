@@ -1,104 +1,248 @@
 #include <define.h>
 
-SUBROUTINE LAI_readin (lon_points,lat_points,&
-                       Julian_8day,numpatch,dir_model_landdata)
-! ===========================================================
-! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-! http://globalchange.bnu.edu.cn
-!
-! Created by Yongjiu Dai, March, 2014
-! ===========================================================
+SUBROUTINE LAI_readin (year, time, dir_landdata)
+   ! ===========================================================
+   ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
+   ! http://globalchange.bnu.edu.cn
+   !
+   ! Created by Yongjiu Dai, March, 2014
+   ! ===========================================================
 
-      use precision
-      use MOD_TimeInvariants
-      use MOD_TimeVariables
-      use omp_lib
+   use precision
+   use mod_namelist
+   use spmd_task
+   use ncio_vector
+   use mod_landpatch
+   use MOD_TimeInvariants
+   use MOD_TimeVariables
+#ifdef CLMDEBUG 
+   use mod_colm_debug
+#endif
+   
+   USE GlobalVars
+   USE LC_Const
+#ifdef PFT_CLASSIFICATION
+   USE mod_landpft
+   USE MOD_PFTimeVars
+#endif
+#ifdef PC_CLASSIFICATION
+   USE mod_landpc
+   USE MOD_PCTimeVars
+#endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
-      IMPLICIT NONE
+   IMPLICIT NONE
 
-      integer, INTENT(in) :: lon_points
-      integer, INTENT(in) :: lat_points
-      integer, INTENT(in) :: Julian_8day
-      integer, INTENT(in) :: numpatch
-      character(LEN=256), INTENT(in) :: dir_model_landdata
+   integer, INTENT(in) :: year, time
+   character(LEN=256), INTENT(in) :: dir_landdata
 
-      character(LEN=256) :: c
-      character(LEN=256) :: lndname
-      integer :: iunit
-      integer :: i, j, m, npatch
+   ! Local variables
+   integer :: iyear, itime
+   character(LEN=256) :: cyear, ctime
+   character(LEN=256) :: landdir, lndname
+   integer :: m, npatch
+   LOGICAL :: is_singlepoint
 
-      real(r8), allocatable :: LAI_patches(:,:,:)
-
-#if(defined USGS_CLASSIFICATION)
-      integer, parameter :: N_land_classification = 24 ! GLCC USGS number of land cover category
-      real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
+#ifdef USGS_CLASSIFICATION
+   real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
       vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
-             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
-             1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
-      real(r8), dimension(24), parameter :: &   ! Stem area index [-]
-      sai0=(/0.20, 0.20, 0.30, 0.30, 0.50, 0.50, 1.00, 0.50, &
-             1.00, 0.50, 2.00, 2.00, 2.00, 2.00, 2.00, 0.00, &
-             2.00, 2.00, 0.00, 0.10, 0.10, 0.10, 0.00, 0.00 /)
-#endif
-#if(defined IGBP_CLASSIFICATION)
-      integer, parameter :: N_land_classification = 17 ! MODIS IGBP number of land cover category
-      real(r8), dimension(17), parameter :: &
-      vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,&
-             1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0/)
-      real(r8), dimension(17), parameter :: &
-      sai0=(/1.6, 1.8, 1.6, 1.6, 1.5, 1.5, 0.45, 1.4, 1.6, 3.1,&
-             1.6, 0.4, 1.1, 1.3, 0.0, 0.14, 0.0/)
+      1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
+      1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
 #endif
 
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
-! READ in Leaf area index and stem area index
-      allocate ( LAI_patches(0:N_land_classification,1:lon_points,1:lat_points) )
+   ! READ in Leaf area index and stem area index
 
-      iunit = 100
-      write(c,'(i3.3)') Julian_8day
-      lndname = trim(dir_model_landdata)//'model_LAI_patches.'//trim(c)//'.bin'
-      print*,trim(lndname)
+   landdir = trim(dir_landdata) // '/LAI'
 
-      OPEN(iunit,file=trim(lndname),form='unformatted',status='old')
-      READ(iunit,err=100) LAI_patches
-      CLOSE(iunit)
-
-#ifdef OPENMP
-!$OMP PARALLEL DO NUM_THREADS(OPENMP) &
-!$OMP PRIVATE(i,j,m)
-#endif
-      do npatch = 1, numpatch
-         i = patch2lon(npatch)
-         j = patch2lat(npatch)
-         m = patchclass(npatch)
-         if( m == 0 )then
-             fveg(npatch)  = 0.
-             tlai(npatch)  = 0.
-             tsai(npatch)  = 0.
-             green(npatch) = 0.
-         else
-             fveg(npatch)  = vegc(m)    !fraction of veg. cover
-             IF (vegc(m) > 0) THEN 
-                tlai(npatch)  = LAI_patches(m,i,j)/vegc(m) !leaf area index
-                tsai(npatch)  = sai0(m) !stem are index
-                green(npatch) = 1.      !fraction of green leaf
-             ELSE 
-                tlai(npatch)  = 0.  
-                tsai(npatch)  = 0.   
-                green(npatch) = 0.    
-             ENDIF 
-         endif
-      end do
-#ifdef OPENMP
-!$OMP END PARALLEL DO
+#ifdef SinglePoint
+   is_singlepoint = USE_SITE_LAI
+   IF ((USE_SITE_LAI) .and. (.not. DEF_LAI_CLIM)) THEN
+      iyear = findloc(SITE_LAI_year, year, dim=1)
+      itime = (time-1)/8 + 1
+   ENDIF
+#else
+   is_singlepoint = .false.
 #endif
 
-      deallocate ( LAI_patches )
+#if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
 
-      go to 1000
-100   print 101,lndname
-101   format(' error occured on file: ',a50)
-1000  continue
+#ifdef SinglePoint
+   IF (USE_SITE_LAI) THEN
+      IF (DEF_LAI_CLIM) THEN
+         tlai(:) = SITE_LAI1(time)
+         tsai(:) = SITE_SAI1(time)
+      ELSE
+         tlai(:) = SITE_LAI2(itime,iyear)
+      ENDIF
+   ENDIF
+#endif
+
+   IF (.not. is_singlepoint) THEN
+      IF (DEF_LAI_CLIM) THEN
+         write(ctime,'(i2.2)') time
+
+         lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
+
+         lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+         call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
+      ELSE
+         write(cyear,'(i4.4)') year 
+         write(ctime,'(i3.3)') time
+         lndname = trim(landdir)// '/' // trim(cyear) //'/LAI_patches'//trim(ctime)//'.nc'
+         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
+      ENDIF
+   ENDIF
+
+   if (p_is_worker) then
+      if (numpatch > 0) then
+
+         do npatch = 1, numpatch
+            m = patchclass(npatch)
+            if( m == 0 )then
+               fveg(npatch)  = 0.
+               tlai(npatch)  = 0.
+               tsai(npatch)  = 0.
+               green(npatch) = 0.
+            else
+               fveg(npatch)  = fveg0(m)           !fraction of veg. cover
+               IF (fveg0(m) > 0) THEN
+                  tlai(npatch)  = tlai(npatch)/fveg0(m) !leaf area index
+                  IF (DEF_LAI_CLIM) THEN
+                     tsai(npatch)  = tsai(npatch)/fveg0(m) !stem are index
+                  ELSE
+                     tsai(npatch)  = sai0(m) !stem are index
+                  ENDIF
+                  green(npatch) = 1.      !fraction of green leaf
+               ELSE 
+                  tlai(npatch)  = 0.  
+                  tsai(npatch)  = 0.   
+                  green(npatch) = 0.    
+               ENDIF 
+            endif
+         end do
+
+      ENDIF
+   ENDIF 
+
+#endif
+
+#ifdef PFT_CLASSIFICATION
+
+#ifdef SinglePoint
+   IF (USE_SITE_LAI) THEN
+      IF (DEF_LAI_CLIM) THEN
+         tlai(:) = SITE_LAI1(time)
+         tsai(:) = SITE_SAI1(time)
+         
+         IF (numpft > 0) THEN
+            IF (landpatch%ltyp(1) == 1) THEN
+               tlai_p(:) = pack(SITE_LAI_pfts2(:,time), SITE_pctpfts > 0.)
+               slai_p(:) = pack(SITE_SAI_pfts2(:,time), SITE_pctpfts > 0.)
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               tlai_p(:) = tlai(:)
+               slai_p(:) = tsai(:)
+#endif
+            ENDIF
+         ENDIF
+      ELSE
+         tlai = SITE_LAI2(:,itime,iyear)
+         tsai = SITE_SAI2(:,itime,iyear)
+         
+         IF (numpft > 0) THEN
+            IF (landpatch%ltyp(1) == 1) THEN
+               tlai_p(:) = pack(SITE_LAI_pfts3(:,itime,iyear), SITE_pctpfts > 0.)
+               slai_p(:) = pack(SITE_SAI_pfts3(:,itime,iyear), SITE_pctpfts > 0.)
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               tlai_p(:) = tlai(:)
+               slai_p(:) = tsai(:)
+#endif
+            ENDIF
+         ENDIF
+      ENDIF
+   ENDIF
+#endif
+
+   IF (.not. is_singlepoint) THEN
+      write(ctime,'(i2.2)') time
+#ifndef LAIfdbk
+      lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+#endif
+
+      lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
+
+#ifndef LAIfdbk
+      lndname = trim(landdir)//'/LAI_pfts'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
+#endif
+
+      lndname = trim(landdir)//'/SAI_pfts'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
+   ENDIF
+
+   if (p_is_worker) then
+      if (numpatch > 0) then
+         do npatch = 1, numpatch
+            m = patchclass(npatch)
+
+            green(npatch) = 1.                
+            fveg (npatch)  = fveg0(m)
+
+         end do
+      ENDIF
+   ENDIF 
+
+#endif
+
+#ifdef PC_CLASSIFICATION
+
+#ifdef SinglePoint
+   IF (USE_SITE_LAI) THEN
+      IF (DEF_LAI_CLIM) THEN
+         tlai(:) = SITE_LAI1(time)
+         tsai(:) = SITE_SAI1(time)
+         tlai_c(:,:) = SITE_LAI_pfts2(:,time)
+         tsai_c(:,:) = SITE_SAI_pfts2(:,time)
+      ELSE
+         tlai(:) = SITE_LAI2(itime,iyear)
+         tsai(:) = SITE_SAI2(itime,iyear)
+         tlai_c(:,:) = SITE_LAI_pfts3(:,itime,iyear)
+         tsai_c(:,:) = SITE_SAI_pfts3(:,itime,iyear)
+      ENDIF
+   ENDIF
+#endif
+
+   IF (is_singlepoint) THEN
+      write(ctime,'(i2.2)') time
+      lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+
+      lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
+
+      lndname = trim(landdir)//'/LAI_pcs'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'LAI_pcs', N_PFT, landpc, tlai_c )
+
+      lndname = trim(landdir)//'/SAI_pcs'//trim(ctime)//'.nc'
+      call ncio_read_vector (lndname, 'SAI_pcs', N_PFT, landpc, tsai_c )
+   ENDIF
+
+   if (p_is_worker) then
+      if (numpatch > 0) then
+         do npatch = 1, numpatch
+            m = patchclass(npatch)
+            fveg (npatch)  = fveg0(m)
+            green(npatch) = 1.                 
+         end do
+      ENDIF 
+   ENDIF 
+
 #endif
 
 END SUBROUTINE LAI_readin

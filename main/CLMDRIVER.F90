@@ -19,6 +19,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_TimeVariables
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
+ USE mod_landpatch, only : numpatch
  use omp_lib
 
  IMPLICIT NONE
@@ -65,13 +66,31 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
        ! SOIL INFORMATION AND LAKE DEPTH
          soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
-         porsl(1:,i),     psi0(1:,i),      bsw(1:,i),       hksati(1:,i),    &
-         csol(1:,i),      dksatu(1:,i),    dkdry(1:,i),     rootfr(1:,m),    &
-         lakedepth(i),    dz_lake(1:,i),                                     &  
+         vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
+         wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
+#ifdef Campbell_SOIL_MODEL
+         bsw(1:,i),                                                          &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
+         sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
+#endif
+         hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
+         dksatf(1:,i),    dkdry(1:,i),                                       &
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         BA_alpha(1:,i),  BA_beta(1:,i),                                     &
+#endif
+         rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &  
 
        ! VEGETATION INFORMATION
          htop(i),         hbot(i),         sqrtdi(m),                        &
-         effcon(m),       vmax25(m),       slti(m),         hlti(m),         &
+         effcon(m),       vmax25(m),                                         &
+#ifdef PLANT_HYDRAULIC_STRESS
+         kmax_sun(m),     kmax_sha(m),     kmax_xyl(m),     kmax_root(m),    &
+         psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
+         ck(m),                                                              &
+#endif
+         slti(m),         hlti(m),                                           &
          shti(m),         hhti(m),         trda(m),         trdm(m),         &
          trop(m),         gradm(m),        binter(m),       extkn(m),        &
          chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
@@ -87,20 +106,29 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
        ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
          z_soisno(maxsnl+1:,i),            dz_soisno(maxsnl+1:,i),           &
          t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-         wice_soisno(maxsnl+1:,i),                                           &
-
-         t_grnd(i),       tleaf(i),        ldew(i),         &
+         wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
+!#ifdef CLM5_INTERCEPTION
+         t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
+!#else  
+!         t_grnd(i),       tleaf(i),        ldew(i),         &
+!#endif
          sag(i),          scv(i),          snowdp(i),       fveg(i),         &
          fsno(i),         sigf(i),         green(i),        lai(i),          &
          sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
          thermk(i),       extkb(i),        extkd(i),                         &
-        
-         zwt(i),          wa(i),                                             &
-         t_lake(1:,i),    lake_icefrac(1:,i),                                & 
+#ifdef PLANT_HYDRAULIC_STRESS
+         vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
+#endif
+         zwt(i),                                                             &
+#ifdef VARIABLY_SATURATED_FLOW
+         dpond(i),                                                           &
+#endif
+         wa(i),                                                              &
+         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    & 
 
        ! additional diagnostic variables for output
-         laisun(i),       laisha(i),                                         &
-         rstfac(i),       h2osoi(1:,i),    wat(i),                           &
+         laisun(i),       laisha(i),       rootr(1:,i),                      &
+         rstfacsun(i),    rstfacsha(i),    h2osoi(1:,i),    wat(i),          &
 
        ! FLUXES
          taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
@@ -131,6 +159,11 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
          dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
 
+#if(defined BGC)
+         if(patchtype(i) .eq. 0)then
+            CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
+         end if
+#endif
       ENDDO
 #ifdef OPENMP
 !$OMP END PARALLEL DO

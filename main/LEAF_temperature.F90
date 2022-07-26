@@ -4,6 +4,8 @@ MODULE LEAF_temperature
 
 !-----------------------------------------------------------------------
  USE precision
+ USE mod_namelist,only:DEF_Interception_scheme
+
  IMPLICIT NONE
  SAVE
 
@@ -27,14 +29,21 @@ MODULE LEAF_temperature
               trop    ,gradm   ,binter  ,extkn   ,extkb   ,extkd   ,&
               hu      ,ht      ,hq      ,us      ,vs      ,thm     ,&
               th      ,thv     ,qm      ,psrf    ,rhoair  ,parsun  ,&
-              parsha  ,sabv    ,frl     ,fsun    ,thermk  ,rstfac  ,&
+              parsha  ,sabv    ,frl     ,fsun    ,thermk  ,rstfacsun, rstfacsha, &
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
-              dqgdT   ,emg     ,tl      ,ldew    ,taux    ,tauy    ,&
+              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow   ,taux    ,tauy    ,&
               fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
-              ustar   ,qstar   ,tstar   ,fm      ,fh      ,fq       ) 
+              ustar   ,qstar   ,tstar   ,fm      ,fh      ,fq      ,&
+              rootfr                             ,&
+#ifdef PLANT_HYDRAULIC_STRESS
+              kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
+              psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&     
+#endif
+              qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
+              hksati  ,rootr                                       ) 
  
 !=======================================================================
 ! Original author : Yongjiu Dai, August 15, 2001
@@ -55,11 +64,17 @@ MODULE LEAF_temperature
 !=======================================================================
 
   USE precision
-  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc
+  USE GlobalVars
+  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE FRICTION_VELOCITY
   USE ASSIM_STOMATA_conductance
   USE MOD_TimeInvariants, only: patchclass
   USE LC_Const, only: z0mr, displar
+#ifdef PLANT_HYDRAULIC_STRESS
+  use PlantHydraulic, only : PlantHydraulicStress_twoleaf
+#endif
+USE PhysicalConstants, only: tfrz
+
   IMPLICIT NONE
  
 !-----------------------Arguments---------------------------------------
@@ -90,6 +105,17 @@ MODULE LEAF_temperature
         trop,       &! temperature coefficient in gs-a model         (273+25)
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
+#ifdef PLANT_HYDRAULIC_STRESS
+        kmax_sun,   &    
+        kmax_sha,   &    
+        kmax_xyl,   &    
+        kmax_root,  &
+        psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+        psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+        psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+        psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
+        ck,         &! shape-fitting parameter for vulnerability curve (-)
+#endif
         extkn        ! coefficient of leaf nitrogen allocation
 
 ! input variables
@@ -116,7 +142,6 @@ MODULE LEAF_temperature
         extkb,      &! (k, g(mu)/mu) direct solar extinction coefficient
         extkd,      &! diffuse and scattered diffuse PAR extinction coefficient
         thermk,     &! canopy gap fraction for tir radiation
-        rstfac,     &! factor of soil water stress to plant physiologocal processes
 
         po2m,       &! atmospheric partial pressure  o2 (pa)
         pco2m,      &! atmospheric partial pressure co2 (pa)
@@ -135,9 +160,26 @@ MODULE LEAF_temperature
         dqgdT,      &! temperature derivative of "qg"
         emg          ! vegetation emissivity
 
+  REAL(r8), intent(in) :: &
+        t_precip,   &! snowfall/rainfall temperature [kelvin]
+        qintr_rain, &! rainfall interception (mm h2o/s)
+        qintr_snow, &! snowfall interception (mm h2o/s)
+        smp     (1:nl_soil), &! precipitation sensible heat from canopy
+        rootfr  (1:nl_soil), &! root fraction
+        hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
+        hk      (1:nl_soil)   ! soil hydraulic conducatance
+
   REAL(r8), intent(inout) :: &
+#ifdef PLANT_HYDRAULIC_STRESS
+        vegwp(1:nvegwcs),&! vegetation water potential
+        gs0sun,      &!
+        gs0sha,      &!
+#endif
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
+        ldew_rain,       &! depth of rain on foliage [mm]
+        ldew_snow,       &! depth of snow on foliage [mm]
+
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
@@ -146,7 +188,10 @@ MODULE LEAF_temperature
         cgrndl,     &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds,     &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
         tref,       &! 2 m height air temperature (kelvin)
-        qref         ! 2 m height air specific humidity
+        qref,       &! 2 m height air specific humidity
+        rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
+        rstfacsha,  &! factor of soil water stress to transpiration on shaded leaf
+        rootr(1:nl_soil)      ! fraction of root water uptake from different layers
 
   REAL(r8), intent(out) :: &
         rst,        &! stomatal resistance
@@ -157,6 +202,7 @@ MODULE LEAF_temperature
         etr,        &! transpiration rate [mm/s]
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
+        hprl,       &! precipitation sensible heat from canopy
 
         z0m,        &! effective roughness [m]
         zol,        &! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -267,7 +313,7 @@ MODULE LEAF_temperature
    INTEGER it, nmozsgn 
 
    REAL(r8) delta, fac
-   REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif
+   REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif,etr0
    REAL(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl  
    REAL(r8) w, csoilcn, z0mg, cint(3), cintsun(3), cintsha(3)
    REAL(r8) fevpl_bef, fevpl_noadj, dtl_noadj, errt, erre
@@ -281,6 +327,11 @@ MODULE LEAF_temperature
    REAL(r8) :: utop, ueff, ktop
    REAL(r8) :: phih, z0qg, z0hg 
    REAL(r8) :: hsink, displasink
+#ifdef PLANT_HYDRAULIC_STRESS
+   real(r8) gb_mol_sun,gb_mol_sha,gssun,gssha,etrsun,etrsha
+   real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
+   real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
+#endif
 
    INTEGER,  parameter :: zd_opt = 3   
    INTEGER,  parameter :: rb_opt = 3
@@ -325,10 +376,9 @@ MODULE LEAF_temperature
        clai = 0.0
 
        ! loop
-       CALL dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
-
+      CALL dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
        ! loop
-       CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
+      CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
 
 !-----------------------------------------------------------------------
 ! initial for fluxes profile
@@ -490,12 +540,26 @@ MODULE LEAF_temperature
  
             eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
+#ifdef PLANT_HYDRAULIC_STRESS
+            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&   
+                     dz_soi    ,rootfr    ,psrf       ,qsatl      ,qsatl      ,&   
+                     qaf       ,tl        ,tl         ,rbsun      ,rbsha      ,&   
+                     raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&   
+                     cintsha   ,laisun    ,laisha     ,rhoair     ,fwet       ,&   
+                     sai       ,kmax_sun  ,kmax_sha   ,kmax_xyl   ,kmax_root  ,&
+                     psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&   
+                     ck        ,smp       ,hk         ,hksati     ,vegwp      ,&   
+                     etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&   
+                     qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
+            etr = etrsun + etrsha
+#endif
+
 ! Sunlit leaves
             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                 parsun   ,rbsun    ,raw    ,rstfac ,cintsun ,&
+                 parsun   ,rbsun    ,raw    ,rstfacsun ,cintsun ,&
                  assimsun ,respcsun ,rssun  )
 
 ! Shaded leaves
@@ -503,12 +567,26 @@ MODULE LEAF_temperature
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                 parsha   ,rbsha    ,raw    ,rstfac ,cintsha ,&
+                 parsha   ,rbsha    ,raw    ,rstfacsha ,cintsha ,&
                  assimsha ,respcsha ,rssha  )
+
+#ifdef PLANT_HYDRAULIC_STRESS
+           gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6 
+           gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6 
+           gs0sun  = gssun/amax1(rstfacsun,1.e-2)
+           gs0sha  = gssha/amax1(rstfacsha,1.e-2)
+
+           gb_mol_sun = 1./rbsun * tprcor/tl / cintsun(3) * 1.e6  ! leaf to canopy
+           gb_mol_sha = 1./rbsha * tprcor/tl / cintsha(3) * 1.e6  ! leaf to canopy
+#endif              
 
          ELSE
             rssun = 2.e4; assimsun = 0.; respcsun = 0.
             rssha = 2.e4; assimsha = 0.; respcsha = 0.
+#ifdef PLANT_HYDRAULIC_STRESS
+            etr = 0.
+            rootr = 0.
+#endif
          ENDIF
 
 ! above stomatal resistances are for the canopy, the stomatal rsistances 
@@ -562,17 +640,21 @@ MODULE LEAF_temperature
          fsenl_dtl = rhoair * cpair * cfh * (wta0 + wtg0)
 
 ! latent heat fluxes and their derivatives
+#ifndef PLANT_HYDRAULIC_STRESS
          etr = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+#endif
          etr_dtl = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * (wtaq0 + wtgq0)*qsatlDT 
-      
+
+#ifndef PLANT_HYDRAULIC_STRESS          
          IF(etr.ge.etrc)THEN
             etr = etrc
             etr_dtl = 0.
          ENDIF
+#endif
  
          evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
                  * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
@@ -597,8 +679,10 @@ MODULE LEAF_temperature
 ! difference of temperatures by quasi-newton-raphson method for the non-linear system equations
 !-----------------------------------------------------------------------
 
-         dtl(it) = (sabv + irab - fsenl - hvap*fevpl) &
-             / ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl)
+         dtl(it) = (sabv + irab - fsenl - hvap*fevpl &
+             + cpliq*qintr_rain*(t_precip-tl) + cpice*qintr_snow*(t_precip-tl)) &
+             / ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl  &
+             + cpliq*qintr_rain + cpice*qintr_snow)
          dtl_noadj = dtl(it)
  
          ! check magnitude of change in leaf temperature limit to maximum allowed value
@@ -712,16 +796,24 @@ MODULE LEAF_temperature
           rst = 2.0e4
        ENDIF
        assim = assimsun + assimsha
-       respc = respcsun + respcsha + rsoil
+       respc = respcsun + respcsha! + rsoil
 
 ! canopy fluxes and total assimilation amd respiration
        fsenl = fsenl + fsenl_dtl*dtl(it-1) &
                ! add the imbalanced energy below due to T adjustment to sensibel heat
-               + (dtl_noadj-dtl(it-1)) * ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl) &
+               + (dtl_noadj-dtl(it-1)) * ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl &
+               + cpliq * qintr_rain + cpice * qintr_snow) &
                ! add the imbalanced energy below due to q adjustment to sensibel heat
                + hvap*erre
- 
+       etr0    = etr
        etr     = etr     +     etr_dtl*dtl(it-1)
+#ifdef PLANT_HYDRAULIC_STRESS
+      if(abs(etr0) .ge. 1.e-15)then
+          rootr  = rootr * etr / etr0
+      else
+          rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+      end if
+#endif
        evplwet = evplwet + evplwet_dtl*dtl(it-1)
        fevpl   = fevpl_noadj
        fevpl   = fevpl   +   fevpl_dtl*dtl(it-1)
@@ -744,7 +836,7 @@ MODULE LEAF_temperature
        fevpg = rhoair*cgw*(qg-qaf)
 
 !-----------------------------------------------------------------------
-! downward (upward) longwave radiation below (above) the canopy
+! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
 !-----------------------------------------------------------------------
 
        ! 10/16/2017: add soil reflectance
@@ -756,6 +848,7 @@ MODULE LEAF_temperature
              + (1-emg)*thermk*thermk*frl &
              + (1-emg)*thermk*fac*stefnc*tlbef**4 &
              + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)
+       hprl = cpliq * qintr_rain*(t_precip-tl) + cpice * qintr_snow*(t_precip-tl)
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
@@ -770,31 +863,79 @@ MODULE LEAF_temperature
 ! (the computational error was created by the assumed 'dtl' in line 406-408) 
 !-----------------------------------------------------------------------
 
-       err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl
+       err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl
 
 #if(defined CLMDEBUG)
        IF(abs(err) .gt. .2) &
-       write(6,*) 'energy imbalance in leaftemone.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl
+       write(6,*) 'energy imbalance in leaftem.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
 #endif
 
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
+ if (DEF_Interception_scheme .eq. 1) then
+      ldew = max(0., ldew-evplwet*deltim)
 
-       ldew = max(0., ldew-evplwet*deltim)
+ elseif (DEF_Interception_scheme .eq. 2) then!CLM4.5
+      ldew = max(0., ldew-evplwet*deltim)
+
+ elseif (DEF_Interception_scheme .eq. 3) then !CLM5
+      if (ldew_rain.gt.evplwet*deltim) then
+         ldew_rain = ldew_rain-evplwet*deltim
+         ldew_snow = ldew_snow
+         ldew=ldew_rain+ldew_snow
+      else
+         ldew_rain = 0.0
+         ldew_snow = max(0., ldew-evplwet*deltim)
+         ldew      = ldew_snow
+      endif
+
+ elseif (DEF_Interception_scheme .eq. 4) then !Noah-MP
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+
+   elseif (DEF_Interception_scheme .eq. 5) then !MATSIRO
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+   
+   elseif (DEF_Interception_scheme .eq. 6) then !VIC
+      if (taf .gt. tfrz) then
+         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
+         ldew_rain=max(ldew_rain,0.0)
+      else
+         ldew_snow = ldew_snow-evplwet*deltim
+         ldew_snow=max(ldew_snow,0.0)
+      endif
+         ldew=ldew_rain+ldew_snow
+
+   else 
+      call abort
+
+ endif
+
 
 !-----------------------------------------------------------------------
 ! 2 m height air temperature
 !-----------------------------------------------------------------------
-
        tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar) 
        qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
-
   END SUBROUTINE LeafTemp
 !----------------------------------------------------------------------         
 
+SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
-  SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
        
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
@@ -812,17 +953,20 @@ MODULE LEAF_temperature
   REAL(r8), intent(in) :: sai    !stem area index  [-]
   REAL(r8), intent(in) :: dewmx  !maximum allowed dew [0.1 mm]
   REAL(r8), intent(in) :: ldew   !depth of water on foliage [kg/m2/s]
-
+  REAL(r8), intent(in) :: ldew_rain   !depth of rain on foliage [kg/m2/s]
+  REAL(r8), intent(in) :: ldew_snow   !depth of snow on foliage [kg/m2/s]
   REAL(r8), intent(out) :: fwet  !fraction of foliage covered by water [-]
   REAL(r8), intent(out) :: fdry  !fraction of foliage that is green and dry [-]
 
   REAL(r8) lsai                  !lai + sai
   REAL(r8) dewmxi                !inverse of maximum allowed dew [1/mm]
   REAL(r8) vegt                  !sigf*lsai
-!
+  REAL(r8) satcap_rain,satcap_snow           !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet 
 ! including stem area which contribute to evaporation
+  if (DEF_Interception_scheme .eq. 1) then !CoLM2014
+
       lsai = lai + sai
       dewmxi = 1.0/dewmx
       vegt   =  lsai
@@ -831,10 +975,58 @@ MODULE LEAF_temperature
       IF(ldew > 0.) THEN
          fwet = ((dewmxi/vegt)*ldew)**.666666666666
 
-! Check for maximum limit of fwet
+      ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)
 
       ENDIF
+   elseif (DEF_Interception_scheme .eq. 2) then !CLM4.5
+      lsai = lai + sai
+      dewmxi = 1.0/dewmx
+      vegt   =  lsai
+
+      fwet = 0
+      IF(ldew > 0.) THEN
+         fwet = ((dewmxi/vegt)*ldew)**.666666666666
+
+      ! Check for maximum limit of fwet
+         fwet = min(fwet,1.0)
+      ENDIF
+   elseif (DEF_Interception_scheme .eq. 3) then !CLM5
+
+   elseif (DEF_Interception_scheme .eq. 4) then !Noah-MP
+      lsai = lai + sai
+      satcap_rain = dewmx*lsai
+      satcap_snow = satcap_rain*60.0
+      IF(ldew_snow > 0. .and. ldew_snow>ldew_rain) THEN
+         fwet=(ldew_snow/satcap_snow)**.666666666666
+      elseif (ldew_rain > 0. .and. ldew_snow<=ldew_rain) then
+         fwet=(ldew_rain/satcap_rain)**.666666666666
+      else
+         fwet=0.0
+      endif
+      ! Check for maximum limit of fwet
+      fwet = min(fwet,1.0)
+   elseif (DEF_Interception_scheme .eq. 5) then !Matsiro
+   IF(ldew > 0.) THEN
+      satcap_rain=0.2*lsai
+      satcap_snow=0.2*lsai
+      fwet=(ldew/(satcap_rain))**.666666666666
+   else
+      fwet=0.0
+   endif
+   fwet = min(fwet,1.0)
+
+   elseif (DEF_Interception_scheme .eq. 6) then !VIC
+      IF(ldew > 0.) THEN
+         fwet=(ldew/(lsai*0.2))**.666666666666
+      else
+         fwet=0.0
+      endif
+
+   else
+      call abort
+   endif
+
 
 ! fdry is the fraction of lai which is dry because only leaves can 
 ! transpire. Adjusted for stem area which does not transpire
@@ -842,6 +1034,7 @@ MODULE LEAF_temperature
 
 
   END SUBROUTINE dewfraction
+
 !----------------------------------------------------------------------         
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)

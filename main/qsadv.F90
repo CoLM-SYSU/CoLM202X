@@ -56,12 +56,12 @@
 
       td = T-273.16
 
-      IF (td < -75.0 .or. td > 100.0) THEN
+      IF (td < -75.0 .or. td > 75.0) THEN
       !* print *, "qsadv: abnormal temperature", T
       ENDIF
 
       IF (td < -75.0) td = -75.0
-      IF (td > 100.0) td = 100.0
+      IF (td > 75.0) td = 75.0
 
       IF (td >= 0.0)THEN
         es   = a0 + td*(a1 + td*(a2 + td*(a3 + td*(a4 &

@@ -42,14 +42,15 @@
                     sm          ,tref       ,qref        ,trad        ,&
                     errore      ,emis       ,z0m         ,zol         ,&
                     rib         ,ustar      ,qstar       ,tstar       ,&
-                    fm          ,fh         ,fq)
+                    fm          ,fh         ,fq          ,pg_rain     ,&
+                    pg_snow     ,t_precip)
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation 
 ! of thermal processes and surface fluxes of the land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
-! 
+! Modified by Nan Wei, 07/2017/  interaction btw prec and land ice
 ! FLOW DIAGRAM FOR GLACIER_TEMP.F90
 ! 
 ! GLACIER_TEMP ===> qsadv
@@ -61,7 +62,7 @@
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : hvap,hsub,rgas,cpair,stefnc,tfrz
+  use PhysicalConstants, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
   use FRICTION_VELOCITY
 
   IMPLICIT NONE
@@ -89,6 +90,9 @@
         forc_q,      &! specific humidity at agcm reference height [kg/kg]
         forc_rhoair, &! density air [kg/m3]
         forc_psrf,   &! atmosphere pressure at the surface [pa]
+        t_precip,    &! snowfall/rainfall temperature [kelvin]
+        pg_rain,     &! rainfall  [kg/(m2 s)]
+        pg_snow,     &! snowfall  [kg/(m2 s)]
 
         ! Radiative fluxes
         coszen,      &! cosine of the solar zenith angle
@@ -226,7 +230,7 @@
                      capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                      t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
                      forc_frl,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                     imelt,sm,xmf,fact)
+                     imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! [5] Correct fluxes to present ice temperature
@@ -271,7 +275,8 @@
 ! ground heat flux
       fgrnd = sabg + emg*forc_frl &
             - emg*stefnc*t_icesno_bef(lb)**3*(t_icesno_bef(lb) + 4.*tinc) &
-            - (fseng+fevpg*htvp)
+            - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_icesno(lb)) &
+            + cpice * pg_snow * (t_precip - t_icesno(lb))
 
 ! outgoing long-wave radiation from ground
       olrg = (1.-emg)*forc_frl + emg*stefnc * t_icesno_bef(lb)**4 &
@@ -288,18 +293,20 @@
 ! [6] energy balance error
 !=======================================================================
 
-      errore = sabg + forc_frl - olrg - fsena - lfevpa - xmf
+      errore = sabg + forc_frl - olrg - fsena - lfevpa - xmf + &
+               cpliq * pg_rain * (t_precip - t_icesno(lb)) &
+               + cpice * pg_snow * (t_precip - t_icesno(lb))
       do j = lb, nl_ice
          errore = errore - (t_icesno(j)-t_icesno_bef(j))/fact(j)
       enddo
 
-!#if (defined CLMDEBUG)
+#if (defined CLMDEBUG)
      if(abs(errore)>.2)then 
-     write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
-     write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf
+        write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
+        write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
      endif
 100  format(10(f7.3))
-!#endif
+#endif
 
  end subroutine GLACIER_TEMP
 
@@ -519,7 +526,7 @@
                       capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                       t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
                       forc_frl,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                      imelt,sm,xmf,fact)
+                      imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! SNOW and LAND ICE temperatures
@@ -528,7 +535,7 @@
 ! o The thermal conductivity of snow/ice is computed from
 !   the formulation used in SNTHERM (Jordan 1991) and Yen (1981), respectively.
 ! o Boundary conditions:
-!   F = Rnet - Hg - LEg (top), F= 0 (base of the land ice column).
+!   F = Rnet - Hg - LEg (top) + HPR, F= 0 (base of the land ice column).
 ! o Ice/snow temperature is predicted from heat conduction
 !   in 10 ice layers and up to 5 snow layers.
 !   The thermal conductivities at the interfaces between two neighbor layers
@@ -564,6 +571,9 @@
   real(r8), INTENT(in) :: cgrnd     !deriv. of ice energy flux wrt to ice temp [W/m2/k]
   real(r8), INTENT(in) :: htvp      !latent heat of vapor of water (or sublimation) [J/kg]
   real(r8), INTENT(in) :: emg       !ground emissivity (0.97 for snow,
+  real(r8), INTENT(in) :: t_precip  ! snowfall/rainfall temperature [kelvin]
+  real(r8), INTENT(in) :: pg_rain   ! rainfall  [kg/(m2 s)]
+  real(r8), INTENT(in) :: pg_snow   ! snowfall  [kg/(m2 s)]
 
   real(r8), INTENT(inout) :: t_icesno (lb:nl_ice) !snow and ice temperature [K]
   real(r8), INTENT(inout) :: wice_icesno(lb:nl_ice) !ice lens [kg/m2]
@@ -657,9 +667,10 @@
 
 
 ! net ground heat flux into the surface and its temperature derivative
-      hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) 
+      hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
+           cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
 
-      dhsdT = - cgrnd - 4.*emg * stefnc * t_icesno(lb)**3
+      dhsdT = - cgrnd - 4.*emg * stefnc * t_icesno(lb)**3 - cpliq * pg_rain - cpice * pg_snow
       t_icesno_bef(lb:) = t_icesno(lb:)
 
       j       = lb

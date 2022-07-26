@@ -1,4 +1,3 @@
-
 #include <define.h>
 
 MODULE user_specified_forcing
@@ -14,532 +13,386 @@ MODULE user_specified_forcing
 !     metpreprocess modified by siguang & weinan for forc_q calibration
 ! ------------------------------------------------------------
 
-#if (defined USE_PRINCETON_DATA)
-
    use precision
    implicit none
 
- ! parameter setting
- ! ------------------------------------------------------------
-   integer, parameter :: NVAR    = 8              ! variable number of forcing data
-   integer, parameter :: nlats   = 180            ! number of latitudes
-   integer, parameter :: nlons   = 360            ! number of longitudes
-   integer, parameter :: startyr = 1948           ! start year of forcing data
-   integer, parameter :: startmo = 1              ! start month of forcing data
-   integer, parameter :: endyr   = 2006           ! end year of forcing data
-   integer, parameter :: endmo   = 12             ! end month of forcing data
-   integer, parameter :: dtime(NVAR)  = 10800     ! temporal resolution
-   integer, parameter :: offset(NVAR) = 0         ! time offset (seconds)
-   integer, parameter :: nlands  = 1              ! land grid number in 1d
+   character(len=256) :: dataset
 
-   logical, parameter :: leapyear = .true.        ! leapyear calendar
-   logical, parameter :: data2d   = .true.        ! data in 2 dimension (lon, lat)
-   logical, parameter :: hightdim = .true.        ! have "z" dimension
-   logical, parameter :: dim2d    = .false.       ! lat/lon value in 2 dimension (lon, lat)
-   logical, parameter :: latrev   = .true.        ! need to reverse latitudes
-   logical, parameter :: lonadj   = .true.        ! need to adjust longitude, 0~360 -> -180~180
+   logical  :: solarin_all_band   
+   real(r8) :: HEIGHT_V            
+   real(r8) :: HEIGHT_T           
+   real(r8) :: HEIGHT_Q           
 
-   character(len=256), parameter :: latname = 'latitude'  ! dimension name of latitude
-   character(len=256), parameter :: lonname = 'longitude' ! dimension name of longitude
-
- ! file grouped by year/month
-   character(len=256), parameter :: groupby = 'year'
+   integer  :: NVAR      ! variable number of forcing data
+   integer  :: startyr   ! start year of forcing data        <MARK #1>
+   integer  :: startmo   ! start month of forcing data
+   integer  :: endyr     ! end year of forcing data
+   integer  :: endmo     ! end month of forcing data
+   integer, allocatable :: dtime(:)          
+   integer, allocatable :: offset(:)        
    
- ! prefix of forcing data file
-   character(len=256), parameter :: fprefix(NVAR) = [character(len=256) :: &
-      'tas/tas_3hourly_', 'shum/shum_3hourly_', 'pres/pres_3hourly_', &
-      'prcp/prcp_3hourly_', 'NULL', 'wind/wind_3hourly_', &
-      'dswrf/dswrf_3hourly_', 'dlwrf/dlwrf_3hourly_']
+   logical :: leapyear   ! leapyear calendar
+   logical :: data2d     ! data in 2 dimension (lon, lat)
+   logical :: hightdim   ! have "z" dimension
+   logical :: dim2d      ! lat/lon value in 2 dimension (lon, lat)
 
- ! variable name of forcing data file
-   character(len=256), parameter :: vname(NVAR) = [character(len=256) :: &
-      'tas', 'shum', 'pres', 'prcp', 'NULL', 'wind', 'dswrf', 'dlwrf']
- 
- ! interpolation method
-   character(len=256), parameter :: tintalgo(NVAR) = [character(len=256) :: &
-      'linear', 'linear', 'linear', 'nearest', 'NULL', 'linear', 'coszen', 'linear']
+   character(len=256) :: latname                   ! dimension name of latitude
+   character(len=256) :: lonname                   ! dimension name of longitude
 
-   INTERFACE getfilename
-      MODULE procedure getfilename
-   END INTERFACE
+   character(len=256) :: groupby                   ! file grouped by year/month
 
-   INTERFACE metpreprocess
-      MODULE procedure metpreprocess
-   END INTERFACE
+   character(len=256), allocatable :: fprefix(:) 
+   character(len=256), allocatable :: vname(:) 
+   character(len=256), allocatable :: tintalgo(:) 
 
-   public metpreprocess
- 
+   ! ----- public subroutines -----
+   public :: init_user_specified_forcing
+   public :: metfilename
+   public :: metpreprocess
+
 CONTAINS
 
-   FUNCTION getfilename(year, month, var_i)
+   ! ----------------
+   subroutine init_user_specified_forcing 
 
+      use mod_namelist
       implicit none
+
+      ! Local variables
+      integer :: ivar
+
+      NVAR = DEF_forcing%NVAR
+
+      allocate (dtime  (NVAR))
+      allocate (offset (NVAR))
+
+      allocate (fprefix  (NVAR))
+      allocate (vname    (NVAR))
+      allocate (tintalgo (NVAR))
+   
+     solarin_all_band = DEF_forcing%solarin_all_band   
+     HEIGHT_V         = DEF_forcing%HEIGHT_V            
+     HEIGHT_T         = DEF_forcing%HEIGHT_T           
+     HEIGHT_Q         = DEF_forcing%HEIGHT_Q           
+                     
+     startyr          = DEF_forcing%startyr  
+     startmo          = DEF_forcing%startmo   
+     endyr            = DEF_forcing%endyr     
+     endmo            = DEF_forcing%endmo     
+     dtime(:)         = DEF_forcing%dtime(:)          
+     offset(:)        = DEF_forcing%offset(:)        
+                     
+     leapyear         = DEF_forcing%leapyear   
+     data2d           = DEF_forcing%data2d     
+     hightdim         = DEF_forcing%hightdim   
+     dim2d            = DEF_forcing%dim2d      
+                     
+     latname          = DEF_forcing%latname                   
+     lonname          = DEF_forcing%lonname                  
+                     
+     groupby          = DEF_forcing%groupby                   
+
+     do ivar = 1, NVAR
+        fprefix (ivar) = DEF_forcing%fprefix(ivar) 
+        vname   (ivar) = DEF_forcing%vname(ivar) 
+        tintalgo(ivar) = DEF_forcing%tintalgo(ivar) 
+     end do
+
+   end subroutine init_user_specified_forcing 
+
+   ! ----------------
+   FUNCTION metfilename(year, month, day, var_i)
+
+      use mod_namelist
+      implicit none
+
       integer, intent(in) :: year
       integer, intent(in) :: month
+      integer, intent(in) :: day 
       integer, intent(in) :: var_i
-      character(len=256)  :: getfilename
+      character(len=256)  :: metfilename
       character(len=256)  :: yearstr
+      character(len=256)  :: monthstr
 
       write(yearstr, '(I4.4)') year
-      getfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(yearstr)//'.nc'
-      return
-   END FUNCTION getfilename
+      write(monthstr, '(I2.2)') month
+
+      select case (trim(DEF_forcing%dataset))
+      case ('PRINCETON')  
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(yearstr)//'.nc'
+      case ('GSWP2')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
+      case ('GSWP3')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
+      case ('QIAN')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
+      case ('CRUNCEPV4')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
+      case ('CRUNCEPV7')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
+      case ('ERA5LAND')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)
+         select case (var_i)
+         case (1)
+            metfilename = trim(metfilename) // '_2m_temperature.nc'
+         case (2)
+            metfilename = trim(metfilename) //'_specific_humidity.nc'
+         case (3)
+            metfilename = trim(metfilename) //'_surface_pressure.nc'
+         case (4)
+            metfilename = trim(metfilename) //'_total_precipitation_m_hr.nc'
+         case (5)
+            metfilename = trim(metfilename) //'_10m_u_component_of_wind.nc'
+         case (6)
+            metfilename = trim(metfilename) //'_10m_v_component_of_wind.nc'
+         case (7)
+            metfilename = trim(metfilename) //'_surface_solar_radiation_downwards_w_m2.nc'
+         case (8)
+            metfilename = trim(metfilename) //'_surface_thermal_radiation_downwards_w_m2.nc'
+         END select
+      case ('ERA5')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)
+         select case (var_i)
+         case (1)
+            metfilename = trim(metfilename) // '_2m_temperature.nc4'
+         case (2)
+            metfilename = trim(metfilename) //'_q.nc4'
+         case (3)
+            metfilename = trim(metfilename) //'_surface_pressure.nc4'
+         case (4)
+            metfilename = trim(metfilename) //'_mean_total_precipitation_rate.nc4'
+         case (5)
+            metfilename = trim(metfilename) //'_100m_u_component_of_wind.nc4'
+         case (6)
+            metfilename = trim(metfilename) //'_100m_v_component_of_wind.nc4'
+         case (7)
+            metfilename = trim(metfilename) //'_mean_surface_downward_short_wave_radiation_flux.nc4'
+         case (8)
+            metfilename = trim(metfilename) //'_mean_surface_downward_long_wave_radiation_flux.nc4'
+         END select
+      case ('MSWX')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)//'.nc'
+      case ('WFDE5')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.0.nc'
+         !print *, metfilename
+      case ('CRUJRA')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'.365d.noc.nc'
+      case ('WFDEI')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
+      case ('JRA55')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc' 
+      case ('GDAS')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
+      case ('CLDAS')
+         metfilename = '/'//trim(fprefix(var_i))//'-'//trim(yearstr)//trim(monthstr)//'.nc'
+      case ('CMFD')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
+      case ('POINT')
+         metfilename = '/'//trim(fprefix(1))
+      end select
+
+   END FUNCTION metfilename
 
  ! preprocess for forcing data [not applicable yet for PRINCETON]
  ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(forcn)
+   SUBROUTINE metpreprocess(grid, forcn)
 
+      use PhysicalConstants
+      use mod_namelist
+      use spmd_task
+      use mod_block
+      use mod_grid
+      use mod_data_type
       implicit none
-      real(r8), intent(inout) :: forcn(:,:,:)
+      type(grid_type), intent(in) :: grid
+      type(block_data_real8_2d), intent(inout) :: forcn(:)
 
-      integer  :: i, j
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT
+      integer  :: ib, jb, i, j
+      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
 
 !----------------------------------------------------------------------------
 ! use polynomials to calculate saturation vapor pressure and derivative with
 ! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
 ! required to convert relative humidity to specific humidity
 !----------------------------------------------------------------------------
-      do i = 1, nlats 
-         do j = 1, nlons
-            call qsadv(forcn(j,i,1),forcn(j,i,3),es,esdT,qsat_tmp,dqsat_tmpdT)
-            if (qsat_tmp < forcn(j,i,2)) then
-               forcn(j,i,2) = qsat_tmp
-            endif
+      if (trim(DEF_forcing%dataset) == 'POINT') then
+#ifdef SinglePoint
+         call qsadv(forcn(1)%blk(site_xblk,site_yblk)%val(1,1), &
+                    forcn(3)%blk(site_xblk,site_yblk)%val(1,1), &
+                    es,esdT,qsat_tmp,dqsat_tmpdT)
+         if (qsat_tmp < forcn(2)%blk(site_xblk,site_yblk)%val(1,1)) THEN
+            forcn(2)%blk(site_xblk,site_yblk)%val(1,1) = qsat_tmp
+         ENDIF
+#endif
+      else
+         do jb = 1, gblock%nyblk
+            do ib = 1, gblock%nxblk
+               if (gblock%pio(ib,jb) == p_iam_glb) then
+
+                  do j = 1, grid%ycnt(jb)
+                     do i = 1, grid%xcnt(ib) 
+
+                        select case (trim(DEF_forcing%dataset))
+                        case ('PRINCETON')
+
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('GSWP2')
+                           
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('GSWP3')
+                           if (forcn(1)%blk(ib,jb)%val(i,j)<212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                           if (forcn(4)%blk(ib,jb)%val(i,j)<0.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('QIAN')
+                           
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                           e  = forcn(3)%blk(ib,jb)%val(i,j) * forcn(2)%blk(ib,jb)%val(i,j) &
+                              / (0.622_R8 + 0.378_R8 * forcn(2)%blk(ib,jb)%val(i,j))
+                           ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
+                           forcn(8)%blk(ib,jb)%val(i,j) = ea * stefnc * forcn(1)%blk(ib,jb)%val(i,j)**4
+
+                        case ('CRUNCEPV4')  
+
+                           if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                           if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                           ! 12th grade of Typhoon 32.7-36.9 m/s
+                           if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                           if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+                        case ('CRUNCEPV7')  
+
+                           if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                           if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                           ! 12th grade of Typhoon 32.7-36.9 m/s
+                           if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                           if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
+                               40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('ERA5LAND')
+                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j) * 1000./3600.
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('ERA5')
+                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+
+                        case ('MSWX')
+                           forcn(1)%blk(ib,jb)%val(i,j)=forcn(1)%blk(ib,jb)%val(i,j)+273.15
+                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/10800.
+                           if (forcn(4)%blk(ib,jb)%val(i,j)>1000.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                           es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                           endif
+
+                        case ('WFDE5')
+                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                              es,esdT,qsat_tmp,dqsat_tmpdT)
+                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                          endif
+
+                        case ('WFDEI')
+                             call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                es,esdT,qsat_tmp,dqsat_tmpdT)
+                             if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                            endif
+
+                        case ('CLDAS')
+                              forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                             call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                es,esdT,qsat_tmp,dqsat_tmpdT)
+                             if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                             endif
+                        case ('CMFD')
+                              forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                                call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                   es,esdT,qsat_tmp,dqsat_tmpdT)
+                                if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                   forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                                endif
+
+                        case ('CRUJRA') 
+                                   forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/21600.
+                                   forcn(7)%blk(ib,jb)%val(i,j)=forcn(7)%blk(ib,jb)%val(i,j)/21600.
+                                   call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                      es,esdT,qsat_tmp,dqsat_tmpdT)
+                                   if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                      forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                                  endif
+     
+                        case ('GDAS') 
+
+                                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                         es,esdT,qsat_tmp,dqsat_tmpdT)
+                                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                                       endif
+
+                        case ('JRA55')
+                                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                                         es,esdT,qsat_tmp,dqsat_tmpdT)
+                                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                                       endif
+
+                        end select
+
+                     end do
+                  end do
+               end if
+            end do
          end do
-      end do
+      end if
 
    END SUBROUTINE metpreprocess
-
-#endif
- 
-
-
-#if(defined USE_GSWP2_DATA)
-
-   use precision
-   implicit none
-
- ! parameter setting
- ! ------------------------------------------------------------
-   integer, parameter :: NVAR    = 8              ! variable number of forcing data
-   integer, parameter :: nlats   = 150            ! number of latitudes
-   integer, parameter :: nlons   = 360            ! number of longitudes
-   integer, parameter :: startyr = 1982           ! start year of forcing data
-   integer, parameter :: startmo = 7              ! start month of forcing data
-   integer, parameter :: endyr   = 1995           ! end year of forcing data
-   integer, parameter :: endmo   = 12             ! end month of forcing data
-   integer, parameter :: dtime(NVAR)  = 10800     ! temporal resolution
-   integer, parameter :: offset(NVAR) = 10800     ! time offset (seconds)
-   integer, parameter :: nlands  = 15238          ! land grid number in 1d
-
-   logical, parameter :: leapyear = .true.        ! leapyear calendar
-   logical, parameter :: data2d   = .false.       ! data in 2 dimension (lon, lat)
-   logical, parameter :: hightdim = .false.       ! have "z" dimension
-   logical, parameter :: dim2d    = .true.        ! lat/lon value in 2 dimension (lon, lat)
-   logical, parameter :: latrev   = .false.       ! need to reverse latitudes
-   logical, parameter :: lonadj   = .false.       ! need to adjust longitude, 0~360 -> -180~180
-
-   character(len=256), parameter :: latname = 'nav_lat'  ! dimension name of latitude
-   character(len=256), parameter :: lonname = 'nav_lon'  ! dimension name of longitude
-
- ! file grouped by year/month
-   character(len=256), parameter :: groupby = 'month'
-   
- ! prefix of forcing data file
-   character(len=256), parameter :: fprefix(NVAR) = [character(len=256) :: &
-      'Tair_cru/Tair_cru', 'Qair_cru/Qair_cru', 'PSurf_ecor/PSurf_ecor', &
-      'Rainf_gswp/Rainf_gswp', 'Rainf_C_gswp/Rainf_C_gswp', 'Wind_ncep/Wind_ncep', &
-      'SWdown_srb/SWdown_srb', 'LWdown_srb/LWdown_srb']
-
- ! variable name of forcing data file
-   character(len=256), parameter :: vname(NVAR) = [character(len=256) :: &
-      'Tair', 'Qair', 'PSurf', 'Rainf', 'Rainf_C', 'Wind', 'SWdown', 'LWdown']
- 
- ! interpolation method
-   character(len=256), parameter :: tintalgo(NVAR) = [character(len=256) :: &
-      'linear', 'linear', 'linear', 'nearest', 'nearest', 'linear', 'coszen', 'linear']
-   
-   INTERFACE getfilename
-      MODULE procedure getfilename
-   END INTERFACE
-
-   INTERFACE metpreprocess
-      MODULE procedure metpreprocess
-   END INTERFACE
- 
-   public metpreprocess
-
-CONTAINS
-
-   FUNCTION getfilename(year, month, var_i)
-
-      implicit none
-      integer, intent(in) :: year
-      integer, intent(in) :: month
-      integer, intent(in) :: var_i
-      character(len=256)  :: getfilename
-      character(len=256)  :: yearstr
-      character(len=256)  :: monthstr
-      
-      write(yearstr, '(I4.4)') year
-      write(monthstr, '(I2.2)') month
-      getfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
-      return
-   END FUNCTION getfilename
-
- ! preprocess for forcing data [not applicable yet for GSWP2]
- ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(forcn)
-
-      implicit none
-      real(r8), intent(inout) :: forcn(:,:,:)
-
-      integer  :: i, j
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT
-
-!----------------------------------------------------------------------------
-! use polynomials to calculate saturation vapor pressure and derivative with
-! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
-! required to convert relative humidity to specific humidity
-!----------------------------------------------------------------------------
-      do i = 1, nlats 
-         do j = 1, nlons
-            call qsadv(forcn(j,i,1),forcn(j,i,3),es,esdT,qsat_tmp,dqsat_tmpdT)
-            if (qsat_tmp < forcn(j,i,2)) then
-               forcn(j,i,2) = qsat_tmp
-            endif
-         end do
-      end do
-
-   END SUBROUTINE metpreprocess
-
-#endif
-
-
- 
-#if(defined USE_QIAN_DATA)
-
-   use precision
-   use PhysicalConstants
-   implicit none
-
- ! parameter setting
- ! ------------------------------------------------------------
-   integer, parameter :: NVAR    = 8              ! variable number of forcing data
-   integer, parameter :: nlats   = 94             ! number of latitudes
-   integer, parameter :: nlons   = 192            ! number of longitudes
-   integer, parameter :: startyr = 1972           ! start year of forcing data       <MARK #2>
-   integer, parameter :: startmo = 1              ! start month of forcing data
-   integer, parameter :: endyr   = 2004           ! end year of forcing data
-   integer, parameter :: endmo   = 12             ! end month of forcing data
-   integer, parameter :: dtime(NVAR)  = (/ &      ! temporal resolution
-      10800, 10800, 10800, 21600, 0, 10800, 21600, 0/)
-   integer, parameter :: offset(NVAR) = (/ &      ! time offset (seconds)
-      5400, 5400, 5400, 10800, 0, 5400, 0, 0/)    ! ..
-   integer, parameter :: nlands  = 1              ! land grid number in 1d
-
-   logical, parameter :: leapyear = .false.       ! leapyear calendar
-   logical, parameter :: data2d   = .true.        ! data in 2 dimension (lon, lat)
-   logical, parameter :: hightdim = .false.       ! have "z" dimension
-   logical, parameter :: dim2d    = .true.        ! lat/lon value in 2 dimension (lon, lat)
-   logical, parameter :: latrev   = .true.        ! need to reverse latitudes
-   logical, parameter :: lonadj   = .true.        ! need to adjust longitude, 0~360 -> -180~180
-
-   character(len=256), parameter :: latname = 'LATIXY'  ! dimension name of latitude
-   character(len=256), parameter :: lonname = 'LONGXY'  ! dimension name of longitude
-
- ! file grouped by year/month
-   character(len=256), parameter :: groupby = 'month'
-   
- ! prefix of forcing data file
-   character(len=256), parameter :: fprefix(NVAR) = [character(len=256) :: &
-      'TmpPrsHumWnd3Hrly/clmforc.Qian.c2006.T62.TPQW.', &
-      'TmpPrsHumWnd3Hrly/clmforc.Qian.c2006.T62.TPQW.', &
-      'TmpPrsHumWnd3Hrly/clmforc.Qian.c2006.T62.TPQW.', &
-      'Precip6Hrly/clmforc.Qian.c2006.T62.Prec.', &
-      'NULL', &
-      'TmpPrsHumWnd3Hrly/clmforc.Qian.c2006.T62.TPQW.', &
-      'Solar6Hrly/clmforc.Qian.c2006.T62.Solr.', &
-      'NULL']
-
- ! variable name of forcing data file
-   character(len=256), parameter :: vname(NVAR) = [character(len=256) :: &
-      'TBOT', 'QBOT', 'PSRF', 'PRECTmms', 'NULL', 'WIND', 'FSDS', 'NULL']
- 
- ! interpolation method
-   character(len=256), parameter :: tintalgo(NVAR) = [character(len=256) :: &
-      'linear', 'linear', 'linear', 'nearest', 'NULL', 'linear', 'coszen', 'NULL']
-   
-   INTERFACE getfilename
-      MODULE procedure getfilename
-   END INTERFACE
-
-   INTERFACE metpreprocess
-      MODULE procedure metpreprocess
-   END INTERFACE
- 
-   public metpreprocess
-
-CONTAINS
-
-   FUNCTION getfilename(year, month, var_i)
-
-      implicit none
-      integer, intent(in) :: year
-      integer, intent(in) :: month
-      integer, intent(in) :: var_i
-      character(len=256)  :: getfilename
-      character(len=256)  :: yearstr
-      character(len=256)  :: monthstr
-      
-      write(yearstr, '(I4.4)') year
-      write(monthstr, '(I2.2)') month
-      getfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
-      return
-   END FUNCTION getfilename
-
- ! preprocess for forcing data: calculate LW
- ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(forcn)
-
-      implicit none
-      real(r8), intent(inout) :: forcn(:,:,:)
-
-      real(r8) :: e, ea
-      integer  :: i, j
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT
-
-!----------------------------------------------------------------------------
-! use polynomials to calculate saturation vapor pressure and derivative with
-! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
-! required to convert relative humidity to specific humidity
-!----------------------------------------------------------------------------
-      do i = 1, nlats 
-         do j = 1, nlons
-            call qsadv(forcn(j,i,1),forcn(j,i,3),es,esdT,qsat_tmp,dqsat_tmpdT)
-            if (qsat_tmp < forcn(j,i,2)) then
-               forcn(j,i,2) = qsat_tmp
-            endif
-         end do
-      end do
-      
-      do i = 1, nlats
-         do j = 1, nlons
-            e  = forcn(j,i,3) * forcn(j,i,2) / (0.622_R8 + 0.378_R8 * forcn(j,i,2))
-            ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(j,i,1))
-            forcn(j,i,8) = ea * stefnc * forcn(j,i,1)**4
-         end do
-      end do
-
-   END SUBROUTINE metpreprocess
-
-#endif
-
-
-
-#if(defined USE_CRUNCEP_DATA)
-
-   use precision
-   use PhysicalConstants
-   implicit none
-
- ! parameter setting
- ! ------------------------------------------------------------
-   integer, parameter :: NVAR    = 8              ! variable number of forcing data
-   integer, parameter :: nlats   = 360            ! number of latitudes
-   integer, parameter :: nlons   = 720            ! number of longitudes
-   integer, parameter :: startyr = 2000           ! start year of forcing data        <MARK #1>
-   integer, parameter :: startmo = 1              ! start month of forcing data
-   integer, parameter :: endyr   = 2003           ! end year of forcing data
-   integer, parameter :: endmo   = 12             ! end month of forcing data
-   integer, parameter :: dtime(NVAR)  = (/ &      ! temporal resolution
-      21600, 21600, 21600, 21600, 0, 21600, 21600, 21600/)
-   integer, parameter :: offset(NVAR) = (/ &      ! time offset (seconds)
-      10800, 10800, 10800, 10800, 0, 10800, 0, 10800/)    ! ..
-   integer, parameter :: nlands  = 1              ! land grid number in 1d
-
-   logical, parameter :: leapyear = .false.       ! leapyear calendar
-   logical, parameter :: data2d   = .true.        ! data in 2 dimension (lon, lat)
-   logical, parameter :: hightdim = .false.       ! have "z" dimension
-   logical, parameter :: dim2d    = .true.        ! lat/lon value in 2 dimension (lon, lat)
-   logical, parameter :: latrev   = .true.        ! need to reverse latitudes
-   logical, parameter :: lonadj   = .true.        ! need to adjust longitude, 0~360 -> -180~180
-
-   character(len=256), parameter :: latname = 'LATIXY'  ! dimension name of latitude
-   character(len=256), parameter :: lonname = 'LONGXY'  ! dimension name of longitude
-
- ! file grouped by year/month
-   character(len=256), parameter :: groupby = 'month'
-   
- ! prefix of forcing data file
-   character(len=256), parameter :: fprefix(NVAR) = [character(len=256) :: &
-      'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
-      'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
-      'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
-      'Precip6Hrly/clmforc.cruncep.V4.c2011.0.5d.Prec.', &
-      'NULL', &
-      'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.', &
-      'Solar6Hrly/clmforc.cruncep.V4.c2011.0.5d.Solr.', &
-      'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.']
-
- ! variable name of forcing data file
-   character(len=256), parameter :: vname(NVAR) = [character(len=256) :: &
-      'TBOT', 'QBOT', 'PSRF', 'PRECTmms', 'NULL', 'WIND', 'FSDS', 'FLDS']
- 
- ! interpolation method
-   character(len=256), parameter :: tintalgo(NVAR) = [character(len=256) :: &
-      'linear', 'linear', 'linear', 'nearest', 'NULL', 'linear', 'coszen', 'linear']
-   
-   INTERFACE getfilename
-      MODULE procedure getfilename
-   END INTERFACE
-
-   INTERFACE metpreprocess
-      MODULE procedure metpreprocess
-   END INTERFACE
- 
-   public metpreprocess
-
-CONTAINS
-
-   FUNCTION getfilename(year, month, var_i)
-
-      implicit none
-      integer, intent(in) :: year
-      integer, intent(in) :: month
-      integer, intent(in) :: var_i
-      character(len=256)  :: getfilename
-      character(len=256)  :: yearstr
-      character(len=256)  :: monthstr
-      
-      write(yearstr, '(I4.4)') year
-      write(monthstr, '(I2.2)') month
-      getfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
-      return
-   END FUNCTION getfilename
-
- ! preprocess for forcing data: calculate LW
- ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(forcn)
-
-      implicit none
-      real(r8), intent(inout) :: forcn(:,:,:)
-
-      real(r8) :: e, ea
-      integer  :: i, j
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT
-
-!----------------------------------------------------------------------------
-! use polynomials to calculate saturation vapor pressure and derivative with
-! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
-! required to convert relative humidity to specific humidity
-!----------------------------------------------------------------------------
-      do i = 1, nlats 
-         do j = 1, nlons
-            call qsadv(forcn(j,i,1),forcn(j,i,3),es,esdT,qsat_tmp,dqsat_tmpdT)
-            if (qsat_tmp < forcn(j,i,2)) then
-               forcn(j,i,2) = qsat_tmp
-            endif
-         end do
-      end do
-      
-   END SUBROUTINE metpreprocess
-
-#endif
-
-
-
-#if(defined USE_POINT_DATA)
-
-   use precision
-   implicit none
- 
- ! parameter setting
- ! ------------------------------------------------------------
-   integer, parameter :: NVAR    = 8              ! variable number of forcing data
- ! not applied for POINT
-   integer, parameter :: nlats   = 2              ! number of latitudes
-   integer, parameter :: nlons   = 2              ! number of longitudes
-   integer, parameter :: startyr = 1948           ! start year of forcing data
-   integer, parameter :: startmo = 7              ! start month of forcing data
-   integer, parameter :: endyr   = 2006           ! end year of forcing data
-   integer, parameter :: endmo   = 12             ! end month of forcing data
-   integer, parameter :: dtime(NVAR)  = 1800      ! temporal resolution
-   integer, parameter :: offset(NVAR) = 0         ! time offset (seconds)
-   integer, parameter :: nlands  = 1              ! land grid number in 1d
-
- ! not applied for POINT
-   logical, parameter :: leapyear = .true.        ! leapyear calendar
-   logical, parameter :: data2d   = .true.        ! data in 2 dimension (lon, lat)
-   logical, parameter :: hightdim = .false.       ! have "z" dimension
-   logical, parameter :: dim2d    = .false.       ! lat/lon value in 2 dimension (lon, lat)
-   logical, parameter :: latrev   = .true.        ! need to reverse latitudes
-   logical, parameter :: lonadj   = .true.        ! need to adjust longitude, 0~360 -> -180~180
-
- ! not applied for POINT
-   character(len=256), parameter :: latname = 'NULL' ! dimension name of latitude
-   character(len=256), parameter :: lonname = 'NULL' ! dimension name of longitude
-
- ! not applied for POINT
-   character(len=256), parameter :: groupby = 'NULL'
-   
- ! prefix of forcing data file
-   character(len=256), parameter :: fprefix(NVAR) = 'VAL.DAT.CTRL.INT'
-
- ! not applied for POINT
-   character(len=256), parameter :: vname(NVAR) = 'NULL'
- 
- ! not applied for POINT
-   character(len=256), parameter :: tintalgo(NVAR) = 'NULL'
-
-   INTERFACE getfilename
-      MODULE procedure getfilename
-   END INTERFACE
-
-   INTERFACE metpreprocess
-      MODULE procedure metpreprocess
-   END INTERFACE
- 
-   public metpreprocess
-
-CONTAINS
-
-   FUNCTION getfilename(year, month, var_i)
-
-      implicit none
-      integer, intent(in) :: year
-      integer, intent(in) :: month
-      integer, intent(in) :: var_i
-      character(len=256)  :: getfilename
-
-      getfilename = '/'//trim(fprefix(1))
-      return
-   END FUNCTION getfilename
-
- ! preprocess for forcing data [not applicable yet for POINT]
- ! ------------------------------------------------------------
-   SUBROUTINE metpreprocess(forcn)
-
-      implicit none
-      real(r8), intent(inout) :: forcn(:,:,:)
-
-      real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT
-
-!----------------------------------------------------------------------------
-! use polynomials to calculate saturation vapor pressure and derivative with
-! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
-! required to convert relative humidity to specific humidity
-!----------------------------------------------------------------------------
-
-      call qsadv(forcn(1,1,1),forcn(1,1,3),es,esdT,qsat_tmp,dqsat_tmpdT)
-      if (qsat_tmp < forcn(1,1,2)) forcn(1,1,2) = qsat_tmp
-
-
-   END SUBROUTINE metpreprocess
-
-#endif
-
 
 END MODULE user_specified_forcing
 ! ----------- EOP ---------------

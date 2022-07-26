@@ -1,255 +1,339 @@
-
 #include <define.h>
 
-SUBROUTINE aggregation_forest_height ( dir_rawdata,dir_model_landdata, &
-                                       lon_points,lat_points, &
-                                       nrow_start,nrow_end,ncol_start,ncol_end, &
-                                       nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                                       READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
-! ----------------------------------------------------------------------
-! 1. Global land cover types (updated with the specific dataset)
-!
-! 2. Global Forest Height
-!    (http://lidarradar.jpl.nasa.gov/)
-!     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
-!     forest canopy height globally with spaceborne lidar.
-!     J. Geophys. Res., 116, G04021.
-!
-! Created by Yongjiu Dai, 02/2014
-! ----------------------------------------------------------------------
-use precision
+SUBROUTINE aggregation_forest_height ( &
+      gland, dir_rawdata, dir_model_landdata)
 
-IMPLICIT NONE
-
-! arguments:
-#if(defined USGS_CLASSIFICATION)
-      integer, parameter :: N_land_classification = 24 ! GLCC USGS number of land cover category
-#else
-      integer, parameter :: N_land_classification = 17 ! MODIS IGBP number of land cover category
+   ! ----------------------------------------------------------------------
+   ! 1. Global land cover types (updated with the specific dataset)
+   !
+   ! 2. Global Forest Height
+   !    (http://lidarradar.jpl.nasa.gov/)
+   !     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
+   !     forest canopy height globally with spaceborne lidar.
+   !     J. Geophys. Res., 116, G04021.
+   !
+   ! Created by Yongjiu Dai, 02/2014
+   ! ----------------------------------------------------------------------
+   use precision
+   use mod_namelist
+   use spmd_task
+   use mod_grid
+   use mod_landpatch
+   use ncio_vector
+   use ncio_block
+#ifdef CLMDEBUG 
+   use mod_colm_debug
 #endif
-      integer, parameter :: nlat = 21600  ! 180*(60*2)
-      integer, parameter :: nlon = 43200  ! 360*(60*2)
+   use mod_aggregation_lc
+   USE mod_utils
 
-      character(LEN=256), intent(in) :: dir_rawdata
-      character(LEN=256), intent(in) :: dir_model_landdata
+   USE LC_Const
+   USE mod_modis_data
+#ifdef PFT_CLASSIFICATION
+   USE mod_landpft
+   USE mod_aggregation_pft
+#endif
+#ifdef PC_CLASSIFICATION
+   USE mod_landpc
+   USE mod_aggregation_pft
+#endif
+   IMPLICIT NONE
+   ! arguments:
 
-      integer, intent(in) :: lon_points ! number of model longitude grid points
-      integer, intent(in) :: lat_points ! model  of model latitude grid points
-      integer, intent(in) :: nrow_start
-      integer, intent(in) :: nrow_end
-      integer, intent(in) :: ncol_start
-      integer, intent(in) :: ncol_end
-      integer, intent(in) :: nx_fine_gridcell
-      integer, intent(in) :: ny_fine_gridcell
-      integer, intent(in) :: READ_row_UB(lat_points)  ! north boundary index for fine gird cell
-      integer, intent(in) :: READ_col_UB(lon_points)  ! west boundary index for fine gird cell  
-      integer, intent(in) :: READ_row_LB(lat_points)  ! south boundary index for fine gird cell
-      integer, intent(in) :: READ_col_LB(lon_points)  ! east boundary index for fine gird cell
+   type(grid_type),  intent(in) :: gland
+   character(LEN=*), intent(in) :: dir_rawdata
+   character(LEN=*), intent(in) :: dir_model_landdata
 
-      real(r8), intent(in) :: area_fine_gridcell(nlon,nlat)  ! rwadata fine cell area (km**2)
+   ! local variables:
+   ! ---------------------------------------------------------------
+   character(len=256) :: landdir, lndname
+   integer :: L, ipatch, p
 
-! local variables:
-! ---------------------------------------------------------------
-      character(len=256) lndname
-      character(len=1) land_chr1(nlon)
-      character(len=2) land_chr2(nlon)
-      integer(kind=1)  land_int1(nlon)
-      integer(kind=2)  land_int2(nlon)
+   type (block_data_real8_2d) :: tree_height
+   real(r8), allocatable :: tree_height_patches(:), tree_height_one(:)
 
-      integer iunit
-      integer length
-      integer i, j, L
-      integer i1, i2, j1, j2
-      integer nrow, ncol, ncol_mod
-      integer LL, np
-      integer n_fine_gridcell
+   ! for IGBP data
+   character(len=256) :: dir_modis
+   type (block_data_real8_2d) :: htop
+   type (block_data_real8_3d) :: pftPCT
+   real(r8), allocatable :: htop_patches(:), htop_pfts(:), htop_pcs(:,:)
+   real(r8), allocatable :: htop_one(:), area_one(:), pct_one(:,:)
+   INTEGER  :: ip, ipft
+   REAL(r8) :: sumarea
 
-      integer, allocatable :: landtypes(:,:) ! GLCC USGS / MODIS IGBP land cover types 
-      integer, allocatable :: num_patches(:)
-      real(r8), allocatable :: tree_height(:,:)  ! forest canopy height (m)
-      real(r8), allocatable :: a_tree_height_patches(:,:)
-      real(r8), allocatable :: tree_height_patches(:,:,:)
+   landdir = trim(dir_model_landdata) // '/htop/'
 
-      real(r8), external :: median
-
-! ........................................
-! ... (1) gloabl land cover types
-! ........................................
-      iunit = 100
-      inquire(iolength=length) land_chr1 
-      allocate ( landtypes (nlon,nlat) ) 
-
-#if(defined USE_POINT_DATA)
-
-#if(defined USGS_CLASSIFICATION)
-      landtypes(ncol_start,nrow_start) = USGS_CLASSIFICATION
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   if (p_is_master) then
+      write(*,'(/, A24)') 'Aggregate forest height ...'
+      CALL system('mkdir -p ' // trim(adjustl(landdir)))
+   end if
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
-      landtypes(ncol_start,nrow_start) = IGBP_CLASSIFICATION
+#ifdef SinglePoint
+   IF (USE_SITE_htop) THEN
+      RETURN
+   ENDIF
 #endif
 
-#else
+#ifdef USGS_CLASSIFICATION
+   lndname = trim(dir_rawdata)//'/Forest_Height.nc' 
 
-#if(defined USGS_CLASSIFICATION)
-     ! GLCC USGS classification
-     ! -------------------
-      lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/landtypes_usgs_update.bin' 
-      print*,lndname
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = nrow_start, nrow_end
-         read(iunit,rec=nrow,err=100) land_chr1 
-         landtypes(:,nrow) = ichar(land_chr1(:)) 
-      enddo 
-      close (iunit)
+   if (p_is_io) then
+      call allocate_block_data (gland, tree_height)
+      call ncio_read_block (lndname, 'forest_height', gland, tree_height)
+
+#ifdef USEMPI
+      CALL aggregation_lc_data_daemon (gland, tree_height)
+#endif
+   end if
+
+   if (p_is_worker) then
+
+      allocate (tree_height_patches (numpatch))
+   
+      do ipatch = 1, numpatch
+         L = landpatch%ltyp(ipatch)
+         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER            BODIES(16)/ICE(24)
+            CALL aggregation_lc_request_data (ipatch, gland, tree_height, tree_height_one)
+            tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
+         ELSE
+            tree_height_patches (ipatch) = -1.0e36_r8
+         ENDIF
+      end do
+      
+#ifdef USEMPI
+      CALL aggregation_lc_worker_done ()
+#endif
+   end if
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
-     ! MODIS IGBP classification
-     ! -------------------
-      lndname = trim(dir_rawdata)//'RAW_DATA_updated_with_igbp/landtypes_igbp_update.bin'
-      print*,lndname
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-      do nrow = nrow_start, nrow_end
-         read(iunit,rec=nrow,err=100) land_chr1
-         landtypes(:,nrow) = ichar(land_chr1(:))
-      enddo
-      close (iunit)
+#ifdef CLMDEBUG
+   call check_vector_data ('htop_patches ', tree_height_patches)
 #endif 
 
-#endif
+   lndname = trim(landdir)//'/htop_patches.nc'
+   CALL ncio_create_file_vector (lndname, landpatch)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, tree_height_patches, 1)
 
-! ................................................
-! ... (2) global forest canopy height (m)
-! ................................................
-      allocate ( tree_height (nlon,nlat) )
-
-      iunit = 100
-      inquire(iolength=length) land_chr1
-      lndname = trim(dir_rawdata)//'forest_height/Forest_Height.bin'
-      print*,lndname
-
-      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-      do nrow = nrow_start, nrow_end
-         read(iunit,rec=nrow,err=100) land_chr1
-         tree_height(:,nrow) = ichar(land_chr1(:))
-      enddo 
-      close (iunit)
-      print*, minval(tree_height(:,nrow_start:nrow_end)), maxval(tree_height(:,nrow_start:nrow_end))
-
-!   ---------------------------------------------------------------
-!   aggregate the forest canopy height from the resolution of raw data to modelling resolution
-!   ---------------------------------------------------------------
-      n_fine_gridcell = nx_fine_gridcell * ny_fine_gridcell
-      allocate ( num_patches(0:N_land_classification) )
-      allocate ( a_tree_height_patches(0:N_land_classification,1:n_fine_gridcell) )
-      allocate ( tree_height_patches(0:N_land_classification,1:lon_points,1:lat_points) )
-
-#ifdef OPENMP
-print *, 'OPENMP enabled, threads num = ', OPENMP
-!$OMP PARALLEL DO NUM_THREADS(OPENMP) SCHEDULE(DYNAMIC,1) &
-!$OMP PRIVATE(i,j,i1,i2,j1,j2,nrow,ncol,ncol_mod,L,LL,num_patches,np) &
-!$OMP PRIVATE(a_tree_height_patches) 
-#endif
-      do j = 1, lat_points
-
-#if(defined USER_GRID)
-         j1 = READ_row_UB(j)  ! read upper boundary of latitude
-         j2 = READ_row_LB(j)  ! read lower boundary of latitude
-#else
-         j1 = nrow_start + (j-1)*ny_fine_gridcell
-         j2 = nrow_start - 1 + j*ny_fine_gridcell
-#endif
-
-         do i = 1, lon_points
-
-#if(defined USER_GRID)
-            i1 = READ_col_UB(i)   ! read upper boundary of longitude
-            i2 = READ_col_LB(i)   ! read lower boundary of longitude
-#else            
-            i1 = ncol_start + (i-1)*nx_fine_gridcell 
-            i2 = ncol_start -1 + i*nx_fine_gridcell
-#endif
-            num_patches(:) = 0
-
-            do nrow = j1, j2            
-               if(i1 > i2) i2 = i2 + nlon   ! for coarse grid crosses the dateline    
-               do ncol = i1, i2
-                  ncol_mod = mod(ncol,nlon)
-                  if(ncol_mod == 0) ncol_mod = nlon  
-                  L = landtypes(ncol_mod,nrow)
-                  ! mapping forest canopy height from "raw data" resolution to modelling resolution
-
-#if(defined USGS_CLASSIFICATION)
-                  if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
-                     num_patches(L) = num_patches(L) + 1
-                     LL = num_patches(L)
-                     a_tree_height_patches (L,LL) = tree_height(ncol_mod,nrow)
-                 endif
-#endif
-#if(defined IGBP_CLASSIFICATION)
-                  if(L/=0 .and. L/=13 .and. L/=17 .and. L/=15)then  ! NOT OCEAN(0)/URBAN and BUILT-UP(13)/WATER BODIES(17)/ICE(15)
-                     num_patches(L) = num_patches(L) + 1
-                     LL = num_patches(L)
-                     a_tree_height_patches (L,LL) = tree_height(ncol_mod,nrow)
-                 endif
-#endif
-               enddo
-            enddo
-            
-            do L = 0, N_land_classification
-#if(defined USGS_CLASSIFICATION)
-               if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
-                  np = num_patches(L)
-                  if(np == 0)then
-                     tree_height_patches (L,i,j) = -1.e36
-                  else if(np == 1)then
-                     tree_height_patches(L,i,j) = a_tree_height_patches(L,1)
-                  else
-                     tree_height_patches(L,i,j) = median( a_tree_height_patches(L,1:np), np )
-                  endif
-               else
-                  tree_height_patches(L,i,j) = -1.e36
-               endif
-
-#endif
-#if(defined IGBP_CLASSIFICATION)
-               if(L/=0 .and. L/=13 .and. L/=17 .and. L/=15)then  ! NOT OCEAN(0)/URBAN and BUILT-UP(13)/WATER BODIES(17)/ICE(15)
-                  np = num_patches(L)
-                  if(np == 0)then
-                     tree_height_patches (L,i,j) = -1.e36
-                  else if(np == 1)then
-                     tree_height_patches(L,i,j) = a_tree_height_patches(L,1)
-                  else
-                     tree_height_patches(L,i,j) = median( a_tree_height_patches(L,1:np), np )
-                  endif
-               else
-                  tree_height_patches(L,i,j) = -1.e36
-               endif
-#endif
-            enddo
-         enddo
-      enddo
-#ifdef OPENMP
-!$OMP END PARALLEL DO
-#endif
-
-! Write-out the forest height (m) 
-      lndname = trim(dir_model_landdata)//'model_forest_height.bin'
-      print*,lndname
-      open(iunit,file=trim(lndname),form='unformatted',status='unknown')
-      write(iunit,err=100) tree_height_patches
-      close(iunit)
-
-      deallocate ( landtypes )
-      deallocate ( tree_height )
-      deallocate ( num_patches )
-      deallocate ( a_tree_height_patches )
+   if (p_is_worker) then
       deallocate ( tree_height_patches )
+   end if
+#endif
 
-      go to 1000
-100   print 101,nrow,lndname
-101   format(' record =',i8,',  error occured on file: ',a50)
-1000  continue
+
+#ifdef IGBP_CLASSIFICATION
+   IF (p_is_io) THEN
+      CALL allocate_block_data (gland, htop)
+   ENDIF
+
+   IF (p_is_io) THEN
+      dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+      CALL modis_read_data (dir_modis, 'HTOP', gland, htop)
+#ifdef USEMPI
+      CALL aggregation_lc_data_daemon (gland, htop)
+#endif
+   ENDIF
+
+   IF (p_is_worker) THEN
+
+      allocate (htop_patches (numpatch))
+
+      DO ipatch = 1, numpatch
+
+         IF (landpatch%ltyp(ipatch) /= 0) THEN
+            CALL aggregation_lc_request_data (ipatch, gland, htop, htop_one, area_one)
+            htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
+         ENDIF
+
+      ENDDO
+      
+#ifdef USEMPI
+      CALL aggregation_lc_worker_done ()
+#endif
+   ENDIF
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+   CALL check_vector_data ('HTOP_patches ', htop_patches)
+#endif
+
+   lndname = trim(landdir)//'/htop_patches.nc'
+   CALL ncio_create_file_vector (lndname, landpatch)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
+
+   IF (p_is_worker) THEN
+      IF (allocated(htop_patches)) deallocate (htop_patches)
+      IF (allocated(htop_one))     deallocate (htop_one)
+      IF (allocated(area_one))     deallocate (area_one)
+   ENDIF
+#endif
+
+#ifdef PFT_CLASSIFICATION
+   IF (p_is_io) THEN
+      CALL allocate_block_data (gland, htop)
+      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+   ENDIF
+     
+   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+      
+   IF (p_is_io) THEN
+      CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )
+      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+#ifdef USEMPI
+      CALL aggregation_pft_data_daemon (gland, pftPCT, data2 = htop)
+#endif
+   ENDIF
+
+   IF (p_is_worker) THEN
+      
+      allocate (htop_patches (numpatch))
+      allocate (htop_pfts    (numpft  ))
+
+      DO ipatch = 1, numpatch
+
+         CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_one, &
+            area = area_one, data2 = htop, dout2 = htop_one)
+
+         htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
+
+         IF (landpatch%ltyp(ipatch) == 1) THEN
+            DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
+               p = landpft%ltyp(ip)
+               sumarea = sum(pct_one(p,:) * area_one)
+               IF (sumarea > 0) THEN
+                  htop_pfts(ip) = sum(htop_one * pct_one(p,:) * area_one) / sumarea
+               ELSE
+                  htop_pfts(ip) = htop_patches(ipatch)
+               ENDIF
+            ENDDO
+#ifdef CROP
+         ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+            ip = patch_pft_s(ipatch)
+            htop_pfts(ip) = htop_patches(ipatch)
+#endif
+         ENDIF
+      ENDDO
+
+#ifdef USEMPI
+   CALL aggregation_pft_worker_done ()
+#endif
+   ENDIF
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+   CALL check_vector_data ('HTOP_patches ', htop_patches)
+   CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
+#endif
+
+   lndname = trim(landdir)//'/htop_patches.nc'
+   CALL ncio_create_file_vector (lndname, landpatch)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
+   
+   lndname = trim(landdir)//'/htop_pfts.nc'
+   CALL ncio_create_file_vector (lndname, landpft)
+   CALL ncio_define_pixelset_dimension (lndname, landpft)
+   CALL ncio_write_vector (lndname, 'htop_pfts', 'vector', landpft, htop_pfts, 1)
+   
+   IF (p_is_worker) THEN
+      IF (allocated(htop_patches)) deallocate (htop_patches)
+      IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
+      IF (allocated(htop_one)) deallocate (htop_one)
+      IF (allocated(pct_one )) deallocate (pct_one )
+      IF (allocated(area_one)) deallocate (area_one)
+   ENDIF
+#endif
+
+#ifdef PC_CLASSIFICATION
+   IF (p_is_io) THEN
+      CALL allocate_block_data (gland, htop)
+      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+   ENDIF
+     
+   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+      
+   IF (p_is_io) THEN
+      CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )
+      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+#ifdef USEMPI
+      CALL aggregation_pft_data_daemon (gland, pftPCT, data2 = htop)
+#endif
+   ENDIF
+
+   IF (p_is_worker) THEN
+      
+      allocate (htop_patches (numpatch))
+      allocate (htop_pcs (0:N_PFT-1, numpc))
+
+      DO ipatch = 1, numpatch
+
+         CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_one, &
+            area = area_one, data2 = htop, dout2 = htop_one)
+
+         htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
+
+         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
+            ip = patch2pc(ipatch)
+            DO ipft = 0, N_PFT-1
+               sumarea = sum(pct_one(ipft,:) * area_one)
+               IF (sumarea > 0) THEN
+                  htop_pcs(ipft,ip) = sum(htop_one * pct_one(ipft,:) * area_one) / sumarea
+               ELSE
+                  htop_pcs(ipft,ip) = htop_patches(ipatch)
+               ENDIF
+            ENDDO
+         ENDIF
+      ENDDO
+
+#ifdef USEMPI
+   CALL aggregation_pft_worker_done ()
+#endif
+   ENDIF
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+   CALL check_vector_data ('HTOP_patches ', htop_patches)
+   CALL check_vector_data ('HTOP_pcs     ', htop_pcs    )
+#endif
+
+   lndname = trim(landdir)//'/htop_patches.nc'
+   CALL ncio_create_file_vector (lndname, landpatch)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
+
+   lndname = trim(landdir)//'/htop_pcs.nc'
+   CALL ncio_create_file_vector (lndname, landpc)
+   CALL ncio_define_pixelset_dimension (lndname, landpc)
+   CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
+   CALL ncio_write_vector (lndname, 'htop_pcs', 'pft', N_PFT, 'vector', landpc, htop_pcs, 1)
+   
+   IF (p_is_worker) THEN
+      IF (allocated(htop_patches)) deallocate (htop_patches)
+      IF (allocated(htop_pcs    )) deallocate (htop_pcs    )
+      IF (allocated(htop_one)) deallocate (htop_one)
+      IF (allocated(pct_one )) deallocate (pct_one )
+      IF (allocated(area_one)) deallocate (area_one)
+   ENDIF
+#endif
+
 
 END SUBROUTINE aggregation_forest_height

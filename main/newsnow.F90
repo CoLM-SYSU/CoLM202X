@@ -87,14 +87,16 @@
 
       if(snl<0 .AND. newnode==0)then
          lb = snl + 1
-         t_soisno(lb) = tfrz &
-            + ( (wice_soisno(lb)*cpice+wliq_soisno(lb)*cpliq)*(t_soisno(lb)-tfrz) &
-            +   (pg_rain*cpliq + pg_snow*cpice)*deltim*(t_precip-tfrz) ) &
-            / ( wice_soisno(lb)*cpice + wliq_soisno(lb)*cpliq &
-            +   pg_rain*deltim*cpliq + pg_snow*deltim*cpice )
+
+!        comment by Nan, will consider t_precip in land surface energy budget
+!         t_soisno(lb) = tfrz &
+!            + ( (wice_soisno(lb)*cpice+wliq_soisno(lb)*cpliq)*(t_soisno(lb)-tfrz) &
+!            +   (pg_rain*cpliq + pg_snow*cpice)*deltim*(t_precip-tfrz) ) &
+!            / ( wice_soisno(lb)*cpice + wliq_soisno(lb)*cpliq &
+!            +   pg_rain*deltim*cpliq + pg_snow*deltim*cpice )
 
          !print *, "new snow:", t_soisno(lb)    ! fordebug
-         t_soisno(lb) = min(tfrz, t_soisno(lb))
+!         t_soisno(lb) = min(tfrz, t_soisno(lb))
          wice_soisno(lb) = wice_soisno(lb)+deltim*pg_snow
          dz_soisno(lb) = dz_soisno(lb)+dz_snowf*deltim
          z_soisno(lb) = zi_soisno(lb) - 0.5*dz_soisno(lb)

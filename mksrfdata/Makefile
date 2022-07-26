@@ -1,43 +1,70 @@
 # Makefile for CLM surface data processing
 
 include ../include/Makeoptions
+ 
+INCLUDE_DIR = -I../include -I../share -I${NETCDF_INC}
+
+VPATH = ../share
 
 # name of executable
-EXECUTABLE = srf.x
+EXECUTABLE = mksrfdata.x
 
 ####################################################################
 .DEFAULT :
 
-OBJS =  precision.o \
-	GlobalVars.o \
-	mksrfdata.o \
-	rdgrid.o \
-	crgrid.o \
-	cellarea.o \
-	info_gridcell.o \
-	rd_land_types.o \
-	rd_soil_properties.o \
-	aggregation_forest_height.o \
-	aggregation_LAI.o \
-	aggregation_lakedepth.o \
-	aggregation_landtypes.o \
-	aggregation_soil_parameters.o \
-	aggregation_soil_brightness.o \
-	aggregation_landwaters.o \
-	aggregation_wetland.o \
-	soil_hydraulic_parameters.o \
-	soil_thermal_parameters.o \
-	array_sorting_mod.o \
-	median.o
+HEADER = ../include/define.h
+
+OBJS_SHARED =  ../share/precision.o \
+					../share/MathConstants.o \
+					../share/spmd_task.o \
+					../share/GlobalVars.o \
+					../share/LC_Const.o  \
+					../share/mod_namelist.o \
+					../share/timemanager.o   \
+					../share/mod_utils.o \
+					../share/ncio_serial.o \
+					../share/mod_block.o \
+					../share/mod_grid.o  \
+					../share/mod_pixel.o \
+					../share/mod_data_type.o \
+					../share/ncio_block.o \
+					../share/mod_hydro_data.o \
+					../share/mod_landbasin.o \
+					../share/mod_pixelset.o \
+					../share/ncio_vector.o \
+					../share/mod_colm_debug.o
+
+OBJS = \
+		 mod_srfdata_restart.o \
+		 mod_modis_data.o \
+		 mod_pixelsetshadow.o \
+		 mod_hydrounit.o \
+		 mod_landpatch.o \
+		 mod_aggregation_LC.o \
+		 mod_aggregation_PFT.o \
+		 mod_landpft.o \
+		 mod_landpc.o \
+		 par_fitting.o \
+		 aggregation_percentages.o \
+		 aggregation_LAI.o \
+		 aggregation_soil_brightness.o \
+		 aggregation_lakedepth.o \
+		 aggregation_forest_height.o \
+		 aggregation_soil_parameters.o \
+		 aggregation_dbedrock.o \
+		 mksrfdata.o
 
 ####################################################################
 
-${EXECUTABLE} : ${OBJS} 
-	${FF} ${FOPTS} ${OBJS} -o $@ ${LDFLAGS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS}  
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM surface data completed!'
 
-$(OBJS):%.o:%.F90
+$(OBJS) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
 
+$(OBJS_SHARED) : %.o : %.F90 ${HEADER} 
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
+
 clean :
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod ${EXECUTABLE}

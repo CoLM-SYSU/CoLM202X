@@ -201,7 +201,7 @@ MODULE ASSIM_STOMATA_conductance
       vm = vm / temph * rstfac * c3 + vm / (templ*temph) * rstfac * c4
       vm = vm * cint(1)
 
-      rgas = 8.314                 ! universal gas constant (J mol-1 K-1)
+      rgas = 8.314467591                 ! universal gas constant (J mol-1 K-1)
 !---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
 !--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
 !/05/2014/
@@ -242,7 +242,7 @@ MODULE ASSIM_STOMATA_conductance
       gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
 
 ! rb is for single leaf, but here the flux is for canopy, thus
-      gbh2o  = gbh2o * cint(3)
+!      gbh2o  = gbh2o * cint(3)  !debug by Xingjie Lu
 
 !  aerodynamic condutance between canopy and reference height atmosphere
       gah2o  = 1.0/ra * tprcor/tm                     ! mol m-2 s-1
@@ -288,7 +288,7 @@ MODULE ASSIM_STOMATA_conductance
       sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) ) 
       omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
       sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
-      assim = ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta )
+      assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
 
       assimn= ( assim - respc)                         ! mol m-2 s-1
 

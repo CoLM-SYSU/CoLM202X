@@ -1,11 +1,16 @@
 #include <define.h>
 
+#ifdef PC_CLASSIFICATION
+
 MODULE MOD_1D_PCFluxes
 ! -------------------------------
 ! Created by Hua Yuan, 08/2019
 ! -------------------------------
 
   USE precision
+#ifdef BGC
+  USE MOD_1D_BGCPFTFluxes
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -22,6 +27,8 @@ MODULE MOD_1D_PCFluxes
   REAL(r8), allocatable :: sabvsun_c (:,:) !solar absorbed by sunlit vegetation [W/m2]
   REAL(r8), allocatable :: sabvsha_c (:,:) !solar absorbed by shaded vegetation [W/m2]
   REAL(r8), allocatable :: qintr_c   (:,:) !interception (mm h2o/s)
+  REAL(r8), allocatable :: qintr_rain_c(:,:)!rainfall interception (mm h2o/s)
+  REAL(r8), allocatable :: qintr_snow_c(:,:)!snowfall interception (mm h2o/s)
   REAL(r8), allocatable :: assim_c   (:,:) !canopy assimilation rate (mol m-2 s-1)
   REAL(r8), allocatable :: respc_c   (:,:) !canopy respiration (mol m-2 s-1)
 
@@ -42,22 +49,32 @@ MODULE MOD_1D_PCFluxes
   ! Allocates memory for CLM 1d [numpc] variables
   ! --------------------------------------------------------------------
 
+     USE spmd_task
+     USE mod_landpc
      USE precision
      USE GlobalVars
      IMPLICIT NONE
 
-     allocate (fsenl_c   (0:N_PFT-1,numpc)) !sensible heat from leaves [W/m2]
-     allocate (fevpl_c   (0:N_PFT-1,numpc)) !evaporation+transpiration from leaves [mm/s]
-     allocate (etr_c     (0:N_PFT-1,numpc)) !transpiration rate [mm/s]
-     allocate (fseng_c   (0:N_PFT-1,numpc)) !sensible heat flux from ground [W/m2]
-     allocate (fevpg_c   (0:N_PFT-1,numpc)) !evaporation heat flux from ground [mm/s]
-     allocate (parsun_c  (0:N_PFT-1,numpc)) !solar absorbed by sunlit vegetation [W/m2]
-     allocate (parsha_c  (0:N_PFT-1,numpc)) !solar absorbed by shaded vegetation [W/m2]
-     allocate (sabvsun_c (0:N_PFT-1,numpc)) !solar absorbed by sunlit vegetation [W/m2]
-     allocate (sabvsha_c (0:N_PFT-1,numpc)) !solar absorbed by shaded vegetation [W/m2]
-     allocate (qintr_c   (0:N_PFT-1,numpc)) !interception (mm h2o/s)
-     allocate (assim_c   (0:N_PFT-1,numpc)) !canopy assimilation rate (mol m-2 s-1)
-     allocate (respc_c   (0:N_PFT-1,numpc)) !canopy respiration (mol m-2 s-1)
+     IF (p_is_worker) THEN
+        IF (numpc > 0) THEN
+
+           allocate (fsenl_c   (0:N_PFT-1,numpc)) !sensible heat from leaves [W/m2]
+           allocate (fevpl_c   (0:N_PFT-1,numpc)) !evaporation+transpiration from leaves [mm/s]
+           allocate (etr_c     (0:N_PFT-1,numpc)) !transpiration rate [mm/s]
+           allocate (fseng_c   (0:N_PFT-1,numpc)) !sensible heat flux from ground [W/m2]
+           allocate (fevpg_c   (0:N_PFT-1,numpc)) !evaporation heat flux from ground [mm/s]
+           allocate (parsun_c  (0:N_PFT-1,numpc)) !solar absorbed by sunlit vegetation [W/m2]
+           allocate (parsha_c  (0:N_PFT-1,numpc)) !solar absorbed by shaded vegetation [W/m2]
+           allocate (sabvsun_c (0:N_PFT-1,numpc)) !solar absorbed by sunlit vegetation [W/m2]
+           allocate (sabvsha_c (0:N_PFT-1,numpc)) !solar absorbed by shaded vegetation [W/m2]
+           allocate (qintr_c   (0:N_PFT-1,numpc)) !interception (mm h2o/s)
+           allocate (qintr_rain_c(0:N_PFT-1,numpc))
+           allocate (qintr_snow_c(0:N_PFT-1,numpc))
+           allocate (assim_c   (0:N_PFT-1,numpc)) !canopy assimilation rate (mol m-2 s-1)
+           allocate (respc_c   (0:N_PFT-1,numpc)) !canopy respiration (mol m-2 s-1)
+
+        ENDIF
+     ENDIF
 
   END SUBROUTINE allocate_1D_PCFluxes
 
@@ -65,19 +82,33 @@ MODULE MOD_1D_PCFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CLM 1d [numpc] variables
   ! --------------------------------------------------------------------
-     deallocate (fsenl_c   )
-     deallocate (fevpl_c   )
-     deallocate (etr_c     )
-     deallocate (fseng_c   )
-     deallocate (fevpg_c   )
-     deallocate (parsun_c  )
-     deallocate (parsha_c  )
-     deallocate (sabvsun_c )
-     deallocate (sabvsha_c )
-     deallocate (qintr_c   )
-     deallocate (assim_c   )
-     deallocate (respc_c   )
+     USE spmd_task
+     USE mod_landpc
+
+     IF (p_is_worker) THEN
+        IF (numpc > 0) THEN
+
+           deallocate (fsenl_c   )
+           deallocate (fevpl_c   )
+           deallocate (etr_c     )
+           deallocate (fseng_c   )
+           deallocate (fevpg_c   )
+           deallocate (parsun_c  )
+           deallocate (parsha_c  )
+           deallocate (sabvsun_c )
+           deallocate (sabvsha_c )
+           deallocate (qintr_c   )
+           deallocate (qintr_rain_c)
+           deallocate (qintr_snow_c)
+           deallocate (assim_c   )
+           deallocate (respc_c   )
+           
+        ENDIF
+     ENDIF
+
   END SUBROUTINE deallocate_1D_PCFluxes
 
 END MODULE MOD_1D_PCFluxes
+
+#endif
 ! ---------- EOP ------------

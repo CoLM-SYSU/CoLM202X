@@ -1,6 +1,10 @@
 # Makefile for CLM main program
 
 include ../include/Makeoptions
+INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
+               -I../mkinidata -I./hydro -I./bgc -I${NETCDF_INC}
+VPATH = ../share : ../mksrfdata : ../main : hydro : bgc
+HEADER = ../include/define.h
 
 DEF  = $(shell grep -i cama_flood ../include/define.h)
 CaMa = $(word 1, ${DEF})
@@ -11,105 +15,200 @@ EXECUTABLE = clm.x
 ####################################################################
 .DEFAULT :
 
-OBJS =  precision.o                 \
-	GlobalVars.o                \
-	PhysicalConstants.o         \
-	LC_Const.o                  \
-	PFT_Const.o                 \
-	ncio.o                      \
-	MOD_PFTimeInvars.o          \
-	MOD_PCTimeInvars.o          \
-	MOD_TimeInvariants.o        \
-	timemanager.o               \
-	user_specified_forcing.o    \
-	metdata.o                   \
-	MOD_PFTimeVars.o            \
-	MOD_PCTimeVars.o            \
-	MOD_TimeVariables.o         \
-	GETMET.o                    \
-	MOD_1D_PFTFluxes.o          \
-	MOD_1D_PCFluxes.o           \
-	MOD_1D_Fluxes.o             \
-	MOD_1D_Forcing.o            \
-	MOD_2D_Fluxes.o             \
-	MOD_2D_Forcing.o            \
-	ThreeDCanopy.o              \
-	ALBEDO.o                    \
-	ASSIM_STOMATA_conductance.o \
-	FRICTION_VELOCITY.o         \
-	LEAF_temperature.o          \
-	LEAF_temperature_PC.o       \
-	SOIL_thermal_parameters.o   \
-	SOIL_SNOW_hydrology.o       \
-	SNOW_Layers_CombineDivide.o \
-	GLACIER.o                   \
-	LAKE.o                      \
-	SIMPLE_OCEAN.o              \
-	CLMDRIVER.o                 \
-	CLM.o                       \
-	CLMMAIN.o                   \
-	eroot.o                     \
-	flxwrite.o                  \
-	groundfluxes.o              \
-	groundtem.o                 \
-	LAI_empirical.o             \
-	LAI_readin.o                \
-	LAI_readin_nc.o             \
-	LEAF_interception.o         \
-	lpwrite.o                   \
-	meltf.o                     \
-	netsolar.o                  \
-	rain_snow_temp.o            \
-	newsnow.o                   \
-	orb_coszen.o                \
-	qsadv.o                     \
-	rd_forcing.o                \
-	snowage.o                   \
-	snowfraction.o              \
-	THERMAL.o                   \
-	tridia.o                    \
-	vec2xy.o                    \
-	wetbulb.o
+OBJS_SHARED = \
+				  ../share/precision.o \
+				  ../share/GlobalVars.o \
+				  ../share/LC_Const.o \
+				  ../share/spmd_task.o          \
+				  ../share/mod_namelist.o \
+				  ../share/PhysicalConstants.o  \
+				  ../share/MathConstants.o  \
+				  ../share/mod_utils.o          \
+				  ../share/timemanager.o        \
+				  ../share/ncio_serial.o \
+				  ../share/mod_block.o          \
+				  ../share/mod_grid.o           \
+				  ../share/mod_pixel.o          \
+				  ../share/mod_data_type.o      \
+				  ../share/ncio_block.o  \
+				  ../share/mod_hydro_data.o \
+				  ../share/mod_landbasin.o   \
+				  ../share/mod_pixelset.o          \
+				  ../share/ncio_vector.o \
+				  ../share/mod_colm_debug.o
+
+OBJS_MKSRFDATA = \
+				  ../mksrfdata/mod_srfdata_restart.o \
+				  ../mksrfdata/mod_modis_data.o \
+				  ../mksrfdata/mod_pixelsetshadow.o \
+				  ../mksrfdata/mod_hydrounit.o \
+				  ../mksrfdata/mod_landpatch.o \
+				  ../mksrfdata/mod_aggregation_PFT.o \
+				  ../mksrfdata/mod_landpft.o \
+				  ../mksrfdata/mod_landpc.o  \
+				  ../mksrfdata/mod_single_srfdata.o
+
+OBJS_HYDRO = \
+				  hydro/mod_soil_function.o \
+				  hydro/mod_soil_water.o
+
+OBJS_BGC = \
+			  bgc/bgc_CNCStateUpdate1Mod.o    \
+			  bgc/bgc_CNCStateUpdate2Mod.o    \
+			  bgc/bgc_CNCStateUpdate3Mod.o    \
+			  bgc/bgc_CNNStateUpdate1Mod.o    \
+			  bgc/bgc_CNNStateUpdate2Mod.o    \
+			  bgc/bgc_CNNStateUpdate3Mod.o    \
+			  bgc/bgc_SoilBiogeochemNStateUpdate1Mod.o \
+			  bgc/bgc_soil_SoilBiogeochemCompetitionMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemDecompCascadeBGCMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemDecompMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemLittVertTranspMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemNLeachingMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemPotentialMod.o  \
+			  bgc/bgc_soil_SoilBiogeochemVerticalProfileMod.o  \
+			  bgc/bgc_veg_CNGapMortalityMod.o  \
+			  bgc/bgc_veg_CNGRespMod.o  \
+			  bgc/bgc_veg_CNMRespMod.o  \
+			  bgc/bgc_DaylengthMod.o \
+			  bgc/bgc_veg_CNPhenologyMod.o  \
+			  bgc/bgc_veg_NutrientCompetitionMod.o  \
+			  bgc/bgc_veg_CNVegStructUpdateMod.o \
+			  bgc/bgc_CNSummaryMod.o  \
+			  bgc/bgc_CNAnnualUpdateMod.o \
+			  bgc/bgc_CNZeroFluxesMod.o \
+			  bgc/bgc_CNBalanceCheckMod.o \
+			  bgc/bgc_CNSASUMod.o \
+			  bgc/bgc_driver.o
+
+BASIC =  \
+		  PFT_Const.o \
+		  MOD_PFTimeVars.o \
+		  MOD_PFTimeInvars.o \
+		  MOD_PCTimeVars.o \
+		  MOD_PCTimeInvars.o \
+		  MOD_TimeInvariants.o        \
+		  MOD_TimeVariables.o    \
+		  MOD_1D_PFTFluxes.o          \
+		  MOD_1D_PCFluxes.o           \
+		  MOD_1D_Fluxes.o \
+		  MOD_1D_Forcing.o         
+
+BASIC_BGC = \
+			  bgc/MOD_1D_BGCFluxes.o  \
+			  bgc/MOD_1D_BGCPFTFluxes.o  \
+			  bgc/MOD_2D_BGCFluxes.o  \
+			  bgc/MOD_BGCPFTimeVars.o  \
+			  bgc/MOD_BGCTimeInvars.o  \
+			  bgc/MOD_BGCTimeVars.o 
+
+OBJS =  \
+		  mod_mapping_grid2pset.o \
+		  mod_mapping_pset2grid.o \
+		  MOD_2D_Fluxes.o             \
+		  MOD_2D_Forcing.o            \
+		  user_specified_forcing.o    \
+		  mod_forcing.o               \
+		  ThreeDCanopy.o              \
+		  ALBEDO.o                    \
+		  ASSIM_STOMATA_conductance.o \
+		  PlantHydraulic.o            \
+		  FRICTION_VELOCITY.o         \
+		  LEAF_temperature.o          \
+		  LEAF_temperature_PC.o       \
+		  soil_hcap_cond.o            \
+		  SOIL_SNOW_hydrology.o       \
+		  SNOW_Layers_CombineDivide.o \
+		  GLACIER.o                   \
+		  LAKE.o                      \
+		  SIMPLE_OCEAN.o              \
+		  eroot.o                     \
+		  groundfluxes.o              \
+		  groundtem.o                 \
+		  LAI_empirical.o             \
+		  LAI_readin.o                \
+		  LAI_varied_readin.o         \
+		  LEAF_interception.o         \
+		  meltf.o                     \
+		  netsolar.o                  \
+		  rain_snow_temp.o            \
+		  newsnow.o                   \
+		  orb_coszen.o                \
+		  qsadv.o                     \
+		  snowage.o                   \
+		  snowfraction.o              \
+		  THERMAL.o                   \
+		  tridia.o                    \
+		  wetbulb.o                   \
+		  MOD_1D_Acc_Fluxes.o         \
+		  MOD_CaMa_Variables.o        \
+		  mod_hist.o                  \
+		  colm_CaMaMod.o              \
+		  CLMDRIVER.o                 \
+		  CLMMAIN.o                   \
+		  CLM.o                       
 
 ####################################################################
-
 ifneq (${CaMa},\#define)
-# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
+# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
-${EXECUTABLE} : ${OBJS}
-	${FF} ${FOPTS} ${OBJS} -o $@ ${LDFLAGS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
+	${BASIC} ${BASIC_BGC} ${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} 
+	\
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${BASIC} \
+	${BASIC_BGC} ${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM completed!'
 
-$(OBJS):%.o:%.F90
+$(OBJS) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 else
 ####################################################################
-
-# The global river model CaMa-Flood (version 3.4.4)
-CaMa_DIR = ../CaMa
+# The global river model CaMa-Flood (version 4.0.1)
+CaMa_DIR = ../CaMa_v404
 
 # CaMa Flood Model modules directories
-CaMa_MODS = -I$(CaMa_DIR)/mod \
-            -I$(CaMa_DIR)/lib \
-            -I$(CaMa_DIR)/src
+CaMa_MODS = -I$(CaMa_DIR)/src
 
 # CaMa Flood Model libs (static) directories
-CaMa_LIBS = $(CaMa_DIR)/src/srcs.a \
-            $(CaMa_DIR)/mod/mods.a \
-            $(CaMa_DIR)/lib/libs.a
-
+CaMa_LIBS = $(CaMa_DIR)/src/libcama.a
 #--------------------------------------------
 
-${EXECUTABLE} : ${OBJS} 
-	${FF} ${FOPTS} ${OBJS} ${CaMa_LIBS} -o $@ ${LDFLAGS}
+${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
+	${BASIC} ${BASIC_BGC} ${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} mk_CaMa
+	\
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} ${BASIC} \
+	${BASIC_BGC} ${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} ${CaMa_LIBS} -o $@ ${LDFLAGS}
 	@echo 'making CLM with CaMa Flood Model completed!'
 
-$(OBJS):%.o:%.F90
+$(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
-endif
-####################################################################
+mk_CaMa : 
+	cd ../CaMa_v404/src && make
 
+endif
+
+$(OBJS_HYDRO) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}hydro
+
+$(OBJS_BGC) : %.o : %.F90 ${HEADER} ${BASIC}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
+
+$(BASIC_BGC) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
+
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
+
+$(OBJS_SHARED) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
+
+$(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../mksrfdata
+
+.PHONY: clean
 clean :
-	${RM} -f *.o *.mod
+	${RM} -f *.o *.mod ${EXECUTABLE}
+	cd hydro && make clean
+	cd bgc   && make clean

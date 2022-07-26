@@ -1,209 +1,263 @@
 #include <define.h>
 
 PROGRAM mksrfdata
-! ======================================================================
-! Surface grid edges: 
-! The model domain was defined with the north, east, south, west edges:
-!          edgen: northern edge of grid : > -90 and <= 90 (degrees)
-!          edgee: eastern edge of grid  : > western edge and <= 180
-!          edges: southern edge of grid : >= -90  and <  90
-!          edgew: western edge of grid  : >= -180 and < 180
-!
-! Region (global) latitude grid goes from:
-!                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
-! Region (global) longitude grid starts at:
-!                 WESTERN edge (DATELINE with western edge)
-!                 West of Greenwich defined negative for global grids, 
-!                 the western edge of the longitude grid starts at the dateline 
-!
-! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
-!              1. Global Terrain Dataset (elevation height,...)
-!              2. Global Land Cover Characteristics (land cover type, plant leaf area index, Forest Height, ...)
-!              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
-!              4. Global Glacier Characteristics
-!              5. Global Urban Characteristics (urban extent, ...)
-!              6. Global Soil Characteristics (...)
-!              7. Global Cultural Characteristics (ON-GONG PROJECT)
-!
-! Land charateristics at the model grid resolution (CREATED):
-!              1. Model grid (longitude, latitude)
-!              2. Fraction (area) of patches of grid (0-1)
-!                 2.1 Fraction of land water bodies (lake, reservoir, river) 
-!                 2.2 Fraction of wetland
-!                 2.3 Fraction of glacier
-!                 2.4 Fraction of urban and built-up
-!                 ......
-!              3. Plant leaf area index
-!              4. Tree height
-!              5. Lake depth
-!              6. Soil thermal and hydraulic parameters
-!
-! Created by Yongjiu Dai, 02/2014
-!
-! ________________
-! REVISION HISTORY:
-!   /07/2014, Siguang Zhu & Xiangxiang Zhang: modifiy the aggregation_xxx
-!               interfaces for reading a user defined domain file.
-!
-! ======================================================================
-USE precision
-USE GlobalVars
-USE omp_lib
-
-IMPLICIT NONE
-
-      character(LEN=256) :: dir_rawdata
-      character(LEN=256) :: dir_model_landdata
-      integer :: lon_points  ! number of input data longitudes
-      integer :: lat_points  ! number of input data latitudes
-      real(r8) :: edgen      ! northern edge of grid (degrees)
-      real(r8) :: edgee      ! eastern edge of grid (degrees)
-      real(r8) :: edges      ! southern edge of grid (degrees)
-      real(r8) :: edgew      ! western edge of grid (degrees)
-
-      real(r8),allocatable :: latn(:)       ! grid cell latitude, northern edge (deg)
-      real(r8),allocatable :: lats(:)       ! grid cell latitude, sourthern edge (deg)
-      real(r8),allocatable :: lonw(:)       ! grid cell longitude, western edge (deg)
-      real(r8),allocatable :: lone(:)       ! grid cell longitude, eastern edge (deg)
-      real(r8),allocatable :: sinn(:)       ! grid cell latitude, northern edge(sin)  
-      real(r8),allocatable :: sins(:)       ! grid cell latitude, northern edge(sin)
-      real(r8),allocatable :: lonw_rad(:)   ! grid cell longitude, western edge (radian)
-      real(r8),allocatable :: lone_rad(:)   ! grid cell longitude, eastern edge (radian)
-      real(r8) :: sinn_i(nlat)              ! fine grid cell latitude, northern edge(sin)
-      real(r8) :: sins_i(nlat)              ! fine grid cell latitude, northern edge(sin)
-      real(r8) :: lonw_rad_i(nlon)          ! fine grid cell longitude, western edge (radian)
-      real(r8) :: lone_rad_i(nlon)          ! fine grid cell longitude, eastern edge (radian)
-      integer,allocatable :: READ_row_UB(:) ! north boundary index for fine gird cell  
-      integer,allocatable :: READ_col_UB(:) ! west boundary index for fine gird cell  
-      integer,allocatable :: READ_row_LB(:) ! south boundary index for fine gird cell
-      integer,allocatable :: READ_col_LB(:) ! east boundary index for fine gird cell
-
-      integer :: nrow_start
-      integer :: nrow_end
-      integer :: ncol_start
-      integer :: ncol_end
-      integer :: nx_fine_gridcell
-      integer :: ny_fine_gridcell
-
-      real(r8), allocatable :: area_fine_gridcell(:,:) ! rwadata fine cell area (km**2)
-
-      namelist /mksrfexp/ dir_rawdata,dir_model_landdata, &
-                          lon_points,lat_points,edgen,edgee,edges,edgew
-
-      read(5,mksrfexp)
-      
-      allocate(latn(lat_points))
-      allocate(lats(lat_points))
-      allocate(lonw(lon_points))
-      allocate(lone(lon_points))
-      allocate(sinn(lat_points))
-      allocate(sins(lat_points))
-      allocate(lonw_rad(lon_points))
-      allocate(lone_rad(lon_points)) 
-      allocate(READ_row_UB(lat_points))
-      allocate(READ_row_LB(lat_points))
-      allocate(READ_col_UB(lon_points))
-      allocate(READ_col_LB(lon_points))
-      allocate(area_fine_gridcell(nlon,nlat))
-
-! ...........................................................................
-! 1. Read in or create the modeling grids coordinates and related information
-! ...........................................................................
-
-#if(defined USER_GRID)
-      CALL rdgrid (dir_model_landdata,edgen,edgee,edges,edgew,&
-                   lon_points,lat_points,latn,lats,lonw,lone)
-#else
-      CALL crgrid (dir_model_landdata,edgen,edgee,edges,edgew,&
-                   lon_points,lat_points,latn,lats,lonw,lone)
+   ! ======================================================================
+   ! Surface grid edges: 
+   ! The model domain was defined with the north, east, south, west edges:
+   !          edgen: northern edge of grid : > -90 and <= 90 (degrees)
+   !          edgee: eastern edge of grid  : > western edge and <= 180
+   !          edges: southern edge of grid : >= -90  and <  90
+   !          edgew: western edge of grid  : >= -180 and < 180
+   !
+   ! Region (global) latitude grid goes from:
+   !                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
+   ! Region (global) longitude grid starts at:
+   !                 WESTERN edge (DATELINE with western edge)
+   !                 West of Greenwich defined negative for global grids, 
+   !                 the western edge of the longitude grid starts at the dateline 
+   !
+   ! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
+   !              1. Global Terrain Dataset (elevation height,...)
+   !              2. Global Land Cover Characteristics (land cover TYPE, plant leaf area index, Forest Height, ...)
+   !              3. Global Lakes and Wetlands Characteristics (lake and wetlands types, lake coverage and lake depth)
+   !              4. Global Glacier Characteristics
+   !              5. Global Urban Characteristics (urban extent, ...)
+   !              6. Global Soil Characteristics (...)
+   !              7. Global Cultural Characteristics (ON-GONG PROJECT)
+   !
+   ! Land charateristics at the model grid resolution (CREATED):
+   !              1. Model grid (longitude, latitude)
+   !              2. Fraction (area) of patches of grid (0-1)
+   !                 2.1 Fraction of land water bodies (lake, reservoir, river) 
+   !                 2.2 Fraction of wetland
+   !                 2.3 Fraction of glacier
+   !                 2.4 Fraction of urban and built-up
+   !                 ......
+   !              3. Plant leaf area index
+   !              4. Tree height
+   !              5. Lake depth
+   !              6. Soil thermal and hydraulic parameters
+   !
+   ! Created by Yongjiu Dai, 02/2014
+   !
+   ! ________________
+   ! REVISION HISTORY:
+   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: modifiy the aggregation_xxx
+   !               interfaces for reading a user defined domain file.
+   !
+   ! ======================================================================
+   USE precision
+   USE spmd_task
+   USE mod_namelist
+   USE mod_block
+   USE mod_pixel
+   USE mod_grid
+   USE mod_landbasin
+   USE mod_hydrounit
+   USE mod_landpatch
+   USE LC_Const
+   USE mod_srfdata_restart
+#ifdef PFT_CLASSIFICATION
+   USE mod_landpft
+#endif
+#ifdef PC_CLASSIFICATION
+   USE mod_landpc
 #endif
 
-! ...................................................................
-! 2. Read in and estimate the land characteristic data at 30 arc second resolution
-! ...................................................................
+   IMPLICIT NONE
 
-#if(defined RAWdata_update)
+   CHARACTER(len=256) :: nlfile
 
-! ONLY update for USGS landcover
+   CHARACTER(LEN=256) :: dir_rawdata
+   CHARACTER(LEN=256) :: dir_landdata
+   REAL(r8) :: edgen  ! northern edge of grid (degrees)
+   REAL(r8) :: edgee  ! eastern edge of grid (degrees)
+   REAL(r8) :: edges  ! southern edge of grid (degrees)
+   REAL(r8) :: edgew  ! western edge of grid (degrees)
+
+   TYPE (grid_type) :: gbasin, gridlai
+
+   INTEGER :: start_time, end_time, c_per_sec, time_used
+
+
+#ifdef USEMPI
+   CALL spmd_init ()
+#endif
+
+   IF (p_is_master) THEN
+      CALL system_clock (start_time)
+   ENDIF
+
+   CALL getarg(1, nlfile)
+
+   CALL read_namelist (nlfile)
+   
+   ! define blocks
+   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
+
+   dir_rawdata  = DEF_dir_rawdata
+   dir_landdata = DEF_dir_landdata
+   edges = DEF_domain%edges
+   edgen = DEF_domain%edgen
+   edgew = DEF_domain%edgew
+   edgee = DEF_domain%edgee
+
+   CAll Init_LC_Const
+
+   ! ...........................................................................
+   ! 1. Read in or create the modeling grids coordinates and related information
+   ! ...........................................................................
+
+   ! define domain in pixel coordinate
+   CALL pixel%set_edges (edges, edgen, edgew, edgee) 
+   CALL pixel%assimilate_gblock ()
+
+   ! define grid coordinates of land basins
+#ifdef GRIDBASED
+   CALL gbasin%define_from_file (DEF_file_landgrid)
+#endif
+#ifdef CATCHMENT
+   CALL gbasin%define_by_name ('merit_90m')
+#endif
+
+   ! define grid coordinates of hydro units in catchment
+#ifdef CATCHMENT
+   CALL ghydru%define_by_name ('merit_90m')
+#endif
+
+   ! define grid coordinates of land types
 #ifdef USGS_CLASSIFICATION
-      CALL rd_land_types ( dir_rawdata )
+   CALL gpatch%define_by_name ('colm_1km')
+#endif
+#ifdef IGBP_CLASSIFICATION
+   CALL gpatch%define_by_name ('colm_500m')
+#endif
+#ifdef PFT_CLASSIFICATION
+   CALL gpatch%define_by_name ('colm_500m')
+#if (defined CROP) 
+   CALL gcrop%define_by_ndims (720,360)
+#endif
+#endif
+#ifdef PC_CLASSIFICATION
+   CALL gpatch%define_by_name ('colm_500m')
 #endif
 
-      CALL rd_soil_properties ( dir_rawdata )
+   ! define grid for land characteristics
+   CALL gridlai%define_by_name ('colm_500m')
+
+   ! assimilate grids to build pixels
+#ifndef SinglePoint
+   CALL pixel%assimilate_grid (gbasin)
+#endif
+#ifdef CATCHMENT
+   CALL pixel%assimilate_grid (ghydru)
+#endif
+   CALL pixel%assimilate_grid (gpatch)
+#if (defined CROP) 
+   CALL pixel%assimilate_grid (gcrop )
+#endif
+   CALL pixel%assimilate_grid (gridlai)
+
+   ! map pixels to grid coordinates
+#ifndef SinglePoint
+   CALL pixel%map_to_grid (gbasin)
+#endif
+#ifdef CATCHMENT
+   CALL pixel%map_to_grid (ghydru)
+#endif
+   CALL pixel%map_to_grid (gpatch)
+#if (defined CROP) 
+   CALL pixel%map_to_grid (gcrop )
+#endif
+   CALL pixel%map_to_grid (gridlai)
+
+   ! build land basins 
+   CALL landbasin_build (gbasin)
+   
+   ! build hydro units 
+   CALL hydrounit_build 
+
+   ! build land patches
+   CALL landpatch_build
+
+#ifdef PFT_CLASSIFICATION
+   CALL landpft_build
+#endif
+   
+#ifdef PC_CLASSIFICATION
+   CALL landpc_build
 #endif
 
-! ................................................................
-! 3. Mapping land characteristic parameters to the model grids
-! ................................................................
+   ! ................................................................
+   ! 2. SAVE land surface tessellation information 
+   ! ................................................................
 
-      CALL info_gridcell ( lon_points,lat_points,edgen,edgee,edges,edgew, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,latn,lats,lonw,lone,&
-                           sinn,sins,lonw_rad,lone_rad,sinn_i,sins_i,lonw_rad_i,lone_rad_i,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL gblock%save_to_file    (dir_landdata)
+   
+   CALL pixel%save_to_file     (dir_landdata)
 
-! read sub-grid structure data
-#ifdef USGS_CLASSIFICATION
-      CALL aggregation_landtypes ( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           sinn,sins,lonw_rad,lone_rad,sinn_i,sins_i,lonw_rad_i,lone_rad_i,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL landbasin_save_to_file  (dir_landdata)
 
-      CALL aggregation_LAI ( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           sinn,sins,lonw_rad,lone_rad,sinn_i,sins_i,lonw_rad_i,lone_rad_i,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL pixelset_save_to_file  (dir_landdata, 'hydrounit', hydrounit)
+   
+   CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
-      CALL aggregation_forest_height ( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+#ifdef PFT_CLASSIFICATION
+   CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  )
 #endif
 
+#ifdef PC_CLASSIFICATION
+   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+#endif
 
-! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! yuan, 07/30/2019: landtype, LAI, forest_height read from NC files in mkinidata
-! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   ! ................................................................
+   ! 3. Mapping land characteristic parameters to the model grids
+   ! ................................................................
 
+   CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 
-      CALL aggregation_soil_parameters ( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
-      CALL aggregation_soil_brightness ( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
+   
+#ifdef USE_DEPTH_TO_BEDROCK
+   CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
+#endif
 
-      CALL aggregation_lakedepth( dir_rawdata,dir_model_landdata, &
-                           lon_points,lat_points, &
-                           nrow_start,nrow_end,ncol_start,ncol_end, &
-                           nx_fine_gridcell,ny_fine_gridcell,area_fine_gridcell,&
-                           READ_row_UB,READ_row_LB,READ_col_UB,READ_col_LB )
+   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
+   
+   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
-1000  PRINT*, 'Successful in surface data making'
+   CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
-      deallocate(latn)
-      deallocate(lats)
-      deallocate(lonw)
-      deallocate(lone)
-      deallocate(sinn)
-      deallocate(sins)
-      deallocate(lonw_rad)
-      deallocate(lone_rad) 
-      deallocate(READ_row_UB)
-      deallocate(READ_row_LB)
-      deallocate(READ_col_UB)
-      deallocate(READ_col_LB)
-      deallocate(area_fine_gridcell)
+   ! ................................................................
+   ! 4. Free memories. 
+   ! ................................................................
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+   
+   IF (p_is_master) THEN
+      CALL system_clock (end_time, count_rate = c_per_sec)
+      time_used = (end_time - start_time) / c_per_sec
+      IF (time_used >= 3600) THEN
+         write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
+         101 format (/, 'Overall system time used:', I4, ' hours', I3, ' minutes', I3, ' seconds.')
+      ELSEIF (time_used >= 60) THEN
+         write(*,102) time_used/60, mod(time_used,60)
+         102 format (/, 'Overall system time used:', I3, ' minutes', I3, ' seconds.')
+      ELSE 
+         write(*,103) time_used
+         103 format (/, 'Overall system time used:', I3, ' seconds.')
+      ENDIF
+
+      write(*,*)  'Successful in surface data making.'
+   ENDIF
+
+#ifdef USEMPI
+   CALL spmd_exit          
+#endif
 
 END PROGRAM mksrfdata
 ! ----------------------------------------------------------------------

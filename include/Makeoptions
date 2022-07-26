@@ -1,32 +1,38 @@
+# =======================================================
+# mpif90 - ifort 
+# 
 
-RM = rm
+FF = mpiifort 
+
+NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib
+NETCDF_INC = /share/home/dq013/software/netcdf-single/include
+
+MOD_CMD = -module 
+
+ #FOPTS = -g -traceback -r8 -free -check uninit
+FOPTS = -qopenmp -g -traceback -r8 -free -check uninit 
+       # -r8 -free -O0 -check uninit -check bounds -check pointers \
+       # -traceback  -assume byterecl -pthread -heap-arrays #-nogen-interface
+
+INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
+               -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
+LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 # =======================================================
-# gfortran 
+# mpif90 - gfortran 
+# 
 
-FF = gfortran -fopenmp
-
-NETCDF_LIB = /usr/lib
-NETCDF_INC = /usr/include
-
-FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
-	-ffpe-trap=invalid,zero,overflow -fbounds-check \
-	-mcmodel=medium -fbacktrace -fdump-core -cpp
-# =======================================================
-
-
-# =======================================================
-# ifort
-
-#FF = ifort -openmp
-
-#NETCDF_LIB = /opt/netcdf/lib
-#NETCDF_INC = /opt/netcdf/include
-
-#FOPTS = -r8 -free -g -check uninit -check bounds -check pointers \
-#	-traceback 
-# =======================================================
-
-
-INCLUDE_DIR = -I. -I../include -I$(NETCDF_INC)
-LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas
+#  FF = /opt/mpich/bin/mpif90
+#   
+#  MPI_LIB = /opt/mpich/lib
+#  NETCDF_LIB = /usr/lib/x86_64-linux-gnu
+#  NETCDF_INC = /usr/include
+#   
+#  MOD_CMD = -J
+# 
+#  FOPTS = -fdefault-real-8 -ffree-form -C -g -u -xcheck=stkovf \
+#           -ffpe-trap=invalid,zero,overflow -fbounds-check \
+#           -mcmodel=medium -fbacktrace -fdump-core -cpp
+#  
+#  INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../mkinidata -I../main -I$(NETCDF_INC)
+#  LDFLAGS = -L${MPI_LIB} -L$(NETCDF_LIB) -lnetcdff -lnetcdf

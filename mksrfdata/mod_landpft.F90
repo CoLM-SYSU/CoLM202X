@@ -1,0 +1,308 @@
+#include <define.h>
+
+#ifdef PFT_CLASSIFICATION
+
+MODULE mod_landpft
+
+   USE mod_pixelset
+   USE LC_const
+   USE GlobalVars, only : N_PFT
+   IMPLICIT NONE
+
+   ! ---- Instance ----
+   INTEGER :: numpft
+   TYPE(pixelset_type) :: landpft
+  
+   INTEGER , allocatable :: pft2patch   (:)  !patch index of a PFT
+   INTEGER , allocatable :: patch_pft_s (:)  !start PFT index of a patch
+   INTEGER , allocatable :: patch_pft_e (:)  !end PFT index of a patch
+
+   ! ---- PUBLIC routines ----
+   PUBLIC :: landpft_build
+
+CONTAINS
+   
+   ! -------------------------------
+   SUBROUTINE landpft_build ()
+
+      USE precision
+      USE spmd_task
+      USE mod_grid
+      USE mod_data_type
+      USE mod_namelist
+      USE mod_modis_data
+      USE mod_landpatch
+      USE mod_aggregation_PFT
+      USE LC_const
+
+      IMPLICIT NONE
+
+      ! Local Variables
+      CHARACTER(len=256) :: dir_modis
+      TYPE (block_data_real8_3d) :: pctpft
+      REAL(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
+      REAL(r8), allocatable :: area_one(:)
+      INTEGER  :: ipatch, ipft, npatch, npft
+      REAL(r8) :: sumarea
+      LOGICAL, allocatable :: patchmask (:)
+      INTEGER  :: npft_glb 
+
+
+      IF (p_is_master) THEN
+         write(*,'(A)') 'Making land plant function type tiles :'
+      ENDIF
+
+#ifdef SinglePoint
+      IF (landpatch%ltyp(1) == 1) THEN
+         numpft = count(SITE_pctpfts > 0.)
+#ifdef CROP
+      ELSEIF (landpatch%ltyp(1) == 12) THEN
+         numpft = numpatch
+#endif
+      ELSE
+         numpft = 0
+      ENDIF
+
+      allocate (patch_pft_s (numpatch))
+      allocate (patch_pft_e (numpatch))
+
+      IF (numpft > 0) THEN
+         allocate (landpft%iunt (numpft))
+         allocate (landpft%unum (numpft))
+         allocate (landpft%ltyp (numpft))
+         allocate (landpft%istt (numpft))
+         allocate (landpft%iend (numpft))
+                  
+         landpft%iunt(:) = 1
+         landpft%unum(:) = 1
+         landpft%istt(:) = 1
+         landpft%iend(:) = 1
+            
+         allocate(pft2patch (numpft))
+
+         IF (landpatch%ltyp(1) == 1) THEN
+            npft = 0
+            DO ipft = 0, N_PFT-1
+               IF (SITE_pctpfts(ipft) > 0.) THEN
+                  npft = npft + 1
+                  landpft%ltyp(npft) = ipft
+               ENDIF
+            ENDDO
+            
+            pft2patch  (:) = 1
+            patch_pft_s(:) = 1 
+            patch_pft_e(:) = numpft
+#ifdef CROP
+         ELSEIF (landpatch%ltyp(1) == 12) THEN
+            DO ipft = 1, numpft
+               landpft%ltyp(ipft) = cropclass(ipft) + N_PFT - 1
+               pft2patch   (ipft) = ipft
+               patch_pft_s (ipft) = ipft 
+               patch_pft_e (ipft) = ipft
+            ENDDO
+#endif
+         ENDIF
+      ELSE
+         patch_pft_s(:) = -1
+         patch_pft_e(:) = -1
+      ENDIF
+      
+      landpft%nset = numpft
+      CALL landpft%set_vecgs
+
+      RETURN
+#endif
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+      if (p_is_io) then
+      
+         call allocate_block_data (gpatch, pctpft, N_PFT, lb1 = 0)
+         CALL flush_block_data (pctpft, 1.0)
+
+         dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+         CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gpatch, pctpft)
+
+#ifdef USEMPI
+         CALL aggregation_pft_data_daemon (gpatch, pctpft)
+#endif
+      end if
+
+
+      if (p_is_worker) then
+
+         allocate (pctpft_patch (0:N_PFT-1,numpatch))
+         allocate (patchmask (numpatch))
+
+         pctpft_patch(:,:) = 0
+         patchmask (:) = .true.
+
+         DO ipatch = 1, numpatch
+            IF (landpatch%ltyp(ipatch) == 1) THEN
+               
+               CALL aggregation_pft_request_data (ipatch, gpatch, pctpft, pctpft_one, area_one)
+
+               sumarea = sum(area_one)
+
+               DO ipft = 0, N_PFT-1
+                  pctpft_patch(ipft,ipatch) = sum(pctpft_one(ipft,:) * area_one) / sumarea
+               ENDDO
+
+               IF (sum(pctpft_patch(:,ipatch)) <= 0.0) THEN
+                  patchmask(ipatch) = .false.
+               ENDIF
+            ENDIF
+         ENDDO
+
+#ifdef USEMPI
+         CALL aggregation_pft_worker_done ()
+#endif
+
+         npatch = count(patchmask)
+         numpft = count(pctpft_patch > 0.)
+#ifdef CROP            
+         numpft = numpft + count(landpatch%ltyp == 12) 
+#endif
+
+         allocate (patch_pft_s (npatch))
+         allocate (patch_pft_e (npatch))
+         allocate (pft2patch   (numpft))
+
+         IF (numpft > 0) THEN
+
+            allocate (landpft%iunt (numpft))
+            allocate (landpft%unum (numpft))
+            allocate (landpft%ltyp (numpft))
+            allocate (landpft%istt (numpft))
+            allocate (landpft%iend (numpft))
+
+            npft = 0
+            npatch = 0
+            DO ipatch = 1, numpatch
+               IF (patchmask(ipatch)) THEN
+                  npatch = npatch + 1
+
+                  IF (landpatch%ltyp(ipatch) == 1) THEN
+                     patch_pft_s(npatch) = npft + 1
+                     patch_pft_e(npatch) = npft + count(pctpft_patch(:,ipatch) > 0)
+
+                     DO ipft = 0, N_PFT-1
+                        IF (pctpft_patch(ipft,ipatch) > 0) THEN
+                           npft = npft + 1
+
+                           landpft%iunt(npft) = landpatch%iunt(ipatch)
+                           landpft%unum(npft) = landpatch%unum(ipatch)
+                           landpft%istt(npft) = landpatch%istt(ipatch)
+                           landpft%iend(npft) = landpatch%iend(ipatch)
+                           landpft%ltyp(npft) = ipft
+
+                           pft2patch(npft) = npatch
+                        ENDIF
+                     ENDDO
+#ifdef CROP
+                  ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+                     npft = npft + 1
+                     patch_pft_s(npatch) = npft
+                     patch_pft_e(npatch) = npft
+                     
+                     landpft%iunt(npft) = landpatch%iunt(ipatch)
+                     landpft%unum(npft) = landpatch%unum(ipatch)
+                     landpft%istt(npft) = landpatch%istt(ipatch)
+                     landpft%iend(npft) = landpatch%iend(ipatch)
+                     landpft%ltyp(npft) = cropclass(ipatch) + N_PFT - 1
+
+                     pft2patch(npft) = npatch
+#endif
+                  ELSE
+                     patch_pft_s(npatch) = -1
+                     patch_pft_e(npatch) = -1
+                  ENDIF
+               ENDIF
+            ENDDO
+
+         ENDIF
+
+      ENDIF
+      
+      CALL landpatch%pset_pack(patchmask, numpatch)
+
+      landpft%nset = numpft
+      CALL landpft%set_vecgs
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numpft, npft_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', npft_glb, ' pft tiles on worker.'
+         ENDIF
+      ENDIF
+      
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numpft, ' pft tiles.'
+#endif
+
+      IF (allocated(pctpft_patch)) deallocate (pctpft_patch)
+      IF (allocated(pctpft_one  )) deallocate (pctpft_one  )
+      IF (allocated(area_one    )) deallocate (area_one    )
+      
+   END SUBROUTINE landpft_build
+
+   ! ----------------------
+   SUBROUTINE map_patch_to_pft 
+
+      USE spmd_task
+      USE mod_landpatch
+      IMPLICIT NONE
+
+      INTEGER :: ipatch, ipft
+      
+      IF (p_is_worker) THEN
+
+         IF ((numpatch <= 0) .or. (numpft <= 0)) return
+
+         allocate (patch_pft_s (numpatch))
+         allocate (patch_pft_e (numpatch))
+         allocate (pft2patch   (numpft  ))
+
+         ipft = 1
+         DO ipatch = 1, numpatch
+            IF (landpatch%ltyp(ipatch) == 1) THEN
+                  
+               patch_pft_s(ipatch) = ipft
+
+               DO WHILE (ipft <= numpft)
+                  IF ((landpft%unum(ipft) == landpatch%unum(ipatch))  &
+                     .and. (landpft%istt(ipft) == landpatch%istt(ipatch))) THEN
+                     pft2patch  (ipft  ) = ipatch
+                     patch_pft_e(ipatch) = ipft
+                     ipft = ipft + 1
+                  ELSE
+                     exit
+                  ENDIF
+               ENDDO
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
+               patch_pft_s(ipatch) = ipft
+               patch_pft_e(ipatch) = ipft
+               pft2patch  (ipft  ) = ipatch
+               ipft = ipft + 1
+#endif
+            ELSE
+               patch_pft_s(ipatch) = -1
+               patch_pft_e(ipatch) = -1
+            ENDIF
+         
+         ENDDO
+
+      ENDIF
+
+   END SUBROUTINE map_patch_to_pft
+
+END MODULE mod_landpft
+
+#endif
