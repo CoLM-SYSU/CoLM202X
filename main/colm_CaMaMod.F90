@@ -48,6 +48,7 @@ CONTAINS
       use CMF_CTRL_OUTPUT_MOD
       USE mod_landpatch
       USE MOD_CaMa_Variables
+      USE YOS_CMF_TIME,       ONLY: YYYY0
       implicit none
 
       !INTEGER, intent(in) :: nlon_cama, nlat_cama
@@ -74,6 +75,7 @@ CONTAINS
          EDAY     = DEF_simulation_time%end_day                        	!  day         
          EHOUR    = DEF_simulation_time%end_sec/3600                        	!  hour 
          LLEAPYR  = DEF_forcing%leapyear
+         YYYY0    = SYEAR
          RMIS     = spval
          DMIS     = spval
 
