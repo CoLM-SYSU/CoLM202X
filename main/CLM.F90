@@ -189,11 +189,9 @@ PROGRAM CLM
    call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
    call allocate_2D_Fluxes (ghist)
    call allocate_1D_Fluxes ()
-print *,'call colm_CaMa_init'
 #if(defined CaMa_Flood)
     call colm_CaMa_init
 #endif
-print *,' done call colm_CaMa_init'
 
    ! ======================================================================
    ! begin time stepping loop

@@ -1,12 +1,12 @@
 #undef CATCHMENT
-#define GRIDBASED
-#define	PFT_CLASSIFICATION       
+#define GRIDBASED   ! CATCHMENT / GRIDBASED / SinglePoint
+#define	USGS_CLASSIFICATION       ! IGBP_CLASSIFICATION / USGS_CLASSIFICATION / PFT_CLASSIFICATION / PC_CLASSIFICATION 
 #define LANDONLY
 
 #define	CLMDEBUG                  
 #define  USEMPI
 
-#define Campbell_SOIL_MODEL
+#define Campbell_SOIL_MODEL  ! Campbell_SOIL_MODEL / vanGenuchten_Mualem_SOIL_MODEL
 #undef VARIABLY_SATURATED_FLOW
 #undef vsf_statistics
 #undef USE_DEPTH_TO_BEDROCK
@@ -22,10 +22,10 @@
 #undef	SOIL_REFL_GUESSED         
 #define	SOIL_REFL_READ            
 
-#undef  CaMa_Flood
+#define  CaMa_Flood
 
-#define CROP
-#define BGC
+#undef CROP
+#undef BGC
 
 #ifdef SinglePoint
 #undef USEMPI

@@ -9,6 +9,7 @@ module mod_forcing
    use user_specified_forcing
    use timemanager
    use spmd_task
+   USE co2_mlo
 
    implicit none
 
@@ -59,6 +60,9 @@ contains
       integer :: ivar
 
       call init_user_specified_forcing
+
+    ! CO2 data initialization
+      CALL init_monthly_co2_mlo
 
       ! get value of fmetdat and deltim
       deltim_int  = int(deltatime)
@@ -135,8 +139,10 @@ contains
       integer  :: id(3)
       integer  :: dtLB, dtUB
       real(r8) :: cosz
+      INTEGER  :: year, month, mday
 
       real solar, frl, prcp, tm, us, vs, pres, qm
+      real(r8) :: pco2m
 
       if (p_is_io) then
       
@@ -348,8 +354,11 @@ contains
 
          end if
 
-         ! [CO2 concentration = 398.03ppm On March 12, 2014, NOAA MLO recorded]
-         call block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = 398.03e-06_r8) 
+         ! [GET ATMOSPHERE CO2 CONCENTRATION DATA]
+         year  = idate(1)
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         pco2m = get_monthly_co2_mlo(year, month)*1.e-6
+         call block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = pco2m        ) 
          call block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     ) 
 
       end if
