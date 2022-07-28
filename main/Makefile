@@ -92,7 +92,8 @@ BASIC =  \
 		  MOD_1D_PFTFluxes.o          \
 		  MOD_1D_PCFluxes.o           \
 		  MOD_1D_Fluxes.o \
-		  MOD_1D_Forcing.o         
+		  MOD_1D_Forcing.o \
+	          monthly_in_situ_co2_mlo.o	  
 
 BASIC_BGC = \
 			  bgc/MOD_1D_BGCFluxes.o  \
