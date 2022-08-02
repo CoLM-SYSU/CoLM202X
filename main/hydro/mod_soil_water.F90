@@ -3145,7 +3145,7 @@ contains
       vl  = soil_vliq_from_psi (psi, &
          vl_s, vl_r, psi_s, nprm, prms)
       do while (wa <= -(zwt-zmin)*(vl_s-vl))
-         zwt = zmin + (zwt-zmin)*2
+         zwt = zmin + (zwt-zmin)*2 + 0.1
          psi = psi_s - (zwt - zmin) * 0.5
          vl  = soil_vliq_from_psi (psi, &
             vl_s, vl_r, psi_s, nprm, prms)
