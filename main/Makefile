@@ -92,7 +92,8 @@ BASIC =  \
 		  MOD_1D_PFTFluxes.o          \
 		  MOD_1D_PCFluxes.o           \
 		  MOD_1D_Fluxes.o \
-		  MOD_1D_Forcing.o         
+		  MOD_1D_Forcing.o \
+	          monthly_in_situ_co2_mlo.o	  
 
 BASIC_BGC = \
 			  bgc/MOD_1D_BGCFluxes.o  \
@@ -165,7 +166,7 @@ $(OBJS) : %.o : %.F90 ${HEADER}
 else
 ####################################################################
 # The global river model CaMa-Flood (version 4.0.1)
-CaMa_DIR = ../CaMa_v404
+CaMa_DIR = ../CaMa_v405
 
 # CaMa Flood Model modules directories
 CaMa_MODS = -I$(CaMa_DIR)/src
@@ -185,7 +186,7 @@ $(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
 mk_CaMa : 
-	cd ../CaMa_v404/src && make
+	cd ../CaMa_v405/src && make
 
 endif
 
