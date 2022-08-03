@@ -1222,7 +1222,7 @@ contains
       compress = DEF_HIST_COMPRESS_LEVEL 
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, compress) 
 
-      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+      IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
          CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
@@ -1304,7 +1304,7 @@ contains
       call hist_write_var_real8_3d (file_hist, varname, dim1name, ghist, &
          itime_in_file, flux_xy, compress) 
 
-      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+      IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
          CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
@@ -1388,7 +1388,7 @@ contains
       call hist_write_var_real8_4d (file_hist, varname, dim1name, dim2name, &
          ghist, itime_in_file, flux_xy, compress) 
 
-      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+      IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
          CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
@@ -1470,7 +1470,7 @@ contains
       call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
          compress) 
 
-      IF ((itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+      IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
          CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
          CALL ncio_put_attr (file_hist, varname, 'units', units)
          CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
