@@ -154,7 +154,7 @@ CONTAINS
      CALL ncio_define_pixelset_dimension (file_restart, landpc)
      CALL ncio_define_dimension_vector (file_restart, 'pft', N_PFT)
      CALL ncio_define_dimension_vector (file_restart, 'band',   2)
-     CALL ncio_define_dimension_vector (file_restart, 'wetdry', 2)
+     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
 #ifdef PLANT_HYDRAULIC_STRESS
      CALL ncio_define_dimension_vector (file_restart, 'vegnodes', nvegwcs)
 #endif
@@ -172,8 +172,8 @@ CONTAINS
       call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'vector', landpc, lai_c    , compress) !  
       call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'vector', landpc, tsai_c   , compress) !  
       call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'vector', landpc, sai_c    , compress) !  
-      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'wetdry', 2, 'pft', N_PFT, 'vector', landpc, ssun_c, compress) !  
-      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'wetdry', 2, 'pft', N_PFT, 'vector', landpc, ssha_c, compress) !  
+      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'vector', landpc, ssun_c, compress) !  
+      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'vector', landpc, ssha_c, compress) !  
       call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'vector', landpc, thermk_c , compress) !  
       call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'vector', landpc, fshade_c , compress) !  
       call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'vector', landpc, extkb_c  , compress) !  
