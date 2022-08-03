@@ -286,6 +286,7 @@ MODULE SOIL_SNOW_hydrology
              pg_rain     ,sm          ,                              &
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
+             pondmx      ,                                           &
              wimp        ,zwt         ,dpond       ,wa      ,qcharge,&
              errw_rsub)
 
@@ -329,6 +330,7 @@ MODULE SOIL_SNOW_hydrology
         deltim           , &! time step (s)
         wtfact           , &! fraction of model area with high water table
         ssi              , &! irreducible water saturation of snow
+        pondmx           , &! ponding depth (mm)
         wimp             , &! water impremeable if porosity less than wimp
         z_soisno (lb:nl_soil)   , &! layer depth (m)
         dz_soisno(lb:nl_soil)   , &! layer thickness (m)
@@ -631,6 +633,10 @@ MODULE SOIL_SNOW_hydrology
      ENDIF
 #endif
 
+     IF (dpond > pondmx) THEN
+        rnof = rnof + (dpond - pondmx) / deltim
+        dpond = pondmx
+     ENDIF
 
 !=======================================================================
 ! [6] assumed hydrological scheme for the wetland and glacier

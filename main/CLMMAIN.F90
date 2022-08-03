@@ -686,6 +686,7 @@ ENDIF
            pg_rain           ,sm                ,etr               ,qseva             ,&
            qsdew             ,qsubl             ,qfros             ,rsur              ,&
            rnof              ,qinfl             ,wtfact            ,ssi               ,&
+           pondmx,                                                                     & 
            wimp              ,zwt               ,dpond             ,wa                ,&
            qcharge           ,errw_rsub)
 #endif
