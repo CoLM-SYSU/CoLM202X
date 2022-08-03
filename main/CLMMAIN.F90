@@ -1117,7 +1117,11 @@ ENDIF
     ENDIF
       
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)
+#ifdef VARIABLY_SATURATED_FLOW
+    wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv
+#else
     wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
+#endif
 !----------------------------------------------------------------------
 
 END SUBROUTINE CLMMAIN
