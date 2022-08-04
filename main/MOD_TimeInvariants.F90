@@ -339,7 +339,7 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, 'soil', nl_soil)
      CALL ncio_define_dimension_vector (file_restart, 'lake', nl_lake)
      CALL ncio_define_dimension_vector (file_restart, 'band',   2)
-     CALL ncio_define_dimension_vector (file_restart, 'wetdry', 2)
+     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
      
      call ncio_write_vector (file_restart, 'patchclass', 'vector', landpatch, patchclass) !
      call ncio_write_vector (file_restart, 'patchtype' , 'vector', landpatch, patchtype ) !

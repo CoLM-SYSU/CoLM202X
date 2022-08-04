@@ -474,7 +474,7 @@ contains
 
          ! averaged albedo [visible, direct; direct, diffuse] 
          call flux_map_and_write_4d ( DEF_hist_vars%alb, &
-            a_alb, f_alb, file_hist, 'f_alb', 'band', 'wetdry', itime_in_file, sumwt, filter, &
+            a_alb, f_alb, file_hist, 'f_alb', 'band', 'rtyp', itime_in_file, sumwt, filter, &
             'averaged albedo direct','%')
 
          ! averaged bulk surface emissivity
