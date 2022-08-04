@@ -396,7 +396,7 @@ SAVE
 #endif
      
      CALL ncio_define_dimension_vector (file_restart, 'band',   2)
-     CALL ncio_define_dimension_vector (file_restart, 'wetdry', 2)
+     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
 
      ! Time-varying state variables which reaquired by restart run
      call ncio_write_vector (file_restart, 'z_sno   '   , 'snow', -maxsnl, 'vector', landpatch, z_sno , compress) !  node depth [m]
@@ -430,9 +430,9 @@ SAVE
      call ncio_write_vector (file_restart, 'sai     '   , 'vector', landpatch, sai       , compress) !  stem area index
      call ncio_write_vector (file_restart, 'tsai    '   , 'vector', landpatch, tsai      , compress) !  stem area index
      call ncio_write_vector (file_restart, 'coszen  '   , 'vector', landpatch, coszen    , compress) !  cosine of solar zenith angle
-     call ncio_write_vector (file_restart, 'alb     '   , 'band', 2, 'wetdry', 2, 'vector', landpatch, alb , compress) !  averaged albedo [-]
-     call ncio_write_vector (file_restart, 'ssun    '   , 'band', 2, 'wetdry', 2, 'vector', landpatch, ssun, compress) !  sunlit canopy absorption for solar radiation (0-1)
-     call ncio_write_vector (file_restart, 'ssha    '   , 'band', 2, 'wetdry', 2, 'vector', landpatch, ssha, compress) !  shaded canopy absorption for solar radiation (0-1)
+     call ncio_write_vector (file_restart, 'alb     '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, alb , compress) !  averaged albedo [-]
+     call ncio_write_vector (file_restart, 'ssun    '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, ssun, compress) !  sunlit canopy absorption for solar radiation (0-1)
+     call ncio_write_vector (file_restart, 'ssha    '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, ssha, compress) !  shaded canopy absorption for solar radiation (0-1)
      call ncio_write_vector (file_restart, 'thermk  '   , 'vector', landpatch, thermk    , compress) !  canopy gap fraction for tir radiation
      call ncio_write_vector (file_restart, 'extkb   '   , 'vector', landpatch, extkb     , compress) !  (k, g(mu)/mu) direct solar extinction coefficient
      call ncio_write_vector (file_restart, 'extkd   '   , 'vector', landpatch, extkd     , compress) !  diffuse and scattered diffuse PAR extinction coefficient
