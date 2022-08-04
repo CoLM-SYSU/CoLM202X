@@ -618,6 +618,7 @@ contains
       REAL(r8), allocatable :: forctime_sec (:)
       INTEGER :: year, month, day, hour, minute, second
       INTEGER :: itime, maxday
+      INTEGER*8 :: sec_long
 
       filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -632,16 +633,16 @@ contains
 
       forctime(1)%year = year
       forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      forctime(1)%sec  = hour*3600 + minute*60 + second + forctime_sec(1)
+      sec_long = hour*3600 + minute*60 + second + forctime_sec(1)
 
       DO itime = 1, size(forctime)
          IF (itime > 1) THEN
             forctime(itime) = forctime(itime-1)
-            forctime(itime)%sec = forctime(itime)%sec + forctime_sec(itime) - forctime_sec(itime-1)
+            sec_long = sec_long + forctime_sec(itime) - forctime_sec(itime-1)
          ENDIF
 
-         DO WHILE (forctime(itime)%sec > 86400)
-            forctime(itime)%sec = forctime(itime)%sec - 86400
+         DO WHILE (sec_long > 86400)
+            sec_long = sec_long - 86400
             IF( isleapyear(forctime(itime)%year) ) THEN
                maxday = 366
             ELSE
@@ -653,6 +654,8 @@ contains
                forctime(itime)%day = 1
             ENDIF
          ENDDO
+
+         forctime(itime)%sec = sec_long
       ENDDO
 
    END SUBROUTINE metread_time
