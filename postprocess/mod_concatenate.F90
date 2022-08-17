@@ -220,7 +220,7 @@ contains
       ! Local variables
       CHARACTER(len=256) :: fileblock
       integer :: ixseg, iyseg
-      INTEGER, allocatable :: time_component(:,:)
+      INTEGER, allocatable :: minutes (:)
 
       iyseg = 1
       DO WHILE (hist_block_info%ysegs(iyseg)%cnt <= 0)
@@ -235,14 +235,15 @@ contains
       call get_filename_block ( &
          filename, hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
-      CALL ncio_read_serial (fileblock, dataname, time_component)
+      CALL ncio_read_serial (fileblock, dataname, minutes)
       
-      timelen = size(time_component, 2)
+      timelen = size(minutes)
       CALL ncio_define_dimension (filename, 'time', timelen)
-      CALL ncio_define_dimension (filename, 'component', 3)
+      call ncio_write_serial (filename, dataname, minutes, 'time')
 
-      call ncio_write_serial (filename, dataname, time_component, 'component', 'time')
-
+      CALL ncio_put_attr (filename, dataname, 'long_name', 'time')
+      CALL ncio_put_attr (filename, dataname, 'units', 'minutes since 1900-1-1 0:0:0')
+      
    end subroutine hist_concatenate_time
 
    !------------------
@@ -322,6 +323,8 @@ contains
       IF (present(units)) THEN
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
+         
+      CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
@@ -388,6 +391,8 @@ contains
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
       
+      CALL ncio_put_attr (filename, varname, 'missing_value', spval)
+
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
    
@@ -455,6 +460,8 @@ contains
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
    
+      CALL ncio_put_attr (filename, varname, 'missing_value', spval)
+
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
 
@@ -554,6 +561,8 @@ contains
          IF (present(units)) THEN
             CALL ncio_put_attr (filename, varname, 'units', units)
          ENDIF
+
+         CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       ENDIF
 
@@ -685,6 +694,8 @@ contains
          IF (present(units)) THEN
             CALL ncio_put_attr (filename, varname, 'units', units)
          ENDIF
+
+         CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       ENDIF
 
@@ -818,6 +829,8 @@ contains
          IF (present(units)) THEN
             CALL ncio_put_attr (filename, varname, 'units', units)
          ENDIF
+
+         CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       ENDIF
 
