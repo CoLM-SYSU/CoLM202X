@@ -58,7 +58,7 @@ program hist_concatenate
       CALL ncio_define_dimension (filehist, 'lake', nl_lake)
       CALL ncio_define_dimension (filehist, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension (filehist, 'band', 2)
-      CALL ncio_define_dimension (filehist, 'wetdry', 2)
+      CALL ncio_define_dimension (filehist, 'rtyp', 2)
 #ifdef PLANT_HYDRAULIC_STRESS
       CALL ncio_define_dimension (filehist, 'vegnodes', nvegwcs)
 #endif
@@ -181,7 +181,7 @@ program hist_concatenate
       'stem area index','m2/m2')
 
    call hist_concatenate_var_4d (filehist, 'f_alb    ', timelen, &
-      'band', 'wetdry', 2, 2, compress, 'averaged albedo direct','%')
+      'band', 'rtyp', 2, 2, compress, 'averaged albedo direct','%')
 
    call hist_concatenate_var_2d (filehist, 'f_emis   ', timelen, compress, &  
       'averaged bulk surface emissivity','-')

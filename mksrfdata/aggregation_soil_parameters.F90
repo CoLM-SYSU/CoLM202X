@@ -1191,8 +1191,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       deallocate ( wf_gravels_s_patches )
       deallocate ( wf_sand_s_patches )
       deallocate ( theta_s_patches )
-      deallocate ( psi_s_patches   )
 #ifdef Campbell_SOIL_MODEL
+      deallocate ( psi_s_patches   )
       deallocate ( lambda_patches  )
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
@@ -1219,8 +1219,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
       IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one) 
       IF (allocated(theta_s_one))             deallocate (theta_s_one)
-      IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )
 #ifdef Campbell_SOIL_MODEL
+      IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )
       IF (allocated(lambda_one ))     deallocate (lambda_one )
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
