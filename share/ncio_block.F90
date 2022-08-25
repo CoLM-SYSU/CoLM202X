@@ -42,39 +42,38 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
       INTEGER :: ncid, varid
+      INTEGER :: iblkme
 
       IF (p_is_io) THEN
                      
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-                  IF (any(ndims == 0)) cycle
+            ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
 
-                  start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
-                  count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
-                  count2(2) = grid%ycnt(jblk)
+            start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
+            count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count2(2) = grid%ycnt(jblk)
 
-                  IF (count2(1) == grid%xcnt(iblk)) THEN
-                     CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                        start2, count2) )
-                  ELSE
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(1:count2(1),:), start2, count2) )
+            IF (count2(1) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start2, count2) )
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(1:count2(1),:), start2, count2) )
 
-                     start2(1) = 1
-                     start_mem = count2(1) + 1
-                     count2(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start2, count2) )
-                  ENDIF
+               start2(1) = 1
+               start_mem = count2(1) + 1
+               count2(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start2, count2) )
+            ENDIF
 
-               ENDIF
-            ENDDO
          ENDDO
                 
          CALL nccheck( nf90_close(ncid) )
@@ -102,39 +101,38 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, ndims(2), start2(2), count2(2), start_mem
       INTEGER :: ncid, varid
+      INTEGER :: iblkme
 
       IF (p_is_io) THEN
                      
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-                  IF (any(ndims == 0)) cycle
+            ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
 
-                  start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
-                  count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
-                  count2(2) = grid%ycnt(jblk)
+            start2 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
+            count2(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count2(2) = grid%ycnt(jblk)
 
-                  IF (count2(1) == grid%xcnt(iblk)) THEN
-                     CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                        start2, count2) )
-                  ELSE
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(1:count2(1),:), start2, count2) )
+            IF (count2(1) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start2, count2) )
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(1:count2(1),:), start2, count2) )
 
-                     start2(1) = 1
-                     start_mem = count2(1) + 1
-                     count2(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start2, count2) )
-                  ENDIF
+               start2(1) = 1
+               start_mem = count2(1) + 1
+               count2(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start2, count2) )
+            ENDIF
 
-               ENDIF
-            ENDDO
          ENDDO
                 
          CALL nccheck( nf90_close(ncid) )
@@ -163,40 +161,39 @@ CONTAINS
 
       ! Local variables
       INTEGER :: iblk, jblk, ndims(3), start3(3), count3(3), start_mem
+      INTEGER :: iblkme
 
       IF (p_is_io) THEN
                      
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
-                  IF (any(ndims == 0)) cycle
+            ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
 
-                  start3 = (/1, grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
-                  count3(1) = ndim1
-                  count3(2) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
-                  count3(3) = grid%ycnt(jblk)
+            start3 = (/1, grid%xdsp(iblk)+1, grid%ydsp(jblk)+1/)
+            count3(1) = ndim1
+            count3(2) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count3(3) = grid%ycnt(jblk)
 
-                  IF (count3(2) == grid%xcnt(iblk)) THEN
-                     CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                        start3, count3) )
-                  ELSE
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(:,1:count3(1),:), start3, count3) )
+            IF (count3(2) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start3, count3) )
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(:,1:count3(1),:), start3, count3) )
 
-                     start3(2) = 1
-                     start_mem = count3(2) + 1
-                     count3(2) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(:,start_mem:ndims(2),:), start3, count3) )
-                  ENDIF
+               start3(2) = 1
+               start_mem = count3(2) + 1
+               count3(2) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(:,start_mem:ndims(2),:), start3, count3) )
+            ENDIF
 
-               ENDIF
-            ENDDO
          ENDDO
                 
          CALL nccheck( nf90_close(ncid) )
@@ -225,40 +222,39 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
       INTEGER :: ncid, varid
+      INTEGER :: iblkme
 
       IF (p_is_io) THEN
                      
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-                  IF (any(ndims == 0)) cycle
+            ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
 
-                  start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
-                  count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
-                  count3(2) = grid%ycnt(jblk)
-                  count3(3) = 1
+            start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
+            count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count3(2) = grid%ycnt(jblk)
+            count3(3) = 1
 
-                  IF (count3(1) == grid%xcnt(iblk)) THEN
-                     CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                        start3, count3) )
-                  ELSE
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(1:count3(1),:), start3, count3) )
+            IF (count3(1) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start3, count3) )
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(1:count3(1),:), start3, count3) )
 
-                     start3(1) = 1
-                     start_mem = count3(1) + 1
-                     count3(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start3, count3) )
-                  ENDIF
+               start3(1) = 1
+               start_mem = count3(1) + 1
+               count3(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start3, count3) )
+            ENDIF
 
-               ENDIF
-            ENDDO
          ENDDO
                 
          CALL nccheck( nf90_close(ncid) )
@@ -287,40 +283,39 @@ CONTAINS
       ! Local variables
       INTEGER :: iblk, jblk, ndims(2), start3(3), count3(3), start_mem
       INTEGER :: ncid, varid
+      INTEGER :: iblkme
 
       IF (p_is_io) THEN
                      
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
-                  IF (any(ndims == 0)) cycle
+            ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
+            IF (any(ndims == 0)) cycle
 
-                  start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
-                  count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
-                  count3(2) = grid%ycnt(jblk)
-                  count3(3) = 1
+            start3 = (/grid%xdsp(iblk)+1, grid%ydsp(jblk)+1, itime/)
+            count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
+            count3(2) = grid%ycnt(jblk)
+            count3(3) = 1
 
-                  IF (count3(1) == grid%xcnt(iblk)) THEN
-                     CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                        start3, count3) )
-                  ELSE
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(1:count3(1),:), start3, count3) )
+            IF (count3(1) == grid%xcnt(iblk)) THEN
+               CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
+                  start3, count3) )
+            ELSE
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(1:count3(1),:), start3, count3) )
 
-                     start3(1) = 1
-                     start_mem = count3(1) + 1
-                     count3(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
-                     CALL nccheck (nf90_get_var(ncid, varid, &
-                        rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start3, count3) )
-                  ENDIF
+               start3(1) = 1
+               start_mem = count3(1) + 1
+               count3(1) = grid%xdsp(iblk) + grid%xcnt(iblk) - grid%nlon
+               CALL nccheck (nf90_get_var(ncid, varid, &
+                  rdata%blk(iblk,jblk)%val(start_mem:ndims(1),:), start3, count3) )
+            ENDIF
 
-               ENDIF
-            ENDDO
          ENDDO
                 
          CALL nccheck( nf90_close(ncid) )
@@ -357,7 +352,7 @@ CONTAINS
          start3 = (/1, 1, itime/)
          count3 = (/1, 1, 1/)
          CALL nccheck (nf90_get_var(ncid, varid, &
-            rdata%blk(site_xblk,site_yblk)%val, start3, count3) )
+            rdata%blk(xblkme(1),yblkme(1))%val, start3, count3) )
                 
          CALL nccheck( nf90_close(ncid) )
 

@@ -36,7 +36,7 @@ CONTAINS
       REAL(r8) :: gmin, gmax, spv
       REAL(r8), allocatable :: gmin_all(:), gmax_all(:)
       LOGICAL,  allocatable :: msk2(:,:)
-      INTEGER :: ib, jb, ix, iy
+      INTEGER :: iblkme, ib, jb, ix, iy
       LOGICAL :: has_nan
 
       IF (p_is_io) THEN
@@ -51,39 +51,37 @@ CONTAINS
          gmax = spv
 
          has_nan = .false.
-         DO jb = 1, gblock%nyblk
-            DO ib = 1, gblock%nxblk
-               IF (gblock%pio(ib,jb) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            ib = xblkme(iblkme)
+            jb = yblkme(iblkme)
 
-                  IF (.not. allocated(gdata%blk(ib,jb)%val)) cycle
+            IF (.not. allocated(gdata%blk(ib,jb)%val)) cycle
 
-                  allocate(msk2 (size(gdata%blk(ib,jb)%val,1), size(gdata%blk(ib,jb)%val,2)))
-                  msk2 = gdata%blk(ib,jb)%val /= spv
+            allocate(msk2 (size(gdata%blk(ib,jb)%val,1), size(gdata%blk(ib,jb)%val,2)))
+            msk2 = gdata%blk(ib,jb)%val /= spv
 
-                  IF (any(msk2)) THEN
-                     IF (gmin == spv) THEN
-                        gmin = minval(gdata%blk(ib,jb)%val, mask = msk2)
-                     ELSE
-                        gmin = min(gmin, minval(gdata%blk(ib,jb)%val, mask = msk2))
-                     ENDIF
-                     
-                     IF (gmax == spv) THEN
-                        gmax = maxval(gdata%blk(ib,jb)%val, mask = msk2)
-                     ELSE
-                        gmax = max(gmax, maxval(gdata%blk(ib,jb)%val, mask = msk2))
-                     ENDIF
-                  ENDIF
-
-                  DO iy = 1, size(gdata%blk(ib,jb)%val,2)
-                     DO ix = 1, size(gdata%blk(ib,jb)%val,1)
-                        has_nan = has_nan .or. isnan(gdata%blk(ib,jb)%val(ix,iy))
-                     ENDDO
-                  ENDDO
-
-                  deallocate(msk2)
-
+            IF (any(msk2)) THEN
+               IF (gmin == spv) THEN
+                  gmin = minval(gdata%blk(ib,jb)%val, mask = msk2)
+               ELSE
+                  gmin = min(gmin, minval(gdata%blk(ib,jb)%val, mask = msk2))
                ENDIF
+
+               IF (gmax == spv) THEN
+                  gmax = maxval(gdata%blk(ib,jb)%val, mask = msk2)
+               ELSE
+                  gmax = max(gmax, maxval(gdata%blk(ib,jb)%val, mask = msk2))
+               ENDIF
+            ENDIF
+
+            DO iy = 1, size(gdata%blk(ib,jb)%val,2)
+               DO ix = 1, size(gdata%blk(ib,jb)%val,1)
+                  has_nan = has_nan .or. isnan(gdata%blk(ib,jb)%val(ix,iy))
+               ENDDO
             ENDDO
+
+            deallocate(msk2)
+
          ENDDO
 
 #ifdef USEMPI

@@ -35,9 +35,8 @@ MODULE mod_block
    ! ---- Instance ----
    TYPE (block_type) :: gblock
    
-#ifdef SinglePoint
-   INTEGER :: site_xblk, site_yblk
-#endif
+   INTEGER :: nblkme
+   INTEGER, allocatable :: xblkme(:), yblkme(:)
 
    ! ---- PUBLIC SUBROUTINE ----
    PUBLIC :: get_filename_block
@@ -199,6 +198,7 @@ CONTAINS
       INTEGER  :: iblk_south, iblk_north, iblk_west,  iblk_east
       REAL(r8) :: edges, edgen, edgew, edgee
       INTEGER  :: numblocks, numblocks_x, numblocks_y
+      INTEGER  :: iblkme
 
       allocate (this%pio (this%nxblk,this%nyblk))
       this%pio(:,:) = p_root
@@ -271,6 +271,31 @@ CONTAINS
          p_root, p_comm_glb, p_err)
 #endif 
 
+#ifndef SinglePoint
+      nblkme = 0
+      IF (p_is_io) THEN
+         nblkme = count(this%pio == p_iam_glb)
+         IF (nblkme > 0) THEN
+            iblkme = 0
+            allocate (xblkme(nblkme))
+            allocate (yblkme(nblkme))
+            DO iblk = 1, this%nxblk
+               DO jblk = 1, this%nyblk
+                  IF (p_iam_glb == this%pio(iblk,jblk)) THEN
+                     iblkme = iblkme + 1
+                     xblkme(iblkme) = iblk
+                     yblkme(iblkme) = jblk
+                  ENDIF
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDIF
+#else
+      nblkme = 1
+      allocate(xblkme(1))
+      allocate(yblkme(1))
+#endif
+
    END SUBROUTINE block_init_pio
 
    ! --------------------------------
@@ -289,6 +314,7 @@ CONTAINS
       CHARACTER(len=256) :: filename
       INTEGER, allocatable :: nbasin_io(:), nbasinblk(:,:)
       INTEGER  :: numblocks, numblocks_x, numblocks_y, iblk, jblk, iproc, jproc
+      INTEGER  :: iblkme
       
       allocate (this%pio (this%nxblk,this%nyblk))
       this%pio(:,:) = p_root
@@ -329,6 +355,40 @@ CONTAINS
 
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &
          p_root, p_comm_glb, p_err)
+#endif
+      
+#ifndef SinglePoint
+      nblkme = 0
+      IF (p_is_io) THEN
+         nblkme = count(this%pio == p_iam_glb)
+         IF (nblkme > 0) THEN
+            iblkme = 0
+            allocate (xblkme(nblkme))
+            allocate (yblkme(nblkme))
+            DO iblk = 1, this%nxblk
+               DO jblk = 1, this%nyblk
+                  IF (p_iam_glb == this%pio(iblk,jblk)) THEN
+                     iblkme = iblkme + 1
+                     xblkme(iblkme) = iblk
+                     yblkme(iblkme) = jblk
+                  ENDIF
+               ENDDO
+            ENDDO
+         ENDIF
+      ENDIF
+#else
+      nblkme = 1
+      allocate(xblkme(1))
+      allocate(yblkme(1))
+         
+      DO jblk = 1, this%nyblk
+         DO iblk = 1, this%nxblk
+            IF (nbasinblk(iblk,jblk) > 0) THEN
+               xblkme(1) = iblk
+               yblkme(1) = jblk
+            ENDIF
+         ENDDO
+      ENDDO
 #endif
 
    END SUBROUTINE block_read_pio

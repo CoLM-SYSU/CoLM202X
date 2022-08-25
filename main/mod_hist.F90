@@ -1182,7 +1182,7 @@ contains
       logical, intent(in) :: filter(:)
       
       ! Local variables
-      integer :: xblk, yblk, xloc, yloc
+      integer :: iblkme, xblk, yblk, xloc, yloc
       integer :: compress
 
       if (.not. is_hist) return
@@ -1194,28 +1194,26 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         do yblk = 1, gblock%nyblk
-            do xblk = 1, gblock%nxblk
-               if (gblock%pio(xblk,yblk) == p_iam_glb) then
+         DO iblkme = 1, nblkme 
+            xblk = xblkme(iblkme)
+            yblk = yblkme(iblkme)
 
-                  do yloc = 1, ghist%ycnt(yblk) 
-                     do xloc = 1, ghist%xcnt(xblk) 
+            do yloc = 1, ghist%ycnt(yblk) 
+               do xloc = 1, ghist%xcnt(xblk) 
 
-                        if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
-                           IF (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
-                              flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-                                 = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-                                 / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                           ENDIF
-                        else
-                           flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
-                        end if
+                  if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
+                     IF (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
+                        flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                           = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                           / sumwt%blk(xblk,yblk)%val(xloc,yloc)
+                     ENDIF
+                  else
+                     flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
+                  end if
 
-                     end do
-                  end do
-
-               end if
+               end do
             end do
+
          end do
       end if
       
@@ -1261,7 +1259,7 @@ contains
       character (len=*), intent(in) :: units
 
       ! Local variables
-      integer :: xblk, yblk, xloc, yloc, i1
+      integer :: iblkme, xblk, yblk, xloc, yloc, i1
       integer :: compress
 
       if (.not. is_hist) return
@@ -1273,30 +1271,28 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         do yblk = 1, gblock%nyblk
-            do xblk = 1, gblock%nxblk
-               if (gblock%pio(xblk,yblk) == p_iam_glb) then
+         DO iblkme = 1, nblkme 
+            xblk = xblkme(iblkme)
+            yblk = yblkme(iblkme)
+                  
+            do yloc = 1, ghist%ycnt(yblk) 
+               do xloc = 1, ghist%xcnt(xblk) 
 
-                  do yloc = 1, ghist%ycnt(yblk) 
-                     do xloc = 1, ghist%xcnt(xblk) 
+                  if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
+                     DO i1 = flux_xy%lb1, flux_xy%ub1
+                        IF (flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) /= spval) THEN
+                           flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) &
+                              = flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) &
+                              / sumwt%blk(xblk,yblk)%val(xloc,yloc)
+                        ENDIF
+                     ENDDO 
+                  else
+                     flux_xy%blk(xblk,yblk)%val(:,xloc,yloc) = spval
+                  end if
 
-                        if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
-                           DO i1 = flux_xy%lb1, flux_xy%ub1
-                              IF (flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) /= spval) THEN
-                                 flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) &
-                                    = flux_xy%blk(xblk,yblk)%val(i1,xloc,yloc) &
-                                    / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                              ENDIF
-                           ENDDO 
-                        else
-                           flux_xy%blk(xblk,yblk)%val(:,xloc,yloc) = spval
-                        end if
-
-                     end do
-                  end do
-
-               end if
+               end do
             end do
+
          end do
       end if
       
@@ -1343,7 +1339,7 @@ contains
       character (len=*), intent(in) :: units
 
       ! Local variables
-      integer :: xblk, yblk, xloc, yloc, i1, i2
+      integer :: iblkme, xblk, yblk, xloc, yloc, i1, i2
       integer :: compress
 
       if (.not. is_hist) return
@@ -1355,32 +1351,30 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         do yblk = 1, gblock%nyblk
-            do xblk = 1, gblock%nxblk
-               if (gblock%pio(xblk,yblk) == p_iam_glb) then
+         DO iblkme = 1, nblkme 
+            xblk = xblkme(iblkme)
+            yblk = yblkme(iblkme)
 
-                  do yloc = 1, ghist%ycnt(yblk) 
-                     do xloc = 1, ghist%xcnt(xblk) 
+            do yloc = 1, ghist%ycnt(yblk) 
+               do xloc = 1, ghist%xcnt(xblk) 
 
-                        if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
-                           DO i1 = flux_xy%lb1, flux_xy%ub1
-                              DO i2 = flux_xy%lb2, flux_xy%ub2
-                                 IF (flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) /= spval) THEN
-                                    flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) &
-                                       = flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) &
-                                       / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                                 ENDIF
-                              ENDDO
-                           ENDDO
-                        else
-                           flux_xy%blk(xblk,yblk)%val(:,:,xloc,yloc) = spval
-                        end if
+                  if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
+                     DO i1 = flux_xy%lb1, flux_xy%ub1
+                        DO i2 = flux_xy%lb2, flux_xy%ub2
+                           IF (flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) /= spval) THEN
+                              flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) &
+                                 = flux_xy%blk(xblk,yblk)%val(i1,i2,xloc,yloc) &
+                                 / sumwt%blk(xblk,yblk)%val(xloc,yloc)
+                           ENDIF
+                        ENDDO
+                     ENDDO
+                  else
+                     flux_xy%blk(xblk,yblk)%val(:,:,xloc,yloc) = spval
+                  end if
 
-                     end do
-                  end do
-
-               end if
+               end do
             end do
+
          end do
       end if
       
@@ -1426,7 +1420,7 @@ contains
       character (len=*), intent(in), optional :: units
 
       ! Local variables
-      integer :: i, xblk, yblk, xloc, yloc
+      integer :: i, iblkme, xblk, yblk, xloc, yloc
       integer :: compress
 
       if (.not. is_hist) return
@@ -1442,27 +1436,25 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         do yblk = 1, gblock%nyblk
-            do xblk = 1, gblock%nxblk
-               if (gblock%pio(xblk,yblk) == p_iam_glb) then
+         DO iblkme = 1, nblkme 
+            xblk = xblkme(iblkme)
+            yblk = yblkme(iblkme)
 
-                  do yloc = 1, ghist%ycnt(yblk) 
-                     do xloc = 1, ghist%xcnt(xblk) 
+            do yloc = 1, ghist%ycnt(yblk) 
+               do xloc = 1, ghist%xcnt(xblk) 
 
-                        if ((sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) &
-                           .and. (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval)) then
-                              flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-                                 = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-                                 / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-                        else
-                           flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
-                        end if
+                  if ((sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) &
+                     .and. (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval)) then
+                     flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                        = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                        / sumwt%blk(xblk,yblk)%val(xloc,yloc)
+                  else
+                     flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
+                  end if
 
-                     end do
-                  end do
-
-               end if
+               end do
             end do
+
          end do
       end if
       
@@ -1497,7 +1489,7 @@ contains
 
       ! Local variables
       character(len=256) :: fileblock
-      integer :: iblk, jblk
+      integer :: iblkme, iblk, jblk
       logical :: fexists
 
       if (trim(DEF_HIST_mode) == 'one') then
@@ -1526,25 +1518,23 @@ contains
 
          if (p_is_io) then
 
-            do jblk = 1, gblock%nyblk
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
                IF (ghist%ycnt(jblk) <= 0) cycle
-               do iblk = 1, gblock%nxblk
-                  IF (ghist%xcnt(iblk) <= 0) cycle
-                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+               IF (ghist%xcnt(iblk) <= 0) cycle
 
-                     call get_filename_block (filename, iblk, jblk, fileblock)
+               call get_filename_block (filename, iblk, jblk, fileblock)
 
-                     inquire (file=fileblock, exist=fexists)
-                     if (.not. fexists) then
-                        call ncio_create_file (trim(fileblock))
-                        CALL ncio_define_dimension (fileblock, 'time', 0)
-                        call hist_write_grid_info  (fileblock, grid, iblk, jblk)
-                     end if
+               inquire (file=fileblock, exist=fexists)
+               if (.not. fexists) then
+                  call ncio_create_file (trim(fileblock))
+                  CALL ncio_define_dimension (fileblock, 'time', 0)
+                  call hist_write_grid_info  (fileblock, grid, iblk, jblk)
+               end if
 
-                     call ncio_write_time (fileblock, dataname, time, itime)
+               call ncio_write_time (fileblock, dataname, time, itime)
 
-                  end if
-               end do
             end do
 
          end if
@@ -1573,7 +1563,7 @@ contains
       integer, intent(in) :: compress
 
       ! Local variables
-      integer :: iblk, jblk, idata, ixseg, iyseg
+      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
       integer :: xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
       integer :: rmesg(3), smesg(3), isrc
       character(len=256) :: fileblock
@@ -1673,19 +1663,17 @@ contains
        
          if (p_is_io) then
 
-            do jblk = 1, gblock%nyblk
-               do iblk = 1, gblock%nxblk
-                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
 
-                     if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
+               if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
-                     call get_filename_block (filename, iblk, jblk, fileblock)
+               call get_filename_block (filename, iblk, jblk, fileblock)
 
-                     call ncio_write_serial_time (fileblock, dataname, itime, &
-                        wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
+               call ncio_write_serial_time (fileblock, dataname, itime, &
+                  wdata%blk(iblk,jblk)%val, 'lon', 'lat', 'time', compress)
 
-                  end if
-               end do
             end do
 
          end if
@@ -1715,7 +1703,7 @@ contains
       integer, intent(in) :: compress
 
       ! Local variables
-      integer :: iblk, jblk, idata, ixseg, iyseg
+      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
       integer :: xcnt, ycnt, ndim1, xbdsp, ybdsp, xgdsp, ygdsp 
       integer :: rmesg(4), smesg(4), isrc
       character(len=256) :: fileblock
@@ -1826,21 +1814,19 @@ contains
 
          if (p_is_io) then
 
-            do jblk = 1, gblock%nyblk
-               do iblk = 1, gblock%nxblk
-                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
 
-                     if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
+               if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
-                     call get_filename_block (filename, iblk, jblk, fileblock)
+               call get_filename_block (filename, iblk, jblk, fileblock)
 
-                     call ncio_define_dimension (fileblock, dim1name, wdata%ub1-wdata%lb1+1)
+               call ncio_define_dimension (fileblock, dim1name, wdata%ub1-wdata%lb1+1)
 
-                     call ncio_write_serial_time (fileblock, dataname, itime, &
-                        wdata%blk(iblk,jblk)%val, dim1name, 'lon', 'lat', 'time', compress)
+               call ncio_write_serial_time (fileblock, dataname, itime, &
+                  wdata%blk(iblk,jblk)%val, dim1name, 'lon', 'lat', 'time', compress)
 
-                  end if
-               end do
             end do
 
          end if
@@ -1870,7 +1856,7 @@ contains
       integer, intent(in) :: compress
 
       ! Local variables
-      integer :: iblk, jblk, idata, ixseg, iyseg
+      integer :: iblkme, iblk, jblk, idata, ixseg, iyseg
       integer :: xcnt, ycnt, ndim1, ndim2, xbdsp, ybdsp, xgdsp, ygdsp
       integer :: rmesg(5), smesg(5), isrc
       character(len=256) :: fileblock
@@ -1985,22 +1971,20 @@ contains
       elseif (trim(DEF_HIST_mode) == 'block') then
          if (p_is_io) then
 
-            do jblk = 1, gblock%nyblk
-               do iblk = 1, gblock%nxblk
-                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
+                     
+               if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
-                     if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
+               call get_filename_block (filename, iblk, jblk, fileblock)
 
-                     call get_filename_block (filename, iblk, jblk, fileblock)
+               call ncio_define_dimension (fileblock, dim1name, wdata%ub1-wdata%lb1+1)
+               call ncio_define_dimension (fileblock, dim2name, wdata%ub2-wdata%lb2+1)
 
-                     call ncio_define_dimension (fileblock, dim1name, wdata%ub1-wdata%lb1+1)
-                     call ncio_define_dimension (fileblock, dim2name, wdata%ub2-wdata%lb2+1)
+               call ncio_write_serial_time (fileblock, dataname, itime, &
+                  wdata%blk(iblk,jblk)%val, dim1name, dim2name, 'lon', 'lat', 'time', compress)
 
-                     call ncio_write_serial_time (fileblock, dataname, itime, &
-                        wdata%blk(iblk,jblk)%val, dim1name, dim2name, 'lon', 'lat', 'time', compress)
-
-                  end if
-               end do
             end do
 
          end if

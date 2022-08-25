@@ -50,7 +50,7 @@ CONTAINS
 
       INTEGER  :: iworker
       INTEGER  :: nbasin, iu, ju
-      INTEGER  :: iblk, jblk, xloc, yloc, xg, yg, ixloc, iyloc
+      INTEGER  :: iblkme, iblk, jblk, xloc, yloc, xg, yg, ixloc, iyloc
       INTEGER  :: xp, yp, xblk, yblk, npxl, ipxl, ix, iy
       INTEGER  :: iloc, iloc_max(2)
       INTEGER  :: iproc, idest, isrc
@@ -101,8 +101,8 @@ CONTAINS
       nbasin_blk(:,:) = 0
       nbasin_blk(landbasin(1)%xblk,landbasin(1)%yblk) = 1
 
-      site_xblk = landbasin(1)%xblk
-      site_yblk = landbasin(1)%yblk
+      xblkme(1) = landbasin(1)%xblk
+      yblkme(1) = landbasin(1)%yblk
       
       RETURN
 #endif
@@ -132,63 +132,62 @@ CONTAINS
             allocate (ulist_worker(iworker)%val (1000))
          ENDDO
 
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
-                  DO yloc = 1, gbasin%ycnt(jblk)
-                     DO xloc = 1, gbasin%xcnt(iblk)
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+                  
+            DO yloc = 1, gbasin%ycnt(jblk)
+               DO xloc = 1, gbasin%xcnt(iblk)
 
 #ifdef GRIDBASED 
-                        IF (databasin%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
-                           xg = gbasin%xdsp(iblk) + xloc
-                           IF (xg > gbasin%nlon) xg = xg - gbasin%nlon
+                  IF (databasin%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
+                     xg = gbasin%xdsp(iblk) + xloc
+                     IF (xg > gbasin%nlon) xg = xg - gbasin%nlon
 
-                           yg = gbasin%ydsp(jblk) + yloc
+                     yg = gbasin%ydsp(jblk) + yloc
 
-                           iu = gbasin%nlon * (yg-1) + xg
-                        ELSE
-                           iu = 0
-                        ENDIF
+                     iu = gbasin%nlon * (yg-1) + xg
+                  ELSE
+                     iu = 0
+                  ENDIF
 #endif
 #ifdef CATCHMENT
-                        iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
+                  iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 
-                        IF (iu > 0) THEN
+                  IF (iu > 0) THEN
 
-                           iworker = mod(iu, p_np_worker)
-                           CALL insert_into_sorted_list1 ( &
-                              iu, nbasin_worker(iworker), ulist_worker(iworker)%val, iloc)
-                        
-                           IF (nbasin_worker(iworker) == size(ulist_worker(iworker)%val)) THEN
-                              CALL expand_list (ulist_worker(iworker)%val, 0.2_r8)
-                           ENDIF
-                           
-                        ENDIF
+                     iworker = mod(iu, p_np_worker)
+                     CALL insert_into_sorted_list1 ( &
+                        iu, nbasin_worker(iworker), ulist_worker(iworker)%val, iloc)
 
-                     ENDDO
-                  ENDDO
+                     IF (nbasin_worker(iworker) == size(ulist_worker(iworker)%val)) THEN
+                        CALL expand_list (ulist_worker(iworker)%val, 0.2_r8)
+                     ENDIF
+
+                  ENDIF
+
+               ENDDO
+            ENDDO
                         
 #ifdef USEMPI
-                  DO iworker = 0, p_np_worker-1
-                     IF (nbasin_worker(iworker) > 0) then 
-                        idest = p_address_worker(iworker)
-                        smesg(1:2) = (/p_iam_glb, nbasin_worker(iworker)/) 
-                        ! send(01)
-                        CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
-                           idest, mpi_tag_size, p_comm_glb, p_err) 
-                     ENDIF
-                  ENDDO
-#endif
-
-                  ! IF (sum(nbasin_worker) > 0) THEN
-                  !    write(*,*) 'Found ', sum(nbasin_worker), ' on block', iblk, jblk
-                  ! ENDIF
-
-                  nbasin = nbasin + sum(nbasin_worker)
-                  nbasin_worker(:) = 0
+            DO iworker = 0, p_np_worker-1
+               IF (nbasin_worker(iworker) > 0) then 
+                  idest = p_address_worker(iworker)
+                  smesg(1:2) = (/p_iam_glb, nbasin_worker(iworker)/) 
+                  ! send(01)
+                  CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
+                     idest, mpi_tag_size, p_comm_glb, p_err) 
                ENDIF
             ENDDO
+#endif
+
+            ! IF (sum(nbasin_worker) > 0) THEN
+            !    write(*,*) 'Found ', sum(nbasin_worker), ' on block', iblk, jblk
+            ! ENDIF
+
+            nbasin = nbasin + sum(nbasin_worker)
+            nbasin_worker(:) = 0
          ENDDO               
          
 #ifdef USEMPI
@@ -245,181 +244,177 @@ CONTAINS
 
       IF (p_is_io) THEN
 
-         DO jblk = 1, gblock%nyblk
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (gbasin%xcnt(iblk) <= 0) cycle 
             IF (gbasin%ycnt(jblk) <= 0) cycle 
 
-            DO iblk = 1, gblock%nxblk
-               IF (gbasin%xcnt(iblk) <= 0) cycle 
+            ylg = gbasin%ydsp(jblk) + 1
+            yug = gbasin%ydsp(jblk) + gbasin%ycnt(jblk)
+            IF (gbasin%yinc == 1) THEN
+               ysp = find_nearest_south (gbasin%lat_s(ylg), pixel%nlat, pixel%lat_s)
+               ynp = find_nearest_north (gbasin%lat_n(yug), pixel%nlat, pixel%lat_n)
+            ELSE
+               ysp = find_nearest_south (gbasin%lat_s(yug), pixel%nlat, pixel%lat_s)
+               ynp = find_nearest_north (gbasin%lat_n(ylg), pixel%nlat, pixel%lat_n)
+            ENDIF
 
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
-         
-                  ylg = gbasin%ydsp(jblk) + 1
-                  yug = gbasin%ydsp(jblk) + gbasin%ycnt(jblk)
-                  IF (gbasin%yinc == 1) THEN
-                     ysp = find_nearest_south (gbasin%lat_s(ylg), pixel%nlat, pixel%lat_s)
-                     ynp = find_nearest_north (gbasin%lat_n(yug), pixel%nlat, pixel%lat_n)
-                  ELSE
-                     ysp = find_nearest_south (gbasin%lat_s(yug), pixel%nlat, pixel%lat_s)
-                     ynp = find_nearest_north (gbasin%lat_n(ylg), pixel%nlat, pixel%lat_n)
-                  ENDIF
+            nyp = ynp - ysp + 1
 
-                  nyp = ynp - ysp + 1
+            xlg = gbasin%xdsp(iblk) + 1
+            xug = gbasin%xdsp(iblk) + gbasin%xcnt(iblk)
+            IF (xug > gbasin%nlon) xug = xug - gbasin%nlon
 
-                  xlg = gbasin%xdsp(iblk) + 1
-                  xug = gbasin%xdsp(iblk) + gbasin%xcnt(iblk)
-                  IF (xug > gbasin%nlon) xug = xug - gbasin%nlon
-                  
-                  xwp = find_nearest_west (gbasin%lon_w(xlg), pixel%nlon, pixel%lon_w)
-                  IF (.not. lon_between_floor(pixel%lon_w(xwp), gbasin%lon_w(xlg), gbasin%lon_e(xlg))) THEN
-                     xwp = mod(xwp,pixel%nlon) + 1
-                  ENDIF
-                  
-                  xep = find_nearest_east (gbasin%lon_e(xug), pixel%nlon, pixel%lon_e)
-                  IF (.not. lon_between_ceil(pixel%lon_e(xep), gbasin%lon_w(xug), gbasin%lon_e(xug))) THEN
-                     xep = xep - 1
-                     IF (xep == 0) xep = pixel%nlon
-                  ENDIF
+            xwp = find_nearest_west (gbasin%lon_w(xlg), pixel%nlon, pixel%lon_w)
+            IF (.not. lon_between_floor(pixel%lon_w(xwp), gbasin%lon_w(xlg), gbasin%lon_e(xlg))) THEN
+               xwp = mod(xwp,pixel%nlon) + 1
+            ENDIF
 
-                  nxp = xep - xwp + 1
-                  IF (nxp <= 0) nxp = nxp + pixel%nlon 
+            xep = find_nearest_east (gbasin%lon_e(xug), pixel%nlon, pixel%lon_e)
+            IF (.not. lon_between_ceil(pixel%lon_e(xep), gbasin%lon_w(xug), gbasin%lon_e(xug))) THEN
+               xep = xep - 1
+               IF (xep == 0) xep = pixel%nlon
+            ENDIF
 
-                  allocate (ulist2 (nxp,nyp))
-                  allocate (xlist2 (nxp,nyp))
-                  allocate (ylist2 (nxp,nyp))
-                  allocate (msk2   (nxp,nyp))
-               
-                  DO iy = ysp, ynp
-                     yg = gbasin%ygrd(iy)
-                     yloc = gbasin%yloc(yg)
-                     
-                     iyloc = iy - ysp + 1
-                     dlatp = pixel%lat_n(iy) - pixel%lat_s(iy)
-                     IF (dlatp < 1.0e-7_r8) THEN
-                        ulist2(:,iyloc) = 0
-                        cycle
-                     ENDIF
-                  
-                     ix = xwp
-                     ixloc = 0
-                     DO while (.true.)
-                        ixloc = ixloc + 1
-                        dlonp = pixel%lon_e(ix) - pixel%lon_w(ix)
-                        IF (dlonp < 0) dlonp = dlonp + 360.0_r8 
+            nxp = xep - xwp + 1
+            IF (nxp <= 0) nxp = nxp + pixel%nlon 
 
-                        xg = gbasin%xgrd(ix)
-                        xloc = gbasin%xloc(xg)
+            allocate (ulist2 (nxp,nyp))
+            allocate (xlist2 (nxp,nyp))
+            allocate (ylist2 (nxp,nyp))
+            allocate (msk2   (nxp,nyp))
+
+            DO iy = ysp, ynp
+               yg = gbasin%ygrd(iy)
+               yloc = gbasin%yloc(yg)
+
+               iyloc = iy - ysp + 1
+               dlatp = pixel%lat_n(iy) - pixel%lat_s(iy)
+               IF (dlatp < 1.0e-7_r8) THEN
+                  ulist2(:,iyloc) = 0
+                  cycle
+               ENDIF
+
+               ix = xwp
+               ixloc = 0
+               DO while (.true.)
+                  ixloc = ixloc + 1
+                  dlonp = pixel%lon_e(ix) - pixel%lon_w(ix)
+                  IF (dlonp < 0) dlonp = dlonp + 360.0_r8 
+
+                  xg = gbasin%xgrd(ix)
+                  xloc = gbasin%xloc(xg)
 
 #ifdef GRIDBASED 
-                        IF (databasin%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
-                           iu = gbasin%nlon * (yg-1) + xg
-                        ELSE
-                           iu = 0
-                        ENDIF
+                  IF (databasin%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
+                     iu = gbasin%nlon * (yg-1) + xg
+                  ELSE
+                     iu = 0
+                  ENDIF
 #endif
 #ifdef CATCHMENT
-                        iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
+                  iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 
-                        xlist2(ixloc,iyloc) = ix
-                        ylist2(ixloc,iyloc) = iy
-                        ulist2(ixloc,iyloc) = iu
+                  xlist2(ixloc,iyloc) = ix
+                  ylist2(ixloc,iyloc) = iy
+                  ulist2(ixloc,iyloc) = iu
 
-                        IF (dlonp < 1.0e-7_r8) THEN
-                           ulist2(ixloc,iyloc) = 0
-                        ENDIF
-                  
-                        IF (ix == xep) exit
-                        ix = mod(ix,pixel%nlon) + 1
-                     ENDDO
-                  ENDDO
+                  IF (dlonp < 1.0e-7_r8) THEN
+                     ulist2(ixloc,iyloc) = 0
+                  ENDIF
+
+                  IF (ix == xep) exit
+                  ix = mod(ix,pixel%nlon) + 1
+               ENDDO
+            ENDDO
                   
 #ifdef USEMPI
-                  allocate (sbuf (nxp*nyp))
-                  allocate (ipt2 (nxp,nyp))
+            allocate (sbuf (nxp*nyp))
+            allocate (ipt2 (nxp,nyp))
                   
-                  ipt2 = mod(ulist2, p_np_worker)
-                  DO iproc = 0, p_np_worker-1
-                     msk2  = (ipt2 == iproc) .and. (ulist2 > 0)
-                     nsend = count(msk2)
-                     IF (nsend > 0) THEN
-                        
-                        idest = p_address_worker(iproc)
+            ipt2 = mod(ulist2, p_np_worker)
+            DO iproc = 0, p_np_worker-1
+               msk2  = (ipt2 == iproc) .and. (ulist2 > 0)
+               nsend = count(msk2)
+               IF (nsend > 0) THEN
 
-                        smesg(1:2) = (/p_iam_glb, nsend/)
-                        ! send(03)
-                        CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
-                           idest, mpi_tag_mesg, p_comm_glb, p_err) 
+                  idest = p_address_worker(iproc)
 
-                        sbuf(1:nsend) = pack(ulist2, msk2)
-                        ! send(04)
-                        CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                           idest, mpi_tag_data, p_comm_glb, p_err) 
+                  smesg(1:2) = (/p_iam_glb, nsend/)
+                  ! send(03)
+                  CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
+                     idest, mpi_tag_mesg, p_comm_glb, p_err) 
 
-                        sbuf(1:nsend) = pack(xlist2, msk2)
-                        ! send(05)
-                        CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                           idest, mpi_tag_data, p_comm_glb, p_err) 
+                  sbuf(1:nsend) = pack(ulist2, msk2)
+                  ! send(04)
+                  CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
+                     idest, mpi_tag_data, p_comm_glb, p_err) 
 
-                        sbuf(1:nsend) = pack(ylist2, msk2)
-                        ! send(06)
-                        CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                           idest, mpi_tag_data, p_comm_glb, p_err) 
+                  sbuf(1:nsend) = pack(xlist2, msk2)
+                  ! send(05)
+                  CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
+                     idest, mpi_tag_data, p_comm_glb, p_err) 
 
-                     ENDIF
-                  ENDDO
-         
-                  deallocate (sbuf  )
-                  deallocate (ipt2  )
-#else
-                  
-                  DO iy = 1, nyp
-                     DO ix = 1, nxp
-
-                        iu = ulist2(ix,iy)
-                        IF (iu > 0) THEN 
-                           
-                           CALL insert_into_sorted_list1 (iu, nbasin, ulist, iloc, is_new)
-                           
-                           msk2 = (ulist2 == iu)
-                           npxl = count(msk2)
-
-                           IF (is_new) THEN
-                              IF (iloc < nbasin) THEN
-                                 iaddr(iloc+1:nbasin) = iaddr(iloc:nbasin-1)
-                              ENDIF
-                              iaddr(iloc) = nbasin
-
-                              lbasin(iaddr(iloc))%num  = iu
-                              lbasin(iaddr(iloc))%npxl = npxl
-                           ELSE
-                              lbasin(iaddr(iloc))%npxl = lbasin(iaddr(iloc))%npxl + npxl
-                           ENDIF
-                           
-                           allocate (xlist(npxl))
-                           allocate (ylist(npxl))
-                           xlist = pack(xlist2, msk2)
-                           ylist = pack(ylist2, msk2)
-                        
-                           CALL append_to_list (lbasin(iaddr(iloc))%ilon, xlist)
-                           CALL append_to_list (lbasin(iaddr(iloc))%ilat, ylist)
-
-                           where(msk2) ulist2 = -1
-
-                           deallocate (xlist)
-                           deallocate (ylist)
-                        ENDIF 
-
-                     ENDDO
-                  ENDDO
-#endif
-
-                  deallocate (ulist2)
-                  deallocate (xlist2)
-                  deallocate (ylist2)
-                  deallocate (msk2  )
+                  sbuf(1:nsend) = pack(ylist2, msk2)
+                  ! send(06)
+                  CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
+                     idest, mpi_tag_data, p_comm_glb, p_err) 
 
                ENDIF
             ENDDO
+
+            deallocate (sbuf  )
+            deallocate (ipt2  )
+#else
+                  
+            DO iy = 1, nyp
+               DO ix = 1, nxp
+
+                  iu = ulist2(ix,iy)
+                  IF (iu > 0) THEN 
+
+                     CALL insert_into_sorted_list1 (iu, nbasin, ulist, iloc, is_new)
+
+                     msk2 = (ulist2 == iu)
+                     npxl = count(msk2)
+
+                     IF (is_new) THEN
+                        IF (iloc < nbasin) THEN
+                           iaddr(iloc+1:nbasin) = iaddr(iloc:nbasin-1)
+                        ENDIF
+                        iaddr(iloc) = nbasin
+
+                        lbasin(iaddr(iloc))%num  = iu
+                        lbasin(iaddr(iloc))%npxl = npxl
+                     ELSE
+                        lbasin(iaddr(iloc))%npxl = lbasin(iaddr(iloc))%npxl + npxl
+                     ENDIF
+
+                     allocate (xlist(npxl))
+                     allocate (ylist(npxl))
+                     xlist = pack(xlist2, msk2)
+                     ylist = pack(ylist2, msk2)
+
+                     CALL append_to_list (lbasin(iaddr(iloc))%ilon, xlist)
+                     CALL append_to_list (lbasin(iaddr(iloc))%ilat, ylist)
+
+                     where(msk2) ulist2 = -1
+
+                     deallocate (xlist)
+                     deallocate (ylist)
+                  ENDIF 
+
+               ENDDO
+            ENDDO
+#endif
+
+            deallocate (ulist2)
+            deallocate (xlist2)
+            deallocate (ylist2)
+            deallocate (msk2  )
+
          ENDDO
 
 #ifdef USEMPI
@@ -752,24 +747,22 @@ CONTAINS
       INTEGER :: iblk, jblk, nave, nres, iproc, ndsp, nsend, idest, isrc, iu
       INTEGER :: smesg(4), rmesg(4)
       INTEGER, allocatable :: nbasin_worker(:)
+      INTEGER :: iblkme
       
       IF (p_is_io) THEN
 
          allocate (nbasin_worker (1:p_np_group-1))
          nbasin_worker(:) = 0
 
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
         
-                  nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
-                  nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
-                  DO iproc = 1, p_np_group-1
-                     nbasin_worker(iproc) = nbasin_worker(iproc) + nave
-                     IF (iproc <= nres)  nbasin_worker(iproc) = nbasin_worker(iproc) + 1
-                  ENDDO
-
-               ENDIF
+            nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
+            nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
+            DO iproc = 1, p_np_group-1
+               nbasin_worker(iproc) = nbasin_worker(iproc) + nave
+               IF (iproc <= nres)  nbasin_worker(iproc) = nbasin_worker(iproc) + 1
             ENDDO
          ENDDO
 
@@ -780,30 +773,28 @@ CONTAINS
          deallocate (nbasin_worker)
 
          ndsp = 0
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
 
-                  nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
-                  nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
-                  DO iproc = 1, p_np_group-1
-                     nsend = nave
-                     IF (iproc <= nres)  nsend = nsend + 1
+            nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
+            nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
+            DO iproc = 1, p_np_group-1
+               nsend = nave
+               IF (iproc <= nres)  nsend = nsend + 1
 
-                     DO iu = ndsp+1, ndsp+nsend
-                        idest = iproc
-                        smesg(1:2) = (/landbasin(iu)%num,  landbasin(iu)%npxl/)
-                        smesg(3:4) = (/landbasin(iu)%xblk, landbasin(iu)%yblk/)
-                        CALL mpi_send (smesg(1:4), 4, MPI_INTEGER, &
-                           idest, mpi_tag_mesg, p_comm_group, p_err) 
-                        CALL mpi_send (landbasin(iu)%ilon, landbasin(iu)%npxl, &
-                           MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
-                        CALL mpi_send (landbasin(iu)%ilat, landbasin(iu)%npxl, &
-                           MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
-                     ENDDO
-                     ndsp = ndsp + nsend
-                  ENDDO
-               ENDIF
+               DO iu = ndsp+1, ndsp+nsend
+                  idest = iproc
+                  smesg(1:2) = (/landbasin(iu)%num,  landbasin(iu)%npxl/)
+                  smesg(3:4) = (/landbasin(iu)%xblk, landbasin(iu)%yblk/)
+                  CALL mpi_send (smesg(1:4), 4, MPI_INTEGER, &
+                     idest, mpi_tag_mesg, p_comm_group, p_err) 
+                  CALL mpi_send (landbasin(iu)%ilon, landbasin(iu)%npxl, &
+                     MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
+                  CALL mpi_send (landbasin(iu)%ilat, landbasin(iu)%npxl, &
+                     MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
+               ENDDO
+               ndsp = ndsp + nsend
             ENDDO
          ENDDO
             
