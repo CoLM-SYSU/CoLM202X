@@ -312,7 +312,7 @@ call colm_CaMa_drv
    IF (p_is_worker) THEN
 #ifdef USEMPI
       CALL mpi_allreduce (MPI_IN_PLACE, count_iters, size(count_iters), &
-         MPI_INTEGER, MPI_SUM, p_comm_worker, p_err)
+         MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
       IF (p_iam_worker == 0) THEN
          write(*,*) 'iteration stat ', count_iters(:)

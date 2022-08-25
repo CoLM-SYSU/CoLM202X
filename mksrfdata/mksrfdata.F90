@@ -92,8 +92,6 @@ PROGRAM mksrfdata
 
    CALL read_namelist (nlfile)
    
-   ! define blocks
-   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
 
    dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
@@ -101,6 +99,10 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+   
+   ! define blocks
+   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
+   ! CALL gblock%load_from_file (dir_landdata, is_read_pio = .false.)
 
    CAll Init_LC_Const
 

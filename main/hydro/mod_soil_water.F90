@@ -75,6 +75,7 @@ contains
    subroutine soil_water_vertical_movement (         &
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
+         porsl_wa,                                   &
          rain,  etr,  rootr, rockbtm, rsubst, qinfl, &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk    )
 
@@ -102,6 +103,8 @@ contains
 
       integer,  intent(in) :: nprm       ! number of parameters included in soil function
       real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+      
+      real(r8), intent(in) :: porsl_wa           ! soil porosity in aquifer
       
       REAL(r8), intent(in) :: rain           ! rain fall on ponding layer
       REAL(r8), intent(in) :: etr            ! transpiration rate
@@ -270,6 +273,7 @@ contains
          call Richards_solver ( &
             lb, ub, dt, sp_zc(lb:ub), sp_zi(lb-1:ub), &
             porsl(lb:ub), vl_r(lb:ub), psi_s(lb:ub), hksat(lb:ub), nprm, prms(:,lb:ub), &
+            porsl_wa, &
             ubc_typ_sub, ubc_val_sub, lbc_typ_sub, lbc_val_sub, &
             ss_dp, wa, ss_vliq(lb:ub), ss_wt(lb:ub), ss_q(lb-1:ub), &
             tol_q, tol_z, tol_v, tol_p)
@@ -300,10 +304,12 @@ contains
             zwt = 0._r8
          ENDIF
       ELSE
-         call get_zwt_from_wa ( &
-            porsl(nlev), vl_r(nlev), psi_s(nlev), hksat(nlev), &
-            nprm, prms(:,nlev), tol_v, tol_z, &
-            wa, sp_zi(nlev), zwt) 
+         IF (is_permeable(nlev)) THEN
+            call get_zwt_from_wa ( &
+               porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
+               nprm, prms(:,nlev), tol_v, tol_z, &
+               wa, sp_zi(nlev), zwt) 
+         ENDIF
       ENDIF
       
       izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
@@ -368,6 +374,7 @@ contains
    subroutine Richards_solver ( &
          lb, ub, dt, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
+         vl_s_wa, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          ss_dp, waquifer, ss_vl, ss_wt, ss_q, &
          tol_q, tol_z, tol_v, tol_p)
@@ -389,6 +396,8 @@ contains
       
       integer,  intent(in) :: nprm        ! number of parameters included in soil function
       real(r8), intent(in) :: prms(nprm,lb:ub)  ! parameters included in soil function
+      
+      real(r8), intent(in) :: vl_s_wa        ! soil porosity in aquifer
       
       integer,  intent(in) :: ubc_typ  ! upper boundary condition type
       real(r8), intent(in) :: ubc_val  ! value of upper boundary condition
@@ -501,7 +510,7 @@ contains
          if (lbc_typ == bc_drainage) then
             waquifer_m1 = waquifer
             call get_zwt_from_wa ( &
-               vl_s(ub), vl_r(ub), psi_s(ub), hksat(ub), &
+               vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), &
                nprm, prms(:,ub), tol_v, tol_z, &
                waquifer, sp_zi(ub), zwt) 
          end if
@@ -560,6 +569,7 @@ contains
                   call use_explicit_form ( &
                      lb, ub, dt_this, sp_dz, sp_zc, sp_zi, &
                      vl_s, vl_r, psi_s, hksat, nprm, prms, &
+                     vl_s_wa, &
                      ubc_typ, ubc_val, lbc_typ, lbc_val, &
                      q_this, q_wf_0, q_wt_0, &
                      ss_wf, ss_vl, ss_wt, ss_dp, waquifer, zwt, &
@@ -683,9 +693,9 @@ contains
                   q_wf_pb = q_wf
                   q_wt_pb = q_wt
 
-                  waquifer_pb  =  - (zwt_pb - sp_zi(ub)) * (vl_s(ub) &
+                  waquifer_pb  =  - (zwt_pb - sp_zi(ub)) * (vl_s_wa &
                      - soil_vliq_from_psi (psi_s(ub)+(sp_zi(ub)-zwt_pb)*0.5, &
-                     vl_s(ub), vl_r(ub), psi_s(ub), nprm, prms(:,ub)))
+                     vl_s_wa, vl_r(ub), psi_s(ub), nprm, prms(:,ub)))
 
                   lev_update(:)    = .false.
                   lev_update(ub+1) = .true.
@@ -773,9 +783,9 @@ contains
             if (vact(ub+1)) then
                zwt = zwt - dv(ub+1) 
                zwt = max(zwt, sp_zi(ub))
-               waquifer  = - (zwt - sp_zi(ub)) * (vl_s(ub) &
+               waquifer  = - (zwt - sp_zi(ub)) * (vl_s_wa &
                   - soil_vliq_from_psi (psi_s(ub)+(sp_zi(ub)-zwt)*0.5, &
-                  vl_s(ub), vl_r(ub), psi_s(ub), nprm, prms(:,ub)))
+                  vl_s_wa, vl_r(ub), psi_s(ub), nprm, prms(:,ub)))
             end if
 
          end do
@@ -1063,6 +1073,7 @@ contains
    subroutine use_explicit_form ( &
          lb, ub, dt, dz, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
+         vl_s_wa, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          q, q_wf, q_wt, wf, vl, wt, dp, waquifer, zwt, &
          wf_m1, vl_m1, wt_m1, dp_m1, waquifer_m1, &
@@ -1083,6 +1094,8 @@ contains
       
       integer,  intent(in) :: nprm
       real(r8), intent(in) :: prms(nprm,lb:ub)
+      
+      real(r8), intent(in) :: vl_s_wa
 
       integer,  intent(in) :: ubc_typ
       real(r8), intent(in) :: ubc_val
@@ -1198,7 +1211,7 @@ contains
       if (lbc_typ == bc_drainage) then
          waquifer = waquifer_m1 + q(ub)*dt
          call get_zwt_from_wa ( &
-            vl_s(ub), vl_r(ub), psi_s(ub), hksat(ub), nprm, prms(:,ub), tol_v, tol_z, &
+            vl_s_wa, vl_r(ub), psi_s(ub), hksat(ub), nprm, prms(:,ub), tol_v, tol_z, &
             waquifer, sp_zi(ub), zwt)
       end if
       

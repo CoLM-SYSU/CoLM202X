@@ -25,6 +25,9 @@ MODULE mod_block
       procedure, PUBLIC :: save_to_file   => block_save_to_file
       procedure, PUBLIC :: load_from_file => block_load_from_file
       
+      procedure, PUBLIC :: init_pio => block_init_pio
+      procedure, PUBLIC :: read_pio => block_read_pio
+
       final :: block_free_mem
 
    END TYPE block_type
@@ -54,10 +57,7 @@ CONTAINS
       INTEGER,  intent(in) :: nxblk_in, nyblk_in
 
       ! Local variables
-      INTEGER  :: iblk, jblk, iproc
-      INTEGER  :: iblk_south, iblk_north, iblk_west,  iblk_east
-      REAL(r8) :: edges, edgen, edgew, edgee
-      INTEGER  :: numblocks, numblocks_x, numblocks_y
+      INTEGER  :: iblk, jblk
       INTEGER, parameter :: iset(23) = &
          (/1,  2,  3,  4,  5,  6,  9, 10, 12,  15,  18, &
           20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360/)
@@ -105,8 +105,105 @@ CONTAINS
          write (*,*)
       ENDIF
 
-      allocate (this%pio (this%nxblk,this%nyblk))
+      CALL this%init_pio ()
+
+   END SUBROUTINE block_set_by_size
+
+   ! --------------------------------
+   SUBROUTINE block_save_to_file (this, dir_landdata)
+
+      USE ncio_serial
+      USE spmd_task
+      IMPLICIT NONE
+
+      class (block_type) :: this
+
+      CHARACTER(len=*), intent(in) :: dir_landdata
+
+      ! Local variables
+      CHARACTER(len=256) :: filename
       
+      IF (p_is_master) THEN
+         
+         filename = trim(dir_landdata) // '/block.nc'
+
+         CALL ncio_create_file (filename)
+
+         CALL ncio_define_dimension (filename, 'longitude', this%nxblk)
+         CALL ncio_define_dimension (filename, 'latitude',  this%nyblk)
+
+         CALL ncio_write_serial (filename, 'lat_s', this%lat_s, 'latitude' )
+         CALL ncio_write_serial (filename, 'lat_n', this%lat_n, 'latitude' )
+         CALL ncio_write_serial (filename, 'lon_w', this%lon_w, 'longitude')
+         CALL ncio_write_serial (filename, 'lon_e', this%lon_e, 'longitude')
+
+      ENDIF
+
+   END SUBROUTINE block_save_to_file
+
+   ! --------------------------------
+   SUBROUTINE block_load_from_file (this, dir_landdata, is_read_pio)
+
+      USE ncio_serial
+      USE spmd_task
+      IMPLICIT NONE
+
+      class (block_type) :: this
+      CHARACTER(len=*),  intent(in) :: dir_landdata
+      LOGICAL, optional, intent(in) :: is_read_pio
+
+      ! Local variables
+      CHARACTER(len=256) :: filename
+         
+      filename = trim(dir_landdata) // '/block.nc'
+         
+      CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
+      CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
+      CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
+      CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
+         
+      this%nyblk = size(this%lat_s)
+      this%nxblk = size(this%lon_w)
+      
+      IF (p_is_master) THEN
+         write (*,*) 'Block information:'
+         write (*,'(I3,A21,I3,A20)') this%nxblk, ' blocks in longitude,', &
+            this%nyblk, ' blocks in latitude.'
+         write (*,*)
+      ENDIF
+
+      IF (present(is_read_pio)) THEN
+         IF (is_read_pio) THEN
+            CALL this%read_pio (dir_landdata)
+         ELSE
+            CALL this%init_pio ()
+         ENDIF
+      ELSE
+         CALL this%read_pio (dir_landdata)
+      ENDIF 
+
+   END SUBROUTINE block_load_from_file
+
+   ! --------------------------------
+   SUBROUTINE block_init_pio (this)
+      
+      USE precision
+      USE mod_namelist
+      USE mod_utils
+      USE spmd_task
+      IMPLICIT NONE
+
+      class (block_type) :: this
+      
+      INTEGER  :: iblk, jblk, iproc
+      INTEGER  :: iblk_south, iblk_north, iblk_west,  iblk_east
+      REAL(r8) :: edges, edgen, edgew, edgee
+      INTEGER  :: numblocks, numblocks_x, numblocks_y
+
+      allocate (this%pio (this%nxblk,this%nyblk))
+      this%pio(:,:) = p_root
+      
+#ifdef USEMPI
       IF (p_is_master) THEN
          
          edges = DEF_domain%edges
@@ -147,14 +244,9 @@ CONTAINS
 
       ENDIF
       
-#ifdef USEMPI
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
       CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
-#endif 
-         
-      this%pio(:,:) = p_root
 
-#ifdef USEMPI
       IF (p_is_master) THEN
 
          iproc = -1
@@ -179,66 +271,25 @@ CONTAINS
          p_root, p_comm_glb, p_err)
 #endif 
 
-   END SUBROUTINE block_set_by_size
+   END SUBROUTINE block_init_pio
 
    ! --------------------------------
-   SUBROUTINE block_save_to_file (this, dir_landdata)
-
-      USE ncio_serial
-      USE spmd_task
-      IMPLICIT NONE
-
-      class (block_type) :: this
-
-      CHARACTER(len=*), intent(in) :: dir_landdata
-
-      ! Local variables
-      CHARACTER(len=256) :: filename
-      
-      IF (p_is_master) THEN
+   SUBROUTINE block_read_pio (this, dir_landdata)
          
-         filename = trim(dir_landdata) // '/block.nc'
-
-         CALL ncio_create_file (filename)
-
-         CALL ncio_define_dimension (filename, 'longitude', this%nxblk)
-         CALL ncio_define_dimension (filename, 'latitude',  this%nyblk)
-
-         CALL ncio_write_serial (filename, 'lat_s', this%lat_s, 'latitude' )
-         CALL ncio_write_serial (filename, 'lat_n', this%lat_n, 'latitude' )
-         CALL ncio_write_serial (filename, 'lon_w', this%lon_w, 'longitude')
-         CALL ncio_write_serial (filename, 'lon_e', this%lon_e, 'longitude')
-
-      ENDIF
-
-   END SUBROUTINE block_save_to_file
-
-   ! --------------------------------
-   SUBROUTINE block_load_from_file (this, dir_landdata)
-
       USE mod_namelist
       USE spmd_task
       USE ncio_serial
+      USE mod_utils
       IMPLICIT NONE
 
       class (block_type) :: this
-      CHARACTER(len=*), intent(in) :: dir_landdata
+      CHARACTER(len=*),  intent(in) :: dir_landdata
 
       ! Local variables
       CHARACTER(len=256) :: filename
       INTEGER, allocatable :: nbasin_io(:), nbasinblk(:,:)
-      INTEGER :: numblocks, iblk, jblk, iproc, jproc
-         
-      filename = trim(dir_landdata) // '/block.nc'
-         
-      CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
-      CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
-      CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
-      CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
-         
-      this%nyblk = size(this%lat_s)
-      this%nxblk = size(this%lon_w)
-
+      INTEGER  :: numblocks, numblocks_x, numblocks_y, iblk, jblk, iproc, jproc
+      
       allocate (this%pio (this%nxblk,this%nyblk))
       this%pio(:,:) = p_root
 
@@ -250,7 +301,7 @@ CONTAINS
       ENDIF 
 
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-         
+
       CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
 
       IF (p_is_master) THEN
@@ -280,7 +331,7 @@ CONTAINS
          p_root, p_comm_glb, p_err)
 #endif
 
-   END SUBROUTINE block_load_from_file
+   END SUBROUTINE block_read_pio
 
    ! --------------------------------
    SUBROUTINE block_free_mem (this)
