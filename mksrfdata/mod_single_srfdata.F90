@@ -50,7 +50,7 @@ MODULE mod_single_srfdata
    REAL(r8), allocatable :: SITE_soil_psi_s             (:) 
    REAL(r8), allocatable :: SITE_soil_lambda            (:) 
 #endif
-#ifdef vanGenuchten_Mualem_SOIL_MODE
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: SITE_soil_theta_r           (:) 
    REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:) 
    REAL(r8), allocatable :: SITE_soil_L_vgm             (:) 
@@ -153,7 +153,7 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'psi_s            ', SITE_soil_psi_s            ) 
          CALL ncio_read_serial (fsrfdata, 'lambda           ', SITE_soil_lambda           ) 
 #endif
-#ifdef vanGenuchten_Mualem_SOIL_MODE
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'theta_r          ', SITE_soil_theta_r          ) 
          CALL ncio_read_serial (fsrfdata, 'alpha_vgm        ', SITE_soil_alpha_vgm        ) 
          CALL ncio_read_serial (fsrfdata, 'L_vgm            ', SITE_soil_L_vgm            ) 

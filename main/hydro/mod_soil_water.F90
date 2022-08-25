@@ -36,7 +36,7 @@ module mod_soil_water
    real(r8), parameter :: tol_richards = 1.e-7
 
 #ifdef vsf_statistics
-   INTEGER :: count_iters(max_iters_richards)
+   INTEGER(8) :: count_iters(max_iters_richards)
 #endif
 
    ! private subroutines and functions
@@ -1129,8 +1129,8 @@ contains
          dwat = (q(ilev-1) - q(ilev)) * dt 
          wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
             + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-         if (dwat <= - wa_m1) then
-            q(ilev) = q(ilev-1) + wa_m1/dt
+         if (dwat <= - wa_m1/2) then
+            q(ilev) = q(ilev-1) + wa_m1/2/dt
          end if
 
       end do
@@ -1142,8 +1142,8 @@ contains
             dwat = (q(ilev-1) - q(ilev)) * dt 
             wa_m1 = (wt_m1(ilev)+wf_m1(ilev)) * vl_s(ilev) &
                + (dz(ilev)-wt_m1(ilev)-wf_m1(ilev)) * vl_m1(ilev)
-            if (dwat <= - wa_m1) then
-               q(ilev-1) = q(ilev) - wa_m1/dt
+            if (dwat <= - wa_m1/2) then
+               q(ilev-1) = q(ilev) - wa_m1/2/dt
             end if
          ENDDO
 
