@@ -319,13 +319,13 @@ CONTAINS
       allocate (this%pio (this%nxblk,this%nyblk))
       this%pio(:,:) = p_root
 
-#ifdef USEMPI
       IF (p_is_master) THEN
          filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
          CALL ncio_read_serial (filename, 'nbasin_blk', nbasinblk)
          numblocks = count(nbasinblk > 0)
       ENDIF 
 
+#ifdef USEMPI
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
 
       CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
