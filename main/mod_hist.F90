@@ -41,10 +41,14 @@ contains
       ! Local Variables
       INTEGER :: lon_points, lat_points
 
-      lon_points = nint(360.0/lon_res)
-      lat_points = nint(180.0/lat_res)
+      IF ((lon_res > 0) .and. (lat_res > 0)) THEN
+         lon_points = nint(360.0/lon_res)
+         lat_points = nint(180.0/lat_res)
+         call ghist%define_by_ndims (lon_points, lat_points)
+      ELSE
+         call ghist%define_by_name (DEF_hist_gridname)
+      ENDIF
 
-      call ghist%define_by_ndims (lon_points, lat_points)
 #ifndef CROP
       call mp2g_hist%build (landpatch, ghist)
 #else

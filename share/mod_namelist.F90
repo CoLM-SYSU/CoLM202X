@@ -94,6 +94,7 @@ MODULE mod_namelist
    ! ----- history -----
    REAL(r8) :: DEF_hist_lon_res = 0.5
    REAL(r8) :: DEF_hist_lat_res = 0.5       
+   CHARACTER(len=256) :: DEF_hist_gridname = 'NONE'
    CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
@@ -397,6 +398,7 @@ CONTAINS
         
          DEF_hist_lon_res,                &
          DEF_hist_lat_res,                &
+         DEF_hist_gridname,               &
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
@@ -493,6 +495,7 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err) 
       CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_hist_gridname,     256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
