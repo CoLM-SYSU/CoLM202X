@@ -207,7 +207,7 @@ CONTAINS
       type(grid_type), intent(in) :: grid
       type(block_data_real8_2d), intent(inout) :: forcn(:)
 
-      integer  :: ib, jb, i, j
+      integer  :: iblkme, ib, jb, i, j
       real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
 
 !----------------------------------------------------------------------------
@@ -217,177 +217,175 @@ CONTAINS
 !----------------------------------------------------------------------------
       if (trim(DEF_forcing%dataset) == 'POINT') then
 #ifdef SinglePoint
-         call qsadv(forcn(1)%blk(site_xblk,site_yblk)%val(1,1), &
-                    forcn(3)%blk(site_xblk,site_yblk)%val(1,1), &
+         call qsadv(forcn(1)%blk(xblkme(1),yblkme(1))%val(1,1), &
+                    forcn(3)%blk(xblkme(1),yblkme(1))%val(1,1), &
                     es,esdT,qsat_tmp,dqsat_tmpdT)
-         if (qsat_tmp < forcn(2)%blk(site_xblk,site_yblk)%val(1,1)) THEN
-            forcn(2)%blk(site_xblk,site_yblk)%val(1,1) = qsat_tmp
+         if (qsat_tmp < forcn(2)%blk(xblkme(1),yblkme(1))%val(1,1)) THEN
+            forcn(2)%blk(xblkme(1),yblkme(1))%val(1,1) = qsat_tmp
          ENDIF
 #endif
       else
-         do jb = 1, gblock%nyblk
-            do ib = 1, gblock%nxblk
-               if (gblock%pio(ib,jb) == p_iam_glb) then
+         DO iblkme = 1, nblkme 
+            ib = xblkme(iblkme)
+            jb = yblkme(iblkme)
 
-                  do j = 1, grid%ycnt(jb)
-                     do i = 1, grid%xcnt(ib) 
+            do j = 1, grid%ycnt(jb)
+               do i = 1, grid%xcnt(ib) 
 
-                        select case (trim(DEF_forcing%dataset))
-                        case ('PRINCETON')
+                  select case (trim(DEF_forcing%dataset))
+                  case ('PRINCETON')
 
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('GSWP2')
-                           
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                  case ('GSWP2')
 
-                        case ('GSWP3')
-                           if (forcn(1)%blk(ib,jb)%val(i,j)<212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
-                           if (forcn(4)%blk(ib,jb)%val(i,j)<0.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('QIAN')
-                           
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                  case ('GSWP3')
+                     if (forcn(1)%blk(ib,jb)%val(i,j)<212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                     if (forcn(4)%blk(ib,jb)%val(i,j)<0.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                           e  = forcn(3)%blk(ib,jb)%val(i,j) * forcn(2)%blk(ib,jb)%val(i,j) &
-                              / (0.622_R8 + 0.378_R8 * forcn(2)%blk(ib,jb)%val(i,j))
-                           ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
-                           forcn(8)%blk(ib,jb)%val(i,j) = ea * stefnc * forcn(1)%blk(ib,jb)%val(i,j)**4
+                  case ('QIAN')
 
-                        case ('CRUNCEPV4')  
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                           if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
-                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
-                           if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
-                           ! 12th grade of Typhoon 32.7-36.9 m/s
-                           if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
-                               40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
-                           if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
-                               40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
-                        case ('CRUNCEPV7')  
+                     e  = forcn(3)%blk(ib,jb)%val(i,j) * forcn(2)%blk(ib,jb)%val(i,j) &
+                        / (0.622_R8 + 0.378_R8 * forcn(2)%blk(ib,jb)%val(i,j))
+                     ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
+                     forcn(8)%blk(ib,jb)%val(i,j) = ea * stefnc * forcn(1)%blk(ib,jb)%val(i,j)**4
 
-                           if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
-                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
-                           if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
-                           ! 12th grade of Typhoon 32.7-36.9 m/s
-                           if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
-                               40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
-                           if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
-                               40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                  case ('CRUNCEPV4')  
 
-                        case ('ERA5LAND')
-                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j) * 1000./3600.
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                     if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                     ! 12th grade of Typhoon 32.7-36.9 m/s
+                     if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                        40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                     if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
+                        40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+                  case ('CRUNCEPV7')  
 
-                        case ('ERA5')
-                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
-                           if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                     if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                     ! 12th grade of Typhoon 32.7-36.9 m/s
+                     if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                        40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                     if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
+                        40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('MSWX')
-                           forcn(1)%blk(ib,jb)%val(i,j)=forcn(1)%blk(ib,jb)%val(i,j)+273.15
-                           forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/10800.
-                           if (forcn(4)%blk(ib,jb)%val(i,j)>1000.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                           es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                           endif
+                  case ('ERA5LAND')
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j) * 1000./3600.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('WFDE5')
-                           call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                              es,esdT,qsat_tmp,dqsat_tmpdT)
-                           if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                              forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                          endif
+                  case ('ERA5')
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
 
-                        case ('WFDEI')
-                             call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                es,esdT,qsat_tmp,dqsat_tmpdT)
-                             if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                            endif
+                  case ('MSWX')
+                     forcn(1)%blk(ib,jb)%val(i,j)=forcn(1)%blk(ib,jb)%val(i,j)+273.15
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/10800.
+                     if (forcn(4)%blk(ib,jb)%val(i,j)>1000.0) forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('CLDAS')
-                              forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
-                             call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                es,esdT,qsat_tmp,dqsat_tmpdT)
-                             if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                             endif
-                        case ('CMFD')
-                              forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
-                                call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                   es,esdT,qsat_tmp,dqsat_tmpdT)
-                                if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                   forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                                endif
+                  case ('WFDE5')
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('CRUJRA') 
-                                   forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/21600.
-                                   forcn(7)%blk(ib,jb)%val(i,j)=forcn(7)%blk(ib,jb)%val(i,j)/21600.
-                                   call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                      es,esdT,qsat_tmp,dqsat_tmpdT)
-                                   if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                      forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                                  endif
-     
-                        case ('GDAS') 
+                  case ('WFDEI')
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                         es,esdT,qsat_tmp,dqsat_tmpdT)
-                                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                                       endif
+                  case ('CLDAS')
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+                  case ('CMFD')
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        case ('JRA55')
-                                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
-                                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
-                                         es,esdT,qsat_tmp,dqsat_tmpdT)
-                                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
-                                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
-                                       endif
+                  case ('CRUJRA') 
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/21600.
+                     forcn(7)%blk(ib,jb)%val(i,j)=forcn(7)%blk(ib,jb)%val(i,j)/21600.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
 
-                        end select
+                  case ('GDAS') 
 
-                     end do
-                  end do
-               end if
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+
+                  case ('JRA55')
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/86400.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+
+                  end select
+
+               end do
             end do
          end do
       end if

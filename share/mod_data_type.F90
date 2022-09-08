@@ -148,16 +148,14 @@ CONTAINS
       TYPE(block_data_int32_2d), intent(out) :: gdata
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
    END SUBROUTINE allocate_block_data_int32_2d
@@ -212,16 +210,14 @@ CONTAINS
       TYPE(block_data_real8_2d), intent(out) :: gdata
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
    END SUBROUTINE allocate_block_data_real8_2d
@@ -278,7 +274,7 @@ CONTAINS
       INTEGER, intent(in), optional :: lb1
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
       
@@ -290,13 +286,10 @@ CONTAINS
 
       gdata%ub1 = gdata%lb1-1+ndim1
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               allocate (gdata%blk(iblk,jblk)%val ( &
-                  gdata%lb1:gdata%ub1, grid%xcnt(iblk), grid%ycnt(jblk)))
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         allocate (gdata%blk(iblk,jblk)%val (gdata%lb1:gdata%ub1, grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
    END SUBROUTINE allocate_block_data_real8_3d
@@ -353,7 +346,7 @@ CONTAINS
       INTEGER, intent(in), optional :: lb1, lb2
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
@@ -373,13 +366,11 @@ CONTAINS
 
       gdata%ub2 = gdata%lb2-1+ndim2
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               allocate (gdata%blk(iblk,jblk)%val ( &
-                  gdata%lb1:gdata%ub1, gdata%lb2:gdata%ub2, grid%xcnt(iblk), grid%ycnt(jblk)))
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         allocate (gdata%blk(iblk,jblk)%val ( &
+            gdata%lb1:gdata%ub1, gdata%lb2:gdata%ub2, grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
    END SUBROUTINE allocate_block_data_real8_4d
@@ -421,14 +412,12 @@ CONTAINS
       REAL(r8), intent(in) :: spval
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               gdata%blk(iblk,jblk)%val = spval
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
    END SUBROUTINE flush_block_data_real8_2d
@@ -445,14 +434,12 @@ CONTAINS
       INTEGER, intent(in) :: spval
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               gdata%blk(iblk,jblk)%val = spval
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
    END SUBROUTINE flush_block_data_int32_2d
@@ -469,14 +456,12 @@ CONTAINS
       REAL(r8), intent(in) :: spval
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               gdata%blk(iblk,jblk)%val = spval
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
    END SUBROUTINE flush_block_data_real8_3d
@@ -493,14 +478,12 @@ CONTAINS
       REAL(r8), intent(in) :: spval
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               gdata%blk(iblk,jblk)%val = spval
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
    END SUBROUTINE flush_block_data_real8_4d
@@ -518,25 +501,21 @@ CONTAINS
       REAL(r8), intent(in), optional :: dsp
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
       IF (present(scl)) THEN
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-                  gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val * scl
-               ENDIF
-            ENDDO
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val * scl
          ENDDO
       ENDIF
 
       IF (present(dsp)) THEN
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-                  gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val + dsp
-               ENDIF
-            ENDDO
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val + dsp
          ENDDO
       ENDIF
 
@@ -555,19 +534,16 @@ CONTAINS
       REAL(r8), intent(in), optional :: sca
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               IF (present(sca)) THEN
-                  gdata_to%blk(iblk,jblk)%val = &
-                     gdata_from%blk(iblk,jblk)%val * sca
-               ELSE
-                  gdata_to%blk(iblk,jblk)%val = gdata_from%blk(iblk,jblk)%val
-               ENDIF
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         IF (present(sca)) THEN
+            gdata_to%blk(iblk,jblk)%val = gdata_from%blk(iblk,jblk)%val * sca
+         ELSE
+            gdata_to%blk(iblk,jblk)%val = gdata_from%blk(iblk,jblk)%val
+         ENDIF
       ENDDO
 
    END SUBROUTINE block_data_copy
@@ -586,16 +562,14 @@ CONTAINS
       TYPE(block_data_real8_2d), intent(inout) :: gdata_to
 
       ! Local variables
-      INTEGER :: iblk, jblk
+      INTEGER :: iblkme, iblk, jblk
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
-               gdata_to%blk(iblk,jblk)%val = &
-                  gdata_from1%blk(iblk,jblk)%val * alp1 &
-                  + gdata_from2%blk(iblk,jblk)%val * alp2
-            ENDIF
-         ENDDO
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
+         gdata_to%blk(iblk,jblk)%val = &
+            gdata_from1%blk(iblk,jblk)%val * alp1 &
+            + gdata_from2%blk(iblk,jblk)%val * alp2
       ENDDO
 
    END SUBROUTINE block_data_linear_interp

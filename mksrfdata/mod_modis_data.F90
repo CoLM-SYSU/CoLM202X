@@ -124,7 +124,7 @@ contains
       type (block_data_int32_2d), intent(inout) :: rdata
 
       ! Local variables
-      integer :: iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
+      integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
       character(len=256) :: file_modis
       INTEGER :: ncid, varid
@@ -134,54 +134,50 @@ contains
 
       if (p_is_io) then
 
-         do jblk = 1, gblock%nyblk
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-            
-            do iblk = 1, gblock%nxblk
-               IF (grid%xcnt(iblk) == 0) cycle
-
-               if (gblock%pio(iblk,jblk) == p_iam_glb) then
                      
-                  rdata%blk(iblk,jblk)%val(:,:) = 0
+            rdata%blk(iblk,jblk)%val(:,:) = 0
 
-                  inorth = grid%ydsp(jblk) + 1
-                  isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
 
-                  iwest = grid%xdsp(iblk) + 1
-                  ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
-                  if (ieast > nxglb) ieast = ieast - nxglb
+            iwest = grid%xdsp(iblk) + 1
+            ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+            if (ieast > nxglb) ieast = ieast - nxglb
 
-                  ibox = grid%xdsp(iblk)/nxbox + 1
-                  jbox = grid%ydsp(jblk)/nybox + 1
-                  ibox0 = ibox
+            ibox = grid%xdsp(iblk)/nxbox + 1
+            jbox = grid%ydsp(jblk)/nybox + 1
+            ibox0 = ibox
 
-                  do while (.true.)
+            do while (.true.)
 
-                     CALL this_block_and_move_to_next (dir_modis, grid, &
-                        isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                        i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                        file_modis)
+               CALL this_block_and_move_to_next (dir_modis, grid, &
+                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
+                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_modis)
 
-                     inquire(file=file_modis, exist=fexists)
-                     if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1))
+               inquire(file=file_modis, exist=fexists)
+               if (fexists) then
+                  allocate (dcache (i1-i0+1,j1-j0+1))
 
-                        CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
-                        CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-                        CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
-                        CALL nccheck( nf90_close(ncid) )
+                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+                  CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
+                  CALL nccheck( nf90_close(ncid) )
 
-                        rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                  rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
 
-                        deallocate (dcache)
-                     end if
-
-                     IF (jbox == -1) exit
-
-                  end do
-
+                  deallocate (dcache)
                end if
+
+               IF (jbox == -1) exit
+
             end do
+
          end do
 
       end if
@@ -205,7 +201,7 @@ contains
       type (block_data_real8_2d), intent(inout) :: rdata
 
       ! Local variables
-      integer :: iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
+      integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
       character(len=256) :: file_modis
       INTEGER :: ncid, varid
@@ -215,54 +211,50 @@ contains
 
       if (p_is_io) then
 
-         do jblk = 1, gblock%nyblk
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-            
-            do iblk = 1, gblock%nxblk
-               IF (grid%xcnt(iblk) == 0) cycle
-
-               if (gblock%pio(iblk,jblk) == p_iam_glb) then
                      
-                  rdata%blk(iblk,jblk)%val(:,:) = 0
+            rdata%blk(iblk,jblk)%val(:,:) = 0
 
-                  inorth = grid%ydsp(jblk) + 1
-                  isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
 
-                  iwest = grid%xdsp(iblk) + 1
-                  ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
-                  if (ieast > nxglb) ieast = ieast - nxglb
+            iwest = grid%xdsp(iblk) + 1
+            ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+            if (ieast > nxglb) ieast = ieast - nxglb
 
-                  ibox = grid%xdsp(iblk)/nxbox + 1
-                  jbox = grid%ydsp(jblk)/nybox + 1
-                  ibox0 = ibox
+            ibox = grid%xdsp(iblk)/nxbox + 1
+            jbox = grid%ydsp(jblk)/nybox + 1
+            ibox0 = ibox
 
-                  do while (.true.)
+            do while (.true.)
 
-                     CALL this_block_and_move_to_next (dir_modis, grid, &
-                        isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                        i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                        file_modis)
+               CALL this_block_and_move_to_next (dir_modis, grid, &
+                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
+                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_modis)
 
-                     inquire(file=file_modis, exist=fexists)
-                     if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1))
+               inquire(file=file_modis, exist=fexists)
+               if (fexists) then
+                  allocate (dcache (i1-i0+1,j1-j0+1))
 
-                        CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
-                        CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-                        CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
-                        CALL nccheck( nf90_close(ncid) )
+                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+                  CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
+                  CALL nccheck( nf90_close(ncid) )
 
-                        rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                  rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
 
-                        deallocate(dcache)
-                     end if
-
-                     IF (jbox == -1) exit
-
-                  end do
-
+                  deallocate(dcache)
                end if
+
+               IF (jbox == -1) exit
+
             end do
+
          end do
 
       end if
@@ -287,7 +279,7 @@ contains
       type (block_data_real8_3d), intent(inout) :: rdata
 
       ! Local variables
-      integer :: iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
+      integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
       character(len=256) :: file_modis
       INTEGER :: ncid, varid
@@ -297,57 +289,53 @@ contains
 
       if (p_is_io) then
 
-         do jblk = 1, gblock%nyblk
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-            
-            do iblk = 1, gblock%nxblk
-               IF (grid%xcnt(iblk) == 0) cycle
+         
+            rdata%blk(iblk,jblk)%val(:,:,:) = 0
 
-               if (gblock%pio(iblk,jblk) == p_iam_glb) then
-                     
-                  rdata%blk(iblk,jblk)%val(:,:,:) = 0
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
 
-                  inorth = grid%ydsp(jblk) + 1
-                  isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            iwest = grid%xdsp(iblk) + 1
+            ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+            if (ieast > nxglb) ieast = ieast - nxglb
 
-                  iwest = grid%xdsp(iblk) + 1
-                  ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
-                  if (ieast > nxglb) ieast = ieast - nxglb
+            ibox = grid%xdsp(iblk)/nxbox + 1
+            jbox = grid%ydsp(jblk)/nybox + 1
+            ibox0 = ibox
 
-                  ibox = grid%xdsp(iblk)/nxbox + 1
-                  jbox = grid%ydsp(jblk)/nybox + 1
-                  ibox0 = ibox
+            do while (.true.)
 
-                  do while (.true.)
+               CALL this_block_and_move_to_next (dir_modis, grid, &
+                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
+                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_modis)
 
-                     CALL this_block_and_move_to_next (dir_modis, grid, &
-                        isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                        i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                        file_modis)
+               inquire(file=file_modis, exist=fexists)
+               if (fexists) then
+                  allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
-                     inquire(file=file_modis, exist=fexists)
-                     if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
+                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+                  CALL nccheck( nf90_get_var(ncid, varid, dcache, &
+                     (/i0,j0,1/), (/i1-i0+1,j1-j0+1,N_PFT_modis/)) )
+                  CALL nccheck( nf90_close(ncid) )
 
-                        CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
-                        CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-                        CALL nccheck( nf90_get_var(ncid, varid, dcache, &
-                           (/i0,j0,1/), (/i1-i0+1,j1-j0+1,N_PFT_modis/)) )
-                        CALL nccheck( nf90_close(ncid) )
+                  DO ipft = 0, N_PFT_modis-1
+                     rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
+                  ENDDO
 
-                        DO ipft = 0, N_PFT_modis-1
-                           rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
-                        ENDDO
-
-                        deallocate (dcache)
-                     end if
-
-                     IF (jbox == -1) exit
-
-                  end do
-
+                  deallocate (dcache)
                end if
+
+               IF (jbox == -1) exit
+
             end do
+
          end do
 
       end if
@@ -373,7 +361,7 @@ contains
       type (block_data_real8_2d), intent(inout) :: rdata
 
       ! Local variables
-      integer :: iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
+      integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
       character(len=256) :: file_modis
       INTEGER :: ncid, varid
@@ -382,55 +370,52 @@ contains
 
       if (p_is_io) then
 
-         do jblk = 1, gblock%nyblk
-            IF (grid%ycnt(jblk) == 0) cycle
-            
-            do iblk = 1, gblock%nxblk
-               IF (grid%xcnt(iblk) == 0) cycle
-
-               if (gblock%pio(iblk,jblk) == p_iam_glb) then
                      
-                  rdata%blk(iblk,jblk)%val(:,:) = 0
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (grid%xcnt(iblk) == 0) cycle
+            IF (grid%ycnt(jblk) == 0) cycle
+         
+            rdata%blk(iblk,jblk)%val(:,:) = 0
 
-                  inorth = grid%ydsp(jblk) + 1
-                  isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
 
-                  iwest = grid%xdsp(iblk) + 1
-                  ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
-                  if (ieast > nxglb) ieast = ieast - nxglb
+            iwest = grid%xdsp(iblk) + 1
+            ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+            if (ieast > nxglb) ieast = ieast - nxglb
 
-                  ibox = grid%xdsp(iblk)/nxbox + 1
-                  jbox = grid%ydsp(jblk)/nybox + 1
-                  ibox0 = ibox
+            ibox = grid%xdsp(iblk)/nxbox + 1
+            jbox = grid%ydsp(jblk)/nybox + 1
+            ibox0 = ibox
 
-                  do while (.true.)
+            do while (.true.)
 
-                     CALL this_block_and_move_to_next (dir_modis, grid, &
-                        isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                        i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                        file_modis)
+               CALL this_block_and_move_to_next (dir_modis, grid, &
+                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
+                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_modis)
 
-                     inquire(file=file_modis, exist=fexists)
-                     if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1))
+               inquire(file=file_modis, exist=fexists)
+               if (fexists) then
+                  allocate (dcache (i1-i0+1,j1-j0+1))
 
-                        CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
-                        CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-                        CALL nccheck( nf90_get_var(ncid, varid, dcache, &
-                           (/i0,j0,time/), (/i1-i0+1,j1-j0+1,1/)) )
-                        CALL nccheck( nf90_close(ncid) )
+                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+                  CALL nccheck( nf90_get_var(ncid, varid, dcache, &
+                     (/i0,j0,time/), (/i1-i0+1,j1-j0+1,1/)) )
+                  CALL nccheck( nf90_close(ncid) )
 
-                        rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
+                  rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
 
-                        deallocate (dcache)
-                     end if
-
-                     IF (jbox == -1) exit
-
-                  end do
-
+                  deallocate (dcache)
                end if
+
+               IF (jbox == -1) exit
+
             end do
+
          end do
 
       end if
@@ -456,7 +441,7 @@ contains
       type (block_data_real8_3d), intent(inout) :: rdata
 
       ! Local variables
-      integer :: iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
+      integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
       character(len=256) :: file_modis
       INTEGER :: ncid, varid
@@ -466,62 +451,57 @@ contains
 
       if (p_is_io) then
 
-         do jblk = 1, gblock%nyblk
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
+            IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-            
-            do iblk = 1, gblock%nxblk
-               IF (grid%xcnt(iblk) == 0) cycle
-
-               if (gblock%pio(iblk,jblk) == p_iam_glb) then
                      
-                  rdata%blk(iblk,jblk)%val(:,:,:) = 0
+            rdata%blk(iblk,jblk)%val(:,:,:) = 0
 
-                  inorth = grid%ydsp(jblk) + 1
-                  isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
+            inorth = grid%ydsp(jblk) + 1
+            isouth = grid%ydsp(jblk) + grid%ycnt(jblk)
 
-                  iwest = grid%xdsp(iblk) + 1
-                  ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
-                  if (ieast > nxglb) ieast = ieast - nxglb
+            iwest = grid%xdsp(iblk) + 1
+            ieast = grid%xdsp(iblk) + grid%xcnt(iblk)
+            if (ieast > nxglb) ieast = ieast - nxglb
 
-                  ibox = grid%xdsp(iblk)/nxbox + 1
-                  jbox = grid%ydsp(jblk)/nybox + 1
-                  ibox0 = ibox
+            ibox = grid%xdsp(iblk)/nxbox + 1
+            jbox = grid%ydsp(jblk)/nybox + 1
+            ibox0 = ibox
 
-                  do while (.true.)
+            do while (.true.)
 
-                     CALL this_block_and_move_to_next (dir_modis, grid, &
-                        isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                        i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                        file_modis)
+               CALL this_block_and_move_to_next (dir_modis, grid, &
+                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
+                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_modis)
 
-                     inquire(file=file_modis, exist=fexists)
-                     if (fexists) then
-                        allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
+               inquire(file=file_modis, exist=fexists)
+               if (fexists) then
+                  allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
-                        CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
-                        CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
-                        CALL nccheck( nf90_get_var(ncid, varid, dcache, &
-                           (/i0,j0,1,time/), (/i1-i0+1,j1-j0+1,N_PFT_modis,1/)) )
-                        CALL nccheck( nf90_close(ncid) )
+                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+                  CALL nccheck( nf90_get_var(ncid, varid, dcache, &
+                     (/i0,j0,1,time/), (/i1-i0+1,j1-j0+1,N_PFT_modis,1/)) )
+                  CALL nccheck( nf90_close(ncid) )
 
-                        DO ipft = 0, N_PFT_modis-1
-                           rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
-                        ENDDO
+                  DO ipft = 0, N_PFT_modis-1
+                     rdata%blk(iblk,jblk)%val(ipft,il0:il1,jl0:jl1) = dcache(:,:,ipft)
+                  ENDDO
 
-                        deallocate (dcache)
-                     end if
-
-                     IF (jbox == -1) exit
-
-                  end do
-
+                  deallocate (dcache)
                end if
+
+               IF (jbox == -1) exit
+
             end do
+
          end do
 
       end if
 
    end subroutine modis_read_data_pft_time
-
 
 end module mod_modis_data
