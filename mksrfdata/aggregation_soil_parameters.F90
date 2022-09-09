@@ -36,7 +36,7 @@ SUBROUTINE aggregation_soil_parameters ( &
    ! ---------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname
    CHARACTER(len=256) :: c
-   INTEGER :: nsl, ipatch, L, np, LL, istt, iend
+   INTEGER :: nsl, ipatch, L, np, LL, ipxstt, ipxend
 
    TYPE (block_data_real8_2d) :: vf_quartz_mineral_s_grid
    TYPE (block_data_real8_2d) :: vf_gravels_s_grid
@@ -242,7 +242,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(vf_quartz_mineral_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_quartz_mineral_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -309,11 +309,11 @@ SUBROUTINE aggregation_soil_parameters ( &
                ! the parameter values of Balland and Arp (2005) Ke-Sr relationship,
                ! modified by Barry-Macaulay et al.(2015), Evaluation of soil thermal conductivity models
 
-               istt = landpatch%istt(ipatch)
-               iend = landpatch%iend(ipatch)
+               ipxstt = landpatch%ipxstt(ipatch)
+               ipxend = landpatch%ipxend(ipatch)
 
-               allocate(BA_alpha_one  (istt:iend))
-               allocate(BA_beta_one   (istt:iend))
+               allocate(BA_alpha_one  (ipxstt:ipxend))
+               allocate(BA_beta_one   (ipxstt:ipxend))
                where ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
                        BA_alpha_one = 0.38
                        BA_beta_one = 35.0
@@ -331,14 +331,14 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SOILPAR_UPS_FIT
                np = size(BA_alpha_one)
                IF( np > 1 ) then
-                  allocate ( ydatb  (istt:iend,npointb) )
+                  allocate ( ydatb  (ipxstt:ipxend,npointb) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacb  (istt:iend,nb) )           ! calculated in Ke_Sr_dist
+                  allocate ( fjacb  (ipxstt:ipxend,nb) )           ! calculated in Ke_Sr_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecb  (istt:iend)    )           ! calculated in Ke_Sr_dist 
+                  allocate ( fvecb  (ipxstt:ipxend)    )           ! calculated in Ke_Sr_dist 
 
 ! Ke-Sr relationship at fine grids for each patch
-                  do LL = istt,iend
+                  do LL = ipxstt,ipxend
                      ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
                                  - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
                                  - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
@@ -356,11 +356,11 @@ SUBROUTINE aggregation_soil_parameters ( &
                         xdatsr,npointb,ydatb, np, vf_gravels_s_patches (ipatch), isiter,&
                         vf_om_s_patches(ipatch),vf_sand_s_patches(ipatch),vf_gravels_s_patches(ipatch))
 
-                  ydatb(istt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
+                  ydatb(ipxstt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
                              - vf_gravels_s_patches(ipatch))) * ((1.0/(1.0+exp(-xb(2)*xdatsr)))**3 &
                              - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_patches(ipatch))
 
-                  if ( all(ydatb(istt,:) >= 0.) .and. all(ydatb(istt,:) <= 1.) .and. isiter == 1 ) then
+                  if ( all(ydatb(ipxstt,:) >= 0.) .and. all(ydatb(ipxstt,:) <= 1.) .and. isiter == 1 ) then
                        BA_alpha_patches(ipatch) = xb(1)
                        BA_beta_patches (ipatch) = xb(2)
                   end if
@@ -387,17 +387,17 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(vf_gravels_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_gravels_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(vf_sand_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_sand_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(vf_om_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_om_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -479,7 +479,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(wf_gravels_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in wf_gravels_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -530,7 +530,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(wf_sand_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in wf_sand_s_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -581,7 +581,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(L_vgm_patches(ipatch))) THEN
                write(*,*) "NAN appears in L_vgm_patches."
-               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -652,18 +652,18 @@ SUBROUTINE aggregation_soil_parameters ( &
 
 #ifdef SOILPAR_UPS_FIT
                np = size(theta_r_one)
-               istt = landpatch%istt(ipatch)
-               iend = landpatch%iend(ipatch)
+               ipxstt = landpatch%ipxstt(ipatch)
+               ipxend = landpatch%ipxend(ipatch)
 
                IF( np > 1 ) then
-                  allocate ( ydatv  (istt:iend,npointw) )
+                  allocate ( ydatv  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacv  (istt:iend,nv) )           ! calculated in SW_VG_dist
+                  allocate ( fjacv  (ipxstt:ipxend,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecv  (istt:iend)    )           ! calculated in SW_VG_dist 
+                  allocate ( fvecv  (ipxstt:ipxend)    )           ! calculated in SW_VG_dist 
 
 ! SW VG retentions at fine grids for each patch
-                  do LL = istt,iend
+                  do LL = ipxstt,ipxend
                      ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
                                  * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
                   end do                  
@@ -703,22 +703,22 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(theta_r_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_r_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(alpha_vgm_patches(ipatch))) THEN
                 write(*,*) "NAN appears in alpha_vgm_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(n_vgm_patches(ipatch))) THEN
                 write(*,*) "NAN appears in n_vgm_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(theta_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_s_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -802,18 +802,18 @@ SUBROUTINE aggregation_soil_parameters ( &
 
 #ifdef SOILPAR_UPS_FIT
                np = size(psi_s_one)
-               istt = landpatch%istt(ipatch)
-               iend = landpatch%iend(ipatch)
+               ipxstt = landpatch%ipxstt(ipatch)
+               ipxend = landpatch%ipxend(ipatch)
 
                IF( np > 1 ) then
-                  allocate ( ydatc  (istt:iend,npointw) )
+                  allocate ( ydatc  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacc  (istt:iend,nc) )           ! calculated in SW_CB_dist
+                  allocate ( fjacc  (ipxstt:ipxend,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecc  (istt:iend)    )           ! calculated in SW_CB_dist 
+                  allocate ( fvecc  (ipxstt:ipxend)    )           ! calculated in SW_CB_dist 
 
 ! SW CB retentions at fine grids for each patch
-                  do LL = istt,iend
+                  do LL = ipxstt,ipxend
                      ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
                   end do                  
                   
@@ -848,17 +848,17 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(theta_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_s_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(psi_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in psi_s_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
             IF (isnan(lambda_patches(ipatch))) THEN
                 write(*,*) "NAN appears in lambda_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -918,7 +918,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(k_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in k_s_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -965,7 +965,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(csol_patches(ipatch))) THEN
                 write(*,*) "NAN appears in csol_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1012,7 +1012,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tksatu_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tksatu_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1059,7 +1059,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tksatf_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tksatf_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1106,7 +1106,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tkdry_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tkdry_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1153,7 +1153,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(k_solids_patches(ipatch))) THEN
                 write(*,*) "NAN appears in k_solids_patches."
-                write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
             ENDIF
 
          ENDDO
