@@ -38,8 +38,8 @@ CONTAINS
       REAL(r8), allocatable :: datashadow1d(:,:), areapixel(:)
       REAL(r8) :: areatotal
       INTEGER  :: nsetshadow, ipset, jpset
-      INTEGER  :: ipxl, iu, istt, iend, ishadow
-      INTEGER,  allocatable :: unum1(:), iunt1(:), istt1(:), iend1(:), ltyp1(:)
+      INTEGER  :: ipxl, iu, ipxstt, ipxend, ishadow
+      INTEGER,  allocatable :: bindex1(:), ibasin1(:), ipxstt1(:), ipxend1(:), ltyp1(:)
       LOGICAL,  allocatable :: msk(:), worker_done(:)
 
 #ifdef USEMPI
@@ -107,19 +107,19 @@ CONTAINS
          DO ipset = 1, pixelset%nset
             IF (any(filter(:) == pixelset%ltyp(ipset))) THEN
 
-               iu   = pixelset%iunt(ipset)
-               istt = pixelset%istt(ipset)
-               iend = pixelset%iend(ipset)
+               iu   = pixelset%ibasin(ipset)
+               ipxstt = pixelset%ipxstt(ipset)
+               ipxend = pixelset%ipxend(ipset)
       
-               allocate (datashadow1d (nshadow, istt:iend))
+               allocate (datashadow1d (nshadow, ipxstt:ipxend))
 
 #ifdef USEMPI
-               allocate (xlist (istt:iend))
-               allocate (ylist (istt:iend))
-               allocate (ipt   (istt:iend))
-               allocate (msk   (istt:iend))
+               allocate (xlist (ipxstt:ipxend))
+               allocate (ylist (ipxstt:ipxend))
+               allocate (ipt   (ipxstt:ipxend))
+               allocate (msk   (ipxstt:ipxend))
 
-               DO ipxl = istt, iend
+               DO ipxl = ipxstt, ipxend
                   xlist(ipxl) = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
                   ylist(ipxl) = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
 
@@ -164,7 +164,7 @@ CONTAINS
                deallocate (msk  )
 
 #else
-               DO ipxl = istt, iend
+               DO ipxl = ipxstt, ipxend
                   ilon = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
                   ilat = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
                   xblk = gshadow%xblk(ilon)
@@ -176,8 +176,8 @@ CONTAINS
                ENDDO
 #endif
 
-               allocate (areapixel(istt:iend))
-               DO ipxl = istt, iend
+               allocate (areapixel(ipxstt:ipxend))
+               DO ipxl = ipxstt, ipxend
                   areapixel(ipxl) = areaquad (&
                      pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
                      pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
@@ -211,28 +211,28 @@ CONTAINS
          ENDDO
 #endif
 
-         allocate (unum1(pixelset%nset))
-         allocate (iunt1(pixelset%nset))
-         allocate (istt1(pixelset%nset))
-         allocate (iend1(pixelset%nset))
+         allocate (bindex1(pixelset%nset))
+         allocate (ibasin1(pixelset%nset))
+         allocate (ipxstt1(pixelset%nset))
+         allocate (ipxend1(pixelset%nset))
          allocate (ltyp1(pixelset%nset))
 
-         unum1 = pixelset%unum
-         iunt1 = pixelset%iunt
-         istt1 = pixelset%istt
-         iend1 = pixelset%iend
+         bindex1 = pixelset%bindex
+         ibasin1 = pixelset%ibasin
+         ipxstt1 = pixelset%ipxstt
+         ipxend1 = pixelset%ipxend
          ltyp1 = pixelset%ltyp
 
-         deallocate (pixelset%unum)
-         deallocate (pixelset%iunt)
-         deallocate (pixelset%istt)
-         deallocate (pixelset%iend)
+         deallocate (pixelset%bindex)
+         deallocate (pixelset%ibasin)
+         deallocate (pixelset%ipxstt)
+         deallocate (pixelset%ipxend)
          deallocate (pixelset%ltyp)
 
-         allocate (pixelset%unum(nsetshadow))
-         allocate (pixelset%iunt(nsetshadow))
-         allocate (pixelset%istt(nsetshadow))
-         allocate (pixelset%iend(nsetshadow))
+         allocate (pixelset%bindex(nsetshadow))
+         allocate (pixelset%ibasin(nsetshadow))
+         allocate (pixelset%ipxstt(nsetshadow))
+         allocate (pixelset%ipxend(nsetshadow))
          allocate (pixelset%ltyp(nsetshadow))
          
          allocate (fracout    (nsetshadow))
@@ -245,10 +245,10 @@ CONTAINS
                   DO ishadow = 1, nshadow
                      IF (pctshadow(ishadow,ipset) > 0.) THEN
                         jpset = jpset + 1
-                        pixelset%unum(jpset) = unum1(ipset)
-                        pixelset%iunt(jpset) = iunt1(ipset)
-                        pixelset%istt(jpset) = istt1(ipset)
-                        pixelset%iend(jpset) = iend1(ipset)
+                        pixelset%bindex(jpset) = bindex1(ipset)
+                        pixelset%ibasin(jpset) = ibasin1(ipset)
+                        pixelset%ipxstt(jpset) = ipxstt1(ipset)
+                        pixelset%ipxend(jpset) = ipxend1(ipset)
                         pixelset%ltyp(jpset) = ltyp1(ipset)
 
                         IF (present(fracin)) THEN
@@ -263,10 +263,10 @@ CONTAINS
                ENDIF
             ELSE
                jpset = jpset + 1
-               pixelset%unum(jpset) = unum1(ipset)
-               pixelset%iunt(jpset) = iunt1(ipset)
-               pixelset%istt(jpset) = istt1(ipset)
-               pixelset%iend(jpset) = iend1(ipset)
+               pixelset%bindex(jpset) = bindex1(ipset)
+               pixelset%ibasin(jpset) = ibasin1(ipset)
+               pixelset%ipxstt(jpset) = ipxstt1(ipset)
+               pixelset%ipxend(jpset) = ipxend1(ipset)
                pixelset%ltyp(jpset) = ltyp1(ipset)
                      
                IF (present(fracin)) THEN
@@ -281,10 +281,10 @@ CONTAINS
 
          pixelset%nset = nsetshadow
 
-         deallocate (unum1)
-         deallocate (iunt1)
-         deallocate (istt1)
-         deallocate (iend1)
+         deallocate (bindex1)
+         deallocate (ibasin1)
+         deallocate (ipxstt1)
+         deallocate (ipxend1)
          deallocate (ltyp1)
          deallocate (pctshadow)
 

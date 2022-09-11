@@ -598,7 +598,6 @@ CONTAINS
 
       ilon_e = ilon - 1
       IF (ilon_e == 0) ilon_e = this%nlon
-     print *,ilon,this%nlon
       ilon = mod(ilon,this%nlon) + 1
       DO while (.true.)
          IF (lon_between_floor(this%lon_w(ilon), edgew, edgee)) THEN

@@ -65,7 +65,7 @@ CONTAINS
 
       INTEGER  :: iu, iset
       INTEGER  :: ng, ig, ng_all, iloc
-      INTEGER  :: npxl, ipxl, ilat, ilon, istt, iend
+      INTEGER  :: npxl, ipxl, ilat, ilon, ipxstt, ipxend
       INTEGER  :: iworker, iproc, idest, isrc, nrecv, nsend
       INTEGER  :: rmesg(2), smesg(2)
       INTEGER  :: iy, ix, xblk, yblk
@@ -125,8 +125,8 @@ CONTAINS
 
          DO iset = 1, pixelset%nset
 
-            iu = pixelset%iunt(iset)
-            npxl = pixelset%iend(iset) - pixelset%istt(iset) + 1
+            iu = pixelset%ibasin(iset)
+            npxl = pixelset%ipxend(iset) - pixelset%ipxstt(iset) + 1
 
             allocate (afrac(iset)%val (npxl))
             allocate (gfrom(iset)%ilat(npxl))
@@ -134,7 +134,7 @@ CONTAINS
 
             gfrom(iset)%ng = 0
             
-            DO ipxl = pixelset%istt(iset), pixelset%iend(iset)
+            DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
 
                ilat = landbasin(iu)%ilat(ipxl)
                ilon = landbasin(iu)%ilon(ipxl)

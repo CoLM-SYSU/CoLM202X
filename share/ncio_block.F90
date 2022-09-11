@@ -45,7 +45,8 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-                     
+         
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
@@ -105,6 +106,7 @@ CONTAINS
 
       IF (p_is_io) THEN
                      
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
@@ -165,6 +167,7 @@ CONTAINS
 
       IF (p_is_io) THEN
                      
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
@@ -226,6 +229,7 @@ CONTAINS
 
       IF (p_is_io) THEN
                      
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
@@ -287,6 +291,7 @@ CONTAINS
 
       IF (p_is_io) THEN
                      
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
@@ -346,6 +351,7 @@ CONTAINS
 
       IF (p_is_io) THEN
                      
+         CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          

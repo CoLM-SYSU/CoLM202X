@@ -90,6 +90,28 @@ CONTAINS
    END SUBROUTINE nccheck
 
    ! ----
+   SUBROUTINE check_ncfile_exist (filename)
+
+      USE spmd_task
+      IMPLICIT NONE
+
+      CHARACTER(len=256), INTENT(IN) :: filename
+      ! Local Variables
+      LOGICAL :: fexists
+
+      inquire (file=trim(filename), exist=fexists)
+      IF (.not. fexists) THEN 
+         write(*,*) trim(filename), ' does not exist.'
+#ifdef USEMPI
+         CALL mpi_abort (p_comm_glb, p_err)
+#else
+         stop 2
+#endif
+      ENDIF
+
+   END SUBROUTINE check_ncfile_exist
+
+   ! ----
    SUBROUTINE ncio_create_file (filename)
 
       USE netcdf
@@ -259,6 +281,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
 
+      CALL check_ncfile_exist (filename)
+
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
       CALL nccheck( nf90_get_var(ncid, varid, rdata) )
@@ -280,6 +304,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
 
+      CALL check_ncfile_exist (filename)
+
       CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
       CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
       CALL nccheck( nf90_get_var(ncid, varid, rdata) )
@@ -300,6 +326,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1)) )
@@ -326,6 +354,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1)) )
@@ -355,6 +385,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1)) )
 
@@ -380,6 +412,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2)) )
@@ -407,6 +441,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2)) )
 
@@ -432,6 +468,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2)) )
@@ -460,6 +498,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2)) )
 
@@ -487,6 +527,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2)) )
 
@@ -512,6 +554,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2), varsize(3)) )
@@ -540,6 +584,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2), varsize(3)) )
 
@@ -567,6 +613,8 @@ CONTAINS
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
 
+      CALL check_ncfile_exist (filename)
+
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2), varsize(3), varsize(4)) )
 
@@ -593,6 +641,8 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid
       INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
 
       CALL ncio_inquire_varsize(filename, dataname, varsize)
       allocate (rdata (varsize(1), varsize(2), varsize(3), varsize(4), varsize(5)) )

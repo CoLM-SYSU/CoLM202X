@@ -30,10 +30,10 @@ MODULE mod_pixelset
      
       INTEGER :: nset
 
-      INTEGER, allocatable :: unum(:)
-      INTEGER, allocatable :: iunt(:)
-      INTEGER, allocatable :: istt(:)
-      INTEGER, allocatable :: iend(:)
+      INTEGER, allocatable :: bindex(:)
+      INTEGER, allocatable :: ibasin(:)
+      INTEGER, allocatable :: ipxstt(:)
+      INTEGER, allocatable :: ipxend(:)
       
       INTEGER, allocatable :: ltyp(:)
 
@@ -65,18 +65,18 @@ CONTAINS
       REAL(r8), intent(inout) :: rlon(:), rlat(:)
 
       ! Local Variables
-      INTEGER :: iset, iu, istt, iend, npxl, ipxl
+      INTEGER :: iset, iu, ipxstt, ipxend, npxl, ipxl
       REAL(r8), allocatable :: area(:)
 
       DO iset = 1, this%nset
 
-         iu = this%iunt(iset)
+         iu = this%ibasin(iset)
 
-         istt = this%istt (iset)
-         iend = this%iend (iset)
+         ipxstt = this%ipxstt (iset)
+         ipxend = this%ipxend (iset)
 
-         allocate (area (istt:iend))
-         DO ipxl = istt, iend 
+         allocate (area (ipxstt:ipxend))
+         DO ipxl = ipxstt, ipxend 
             area(ipxl) = areaquad (&
                pixel%lat_s(landbasin(iu)%ilat(ipxl)), &
                pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
@@ -84,11 +84,11 @@ CONTAINS
                pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
          ENDDO
 
-         npxl = iend - istt + 1
+         npxl = ipxend - ipxstt + 1
          rlat(iset) = get_pixelset_rlat ( &
-            npxl, landbasin(iu)%ilat(istt:iend), area)
+            npxl, landbasin(iu)%ilat(ipxstt:ipxend), area)
          rlon(iset) = get_pixelset_rlon ( &
-            npxl, landbasin(iu)%ilon(istt:iend), area)
+            npxl, landbasin(iu)%ilon(ipxstt:ipxend), area)
 
          deallocate (area)
 
@@ -177,10 +177,10 @@ CONTAINS
       IMPLICIT NONE
       TYPE (pixelset_type) :: this
 
-      IF (allocated(this%unum)) deallocate(this%unum)
-      IF (allocated(this%iunt)) deallocate(this%iunt)
-      IF (allocated(this%istt)) deallocate(this%istt)
-      IF (allocated(this%iend)) deallocate(this%iend)
+      IF (allocated(this%bindex)) deallocate(this%bindex)
+      IF (allocated(this%ibasin)) deallocate(this%ibasin)
+      IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
+      IF (allocated(this%ipxend)) deallocate(this%ipxend)
       IF (allocated(this%ltyp)) deallocate(this%ltyp)
       
       IF (allocated(this%nonzero)) deallocate(this%nonzero)
@@ -223,8 +223,8 @@ CONTAINS
          iu = 1
          xblk = 0
          yblk = 0
-         DO iset = 1, size(this%unum)
-            DO WHILE (this%unum(iset) /= landbasin(iu)%num)
+         DO iset = 1, size(this%bindex)
+            DO WHILE (this%bindex(iset) /= landbasin(iu)%indx)
                iu = iu + 1
             ENDDO 
 
@@ -309,56 +309,56 @@ CONTAINS
       LOGICAL, intent(in)  :: mask(:)
       INTEGER, intent(out) :: nset_packed
 
-      INTEGER, allocatable :: unum1(:)
-      INTEGER, allocatable :: iunt1(:)
-      INTEGER, allocatable :: istt1(:)
-      INTEGER, allocatable :: iend1(:)
+      INTEGER, allocatable :: bindex1(:)
+      INTEGER, allocatable :: ibasin1(:)
+      INTEGER, allocatable :: ipxstt1(:)
+      INTEGER, allocatable :: ipxend1(:)
       INTEGER, allocatable :: ltyp1(:)
 
       IF (p_is_worker) THEN 
       
          IF (count(mask) < this%nset) THEN
 
-            allocate (unum1(this%nset))
-            allocate (iunt1(this%nset))
-            allocate (istt1(this%nset))
-            allocate (iend1(this%nset))
+            allocate (bindex1(this%nset))
+            allocate (ibasin1(this%nset))
+            allocate (ipxstt1(this%nset))
+            allocate (ipxend1(this%nset))
             allocate (ltyp1(this%nset))
 
-            unum1 = this%unum
-            iunt1 = this%iunt
-            istt1 = this%istt
-            iend1 = this%iend
+            bindex1 = this%bindex
+            ibasin1 = this%ibasin
+            ipxstt1 = this%ipxstt
+            ipxend1 = this%ipxend
             ltyp1 = this%ltyp
 
-            deallocate (this%unum)
-            deallocate (this%iunt)
-            deallocate (this%istt)
-            deallocate (this%iend)
+            deallocate (this%bindex)
+            deallocate (this%ibasin)
+            deallocate (this%ipxstt)
+            deallocate (this%ipxend)
             deallocate (this%ltyp)
 
             this%nset = count(mask)
 
             IF (this%nset > 0) THEN
 
-               allocate (this%unum(this%nset))
-               allocate (this%iunt(this%nset))
-               allocate (this%istt(this%nset))
-               allocate (this%iend(this%nset))
+               allocate (this%bindex(this%nset))
+               allocate (this%ibasin(this%nset))
+               allocate (this%ipxstt(this%nset))
+               allocate (this%ipxend(this%nset))
                allocate (this%ltyp(this%nset))
 
-               this%unum = pack(unum1, mask)
-               this%iunt = pack(iunt1, mask)
-               this%istt = pack(istt1, mask)
-               this%iend = pack(iend1, mask)
+               this%bindex = pack(bindex1, mask)
+               this%ibasin = pack(ibasin1, mask)
+               this%ipxstt = pack(ipxstt1, mask)
+               this%ipxend = pack(ipxend1, mask)
                this%ltyp = pack(ltyp1, mask)
 
             ENDIF
 
-            deallocate (unum1)
-            deallocate (iunt1)
-            deallocate (istt1)
-            deallocate (iend1)
+            deallocate (bindex1)
+            deallocate (ibasin1)
+            deallocate (ipxstt1)
+            deallocate (ipxend1)
             deallocate (ltyp1)
 
          ENDIF

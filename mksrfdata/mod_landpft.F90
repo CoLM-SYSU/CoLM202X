@@ -67,16 +67,16 @@ CONTAINS
       allocate (patch_pft_e (numpatch))
 
       IF (numpft > 0) THEN
-         allocate (landpft%iunt (numpft))
-         allocate (landpft%unum (numpft))
+         allocate (landpft%ibasin (numpft))
+         allocate (landpft%bindex (numpft))
          allocate (landpft%ltyp (numpft))
-         allocate (landpft%istt (numpft))
-         allocate (landpft%iend (numpft))
+         allocate (landpft%ipxstt (numpft))
+         allocate (landpft%ipxend (numpft))
                   
-         landpft%iunt(:) = 1
-         landpft%unum(:) = 1
-         landpft%istt(:) = 1
-         landpft%iend(:) = 1
+         landpft%ibasin(:) = 1
+         landpft%bindex(:) = 1
+         landpft%ipxstt(:) = 1
+         landpft%ipxend(:) = 1
             
          allocate(pft2patch (numpft))
 
@@ -172,11 +172,11 @@ CONTAINS
 
          IF (numpft > 0) THEN
 
-            allocate (landpft%iunt (numpft))
-            allocate (landpft%unum (numpft))
+            allocate (landpft%ibasin (numpft))
+            allocate (landpft%bindex (numpft))
             allocate (landpft%ltyp (numpft))
-            allocate (landpft%istt (numpft))
-            allocate (landpft%iend (numpft))
+            allocate (landpft%ipxstt (numpft))
+            allocate (landpft%ipxend (numpft))
 
             npft = 0
             npatch = 0
@@ -192,10 +192,10 @@ CONTAINS
                         IF (pctpft_patch(ipft,ipatch) > 0) THEN
                            npft = npft + 1
 
-                           landpft%iunt(npft) = landpatch%iunt(ipatch)
-                           landpft%unum(npft) = landpatch%unum(ipatch)
-                           landpft%istt(npft) = landpatch%istt(ipatch)
-                           landpft%iend(npft) = landpatch%iend(ipatch)
+                           landpft%ibasin(npft) = landpatch%ibasin(ipatch)
+                           landpft%bindex(npft) = landpatch%bindex(ipatch)
+                           landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
+                           landpft%ipxend(npft) = landpatch%ipxend(ipatch)
                            landpft%ltyp(npft) = ipft
 
                            pft2patch(npft) = npatch
@@ -207,10 +207,10 @@ CONTAINS
                      patch_pft_s(npatch) = npft
                      patch_pft_e(npatch) = npft
                      
-                     landpft%iunt(npft) = landpatch%iunt(ipatch)
-                     landpft%unum(npft) = landpatch%unum(ipatch)
-                     landpft%istt(npft) = landpatch%istt(ipatch)
-                     landpft%iend(npft) = landpatch%iend(ipatch)
+                     landpft%ibasin(npft) = landpatch%ibasin(ipatch)
+                     landpft%bindex(npft) = landpatch%bindex(ipatch)
+                     landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
+                     landpft%ipxend(npft) = landpatch%ipxend(ipatch)
                      landpft%ltyp(npft) = cropclass(ipatch) + N_PFT - 1
 
                      pft2patch(npft) = npatch
@@ -276,8 +276,8 @@ CONTAINS
                patch_pft_s(ipatch) = ipft
 
                DO WHILE (ipft <= numpft)
-                  IF ((landpft%unum(ipft) == landpatch%unum(ipatch))  &
-                     .and. (landpft%istt(ipft) == landpatch%istt(ipatch))) THEN
+                  IF ((landpft%bindex(ipft) == landpatch%bindex(ipatch))  &
+                     .and. (landpft%ipxstt(ipft) == landpatch%ipxstt(ipatch))) THEN
                      pft2patch  (ipft  ) = ipatch
                      patch_pft_e(ipatch) = ipft
                      ipft = ipft + 1
