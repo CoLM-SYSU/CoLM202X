@@ -34,6 +34,9 @@ SUBROUTINE aggregation_lakedepth ( &
 #endif
    USE mod_aggregation_lc
    USE mod_utils
+#ifdef MAP_PATCH_TO_GRID
+   USE mod_patch2grid
+#endif
 
    IMPLICIT NONE
    ! arguments:
@@ -131,6 +134,10 @@ SUBROUTINE aggregation_lakedepth ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'vector', landpatch, lakedepth_patches, 1)
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (lakedepth_patches, 'lakedepth', 'lakedepth.nc')
+#endif
 
    IF (p_is_worker) THEN
       deallocate ( lakedepth_patches )

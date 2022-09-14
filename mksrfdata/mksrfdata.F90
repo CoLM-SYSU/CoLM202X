@@ -63,6 +63,9 @@ PROGRAM mksrfdata
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
+#ifdef MAP_PATCH_TO_GRID
+   USE mod_patch2grid
+#endif
 
    IMPLICIT NONE
 
@@ -210,6 +213,11 @@ PROGRAM mksrfdata
 
 #ifdef PC_CLASSIFICATION
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+#endif
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL grid_patch2grid%define_from_file (DEF_file_landgrid)
+   CALL patch2grid_init ()
 #endif
 
    ! ................................................................
