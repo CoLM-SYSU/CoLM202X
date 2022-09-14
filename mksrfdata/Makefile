@@ -32,7 +32,8 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_landbasin.o \
 					../share/mod_pixelset.o \
 					../share/ncio_vector.o \
-					../share/mod_colm_debug.o
+					../share/mod_colm_debug.o \
+					../share/mod_mapping_pset2grid.o
 
 OBJS = \
 		 mod_srfdata_restart.o \
@@ -52,6 +53,7 @@ OBJS = \
 		 aggregation_forest_height.o \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
+		 mod_patch2grid.o \
 		 mksrfdata.o
 
 ####################################################################
