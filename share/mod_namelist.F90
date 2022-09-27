@@ -76,7 +76,7 @@ MODULE mod_namelist
    CHARACTER(len=256) :: DEF_dir_restart  = 'path/to/restart'
    CHARACTER(len=256) :: DEF_dir_history  = 'path/to/history'
 
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
    CHARACTER(len=256) :: DEF_file_landgrid = 'path/to/landmask/file'
 #endif
 
@@ -386,7 +386,7 @@ CONTAINS
          DEF_dir_rawdata,                 &  
          DEF_dir_output,                  &  
          DEF_dir_forcing,                 &  
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
          DEF_file_landgrid,               &
 #endif
 #ifdef CATCHMENT
@@ -478,7 +478,7 @@ CONTAINS
       CALL mpi_bcast (DEF_dir_restart,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_history,  256, mpi_character, p_root, p_comm_glb, p_err)
       
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_landgrid, 256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 

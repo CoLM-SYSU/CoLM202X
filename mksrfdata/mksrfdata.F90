@@ -124,6 +124,9 @@ PROGRAM mksrfdata
 #ifdef CATCHMENT
    CALL gbasin%define_by_name ('merit_90m')
 #endif
+#ifdef UNSTRUCTURED
+   CALL gbasin%define_by_name ('colm_1km')
+#endif
 
    ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
@@ -216,7 +219,11 @@ PROGRAM mksrfdata
 #endif
 
 #ifdef MAP_PATCH_TO_GRID
+#ifdef UNSTRUCTURED
+   CALL grid_patch2grid%define_by_name ('colm_1km')
+#else
    CALL grid_patch2grid%define_from_file (DEF_file_landgrid)
+#endif
    CALL patch2grid_init ()
 #endif
 

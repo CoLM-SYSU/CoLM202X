@@ -36,6 +36,10 @@ CONTAINS
       REAL(r8), allocatable :: vectmp (:)
       TYPE(block_data_real8_2d) :: sumwt 
       INTEGER  :: iblkme, xblk, yblk, xloc, yloc 
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
       
 #if (defined IGBP_CLASSIFICATION || defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION) 
       npatchtype = 18
@@ -108,7 +112,6 @@ CONTAINS
 
       IF (p_is_master) THEN
          CALL system('mkdir -p ' // trim(dir_patch2grid))
-         write(*,*) dir_patch2grid
       ENDIF
 
       CALL write3d_patch2grid (wt_patch2grid, 'patchfrac', 'patchfrac.nc')

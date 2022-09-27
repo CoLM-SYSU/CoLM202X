@@ -17,7 +17,7 @@ MODULE mod_hydrounit
 
 CONTAINS
 
-#if (defined GRIDBASED || defined SinglePoint)
+#if (defined GRIDBASED || defined SinglePoint || defined UNSTRUCTURED)
    ! -------------------------------
    SUBROUTINE hydrounit_build 
 
