@@ -493,8 +493,8 @@ CONTAINS
             ENDIF
          ENDDO
 
-         write(*,102) nrecv, nproc, p_iam_glb
-         102 format ('Receive ', I10, ' data from', I5, ' workers to IO', I5) 
+         ! write(*,102) nrecv, nproc, p_iam_glb
+         ! 102 format ('Receive ', I10, ' data from', I5, ' workers to IO', I5) 
       ELSEIF (p_is_worker) THEN 
          nproc = 0
          nsend = 0
@@ -505,8 +505,8 @@ CONTAINS
             ENDIF
          ENDDO
 
-         write(*,103) nsend, nproc, p_iam_glb
-         103 format ('Sending ', I10, ' data to', I5, ' IO from worker', I5) 
+         ! write(*,103) nsend, nproc, p_iam_glb
+         ! 103 format ('Sending ', I10, ' data to', I5, ' IO from worker', I5) 
       ENDIF
 #endif 
 

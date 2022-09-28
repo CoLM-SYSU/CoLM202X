@@ -223,7 +223,7 @@ CONTAINS
          iu = 1
          xblk = 0
          yblk = 0
-         DO iset = 1, size(this%bindex)
+         DO iset = 1, this%nset ! size(this%bindex)
             DO WHILE (this%bindex(iset) /= landbasin(iu)%indx)
                iu = iu + 1
             ENDDO 

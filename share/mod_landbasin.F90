@@ -141,6 +141,9 @@ CONTAINS
 #ifdef CATCHMENT
          CALL hydro_data_read (DEF_dir_hydrodata, 'icat', gbasin, databasin, spv = -1)
 #endif
+#ifdef UNSTRUCTURED
+         CALL ncio_read_block (DEF_file_landgrid, 'patchtypes', gbasin, databasin)
+#endif
       ENDIF
 
       ! Step 1: How many basins in each block?
@@ -176,6 +179,9 @@ CONTAINS
                   ENDIF
 #endif
 #ifdef CATCHMENT
+                  iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
+#endif
+#ifdef UNSTRUCTURED
                   iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 
@@ -338,6 +344,9 @@ CONTAINS
                   ENDIF
 #endif
 #ifdef CATCHMENT
+                  iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
+#endif
+#ifdef UNSTRUCTURED
                   iu = databasin%blk(iblk,jblk)%val(xloc,yloc)
 #endif
 

@@ -62,6 +62,10 @@ CONTAINS
       INTEGER :: cropfilter(1)
       INTEGER :: ic, jc 
 #endif
+#ifdef USE_DOMINANT_PATCHTYPE
+      INTEGER :: dominant_type
+      INTEGER, allocatable :: npxl_ltype (:)
+#endif
 
       INTEGER :: iblk, jblk
 
@@ -214,11 +218,13 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         allocate (bindex_tmp (numhru*N_land_classification))
-         allocate (ibasin_tmp (numhru*N_land_classification))
-         allocate (ltyp_tmp (numhru*N_land_classification))
-         allocate (ipxstt_tmp (numhru*N_land_classification))
-         allocate (ipxend_tmp (numhru*N_land_classification))
+         IF (numhru > 0) THEN
+            allocate (bindex_tmp (numhru*N_land_classification))
+            allocate (ibasin_tmp (numhru*N_land_classification))
+            allocate (ltyp_tmp   (numhru*N_land_classification))
+            allocate (ipxstt_tmp (numhru*N_land_classification))
+            allocate (ipxend_tmp (numhru*N_land_classification))
+         ENDIF
 
          numpatch = 0
 
@@ -315,12 +321,25 @@ CONTAINS
                   ENDIF
                ENDIF
             ENDDO
+#endif
             
             CALL quicksort (npxl, ltype, order)
                
             landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
             landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
             
+#ifdef USE_DOMINANT_PATCHTYPE
+            allocate (npxl_ltype (ltype(1):ltype(npxl)))
+            npxl_ltype(:) = 0
+            DO ipxl = ipxstt+1, ipxend
+               npxl_ltype(ltype(ipxl)) = npxl_ltype(ltype(ipxl)) + 1
+            ENDDO 
+            dominant_type = maxloc(npxl_ltype, dim=1) + ltype(1) - 1
+
+            ltype(:) = dominant_type
+
+            deallocate(npxl_ltype)
+#endif
             DO ipxl = ipxstt, ipxend
                IF (ipxl == ipxstt) THEN
                   numpatch = numpatch + 1 
@@ -339,7 +358,6 @@ CONTAINS
                ENDIF
             ENDDO
             ipxend_tmp(numpatch) = ipxend
-#endif
 
 #if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION || defined PC_CLASSIFICATION) 
             CALL quicksort (npxl, ltype, order)
@@ -372,23 +390,27 @@ CONTAINS
 
          ENDDO
          
-         allocate (landpatch%ibasin (numpatch))
-         allocate (landpatch%bindex (numpatch))
-         allocate (landpatch%ltyp (numpatch))
-         allocate (landpatch%ipxstt (numpatch))
-         allocate (landpatch%ipxend (numpatch))
+         IF (numpatch > 0) THEN
+            allocate (landpatch%ibasin (numpatch))
+            allocate (landpatch%bindex (numpatch))
+            allocate (landpatch%ltyp   (numpatch))
+            allocate (landpatch%ipxstt (numpatch))
+            allocate (landpatch%ipxend (numpatch))
 
-         landpatch%ibasin = ibasin_tmp(1:numpatch)  
-         landpatch%bindex = bindex_tmp(1:numpatch)  
-         landpatch%ltyp = ltyp_tmp(1:numpatch)  
-         landpatch%ipxstt = ipxstt_tmp(1:numpatch)
-         landpatch%ipxend = ipxend_tmp(1:numpatch)
+            landpatch%ibasin = ibasin_tmp(1:numpatch)  
+            landpatch%bindex = bindex_tmp(1:numpatch)  
+            landpatch%ltyp   = ltyp_tmp  (1:numpatch)  
+            landpatch%ipxstt = ipxstt_tmp(1:numpatch)
+            landpatch%ipxend = ipxend_tmp(1:numpatch)
+         ENDIF
 
-         deallocate (ltyp_tmp)
-         deallocate (ipxstt_tmp)
-         deallocate (ipxend_tmp)
-         deallocate (ibasin_tmp)
-         deallocate (bindex_tmp)
+         IF (numhru > 0) THEN
+            deallocate (ltyp_tmp)
+            deallocate (ipxstt_tmp)
+            deallocate (ipxend_tmp)
+            deallocate (ibasin_tmp)
+            deallocate (bindex_tmp)
+         ENDIF
 
 #ifdef USEMPI
          DO iproc = 0, p_np_io-1
@@ -406,8 +428,10 @@ CONTAINS
 
 #ifdef LANDONLY
       IF (p_is_worker) THEN
-         allocate(msk(numpatch))
-         msk = (landpatch%ltyp /= 0)
+         IF (numpatch > 0) THEN
+            allocate(msk(numpatch))
+            msk = (landpatch%ltyp /= 0)
+         ENDIF
       ENDIF
          
       CALL landpatch%pset_pack (msk, numpatch)

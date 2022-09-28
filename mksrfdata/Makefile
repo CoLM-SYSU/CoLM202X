@@ -46,6 +46,7 @@ OBJS = \
 		 mod_landpft.o \
 		 mod_landpc.o \
 		 par_fitting.o \
+		 mod_patch2grid.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
 		 aggregation_soil_brightness.o \
@@ -53,7 +54,6 @@ OBJS = \
 		 aggregation_forest_height.o \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
-		 mod_patch2grid.o \
 		 mksrfdata.o
 
 ####################################################################
