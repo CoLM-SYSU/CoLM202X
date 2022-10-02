@@ -151,13 +151,13 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8),allocatable :: vf_p                      (:)
   REAL(r8),allocatable :: cphase_p                  (:)
   REAL(r8),allocatable :: fert_counter_p            (:)
-  REAL(r8),allocatable :: fert_p                    (:)
   REAL(r8),allocatable :: tref_min_p                (:)
   REAL(r8),allocatable :: tref_max_p                (:)
   REAL(r8),allocatable :: tref_min_inst_p           (:)
   REAL(r8),allocatable :: tref_max_inst_p           (:)
   REAL(r8),allocatable :: fertnitro_p               (:)
   REAL(r8),allocatable :: latbaset_p                (:)
+  REAL(r8),allocatable :: plantdate_p               (:)
 ! --------------------- end CROP variables -------------------------
 
 ! --------------------- SASU variables -----------------------------
@@ -508,13 +508,13 @@ CONTAINS
             allocate (vf_p                     (numpft))
             allocate (cphase_p                 (numpft))
             allocate (fert_counter_p           (numpft))
-            allocate (fert_p                   (numpft))
             allocate (tref_min_p               (numpft))
             allocate (tref_max_p               (numpft))
             allocate (tref_min_inst_p          (numpft))
             allocate (tref_max_inst_p          (numpft))
             allocate (fertnitro_p              (numpft))
             allocate (latbaset_p               (numpft))
+            allocate (plantdate_p              (numpft))
 #endif
 
 #ifdef SASU
@@ -849,13 +849,13 @@ CONTAINS
      call ncio_read_vector (file_restart, 'vf_p                   ', landpft, vf_p                  )
      call ncio_read_vector (file_restart, 'cphase_p               ', landpft, cphase_p              )
      call ncio_read_vector (file_restart, 'fert_counter_p         ', landpft, fert_counter_p        )
-     call ncio_read_vector (file_restart, 'fert_p                 ', landpft, fert_p                )
      call ncio_read_vector (file_restart, 'tref_min_p             ', landpft, tref_min_p            )
      call ncio_read_vector (file_restart, 'tref_max_p             ', landpft, tref_max_p            )
      call ncio_read_vector (file_restart, 'tref_min_inst_p        ', landpft, tref_min_inst_p       )
      call ncio_read_vector (file_restart, 'tref_max_inst_p        ', landpft, tref_max_inst_p       )
      call ncio_read_vector (file_restart, 'fertnitro_p            ', landpft, fertnitro_p           )
      call ncio_read_vector (file_restart, 'latbaset_p             ', landpft, latbaset_p            )
+     call ncio_read_vector (file_restart, 'plantdate_p            ', landpft, plantdate_p           )
 #endif
 
 #ifdef SASU
@@ -1409,8 +1409,6 @@ CONTAINS
      cphase_p              , compress)
      call ncio_write_vector (file_restart, 'fert_counter_p         ', 'vector', landpft, &
      fert_counter_p        , compress)
-     call ncio_write_vector (file_restart, 'fert_p                 ', 'vector', landpft, &
-     fert_p                , compress)
      call ncio_write_vector (file_restart, 'tref_min_p             ', 'vector', landpft, &
      tref_min_p            , compress)
      call ncio_write_vector (file_restart, 'tref_max_p             ', 'vector', landpft, &
@@ -1423,6 +1421,8 @@ CONTAINS
      fertnitro_p           , compress)
      call ncio_write_vector (file_restart, 'latbaset_p             ', 'vector', landpft, &
      latbaset_p            , compress)
+     call ncio_write_vector (file_restart, 'plantdate_p            ', 'vector', landpft, &
+     plantdate_p           , compress)
 #endif
 
 #ifdef SASU
@@ -1921,13 +1921,13 @@ CONTAINS
             deallocate (vf_p                     )
             deallocate (cphase_p                 )
             deallocate (fert_counter_p           )
-            deallocate (fert_p                   )
             deallocate (tref_min_p               )
             deallocate (tref_max_p               )
             deallocate (tref_min_inst_p          )
             deallocate (tref_max_inst_p          )
             deallocate (fertnitro_p              )
             deallocate (latbaset_p               )
+            deallocate (plantdate_p              )
 #endif
 
 #ifdef SASU
@@ -2121,6 +2121,7 @@ CONTAINS
    SUBROUTINE check_BGCPFTimeVars
 
       use mod_colm_debug
+      use spmd_task
       IMPLICIT NONE
 
 ! bgc variables
@@ -2260,13 +2261,13 @@ CONTAINS
       call check_vector_data ('vf_p                   ', vf_p                   )
       call check_vector_data ('cphase_p               ', cphase_p               )
       call check_vector_data ('fert_counter_p         ', fert_counter_p         )
-      call check_vector_data ('fert_p                 ', fert_p                 )
       call check_vector_data ('tref_min_p             ', tref_min_p             )
       call check_vector_data ('tref_max_p             ', tref_max_p             )
       call check_vector_data ('tref_min_inst_p        ', tref_min_inst_p        )
       call check_vector_data ('tref_max_inst_p        ', tref_max_inst_p        )
       call check_vector_data ('fertnitro_p            ', fertnitro_p            )
       call check_vector_data ('latbaset_p             ', latbaset_p             )
+      call check_vector_data ('plantdate_p            ', plantdate_p            )
 #endif
 
 #ifdef SASU

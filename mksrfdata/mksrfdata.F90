@@ -75,7 +75,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gbasin, gridlai
+   TYPE (grid_type) :: gbasin, gridlai, gnitrif
 
    INTEGER :: start_time, end_time, c_per_sec, time_used
 
@@ -135,8 +135,12 @@ PROGRAM mksrfdata
 #ifdef PFT_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
 #if (defined CROP) 
+   ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
+#endif
+#ifdef NITRIF
+   CALL gnitrif%define_by_name ('nitrif_2deg')
 #endif
 #ifdef PC_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
@@ -157,6 +161,9 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (gcrop )
 #endif
    CALL pixel%assimilate_grid (gridlai)
+#ifdef NITRIF
+   CALL pixel%assimilate_grid (gnitrif)
+#endif
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
@@ -170,6 +177,10 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (gcrop )
 #endif
    CALL pixel%map_to_grid (gridlai)
+#ifdef NITRIF
+   CALL pixel%map_to_grid (gnitrif)
+#endif
+
 
    ! build land basins 
    CALL landbasin_build (gbasin)
@@ -214,6 +225,12 @@ PROGRAM mksrfdata
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
 
+#if (defined CROP)
+   call aggregation_crop_parameters (gcrop, dir_rawdata, dir_landdata)
+#endif
+#if (defined NITRIF)
+   call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)
+#endif
    CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 
    CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)

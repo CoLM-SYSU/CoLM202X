@@ -119,6 +119,9 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #ifdef PLANT_HYDRAULIC_STRESS
          vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
 #endif
+#ifdef OzoneStress
+         lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
+#endif
          zwt(i),                                                             &
 #ifdef VARIABLY_SATURATED_FLOW
          dpond(i),                                                           &

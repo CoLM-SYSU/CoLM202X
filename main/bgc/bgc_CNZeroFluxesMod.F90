@@ -381,25 +381,6 @@ use MOD_1D_BGCFluxes, only:             &
     f_n2o_denit_vr       , &
     f_n2o_nit_vr       , &
 
-    smin_no3_massdens_vr       , &
-    k_nitr_t_vr       , &
-    k_nitr_ph_vr       , &
-    k_nitr_h2o_vr       , &
-    k_nitr_vr       , &
-    wfps_vr       , &
-    fmax_denit_carbonsubstrate_vr       , &
-    fmax_denit_nitrate_vr       , &
-    f_denit_base_vr       , &
-
-    diffus       , &
-    ratio_k1       , &
-    ratio_no3_co2       , &
-    soil_co2_prod       , &
-    fr_WFPS       , &
-    soil_bulkdensity       , &
-
-    r_psi       , &
-    anaerobic_frac       , &
 #endif
     potential_immob_vr       , &
     actual_immob_vr       , &
@@ -885,25 +866,6 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
       f_n2o_denit_vr(j,i)                = 0._r8
       f_n2o_nit_vr(j,i)                  = 0._r8
 
-      smin_no3_massdens_vr(j,i)          = 0._r8
-      k_nitr_t_vr(j,i)                   = 0._r8
-      k_nitr_ph_vr(j,i)                  = 0._r8
-      k_nitr_h2o_vr(j,i)                 = 0._r8
-      k_nitr_vr(j,i)                     = 0._r8
-      wfps_vr(j,i)                       = 0._r8
-      fmax_denit_carbonsubstrate_vr(j,i) = 0._r8
-      fmax_denit_nitrate_vr(j,i)         = 0._r8
-      f_denit_base_vr(j,i)               = 0._r8
-
-      diffus(j,i)                        = 0._r8
-      ratio_k1(j,i)                      = 0._r8
-      ratio_no3_co2(j,i)                 = 0._r8
-      soil_co2_prod(j,i)                 = 0._r8
-      fr_WFPS(j,i)                       = 0._r8
-      soil_bulkdensity(j,i)              = 0._r8
-
-      r_psi(j,i)                         = 0._r8
-      anaerobic_frac(j,i)                = 0._r8
 #endif
       potential_immob_vr(j,i)               = 0._r8
       actual_immob_vr(j,i)                  = 0._r8

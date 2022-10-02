@@ -23,7 +23,7 @@ MODULE LEAF_temperature
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE  LeafTemp(ipatch,deltim,csoilc,dewmx,htvp    ,lai     ,&
+  SUBROUTINE  LeafTemp(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai     ,&
               sai     ,htop    ,hbot    ,sqrtdi  ,effcon  ,vmax25  ,&
               slti    ,hlti    ,shti    ,hhti    ,trda    ,trdm    ,&
               trop    ,gradm   ,binter  ,extkn   ,extkb   ,extkd   ,&
@@ -41,6 +41,10 @@ MODULE LEAF_temperature
 #ifdef PLANT_HYDRAULIC_STRESS
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
               psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&     
+#endif
+#ifdef OzoneStress
+              o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
+              lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       ) 
@@ -74,12 +78,16 @@ MODULE LEAF_temperature
   use PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
 USE PhysicalConstants, only: tfrz
+  use MOD_PFTimeInvars, only: pftclass
+#ifdef OzoneStress
+  use OzoneMod, only: CalcOzoneStress
+#endif
 
   IMPLICIT NONE
  
 !-----------------------Arguments---------------------------------------
 
-  INTEGER,  intent(in) :: ipatch
+  INTEGER,  intent(in) :: ipatch,ivt
   REAL(r8), intent(in) :: &
         deltim,     &! seconds in a time step [second]
         csoilc,     &! drag coefficient for soil under canopy [-]
@@ -180,6 +188,12 @@ USE PhysicalConstants, only: tfrz
         ldew_rain,       &! depth of rain on foliage [mm]
         ldew_snow,       &! depth of snow on foliage [mm]
 
+#ifdef OzoneStress
+        lai_old    ,&! lai in last time step
+        o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
+        o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
+        forc_ozone ,&
+#endif
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
@@ -203,6 +217,12 @@ USE PhysicalConstants, only: tfrz
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
         hprl,       &! precipitation sensible heat from canopy
+#ifdef OzoneStress
+        o3coefv_sun,&! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefg_sun,&! Ozone stress factor for stomata on shaded leaf
+        o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
+#endif
 
         z0m,        &! effective roughness [m]
         zol,        &! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -558,16 +578,22 @@ USE PhysicalConstants, only: tfrz
             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                 pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                 parsun   ,rbsun    ,raw    ,rstfacsun ,cintsun ,&
+                 pco2m    ,pco2a    ,eah    ,ei     ,tl      , parsun   ,&
+#ifdef OzoneStress
+                 o3coefv_sun ,o3coefg_sun, &
+#endif
+                 rbsun   ,raw  ,rstfacsun ,cintsun ,&
                  assimsun ,respcsun ,rssun  )
 
 ! Shaded leaves
             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
-                 pco2m    ,pco2a    ,eah    ,ei     ,tl      ,&
-                 parsha   ,rbsha    ,raw    ,rstfacsha ,cintsha ,&
+                 pco2m    ,pco2a    ,eah    ,ei     ,tl      ,  parsha  ,&
+#ifdef OzoneStress
+                 o3coefv_sha ,o3coefg_sha, &
+#endif
+                 rbsha    ,raw  ,rstfacsha ,cintsha ,&
                  assimsha ,respcsha ,rssha  )
 
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -777,6 +803,17 @@ USE PhysicalConstants, only: tfrz
         
        !IF (it > itmax) print *, "*** NOTE: it = 41! ***"
 
+#ifdef OzoneStress
+       call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
+                             rssun,rbsun,lai,lai_old,ivt,o3uptakesun,deltim)
+       call CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
+                             rssha,rbsha,lai,lai_old,ivt,o3uptakesha,deltim)
+       lai_old  = lai
+       assimsun = assimsun * o3coefv_sun
+       assimsha = assimsha * o3coefv_sha
+       rssun    = rssun / o3coefg_sun
+       rssha    = rssha / o3coefg_sha
+#endif
 ! ======================================================================
 !      END stability iteration 
 ! ======================================================================

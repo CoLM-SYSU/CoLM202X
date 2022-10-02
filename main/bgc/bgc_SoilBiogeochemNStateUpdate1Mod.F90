@@ -26,7 +26,7 @@ use MOD_1D_BGCFluxes, only: &
            sminn_to_plant_vr       , smin_nh4_to_plant_vr     , smin_no3_to_plant_vr     , supplement_to_sminn_vr, &
            sminn_to_plant_fun_vr   , sminn_to_plant_fun_nh4_vr, sminn_to_plant_fun_no3_vr, &
            sminn_to_denit_excess_vr, f_nit_vr                 , f_denit_vr               , &
-           ndep_to_sminn           , ffix_to_sminn            , nfix_to_sminn            
+           ndep_to_sminn           , ffix_to_sminn            , nfix_to_sminn            , fert_to_sminn
 
 implicit none
 
@@ -80,32 +80,28 @@ real(r8):: sminflux,minerflux
 !                    sum(ndep_to_sminn(i)*deltim * ndep_prof(1:nl_soil,i)*dz_soi(1:nl_soil))
 
 !      ! repeating N dep and fixation for crops
-!      if ( use_crop )then
-!         do j = 1, nl_soil
-!
-!            ! column loop
-!            do fc = 1,num_soilc
-!               c = filter_soilc(fc)
-!               if (.not. use_nitrif_denitrif) then
-!
-!                  ! N deposition and fixation
+#ifdef CROP
+      do j = 1, nl_soil
+
+            ! column loop
+
+#ifndef NITRIF
+                  ! N deposition and fixation
+         sminn_vr(j,i) = sminn_vr(j,i) &
+                     + fert_to_sminn(i) * deltim * ndep_prof(j,i)
 !                  sminn_vr(j) = sminn_vr(j) &
-!                       + fert_to_sminn(*deltim * ndep_prof(c,j)
-!                  sminn_vr(j) = sminn_vr(j) &
-!                       + soyfixn_to_sminn(*deltim * nfixation_prof(c,j)
-!
-!               else
-!
-!                  ! N deposition and fixation (put all into NH4 pool)
+!                       + soyfixn_to_sminn(*deltim * nfixation_prof(j,i)
+
+#else
+                  ! N deposition and fixation (put all into NH4 pool)
+         smin_nh4_vr(j,i) = smin_nh4_vr(j,i) &
+                        + fert_to_sminn(i) * deltim * ndep_prof(j,i)
 !                  smin_nh4_vr(j) = smin_nh4_vr(j) &
-!                       + fert_to_sminn(*deltim * ndep_prof(c,j)
-!                  smin_nh4_vr(j) = smin_nh4_vr(j) &
-!                       + soyfixn_to_sminn(*deltim * nfixation_prof(c,j)
-!
-!               end if
-!            end do
-!         end do
-!      end if
+!                       + soyfixn_to_sminn(i) * deltim * nfixation_prof(j,i)
+
+#endif
+      end do
+#endif
 
       ! decomposition fluxes
 !   if (.not. use_soil_matrixcn) then

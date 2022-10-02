@@ -34,6 +34,15 @@ SAVE
       real(r8), allocatable :: gs0sun   (:)     ! working copy of sunlit stomata conductance
       real(r8), allocatable :: gs0sha   (:)     ! working copy of shalit stomata conductance
 #endif
+#ifdef OzoneStress
+      real(r8), allocatable :: o3coefv_sun(:) ! Ozone stress factor for photosynthesis on sunlit leaf
+      real(r8), allocatable :: o3coefv_sha(:) ! Ozone stress factor for photosynthesis on shaded leaf
+      real(r8), allocatable :: o3coefg_sun(:) ! Ozone stress factor for stomata on sunlit leaf
+      real(r8), allocatable :: o3coefg_sha(:) ! Ozone stress factor for stomata on shaded leaf
+      real(r8), allocatable :: lai_old    (:) ! lai in last time step
+      real(r8), allocatable :: o3uptakesun(:) ! Ozone does, sunlit leaf (mmol O3/m^2)
+      real(r8), allocatable :: o3uptakesha(:) ! Ozone does, shaded leaf (mmol O3/m^2)
+#endif
       real(r8), allocatable :: rstfacsun(:)     ! factor of soil water stress on sunlit leaf
       real(r8), allocatable :: rstfacsha(:)     ! factor of soil water stress on shaded leaf
       real(r8), allocatable :: t_grnd   (:)     ! ground surface temperature [K]
@@ -67,6 +76,7 @@ SAVE
       real(r8), allocatable :: zwt      (:)     ! the depth to water table [m]
       real(r8), allocatable :: wa       (:)     ! water storage in aquifer [mm]
       real(r8), allocatable :: wat      (:)     ! total water storage [mm]
+      
 #ifdef VARIABLY_SATURATED_FLOW
       real(r8), allocatable :: dpond    (:)     ! depth of ponding water
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -141,6 +151,15 @@ SAVE
         allocate (vegwp      (1:nvegwcs,numpatch))
         allocate (gs0sun               (numpatch))
         allocate (gs0sha               (numpatch))
+#endif
+#ifdef OzoneStress
+        allocate (o3coefv_sun          (numpatch)) ! Ozone stress factor for photosynthesis on sunlit leaf
+        allocate (o3coefv_sha          (numpatch)) ! Ozone stress factor for photosynthesis on shaded leaf
+        allocate (o3coefg_sun          (numpatch)) ! Ozone stress factor for stomata on sunlit leaf
+        allocate (o3coefg_sha          (numpatch)) ! Ozone stress factor for stomata on shaded leaf
+        allocate (lai_old              (numpatch)) ! lai in last time step
+        allocate (o3uptakesun          (numpatch)) ! Ozone does, sunlit leaf (mmol O3/m^2)
+        allocate (o3uptakesha          (numpatch)) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
         allocate (rstfacsun            (numpatch))
         allocate (rstfacsha            (numpatch))
@@ -249,6 +268,15 @@ SAVE
            deallocate (vegwp  )
            deallocate (gs0sun )
            deallocate (gs0sha )
+#endif
+#ifdef OzoneStress
+           deallocate (o3coefv_sun) ! Ozone stress factor for photosynthesis on sunlit leaf
+           deallocate (o3coefv_sha) ! Ozone stress factor for photosynthesis on shaded leaf
+           deallocate (o3coefg_sun) ! Ozone stress factor for stomata on sunlit leaf
+           deallocate (o3coefg_sha) ! Ozone stress factor for stomata on shaded leaf
+           deallocate (lai_old    ) ! lai in last time step
+           deallocate (o3uptakesun) ! Ozone does, sunlit leaf (mmol O3/m^2)
+           deallocate (o3uptakesha) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
            deallocate (t_grnd )
            deallocate (tleaf  )
@@ -411,6 +439,11 @@ SAVE
      call ncio_write_vector (file_restart, 'gs0sun  ',    'vector', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
      call ncio_write_vector (file_restart, 'gs0sha  ',    'vector', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
 #endif
+#ifdef OzoneStress
+     call ncio_write_vector (file_restart, 'lai_old    ', 'vector', landpatch, lai_old    , compress)
+     call ncio_write_vector (file_restart, 'o3uptakesun', 'vector', landpatch, o3uptakesun, compress)
+     call ncio_write_vector (file_restart, 'o3uptakesha', 'vector', landpatch, o3uptakesha, compress)
+#endif
      call ncio_write_vector (file_restart, 't_grnd  '   , 'vector', landpatch, t_grnd    , compress) !  ground surface temperature [K]
      call ncio_write_vector (file_restart, 'tleaf   '   , 'vector', landpatch, tleaf     , compress) !  leaf temperature [K]
      call ncio_write_vector (file_restart, 'ldew    '   , 'vector', landpatch, ldew      , compress) !  depth of water on foliage [mm]
@@ -438,6 +471,11 @@ SAVE
      call ncio_write_vector (file_restart, 'extkd   '   , 'vector', landpatch, extkd     , compress) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_write_vector (file_restart, 'zwt     '   , 'vector', landpatch, zwt       , compress) !  the depth to water table [m]
      call ncio_write_vector (file_restart, 'wa      '   , 'vector', landpatch, wa        , compress) !  water storage in aquifer [mm]
+
+
+
+
+
 #ifdef VARIABLY_SATURATED_FLOW
      call ncio_write_vector (file_restart, 'dpond   '   , 'vector', landpatch, dpond     , compress) ! depth of ponding water
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -532,6 +570,11 @@ SAVE
      call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) !  working copy of sunlit stomata conductance
      call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) !  working copy of shalit stomata conductance
 #endif
+#ifdef OzoneStress
+     call ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
+     call ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
+     call ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
+#endif
      call ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) !  ground surface temperature [K]
      call ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) !  leaf temperature [K]
      call ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) !  depth of water on foliage [mm]
@@ -559,6 +602,7 @@ SAVE
      call ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) !  the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) !  water storage in aquifer [mm]
+
 #ifdef VARIABLY_SATURATED_FLOW
      call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -638,6 +682,15 @@ SAVE
      call check_vector_data ('vegwp       ', vegwp      ) !  vegetation water potential [mm]
      call check_vector_data ('gs0sun      ', gs0sun     ) !  working copy of sunlit stomata conductance
      call check_vector_data ('gs0sha      ', gs0sha     ) !  working copy of shalit stomata conductance
+#endif
+#ifdef OzoneStress
+     call check_vector_data ('o3coefv_sun', o3coefv_sun)
+     call check_vector_data ('o3coefv_sha', o3coefv_sha)
+     call check_vector_data ('o3coefg_sun', o3coefg_sun)
+     call check_vector_data ('o3coefg_sha', o3coefg_sha)
+     call check_vector_data ('lai_old    ', lai_old    )
+     call check_vector_data ('o3uptakesun', o3uptakesun)
+     call check_vector_data ('o3uptakesha', o3uptakesha)
 #endif
      call check_vector_data ('t_grnd      ', t_grnd     ) !  ground surface temperature [K]
      call check_vector_data ('tleaf       ', tleaf      ) !  leaf temperature [K]

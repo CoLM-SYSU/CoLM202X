@@ -39,7 +39,10 @@ SAVE
   REAL(r8), allocatable :: vf_sand   (:,:)     ! volumetric fraction of sand
   REAL(r8), allocatable :: wf_gravels(:,:)     ! gravimetric fraction of gravels
   REAL(r8), allocatable :: wf_sand   (:,:)     ! gravimetric fraction of sand
+  REAL(r8), allocatable :: OM_density(:,:)     ! OM density (kg/m3)
+  REAL(r8), allocatable :: BD_all    (:,:)     ! bulk density of soil (GRAVELS + ORGANIC MATTER + Mineral Soils,kg/m3)
 
+  REAL(r8), allocatable :: wfc          (:,:)  !field capacity
   REAL(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL
@@ -136,6 +139,9 @@ SAVE
         allocate (vf_sand      (nl_soil,numpatch))
         allocate (wf_gravels   (nl_soil,numpatch))
         allocate (wf_sand      (nl_soil,numpatch))
+        allocate (OM_density   (nl_soil,numpatch))
+        allocate (BD_all       (nl_soil,numpatch))
+        allocate (wfc          (nl_soil,numpatch))
         allocate (porsl        (nl_soil,numpatch))
         allocate (psi0         (nl_soil,numpatch))
 #ifdef Campbell_SOIL_MODEL
@@ -231,6 +237,9 @@ SAVE
      call ncio_read_vector (file_restart, 'vf_sand   ',   nl_soil, landpatch, vf_sand   ) ! volumetric fraction of sand
      call ncio_read_vector (file_restart, 'wf_gravels',   nl_soil, landpatch, wf_gravels) ! gravimetric fraction of gravels
      call ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
+     call ncio_read_vector (file_restart, 'OM_density',   nl_soil, landpatch, OM_density) ! OM density
+     call ncio_read_vector (file_restart, 'BD_all    ',   nl_soil, landpatch, BD_all    ) ! bulk density of soil
+     call ncio_read_vector (file_restart, 'wfc       ',   nl_soil, landpatch, wfc       ) ! field capacity
      call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL                                         
@@ -361,6 +370,9 @@ SAVE
      call ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'vector', landpatch, vf_sand   , compress) ! volumetric fraction of sand
      call ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'vector', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
      call ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'vector', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+     call ncio_write_vector (file_restart, 'OM_density', 'soil', nl_soil, 'vector', landpatch, OM_density, compress) ! OM_density
+     call ncio_write_vector (file_restart, 'BD_all    ', 'soil', nl_soil, 'vector', landpatch, BD_all    , compress) ! bulk density of soil
+     call ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'vector', landpatch, wfc       , compress) ! field capacity
      call ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'vector', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
      call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'vector', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL
@@ -465,6 +477,9 @@ SAVE
            deallocate (vf_sand   )
            deallocate (wf_gravels)
            deallocate (wf_sand   )
+           deallocate (OM_density)
+           deallocate (BD_all    )
+           deallocate (wfc    )
            deallocate (porsl  )
            deallocate (psi0   )
 #ifdef Campbell_SOIL_MODEL
@@ -544,6 +559,9 @@ SAVE
       call check_vector_data ('vf_sand     ', vf_sand     ) ! volumetric fraction of sand
       call check_vector_data ('wf_gravels  ', wf_gravels  ) ! gravimetric fraction of gravels
       call check_vector_data ('wf_sand     ', wf_sand     ) ! gravimetric fraction of sand
+      call check_vector_data ('OM_density  ', OM_density  ) ! OM density
+      call check_vector_data ('BD_all      ', BD_all      ) ! bulk density of soils
+      call check_vector_data ('wfc         ', wfc         ) ! field capacity
       call check_vector_data ('porsl       ', porsl       ) ! fraction of soil that is voids [-]
       call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
 #ifdef Campbell_SOIL_MODEL

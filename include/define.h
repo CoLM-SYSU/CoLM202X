@@ -1,9 +1,9 @@
 #undef CATCHMENT
 #define GRIDBASED   ! CATCHMENT / GRIDBASED / SinglePoint
-#define	USGS_CLASSIFICATION       ! IGBP_CLASSIFICATION / USGS_CLASSIFICATION / PFT_CLASSIFICATION / PC_CLASSIFICATION 
+#define PFT_CLASSIFICATION       ! IGBP_CLASSIFICATION / USGS_CLASSIFICATION / PFT_CLASSIFICATION / PC_CLASSIFICATION
 #define LANDONLY
 
-#define	CLMDEBUG                  
+#define CLMDEBUG
 #define  USEMPI
 
 #define Campbell_SOIL_MODEL  ! Campbell_SOIL_MODEL / vanGenuchten_Mualem_SOIL_MODEL
@@ -17,15 +17,20 @@
 #define THERMAL_CONDUCTIVITY_SCHEME_4
 
 #define PLANT_HYDRAULIC_STRESS
-#undef  DYN_PHENOLOGY             
-#undef	SOILINI                   
-#undef	SOIL_REFL_GUESSED         
-#define	SOIL_REFL_READ            
+#undef  DYN_PHENOLOGY
+#undef  SOILINI
+#undef  SOIL_REFL_GUESSED
+#define SOIL_REFL_READ
 
-#define  CaMa_Flood
+#undef  CaMa_Flood
 
-#undef CROP
-#undef BGC
+#define CROP
+#define BGC
+#define LAIfdbk
+#define SASU
+#define OzoneStress
+#define FERT
+#define NITRIF
 
 #ifdef SinglePoint
 #undef USEMPI
@@ -33,6 +38,10 @@
 
 #ifndef PFT_CLASSIFICATION
 #undef CROP
+#endif
+
+#ifdef BGC
+#define PFT_CLASSIFICATION
 #endif
 
 #ifndef VARIABLY_SATURATED_FLOW

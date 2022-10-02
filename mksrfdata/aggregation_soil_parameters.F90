@@ -44,6 +44,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    TYPE (block_data_real8_2d) :: vf_sand_s_grid
    TYPE (block_data_real8_2d) :: wf_gravels_s_grid
    TYPE (block_data_real8_2d) :: wf_sand_s_grid
+   TYPE (block_data_real8_2d) :: OM_density_s_grid
+   TYPE (block_data_real8_2d) :: BD_all_s_grid
    TYPE (block_data_real8_2d) :: theta_s_grid
 #ifdef Campbell_SOIL_MODEL
    TYPE (block_data_real8_2d) :: psi_s_grid  
@@ -68,6 +70,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: vf_sand_s_patches (:)
    REAL(r8), allocatable :: wf_gravels_s_patches (:)
    REAL(r8), allocatable :: wf_sand_s_patches (:)
+   REAL(r8), allocatable :: OM_density_s_patches (:)
+   REAL(r8), allocatable :: BD_all_s_patches (:)
    REAL(r8), allocatable :: theta_s_patches (:) 
 #ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_patches   (:) 
@@ -96,6 +100,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: vf_sand_s_one (:)
    REAL(r8), allocatable :: wf_gravels_s_one (:)
    REAL(r8), allocatable :: wf_sand_s_one (:) 
+   REAL(r8), allocatable :: OM_density_s_one (:)
+   REAL(r8), allocatable :: BD_all_s_one (:)
    REAL(r8), allocatable :: theta_s_one (:) 
 #ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_one   (:) 
@@ -188,6 +194,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( vf_sand_s_patches (numpatch) )
       allocate ( wf_gravels_s_patches (numpatch) )
       allocate ( wf_sand_s_patches (numpatch) )
+      allocate ( OM_density_s_patches (numpatch) )
+      allocate ( BD_all_s_patches (numpatch) )
       allocate ( theta_s_patches(numpatch) )
 #ifdef Campbell_SOIL_MODEL
       allocate ( psi_s_patches  (numpatch) )
@@ -1176,6 +1184,107 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'vector', landpatch, k_solids_patches, 1)
 
+      ! (20) OM_density [kg/m3]
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, OM_density_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/OM_density_s.nc'
+         CALL ncio_read_block (lndname, 'OM_density_s_l'//trim(c), gland, OM_density_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, OM_density_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, OM_density_s_grid, &
+                                                 OM_density_s_one, area_one)
+               OM_density_s_patches (ipatch) = sum (OM_density_s_one * (area_one/sum(area_one)))
+            ELSE
+               OM_density_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(OM_density_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in OM_density_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('OM_density_s lev '//trim(c), OM_density_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, OM_density_s_patches, 1)
+
+      ! (21) bulk density of soil (GRAVELS + OM + Mineral Soils)
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, BD_all_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/BD_all_s.nc'
+         CALL ncio_read_block (lndname, 'BD_all_s_l'//trim(c), gland, BD_all_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, BD_all_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%ltyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, BD_all_s_grid, &
+                                                 BD_all_s_one, area_one)
+               BD_all_s_patches (ipatch) = sum (BD_all_s_one * (area_one/sum(area_one)))
+            ELSE
+               BD_all_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(BD_all_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in BD_all_s_patches."
+               write(*,*) landpatch%unum(ipatch), landpatch%ltyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('BD_all_s lev '//trim(c), BD_all_s_patches)
+#endif
+
+      lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_pixelset_dimension (lndname, landpatch)
+      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'vector',& 
+                              landpatch, BD_all_s_patches, 1)
+
+
    ENDDO
 
 
@@ -1190,6 +1299,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       deallocate ( vf_sand_s_patches )
       deallocate ( wf_gravels_s_patches )
       deallocate ( wf_sand_s_patches )
+      deallocate ( OM_density_s_patches )
+      deallocate ( BD_all_s_patches )
       deallocate ( theta_s_patches )
 #ifdef Campbell_SOIL_MODEL
       deallocate ( psi_s_patches   )
@@ -1218,6 +1329,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (allocated(vf_sand_s_one))           deallocate (vf_sand_s_one)
       IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
       IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one) 
+      IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
+      IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
       IF (allocated(theta_s_one))             deallocate (theta_s_one)
 #ifdef Campbell_SOIL_MODEL
       IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )

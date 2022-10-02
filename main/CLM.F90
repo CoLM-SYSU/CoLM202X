@@ -213,6 +213,7 @@ PROGRAM CLM
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
 
+
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
       CALL TICKTIME (deltim,idate)
@@ -250,6 +251,13 @@ PROGRAM CLM
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
       ENDIF
+#endif
+
+#ifdef NITRIF
+      CALL julian2monthday (idate(1), idate(2), month, mday)
+      if(mday .eq. 1)then
+         CALL NITRIF_readin(month, dir_landdata)
+      end if
 #endif
 
 !!!! need to acc runoff here!!!

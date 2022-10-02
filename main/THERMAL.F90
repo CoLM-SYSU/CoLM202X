@@ -25,6 +25,9 @@
                      psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&   
                      ck          ,vegwp       ,gs0sun      ,gs0sha     ,&   
 #endif
+#ifdef OzoneStress
+                     lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
+#endif
                      slti        ,hlti        ,shti        ,hhti       ,&
                      trda        ,trdm        ,trop        ,gradm      ,&
                      binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
@@ -90,6 +93,7 @@
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE mod_soil_function, only : soil_psi_from_vliq
 #endif
+use spmd_task
 
   IMPLICIT NONE
  
@@ -218,6 +222,12 @@
         gs0sun,      &!
         gs0sha,      &!
 #endif
+#ifdef OzoneStress
+        lai_old    ,& ! lai in last time step
+        o3uptakesun,& ! Ozone does, sunlit leaf (mmol O3/m^2)
+        o3uptakesha,& ! Ozone does, shaded leaf (mmol O3/m^2)
+        forc_ozone ,& ! Ozone 
+#endif
         tleaf,       &! shaded leaf temperature [K]
         t_soisno(lb:nl_soil),   &! soil temperature [K]
         wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
@@ -331,6 +341,9 @@
 
   REAL(r8) :: z0m_g,z0h_g,zol_g,obu_g,rib_g,ustar_g,qstar_g,tstar_g
   REAL(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu
+#ifdef OzoneStress
+  REAL(r8) :: o3coefv_sun, o3coefv_sha, o3coefg_sun, o3coefg_sha
+#endif
      
   INTEGER p, ps, pe, pc
 
@@ -522,6 +535,10 @@ IF (patchtype == 0) THEN
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&   
 #endif
+#ifdef OzoneStress
+                 o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
+                 lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
+#endif
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )
       ENDIF
@@ -588,7 +605,6 @@ IF (patchtype == 0) THEN
 
       sabv_p(ps:pe) = sabvsun_p(ps:pe) + sabvsha_p(ps:pe)
       sabv = sabvsun + sabvsha
-
       DO i = ps, pe
          p = pftclass(i)
 
@@ -615,7 +631,7 @@ IF (patchtype == 0) THEN
             rstfacsun_p(i) = rstfac_p(i)
             rstfacsha_p(i) = rstfac_p(i)
 
-            CALL LeafTemp (ipatch,deltim,csoilc     ,dewmx      ,htvp       ,&
+            CALL LeafTemp (ipatch,p,deltim,csoilc   ,dewmx      ,htvp       ,&
                  lai_p(i)   ,sai_p(i)   ,htop_p(i)  ,hbot_p(i)  ,sqrtdi_p(p),&
                  effcon_p(p),vmax25_p(p),slti_p(p)  ,hlti_p(p)  ,shti_p(p)  ,&
                  hhti_p(p)  ,trda_p(p)  ,trdm_p(p)  ,trop_p(p)  ,gradm_p(p) ,&
@@ -636,6 +652,10 @@ IF (patchtype == 0) THEN
                  kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
                  psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
                  gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
+#endif
+#ifdef OzoneStress
+                 o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i), &
+                 lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone,  &
 #endif
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
                  hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
@@ -854,6 +874,10 @@ IF (patchtype == 0) THEN
            psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
            gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&   
 #endif
+#ifdef OzoneStress
+           o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
+           lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
+#endif
            qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp           ,&
            hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                )
       ELSE 
@@ -954,7 +978,7 @@ ELSE
          rstfacsun = rstfac
          rstfacsha = rstfac
 
-         CALL LeafTemp (ipatch,deltim   ,csoilc    ,dewmx      ,htvp       ,&
+         CALL LeafTemp (ipatch,1,deltim ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
                  effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
                  hhti       ,trda       ,trdm      ,trop       ,gradm      ,&
@@ -975,6 +999,10 @@ ELSE
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
+#endif
+#ifdef OzoneStress
+                 o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
+                 lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 #endif
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )

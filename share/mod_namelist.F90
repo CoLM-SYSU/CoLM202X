@@ -262,7 +262,49 @@ MODULE mod_namelist
       LOGICAL :: cropprod1c_loss    = .true.
       LOGICAL :: cropseedc_deficit  = .true.
       LOGICAL :: grainc_to_cropprodc= .true.
+      LOGICAL :: cropprodc_rainfed_temp_corn= .true.
+      LOGICAL :: cropprodc_irrigated_temp_corn= .true.
+      LOGICAL :: cropprodc_rainfed_spwheat= .true.
+      LOGICAL :: cropprodc_irrigated_spwheat= .true.
+      LOGICAL :: cropprodc_rainfed_wtwheat= .true.
+      LOGICAL :: cropprodc_irrigated_wtwheat= .true.
+      LOGICAL :: cropprodc_rainfed_temp_soybean= .true.
+      LOGICAL :: cropprodc_irrigated_temp_soybean= .true.
+      LOGICAL :: cropprodc_rainfed_cotton= .true.
+      LOGICAL :: cropprodc_irrigated_cotton= .true.
+      LOGICAL :: cropprodc_rainfed_rice= .true.
+      LOGICAL :: cropprodc_irrigated_rice= .true.
+      LOGICAL :: cropprodc_rainfed_sugarcane= .true.
+      LOGICAL :: cropprodc_irrigated_sugarcane= .true.
+      LOGICAL :: cropprodc_rainfed_trop_corn= .true.
+      LOGICAL :: cropprodc_irrigated_trop_corn= .true.
+      LOGICAL :: cropprodc_rainfed_trop_soybean= .true.
+      LOGICAL :: cropprodc_irrigated_trop_soybean= .true.
+      LOGICAL :: cropprodc_unmanagedcrop= .true.
+
       LOGICAL :: grainc_to_seed     = .true.
+      LOGICAL :: fert_to_sminn      = .true.
+
+      LOGICAL :: pdcorn             = .true.
+      LOGICAL :: pdswheat           = .true.
+      LOGICAL :: pdwwheat           = .true.
+      LOGICAL :: pdsoybean          = .true.
+      LOGICAL :: pdcotton           = .true.
+      LOGICAL :: pdrice1            = .true.
+      LOGICAL :: pdrice2            = .true.
+      LOGICAL :: pdsugarcane        = .true.
+      LOGICAL :: fertnitro_corn     = .true.
+      LOGICAL :: fertnitro_swheat   = .true.
+      LOGICAL :: fertnitro_wwheat   = .true.
+      LOGICAL :: fertnitro_soybean  = .true.
+      LOGICAL :: fertnitro_cotton   = .true.
+      LOGICAL :: fertnitro_rice1    = .true.
+      LOGICAL :: fertnitro_rice2    = .true.
+      LOGICAL :: fertnitro_sugarcane= .true.
+#endif
+#ifdef NITRIF
+      LOGICAL :: CONC_O2_UNSAT      = .true.
+      LOGICAL :: O2_DECOMP_DEPTH_UNSAT = .true.
 #endif
 #endif
 
@@ -275,6 +317,9 @@ MODULE mod_namelist
       LOGICAL :: rstfacsha    = .true.
       LOGICAL :: rootr        = .true.
       LOGICAL :: vegwp        = .true.
+      LOGICAL :: BD_all       = .true.
+      LOGICAL :: wfc          = .true.
+      LOGICAL :: OM_density   = .true.
 #ifdef VARIABLY_SATURATED_FLOW
       LOGICAL :: dpond        = .true. 
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -631,12 +676,31 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%downreg            ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%ar                 ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
 #ifdef CROP
-      CALL mpi_bcast (DEF_hist_vars%cphase             ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%cropprod1c         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%cropprod1c_loss    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%cropseedc_deficit  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%grainc_to_cropprodc,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_vars%grainc_to_seed     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cphase                          , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprod1c                      , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprod1c_loss                 , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropseedc_deficit               , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_temp_corn     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_temp_corn   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_spwheat       , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_spwheat     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_wtwheat       , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_wtwheat     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_temp_soybean  , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_temp_soybean, 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_cotton        , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_cotton      , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_rice          , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_rice        , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_sugarcane     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_sugarcane   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_trop_corn     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_trop_corn   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_trop_soybean  , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_trop_soybean, 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%cropprodc_unmanagedcrop         , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_to_seed                  , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%fert_to_sminn                   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
 #endif
 #endif
       
@@ -649,6 +713,9 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%rstfacsha   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%rootr       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%vegwp       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%BD_all      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%wfc         ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%OM_density  ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
 #ifdef VARIABLY_SATURATED_FLOW
       CALL mpi_bcast (DEF_hist_vars%dpond       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
 #ifdef USE_DEPTH_TO_BEDROCK

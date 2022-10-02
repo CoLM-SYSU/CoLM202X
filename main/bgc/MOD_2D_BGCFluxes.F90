@@ -66,6 +66,7 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_cropseedc_deficit  ! crop seed carbon deficit
    type(block_data_real8_2d) :: f_grainc_to_cropprodc! grain to crop production
    type(block_data_real8_2d) :: f_grainc_to_seed     ! grain to crop seed
+   type(block_data_real8_2d) :: f_fert_to_sminn      ! grain to crop seed
 
    type(block_data_real8_2d) :: f_gpp                ! net primary production (gC/m2/s)
    type(block_data_real8_2d) :: f_downreg            ! gpp downregulation due to N limitation
@@ -88,6 +89,28 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_3d) :: f_soil3n_vr          ! soil nitrogen pool [gN/m2]
    type(block_data_real8_3d) :: f_sminn_vr           ! soil mineral nitrogen pool [gN/m2]
 
+#ifdef NITRIF
+   type(block_data_real8_3d) :: f_O2_DECOMP_DEPTH_UNSAT
+   type(block_data_real8_3d) :: f_CONC_O2_UNSAT
+#endif
+#ifdef CROP
+   type(block_data_real8_2d) :: f_pdcorn
+   type(block_data_real8_2d) :: f_pdswheat
+   type(block_data_real8_2d) :: f_pdwwheat
+   type(block_data_real8_2d) :: f_pdsoybean
+   type(block_data_real8_2d) :: f_pdcotton
+   type(block_data_real8_2d) :: f_pdrice1
+   type(block_data_real8_2d) :: f_pdrice2
+   type(block_data_real8_2d) :: f_pdsugarcane
+   type(block_data_real8_2d) :: f_fertnitro_corn
+   type(block_data_real8_2d) :: f_fertnitro_swheat
+   type(block_data_real8_2d) :: f_fertnitro_wwheat
+   type(block_data_real8_2d) :: f_fertnitro_soybean
+   type(block_data_real8_2d) :: f_fertnitro_cotton
+   type(block_data_real8_2d) :: f_fertnitro_rice1
+   type(block_data_real8_2d) :: f_fertnitro_rice2
+   type(block_data_real8_2d) :: f_fertnitro_sugarcane
+#endif
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_BGCFluxes
 
@@ -158,16 +181,11 @@ CONTAINS
          call allocate_block_data (grid, f_cropseedc_deficit  )  ! crop seed carbon deficit
          call allocate_block_data (grid, f_grainc_to_cropprodc ) ! grain to crop production
          call allocate_block_data (grid, f_grainc_to_seed     )  ! grain to crop seed
+         call allocate_block_data (grid, f_fert_to_sminn      )  ! grain to crop seed
 
          call allocate_block_data (grid, f_gpp                ) ! net primary production (gC/m2)
          call allocate_block_data (grid, f_downreg            ) ! gpp downregulation due to N limitation
          call allocate_block_data (grid, f_ar                 )
-         call allocate_block_data (grid, f_cphase             )
-         call allocate_block_data (grid, f_cropprod1c         )
-         call allocate_block_data (grid, f_cropprod1c_loss    )
-         call allocate_block_data (grid, f_cropseedc_deficit  )
-         call allocate_block_data (grid, f_grainc_to_cropprodc)
-         call allocate_block_data (grid, f_grainc_to_seed     )
 
          call allocate_block_data (grid, f_litr1c_vr  ,nl_soil)  ! soil carbon pool (gC/m2)
          call allocate_block_data (grid, f_litr2c_vr  ,nl_soil)  ! soil carbon pool (gC/m2)
@@ -185,6 +203,28 @@ CONTAINS
          call allocate_block_data (grid, f_soil2n_vr  ,nl_soil)  ! soil nitrogen pool (gN/m2)
          call allocate_block_data (grid, f_soil3n_vr  ,nl_soil)  ! soil nitrogen pool (gN/m2)
          call allocate_block_data (grid, f_sminn_vr   ,nl_soil)  ! soil mineral nitrogen pool (gN/m2)
+#ifdef NITRIF
+         call allocate_block_data (grid, f_O2_DECOMP_DEPTH_UNSAT, nl_soil)
+         call allocate_block_data (grid, f_CONC_O2_UNSAT        , nl_soil)
+#endif
+#ifdef CROP
+         call allocate_block_data (grid, f_pdcorn              )
+         call allocate_block_data (grid, f_pdswheat            )
+         call allocate_block_data (grid, f_pdwwheat            )
+         call allocate_block_data (grid, f_pdsoybean           )
+         call allocate_block_data (grid, f_pdcotton            )
+         call allocate_block_data (grid, f_pdrice1             )
+         call allocate_block_data (grid, f_pdrice2             )
+         call allocate_block_data (grid, f_pdsugarcane         )
+         call allocate_block_data (grid, f_fertnitro_corn      )
+         call allocate_block_data (grid, f_fertnitro_swheat    )
+         call allocate_block_data (grid, f_fertnitro_wwheat    )
+         call allocate_block_data (grid, f_fertnitro_soybean   )
+         call allocate_block_data (grid, f_fertnitro_cotton    )
+         call allocate_block_data (grid, f_fertnitro_rice1     )
+         call allocate_block_data (grid, f_fertnitro_rice2     )
+         call allocate_block_data (grid, f_fertnitro_sugarcane )
+#endif
 
       end if
 

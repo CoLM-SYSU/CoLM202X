@@ -130,13 +130,35 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_gpp                (:)
    real(r8), allocatable :: a_downreg            (:)
    real(r8), allocatable :: a_ar                 (:)
+
+#ifdef NITRIF
+   real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
+   real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
+#endif
 #ifdef CROP
+   real(r8), allocatable :: a_pdcorn                (:)
+   real(r8), allocatable :: a_pdswheat              (:)
+   real(r8), allocatable :: a_pdwwheat              (:)
+   real(r8), allocatable :: a_pdsoybean             (:)
+   real(r8), allocatable :: a_pdcotton              (:)
+   real(r8), allocatable :: a_pdrice1               (:)
+   real(r8), allocatable :: a_pdrice2               (:)
+   real(r8), allocatable :: a_pdsugarcane           (:)
+   real(r8), allocatable :: a_fertnitro_corn        (:)
+   real(r8), allocatable :: a_fertnitro_swheat      (:)
+   real(r8), allocatable :: a_fertnitro_wwheat      (:)
+   real(r8), allocatable :: a_fertnitro_soybean     (:)
+   real(r8), allocatable :: a_fertnitro_cotton      (:)
+   real(r8), allocatable :: a_fertnitro_rice1       (:)
+   real(r8), allocatable :: a_fertnitro_rice2       (:)
+   real(r8), allocatable :: a_fertnitro_sugarcane   (:)
    real(r8), allocatable :: a_cphase             (:)
    real(r8), allocatable :: a_cropprod1c         (:)
    real(r8), allocatable :: a_cropprod1c_loss    (:)
    real(r8), allocatable :: a_cropseedc_deficit  (:)
    real(r8), allocatable :: a_grainc_to_cropprodc(:)
    real(r8), allocatable :: a_grainc_to_seed     (:)
+   real(r8), allocatable :: a_fert_to_sminn      (:)
 #endif
 #endif
 
@@ -145,6 +167,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_wice_soisno (:,:)
    real(r8), allocatable :: a_h2osoi      (:,:)
    real(r8), allocatable :: a_rootr       (:,:)
+   real(r8), allocatable :: a_BD_all      (:,:)
+   real(r8), allocatable :: a_wfc         (:,:)
+   real(r8), allocatable :: a_OM_density  (:,:)
 #ifdef PLANT_HYDRAULIC_STRESS
    real(r8), allocatable :: a_vegwp       (:,:)
 #endif
@@ -341,13 +366,34 @@ contains
             allocate (a_gpp                (numpatch))
             allocate (a_downreg            (numpatch))
             allocate (a_ar                 (numpatch))
+#ifdef NITRIF
+            allocate (a_O2_DECOMP_DEPTH_UNSAT (1:nl_soil,numpatch))
+            allocate (a_CONC_O2_UNSAT         (1:nl_soil,numpatch))
+#endif
 #ifdef CROP
+            allocate (a_pdcorn             (numpatch))
+            allocate (a_pdswheat           (numpatch))
+            allocate (a_pdwwheat           (numpatch))
+            allocate (a_pdsoybean          (numpatch))
+            allocate (a_pdcotton           (numpatch))
+            allocate (a_pdrice1            (numpatch))
+            allocate (a_pdrice2            (numpatch))
+            allocate (a_pdsugarcane        (numpatch))
+            allocate (a_fertnitro_corn     (numpatch))
+            allocate (a_fertnitro_swheat   (numpatch))
+            allocate (a_fertnitro_wwheat   (numpatch))
+            allocate (a_fertnitro_soybean  (numpatch))
+            allocate (a_fertnitro_cotton   (numpatch))
+            allocate (a_fertnitro_rice1    (numpatch))
+            allocate (a_fertnitro_rice2    (numpatch))
+            allocate (a_fertnitro_sugarcane(numpatch))
             allocate (a_cphase             (numpatch))
             allocate (a_cropprod1c         (numpatch))
             allocate (a_cropprod1c_loss    (numpatch))
             allocate (a_cropseedc_deficit  (numpatch))
             allocate (a_grainc_to_cropprodc(numpatch))
             allocate (a_grainc_to_seed     (numpatch))
+            allocate (a_fert_to_sminn      (numpatch))
 #endif
 #endif
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
@@ -355,6 +401,9 @@ contains
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_h2osoi      (1:nl_soil,       numpatch))
             allocate (a_rootr       (1:nl_soil,       numpatch))
+            allocate (a_BD_all      (1:nl_soil,       numpatch))
+            allocate (a_wfc         (1:nl_soil,       numpatch))
+            allocate (a_OM_density  (1:nl_soil,       numpatch))
 #ifdef PLANT_HYDRAULIC_STRESS
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
 #endif
@@ -549,13 +598,34 @@ contains
             deallocate (a_gpp                )
             deallocate (a_downreg            )
             deallocate (a_ar                 )
+#ifdef NITRIF
+            deallocate (a_O2_DECOMP_DEPTH_UNSAT )
+            deallocate (a_CONC_O2_UNSAT         )
+#endif
 #ifdef CROP
+            deallocate (a_pdcorn             )
+            deallocate (a_pdswheat           )
+            deallocate (a_pdwwheat           )
+            deallocate (a_pdsoybean          )
+            deallocate (a_pdcotton           )
+            deallocate (a_pdrice1            )
+            deallocate (a_pdrice2            )
+            deallocate (a_pdsugarcane        )
+            deallocate (a_fertnitro_corn     )
+            deallocate (a_fertnitro_swheat   )
+            deallocate (a_fertnitro_wwheat   )
+            deallocate (a_fertnitro_soybean  )
+            deallocate (a_fertnitro_cotton   )
+            deallocate (a_fertnitro_rice1    )
+            deallocate (a_fertnitro_rice2    )
+            deallocate (a_fertnitro_sugarcane)
             deallocate (a_cphase             )
             deallocate (a_cropprod1c         )
             deallocate (a_cropprod1c_loss    )
             deallocate (a_cropseedc_deficit  )
             deallocate (a_grainc_to_cropprodc)
             deallocate (a_grainc_to_seed     )
+            deallocate (a_fert_to_sminn      )
 #endif
 #endif
 
@@ -564,6 +634,9 @@ contains
             deallocate (a_wice_soisno )
             deallocate (a_h2osoi      ) 
             deallocate (a_rootr       )
+            deallocate (a_BD_all      )
+            deallocate (a_wfc         )
+            deallocate (a_OM_density  )
 #ifdef PLANT_HYDRAULIC_STRESS
             deallocate (a_vegwp       )
 #endif
@@ -585,6 +658,7 @@ contains
             deallocate (a_soil3n_vr   )
             deallocate (a_cwdn_vr     )
             deallocate (a_sminn_vr    )
+            deallocate (decomp_vr_tmp )
 #endif
 
             deallocate (a_ustar     ) 
@@ -762,13 +836,34 @@ contains
             a_gpp                (:) = spval
             a_downreg            (:) = spval
             a_ar                 (:) = spval
+#ifdef NITRIF
+            a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
+            a_CONC_O2_UNSAT         (:,:) = spval
+#endif
 #ifdef CROP
+            a_pdcorn             (:) = spval
+            a_pdswheat           (:) = spval
+            a_pdwwheat           (:) = spval
+            a_pdsoybean          (:) = spval
+            a_pdcotton           (:) = spval
+            a_pdrice1            (:) = spval
+            a_pdrice2            (:) = spval
+            a_pdsugarcane        (:) = spval
+            a_fertnitro_corn     (:) = spval
+            a_fertnitro_swheat   (:) = spval
+            a_fertnitro_wwheat   (:) = spval
+            a_fertnitro_soybean  (:) = spval
+            a_fertnitro_cotton   (:) = spval
+            a_fertnitro_rice1    (:) = spval
+            a_fertnitro_rice2    (:) = spval
+            a_fertnitro_sugarcane(:) = spval
             a_cphase             (:) = spval
             a_cropprod1c         (:) = spval
             a_cropprod1c_loss    (:) = spval
             a_cropseedc_deficit  (:) = spval
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
+            a_fert_to_sminn      (:) = spval
 #endif
 #endif
 
@@ -777,6 +872,9 @@ contains
             a_wice_soisno  (:,:) = spval
             a_h2osoi       (:,:) = spval
             a_rootr        (:,:) = spval
+            a_BD_all       (:,:) = spval
+            a_wfc          (:,:) = spval
+            a_OM_density   (:,:) = spval
 #ifdef PLANT_HYDRAULIC_STRESS
             a_vegwp        (:,:) = spval
 #endif
@@ -1027,13 +1125,34 @@ contains
             call acc1d (gpp                , a_gpp                 )
             call acc1d (downreg            , a_downreg             )
             call acc1d (ar                 , a_ar                  )
+#ifdef NITRIF
+            call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
+            call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
+#endif
 #ifdef CROP
-            call acc1d (cphase             , a_cphase             )
-            call acc1d (cropprod1c         , a_cropprod1c         )
-            call acc1d (cropprod1c_loss    , a_cropprod1c_loss    )
-            call acc1d (cropseedc_deficit  , a_cropseedc_deficit  )
-            call acc1d (grainc_to_cropprodc, a_grainc_to_cropprodc)
-            call acc1d (grainc_to_seed     , a_grainc_to_seed     )
+            call acc1d (pdcorn             ,   a_pdcorn             )
+            call acc1d (pdswheat           ,   a_pdswheat           )
+            call acc1d (pdwwheat           ,   a_pdwwheat           )
+            call acc1d (pdsoybean          ,   a_pdsoybean          )
+            call acc1d (pdcotton           ,   a_pdcotton           )
+            call acc1d (pdrice1            ,   a_pdrice1            )
+            call acc1d (pdrice2            ,   a_pdrice2            )
+            call acc1d (pdsugarcane        ,   a_pdsugarcane        )
+            call acc1d (fertnitro_corn     ,   a_fertnitro_corn     )
+            call acc1d (fertnitro_swheat   ,   a_fertnitro_swheat   )
+            call acc1d (fertnitro_wwheat   ,   a_fertnitro_wwheat   )
+            call acc1d (fertnitro_soybean  ,   a_fertnitro_soybean  )
+            call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
+            call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
+            call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
+            call acc1d (fertnitro_sugarcane, a_fertnitro_sugarcane  )
+            call acc1d (cphase             ,   a_cphase             )
+            call acc1d (cropprod1c         ,   a_cropprod1c         )
+            call acc1d (cropprod1c_loss    ,   a_cropprod1c_loss    )
+            call acc1d (cropseedc_deficit  ,   a_cropseedc_deficit  )
+            call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
+            call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
+            call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 #endif
 #endif
             call acc2d (t_soisno   , a_t_soisno   )
@@ -1042,6 +1161,9 @@ contains
 
             call acc2d (h2osoi     , a_h2osoi     )
             call acc2d (rootr      , a_rootr      )
+            call acc2d (BD_all     , a_BD_all      )
+            call acc2d (wfc        , a_wfc         )
+            call acc2d (OM_density , a_OM_density  )
 #ifdef PLANT_HYDRAULIC_STRESS
             call acc2d (vegwp      , a_vegwp      )
 #endif
@@ -1132,7 +1254,7 @@ contains
                end do
             end do
             call acc2d (decomp_vr_tmp, a_cwdn_vr     )
-            call acc2d (sminn_vr    , a_sminn_vr    )
+            call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
             allocate (r_tstar (numpatch))

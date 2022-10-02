@@ -47,6 +47,8 @@ OBJS = \
 		 par_fitting.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
+		 aggregation_crop_parameters.o \
+		 aggregation_nitrif_parameters.o \
 		 aggregation_soil_brightness.o \
 		 aggregation_lakedepth.o \
 		 aggregation_forest_height.o \

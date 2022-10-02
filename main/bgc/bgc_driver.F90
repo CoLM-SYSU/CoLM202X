@@ -17,6 +17,9 @@ SUBROUTINE bgc_driver &
   use bgc_soil_SoilBiogeochemVerticalProfileMod, only: SoilBiogeochemVerticalProfile
   use bgc_veg_NutrientCompetitionMod, only: calc_plant_nutrient_demand_CLM45_default,&
                                             calc_plant_nutrient_competition_CLM45_default
+#ifdef NITRIF
+  use bgc_soil_SoilBiogeochemNitrifDenitrifMod, only: SoilBiogeochemNitrifDenitrif
+#endif
   use bgc_soil_SoilBiogeochemCompetitionMod, only: SoilBiogeochemCompetition
   use bgc_soil_SoilBiogeochemDecompMod, only: SoilBiogeochemDecomp
   use bgc_veg_CNPhenologyMod, only: CNPhenology
@@ -39,6 +42,7 @@ SUBROUTINE bgc_driver &
   use bgc_veg_CNVegStructUpdateMod, only: CNVegStructUpdate
   use bgc_CNBalanceCheckMod, only: BeginCNBalance, CBalanceCheck, NBalanceCheck
   use bgc_CNSASUMod, only: CNSASU
+  use bgc_veg_CNNDynamicsMod, only: CNNFert
   use timemanager
   use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                       z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
@@ -67,6 +71,9 @@ use MOD_PFTimeVars, only: &
   call decomp_rate_constants_bgc(i,nl_soil,z_soi)
   call SoilBiogeochemPotential(i,nl_soil,ndecomp_pools,ndecomp_transitions)
   call SoilBiogeochemVerticalProfile(i,ps,pe,nl_soil,nl_soil_full,nbedrock,zmin_bedrock,z_soi,dz_soi)
+#ifdef NITRIF
+  call SoilBiogeochemNitrifDenitrif(i,nl_soil,dz_soi)
+#endif
   call calc_plant_nutrient_demand_CLM45_default(i,ps,pe,deltim,npcropmin)
   
   plant_ndemand(i) = sum( plant_ndemand_p(ps:pe)*pftfrac(ps:pe) )
@@ -76,6 +83,9 @@ use MOD_PFTimeVars, only: &
   call SoilBiogeochemDecomp(i,nl_soil,ndecomp_pools,ndecomp_transitions, dz_soi)
   call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=1)
   call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=2)
+#ifdef CROP
+  call CNNFert(i, ps, pe)
+#endif
   call CNGResp(i, ps, pe, npcropmin)
   call CStateUpdate0()
   call CStateUpdate1(i, ps, pe, deltim, nl_soil, ndecomp_transitions, npcropmin)

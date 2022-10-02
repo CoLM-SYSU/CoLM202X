@@ -738,6 +738,10 @@ ENDIF
           totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
           totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
        end do
+#ifdef OzoneStress
+       o3uptakesun_p            (ps:pe) = 0._r8
+       o3uptakesha_p            (ps:pe) = 0._r8
+#endif
        leafc_xfer_p             (ps:pe) = 0.0
        frootc_p                 (ps:pe) = 0.0
        frootc_storage_p         (ps:pe) = 0.0
@@ -852,12 +856,10 @@ ENDIF
        vf_p                     (ps:pe) = 0._r8
        cphase_p                 (ps:pe) = 4._r8
        fert_counter_p           (ps:pe) = 0._r8
-       fert_p                   (ps:pe) = 0._r8
        tref_min_p               (ps:pe) = 273.15_r8
        tref_max_p               (ps:pe) = 273.15_r8
        tref_min_inst_p          (ps:pe) = spval
        tref_max_inst_p          (ps:pe) = spval
-       fertnitro_p              (ps:pe) = spval
        latbaset_p               (ps:pe) = spval
 #endif
 

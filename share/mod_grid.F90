@@ -157,6 +157,10 @@ CONTAINS
 
       ENDIF
 
+      IF (trim(gridname) == 'nitrif_2deg') THEN
+         CALL this%define_by_ndims (144,96)
+      ENDIF
+
       IF (trim(gridname) == 'ERA5LAND') THEN
 
          nlat = 1801

@@ -269,6 +269,29 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
       dnp    = 0.01_r8
       bdnr   = 0.5_r8
+      compet_plant_no3 = 1._r8
+      compet_plant_nh4 = 1._r8
+      compet_decomp_no3 = 1._r8
+      compet_decomp_nh4 = 1._r8
+      compet_denit = 1._r8
+      compet_nit = 1._r8
+      surface_tension_water = 0.073
+      rij_kro_a     = 1.5e-10_r8
+      rij_kro_alpha = 1.26_r8
+      rij_kro_beta  = 0.6_r8
+      rij_kro_gamma = 0.6_r8
+      rij_kro_delta = 0.85_r8
+      organic_max        = 130
+      d_con_g21          = 0.1759_r8
+      d_con_g22          = 0.00117_r8
+      d_con_w21          = 1.172_r8
+      d_con_w22          = 0.03443_r8
+      d_con_w23          = 0.0005048_r8
+      denit_resp_coef    = 0.1_r8
+      denit_resp_exp     = 1.3_r8
+      denit_nitrate_coef = 1.15_r8
+      denit_nitrate_exp  = 0.57_r8
+      k_nitr_max         = 1.1574074e-06_r8
       Q10       = 1.5_r8
       froz_q10  = 1.5_r8
       tau_l1    = 1._r8/18.5_r8
@@ -452,7 +475,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       CALL check_vector_data ('SAI ', tsai)
 #endif
 
+#ifdef NITRIF
+      CALL NITRIF_readin (month, dir_landdata)
+#endif
+
 #ifdef CROP
+      CALL CROP_readin (dir_landdata)
       if (p_is_worker) then
          do i = 1, numpatch
             if(patchtype(i) .eq.  0)then

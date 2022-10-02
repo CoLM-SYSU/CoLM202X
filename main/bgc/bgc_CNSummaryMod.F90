@@ -3,6 +3,7 @@
 module bgc_CNSummaryMod
 
 use precision
+use MOD_PFTimeInvars, only: pftclass
 use MOD_BGCTimeVars, only: &
     totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
     totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
@@ -11,6 +12,8 @@ use MOD_BGCTimeVars, only: &
     deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
     deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, grainc, grainc_storage, grainc_xfer, &
     cropseedc_deficit, cropprod1c, cphase, & 
+    fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
+    fertnitro_cotton, fertnitro_rice1, fertnitro_rice2, fertnitro_sugarcane, &
     leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
     deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
     deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, grainn, grainn_storage, grainn_xfer, downreg
@@ -25,7 +28,7 @@ use MOD_BGCPFTimeVars, only: &
     grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, &
     cropseedc_deficit_p, cropprod1c_p, cpool_p, &
 #ifdef CROP
-    cphase_p, &
+    cphase_p, fertnitro_p, &
 #endif
     leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
     leafn_storage_p, frootn_storage_p, livestemn_storage_p, &
@@ -235,6 +238,14 @@ cphase(i)             = sum(cphase_p(ps:pe)             * pftfrac(ps:pe))
 !prodc10(i)            = sum(prodc10_p(ps:pe)            * pftfrac(ps:pe))
 #endif
 
+fertnitro_corn(i) = 0._r8
+fertnitro_swheat(i) = 0._r8
+fertnitro_wwheat(i) = 0._r8
+fertnitro_soybean(i) = 0._r8
+fertnitro_cotton(i) = 0._r8
+fertnitro_rice1(i) = 0._r8
+fertnitro_rice2(i) = 0._r8
+fertnitro_sugarcane(i) = 0._r8
 do m = ps, pe
    totvegc_p(m) = leafc_p(m)             + frootc_p(m)             + livestemc_p(m) &
                 + deadstemc_p(m)         + livecrootc_p(m)         + deadcrootc_p(m) &
@@ -246,11 +257,40 @@ do m = ps, pe
                 + grainc_p(m)            + grainc_storage_p(m)     + grainc_xfer_p(m) &
                 + cropseedc_deficit_p(m) + cpool_p(m)
 
+   if( pftclass(m) .eq. 17 .or. pftclass(m) .eq. 18 .or. pftclass(m) .eq. 63 .or. pftclass(m) .eq. 64)then
+      fertnitro_corn(i) = fertnitro_p(m) 
+   else
+      if( pftclass(m) .eq. 19 .or. pftclass(m) .eq. 20)then
+         fertnitro_swheat(i) = fertnitro_p(m)
+      else
+         if(pftclass(m) .eq. 21 .or. pftclass(m) .eq. 22)then
+            fertnitro_wwheat(i) = fertnitro_p(m)
+         else
+            if(pftclass(m) .eq. 23 .or. pftclass(m) .eq. 24 .or. pftclass(m) .eq. 77 .or. pftclass(m) .eq. 78)then
+               fertnitro_soybean(i) = fertnitro_p(m)
+            else
+               if(pftclass(m) .eq. 41 .or. pftclass(m) .eq. 42)then
+                  fertnitro_cotton(i) = fertnitro_p(m)
+               else
+                  if(pftclass(m) .eq. 61 .or. pftclass(m) .eq. 62)then
+                     fertnitro_rice1(i) = fertnitro_p(m)
+                     fertnitro_rice2(i) = fertnitro_p(m)
+                  else
+                     if(pftclass(m) .eq. 67 .or. pftclass(m) .eq. 68)then
+                        fertnitro_sugarcane(i) = fertnitro_p(m)
+                     end if
+                  end if
+               end if
+            end if
+         end if
+      end if
+   end if
 end do
 
 totvegc(i) = sum(totvegc_p(ps:pe)*pftfrac(ps:pe))
 ctrunc_veg(i) = sum(ctrunc_p(ps:pe) *pftfrac(ps:pe))
 totcolc(i) = totvegc(i) + totcwdc(i) + totlitc(i) + totsomc(i) + ctrunc_veg(i) +ctrunc_soil(i)
+
 
 end subroutine cnveg_carbonstate_summary
 
@@ -352,12 +392,16 @@ do j = 1, nl_soil
    f_n2o_nit(i)           = f_n2o_nit(i)           + f_n2o_nit_vr(j,i) * dz_soi(j)
    denit(i)               = denit(i)               &
 #ifdef NITRIF
-                          + f_denit_vr(j,i) * dz_soi(j) &
+                          + f_denit_vr(j,i) * dz_soi(j)
+#else
+                          + sminn_to_denit_excess_vr(j,i) * dz_soi(j)
 #endif
-                          + sminn_to_denit_excess_vr(j,i) * dz_soi(j) 
+
+#ifndef NITRIF
    do k = 1, ndecomp_transitions
       denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
    end do
+#endif
 end do
 end subroutine soilbiogeochem_nitrogenflux_summary
 

@@ -35,10 +35,34 @@ SAVE
   REAL(r8), allocatable :: abm_lf (:) !
   REAL(r8), allocatable :: peatf_lf(:)!
   REAL(r8), allocatable :: cmb_cmplt_fact(:)
+  INTEGER , allocatable :: rice2pdt(:)
 
   REAL(r8) :: nitrif_n2o_loss_frac ! fraction of N lost as N2O in nitrification (Li et al., 2000)
   REAL(r8) :: dnp     ! denitrification proportion
   REAL(r8) :: bdnr    ! bulk denitrification rate (1/day)
+  REAL(r8) :: compet_plant_no3
+  REAL(r8) :: compet_plant_nh4
+  REAL(r8) :: compet_decomp_no3
+  REAL(r8) :: compet_decomp_nh4
+  REAL(r8) :: compet_denit
+  REAL(r8) :: compet_nit
+  REAL(r8) :: surface_tension_water
+  REAL(r8) :: rij_kro_a
+  REAL(r8) :: rij_kro_alpha
+  REAL(r8) :: rij_kro_beta
+  REAL(r8) :: rij_kro_gamma
+  REAL(r8) :: rij_kro_delta
+  REAL(r8) :: organic_max
+  REAL(r8) :: d_con_g21
+  REAL(r8) :: d_con_g22
+  REAL(r8) :: d_con_w21
+  REAL(r8) :: d_con_w22
+  REAL(r8) :: d_con_w23
+  REAL(r8) :: denit_resp_coef
+  REAL(r8) :: denit_resp_exp
+  REAL(r8) :: denit_nitrate_coef
+  REAL(r8) :: denit_nitrate_exp
+  REAL(r8) :: k_nitr_max
   REAL(r8) :: Q10
   REAL(r8) :: froz_q10 
   REAL(r8) :: tau_l1
@@ -131,6 +155,7 @@ SAVE
      allocate (abm_lf            (numpatch))
      allocate (peatf_lf          (numpatch))
      allocate (cmb_cmplt_fact    (2))
+     allocate (rice2pdt          (numpatch))
 
 ! end bgc variables
   end if
@@ -183,10 +208,34 @@ SAVE
      call ncio_read_vector       (file_restart, 'abm_lf         ', landpatch, abm_lf        )
      call ncio_read_vector       (file_restart, 'peatf_lf       ', landpatch, peatf_lf      )
      call ncio_read_bcast_serial (file_restart, 'cmb_cmplt_fact ', cmb_cmplt_fact )
+     call ncio_read_vector       (file_restart, 'rice2pdt       ', landpatch, rice2pdt      )
 
      call ncio_read_bcast_serial (file_restart, 'nitrif_n2o_loss_frac', nitrif_n2o_loss_frac)
      call ncio_read_bcast_serial (file_restart, 'dnp                 ', dnp                 )!
      call ncio_read_bcast_serial (file_restart, 'bdnr                ', bdnr                )!
+     call ncio_read_bcast_serial (file_restart, 'compet_plant_no3    ', compet_plant_no3    )!
+     call ncio_read_bcast_serial (file_restart, 'compet_plant_nh4    ', compet_plant_nh4    )!
+     call ncio_read_bcast_serial (file_restart, 'compet_decomp_no3   ', compet_decomp_no3   )!
+     call ncio_read_bcast_serial (file_restart, 'compet_decomp_nh4   ', compet_decomp_nh4   )!
+     call ncio_read_bcast_serial (file_restart, 'compet_denit        ', compet_denit        )!
+     call ncio_read_bcast_serial (file_restart, 'compet_nit          ', compet_nit          )!
+     call ncio_read_bcast_serial (file_restart, 'surface_tension_water',surface_tension_water)
+     call ncio_read_bcast_serial (file_restart, 'rij_kro_a           ', rij_kro_a           )
+     call ncio_read_bcast_serial (file_restart, 'rij_kro_alpha       ', rij_kro_alpha       )
+     call ncio_read_bcast_serial (file_restart, 'rij_kro_beta        ', rij_kro_beta        )
+     call ncio_read_bcast_serial (file_restart, 'rij_kro_gamma       ', rij_kro_gamma       )
+     call ncio_read_bcast_serial (file_restart, 'rij_kro_delta       ', rij_kro_delta       )
+     call ncio_read_bcast_serial (file_restart, 'organic_max         ', organic_max         )
+     call ncio_read_bcast_serial (file_restart, 'd_con_g21           ', d_con_g21           )
+     call ncio_read_bcast_serial (file_restart, 'd_con_g22           ', d_con_g22           )
+     call ncio_read_bcast_serial (file_restart, 'd_con_w21           ', d_con_w21           )
+     call ncio_read_bcast_serial (file_restart, 'd_con_w22           ', d_con_w22           )
+     call ncio_read_bcast_serial (file_restart, 'd_con_w23           ', d_con_w23           )
+     call ncio_read_bcast_serial (file_restart, 'denit_resp_coef     ', denit_resp_coef     )
+     call ncio_read_bcast_serial (file_restart, 'denit_resp_exp      ', denit_resp_exp      )
+     call ncio_read_bcast_serial (file_restart, 'denit_nitrate_coef  ', denit_nitrate_coef  )
+     call ncio_read_bcast_serial (file_restart, 'denit_nitrate_exp   ', denit_nitrate_exp   )!
+     call ncio_read_bcast_serial (file_restart, 'k_nitr_max          ', k_nitr_max          )!
      call ncio_read_bcast_serial (file_restart, 'Q10                 ', Q10                 )!
      call ncio_read_bcast_serial (file_restart, 'froz_q10            ', froz_q10            )!
      call ncio_read_bcast_serial (file_restart, 'tau_l1              ', tau_l1              )!
@@ -281,6 +330,7 @@ SAVE
      call ncio_write_vector       (file_restart, 'gdp_lf         ',  'vector', landpatch, gdp_lf         , compress)
      call ncio_write_vector       (file_restart, 'abm_lf         ',  'vector', landpatch, abm_lf         , compress)
      call ncio_write_vector       (file_restart, 'peatf_lf       ',  'vector', landpatch, peatf_lf       , compress)
+     call ncio_write_vector       (file_restart, 'rice2pdt       ',  'vector', landpatch, rice2pdt       , compress)
 
      if (p_is_master) then
 
@@ -312,6 +362,29 @@ SAVE
         call ncio_write_serial (file_restart, 'nitrif_n2o_loss_frac', nitrif_n2o_loss_frac)
         call ncio_write_serial (file_restart, 'dnp                 ', dnp                 )!
         call ncio_write_serial (file_restart, 'bdnr                ', bdnr                )!
+        call ncio_write_serial (file_restart, 'compet_plant_no3    ', compet_plant_no3    )!
+        call ncio_write_serial (file_restart, 'compet_plant_nh4    ', compet_plant_nh4    )!
+        call ncio_write_serial (file_restart, 'compet_decomp_no3   ', compet_decomp_no3   )!
+        call ncio_write_serial (file_restart, 'compet_decomp_nh4   ', compet_decomp_nh4   )!
+        call ncio_write_serial (file_restart, 'compet_denit        ', compet_denit        )!
+        call ncio_write_serial (file_restart, 'compet_nit          ', compet_nit          )!
+        call ncio_write_serial (file_restart, 'surface_tension_water',surface_tension_water)
+        call ncio_write_serial (file_restart, 'rij_kro_a           ', rij_kro_a           )
+        call ncio_write_serial (file_restart, 'rij_kro_alpha       ', rij_kro_alpha       )
+        call ncio_write_serial (file_restart, 'rij_kro_beta        ', rij_kro_beta        )
+        call ncio_write_serial (file_restart, 'rij_kro_gamma       ', rij_kro_gamma       )
+        call ncio_write_serial (file_restart, 'rij_kro_delta       ', rij_kro_delta       )
+        call ncio_write_serial (file_restart, 'organic_max         ', organic_max         )
+        call ncio_write_serial (file_restart, 'd_con_g21           ', d_con_g21           )
+        call ncio_write_serial (file_restart, 'd_con_g22           ', d_con_g22           )
+        call ncio_write_serial (file_restart, 'd_con_w21           ', d_con_w21           )
+        call ncio_write_serial (file_restart, 'd_con_w22           ', d_con_w22           )
+        call ncio_write_serial (file_restart, 'd_con_w23           ', d_con_w23           )
+        call ncio_write_serial (file_restart, 'denit_resp_coef     ', denit_resp_coef     )
+        call ncio_write_serial (file_restart, 'denit_resp_exp      ', denit_resp_exp      )
+        call ncio_write_serial (file_restart, 'denit_nitrate_coef  ', denit_nitrate_coef  )
+        call ncio_write_serial (file_restart, 'denit_nitrate_exp   ', denit_nitrate_exp   )!
+        call ncio_write_serial (file_restart, 'k_nitr_max          ', k_nitr_max          )!
         call ncio_write_serial (file_restart, 'Q10                 ', Q10                 )!
         call ncio_write_serial (file_restart, 'froz_q10            ', froz_q10            )!
         call ncio_write_serial (file_restart, 'tau_l1              ', tau_l1              )!
@@ -391,6 +464,7 @@ SAVE
      deallocate (gdp_lf         )
      deallocate (abm_lf         )
      deallocate (peatf_lf       )
+     deallocate (rice2pdt       )
 
         end if
      end if
@@ -411,6 +485,7 @@ SAVE
       call check_vector_data ('gdp_lf         ',  gdp_lf         )
       call check_vector_data ('abm_lf         ',  abm_lf         )
       call check_vector_data ('peatf_lf       ',  peatf_lf       )
+      call check_vector_data ('rice2pdt       ',  float(rice2pdt))
      
    end subroutine check_BGCTimeInvars 
 #endif

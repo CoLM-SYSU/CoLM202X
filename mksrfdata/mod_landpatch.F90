@@ -415,7 +415,8 @@ CONTAINS
 
 #if (defined CROP) 
       IF (p_is_io) THEN
-         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
+!         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
+         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_lf-merged-20220930.nc'
          CALL allocate_block_data (gcrop, cropdata, N_CFT)
          CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
       ENDIF

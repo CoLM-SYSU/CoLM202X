@@ -60,6 +60,7 @@ OBJS_BGC = \
 			  bgc/bgc_CNNStateUpdate2Mod.o    \
 			  bgc/bgc_CNNStateUpdate3Mod.o    \
 			  bgc/bgc_SoilBiogeochemNStateUpdate1Mod.o \
+			  bgc/bgc_soil_SoilBiogeochemNitrifDenitrifMod.o \
 			  bgc/bgc_soil_SoilBiogeochemCompetitionMod.o  \
 			  bgc/bgc_soil_SoilBiogeochemDecompCascadeBGCMod.o  \
 			  bgc/bgc_soil_SoilBiogeochemDecompMod.o  \
@@ -79,6 +80,7 @@ OBJS_BGC = \
 			  bgc/bgc_CNZeroFluxesMod.o \
 			  bgc/bgc_CNBalanceCheckMod.o \
 			  bgc/bgc_CNSASUMod.o \
+			  bgc/bgc_veg_CNNDynamicsMod.o \
 			  bgc/bgc_driver.o
 
 BASIC =  \
@@ -115,6 +117,7 @@ OBJS =  \
 		  ASSIM_STOMATA_conductance.o \
 		  PlantHydraulic.o            \
 		  FRICTION_VELOCITY.o         \
+		  OzoneMod.o                  \
 		  LEAF_temperature.o          \
 		  LEAF_temperature_PC.o       \
 		  soil_hcap_cond.o            \
@@ -128,6 +131,8 @@ OBJS =  \
 		  groundtem.o                 \
 		  LAI_empirical.o             \
 		  LAI_readin.o                \
+		  CROP_readin.o               \
+		  NITRIF_readin.o               \
 		  LAI_varied_readin.o         \
 		  LEAF_interception.o         \
 		  meltf.o                     \
