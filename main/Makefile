@@ -142,6 +142,8 @@ OBJS =  \
 		  wetbulb.o                   \
 		  MOD_1D_Acc_Fluxes.o         \
 		  MOD_CaMa_Variables.o        \
+		  mod_unstructured_mesh.o     \
+		  mod_hist_vector.o           \
 		  mod_hist.o                  \
 		  colm_CaMaMod.o              \
 		  CLMDRIVER.o                 \

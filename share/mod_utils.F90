@@ -25,7 +25,10 @@ MODULE mod_utils
    PUBLIC :: lon_between_floor
    PUBLIC :: lon_between_ceil
 
-   PUBLIC :: quicksort
+   interface quicksort
+      MODULE procedure quicksort_int32
+      MODULE procedure quicksort_int64
+   END interface quicksort
    PUBLIC :: quickselect
    PUBLIC :: median
 
@@ -599,7 +602,7 @@ CONTAINS
 
 
    !-----------------------------------------------------
-   recursive SUBROUTINE quicksort (nA, A, order)
+   recursive SUBROUTINE quicksort_int32 (nA, A, order)
 
       USE precision
       IMPLICIT NONE
@@ -645,12 +648,66 @@ CONTAINS
 
          marker = right
 
-         CALL quicksort (marker,    A(1:marker),    order(1:marker))
-         CALL quicksort (nA-marker, A(marker+1:nA), order(marker+1:nA))
+         CALL quicksort_int32 (marker,    A(1:marker),    order(1:marker))
+         CALL quicksort_int32 (nA-marker, A(marker+1:nA), order(marker+1:nA))
 
       ENDIF
 
-   END SUBROUTINE quicksort
+   END SUBROUTINE quicksort_int32
+
+   !-----------------------------------------------------
+   recursive SUBROUTINE quicksort_int64 (nA, A, order)
+
+      USE precision
+      IMPLICIT NONE
+
+      INTEGER*8, intent(in) :: nA
+      INTEGER*8, intent(inout) :: A     (nA)
+      INTEGER*8, intent(inout) :: order (nA)
+
+      ! Local variables
+      INTEGER*8 :: left, right
+      INTEGER*8 :: pivot
+      INTEGER*8 :: marker
+      INTEGER*8 :: itemp
+
+      IF (nA > 1) THEN
+
+         pivot = A (nA/2)
+         left  = 0
+         right = nA + 1
+
+         DO while (left < right)
+            right = right - 1
+            DO while (A(right) > pivot)
+               right = right - 1
+            ENDDO
+
+            left = left + 1
+            DO while (A(left) < pivot)
+               left = left + 1
+            ENDDO
+
+            IF (left < right) THEN
+               itemp    = A(left)
+               A(left)  = A(right)
+               A(right) = itemp
+
+               itemp        = order(left)
+               order(left)  = order(right)
+               order(right) = itemp
+
+            ENDIF
+         ENDDO
+
+         marker = right
+
+         CALL quicksort_int64 (marker,    A(1:marker),    order(1:marker))
+         CALL quicksort_int64 (nA-marker, A(marker+1:nA), order(marker+1:nA))
+
+      ENDIF
+
+   END SUBROUTINE quicksort_int64
 
    !-----------------------------------------------------
    recursive FUNCTION quickselect (nA, A, k) result(selected)
