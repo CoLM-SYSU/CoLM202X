@@ -329,12 +329,12 @@ CONTAINS
             landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
             
 #ifdef USE_DOMINANT_PATCHTYPE
-            allocate (npxl_ltype (ltype(1):ltype(npxl)))
+            allocate (npxl_ltype (ltype(ipxstt):ltype(ipxend)))
             npxl_ltype(:) = 0
-            DO ipxl = ipxstt+1, ipxend
+            DO ipxl = ipxstt, ipxend
                npxl_ltype(ltype(ipxl)) = npxl_ltype(ltype(ipxl)) + 1
             ENDDO 
-            dominant_type = maxloc(npxl_ltype, dim=1) + ltype(1) - 1
+            dominant_type = maxloc(npxl_ltype, dim=1) + ltype(ipxstt) - 1
 
             ltype(:) = dominant_type
 
@@ -359,31 +359,31 @@ CONTAINS
             ENDDO
             ipxend_tmp(numpatch) = ipxend
 
-#if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION || defined PC_CLASSIFICATION) 
-            CALL quicksort (npxl, ltype, order)
-               
-            landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
-            landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
-            
-            DO ipxl = ipxstt, ipxend
-               IF (ipxl == ipxstt) THEN
-                  numpatch = numpatch + 1 
-                  ibasin_tmp(numpatch) = iu
-                  bindex_tmp(numpatch) = landbasin(iu)%indx
-                  ltyp_tmp(numpatch) = ltype(ipxl)
-                  ipxstt_tmp(numpatch) = ipxl
-               ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
-                  ipxend_tmp(numpatch) = ipxl - 1
-
-                  numpatch = numpatch + 1
-                  ibasin_tmp(numpatch) = iu
-                  bindex_tmp(numpatch) = landbasin(iu)%indx
-                  ltyp_tmp(numpatch) = ltype(ipxl)
-                  ipxstt_tmp(numpatch) = ipxl
-               ENDIF
-            ENDDO
-            ipxend_tmp(numpatch) = ipxend
-#endif
+! #if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION || defined PC_CLASSIFICATION) 
+!             CALL quicksort (npxl, ltype, order)
+!                
+!             landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
+!             landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
+!             
+!             DO ipxl = ipxstt, ipxend
+!                IF (ipxl == ipxstt) THEN
+!                   numpatch = numpatch + 1 
+!                   ibasin_tmp(numpatch) = iu
+!                   bindex_tmp(numpatch) = landbasin(iu)%indx
+!                   ltyp_tmp(numpatch) = ltype(ipxl)
+!                   ipxstt_tmp(numpatch) = ipxl
+!                ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
+!                   ipxend_tmp(numpatch) = ipxl - 1
+! 
+!                   numpatch = numpatch + 1
+!                   ibasin_tmp(numpatch) = iu
+!                   bindex_tmp(numpatch) = landbasin(iu)%indx
+!                   ltyp_tmp(numpatch) = ltype(ipxl)
+!                   ipxstt_tmp(numpatch) = ipxl
+!                ENDIF
+!             ENDDO
+!             ipxend_tmp(numpatch) = ipxend
+! #endif
             
             deallocate (ltype)
             deallocate (order)
