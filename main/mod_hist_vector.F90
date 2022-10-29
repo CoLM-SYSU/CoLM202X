@@ -417,15 +417,6 @@ contains
          a_ldew, file_hist, 'f_ldew', itime_in_file, filter, &
          'depth of water on foliage','mm')
 
-!#ifdef CLM5_INTERCEPTION
-!         call aggregate_to_hru_and_write_2d ( DEF_hist_vars%ldew_rain, &
-!         a_ldew, f_ldew_rain, file_hist, 'f_ldew_rain', itime_in_file, sumwt, filter, &
-!         'depth of rain on foliage','mm')
-!         call aggregate_to_hru_and_write_2d ( DEF_hist_vars%ldew_snow, &
-!         a_ldew, f_ldew_snow, file_hist, 'f_ldew_snow', itime_in_file, sumwt, filter, &
-!         'depth of snow on foliage','mm')
-!#endif
-      
       ! snow cover, water equivalent [mm]
       call aggregate_to_hru_and_write_2d ( DEF_hist_vars%scv, &
          a_scv, file_hist, 'f_scv', itime_in_file, filter, &
@@ -897,13 +888,6 @@ contains
          'vegnodes', nvegwcs, 'vegetation water potential', 'mm')
 #endif
 
-#ifdef VARIABLY_SATURATED_FLOW
-      ! depth of ponding water [m]
-      call aggregate_to_hru_and_write_2d ( DEF_hist_vars%dpond, &
-         a_dpond, file_hist, 'f_dpond', itime_in_file, filter, &
-         'depth of ponding water','mm')
-#endif
-
 #ifndef USE_DEPTH_TO_BEDROCK
       ! water table depth [m]
       call aggregate_to_hru_and_write_2d ( DEF_hist_vars%zwt, &
@@ -941,6 +925,18 @@ contains
       call aggregate_to_hru_and_write_2d ( DEF_hist_vars%wa, &
          a_wa, file_hist, 'f_wa', itime_in_file, filter, &
          'water storage in aquifer','mm')
+#endif
+
+#ifdef VARIABLY_SATURATED_FLOW
+      if (p_is_worker) then
+         if (numpatch > 0) then
+            filter(:) = .true.
+         end if
+      end if
+      ! depth of ponding water [m]
+      call aggregate_to_hru_and_write_2d ( DEF_hist_vars%dpond, &
+         a_dpond, file_hist, 'f_dpond', itime_in_file, filter, &
+         'depth of ponding water','mm')
 #endif
 
       ! -----------------------------------------------
@@ -1653,87 +1649,6 @@ contains
 #endif
 
    end subroutine aggregate_to_hru_and_write_ln
-
-   ! ! -------
-   ! subroutine aggregate_to_hru_and_write_ln ( is_hist, &
-   !       acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, &
-   !       longname, units)
-
-   !    use precision
-   !    use spmd_task
-   !    use mod_namelist
-   !    use mod_data_type
-   !    use mod_mapping_pset2grid
-   !    use mod_block
-   !    use mod_grid
-   !    use MOD_1D_Acc_Fluxes,  only: nac_ln
-   !    use GlobalVars, only: spval
-   !    implicit none
-
-   !    logical, intent(in) :: is_hist
-
-   !    real(r8), intent(inout) :: acc_vec(:)
-   !    type(block_data_real8_2d), intent(inout) :: flux_xy
-   !    character(len=*), intent(in) :: file_hist
-   !    character(len=*), intent(in) :: varname
-   !    integer, intent(in) :: itime_in_file
-   !    
-   !    type(block_data_real8_2d), intent(in) :: sumwt
-   !    logical,  intent(in) :: filter(:)
-   !    character (len=*), intent(in), optional :: longname
-   !    character (len=*), intent(in), optional :: units
-
-   !    ! Local variables
-   !    integer :: i, iblkme, xblk, yblk, xloc, yloc
-   !    integer :: compress
-
-   !    if (.not. is_hist) return
-
-   !    if (p_is_worker) then
-   !       do i = lbound(acc_vec,1), ubound(acc_vec,1)
-   !          if ((acc_vec(i) /= spval) .and. (nac_ln(i) > 0)) then
-   !             acc_vec(i) = acc_vec(i) / nac_ln(i)
-   !          end if
-   !       end do
-   !    end if
-   !    
-   !    call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
-
-   !    if (p_is_io) then
-   !       DO iblkme = 1, nblkme 
-   !          xblk = xblkme(iblkme)
-   !          yblk = yblkme(iblkme)
-
-   !          do yloc = 1, ghist%ycnt(yblk) 
-   !             do xloc = 1, ghist%xcnt(xblk) 
-
-   !                if ((sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) &
-   !                   .and. (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval)) then
-   !                   flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-   !                      = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
-   !                      / sumwt%blk(xblk,yblk)%val(xloc,yloc)
-   !                else
-   !                   flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
-   !                end if
-
-   !             end do
-   !          end do
-
-   !       end do
-   !    end if
-   !    
-   !    compress = DEF_HIST_COMPRESS_LEVEL 
-   !    call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, &
-   !       compress) 
-
-   !    IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
-   !       CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-   !       CALL ncio_put_attr (file_hist, varname, 'units', units)
-   !       CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-   !    ENDIF
-
-   ! end subroutine aggregate_to_hru_and_write_ln
-
 
 end module mod_hist_vector
 #endif

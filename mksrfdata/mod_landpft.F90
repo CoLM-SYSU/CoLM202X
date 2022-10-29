@@ -53,64 +53,61 @@ CONTAINS
       ENDIF
 
 #ifdef SinglePoint
-      IF (landpatch%ltyp(1) == 1) THEN
-         numpft = count(SITE_pctpfts > 0.)
-#ifdef CROP
-      ELSEIF (landpatch%ltyp(1) == 12) THEN
-         numpft = numpatch
-#endif
-      ELSE
-         numpft = 0
-      ENDIF
-
-      allocate (patch_pft_s (numpatch))
-      allocate (patch_pft_e (numpatch))
-
-      IF (numpft > 0) THEN
-         allocate (landpft%ibasin (numpft))
-         allocate (landpft%bindex (numpft))
-         allocate (landpft%ltyp (numpft))
-         allocate (landpft%ipxstt (numpft))
-         allocate (landpft%ipxend (numpft))
-                  
-         landpft%ibasin(:) = 1
-         landpft%bindex(:) = 1
-         landpft%ipxstt(:) = 1
-         landpft%ipxend(:) = 1
-            
-         allocate(pft2patch (numpft))
-
+      IF (USE_SITE_pctpfts) THEN
          IF (landpatch%ltyp(1) == 1) THEN
-            npft = 0
-            DO ipft = 0, N_PFT-1
-               IF (SITE_pctpfts(ipft) > 0.) THEN
-                  npft = npft + 1
-                  landpft%ltyp(npft) = ipft
-               ENDIF
-            ENDDO
-            
-            pft2patch  (:) = 1
-            patch_pft_s(:) = 1 
-            patch_pft_e(:) = numpft
+            numpft = count(SITE_pctpfts > 0.)
 #ifdef CROP
          ELSEIF (landpatch%ltyp(1) == 12) THEN
-            DO ipft = 1, numpft
-               landpft%ltyp(ipft) = cropclass(ipft) + N_PFT - 1
-               pft2patch   (ipft) = ipft
-               patch_pft_s (ipft) = ipft 
-               patch_pft_e (ipft) = ipft
-            ENDDO
+            numpft = numpatch
 #endif
+         ELSE
+            numpft = 0
          ENDIF
-      ELSE
-         patch_pft_s(:) = -1
-         patch_pft_e(:) = -1
-      ENDIF
-      
-      landpft%nset = numpft
-      CALL landpft%set_vecgs
 
-      RETURN
+         allocate (patch_pft_s (numpatch))
+         allocate (patch_pft_e (numpatch))
+
+         IF (numpft > 0) THEN
+            allocate (landpft%ibasin (numpft))
+            allocate (landpft%bindex (numpft))
+            allocate (landpft%ltyp   (numpft))
+            allocate (landpft%ipxstt (numpft))
+            allocate (landpft%ipxend (numpft))
+
+            landpft%ibasin(:) = 1
+            landpft%bindex(:) = 1
+            landpft%ipxstt(:) = 1
+            landpft%ipxend(:) = 1
+
+            allocate(pft2patch (numpft))
+
+            IF (landpatch%ltyp(1) == 1) THEN
+               landpft%ltyp = pack(SITE_pfttyp, SITE_pctpfts > 0.)
+
+               pft2patch  (:) = 1
+               patch_pft_s(:) = 1 
+               patch_pft_e(:) = numpft
+#ifdef CROP
+            ELSEIF (landpatch%ltyp(1) == 12) THEN
+               DO ipft = 1, numpft
+                  landpft%ltyp(ipft) = cropclass(ipft) + N_PFT - 1
+                  pft2patch   (ipft) = ipft
+                  patch_pft_s (ipft) = ipft 
+                  patch_pft_e (ipft) = ipft
+               ENDDO
+#endif
+            ENDIF
+         ELSE
+            write(*,*) 'Warning : land type ', landpatch%ltyp(1), ' for PFT_CLASSIFICATION' 
+            patch_pft_s(:) = -1
+            patch_pft_e(:) = -1
+         ENDIF
+
+         landpft%nset = numpft
+         CALL landpft%set_vecgs
+
+         RETURN
+      ENDIF
 #endif
 
 #ifdef USEMPI
@@ -119,7 +116,7 @@ CONTAINS
 
       if (p_is_io) then
       
-         call allocate_block_data (gpatch, pctpft, N_PFT, lb1 = 0)
+         call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
          dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
@@ -225,6 +222,11 @@ CONTAINS
          ENDIF
 
       ENDIF
+
+      IF (.not. allocated(patchmask)) THEN
+         allocate (patchmask(1))
+         patchmask = .true.
+      ENDIF
       
       CALL landpatch%pset_pack(patchmask, numpatch)
 
@@ -245,10 +247,17 @@ CONTAINS
 #else
       write(*,'(A,I12,A)') 'Total: ', numpft, ' pft tiles.'
 #endif
+            
+#ifdef SinglePoint
+      allocate  (SITE_pfttyp(numpft))
+      SITE_pfttyp(:) = landpft%ltyp
+#endif
 
       IF (allocated(pctpft_patch)) deallocate (pctpft_patch)
       IF (allocated(pctpft_one  )) deallocate (pctpft_one  )
       IF (allocated(area_one    )) deallocate (area_one    )
+
+      deallocate (patchmask)
       
    END SUBROUTINE landpft_build
 

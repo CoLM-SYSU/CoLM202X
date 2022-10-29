@@ -51,12 +51,7 @@ SUBROUTINE lakedepth_readin (dir_landdata)
 
    ! Read lakedepth
 #ifdef SinglePoint
-   IF (USE_SITE_lakedepth) THEN
-      lakedepth(:) = SITE_lakedepth
-   ELSE
-      lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
-      call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth) 
-   ENDIF
+   lakedepth(:) = SITE_lakedepth
 #else
    lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
    call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth) 

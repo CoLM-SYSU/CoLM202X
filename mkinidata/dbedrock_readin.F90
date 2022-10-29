@@ -25,12 +25,7 @@ subroutine dbedrock_readin (dir_landdata)
    real(r8) :: dres
 
 #ifdef SinglePoint
-   IF (USE_SITE_dbedrock) THEN
-      dbedrock(:) = SITE_dbedrock
-   ELSE
-      lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
-      call ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock) 
-   ENDIF
+   dbedrock(:) = SITE_dbedrock
 #else
    lndname = trim(dir_landdata)//'/dbedrock/dbedrock_patches.nc'
    call ncio_read_vector (lndname, 'dbedrock_patches', landpatch, dbedrock) 

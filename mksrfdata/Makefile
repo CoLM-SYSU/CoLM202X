@@ -28,7 +28,7 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_pixel.o \
 					../share/mod_data_type.o \
 					../share/ncio_block.o \
-					../share/mod_hydro_data.o \
+					../share/mod_catchment_data.o \
 					../share/mod_landbasin.o \
 					../share/mod_pixelset.o \
 					../share/ncio_vector.o \
@@ -36,6 +36,7 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_mapping_pset2grid.o
 
 OBJS = \
+		 mod_single_srfdata.o \
 		 mod_srfdata_restart.o \
 		 mod_modis_data.o \
 		 mod_pixelsetshadow.o \

@@ -4,19 +4,13 @@
 
  FF = /opt/mpich-3.4.2-intel/bin/mpif90
 
- NETCDF_LIB = /home/zhwei/software/NETCDF/c-4.7.3-f4.5.2/lib
- NETCDF_INC = /home/zhwei/software/NETCDF/c-4.7.3-f4.5.2/include
+ NETCDF_LIB = /opt/netcdf/lib
+ NETCDF_INC = /opt/netcdf/include
 
  MOD_CMD = -module 
 
-# FOPTS = -g -traceback -r8 -free -check uninit
- FOPTS = -qopenmp -g -traceback -r8 -free -check uninit 
- 
- #FOPTS =   -r8 -free -check bounds -assume byterecl -check pointers -traceback #-pthread # -check pointers # \
-        #-traceback # -assume byterecl -pthread -heap-arrays #-nogen-interface
+ FOPTS = -qopenmp -g -traceback -r8 -free -check uninit -check bounds
 
- INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
-               -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
  LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 # =======================================================

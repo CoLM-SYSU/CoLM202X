@@ -37,8 +37,8 @@ contains
 #endif
 
 #ifdef CATCHMENT
-      CALL ncio_read_serial (meshfile, 'icat',  cat)
-      CALL ncio_read_serial (meshfile, 'hunit', hru)
+      CALL ncio_read_serial (meshfile, 'icatchment2d',  cat)
+      CALL ncio_read_serial (meshfile, 'ihydrounit2d', hru)
       ndim1 = size(cat,1); ndim2 = size(cat,2)
 
       CALL ncio_read_serial (meshfile, 'latitude',  latitude)

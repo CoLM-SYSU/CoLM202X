@@ -41,7 +41,7 @@ CONTAINS
          allocate (hydrounit%ibasin (numhru))
          allocate (hydrounit%ipxstt (numhru))
          allocate (hydrounit%ipxend (numhru))
-         allocate (hydrounit%ltyp (numhru))
+         allocate (hydrounit%ltyp   (numhru))
 
          DO ihru = 1, numhru
             hydrounit%bindex(ihru) = landbasin(ihru)%indx
@@ -67,7 +67,7 @@ CONTAINS
 
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
-      write(*,'(A,I12,A)') 'Total: ', numbasin, ' hydro units.'
+      write(*,'(A,I12,A)') 'Total: ', numhru, ' hydro units.'
 #endif
 
    END SUBROUTINE hydrounit_build
@@ -80,18 +80,22 @@ CONTAINS
 
       USE precision
       USE spmd_task
+      USE ncio_serial
       USE mod_utils
       USE mod_block
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
       USE mod_landbasin
-      USE mod_hydro_data
+      USE mod_catchment_data
       USE mod_namelist
 
       IMPLICIT NONE
 
       ! Local Variables
+      CHARACTER(len=256) :: file_drainage_network
+      INTEGER , allocatable :: varsize (:)
+      INTEGER :: maxnumhru
       TYPE (block_data_int32_2d) :: hydrdata
       INTEGER :: nreq, rmesg(2), smesg(2), isrc, idest, iproc
       INTEGER :: ilon_g, ilat_g, iloc
@@ -107,16 +111,28 @@ CONTAINS
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land hydro units :'
+         
+         IF (catchment_data_in_one_file) THEN
+            file_drainage_network = trim(DEF_path_catchment_data) 
+         ELSE
+            file_drainage_network = trim(DEF_path_catchment_data) // '/' // 'drainage_network.nc'
+         ENDIF
+
+         CALL ncio_inquire_varsize (file_drainage_network, 'hydrounit_index', varsize)
+         maxnumhru = varsize(1) 
       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
+      CALL mpi_bcast (maxnumhru, 1, mpi_integer, p_root, p_comm_glb, p_err)
 #endif
 
       IF (p_is_io) THEN
          CALL allocate_block_data (ghydru, hydrdata)
-         CALL hydro_data_read (DEF_dir_hydrodata, 'hunit', ghydru, hydrdata)
       ENDIF
+
+      CALL catchment_data_read (DEF_path_catchment_data, 'ihydrounit2d', ghydru, hydrdata, &
+         catchment_data_in_one_file)
 
 #ifdef USEMPI
       IF (p_is_io) THEN 
@@ -173,11 +189,11 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         allocate (bindex_tmp (numbasin*DEF_max_hband))
-         allocate (ibasin_tmp (numbasin*DEF_max_hband))
-         allocate (ltyp_tmp (numbasin*DEF_max_hband))
-         allocate (ipxstt_tmp (numbasin*DEF_max_hband))
-         allocate (ipxend_tmp (numbasin*DEF_max_hband))
+         allocate (bindex_tmp (numbasin*maxnumhru))
+         allocate (ibasin_tmp (numbasin*maxnumhru))
+         allocate (ltyp_tmp   (numbasin*maxnumhru))
+         allocate (ipxstt_tmp (numbasin*maxnumhru))
+         allocate (ipxend_tmp (numbasin*maxnumhru))
 
          numhru = 0
 
@@ -327,7 +343,7 @@ CONTAINS
 
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
-      write(*,'(A,I12,A)') 'Total: ', numbasin, ' hydro units.'
+      write(*,'(A,I12,A)') 'Total: ', numhru, ' hydro units.'
 #endif
 
    END SUBROUTINE hydrounit_build

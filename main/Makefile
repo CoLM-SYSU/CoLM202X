@@ -31,7 +31,7 @@ OBJS_SHARED = \
 				  ../share/mod_pixel.o          \
 				  ../share/mod_data_type.o      \
 				  ../share/ncio_block.o  \
-				  ../share/mod_hydro_data.o \
+				  ../share/mod_catchment_data.o \
 				  ../share/mod_landbasin.o   \
 				  ../share/mod_pixelset.o          \
 				  ../share/ncio_vector.o \
@@ -95,7 +95,8 @@ BASIC =  \
 		  MOD_1D_PCFluxes.o           \
 		  MOD_1D_Fluxes.o \
 		  MOD_1D_Forcing.o \
-	          monthly_in_situ_co2_mlo.o	  
+		  mod_unstructured_mesh.o     \
+		  monthly_in_situ_co2_mlo.o
 
 BASIC_BGC = \
 			  bgc/MOD_1D_BGCFluxes.o  \
@@ -142,7 +143,6 @@ OBJS =  \
 		  wetbulb.o                   \
 		  MOD_1D_Acc_Fluxes.o         \
 		  MOD_CaMa_Variables.o        \
-		  mod_unstructured_mesh.o     \
 		  mod_hist_vector.o           \
 		  mod_hist.o                  \
 		  colm_CaMaMod.o              \

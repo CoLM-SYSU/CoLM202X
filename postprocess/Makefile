@@ -7,8 +7,16 @@ INCLUDE_DIR = -I../include -I../share -I../main -I${NETCDF_INC}
 VPATH  = ../share
 HEADER = ../include/define.h
 
+DEF = $(shell grep -i CATCHMENT ../include/define.h)
+vector2grid = $(word 1, ${DEF})
+
+ifneq (${vector2grid},\#define)
+DEF = $(shell grep -i UNSTRUCTURED ../include/define.h)
+vector2grid = $(word 1, ${DEF})
+endif
+
 # Name of executable
-EXECUTABLE = hist_concatenate.x
+EXECUTABLE = hist_concatenate.x hist_vector2grid.x
 
 ####################################################################
 .DEFAULT :
@@ -31,7 +39,11 @@ OBJS2 = mod_vector2grid.o hist_vector2grid.o
 
 ####################################################################
 
+ifneq (${vector2grid},\#define)
+all : hist_concatenate.x
+else
 all : hist_concatenate.x hist_vector2grid.x
+endif
 
 hist_concatenate.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS1}
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS1} -o $@ ${LDFLAGS}

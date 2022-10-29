@@ -109,10 +109,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                         rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
                         p_root, p_comm_group, p_err)
 
@@ -120,8 +122,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(istt:iend) = rbuff
-                        deallocate (rbuff)
                      ENDIF
+                        
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -210,10 +213,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER1, & ! insignificant on workers
+                        MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER1, & ! insignificant on workers
                         rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER1, &
                         p_root, p_comm_group, p_err)
 
@@ -221,8 +226,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(istt:iend) = (rbuff == 1)
-                        deallocate (rbuff)
                      ENDIF
+                     
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -310,10 +316,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         rbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
                         p_root, p_comm_group, p_err)
 
@@ -321,9 +329,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(istt:iend) = rbuff
-                        deallocate (rbuff)
                      ENDIF
                         
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -412,10 +420,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (ndim1, pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1,1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         rbuff, ndim1 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
                         p_root, p_comm_group, p_err)
 
@@ -423,8 +433,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(:,istt:iend) = rbuff
-                        deallocate (rbuff)
                      ENDIF
+
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -513,10 +524,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (ndim1,ndim2, pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1,1,1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         rbuff, ndim1 * ndim2 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
                         p_root, p_comm_group, p_err)
 
@@ -524,8 +537,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(:,:,istt:iend) = rbuff
-                        deallocate (rbuff)
                      ENDIF
+                     
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -614,10 +628,12 @@ CONTAINS
 
                      IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
                         allocate (rbuff (ndim1,ndim2,ndim3, pixelset%vecgs%vlen(iblk,jblk)))
+                     ELSE
+                        allocate (rbuff(1,1,1,1))
                      ENDIF
 
                      CALL mpi_scatterv ( &
-                        sbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         rbuff, ndim1 * ndim2 * ndim3 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
                         p_root, p_comm_group, p_err)
 
@@ -625,8 +641,9 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         rdata(:,:,:,istt:iend) = rbuff
-                        deallocate (rbuff)
                      ENDIF
+                     
+                     IF (allocated(rbuff)) deallocate (rbuff)
 
                   ENDIF
                ENDIF
@@ -817,16 +834,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(istt:iend)
+                     ELSE
+                        allocate (sbuff (1))
                      ENDIF
 
                      CALL mpi_gatherv ( &
                         sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -923,16 +940,16 @@ CONTAINS
                              sbuff(i-istt+1) = 0
                            end if
                         end do
+                     ELSE
+                        allocate (sbuff (1))
                      ENDIF
 
                      CALL mpi_gatherv ( &
                         sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER1, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER1, & ! insignificant on workers
+                        MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER1, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -1020,16 +1037,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(:,:,istt:iend)
+                     ELSE
+                        allocate (sbuff (1,1,1))
                      ENDIF
 
                      CALL mpi_gatherv ( &
                         sbuff, ndim1*ndim2*pixelset%vecgs%vlen(iblk,jblk), MPI_INTEGER, &
-                        pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_INTEGER, & ! insignificant on workers
+                        MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -1114,15 +1131,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(istt:iend)
+                     ELSE
+                        allocate (sbuff (1))
                      ENDIF
 
-                     CALL mpi_gatherv (sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                     CALL mpi_gatherv ( &
+                        sbuff, pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -1211,15 +1229,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(:,istt:iend)
+                     ELSE
+                        allocate (sbuff (1,1))
                      ENDIF
 
-                     CALL mpi_gatherv (sbuff, ndim1 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                     CALL mpi_gatherv ( &
+                        sbuff, ndim1 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -1307,16 +1326,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(:,:,istt:iend)
+                     ELSE
+                        allocate (sbuff (1,1,1))
                      ENDIF
 
                      CALL mpi_gatherv ( sbuff, &
                         ndim1 * ndim2 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF
@@ -1404,16 +1423,16 @@ CONTAINS
                         istt = pixelset%vecgs%vstt(iblk,jblk)
                         iend = pixelset%vecgs%vend(iblk,jblk)
                         sbuff = wdata(:,:,:,istt:iend)
+                     ELSE
+                        allocate (sbuff (1,1,1,1))
                      ENDIF
 
                      CALL mpi_gatherv ( sbuff, &
                         ndim1 * ndim2 * ndim3 * pixelset%vecgs%vlen(iblk,jblk), MPI_REAL8, &
-                        rbuff, pixelset%vecgs%vcnt, pixelset%vecgs%vdsp, MPI_REAL8, & ! insignificant on workers
+                        MPI_RNULL_P, MPI_INULL_P, MPI_INULL_P, MPI_REAL8, & ! insignificant on workers
                         p_root, p_comm_group, p_err)
 
-                     IF (pixelset%vecgs%vlen(iblk,jblk) > 0) THEN
-                        deallocate (sbuff)
-                     ENDIF
+                     IF (allocated(sbuff)) deallocate (sbuff)
 
                   ENDIF
                ENDIF

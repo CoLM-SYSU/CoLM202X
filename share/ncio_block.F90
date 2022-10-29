@@ -17,6 +17,7 @@ MODULE ncio_block
       MODULE procedure ncio_read_block_int32_2d_time 
       MODULE procedure ncio_read_block_real8_2d_time 
    END interface ncio_read_block_time
+
 #ifdef SinglePoint
    PUBLIC :: ncio_read_site_time
 #endif
@@ -50,9 +51,9 @@ CONTAINS
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
             IF (any(ndims == 0)) cycle
@@ -110,9 +111,9 @@ CONTAINS
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
             IF (any(ndims == 0)) cycle
@@ -171,9 +172,9 @@ CONTAINS
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             ndims = (/ndim1, grid%xcnt(iblk), grid%ycnt(jblk)/)
             IF (any(ndims == 0)) cycle
@@ -233,9 +234,9 @@ CONTAINS
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
             IF (any(ndims == 0)) cycle
@@ -295,9 +296,9 @@ CONTAINS
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
          
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             ndims = (/grid%xcnt(iblk), grid%ycnt(jblk)/)
             IF (any(ndims == 0)) cycle
@@ -358,7 +359,7 @@ CONTAINS
          start3 = (/1, 1, itime/)
          count3 = (/1, 1, 1/)
          CALL nccheck (nf90_get_var(ncid, varid, &
-            rdata%blk(xblkme(1),yblkme(1))%val, start3, count3) )
+            rdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val, start3, count3) )
                 
          CALL nccheck( nf90_close(ncid) )
 

@@ -17,6 +17,9 @@ MODULE mod_block
 
       ! IO.
       INTEGER, allocatable :: pio(:,:)
+   
+      INTEGER :: nblkme
+      INTEGER, allocatable :: xblkme(:), yblkme(:)
 
    CONTAINS
 
@@ -25,8 +28,9 @@ MODULE mod_block
       procedure, PUBLIC :: save_to_file   => block_save_to_file
       procedure, PUBLIC :: load_from_file => block_load_from_file
       
-      procedure, PUBLIC :: init_pio => block_init_pio
-      procedure, PUBLIC :: read_pio => block_read_pio
+      procedure, PRIVATE :: clip     => block_clip
+      procedure, PRIVATE :: init_pio => block_init_pio
+      procedure, PRIVATE :: read_pio => block_read_pio
 
       final :: block_free_mem
 
@@ -35,8 +39,6 @@ MODULE mod_block
    ! ---- Instance ----
    TYPE (block_type) :: gblock
    
-   INTEGER :: nblkme
-   INTEGER, allocatable :: xblkme(:), yblkme(:)
 
    ! ---- PUBLIC SUBROUTINE ----
    PUBLIC :: get_filename_block
@@ -57,8 +59,8 @@ CONTAINS
 
       ! Local variables
       INTEGER  :: iblk, jblk
-      INTEGER, parameter :: iset(23) = &
-         (/1,  2,  3,  4,  5,  6,  9, 10, 12,  15,  18, &
+      INTEGER, parameter :: iset(24) = &
+         (/1,  2,  3,  4,  5,  6,  8,  9, 10,  12,  15,  18, &
           20, 24, 30, 36, 40, 45, 60, 72, 90, 120, 180, 360/)
 
       IF ((findloc(iset,nyblk_in,dim=1) <= 0) .or. &
@@ -184,56 +186,50 @@ CONTAINS
    END SUBROUTINE block_load_from_file
 
    ! --------------------------------
-   SUBROUTINE block_init_pio (this)
-      
-      USE precision
+   SUBROUTINE block_clip (this, &
+         iblk_south, iblk_north, iblk_west, iblk_east, numblocks)
+     
       USE mod_namelist
       USE mod_utils
-      USE spmd_task
-      IMPLICIT NONE
-
+      IMPLICIT NONE 
+      
       class (block_type) :: this
-      
-      INTEGER  :: iblk, jblk, iproc
-      INTEGER  :: iblk_south, iblk_north, iblk_west,  iblk_east
+      INTEGER, intent(out) :: iblk_south, iblk_north, iblk_west, iblk_east
+      INTEGER, intent(out), optional :: numblocks
+
+      ! Local Variables
       REAL(r8) :: edges, edgen, edgew, edgee
-      INTEGER  :: numblocks, numblocks_x, numblocks_y
-      INTEGER  :: iblkme
+      INTEGER  :: numblocks_x, numblocks_y
 
-      allocate (this%pio (this%nxblk,this%nyblk))
-      this%pio(:,:) = p_root
-      
-#ifdef USEMPI
-      IF (p_is_master) THEN
-         
-         edges = DEF_domain%edges
-         edgen = DEF_domain%edgen
-         edgew = DEF_domain%edgew
-         edgee = DEF_domain%edgee
+      edges = DEF_domain%edges
+      edgen = DEF_domain%edgen
+      edgew = DEF_domain%edgew
+      edgee = DEF_domain%edgee
 
-         iblk_south = find_nearest_south (edges, this%nyblk, this%lat_s)
-         iblk_north = find_nearest_north (edgen, this%nyblk, this%lat_n)
+      iblk_south = find_nearest_south (edges, this%nyblk, this%lat_s)
+      iblk_north = find_nearest_north (edgen, this%nyblk, this%lat_n)
 
-         numblocks_y = iblk_north - iblk_south + 1
+      numblocks_y = iblk_north - iblk_south + 1
 
-         CALL normalize_longitude (edgew)
-         CALL normalize_longitude (edgee)
+      CALL normalize_longitude (edgew)
+      CALL normalize_longitude (edgee)
 
-         IF (edgew == edgee) THEN
-            iblk_west = 1
-            iblk_east = this%nxblk
-         ELSE
-            iblk_west = find_nearest_west (edgew, this%nxblk, this%lon_w)
-            iblk_east = find_nearest_east (edgee, this%nxblk, this%lon_e)
+      IF (edgew == edgee) THEN
+         iblk_west = 1
+         iblk_east = this%nxblk
+      ELSE
+         iblk_west = find_nearest_west (edgew, this%nxblk, this%lon_w)
+         iblk_east = find_nearest_east (edgee, this%nxblk, this%lon_e)
 
-            IF (iblk_west == iblk_east) THEN
-               IF (lon_between_floor(edgee,this%lon_w(iblk_west),edgew)) THEN
-                  iblk_west = 1
-                  iblk_east = this%nxblk
-               ENDIF
+         IF (iblk_west == iblk_east) THEN
+            IF (lon_between_floor(edgee,this%lon_w(iblk_west),edgew)) THEN
+               iblk_west = 1
+               iblk_east = this%nxblk
             ENDIF
          ENDIF
+      ENDIF
 
+      IF (present(numblocks)) THEN
          IF (iblk_east >= iblk_west) THEN
             numblocks_x = iblk_east - iblk_west + 1
          ELSE
@@ -241,21 +237,53 @@ CONTAINS
          ENDIF
 
          numblocks = numblocks_x * numblocks_y
-
       ENDIF
+
+   END SUBROUTINE block_clip
+
+   ! --------------------------------
+   SUBROUTINE block_init_pio (this)
       
-      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-      CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
+      USE precision
+      USE spmd_task
+      USE mod_namelist
+      USE mod_utils
+      IMPLICIT NONE
+
+      class (block_type) :: this
+      
+      INTEGER  :: iblk, jblk, iproc
+      INTEGER  :: iblk_south, iblk_north, iblk_west, iblk_east
+      REAL(r8) :: edges, edgen, edgew, edgee
+      INTEGER  :: numblocks
+      INTEGER  :: iblkme
 
       IF (p_is_master) THEN
+         CALL this%clip (iblk_south, iblk_north, iblk_west, iblk_east, numblocks)
+      ENDIF
+      
+#ifdef USEMPI
+      CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
+#endif 
+
+      allocate (this%pio (this%nxblk,this%nyblk))
+
+      IF (p_is_master) THEN
+      
+         this%pio(:,:) = -1
 
          iproc = -1
          DO jblk = iblk_south, iblk_north
 
             iblk = iblk_west
             DO while (.true.)
+#ifdef USEMPI
                iproc = mod(iproc+1, p_np_io)
                this%pio(iblk,jblk) = p_address_io(iproc)
+#else
+               this%pio(iblk,jblk) = p_root
+#endif 
 
                IF (iblk /= iblk_east) THEN
                   iblk = mod(iblk,this%nxblk) + 1
@@ -267,33 +295,39 @@ CONTAINS
 
       ENDIF
 
+#ifdef USEMPI
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &
          p_root, p_comm_glb, p_err)
 #endif 
 
 #ifndef SinglePoint
-      nblkme = 0
+      this%nblkme = 0
       IF (p_is_io) THEN
-         nblkme = count(this%pio == p_iam_glb)
-         IF (nblkme > 0) THEN
+         this%nblkme = count(this%pio == p_iam_glb)
+         IF (this%nblkme > 0) THEN
             iblkme = 0
-            allocate (xblkme(nblkme))
-            allocate (yblkme(nblkme))
+            allocate (this%xblkme(this%nblkme))
+            allocate (this%yblkme(this%nblkme))
             DO iblk = 1, this%nxblk
                DO jblk = 1, this%nyblk
                   IF (p_iam_glb == this%pio(iblk,jblk)) THEN
                      iblkme = iblkme + 1
-                     xblkme(iblkme) = iblk
-                     yblkme(iblkme) = jblk
+                     this%xblkme(iblkme) = iblk
+                     this%yblkme(iblkme) = jblk
                   ENDIF
                ENDDO
             ENDDO
          ENDIF
       ENDIF
 #else
-      nblkme = 1
-      allocate(xblkme(1))
-      allocate(yblkme(1))
+      this%nblkme = 1
+      allocate(this%xblkme(1))
+      allocate(this%yblkme(1))
+
+      CALL normalize_longitude (SITE_lon_location)
+      this%xblkme(1) = find_nearest_west  (SITE_lon_location, gblock%nxblk, gblock%lon_w)
+
+      this%yblkme(1) = find_nearest_south (SITE_lat_location, gblock%nyblk, gblock%lat_s)
 #endif
 
    END SUBROUTINE block_init_pio
@@ -301,43 +335,52 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE block_read_pio (this, dir_landdata)
          
-      USE mod_namelist
       USE spmd_task
       USE ncio_serial
-      USE mod_utils
+      USE mod_namelist
       IMPLICIT NONE
 
       class (block_type) :: this
       CHARACTER(len=*),  intent(in) :: dir_landdata
 
-      ! Local variables
+      ! Local Variables
       CHARACTER(len=256) :: filename
       INTEGER, allocatable :: nbasin_io(:), nbasinblk(:,:)
-      INTEGER  :: numblocks, numblocks_x, numblocks_y, iblk, jblk, iproc, jproc
+      INTEGER  :: iblk_south, iblk_north, iblk_west, iblk_east
+      INTEGER  :: numblocks, iblk, jblk, iproc, jproc
       INTEGER  :: iblkme
       
-      allocate (this%pio (this%nxblk,this%nyblk))
-      this%pio(:,:) = p_root
-
       IF (p_is_master) THEN
          filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
          CALL ncio_read_serial (filename, 'nbasin_blk', nbasinblk)
          numblocks = count(nbasinblk > 0)
       ENDIF 
+      
+      IF (p_is_master) THEN
+         CALL this%clip (iblk_south, iblk_north, iblk_west, iblk_east)
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_bcast (numblocks, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-
       CALL divide_processes_into_groups (numblocks, DEF_PIO_groupsize)
+#endif
+      
+      allocate (this%pio (this%nxblk,this%nyblk))
 
       IF (p_is_master) THEN
 
+         this%pio(:,:) = -1
+
+#ifdef USEMPI
          allocate (nbasin_io (0:p_np_io-1))
          nbasin_io(:) = 0
-
          jproc = -1
-         DO jblk = 1, this%nyblk
-            DO iblk = 1, this%nxblk
+#endif
+
+         DO jblk = iblk_south, iblk_north
+            iblk = iblk_west
+            DO while (.true.)
+#ifdef USEMPI
                IF (nbasinblk(iblk,jblk) > 0) THEN
                   iproc = minloc(nbasin_io, dim=1) - 1
                   this%pio(iblk,jblk) = p_address_io(iproc)
@@ -346,50 +389,63 @@ CONTAINS
                   jproc = mod(jproc+1, p_np_io)
                   this%pio(iblk,jblk) = p_address_io(jproc)
                ENDIF
+#else
+               this%pio(iblk,jblk) = p_root
+#endif
+               
+               IF (iblk /= iblk_east) THEN
+                  iblk = mod(iblk,this%nxblk) + 1
+               ELSE
+                  exit
+               ENDIF
             ENDDO
          ENDDO
 
-         deallocate (nbasinblk)
+#ifdef USEMPI
          deallocate (nbasin_io)
+#endif
       ENDIF
 
+#ifdef USEMPI
       CALL mpi_bcast (this%pio, this%nxblk * this%nyblk, MPI_INTEGER, &
          p_root, p_comm_glb, p_err)
 #endif
       
 #ifndef SinglePoint
-      nblkme = 0
+      this%nblkme = 0
       IF (p_is_io) THEN
-         nblkme = count(this%pio == p_iam_glb)
-         IF (nblkme > 0) THEN
+         this%nblkme = count(this%pio == p_iam_glb)
+         IF (this%nblkme > 0) THEN
             iblkme = 0
-            allocate (xblkme(nblkme))
-            allocate (yblkme(nblkme))
+            allocate (this%xblkme(this%nblkme))
+            allocate (this%yblkme(this%nblkme))
             DO iblk = 1, this%nxblk
                DO jblk = 1, this%nyblk
                   IF (p_iam_glb == this%pio(iblk,jblk)) THEN
                      iblkme = iblkme + 1
-                     xblkme(iblkme) = iblk
-                     yblkme(iblkme) = jblk
+                     this%xblkme(iblkme) = iblk
+                     this%yblkme(iblkme) = jblk
                   ENDIF
                ENDDO
             ENDDO
          ENDIF
       ENDIF
 #else
-      nblkme = 1
-      allocate(xblkme(1))
-      allocate(yblkme(1))
+      this%nblkme = 1
+      allocate(this%xblkme(1))
+      allocate(this%yblkme(1))
          
       DO jblk = 1, this%nyblk
          DO iblk = 1, this%nxblk
             IF (nbasinblk(iblk,jblk) > 0) THEN
-               xblkme(1) = iblk
-               yblkme(1) = jblk
+               this%xblkme(1) = iblk
+               this%yblkme(1) = jblk
             ENDIF
          ENDDO
       ENDDO
 #endif
+
+      IF (allocated(nbasinblk)) deallocate (nbasinblk)
 
    END SUBROUTINE block_read_pio
 
@@ -405,6 +461,9 @@ CONTAINS
       IF (allocated (this%lon_e))  deallocate (this%lon_e)
       
       IF (allocated (this%pio)  )  deallocate (this%pio  )
+
+      IF (allocated (this%xblkme)) deallocate (this%xblkme)
+      IF (allocated (this%yblkme)) deallocate (this%yblkme)
       
    END SUBROUTINE block_free_mem
    

@@ -14,6 +14,12 @@ SUBROUTINE aggregation_dbedrock ( &
    USE ncio_block
    USE mod_colm_debug
    USE mod_aggregation_lc
+#ifdef MAP_PATCH_TO_GRID
+   USE mod_patch2grid
+#endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
    ! arguments:
@@ -23,7 +29,6 @@ SUBROUTINE aggregation_dbedrock ( &
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
-   ! ---------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname
 
    TYPE (block_data_real8_2d) :: dbedrock
@@ -37,7 +42,7 @@ SUBROUTINE aggregation_dbedrock ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
    IF (p_is_master) THEN
-      write(*,'(/, A30)') 'Aggregate depth to bedrock ...'
+      write(*,'(/, A)') 'Aggregate depth to bedrock ...'
       CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
 #ifdef USEMPI
@@ -94,10 +99,18 @@ SUBROUTINE aggregation_dbedrock ( &
 #endif
 
    ! Write-out the depth of the pacth in the gridcell
+#ifndef SinglePoint
    lndname = trim(landdir)//'/dbedrock_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'dbedrock_patches', 'vector', landpatch, dbedrock_patches, 1)
+#else
+   SITE_dbedrock = dbedrock_patches(1)
+#endif
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (dbedrock_patches, 'dbedrock', 'dbedrock.nc')
+#endif
 
    IF (p_is_worker) THEN
       deallocate ( dbedrock_patches )

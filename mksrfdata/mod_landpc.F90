@@ -42,7 +42,7 @@ CONTAINS
             
          allocate (landpc%bindex (numpc))
          allocate (landpc%ibasin (numpc))
-         allocate (landpc%ltyp (numpc))
+         allocate (landpc%ltyp   (numpc))
          allocate (landpc%ipxstt (numpc))
          allocate (landpc%ipxend (numpc))
                   
@@ -83,7 +83,7 @@ CONTAINS
 
             allocate (landpc%bindex (numpc))
             allocate (landpc%ibasin (numpc))
-            allocate (landpc%ltyp (numpc))
+            allocate (landpc%ltyp   (numpc))
             allocate (landpc%ipxstt (numpc))
             allocate (landpc%ipxend (numpc))
 

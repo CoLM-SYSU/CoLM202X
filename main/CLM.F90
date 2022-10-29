@@ -46,11 +46,11 @@ PROGRAM CLM
 #if(defined CaMa_Flood)
    use colm_CaMaMod
 #endif
-#ifdef vsf_statistics
-   USE mod_soil_water, only : count_iters
-#endif
 #ifdef SinglePoint
    USE mod_single_srfdata
+#endif
+#if (defined UNSTRUCTURED || defined CATCHMENT)
+   USE mod_unstructured_mesh
 #endif
 
    IMPLICIT NONE
@@ -62,16 +62,18 @@ PROGRAM CLM
    character(len=256) :: dir_forcing
    character(len=256) :: dir_hist
    character(len=256) :: dir_restart
+   character(len=256) :: fsrfdata
 
-   real(r8) :: deltim           ! time step (senconds)
-   integer  :: idate(3)         ! calendar (year, julian day, seconds)
-   integer  :: edate(3)         ! calendar (year, julian day, seconds)
-   integer  :: pdate(3)         ! calendar (year, julian day, seconds)
-   logical  :: greenwich        ! greenwich time
+   real(r8) :: deltim       ! time step (senconds)
+   integer  :: sdate(3)     ! calendar (year, julian day, seconds)
+   integer  :: idate(3)     ! calendar (year, julian day, seconds)
+   integer  :: edate(3)     ! calendar (year, julian day, seconds)
+   integer  :: pdate(3)     ! calendar (year, julian day, seconds)
+   logical  :: greenwich    ! greenwich time
    
-   logical :: doalb            ! true => start up the surface albedo calculation
-   logical :: dolai            ! true => start up the time-varying vegetation paramter
-   logical :: dosst            ! true => update sst/ice/snow
+   logical :: doalb         ! true => start up the surface albedo calculation
+   logical :: dolai         ! true => start up the time-varying vegetation paramter
+   logical :: dosst         ! true => update sst/ice/snow
 
    integer :: Julian_1day_p, Julian_1day 
    integer :: Julian_8day_p, Julian_8day 
@@ -79,17 +81,14 @@ PROGRAM CLM
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
    INTEGER :: month, mday, month_p, mday_p
+   INTEGER :: spinup_repeat
 
-   type(timestamp) :: itstamp, etstamp, ptstamp
+   type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
    
    integer*8 :: start_time, end_time, c_per_sec, time_used
 
 #ifdef USEMPI
    call spmd_init ()
-#endif
-
-#ifdef vsf_statistics
-   count_iters(:) = 0
 #endif
 
    if (p_is_master) then
@@ -100,15 +99,16 @@ PROGRAM CLM
 
    call read_namelist (nlfile)
 
-#ifdef SinglePoint
-   CALL read_surface_data_single (SITE_fsrfdata)
-#endif
-
    casename     = DEF_CASE_NAME
    dir_landdata = DEF_dir_landdata
    dir_forcing  = DEF_dir_forcing
    dir_hist     = DEF_dir_history
    dir_restart  = DEF_dir_restart
+
+#ifdef SinglePoint
+   fsrfdata = trim(dir_landdata) // '/srfdata.nc'
+   CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
+#endif
 
    deltim    = DEF_simulation_time%timestep
    greenwich = DEF_simulation_time%greenwich
@@ -124,13 +124,15 @@ PROGRAM CLM
    p_month   = DEF_simulation_time%spinup_month
    p_day     = DEF_simulation_time%spinup_day    
    p_seconds = DEF_simulation_time%spinup_sec  
+   
+   spinup_repeat = DEF_simulation_time%spinup_repeat 
 
    call initimetype(greenwich)
    call monthday2julian(s_year,s_month,s_day,s_julian)
    call monthday2julian(e_year,e_month,e_day,e_julian)
    call monthday2julian(p_year,p_month,p_day,p_julian)
 
-   idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
+   sdate(1) = s_year; sdate(2) = s_julian; sdate(3) = s_seconds
    edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
    pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
    
@@ -160,9 +162,15 @@ PROGRAM CLM
    call adj2end(edate)
    call adj2end(pdate)
 
-   itstamp = idate
+   ststamp = sdate
    etstamp = edate
    ptstamp = pdate
+
+   IF (ptstamp <= ststamp) THEN
+      spinup_repeat = 0
+   ELSE
+      spinup_repeat = max(0, spinup_repeat)
+   ENDIF
 
    ! ----------------------------------------------------------------------
    ! Read in the model time invariant constant data
@@ -171,39 +179,47 @@ PROGRAM CLM
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
-   CALL READ_TimeVariables (idate, casename, dir_restart)
+   CALL READ_TimeVariables (sdate, casename, dir_restart)
 
    !-----------------------
-
    doalb = .true.
    dolai = .true.
    dosst = .false.
 
    ! Initialize meteorological forcing data module
-   CALL forcing_init (dir_forcing, deltim, idate)
+   CALL forcing_init (dir_forcing, deltim, sdate)
    call allocate_2D_Forcing (gforc)
    call allocate_1D_Forcing ()
 
    ! Initialize history data module
-   print*, dir_hist, DEF_hist_lon_res, DEF_hist_lat_res
    call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
    call allocate_2D_Fluxes (ghist)
    call allocate_1D_Fluxes ()
+
 #if(defined CaMa_Flood)
-    call colm_CaMa_init
+   call colm_CaMa_init
+#endif
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   CALL unstructured_mesh_init ()
 #endif
 
    ! ======================================================================
    ! begin time stepping loop
    ! ======================================================================
 
+   idate   = sdate
+   itstamp = ststamp
+
    TIMELOOP : DO while (itstamp < etstamp)
       
       CALL julian2monthday (idate(1), idate(2), month_p, mday_p)
 
       if (p_is_master) then
-         write(*,100) idate(1), month_p, mday_p, idate(3)
-         100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
+         IF (itstamp < ptstamp) THEN
+            write(*, 99) idate(1), month_p, mday_p, idate(3), spinup_repeat
+         ELSE
+            write(*,100) idate(1), month_p, mday_p, idate(3)
+         ENDIF
       end if
 
       Julian_1day_p = int(calendarday(idate)-1)/1*1 + 1
@@ -254,10 +270,9 @@ PROGRAM CLM
 
 !!!! need to acc runoff here!!!
 #if(defined CaMa_Flood)
-call colm_CaMa_drv
+      call colm_CaMa_drv
 #endif
 
-   
       ! Write out the model variables for restart run and the histroy file
       ! ----------------------------------------------------------------------
       call hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
@@ -286,6 +301,13 @@ call colm_CaMa_drv
          end if
       end if
 
+      IF ((spinup_repeat > 1) .and. (ptstamp <= itstamp)) THEN
+         spinup_repeat = spinup_repeat - 1
+         idate   = sdate
+         itstamp = ststamp
+         CALL forcing_reset ()
+      ENDIF
+
    END DO TIMELOOP
 
    call deallocate_TimeInvariants ()  
@@ -293,8 +315,15 @@ call colm_CaMa_drv
    call deallocate_1D_Forcing     ()
    call deallocate_1D_Fluxes      ()
 
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+    CALL unstructured_mesh_final ()
+#endif
+
    call hist_final ()
 
+#ifdef SinglePoint
+   CALL single_srfdata_final ()
+#endif
 
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
@@ -308,18 +337,8 @@ call colm_CaMa_drv
       write(*,'(/,A25)') 'CLM Execution Completed.'
    end if
 
-#ifdef vsf_statistics
-   IF (p_is_worker) THEN
-#ifdef USEMPI
-      CALL mpi_allreduce (MPI_IN_PLACE, count_iters, size(count_iters), &
-         MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
-#endif
-      IF (p_iam_worker == 0) THEN
-         write(*,*) 'iteration stat ', count_iters(:)
-      ENDIF
-   ENDIF
-#endif
-         
+   99  format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I3, ' repeat left)')
+   100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
    101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.') 
    102 format (/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
    103 format (/, 'Time elapsed : ', I3, ' seconds.')

@@ -6,7 +6,7 @@ MODULE mod_namelist
    IMPLICIT NONE
    SAVE
 
-   CHARACTER(len=256) :: DEF_CASE_NAME = 'CLMCRU'         
+   CHARACTER(len=256) :: DEF_CASE_NAME = 'CASENAME'         
 
    ! ----- domain TYPE -----
    TYPE nl_domain_type
@@ -30,12 +30,8 @@ MODULE mod_namelist
    INTEGER  :: SITE_landtype = 1
    CHARACTER(len=256) :: SITE_fsrfdata
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-   REAL(r8) :: SITE_pct_pfts(0:N_PFT-1) = 1./N_PFT
-#ifdef CROP
-   REAL(r8) :: SITE_pctcrop (N_CFT) = 1./N_CFT
-#endif
-#endif
+   LOGICAL  :: USE_SITE_pctpfts         = .true.
+   LOGICAL  :: USE_SITE_pctcrop         = .true.
    LOGICAL  :: USE_SITE_htop            = .true.
    LOGICAL  :: USE_SITE_LAI             = .true.
    LOGICAL  :: USE_SITE_lakedepth       = .true.
@@ -44,7 +40,6 @@ MODULE mod_namelist
 #ifdef USE_DEPTH_TO_BEDROCK
    LOGICAL  :: USE_SITE_dbedrock = .true.
 #endif
-   LOGICAL  :: USE_SITE_Forcing  = .false.
 #endif
 
    ! ----- simulation time type -----
@@ -62,7 +57,7 @@ MODULE mod_namelist
       INTEGER  :: spinup_month= 1
       INTEGER  :: spinup_day  = 1
       INTEGER  :: spinup_sec  = 0
-      INTEGER  :: spinup_repeat = 2
+      INTEGER  :: spinup_repeat = 1
       REAL(r8) :: timestep    = 3600.
    END TYPE nl_simulation_time_type
 
@@ -82,8 +77,8 @@ MODULE mod_namelist
 #endif
 
 #ifdef CATCHMENT
-   CHARACTER(len=256) :: DEF_dir_hydrodata = 'path/to/hydrodata'
-   INTEGER            :: DEF_max_hband = 25
+   LOGICAL :: Catchment_data_in_ONE_file = .false.
+   CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/hydrodata'
 #endif 
 
    !add by zhongwang wei @ sysu 2021/12/23 
@@ -158,7 +153,7 @@ MODULE mod_namelist
 
    ! ----- history variables -----
    TYPE history_var_type
-
+      
       LOGICAL :: xy_us        = .true.    
       LOGICAL :: xy_vs        = .true. 
       LOGICAL :: xy_t         = .true. 
@@ -312,7 +307,6 @@ MODULE mod_namelist
       LOGICAL :: sminn_vr     = .true.
 #endif
    
-                                       
       LOGICAL :: ustar        = .true. 
       LOGICAL :: tstar        = .true. 
       LOGICAL :: qstar        = .true. 
@@ -369,12 +363,8 @@ CONTAINS
          SITE_lat_location,       &
          SITE_fsrfdata,           &
          SITE_landtype,           &
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-         SITE_pct_pfts,           &
-#ifdef CROP
-         SITE_pctcrop,            &
-#endif
-#endif
+         USE_SITE_pctpfts,         &
+         USE_SITE_pctcrop,         &
          USE_SITE_htop,            &
          USE_SITE_LAI,             &
          USE_SITE_lakedepth,       &
@@ -383,7 +373,6 @@ CONTAINS
 #ifdef USE_DEPTH_TO_BEDROCK
          USE_SITE_dbedrock,       &
 #endif
-         USE_SITE_Forcing,        &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -395,8 +384,8 @@ CONTAINS
          DEF_file_landgrid,               &
 #endif
 #ifdef CATCHMENT
-         DEF_dir_hydrodata,               &
-         DEF_max_hband,                   &
+         Catchment_data_in_ONE_file,      &
+         DEF_path_Catchment_data,         &
 #endif
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
@@ -436,9 +425,6 @@ CONTAINS
          IF (ierr /= 0) THEN
             write(*,*) ' ***** ERROR: Problem reading forcing namelist.'
             write(*,*) trim(DEF_forcing_namelist), ierr
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#endif
          ENDIF
          close(10)
 
@@ -459,10 +445,21 @@ CONTAINS
 
          DEF_nx_blocks = 360
          DEF_ny_blocks = 180
+         
+         DEF_HIST_mode = 'one'
+#endif
+
+#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+         IF (.not. DEF_LAI_CLIM) THEN
+            write(*,*) 'Warning: 8-day LAI data is not supported for '
+            write(*,*) 'PFT_CLASSIFICATION and PC_CLASSIFICATION.'
+            write(*,*) 'Changed to climatic data.'
+            DEF_LAI_CLIM = .true.
+         ENDIF
 #endif
 
       ENDIF
-         
+
 #ifdef USEMPI
       CALL mpi_bcast (DEF_CASE_NAME,    256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edges,   1, mpi_real8,     p_root, p_comm_glb, p_err)
@@ -474,19 +471,24 @@ CONTAINS
       CALL mpi_bcast (DEF_ny_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_PIO_groupsize, 1, mpi_integer, p_root, p_comm_glb, p_err)
       
-      CALL mpi_bcast (DEF_simulation_time%greenwich,    1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_year,   1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_month,  1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_day,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%start_sec,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_year,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_month,    1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_day,      1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%end_sec,      1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_year,  1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_month, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_day,   1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_simulation_time%spinup_sec,   1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%greenwich,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_simulation_time%start_year,    1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_month,   1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_day,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%start_sec,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_simulation_time%end_year,      1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_month,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_day,       1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%end_sec,       1, mpi_integer, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_simulation_time%spinup_year,   1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_month,  1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_day,    1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_sec,    1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%spinup_repeat, 1, mpi_integer, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_simulation_time%timestep,     1, mpi_real8,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)  
@@ -502,8 +504,8 @@ CONTAINS
 #endif
 
 #ifdef CATCHMENT
-      CALL mpi_bcast (DEF_dir_hydrodata, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_max_hband,       1, mpi_integer,   p_root, p_comm_glb, p_err)
+      call mpi_bcast (Catchment_data_in_ONE_file, 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_path_Catchment_data,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI 

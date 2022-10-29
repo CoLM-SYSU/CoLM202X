@@ -180,6 +180,7 @@ CONTAINS
       ENDIF
 
       IF (trim(gridname) == 'ERA5') THEN
+
          nlat = 721
          nlon = 1440
 
@@ -201,6 +202,7 @@ CONTAINS
       ENDIF
 
       IF (trim(gridname) == 'PRINCETON') THEN
+
          nlat = 180
          nlon = 360
 
@@ -222,6 +224,7 @@ CONTAINS
       ENDIF
 
       IF (trim(gridname) == 'JRA55') THEN
+
          nlat = 320
          nlon = 640
 
@@ -246,6 +249,7 @@ CONTAINS
 
 
       IF (trim(gridname) == 'GDAS') THEN
+
          nlat = 600
          nlon = 1440
 
@@ -269,6 +273,7 @@ CONTAINS
       ENDIF
 
       IF (trim(gridname) == 'CLDAS') THEN
+
          nlat = 1040
          nlon = 1600
 
@@ -291,6 +296,7 @@ CONTAINS
 
 
       IF (trim(gridname) == 'CMFD') THEN
+
          nlat = 400
          nlon = 700
 

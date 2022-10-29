@@ -44,6 +44,7 @@ PROGRAM CLMINI
    character(LEN=256) :: casename ! case name
    character(LEN=256) :: dir_landdata
    character(LEN=256) :: dir_restart
+   CHARACTER(LEN=256) :: fsrfdata
    integer  :: s_year      ! starting date for run in year
    integer  :: s_month     ! starting date for run in month
    integer  :: s_day       ! starting date for run in day
@@ -52,7 +53,7 @@ PROGRAM CLMINI
    integer  :: idate(3)    ! starting date
    logical  :: greenwich   ! true: greenwich time, false: local time
 
-   integer :: start_time, end_time, c_per_sec, time_used
+   integer*8 :: start_time, end_time, c_per_sec, time_used
 
 #ifdef USEMPI
    call spmd_init ()
@@ -66,10 +67,6 @@ PROGRAM CLMINI
    call getarg (1, nlfile)
    call read_namelist (nlfile)
 
-#ifdef SinglePoint
-   CALL read_surface_data_single (SITE_fsrfdata)
-#endif
-
    casename     = DEF_CASE_NAME        
    dir_landdata = DEF_dir_landdata 
    dir_restart  = DEF_dir_restart  
@@ -78,6 +75,11 @@ PROGRAM CLMINI
    s_month      = DEF_simulation_time%start_month
    s_day        = DEF_simulation_time%start_day
    s_seconds    = DEF_simulation_time%start_sec
+
+#ifdef SinglePoint
+   fsrfdata = trim(dir_landdata) // '/srfdata.nc'
+   CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
+#endif
 
    CALL monthday2julian(s_year,s_month,s_day,s_julian)
    idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
@@ -103,6 +105,14 @@ PROGRAM CLMINI
 #endif
 
    CALL initialize (casename, dir_landdata, dir_restart, idate, greenwich)
+
+#ifdef SinglePoint
+   CALL single_srfdata_final ()
+#endif
+
+#ifdef USEMPI
+   CALL mpi_barrier (p_comm_glb, p_err)
+#endif
 
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
