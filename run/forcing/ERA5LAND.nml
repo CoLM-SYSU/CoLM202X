@@ -1,0 +1,43 @@
+&nl_colm_forcing
+   
+  ! ----- forcing -----
+   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/ERA5LAND/' 
+
+   DEF_forcing%dataset           = 'ERA5LAND' 
+   DEF_forcing%solarin_all_band  = .true.  
+   DEF_forcing%HEIGHT_V          = 50.0    
+   DEF_forcing%HEIGHT_T          = 40.
+   DEF_forcing%HEIGHT_Q          = 40.
+   
+   DEF_forcing%NVAR              = 8        ! variable number of forcing data
+   DEF_forcing%startyr           = 1950     ! start year of forcing data  
+   DEF_forcing%startmo           = 1        ! start month of forcing data
+   DEF_forcing%endyr             = 2021     ! end year of forcing data
+   DEF_forcing%endmo             = 11       ! end month of forcing data
+   DEF_forcing%dtime             = 3600 3600 3600 3600 3600 3600 3600 3600
+   DEF_forcing%offset            = 1800 1800 1800 1800 1800 1800 0 1800
+   DEF_forcing%nlands            = 1        ! land grid number in 1d
+   
+   DEF_forcing%leapyear          = .true.   ! leapyear calendar
+   DEF_forcing%data2d            = .true.   ! data in 2 dimension (lon, lat)
+   DEF_forcing%hightdim          = .false.  ! have "z" dimension
+   DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
+   
+   DEF_forcing%latname           = 'latitude'  ! dimension name of latitude
+   DEF_forcing%lonname           = 'longitude' ! dimension name of longitude
+   
+   DEF_forcing%groupby           = 'month'  ! file grouped by year/month
+   
+   DEF_forcing%fprefix(1) = '2m_temperature/ERA5LAND'
+   DEF_forcing%fprefix(2) = 'specific_humidity/ERA5LAND'
+   DEF_forcing%fprefix(3) = 'surface_pressure/ERA5LAND'
+   DEF_forcing%fprefix(4) = 'Precipitation_m_hr/ERA5LAND'
+   DEF_forcing%fprefix(5) = '10m_u_component_of_wind/ERA5LAND'
+   DEF_forcing%fprefix(6) = '10m_v_component_of_wind/ERA5LAND'
+   DEF_forcing%fprefix(7) = 'surface_solar_radiation_downwards_w_m2/ERA5LAND'
+   DEF_forcing%fprefix(8) = 'surface_thermal_radiation_downwards_w_m2/ERA5LAND'
+   
+   DEF_forcing%vname    = 't2m' 'Q' 'sp' 'tp' 'u10' 'v10' 'ssrd' 'strd' 
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
+
+/

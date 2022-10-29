@@ -172,9 +172,9 @@ CONTAINS
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
@@ -234,9 +234,9 @@ CONTAINS
 
       allocate (gdata%blk (gblock%nxblk,gblock%nyblk))
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
@@ -306,9 +306,9 @@ CONTAINS
 
       gdata%ub1 = gdata%lb1-1+ndim1
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val (gdata%lb1:gdata%ub1, grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
 
@@ -386,9 +386,9 @@ CONTAINS
 
       gdata%ub2 = gdata%lb2-1+ndim2
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          allocate (gdata%blk(iblk,jblk)%val ( &
             gdata%lb1:gdata%ub1, gdata%lb2:gdata%ub2, grid%xcnt(iblk), grid%ycnt(jblk)))
       ENDDO
@@ -434,9 +434,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
@@ -456,9 +456,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
@@ -478,9 +478,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
@@ -500,9 +500,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          gdata%blk(iblk,jblk)%val = spval
       ENDDO
 
@@ -524,17 +524,17 @@ CONTAINS
       INTEGER :: iblkme, iblk, jblk
 
       IF (present(scl)) THEN
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val * scl
          ENDDO
       ENDIF
 
       IF (present(dsp)) THEN
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             gdata%blk(iblk,jblk)%val = gdata%blk(iblk,jblk)%val + dsp
          ENDDO
       ENDIF
@@ -556,9 +556,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          IF (present(sca)) THEN
             gdata_to%blk(iblk,jblk)%val = gdata_from%blk(iblk,jblk)%val * sca
          ELSE
@@ -584,9 +584,9 @@ CONTAINS
       ! Local variables
       INTEGER :: iblkme, iblk, jblk
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
          gdata_to%blk(iblk,jblk)%val = &
             gdata_from1%blk(iblk,jblk)%val * alp1 &
             + gdata_from2%blk(iblk,jblk)%val * alp2

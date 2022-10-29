@@ -27,12 +27,21 @@ SUBROUTINE pct_readin (dir_landdata)
    INTEGER :: npatch, ipatch
 
 #ifdef PFT_CLASSIFICATION
+#ifndef SinglePoint
    lndname = trim(dir_landdata)//'/pctpft/pct_pfts.nc'
    call ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac) 
+#else
+   pftfrac = pack(SITE_pctpfts, SITE_pctpfts > 0.)
+#endif
 
 #if (defined CROP) 
+#ifndef SinglePoint
    lndname = trim(dir_landdata)//'/pctpft/pct_crops.nc'
    call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop) 
+#else
+   allocate (pctcrop (numpatch))
+   pctcrop = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+#endif
 #endif
 
 #ifdef CLMDEBUG
@@ -59,8 +68,12 @@ SUBROUTINE pct_readin (dir_landdata)
 #endif
       
 #ifdef PC_CLASSIFICATION
+#ifndef SinglePoint
    lndname = trim(dir_landdata)//'/pctpft/pct_pcs.nc'
    CALL ncio_read_vector (lndname, 'pct_pcs', N_PFT, landpc, pcfrac)
+#else
+   pcfrac(:,1) = SITE_pctpfts 
+#endif
 
 #ifdef CLMDEBUG
    IF (p_is_worker) THEN 

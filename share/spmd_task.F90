@@ -67,6 +67,9 @@ MODULE spmd_task
    INTEGER, PUBLIC, parameter :: mpi_tag_mesg = 2
    INTEGER, PUBLIC, parameter :: mpi_tag_data = 3 
 
+   INTEGER  :: MPI_INULL_P(1)
+   REAL(r8) :: MPI_RNULL_P(1)
+
    ! subroutines
    PUBLIC :: spmd_init
    PUBLIC :: spmd_exit

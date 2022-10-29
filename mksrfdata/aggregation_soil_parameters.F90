@@ -24,6 +24,9 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SOILPAR_UPS_FIT
    USE par_fitting
 #endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -177,18 +180,46 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SinglePoint
    IF (USE_SITE_soilparameters) THEN
       RETURN
+   ELSE
+      allocate ( SITE_soil_vf_quartz_mineral (nl_soil) )
+      allocate ( SITE_soil_vf_gravels        (nl_soil) )
+      allocate ( SITE_soil_vf_om             (nl_soil) )
+      allocate ( SITE_soil_vf_sand           (nl_soil) )
+      allocate ( SITE_soil_wf_gravels        (nl_soil) )
+      allocate ( SITE_soil_wf_sand           (nl_soil) )
+      allocate ( SITE_soil_theta_s           (nl_soil) )
+#ifdef Campbell_SOIL_MODEL
+      allocate ( SITE_soil_psi_s  (nl_soil) )
+      allocate ( SITE_soil_lambda (nl_soil) )
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      allocate ( SITE_soil_theta_r   (nl_soil) )
+      allocate ( SITE_soil_alpha_vgm (nl_soil) )
+      allocate ( SITE_soil_L_vgm     (nl_soil) )
+      allocate ( SITE_soil_n_vgm     (nl_soil) )
+#endif
+      allocate ( SITE_soil_k_s      (nl_soil) )
+      allocate ( SITE_soil_csol     (nl_soil) )
+      allocate ( SITE_soil_tksatu   (nl_soil) )
+      allocate ( SITE_soil_tksatf   (nl_soil) )
+      allocate ( SITE_soil_tkdry    (nl_soil) )
+      allocate ( SITE_soil_k_solids (nl_soil) )
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+      allocate ( SITE_soil_BA_alpha (nl_soil) )
+      allocate ( SITE_soil_BA_beta  (nl_soil) )
+#endif
    ENDIF
 #endif
 
    IF (p_is_worker) THEN
 
       allocate ( vf_quartz_mineral_s_patches(numpatch) )
-      allocate ( vf_gravels_s_patches (numpatch) )
-      allocate ( vf_om_s_patches (numpatch) )
-      allocate ( vf_sand_s_patches (numpatch) )
-      allocate ( wf_gravels_s_patches (numpatch) )
-      allocate ( wf_sand_s_patches (numpatch) )
-      allocate ( theta_s_patches(numpatch) )
+      allocate ( vf_gravels_s_patches       (numpatch) )
+      allocate ( vf_om_s_patches            (numpatch) )
+      allocate ( vf_sand_s_patches          (numpatch) )
+      allocate ( wf_gravels_s_patches       (numpatch) )
+      allocate ( wf_sand_s_patches          (numpatch) )
+      allocate ( theta_s_patches            (numpatch) )
 #ifdef Campbell_SOIL_MODEL
       allocate ( psi_s_patches  (numpatch) )
       allocate ( lambda_patches (numpatch) )
@@ -199,15 +230,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( L_vgm_patches     (numpatch) )
       allocate ( n_vgm_patches     (numpatch) )
 #endif
-      allocate ( k_s_patches    (numpatch) )
-      allocate ( csol_patches   (numpatch) )
-      allocate ( tksatu_patches (numpatch) )
-      allocate ( tksatf_patches (numpatch) )
-      allocate ( tkdry_patches  (numpatch) )
+      allocate ( k_s_patches       (numpatch) )
+      allocate ( csol_patches      (numpatch) )
+      allocate ( tksatu_patches    (numpatch) )
+      allocate ( tksatf_patches    (numpatch) )
+      allocate ( tkdry_patches     (numpatch) )
       allocate ( k_solids_patches  (numpatch) )
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       allocate ( BA_alpha_patches  (numpatch) )
-      allocate ( BA_beta_patches  (numpatch) )
+      allocate ( BA_beta_patches   (numpatch) )
 #endif
 
    ENDIF
@@ -260,11 +291,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('vf_quartz_mineral_s lev '//trim(c), vf_quartz_mineral_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, vf_quartz_mineral_s_patches, 1)
+#else
+      SITE_soil_vf_quartz_mineral(nsl) = vf_quartz_mineral_s_patches(1)
+#endif
 
       ! (2) volumetric fraction of gravels
       ! (3) volumetric fraction of sand
@@ -421,36 +456,56 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, vf_gravels_s_patches, 1)
+#else
+      SITE_soil_vf_gravels(nsl) = vf_gravels_s_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'vector',&
                               landpatch, vf_sand_s_patches, 1)
+#else
+      SITE_soil_vf_sand(nsl) = vf_sand_s_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'vector',&
                               landpatch, vf_om_s_patches, 1)
+#else
+      SITE_soil_vf_om(nsl) = vf_om_s_patches(1)
+#endif
 
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+#ifndef SinglePoint
       lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, BA_alpha_patches, 1)
+#else
+      SITE_soil_BA_alpha(nsl) = BA_alpha_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'vector',&
                               landpatch, BA_beta_patches, 1)
+#else
+      SITE_soil_BA_beta(nsl) = BA_beta_patches(1)
+#endif
 #endif
 
       ! (5) gravimetric fraction of gravels
@@ -497,11 +552,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('wf_gravels_s lev '//trim(c), wf_gravels_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, wf_gravels_s_patches, 1)
+#else
+      SITE_soil_wf_gravels(nsl) = wf_gravels_s_patches(1)
+#endif
 
 
       ! (6) gravimetric fraction of sand
@@ -548,11 +607,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('wf_sand_s lev '//trim(c), wf_sand_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, wf_sand_s_patches, 1)
+#else
+      SITE_soil_wf_sand(nsl) = wf_sand_s_patches(1)
+#endif
 
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL                           
@@ -599,10 +662,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('L VGM lev '//trim(c), L_vgm_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'vector', landpatch, L_vgm_patches, 1)
+#else
+      SITE_soil_L_vgm(nsl) = L_vgm_patches(1)
+#endif
 
 
       ! (8) VGM's residual water content (theta_r) [cm3/cm3]
@@ -739,25 +806,41 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'vector', landpatch, theta_r_patches, 1)
+#else
+      SITE_soil_theta_r(nsl) = theta_r_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'vector', landpatch, alpha_vgm_patches, 1)
+#else
+      SITE_soil_alpha_vgm(nsl) = alpha_vgm_patches(1)
+#endif
       
+#ifndef SinglePoint
       lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'vector', landpatch, n_vgm_patches, 1)
+#else
+      SITE_soil_n_vgm(nsl) = n_vgm_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+#else
+      SITE_soil_theta_s(nsl) = theta_s_patches(1)
+#endif
       
 #endif
 
@@ -878,20 +961,32 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+#else
+      SITE_soil_theta_s(nsl) = theta_s_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'vector', landpatch, psi_s_patches, 1)
+#else
+      SITE_soil_psi_s(nsl) = psi_s_patches(1)
+#endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'vector', landpatch, lambda_patches, 1)
+#else
+      SITE_soil_lambda(nsl) = lambda_patches(1)
+#endif
 #endif
 
       ! (14) saturated hydraulic conductivity [cm/day]
@@ -936,10 +1031,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('k_s lev '//trim(c), k_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'vector', landpatch, k_s_patches, 1)
+#else
+      SITE_soil_k_s(nsl) = k_s_patches(1)
+#endif
 
       ! (15) heat capacity of soil solids [J/(m3 K)]
       IF (p_is_io) THEN
@@ -983,10 +1082,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('csol lev '//trim(c), csol_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'vector', landpatch, csol_patches, 1)
+#else
+      SITE_soil_csol(nsl) = csol_patches(1)
+#endif
 
       ! (16) thermal conductivity of unfrozen saturated soil [W/m-K]
       IF (p_is_io) THEN
@@ -1030,10 +1133,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('tksatu lev '//trim(c), tksatu_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'vector', landpatch, tksatu_patches, 1)
+#else
+      SITE_soil_tksatu(nsl) = tksatu_patches(1)
+#endif
 
       ! (17) thermal conductivity of frozen saturated soil [W/m-K]
       IF (p_is_io) THEN
@@ -1077,10 +1184,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('tksatf lev '//trim(c), tksatf_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'vector', landpatch, tksatf_patches, 1)
+#else
+      SITE_soil_tksatf(nsl) = tksatf_patches(1)
+#endif
 
       ! (18) thermal conductivity for dry soil [W/(m-K)]
       IF (p_is_io) THEN
@@ -1124,10 +1235,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('tkdry lev '//trim(c), tkdry_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'vector', landpatch, tkdry_patches, 1)
+#else
+      SITE_soil_tkdry(nsl) = tkdry_patches(1)
+#endif
 
       ! (19) thermal conductivity of soil solids [W/m-K]
       IF (p_is_io) THEN
@@ -1171,10 +1286,14 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('k_solids lev '//trim(c), k_solids_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'vector', landpatch, k_solids_patches, 1)
+#else
+      SITE_soil_k_solids(nsl) = k_solids_patches(1)
+#endif
 
    ENDDO
 

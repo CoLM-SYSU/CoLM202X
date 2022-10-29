@@ -51,9 +51,9 @@ CONTAINS
          gmax = spv
 
          has_nan = .false.
-         DO iblkme = 1, nblkme 
-            ib = xblkme(iblkme)
-            jb = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
 
             IF (.not. allocated(gdata%blk(ib,jb)%val)) cycle
 
@@ -88,10 +88,13 @@ CONTAINS
          IF (p_iam_io == p_root) THEN
             allocate (gmin_all (0:p_np_io-1))
             allocate (gmax_all (0:p_np_io-1))
+            CALL mpi_gather (gmin, 1, MPI_REAL8, gmin_all, 1, MPI_REAL8, p_root, p_comm_io, p_err)
+            CALL mpi_gather (gmax, 1, MPI_REAL8, gmax_all, 1, MPI_REAL8, p_root, p_comm_io, p_err)
+         ELSE
+            CALL mpi_gather (gmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_io, p_err)
+            CALL mpi_gather (gmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_io, p_err)
          ENDIF
 
-         CALL mpi_gather (gmin, 1, MPI_REAL8, gmin_all, 1, MPI_REAL8, p_root, p_comm_io, p_err)
-         CALL mpi_gather (gmax, 1, MPI_REAL8, gmax_all, 1, MPI_REAL8, p_root, p_comm_io, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
 
          IF (p_iam_io == p_root) THEN
@@ -168,10 +171,13 @@ CONTAINS
          IF (p_iam_worker == p_root) THEN
             allocate (vmin_all (0:p_np_worker-1))
             allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          ENDIF
 
-         CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
-         CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
 
          IF (p_iam_worker == p_root) THEN
@@ -250,10 +256,13 @@ CONTAINS
          IF (p_iam_worker == p_root) THEN
             allocate (vmin_all (0:p_np_worker-1))
             allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          ENDIF
 
-         CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
-         CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
 
          IF (p_iam_worker == p_root) THEN
@@ -334,10 +343,13 @@ CONTAINS
          IF (p_iam_worker == p_root) THEN
             allocate (vmin_all (0:p_np_worker-1))
             allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          ENDIF
 
-         CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
-         CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
 
          CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
 
@@ -421,10 +433,13 @@ CONTAINS
          IF (p_iam_worker == p_root) THEN
             allocate (vmin_all (0:p_np_worker-1))
             allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_REAL8, MPI_RNULL_P, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
          ENDIF
 
-         CALL mpi_gather (vmin, 1, MPI_REAL8, vmin_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
-         CALL mpi_gather (vmax, 1, MPI_REAL8, vmax_all, 1, MPI_REAL8, p_root, p_comm_worker, p_err)
 
          CALL mpi_allreduce (MPI_IN_PLACE, has_nan, 1, MPI_LOGICAL, MPI_LOR, p_comm_worker, p_err)
 

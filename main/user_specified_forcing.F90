@@ -3,11 +3,14 @@
 MODULE user_specified_forcing
 
 ! ------------------------------------------------------------
-! MODULE NANE: 
-!     PRIMCETON GSWP2 QIAN POINT
-!
 ! PURPOSE :
-!     Read PRINCETON/GSWP2/QIAN/CRUNCEP/POINT forcing data     
+!     Read forcing data from :     
+!     1)  PRINCETON     2)  GSWP2         3)  GSWP3 
+!     4)  QIAN          5)  CRUNCEPV4     6)  CRUNCEPV7  
+!     7)  ERA5LAND      8)  ERA5          9)  MSWX 
+!     10) WFDE5         11) CRUJRA        12) WFDEI 
+!     13) JRA55         14) GDAS          15) CLDAS 
+!     16) CMFD          17) POINT         18) test
 !
 !     PLEASE modify the following codes when specified forcing used
 !     metpreprocess modified by siguang & weinan for forc_q calibration
@@ -70,33 +73,33 @@ CONTAINS
       allocate (vname    (NVAR))
       allocate (tintalgo (NVAR))
    
-     solarin_all_band = DEF_forcing%solarin_all_band   
-     HEIGHT_V         = DEF_forcing%HEIGHT_V            
-     HEIGHT_T         = DEF_forcing%HEIGHT_T           
-     HEIGHT_Q         = DEF_forcing%HEIGHT_Q           
-                     
-     startyr          = DEF_forcing%startyr  
-     startmo          = DEF_forcing%startmo   
-     endyr            = DEF_forcing%endyr     
-     endmo            = DEF_forcing%endmo     
-     dtime(:)         = DEF_forcing%dtime(:)          
-     offset(:)        = DEF_forcing%offset(:)        
-                     
-     leapyear         = DEF_forcing%leapyear   
-     data2d           = DEF_forcing%data2d     
-     hightdim         = DEF_forcing%hightdim   
-     dim2d            = DEF_forcing%dim2d      
-                     
-     latname          = DEF_forcing%latname                   
-     lonname          = DEF_forcing%lonname                  
-                     
-     groupby          = DEF_forcing%groupby                   
+      solarin_all_band = DEF_forcing%solarin_all_band   
+      HEIGHT_V         = DEF_forcing%HEIGHT_V            
+      HEIGHT_T         = DEF_forcing%HEIGHT_T           
+      HEIGHT_Q         = DEF_forcing%HEIGHT_Q           
 
-     do ivar = 1, NVAR
-        fprefix (ivar) = DEF_forcing%fprefix(ivar) 
-        vname   (ivar) = DEF_forcing%vname(ivar) 
-        tintalgo(ivar) = DEF_forcing%tintalgo(ivar) 
-     end do
+      startyr          = DEF_forcing%startyr  
+      startmo          = DEF_forcing%startmo   
+      endyr            = DEF_forcing%endyr     
+      endmo            = DEF_forcing%endmo     
+      dtime(:)         = DEF_forcing%dtime(:)          
+      offset(:)        = DEF_forcing%offset(:)        
+
+      leapyear         = DEF_forcing%leapyear   
+      data2d           = DEF_forcing%data2d     
+      hightdim         = DEF_forcing%hightdim   
+      dim2d            = DEF_forcing%dim2d      
+
+      latname          = DEF_forcing%latname                   
+      lonname          = DEF_forcing%lonname                  
+
+      groupby          = DEF_forcing%groupby                   
+
+      do ivar = 1, NVAR
+         fprefix (ivar) = DEF_forcing%fprefix(ivar) 
+         vname   (ivar) = DEF_forcing%vname(ivar) 
+         tintalgo(ivar) = DEF_forcing%tintalgo(ivar) 
+      end do
 
    end subroutine init_user_specified_forcing 
 
@@ -210,24 +213,24 @@ CONTAINS
       integer  :: iblkme, ib, jb, i, j
       real(r8) :: es, esdT, qsat_tmp, dqsat_tmpdT, e, ea
 
-!----------------------------------------------------------------------------
-! use polynomials to calculate saturation vapor pressure and derivative with
-! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
-! required to convert relative humidity to specific humidity
-!----------------------------------------------------------------------------
+      !----------------------------------------------------------------------------
+      ! use polynomials to calculate saturation vapor pressure and derivative with
+      ! respect to temperature: over water when t > 0 c and over ice when t <= 0 c
+      ! required to convert relative humidity to specific humidity
+      !----------------------------------------------------------------------------
       if (trim(DEF_forcing%dataset) == 'POINT') then
 #ifdef SinglePoint
-         call qsadv(forcn(1)%blk(xblkme(1),yblkme(1))%val(1,1), &
-                    forcn(3)%blk(xblkme(1),yblkme(1))%val(1,1), &
+         call qsadv(forcn(1)%blk(gblock%xblkme(1),gblock%yblkme(1))%val(1,1), &
+                    forcn(3)%blk(gblock%xblkme(1),gblock%yblkme(1))%val(1,1), &
                     es,esdT,qsat_tmp,dqsat_tmpdT)
-         if (qsat_tmp < forcn(2)%blk(xblkme(1),yblkme(1))%val(1,1)) THEN
-            forcn(2)%blk(xblkme(1),yblkme(1))%val(1,1) = qsat_tmp
+         if (qsat_tmp < forcn(2)%blk(gblock%xblkme(1),gblock%yblkme(1))%val(1,1)) THEN
+            forcn(2)%blk(gblock%xblkme(1),gblock%yblkme(1))%val(1,1) = qsat_tmp
          ENDIF
 #endif
       else
-         DO iblkme = 1, nblkme 
-            ib = xblkme(iblkme)
-            jb = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
 
             do j = 1, grid%ycnt(jb)
                do i = 1, grid%xcnt(ib) 

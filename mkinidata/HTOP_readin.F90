@@ -44,9 +44,6 @@ SUBROUTINE HTOP_readin (dir_landdata)
 
 
 #ifdef USGS_CLASSIFICATION
-      ! lndname = trim(landdir)//'/tree_height_patches.nc'
-      
-      ! CALL ncio_read_vector (lndname, 'tree_height_patches', landpatch, htoplc)
 
       IF (p_is_worker) THEN
          do npatch = 1, numpatch
@@ -58,21 +55,14 @@ SUBROUTINE HTOP_readin (dir_landdata)
          end do
       ENDIF
 
-      ! IF (allocated(htoplc))   deallocate ( htoplc )
 #endif
 
 #ifdef IGBP_CLASSIFICATION
 #ifdef SinglePoint
-      IF (USE_SITE_htop) THEN
-         allocate (htoplc (numpatch))
-         htoplc(:) = SITE_htop
-      ELSE
-         lndname = trim(landdir)//'/htop_patches.nc'
-         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
-      ENDIF
+      allocate (htoplc (numpatch))
+      htoplc(:) = SITE_htop
 #else
       lndname = trim(landdir)//'/htop_patches.nc'
-      
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
 #endif
 
@@ -103,29 +93,9 @@ SUBROUTINE HTOP_readin (dir_landdata)
 
 #ifdef PFT_CLASSIFICATION
 #ifdef SinglePoint
-      IF (USE_SITE_htop) THEN
-         allocate(htoplc(1))
-         htoplc(:) = SITE_htop
-
-         IF (numpft > 0) THEN
-            allocate(htoppft(numpft))
-            IF (landpatch%ltyp(1) == 1) THEN
-               htoppft = pack(htoppft, SITE_pctpfts > 0.)
-#ifdef CROP
-            ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
-               htoppft = SITE_htop
-#endif
-            ENDIF
-         ENDIF
-      ELSE
-         lndname = trim(landdir)//'/htop_patches.nc'
-         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc)
-         lndname = trim(landdir)//'/htop_pfts.nc'
-         CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)
-      ENDIF
+      allocate(htoppft(numpft))
+      htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
 #else
-      lndname = trim(landdir)//'/htop_patches.nc'
-      CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
       lndname = trim(landdir)//'/htop_pfts.nc'
       CALL ncio_read_vector (lndname, 'htop_pfts', landpft,   htoppft)
 #endif
@@ -169,19 +139,13 @@ SUBROUTINE HTOP_readin (dir_landdata)
          ENDDO 
       ENDIF
 
-      IF (allocated(htoplc )) deallocate(htoplc )
       IF (allocated(htoppft)) deallocate(htoppft)
 #endif
 
 #ifdef PC_CLASSIFICATION
 #ifdef SinglePoint
-      IF (USE_SITE_htop) THEN
-         allocate(htoplc(1))
-         htoplc(:) = SITE_htop
-      ELSE
-         lndname = trim(landdir)//'/htop_patches.nc'
-         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
-      ENDIF
+      allocate(htoplc(1))
+      htoplc(:) = sum(SITE_htop_pfts * SITE_pctpfts)
 #else
       lndname = trim(landdir)//'/htop_patches.nc'
       CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )

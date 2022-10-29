@@ -37,6 +37,12 @@ SUBROUTINE aggregation_forest_height ( &
    USE mod_landpc
    USE mod_aggregation_pft
 #endif
+#ifdef MAP_PATCH_TO_GRID
+   USE mod_patch2grid
+#endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
    IMPLICIT NONE
    ! arguments:
 
@@ -67,7 +73,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
    if (p_is_master) then
-      write(*,'(/, A24)') 'Aggregate forest height ...'
+      write(*,'(/, A)') 'Aggregate forest height ...'
       CALL system('mkdir -p ' // trim(adjustl(landdir)))
    end if
 #ifdef USEMPI
@@ -98,7 +104,8 @@ SUBROUTINE aggregation_forest_height ( &
    
       do ipatch = 1, numpatch
          L = landpatch%ltyp(ipatch)
-         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER            BODIES(16)/ICE(24)
+         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   
+            ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
             CALL aggregation_lc_request_data (ipatch, gland, tree_height, tree_height_one)
             tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
          ELSE
@@ -119,10 +126,18 @@ SUBROUTINE aggregation_forest_height ( &
    call check_vector_data ('htop_patches ', tree_height_patches)
 #endif 
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, tree_height_patches, 1)
+#else
+   SITE_htop = tree_height_patches(1)
+#endif 
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (tree_height_patches, 'canopyheight', 'canopyheight.nc')
+#endif
 
    if (p_is_worker) then
       deallocate ( tree_height_patches )
@@ -169,10 +184,18 @@ SUBROUTINE aggregation_forest_height ( &
    CALL check_vector_data ('HTOP_patches ', htop_patches)
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'htop_patches', 'vector', landpatch, htop_patches, 1)
+#else
+   SITE_htop = htop_patches(1)
+#endif 
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (htop_patches, 'canopyheight', 'canopyheight.nc')
+#endif
 
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)
@@ -184,7 +207,7 @@ SUBROUTINE aggregation_forest_height ( &
 #ifdef PFT_CLASSIFICATION
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
-      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+      CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
@@ -241,6 +264,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
@@ -250,7 +274,15 @@ SUBROUTINE aggregation_forest_height ( &
    CALL ncio_create_file_vector (lndname, landpft)
    CALL ncio_define_pixelset_dimension (lndname, landpft)
    CALL ncio_write_vector (lndname, 'htop_pfts', 'vector', landpft, htop_pfts, 1)
+#else
+   allocate (SITE_htop_pfts(numpft))
+   SITE_htop_pfts(:) = htop_pfts(:)
+#endif
    
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (htop_patches, 'canopyheight', 'canopyheight.nc')
+#endif
+
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)
       IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
@@ -263,7 +295,7 @@ SUBROUTINE aggregation_forest_height ( &
 #ifdef PC_CLASSIFICATION
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
-      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+      CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
@@ -315,6 +347,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL check_vector_data ('HTOP_pcs     ', htop_pcs    )
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/htop_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
@@ -325,6 +358,14 @@ SUBROUTINE aggregation_forest_height ( &
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
    CALL ncio_write_vector (lndname, 'htop_pcs', 'pft', N_PFT, 'vector', landpc, htop_pcs, 1)
+#else
+   allocate (SITE_htop_pfts(N_PFT))
+   SITE_htop_pfts(:) = htop_pcs(:,1)
+#endif
+
+#ifdef MAP_PATCH_TO_GRID
+   CALL map_patchdata_to_grid_and_write (htop_patches, 'canopyheight', 'canopyheight.nc')
+#endif
    
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)

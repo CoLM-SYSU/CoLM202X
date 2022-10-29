@@ -21,6 +21,9 @@ SUBROUTINE aggregation_soil_brightness ( &
 #endif
    USE mod_aggregation_lc
    USE mod_utils
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -107,9 +110,9 @@ SUBROUTINE aggregation_soil_brightness ( &
       ! Read in the index of soil brightness (color)
       CALL ncio_read_block (lndname, 'soil_brightness', gland, isc)
 
-      DO iblkme = 1, nblkme 
-         iblk = xblkme(iblkme)
-         jblk = yblkme(iblkme)
+      DO iblkme = 1, gblock%nblkme 
+         iblk = gblock%xblkme(iblkme)
+         jblk = gblock%yblkme(iblkme)
 
          DO iy = 1, gland%ycnt(jblk)
             DO ix = 1, gland%xcnt(iblk)
@@ -280,6 +283,7 @@ SUBROUTINE aggregation_soil_brightness ( &
    CALL check_vector_data ('d_n_alb ', soil_d_n_alb, -1.e36_r8)
 #endif
 
+#ifndef SinglePoint
    ! (1) Write-out the albedo of visible of the saturated soil
    lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
@@ -303,6 +307,12 @@ SUBROUTINE aggregation_soil_brightness ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'vector', landpatch, soil_d_n_alb, 1)
+#else
+   SITE_soil_s_v_alb = soil_s_v_alb(1) 
+   SITE_soil_d_v_alb = soil_d_v_alb(1)
+   SITE_soil_s_n_alb = soil_s_n_alb(1)
+   SITE_soil_d_n_alb = soil_d_n_alb(1)
+#endif
 
    ! Deallocate the allocatable array
    ! --------------------------------

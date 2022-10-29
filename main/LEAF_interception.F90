@@ -1286,9 +1286,9 @@ END SUBROUTINE LEAF_interception_vic
 #endif
  
 #ifdef PC_CLASSIFICATION
- SUBROUTINE LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,&
+ SUBROUTINE LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,chil,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain, ldew_snow,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                              ldew,ldew_rain, ldew_snow,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 
 !=======================================================================
@@ -1311,12 +1311,17 @@ END SUBROUTINE LEAF_interception_vic
      REAL(r8), intent(in) :: dewmx     !maximum dew [mm]
      REAL(r8), intent(in) :: forc_us   !wind speed
      REAL(r8), intent(in) :: forc_vs   !wind speed
+     REAL(r8), intent(in) :: forc_t    !air temperature
+     REAL(r8), intent(in) :: chil
      REAL(r8), intent(in) :: prc_rain  !convective ranfall [mm/s]
      REAL(r8), intent(in) :: prc_snow  !convective snowfall [mm/s]
      REAL(r8), intent(in) :: prl_rain  !large-scale rainfall [mm/s]
      REAL(r8), intent(in) :: prl_snow  !large-scale snowfall [mm/s]
+     REAL(r8), intent(in) :: hu
 
-     REAL(r8), intent(inout) :: ldew   !depth of water on foliage [mm]
+     REAL(r8), intent(inout) :: ldew        !depth of water on foliage [mm]
+     REAL(r8), intent(inout) :: ldew_rain   !depth of water on foliage [mm]
+     REAL(r8), intent(inout) :: ldew_snow   !depth of water on foliage [mm]
      REAL(r8), intent(out) :: pg_rain  !rainfall onto ground including canopy runoff [kg/(m2 s)]
      REAL(r8), intent(out) :: pg_snow  !snowfall onto ground including canopy runoff [kg/(m2 s)]
      REAL(r8), intent(out) :: qintr    !interception [kg/(m2 s)]
@@ -1332,10 +1337,10 @@ END SUBROUTINE LEAF_interception_vic
      pc = patch2pc(ipatch)      
 
      DO p = 0, N_PFT-1
-        CALL LEAF_interception (deltim,dewmx,forc_us,forc_vs,&
-           chil_p(p),sigf_c(p,pc),lai_c(p,pc),sai_c(p,pc),tleaf_c(p,pc),&
+        CALL LEAF_interception_CoLM (deltim,dewmx,forc_us,forc_vs,&
+           chil,sigf_c(p,pc),lai_c(p,pc),sai_c(p,pc),forc_t,tleaf_c(p,pc),&
            prc_rain,prc_snow,prl_rain,prl_snow,&
-          ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),z0m(p,pc),hu,pg_rain,pg_snow,qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
+          ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),z0m_c(p,pc),hu,pg_rain,pg_snow,qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
 
            
         pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)

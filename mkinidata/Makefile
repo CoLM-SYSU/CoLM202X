@@ -26,7 +26,7 @@ OBJS_SHARED = \
 				  ../share/mod_pixel.o \
 				  ../share/mod_data_type.o \
 				  ../share/ncio_block.o \
-				  ../share/mod_hydro_data.o \
+				  ../share/mod_catchment_data.o \
 				  ../share/mod_landbasin.o \
 				  ../share/mod_pixelset.o \
 				  ../share/ncio_vector.o \
@@ -70,8 +70,7 @@ BASIC_BGC = \
 OBJS_MAIN = \
 				  ../main/LAI_empirical.o  \
 				  ../main/LAI_readin.o \
-				  ../main/LAI_varied_readin.o  \
-				  ../main/orb_coszen.o         \
+				  ../main/orb_coszen.o \
 				  ../main/ThreeDCanopy.o \
 				  ../main/ALBEDO.o    \
 				  ../main/snowfraction.o

@@ -74,9 +74,6 @@ MODULE GlobalVars
    integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
 
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
-!   INTEGER :: numpatch  ! moved to mod_landpatch   !total number of patches of grids
-!   INTEGER :: numpft    ! moved to mod_landpft     !total number of PFT patches of grids
-!   INTEGER :: numpc     ! moved to mod_landpc      !total number of PC patches of grids
 
    REAL(r8) :: z_soi (1:nl_soil)       !node depth [m]
    REAL(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]

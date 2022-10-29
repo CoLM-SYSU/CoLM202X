@@ -86,9 +86,9 @@ CONTAINS
          call map_patch2grid%map (vectmp, sumwt, msk = filter)
 
          if (p_is_io) then
-            DO iblkme = 1, nblkme 
-               xblk = xblkme(iblkme)
-               yblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               xblk = gblock%xblkme(iblkme)
+               yblk = gblock%yblkme(iblkme)
 
                do yloc = 1, grid_patch2grid%ycnt(yblk) 
                   do xloc = 1, grid_patch2grid%xcnt(xblk) 
@@ -166,9 +166,9 @@ CONTAINS
          call map_patch2grid%map (patchdata, tmpgriddata2, spv = spval, msk = filter)   
 
          if (p_is_io) then
-            DO iblkme = 1, nblkme 
-               xblk = xblkme(iblkme)
-               yblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               xblk = gblock%xblkme(iblkme)
+               yblk = gblock%yblkme(iblkme)
 
                do yloc = 1, grid_patch2grid%ycnt(yblk) 
                   do xloc = 1, grid_patch2grid%xcnt(xblk) 

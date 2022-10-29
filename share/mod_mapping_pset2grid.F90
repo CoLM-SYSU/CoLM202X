@@ -183,9 +183,6 @@ CONTAINS
                      ENDIF
 
                      area = areaquad (lat_s, lat_n, lon_w, lon_e)
-                     IF (area < 1.0e-10) THEN
-                        write(*,*) area, lat_s, lat_n, lon_w, lon_e ! count(parea(iproc)%val <= 0.0)
-                     ENDIF
 
                      CALL insert_into_sorted_list2 ( ix, iy, &
                         gfrom(iset)%ng, gfrom(iset)%ilon, gfrom(iset)%ilat, &
@@ -492,9 +489,6 @@ CONTAINS
                nrecv = nrecv + this%glist(iproc)%ng
             ENDIF
          ENDDO
-
-         ! write(*,102) nrecv, nproc, p_iam_glb
-         ! 102 format ('Receive ', I10, ' data from', I5, ' workers to IO', I5) 
       ELSEIF (p_is_worker) THEN 
          nproc = 0
          nsend = 0
@@ -504,9 +498,6 @@ CONTAINS
                nsend = nsend + this%glist(iproc)%ng
             ENDIF
          ENDDO
-
-         ! write(*,103) nsend, nproc, p_iam_glb
-         ! 103 format ('Sending ', I10, ' data to', I5, ' IO from worker', I5) 
       ENDIF
 #endif 
 

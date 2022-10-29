@@ -441,14 +441,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%ldew, &
             a_ldew, f_ldew, file_hist, 'f_ldew', itime_in_file, sumwt, filter, &
             'depth of water on foliage','mm')
-!#ifdef CLM5_INTERCEPTION
-!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_rain, &
-!         a_ldew, f_ldew_rain, file_hist, 'f_ldew_rain', itime_in_file, sumwt, filter, &
-!         'depth of rain on foliage','mm')
-!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_snow, &
-!         a_ldew, f_ldew_snow, file_hist, 'f_ldew_snow', itime_in_file, sumwt, filter, &
-!         'depth of snow on foliage','mm')
-!#endif
+
          ! snow cover, water equivalent [mm]
          call flux_map_and_write_2d ( DEF_hist_vars%scv, &
             a_scv, f_scv, file_hist, 'f_scv', itime_in_file, sumwt, filter, &
@@ -1216,9 +1209,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -1293,9 +1286,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
                   
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -1373,9 +1366,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -1458,9 +1451,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -1540,9 +1533,9 @@ contains
 
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
                IF (ghist%ycnt(jblk) <= 0) cycle
                IF (ghist%xcnt(iblk) <= 0) cycle
 
@@ -1685,9 +1678,9 @@ contains
        
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
@@ -1836,9 +1829,9 @@ contains
 
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
@@ -1993,9 +1986,9 @@ contains
       elseif (trim(DEF_HIST_mode) == 'block') then
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
                      
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 

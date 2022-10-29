@@ -886,27 +886,6 @@ CONTAINS
          ENDIF 
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
-      if (trim(dimname) .eq. 'lon') then
-         !print *, 'lon-def'
-         call nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
-         call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-         call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
-      elseif (trim(dimname) .eq.'lat') then
-         !print *, 'lat-def'
-         call nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
-         call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-         call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-      elseif (trim(dimname) .eq.'lat_cama') then
-            !print *, 'lat-def'
-            call nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
-            call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
-            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
-      elseif (trim(dimname) .eq.'lon_cama') then
-         call nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
-         call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
-         call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )          
-                              
-      endif  
 
       CALL nccheck( nf90_close(ncid) )
 
@@ -934,7 +913,7 @@ CONTAINS
          IF (dimlen == 0) THEN
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), NF90_UNLIMITED, dimid) )
          ELSE
-            CALL nccheck( nf90_def_dim(ncid, trim(dimname), dimlen, dimid) )
+            CALL nccheck( nf90_def_dim(ncid, trim(dimname), int(dimlen), dimid) )
          ENDIF 
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
@@ -1154,7 +1133,6 @@ CONTAINS
 
    END SUBROUTINE ncio_write_serial_logical_1d
 
-   !---------------------------------------------------------
    !---------------------------------------------------------
    SUBROUTINE ncio_write_serial_int8_2d (filename, dataname, wdata, &
          dim1name, dim2name, compress)
@@ -1568,18 +1546,19 @@ CONTAINS
 
    !------------------------------
    SUBROUTINE ncio_write_time (filename, dataname, time_component, itime)
+      
       USE timemanager
-           IMPLICIT NONE
-     
-           CHARACTER (len=*), intent(in) :: filename
-           CHARACTER (len=*), intent(in) :: dataname
-           INTEGER, intent(in)  :: time_component(3)
-           INTEGER, intent(out) :: itime
-     
-           ! Local variables
+      IMPLICIT NONE
+
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: dataname
+      INTEGER, intent(in)  :: time_component(3)
+      INTEGER, intent(out) :: itime
+
+      ! Local variables
       INTEGER, allocatable :: time_file(:)
-           INTEGER :: ncid, varid, time_id, component_id, status
-           INTEGER :: timelen, minutes
+      INTEGER :: ncid, varid, time_id, component_id, status
+      INTEGER :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
 
@@ -1592,40 +1571,38 @@ CONTAINS
          itime = 1
          IF (timelen > 0) THEN
             allocate (time_file (timelen))
-                  CALL nccheck( nf90_get_var(ncid, varid, time_file) )
-      
-                  DO while (itime <= timelen)
-               IF (minutes == time_file(itime)) exit
-                     itime = itime + 1
-                  ENDDO
-      
-                  deallocate(time_file)
-               ENDIF
-      
-      
-            ELSE
-               status = nf90_inq_dimid(ncid, 'time', time_id)
-               IF (status /= NF90_NOERR) THEN
-                  CALL nccheck( nf90_redef(ncid) )
-                  CALL nccheck( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_id) )
-                  CALL nccheck( nf90_enddef(ncid) )
-               ENDIF 
-      
+            CALL nccheck( nf90_get_var(ncid, varid, time_file) )
 
-                  CALL nccheck( nf90_redef(ncid) )
+            DO while (itime <= timelen)
+               IF (minutes == time_file(itime)) exit
+               itime = itime + 1
+            ENDDO
+
+            deallocate(time_file)
+         ENDIF
+
+      ELSE
+         status = nf90_inq_dimid(ncid, 'time', time_id)
+         IF (status /= NF90_NOERR) THEN
+            CALL nccheck( nf90_redef(ncid) )
+            CALL nccheck( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_id) )
+            CALL nccheck( nf90_enddef(ncid) )
+         ENDIF 
+
+         CALL nccheck( nf90_redef(ncid) )
          CALL nccheck( nf90_def_var(ncid, trim(dataname), NF90_INT, (/time_id/), varid) )
 
          call nccheck( nf90_put_att(ncid, varid, 'long_name', 'time') )
          call nccheck( nf90_put_att(ncid, varid, 'units', 'minutes since 1900-1-1 0:0:0') )
-               CALL nccheck( nf90_enddef(ncid) )
-              
-               itime = 1
-            ENDIF 
-     
+         CALL nccheck( nf90_enddef(ncid) )
+
+         itime = 1
+      ENDIF 
+
       CALL nccheck( nf90_put_var(ncid, varid, minutes, (/itime/)) ) 
-           CALL nccheck( nf90_close(ncid) )
-     
-        END SUBROUTINE ncio_write_time
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_write_time
      
 
    !----------------------------------------------------------------------------

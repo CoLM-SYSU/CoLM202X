@@ -59,7 +59,7 @@ CONTAINS
       USE mod_grid
       USE mod_utils
       USE mod_data_type
-      USE mod_hydro_data
+      USE mod_catchment_data
 
       IMPLICIT NONE
 
@@ -125,26 +125,23 @@ CONTAINS
       nbasin_blk(:,:) = 0
       nbasin_blk(landbasin(1)%xblk,landbasin(1)%yblk) = 1
 
-      xblkme(1) = landbasin(1)%xblk
-      yblkme(1) = landbasin(1)%yblk
-      
       RETURN
 #endif
 
       IF (p_is_io) THEN 
-
          CALL allocate_block_data (gbasin, databasin)
+      ENDIF
 
 #ifdef GRIDBASED 
-         CALL ncio_read_block (DEF_file_landgrid, 'landmask', gbasin, databasin)
+      CALL ncio_read_block (DEF_file_landgrid, 'landmask', gbasin, databasin)
 #endif
 #ifdef CATCHMENT
-         CALL hydro_data_read (DEF_dir_hydrodata, 'icat', gbasin, databasin, spv = -1)
+      CALL catchment_data_read (DEF_path_Catchment_data, 'icatchment2d', gbasin, databasin, &
+         catchment_data_in_one_file, spv = -1)
 #endif
 #ifdef UNSTRUCTURED
-         CALL ncio_read_block (DEF_file_landgrid, 'patchtypes', gbasin, databasin)
+      CALL ncio_read_block (DEF_file_landgrid, 'patchtypes', gbasin, databasin)
 #endif
-      ENDIF
 
       ! Step 1: How many basins in each block?
       IF (p_is_io) THEN
@@ -159,9 +156,9 @@ CONTAINS
             allocate (ulist_worker(iworker)%val (1000))
          ENDDO
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
                   
             DO yloc = 1, gbasin%ycnt(jblk)
                DO xloc = 1, gbasin%xcnt(iblk)
@@ -211,10 +208,6 @@ CONTAINS
                ENDIF
             ENDDO
 #endif
-
-            ! IF (sum(nbasin_worker) > 0) THEN
-            !    write(*,*) 'Found ', sum(nbasin_worker), ' on block', iblk, jblk
-            ! ENDIF
 
             nbasin = nbasin + sum(nbasin_worker)
             nbasin_worker(:) = 0
@@ -274,9 +267,9 @@ CONTAINS
 
       IF (p_is_io) THEN
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (gbasin%xcnt(iblk) <= 0) cycle 
             IF (gbasin%ycnt(jblk) <= 0) cycle 
 
@@ -728,9 +721,9 @@ CONTAINS
                CALL copy_basin(landbasin(iu), lbasin(iu))
             ENDDO
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                IF (blkcnt(iblk,jblk) > 0) THEN
                   allocate (basinindx (blkcnt(iblk,jblk)))
@@ -823,9 +816,9 @@ CONTAINS
          allocate (nbasin_worker (1:p_np_group-1))
          nbasin_worker(:) = 0
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
         
             nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
             nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)
@@ -842,9 +835,9 @@ CONTAINS
          deallocate (nbasin_worker)
 
          ndsp = 0
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
 
             nave = nbasin_blk(iblk,jblk) / (p_np_group-1)
             nres = mod(nbasin_blk(iblk,jblk), p_np_group-1)

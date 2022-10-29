@@ -80,7 +80,7 @@ PROGRAM mksrfdata
 
    TYPE (grid_type) :: gbasin, gridlai
 
-   INTEGER :: start_time, end_time, c_per_sec, time_used
+   INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
 
 #ifdef USEMPI
@@ -95,6 +95,9 @@ PROGRAM mksrfdata
 
    CALL read_namelist (nlfile)
    
+#ifdef SinglePoint
+   CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+#endif
 
    dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
@@ -179,6 +182,7 @@ PROGRAM mksrfdata
 #endif
    CALL pixel%map_to_grid (gridlai)
 
+
    ! build land basins 
    CALL landbasin_build (gbasin)
    
@@ -219,11 +223,7 @@ PROGRAM mksrfdata
 #endif
 
 #ifdef MAP_PATCH_TO_GRID
-#ifdef UNSTRUCTURED
-   CALL grid_patch2grid%define_by_name ('colm_1km')
-#else
    CALL grid_patch2grid%define_from_file (DEF_file_landgrid)
-#endif
    CALL patch2grid_init ()
 #endif
 
@@ -231,18 +231,18 @@ PROGRAM mksrfdata
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
 
+   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
+   
+   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
+   
    CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 
    CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
-   
 #ifdef USE_DEPTH_TO_BEDROCK
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
-   
    CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
    CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
@@ -250,6 +250,15 @@ PROGRAM mksrfdata
    ! ................................................................
    ! 4. Free memories. 
    ! ................................................................
+   
+#ifdef SinglePoint
+#if (defined PFT_CLASSIFICATION)
+   CALL write_surface_data_single (numpatch, numpft)
+#else
+   CALL write_surface_data_single (numpatch) 
+#endif
+   CALL single_srfdata_final ()
+#endif
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
