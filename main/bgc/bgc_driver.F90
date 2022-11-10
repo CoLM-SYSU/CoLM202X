@@ -3,7 +3,7 @@
 #include <define.h>
 
 SUBROUTINE bgc_driver &
-          (i,idate,deltim,dlat,dlon)!, woody, &
+          (i,idate,deltim,dlat,dlon)
 
   use precision
   use PhysicalConstants, only : tfrz, denh2o, denice
@@ -42,7 +42,7 @@ SUBROUTINE bgc_driver &
   use bgc_veg_CNVegStructUpdateMod, only: CNVegStructUpdate
   use bgc_CNBalanceCheckMod, only: BeginCNBalance, CBalanceCheck, NBalanceCheck
   use bgc_CNSASUMod, only: CNSASU
-  use bgc_veg_CNNDynamicsMod, only: CNNFert
+  use bgc_veg_CNNDynamicsMod, only: CNNFert, CNSoyfix
   use timemanager
   use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                       z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
@@ -80,6 +80,10 @@ use MOD_PFTimeVars, only: &
 
   call SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
   call calc_plant_nutrient_competition_CLM45_default(i,ps,pe,npcropmin)
+#ifdef CNSOYFIXN
+  call CNSoyfix (i, ps, pe, nl_soil)
+#endif
+  
   call SoilBiogeochemDecomp(i,nl_soil,ndecomp_pools,ndecomp_transitions, dz_soi)
   call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=1)
   call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=2)

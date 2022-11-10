@@ -117,6 +117,7 @@ SAVE
       REAL(r8), allocatable :: smin_no3_vr              (:,:)
       REAL(r8), allocatable :: smin_nh4_vr              (:,:)
       REAL(r8), allocatable :: sminn                    (:)
+      REAL(r8), allocatable :: ndep                     (:)
 
 #ifdef NITRIF
       REAL(r8), allocatable :: to2_decomp_depth_unsat   (:,:)
@@ -220,6 +221,11 @@ SAVE
       REAL(r8), allocatable :: lowerVX_n_vr_acc            (:,:,:)
       LOGICAL , allocatable :: skip_balance_check          (:)
 #ifdef CROP
+      REAL(r8), allocatable :: vf          (:)
+      REAL(r8), allocatable :: gddplant    (:)
+      REAL(r8), allocatable :: gddmaturity (:)
+      REAL(r8), allocatable :: hui         (:)
+      REAL(r8), allocatable :: huiswheat   (:)
       REAL(r8), allocatable :: pdcorn      (:)  
       REAL(r8), allocatable :: pdswheat    (:)
       REAL(r8), allocatable :: pdwwheat    (:)
@@ -228,6 +234,7 @@ SAVE
       REAL(r8), allocatable :: pdrice1     (:)
       REAL(r8), allocatable :: pdrice2     (:)
       REAL(r8), allocatable :: pdsugarcane (:)  
+      REAL(r8), allocatable :: plantdate   (:)  
       REAL(r8), allocatable :: fertnitro_corn      (:)  
       REAL(r8), allocatable :: fertnitro_swheat    (:)
       REAL(r8), allocatable :: fertnitro_wwheat    (:)
@@ -377,6 +384,7 @@ SAVE
         allocate (smin_no3_vr                  (nl_soil,numpatch))
         allocate (smin_nh4_vr                  (nl_soil,numpatch))
         allocate (sminn                        (numpatch))
+        allocate (ndep                         (numpatch))
    
 #ifdef NITRIF
         allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))
@@ -485,6 +493,11 @@ SAVE
         allocate (skip_balance_check           (numpatch))
 
 #ifdef CROP
+        allocate (vf                    (numpatch))
+        allocate (gddmaturity           (numpatch))
+        allocate (gddplant              (numpatch))
+        allocate (hui                   (numpatch))
+        allocate (huiswheat             (numpatch))
         allocate (pdcorn                (numpatch))  
         allocate (pdswheat              (numpatch))
         allocate (pdwwheat              (numpatch))
@@ -492,6 +505,7 @@ SAVE
         allocate (pdcotton              (numpatch))
         allocate (pdrice1               (numpatch))
         allocate (pdrice2               (numpatch))
+        allocate (plantdate             (numpatch))
         allocate (pdsugarcane           (numpatch))  
         allocate (fertnitro_corn        (numpatch))  
         allocate (fertnitro_swheat      (numpatch))
@@ -627,6 +641,7 @@ SAVE
            deallocate (smin_no3_vr                  )
            deallocate (smin_nh4_vr                  )
            deallocate (sminn                        )
+           deallocate (ndep                         )
    
 #ifdef NITRIF
            deallocate (to2_decomp_depth_unsat       )
@@ -734,6 +749,11 @@ SAVE
 #endif
            deallocate (skip_balance_check           )
 #ifdef CROP
+           deallocate (vf         )
+           deallocate (gddplant   )
+           deallocate (gddmaturity)
+           deallocate (hui        )
+           deallocate (huiswheat  )
            deallocate (pdcorn     )
            deallocate (pdswheat   )
            deallocate (pdwwheat   )
@@ -741,6 +761,7 @@ SAVE
            deallocate (pdcotton   )
            deallocate (pdrice1    )
            deallocate (pdrice2    )
+           deallocate (plantdate  )
            deallocate (pdsugarcane)
            deallocate (fertnitro_corn     )
            deallocate (fertnitro_swheat   )
@@ -797,6 +818,7 @@ SAVE
      call ncio_write_vector (file_restart, 'totcoln              ', 'vector', landpatch, totcoln              )
        
      call ncio_write_vector (file_restart, 'sminn                ', 'vector', landpatch, sminn                )
+     call ncio_write_vector (file_restart, 'ndep                 ', 'vector', landpatch, ndep                 )
 
      call ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
                                                                     'vector', landpatch,     decomp_cpools_vr(1:nl_soil,:,:))
@@ -901,7 +923,7 @@ SAVE
      call ncio_write_vector (file_restart, 'pdsoybean  ' , 'vector', landpatch, pdsoybean  , compress)
      call ncio_write_vector (file_restart, 'pdcotton   ' , 'vector', landpatch, pdcotton   , compress)
      call ncio_write_vector (file_restart, 'pdrice1    ' , 'vector', landpatch, pdrice1    , compress)
-     call ncio_write_vector (file_restart, 'pdrice2    ' , 'vector', landpatch, pdrice1    , compress)
+     call ncio_write_vector (file_restart, 'pdrice2    ' , 'vector', landpatch, pdrice2    , compress)
      call ncio_write_vector (file_restart, 'pdsugarcane' , 'vector', landpatch, pdsugarcane, compress)
      call ncio_write_vector (file_restart, 'fertnitro_corn     ' , 'vector', landpatch, fertnitro_corn     , compress)
      call ncio_write_vector (file_restart, 'fertnitro_swheat   ' , 'vector', landpatch, fertnitro_swheat   , compress)
@@ -948,6 +970,7 @@ SAVE
      call ncio_read_vector (file_restart, 'totcoln              ', landpatch, totcoln              )
        
      call ncio_read_vector (file_restart, 'sminn                ', landpatch, sminn                )
+     call ncio_read_vector (file_restart, 'ndep                 ', landpatch, ndep                 )
 
      call ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil, ndecomp_pools, landpatch, decomp_cpools_vr)
      call ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
@@ -1041,7 +1064,7 @@ SAVE
      call ncio_read_vector (file_restart, 'pdsoybean  ' , landpatch, pdsoybean  )
      call ncio_read_vector (file_restart, 'pdcotton   ' , landpatch, pdcotton   )
      call ncio_read_vector (file_restart, 'pdrice1    ' , landpatch, pdrice1    )
-     call ncio_read_vector (file_restart, 'pdrice2    ' , landpatch, pdrice1    )
+     call ncio_read_vector (file_restart, 'pdrice2    ' , landpatch, pdrice2    )
      call ncio_read_vector (file_restart, 'pdsugarcane' , landpatch, pdsugarcane)
      call ncio_read_vector (file_restart, 'fertnitro_corn     ' , landpatch, fertnitro_corn     )
      call ncio_read_vector (file_restart, 'fertnitro_swheat   ' , landpatch, fertnitro_swheat   )
@@ -1181,6 +1204,7 @@ SAVE
 #endif
 
      call check_vector_data ('sminn                    ', sminn                    ) 
+     call check_vector_data ('ndep                     ', ndep                     ) 
 
      call check_vector_data ('ndep_prof                ', ndep_prof                ) 
      call check_vector_data ('nfixation_prof           ', nfixation_prof           ) 
@@ -1282,13 +1306,19 @@ SAVE
 !------------------------------------------------------
 #endif
 #ifdef CROP
+     call check_vector_data ('vf         ' , vf         )
+     call check_vector_data ('hui        ' , hui        )
+     call check_vector_data ('huiswheat  ' , huiswheat  )
+     call check_vector_data ('gddplant   ' , gddplant   )
+     call check_vector_data ('gddmaturity' , gddmaturity)
      call check_vector_data ('pdcorn     ' , pdcorn     )
      call check_vector_data ('pdswheat   ' , pdswheat   )
      call check_vector_data ('pdwwheat   ' , pdwwheat   )
      call check_vector_data ('pdsoybean  ' , pdsoybean  )
      call check_vector_data ('pdcotton   ' , pdcotton   )
      call check_vector_data ('pdrice1    ' , pdrice1    )
-     call check_vector_data ('pdrice2    ' , pdrice1    )
+     call check_vector_data ('pdrice2    ' , pdrice2    )
+     call check_vector_data ('plantdate  ' , plantdate  )
      call check_vector_data ('pdsugarcane' , pdsugarcane)
      call check_vector_data ('fertnitro_corn     ' , fertnitro_corn     )
      call check_vector_data ('fertnitro_swheat   ' , fertnitro_swheat   )

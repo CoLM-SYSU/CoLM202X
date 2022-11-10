@@ -88,6 +88,7 @@ OBJS = \
 		 HTOP_readin.o \
 		 CROP_readin.o \
 		 NITRIF_readin.o \
+	         NDEP_readin.o   \
 		 IniTimeVar.o             \
 		 initialize.o             \
 		 CLMINI.o 

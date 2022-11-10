@@ -236,7 +236,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       receiver_pool = (/i_soil1  , i_soil1  , i_soil2  , i_soil2, i_cel_lit, i_lig_lit, i_soil3, i_soil1, i_soil3, i_soil1/)
       am = 0.02_r8
       floating_cn_ratio = (/.true., .true., .true., .true., .false. ,.false., .false./)
-      initial_cn_ratio  = (/90._r8, 90._r8, 90._r8, 90._r8, 200._r8, 200._r8, 200._r8/)      ! 1:ndecomp_pools
+      initial_cn_ratio  = (/90._r8, 90._r8, 90._r8, 90._r8,    8._r8, 11._r8,  11._r8/)      ! 1:ndecomp_pools
 
       f_s2s1 = 0.42_r8/(0.45_r8)
       f_s2s3 = 0.03_r8/(0.45_r8)
@@ -475,6 +475,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       CALL check_vector_data ('SAI ', tsai)
 #endif
 
+#ifdef BGC
+      CALL NDEP_readin(year, dir_landdata, .true., .false.)
 #ifdef NITRIF
       CALL NITRIF_readin (month, dir_landdata)
 #endif
@@ -500,6 +502,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             end if
          end do
       end if
+#endif
 #endif
 
 #endif

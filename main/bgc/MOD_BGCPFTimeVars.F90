@@ -126,12 +126,10 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: ntrunc_p                 (:)
   REAL(r8), allocatable :: npool_p                  (:)
 
-!--------------------- CROP variables ------------------------------
+!--------------------- CROP variables for GPAM------------------------------
   LOGICAL, allocatable :: croplive_p                (:)
-  REAL(r8),allocatable :: gddtsoi_p                 (:)
-  REAL(r8),allocatable :: huileaf_p                 (:)
+  REAL(r8),allocatable :: hui_p                     (:)
   REAL(r8),allocatable :: gddplant_p                (:)
-  REAL(r8),allocatable :: huigrain_p                (:)
   INTEGER ,allocatable :: peaklai_p                 (:)
   REAL(r8),allocatable :: aroot_p                   (:)
   REAL(r8),allocatable :: astem_p                   (:)
@@ -147,7 +145,6 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8),allocatable :: a10tmin_p                 (:)
   REAL(r8),allocatable :: t10_p                     (:)
   REAL(r8),allocatable :: cumvd_p                   (:)
-  REAL(r8),allocatable :: hdidx_p                   (:)
   REAL(r8),allocatable :: vf_p                      (:)
   REAL(r8),allocatable :: cphase_p                  (:)
   REAL(r8),allocatable :: fert_counter_p            (:)
@@ -485,10 +482,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
             allocate (croplive_p               (numpft))
-            allocate (gddtsoi_p                (numpft))
-            allocate (huileaf_p                (numpft))
+            allocate (hui_p                    (numpft))
             allocate (gddplant_p               (numpft))
-            allocate (huigrain_p               (numpft))
             allocate (peaklai_p                (numpft))
             allocate (aroot_p                  (numpft))
             allocate (astem_p                  (numpft))
@@ -504,7 +499,6 @@ CONTAINS
             allocate (a10tmin_p                (numpft))
             allocate (t10_p                    (numpft))
             allocate (cumvd_p                  (numpft))
-            allocate (hdidx_p                  (numpft))
             allocate (vf_p                     (numpft))
             allocate (cphase_p                 (numpft))
             allocate (fert_counter_p           (numpft))
@@ -744,12 +738,6 @@ CONTAINS
      call ncio_read_vector (file_restart, 'totvegc_p              ', landpft, totvegc_p             )
      call ncio_read_vector (file_restart, 'cropprod1c_p           ', landpft, cropprod1c_p          )
 
-  !   call ncio_read_vector (file_restart, 'leaf_prof_p            ', landpft, leaf_prof_p           )
-  !   call ncio_read_vector (file_restart, 'froot_prof_p           ', landpft, froot_prof_p          )
-  !   call ncio_read_vector (file_restart, 'croot_prof_p           ', landpft, croot_prof_p          )
-  !   call ncio_read_vector (file_restart, 'stem_prof_p            ', landpft, stem_prof_p           )
-  !   call ncio_read_vector (file_restart, 'cinput_rootfr_p        ', landpft, cinput_rootfr_p       )
-
      call ncio_read_vector (file_restart, 'leafn_p                ', landpft, leafn_p               )
      call ncio_read_vector (file_restart, 'leafn_storage_p        ', landpft, leafn_storage_p       )
      call ncio_read_vector (file_restart, 'leafn_xfer_p           ', landpft, leafn_xfer_p          )
@@ -815,9 +803,6 @@ CONTAINS
      call ncio_read_vector (file_restart, 'days_active_p          ', landpft, days_active_p         )
 
      call ncio_read_vector (file_restart, 'burndate_p             ', landpft, burndate_p            )
-!     call ncio_read_vector (file_restart, 'c_allometry_p          ', landpft, c_allometry_p         )
-!     call ncio_read_vector (file_restart, 'n_allometry_p          ', landpft, n_allometry_p         )
-!     call ncio_read_vector (file_restart, 'downreg_p              ', landpft, downreg_p             )
      call ncio_read_vector (file_restart, 'grain_flag_p           ', landpft, grain_flag_p          )
      call ncio_read_vector (file_restart, 'ctrunc_p               ', landpft, ctrunc_p              )
      call ncio_read_vector (file_restart, 'ntrunc_p               ', landpft, ntrunc_p              )
@@ -826,10 +811,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
      call ncio_read_vector (file_restart, 'croplive_p             ', landpft, croplive_p            )
-     call ncio_read_vector (file_restart, 'gddtsoi_p              ', landpft, gddtsoi_p             )
-     call ncio_read_vector (file_restart, 'huileaf_p              ', landpft, huileaf_p             )
+     call ncio_read_vector (file_restart, 'hui_p                  ', landpft, hui_p                 )
      call ncio_read_vector (file_restart, 'gddplant_p             ', landpft, gddplant_p            )
-     call ncio_read_vector (file_restart, 'huigrain_p             ', landpft, huigrain_p            )
      call ncio_read_vector (file_restart, 'peaklai_p              ', landpft, peaklai_p             )
      call ncio_read_vector (file_restart, 'aroot_p                ', landpft, aroot_p               )
      call ncio_read_vector (file_restart, 'astem_p                ', landpft, astem_p               )
@@ -845,7 +828,6 @@ CONTAINS
      call ncio_read_vector (file_restart, 'a10tmin_p              ', landpft, a10tmin_p             )
      call ncio_read_vector (file_restart, 't10_p                  ', landpft, t10_p                 )
      call ncio_read_vector (file_restart, 'cumvd_p                ', landpft, cumvd_p               )
-     call ncio_read_vector (file_restart, 'hdidx_p                ', landpft, hdidx_p               )
      call ncio_read_vector (file_restart, 'vf_p                   ', landpft, vf_p                  )
      call ncio_read_vector (file_restart, 'cphase_p               ', landpft, cphase_p              )
      call ncio_read_vector (file_restart, 'fert_counter_p         ', landpft, fert_counter_p        )
@@ -1209,17 +1191,6 @@ CONTAINS
      call ncio_write_vector (file_restart, 'cropprod1c_p           ', 'vector', landpft, &
      cropprod1c_p          , compress)
 
-!     call ncio_write_vector (file_restart, 'leaf_prof_p            ', 'vector', landpft, &
-!     leaf_prof_p           , compress)
-!     call ncio_write_vector (file_restart, 'froot_prof_p           ', 'vector', landpft, &
-!     froot_prof_p          , compress)
-!     call ncio_write_vector (file_restart, 'croot_prof_p           ', 'vector', landpft, &
-!     croot_prof_p          , compress)
-!     call ncio_write_vector (file_restart, 'stem_prof_p            ', 'vector', landpft, &
-!     stem_prof_p           , compress)
-!     call ncio_write_vector (file_restart, 'cinput_rootfr_p        ', 'vector', landpft, &
-!     cinput_rootfr_p       , compress)
-
      call ncio_write_vector (file_restart, 'leafn_p                ', 'vector', landpft, &
      leafn_p               , compress)
      call ncio_write_vector (file_restart, 'leafn_storage_p        ', 'vector', landpft, &
@@ -1345,12 +1316,6 @@ CONTAINS
 
      call ncio_write_vector (file_restart, 'burndate_p             ', 'vector', landpft, &
      burndate_p            , compress)
-!     call ncio_write_vector (file_restart, 'c_allometry_p          ', 'vector', landpft, &
-!     c_allometry_p         , compress)
-!     call ncio_write_vector (file_restart, 'n_allometry_p          ', 'vector', landpft, &
-!     n_allometry_p         , compress)
-!     call ncio_write_vector (file_restart, 'downreg_p              ', 'vector', landpft, &
-!     downreg_p             , compress)
      call ncio_write_vector (file_restart, 'grain_flag_p           ', 'vector', landpft, &
      grain_flag_p          , compress)
      call ncio_write_vector (file_restart, 'ctrunc_p               ', 'vector', landpft, &
@@ -1364,14 +1329,10 @@ CONTAINS
 ! crop variables 
      call ncio_write_vector (file_restart, 'croplive_p             ', 'vector', landpft, &
      croplive_p            , compress)
-     call ncio_write_vector (file_restart, 'gddtsoi_p              ', 'vector', landpft, &
-     gddtsoi_p             , compress)
-     call ncio_write_vector (file_restart, 'huileaf_p              ', 'vector', landpft, &
-     huileaf_p             , compress)
+     call ncio_write_vector (file_restart, 'hui_p                   ', 'vector', landpft, &
+     hui_p             , compress)
      call ncio_write_vector (file_restart, 'gddplant_p             ', 'vector', landpft, &
      gddplant_p            , compress)
-     call ncio_write_vector (file_restart, 'huigrain_p             ', 'vector', landpft, &
-     huigrain_p            , compress)
      call ncio_write_vector (file_restart, 'peaklai_p              ', 'vector', landpft, &
      peaklai_p             , compress)
      call ncio_write_vector (file_restart, 'aroot_p                ', 'vector', landpft, &
@@ -1401,8 +1362,6 @@ CONTAINS
      t10_p                 , compress)
      call ncio_write_vector (file_restart, 'cumvd_p                ', 'vector', landpft, &
      cumvd_p               , compress)
-     call ncio_write_vector (file_restart, 'hdidx_p                ', 'vector', landpft, &
-     hdidx_p               , compress)
      call ncio_write_vector (file_restart, 'vf_p                   ', 'vector', landpft, &
      vf_p                  , compress)
      call ncio_write_vector (file_restart, 'cphase_p               ', 'vector', landpft, &
@@ -1898,10 +1857,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
             deallocate (croplive_p               )
-            deallocate (gddtsoi_p                )
-            deallocate (huileaf_p                )
+            deallocate (hui_p                    )
             deallocate (gddplant_p               )
-            deallocate (huigrain_p               )
             deallocate (peaklai_p                )
             deallocate (aroot_p                  )
             deallocate (astem_p                  )
@@ -1917,7 +1874,6 @@ CONTAINS
             deallocate (a10tmin_p                )
             deallocate (t10_p                    )
             deallocate (cumvd_p                  )
-            deallocate (hdidx_p                  )
             deallocate (vf_p                     )
             deallocate (cphase_p                 )
             deallocate (fert_counter_p           )
@@ -2207,7 +2163,6 @@ CONTAINS
       call check_vector_data ('gdd020_p               ', gdd020_p               )
       call check_vector_data ('gdd820_p               ', gdd820_p               )
       call check_vector_data ('gdd1020_p              ', gdd1020_p              )
-!      call check_vector_data ('nyrs_crop_active_p     ', nyrs_crop_active_p     )
 
       call check_vector_data ('offset_flag_p          ', offset_flag_p          )
       call check_vector_data ('offset_counter_p       ', offset_counter_p       )
@@ -2237,12 +2192,8 @@ CONTAINS
 
 #ifdef CROP
 ! crop variables 
-!      call check_vector_data ('croplive_p             ', croplive_p             )
-      call check_vector_data ('gddtsoi_p              ', gddtsoi_p              )
-      call check_vector_data ('huileaf_p              ', huileaf_p              )
+      call check_vector_data ('hui_p                  ', hui_p                  )
       call check_vector_data ('gddplant_p             ', gddplant_p             )
-      call check_vector_data ('huigrain_p             ', huigrain_p             )
-!      call check_vector_data ('peaklai_p              ', peaklai_p              )
       call check_vector_data ('aroot_p                ', aroot_p                )
       call check_vector_data ('astem_p                ', astem_p                )
       call check_vector_data ('arepr_p                ', arepr_p                )
@@ -2251,13 +2202,10 @@ CONTAINS
       call check_vector_data ('aleafi_p               ', aleafi_p               )
       call check_vector_data ('gddmaturity_p          ', gddmaturity_p          )
 
-!      call check_vector_data ('cropplant_p            ', cropplant_p            )
-!      call check_vector_data ('idop_p                 ', idop_p                 )
       call check_vector_data ('a5tmin_p               ', a5tmin_p               )
       call check_vector_data ('a10tmin_p              ', a10tmin_p              )
       call check_vector_data ('t10_p                  ', t10_p                  )
       call check_vector_data ('cumvd_p                ', cumvd_p                )
-      call check_vector_data ('hdidx_p                ', hdidx_p                )
       call check_vector_data ('vf_p                   ', vf_p                   )
       call check_vector_data ('cphase_p               ', cphase_p               )
       call check_vector_data ('fert_counter_p         ', fert_counter_p         )

@@ -17,7 +17,7 @@ MODULE mod_hydrounit
 
 CONTAINS
 
-#if (defined GRIDBASED || defined SinglePoint)
+#if (defined GRIDBASED || defined SinglePoint || defined UNSTRUCTURED)
    ! -------------------------------
    SUBROUTINE hydrounit_build 
 
@@ -37,17 +37,17 @@ CONTAINS
 
          numhru = numbasin
 
-         allocate (hydrounit%unum (numhru))
-         allocate (hydrounit%iunt (numhru))
-         allocate (hydrounit%istt (numhru))
-         allocate (hydrounit%iend (numhru))
+         allocate (hydrounit%bindex (numhru))
+         allocate (hydrounit%ibasin (numhru))
+         allocate (hydrounit%ipxstt (numhru))
+         allocate (hydrounit%ipxend (numhru))
          allocate (hydrounit%ltyp (numhru))
 
          DO ihru = 1, numhru
-            hydrounit%unum(ihru) = landbasin(ihru)%num
-            hydrounit%iunt(ihru) = ihru
-            hydrounit%istt(ihru) = 1 
-            hydrounit%iend(ihru) = landbasin(ihru)%npxl 
+            hydrounit%bindex(ihru) = landbasin(ihru)%indx
+            hydrounit%ibasin(ihru) = ihru
+            hydrounit%ipxstt(ihru) = 1 
+            hydrounit%ipxend(ihru) = landbasin(ihru)%npxl 
          ENDDO
 
       ENDIF
@@ -100,7 +100,7 @@ CONTAINS
       INTEGER :: iu
       INTEGER, allocatable :: xlist(:), ylist(:), sbuf(:), rbuf(:)
       INTEGER, allocatable :: ltype(:), ipt(:), order(:)
-      INTEGER, allocatable :: unum_tmp(:), ltyp_tmp(:), istt_tmp(:), iend_tmp(:), iunt_tmp(:)
+      INTEGER, allocatable :: bindex_tmp(:), ltyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ibasin_tmp(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL, allocatable :: worker_done(:)
       INTEGER :: nhru_glb
@@ -173,11 +173,11 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         allocate (unum_tmp (numbasin*DEF_max_hband))
-         allocate (iunt_tmp (numbasin*DEF_max_hband))
+         allocate (bindex_tmp (numbasin*DEF_max_hband))
+         allocate (ibasin_tmp (numbasin*DEF_max_hband))
          allocate (ltyp_tmp (numbasin*DEF_max_hband))
-         allocate (istt_tmp (numbasin*DEF_max_hband))
-         allocate (iend_tmp (numbasin*DEF_max_hband))
+         allocate (ipxstt_tmp (numbasin*DEF_max_hband))
+         allocate (ipxend_tmp (numbasin*DEF_max_hband))
 
          numhru = 0
 
@@ -262,44 +262,44 @@ CONTAINS
             DO ipxl = 1, npxl
                IF (ipxl == 1) THEN
                   numhru = numhru + 1 
-                  unum_tmp (numhru) = landbasin(iu)%num
-                  iunt_tmp (numhru) = iu
+                  bindex_tmp (numhru) = landbasin(iu)%indx
+                  ibasin_tmp (numhru) = iu
                   ltyp_tmp (numhru) = ltype(ipxl)
-                  istt_tmp (numhru) = ipxl
+                  ipxstt_tmp (numhru) = ipxl
                ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
-                  iend_tmp(numhru) = ipxl - 1
+                  ipxend_tmp(numhru) = ipxl - 1
 
                   numhru = numhru + 1
-                  unum_tmp (numhru) = landbasin(iu)%num
-                  iunt_tmp (numhru) = iu
+                  bindex_tmp (numhru) = landbasin(iu)%indx
+                  ibasin_tmp (numhru) = iu
                   ltyp_tmp (numhru) = ltype(ipxl)
-                  istt_tmp (numhru) = ipxl
+                  ipxstt_tmp (numhru) = ipxl
                ENDIF
             ENDDO
-            iend_tmp(numhru) = npxl
+            ipxend_tmp(numhru) = npxl
             
             deallocate (ltype)
             deallocate (order)
 
          ENDDO
 
-         allocate (hydrounit%unum (numhru))
-         allocate (hydrounit%iunt (numhru))
+         allocate (hydrounit%bindex (numhru))
+         allocate (hydrounit%ibasin (numhru))
          allocate (hydrounit%ltyp (numhru))
-         allocate (hydrounit%istt (numhru))
-         allocate (hydrounit%iend (numhru))
+         allocate (hydrounit%ipxstt (numhru))
+         allocate (hydrounit%ipxend (numhru))
          
-         hydrounit%unum = unum_tmp(1:numhru)  
-         hydrounit%iunt = iunt_tmp(1:numhru)  
+         hydrounit%bindex = bindex_tmp(1:numhru)  
+         hydrounit%ibasin = ibasin_tmp(1:numhru)  
          hydrounit%ltyp = ltyp_tmp (1:numhru)  
-         hydrounit%istt = istt_tmp (1:numhru)
-         hydrounit%iend = iend_tmp (1:numhru)
+         hydrounit%ipxstt = ipxstt_tmp (1:numhru)
+         hydrounit%ipxend = ipxend_tmp (1:numhru)
 
          deallocate (ltyp_tmp)
-         deallocate (istt_tmp)
-         deallocate (iend_tmp)
-         deallocate (iunt_tmp)
-         deallocate (unum_tmp)
+         deallocate (ipxstt_tmp)
+         deallocate (ipxend_tmp)
+         deallocate (ibasin_tmp)
+         deallocate (bindex_tmp)
 
 #ifdef USEMPI
          DO iproc = 0, p_np_io-1

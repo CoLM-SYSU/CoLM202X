@@ -50,10 +50,10 @@ CONTAINS
       INTEGER :: ilon_g, ilat_g, iloc
       INTEGER :: ig, xblk, yblk, xloc, yloc
       INTEGER :: npxl, ipxl
-      INTEGER :: iu, ihru, istt, iend, ipatch
+      INTEGER :: iu, ihru, ipxstt, ipxend, ipatch
       INTEGER, allocatable :: xlist(:), ylist(:), sbuf(:), rbuf(:)
       INTEGER, allocatable :: ltype(:), ipt(:), order(:)
-      INTEGER, allocatable :: unum_tmp(:), ltyp_tmp(:), istt_tmp(:), iend_tmp(:), iunt_tmp(:)
+      INTEGER, allocatable :: bindex_tmp(:), ltyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ibasin_tmp(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL, allocatable :: worker_done(:)
       INTEGER :: npatch_glb
@@ -61,6 +61,10 @@ CONTAINS
       TYPE(block_data_real8_3d) :: cropdata
       INTEGER :: cropfilter(1)
       INTEGER :: ic, jc 
+#endif
+#ifdef USE_DOMINANT_PATCHTYPE
+      INTEGER :: dominant_type
+      INTEGER, allocatable :: npxl_ltype (:)
 #endif
 
       INTEGER :: iblk, jblk
@@ -97,17 +101,17 @@ CONTAINS
       numpatch = 1
 #endif
 
-      allocate (landpatch%unum (numpatch))
-      allocate (landpatch%iunt (numpatch))
-      allocate (landpatch%istt (numpatch))
-      allocate (landpatch%iend (numpatch))
+      allocate (landpatch%bindex (numpatch))
+      allocate (landpatch%ibasin (numpatch))
+      allocate (landpatch%ipxstt (numpatch))
+      allocate (landpatch%ipxend (numpatch))
       allocate (landpatch%ltyp (numpatch))
 
       DO ipatch = 1, numpatch 
-         landpatch%unum(ipatch) = landbasin(1)%num
-         landpatch%iunt(ipatch) = 1
-         landpatch%istt(ipatch) = 1 
-         landpatch%iend(ipatch) = 1
+         landpatch%bindex(ipatch) = landbasin(1)%indx
+         landpatch%ibasin(ipatch) = 1
+         landpatch%ipxstt(ipatch) = 1 
+         landpatch%ipxend(ipatch) = 1
 #ifdef PFT_CLASSIFICATION
          IF (patchtypes(SITE_landtype) == 0) THEN
 #ifdef CROP
@@ -214,30 +218,32 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         allocate (unum_tmp (numhru*N_land_classification))
-         allocate (iunt_tmp (numhru*N_land_classification))
-         allocate (ltyp_tmp (numhru*N_land_classification))
-         allocate (istt_tmp (numhru*N_land_classification))
-         allocate (iend_tmp (numhru*N_land_classification))
+         IF (numhru > 0) THEN
+            allocate (bindex_tmp (numhru*N_land_classification))
+            allocate (ibasin_tmp (numhru*N_land_classification))
+            allocate (ltyp_tmp   (numhru*N_land_classification))
+            allocate (ipxstt_tmp (numhru*N_land_classification))
+            allocate (ipxend_tmp (numhru*N_land_classification))
+         ENDIF
 
          numpatch = 0
 
          DO ihru = 1, numhru
          
-            iu   = hydrounit%iunt(ihru)
-            istt = hydrounit%istt(ihru)
-            iend = hydrounit%iend(ihru)
-            npxl = iend - istt + 1 
+            iu   = hydrounit%ibasin(ihru)
+            ipxstt = hydrounit%ipxstt(ihru)
+            ipxend = hydrounit%ipxend(ihru)
+            npxl = ipxend - ipxstt + 1 
             
-            allocate (ltype (istt:iend))
+            allocate (ltype (ipxstt:ipxend))
 
 #ifdef USEMPI
-            allocate (xlist (istt:iend))
-            allocate (ylist (istt:iend))
-            allocate (ipt   (istt:iend))
-            allocate (msk   (istt:iend))
+            allocate (xlist (ipxstt:ipxend))
+            allocate (ylist (ipxstt:ipxend))
+            allocate (ipt   (ipxstt:ipxend))
+            allocate (msk   (ipxstt:ipxend))
 
-            DO ipxl = istt, iend
+            DO ipxl = ipxstt, ipxend
                ilon_g = gpatch%xgrd(landbasin(iu)%ilon(ipxl))
                ilat_g = gpatch%ygrd(landbasin(iu)%ilat(ipxl))
                xlist(ipxl) = ilon_g
@@ -283,7 +289,7 @@ CONTAINS
             deallocate (ipt  )
             deallocate (msk  )
 #else
-            DO ipxl = istt, iend
+            DO ipxl = ipxstt, ipxend
                ilon_g = gpatch%xgrd(landbasin(iu)%ilon(ipxl))
                ilat_g = gpatch%ygrd(landbasin(iu)%ilat(ipxl))
                xblk   = gpatch%xblk(ilon_g)
@@ -295,12 +301,12 @@ CONTAINS
             ENDDO
 #endif
                
-            allocate (order (istt:iend))
-            order = (/ (ipxl, ipxl = istt, iend) /)
+            allocate (order (ipxstt:ipxend))
+            order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
 #ifdef PFT_CLASSIFICATION
             ! For classification of plant function types, merge all land types with soil ground 
-            DO ipxl = istt, iend
+            DO ipxl = ipxstt, ipxend
                IF (ltype(ipxl) > 0) THEN
                   IF (patchtypes(ltype(ipxl)) == 0) THEN
 #if (defined CROP) 
@@ -315,56 +321,68 @@ CONTAINS
                   ENDIF
                ENDIF
             ENDDO
+#endif
             
             CALL quicksort (npxl, ltype, order)
                
-            landbasin(iu)%ilon(istt:iend) = landbasin(iu)%ilon(order)
-            landbasin(iu)%ilat(istt:iend) = landbasin(iu)%ilat(order)
+            landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
+            landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
             
-            DO ipxl = istt, iend
-               IF (ipxl == istt) THEN
+#ifdef USE_DOMINANT_PATCHTYPE
+            allocate (npxl_ltype (ltype(1):ltype(npxl)))
+            npxl_ltype(:) = 0
+            DO ipxl = ipxstt+1, ipxend
+               npxl_ltype(ltype(ipxl)) = npxl_ltype(ltype(ipxl)) + 1
+            ENDDO 
+            dominant_type = maxloc(npxl_ltype, dim=1) + ltype(1) - 1
+
+            ltype(:) = dominant_type
+
+            deallocate(npxl_ltype)
+#endif
+            DO ipxl = ipxstt, ipxend
+               IF (ipxl == ipxstt) THEN
                   numpatch = numpatch + 1 
-                  iunt_tmp(numpatch) = iu
-                  unum_tmp(numpatch) = landbasin(iu)%num
+                  ibasin_tmp(numpatch) = iu
+                  bindex_tmp(numpatch) = landbasin(iu)%indx
                   ltyp_tmp(numpatch) = ltype(ipxl)
-                  istt_tmp(numpatch) = ipxl
+                  ipxstt_tmp(numpatch) = ipxl
                ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
-                  iend_tmp(numpatch) = ipxl - 1
+                  ipxend_tmp(numpatch) = ipxl - 1
 
                   numpatch = numpatch + 1
-                  iunt_tmp(numpatch) = iu
-                  unum_tmp(numpatch) = landbasin(iu)%num
+                  ibasin_tmp(numpatch) = iu
+                  bindex_tmp(numpatch) = landbasin(iu)%indx
                   ltyp_tmp(numpatch) = ltype(ipxl)
-                  istt_tmp(numpatch) = ipxl
+                  ipxstt_tmp(numpatch) = ipxl
                ENDIF
             ENDDO
-            iend_tmp(numpatch) = iend
-#endif
+            ipxend_tmp(numpatch) = ipxend
 
 #if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION || defined PC_CLASSIFICATION) 
             CALL quicksort (npxl, ltype, order)
                
-            landbasin(iu)%ilon(istt:iend) = landbasin(iu)%ilon(order)
-            landbasin(iu)%ilat(istt:iend) = landbasin(iu)%ilat(order)
+            landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
+            landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
             
-            DO ipxl = istt, iend
-               IF (ipxl == istt) THEN
+            DO ipxl = ipxstt, ipxend
+               IF (ipxl == ipxstt) THEN
                   numpatch = numpatch + 1 
-                  iunt_tmp(numpatch) = iu
-                  unum_tmp(numpatch) = landbasin(iu)%num
+                  ibasin_tmp(numpatch) = iu
+                  bindex_tmp(numpatch) = landbasin(iu)%indx
                   ltyp_tmp(numpatch) = ltype(ipxl)
-                  istt_tmp(numpatch) = ipxl
+                  ipxstt_tmp(numpatch) = ipxl
                ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
-                  iend_tmp(numpatch) = ipxl - 1
+                  ipxend_tmp(numpatch) = ipxl - 1
 
                   numpatch = numpatch + 1
-                  iunt_tmp(numpatch) = iu
-                  unum_tmp(numpatch) = landbasin(iu)%num
+                  ibasin_tmp(numpatch) = iu
+                  bindex_tmp(numpatch) = landbasin(iu)%indx
                   ltyp_tmp(numpatch) = ltype(ipxl)
-                  istt_tmp(numpatch) = ipxl
+                  ipxstt_tmp(numpatch) = ipxl
                ENDIF
             ENDDO
-            iend_tmp(numpatch) = iend
+            ipxend_tmp(numpatch) = ipxend
 #endif
             
             deallocate (ltype)
@@ -372,23 +390,27 @@ CONTAINS
 
          ENDDO
          
-         allocate (landpatch%iunt (numpatch))
-         allocate (landpatch%unum (numpatch))
-         allocate (landpatch%ltyp (numpatch))
-         allocate (landpatch%istt (numpatch))
-         allocate (landpatch%iend (numpatch))
+         IF (numpatch > 0) THEN
+            allocate (landpatch%ibasin (numpatch))
+            allocate (landpatch%bindex (numpatch))
+            allocate (landpatch%ltyp   (numpatch))
+            allocate (landpatch%ipxstt (numpatch))
+            allocate (landpatch%ipxend (numpatch))
 
-         landpatch%iunt = iunt_tmp(1:numpatch)  
-         landpatch%unum = unum_tmp(1:numpatch)  
-         landpatch%ltyp = ltyp_tmp(1:numpatch)  
-         landpatch%istt = istt_tmp(1:numpatch)
-         landpatch%iend = iend_tmp(1:numpatch)
+            landpatch%ibasin = ibasin_tmp(1:numpatch)  
+            landpatch%bindex = bindex_tmp(1:numpatch)  
+            landpatch%ltyp   = ltyp_tmp  (1:numpatch)  
+            landpatch%ipxstt = ipxstt_tmp(1:numpatch)
+            landpatch%ipxend = ipxend_tmp(1:numpatch)
+         ENDIF
 
-         deallocate (ltyp_tmp)
-         deallocate (istt_tmp)
-         deallocate (iend_tmp)
-         deallocate (iunt_tmp)
-         deallocate (unum_tmp)
+         IF (numhru > 0) THEN
+            deallocate (ltyp_tmp)
+            deallocate (ipxstt_tmp)
+            deallocate (ipxend_tmp)
+            deallocate (ibasin_tmp)
+            deallocate (bindex_tmp)
+         ENDIF
 
 #ifdef USEMPI
          DO iproc = 0, p_np_io-1
@@ -406,8 +428,10 @@ CONTAINS
 
 #ifdef LANDONLY
       IF (p_is_worker) THEN
-         allocate(msk(numpatch))
-         msk = (landpatch%ltyp /= 0)
+         IF (numpatch > 0) THEN
+            allocate(msk(numpatch))
+            msk = (landpatch%ltyp /= 0)
+         ENDIF
       ENDIF
          
       CALL landpatch%pset_pack (msk, numpatch)

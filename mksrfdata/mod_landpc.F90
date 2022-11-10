@@ -40,16 +40,16 @@ CONTAINS
          patch2pc(1) = 1
          pc2patch(1) = 1
             
-         allocate (landpc%unum (numpc))
-         allocate (landpc%iunt (numpc))
+         allocate (landpc%bindex (numpc))
+         allocate (landpc%ibasin (numpc))
          allocate (landpc%ltyp (numpc))
-         allocate (landpc%istt (numpc))
-         allocate (landpc%iend (numpc))
+         allocate (landpc%ipxstt (numpc))
+         allocate (landpc%ipxend (numpc))
                   
-         landpc%iunt(1) = 1
-         landpc%unum(1) = 1
-         landpc%istt(1) = 1
-         landpc%iend(1) = 1
+         landpc%ibasin(1) = 1
+         landpc%bindex(1) = 1
+         landpc%ipxstt(1) = 1
+         landpc%ipxend(1) = 1
          landpc%ltyp(1) = SITE_landtype
       ELSE
          numpc = 0
@@ -81,11 +81,11 @@ CONTAINS
             allocate (pc2patch (numpc   ))
             allocate (patch2pc (numpatch))
 
-            allocate (landpc%unum (numpc))
-            allocate (landpc%iunt (numpc))
+            allocate (landpc%bindex (numpc))
+            allocate (landpc%ibasin (numpc))
             allocate (landpc%ltyp (numpc))
-            allocate (landpc%istt (numpc))
-            allocate (landpc%iend (numpc))
+            allocate (landpc%ipxstt (numpc))
+            allocate (landpc%ipxend (numpc))
 
             npc = 0
             DO ipatch = 1, numpatch
@@ -94,10 +94,10 @@ CONTAINS
 
                   npc = npc + 1
                         
-                  landpc%iunt(npc) = landpatch%iunt(ipatch)
-                  landpc%unum(npc) = landpatch%unum(ipatch)
-                  landpc%istt(npc) = landpatch%istt(ipatch)
-                  landpc%iend(npc) = landpatch%iend(ipatch)
+                  landpc%ibasin(npc) = landpatch%ibasin(ipatch)
+                  landpc%bindex(npc) = landpatch%bindex(ipatch)
+                  landpc%ipxstt(npc) = landpatch%ipxstt(ipatch)
+                  landpc%ipxend(npc) = landpatch%ipxend(ipatch)
                   landpc%ltyp(npc) = m
 
                   pc2patch(npc) = ipatch

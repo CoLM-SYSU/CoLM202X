@@ -78,7 +78,7 @@ CONTAINS
                      DO iu = 1, numbasin
                         IF ((landbasin(iu)%xblk == iblk) .and. (landbasin(iu)%yblk == jblk)) THEN
                            ju = ju + 1
-                           basinnum(ju) = landbasin(iu)%num
+                           basinnum(ju) = landbasin(iu)%indx
                            npxlall(ju) = landbasin(iu)%npxl
 
                            basinpixels(1,1:npxlall(ju),ju) = landbasin(iu)%ilon
@@ -214,7 +214,7 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock
-      INTEGER :: iblk, jblk, iu, nbasin, ndsp
+      INTEGER :: iblkme, iblk, jblk, iu, nbasin, ndsp
       INTEGER, allocatable :: basinnum(:), npxl(:), pixels(:,:,:)
 
 #ifdef USEMPI
@@ -237,36 +237,34 @@ CONTAINS
             allocate (landbasin (numbasin))
 
             ndsp = 0
-            DO jblk = 1, gblock%nyblk
-               DO iblk = 1, gblock%nxblk
-                  IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
 
-                     nbasin = nbasin_blk(iblk,jblk)
+               nbasin = nbasin_blk(iblk,jblk)
 
-                     IF (nbasin > 0) THEN
-                     
-                        CALL get_filename_block (filename, iblk, jblk, fileblock)
-                        CALL ncio_read_serial (fileblock, 'basinnum', basinnum)
-                        CALL ncio_read_serial (fileblock, 'npxl',    npxl   )
-                        CALL ncio_read_serial (fileblock, 'pixel',   pixels )
+               IF (nbasin > 0) THEN
 
-                        DO iu = 1, nbasin
-                           landbasin(iu+ndsp)%num  = basinnum(iu)
-                           landbasin(iu+ndsp)%npxl = npxl(iu)
-                           landbasin(iu+ndsp)%xblk = iblk
-                           landbasin(iu+ndsp)%yblk = jblk
+                  CALL get_filename_block (filename, iblk, jblk, fileblock)
+                  CALL ncio_read_serial (fileblock, 'basinnum', basinnum)
+                  CALL ncio_read_serial (fileblock, 'npxl',    npxl   )
+                  CALL ncio_read_serial (fileblock, 'pixel',   pixels )
 
-                           allocate (landbasin(iu+ndsp)%ilon (npxl(iu)))
-                           allocate (landbasin(iu+ndsp)%ilat (npxl(iu)))
+                  DO iu = 1, nbasin
+                     landbasin(iu+ndsp)%indx  = basinnum(iu)
+                     landbasin(iu+ndsp)%npxl = npxl(iu)
+                     landbasin(iu+ndsp)%xblk = iblk
+                     landbasin(iu+ndsp)%yblk = jblk
 
-                           landbasin(iu+ndsp)%ilon = pixels(1,1:npxl(iu),iu)
-                           landbasin(iu+ndsp)%ilat = pixels(2,1:npxl(iu),iu)
-                        ENDDO
+                     allocate (landbasin(iu+ndsp)%ilon (npxl(iu)))
+                     allocate (landbasin(iu+ndsp)%ilat (npxl(iu)))
 
-                        ndsp = ndsp + nbasin
-                     ENDIF
-                  ENDIF
-               ENDDO
+                     landbasin(iu+ndsp)%ilon = pixels(1,1:npxl(iu),iu)
+                     landbasin(iu+ndsp)%ilat = pixels(2,1:npxl(iu),iu)
+                  ENDDO
+
+                  ndsp = ndsp + nbasin
+               ENDIF
             ENDDO
          ENDIF
          
@@ -275,11 +273,6 @@ CONTAINS
          IF (allocated(pixels )) deallocate(pixels )
             
       ENDIF
-
-#ifdef SinglePoint
-      site_xblk = landbasin(1)%xblk
-      site_yblk = landbasin(1)%yblk
-#endif
 
 #ifdef CLMDEBUG 
       IF (p_is_io)     write(*,*) numbasin, ' basins on group', p_iam_io
@@ -328,9 +321,9 @@ CONTAINS
       CALL ncio_create_file_vector (filename, pixelset)
       CALL ncio_define_pixelset_dimension (filename, pixelset)
 
-      CALL ncio_write_vector (filename, 'unum', 'vector', pixelset, pixelset%unum, rcompress)
-      CALL ncio_write_vector (filename, 'istt', 'vector', pixelset, pixelset%istt, rcompress)
-      CALL ncio_write_vector (filename, 'iend', 'vector', pixelset, pixelset%iend, rcompress)
+      CALL ncio_write_vector (filename, 'bindex', 'vector', pixelset, pixelset%bindex, rcompress)
+      CALL ncio_write_vector (filename, 'ipxstt', 'vector', pixelset, pixelset%ipxstt, rcompress)
+      CALL ncio_write_vector (filename, 'ipxend', 'vector', pixelset, pixelset%ipxend, rcompress)
       CALL ncio_write_vector (filename, 'ltyp', 'vector', pixelset, pixelset%ltyp, rcompress)
       
 #ifdef USEMPI
@@ -360,7 +353,7 @@ CONTAINS
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock
-      INTEGER :: iset, nset, ndsp, iblk, jblk, iu, ju, nave, nres, left, iproc
+      INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, iu, ju, nave, nres, left, iproc
       INTEGER :: nsend, nrecv
       INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
       LOGICAL, allocatable :: msk(:)
@@ -380,45 +373,41 @@ CONTAINS
 
          pixelset%nset = 0
                   
-         DO jblk = 1, gblock%nyblk
-            DO iblk = 1, gblock%nxblk
-               IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+         DO iblkme = 1, nblkme 
+            iblk = xblkme(iblkme)
+            jblk = yblkme(iblkme)
          
-                  CALL get_filename_block (filename, iblk, jblk, fileblock)
-                  
-                  inquire (file=trim(fileblock), exist=fexists)
-                  IF (fexists) THEN 
-                     CALL ncio_inquire_length (fileblock, 'unum', nset)
-                     pixelset%nset = pixelset%nset + nset
-                  ENDIF
+            CALL get_filename_block (filename, iblk, jblk, fileblock)
 
-               ENDIF
-            ENDDO
+            inquire (file=trim(fileblock), exist=fexists)
+            IF (fexists) THEN 
+               CALL ncio_inquire_length (fileblock, 'bindex', nset)
+               pixelset%nset = pixelset%nset + nset
+            ENDIF
+
          ENDDO
 
          IF (pixelset%nset > 0) THEN
 
-            allocate (pixelset%unum (pixelset%nset))
+            allocate (pixelset%bindex (pixelset%nset))
 
             ndsp = 0
-            DO jblk = 1, gblock%nyblk
-               DO iblk = 1, gblock%nxblk
-                  IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
+            DO iblkme = 1, nblkme 
+               iblk = xblkme(iblkme)
+               jblk = yblkme(iblkme)
 
-                     CALL get_filename_block (filename, iblk, jblk, fileblock)
-                     inquire (file=trim(fileblock), exist=fexists)
-                     IF (fexists) THEN 
+               CALL get_filename_block (filename, iblk, jblk, fileblock)
+               inquire (file=trim(fileblock), exist=fexists)
+               IF (fexists) THEN 
 
-                        CALL ncio_read_serial (fileblock, 'unum', rbuff) 
+                  CALL ncio_read_serial (fileblock, 'bindex', rbuff) 
 
-                        nset = size(rbuff)
-                        pixelset%unum(ndsp+1:ndsp+nset) = rbuff
+                  nset = size(rbuff)
+                  pixelset%bindex(ndsp+1:ndsp+nset) = rbuff
 
-                        ndsp = ndsp + nset
-                     ENDIF
+                  ndsp = ndsp + nset
+               ENDIF
 
-                  ENDIF
-               ENDDO
             ENDDO
          ENDIF
       ENDIF
@@ -435,7 +424,7 @@ CONTAINS
             iblk = landbasin(iu)%xblk
             jblk = landbasin(iu)%yblk
             DO iset = 1, pixelset%nset
-               DO WHILE (pixelset%unum(iset) /= landbasin(iu)%num)
+               DO WHILE (pixelset%bindex(iset) /= landbasin(iu)%indx)
                   iu = iu + 1
                   ju = ju + 1
                   IF ((landbasin(iu)%xblk /= iblk) .or. (landbasin(iu)%yblk /= jblk)) THEN
@@ -462,7 +451,7 @@ CONTAINS
 
                IF (nsend > 0) THEN
                   allocate (sbuff(nsend))
-                  sbuff = pack(pixelset%unum, msk)
+                  sbuff = pack(pixelset%bindex, msk)
                   CALL mpi_send (sbuff, nsend, MPI_INTEGER, iproc, mpi_tag_data, p_comm_group, p_err) 
                   deallocate (sbuff)
                ENDIF
@@ -482,8 +471,8 @@ CONTAINS
          
          pixelset%nset = nrecv
          IF (nrecv > 0) THEN
-            allocate (pixelset%unum (nrecv))
-            CALL mpi_recv (pixelset%unum, nrecv, MPI_INTEGER, &
+            allocate (pixelset%bindex (nrecv))
+            CALL mpi_recv (pixelset%bindex, nrecv, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_group, p_stat, p_err)
          ENDIF
       ENDIF
@@ -492,20 +481,20 @@ CONTAINS
       
       CALL pixelset%set_vecgs
 
-      CALL ncio_read_vector (filename, 'istt', pixelset, pixelset%istt)
-      CALL ncio_read_vector (filename, 'iend', pixelset, pixelset%iend)
+      CALL ncio_read_vector (filename, 'ipxstt', pixelset, pixelset%ipxstt)
+      CALL ncio_read_vector (filename, 'ipxend', pixelset, pixelset%ipxend)
       CALL ncio_read_vector (filename, 'ltyp', pixelset, pixelset%ltyp)
 
       IF (p_is_worker) THEN
          IF (pixelset%nset > 0) THEN
 
-            allocate (pixelset%iunt (pixelset%nset))
+            allocate (pixelset%ibasin (pixelset%nset))
             iu = 1
             DO iset = 1, pixelset%nset
-               DO WHILE (pixelset%unum(iset) /= landbasin(iu)%num)
+               DO WHILE (pixelset%bindex(iset) /= landbasin(iu)%indx)
                   iu = iu + 1
                ENDDO
-               pixelset%iunt(iset) = iu
+               pixelset%ibasin(iset) = iu
             ENDDO
 
          ENDIF

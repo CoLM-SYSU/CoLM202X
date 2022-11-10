@@ -35,7 +35,9 @@ OBJS_SHARED = \
 				  ../share/mod_landbasin.o   \
 				  ../share/mod_pixelset.o          \
 				  ../share/ncio_vector.o \
-				  ../share/mod_colm_debug.o
+				  ../share/mod_colm_debug.o \
+				  ../share/mod_mapping_grid2pset.o \
+				  ../share/mod_mapping_pset2grid.o
 
 OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_srfdata_restart.o \
@@ -106,8 +108,6 @@ BASIC_BGC = \
 			  bgc/MOD_BGCTimeVars.o 
 
 OBJS =  \
-		  mod_mapping_grid2pset.o \
-		  mod_mapping_pset2grid.o \
 		  MOD_2D_Fluxes.o             \
 		  MOD_2D_Forcing.o            \
 		  user_specified_forcing.o    \
@@ -132,7 +132,8 @@ OBJS =  \
 		  LAI_empirical.o             \
 		  LAI_readin.o                \
 		  CROP_readin.o               \
-		  NITRIF_readin.o               \
+		  NITRIF_readin.o             \
+		  NDEP_readin.o               \
 		  LAI_varied_readin.o         \
 		  LEAF_interception.o         \
 		  meltf.o                     \

@@ -46,7 +46,7 @@ SUBROUTINE aggregation_soil_brightness ( &
    REAL(r8), allocatable :: soil_d_n_alb (:)
 
    INTEGER :: ii, L
-   INTEGER :: ipatch, iblk, jblk, ix, iy
+   INTEGER :: ipatch, iblkme, iblk, jblk, ix, iy
    REAL(r8), allocatable :: soil_one(:)
 
    ! ----------------------------------------------------------------------
@@ -107,26 +107,24 @@ SUBROUTINE aggregation_soil_brightness ( &
       ! Read in the index of soil brightness (color)
       CALL ncio_read_block (lndname, 'soil_brightness', gland, isc)
 
-      DO jblk = 1, gblock%nyblk
-         DO iblk = 1, gblock%nxblk
-            IF (p_iam_glb == gblock%pio(iblk,jblk)) THEN
+      DO iblkme = 1, nblkme 
+         iblk = xblkme(iblkme)
+         jblk = yblkme(iblkme)
 
-               DO iy = 1, gland%ycnt(jblk)
-                  DO ix = 1, gland%xcnt(iblk)
+         DO iy = 1, gland%ycnt(jblk)
+            DO ix = 1, gland%xcnt(iblk)
 
-                     ii = isc%blk(iblk,jblk)%val(ix,iy)
-                     IF ((ii >= 1) .and. (ii <= 20)) THEN 
-                        a_s_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_v_refl( ii )
-                        a_d_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_d_v_refl( ii )
-                        a_s_n_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_n_refl( ii )
-                        a_d_n_refl%blk(iblk,jblk)%val(ix,iy) = soil_d_n_refl( ii )
-                     ENDIF
+               ii = isc%blk(iblk,jblk)%val(ix,iy)
+               IF ((ii >= 1) .and. (ii <= 20)) THEN 
+                  a_s_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_v_refl( ii )
+                  a_d_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_d_v_refl( ii )
+                  a_s_n_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_n_refl( ii )
+                  a_d_n_refl%blk(iblk,jblk)%val(ix,iy) = soil_d_n_refl( ii )
+               ENDIF
 
-                  ENDDO
-               ENDDO
-
-            ENDIF
+            ENDDO
          ENDDO
+
       ENDDO
 
    ENDIF

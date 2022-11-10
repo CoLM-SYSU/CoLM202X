@@ -174,43 +174,43 @@ CONTAINS
       ! Local Variables
       INTEGER :: nreq, smesg(2), isrc, idest, iproc
       INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: npxl, ipxl, iu, istt, iend
+      INTEGER :: npxl, ipxl, iu, ipxstt, ipxend
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
       REAL(r8), allocatable :: rbuf(:)
       LOGICAL,  allocatable :: msk(:)
 
 
-      iu   = landpatch%iunt(ipatch)
-      istt = landpatch%istt(ipatch)
-      iend = landpatch%iend(ipatch)
+      iu   = landpatch%ibasin(ipatch)
+      ipxstt = landpatch%ipxstt(ipatch)
+      ipxend = landpatch%ipxend(ipatch)
 
-      npxl = iend - istt + 1
-      allocate (data_out1 (istt:iend))
+      npxl = ipxend - ipxstt + 1
+      allocate (data_out1 (ipxstt:ipxend))
 
       IF (present (areall)) THEN
-         allocate (areall (istt:iend))
+         allocate (areall (ipxstt:ipxend))
       ENDIF
 
       IF (present(data_in2) .and. present(data_out2)) THEN
-         allocate (data_out2 (istt:iend))
+         allocate (data_out2 (ipxstt:ipxend))
       ENDIF
 
       IF (present(data_in3) .and. present(data_out3)) THEN
-         allocate (data_out3 (istt:iend))
+         allocate (data_out3 (ipxstt:ipxend))
       ENDIF
 
       IF (present(data_in4) .and. present(data_out4)) THEN
-         allocate (data_out4 (istt:iend))
+         allocate (data_out4 (ipxstt:ipxend))
       ENDIF
 
 #ifdef USEMPI
 
-      allocate (xlist (istt:iend))
-      allocate (ylist (istt:iend))
-      allocate (ipt   (istt:iend))
-      allocate (msk   (istt:iend))
+      allocate (xlist (ipxstt:ipxend))
+      allocate (ylist (ipxstt:ipxend))
+      allocate (ipt   (ipxstt:ipxend))
+      allocate (msk   (ipxstt:ipxend))
 
-      DO ipxl = istt, iend
+      DO ipxl = ipxstt, ipxend
          xlist(ipxl) = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
          ylist(ipxl) = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
 
@@ -274,7 +274,7 @@ CONTAINS
 
 #else
       
-      DO ipxl = istt, iend
+      DO ipxl = ipxstt, ipxend
 
          ilon = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
          ilat = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
@@ -302,7 +302,7 @@ CONTAINS
 #endif
 
       IF (present(areall)) THEN
-         DO ipxl = istt, iend
+         DO ipxl = ipxstt, ipxend
             areall(ipxl) = areaquad (&
                pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
                pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )

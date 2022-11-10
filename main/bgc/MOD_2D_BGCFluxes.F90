@@ -67,10 +67,42 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_grainc_to_cropprodc! grain to crop production
    type(block_data_real8_2d) :: f_grainc_to_seed     ! grain to crop seed
    type(block_data_real8_2d) :: f_fert_to_sminn      ! grain to crop seed
+   type(block_data_real8_2d) :: f_ndep_to_sminn      ! grain to crop seed
+   type(block_data_real8_2d) :: f_plantdate          ! planting date
 
    type(block_data_real8_2d) :: f_gpp                ! net primary production (gC/m2/s)
    type(block_data_real8_2d) :: f_downreg            ! gpp downregulation due to N limitation
    type(block_data_real8_2d) :: f_ar                 ! autotrophic respiration (gC/m2/s)
+   type(block_data_real8_2d) :: f_fpg                ! fraction of potential gpp
+   type(block_data_real8_2d) :: f_fpi                ! fraction of potential immobilization
+   type(block_data_real8_2d) :: f_gpp_enftemp        !1
+   type(block_data_real8_2d) :: f_gpp_enfboreal      !2
+   type(block_data_real8_2d) :: f_gpp_dnfboreal      !3
+   type(block_data_real8_2d) :: f_gpp_ebftrop        !4
+   type(block_data_real8_2d) :: f_gpp_ebftemp        !5
+   type(block_data_real8_2d) :: f_gpp_dbftrop        !6
+   type(block_data_real8_2d) :: f_gpp_dbftemp        !7
+   type(block_data_real8_2d) :: f_gpp_dbfboreal      !8
+   type(block_data_real8_2d) :: f_gpp_ebstemp        !9
+   type(block_data_real8_2d) :: f_gpp_dbstemp        !10
+   type(block_data_real8_2d) :: f_gpp_dbsboreal      !11
+   type(block_data_real8_2d) :: f_gpp_c3arcgrass     !12
+   type(block_data_real8_2d) :: f_gpp_c3grass        !13
+   type(block_data_real8_2d) :: f_gpp_c4grass        !14
+   type(block_data_real8_2d) :: f_leafc_enftemp      !1
+   type(block_data_real8_2d) :: f_leafc_enfboreal    !2
+   type(block_data_real8_2d) :: f_leafc_dnfboreal    !3
+   type(block_data_real8_2d) :: f_leafc_ebftrop      !4
+   type(block_data_real8_2d) :: f_leafc_ebftemp      !5
+   type(block_data_real8_2d) :: f_leafc_dbftrop      !6
+   type(block_data_real8_2d) :: f_leafc_dbftemp      !7
+   type(block_data_real8_2d) :: f_leafc_dbfboreal    !8
+   type(block_data_real8_2d) :: f_leafc_ebstemp      !9
+   type(block_data_real8_2d) :: f_leafc_dbstemp      !10
+   type(block_data_real8_2d) :: f_leafc_dbsboreal    !11
+   type(block_data_real8_2d) :: f_leafc_c3arcgrass   !12
+   type(block_data_real8_2d) :: f_leafc_c3grass      !13
+   type(block_data_real8_2d) :: f_leafc_c4grass      !14
 
    type(block_data_real8_3d) :: f_litr1c_vr          ! soil carbon pool [gC/m2]
    type(block_data_real8_3d) :: f_litr2c_vr          ! soil carbon pool [gC/m2]
@@ -94,6 +126,10 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_3d) :: f_CONC_O2_UNSAT
 #endif
 #ifdef CROP
+   type(block_data_real8_2d) :: f_hui
+   type(block_data_real8_2d) :: f_vf
+   type(block_data_real8_2d) :: f_gddplant
+   type(block_data_real8_2d) :: f_gddmaturity
    type(block_data_real8_2d) :: f_pdcorn
    type(block_data_real8_2d) :: f_pdswheat
    type(block_data_real8_2d) :: f_pdwwheat
@@ -182,10 +218,42 @@ CONTAINS
          call allocate_block_data (grid, f_grainc_to_cropprodc ) ! grain to crop production
          call allocate_block_data (grid, f_grainc_to_seed     )  ! grain to crop seed
          call allocate_block_data (grid, f_fert_to_sminn      )  ! grain to crop seed
+         call allocate_block_data (grid, f_ndep_to_sminn      )  ! grain to crop seed
+         call allocate_block_data (grid, f_plantdate          )  ! planting date
 
          call allocate_block_data (grid, f_gpp                ) ! net primary production (gC/m2)
          call allocate_block_data (grid, f_downreg            ) ! gpp downregulation due to N limitation
          call allocate_block_data (grid, f_ar                 )
+         call allocate_block_data (grid, f_fpg                ) ! fraction of potential gpp
+         call allocate_block_data (grid, f_fpi                ) ! fraction of potential immobilization
+         call allocate_block_data (grid, f_gpp_enftemp        ) !1
+         call allocate_block_data (grid, f_gpp_enfboreal      ) !2
+         call allocate_block_data (grid, f_gpp_dnfboreal      ) !3
+         call allocate_block_data (grid, f_gpp_ebftrop        ) !4
+         call allocate_block_data (grid, f_gpp_ebftemp        ) !5
+         call allocate_block_data (grid, f_gpp_dbftrop        ) !6
+         call allocate_block_data (grid, f_gpp_dbftemp        ) !7
+         call allocate_block_data (grid, f_gpp_dbfboreal      ) !8
+         call allocate_block_data (grid, f_gpp_ebstemp        ) !9
+         call allocate_block_data (grid, f_gpp_dbstemp        ) !10
+         call allocate_block_data (grid, f_gpp_dbsboreal      ) !11
+         call allocate_block_data (grid, f_gpp_c3arcgrass     ) !12
+         call allocate_block_data (grid, f_gpp_c3grass        ) !13
+         call allocate_block_data (grid, f_gpp_c4grass        ) !14
+         call allocate_block_data (grid, f_leafc_enftemp      ) !1
+         call allocate_block_data (grid, f_leafc_enfboreal    ) !2
+         call allocate_block_data (grid, f_leafc_dnfboreal    ) !3
+         call allocate_block_data (grid, f_leafc_ebftrop      ) !4
+         call allocate_block_data (grid, f_leafc_ebftemp      ) !5
+         call allocate_block_data (grid, f_leafc_dbftrop      ) !6
+         call allocate_block_data (grid, f_leafc_dbftemp      ) !7
+         call allocate_block_data (grid, f_leafc_dbfboreal    ) !8
+         call allocate_block_data (grid, f_leafc_ebstemp      ) !9
+         call allocate_block_data (grid, f_leafc_dbstemp      ) !10
+         call allocate_block_data (grid, f_leafc_dbsboreal    ) !11
+         call allocate_block_data (grid, f_leafc_c3arcgrass   ) !12
+         call allocate_block_data (grid, f_leafc_c3grass      ) !13
+         call allocate_block_data (grid, f_leafc_c4grass      ) !14
 
          call allocate_block_data (grid, f_litr1c_vr  ,nl_soil)  ! soil carbon pool (gC/m2)
          call allocate_block_data (grid, f_litr2c_vr  ,nl_soil)  ! soil carbon pool (gC/m2)
@@ -208,6 +276,10 @@ CONTAINS
          call allocate_block_data (grid, f_CONC_O2_UNSAT        , nl_soil)
 #endif
 #ifdef CROP
+         call allocate_block_data (grid, f_hui                 )
+         call allocate_block_data (grid, f_vf                  )
+         call allocate_block_data (grid, f_gddmaturity         ) 
+         call allocate_block_data (grid, f_gddplant            )   
          call allocate_block_data (grid, f_pdcorn              )
          call allocate_block_data (grid, f_pdswheat            )
          call allocate_block_data (grid, f_pdwwheat            )

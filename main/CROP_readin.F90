@@ -102,6 +102,7 @@ SUBROUTINE CROP_readin (dir_landdata)
       ENDIF
    ENDIF 
 
+   lndname = trim(landdir) // '/plantdate_pfts.nc'
    call ncio_read_vector (lndname, 'plantdate_pfts',  landpft, plantdate_tmp)
    if (p_is_worker) then
       if (numpatch > 0) then

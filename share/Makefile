@@ -28,7 +28,9 @@ OBJS =  \
 	mod_landbasin.o     \
 	mod_pixelset.o      \
 	ncio_vector.o       \
-	mod_colm_debug.o     
+	mod_colm_debug.o    \
+	mod_mapping_pset2grid.o \
+	mod_mapping_grid2pset.o
 
 
 ####################################################################

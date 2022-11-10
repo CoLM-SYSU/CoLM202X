@@ -43,13 +43,13 @@ Module OzoneMod
      real(r8) :: condInt        ! intercept for conductance
      real(r8) :: condSlope      ! slope for conductance
 
-     real(r8), parameter :: ko3 = 1.67_r8
+     real(r8), parameter :: ko3 = 1.51_r8  !F. Li
  
     ! LAI threshold for LAIs that asymptote and don't reach 0
      real(r8), parameter :: lai_thresh = 0.5_r8
   
      ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
-     real(r8), parameter :: o3_flux_threshold = 0.8_r8
+     real(r8), parameter :: o3_flux_threshold = 0.5_r8  !F. Li
   
      ! o3 intercepts and slopes for photosynthesis
      real(r8), parameter :: needleleafPhotoInt   = 0.8390_r8  ! units = unitless
@@ -113,10 +113,15 @@ Module OzoneMod
         o3coefv = 1._r8
         o3coefg = 1._r8
      else
-        ! Determine parameter values for this pft
-        ! TODO(wjs, 2014-10-01) Once these parameters are moved into the params file,     this
-        ! logic can be removed.
-        if (ivt>3) then
+       ! Determine parameter values for this pft
+       ! TODO(wjs, 2014-10-01) Once these parameters are moved into the params file,     this
+       ! logic can be removed.
+       ! add GPAM ozone impact on crop and change logic by F. Li
+       if (ivt>16)then
+          o3coefv = max(0._r8, min(1._r8, 0.883_r8 - 0.058 * log10(o3uptake)))
+          o3coefg = max(0._r8, min(1._r8, 0.951_r8 - 0.109 * tanh(o3uptake)))  
+       else
+         if (ivt>3) then
            if (woody(ivt)==0) then
               photoInt   = nonwoodyPhotoInt
               photoSlope = nonwoodyPhotoSlope
@@ -138,8 +143,8 @@ Module OzoneMod
         ! Apply parameter values to compute o3 coefficients
         o3coefv = max(0._r8, min(1._r8, photoInt + photoSlope * o3uptake))
         o3coefg = max(0._r8, min(1._r8, condInt  + condSlope  * o3uptake))
-
-     end if
+      end if
+    end if
 
   end subroutine CalcOzoneStress
   end module OzoneMod

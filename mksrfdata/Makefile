@@ -32,7 +32,8 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_landbasin.o \
 					../share/mod_pixelset.o \
 					../share/ncio_vector.o \
-					../share/mod_colm_debug.o
+					../share/mod_colm_debug.o \
+					../share/mod_mapping_pset2grid.o
 
 OBJS = \
 		 mod_srfdata_restart.o \
@@ -45,8 +46,10 @@ OBJS = \
 		 mod_landpft.o \
 		 mod_landpc.o \
 		 par_fitting.o \
+		 mod_patch2grid.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
+		 aggregation_NDEP.o \
 		 aggregation_crop_parameters.o \
 		 aggregation_nitrif_parameters.o \
 		 aggregation_soil_brightness.o \

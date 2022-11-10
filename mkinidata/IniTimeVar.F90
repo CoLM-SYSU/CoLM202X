@@ -605,7 +605,6 @@ ENDIF
     totsomn                         = 0.0
     totcwdn                         = 0.0
     totvegn                         = 0.0
-    totcoln                         = 0.0
     col_endcb                       = 0.0
     col_begcb                       = 0.0
     col_vegendcb                    = 0.0
@@ -618,8 +617,6 @@ ENDIF
     col_vegbegnb                    = 0.0
     col_soilendnb                   = 0.0
     col_soilbegnb                   = 0.0
-    col_sminnendnb                  = 0.0
-    col_sminnbegnb                  = 0.0
     decomp_cpools_vr          (:,:) = 0.0
     decomp_cpools             (:)   = 0.0
     ctrunc_vr                 (:)   = 0.0
@@ -633,11 +630,16 @@ ENDIF
     ntrunc_vr                 (:)   = 0.0
     ntrunc_veg                      = 0.0
     ntrunc_soil                     = 0.0
-    sminn_vr                  (:)   = 0.0
+    smin_no3_vr               (:)   = 5.0
+    smin_nh4_vr               (:)   = 5.0
+    sminn_vr                  (:)   = 10.0
     sminn                           = 0.0
-    smin_no3_vr               (:)   = 0.0
-    smin_nh4_vr               (:)   = 0.0
-    sminn_vr                  (:)   = 0.0
+    do j = 1, nl_soil
+       sminn                        = sminn + sminn_vr(j) * dz_soisno(j)
+    end do
+    col_sminnendnb                  = sminn
+    col_sminnbegnb                  = sminn
+    totcoln                         = totvegn + totcwdn + totlitn + totsomn + sminn + ntrunc_veg + ntrunc_soil
     prec10                          = 0._r8
     prec60                          = 0._r8
     prec365                         = 0._r8
@@ -833,10 +835,8 @@ ENDIF
 #ifdef CROP
 ! crop variables
        croplive_p               (ps:pe) = .false.
-       gddtsoi_p                (ps:pe) =  spval
-       huileaf_p                (ps:pe) =  spval
+       hui_p                    (ps:pe) =  spval
        gddplant_p               (ps:pe) =  spval
-       huigrain_p               (ps:pe) =  0.0_r8
        peaklai_p                (ps:pe) =  0
        aroot_p                  (ps:pe) =  spval
        astem_p                  (ps:pe) =  spval
@@ -848,11 +848,7 @@ ENDIF
 
        cropplant_p              (ps:pe) = .false.
        idop_p                   (ps:pe) = 99999999
-       a5tmin_p                 (ps:pe) = spval
-       a10tmin_p                (ps:pe) = spval
-       t10_p                    (ps:pe) = spval
        cumvd_p                  (ps:pe) = spval
-       hdidx_p                  (ps:pe) = spval
        vf_p                     (ps:pe) = 0._r8
        cphase_p                 (ps:pe) = 4._r8
        fert_counter_p           (ps:pe) = 0._r8

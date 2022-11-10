@@ -7,8 +7,7 @@ module bgc_veg_CNPhenologyMod
       lflitcn, lf_flab, lf_fcel, lf_flig  , fr_flab, fr_fcel, fr_flig, &
 
 ! crop variables
-      minplanttemp, minplantjday, maxplantjday, hybgdd, manunitro, planttemp, lfemerg, mxmat, grnfill, mxtmp, &
-      baset  , gddmin 
+       manunitro, lfemerg, mxmat, grnfill,  baset
 
   use MOD_BGCTimeInvars, only: &
       ndays_on        , ndays_off      , fstor2tran, crit_dayl  , crit_onset_fdd, crit_onset_swi, &
@@ -23,6 +22,7 @@ module bgc_veg_CNPhenologyMod
       nrice           , nirrig_rice       , ntmp_soybean, nirrig_tmp_soybean, &
       ntrp_soybean    , nirrig_trp_soybean, &
       spval
+  USE PhysicalConstants, only: tfrz
 
   use MOD_TimeVariables, only: &
       t_soisno, smp
@@ -61,12 +61,12 @@ module bgc_veg_CNPhenologyMod
 
 ! crop variables
       cropplant_p       , idop_p              , a5tmin_p            , a10tmin_p        , t10_p          , &
-      cumvd_p           , hdidx_p             , vf_p                , cphase_p         , fert_counter_p , &
-      croplive_p        , gddplant_p          , gddtsoi_p           , harvdate_p       , gddmaturity_p  , &
-      huigrain_p        , huileaf_p           , peaklai_p           , &
-      tref_min_p        , tref_max_p          , tref_min_inst_p     , tref_max_inst_p, &
-      fertnitro_p       , latbaset_p          , plantdate_p! input from files
-      
+      cumvd_p           , vf_p                , cphase_p         , fert_counter_p , &
+      croplive_p        , gddplant_p          , harvdate_p          , gddmaturity_p  , &
+      hui_p             , peaklai_p           ,&
+      tref_min_p        , tref_max_p          , tref_min_inst_p  , tref_max_inst_p, &
+      fertnitro_p       , plantdate_p! input from files
+
   use MOD_1D_BGCPFTFluxes, only: &
       livestemc_to_deadstemc_p       , livecrootc_to_deadcrootc_p   , &
 
@@ -113,6 +113,7 @@ module bgc_veg_CNPhenologyMod
   use timemanager
   use precision
   use bgc_DaylengthMod, only: daylength
+  use spmd_task
 
 implicit none
 
@@ -162,14 +163,12 @@ integer  h,m    ! 1 for north hemsiphere; 2 for south hemisphere
     call CNStressDecidPhenology(i,ps,pe,deltim,dayspyr)
 
 #ifdef CROP
-!   if (doalb .and. num_pcropp > 0 ) then
     if(dlat >= 0)then
        h = 1
     else
        h = 2
     end if
     call CropPhenology(i,ps,pe,idate(1:3),h,deltim,dayspyr,npcropmin)
-!   end if
 #endif
  else if ( phase == 2 ) then
     ! the same onset and offset routines are called regardless of
@@ -182,8 +181,6 @@ integer  h,m    ! 1 for north hemsiphere; 2 for south hemisphere
     call CNBackgroundLitterfall(i,ps,pe)
 
     call CNLivewoodTurnover(i,ps,pe)
-
-    call CNGrainToProductPools(i,ps,pe)
 
     call CNLitterToColumn(i,ps,pe,nl_soil,npcropmin)
  else
@@ -243,21 +240,9 @@ subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz
 
    accumnstep(i) = accumnstep(i) + 1
    prec_today(i) = forc_prc(i) + forc_prl(i)
-#ifdef CROP
 
-   nsteps = amin1(5._r8 * stepperday, accumnstep(i))
-   do m = ps , pe
-      a5tmin_p (m) = (a5tmin_p(m)  * (nsteps - 1) + tref_min_p(m) ) / nsteps
-   end do
-#endif
    nsteps = amin1(10._r8 * stepperday, accumnstep(i))
    prec10     (i)  = ( prec10  (i) * (nsteps - 1) + prec_today(i) ) / nsteps
-#ifdef CROP
-   do m = ps , pe
-      t10_p    (m) = ( t10_p   (m) * (nsteps - 1) + tref_p    (m) ) / nsteps
-      a10tmin_p(m) = (a10tmin_p(m) * (nsteps - 1) + tref_min_p(m) ) / nsteps
-   end do
-#endif
 
    nsteps = amin1(60._r8 * stepperday, accumnstep(i))
    prec60     (i) = ( prec60 (i) * (nsteps - 1) + prec_today(i) ) / nsteps
@@ -266,53 +251,31 @@ subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz
    prec365    (i) = ( prec365(i) * (nsteps - 1) + prec_today(i) ) / nsteps
 
    call julian2monthday(idate(1),idate(2),month,mday)
+   !calculate gdd0,gdd8,gdd10,gddplant for GPAM crop phenology F. Li
    do m = ps , pe
       ivt = pftclass(m)
       if(((month .ge. 4 .and. month .le. 9) .and. dlat .ge. 0) .or. &
          ((month .gt. 9 .or.  month .lt. 4) .and. dlat .lt. 0)) then
-         gdd0_p (m) = gdd0_p (m) + max(0._r8, min(26._r8, &
-                            tref_p(m) - 273.15)) * deltim / 86400._r8
-         gdd8_p (m) = gdd8_p (m) + max(0._r8, min(30._r8, &
-                            tref_p(m) - 273.15 - 8)) * deltim / 86400._r8
-         gdd10_p(m) = gdd10_p(m) + max(0._r8, min(30._r8, &
-                            tref_p(m) - 273.15 - 10)) * deltim / 86400._r8
+         gdd0_p (m) = gdd0_p (m) + max(0._r8, tref_p(m) - 273.15) * deltim / 86400._r8
+         gdd8_p (m) = gdd8_p (m) + max(0._r8, tref_p(m) - 273.15 - 8) * deltim / 86400._r8
+         gdd10_p(m) = gdd10_p(m) + max(0._r8, tref_p(m) - 273.15 - 10) * deltim / 86400._r8
       end if
 #ifdef CROP
       if(croplive_p(m))then
-         if(ivt == nwwheat .or. ivt == nirrig_wwheat)then
-            gddplant_p(m) = gddplant_p(m) + vf_p(m)
-            gddtsoi_p(m)  = gddtsoi_p (m) + vf_p(m)
-         else
-            if((.not. isconst_baset) .and. ((ivt == nswheat) .or. (ivt == nirrig_swheat) .or. &
-                                            (ivt == nsugarcane) .or. (ivt == nirrig_sugarcane)))then
-               gddplant_p(m) = gddplant_p(m) + max(0._r8, min(mxtmp(ivt), &
-                               tref_p(m) - (273.15 + latbaset_p(m)))) * deltim / 86400._r8
-            else
-               gddplant_p(m) = gddplant_p(m) + max(0._r8, min(mxtmp(ivt), &
-                               tref_p(m) - (273.15 + baset(ivt)))) * deltim / 86400._r8
-            end if
-            gddtsoi_p(m) = gddtsoi_p(m) +  max(0._r8, min(mxtmp(ivt), &
-                           (t_soisno(1,i) * dz_soi(1) + t_soisno(2,i) * dz_soi(2)) &
-                            / (dz_soi(1) + dz_soi(2)))) * deltim / 86400._r8 
-         end if
+           if((ivt == nwwheat .or. ivt == nirrig_wwheat).and.cphase_p(m) == 2._r8)then
+             gddplant_p(m) = gddplant_p(m) +vf_p(m) *  max(0._r8, &
+                               tref_p(m) - (273.15 + baset(ivt))) * deltim / 86400._r8
+           else
+             gddplant_p(m) = gddplant_p(m) + max(0._r8, &
+                               tref_p(m) - (273.15 + baset(ivt))) * deltim / 86400._r8
+          end if 
       else
          gddplant_p(m) = 0._r8
-         gddtsoi_p(m) = 0._r8
       end if
 #endif
    end do
 
-!   if(idate(2) .eq. dayspyr .and. idate(3) .eq. 86400)then
-!      annavg_tref(i) = tempavg_tref(i)
-!      tempavg_tref(i) = 0
-!   end if
-
-     !
-     ! The following crop related steps are done here rather than CropPhenology
-     ! so that they will be completed each time-step rather than with doalb.
-     !
-     ! The following lines come from ibis's climate.f + stats.f
-     ! gdd SUMMATIONS ARE RELATIVE TO THE PLANTING DATE (see subr. updateAccFlds)
+!calculate gdd020,gdd820,gdd1020 for gddmaturity in GPAM crop phenology F. Li 
    do m = ps , pe
       ivt = pftclass(m)
       if (idate(2) == 1 .and. idate(3) ==1800)then
@@ -373,27 +336,12 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
          end if
       end do
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!    if (CN_evergreen_phenology_opt == 1) then
-!    do fp = 1,num_soilp
-!       p = filter_soilp(fp)
-!       print*,'isevg',isevg(ivt),ivt
      do m = ps , pe
         ivt = pftclass(m)
         if (isevg(ivt)) then
 
            tranr=0.0002_r8
           ! set carbon fluxes for shifting storage pools to transfer pools
-!          if (use_matrixcn) then
-!             matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
-!             matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) =  matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + tranr/dt
-!             if (woody(ivt(p)) == 1.0_r8) then
-!                matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc)   = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + t     ranr/dt
-!                matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc)   = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + t     ranr/dt
-!                matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) +      tranr/dt
-!                matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) +      tranr/dt
-!             end if
-!          end if !use_matrixcn
            leafc_storage_to_xfer_p(m)  = tranr * leafc_storage_p(m)/deltim
            frootc_storage_to_xfer_p(m) = tranr * frootc_storage_p(m)/deltim
            if (woody(ivt) == 1) then
@@ -405,16 +353,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
            end if
 
          ! set nitrogen fluxes for shifting storage pools to transfer pools
-!         if (use_matrixcn) then
-!            matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   =  matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + tranr/dt
-!            matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) =  matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + tranr/dt
-!            if (woody(ivt(p)) == 1.0_r8) then
-!               matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + tr     anr/dt
-!               matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + tr     anr/dt
-!               matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn)      + tranr/dt
-!               matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn)      + tranr/dt
-!            end if
-!         end if !use_matrixcn
           leafn_storage_to_xfer_p(m)  = tranr * leafn_storage_p(m)/deltim
           frootn_storage_to_xfer_p(m) = tranr * frootn_storage_p(m)/deltim
           if (woody(ivt) == 1) then
@@ -425,25 +363,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
           end if
 
           t1 = 1.0_r8 / deltim
-
-!         if (use_matrixcn) then
-!            matrix_phtransfer(p,ileafxf_to_ileaf_phc)   = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + t1
-!            matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + t1
-!
-!            matrix_nphtransfer(p,ileafxf_to_ileaf_phn)   = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + t1
-!            matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + t1
-!            if (woody(ivt(p)) == 1.0_r8) then
-!               matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + t1
-!               matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + t1
-!               matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + t1
-!               matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + t1
-!
-!               matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + t1
-!               matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + t1
-!               matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
-!               matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
-!            end if
-!         end if !use_matrixcn
 
           leafc_xfer_to_leafc_p(m)   = t1 * leafc_xfer_p(m)
           frootc_xfer_to_frootc_p(m) = t1 * frootc_xfer_p(m)
@@ -465,9 +384,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
        end if ! end of if (isevg(ivt(p)) == 1._r8) then
 
     end do ! end of pft loop
-
-!    end if ! end of if (CN_evergreen_phenology_opt == 1) then
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    end subroutine CNEvergreenPhenology
 
@@ -505,7 +421,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
       if(idate2_last .le. 0)idate2_last=idate2_last+365
       prev_dayl(i)=daylength(dlat,idate2_last)
       dayl(i)     =daylength(dlat,idate(2))
-!      print*,'issed',issed(ivt),ivt
 
       do m = ps , pe
          ivt = pftclass(m)
@@ -642,26 +557,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                ! inlined during vectorization
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
-!                  if(use_matrixcn)then
-!                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-!                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
-!
-!                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
-!                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
-!                     if (woody(ivt) == 1) then
-!                          matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
-!                          matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
-!                          matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
-!                          matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
-!                          matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
-!                          matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
-!                          matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
-!                          matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
-!                     end if
-!                  else
-                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-                     !                                        and CNNStateUpdate1::NStateUpdate1
-!                  end if  ! use_matrixcn
                   leafc_storage_to_xfer_p(m)  = fstor2tran * leafc_storage_p(m)/deltim
                   frootc_storage_to_xfer_p(m) = fstor2tran * frootc_storage_p(m)/deltim
                   if (woody(ivt) == 1) then
@@ -685,15 +580,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
             ! test for switching from growth period to offset period
             else if (offset_flag_p(m) == 0.0_r8) then
-!             if (use_cndv) then
-               ! If days_active > 355, then remove patch in
-               ! CNDVEstablishment at the end of the year.
-               ! days_active > 355 is a symptom of seasonal decid. patches occurring in
-               ! gridcells where dayl never drops below crit_dayl.
-               ! This results in TLAI>1e4 in a few gridcells.
-!                days_active(p) = days_active(p) + fracday
-!                if (days_active(p) > 355._r8) pftmayexist(p) = .false.
-!             end if
 
                   ! only begin to test for offset daylength once past the summer sol
                if (ws_flag == 0._r8 .and. dayl(i) < crit_dayl) then
@@ -732,7 +618,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
    do m = ps , pe
       ivt = pftclass(m)
-!   print*,'isstd',isstd(ivt),ivt
       if (isstd(ivt)) then
          soilt = t_soisno(3,i)
          psi = smp(3,i) * 1.e-5 ! mmH2O -> MPa
@@ -740,10 +625,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
       ! onset gdd sum from Biome-BGC, v4.1.2
          crit_onset_gdd = exp(4.8_r8 + 0.13_r8*(annavg_tref_p(m) - 273.15_r8))
 
-!      print*,'offset_flag',offset_flag_p(m)
-!      print*,'onset_flag',onset_flag_p(m)
-!      print*,'dormant_flag',dormant_flag_p(m)
-!      print*,'annavg_tref',annavg_tref_p(m)
       ! update offset_counter and test for the end of the offset period
          if (offset_flag_p(m) == 1._r8) then
          ! decrement counter for offset period
@@ -769,7 +650,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
          if (onset_flag_p(m) == 1.0_r8) then
          ! decrement counter for onset period
             onset_counter_p(m) = onset_counter_p(m) - deltim
-!         print*,'onset_flag_counting',onset_counter_p(m), deltim
 
          ! if this is the end of the onset period, reset phenology
          ! flags and indices
@@ -857,7 +737,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
          ! Adding in Kyla's rainfall trigger when fun on. RF. prec10 (mm/s) needs to be higher than 8mm over 10 days.
 
-!         print*,'onset_swi,crit_onset_swi',onset_swi_p(m),crit_onset_swi,&
 !additional_onset_condition,psi,soilpsi_on,.true.,onset_gdd_p(m),crit_onset_gdd
             if (onset_swi_p(m) > crit_onset_swi.and. additional_onset_condition)  then
                onset_flag_p(m) = 1._r8
@@ -877,7 +756,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
          ! if this is the beginning of the onset period
          ! then reset the phenology flags and indices
-!         print*,'onset_flag2',onset_flag_p(m)
 
             if (onset_flag_p(m) == 1._r8) then
                dormant_flag_p(m) = 0._r8
@@ -894,28 +772,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             ! inlined during vectorization
 
             ! set carbon fluxes for shifting storage pools to transfer pools
-!            if (use_matrixcn) then
-!               matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-!               matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
-!               matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
-!               matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
-!               if (woody(ivt(p)) == 1.0_r8) then
-!                  matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
-!                  matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
-!                  matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
-!                  matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
-!
-!                  matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
-!                  matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
-!                  matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
-!                  matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
-!               end if
-!            else
-!               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-!               !                                        and CNNStateUpdate1::NStateUpdate1
-!            end if
-!            print*,'leafc_storage_to_xfer in CNPHenology1',leafc_storage_to_xfer_p(m),fstor2tran,leafc_storage_p(m),deltim
-!            print*,'frootc_storage_to_xfer in CNPHenology1',frootc_storage_to_xfer(i),fstor2tran,frootc_storage_p(m),deltim
                leafc_storage_to_xfer_p(m)  = fstor2tran * leafc_storage_p(m)/deltim
                frootc_storage_to_xfer_p(m) = fstor2tran * frootc_storage_p(m)/deltim
                if (woody(ivt) == 1) then
@@ -1002,7 +858,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
       ! only begin to calculate a lgsf greater than 0.0 once the number
       ! of days active exceeds days/year.
          lgsf_p(m) = max(min(3.0_r8*(days_active_p(m)-leaf_long(ivt)*dayspyr )/dayspyr, 1._r8),0._r8)
-      !print*,'lgsf',lgsf_p(m),days_active_p(m),leaf_long(ivt),dayspyr
       ! RosieF. 5 Nov 2015.  Changed this such that the increase in leaf turnover is faster after
       ! trees enter the 'fake evergreen' state. Otherwise, they have a whole year of
       ! cheating, with less litterfall than they should have, resulting in very high LAI.
@@ -1034,31 +889,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
          ! between leafc and leafc_store in the flux. RosieF, Nov5 2015.
             leafc_storage_to_xfer_p(m)  = max(0.0_r8,(leafc_storage_p(m)-leafc_p(m))) * bgtr_p(m)
             frootc_storage_to_xfer_p(m) = max(0.0_r8,(frootc_storage_p(m)-frootc_p(m))) * bgtr_p(m)
-         !print*,'frootc_storage_to_xfer in CNPhenology2',leafc_storage_to_xfer_p(m),frootc_storage_to_xfer_p(m),&
-!         frootc_storage_p(m),bgtr_p(m)
-!         if (use_matrixcn) then
-!            if(leafc_storage(p) .gt. 0)then
-!               matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
-!                                                      + leafc_storage_to_xfer(p) / leafc_storage(p)
-!            else
-!              leafc_storage_to_xfer(p) = 0
-!            end if
-!            if(frootc_storage(p) .gt. 0)then
-!               matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) &
-!                                                      + frootc_storage_to_xfer(p) / frootc_storage(p)
-!            else
-!               frootc_storage_to_xfer(p) = 0
-!            end if
-!          if (woody(ivt(p)) == 1.0_r8) then
-!              matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + bgtr(p)
-!              matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + bgtr(p)
-!              matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p)
-!              matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
-!           end if
-!        else
-!           ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-!           !                                        and CNNStateUpdate1::NStateUpdate1
-!        end if !use_matrixcn
             if (woody(ivt) == 1) then
                livestemc_storage_to_xfer_p(m)  = livestemc_storage_p(m) * bgtr_p(m)
                deadstemc_storage_to_xfer_p(m)  = deadstemc_storage_p(m) * bgtr_p(m)
@@ -1070,21 +900,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
          ! set nitrogen fluxes for shifting storage pools to transfer pools
             leafn_storage_to_xfer_p(m)  = leafn_storage_p(m) * bgtr_p(m)
             frootn_storage_to_xfer_p(m) = frootn_storage_p(m) * bgtr_p(m)
-!         if (use_matrixcn) then
-!            matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) &
-!                                                      + bgtr(p)
-!            matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) &
-!                                                      + bgtr(p)
-!            if (woody(ivt(p)) == 1.0_r8) then
-!               matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + bgtr(p)
-!               matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + bgtr(p)
-!               matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + bgtr(p)
-!               matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + bgtr(p)
-!            end if
-!         else
-           ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-           !                                        and CNNStateUpdate1::NStateUpdate1
-!         end if !use_matrixcn
             if (woody(ivt) == 1) then
                livestemn_storage_to_xfer_p(m)  = livestemn_storage_p(m) * bgtr_p(m)
                deadstemn_storage_to_xfer_p(m)  = deadstemn_storage_p(m) * bgtr_p(m)
@@ -1102,8 +917,9 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
   subroutine CropPhenology(i,ps,pe,idate,h,deltim,dayspyr,npcropmin)
 
     ! !DESCRIPTION:
-    ! Code from AgroIBIS to determine crop phenology and code from CN to
-    ! handle CN fluxes during the phenological onset                       & offset periods.
+    ! GPAM crop phenology and code from CN to
+    ! handle CN fluxes during the phenological onset & offset periods.
+    !F. Li
     
     ! !USES:
     !
@@ -1127,7 +943,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
     integer c         ! column indices
     integer g         ! gridcell indices
     integer idpp      ! number of days past planting
-    real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
     integer :: jdayyrstart(2)
     real(r8) :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
@@ -1156,355 +971,57 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
           bgtr_p(m)  = 0._r8
           lgsf_p(m)  = 0._r8
 
-         ! ---------------------------------
-         ! from AgroIBIS subroutine planting
-         ! ---------------------------------
-
-         ! in order to allow a crop to be planted only once each year
-         ! initialize cropplant = .false., but hold it = .true. through the end of the year
-
-         ! initialize other variables that are calculated for crops
-         ! on an annual basis in cropresidue subroutine
-
-          if ( jday == jdayyrstart(h) .and. mcsec == 1800 )then
-
-            ! make sure variables aren't changed at beginning of the year
-            ! for a crop that is currently planted, such as
-            ! WINTER TEMPERATE CEREAL = winter (wheat + barley + rye)
-            ! represented here by the winter wheat pft
-
-            if (.not. croplive_p(m))  then
-               cropplant_p(m) = .false.
-               idop_p(m)      = NOT_Planted
-
-               ! keep next for continuous, annual winter temperate cereal crop;
-               ! if we removed elseif,
-               ! winter cereal grown continuously would amount to a cereal/fallow
-               ! rotation because cereal would only be planted every other year
-
-            else if (croplive_p(m) .and. (ivt == nwwheat .or. ivt == nirrig_wwheat)) then
-               cropplant_p(m) = .false.
-               !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
-            end if
-
-          end if
- 
+          
+         !  plantdate is read in 
+         !  determine if the cft is planted in this time step
           if ( (.not. croplive_p(m)) .and. (.not. cropplant_p(m)) ) then
-
-            ! gdd needed for * chosen crop and a likely hybrid (for that region) *
-            ! to reach full physiological maturity
-
-            ! based on accumulated seasonal average growing degree days from
-            ! April 1 - Sept 30 (inclusive)
-            ! for corn and soybeans in the United States -
-            ! decided upon by what the typical average growing season length is
-            ! and the gdd needed to reach maturity in those regions
-
-            ! first choice is used for spring temperate cereal and/or soybeans and maize
-
-            ! slevis: ibis reads xinpdate in io.f from control.crops.nc variable name 'plantdate'
-            !         According to Chris Kucharik, the dataset of
-            !         xinpdate was generated from a previous model run at 0.5 deg resolution
-
-            ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
-             if (ivt == nwwheat .or. ivt == nirrig_wwheat) then
-
-               ! add check to only plant winter cereal after other crops (soybean, maize)
-               ! have been harvested
-
-               ! *** remember order of planting is crucial - in terms of which crops you want
-               ! to be grown in what order ***
-
-               ! in this case, corn or soybeans are assumed to be planted before
-               ! cereal would be in any particular year that both patches are allowed
-               ! to grow in the same grid cell (e.g., double-cropping)
-
-               ! slevis: harvdate below needs cropplant(p) above to be cropplant(p,ivt(p))
-               !         where ivt(p) has rotated to winter cereal because
-               !         cropplant through the end of the year for a harvested crop.
-               !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
-               !         updated on Jan 1st instead of at harvest (slevis)
-               if (a5tmin_p(m)             /= spval                  .and. &
-                    a5tmin_p(m)             <= minplanttemp(ivt)   .and. &
-                    jday                  >= minplantjday(ivt,h) .and. &
-                    (gdd020_p(m)            /= spval                  .and. &
-                    gdd020_p(m)             >= gddmin(ivt))) then
-
+               if (jday == int(plantdate_p(m))) then
                   cumvd_p(m)       = 0._r8
-                  hdidx_p(m)       = 0._r8
                   vf_p(m)          = 0._r8
                   croplive_p(m)    = .true.
                   cropplant_p(m)   = .true.
                   idop_p(m)        = jday
                   harvdate_p(m)    = NOT_Harvested
-                  gddmaturity_p(m) = hybgdd(ivt)
                   leafc_xfer_p(m)  = initial_seed_at_planting
                   leafn_xfer_p(m)  = leafc_xfer_p(m) / leafcn(ivt) ! with onset
                   crop_seedc_to_leaf_p(m) = leafc_xfer_p(m)/deltim
                   crop_seedn_to_leaf_p(m) = leafn_xfer_p(m)/deltim
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-!                  if (use_c13) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-!                     endif
-!                  endif
-!                  if (use_c14) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-!                     endif
-!                  endif
-
-                  ! latest possible date to plant winter cereal and after all other 
-                  ! crops were harvested for that year
-
-               else if (jday       >=  maxplantjday(ivt,h) .and. &
-                    gdd020_p(m)  /= spval                   .and. &
-                    gdd020_p(m)  >= gddmin(ivt)) then
-
-                  cumvd_p(m)       = 0._r8
-                  hdidx_p(m)       = 0._r8
-                  vf_p(m)          = 0._r8
-                  croplive_p(m)    = .true.
-                  cropplant_p(m)   = .true.
-                  idop_p(m)        = jday
-                  harvdate_p(m)    = NOT_Harvested
-                  gddmaturity_p(m) = hybgdd(ivt)
-                  leafc_xfer_p(m)  = initial_seed_at_planting
-                  leafn_xfer_p(m)  = leafc_xfer_p(m) / leafcn(ivt) ! with onset
-                  crop_seedc_to_leaf_p(m) = leafc_xfer_p(m)/deltim
-                  crop_seedn_to_leaf_p(m) = leafn_xfer_p(m)/deltim
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-!                  if (use_c13) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-!                     endif
-!                  endif
-!                  if (use_c14) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-!                     endif
-!                  endif
-               else
-                  gddmaturity_p(m) = 0._r8
                end if
+           end if
+         ! calculate gddmaturity
+         if(croplive_p(m))then
+             if (ivt == nwwheat .or. ivt == nirrig_wwheat)then
+                    gddmaturity_p(m) = 0.42_r8 * gdd1020_p(m) + 440._r8
+             end if           
+             if ( ivt == ntmp_soybean .or. ivt == nirrig_tmp_soybean .or. &
+                  ivt == ntrp_soybean .or. ivt == nirrig_trp_soybean) then
+                    gddmaturity_p(m) = 0.30_r8 * gdd1020_p(m) + 710._r8
+             end if
+             if (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
+                 ivt == ntrp_corn .or. ivt == nirrig_trp_corn .or. &
+                 ivt == nsugarcane .or. ivt == nirrig_sugarcane .or. &
+                 ivt == nmiscanthus .or. ivt == nirrig_miscanthus .or. &
+                 ivt == nswitchgrass .or. ivt == nirrig_switchgrass) then
+                    gddmaturity_p(m) = 0.30_r8 * gdd820_p(m) + 816._r8
+             end if
+             if (ivt == nswheat .or. ivt == nirrig_swheat .or. &
+                  ivt == ncotton .or. ivt == nirrig_cotton)then
+                    gddmaturity_p(m) = 0.24_r8 * gdd020_p(m) + 1349._r8
+             end if 
+             if (ivt == nrice   .or. ivt == nirrig_rice) then
+                    gddmaturity_p(m) = 0.35_r8 * gdd020_p(m) + 587._r8
+             end if
+            hui_p(m)=gddplant_p(m)/gddmaturity_p(m) 
+        end if 
+         
+         ! all of the phenology changes are based on hui
 
-             else ! not winter cereal... slevis: added distinction between NH and SH
-               ! slevis: The idea is that jday will equal idop sooner or later in the year
-               !         while the gdd part is either true or false for the year.
-               if (t10_p(m) /= spval.and. a10tmin_p(m) /= spval   .and. &
-                    t10_p(m)     > planttemp(ivt)             .and. &
-                    a10tmin_p(m) > minplanttemp(ivt)          .and. &
-                    jday       >= minplantjday(ivt,h)       .and. &
-                    jday       <= maxplantjday(ivt,h)       .and. &
-                    t10_p(m) /= spval .and. a10tmin_p(m) /= spval  .and. &
-                    gdd820_p(m) /= spval                         .and. &
-                    gdd820_p(m) >= gddmin(ivt)) then
-
-                  ! impose limit on growing season length needed
-                  ! for crop maturity - for cold weather constraints
-                  croplive_p(m)  = .true.
-                  cropplant_p(m) = .true.
-                  idop_p(m)      = jday
-                  harvdate_p(m)  = NOT_Harvested
-
-                  ! go a specified amount of time before/after
-                  ! climatological date
-                  if ( ivt == ntmp_soybean .or. ivt == nirrig_tmp_soybean .or. &
-                       ivt == ntrp_soybean .or. ivt == nirrig_trp_soybean) then
-                     gddmaturity_p(m) = min(gdd1020_p(m), hybgdd(ivt))
-                  end if
-                  
-                  if (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
-                      ivt == ntrp_corn .or. ivt == nirrig_trp_corn .or. &
-                      ivt == nsugarcane .or. ivt == nirrig_sugarcane .or. &
-                      ivt == nmiscanthus .or. ivt == nirrig_miscanthus .or. &
-                      ivt == nswitchgrass .or. ivt == nirrig_switchgrass) then
-                     gddmaturity_p(m) = max(950._r8, min(gdd820_p(m)*0.85_r8, hybgdd(ivt)))
-                     gddmaturity_p(m) = max(950._r8, min(gddmaturity_p(m)+150._r8, 1850._r8))
-                  end if
-                  if (ivt == nswheat .or. ivt == nirrig_swheat .or. &
-                      ivt == ncotton .or. ivt == nirrig_cotton .or. &
-                      ivt == nrice   .or. ivt == nirrig_rice) then
-                     gddmaturity_p(m) = min(gdd020_p(m), hybgdd(ivt))
-                  end if
-
-                  leafc_xfer_p(m)  = initial_seed_at_planting
-                  leafn_xfer_p(m) = leafc_xfer_p(m) / leafcn(ivt) ! with onset
-                  crop_seedc_to_leaf_p(m) = leafc_xfer_p(m)/deltim
-                  crop_seedn_to_leaf_p(m) = leafn_xfer_p(m)/deltim
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-!                  if (use_c13) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-!                     endif
-!                  endif
-!                  if (use_c14) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-!                     endif
-!                  endif
-
-
-                  ! If hit the max planting julian day -- go ahead and plant
-               else if (jday == maxplantjday(ivt,h) .and. gdd820_p(m) > 0._r8 .and. &
-                    gdd820_p(m) /= spval ) then
-                  croplive_p(m)  = .true.
-                  cropplant_p(m) = .true.
-                  idop_p(m)      = jday
-                  harvdate_p(m)  = NOT_Harvested
-
-                  if (ivt == ntmp_soybean .or. ivt == nirrig_tmp_soybean .or. &
-                      ivt == ntrp_soybean .or. ivt == nirrig_trp_soybean) then
-                     gddmaturity_p(m) = min(gdd1020_p(m), hybgdd(ivt))
-                  end if
-                  
-                  if (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
-                      ivt == ntrp_corn .or. ivt == nirrig_trp_corn .or. &
-                      ivt == nsugarcane .or. ivt == nirrig_sugarcane .or. &
-                      ivt == nmiscanthus .or. ivt == nirrig_miscanthus .or. &
-                      ivt == nswitchgrass .or. ivt == nirrig_switchgrass) then
-                     gddmaturity_p(m) = max(950._r8, min(gdd820_p(m)*0.85_r8, hybgdd(ivt)))
-                  end if
-                  if (ivt == nswheat .or. ivt == nirrig_swheat .or. &
-                      ivt == ncotton .or. ivt == nirrig_cotton .or. &
-                      ivt == nrice   .or. ivt == nirrig_rice) then
-                     gddmaturity_p(m) = min(gdd020_p(m), hybgdd(ivt))
-                  end if
-
-                  leafc_xfer_p(m)  = initial_seed_at_planting
-                  leafn_xfer_p(m) = leafc_xfer_p(m) / leafcn(ivt) ! with onset
-                  crop_seedc_to_leaf_p(m) = leafc_xfer_p(m)/deltim
-                  crop_seedn_to_leaf_p(m) = leafn_xfer_p(m)/deltim
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-!                  if (use_c13) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-!                     endif
-!                  endif
-!                  if (use_c14) then
-!                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-!                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-!                     else
-!                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-!                     endif
-!                  endif
-
-               else
-                  gddmaturity_p(m) = 0._r8
-               end if
-            end if ! crop patch distinction
-            ! crop phenology (gdd thresholds) controlled by gdd needed for
-            ! maturity (physiological) which is based on the average gdd
-            ! accumulation and hybrids in United States from April 1 - Sept 30
-
-            ! calculate threshold from phase 1 to phase 2:
-            ! threshold for attaining leaf emergence (based on fraction of
-            ! gdd(i) -- climatological average)
-            ! Hayhoe and Dwyer, 1990, Can. J. Soil Sci 70:493-497
-            ! Carlson and Gage, 1989, Agric. For. Met., 45: 313-324
-            ! J.T. Ritchie, 1991: Modeling Plant and Soil systems
-
-            huileaf_p(m) = lfemerg(ivt) * gddmaturity_p(m) ! 3-7% in cereal
-
-            ! calculate threshhold from phase 2 to phase 3:
-            ! from leaf emergence to beginning of grain-fill period
-            ! this hypothetically occurs at the end of tassling, not the beginning
-            ! tassel initiation typically begins at 0.5-0.55 * gddmaturity
-
-            ! calculate linear relationship between huigrain fraction and relative
-            ! maturity rating for maize
-
-            if (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
-                ivt == ntrp_corn .or. ivt == nirrig_trp_corn .or. &
-                ivt == nsugarcane .or. ivt == nirrig_sugarcane .or. &
-                ivt == nmiscanthus .or. ivt == nirrig_miscanthus .or. &
-                ivt == nswitchgrass .or. ivt == nirrig_switchgrass) then
-               ! the following estimation of crmcorn from gddmaturity is based on a linear
-               ! regression using data from Pioneer-brand corn hybrids (Kucharik, 2003,
-               ! Earth Interactions 7:1-33: fig. 2)
-               crmcorn = max(73._r8, min(135._r8, (gddmaturity_p(m)+ 53.683_r8)/13.882_r8))
-
-               ! the following adjustment of grnfill based on crmcorn is based on a tuning
-               ! of Agro-IBIS to give reasonable results for max LAI and the seasonal
-               ! progression of LAI growth (pers. comm. C. Kucharik June 10, 2010)
-               huigrain_p(m) = -0.002_r8  * (crmcorn - 73._r8) + grnfill(ivt)
-
-               huigrain_p(m) = min(max(huigrain_p(m), grnfill(ivt)-0.1_r8), grnfill(ivt))
-               huigrain_p(m) = huigrain_p(m) * gddmaturity_p(m)     ! Cabelguenne et
-            else
-               huigrain_p(m) = grnfill(ivt) * gddmaturity_p(m) ! al. 1999
-            end if
-
-          end if ! crop not live nor planted
-
-         ! ----------------------------------
-         ! from AgroIBIS subroutine phenocrop
-         ! ----------------------------------
-
-         ! all of the phenology changes are based on the total number of gdd needed
-         ! to change to the next phase - based on fractions of the total gdd typical
-         ! for  that region based on the April 1 - Sept 30 window of development
-
-         ! crop phenology (gdd thresholds) controlled by gdd needed for
-         ! maturity (physiological) which is based on the average gdd
-         ! accumulation and hybrids in United States from April 1 - Sept 30
-
-         ! Phase 1: Planting to leaf emergence (now in CNAllocation)
-         ! Phase 2: Leaf emergence to beginning of grain fill (general LAI accumulation)
+         ! Phase 1: Planting to leaf emergence
+         ! Phase 2: Leaf emergence to beginning of grain fill (LAI increase)
          ! Phase 3: Grain fill to physiological maturity and harvest (LAI decline)
          ! Harvest: if gdd past grain fill initiation exceeds limit
          ! or number of days past planting reaches a maximum, the crop has
          ! reached physiological maturity and plant is harvested;
-         ! crop could be live or dead at this stage - these limits
-         ! could lead to reaching physiological maturity or determining
-         ! a harvest date for a crop killed by an early frost (see next comments)
-         ! --- --- ---
-         ! keeping comments without the code (slevis):
-         ! if minimum temperature, tref_min_p <= freeze kill threshold, tkill
-         ! for 3 consecutive days and lai is above a minimum,
-         ! plant will be damaged/killed. This function is more for spring freeze events
-         ! or for early fall freeze events
-
-         ! spring temperate cereal is affected by this, winter cereal kill function
-         ! is determined in crops.f - is a more elaborate function of
-         ! cold hardening of the plant
-
-         ! currently simulates too many grid cells killed by freezing temperatures
-
-         ! removed on March 12 2002 - C. Kucharik
-         ! until it can be a bit more refined, or used at a smaller scale.
-         ! we really have no way of validating this routine
-         ! too difficult to implement on 0.5 degree scale grid cells
          ! --- --- ---
 
           onset_flag_p(m)  = 0._r8 ! CN terminology to trigger certain
@@ -1512,16 +1029,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
  
           if (croplive_p(m)) then
             cphase_p(m) = 1._r8
-
-            ! call vernalization if winter temperate cereal planted, living, and the
-            ! vernalization factor is not 1;
-            ! vf affects the calculation of gddtsoi & gddplant
-
-            if (tref_min_p(m) < 1.e30_r8 .and. vf_p(m) /= 1._r8 .and. &
-               (ivt == nwwheat .or. ivt == nirrig_wwheat)) then
-!               call vernalization(i,m)  ! ignore winter wheat for now, add later
-            end if
-
             ! days past planting may determine harvest
 
             if (jday >= idop_p(m)) then
@@ -1539,21 +1046,29 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             ! transfer seed carbon to leaf emergence
 
             if (peaklai_p(m) >= 1) then
-               gddplant_p(m) = max(gddplant_p(m),huigrain_p(m))
+               hui_p(m) = max(hui_p(m),grnfill(ivt))
             endif
 
-            if (gddtsoi_p(m) >= huileaf_p(m) .and. gddplant_p(m) < huigrain_p(m) .and. idpp < mxmat(ivt)) then
+            if (hui_p(m) >= lfemerg(ivt) .and. hui_p(m) < grnfill(ivt) .and. idpp < mxmat(ivt)) then
                cphase_p(m) = 2._r8
+            ! call vernalization if winter temperate cereal planted, living, and the
+            ! vernalization factor is not 1;
+            ! vf affects the calculation of gddplant
+               if ( vf_p(m) /= 1._r8 .and. (ivt == nwwheat .or. ivt == nirrig_wwheat) .and. hui_p(m) < 0.8_r8 * grnfill(ivt)) then
+                  call vernalization(i,m,deltim)  ! ignore winter wheat for now, add later
+               end if
+          
+           !fertilization
+               
                if (abs(onset_counter_p(m)) > 1.e-6_r8) then
                   onset_flag_p(m)    = 1._r8
                   onset_counter_p(m) = deltim
-                    fert_counter_p(m)  = ndays_on * 86400.
+                  fert_counter_p(m)  = ndays_on * 86400.
                     if (ndays_on .gt. 0) then
 #ifdef FERT
                        fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
-!                       fert_p(m) = manunitro(ivt) * 1000._r8 / fert_counter_p(m)
 #else
-                       fert_p(m) = 0
+                       fert_p(m) = 0._r8
 #endif
                     else
                        fert_p(m) = 0._r8
@@ -1573,10 +1088,12 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                ! the onset_counter would change from dt and you'd need to make
                ! changes to the offset subroutine below
 
-            else if (gddplant_p(m) >= gddmaturity_p(m) .or. idpp >= mxmat(ivt)) then
+            else if (hui_p(m) >= 1._r8 .or. idpp >= mxmat(ivt)) then
                if (harvdate_p(m) >= NOT_Harvested) harvdate_p(m) = jday
                croplive_p(m) = .false.     ! no re-entry in greater if-block
+               cropplant_p(m)=.false.
                cphase_p(m) = 4._r8
+               hui_p(m)=0._r8
                if (tlai_p(m) > 0._r8) then ! plant had emerged before harvest
                   offset_flag_p(m) = 1._r8
                   offset_counter_p(m) = deltim
@@ -1590,13 +1107,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                   crop_seedn_to_leaf_p(m) = crop_seedn_to_leaf_p(m) - leafn_xfer_p(m)/deltim
                   leafc_xfer_p(m) = 0._r8
                   leafn_xfer_p(m) = leafc_xfer_p(m) / leafcn(ivt)
-!                  if(m .eq. 642821)print*,'here10,leafc_xfer',m,leafc_xfer_p(m)
-!                  if (use_c13) then
-!                     c13_cnveg_carbonstate_inst%leafc_xfer_patch_p(m) = 0._r8
-!                  endif
-!                  if (use_c14) then
-!                     c14_cnveg_carbonstate_inst%leafc_xfer_patch_p(m) = 0._r8
-!                  endif
 
                end if
 
@@ -1606,7 +1116,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                ! AgroIBIS uses a complex formula for lai decline.
                ! Use CN's simple formula at least as a place holder (slevis)
 
-            else if (gddplant_p(m) >= huigrain_p(m)) then
+            else if (hui_p(m) >= grnfill(ivt)) then
                cphase_p(m) = 3._r8
                bglfr_p(m) = 1._r8/(leaf_long(ivt)*dayspyr*86400.)
             end if
@@ -1619,6 +1129,9 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
               else ! continue same fert application every timestep
                  fert_counter_p(m) = fert_counter_p(m) - deltim
               end if
+             if(p_iam_glb .eq. 421 .and. i .eq. 53)write(*,'(A,2I,L,2F,2I,4F)'),'cropphen crop live',ivt,m,croplive_p(m),cphase_p(m),hui_p(m), idpp
+             if(p_iam_glb .eq. 421 .and. i .eq. 55)write(*,'(A,2I,L,2F,2I,4F)'),'cropphen crop live',ivt,m,croplive_p(m),cphase_p(m),hui_p(m), idpp
+             if(p_iam_glb .eq. 421 .and. i .eq. 59)write(*,'(A,2I,L,2F,2I,4F)'),'cropphen crop live',ivt,m,croplive_p(m),cphase_p(m),hui_p(m), idpp
 
           else   ! crop not live
             ! next 2 lines conserve mass if leaf*_xfer > 0 due to interpinic.
@@ -1631,12 +1144,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             onset_counter_p(m) = 0._r8
             leafc_xfer_p(m) = 0._r8
             leafn_xfer_p(m) = leafc_xfer_p(m) / leafcn(ivt)
-!            if (use_c13) then
-!              c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
-!            endif
-!            if (use_c14) then
-!               c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = 0._r8
-!            endif
           end if ! croplive
          end if
       end do ! prognostic crops loop
@@ -1912,10 +1419,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             ! units for bglfr are already 1/s
             leafc_to_litter_p(m)  = bglfr_p(m) * leafc_p(m)
             frootc_to_litter_p(m) = bglfr_p(m) * frootc_p(m)
-!            if (use_matrixcn) then
-!               matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
-!               matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
-!            end if
 !            if ( use_fun ) then
 !               leafc_to_litter_fun(p)     = leafc_to_litter(p)
 !               leafn_to_retransn(p)       = paid_retransn_to_npool(p) + free_retransn_to_npool(p)
@@ -2003,13 +1506,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 !               endif
 !            end if
 
-!            if (use_matrixcn) then   
-!               if(frootn(p) .ne. 0)then
-!                  matrix_nphtransfer(p,ifroot_to_iout_phn) = frootn_to_litter(p) / frootn(p)
-!               end if
-!            else
-!               ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
-!            end if !use_matrixcn
          end if
       end do
 
@@ -2039,13 +1535,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             livestemc_to_deadstemc_p(m) = ctovr
             livestemn_to_deadstemn_p(m) = ctovr / deadwdcn(ivt)
 
-!            if(use_matrixcn)then
-!               matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
-!               matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = lwtop / deadwdcn(ivt(p))
-!            else
-!               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-!               !                                        and CNNStateUpdate1::NStateUpdate1
-!            end if
 !            if (CNratio_floating .eqv. .true.) then    
 !               if (livestemc(p) == 0.0_r8) then    
 !                   ntovr = 0.0_r8    
@@ -2054,15 +1543,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 !                end if   
 !
 !                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
-!               if (use_matrixcn)then 
-!                  if (livestemn(p) .gt. 0.0_r8) then
-!                     matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = livestemn_to_deadstemn(p) / livestemn(p)
-!                  else
-!                     livestemn_to_deadstemn(p) = 0
-!                  end if
-!               else
-!                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
-!               end if
 !            end if    
             
             livestemn_to_retransn_p(m)  = ntovr - livestemn_to_deadstemn_p(m)
@@ -2074,13 +1554,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
             ntovr = ctovr / livewdcn(ivt)
             livecrootc_to_deadcrootc_p(m) = ctovr
             livecrootn_to_deadcrootn_p(m) = ctovr / deadwdcn(ivt)
-!            if(use_matrixcn)then
-!               matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)  = lwtop
-!               matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = lwtop / deadwdcn(ivt(p))
-!            else
-!               ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-!               !                                        and CNNStateUpdate1::NStateUpdate1
-!            end if !use_matrixcn
             
 !            if (CNratio_floating .eqv. .true.) then    
 !              if (livecrootc(p) == 0.0_r8) then    
@@ -2090,13 +1563,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 !               end if   
 
 !               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
-!               if (use_matrixcn)then 
-!                  if (livecrootn(p) .ne.0.0_r8 )then
-!                     matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = livecrootn_to_deadcrootn(p) / livecrootn(p)
-!                  end if
-!               else
-!                  ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
-!               end if !use_matrixcn
 !            end if    
             
             livecrootn_to_retransn_p(m)  = ntovr - livecrootn_to_deadcrootn_p(m)
@@ -2105,18 +1571,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 !               livecrootn_to_retransn(p) = 0.0_r8
 !               livestemn_to_retransn(p)  = 0.0_r8
 !            endif
-!            if(use_matrixcn)then
-!               if(livecrootn(p) .gt. 0.0_r8) then
-!                  matrix_nphtransfer(p,ilivecroot_to_iretransn_phn) = livecrootn_to_retransn(p) / livecrootn(p)
-!               else
-!                  livecrootn_to_retransn(p) = 0
-!               end if
-!               if(livestemn(p) .gt. 0.0_r8) then
-!                  matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
-!               else
-!                  livestemn_to_retransn(p)  = 0
-!               end if
-!            end if !use_matrixcn
 
          end if
       end do ! end pft loop
@@ -2163,7 +1617,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                  + leafc_to_litter_p(m) * lf_fcel(ivt) * wtcol * leaf_prof_p(j,m)
           phenology_to_lig_c(j,i) = phenology_to_lig_c(j,i) &
                  + leafc_to_litter_p(m) * lf_flig(ivt) * wtcol * leaf_prof_p(j,m)
- !         print*,'CNLitterToProf,leaf2litter',leafc_to_litter(i),lf_flab(ivt),lf_fcel(ivt)
 
          ! leaf litter nitrogen fluxes
           phenology_to_met_n(j,i) = phenology_to_met_n(j,i) &
@@ -2180,7 +1633,6 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
                + frootc_to_litter_p(m) * fr_fcel(ivt) * wtcol * froot_prof_p(j,m)
           phenology_to_lig_c(j,i) = phenology_to_lig_c(j,i) &
                + frootc_to_litter_p(m) * fr_flig(ivt) * wtcol * froot_prof_p(j,m)
-!         print*,'CNLitterToProf,froot2litter',frootc_to_litter_p(m),fr_flab(ivt),fr_fcel(ivt)
 
          ! fine root litter nitrogen fluxes
           phenology_to_met_n(j,i) = phenology_to_met_n(j,i) &
@@ -2235,105 +1687,35 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
   end subroutine CNLitterToColumn
 
-  subroutine vernalization(i,m)
+  subroutine vernalization(i,m,deltim)
+ ! F. Li for winter wheat vernalization 
    integer, intent(in) :: i
    integer, intent(in) :: m
+   real(r8),intent(in) :: deltim
   ! LOCAL VARAIBLES:
-   real(r8) tcrown                     ! ?
-   real(r8) vd, vd1, vd2               ! vernalization dependence
-   real(r8) tkil                       ! Freeze kill threshold
+    real(r8) vtmin,vtopt,vtmax          ! vernalization minimum, optimum, maximum temperature
+    real(r8) alpha                      ! parameter in calculating vernalization rate
+    real(r8) tc                         ! t_ref2m in degree C
+    real(r8) dt          ! convert dtime from sec to hour
 
-
+   
        ! for all equations - temperatures must be in degrees (C)
        ! calculate temperature of crown of crop (e.g., 3 cm soil temperature)
        ! snow depth in centimeters
 
-!       if (tref_p(m) < tfrz) then !slevis: tref inst of td=daily avg (K)
-!          tcrown = 2._r8 + (tref_p(m) - tfrz) * (0.4_r8 + 0.0018_r8 * &
-!               (min(snowdp(i)*100._r8, 15._r8) - 15._r8)**2)
-!       else !slevis: snow_depth inst of adsnod=daily average (m)
-!          tcrown = tref_p(m) - tfrz
-!       end if
+        vtmin=-1.3_r8
+        vtopt=4.9_r8
+        vtmax=15.7_r8
+        dt=deltim/3600.0_r8  !dt is the time step in hour
+        alpha=log(2._r8)/log((vtmax-vtmin)/(vtopt-vtmin))
 
-       ! vernalization factor calculation
-       ! if vf(p) = 1.  then plant is fully vernalized - and thermal time
-       ! accumulation in phase 1 will be unaffected
-       ! refers to gddtsoi & gddplant, defined in the accumulation routines (slevis)
-       ! reset vf, cumvd, and hdidx to 0 at planting of crop (slevis)
+        tc = tref_p(m)-tfrz
+        if(tc >=vtmin .and. tc <= vtmax) then
+         cumvd_p(m)=cumvd_p(m) + (2._r8*((tc-vtmin)**alpha)*(vtopt-vtmin)**alpha &
+                 - (tc-vtmin)**(2._r8*alpha))/(vtopt-vtmin)**(2._r8*alpha)*(dt/24._r8)
+        end if
 
-!       if (tref_max_p(p) > tfrz) then
-!          if (tref_min_p(p) <= tfrz+15._r8) then
-!             vd1      = 1.4_r8 - 0.0778_r8 * tcrown
-!             vd2      = 0.5_r8 + 13.44_r8 / ((tref_max_p(p)-tref_min_p(p)+3._r8)**2) * tcrown
-!             vd       = max(0._r8, min(1._r8, vd1, vd2))
-!             cumvd(p) = cumvd(p) + vd
-!          end if
-
-!          if (cumvd(p) < 10._r8 .and. tref_max_p(p) > tfrz+30._r8) then
-!             cumvd(p) = cumvd(p) - 0.5_r8 * (tref_max_p(p) - tfrz - 30._r8)
-!          end if
-!          cumvd(p) = max(0._r8, cumvd(p))       ! must be > 0
-
-!          vf(p) = 1._r8 - p1v * (50._r8 - cumvd(p))
-!          vf(p) = max(0._r8, min(vf(p), 1._r8)) ! must be between 0 - 1
-!       end if
-
-       ! calculate cold hardening of plant
-       ! determines for winter cereal varieties whether the plant has completed
-       ! a period of cold hardening to protect it from freezing temperatures. If
-       ! not, then exposure could result in death or killing of plants.
-
-       ! there are two distinct phases of hardening
-
-!       if (tref_min_p(p) <= tfrz-3._r8 .or. hdidx(p) /= 0._r8) then
-!          if (hdidx(p) >= hti) then   ! done with phase 1
-!             hdidx(p) = hdidx(p) + 0.083_r8
-!             hdidx(p) = min(hdidx(p), hti*2._r8)
-!          end if
-
-!          if (tref_max_p(p) >= tbase + tfrz + 10._r8) then
-!             hdidx(p) = hdidx(p) - 0.02_r8 * (tref_max_p(p)-tbase-tfrz-10._r8)
-!             if (hdidx(p) > hti) hdidx(p) = hdidx(p) - 0.02_r8 * (tref_max_p(p)-tbase-tfrz-10._r8)
-!             hdidx(p) = max(0._r8, hdidx(p))
-!          end if
-
-!       else if (tcrown >= tbase-1._r8) then
-!          if (tcrown <= tbase+8._r8) then
-!             hdidx(p) = hdidx(p) + 0.1_r8 - (tcrown-tbase+3.5_r8)**2 / 506._r8
-!             if (hdidx(p) >= hti .and. tcrown <= tbase + 0._r8) then
-!                hdidx(p) = hdidx(p) + 0.083_r8
-!                hdidx(p) = min(hdidx(p), hti*2._r8)
-!             end if
-!          end if
-
-!          if (tref_max_p(p) >= tbase + tfrz + 10._r8) then
-!             hdidx(p) = hdidx(p) - 0.02_r8 * (tref_max_p(p)-tbase-tfrz-10._r8)
-!             if (hdidx(p) > hti) hdidx(p) = hdidx(p) - 0.02_r8 * (tref_max_p(p)-tbase-tfrz-10._r8)
-!             hdidx(p) = max(0._r8, hdidx(p))
-!          end if
-!       end if
-
-       ! calculate what the cereal killing temperature
-       ! there is a linear inverse relationship between
-       ! hardening of the plant and the killing temperature or
-       ! threshold that the plant can withstand
-       ! when plant is fully-hardened (hdidx = 2), the killing threshold is -18 C
-
-       ! will have to develop some type of relationship that reduces LAI and
-       ! biomass pools in response to cold damaged crop
-
-!       if (tref_min_p(p) <= tfrz - 6._r8) then
-!          tkil = (tbase - 6._r8) - 6._r8 * hdidx(p)
-!          if (tkil >= tcrown) then
-!             if ((0.95_r8 - 0.02_r8 * (tcrown - tkil)**2) >= 0.02_r8) then
-!                write (*,*)  'crop damaged by cold temperatures at p,c =', p,c
-!             else if (tlai(p) > 0._r8) then ! slevis: kill if past phase1
-!                gddmaturity(p) = 0._r8      !         by forcing through
-!                huigrain(p)    = 0._r8      !         harvest
-!                write (*,*)  '95% of crop killed by cold temperatures at p,c =', p,c
-!             end if
-!          end if
-!       end if
+        vf_p(m)=(cumvd_p(m)**5._r8)/(22.5_r8**5._r8+cumvd_p(m)**5._r8)
 
   end subroutine vernalization
   

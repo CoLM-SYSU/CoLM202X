@@ -83,6 +83,7 @@ PROGRAM CLM
    type(timestamp) :: itstamp, etstamp, ptstamp
    
    integer*8 :: start_time, end_time, c_per_sec, time_used
+   logical isread
 
 #ifdef USEMPI
    call spmd_init ()
@@ -253,11 +254,20 @@ PROGRAM CLM
       ENDIF
 #endif
 
+#ifdef BGC
 #ifdef NITRIF
       CALL julian2monthday (idate(1), idate(2), month, mday)
       if(mday .eq. 1)then
          CALL NITRIF_readin(month, dir_landdata)
       end if
+#endif
+      if(idate(2) .eq. 1)then
+         isread = .true.
+      else
+         isread = .false.
+      end if
+      CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
+
 #endif
 
 !!!! need to acc runoff here!!!
@@ -320,7 +330,7 @@ call colm_CaMa_drv
    IF (p_is_worker) THEN
 #ifdef USEMPI
       CALL mpi_allreduce (MPI_IN_PLACE, count_iters, size(count_iters), &
-         MPI_INTEGER, MPI_SUM, p_comm_worker, p_err)
+         MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
       IF (p_iam_worker == 0) THEN
          write(*,*) 'iteration stat ', count_iters(:)

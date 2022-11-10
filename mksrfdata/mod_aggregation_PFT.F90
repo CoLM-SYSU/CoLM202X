@@ -162,31 +162,31 @@ CONTAINS
       ! Local Variables
       INTEGER :: nreq, smesg(2), isrc, idest, iproc
       INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: npxl, ipxl, iu, istt, iend
+      INTEGER :: npxl, ipxl, iu, ipxstt, ipxend
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
       REAL(r8), allocatable :: rbuf2(:), rbuf3(:,:)
       LOGICAL,  allocatable :: msk(:)
 
 
-      iu   = landpatch%iunt(ipatch)
-      istt = landpatch%istt(ipatch)
-      iend = landpatch%iend(ipatch)
+      iu   = landpatch%ibasin(ipatch)
+      ipxstt = landpatch%ipxstt(ipatch)
+      ipxend = landpatch%ipxend(ipatch)
 
-      npxl = iend - istt + 1
-      allocate (pctout (0:N_PFT_modis-1,istt:iend))
+      npxl = ipxend - ipxstt + 1
+      allocate (pctout (0:N_PFT_modis-1,ipxstt:ipxend))
 
-      IF (present(data2)) allocate (dout2 (istt:iend))
-      IF (present(data3)) allocate (dout3 (0:N_PFT_modis-1,istt:iend))
-      IF (present (area)) allocate (area (istt:iend))
+      IF (present(data2)) allocate (dout2 (ipxstt:ipxend))
+      IF (present(data3)) allocate (dout3 (0:N_PFT_modis-1,ipxstt:ipxend))
+      IF (present (area)) allocate (area (ipxstt:ipxend))
 
 #ifdef USEMPI
 
-      allocate (xlist (istt:iend))
-      allocate (ylist (istt:iend))
-      allocate (ipt   (istt:iend))
-      allocate (msk   (istt:iend))
+      allocate (xlist (ipxstt:ipxend))
+      allocate (ylist (ipxstt:ipxend))
+      allocate (ipt   (ipxstt:ipxend))
+      allocate (msk   (ipxstt:ipxend))
 
-      DO ipxl = istt, iend
+      DO ipxl = ipxstt, ipxend
          xlist(ipxl) = grid%xgrd(landbasin(iu)%ilon(ipxl))
          ylist(ipxl) = grid%ygrd(landbasin(iu)%ilat(ipxl))
 
@@ -248,7 +248,7 @@ CONTAINS
 
 #else
       
-      DO ipxl = istt, iend
+      DO ipxl = ipxstt, ipxend
 
          ilon = grid%xgrd(landbasin(iu)%ilon(ipxl))
          ilat = grid%ygrd(landbasin(iu)%ilat(ipxl))
@@ -274,7 +274,7 @@ CONTAINS
       pctout = max(pctout, 0.)
 
       IF (present(area)) THEN
-         DO ipxl = istt, iend
+         DO ipxl = ipxstt, ipxend
             area(ipxl) = areaquad (&
                pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
                pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )

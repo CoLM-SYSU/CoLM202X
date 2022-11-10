@@ -5,16 +5,16 @@ module bgc_veg_CNNDynamicsMod
 
 use precision
 
-use MOD_PFTimeInvars, only: pftclass
+use MOD_PFTimeInvars, only: pftclass, pftfrac
 use MOD_TimeInvariants, only: porsl, psi0, bsw
 use MOD_TimeVariables, only: h2osoi
 
 use MOD_1D_BGCPFTFluxes, only: fert_p  ! intent(in)
  
-use MOD_1D_BGCFluxes, only: fert_to_sminn
+use MOD_1D_BGCFluxes, only: fert_to_sminn, soyfixn_to_sminn
 
 use MOD_BGCTimeVars, only: sminn, fpg
-use MOD_BGCPFTimeVars, only: croplive_p, gddplant_p, gddmaturity_p
+use MOD_BGCPFTimeVars, only: croplive_p, hui_p
 
 use MOD_1D_BGCPFTFluxes, only: plant_ndemand_p, soyfixn_p
 
@@ -36,14 +36,13 @@ contains
  end subroutine CNNFert
 
  subroutine CNSoyfix (i, ps, pe, nl_soil)
-
+ ! GPAM Soybean biological N fixation
    integer, intent(in) :: i
    integer, intent(in) :: ps
    integer, intent(in) :: pe
    integer, intent(in) :: nl_soil
    real(r8):: fxw,fxn,fxg,fxr             ! soil water factor, nitrogen factor, growth stage factor
    real(r8):: soy_ndemand                 ! difference between nitrogen supply and demand
-   real(r8):: GDDfrac
    real(r8):: sminnthreshold1, sminnthreshold2
    real(r8):: GDDfracthreshold1, GDDfracthreshold2
    real(r8):: GDDfracthreshold3, GDDfracthreshold4
@@ -63,7 +62,7 @@ contains
  
    do j = 1, nl_soil
       if (z_soi(j)+0.5_r8*dz_soi(j) <= 0.05_r8) then
-         watdry = porsl(j,i) * (316230._r8/psi0(j,i)) ** (-1._r8/bsw(j,i))
+         watdry = porsl(j,i) * (316230._r8/(-psi0(j,i))) ** (-1._r8/bsw(j,i))
          rwat = rwat + (h2osoi(j,i)-watdry) * dz_soi(j)
          swat = swat + (porsl (j,i)-watdry) * dz_soi(j)
          rz   = rz   + dz_soi(j)
@@ -76,9 +75,7 @@ contains
             
    do m = ps, pe
       ivt = pftclass(m)
-      if(croplive_p(m) .and. ivt .eq. 23 .or. ivt .eq. 24 .or. ivt .eq. 77 .or. ivt .eq. 78)then 
-        ! & rain fed temperate soybean & irrigated temperate soybean 
-        ! & rain fed tropical soybean & irrigated tropical soybean
+      if(croplive_p(m) .and. ivt ==  23 .or. ivt == 24 .or. ivt == 77 .or. ivt == 78)then 
 
         ! difference between supply and demand
 
@@ -101,32 +98,23 @@ contains
             end if
            
             ! growth stage factor
-            ! slevis: to replace GDDfrac, assume...
-            ! Beth's crit_offset_gdd_def is similar to my gddmaturity
-            ! Beth's ac_gdd (base 5C) similar to my hui=gddplant (base 10
-            ! for soy)
-            ! Ranges below are not firm. Are they lit. based or tuning based?
 
-            GDDfrac = gddplant_p(m) / gddmaturity_p(m)
-
-            if (GDDfrac <= GDDfracthreshold1) then
+            if (hui_p(m) <= GDDfracthreshold1) then
                fxg = 0._r8
-            else if (GDDfrac > GDDfracthreshold1 .and. GDDfrac <= GDDfracthreshold2) then
-               fxg = 6.67_r8 * GDDfrac - 1._r8
-            else if (GDDfrac > GDDfracthreshold2 .and. GDDfrac <= GDDfracthreshold3) then
+            else if (hui_p(m) > GDDfracthreshold1 .and. hui_p(m) <= GDDfracthreshold2) then
+               fxg = 6.67_r8 * hui_p(m) - 1._r8
+            else if (hui_p(m) > GDDfracthreshold2 .and. hui_p(m) <= GDDfracthreshold3) then
                fxg = 1._r8
-            else if (GDDfrac > GDDfracthreshold3 .and. GDDfrac <= GDDfracthreshold4) then
-               fxg = 3.75_r8 - 5._r8 * GDDfrac
-            else  ! GDDfrac > GDDfracthreshold4
+            else if (hui_p(m) > GDDfracthreshold3 .and. hui_p(m) <= GDDfracthreshold4) then
+               fxg = 3.75_r8 - 5._r8 * hui_p(m)
+            else 
                fxg = 0._r8
             end if
 
             ! calculate the nitrogen fixed by the soybean
 
-            fxr = min(1._r8, fxw, fxn) * fxg
-            fxr = max(0._r8, fxr)
-            soyfixn_p(m) = fxr * soy_ndemand
-            soyfixn_p(m) = min(soyfixn_p(m), soy_ndemand)
+            fxr = max(0._r8, min(1._r8, fxw, fxn) * fxg)
+            soyfixn_p(m) = min(fxr * soy_ndemand, soy_ndemand)
 
          else ! if nitrogen demand met, no fixation
 
@@ -140,6 +128,8 @@ contains
 
       end if
    end do
+
+   soyfixn_to_sminn(i) = sum(soyfixn_p(ps:pe)*pftfrac(ps:pe))
 
  end subroutine CNSoyfix
 

@@ -76,7 +76,7 @@ MODULE mod_namelist
    CHARACTER(len=256) :: DEF_dir_restart  = 'path/to/restart'
    CHARACTER(len=256) :: DEF_dir_history  = 'path/to/history'
 
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
    CHARACTER(len=256) :: DEF_file_landgrid = 'path/to/landmask/file'
 #endif
 
@@ -94,6 +94,7 @@ MODULE mod_namelist
    ! ----- history -----
    REAL(r8) :: DEF_hist_lon_res = 0.5
    REAL(r8) :: DEF_hist_lat_res = 0.5       
+   CHARACTER(len=256) :: DEF_hist_gridname = 'NONE'
    CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
@@ -256,12 +257,65 @@ MODULE mod_namelist
       LOGICAL :: gpp                = .true.
       LOGICAL :: downreg            = .true.
       LOGICAL :: ar                 = .true.
+      LOGICAL :: fpg                = .true.
+      LOGICAL :: fpi                = .true.
+      LOGICAL :: gpp_enftemp        = .true. !1
+      LOGICAL :: gpp_enfboreal      = .true. !2
+      LOGICAL :: gpp_dnfboreal      = .true. !3
+      LOGICAL :: gpp_ebftrop        = .true. !4
+      LOGICAL :: gpp_ebftemp        = .true. !5
+      LOGICAL :: gpp_dbftrop        = .true. !6
+      LOGICAL :: gpp_dbftemp        = .true. !7
+      LOGICAL :: gpp_dbfboreal      = .true. !8
+      LOGICAL :: gpp_ebstemp        = .true. !9
+      LOGICAL :: gpp_dbstemp        = .true. !10
+      LOGICAL :: gpp_dbsboreal      = .true. !11
+      LOGICAL :: gpp_c3arcgrass     = .true. !12
+      LOGICAL :: gpp_c3grass        = .true. !13
+      LOGICAL :: gpp_c4grass        = .true. !14
+      LOGICAL :: leafc_enftemp      = .true. !1
+      LOGICAL :: leafc_enfboreal    = .true. !2
+      LOGICAL :: leafc_dnfboreal    = .true. !3
+      LOGICAL :: leafc_ebftrop      = .true. !4
+      LOGICAL :: leafc_ebftemp      = .true. !5
+      LOGICAL :: leafc_dbftrop      = .true. !6
+      LOGICAL :: leafc_dbftemp      = .true. !7
+      LOGICAL :: leafc_dbfboreal    = .true. !8
+      LOGICAL :: leafc_ebstemp      = .true. !9
+      LOGICAL :: leafc_dbstemp      = .true. !10
+      LOGICAL :: leafc_dbsboreal    = .true. !11
+      LOGICAL :: leafc_c3arcgrass   = .true. !12
+      LOGICAL :: leafc_c3grass      = .true. !13
+      LOGICAL :: leafc_c4grass      = .true. !14
 #ifdef CROP
       LOGICAL :: cphase             = .true.
+      LOGICAL :: gddmaturity        = .true.
+      LOGICAL :: gddplant           = .true.
+      LOGICAL :: vf                 = .true.
+      LOGICAL :: hui                = .true.
       LOGICAL :: cropprod1c         = .true.
       LOGICAL :: cropprod1c_loss    = .true.
       LOGICAL :: cropseedc_deficit  = .true.
       LOGICAL :: grainc_to_cropprodc= .true.
+      LOGICAL :: plantdate_rainfed_temp_corn= .true.
+      LOGICAL :: plantdate_irrigated_temp_corn= .true.
+      LOGICAL :: plantdate_rainfed_spwheat= .true.
+      LOGICAL :: plantdate_irrigated_spwheat= .true.
+      LOGICAL :: plantdate_rainfed_wtwheat= .true.
+      LOGICAL :: plantdate_irrigated_wtwheat= .true.
+      LOGICAL :: plantdate_rainfed_temp_soybean= .true.
+      LOGICAL :: plantdate_irrigated_temp_soybean= .true.
+      LOGICAL :: plantdate_rainfed_cotton= .true.
+      LOGICAL :: plantdate_irrigated_cotton= .true.
+      LOGICAL :: plantdate_rainfed_rice= .true.
+      LOGICAL :: plantdate_irrigated_rice= .true.
+      LOGICAL :: plantdate_rainfed_sugarcane= .true.
+      LOGICAL :: plantdate_irrigated_sugarcane= .true.
+      LOGICAL :: plantdate_rainfed_trop_corn= .true.
+      LOGICAL :: plantdate_irrigated_trop_corn= .true.
+      LOGICAL :: plantdate_rainfed_trop_soybean= .true.
+      LOGICAL :: plantdate_irrigated_trop_soybean= .true.
+      LOGICAL :: plantdate_unmanagedcrop= .true.
       LOGICAL :: cropprodc_rainfed_temp_corn= .true.
       LOGICAL :: cropprodc_irrigated_temp_corn= .true.
       LOGICAL :: cropprodc_rainfed_spwheat= .true.
@@ -284,7 +338,9 @@ MODULE mod_namelist
 
       LOGICAL :: grainc_to_seed     = .true.
       LOGICAL :: fert_to_sminn      = .true.
+      LOGICAL :: ndep_to_sminn      = .true.
 
+      LOGICAL :: huiswheat          = .true.
       LOGICAL :: pdcorn             = .true.
       LOGICAL :: pdswheat           = .true.
       LOGICAL :: pdwwheat           = .true.
@@ -430,7 +486,7 @@ CONTAINS
          DEF_dir_rawdata,                 &  
          DEF_dir_output,                  &  
          DEF_dir_forcing,                 &  
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
          DEF_file_landgrid,               &
 #endif
 #ifdef CATCHMENT
@@ -442,6 +498,7 @@ CONTAINS
         
          DEF_hist_lon_res,                &
          DEF_hist_lat_res,                &
+         DEF_hist_gridname,               &
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
@@ -521,7 +578,7 @@ CONTAINS
       CALL mpi_bcast (DEF_dir_restart,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_history,  256, mpi_character, p_root, p_comm_glb, p_err)
       
-#ifdef GRIDBASED
+#if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_landgrid, 256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
@@ -538,6 +595,7 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err) 
       CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_hist_gridname,     256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
@@ -675,11 +733,65 @@ CONTAINS
       CALL mpi_bcast (DEF_hist_vars%gpp                ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%downreg            ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%ar                 ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%fpg                ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%fpi                ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_enftemp        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_enfboreal      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dnfboreal      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_ebftrop        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_ebftemp        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dbftrop        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dbftemp        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dbfboreal      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_ebstemp        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dbstemp        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_dbsboreal      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_c3arcgrass     ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_c3grass        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gpp_c4grass        ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_enftemp      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_enfboreal    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dnfboreal    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_ebftrop      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_ebftemp      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dbftrop      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dbftemp      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dbfboreal    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_ebstemp      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dbstemp      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_dbsboreal    ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_c3arcgrass   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_c3grass      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%leafc_c4grass      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
 #ifdef CROP
       CALL mpi_bcast (DEF_hist_vars%cphase                          , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%hui                             , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%vf                              , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gddmaturity                     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%gddplant                        , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropprod1c                      , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropprod1c_loss                 , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropseedc_deficit               , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%grainc_to_cropprodc             , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_temp_corn     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_temp_corn   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_spwheat       , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_spwheat     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_wtwheat       , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_wtwheat     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_temp_soybean  , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_temp_soybean, 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_cotton        , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_cotton      , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_rice          , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_rice        , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_sugarcane     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_sugarcane   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_trop_corn     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_trop_corn   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_rainfed_trop_soybean  , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_irrigated_trop_soybean, 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_vars%plantdate_unmanagedcrop         , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_temp_corn     , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropprodc_irrigated_temp_corn   , 1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_vars%cropprodc_rainfed_spwheat       , 1, mpi_logical,   p_root, p_comm_glb, p_err)

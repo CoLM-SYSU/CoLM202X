@@ -129,7 +129,7 @@ contains
 
       ! local variables:
       integer  :: ivar
-      integer  :: ib, jb, i, j, ilon, ilat, np
+      integer  :: iblkme, ib, jb, i, j, ilon, ilat, np
       real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
       real(r8) :: sunang, cloud, difrat, vnrat
       real(r8) :: a, hsolar, ratio_rvrf 
@@ -196,25 +196,23 @@ contains
             ! coszen method, for SW
             if (tintalgo(ivar) == 'coszen') then
                calday = calendarday(mtstamp)
-               do jb = 1, gblock%nyblk
-                  do ib = 1, gblock%nxblk
-                     if (gblock%pio(ib,jb) == p_iam_glb) then
+               DO iblkme = 1, nblkme 
+                  ib = xblkme(iblkme)
+                  jb = yblkme(iblkme)
 
-                        do j = 1, gforc%ycnt(jb)
-                           do i = 1, gforc%xcnt(ib)
+                  do j = 1, gforc%ycnt(jb)
+                     do i = 1, gforc%xcnt(ib)
 
-                              ilat = gforc%ydsp(jb) + j
-                              ilon = gforc%xdsp(ib) + i
-                              if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+                        ilat = gforc%ydsp(jb) + j
+                        ilon = gforc%xdsp(ib) + i
+                        if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                              cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
-                              cosz = max(0.001, cosz)
-                              forcn(ivar)%blk(ib,jb)%val(i,j) = &
-                                 cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
+                        cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
+                        cosz = max(0.001, cosz)
+                        forcn(ivar)%blk(ib,jb)%val(i,j) = &
+                           cosz / avgcos%blk(ib,jb)%val(i,j) * forcn_LB(ivar)%blk(ib,jb)%val(i,j)
 
-                           end do
-                        end do
-                     end if
+                     end do
                   end do
                end do
             end if
@@ -281,30 +279,28 @@ contains
                ! direct to diffuse radiation calculated based on one year's worth of
                ! hourly CAM output from CAM version cam3_5_55
                !---------------------------------------------------------------
-               do jb = 1, gblock%nyblk
-                  do ib = 1, gblock%nxblk
-                     if (gblock%pio(ib,jb) == p_iam_glb) then
+               DO iblkme = 1, nblkme 
+                  ib = xblkme(iblkme)
+                  jb = yblkme(iblkme)
 
-                        do j = 1, gforc%ycnt(jb)
-                           do i = 1, gforc%xcnt(ib)
+                  do j = 1, gforc%ycnt(jb)
+                     do i = 1, gforc%xcnt(ib)
 
-                              hsolar = forc_xy_solarin%blk(ib,jb)%val(i,j)*0.5_R8
+                        hsolar = forc_xy_solarin%blk(ib,jb)%val(i,j)*0.5_R8
 
-                              ! NIR (dir, diff)
-                              ratio_rvrf = min(0.99_R8,max(0.29548_R8 + 0.00504_R8*hsolar  &
-                                 -1.4957e-05_R8*hsolar**2 + 1.4881e-08_R8*hsolar**3,0.01_R8))
-                              forc_xy_soll %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
-                              forc_xy_solld%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
+                        ! NIR (dir, diff)
+                        ratio_rvrf = min(0.99_R8,max(0.29548_R8 + 0.00504_R8*hsolar  &
+                           -1.4957e-05_R8*hsolar**2 + 1.4881e-08_R8*hsolar**3,0.01_R8))
+                        forc_xy_soll %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
+                        forc_xy_solld%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
 
-                              ! VIS (dir, diff)
-                              ratio_rvrf = min(0.99_R8,max(0.17639_R8 + 0.00380_R8*hsolar  &
-                                 -9.0039e-06_R8*hsolar**2 + 8.1351e-09_R8*hsolar**3,0.01_R8))
-                              forc_xy_sols %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
-                              forc_xy_solsd%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
+                        ! VIS (dir, diff)
+                        ratio_rvrf = min(0.99_R8,max(0.17639_R8 + 0.00380_R8*hsolar  &
+                           -9.0039e-06_R8*hsolar**2 + 8.1351e-09_R8*hsolar**3,0.01_R8))
+                        forc_xy_sols %blk(ib,jb)%val(i,j) = ratio_rvrf*hsolar
+                        forc_xy_solsd%blk(ib,jb)%val(i,j) = (1._R8 - ratio_rvrf)*hsolar
 
-                           end do
-                        end do
-                     end if
+                     end do
                   end do
                end do
 
@@ -315,39 +311,37 @@ contains
                ! (visible, near-infrad, dirct, diffuse)
                ! Julian calday (1.xx to 365.xx)
                !---------------------------------------------------------------
-               do jb = 1, gblock%nyblk
-                  do ib = 1, gblock%nxblk
-                     if (gblock%pio(ib,jb) == p_iam_glb) then
+               DO iblkme = 1, nblkme 
+                  ib = xblkme(iblkme)
+                  jb = yblkme(iblkme)
 
-                        do j = 1, gforc%ycnt(jb)
-                           do i = 1, gforc%xcnt(ib)
+                  do j = 1, gforc%ycnt(jb)
+                     do i = 1, gforc%xcnt(ib)
 
-                              ilat = gforc%ydsp(jb) + j
-                              ilon = gforc%xdsp(ib) + i
-                              if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+                        ilat = gforc%ydsp(jb) + j
+                        ilon = gforc%xdsp(ib) + i
+                        if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                              a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-                              sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
+                        a = forc_xy_solarin%blk(ib,jb)%val(i,j)
+                        sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
-                              cloud = (1160.*sunang-a)/(963.*sunang)
-                              cloud = max(cloud,0.)
-                              cloud = min(cloud,1.)
-                              cloud = max(0.58,cloud)
+                        cloud = (1160.*sunang-a)/(963.*sunang)
+                        cloud = max(cloud,0.)
+                        cloud = min(cloud,1.)
+                        cloud = max(0.58,cloud)
 
-                              difrat = 0.0604/(sunang-0.0223)+0.0683
-                              if(difrat.lt.0.) difrat = 0.
-                              if(difrat.gt.1.) difrat = 1.
+                        difrat = 0.0604/(sunang-0.0223)+0.0683
+                        if(difrat.lt.0.) difrat = 0.
+                        if(difrat.gt.1.) difrat = 1.
 
-                              difrat = difrat+(1.0-difrat)*cloud
-                              vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
+                        difrat = difrat+(1.0-difrat)*cloud
+                        vnrat = (580.-cloud*464.)/((580.-cloud*499.)+(580.-cloud*464.))
 
-                              forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
-                              forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
-                              forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
-                              forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
-                           end do
-                        end do
-                     end if
+                        forc_xy_sols %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*vnrat
+                        forc_xy_soll %blk(ib,jb)%val(i,j) = a*(1.0-difrat)*(1.0-vnrat)
+                        forc_xy_solsd%blk(ib,jb)%val(i,j) = a*difrat*vnrat
+                        forc_xy_solld%blk(ib,jb)%val(i,j) = a*difrat*(1.0-vnrat)
+                     end do
                   end do
                end do
             end if
@@ -1078,7 +1072,7 @@ contains
          use mod_data_type
          implicit none
 
-         integer  :: ib, jb, i, j, ilon, ilat
+         integer  :: iblkme, ib, jb, i, j, ilon, ilat
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
 
@@ -1090,25 +1084,23 @@ contains
             tstamp = tstamp + deltim_int
             calday = calendarday(tstamp)
 
-            do jb = 1, gblock%nyblk
-               do ib = 1, gblock%nxblk
-                  if (gblock%pio(ib,jb) == p_iam_glb) then
 
-                     do j = 1, gforc%ycnt(jb)
-                        do i = 1, gforc%xcnt(ib)
-                              
-                           ilat = gforc%ydsp(jb) + j
-                           ilon = gforc%xdsp(ib) + i
-                           if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
+            DO iblkme = 1, nblkme 
+               ib = xblkme(iblkme)
+               jb = yblkme(iblkme)
+               do j = 1, gforc%ycnt(jb)
+                  do i = 1, gforc%xcnt(ib)
 
-                           cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
-                           cosz = max(0.001, cosz)
-                           avgcos%blk(ib,jb)%val(i,j) = &
-                              avgcos%blk(ib,jb)%val(i,j) + cosz*deltim_real /real(dtime(7))
+                     ilat = gforc%ydsp(jb) + j
+                     ilon = gforc%xdsp(ib) + i
+                     if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        end do
-                     end do
-                  end if
+                     cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
+                     cosz = max(0.001, cosz)
+                     avgcos%blk(ib,jb)%val(i,j) = &
+                        avgcos%blk(ib,jb)%val(i,j) + cosz*deltim_real /real(dtime(7))
+
+                  end do
                end do
             end do
          end do

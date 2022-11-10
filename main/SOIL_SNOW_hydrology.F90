@@ -584,6 +584,7 @@ MODULE SOIL_SNOW_hydrology
       CALL soil_water_vertical_movement ( &
          nlev, deltim, sp_zc(1:nlev), sp_zi (0:nlev), is_permeable(1:nlev), &
          eff_porosity(1:nlev), theta_r (1:nlev), psi0 (1:nlev), hksati(1:nlev), nprms, prms(:,1:nlev), &
+         porsl(nlev), &
          qraing, etr, rootr(1:nlev), rockbtm, rsubst, qinfl, &
          dpond, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
 

@@ -63,6 +63,9 @@ PROGRAM mksrfdata
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
+#ifdef MAP_PATCH_TO_GRID
+   USE mod_patch2grid
+#endif
 
    IMPLICIT NONE
 
@@ -75,7 +78,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gbasin, gridlai, gnitrif
+   TYPE (grid_type) :: gbasin, gridlai, gnitrif, gndep
 
    INTEGER :: start_time, end_time, c_per_sec, time_used
 
@@ -92,8 +95,6 @@ PROGRAM mksrfdata
 
    CALL read_namelist (nlfile)
    
-   ! define blocks
-   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
 
    dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
@@ -101,6 +102,10 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+   
+   ! define blocks
+   CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
+   ! CALL gblock%load_from_file (dir_landdata, is_read_pio = .false.)
 
    CAll Init_LC_Const
 
@@ -119,6 +124,9 @@ PROGRAM mksrfdata
 #ifdef CATCHMENT
    CALL gbasin%define_by_name ('merit_90m')
 #endif
+#ifdef UNSTRUCTURED
+   CALL gbasin%define_by_name ('colm_1km')
+#endif
 
    ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
@@ -134,16 +142,19 @@ PROGRAM mksrfdata
 #endif
 #ifdef PFT_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
+#endif
+#ifdef PC_CLASSIFICATION
+   CALL gpatch%define_by_name ('colm_500m')
+#endif
+#ifdef BGC
 #if (defined CROP) 
    ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
-#endif
 #ifdef NITRIF
    CALL gnitrif%define_by_name ('nitrif_2deg')
 #endif
-#ifdef PC_CLASSIFICATION
-   CALL gpatch%define_by_name ('colm_500m')
+   CALL gndep%define_by_name ('nitrif_2deg')
 #endif
 
    ! define grid for land characteristics
@@ -157,12 +168,15 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (ghydru)
 #endif
    CALL pixel%assimilate_grid (gpatch)
+   CALL pixel%assimilate_grid (gridlai)
+#ifdef BGC
 #if (defined CROP) 
    CALL pixel%assimilate_grid (gcrop )
 #endif
-   CALL pixel%assimilate_grid (gridlai)
 #ifdef NITRIF
    CALL pixel%assimilate_grid (gnitrif)
+#endif
+   CALL pixel%assimilate_grid (gndep)
 #endif
 
    ! map pixels to grid coordinates
@@ -179,6 +193,9 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (gridlai)
 #ifdef NITRIF
    CALL pixel%map_to_grid (gnitrif)
+#endif
+#ifdef BGC
+   CALL pixel%map_to_grid (gndep)
 #endif
 
 
@@ -221,15 +238,26 @@ PROGRAM mksrfdata
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
 #endif
 
+#ifdef MAP_PATCH_TO_GRID
+#ifdef UNSTRUCTURED
+   CALL grid_patch2grid%define_by_name ('colm_1km')
+#else
+   CALL grid_patch2grid%define_from_file (DEF_file_landgrid)
+#endif
+   CALL patch2grid_init ()
+#endif
+
    ! ................................................................
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
-
+#ifdef BGC
+   call aggregation_NDEP            (gndep, dir_rawdata, dir_landdata)
 #if (defined CROP)
    call aggregation_crop_parameters (gcrop, dir_rawdata, dir_landdata)
 #endif
 #if (defined NITRIF)
    call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)
+#endif
 #endif
    CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 

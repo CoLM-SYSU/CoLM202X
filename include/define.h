@@ -27,7 +27,7 @@
 #define CROP
 #define BGC
 #define LAIfdbk
-#define SASU
+#undef SASU
 #define OzoneStress
 #define FERT
 #define NITRIF

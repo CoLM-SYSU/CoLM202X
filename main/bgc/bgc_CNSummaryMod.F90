@@ -11,12 +11,12 @@ use MOD_BGCTimeVars, only: &
     leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
     deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
     deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, grainc, grainc_storage, grainc_xfer, &
-    cropseedc_deficit, cropprod1c, cphase, & 
+    cropseedc_deficit, cropprod1c, cphase, hui, vf, gddplant, gddmaturity, & 
     fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
     fertnitro_cotton, fertnitro_rice1, fertnitro_rice2, fertnitro_sugarcane, &
     leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
     deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
-    deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, grainn, grainn_storage, grainn_xfer, downreg
+    deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, grainn, grainn_storage, grainn_xfer, downreg, plantdate
 use MOD_BGCTimeInvars, only: &
     is_litter, is_soil, is_cwd
 use MOD_BGCPFTimeVars, only: &
@@ -26,9 +26,9 @@ use MOD_BGCPFTimeVars, only: &
     leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
     deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
     grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, &
-    cropseedc_deficit_p, cropprod1c_p, cpool_p, &
+    cropseedc_deficit_p, cropprod1c_p, cpool_p, plantdate_p, &
 #ifdef CROP
-    cphase_p, fertnitro_p, &
+    cphase_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
 #endif
     leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
     leafn_storage_p, frootn_storage_p, livestemn_storage_p, &
@@ -38,8 +38,12 @@ use MOD_BGCPFTimeVars, only: &
     grainn_p, grainn_storage_p, grainn_xfer_p, ntrunc_p, totvegn_p, cropseedn_deficit_p, downreg_p
 use MOD_PFTimeInvars,  only: pftfrac
 use MOD_1D_BGCFluxes, only: &
+    gpp_enftemp, gpp_enfboreal, gpp_dnfboreal, gpp_ebftrop, gpp_ebftemp, gpp_dbftrop, gpp_dbftemp, &
+    gpp_dbfboreal, gpp_ebstemp, gpp_dbstemp, gpp_dbsboreal, gpp_c3arcgrass, gpp_c3grass, gpp_c4grass, &
+    leafc_enftemp, leafc_enfboreal, leafc_dnfboreal, leafc_ebftrop, leafc_ebftemp, leafc_dbftrop, leafc_dbftemp, &
+    leafc_dbfboreal, leafc_ebstemp, leafc_dbstemp, leafc_dbsboreal, leafc_c3arcgrass, leafc_c3grass, leafc_c4grass, &
     decomp_hr, decomp_hr_vr, gpp, ar, er, supplement_to_sminn, supplement_to_sminn_vr, &
-    cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, &
+    cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, grainn_to_cropprodn, &
     sminn_leached, sminn_leached_vr, smin_no3_leached, smin_no3_leached_vr, smin_no3_runoff, smin_no3_runoff_vr, &
     f_n2o_nit, f_n2o_nit_vr, decomp_cpools_transport_tendency, decomp_npools_transport_tendency, &
     denit, f_denit_vr, fire_closs, hrv_xsmrpool_to_atm, som_c_leached, som_n_leached, sminn_to_denit_excess_vr, &
@@ -63,7 +67,9 @@ use MOD_1D_BGCPFTFluxes, only: &
     m_livecrootc_to_fire_p, m_livecrootc_storage_to_fire_p, m_livecrootc_xfer_to_fire_p, &
     m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
     m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p, &
-    cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p
+    cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p, grainn_to_food_p
+use MOD_TimeInvariants, only : patchclass
+use spmd_task
     
 implicit none
 
@@ -114,7 +120,7 @@ call soilbiogeochem_nitrogenflux_summary(i,nl_soil,dz_soi,ndecomp_transitions,nd
 
 call cnveg_carbonflux_summary(i,ps,pe)
 
-call cnveg_nitrogenflux_summary()
+call cnveg_nitrogenflux_summary(i,ps,pe)
 
 end subroutine CNDriverSummarizeFluxes
 
@@ -235,8 +241,10 @@ cropseedc_deficit(i)  = sum(cropseedc_deficit_p(ps:pe)  * pftfrac(ps:pe))
 cropprod1c(i)         = sum(cropprod1c_p(ps:pe)         * pftfrac(ps:pe))
 #ifdef CROP
 cphase(i)             = sum(cphase_p(ps:pe)             * pftfrac(ps:pe))
-!prodc10(i)            = sum(prodc10_p(ps:pe)            * pftfrac(ps:pe))
-#endif
+hui(i)                = hui_p(ps)           
+gddplant(i)           = sum(gddplant_p(ps:pe)           * pftfrac(ps:pe))
+gddmaturity(i)        = sum(gddmaturity_p(ps:pe)        * pftfrac(ps:pe))
+vf(i)                 = sum(vf_p(ps:pe)             * pftfrac(ps:pe))
 
 fertnitro_corn(i) = 0._r8
 fertnitro_swheat(i) = 0._r8
@@ -257,36 +265,70 @@ do m = ps, pe
                 + grainc_p(m)            + grainc_storage_p(m)     + grainc_xfer_p(m) &
                 + cropseedc_deficit_p(m) + cpool_p(m)
 
-   if( pftclass(m) .eq. 17 .or. pftclass(m) .eq. 18 .or. pftclass(m) .eq. 63 .or. pftclass(m) .eq. 64)then
+   if(     pftclass(m) .eq. 17 .or. pftclass(m) .eq. 18 .or. pftclass(m) .eq. 63 .or. pftclass(m) .eq. 64)then
       fertnitro_corn(i) = fertnitro_p(m) 
-   else
-      if( pftclass(m) .eq. 19 .or. pftclass(m) .eq. 20)then
-         fertnitro_swheat(i) = fertnitro_p(m)
-      else
-         if(pftclass(m) .eq. 21 .or. pftclass(m) .eq. 22)then
-            fertnitro_wwheat(i) = fertnitro_p(m)
-         else
-            if(pftclass(m) .eq. 23 .or. pftclass(m) .eq. 24 .or. pftclass(m) .eq. 77 .or. pftclass(m) .eq. 78)then
-               fertnitro_soybean(i) = fertnitro_p(m)
-            else
-               if(pftclass(m) .eq. 41 .or. pftclass(m) .eq. 42)then
-                  fertnitro_cotton(i) = fertnitro_p(m)
-               else
-                  if(pftclass(m) .eq. 61 .or. pftclass(m) .eq. 62)then
-                     fertnitro_rice1(i) = fertnitro_p(m)
-                     fertnitro_rice2(i) = fertnitro_p(m)
-                  else
-                     if(pftclass(m) .eq. 67 .or. pftclass(m) .eq. 68)then
-                        fertnitro_sugarcane(i) = fertnitro_p(m)
-                     end if
-                  end if
-               end if
-            end if
-         end if
-      end if
+   else if(pftclass(m) .eq. 19 .or. pftclass(m) .eq. 20)then
+      fertnitro_swheat(i) = fertnitro_p(m)
+   else if(pftclass(m) .eq. 21 .or. pftclass(m) .eq. 22)then
+      fertnitro_wwheat(i) = fertnitro_p(m)
+   else if(pftclass(m) .eq. 23 .or. pftclass(m) .eq. 24 .or. pftclass(m) .eq. 77 .or. pftclass(m) .eq. 78)then
+      fertnitro_soybean(i) = fertnitro_p(m)
+   else if(pftclass(m) .eq. 41 .or. pftclass(m) .eq. 42)then
+      fertnitro_cotton(i) = fertnitro_p(m)
+   else if(pftclass(m) .eq. 61 .or. pftclass(m) .eq. 62)then
+      fertnitro_rice1(i) = fertnitro_p(m)
+      fertnitro_rice2(i) = fertnitro_p(m)
+   else if(pftclass(m) .eq. 67 .or. pftclass(m) .eq. 68)then
+      fertnitro_sugarcane(i) = fertnitro_p(m)
    end if
 end do
+#endif
 
+leafc_enftemp              (i) = 0._r8
+leafc_enfboreal            (i) = 0._r8
+leafc_dnfboreal            (i) = 0._r8
+leafc_ebftrop              (i) = 0._r8
+leafc_ebftemp              (i) = 0._r8
+leafc_dbftrop              (i) = 0._r8
+leafc_dbftemp              (i) = 0._r8
+leafc_dbfboreal            (i) = 0._r8
+leafc_ebstemp              (i) = 0._r8
+leafc_dbstemp              (i) = 0._r8
+leafc_dbsboreal            (i) = 0._r8
+leafc_c3arcgrass           (i) = 0._r8
+leafc_c3grass              (i) = 0._r8
+leafc_c4grass              (i) = 0._r8
+do m = ps, pe
+   if(pftclass      (m) .eq. 1)then
+      leafc_enftemp   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 2)then
+      leafc_enfboreal (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 3)then
+      leafc_dnfboreal (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 4)then
+      leafc_ebftrop   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 5)then
+      leafc_ebftemp   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 6)then
+      leafc_dbftrop   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 7)then
+      leafc_dbftemp   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 8)then
+      leafc_dbfboreal (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 9)then
+      leafc_ebstemp   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 10)then
+      leafc_dbstemp   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 11)then
+      leafc_dbsboreal (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 12)then
+      leafc_c3arcgrass(i)= leafc_p(m)
+   else if(pftclass (m) .eq. 13)then
+      leafc_c3grass   (i) = leafc_p(m)
+   else if(pftclass (m) .eq. 14)then
+      leafc_c4grass   (i) = leafc_p(m)
+   end if
+end do
 totvegc(i) = sum(totvegc_p(ps:pe)*pftfrac(ps:pe))
 ctrunc_veg(i) = sum(ctrunc_p(ps:pe) *pftfrac(ps:pe))
 totcolc(i) = totvegc(i) + totcwdc(i) + totlitc(i) + totsomc(i) + ctrunc_veg(i) +ctrunc_soil(i)
@@ -324,6 +366,7 @@ grainn(i)             = sum(grainn_p(ps:pe)             * pftfrac(ps:pe))
 grainn_storage(i)     = sum(grainn_storage_p(ps:pe)     * pftfrac(ps:pe))
 grainn_xfer(i)        = sum(grainn_xfer_p(ps:pe)        * pftfrac(ps:pe))
 retransn(i)           = sum(retransn_p(ps:pe)           * pftfrac(ps:pe))
+
 do m = ps, pe
    totvegn_p(m) = leafn_p(m)             + frootn_p(m)             + livestemn_p(m) &
                 + deadstemn_p(m)         + livecrootn_p(m)         + deadcrootn_p(m) &
@@ -429,14 +472,73 @@ ar (i) = sum((leaf_mr_p(ps:pe)                    + froot_mr_p(ps:pe) &
             + grain_mr_p(ps:pe)                   + xsmrpool_to_atm_p(ps:pe) &
             + cpool_grain_gr_p(ps:pe)             + transfer_grain_gr_p(ps:pe) &
             + cpool_grain_storage_gr_p(ps:pe))    * pftfrac(ps:pe))
+gpp_enftemp                (i) = 0._r8
+gpp_enfboreal              (i) = 0._r8
+gpp_dnfboreal              (i) = 0._r8
+gpp_ebftrop                (i) = 0._r8
+gpp_ebftemp                (i) = 0._r8
+gpp_dbftrop                (i) = 0._r8
+gpp_dbftemp                (i) = 0._r8
+gpp_dbfboreal              (i) = 0._r8
+gpp_ebstemp                (i) = 0._r8
+gpp_dbstemp                (i) = 0._r8
+gpp_dbsboreal              (i) = 0._r8
+gpp_c3arcgrass             (i) = 0._r8
+gpp_c3grass                (i) = 0._r8
+gpp_c4grass                (i) = 0._r8
+do m = ps, pe
+   if(pftclass      (m) .eq. 1)then
+      gpp_enftemp   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 2)then
+      gpp_enfboreal (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 3)then
+      gpp_dnfboreal (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 4)then
+      gpp_ebftrop   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 5)then
+      gpp_ebftemp   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 6)then
+      gpp_dbftrop   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 7)then
+      gpp_dbftemp   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 8)then
+      gpp_dbfboreal (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 9)then
+      gpp_ebstemp   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 10)then
+      gpp_dbstemp   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 11)then
+      gpp_dbsboreal (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 12)then
+      gpp_c3arcgrass(i)= psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 13)then
+      gpp_c3grass   (i) = psn_to_cpool_p(m)
+   else if(pftclass (m) .eq. 14)then
+      gpp_c4grass   (i) = psn_to_cpool_p(m)
+   end if
+end do
+
+   
 #ifdef FUN
 ar(i) = ar(i) + sum(soil_change_p(ps:pe) * pftfrac(ps:pe))
 #endif
 er(i) = ar(i) + decomp_hr(i)
 #ifdef CROP
-cropprod1c_loss(i) = sum(cropprod1c_loss_p(ps:pe) * pftfrac(ps:pe))
-grainc_to_cropprodc (i) = sum(grainc_to_food_p(ps:pe)  * pftfrac(ps:pe))
-grainc_to_seed (i) = sum(grainc_to_seed_p(ps:pe)  * pftfrac(ps:pe))
+if(patchclass(i) .eq. 12)then
+   if(ps .ne. pe)then
+      write(*,*),'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
+      call abort
+   else
+      cropprod1c_loss     (i) = cropprod1c_loss_p(ps)  
+      grainc_to_cropprodc (i) = grainc_to_food_p (ps)
+      grainc_to_seed      (i) = grainc_to_seed_p (ps) 
+      plantdate           (i) = plantdate_p      (ps)
+   end if
+else
+   cropprod1c_loss     (i) = 0._r8
+   grainc_to_cropprodc (i) = 0._r8
+   grainc_to_seed      (i) = 0._r8
+endif
 #endif
 
 do m = ps, pe
@@ -468,8 +570,24 @@ hrv_xsmrpool_to_atm(i) = sum(hrv_xsmrpool_to_atm_p(ps:pe) * pftfrac(ps:pe))
 
 end subroutine cnveg_carbonflux_summary
 
-subroutine cnveg_nitrogenflux_summary()
+subroutine cnveg_nitrogenflux_summary(i,ps,pe)
 
+integer, intent(in) :: i
+integer, intent(in) :: ps
+integer, intent(in) :: pe
+
+#ifdef CROP
+if(patchclass(i) .eq. 12)then
+   if(ps .ne. pe)then
+      write(*,*),'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
+      call abort
+   else
+      grainn_to_cropprodn (i) = grainn_to_food_p (ps)
+   end if
+else
+   grainn_to_cropprodn (i) = 0._r8
+endif
+#endif
 end subroutine cnveg_nitrogenflux_summary
 
 end module bgc_CNSummaryMod
