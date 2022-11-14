@@ -155,6 +155,10 @@ CONTAINS
 
       type(grid_type), intent(in) :: grid
 
+#if (defined HISTORY_IN_VECTOR)
+      RETURN
+#endif
+
       if (p_is_io) then
          
          call allocate_block_data (grid, f_taux   )  ! wind stress: E-W [kg/m/s2]

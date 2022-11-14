@@ -134,9 +134,9 @@ contains
 
       if (p_is_io) then
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
                      
@@ -211,9 +211,9 @@ contains
 
       if (p_is_io) then
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
                      
@@ -289,9 +289,9 @@ contains
 
       if (p_is_io) then
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
          
@@ -371,9 +371,9 @@ contains
       if (p_is_io) then
 
                      
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
          
@@ -451,9 +451,9 @@ contains
 
       if (p_is_io) then
 
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
                      

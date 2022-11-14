@@ -111,51 +111,41 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef SinglePoint
-   is_singlepoint = USE_SITE_soilparameters
-#else
-   is_singlepoint = .false.
-#endif
-
    DO nsl = 1, 8
 
 #ifdef SinglePoint
-      IF (USE_SITE_soilparameters) THEN
-         soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl) 
-         soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
-         soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
-         soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
-         soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
-         soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
-         soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
-         soil_BD_all_s_l            (:) = SITE_soil_BD_all            (nsl)
-         soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
+      soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl) 
+      soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
+      soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
+      soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
+      soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
+      soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
+      soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
+      soil_BD_all_s_l            (:) = SITE_soil_BD_all            (nsl)
+      soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
 #ifdef Campbell_SOIL_MODEL
-         soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
-         soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
+      soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
+      soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-         soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
-         soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
-         soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
-         soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
+      soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
+      soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
+      soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
+      soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
 #endif
-         soil_k_s_l     (:) = SITE_soil_k_s      (nsl) 
-         soil_csol_l    (:) = SITE_soil_csol     (nsl)
-         soil_k_solids_l(:) = SITE_soil_k_solids (nsl)
-         soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
-         soil_tksatf_l  (:) = SITE_soil_tksatf   (nsl)
-         soil_tkdry_l   (:) = SITE_soil_tkdry    (nsl)
+      soil_k_s_l     (:) = SITE_soil_k_s      (nsl) 
+      soil_csol_l    (:) = SITE_soil_csol     (nsl)
+      soil_k_solids_l(:) = SITE_soil_k_solids (nsl)
+      soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
+      soil_tksatf_l  (:) = SITE_soil_tksatf   (nsl)
+      soil_tkdry_l   (:) = SITE_soil_tkdry    (nsl)
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-         soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
-         soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
-#endif
-      ENDIF
+      soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
+      soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
 #endif
       
+#else
       write(c,'(i1)') nsl 
-
-      IF (.not. is_singlepoint) THEN
 
       ! (1) read in the volumetric fraction of quartz within mineral soil
       lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
@@ -255,7 +245,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', landpatch, soil_BD_all_s_l)
 
-      ENDIF
+#endif
 
       if (p_is_worker) then
 
@@ -457,24 +447,16 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 #elif(defined SOIL_REFL_READ)
 
 #ifdef SinglePoint
-   is_singlepoint = USE_SITE_soilreflectance
-#else
-   is_singlepoint = .false.
-#endif
-
-#ifdef SinglePoint
    IF (USE_SITE_soilreflectance) THEN
-      soil_s_v_alb(:) = SITE_soil_s_v_alb(:)
-      soil_d_v_alb(:) = SITE_soil_d_v_alb(:)
-      soil_s_n_alb(:) = SITE_soil_s_n_alb(:)
-      soil_d_n_alb(:) = SITE_soil_d_n_alb(:)
+      soil_s_v_alb(:) = SITE_soil_s_v_alb
+      soil_d_v_alb(:) = SITE_soil_d_v_alb
+      soil_s_n_alb(:) = SITE_soil_s_n_alb
+      soil_d_n_alb(:) = SITE_soil_d_n_alb
    ENDIF
-#endif
-
-   IF (.not. is_singlepoint) THEN
-      ! (1) Read in the albedo of visible of the saturated soil
-      lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
+#else
+   ! (1) Read in the albedo of visible of the saturated soil
+   lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
+   call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
 
    ! (2) Read in the albedo of visible of the dry soil
    lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
@@ -484,10 +466,10 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
    call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
 
-      ! (4) Read in the albedo of near infrared of the dry soil
-      lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
-   ENDIF
+   ! (4) Read in the albedo of near infrared of the dry soil
+   lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
+   call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+#endif
 
 #endif
 

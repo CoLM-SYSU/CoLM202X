@@ -366,7 +366,7 @@ MODULE SOIL_SNOW_hydrology
         smp(1:nl_soil)   , &! soil matrix potential [mm]
         hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
         zwt              , &! the depth from ground (soil) surface to water table [m]
-        dpond            , &
+        dpond            , &! depth of ponding water [mm]
         wa                  ! water storage in aquifer [mm]
 
   real(r8), INTENT(out) :: &
@@ -441,10 +441,6 @@ MODULE SOIL_SNOW_hydrology
 !=======================================================================
 
   if(patchtype<=1)then   ! soil ground only
-
-     IF (ipatch == 952634) THEN
-        write(*,*) 'stop here'
-     ENDIF
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + dpond

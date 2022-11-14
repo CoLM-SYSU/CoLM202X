@@ -37,6 +37,9 @@ SUBROUTINE aggregation_lakedepth ( &
 #ifdef MAP_PATCH_TO_GRID
    USE mod_patch2grid
 #endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
    ! arguments:
@@ -130,10 +133,14 @@ SUBROUTINE aggregation_lakedepth ( &
 #endif
 
    ! Write-out the lake depth of the lake pacth in the gridcell
+#ifndef SinglePoint
    lndname = trim(landdir)//'/lakedepth_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'vector', landpatch, lakedepth_patches, 1)
+#else
+   SITE_lakedepth = lakedepth_patches(1)
+#endif
 
 #ifdef MAP_PATCH_TO_GRID
    CALL map_patchdata_to_grid_and_write (lakedepth_patches, 'lakedepth', 'lakedepth.nc')

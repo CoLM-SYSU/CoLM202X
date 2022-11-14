@@ -828,8 +828,8 @@ IF (patchtype == 0) THEN
             tleaf_c(p,pc) = forc_t
             laisun_c(p)   = 0.
             laisha_c(p)   = 0.
-            ldew_c_rain(p,pc)  = 0.
-            ldew_c_snow(p,pc)  = 0.
+            ldew_rain_c(p,pc)  = 0.
+            ldew_snow_c(p,pc)  = 0.
             ldew_c(p,pc)  = 0.
             rootr_c(:,p)  = 0.
             rstfacsun_c(p)   = 0.
@@ -863,7 +863,7 @@ IF (patchtype == 0) THEN
            rstfacsun_c(:),rstfacsha_c(:),forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
            ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
-           z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,ldew_c_rain(:,pc)  ,ldew_c_snow(:,pc)  ,taux          ,tauy          ,&
+           z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,ldew_rain_c(:,pc)  ,ldew_snow_c(:,pc)  ,taux          ,tauy          ,&
            fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
            tref          ,qref          ,rst_c(:,pc)   ,assim_c(:,pc) ,respc_c(:,pc) ,&
            fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
@@ -884,8 +884,8 @@ IF (patchtype == 0) THEN
          laisun_c(:)    = 0.
          laisha_c(:)    = 0.
          tleaf_c (:,pc) = forc_t
-         ldew_c_rain  (:,pc) = 0.
-         ldew_c_snow  (:,pc) = 0.
+         ldew_rain_c  (:,pc) = 0.
+         ldew_snow_c  (:,pc) = 0.
          ldew_c  (:,pc) = 0.
          rst_c   (:,pc) = 2.0e4
          assim_c (:,pc) = 0.
@@ -902,8 +902,8 @@ IF (patchtype == 0) THEN
       laisun = sum( laisun_c(:)   *pcfrac(:,pc) )
       laisha = sum( laisha_c(:)   *pcfrac(:,pc) )
       tleaf  = sum( tleaf_c (:,pc)*pcfrac(:,pc) )
-      ldew_rain   = sum( ldew_c_rain  (:,pc)*pcfrac(:,pc) )
-      ldew_snow   = sum( ldew_c_snow  (:,pc)*pcfrac(:,pc) )
+      ldew_rain   = sum( ldew_rain_c  (:,pc)*pcfrac(:,pc) )
+      ldew_snow   = sum( ldew_snow_c  (:,pc)*pcfrac(:,pc) )
       ldew   = sum( ldew_c  (:,pc)*pcfrac(:,pc) )
       rst    = sum( rst_c   (:,pc)*pcfrac(:,pc) )
       assim  = sum( assim_c (:,pc)*pcfrac(:,pc) )

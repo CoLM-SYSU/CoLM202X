@@ -7,8 +7,16 @@ INCLUDE_DIR = -I../include -I../share -I../main -I${NETCDF_INC}
 VPATH  = ../share
 HEADER = ../include/define.h
 
+DEF = $(shell grep -i CATCHMENT ../include/define.h)
+vector2grid = $(word 1, ${DEF})
+
+ifneq (${vector2grid},\#define)
+DEF = $(shell grep -i UNSTRUCTURED ../include/define.h)
+vector2grid = $(word 1, ${DEF})
+endif
+
 # Name of executable
-EXECUTABLE = hist_concatenate.x
+EXECUTABLE = hist_concatenate.x hist_vector2grid.x
 
 ####################################################################
 .DEFAULT :
@@ -26,16 +34,27 @@ OBJS_SHARED = \
 				  ../share/mod_block.o \
 				  ../share/mod_grid.o 
 
-OBJS = mod_concatenate.o hist_concatenate.o
+OBJS1 = mod_concatenate.o hist_concatenate.o
+OBJS2 = mod_vector2grid.o hist_vector2grid.o
 
 ####################################################################
 
-# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
+ifneq (${vector2grid},\#define)
+all : hist_concatenate.x
+else
+all : hist_concatenate.x hist_vector2grid.x
+endif
 
-${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS}
-	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS} -o $@ ${LDFLAGS}
+hist_concatenate.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS1}
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS1} -o $@ ${LDFLAGS}
 
-$(OBJS):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
+hist_vector2grid.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS2}
+	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS2} -o $@ ${LDFLAGS}
+
+$(OBJS1):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
+
+$(OBJS2):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER} 

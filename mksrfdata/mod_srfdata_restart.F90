@@ -85,23 +85,23 @@ CONTAINS
                            basinpixels(2,1:npxlall(ju),ju) = landbasin(iu)%ilat
                         ENDIF
                      ENDDO
+                  ELSE
+                     allocate (basinnum (1)); basinnum = -1
+                     allocate (npxlall  (1)); npxlall = 0
                   ENDIF
 
 #ifdef USEMPI 
                   CALL mpi_gather (nbasin, 1, MPI_INTEGER, &
-                     nbasin_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
+                     MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
                   
                   CALL mpi_gatherv (basinnum, nbasin, MPI_INTEGER, &
-                     basinnum, nbasin_worker, ndsp_worker, MPI_INTEGER, &
+                     MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
          
                   CALL mpi_gatherv (npxlall, nbasin, MPI_INTEGER, &
-                     npxlall, nbasin_worker, ndsp_worker, MPI_INTEGER, &
+                     MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
 
-                 ! CALL mpi_gatherv (basinpixels, nbasin*2*ulen, MPI_INTEGER, &
-                 !    basinpixels, nbasin_worker, ndsp_worker, MPI_INTEGER, &
-                 !    p_root, p_comm_group, p_err)
                   DO iu = 1, nbasin
                      CALL mpi_send (basinpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
                         p_root, mpi_tag_data, p_comm_group, p_err) 
@@ -141,9 +141,6 @@ CONTAINS
                      p_root, p_comm_group, p_err)
          
                   allocate (basinpixels (2, ulen, nbasin))
-                  ! CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
-                  !    basinpixels, nbasin_worker*2*ulen, ndsp_worker*2*ulen, MPI_INTEGER, &
-                  !    p_root, p_comm_group, p_err)
                   DO iworker = 1, p_np_group-1 
                      DO iu = ndsp_worker(iworker)+1, ndsp_worker(iworker)+nbasin_worker(iworker)
                         CALL mpi_recv (basinpixels(:,:,iu), 2*ulen, MPI_INTEGER, &
@@ -164,19 +161,19 @@ CONTAINS
                      CALL ncio_define_dimension (fileblock, 'np_max',   ulen )
                      CALL ncio_define_dimension (fileblock, 'ncoor',    2    )
 
-                     CALL ncio_write_serial (fileblock, 'basinnum', basinnum,   'landbasin')
-                     CALL ncio_write_serial (fileblock, 'npxl',    npxlall,   'landbasin')
-                     CALL ncio_write_serial (fileblock, 'pixel',   basinpixels, &
+                     CALL ncio_write_serial (fileblock, 'basinnum', basinnum, 'landbasin')
+                     CALL ncio_write_serial (fileblock, 'npxl',     npxlall,  'landbasin')
+                     CALL ncio_write_serial (fileblock, 'pixel',    basinpixels, &
                         'ncoor', 'np_max', 'landbasin', compress = 1)
                   ENDIF
                ENDIF
             ENDIF
                      
-            IF (allocated (basinnum))     deallocate(basinnum)
+            IF (allocated (basinnum))    deallocate(basinnum)
             IF (allocated (npxlall))     deallocate(npxlall)
-            IF (allocated (basinpixels))  deallocate(basinpixels)
+            IF (allocated (basinpixels)) deallocate(basinpixels)
             
-            IF (allocated (nbasin_worker))  deallocate(nbasin_worker)
+            IF (allocated (nbasin_worker)) deallocate(nbasin_worker)
             IF (allocated (ndsp_worker ))  deallocate(ndsp_worker )
 
 #ifdef USEMPI
@@ -237,9 +234,9 @@ CONTAINS
             allocate (landbasin (numbasin))
 
             ndsp = 0
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                nbasin = nbasin_blk(iblk,jblk)
 
@@ -324,7 +321,7 @@ CONTAINS
       CALL ncio_write_vector (filename, 'bindex', 'vector', pixelset, pixelset%bindex, rcompress)
       CALL ncio_write_vector (filename, 'ipxstt', 'vector', pixelset, pixelset%ipxstt, rcompress)
       CALL ncio_write_vector (filename, 'ipxend', 'vector', pixelset, pixelset%ipxend, rcompress)
-      CALL ncio_write_vector (filename, 'ltyp', 'vector', pixelset, pixelset%ltyp, rcompress)
+      CALL ncio_write_vector (filename, 'ltyp',   'vector', pixelset, pixelset%ltyp,   rcompress)
       
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -373,9 +370,9 @@ CONTAINS
 
          pixelset%nset = 0
                   
-         DO iblkme = 1, nblkme 
-            iblk = xblkme(iblkme)
-            jblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            iblk = gblock%xblkme(iblkme)
+            jblk = gblock%yblkme(iblkme)
          
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
@@ -392,9 +389,9 @@ CONTAINS
             allocate (pixelset%bindex (pixelset%nset))
 
             ndsp = 0
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
                inquire (file=trim(fileblock), exist=fexists)
@@ -483,7 +480,7 @@ CONTAINS
 
       CALL ncio_read_vector (filename, 'ipxstt', pixelset, pixelset%ipxstt)
       CALL ncio_read_vector (filename, 'ipxend', pixelset, pixelset%ipxend)
-      CALL ncio_read_vector (filename, 'ltyp', pixelset, pixelset%ltyp)
+      CALL ncio_read_vector (filename, 'ltyp',   pixelset, pixelset%ltyp)
 
       IF (p_is_worker) THEN
          IF (pixelset%nset > 0) THEN

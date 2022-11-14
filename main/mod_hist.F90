@@ -10,6 +10,9 @@ module mod_hist
    USE GlobalVars, only : spval
    USE mod_landpft, only : patch_pft_s
    USE ncio_serial
+#if (defined HISTORY_IN_VECTOR)
+   USE mod_hist_vector
+#endif
 
    type(grid_type), target :: ghist
    type(mapping_pset2grid_type) :: mp2g_hist
@@ -42,6 +45,14 @@ contains
 
       ! Local Variables
       INTEGER :: lon_points, lat_points
+      
+      call allocate_acc_fluxes ()
+      call FLUSH_acc_fluxes ()
+
+#if (defined HISTORY_IN_VECTOR)
+      CALL hist_vector_init ()
+      RETURN
+#endif
 
       IF ((lon_res > 0) .and. (lat_res > 0)) THEN
          lon_points = nint(360.0/lon_res)
@@ -56,9 +67,6 @@ contains
 #else
       call mp2g_hist%build (landpatch, ghist, pctcrop)
 #endif
-
-      call allocate_acc_fluxes ()
-      call FLUSH_acc_fluxes ()
 
       !>>>>>add by zhongwang wei 
       call hist_concat%set (ghist)
@@ -82,6 +90,10 @@ contains
       implicit none
       
       call deallocate_acc_fluxes ()
+
+#if (defined HISTORY_IN_VECTOR)
+      CALL hist_vector_final ()
+#endif
 
    end subroutine hist_final
 
@@ -179,13 +191,19 @@ contains
             write(cdate,'(i4.4,"-",i2.2,"-",i2.2)') idate(1), month, day
          end if
 
-         file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
-         call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
-
 #if(defined CaMa_Flood)
          file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
          call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
 #endif
+         
+         file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
+
+#if (defined HISTORY_IN_VECTOR)
+         CALL hist_vector_out (file_hist, idate)
+         RETURN
+#endif
+
+         call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -427,14 +445,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%ldew, &
             a_ldew, f_ldew, file_hist, 'f_ldew', itime_in_file, sumwt, filter, &
             'depth of water on foliage','mm')
-!#ifdef CLM5_INTERCEPTION
-!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_rain, &
-!         a_ldew, f_ldew_rain, file_hist, 'f_ldew_rain', itime_in_file, sumwt, filter, &
-!         'depth of rain on foliage','mm')
-!         call flux_map_and_write_2d ( DEF_hist_vars%ldew_snow, &
-!         a_ldew, f_ldew_snow, file_hist, 'f_ldew_snow', itime_in_file, sumwt, filter, &
-!         'depth of snow on foliage','mm')
-!#endif
+
          ! snow cover, water equivalent [mm]
          call flux_map_and_write_2d ( DEF_hist_vars%scv, &
             a_scv, f_scv, file_hist, 'f_scv', itime_in_file, sumwt, filter, &
@@ -2940,9 +2951,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -3017,9 +3028,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
                   
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -3097,9 +3108,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -3182,9 +3193,9 @@ contains
       call mp2g_hist%map (acc_vec, flux_xy, spv = spval, msk = filter)   
 
       if (p_is_io) then
-         DO iblkme = 1, nblkme 
-            xblk = xblkme(iblkme)
-            yblk = yblkme(iblkme)
+         DO iblkme = 1, gblock%nblkme 
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
 
             do yloc = 1, ghist%ycnt(yblk) 
                do xloc = 1, ghist%xcnt(xblk) 
@@ -3264,9 +3275,9 @@ contains
 
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
                IF (ghist%ycnt(jblk) <= 0) cycle
                IF (ghist%xcnt(iblk) <= 0) cycle
 
@@ -3409,9 +3420,9 @@ contains
        
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
@@ -3560,9 +3571,9 @@ contains
 
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
 
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 
@@ -3717,9 +3728,9 @@ contains
       elseif (trim(DEF_HIST_mode) == 'block') then
          if (p_is_io) then
 
-            DO iblkme = 1, nblkme 
-               iblk = xblkme(iblkme)
-               jblk = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
                      
                if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
 

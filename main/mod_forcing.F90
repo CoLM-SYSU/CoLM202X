@@ -61,7 +61,7 @@ contains
 
       call init_user_specified_forcing
 
-    ! CO2 data initialization
+      ! CO2 data initialization
       CALL init_monthly_co2_mlo
 
       ! get value of fmetdat and deltim
@@ -97,7 +97,7 @@ contains
       end if
 
 #ifdef SinglePoint
-      IF (USE_SITE_Forcing) THEN
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          CALL metread_time (dir_forcing)
          allocate (iforctime(NVAR))
       ENDIF
@@ -105,6 +105,15 @@ contains
 
    end subroutine forcing_init
 
+   ! ------------
+   SUBROUTINE forcing_reset ()
+
+      IMPLICIT NONE
+      
+      tstamp_LB(:) = timestamp(-1, -1, -1)
+      tstamp_UB(:) = timestamp(-1, -1, -1)
+
+   END SUBROUTINE forcing_reset
 
    !--------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
@@ -196,9 +205,9 @@ contains
             ! coszen method, for SW
             if (tintalgo(ivar) == 'coszen') then
                calday = calendarday(mtstamp)
-               DO iblkme = 1, nblkme 
-                  ib = xblkme(iblkme)
-                  jb = yblkme(iblkme)
+               DO iblkme = 1, gblock%nblkme 
+                  ib = gblock%xblkme(iblkme)
+                  jb = gblock%yblkme(iblkme)
 
                   do j = 1, gforc%ycnt(jb)
                      do i = 1, gforc%xcnt(ib)
@@ -279,9 +288,9 @@ contains
                ! direct to diffuse radiation calculated based on one year's worth of
                ! hourly CAM output from CAM version cam3_5_55
                !---------------------------------------------------------------
-               DO iblkme = 1, nblkme 
-                  ib = xblkme(iblkme)
-                  jb = yblkme(iblkme)
+               DO iblkme = 1, gblock%nblkme 
+                  ib = gblock%xblkme(iblkme)
+                  jb = gblock%yblkme(iblkme)
 
                   do j = 1, gforc%ycnt(jb)
                      do i = 1, gforc%xcnt(ib)
@@ -311,9 +320,9 @@ contains
                ! (visible, near-infrad, dirct, diffuse)
                ! Julian calday (1.xx to 365.xx)
                !---------------------------------------------------------------
-               DO iblkme = 1, nblkme 
-                  ib = xblkme(iblkme)
-                  jb = yblkme(iblkme)
+               DO iblkme = 1, gblock%nblkme 
+                  ib = gblock%xblkme(iblkme)
+                  jb = gblock%yblkme(iblkme)
 
                   do j = 1, gforc%ycnt(jb)
                      do i = 1, gforc%xcnt(ib)
@@ -395,6 +404,7 @@ contains
             forc_rhoair(np) = (forc_pbot(np) &
                - 0.378*forc_q(np)*forc_pbot(np)/(0.622+0.378*forc_q(np)))&
                / (rgas*forc_t(np))  
+
          end do
       
       end if
@@ -470,15 +480,13 @@ contains
 
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
+            IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 #ifdef SinglePoint
-            IF (USE_SITE_Forcing) THEN
                CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#endif
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
-#else
-            call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
-#endif
 
             call block_data_copy (metdata, forcn_LB(ivar))
          end if
@@ -493,15 +501,13 @@ contains
             if (year <= endyr) then
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
+               IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 #ifdef SinglePoint
-               IF (USE_SITE_Forcing) THEN
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#endif
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
-#else
-               call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
-#endif
 
                call block_data_copy (metdata, forcn_UB(ivar))
             else
@@ -539,63 +545,57 @@ contains
       real(r8), allocatable :: lonxy (:,:)    ! longitude values in 2d
       real(r8), allocatable :: lon_in(:) 
       real(r8), allocatable :: lat_in(:)
-      LOGICAL :: use_site_forc
 
-      use_site_forc = .false.
-#ifdef SinglePoint
-      use_site_forc = USE_SITE_Forcing
-#endif
-
-      IF (use_site_forc) THEN
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          CALL gforc%define_by_ndims (360, 180)
       ELSE
       
          mtstamp = idate
 
-      call setstampLB(mtstamp, 1, year, month, day, time_i)
-      filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
-      tstamp_LB(1) = timestamp(-1, -1, -1)
+         call setstampLB(mtstamp, 1, year, month, day, time_i)
+         filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
+         tstamp_LB(1) = timestamp(-1, -1, -1)
 
-      IF (trim(DEF_forcing%dataset) == 'ERA5LAND') THEN
-         CALL gforc%define_by_name ('ERA5LAND')
-      ELSEIF (trim(DEF_forcing%dataset) == 'ERA5') THEN
-         CALL gforc%define_by_name ('ERA5')
-      ELSEIF (trim(DEF_forcing%dataset) == 'PRINCETON') THEN
-         CALL gforc%define_by_name ('PRINCETON')
-      ELSEIF (trim(DEF_forcing%dataset) == 'JRA55') THEN
-         CALL gforc%define_by_name ('JRA55')
-      ELSEIF (trim(DEF_forcing%dataset) == 'CMFD') THEN
-         CALL gforc%define_by_name ('CMFD')
-      ELSEIF (trim(DEF_forcing%dataset) == 'CLDAS') THEN
-         CALL gforc%define_by_name ('CLDAS')
-      ELSEIF (trim(DEF_forcing%dataset) == 'GDAS') THEN
+         IF (trim(DEF_forcing%dataset) == 'ERA5LAND') THEN
+            CALL gforc%define_by_name ('ERA5LAND')
+         ELSEIF (trim(DEF_forcing%dataset) == 'ERA5') THEN
+            CALL gforc%define_by_name ('ERA5')
+         ELSEIF (trim(DEF_forcing%dataset) == 'PRINCETON') THEN
+            CALL gforc%define_by_name ('PRINCETON')
+         ELSEIF (trim(DEF_forcing%dataset) == 'JRA55') THEN
+            CALL gforc%define_by_name ('JRA55')
+         ELSEIF (trim(DEF_forcing%dataset) == 'CMFD') THEN
+            CALL gforc%define_by_name ('CMFD')
+         ELSEIF (trim(DEF_forcing%dataset) == 'CLDAS') THEN
+            CALL gforc%define_by_name ('CLDAS')
+         ELSEIF (trim(DEF_forcing%dataset) == 'GDAS') THEN
             CALL gforc%define_by_name ('GDAS')
-      ELSE
-         if (dim2d) then
-            call ncio_read_bcast_serial (filename, latname, latxy)
-            call ncio_read_bcast_serial (filename, lonname, lonxy)
+         ELSE
+            if (dim2d) then
+               call ncio_read_bcast_serial (filename, latname, latxy)
+               call ncio_read_bcast_serial (filename, lonname, lonxy)
 
-            allocate (lat_in (size(latxy,2)))
-            allocate (lon_in (size(lonxy,1)))
-            lat_in = latxy(1,:)
-            lon_in = lonxy(:,1)
+               allocate (lat_in (size(latxy,2)))
+               allocate (lon_in (size(lonxy,1)))
+               lat_in = latxy(1,:)
+               lon_in = lonxy(:,1)
 
-            call gforc%define_by_center (lat_in, lon_in)
+               call gforc%define_by_center (lat_in, lon_in)
 
-            deallocate (latxy)
-            deallocate (lonxy)
-            deallocate (lat_in)
-            deallocate (lon_in)
-         else
-            call ncio_read_bcast_serial (filename, latname, lat_in)
-            call ncio_read_bcast_serial (filename, lonname, lon_in)
+               deallocate (latxy)
+               deallocate (lonxy)
+               deallocate (lat_in)
+               deallocate (lon_in)
+            else
+               call ncio_read_bcast_serial (filename, latname, lat_in)
+               call ncio_read_bcast_serial (filename, lonname, lon_in)
 
-            call gforc%define_by_center (lat_in, lon_in)
+               call gforc%define_by_center (lat_in, lon_in)
 
-            deallocate (lat_in)
-            deallocate (lon_in)
-         end if
-      ENDIF
+               deallocate (lat_in)
+               deallocate (lon_in)
+            end if
+         ENDIF
       ENDIF
 
       call gforc%set_rlon ()
@@ -699,7 +699,7 @@ contains
       sec  = mtstamp%sec
 
 #ifdef SinglePoint
-      IF (USE_SITE_Forcing) THEN
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          time_i = 0
          DO i = 1, size(forctime)
             IF (mtstamp < forctime(i)) THEN
@@ -924,7 +924,7 @@ contains
          integer :: months(0:12)
 
 #ifdef SinglePoint
-      IF (USE_SITE_Forcing) THEN
+      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          if ( tstamp_UB(var_i) == 'NULL' ) then
             tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
          ELSE
@@ -1085,9 +1085,9 @@ contains
             calday = calendarday(tstamp)
 
 
-            DO iblkme = 1, nblkme 
-               ib = xblkme(iblkme)
-               jb = yblkme(iblkme)
+            DO iblkme = 1, gblock%nblkme 
+               ib = gblock%xblkme(iblkme)
+               jb = gblock%yblkme(iblkme)
                do j = 1, gforc%ycnt(jb)
                   do i = 1, gforc%xcnt(ib)
 

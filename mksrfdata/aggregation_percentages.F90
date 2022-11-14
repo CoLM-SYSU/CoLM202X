@@ -25,6 +25,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    USE mod_landpc
    USE mod_aggregation_pft
 #endif
+#ifdef SinglePoint
+   USE mod_single_srfdata
+#endif
 
    IMPLICIT NONE
 
@@ -71,24 +74,25 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifdef PFT_CLASSIFICATION
 
 #ifdef SinglePoint
-
-   IF (landpatch%ltyp(1) == 1) THEN
+   IF (USE_SITE_pctpfts) THEN
       allocate(pct_pfts (numpft))
-      pct_pfts = pack(SITE_pctpfts, SITE_pctpfts > 0.)
-      pct_pfts = pct_pfts / sum(pct_pfts)
+      IF (landpatch%ltyp(1) == 1) THEN
+         pct_pfts = pack(SITE_pctpfts, SITE_pctpfts > 0.)
+         pct_pfts = pct_pfts / sum(pct_pfts)
 #ifdef CROP
-   ELSEIF (landpatch%ltyp(1) == 12) THEN
-      allocate(pct_pfts (numpft))
-      pct_pfts(:) = 1.
+      ELSEIF (landpatch%ltyp(1) == 12) THEN
+         pct_pfts(:) = 1.
 #endif
+      ENDIF
+   
+      RETURN
    ENDIF
-
-#else
+#endif
 
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
       
    IF (p_is_io) THEN
-      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+      CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
       CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
 #ifdef USEMPI
       CALL aggregation_pft_data_daemon (gland, pftPCT)
@@ -132,16 +136,20 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#endif
 
 #ifdef CLMDEBUG 
    CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/pct_pfts.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpft)
    CALL ncio_write_vector (lndname, 'pct_pfts', 'vector', landpft, pct_pfts, 1)
+#else
+   allocate (SITE_pctpfts(numpft))
+   SITE_pctpfts = pct_pfts
+#endif
 
    IF (p_is_worker) THEN
       IF (allocated(pct_pfts   )) deallocate(pct_pfts   )
@@ -151,10 +159,17 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #if (defined CROP) 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpatch)
    CALL ncio_write_vector (lndname, 'pct_crops', 'vector', landpatch, pctcrop, 1)
+#else
+   allocate (SITE_croptyp(numpatch))
+   allocate (SITE_pctcrop(numpatch))
+   SITE_croptyp = cropclass
+   SITE_pctcrop = pctcrop
+#endif
 #endif
 
 #endif
@@ -162,18 +177,15 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifdef PC_CLASSIFICATION
 
 #ifdef SinglePoint
-
-   IF (patchtypes(SITE_landtype) == 0) THEN
-      allocate(pct_pcs (0:N_PFT-1,1))
-      pct_pcs(:,1) = SITE_pctpfts
-      pct_pcs(:,1) = pct_pcs(:,1) / sum(pct_pcs(:,1))
+   IF (USE_SITE_pctpfts) THEN
+      RETURN
    ENDIF
+#endif
 
-#else
    dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
       
    IF (p_is_io) THEN
-      CALL allocate_block_data (gland, pftPCT, N_PFT, lb1 = 0)
+      CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
       CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
 #ifdef USEMPI
       CALL aggregation_pft_data_daemon (gland, pftPCT)
@@ -185,7 +197,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       
       DO ipatch = 1, numpatch
 
-         IF (landpatch%ltyp(ipatch) == 1) THEN
+         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
 
@@ -210,7 +222,6 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-#endif
 
    ! ---------------------------------------------------
    ! write out the plant leaf area index of grid patches
@@ -219,11 +230,16 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/pct_pcs.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_pixelset_dimension (lndname, landpc)
    CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
    CALL ncio_write_vector (lndname, 'pct_pcs', 'pft', N_PFT, 'vector', landpc, pct_pcs, 1)
+#else
+   allocate (SITE_pctpfts (N_PFT))
+   SITE_pctpfts = pct_pcs(:,1)
+#endif
 
    IF (p_is_worker) THEN
       IF (allocated(pct_pcs    )) deallocate(pct_pcs    )

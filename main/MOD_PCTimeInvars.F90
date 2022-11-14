@@ -13,8 +13,6 @@ MODULE MOD_PCTimeInvars
   SAVE
 
   ! for PC_CLASSIFICATION
-!  INTEGER , allocatable :: patch2pc(:)    !projection from patch to PC
-!  INTEGER , allocatable :: pc2patch(:)    !projection from PC to patch
   REAL(r8), allocatable :: pcfrac(:,:)    !PC fractional cover
   REAL(r8), allocatable :: htop_c(:,:)    !canopy top height [m]
   REAL(r8), allocatable :: hbot_c(:,:)    !canopy bottom height [m]   

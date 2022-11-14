@@ -18,8 +18,8 @@ MODULE MOD_PCTimeVars
   REAL(r8), allocatable :: tleaf_c    (:,:) !leaf temperature [K]
   REAL(r8), allocatable :: ldew_c     (:,:) !depth of water on foliage [mm]
 !#ifdef CLM5_INTERCEPTION
-  real(r8), allocatable :: ldew_c_rain     (:)     ! depth of rain on foliage [mm]
-  real(r8), allocatable :: ldew_c_snow     (:)     ! depth of rain on foliage [mm]
+  real(r8), allocatable :: ldew_rain_c     (:,:)     ! depth of rain on foliage [mm]
+  real(r8), allocatable :: ldew_snow_c     (:,:)     ! depth of rain on foliage [mm]
 !#endif
   REAL(r8), allocatable :: sigf_c     (:,:) !fraction of veg cover, excluding snow-covered veg [-]
   REAL(r8), allocatable :: tlai_c     (:,:) !leaf area index
@@ -71,10 +71,8 @@ CONTAINS
          IF (numpc > 0) THEN 
             allocate (tleaf_c    (0:N_PFT-1,numpc)) !leaf temperature [K]
             allocate (ldew_c     (0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-!#ifdef CLM5_INTERCEPTION
-            allocate (ldew_c_rain     (0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-            allocate (ldew_c_snow     (0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-!#endif
+            allocate (ldew_rain_c(0:N_PFT-1,numpc)) !depth of water on foliage [mm]
+            allocate (ldew_snow_c(0:N_PFT-1,numpc)) !depth of water on foliage [mm]
             allocate (sigf_c     (0:N_PFT-1,numpc)) !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_c     (0:N_PFT-1,numpc)) !leaf area index
             allocate (lai_c      (0:N_PFT-1,numpc)) !leaf area index
@@ -110,10 +108,8 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'tleaf_c  ', N_PFT,     landpc, tleaf_c  ) !  
       call ncio_read_vector (file_restart, 'ldew_c   ', N_PFT,     landpc, ldew_c   ) !  
-!#ifdef CLM5_INTERCEPTION
-      call ncio_read_vector (file_restart, 'ldew_c_rain   ', N_PFT,     landpc, ldew_c_rain   ) !  
-      call ncio_read_vector (file_restart, 'ldew_c_snow   ', N_PFT,     landpc, ldew_c_snow   ) !  
-!#endif
+      call ncio_read_vector (file_restart, 'ldew_rain_c   ', N_PFT,     landpc, ldew_rain_c   ) !  
+      call ncio_read_vector (file_restart, 'ldew_snow_c   ', N_PFT,     landpc, ldew_snow_c   ) !  
       call ncio_read_vector (file_restart, 'sigf_c   ', N_PFT,     landpc, sigf_c   ) !  
       call ncio_read_vector (file_restart, 'tlai_c   ', N_PFT,     landpc, tlai_c   ) !  
       call ncio_read_vector (file_restart, 'lai_c    ', N_PFT,     landpc, lai_c    ) !  
@@ -161,11 +157,8 @@ CONTAINS
 
       call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'vector', landpc, tleaf_c  , compress) !  
       call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'vector', landpc, ldew_c   , compress) ! 
-!#ifdef CLM5_INTERCEPTION
-      call ncio_write_vector (file_restart, 'ldew_c_rain   ', 'pft', N_PFT, 'vector', landpc, ldew_c_rain   , compress) ! 
-      call ncio_write_vector (file_restart, 'ldew_c_snow   ', 'pft', N_PFT, 'vector', landpc, ldew_c_snow   , compress) ! 
-
-!#endif
+      call ncio_write_vector (file_restart, 'ldew_rain_c   ', 'pft', N_PFT, 'vector', landpc, ldew_rain_c   , compress) ! 
+      call ncio_write_vector (file_restart, 'ldew_snow_c   ', 'pft', N_PFT, 'vector', landpc, ldew_snow_c   , compress) ! 
 
       call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'vector', landpc, sigf_c   , compress) !  
       call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'vector', landpc, tlai_c   , compress) !  
@@ -201,10 +194,8 @@ CONTAINS
          IF (numpc > 0) THEN 
             deallocate (tleaf_c  ) !leaf temperature [K]
             deallocate (ldew_c   ) !depth of water on foliage [mm]
-!#ifdef CLM5_INTERCEPTION
-            deallocate (ldew_c_rain   ) !depth of water on foliage [mm]
-            deallocate (ldew_c_snow   ) !depth of water on foliage [mm]
-!#endif
+            deallocate (ldew_rain_c   ) !depth of water on foliage [mm]
+            deallocate (ldew_snow_c   ) !depth of water on foliage [mm]
             deallocate (sigf_c   ) !fraction of veg cover, excluding snow-covered veg [-]
             deallocate (tlai_c   ) !leaf area index
             deallocate (lai_c    ) !leaf area index
@@ -236,10 +227,8 @@ CONTAINS
 
       call check_vector_data ('tleaf_c  ', tleaf_c  )      ! 
       call check_vector_data ('ldew_c   ', ldew_c   )      !  
-!#ifdef CLM5_INTERCEPTION
-      call check_vector_data ('ldew_c_rain   ', ldew_c_rain   )      !  
-      call check_vector_data ('ldew_c_snow   ', ldew_c_snow   )      !  
-!#endif
+      call check_vector_data ('ldew_rain_c', ldew_rain_c)      !  
+      call check_vector_data ('ldew_snow_c', ldew_snow_c)      !  
       call check_vector_data ('sigf_c   ', sigf_c   )      !  
       call check_vector_data ('tlai_c   ', tlai_c   )      !  
       call check_vector_data ('lai_c    ', lai_c    )      !  

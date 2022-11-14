@@ -59,10 +59,8 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_t_grnd(:) 
    real(r8), allocatable :: a_tleaf (:) 
    real(r8), allocatable :: a_ldew  (:) 
-!#ifdef CLM5_INTERCEPTION
    real(r8), allocatable :: a_ldew_rain  (:) 
    real(r8), allocatable :: a_ldew_snow  (:) 
-!#endif
    real(r8), allocatable :: a_scv   (:) 
    real(r8), allocatable :: a_snowdp(:) 
    real(r8), allocatable :: a_fsno  (:) 
@@ -330,10 +328,8 @@ contains
 
             allocate (a_t_grnd    (numpatch)) 
             allocate (a_tleaf     (numpatch)) 
-!#ifdef CLM5_INTERCEPTION
-            allocate (a_ldew_rain      (numpatch)) 
-            allocate (a_ldew_snow      (numpatch)) 
-!#endif
+            allocate (a_ldew_rain (numpatch)) 
+            allocate (a_ldew_snow (numpatch)) 
             allocate (a_ldew      (numpatch)) 
             allocate (a_scv       (numpatch)) 
             allocate (a_snowdp    (numpatch)) 
@@ -599,10 +595,8 @@ contains
 
             deallocate (a_t_grnd    ) 
             deallocate (a_tleaf     )
-!#ifdef CLM5_INTERCEPTION
-            deallocate (a_ldew_rain      ) 
-            deallocate (a_ldew_snow      ) 
-!#endif
+            deallocate (a_ldew_rain ) 
+            deallocate (a_ldew_snow ) 
             deallocate (a_ldew      ) 
             deallocate (a_scv       ) 
             deallocate (a_snowdp    ) 
@@ -873,10 +867,8 @@ contains
 
             a_t_grnd  (:) = spval
             a_tleaf   (:) = spval
-!#ifdef CLM5_INTERCEPTION
-            a_ldew_rain    (:) = spval
-            a_ldew_snow    (:) = spval
-!#endif
+            a_ldew_rain(:) = spval
+            a_ldew_snow(:) = spval
             a_ldew    (:) = spval
             a_scv     (:) = spval
             a_snowdp  (:) = spval
@@ -1190,10 +1182,8 @@ contains
 
             call acc1d (t_grnd , a_t_grnd )
             call acc1d (tleaf  , a_tleaf  )
-!#ifdef CLM5_INTERCEPTION
-            call acc1d (ldew_rain   , a_ldew_rain   )
-            call acc1d (ldew_snow   , a_ldew_snow   )
-!#endif
+            call acc1d (ldew_rain, a_ldew_rain)
+            call acc1d (ldew_snow, a_ldew_snow)
             call acc1d (ldew   , a_ldew   )
             call acc1d (scv    , a_scv    )
             call acc1d (snowdp , a_snowdp )

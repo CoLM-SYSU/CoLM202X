@@ -45,6 +45,7 @@ MODULE mod_pixelset
       procedure, PUBLIC :: set_vecgs         => vec_gather_scatter_set
       procedure, PUBLIC :: get_lonlat_radian => pixelset_get_lonlat_radian
       procedure, PUBLIC :: pset_pack         => pixelset_pack
+
       final :: pixelset_free_mem
 
    END TYPE pixelset_type
@@ -181,7 +182,7 @@ CONTAINS
       IF (allocated(this%ibasin)) deallocate(this%ibasin)
       IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
       IF (allocated(this%ipxend)) deallocate(this%ipxend)
-      IF (allocated(this%ltyp)) deallocate(this%ltyp)
+      IF (allocated(this%ltyp)  ) deallocate(this%ltyp  )
       
       IF (allocated(this%nonzero)) deallocate(this%nonzero)
 
@@ -246,7 +247,7 @@ CONTAINS
 
                   scnt = this%vecgs%vlen(iblk,jblk)
                   CALL mpi_gather (scnt, 1, MPI_INTEGER, &
-                     this%vecgs%vcnt, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
+                     MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
 
                ENDIF
             ENDDO

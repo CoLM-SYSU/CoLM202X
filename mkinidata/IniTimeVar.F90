@@ -432,10 +432,8 @@ IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
      sigf   = fveg
-!#ifdef CLM5_INTERCEPTION
      ldew_rain  = 0.
      ldew_snow  = 0.
-!#endif
      ldew  = 0.
      tleaf  = t_soisno(1)
      lai    = tlai(ipatch)
@@ -484,10 +482,8 @@ IF (patchtype == 0) THEN
 #ifdef PC_CLASSIFICATION
      pc = patch2pc(ipatch)
      sigf_c(:,pc)   = 1.
-!#ifdef CLM5_INTERCEPTION
-     ldew_c_rain(:,pc)  = 0.
-     ldew_c_snow(:,pc)  = 0. 
-!#endif
+     ldew_rain_c(:,pc)  = 0.
+     ldew_snow_c(:,pc)  = 0. 
      ldew_c(:,pc)   = 0.
      tleaf_c(:,pc)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -499,10 +495,8 @@ IF (patchtype == 0) THEN
      sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
 
      sigf  = 1.
-!#ifdef CLM5_INTERCEPTION
      ldew_rain  = 0.
      ldew_snow  = 0.
-!#endif
      ldew  = 0.
      tleaf = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -516,10 +510,8 @@ IF (patchtype == 0) THEN
 
 ELSE
      sigf   = fveg
-!#ifdef CLM5_INTERCEPTION
      ldew_rain  = 0.
      ldew_snow  = 0. 
-!#endif
      ldew  = 0.
      tleaf  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -554,10 +546,8 @@ ENDIF
      dz_soisno(maxsnl+1:0) = 0.
      sigf   = 0.
      fsno   = 0.
-!#ifdef CLM5_INTERCEPTION
      ldew_rain  = 0.
      ldew_snow  = 0.
-!#endif
      ldew  = 0.
      scv    = 0.
      sag    = 0.
