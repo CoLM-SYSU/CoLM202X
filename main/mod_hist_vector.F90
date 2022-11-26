@@ -43,7 +43,11 @@ contains
       IF (p_is_worker) THEN
          IF (numhru > 0) THEN
             allocate (indexhru (numhru))
+#if (defined CATCHMENT)
             indexhru = hydrounit%bindex * 1000 + hydrounit%ltyp
+#elif (defined UNSTRUCTURED)
+            indexhru = hydrounit%bindex
+#endif
          ENDIF
          
          totalnumhru = numhru
@@ -128,8 +132,13 @@ contains
          allocate (htype_hru (totalnumhru))
 
          DO i = 1, totalnumhru
+#if (defined CATCHMENT)
             basin_hru(i) = indexhru(i) / 1000
             htype_hru(i) = mod(indexhru(i), 1000)
+#elif (defined UNSTRUCTURED)
+            basin_hru(i) = indexhru(i)
+            htype_hru(i) = 0
+#endif
          ENDDO
       ENDIF
 
@@ -1171,7 +1180,8 @@ contains
                   mask = (acc_vec_patch(istt:iend) /= spval) .and. filter(istt:iend)
                   IF (any(mask)) THEN
                      sumwt = sum(wtpatch_hru(istt:iend), mask = mask)
-                     acc_vec_hru(ihru) = sum(acc_vec_patch(istt:iend), mask = mask)
+                     acc_vec_hru(ihru) = sum(wtpatch_hru(istt:iend) &
+                        * acc_vec_patch(istt:iend), mask = mask)
                      acc_vec_hru(ihru) = acc_vec_hru(ihru) / sumwt / nac
                   ENDIF
                   deallocate(mask)
@@ -1305,7 +1315,8 @@ contains
                      mask = (acc_vec_patch(i1,istt:iend) /= spval) .and. filter(istt:iend)
                      IF (any(mask)) THEN
                         sumwt = sum(wtpatch_hru(istt:iend), mask = mask)
-                        acc_vec_hru(i1,ihru) = sum(acc_vec_patch(i1,istt:iend), mask = mask)
+                        acc_vec_hru(i1,ihru) = sum(wtpatch_hru(istt:iend) &
+                           * acc_vec_patch(i1,istt:iend), mask = mask)
                         acc_vec_hru(i1,ihru) = acc_vec_hru(i1,ihru) / sumwt / nac
                      ENDIF
                   ENDDO
@@ -1451,7 +1462,8 @@ contains
                         mask = (acc_vec_patch(i1,i2,istt:iend) /= spval) .and. filter(istt:iend)
                         IF (any(mask)) THEN
                            sumwt = sum(wtpatch_hru(istt:iend), mask = mask)
-                           acc_vec_hru(i1,i2,ihru) = sum(acc_vec_patch(i1,i2,istt:iend), mask = mask)
+                           acc_vec_hru(i1,i2,ihru) = sum(wtpatch_hru(istt:iend) &
+                              * acc_vec_patch(i1,i2,istt:iend), mask = mask)
                            acc_vec_hru(i1,i2,ihru) = acc_vec_hru(i1,i2,ihru) / sumwt / nac
                         ENDIF
                      ENDDO
@@ -1582,7 +1594,8 @@ contains
                   mask = (acc_vec_patch(istt:iend) /= spval) .and. filter(istt:iend) .and. (nac_ln > 0)
                   IF (any(mask)) THEN
                      sumwt = sum(wtpatch_hru(istt:iend), mask = mask)
-                     acc_vec_hru(ihru) = sum(acc_vec_patch(istt:iend)/nac_ln(istt:iend), mask = mask)
+                     acc_vec_hru(ihru) = sum(wtpatch_hru(istt:iend) * acc_vec_patch(istt:iend) &
+                        / nac_ln(istt:iend), mask = mask)
                      acc_vec_hru(ihru) = acc_vec_hru(ihru) / sumwt
                   ENDIF
                   deallocate(mask)
