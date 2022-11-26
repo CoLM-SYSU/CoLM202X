@@ -10,6 +10,7 @@ module mod_forcing
    use timemanager
    use spmd_task
    USE co2_mlo
+   USE MathConstants, only : pi
 
    implicit none
 
@@ -204,7 +205,6 @@ contains
 
             ! coszen method, for SW
             if (tintalgo(ivar) == 'coszen') then
-               calday = calendarday(mtstamp)
                DO iblkme = 1, gblock%nblkme 
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
@@ -216,6 +216,7 @@ contains
                         ilon = gforc%xdsp(ib) + i
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
+                        calday = calendarday(mtstamp, gforc%rlon(ilon)*180.0_r8/pi)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
                         forcn(ivar)%blk(ib,jb)%val(i,j) = &
@@ -277,8 +278,6 @@ contains
          call flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
          call flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
 
-         calday = calendarday(idate) 
-
          if (solarin_all_band) then
 
             if (trim(dataset) == 'QIAN') then
@@ -332,6 +331,7 @@ contains
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         a = forc_xy_solarin%blk(ib,jb)%val(i,j)
+                        calday = calendarday(idate,  gforc%rlon(ilon)*180.0_r8/pi)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
                         cloud = (1160.*sunang-a)/(963.*sunang)
@@ -1082,8 +1082,6 @@ contains
          do while (tstamp < tstamp_UB(7))
 
             tstamp = tstamp + deltim_int
-            calday = calendarday(tstamp)
-
 
             DO iblkme = 1, gblock%nblkme 
                ib = gblock%xblkme(iblkme)
@@ -1095,10 +1093,11 @@ contains
                      ilon = gforc%xdsp(ib) + i
                      if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
+                     calday = calendarday(tstamp, gforc%rlon(ilon)*180.0_r8/pi)
                      cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                      cosz = max(0.001, cosz)
-                     avgcos%blk(ib,jb)%val(i,j) = &
-                        avgcos%blk(ib,jb)%val(i,j) + cosz*deltim_real /real(dtime(7))
+                     avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
+                        + cosz*deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
 
                   end do
                end do
