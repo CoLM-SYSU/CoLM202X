@@ -263,6 +263,14 @@ contains
       call ncio_write_serial (filename, 'lon_e', hist_block_info%ginfo%lon_e, 'lon')
       call ncio_write_serial (filename, 'lat',   hist_block_info%ginfo%lat_c, 'lat')
       call ncio_write_serial (filename, 'lon',   hist_block_info%ginfo%lon_c, 'lon')
+               
+      CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
+      CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
+      CALL ncio_put_attr (filename, 'lat', 'axis', 'X')
+
+      CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
+      CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
+      CALL ncio_put_attr (filename, 'lon', 'axis', 'Y')
 
    end subroutine hist_concatenate_grid_info
 

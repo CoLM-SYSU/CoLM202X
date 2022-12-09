@@ -23,6 +23,15 @@ MODULE mod_landpatch
    INTEGER,  allocatable :: cropclass (:)
 #endif
 
+   TYPE(subset_type)   :: elm_patch
+   TYPE(superset_type) :: patch2elm
+   
+#ifdef CATCHMENT
+   TYPE(subset_type)   :: hru_patch
+   TYPE(superset_type) :: patch2hru
+#endif
+   
+
 CONTAINS
    
    ! -------------------------------
@@ -31,43 +40,37 @@ CONTAINS
       USE precision
       USE spmd_task
       USE mod_utils
-      USE mod_block
-      USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_landbasin
-      USE mod_hydrounit
+      USE mod_mesh
+      USE mod_landelm
+#ifdef CATCHMENT
+      USE mod_landhru
+#endif
       USE mod_namelist
       USE ncio_block
-      USE mod_modis_data
 #if (defined CROP) 
       USE mod_pixelsetshadow
 #endif
+      USE mod_aggregation_generic
 
       IMPLICIT NONE
 
       ! Local Variables
       CHARACTER(len=256) :: file_patch
       TYPE (block_data_int32_2d) :: patchdata
-      INTEGER :: nreq, rmesg(2), smesg(2), isrc, idest, iproc
-      INTEGER :: ilon_g, ilat_g, iloc
-      INTEGER :: ig, xblk, yblk, xloc, yloc
-      INTEGER :: npxl, ipxl
-      INTEGER :: iu, ihru, ipxstt, ipxend, ipatch
-      INTEGER, allocatable :: xlist(:), ylist(:), sbuf(:), rbuf(:)
-      INTEGER, allocatable :: ltype(:), ipt(:), order(:)
-      INTEGER, allocatable :: bindex_tmp(:), ltyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ibasin_tmp(:)
+      INTEGER :: iloc, npxl, ipxl, numset
+      INTEGER :: ie, iset, ipxstt, ipxend, ipatch
+      INTEGER, allocatable :: types(:), order(:), ibuff(:)
+      INTEGER, allocatable :: eindex_tmp(:), settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
       LOGICAL, allocatable :: msk(:)
-      LOGICAL, allocatable :: worker_done(:)
       INTEGER :: npatch_glb
 #if (defined CROP) 
       TYPE(block_data_real8_3d) :: cropdata
       INTEGER :: cropfilter(1)
 #endif
-#ifdef USE_DOMINANT_PATCHTYPE
       INTEGER :: dominant_type
-      INTEGER, allocatable :: npxl_ltype (:)
-#endif
+      INTEGER, allocatable :: npxl_types (:)
 
       INTEGER :: iblk, jblk
 
@@ -87,17 +90,17 @@ CONTAINS
 
          pctcrop = pctcrop / sum(pctcrop)
 
-         allocate (landpatch%bindex (numpatch))
-         allocate (landpatch%ibasin (numpatch))
+         allocate (landpatch%eindex (numpatch))
          allocate (landpatch%ipxstt (numpatch))
          allocate (landpatch%ipxend (numpatch))
-         allocate (landpatch%ltyp   (numpatch))
+         allocate (landpatch%settyp (numpatch))
+         allocate (landpatch%ielm   (numpatch))
 
-         landpatch%bindex(:) = 1
-         landpatch%ibasin(:) = 1
+         landpatch%eindex(:) = 1
+         landpatch%ielm  (:) = 1
          landpatch%ipxstt(:) = 1 
          landpatch%ipxend(:) = 1
-         landpatch%ltyp  (:) = 12
+         landpatch%settyp(:) = 12
 
          landpatch%nset = numpatch
          CALL landpatch%set_vecgs 
@@ -117,254 +120,156 @@ CONTAINS
          file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
-      ENDIF
-
 #ifdef USEMPI
-      IF (p_is_io) THEN 
-
-         allocate (worker_done (0:p_np_worker-1))
-         worker_done(:) = .false.
-
-         DO while (.not. all(worker_done))
-
-            CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
-               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-            isrc = rmesg(1)
-            nreq = rmesg(2)
-
-            IF (nreq > 0) THEN
-
-               allocate (xlist (nreq))
-               allocate (ylist (nreq))
-               allocate (sbuf  (nreq))
-
-               CALL mpi_recv (xlist, nreq, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               CALL mpi_recv (ylist, nreq, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-               DO ig = 1, nreq
-                  xblk = gpatch%xblk(xlist(ig))
-                  yblk = gpatch%yblk(ylist(ig))
-                  xloc = gpatch%xloc(xlist(ig))
-                  yloc = gpatch%yloc(ylist(ig))
-
-                  sbuf(ig) = patchdata%blk(xblk,yblk)%val(xloc,yloc)
-               ENDDO
-            
-               idest = isrc
-               CALL mpi_send (sbuf, nreq, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-
-               deallocate (ylist)
-               deallocate (xlist)
-               deallocate (sbuf )
-
-            ELSE
-               worker_done(p_itis_worker(isrc)) = .true.
-            ENDIF
-         ENDDO
-
-         deallocate (worker_done)
-      ENDIF 
+         CALL aggregation_gen_data_daemon (gpatch, data_i4 = patchdata)
 #endif
+      ENDIF
 #endif
 
       IF (p_is_worker) THEN
 
-         IF (numhru > 0) THEN
-            allocate (bindex_tmp (numhru*N_land_classification))
-            allocate (ibasin_tmp (numhru*N_land_classification))
-            allocate (ltyp_tmp   (numhru*N_land_classification))
-            allocate (ipxstt_tmp (numhru*N_land_classification))
-            allocate (ipxend_tmp (numhru*N_land_classification))
+#ifdef CATCHMENT         
+         numset = numhru
+#else
+         numset = numelm
+#endif
+
+         IF (numset > 0) THEN
+            allocate (eindex_tmp (numset*N_land_classification))
+            allocate (settyp_tmp (numset*N_land_classification))
+            allocate (ipxstt_tmp (numset*N_land_classification))
+            allocate (ipxend_tmp (numset*N_land_classification))
+            allocate (ielm_tmp   (numset*N_land_classification))
          ENDIF
 
          numpatch = 0
 
-         DO ihru = 1, numhru
-         
-            iu     = hydrounit%ibasin(ihru)
-            ipxstt = hydrounit%ipxstt(ihru)
-            ipxend = hydrounit%ipxend(ihru)
+         DO iset = 1, numset
+#ifdef CATCHMENT         
+            ie     = landhru%ielm  (iset)
+            ipxstt = landhru%ipxstt(iset)
+            ipxend = landhru%ipxend(iset)
+#else
+            ie     = landelm%ielm  (iset)
+            ipxstt = landelm%ipxstt(iset)
+            ipxend = landelm%ipxend(iset)
+#endif
+
             npxl   = ipxend - ipxstt + 1 
             
-            allocate (ltype (ipxstt:ipxend))
+            allocate (types (ipxstt:ipxend))
 
 #ifndef SinglePoint
-#ifdef USEMPI
-            allocate (xlist (ipxstt:ipxend))
-            allocate (ylist (ipxstt:ipxend))
-            allocate (ipt   (ipxstt:ipxend))
-            allocate (msk   (ipxstt:ipxend))
-
-            DO ipxl = ipxstt, ipxend
-               ilon_g = gpatch%xgrd(landbasin(iu)%ilon(ipxl))
-               ilat_g = gpatch%ygrd(landbasin(iu)%ilat(ipxl))
-               xlist(ipxl) = ilon_g
-               ylist(ipxl) = ilat_g
-
-               xblk = gpatch%xblk(xlist(ipxl))
-               yblk = gpatch%yblk(ylist(ipxl))
-               ipt(ipxl) = gblock%pio(xblk,yblk)
-            ENDDO
-
-            DO iproc = 0, p_np_io-1
-               msk = (ipt == p_address_io(iproc))
-               nreq = count(msk)
-
-               IF (nreq > 0) THEN
-               
-                  smesg = (/p_iam_glb, nreq/)
-                  idest = p_address_io(iproc)
-                  CALL mpi_send (smesg, 2, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
-
-                  allocate (sbuf (nreq))
-                  allocate (rbuf (nreq))
-
-                  sbuf = pack(xlist, msk)
-                  CALL mpi_send (sbuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  sbuf = pack(ylist, msk)
-                  CALL mpi_send (sbuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                  isrc = idest
-                  CALL mpi_recv (rbuf, nreq, MPI_INTEGER, &
-                     isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-                  CALL unpack_inplace (rbuf, msk, ltype)
-
-                  deallocate (sbuf)
-                  deallocate (rbuf)
-               ENDIF
-            ENDDO
-            
-            deallocate (xlist)
-            deallocate (ylist)
-            deallocate (ipt  )
-            deallocate (msk  )
+            CALL aggregation_gen_request_data (gpatch, &
+               mesh(ie)%ilon(ipxstt:ipxend), mesh(ie)%ilat(ipxstt:ipxend), &
+               data_i4 = patchdata, out_i4 = ibuff)
+            types(:) = ibuff
+            deallocate (ibuff)
 #else
-            DO ipxl = ipxstt, ipxend
-               ilon_g = gpatch%xgrd(landbasin(iu)%ilon(ipxl))
-               ilat_g = gpatch%ygrd(landbasin(iu)%ilat(ipxl))
-               xblk   = gpatch%xblk(ilon_g)
-               yblk   = gpatch%yblk(ilat_g)
-               xloc   = gpatch%xloc(ilon_g)
-               yloc   = gpatch%yloc(ilat_g)
-
-               ltype(ipxl) = patchdata%blk(xblk,yblk)%val(xloc,yloc)
-            ENDDO
-#endif
-#else
-            ltype(:) = SITE_landtype
+            types(:) = SITE_landtype
 #endif
 
 #ifdef CATCHMENT
-            IF (hydrounit%ltyp(ihru) == 0) THEN
+            IF (landhru%settyp(iset) == 0) THEN
 #if (defined IGBP_CLASSIFICATION || defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION) 
-               ltype(ipxstt:ipxend) = 17
+               types(ipxstt:ipxend) = 17
 #elif (defined USGS_CLASSIFICATION)
-               ltype(ipxstt:ipxend) = 16
+               types(ipxstt:ipxend) = 16
 #endif
             ENDIF
 #endif
 
-            allocate (order (ipxstt:ipxend))
-            order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
-
 #ifdef PFT_CLASSIFICATION
             ! For classification of plant function types, merge all land types with soil ground 
             DO ipxl = ipxstt, ipxend
-               IF (ltype(ipxl) > 0) THEN
-                  IF (patchtypes(ltype(ipxl)) == 0) THEN
+               IF (types(ipxl) > 0) THEN
+                  IF (patchtypes(types(ipxl)) == 0) THEN
 #if (defined CROP) 
                      !12  Croplands
                      !14  Cropland/Natural Vegetation Mosaics  ?
-                     IF (ltype(ipxl) /= 12) THEN
-                        ltype(ipxl) = 1
+                     IF (types(ipxl) /= 12) THEN
+                        types(ipxl) = 1
                      ENDIF
 #else
-                     ltype(ipxl) = 1
+                     types(ipxl) = 1
 #endif
                   ENDIF
                ENDIF
             ENDDO
 #endif
+
+            allocate (order (ipxstt:ipxend))
+            order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
             
-            CALL quicksort (npxl, ltype, order)
+            CALL quicksort (npxl, types, order)
                
-            landbasin(iu)%ilon(ipxstt:ipxend) = landbasin(iu)%ilon(order)
-            landbasin(iu)%ilat(ipxstt:ipxend) = landbasin(iu)%ilat(order)
+            mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
+            mesh(ie)%ilat(ipxstt:ipxend) = mesh(ie)%ilat(order)
 
-#ifdef USE_DOMINANT_PATCHTYPE
-            allocate (npxl_ltype (0:maxval(ltype)))
-            npxl_ltype(:) = 0
-            DO ipxl = ipxstt, ipxend
-               npxl_ltype(ltype(ipxl)) = npxl_ltype(ltype(ipxl)) + 1
-            ENDDO 
+            IF (DEF_USE_DOMINANT_PATCHTYPE) THEN
+               allocate (npxl_types (0:maxval(types)))
+               npxl_types(:) = 0
+               DO ipxl = ipxstt, ipxend
+                  npxl_types(types(ipxl)) = npxl_types(types(ipxl)) + 1
+               ENDDO 
 
-            IF (any(ltype > 0)) THEN
-               iloc = findloc(ltype > 0, .true., dim=1) + ipxstt - 1
-               dominant_type = maxloc(npxl_ltype(1:), dim=1)
-               ltype(iloc:ipxend) = dominant_type
+               IF (any(types > 0)) THEN
+                  iloc = findloc(types > 0, .true., dim=1) + ipxstt - 1
+                  dominant_type = maxloc(npxl_types(1:), dim=1)
+                  types(iloc:ipxend) = dominant_type
+               ENDIF
+
+               deallocate(npxl_types)
             ENDIF
-
-            deallocate(npxl_ltype)
-#endif
             
             DO ipxl = ipxstt, ipxend
                IF (ipxl == ipxstt) THEN
                   numpatch = numpatch + 1 
-                  ibasin_tmp(numpatch) = iu
-                  bindex_tmp(numpatch) = landbasin(iu)%indx
-                  ltyp_tmp  (numpatch) = ltype(ipxl)
+                  eindex_tmp(numpatch) = mesh(ie)%indx
+                  settyp_tmp(numpatch) = types(ipxl)
                   ipxstt_tmp(numpatch) = ipxl
-               ELSEIF (ltype(ipxl) /= ltype(ipxl-1)) THEN
+                  ielm_tmp  (numpatch) = ie
+               ELSEIF (types(ipxl) /= types(ipxl-1)) THEN
                   ipxend_tmp(numpatch) = ipxl - 1
 
                   numpatch = numpatch + 1
-                  ibasin_tmp(numpatch) = iu
-                  bindex_tmp(numpatch) = landbasin(iu)%indx
-                  ltyp_tmp  (numpatch) = ltype(ipxl)
+                  eindex_tmp(numpatch) = mesh(ie)%indx
+                  settyp_tmp(numpatch) = types(ipxl)
                   ipxstt_tmp(numpatch) = ipxl
+                  ielm_tmp  (numpatch) = ie
                ENDIF
             ENDDO
             ipxend_tmp(numpatch) = ipxend
 
-            deallocate (ltype)
+            deallocate (types)
             deallocate (order)
 
          ENDDO
          
          IF (numpatch > 0) THEN
-            allocate (landpatch%ibasin (numpatch))
-            allocate (landpatch%bindex (numpatch))
-            allocate (landpatch%ltyp   (numpatch))
+            allocate (landpatch%eindex (numpatch))
+            allocate (landpatch%settyp (numpatch))
             allocate (landpatch%ipxstt (numpatch))
             allocate (landpatch%ipxend (numpatch))
+            allocate (landpatch%ielm   (numpatch))
 
-            landpatch%ibasin = ibasin_tmp(1:numpatch)  
-            landpatch%bindex = bindex_tmp(1:numpatch)  
-            landpatch%ltyp   = ltyp_tmp  (1:numpatch)  
+            landpatch%eindex = eindex_tmp(1:numpatch)  
             landpatch%ipxstt = ipxstt_tmp(1:numpatch)
             landpatch%ipxend = ipxend_tmp(1:numpatch)
+            landpatch%settyp = settyp_tmp(1:numpatch)  
+            landpatch%ielm   = ielm_tmp  (1:numpatch)  
          ENDIF
 
-         IF (numhru > 0) THEN
-            deallocate (ltyp_tmp)
+         IF (numset > 0) THEN
+            deallocate (eindex_tmp)
             deallocate (ipxstt_tmp)
             deallocate (ipxend_tmp)
-            deallocate (ibasin_tmp)
-            deallocate (bindex_tmp)
+            deallocate (settyp_tmp)
+            deallocate (ielm_tmp  )
          ENDIF
 
 #ifdef USEMPI
-         DO iproc = 0, p_np_io-1
-            smesg = (/p_iam_glb, -1/)
-            idest = p_address_io(iproc)
-            CALL mpi_send (smesg, 2, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
-         ENDDO
+         CALL aggregation_gen_worker_done ()
 #endif
 
       ENDIF
@@ -373,19 +278,16 @@ CONTAINS
 
       CALL landpatch%set_vecgs
 
-#ifdef LANDONLY
-      IF ((p_is_worker) .and. (numpatch > 0)) THEN
-         allocate(msk(numpatch))
-         msk = (landpatch%ltyp /= 0)
-      ELSE
-         allocate(msk(1))
-         msk = .true.
-      ENDIF
-         
-      CALL landpatch%pset_pack (msk, numpatch)
+      IF (DEF_LANDONLY) THEN
+         IF ((p_is_worker) .and. (numpatch > 0)) THEN
+            allocate(msk(numpatch))
+            msk = (landpatch%settyp /= 0)
+         ENDIF
 
-      deallocate(msk)
-#endif 
+         CALL landpatch%pset_pack (msk, numpatch)
+
+         IF (allocated(msk)) deallocate(msk)
+      ENDIF 
 
 #if (defined CROP) 
       IF (p_is_io) THEN
@@ -403,12 +305,10 @@ CONTAINS
 #endif
 
 #ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches on worker.'
+            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches.'
          ENDIF
       ENDIF
 
@@ -417,6 +317,45 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#if (defined CROP) 
+      elm_patch%subfrc = elm_patch%subfrc * pctcrop
+#endif
+
+#ifdef CATCHMENT
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
+#if (defined CROP) 
+      hru_patch%subfrc = hru_patch%subfrc * pctcrop
+#endif
+#endif
+
+      CALL write_patchfrac (DEF_dir_landdata)
+
    END SUBROUTINE landpatch_build
+
+   ! -----
+   SUBROUTINE write_patchfrac (dir_landdata)
+      
+      USE ncio_vector
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), intent(in) :: dir_landdata
+      CHARACTER(len=256) :: lndname
+         
+      CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch')
+      
+      lndname = trim(dir_landdata)//'/landpatch/patchfrac_elm.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'patchfrac_elm', 'patch', landpatch, elm_patch%subfrc, 1)
+
+#ifdef CATCHMENT
+      lndname = trim(dir_landdata)//'/landpatch/patchfrac_hru.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'patchfrac_hru', 'patch', landpatch, hru_patch%subfrc, 1)
+#endif
+
+   END SUBROUTINE write_patchfrac
 
 END MODULE mod_landpatch

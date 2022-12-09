@@ -55,7 +55,7 @@
    DEF_hist_lon_res = 1.
    DEF_hist_lat_res = 1. 
    DEF_WRST_FREQ = 'YEARLY'   ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'DAILY'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'TIMESTEP'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'YEAR'  ! history in one file: DAY/MONTH/YEAR
    DEF_REST_COMPRESS_LEVEL = 0
    DEF_HIST_COMPRESS_LEVEL = 0

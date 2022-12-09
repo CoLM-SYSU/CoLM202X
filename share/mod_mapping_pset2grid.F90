@@ -44,7 +44,7 @@ CONTAINS
       USE mod_grid
       USE mod_pixelset
       USE mod_data_type
-      USE mod_landbasin
+      USE mod_mesh
       USE mod_utils
       USE spmd_task
       IMPLICIT NONE
@@ -68,7 +68,7 @@ CONTAINS
       REAL(r8), allocatable :: gbuff(:)
       TYPE(pointer_real8_1d), allocatable :: parea(:)
 
-      INTEGER  :: iu, iset
+      INTEGER  :: ie, iset
       INTEGER  :: ng, ig, ng_all, iloc
       INTEGER  :: npxl, ipxl, ilat, ilon, ipxstt, ipxend
       INTEGER  :: iworker, iproc, idest, isrc, nrecv, nsend
@@ -76,7 +76,6 @@ CONTAINS
       INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
       REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area
       LOGICAL  :: is_new
-      INTEGER  :: nproc
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -131,7 +130,7 @@ CONTAINS
 
          DO iset = 1, pixelset%nset
 
-            iu = pixelset%ibasin(iset)
+            ie = pixelset%ielm(iset)
             npxl = pixelset%ipxend(iset) - pixelset%ipxstt(iset) + 1
 
             allocate (afrac(iset)%val (npxl))
@@ -141,15 +140,15 @@ CONTAINS
             gfrom(iset)%ng = 0
             DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
 
-               ilat = landbasin(iu)%ilat(ipxl)
-               ilon = landbasin(iu)%ilon(ipxl)
+               ilat = mesh(ie)%ilat(ipxl)
+               ilon = mesh(ie)%ilon(ipxl)
 
                DO iy = ys(ilat), yn(ilat), fgrid%yinc
                      
                   lat_s = max(fgrid%lat_s(iy), pixel%lat_s(ilat))
                   lat_n = min(fgrid%lat_n(iy), pixel%lat_n(ilat))
 
-                  IF ((lat_n-lat_s) < 1.0e-7_r8) THEN
+                  IF ((lat_n-lat_s) < 1.0e-6_r8) THEN
                      cycle
                   ENDIF
 
@@ -169,13 +168,13 @@ CONTAINS
                      ENDIF
 
                      IF (lon_e > lon_w) THEN
-                        IF ((lon_e-lon_w) < 1.0e-7_r8) THEN
+                        IF ((lon_e-lon_w) < 1.0e-6_r8) THEN
                            IF (ix == xe(ilon))  exit
                            ix = mod(ix,fgrid%nlon) + 1
                            cycle
                         ENDIF
                      ELSE
-                        IF ((lon_e+360.0_r8-lon_w) < 1.0e-7_r8) THEN
+                        IF ((lon_e+360.0_r8-lon_w) < 1.0e-6_r8) THEN
                            IF (ix == xe(ilon))  exit
                            ix = mod(ix,fgrid%nlon) + 1
                            cycle
@@ -479,28 +478,6 @@ CONTAINS
       ENDIF 
 
 #ifdef USEMPI
-#ifdef CLMDEBUG 
-      IF (p_is_io) THEN 
-         nproc = 0
-         nrecv = 0
-         DO iproc = 0, p_np_worker-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               nproc = nproc + 1
-               nrecv = nrecv + this%glist(iproc)%ng
-            ENDIF
-         ENDDO
-      ELSEIF (p_is_worker) THEN 
-         nproc = 0
-         nsend = 0
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               nproc = nproc + 1
-               nsend = nsend + this%glist(iproc)%ng
-            ENDIF
-         ENDDO
-      ENDIF
-#endif 
-
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
@@ -725,7 +702,7 @@ CONTAINS
                      ENDIF
                   ELSE
                      pbuff(iproc)%val(i1,iloc) = pbuff(iproc)%val(i1,iloc) &
-                        + pdata(i1-lb1+1,iset) * this%gweight(iset)%val(ig)
+                        + pdata(i1,iset) * this%gweight(iset)%val(ig)
                   ENDIF
                ENDDO
             ENDDO

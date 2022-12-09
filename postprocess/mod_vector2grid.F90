@@ -20,14 +20,14 @@ contains
    SUBROUTINE hist_vector2grid_init (meshfile, input)
       
       USE mod_utils
-      USE mod_namelist
       IMPLICIT NONE
       CHARACTER(len=*), intent(in) :: meshfile, input
 
       ! Local Variables
       INTEGER :: ndim1, ndim2, ndim0, i1, i2, i1n, i2n, iloc
+      INTEGER :: i1s, i1e, i2s, i2e
       LOGICAL :: found
-      INTEGER, allocatable :: basin(:)
+      INTEGER, allocatable :: elm(:)
 #ifdef CATCHMENT
       INTEGER, allocatable :: cat(:,:), hru(:,:)
       INTEGER, allocatable :: htype(:)
@@ -35,36 +35,30 @@ contains
 #ifdef UNSTRUCTURED
       INTEGER, allocatable :: polygon(:,:)
 #endif
+      INTEGER, allocatable  :: addr2d_g(:,:)
+      REAL(r8), allocatable :: lon(:), lat(:)
 
 #ifdef CATCHMENT
-      CALL ncio_read_serial (meshfile, 'icatchment2d',  cat)
+      CALL ncio_read_serial (meshfile, 'icatchment2d', cat)
       CALL ncio_read_serial (meshfile, 'ihydrounit2d', hru)
       ndim1 = size(cat,1); ndim2 = size(cat,2)
-
-      CALL ncio_read_serial (meshfile, 'latitude',  latitude)
-      CALL ncio_read_serial (meshfile, 'longitude', longitude)
-      coord1name = 'latitude'
-      coord2name = 'longitude'
 #endif
 #ifdef UNSTRUCTURED
-      CALL ncio_read_serial (DEF_file_landgrid, 'patchtypes', polygon)
+      CALL ncio_read_serial (meshfile, 'elmindex', polygon)
       ndim1 = size(polygon,1); ndim2 = size(polygon,2)
-      
-      longitude = (/(-180 + 360.0/43200/2 + (i1-1)*360.0/43200, i1=1,43200)/)
-      latitude  = (/(  90 - 180.0/21600/2 - (i2-1)*180.0/21600, i2=1,21600)/)
-      coord1name = 'longitude'
-      coord2name = 'latitude'
 #endif
 
-      allocate (addr2d (ndim1, ndim2))
-      addr2d(:,:) = -1
+      allocate (addr2d_g (ndim1, ndim2))
+      addr2d_g(:,:) = -1
 
-      CALL ncio_read_serial (input, 'basin', basin)
 #ifdef CATCHMENT
-      CALL ncio_read_serial (input, 'htype', htype)
+      CALL ncio_read_serial (input, 'bsn_hru', elm  )
+      CALL ncio_read_serial (input, 'typ_hru', htype)
+#else
+      CALL ncio_read_serial (input, 'elmindex', elm)
 #endif
       
-      ndim0 = size(basin)
+      ndim0 = size(elm)
 
       DO i1 = 1, ndim1
          DO i2 = 1, ndim2
@@ -86,8 +80,8 @@ contains
 #ifdef UNSTRUCTURED
                   IF ((polygon(i1n,i2n) == polygon(i1,i2)) &
 #ENDIF
-                     .and. (addr2d(i1n,i2n) /= -1)) THEN
-                     addr2d(i1,i2) = addr2d(i1n,i2n)
+                     .and. (addr2d_g(i1n,i2n) /= -1)) THEN
+                     addr2d_g(i1,i2) = addr2d_g(i1n,i2n)
                      found = .true.
                      exit
                   ENDIF
@@ -96,20 +90,76 @@ contains
 
             IF (.not. found) THEN
 #ifdef CATCHMENT
-               iloc = find_in_sorted_list2 (hru(i1,i2),cat(i1,i2), ndim0, htype,basin)
+               iloc = find_in_sorted_list2 (hru(i1,i2),cat(i1,i2), ndim0, htype,elm)
 #ENDIF
 #ifdef UNSTRUCTURED
-               iloc = find_in_sorted_list1 (polygon(i1,i2), ndim0, basin)
+               iloc = find_in_sorted_list1 (polygon(i1,i2), ndim0, elm)
 #ENDIF
-               IF (iloc > 0) addr2d(i1,i2) = iloc
+               IF (iloc > 0) addr2d_g(i1,i2) = iloc
             ENDIF
 
          ENDDO
       ENDDO
 
-      ndim1out = ndim1
-      ndim2out = ndim2
+      DO i1 = 1, ndim1
+         IF (any(addr2d_g(i1,:) > 0)) THEN
+            i1s = i1
+            exit
+         ENDIF
+      ENDDO
+      
+      DO i1 = ndim1, 1, -1
+         IF (any(addr2d_g(i1,:) > 0)) THEN
+            i1e = i1
+            exit
+         ENDIF
+      ENDDO
 
+      DO i2 = 1, ndim2
+         IF (any(addr2d_g(:,i2) > 0)) THEN
+            i2s = i2
+            exit
+         ENDIF
+      ENDDO
+      
+      DO i2 = ndim2, 1, -1
+         IF (any(addr2d_g(:,i2) > 0)) THEN
+            i2e = i2
+            exit
+         ENDIF
+      ENDDO
+
+      ndim1out = i1e - i1s + 1
+      ndim2out = i2e - i2s + 1
+
+      allocate(addr2d (ndim1out,ndim2out))
+      addr2d = addr2d_g(i1s:i1e,i2s:i2e)
+
+      CALL ncio_read_serial (meshfile, 'latitude',  lat)
+      CALL ncio_read_serial (meshfile, 'longitude', lon)
+
+#ifdef UNSTRUCTURED
+      allocate(longitude(ndim1out))
+      allocate(latitude (ndim2out))
+
+      longitude = lon(i1s:i1e)
+      latitude  = lat(i2s:i2e)
+
+      coord1name = 'longitude'
+      coord2name = 'latitude'
+#endif
+#ifdef CATCHMENT
+      allocate(latitude (ndim1out))
+      allocate(longitude(ndim2out))
+
+      latitude  = lat(i1s:i1e)
+      longitude = lon(i2s:i2e)
+
+      coord1name = 'latitude'
+      coord2name = 'longitude'
+#endif
+
+      deallocate (addr2d_g)
 #ifdef CATCHMENT
       deallocate (cat)
       deallocate (hru)
@@ -118,14 +168,16 @@ contains
 #ifdef UNSTRUCTURED
       deallocate (polygon)
 #ENDIF
-      deallocate (basin)
+      deallocate (elm)
+
+      deallocate(lat, lon)
 
       write(*,*) 'Init done.'
 
    END SUBROUTINE hist_vector2grid_init
 
    ! -------
-   SUBROUTINE hist_vector2grid_one_var (input, output, varname, timelen)
+   SUBROUTINE hist_vector2grid_one_var_time (input, output, varname, timelen)
       
       IMPLICIT NONE
       CHARACTER(len=*), intent(in) :: input, output
@@ -154,7 +206,9 @@ contains
       CALL nccheck( nf90_close (ncid) )
                
       IF (ndims >=2) THEN
-         IF ((trim(dimnames(ndims-1)) == 'hydrounit') .and. (trim(dimnames(ndims)) == 'time')) THEN
+         IF (((trim(dimnames(ndims-1)) == 'hydrounit') .or. (trim(dimnames(ndims-1)) == 'element')) &
+            .and. (trim(dimnames(ndims)) == 'time')) THEN
+
             IF (ndims == 2) THEN
 
                CALL ncio_read_serial (input, varname, data2in)
@@ -231,8 +285,92 @@ contains
       
             CALL copy_variable_attr_nc (input, output, varname)
             
-            write(*,*) 'From <', trim(input), '> to <', trim(output), '> : ', trim(varname)
+            write(*,*) '     ', trim(varname), ' done.'
          ENDIF
+      ENDIF
+
+      deallocate (dimids)
+      deallocate (dimlens)
+      deallocate (dimnames)
+
+   END SUBROUTINE hist_vector2grid_one_var_time
+
+   ! -------
+   SUBROUTINE hist_vector2grid_one_var (input, output, varname)
+      
+      IMPLICIT NONE
+      CHARACTER(len=*), intent(in) :: input, output
+      CHARACTER(len=*), intent(in) :: varname
+
+      ! Local Variables
+      INTEGER :: ncid, varid, ndims, id
+      INTEGER :: i1, i2
+      INTEGER, allocatable :: dimids(:), dimlens(:)
+      CHARACTER(len=256), allocatable :: dimnames (:)
+      REAL(r8), allocatable :: data1in(:),   data1out(:,:)
+      REAL(r8), allocatable :: data2in(:,:), data2out(:,:,:)
+
+      CALL nccheck( nf90_open (trim(input), NF90_NOWRITE, ncid) )
+      CALL nccheck( nf90_inq_varid (ncid, trim(varname), varid) )
+      CALL nccheck( nf90_inquire_variable (ncid, varid, ndims = ndims) )
+      allocate (dimids  (ndims))
+      CALL nccheck( nf90_inquire_variable (ncid, varid, dimids = dimids) )
+      allocate (dimnames (ndims))
+      allocate (dimlens  (ndims))
+      DO id = 1, ndims
+         CALL nccheck( nf90_inquire_dimension (ncid, dimids(id), dimnames(id), dimlens(id)) )
+      ENDDO
+      CALL nccheck( nf90_close (ncid) )
+               
+      IF (ndims == 1) THEN
+
+         CALL ncio_read_serial (input, varname, data1in)
+
+         allocate (data1out (ndim1out, ndim2out))
+         data1out(:,:) = spval
+
+#ifdef OPENMP
+!$OMP PARALLEL DO NUM_THREADS(OPENMP) PRIVATE(i1,i2)
+#endif
+         DO i1 = 1, ndim1out
+            DO i2 = 1, ndim2out
+               IF (addr2d(i1,i2) > 0) THEN
+                  data1out(i1,i2) = data1in(addr2d(i1,i2))
+               ENDIF
+            ENDDO
+         ENDDO
+#ifdef OPENMP
+!$OMP END PARALLEL DO
+#endif
+
+         CALL ncio_write_serial (output, varname, data1out, &
+            coord1name, coord2name, compress = 1)
+
+         deallocate(data1in )
+         deallocate(data1out)
+
+      ELSEIF (ndims == 2) THEN
+
+         CALL ncio_read_serial (input, varname, data2in)
+
+         CALL copy_dimension_nc (input, output, dimnames(1))
+
+         allocate (data2out (dimlens(1), ndim1out, ndim2out))
+         data2out(:,:,:) = spval
+         DO i1 = 1, ndim1out
+            DO i2 = 1, ndim2out
+               IF (addr2d(i1,i2) > 0) THEN
+                  data2out(:,i1,i2) = data2in(:,addr2d(i1,i2))
+               ENDIF
+            ENDDO
+         ENDDO
+
+         CALL ncio_write_serial (output, varname, data2out, &
+            dimnames(1), coord1name, coord2name, compress = 1)
+
+         deallocate(data2in )
+         deallocate(data2out)
+
       ENDIF
 
       deallocate (dimids)
