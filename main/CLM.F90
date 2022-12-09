@@ -34,14 +34,23 @@ PROGRAM CLM
 
    use mod_block
    use mod_pixel
-   use mod_hydrounit
+   USE mod_mesh
+   use mod_landelm
+#ifdef CATCHMENT
+   USE mod_landhru
+#endif
    use mod_landpatch
-   use mod_srfdata_restart
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
+#endif
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   USE mod_elm_vector
+#endif
+#ifdef CATCHMENT
+   USE mod_hru_vector
 #endif
 #if(defined CaMa_Flood)
    use colm_CaMaMod
@@ -49,9 +58,7 @@ PROGRAM CLM
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT)
-   USE mod_unstructured_mesh
-#endif
+   use mod_srfdata_restart
 
    IMPLICIT NONE
 
@@ -143,10 +150,14 @@ PROGRAM CLM
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
 
-   call landbasin_load_from_file (dir_landdata)
+   call mesh_load_from_file (dir_landdata)
 
-   call pixelset_load_from_file (dir_landdata, 'hydrounit', hydrounit, numhru)
+   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
    
+#ifdef CATCHMENT
+   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+#endif
+  
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -159,6 +170,7 @@ PROGRAM CLM
    CALL map_patch_to_pc
 #endif
 
+   call adj2end(sdate)
    call adj2end(edate)
    call adj2end(pdate)
 
@@ -196,11 +208,15 @@ PROGRAM CLM
    call allocate_2D_Fluxes (ghist)
    call allocate_1D_Fluxes ()
 
+
 #if(defined CaMa_Flood)
    call colm_CaMa_init
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
-   CALL unstructured_mesh_init ()
+   CALL elm_vector_init ()
+#ifdef CATCHMENT
+   CALL hru_vector_init ()
+#endif
 #endif
 
    ! ======================================================================
@@ -221,6 +237,7 @@ PROGRAM CLM
             write(*,100) idate(1), month_p, mday_p, idate(3)
          ENDIF
       end if
+   
 
       Julian_1day_p = int(calendarday(idate)-1)/1*1 + 1
       Julian_8day_p = int(calendarday(idate)-1)/8*8 + 1
@@ -315,9 +332,6 @@ PROGRAM CLM
    call deallocate_1D_Forcing     ()
    call deallocate_1D_Fluxes      ()
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
-    CALL unstructured_mesh_final ()
-#endif
 
    call hist_final ()
 
