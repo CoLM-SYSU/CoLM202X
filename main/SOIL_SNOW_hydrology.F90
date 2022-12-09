@@ -8,12 +8,8 @@ MODULE SOIL_SNOW_hydrology
   SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-#ifndef VARIABLY_SATURATED_FLOW
   public :: WATER
-#endif
-#ifdef VARIABLY_SATURATED_FLOW
   PUBLIC :: WATER_VSF
-#endif
   public :: snowwater
   public :: soilwater
 
@@ -31,7 +27,6 @@ MODULE SOIL_SNOW_hydrology
 
 
 
-#ifndef VARIABLY_SATURATED_FLOW
   subroutine WATER (ipatch,patchtype  ,lb          ,nl_soil ,deltim,&
              z_soisno    ,dz_soisno   ,zi_soisno                   ,&
              bsw         ,porsl       ,psi0        ,hksati  ,rootr ,&
@@ -268,10 +263,8 @@ MODULE SOIL_SNOW_hydrology
   endif
 
   end subroutine WATER
-#endif
 
 !-----------------------------------------------------------------------
-#ifdef VARIABLY_SATURATED_FLOW
   subroutine WATER_VSF (ipatch,  patchtype,lb      ,nl_soil ,deltim ,&
              z_soisno    ,dz_soisno   ,zi_soisno                    ,&
 #ifdef Campbell_SOIL_MODEL 
@@ -309,10 +302,6 @@ MODULE SOIL_SNOW_hydrology
   use PhysicalConstants, only : denice, denh2o, tfrz
   USE mod_soil_water
 
-#ifdef USE_DEPTH_TO_BEDROCK
-   USE MOD_TimeInvariants, only : dbedrock, ibedrock
-   USE MOD_TimeVariables , only : dwatsub
-#endif
 
   implicit none
     
@@ -394,7 +383,6 @@ MODULE SOIL_SNOW_hydrology
   REAL(r8) :: qraing
 
   INTEGER  :: nlev
-  LOGICAL  :: rockbtm
   REAL(r8) :: zwtmm
   REAL(r8) :: sp_zc(1:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil) ! in cm
   LOGICAL  :: is_permeable(1:nl_soil)
@@ -413,11 +401,7 @@ MODULE SOIL_SNOW_hydrology
 #endif
   REAL(r8) :: prms(nprms, 1:nl_soil)
 
-#ifdef USE_DEPTH_TO_BEDROCK
-      nlev = min(ibedrock(ipatch), nl_soil)
-#else
       nlev = nl_soil
-#endif
       
 #ifdef Campbell_SOIL_MODEL
       theta_r(1:nlev) = 0._r8
@@ -473,7 +457,6 @@ MODULE SOIL_SNOW_hydrology
 
       ! surface runoff including water table and surface staturated area
 
-      rsur = 0.
       if (gwat > 0.) then
       call surfacerunoff (nlev,wtfact,wimp,porsl,psi0,hksati,&
                           z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -494,21 +477,6 @@ MODULE SOIL_SNOW_hydrology
       sp_zc(1:nlev) = z_soisno (1:nlev) * 1000.0   ! from meter to mm
       sp_zi(0:nlev) = zi_soisno(0:nlev) * 1000.0   ! from meter to mm
 
-      rockbtm = .false.
-#ifdef USE_DEPTH_TO_BEDROCK
-      IF (ibedrock(ipatch) <= nl_soil) THEN
-         rockbtm = .true.
-         sp_zi(nlev) = dbedrock(ipatch) * 1000.0 ! from meter to mm
-         sp_zc(nlev) = (sp_zi(nlev) + sp_zi(nlev-1)) / 2.0
-         IF (is_permeable(nlev)) THEN
-            vol_liq(nlev) = min(eff_porosity(nlev), &
-               wliq_soisno(nlev)/denh2o / ((sp_zi(nlev)-sp_zi(nlev-1))/1000.0))
-            vol_liq(nlev) = max(0., vol_liq(nlev))
-            wresi(nlev) = wliq_soisno(nlev) - (sp_zi(nlev)-sp_zi(nlev-1))/1000.0 * denh2o * vol_liq(nlev)
-         ENDIF
-      ENDIF 
-#endif
-
       ! check consistancy between water table location and liquid water content
       DO j = 1, nlev
          IF ((vol_liq(j) < eff_porosity(j)-1.e-6) .and. (zwtmm <= sp_zi(j-1))) THEN
@@ -517,30 +485,26 @@ MODULE SOIL_SNOW_hydrology
       ENDDO
 
       !-- Topographic runoff  ----------------------------------------------------------
+      imped = 1.0
       IF (zwtmm < sp_zi(nlev)) THEN
          dzsum = 0.
          icefracsum = 0.
-         drainmax   = hksati(nlev)
          do j = nlev, 1, -1
             sp_dz(j) = sp_zi(j) - sp_zi(j-1)
             IF (zwtmm < sp_zi(j)) THEN
                dz = min(sp_dz(j), sp_zi(j)-zwtmm)
                dzsum = dzsum + dz
                icefracsum = icefracsum + icefrac(j) * dz
-               drainmax   = min(hksati(j), drainmax)
             ENDIF
          end do
          ! add ice impedance factor to baseflow
          IF (dzsum > 0) THEN
             fracice_rsub = max(0.,exp(-3.*(1.-(icefracsum/dzsum)))-exp(-3.))/(1.0-exp(-3.))
             imped = max(0.,1.-fracice_rsub)
-         ELSE
-            imped = 1.0
          ENDIF
-         rsubst = imped * drainmax * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-      ELSE
-         rsubst = 0.
       ENDIF 
+         
+      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nlev)
@@ -581,11 +545,10 @@ MODULE SOIL_SNOW_hydrology
          nlev, deltim, sp_zc(1:nlev), sp_zi (0:nlev), is_permeable(1:nlev), &
          eff_porosity(1:nlev), theta_r (1:nlev), psi0 (1:nlev), hksati(1:nlev), nprms, prms(:,1:nlev), &
          porsl(nlev), &
-         qraing, etr, rootr(1:nlev), rockbtm, rsubst, qinfl, &
+         qraing, etr, rootr(1:nlev), rsubst, qinfl, &
          dpond, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
 
       ! update the mass of liquid water
-      ! wliq_soisno(1:nlev) = vol_liq(1:nlev) * sp_dz(1:nlev)/1000.0 * denh2o
       DO j = nlev, 1, -1
          IF (is_permeable(j)) THEN
             IF (zwtmm < sp_zi(j)) THEN
@@ -604,21 +567,14 @@ MODULE SOIL_SNOW_hydrology
       ENDDO
       
       zwt = zwtmm/1000.0
-#ifdef USE_DEPTH_TO_BEDROCK
-      IF (ibedrock(ipatch) <= nl_soil) THEN
-         dwatsub(ipatch) = max(dbedrock(ipatch)-zwt, 0._r8)
-      ENDIF
-#endif
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
 
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+         - (gwat-etr-rnof)*deltim
       if(lb >= 1)then
-         err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
-                    - (gwat+qfros-qseva-qsubl-etr-rnof)*deltim
-      else
-         err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
-                    - (gwat-etr-rnof)*deltim
+         err_solver = err_solver - (qfros-qseva-qsubl)*deltim
       endif
 
 #if(defined CLMDEBUG)
@@ -671,8 +627,6 @@ MODULE SOIL_SNOW_hydrology
 !-----------------------------------------------------------------------
 
   end subroutine WATER_VSF
-
-#endif
 
 
   subroutine snowwater (lb,deltim,ssi,wimp, &

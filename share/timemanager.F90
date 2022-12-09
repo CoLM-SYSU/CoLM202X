@@ -1,4 +1,4 @@
-
+#include <define.h>
 ! --------------------------------------------------------
 ! MODULE NANE: 
 !     time manager model
@@ -63,6 +63,13 @@ CONTAINS
       LOGICAL, intent(in) :: greenwich
 
       isgreenwich = greenwich
+
+#ifndef SinglePoint
+      IF (.not. isgreenwich) THEN
+         write(*,*) 'Warning: Please Use Greenwich time for non-SinglePoint case.'
+         isgreenwich = .true.
+      ENDIF 
+#endif
       
    END SUBROUTINE initimetype
  

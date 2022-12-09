@@ -46,12 +46,12 @@ SUBROUTINE pct_readin (dir_landdata)
 
 #ifdef CLMDEBUG
    IF (p_is_worker) THEN 
-      npatch = count(landpatch%ltyp == 1)
+      npatch = count(landpatch%settyp == 1)
       allocate (sumpct (npatch))
 
       npatch = 0
       DO ipatch = 1, numpatch
-         IF (landpatch%ltyp(ipatch) == 1) THEN
+         IF (landpatch%settyp(ipatch) == 1) THEN
             npatch = npatch + 1
             sumpct(npatch) = sum(pftfrac(patch_pft_s(ipatch):patch_pft_e(ipatch)))
          ENDIF
@@ -83,5 +83,7 @@ SUBROUTINE pct_readin (dir_landdata)
    CALL check_vector_data ('Sum PFT pct', sumpct)
 #endif
 #endif
+
+   IF (allocated(sumpct)) deallocate(sumpct)
 
 END SUBROUTINE pct_readin

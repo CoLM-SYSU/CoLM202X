@@ -38,6 +38,7 @@ MODULE mod_grid
       procedure, PUBLIC :: define_by_ndims  => grid_define_by_ndims  
       procedure, PUBLIC :: define_by_center => grid_define_by_center
       procedure, PUBLIC :: define_from_file => grid_define_from_file
+      procedure, PUBLIC :: define_by_copy   => grid_define_by_copy
 
       procedure, PUBLIC :: set_rlon => grid_set_rlon
       procedure, PUBLIC :: set_rlat => grid_set_rlat
@@ -157,166 +158,6 @@ CONTAINS
 
       ENDIF
 
-      IF (trim(gridname) == 'ERA5LAND') THEN
-
-         nlat = 1801
-         nlon = 3600
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat = 180.0 / (nlat-1)
-         DO ilat = 1, nlat
-            lat(ilat) = 90.0 - del_lat * (ilat-1)
-         ENDDO
-
-         del_lon = 360.0 / nlon
-         DO ilon = 1, nlon
-            lon(ilon) = (ilon-1) * del_lon
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-      IF (trim(gridname) == 'ERA5') THEN
-
-         nlat = 721
-         nlon = 1440
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat = 180.0 / (nlat-1)
-         DO ilat = 1, nlat
-            lat(ilat) = 90.0 - del_lat * (ilat-1)
-         ENDDO
-
-         del_lon = 360.0 / nlon
-         DO ilon = 1, nlon
-            lon(ilon) = (ilon-1) * del_lon
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-      IF (trim(gridname) == 'PRINCETON') THEN
-
-         nlat = 180
-         nlon = 360
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat = 180.0 / nlat
-         DO ilat = 1, nlat
-            lat(ilat) = -90.0 + del_lat * (ilat-1)
-         ENDDO
-
-         del_lon = 360.0 / nlon
-         DO ilon = 1, nlon
-            lon(ilon) =(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-      IF (trim(gridname) == 'JRA55') THEN
-
-         nlat = 320
-         nlon = 640
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat = 180.0 / nlat
-         del_lat=0.5625
-         DO ilat = 1, nlat
-            lat(ilat) =  90.0 - del_lat * (ilat-1)
-         ENDDO
-
-         del_lon = 360.0 / nlon
-         del_lon=0.5625
-         DO ilon = 1, nlon
-            lon(ilon) =(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-
-      IF (trim(gridname) == 'GDAS') THEN
-
-         nlat = 600
-         nlon = 1440
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         !del_lat = 180.0 / nlat
-         del_lat=0.25
-         DO ilat = 1, nlat
-            lat(ilat) = -60.0 + del_lat * (ilat-1)
-         ENDDO
-
-         !del_lon = 360.0 / nlon
-         del_lon=0.25
-         DO ilon = 1, nlon
-            lon(ilon) =-180.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-      IF (trim(gridname) == 'CLDAS') THEN
-
-         nlat = 1040
-         nlon = 1600
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat=0.0625
-         DO ilat = 1, nlat
-            lat(ilat) = del_lat * (ilat-1)
-         ENDDO
-
-         del_lon=0.0625
-         DO ilon = 1, nlon
-            lon(ilon) =60.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
-
-      IF (trim(gridname) == 'CMFD') THEN
-
-         nlat = 400
-         nlon = 700
-
-         allocate (lon(nlon))
-         allocate (lat(nlat))
-
-         del_lat=0.1
-         DO ilat = 1, nlat
-            lat(ilat) = 15.0+del_lat * (ilat-1)
-         ENDDO
-
-         del_lon=0.1
-         DO ilon = 1, nlon
-            lon(ilon) =70.0+(ilon-1) * del_lon  !  ilon * del_lon * (ilon-1)
-         ENDDO
-
-         call this%define_by_center (lat, lon)
-
-      ENDIF
-
    END SUBROUTINE grid_define_by_name
 
    !-----------------------------------------------------
@@ -355,7 +196,8 @@ CONTAINS
    END SUBROUTINE grid_define_by_ndims
 
    !---------------------------------------------
-   SUBROUTINE grid_define_by_center (this, lat_in, lon_in)
+   SUBROUTINE grid_define_by_center (this, lat_in, lon_in, &
+         south, north, west, east)
       
       USE precision
       USE mod_utils
@@ -363,6 +205,7 @@ CONTAINS
       class (grid_type) :: this
 
       REAL(r8), intent(in) :: lat_in(:), lon_in(:)
+      REAL(r8), intent(in), optional :: south, north, west, east
 
       ! Local variables
       INTEGER :: ilat, ilon, ilone, ilonw
@@ -384,25 +227,41 @@ CONTAINS
             IF (ilat < this%nlat) THEN
                this%lat_n(ilat) = (lat_in(ilat) + lat_in(ilat+1)) * 0.5
             ELSE
-               this%lat_n(ilat) = 90.0
+               IF (present(north)) THEN
+                  this%lat_n(ilat) = north
+               ELSE
+                  this%lat_n(ilat) = 90.0
+               ENDIF
             ENDIF
 
             IF (ilat > 1) THEN
                this%lat_s(ilat) = (lat_in(ilat-1) + lat_in(ilat)) * 0.5
             ELSE
-               this%lat_s(ilat) = -90.0
+               IF (present(south)) THEN
+                  this%lat_s(ilat) = south
+               ELSE
+                  this%lat_s(ilat) = -90.0
+               ENDIF
             ENDIF
          ELSEIF (this%yinc == -1) THEN
             IF (ilat > 1) THEN
                this%lat_n(ilat) = (lat_in(ilat-1) + lat_in(ilat)) * 0.5
             ELSE
-               this%lat_n(ilat) = 90.0
+               IF (present(north)) THEN
+                  this%lat_n(ilat) = north
+               ELSE
+                  this%lat_n(ilat) = 90.0
+               ENDIF
             ENDIF
 
             IF (ilat < this%nlat) THEN
                this%lat_s(ilat) = (lat_in(ilat) + lat_in(ilat+1)) * 0.5
             ELSE
-               this%lat_s(ilat) = -90.0
+               IF (present(south)) THEN
+                  this%lat_s(ilat) = south
+               ELSE
+                  this%lat_s(ilat) = -90.0
+               ENDIF
             ENDIF
          ENDIF
       ENDDO
@@ -422,12 +281,20 @@ CONTAINS
             this%lon_e(ilon) = (lon_in_n(ilon) + lon_in_n(ilone)) * 0.5
          ENDIF
 
+         IF ((ilon == this%nlon) .and. (present(east))) THEN
+            this%lon_e(this%nlon) = east
+         ENDIF
+
          ilonw = ilon - 1
          IF (ilonw == 0) ilonw = this%nlon
          IF (lon_in_n(ilonw) > lon_in_n(ilon)) THEN
             this%lon_w(ilon) = (lon_in_n(ilonw) + lon_in_n(ilon) + 360.0) * 0.5
          ELSE
             this%lon_w(ilon) = (lon_in_n(ilonw) + lon_in_n(ilon)) * 0.5
+         ENDIF
+
+         IF ((ilon == 1) .and. (present(west))) THEN
+            this%lon_w(1) = west
          ENDIF
       ENDDO
 
@@ -459,6 +326,27 @@ CONTAINS
       CALL this%set_blocks ()
       
    END SUBROUTINE grid_define_from_file
+
+   !-----------------------------------------------------
+   SUBROUTINE grid_define_by_copy (this, grid_in)
+      
+      USE ncio_serial
+      IMPLICIT NONE
+      class (grid_type) :: this
+
+      TYPE(grid_type) :: grid_in
+
+      CALL this%init (grid_in%nlon, grid_in%nlat)
+
+      this%lat_s = grid_in%lat_s
+      this%lat_n = grid_in%lat_n
+      this%lon_w = grid_in%lon_w
+      this%lon_e = grid_in%lon_e
+
+      CALL this%normalize  ()
+      CALL this%set_blocks ()
+      
+   END SUBROUTINE grid_define_by_copy
 
    !-----------------------------------------------------
    SUBROUTINE grid_normalize (this)
@@ -527,8 +415,13 @@ CONTAINS
          this%ycnt(:) = 0
          this%yblk(:) = 0
 
-         jblk = find_nearest_south (edges, gblock%nyblk, gblock%lat_s)
-         ilat = find_nearest_south (edges, this%nlat, this%lat_s)
+         IF (edges < this%lat_s(1)) THEN
+            jblk = find_nearest_south (this%lat_s(1), gblock%nyblk, gblock%lat_s)
+            ilat = 1
+         ELSE
+            jblk = find_nearest_south (edges, gblock%nyblk, gblock%lat_s)
+            ilat = find_nearest_south (edges, this%nlat, this%lat_s)
+         ENDIF
 
          this%ydsp(jblk) = ilat - 1
 
@@ -560,8 +453,13 @@ CONTAINS
          this%ycnt(:) = 0
          this%yblk(:) = 0
 
-         jblk = find_nearest_north (edgen, gblock%nyblk, gblock%lat_n)
-         ilat = find_nearest_north (edgen, this%nlat, this%lat_n)
+         IF (edgen > this%lat_n(1)) THEN
+            jblk = find_nearest_north (this%lat_n(1), gblock%nyblk, gblock%lat_n)
+            ilat = 1
+         ELSE
+            jblk = find_nearest_north (edgen, gblock%nyblk, gblock%lat_n)
+            ilat = find_nearest_north (edgen, this%nlat, this%lat_n)
+         ENDIF
 
          this%ydsp(jblk) = ilat - 1
 
@@ -594,8 +492,14 @@ CONTAINS
       this%xcnt(:) = 0
       this%xblk(:) = 0
 
-      iblk = find_nearest_west (edgew, gblock%nxblk, gblock%lon_w)
-      ilon = find_nearest_west (edgew, this%nlon, this%lon_w)
+      IF ((this%lon_w(1) /= this%lon_e(this%nlon)) &
+         .and. (lon_between_floor(edgew, this%lon_e(this%nlon), this%lon_w(1)))) THEN
+         iblk = find_nearest_west (this%lon_w(1), gblock%nxblk, gblock%lon_w)
+         ilon = 1
+      ELSE
+         iblk = find_nearest_west (edgew, gblock%nxblk, gblock%lon_w)
+         ilon = find_nearest_west (edgew, this%nlon, this%lon_w)
+      ENDIF
 
       this%xdsp(iblk) = ilon - 1
       this%xcnt(iblk) = 1

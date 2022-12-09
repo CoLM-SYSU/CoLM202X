@@ -140,7 +140,7 @@ CONTAINS
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_landbasin
+      USE mod_mesh
       USE mod_pixelset
       USE mod_landpatch
       USE mod_utils
@@ -162,13 +162,13 @@ CONTAINS
       ! Local Variables
       INTEGER :: nreq, smesg(2), isrc, idest, iproc
       INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: npxl, ipxl, iu, ipxstt, ipxend
+      INTEGER :: npxl, ipxl, ie, ipxstt, ipxend
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
       REAL(r8), allocatable :: rbuf2(:), rbuf3(:,:)
       LOGICAL,  allocatable :: msk(:)
 
 
-      iu   = landpatch%ibasin(ipatch)
+      ie     = landpatch%ielm  (ipatch)
       ipxstt = landpatch%ipxstt(ipatch)
       ipxend = landpatch%ipxend(ipatch)
 
@@ -187,8 +187,8 @@ CONTAINS
       allocate (msk   (ipxstt:ipxend))
 
       DO ipxl = ipxstt, ipxend
-         xlist(ipxl) = grid%xgrd(landbasin(iu)%ilon(ipxl))
-         ylist(ipxl) = grid%ygrd(landbasin(iu)%ilat(ipxl))
+         xlist(ipxl) = grid%xgrd(mesh(ie)%ilon(ipxl))
+         ylist(ipxl) = grid%ygrd(mesh(ie)%ilat(ipxl))
 
          xblk = grid%xblk(xlist(ipxl))
          yblk = grid%yblk(ylist(ipxl))
@@ -250,8 +250,8 @@ CONTAINS
       
       DO ipxl = ipxstt, ipxend
 
-         ilon = grid%xgrd(landbasin(iu)%ilon(ipxl))
-         ilat = grid%ygrd(landbasin(iu)%ilat(ipxl))
+         ilon = grid%xgrd(mesh(ie)%ilon(ipxl))
+         ilat = grid%ygrd(mesh(ie)%ilat(ipxl))
          xblk = grid%xblk(ilon)
          yblk = grid%yblk(ilat)
          xloc = grid%xloc(ilon)
@@ -276,8 +276,8 @@ CONTAINS
       IF (present(area)) THEN
          DO ipxl = ipxstt, ipxend
             area(ipxl) = areaquad (&
-               pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
-               pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
+               pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+               pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
          ENDDO
       ENDIF
 
