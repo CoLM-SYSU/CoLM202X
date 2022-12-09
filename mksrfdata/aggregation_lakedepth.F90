@@ -34,9 +34,6 @@ SUBROUTINE aggregation_lakedepth ( &
 #endif
    USE mod_aggregation_lc
    USE mod_utils
-#ifdef MAP_PATCH_TO_GRID
-   USE mod_patch2grid
-#endif
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
@@ -62,11 +59,17 @@ SUBROUTINE aggregation_lakedepth ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
    IF (p_is_master) THEN
-      write(*,'(/, A24)') 'Aggregate lake depth ...'
+      write(*,'(/, A)') 'Aggregate lake depth ...'
       CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef SinglePoint
+   IF (USE_SITE_lakedepth) THEN
+      RETURN
+   ENDIF
 #endif
 
    ! ................................................
@@ -84,12 +87,6 @@ SUBROUTINE aggregation_lakedepth ( &
 #endif
    ENDIF
 
-#ifdef SinglePoint
-   IF (USE_SITE_lakedepth) THEN
-      RETURN
-   ENDIF
-#endif
-
    !   ---------------------------------------------------------------
    !   aggregate the lake depth from the resolution of raw data to modelling resolution
    !   ---------------------------------------------------------------
@@ -99,7 +96,7 @@ SUBROUTINE aggregation_lakedepth ( &
       allocate (lakedepth_patches (numpatch))
    
       DO ipatch = 1, numpatch
-         L = landpatch%ltyp(ipatch)
+         L = landpatch%settyp(ipatch)
 #ifdef USGS_CLASSIFICATION
          IF(L==16)THEN  ! LAND WATER BODIES (16)
 #endif
@@ -136,14 +133,10 @@ SUBROUTINE aggregation_lakedepth ( &
 #ifndef SinglePoint
    lndname = trim(landdir)//'/lakedepth_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_pixelset_dimension (lndname, landpatch)
-   CALL ncio_write_vector (lndname, 'lakedepth_patches', 'vector', landpatch, lakedepth_patches, 1)
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+   CALL ncio_write_vector (lndname, 'lakedepth_patches', 'patch', landpatch, lakedepth_patches, 1)
 #else
    SITE_lakedepth = lakedepth_patches(1)
-#endif
-
-#ifdef MAP_PATCH_TO_GRID
-   CALL map_patchdata_to_grid_and_write (lakedepth_patches, 'lakedepth', 'lakedepth.nc')
 #endif
 
    IF (p_is_worker) THEN

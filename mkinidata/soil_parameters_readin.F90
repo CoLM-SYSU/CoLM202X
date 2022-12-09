@@ -234,7 +234,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       if (p_is_worker) then
 
          do ipatch = 1, numpatch
-            m = landpatch%ltyp(ipatch)
+            m = landpatch%settyp(ipatch)
             if( m == 0 )then     ! ocean
                vf_quartz (nsl,ipatch) = -1.e36
                vf_gravels(nsl,ipatch) = -1.e36
@@ -406,7 +406,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 #if(defined SOIL_REFL_GUESSED)
    if (p_is_worker) then
       do ipatch = 1, numpatch
-         m = landpatch%ltyp(ipatch)
+         m = landpatch%settyp(ipatch)
          CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
             soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
       enddo

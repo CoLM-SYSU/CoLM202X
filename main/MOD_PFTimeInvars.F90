@@ -89,12 +89,12 @@ MODULE MOD_PFTimeInvars
      compress = DEF_REST_COMPRESS_LEVEL 
 
      call ncio_create_file_vector (file_restart, landpft)
-     CALL ncio_define_pixelset_dimension (file_restart, landpft)
+     CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
      
-     call ncio_write_vector (file_restart, 'pftclass', 'vector', landpft, pftclass, compress) !
-     call ncio_write_vector (file_restart, 'pftfrac ', 'vector', landpft, pftfrac , compress) !
-     call ncio_write_vector (file_restart, 'htop_p  ', 'vector', landpft, htop_p  , compress) !
-     call ncio_write_vector (file_restart, 'hbot_p  ', 'vector', landpft, hbot_p  , compress) !
+     call ncio_write_vector (file_restart, 'pftclass', 'pft', landpft, pftclass, compress) !
+     call ncio_write_vector (file_restart, 'pftfrac ', 'pft', landpft, pftfrac , compress) !
+     call ncio_write_vector (file_restart, 'htop_p  ', 'pft', landpft, htop_p  , compress) !
+     call ncio_write_vector (file_restart, 'hbot_p  ', 'pft', landpft, hbot_p  , compress) !
     
   end subroutine WRITE_PFTimeInvars 
 

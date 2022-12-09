@@ -96,12 +96,7 @@ MODULE MOD_2D_Fluxes
 #endif
    type(block_data_real8_2d) :: f_rstfacsun    ! factor of soil water stress
    type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
-#ifdef VARIABLY_SATURATED_FLOW
    type(block_data_real8_2d) :: f_dpond        ! depth of ponding water [mm]
-#ifdef USE_DEPTH_TO_BEDROCK
-   type(block_data_real8_2d) :: f_dwatsub      ! depth of saturated subsurface water above bedrock [m]
-#endif
-#endif
    type(block_data_real8_2d) :: f_zwt          ! the depth to water table [m]
    type(block_data_real8_2d) :: f_wa           ! water storage in aquifer [mm]
    type(block_data_real8_2d) :: f_wat          ! total water storage [mm]
@@ -148,12 +143,15 @@ CONTAINS
       use spmd_task
       use mod_grid
       use mod_data_type
+      USE mod_namelist
       implicit none
 
       type(grid_type), intent(in) :: grid
 
-#if (defined HISTORY_IN_VECTOR)
-      RETURN
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+      IF (DEF_HISTORY_IN_VECTOR) THEN
+         RETURN
+      ENDIF 
 #endif
 
       if (p_is_io) then
@@ -235,12 +233,9 @@ CONTAINS
 #endif
          call allocate_block_data (grid, f_rstfacsun)  ! factor of soil water stress
          call allocate_block_data (grid, f_rstfacsha)  ! factor of soil water stress
-#ifdef VARIABLY_SATURATED_FLOW
+
          call allocate_block_data (grid, f_dpond  )  ! depth of ponding water [m]
-#ifdef USE_DEPTH_TO_BEDROCK
-         call allocate_block_data (grid, f_dwatsub)  ! depth of saturated subsurface water above bedrock [m]
-#endif
-#endif
+
          call allocate_block_data (grid, f_zwt   )  ! the depth to water table [m]
          call allocate_block_data (grid, f_wa    )  ! water storage in aquifer [mm]
          call allocate_block_data (grid, f_wat   )  ! total water storage [mm]

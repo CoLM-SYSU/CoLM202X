@@ -25,6 +25,11 @@ program hist_concatenate
 #endif
 
    IF (p_is_master) THEN
+      write(*,*) 'Usage : PATH/hist_concatenate colm_namelist_file filehist'
+      write(*,*) '      : < filehist is the file of hist without block information. >'
+   ENDIF
+
+   IF (p_is_master) THEN
       call getarg (1, nlfile)
       call getarg (2, filehist)
    ENDIF

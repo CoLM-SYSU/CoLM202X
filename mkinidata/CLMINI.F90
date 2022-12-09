@@ -20,8 +20,11 @@ PROGRAM CLMINI
    use spmd_task
    use mod_block
    use mod_pixel
-   use mod_landbasin
-   USE mod_hydrounit
+   use mod_mesh
+   USE mod_landelm
+#ifdef CATCHMENT
+   USE mod_landhru
+#endif
    use mod_landpatch
    use mod_srfdata_restart
    USE GlobalVars
@@ -83,14 +86,21 @@ PROGRAM CLMINI
 
    CALL monthday2julian(s_year,s_month,s_day,s_julian)
    idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
+   CALL adj2end(idate)
 
    CALL Init_GlovalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
-   call pixel%load_from_file    (dir_landdata)
-   call gblock%load_from_file   (dir_landdata)
-   call landbasin_load_from_file (dir_landdata)
-   CALL pixelset_load_from_file (dir_landdata, 'hydrounit', hydrounit, numhru)
+
+   call pixel%load_from_file  (dir_landdata)
+   call gblock%load_from_file (dir_landdata)
+   call mesh_load_from_file   (dir_landdata)
+
+   CALL pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
+
+#ifdef CATCHMENT
+   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+#endif
   
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
@@ -108,10 +118,6 @@ PROGRAM CLMINI
 
 #ifdef SinglePoint
    CALL single_srfdata_final ()
-#endif
-
-#ifdef USEMPI
-   CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
 #ifdef USEMPI

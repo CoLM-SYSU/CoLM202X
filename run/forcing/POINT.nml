@@ -14,7 +14,6 @@
    DEF_forcing%startmo           = 1        ! start month of forcing data
    DEF_forcing%endyr             = 2020     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
-   DEF_forcing%dtime             = 1800 1800 1800 1800 1800 1800 1800 1800
    
    DEF_forcing%fprefix(1) = 'DingHuShan.nc'
    DEF_forcing%fprefix(2) = 'DingHuShan.nc'

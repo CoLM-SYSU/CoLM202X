@@ -385,6 +385,7 @@ contains
       use mod_mapping_pset2grid
       use mod_colm_debug
       USE MOD_TimeInvariants, only : patchtype
+      USE mod_forcing, only : forcmask
 
       !use GlobalVars, only : spval
       IMPLICIT NONE
@@ -416,6 +417,9 @@ contains
             allocate (vectmp (numpatch))
 
             filter(:) = patchtype < 99
+            IF (DEF_forcing%has_missing_value) THEN
+               filter = filter .and. forcmask
+            ENDIF
             vectmp (:) = 1.
          end if
       ENDIF
