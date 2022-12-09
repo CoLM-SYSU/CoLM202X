@@ -16,7 +16,7 @@ vector2grid = $(word 1, ${DEF})
 endif
 
 # Name of executable
-EXECUTABLE = hist_concatenate.x srfdata_concatenate.x post_vector2grid.x
+EXECUTABLE = hist_concatenate.x hist_vector2grid.x
 
 ####################################################################
 .DEFAULT :
@@ -35,33 +35,26 @@ OBJS_SHARED = \
 				  ../share/mod_grid.o 
 
 OBJS1 = mod_concatenate.o hist_concatenate.o
-OBJS2 = mod_vector2grid.o post_vector2grid.o
-OBJS3 = srfdata_concatenate.o
+OBJS2 = mod_vector2grid.o hist_vector2grid.o
 
 ####################################################################
 
 ifneq (${vector2grid},\#define)
-all : hist_concatenate.x srfdata_concatenate.x
+all : hist_concatenate.x
 else
-all : hist_concatenate.x srfdata_concatenate.x post_vector2grid.x
+all : hist_concatenate.x hist_vector2grid.x
 endif
 
-hist_concatenate.x : ${HEADER} ${OBJS_SHARED} ${OBJS1}
+hist_concatenate.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS1}
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS1} -o $@ ${LDFLAGS}
 
-post_vector2grid.x : ${HEADER} ${OBJS_SHARED} ${OBJS2}
+hist_vector2grid.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MAIN} ${OBJS2}
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS2} -o $@ ${LDFLAGS}
 
-srfdata_concatenate.x : ${HEADER} ${OBJS_SHARED} ${OBJS3}
-	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS3} -o $@ ${LDFLAGS}
-
-$(OBJS1):%.o:%.F90 ${HEADER}
+$(OBJS1):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
-$(OBJS2):%.o:%.F90 ${HEADER}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
-
-$(OBJS3):%.o:%.F90 ${HEADER}
+$(OBJS2):%.o:%.F90 ${HEADER} ${OBJS_MAIN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER} 

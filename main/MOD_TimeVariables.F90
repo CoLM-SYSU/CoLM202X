@@ -65,7 +65,12 @@ SAVE
       real(r8), allocatable :: zwt      (:)     ! the depth to water table [m]
       real(r8), allocatable :: wa       (:)     ! water storage in aquifer [mm]
       real(r8), allocatable :: wat      (:)     ! total water storage [mm]
+#ifdef VARIABLY_SATURATED_FLOW
       real(r8), allocatable :: dpond    (:)     ! depth of ponding water [mm]
+#ifdef USE_DEPTH_TO_BEDROCK
+      real(r8), allocatable :: dwatsub  (:)     ! depth of saturated subsurface water above bedrock
+#endif
+#endif
 
       real(r8), allocatable :: t_lake(:,:)      ! lake layer teperature [K]
       real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
@@ -163,8 +168,13 @@ SAVE
         allocate (zwt                  (numpatch))
         allocate (wa                   (numpatch))
         allocate (wat                  (numpatch))
+#ifdef VARIABLY_SATURATED_FLOW
         allocate (dpond                (numpatch))
-        
+#ifdef USE_DEPTH_TO_BEDROCK
+        allocate (dwatsub              (numpatch))
+#endif
+#endif
+
         allocate (t_lake       (nl_lake,numpatch))    !new lake scheme
         allocate (lake_icefrac (nl_lake,numpatch))    !new lake scheme
         allocate (savedtke1            (numpatch))    !new lake scheme
@@ -262,7 +272,12 @@ SAVE
            deallocate (zwt    )
            deallocate (wa     )
            deallocate (wat    )
+#ifdef VARIABLY_SATURATED_FLOW
            deallocate (dpond  )
+#ifdef USE_DEPTH_TO_BEDROCK
+           deallocate (dwatsub)
+#endif
+#endif
 
            deallocate (t_lake )      ! new lake scheme
            deallocate (lake_icefrac) ! new lake scheme
@@ -317,8 +332,6 @@ SAVE
 
      ! added by yuan, 08/31/2014
      select case (trim(DEF_WRST_FREQ))
-     case ('TIMESTEP')
-        rwrite = .true.
      case ('HOURLY')
         rwrite = isendofhour (idate, deltim)
      case ('DAILY')
@@ -363,79 +376,84 @@ SAVE
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_'//trim(cdate)//'.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
+     CALL ncio_define_pixelset_dimension (file_restart, landpatch)
      
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
+     CALL ncio_define_dimension_vector (file_restart, 'snow',     -maxsnl       )
+     CALL ncio_define_dimension_vector (file_restart, 'soilsnow', nl_soil-maxsnl)
+     CALL ncio_define_dimension_vector (file_restart, 'soil',     nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, 'lake',     nl_lake)
 
 #ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
+     CALL ncio_define_dimension_vector (file_restart, 'vegnodes', nvegwcs)
 #endif
      
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
+     CALL ncio_define_dimension_vector (file_restart, 'band',   2)
+     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
 
      ! Time-varying state variables which reaquired by restart run
-     call ncio_write_vector (file_restart, 'z_sno   '   , 'snow', -maxsnl, 'patch', landpatch, z_sno , compress) !  node depth [m]
-     call ncio_write_vector (file_restart, 'dz_sno  '   , 'snow', -maxsnl, 'patch', landpatch, dz_sno, compress) !  interface depth [m]
-     call ncio_write_vector (file_restart, 't_soisno'   , 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, t_soisno   , compress) !  soil temperature [K]
-     call ncio_write_vector (file_restart, 'wliq_soisno', 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, wliq_soisno, compress) !  liquid water in layers [kg/m2]
-     call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, wice_soisno, compress) !  ice lens in layers [kg/m2]
-     call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'patch', landpatch, smp, compress) !  soil matrix potential [mm]
-     call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'patch', landpatch, hk, compress) !  hydraulic conductivity [mm h2o/s]
+     call ncio_write_vector (file_restart, 'z_sno   '   , 'snow', -maxsnl, 'vector', landpatch, z_sno , compress) !  node depth [m]
+     call ncio_write_vector (file_restart, 'dz_sno  '   , 'snow', -maxsnl, 'vector', landpatch, dz_sno, compress) !  interface depth [m]
+     call ncio_write_vector (file_restart, 't_soisno'   , 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, t_soisno   , compress) !  soil temperature [K]
+     call ncio_write_vector (file_restart, 'wliq_soisno', 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, wliq_soisno, compress) !  liquid water in layers [kg/m2]
+     call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'vector', landpatch, wice_soisno, compress) !  ice lens in layers [kg/m2]
+     call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'vector', landpatch, smp, compress) !  soil matrix potential [mm]
+     call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'vector', landpatch, hk, compress) !  hydraulic conductivity [mm h2o/s]
 #ifdef PLANT_HYDRAULIC_STRESS
-     call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress) !  vegetation water potential [mm]
-     call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
-     call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
+     call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'vector', landpatch, vegwp, compress) !  vegetation water potential [mm]
+     call ncio_write_vector (file_restart, 'gs0sun  ',    'vector', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
+     call ncio_write_vector (file_restart, 'gs0sha  ',    'vector', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
 #endif
-     call ncio_write_vector (file_restart, 't_grnd  '   , 'patch', landpatch, t_grnd    , compress) !  ground surface temperature [K]
-     call ncio_write_vector (file_restart, 'tleaf   '   , 'patch', landpatch, tleaf     , compress) !  leaf temperature [K]
-     call ncio_write_vector (file_restart, 'ldew    '   , 'patch', landpatch, ldew      , compress) !  depth of water on foliage [mm]
-     call ncio_write_vector (file_restart, 'ldew_rain'  , 'patch', landpatch, ldew_rain , compress) !  depth of water on foliage [mm]
-     call ncio_write_vector (file_restart, 'ldew_snow'  , 'patch', landpatch, ldew_snow , compress) !  depth of water on foliage [mm]
-     call ncio_write_vector (file_restart, 'sag     '   , 'patch', landpatch, sag       , compress) !  non dimensional snow age [-]
-     call ncio_write_vector (file_restart, 'scv     '   , 'patch', landpatch, scv       , compress) !  snow cover, water equivalent [mm]
-     call ncio_write_vector (file_restart, 'snowdp  '   , 'patch', landpatch, snowdp    , compress) !  snow depth [meter]
-     call ncio_write_vector (file_restart, 'fveg    '   , 'patch', landpatch, fveg      , compress) !  fraction of vegetation cover
-     call ncio_write_vector (file_restart, 'fsno    '   , 'patch', landpatch, fsno      , compress) !  fraction of snow cover on ground
-     call ncio_write_vector (file_restart, 'sigf    '   , 'patch', landpatch, sigf      , compress) !  fraction of veg cover, excluding snow-covered veg [-]
-     call ncio_write_vector (file_restart, 'green   '   , 'patch', landpatch, green     , compress) !  leaf greenness
-     call ncio_write_vector (file_restart, 'lai     '   , 'patch', landpatch, lai       , compress) !  leaf area index
-     call ncio_write_vector (file_restart, 'tlai    '   , 'patch', landpatch, tlai      , compress) !  leaf area index
-     call ncio_write_vector (file_restart, 'sai     '   , 'patch', landpatch, sai       , compress) !  stem area index
-     call ncio_write_vector (file_restart, 'tsai    '   , 'patch', landpatch, tsai      , compress) !  stem area index
-     call ncio_write_vector (file_restart, 'coszen  '   , 'patch', landpatch, coszen    , compress) !  cosine of solar zenith angle
-     call ncio_write_vector (file_restart, 'alb     '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, alb , compress) !  averaged albedo [-]
-     call ncio_write_vector (file_restart, 'ssun    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssun, compress) !  sunlit canopy absorption for solar radiation (0-1)
-     call ncio_write_vector (file_restart, 'ssha    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssha, compress) !  shaded canopy absorption for solar radiation (0-1)
-     call ncio_write_vector (file_restart, 'thermk  '   , 'patch', landpatch, thermk    , compress) !  canopy gap fraction for tir radiation
-     call ncio_write_vector (file_restart, 'extkb   '   , 'patch', landpatch, extkb     , compress) !  (k, g(mu)/mu) direct solar extinction coefficient
-     call ncio_write_vector (file_restart, 'extkd   '   , 'patch', landpatch, extkd     , compress) !  diffuse and scattered diffuse PAR extinction coefficient
-     call ncio_write_vector (file_restart, 'zwt     '   , 'patch', landpatch, zwt       , compress) !  the depth to water table [m]
-     call ncio_write_vector (file_restart, 'wa      '   , 'patch', landpatch, wa        , compress) !  water storage in aquifer [mm]
-     call ncio_write_vector (file_restart, 'dpond   '   , 'patch', landpatch, dpond     , compress) ! depth of ponding water
+     call ncio_write_vector (file_restart, 't_grnd  '   , 'vector', landpatch, t_grnd    , compress) !  ground surface temperature [K]
+     call ncio_write_vector (file_restart, 'tleaf   '   , 'vector', landpatch, tleaf     , compress) !  leaf temperature [K]
+     call ncio_write_vector (file_restart, 'ldew    '   , 'vector', landpatch, ldew      , compress) !  depth of water on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_rain    '   , 'vector', landpatch, ldew_rain      , compress) !  depth of water on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_snow    '   , 'vector', landpatch, ldew_snow      , compress) !  depth of water on foliage [mm]
+     call ncio_write_vector (file_restart, 'sag     '   , 'vector', landpatch, sag       , compress) !  non dimensional snow age [-]
+     call ncio_write_vector (file_restart, 'scv     '   , 'vector', landpatch, scv       , compress) !  snow cover, water equivalent [mm]
+     call ncio_write_vector (file_restart, 'snowdp  '   , 'vector', landpatch, snowdp    , compress) !  snow depth [meter]
+     call ncio_write_vector (file_restart, 'fveg    '   , 'vector', landpatch, fveg      , compress) !  fraction of vegetation cover
+     call ncio_write_vector (file_restart, 'fsno    '   , 'vector', landpatch, fsno      , compress) !  fraction of snow cover on ground
+     call ncio_write_vector (file_restart, 'sigf    '   , 'vector', landpatch, sigf      , compress) !  fraction of veg cover, excluding snow-covered veg [-]
+     call ncio_write_vector (file_restart, 'green   '   , 'vector', landpatch, green     , compress) !  leaf greenness
+     call ncio_write_vector (file_restart, 'lai     '   , 'vector', landpatch, lai       , compress) !  leaf area index
+     call ncio_write_vector (file_restart, 'tlai    '   , 'vector', landpatch, tlai      , compress) !  leaf area index
+     call ncio_write_vector (file_restart, 'sai     '   , 'vector', landpatch, sai       , compress) !  stem area index
+     call ncio_write_vector (file_restart, 'tsai    '   , 'vector', landpatch, tsai      , compress) !  stem area index
+     call ncio_write_vector (file_restart, 'coszen  '   , 'vector', landpatch, coszen    , compress) !  cosine of solar zenith angle
+     call ncio_write_vector (file_restart, 'alb     '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, alb , compress) !  averaged albedo [-]
+     call ncio_write_vector (file_restart, 'ssun    '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, ssun, compress) !  sunlit canopy absorption for solar radiation (0-1)
+     call ncio_write_vector (file_restart, 'ssha    '   , 'band', 2, 'rtyp', 2, 'vector', landpatch, ssha, compress) !  shaded canopy absorption for solar radiation (0-1)
+     call ncio_write_vector (file_restart, 'thermk  '   , 'vector', landpatch, thermk    , compress) !  canopy gap fraction for tir radiation
+     call ncio_write_vector (file_restart, 'extkb   '   , 'vector', landpatch, extkb     , compress) !  (k, g(mu)/mu) direct solar extinction coefficient
+     call ncio_write_vector (file_restart, 'extkd   '   , 'vector', landpatch, extkd     , compress) !  diffuse and scattered diffuse PAR extinction coefficient
+     call ncio_write_vector (file_restart, 'zwt     '   , 'vector', landpatch, zwt       , compress) !  the depth to water table [m]
+     call ncio_write_vector (file_restart, 'wa      '   , 'vector', landpatch, wa        , compress) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
+     call ncio_write_vector (file_restart, 'dpond   '   , 'vector', landpatch, dpond     , compress) ! depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+     call ncio_write_vector (file_restart, 'dwatsub '   , 'vector', landpatch, dwatsub   , compress) ! depth of saturated subsurface water above bedrock
+#endif
+#endif
 
-     call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
-     call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
-     call ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress) !
+     call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'vector', landpatch, t_lake      , compress) !
+     call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'vector', landpatch, lake_icefrac, compress) !
+     call ncio_write_vector (file_restart, 'savedtke1  ', 'vector', landpatch, savedtke1   , compress) !
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM) 
-     call ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) !     radiative temperature of surface [K]
-     call ncio_write_vector (file_restart, 'tref ', 'patch', landpatch, tref , compress) !     2 m height air temperature [kelvin]
-     call ncio_write_vector (file_restart, 'qref ', 'patch', landpatch, qref , compress) !     2 m height air specific humidity
-     call ncio_write_vector (file_restart, 'rst  ', 'patch', landpatch, rst  , compress) !     canopy stomatal resistance (s/m)
-     call ncio_write_vector (file_restart, 'emis ', 'patch', landpatch, emis , compress) !     averaged bulk surface emissivity
-     call ncio_write_vector (file_restart, 'z0m  ', 'patch', landpatch, z0m  , compress) !     effective roughness [m]
-     call ncio_write_vector (file_restart, 'zol  ', 'patch', landpatch, zol  , compress) !     dimensionless height (z/L) used in Monin-Obukhov theory
-     call ncio_write_vector (file_restart, 'rib  ', 'patch', landpatch, rib  , compress) !     bulk Richardson number in surface layer
-     call ncio_write_vector (file_restart, 'ustar', 'patch', landpatch, ustar, compress) !     u* in similarity theory [m/s]
-     call ncio_write_vector (file_restart, 'qstar', 'patch', landpatch, qstar, compress) !     q* in similarity theory [kg/kg]
-     call ncio_write_vector (file_restart, 'tstar', 'patch', landpatch, tstar, compress) !     t* in similarity theory [K]
-     call ncio_write_vector (file_restart, 'fm   ', 'patch', landpatch, fm   , compress) !     integral of profile function for momentum
-     call ncio_write_vector (file_restart, 'fh   ', 'patch', landpatch, fh   , compress) !     integral of profile function for heat
-     call ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) !     integral of profile function for moisture
+     call ncio_write_vector (file_restart, 'trad ', 'vector', landpatch, trad , compress) !     radiative temperature of surface [K]
+     call ncio_write_vector (file_restart, 'tref ', 'vector', landpatch, tref , compress) !     2 m height air temperature [kelvin]
+     call ncio_write_vector (file_restart, 'qref ', 'vector', landpatch, qref , compress) !     2 m height air specific humidity
+     call ncio_write_vector (file_restart, 'rst  ', 'vector', landpatch, rst  , compress) !     canopy stomatal resistance (s/m)
+     call ncio_write_vector (file_restart, 'emis ', 'vector', landpatch, emis , compress) !     averaged bulk surface emissivity
+     call ncio_write_vector (file_restart, 'z0m  ', 'vector', landpatch, z0m  , compress) !     effective roughness [m]
+     call ncio_write_vector (file_restart, 'zol  ', 'vector', landpatch, zol  , compress) !     dimensionless height (z/L) used in Monin-Obukhov theory
+     call ncio_write_vector (file_restart, 'rib  ', 'vector', landpatch, rib  , compress) !     bulk Richardson number in surface layer
+     call ncio_write_vector (file_restart, 'ustar', 'vector', landpatch, ustar, compress) !     u* in similarity theory [m/s]
+     call ncio_write_vector (file_restart, 'qstar', 'vector', landpatch, qstar, compress) !     q* in similarity theory [kg/kg]
+     call ncio_write_vector (file_restart, 'tstar', 'vector', landpatch, tstar, compress) !     t* in similarity theory [K]
+     call ncio_write_vector (file_restart, 'fm   ', 'vector', landpatch, fm   , compress) !     integral of profile function for momentum
+     call ncio_write_vector (file_restart, 'fh   ', 'vector', landpatch, fh   , compress) !     integral of profile function for heat
+     call ncio_write_vector (file_restart, 'fq   ', 'vector', landpatch, fq   , compress) !     integral of profile function for moisture
 
 #if (defined PFT_CLASSIFICATION)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'.nc'
@@ -465,7 +483,7 @@ SAVE
      use spmd_task
      use ncio_vector
 #ifdef CLMDEBUG 
-     USE mod_colm_debug
+   USE mod_colm_debug
 #endif
      USE mod_landpatch
      USE GlobalVars
@@ -529,7 +547,12 @@ SAVE
      call ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) !  the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
      call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
+#ifdef USE_DEPTH_TO_BEDROCK
+     call ncio_read_vector (file_restart, 'dwatsub '   , landpatch, dwatsub    ) ! depth of saturated subsurface water above bedrock
+#endif
+#endif
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
@@ -629,8 +652,12 @@ SAVE
      call check_vector_data ('extkd       ', extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call check_vector_data ('zwt         ', zwt        ) !  the depth to water table [m]
      call check_vector_data ('wa          ', wa         ) !  water storage in aquifer [mm]
+#ifdef VARIABLY_SATURATED_FLOW
      call check_vector_data ('dpond       ', dpond      ) !  depth of ponding water
-
+#ifdef USE_DEPTH_TO_BEDROCK
+     call check_vector_data ('dwatsub     ', dwatsub    ) !  depth of saturated subsurface water above bedrock
+#endif
+#endif
      call check_vector_data ('t_lake      ', t_lake      ) !
      call check_vector_data ('lake_icefrc ', lake_icefrac) !
      call check_vector_data ('savedtke1   ', savedtke1   ) !

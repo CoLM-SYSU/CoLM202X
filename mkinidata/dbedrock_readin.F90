@@ -21,7 +21,8 @@ subroutine dbedrock_readin (dir_landdata)
 
    ! Local Variables
    character(len=256) :: lndname
-   integer  :: ipatch, L
+   integer  :: ipatch, L, ibd
+   real(r8) :: dres
 
 #ifdef SinglePoint
    dbedrock(:) = SITE_dbedrock
@@ -34,7 +35,7 @@ subroutine dbedrock_readin (dir_landdata)
 
       do ipatch = 1, numpatch
 
-         L = landpatch%settyp(ipatch)
+         L = landpatch%ltyp(ipatch)
 
          if (L == 0) then
             ibedrock(ipatch) = 0
@@ -42,12 +43,19 @@ subroutine dbedrock_readin (dir_landdata)
             
             dbedrock(ipatch) = dbedrock(ipatch) / 100.0 ! from cm to meter
             dbedrock(ipatch) = max(dbedrock(ipatch), dz_soi(1))
-            
-            IF (dbedrock(ipatch) > zi_soi(1)) THEN
-               ibedrock(ipatch) = findloc(dbedrock(ipatch)>zi_soi, .true., back=.true., dim=1) + 1
-            ELSE
-               ibedrock(ipatch) = 1
-            ENDIF
+
+            ibd = 1
+            dres = dbedrock(ipatch)
+            do while (ibd <= nl_soil)
+               if (dres > dz_soi(ibd)) then
+                  dres = dres - dz_soi(ibd)
+                  ibd = ibd + 1
+               else
+                  exit
+               end if
+            end do
+
+            ibedrock(ipatch) = ibd
 
          end if
 

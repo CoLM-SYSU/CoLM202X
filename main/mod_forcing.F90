@@ -10,22 +10,20 @@ module mod_forcing
    use timemanager
    use spmd_task
    USE co2_mlo
-   USE MathConstants, only : pi
 
    implicit none
 
    type (grid_type), public :: gforc
    type (mapping_grid2pset_type) :: mg2p_forc
 
-   LOGICAL, allocatable :: forcmask (:)
-
    ! local variables
    integer  :: deltim_int                ! model time step length
    real(r8) :: deltim_real               ! model time step length
 
-   !  for SinglePoint
+#ifdef SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
    INTEGER, allocatable :: iforctime(:)
+#endif
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
    type(timestamp), allocatable :: tstamp_UB(:)  ! time stamp of up boundary data
@@ -49,13 +47,9 @@ contains
    subroutine forcing_init (dir_forcing, deltatime, idate)
 
       use spmd_task
-      USE mod_namelist
       use mod_data_type
       USE mod_landpatch
       use mod_mapping_grid2pset
-      use user_specified_forcing
-      USE ncio_serial
-      USE ncio_block
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
@@ -63,10 +57,7 @@ contains
       integer,  intent(in) :: idate(3)
 
       ! Local variables
-      CHARACTER(len=256) :: filename
-      type(timestamp)    :: mtstamp 
-      integer            :: ivar, year, month, day, time_i
-      REAL(r8)           :: missing_value
+      integer :: ivar
 
       call init_user_specified_forcing
 
@@ -84,6 +75,8 @@ contains
       tstamp_UB(:) = timestamp(-1, -1, -1)
 
       call metread_latlon (dir_forcing, idate)
+
+      call mg2p_forc%build (gforc, landpatch)
 
       if (p_is_io) then
 
@@ -103,36 +96,12 @@ contains
 
       end if
 
-      IF (.not. DEF_forcing%has_missing_value) THEN
-         call mg2p_forc%build (gforc, landpatch)
-      ELSE
-         mtstamp = idate
-         call setstampLB(mtstamp, 1, year, month, day, time_i)
-         filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
-         tstamp_LB(1) = timestamp(-1, -1, -1)
-         
-         IF (p_is_worker) THEN
-            IF (numpatch > 0) THEN
-               allocate (forcmask(numpatch))
-               forcmask(:) = .true.
-            ENDIF
-         ENDIF
-
-         IF (p_is_master) THEN 
-            CALL ncio_get_attr (filename, vname(1), 'missing_value', missing_value)
-         ENDIF
-#ifdef USEMPI
-         CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
-#endif
-
-         call ncio_read_block_time (filename, vname(1), gforc, time_i, metdata)
-         call mg2p_forc%build (gforc, landpatch, metdata, missing_value, forcmask)
-      ENDIF
-
+#ifdef SinglePoint
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          CALL metread_time (dir_forcing)
          allocate (iforctime(NVAR))
       ENDIF
+#endif
 
    end subroutine forcing_init
 
@@ -235,6 +204,7 @@ contains
 
             ! coszen method, for SW
             if (tintalgo(ivar) == 'coszen') then
+               calday = calendarday(mtstamp)
                DO iblkme = 1, gblock%nblkme 
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
@@ -246,7 +216,6 @@ contains
                         ilon = gforc%xdsp(ib) + i
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        calday = calendarday(mtstamp, gforc%rlon(ilon)*180.0_r8/pi)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
                         forcn(ivar)%blk(ib,jb)%val(i,j) = &
@@ -302,11 +271,13 @@ contains
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
-         ENDIF
+         end if
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
          call flush_block_data (forc_xy_hgt_t, real(HEIGHT_T,r8))
          call flush_block_data (forc_xy_hgt_q, real(HEIGHT_Q,r8))
+
+         calday = calendarday(idate) 
 
          if (solarin_all_band) then
 
@@ -361,7 +332,6 @@ contains
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-                        calday = calendarday(idate,  gforc%rlon(ilon)*180.0_r8/pi)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
                         cloud = (1160.*sunang-a)/(963.*sunang)
@@ -423,10 +393,6 @@ contains
       if (p_is_worker) then
 
          do np = 1, numpatch
-            IF (DEF_forcing%has_missing_value) THEN
-               IF (.not. forcmask(np)) cycle
-            ENDIF
-         
             ! The standard measuring conditions for temperature are two meters above the ground
             ! Scientists have measured the most frigid temperature ever 
             ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
@@ -515,7 +481,9 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+#ifdef SinglePoint
                CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#endif
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -534,7 +502,9 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+#ifdef SinglePoint
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#endif
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
@@ -586,32 +556,46 @@ contains
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
 
-         if (dim2d) then
-            call ncio_read_bcast_serial (filename, latname, latxy)
-            call ncio_read_bcast_serial (filename, lonname, lonxy)
-
-            allocate (lat_in (size(latxy,2)))
-            allocate (lon_in (size(lonxy,1)))
-            lat_in = latxy(1,:)
-            lon_in = lonxy(:,1)
-
-            deallocate (latxy)
-            deallocate (lonxy)
-         else
-            call ncio_read_bcast_serial (filename, latname, lat_in)
-            call ncio_read_bcast_serial (filename, lonname, lon_in)
-         ENDIF
-
-         IF (.not. DEF_forcing%regional) THEN
-            call gforc%define_by_center (lat_in, lon_in)
+         IF (trim(DEF_forcing%dataset) == 'ERA5LAND') THEN
+            CALL gforc%define_by_name ('ERA5LAND')
+         ELSEIF (trim(DEF_forcing%dataset) == 'ERA5') THEN
+            CALL gforc%define_by_name ('ERA5')
+         ELSEIF (trim(DEF_forcing%dataset) == 'PRINCETON') THEN
+            CALL gforc%define_by_name ('PRINCETON')
+         ELSEIF (trim(DEF_forcing%dataset) == 'JRA55') THEN
+            CALL gforc%define_by_name ('JRA55')
+         ELSEIF (trim(DEF_forcing%dataset) == 'CMFD') THEN
+            CALL gforc%define_by_name ('CMFD')
+         ELSEIF (trim(DEF_forcing%dataset) == 'CLDAS') THEN
+            CALL gforc%define_by_name ('CLDAS')
+         ELSEIF (trim(DEF_forcing%dataset) == 'GDAS') THEN
+            CALL gforc%define_by_name ('GDAS')
          ELSE
-            call gforc%define_by_center (lat_in, lon_in, &
-               south = DEF_forcing%regbnd(1), north = DEF_forcing%regbnd(2), &
-               west  = DEF_forcing%regbnd(3), east  = DEF_forcing%regbnd(4))
-         ENDIF
+            if (dim2d) then
+               call ncio_read_bcast_serial (filename, latname, latxy)
+               call ncio_read_bcast_serial (filename, lonname, lonxy)
 
-         deallocate (lat_in)
-         deallocate (lon_in)
+               allocate (lat_in (size(latxy,2)))
+               allocate (lon_in (size(lonxy,1)))
+               lat_in = latxy(1,:)
+               lon_in = lonxy(:,1)
+
+               call gforc%define_by_center (lat_in, lon_in)
+
+               deallocate (latxy)
+               deallocate (lonxy)
+               deallocate (lat_in)
+               deallocate (lon_in)
+            else
+               call ncio_read_bcast_serial (filename, latname, lat_in)
+               call ncio_read_bcast_serial (filename, lonname, lon_in)
+
+               call gforc%define_by_center (lat_in, lon_in)
+
+               deallocate (lat_in)
+               deallocate (lon_in)
+            end if
+         ENDIF
       ENDIF
 
       call gforc%set_rlon ()
@@ -619,6 +603,7 @@ contains
 
    END SUBROUTINE metread_latlon
 
+#ifdef SinglePoint
    !-------------------------------------------------
    SUBROUTINE metread_time (dir_forcing)
 
@@ -677,6 +662,7 @@ contains
       ENDDO
 
    END SUBROUTINE metread_time
+#endif
 
    ! ------------------------------------------------------------
    ! FUNCTION: 
@@ -712,6 +698,7 @@ contains
       day  = mtstamp%day
       sec  = mtstamp%sec
 
+#ifdef SinglePoint
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          time_i = 0
          DO i = 1, size(forctime)
@@ -730,6 +717,7 @@ contains
 
          RETURN
       ENDIF
+#endif
 
       tstamp_LB(var_i)%year = year
       tstamp_LB(var_i)%day  = day
@@ -935,6 +923,7 @@ contains
          integer :: day, sec
          integer :: months(0:12)
 
+#ifdef SinglePoint
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          if ( tstamp_UB(var_i) == 'NULL' ) then
             tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
@@ -948,6 +937,7 @@ contains
          year = tstamp_UB(var_i)%year
          RETURN
       ENDIF
+#endif
 
       ! calculate the time stamp
       if ( tstamp_UB(var_i) == 'NULL' ) then
@@ -1092,6 +1082,8 @@ contains
          do while (tstamp < tstamp_UB(7))
 
             tstamp = tstamp + deltim_int
+            calday = calendarday(tstamp)
+
 
             DO iblkme = 1, gblock%nblkme 
                ib = gblock%xblkme(iblkme)
@@ -1103,11 +1095,10 @@ contains
                      ilon = gforc%xdsp(ib) + i
                      if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                     calday = calendarday(tstamp, gforc%rlon(ilon)*180.0_r8/pi)
                      cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                      cosz = max(0.001, cosz)
-                     avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
-                        + cosz*deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
+                     avgcos%blk(ib,jb)%val(i,j) = &
+                        avgcos%blk(ib,jb)%val(i,j) + cosz*deltim_real /real(dtime(7))
 
                   end do
                end do

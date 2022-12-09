@@ -33,7 +33,7 @@
    
    ! ----- land units and land sets -----
    ! for GRIDBASED
-   DEF_file_mesh = '/tera05/zhangsp/data/landdata/mask/landmask_igbp_100km.nc'
+   DEF_file_landgrid = '/tera05/zhangsp/data/landdata/landmask_igbp_100km.nc'
 
    ! LAI setting
    DEF_LAI_CLIM = .true.
@@ -45,22 +45,20 @@
    ! Options : 
    ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
    ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT 
-   ! CLDAS
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/ERA5.nml'
+   DEF_forcing_namelist = '/tera05/zhangsp/data/forcing/ERA5.nml'
 
    ! ----- history -----
-   DEF_hist_grid_as_forcing = .true.
    DEF_hist_lon_res = 1.0
    DEF_hist_lat_res = 1.0
    DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_groupby = 'YEAR' ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one'     ! history in one or block 
 
    DEF_REST_COMPRESS_LEVEL = 1
    DEF_HIST_COMPRESS_LEVEL = 1
    
-   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
+   DEF_hist_vars_namelist = '/tera05/zhangsp/cases/history.nml'
    DEF_hist_vars_turnon_all = .true.
    
 /

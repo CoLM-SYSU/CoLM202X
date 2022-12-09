@@ -6,12 +6,6 @@ MODULE MOD_1D_Fluxes
 ! -------------------------------
 
   USE precision
-#ifdef PFT_CLASSIFICATION
-  USE MOD_1D_PFTFluxes
-#endif
-#ifdef PC_CLASSIFICATION
-  USE MOD_1D_PCFluxes
-#endif
 #ifdef BGC
   USE MOD_1D_BGCFluxes
 #endif
@@ -87,9 +81,19 @@ MODULE MOD_1D_Fluxes
   ! --------------------------------------------------------------------
      USE precision
      USE GlobalVars
+#ifdef PFT_CLASSIFICATION
+     USE MOD_1D_PFTFluxes
+#endif
+#ifdef PC_CLASSIFICATION
+     USE MOD_1D_PCFluxes
+#endif
+#ifdef BGC 
+     USE MOD_1D_BGCFluxes
+#endif
      USE spmd_task
      USE mod_landpatch
      IMPLICIT NONE
+
 
       if (p_is_worker) then
 
@@ -164,6 +168,15 @@ MODULE MOD_1D_Fluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
+#ifdef PFT_CLASSIFICATION
+     USE MOD_1D_PFTFluxes
+#endif
+#ifdef PC_CLASSIFICATION
+     USE MOD_1D_PCFluxes
+#endif
+#ifdef BGC 
+     USE MOD_1D_BGCFluxes
+#endif
      USE spmd_task
      USE mod_landpatch
 

@@ -1,7 +1,5 @@
 #include <define.h>
 
-#define SoilWaterDebug
-
 module mod_soil_water
 
    ! Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019). 
@@ -37,9 +35,8 @@ module mod_soil_water
    integer,  parameter :: max_iters_richards = 6
    real(r8), parameter :: tol_richards = 1.e-7
 
-#ifdef SoilWaterDebug
-   INTEGER(8) :: count_iters_this(max_iters_richards) = 0
-   INTEGER(8) :: count_iters_accm(max_iters_richards) = 0
+#ifdef vsf_statistics
+   INTEGER(8) :: count_iters(max_iters_richards)
 #endif
 
    ! private subroutines and functions
@@ -79,7 +76,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         rain,  etr,  rootr, rsubst,  qinfl,         &
+         rain,  etr,  rootr, rockbtm, rsubst, qinfl, &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk    )
 
       !=======================================================================
@@ -104,14 +101,15 @@ contains
       real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential
       real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity
 
-      integer,  intent(in) :: nprm      ! number of parameters included in soil function
+      integer,  intent(in) :: nprm       ! number of parameters included in soil function
       real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
       
-      real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer
+      real(r8), intent(in) :: porsl_wa           ! soil porosity in aquifer
       
       REAL(r8), intent(in) :: rain           ! rain fall on ponding layer
       REAL(r8), intent(in) :: etr            ! transpiration rate
       REAL(r8), intent(in) :: rootr(1:nlev)  ! root fractions
+      LOGICAL,  intent(in) :: rockbtm        ! whether the soil column is on bedrock or not
 
       REAL(r8), intent(inout) :: rsubst      ! subsurface runoff
       REAL(r8), intent(out)   :: qinfl       ! infiltration into soil
@@ -126,9 +124,12 @@ contains
 
       ! Local variables
       integer  :: lb, ub, ilev, izwt
-      REAL(r8) :: sumroot, deficit, wcharge
-      REAL(r8) :: dp_m1, psi, vliq, zwtp, air
+      REAL(r8) :: sumroot
+      REAL(r8) :: dp_m1
+      REAL(r8) :: flxbtm 
+      REAL(r8) :: deficit
       LOGICAL  :: is_sat
+      REAL(r8) :: vliq
 
       real(r8) :: sp_dz  (1:nlev) 
       REAL(r8) :: etroot (1:nlev)
@@ -140,9 +141,7 @@ contains
       integer  :: lbc_typ_sub
       real(r8) :: lbc_val_sub
 
-#ifdef SoilWaterDebug
       REAL(r8) :: w_sum_before, w_sum_after, wblc
-#endif
 
       REAL(r8) :: tol_q, tol_z, tol_v, tol_p
 
@@ -159,7 +158,6 @@ contains
       ! water table location
       izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
 
-#ifdef SoilWaterDebug
       ! total water mass
       w_sum_before = ss_dp
       DO ilev = 1, nlev
@@ -174,8 +172,8 @@ contains
             ENDIF
          ENDIF
       ENDDO
-      w_sum_before = w_sum_before + wa
-#endif
+
+      IF (.not. rockbtm) w_sum_before = w_sum_before + wa
 
       ! transpiration
       sumroot   = sum(rootr, mask = is_permeable)
@@ -208,92 +206,6 @@ contains
          deficit = deficit + etroot(ilev)*dt
       ENDDO
          
-      ! Exchange water with aquifer
-      wcharge = rsubst * dt + deficit 
-      IF (wcharge > 0.) THEN
-         ! remove water from aquifer
-         DO WHILE (wcharge > 0.) 
-            IF (izwt <= nlev) THEN
-               IF (is_permeable(izwt)) THEN
-                  
-                  call get_zwt_from_wa ( &
-                     porsl(izwt), vl_r(izwt), psi_s(izwt), hksat(izwt), &
-                     nprm, prms(:,izwt), tol_v, tol_z, &
-                     -wcharge, zwt, zwtp) 
-
-                  IF (zwtp < sp_zi(izwt)) THEN
-                     ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                        + porsl(izwt)*(zwtp-zwt) - wcharge) / (zwtp - sp_zi(izwt-1))
-                     wcharge = 0.
-                     zwt = zwtp
-                  ELSE
-                     psi  = psi_s(izwt) - (zwtp - 0.5*(sp_zi(izwt) + zwt)) 
-                     vliq = soil_vliq_from_psi (psi, &
-                        porsl(izwt), vl_r(izwt), psi_s(izwt), nprm, prms(:,izwt))
-                     IF (wcharge > (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)) THEN
-                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                           + vliq * (sp_zi(izwt)-zwt)) / sp_dz(izwt)
-                        wcharge = wcharge - (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)
-                     ELSE
-                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                           + porsl(izwt)*(sp_zi(izwt)-zwt) - wcharge) / sp_dz(izwt)
-                        wcharge = 0.
-                     ENDIF
-
-                     zwt  = sp_zi(izwt)
-                     izwt = izwt + 1
-                  ENDIF
-
-               ELSE
-                  zwt  = sp_zi(izwt)
-                  izwt = izwt + 1
-               ENDIF
-            ELSE
-               call get_zwt_from_wa ( &
-                  porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
-                  nprm, prms(:,nlev), tol_v, tol_z, &
-                  wa-wcharge, sp_zi(nlev), zwt) 
-               wa = wa - wcharge
-               wcharge = 0.
-            ENDIF
-         ENDDO
-      ELSEIF (wcharge < 0.) THEN
-         ! increase water in aquifer
-         DO WHILE (wcharge < 0.)
-            IF (izwt > nlev) THEN
-               IF (wa <= wcharge) THEN
-                  wa = wa - wcharge
-                  wcharge = 0.
-               ELSE
-                  wcharge = wcharge - wa
-                  wa = 0.
-                  izwt = nlev
-                  zwt  = sp_zi(nlev)
-               ENDIF
-            ELSEIF (izwt >= 1) THEN
-               IF (is_permeable(izwt)) THEN
-                  air = (porsl(izwt)-ss_vliq(izwt)) * (zwt-sp_zi(izwt-1))
-                  IF (air > -wcharge) THEN
-                     ss_vliq(izwt) = ss_vliq(izwt) - wcharge / (zwt-sp_zi(izwt-1))
-                     wcharge = 0.
-                  ELSE
-                     ss_vliq(izwt) = porsl(izwt)
-                     wcharge = wcharge + air
-                     izwt = izwt - 1
-                     zwt  = sp_zi(izwt)
-                  ENDIF
-               ELSE
-                  izwt = izwt - 1
-                  zwt  = sp_zi(izwt)
-               ENDIF
-            ELSE
-               ss_dp = ss_dp - wcharge
-               wcharge = 0.
-               izwt = 1
-            ENDIF
-         ENDDO
-      ENDIF
-
       ! water table location
       ss_wt(:) = 0._r8
       IF ((izwt >= 1) .and. (izwt <= nlev)) THEN
@@ -302,6 +214,9 @@ contains
       DO ilev = izwt+1, nlev
          ss_wt(ilev) = sp_dz(ilev)
       ENDDO
+
+      ! boundary condition at bottom
+      flxbtm = rsubst + deficit/dt
 
       ! Impermeable levels cut the soil column into several disconnected parts.
       ! The Richards solver is called to calcute water movement part by part.
@@ -336,13 +251,24 @@ contains
             ubc_val_sub = 0
          end if
 
-         if ((ub == nlev) .and. (izwt > nlev)) then
+         if ((ub == nlev) .and. (.not. rockbtm) .and. (izwt > nlev)) then
+
             lbc_typ_sub = bc_drainage
-            lbc_val_sub = 0.
+         
+            wa = wa - flxbtm * dt
+            IF (wa > 0.) THEN
+               lbc_typ_sub = bc_fix_flux
+               flxbtm = - wa / dt
+               zwt = sp_zi(nlev)
+               wa  = 0._r8
+            ELSE
+               flxbtm = 0._r8
+            ENDIF
          else
             lbc_typ_sub = bc_fix_flux
-            lbc_val_sub = 0.
          end if
+            
+         lbc_val_sub = flxbtm
 
          call Richards_solver ( &
             lb, ub, dt, sp_zc(lb:ub), sp_zi(lb-1:ub), &
@@ -352,15 +278,18 @@ contains
             ss_dp, wa, ss_vliq(lb:ub), ss_wt(lb:ub), ss_q(lb-1:ub), &
             tol_q, tol_z, tol_v, tol_p)
 
-         ub = lb - 1
+         IF (lbc_typ_sub /= bc_drainage) THEN
+            flxbtm = flxbtm - ss_q(ub)
+         ENDIF
 
+         ub = lb - 1
       end do soilcolumn 
 
       IF (.not. is_permeable(1)) THEN
-         ss_dp = max(ss_dp + rain * dt, 0._r8)
+         ss_dp = max(ss_dp + (rain - flxbtm)* dt, 0._r8)
       ENDIF 
-      
-      IF (wa >= 0) THEN
+
+      IF (rockbtm .or. (wa >= 0)) THEN
          do ilev = nlev, 1, -1
             is_sat = (.not. is_permeable(ilev)) &
                .or. (ss_vliq(ilev) > porsl(ilev) - tol_v) &
@@ -393,7 +322,6 @@ contains
 
       qinfl = rain - (ss_dp - dp_m1)/dt 
       
-#ifdef SoilWaterDebug
       ! total water mass
       w_sum_after = ss_dp
       DO ilev = 1, nlev
@@ -408,15 +336,18 @@ contains
             ENDIF
          ENDIF
       ENDDO
-      w_sum_after = w_sum_after + wa
+
+      IF (.not. rockbtm) w_sum_after = w_sum_after + wa
 
       wblc = w_sum_after - (w_sum_before + (rain - etr - rsubst) * dt)
 
-      IF (abs(wblc) > 1.0e-3) THEN
-         write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, rain, etr, rsubst
-      ENDIF
+      ! subsurface runoff correction
+      IF (wblc > 1.0e-3) THEN
+         rsubst = rsubst - wblc/dt
+#ifdef  CoLM_hydro_DEBUG
+         write(*,*) 'runoff adjustment: reduced by ', wblc/dt, ' to ', rsubst
 #endif
+      ENDIF
 
       DO ilev = 1, nlev
          IF (ilev < izwt) THEN 
@@ -434,6 +365,7 @@ contains
             hk (ilev) = hksat(ilev)
          ENDIF
       ENDDO
+
 
    end subroutine soil_water_vertical_movement
 
@@ -646,7 +578,7 @@ contains
                   
                end if
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
                ! if (iter == max_iters_richards) then
                !    write(*,*) 'Warning : Richards_solver : not converged.'
                !    write(*, 100) dt_this, iter, f2_norm(iter)/dt_this, tol_richards
@@ -656,8 +588,8 @@ contains
 
                dt_done = dt_done + dt_this
 
-#ifdef SoilWaterDebug
-               count_iters_this(iter) = count_iters_this(iter) + 1
+#ifdef vsf_statistics
+               count_iters(iter) = count_iters(iter) + 1
 #endif
 
                exit
@@ -870,7 +802,7 @@ contains
 
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
 
-#ifdef  SoilWaterDebug
+#ifdef  CoLM_hydro_DEBUG
          IF (abs(werr) > 1.0e-3) then
              write(*,*)  'Richards solver water balance violation: ', werr
          ENDIF 
@@ -2304,7 +2236,7 @@ contains
             qq(lb-1) = qlc(lb)
             is_trans = .false.
          case (bc_fix_flux)
-            qq(lb-1) = ubc_val ! min(qlc(lb), ubc_val)
+            qq(lb-1) = min(qlc(lb), ubc_val)
             is_trans = (qlc(lb) > ubc_val)
          case (bc_rainfall)
             if (dpond < tol_z) then
@@ -2687,7 +2619,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_at_unsaturated_interface: not converged.'
       end if
@@ -2855,7 +2787,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_top_transitive_interface: not converged.'
       end if
@@ -3026,7 +2958,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_btm_transitive_interface: not converged.'
       end if
@@ -3187,7 +3119,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_both_transitive_interface: not converged.'
       end if
@@ -3257,7 +3189,7 @@ contains
          iter = iter + 1
       end do 
 
-#if (defined SoilWaterDebug)
+#if (defined CoLM_hydro_DEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : get_zwt_from_wa: not converged.'
       end if
@@ -3400,34 +3332,5 @@ contains
       end do
 
    end function find_unsat_lev_lower
-
-   ! -----
-   SUBROUTINE print_iteration_stat_info ()
-      
-      USE spmd_task
-      IMPLICIT NONE
-   
-      CHARACTER(len=20) :: fmtt
-
-#ifdef SoilWaterDebug
-      IF (p_is_worker) THEN
-#ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, count_iters_this, size(count_iters_this), &
-            MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
-#endif
-         IF (p_iam_worker == 0) THEN
-            write(*,*)
-            write(fmtt,'("(A,",I1,"I10)")') max_iters_richards
-            write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
-
-            count_iters_accm = count_iters_accm + count_iters_this
-            write(*,fmtt) 'VSF Iteration stat all steps: ', count_iters_accm(:)
-         ENDIF
-
-         count_iters_this = 0 
-      ENDIF
-#endif
-
-   END SUBROUTINE print_iteration_stat_info
 
 end module mod_soil_water

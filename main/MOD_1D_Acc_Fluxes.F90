@@ -42,7 +42,12 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_qdrip  (:)
    real(r8), allocatable :: a_rstfacsun (:)
    real(r8), allocatable :: a_rstfacsha (:)
+#ifdef VARIABLY_SATURATED_FLOW
    real(r8), allocatable :: a_dpond  (:)
+#ifdef USE_DEPTH_TO_BEDROCK
+   real(r8), allocatable :: a_dwatsub(:)
+#endif
+#endif
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
@@ -246,8 +251,12 @@ contains
             allocate (a_qdrip     (numpatch))
             allocate (a_rstfacsun (numpatch))
             allocate (a_rstfacsha (numpatch))
+#ifdef VARIABLY_SATURATED_FLOW
             allocate (a_dpond     (numpatch))
-
+#ifdef USE_DEPTH_TO_BEDROCK
+            allocate (a_dwatsub   (numpatch))
+#endif
+#endif
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
             allocate (a_wat       (numpatch))
@@ -449,8 +458,12 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
+#ifdef VARIABLY_SATURATED_FLOW
             deallocate (a_dpond     )
-
+#ifdef USE_DEPTH_TO_BEDROCK
+            deallocate (a_dwatsub   )
+#endif
+#endif
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
@@ -656,8 +669,12 @@ contains
             a_qdrip   (:) = spval
             a_rstfacsun(:) = spval
             a_rstfacsha(:) = spval
-
+#ifdef VARIABLY_SATURATED_FLOW
             a_dpond   (:) = spval
+#ifdef USE_DEPTH_TO_BEDROCK
+            a_dwatsub (:) = spval
+#endif
+#endif
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
@@ -906,8 +923,12 @@ contains
             call acc1d (qdrip  , a_qdrip  )
             call acc1d (rstfacsun , a_rstfacsun )
             call acc1d (rstfacsha , a_rstfacsha )
-
+#ifdef VARIABLY_SATURATED_FLOW
             call acc1d (dpond  , a_dpond  )
+#ifdef USE_DEPTH_TO_BEDROCK
+            call acc1d (dwatsub, a_dwatsub)
+#endif
+#endif
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )
@@ -1272,8 +1293,8 @@ contains
       ! Local variables
       integer :: i1, i2
 
-      do i2 = lbound(var,2), ubound(var,2)
-         do i1 = lbound(var,1), ubound(var,1)
+      do i1 = lbound(var,1), ubound(var,1)
+         do i2 = lbound(var,2), ubound(var,2)
             if (var(i1,i2) /= spval) then
                if (s(i1,i2) /= spval) then
                   s(i1,i2) = s(i1,i2) + var(i1,i2)
@@ -1299,9 +1320,9 @@ contains
       ! Local variables
       integer :: i1, i2, i3
 
-      do i3 = lbound(var,3), ubound(var,3)
+      do i1 = lbound(var,1), ubound(var,1)
          do i2 = lbound(var,2), ubound(var,2)
-            do i1 = lbound(var,1), ubound(var,1)
+            do i3 = lbound(var,3), ubound(var,3)
                if (var(i1,i2,i3) /= spval) then
                   if (s(i1,i2,i3) /= spval) then
                      s(i1,i2,i3) = s(i1,i2,i3) + var(i1,i2,i3)

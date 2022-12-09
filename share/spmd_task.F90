@@ -191,7 +191,7 @@ CONTAINS
       IF (p_is_master) THEN
 
          write (*,*) 'MPI information:'
-         write (*,'(A,I5)') ' Master is ', p_root  
+         write (*,'(A11,I5)') ' Master is ', p_root  
 
          DO igrp = 0, p_np_io-1
             write (cnum,'(I5)') igrp  

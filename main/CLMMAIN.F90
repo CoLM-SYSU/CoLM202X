@@ -12,7 +12,9 @@ SUBROUTINE CLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          & 
+#ifdef Campbell_SOIL_MODEL
            bsw,                                                     &
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
            sc_vgm,       fc_vgm,                                    &
@@ -56,7 +58,11 @@ SUBROUTINE CLMMAIN ( &
 #ifdef PLANT_HYDRAULIC_STRESS
            vegwp,        gs0sun,       gs0sha,                      &
 #endif
-           zwt,          dpond,        wa,                          &
+           zwt,                                                     &
+#ifdef VARIABLY_SATURATED_FLOW
+           dpond,                                                   &
+#endif
+           wa,                                                      &
            t_lake,       lake_icefrac, savedtke1,                   &
 
          ! additional diagnostic variables for output
@@ -143,7 +149,10 @@ SUBROUTINE CLMMAIN ( &
   USE SIMPLE_OCEAN
   USE ALBEDO
   USE timemanager
-  USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+#ifdef USE_DEPTH_TO_BEDROCK
+  USE MOD_TimeInvariants, only : ibedrock
+#endif
+USE mod_namelist,only:DEF_Interception_scheme
 
   IMPLICIT NONE
  
@@ -184,7 +193,9 @@ SUBROUTINE CLMMAIN ( &
         wf_sand   (nl_soil), &! gravimetric fraction of sand
         porsl(nl_soil)   ,&! fraction of soil that is voids [-]
         psi0(nl_soil)    ,&! minimum soil suction [mm]
+#ifdef Campbell_SOIL_MODEL
         bsw(nl_soil)     ,&! clapp and hornbereger "b" parameter [-]
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r  (1:nl_soil), &
         alpha_vgm(1:nl_soil), &
@@ -307,7 +318,9 @@ SUBROUTINE CLMMAIN ( &
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
         zwt         ,&! the depth to water table [m]
+#ifdef VARIABLY_SATURATED_FLOW
         dpond       ,&! depth of ponding water [mm]
+#endif
         wa          ,&! water storage in aquifer [mm]
 
         fveg        ,&! fraction of vegetation cover
@@ -494,11 +507,9 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
       ENDDO
 
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-      
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         totwb = totwb + dpond
-      ENDIF
-
+#ifdef VARIABLY_SATURATED_FLOW
+      totwb = totwb + dpond
+#endif
       fiold(:) = 0.0
       IF (snl <0 ) THEN
          fiold(snl+1:0)=wice_soisno(snl+1:0)/(wliq_soisno(snl+1:0)+wice_soisno(snl+1:0))
@@ -650,39 +661,35 @@ ENDIF
            fm                ,fh                ,fq                ,pg_rain           ,&
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        )
 
-      IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-
-         CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
-              deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
-              bsw               ,porsl             ,psi0              ,hksati            ,&
-              rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
-              pg_rain           ,sm                ,etr               ,qseva             ,&
-              qsdew             ,qsubl             ,qfros             ,rsur              ,&
-              rnof              ,qinfl             ,wtfact            ,pondmx            ,&
-              ssi               ,wimp              ,smpmin            ,zwt               ,&
-              wa                ,qcharge           ,errw_rsub)
-
-      ELSE
-
-         CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
-              deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
+#ifndef VARIABLY_SATURATED_FLOW
+      CALL WATER (ipatch     ,patchtype         ,lb                ,nl_soil           ,&
+           deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
+           bsw               ,porsl             ,psi0              ,hksati            ,&
+           rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
+           pg_rain           ,sm                ,etr               ,qseva             ,&
+           qsdew             ,qsubl             ,qfros             ,rsur              ,&
+           rnof              ,qinfl             ,wtfact            ,pondmx            ,&
+           ssi               ,wimp              ,smpmin            ,zwt               ,&
+           wa                ,qcharge           ,errw_rsub)
+#else
+      CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
+           deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
 #ifdef Campbell_SOIL_MODEL
-              bsw               ,                                                         &
+           bsw               ,                                                         &
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-              theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
-              sc_vgm            ,fc_vgm            ,                                      &
+           theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
+           sc_vgm            ,fc_vgm            ,                                      &
 #endif
-              porsl             ,psi0              ,hksati            ,                   &
-              rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
-              pg_rain           ,sm                ,etr               ,qseva             ,&
-              qsdew             ,qsubl             ,qfros             ,rsur              ,&
-              rnof              ,qinfl             ,wtfact            ,ssi               ,&
-              pondmx,                                                                     & 
-              wimp              ,zwt               ,dpond             ,wa                ,&
-              qcharge           ,errw_rsub)
-
-      ENDIF
+           porsl             ,psi0              ,hksati            ,                   &
+           rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
+           pg_rain           ,sm                ,etr               ,qseva             ,&
+           qsdew             ,qsubl             ,qfros             ,rsur              ,&
+           rnof              ,qinfl             ,wtfact            ,ssi               ,&
+           pondmx,                                                                     & 
+           wimp              ,zwt               ,dpond             ,wa                ,&
+           qcharge           ,errw_rsub)
+#endif
 
       IF (snl < 0) THEN
          ! Compaction rate for snow 
@@ -734,11 +741,9 @@ ENDIF
       ! water balance
       ! ----------------------------------------
       endwb=sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
-
-      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         endwb = endwb + dpond
-      ENDIF
-
+#ifdef VARIABLY_SATURATED_FLOW
+      endwb = endwb + dpond
+#ENDIF
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       IF(patchtype==2) errorw=0.    !wetland
       xerr=errorw/deltim
@@ -1101,13 +1106,11 @@ ENDIF
        rstfacsha = 0.
        rootr = 0.
        zwt = 0.
-      
-       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-          wa = 0.
-       ELSE
-          wa = 4800.
-       ENDIF
-
+#ifdef VARIABLY_SATURATED_FLOW
+       wa = 0.
+#else
+       wa = 4800.
+#endif
        qcharge = 0.
 #ifdef PLANT_HYDRAULIC_STRESS
        vegwp = -2.5e4
@@ -1115,12 +1118,11 @@ ENDIF
     ENDIF
       
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)
-      
-    IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-       wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv
-    ELSE
-       wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
-    ENDIF
+#ifdef VARIABLY_SATURATED_FLOW
+    wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv
+#else
+    wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
+#endif
 !----------------------------------------------------------------------
 
 END SUBROUTINE CLMMAIN

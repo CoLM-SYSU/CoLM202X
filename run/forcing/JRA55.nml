@@ -23,8 +23,8 @@
    DEF_forcing%hightdim          = .false.  ! have "z" dimension
    DEF_forcing%dim2d             = .false.  ! lat/lon value in 2 dimension (lon, lat)
    
-   DEF_forcing%latname           = 'g4_lat_2'  ! dimension name of latitude
-   DEF_forcing%lonname           = 'g4_lon_3' ! dimension name of longitude
+   DEF_forcing%latname           = 'lat'  ! dimension name of latitude
+   DEF_forcing%lonname           = 'lon' ! dimension name of longitude
    
    DEF_forcing%groupby           = 'year'  ! file grouped by year/month
    

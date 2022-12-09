@@ -40,17 +40,17 @@ CONTAINS
          patch2pc(1) = 1
          pc2patch(1) = 1
             
-         allocate (landpc%eindex (numpc))
-         allocate (landpc%settyp (numpc))
+         allocate (landpc%bindex (numpc))
+         allocate (landpc%ibasin (numpc))
+         allocate (landpc%ltyp   (numpc))
          allocate (landpc%ipxstt (numpc))
          allocate (landpc%ipxend (numpc))
-         allocate (landpc%ielm   (numpc))
                   
-         landpc%eindex(1) = 1
+         landpc%ibasin(1) = 1
+         landpc%bindex(1) = 1
          landpc%ipxstt(1) = 1
          landpc%ipxend(1) = 1
-         landpc%settyp(1) = SITE_landtype
-         landpc%ielm  (1) = 1
+         landpc%ltyp(1) = SITE_landtype
       ELSE
          numpc = 0
       ENDIF
@@ -61,12 +61,16 @@ CONTAINS
       RETURN
 #endif
 
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
       if (p_is_worker) then
 
          numpc = 0
 
          DO ipatch = 1, numpatch
-            m = landpatch%settyp(ipatch)
+            m = landpatch%ltyp(ipatch)
             IF (patchtypes(m) == 0) THEN
                numpc = numpc + 1
             ENDIF
@@ -77,26 +81,24 @@ CONTAINS
             allocate (pc2patch (numpc   ))
             allocate (patch2pc (numpatch))
 
-            patch2pc(:) = -1
-
-            allocate (landpc%eindex (numpc))
-            allocate (landpc%settyp (numpc))
+            allocate (landpc%bindex (numpc))
+            allocate (landpc%ibasin (numpc))
+            allocate (landpc%ltyp   (numpc))
             allocate (landpc%ipxstt (numpc))
             allocate (landpc%ipxend (numpc))
-            allocate (landpc%ielm   (numpc))
 
             npc = 0
             DO ipatch = 1, numpatch
-               m = landpatch%settyp(ipatch)
+               m = landpatch%ltyp(ipatch)
                IF (patchtypes(m) == 0) THEN
 
                   npc = npc + 1
                         
-                  landpc%ielm  (npc) = landpatch%ielm  (ipatch)
-                  landpc%eindex(npc) = landpatch%eindex(ipatch)
+                  landpc%ibasin(npc) = landpatch%ibasin(ipatch)
+                  landpc%bindex(npc) = landpatch%bindex(ipatch)
                   landpc%ipxstt(npc) = landpatch%ipxstt(ipatch)
                   landpc%ipxend(npc) = landpatch%ipxend(ipatch)
-                  landpc%settyp(npc) = m
+                  landpc%ltyp(npc) = m
 
                   pc2patch(npc) = ipatch
                   patch2pc(ipatch) = npc
@@ -110,10 +112,12 @@ CONTAINS
       CALL landpc%set_vecgs
 
 #ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+
       IF (p_is_worker) THEN
          CALL mpi_reduce (numpc, npc_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', npc_glb, ' plant community tiles.'
+            write(*,'(A,I12,A)') 'Total: ', npc_glb, ' plant community tiles on worker.'
          ENDIF
       ENDIF
       
@@ -143,7 +147,7 @@ CONTAINS
       
          ipc = 0
          DO ipatch = 1, numpatch
-            IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+            IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
                ipc = ipc + 1
                patch2pc(ipatch) = ipc
                pc2patch(ipc) = ipatch
@@ -152,6 +156,8 @@ CONTAINS
             ENDIF
          ENDDO
          
+         write(*,'(I10,A14,I5)') numpc, ' pcs on worker', p_iam_glb
+
       ENDIF
 
    END SUBROUTINE map_patch_to_pc

@@ -149,7 +149,7 @@ CONTAINS
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_mesh
+      USE mod_landbasin
       USE mod_pixelset
       USE mod_landpatch
       USE mod_utils
@@ -174,13 +174,13 @@ CONTAINS
       ! Local Variables
       INTEGER :: nreq, smesg(2), isrc, idest, iproc
       INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: npxl, ipxl, ie, ipxstt, ipxend
+      INTEGER :: npxl, ipxl, iu, ipxstt, ipxend
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
       REAL(r8), allocatable :: rbuf(:)
       LOGICAL,  allocatable :: msk(:)
 
 
-      ie     = landpatch%ielm  (ipatch)
+      iu   = landpatch%ibasin(ipatch)
       ipxstt = landpatch%ipxstt(ipatch)
       ipxend = landpatch%ipxend(ipatch)
 
@@ -211,8 +211,8 @@ CONTAINS
       allocate (msk   (ipxstt:ipxend))
 
       DO ipxl = ipxstt, ipxend
-         xlist(ipxl) = grid_in%xgrd(mesh(ie)%ilon(ipxl))
-         ylist(ipxl) = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+         xlist(ipxl) = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
+         ylist(ipxl) = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
 
          xblk = grid_in%xblk(xlist(ipxl))
          yblk = grid_in%yblk(ylist(ipxl))
@@ -276,8 +276,8 @@ CONTAINS
       
       DO ipxl = ipxstt, ipxend
 
-         ilon = grid_in%xgrd(mesh(ie)%ilon(ipxl))
-         ilat = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+         ilon = grid_in%xgrd(landbasin(iu)%ilon(ipxl))
+         ilat = grid_in%ygrd(landbasin(iu)%ilat(ipxl))
          xblk = grid_in%xblk(ilon)
          yblk = grid_in%yblk(ilat)
          xloc = grid_in%xloc(ilon)
@@ -304,8 +304,8 @@ CONTAINS
       IF (present(areall)) THEN
          DO ipxl = ipxstt, ipxend
             areall(ipxl) = areaquad (&
-               pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
-               pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+               pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
+               pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
          ENDDO
       ENDIF
 

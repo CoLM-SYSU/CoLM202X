@@ -147,7 +147,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       allocate ( soil_s_v_alb (numpatch) )
 
       DO ipatch = 1, numpatch
-         L = landpatch%settyp(ipatch)
+         L = landpatch%ltyp(ipatch)
 #ifdef USGS_CLASSIFICATION
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -182,7 +182,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       allocate ( soil_d_v_alb (numpatch) )
 
       DO ipatch = 1, numpatch
-         L = landpatch%settyp(ipatch)
+         L = landpatch%ltyp(ipatch)
 #ifdef USGS_CLASSIFICATION
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -217,7 +217,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       allocate ( soil_s_n_alb (numpatch) )
 
       DO ipatch = 1, numpatch
-         L = landpatch%settyp(ipatch)
+         L = landpatch%ltyp(ipatch)
 #ifdef USGS_CLASSIFICATION
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -252,7 +252,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       allocate ( soil_d_n_alb (numpatch) )
 
       DO ipatch = 1, numpatch
-         L = landpatch%settyp(ipatch)
+         L = landpatch%ltyp(ipatch)
 #ifdef USGS_CLASSIFICATION
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
@@ -287,26 +287,26 @@ SUBROUTINE aggregation_soil_brightness ( &
    ! (1) Write-out the albedo of visible of the saturated soil
    lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'soil_s_v_alb', 'vector', landpatch, soil_s_v_alb, 1)
 
    ! (2) Write-out the albedo of visible of the dry soil
    lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'soil_d_v_alb', 'vector', landpatch, soil_d_v_alb, 1)
 
    ! (3) Write-out the albedo of near infrared of the saturated soil
    lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'soil_s_n_alb', 'vector', landpatch, soil_s_n_alb, 1)
 
    ! (4) Write-out the albedo of near infrared of the dry soil
    lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'soil_d_n_alb', 'vector', landpatch, soil_d_n_alb, 1)
 #else
    SITE_soil_s_v_alb = soil_s_v_alb(1) 
    SITE_soil_d_v_alb = soil_d_v_alb(1)
