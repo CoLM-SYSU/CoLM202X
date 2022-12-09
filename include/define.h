@@ -1,7 +1,7 @@
 ! 1. Spatial structure: 
 !    Select one of the following options.
-#undef GRIDBASED
-#define CATCHMENT 
+#define GRIDBASED
+#undef CATCHMENT 
 #undef UNSTRUCTURED
 #undef SinglePoint
 
@@ -27,8 +27,8 @@
 
 ! 6. Hydrological process options.
 ! 6.1 Two soil hydraulic models can be used.   
-#undef   Campbell_SOIL_MODEL
-#define  vanGenuchten_Mualem_SOIL_MODEL
+#define  Campbell_SOIL_MODEL
+#undef   vanGenuchten_Mualem_SOIL_MODEL
 
 ! 7. If defined, soil temperature, wetness and snow depth
 !     are initialized by input data.
