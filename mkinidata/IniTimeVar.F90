@@ -56,7 +56,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 
   USE precision
   USE PhysicalConstants, only: tfrz
-  USE MOD_TimeVariables, only: tlai, tsai, dpond
+  USE MOD_TimeVariables, only: tlai, tsai
   USE PFT_Const, only: isevg, woody, leafcn, deadwdcn
 #ifdef USE_DEPTH_TO_BEDROCK
   USE MOD_TimeInvariants, only : ibedrock, dbedrock
@@ -73,7 +73,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #endif
   USE GlobalVars
   USE ALBEDO
-  USE mod_namelist
+#ifdef VARIABLY_SATURATED_FLOW
+  USE MOD_TimeVariables, only: dpond
+#endif
 
   IMPLICIT NONE 
 
@@ -390,17 +392,34 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         ENDIF
      ENDDO
 
+#ifdef USE_DEPTH_TO_BEDROCK
+     IF (patchtype <= 2) THEN
+        IF (ibedrock(ipatch) <= nl_soil) THEN
+           j = ibedrock(ipatch)
+           IF (j == 1) THEN
+              wliq_soisno(j) = dbedrock(ipatch) *porsl(j)*1000.
+           else
+              wliq_soisno(j) = (dbedrock(ipatch) - zi_soi(j-1)) *porsl(j)*1000.
+           ENDIF 
+
+           DO j = ibedrock(ipatch)+1, nl_soil
+              wliq_soisno(j) = 0.
+           ENDDO
+        ENDIF 
+     ENDIF
+#endif
+
+
 ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
 !                    is below the model bottom zi(nl_soil)
 
      wa  = 4800.                             !assuming aquifer capacity is 5000 mm
      zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
-
-     IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-        wa = 0.
-        zwt = zi_soi(nl_soil)
-        dpond = 0.
-     ENDIF
+#ifdef VARIABLY_SATURATED_FLOW
+     wa = 0.
+     zwt = zi_soi(nl_soil)
+     dpond = 0.
+#endif
 
 ! snow temperature and water content
      t_soisno(maxsnl+1:0) = -999.

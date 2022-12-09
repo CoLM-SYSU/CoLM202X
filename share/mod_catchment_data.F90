@@ -42,12 +42,6 @@ CONTAINS
       REAL(r8), allocatable :: latitude(:), longitude(:)
       LOGICAL :: fexists
 
-      IF (p_is_master) THEN
-         IF (grid%yinc == 1) THEN
-            write(*,*) 'Warning: latitude in catchment data should be from north to south.'
-         ENDIF
-      ENDIF 
-
       IF (in_one_file) THEN
 
          file_hydro = path_hydro

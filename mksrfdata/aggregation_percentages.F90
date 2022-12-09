@@ -63,7 +63,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
    IF (p_is_master) THEN
-      write(*,'(/, A43)') 'Aggregate plant function type fractions ...'
+      write(*,'(/, A43)') 'Aggregate plant FUNCTION TYPE fractions ...'
       CALL system('mkdir -p ' // trim(adjustl(landdir)))
    ENDIF
 #ifdef USEMPI
@@ -75,6 +75,16 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 
 #ifdef SinglePoint
    IF (USE_SITE_pctpfts) THEN
+      allocate(pct_pfts (numpft))
+      IF (landpatch%ltyp(1) == 1) THEN
+         pct_pfts = pack(SITE_pctpfts, SITE_pctpfts > 0.)
+         pct_pfts = pct_pfts / sum(pct_pfts)
+#ifdef CROP
+      ELSEIF (landpatch%ltyp(1) == 12) THEN
+         pct_pfts(:) = 1.
+#endif
+      ENDIF
+   
       RETURN
    ENDIF
 #endif
@@ -94,7 +104,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       allocate(pct_pfts (numpft))
       
       DO ipatch = 1, numpatch
-         IF (landpatch%settyp(ipatch) == 1) THEN
+         IF (landpatch%ltyp(ipatch) == 1) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
 
@@ -103,7 +113,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
             sumarea = sum(area_one)
 
             DO ipft = patch_pft_s(ipatch), patch_pft_e(ipatch)
-               p = landpft%settyp(ipft)
+               p = landpft%ltyp(ipft)
                pct_pfts(ipft) = sum(pct_pft_one(p,:) / pct_one * area_one) / sumarea
             ENDDO
 
@@ -111,7 +121,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
                pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   & 
                / sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
 #ifdef CROP
-         ELSEIF (landpatch%settyp(ipatch) == 12) THEN
+         ELSEIF (landpatch%ltyp(ipatch) == 12) THEN
             pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) = 1.
 #endif
          ENDIF
@@ -134,8 +144,8 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifndef SinglePoint
    lndname = trim(landdir)//'/pct_pfts.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
-   CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', landpft, pct_pfts, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpft)
+   CALL ncio_write_vector (lndname, 'pct_pfts', 'vector', landpft, pct_pfts, 1)
 #else
    allocate (SITE_pctpfts(numpft))
    SITE_pctpfts = pct_pfts
@@ -152,8 +162,8 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifndef SinglePoint
    lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_crop (lndname, landpatch, 'patch')
-   CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctcrop, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpatch)
+   CALL ncio_write_vector (lndname, 'pct_crops', 'vector', landpatch, pctcrop, 1)
 #else
    allocate (SITE_croptyp(numpatch))
    allocate (SITE_pctcrop(numpatch))
@@ -187,7 +197,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       
       DO ipatch = 1, numpatch
 
-         IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+         IF (patchtypes(landpatch%ltyp(ipatch)) == 0) THEN
             CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
                area = area_one)
 
@@ -223,9 +233,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifndef SinglePoint
    lndname = trim(landdir)//'/pct_pcs.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_vector (lndname, landpc, 'pc')
-   CALL ncio_define_dimension_vector (lndname, landpc, 'pft', N_PFT)
-   CALL ncio_write_vector (lndname, 'pct_pcs', 'pft', N_PFT, 'pc', landpc, pct_pcs, 1)
+   CALL ncio_define_pixelset_dimension (lndname, landpc)
+   CALL ncio_define_dimension_vector (lndname, 'pft', N_PFT)
+   CALL ncio_write_vector (lndname, 'pct_pcs', 'pft', N_PFT, 'vector', landpc, pct_pcs, 1)
 #else
    allocate (SITE_pctpfts (N_PFT))
    SITE_pctpfts = pct_pcs(:,1)

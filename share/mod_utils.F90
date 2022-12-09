@@ -29,7 +29,6 @@ MODULE mod_utils
       MODULE procedure quicksort_int32
       MODULE procedure quicksort_int64
    END interface quicksort
-
    PUBLIC :: quickselect
    PUBLIC :: median
 
@@ -75,13 +74,12 @@ CONTAINS
       INTEGER, allocatable :: temp (:)
 
       n0 = size(list)
-
       allocate (temp(n0))
       temp = list
       
       n1 = ceiling(n0 * (1+percent))
-
       deallocate(list)
+
       allocate (list(n1))
       list(1:n0) = temp      
 
@@ -103,13 +101,12 @@ CONTAINS
       REAL(r8), allocatable :: temp (:)
 
       n0 = size(list)
-
       allocate (temp(n0))
       temp = list
       
       n1 = ceiling(n0 * (1+percent))
-      
       deallocate(list)
+
       allocate (list(n1))
       list(1:n0) = temp      
 
@@ -645,6 +642,7 @@ CONTAINS
                itemp        = order(left)
                order(left)  = order(right)
                order(right) = itemp
+
             ENDIF
          ENDDO
 
@@ -698,6 +696,7 @@ CONTAINS
                itemp        = order(left)
                order(left)  = order(right)
                order(right) = itemp
+
             ENDIF
          ENDDO
 

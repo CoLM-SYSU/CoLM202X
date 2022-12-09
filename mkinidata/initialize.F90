@@ -57,6 +57,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! ------------------------ local variables -----------------------------
    real(r8) :: rlon, rlat
+   INTEGER  :: month, mday, m
 
 #if(defined SOILINI)
    character(len=256) :: fsoildat
@@ -82,12 +83,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    real(r8), allocatable :: dz_soisno(:,:)
 
    real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
-   INTEGER  :: idate0(3)
-   integer  :: year, jday                ! Julian day and seconds
-   INTEGER  :: month, mday
-
-   integer  :: i,j,ipatch,nsl,ps,pe,ivt,m  ! indices
-   INTEGER  :: hs, he
+   integer  :: year, jday, msec          ! Julian day and seconds
+   integer  :: i,j,ipatch,nsl,ps,pe,ivt  ! indices
 
    integer :: Julian_8day
    integer :: ltyp
@@ -118,7 +115,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    if (p_is_worker) then
       
-      patchclass = landpatch%settyp
+      patchclass = landpatch%ltyp
 
       DO ipatch = 1, numpatch
          patchtype(ipatch) = patchtypes(patchclass(ipatch))
@@ -127,7 +124,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
 #ifdef PFT_CLASSIFICATION
-      pftclass = landpft%settyp
+      pftclass = landpft%ltyp
 #endif
    
    ENDIF
@@ -137,17 +134,21 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #endif
    
    ! ------------------------------------------
-   ! 1.1 Ponding water
+   ! 1.1 Depth to bedrock
    ! ------------------------------------------
 #ifdef USE_DEPTH_TO_BEDROCK
    CALL dbedrock_readin (dir_landdata)
 #endif
 
+#ifdef VARIABLY_SATURATED_FLOW
    IF (p_is_worker) THEN
       IF (numpatch > 0) THEN
-         dpond(:) = 0._r8
+         DO ipatch = 1, numpatch
+            dpond(ipatch) = 0._r8
+         ENDDO
       ENDIF
    ENDIF
+#endif
    ! ------------------------------------------
    ! 1.2 Lake depth and layers' thickness
    ! ------------------------------------------
@@ -337,6 +338,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       ENDIF
    ENDIF
 
+   year = idate(1)
+   jday = idate(2)
+   msec = idate(3)
 
    ! ................................
    ! 2.2 cosine of solar zenith angle 
@@ -353,7 +357,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! ...........................................
 
 #if(defined SOILINI)
-   fsoildat = DEF_file_soil_init
+   fsoildat = 'change/directory/and/file/path.nc'
 
    call gsoil%define_from_file (fsoildat)
    call ms2p%build (gsoil, landpatch)
@@ -416,17 +420,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    end if
 #else
 
-   idate0 = idate
-   CALL adj2begin(idate0)
-   year = idate0(1)
-   jday = idate0(2)
-
    IF (DEF_LAI_CLIM) then
       ! yuan, 08/03/2019: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)
    ELSE
-      Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
+      Julian_8day = int(calendarday(idate)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
 #ifdef CLMDEBUG

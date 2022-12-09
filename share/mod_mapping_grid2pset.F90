@@ -34,7 +34,7 @@ MODULE mod_mapping_grid2pset
 CONTAINS
    
    !------------------------------------------
-   SUBROUTINE mapping_grid2pset_build (this, fgrid, pixelset, gfilter, missing_value, pfilter)
+   SUBROUTINE mapping_grid2pset_build (this, fgrid, pixelset)
 
       USE precision
       USE mod_namelist
@@ -42,7 +42,7 @@ CONTAINS
       USE mod_pixel
       USE mod_grid
       USE mod_data_type
-      USE mod_mesh
+      USE mod_landbasin
       USE mod_pixelset
       USE mod_utils
       USE spmd_task
@@ -52,11 +52,6 @@ CONTAINS
 
       TYPE(grid_type),     intent(in) :: fgrid
       TYPE(pixelset_type), intent(in) :: pixelset
-
-      TYPE(block_data_real8_2d), intent(in), optional :: gfilter
-      REAL(r8), intent(in),    optional :: missing_value
-      LOGICAL,  intent(inout), optional :: pfilter(:)
-
 
       ! Local variables
       TYPE(pointer_real8_1d), allocatable :: afrac(:)
@@ -68,15 +63,15 @@ CONTAINS
       INTEGER,  allocatable :: ipt(:)
       LOGICAL,  allocatable :: msk(:)
 
-      INTEGER  :: ie, iset
-      INTEGER  :: ng, ig, ng_all, iloc, ng0
+      INTEGER  :: iu, iset
+      INTEGER  :: ng, ig, ng_all, iloc
       INTEGER  :: npxl, ipxl, ilat, ilon, ipxstt, ipxend
-      INTEGER  :: iworker, iproc, iio, idest, isrc, nrecv, nsend
+      INTEGER  :: iworker, iproc, idest, isrc, nrecv, nsend
       INTEGER  :: rmesg(2), smesg(2)
-      INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
+      INTEGER  :: iy, ix, xblk, yblk
       REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area
       LOGICAL  :: is_new
-
+         
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -130,7 +125,7 @@ CONTAINS
 
          DO iset = 1, pixelset%nset
 
-            ie = pixelset%ielm(iset)
+            iu = pixelset%ibasin(iset)
             npxl = pixelset%ipxend(iset) - pixelset%ipxstt(iset) + 1
 
             allocate (afrac(iset)%val (npxl))
@@ -141,8 +136,8 @@ CONTAINS
             
             DO ipxl = pixelset%ipxstt(iset), pixelset%ipxend(iset)
 
-               ilat = mesh(ie)%ilat(ipxl)
-               ilon = mesh(ie)%ilon(ipxl)
+               ilat = landbasin(iu)%ilat(ipxl)
+               ilon = landbasin(iu)%ilon(ipxl)
 
                DO iy = ys(ilat), yn(ilat), fgrid%yinc
                   
@@ -219,11 +214,6 @@ CONTAINS
 
             ENDDO
          ENDDO
-         
-         deallocate (ys)
-         deallocate (yn)
-         deallocate (xw)
-         deallocate (xe)
 
          ng_all = sum(ng_lat)
          allocate (xlist(ng_all))
@@ -289,11 +279,49 @@ CONTAINS
          deallocate (ipt)
          deallocate (msk)
 #endif
-   
-      ENDIF
+
+         allocate (this%address (pixelset%nset))
+         allocate (this%gweight (pixelset%nset))
+
+         DO iset = 1, pixelset%nset
+            ng = gfrom(iset)%ng
+            allocate (this%address(iset)%val (2,ng))
+            allocate (this%gweight(iset)%val (ng))
+
+            IF (sum(afrac(iset)%val(1:ng)) < 1.0e-12) THEN
+               this%gweight(iset)%val = 1.0_r8 / ng
+            ELSE
+               this%gweight(iset)%val &
+                  = afrac(iset)%val(1:ng) / sum(afrac(iset)%val(1:ng))
+            ENDIF
+
+            DO ig = 1, gfrom(iset)%ng
+               ilon = gfrom(iset)%ilon(ig)
+               ilat = gfrom(iset)%ilat(ig)
+               xblk = fgrid%xblk(ilon)
+               yblk = fgrid%yblk(ilat)
 
 #ifdef USEMPI
-      IF (p_is_worker) THEN
+               iproc = p_itis_io(gblock%pio(xblk,yblk))
+#else
+               iproc = 0
+#endif
+               this%address(iset)%val(1,ig) = iproc
+               this%address(iset)%val(2,ig) = find_in_sorted_list2 ( &
+                  ilon, ilat, this%glist(iproc)%ng, this%glist(iproc)%ilon, this%glist(iproc)%ilat)
+            ENDDO
+         ENDDO
+
+         DO iset = 1, pixelset%nset
+            deallocate (afrac(iset)%val )
+            deallocate (gfrom(iset)%ilon)
+            deallocate (gfrom(iset)%ilat)
+         ENDDO
+
+         deallocate (afrac)
+         deallocate (gfrom)
+         
+#ifdef USEMPI
          DO iproc = 0, p_np_io-1
             idest = p_address_io(iproc)
             smesg = (/p_iam_glb, this%glist(iproc)%ng/)
@@ -308,10 +336,13 @@ CONTAINS
                   idest, mpi_tag_data, p_comm_glb, p_err)
             ENDIF
          ENDDO
+#endif
+
       ENDIF
 
+#ifdef USEMPI
       IF (p_is_io) THEN
-
+            
          allocate (this%glist (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
@@ -341,191 +372,6 @@ CONTAINS
 
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      
-      IF (present(missing_value)) THEN
-
-         IF (p_is_io) THEN
-            DO iproc = 0, p_np_worker-1
-               IF (this%glist(iproc)%ng > 0) THEN
-                  
-                  allocate (msk (this%glist(iproc)%ng))
-
-                  DO ig = 1, this%glist(iproc)%ng
-                     ilon = this%glist(iproc)%ilon(ig)
-                     ilat = this%glist(iproc)%ilat(ig)
-                     xblk = this%grid%xblk (ilon)
-                     yblk = this%grid%yblk (ilat)
-                     xloc = this%grid%xloc (ilon)
-                     yloc = this%grid%yloc (ilat)
-
-                     msk(ig) = gfilter%blk(xblk,yblk)%val(xloc,yloc) /= missing_value
-                  ENDDO
-
-                  IF (any(.not. msk)) THEN
-
-                     this%glist(iproc)%ng = count(msk)
-
-                     IF (this%glist(iproc)%ng > 0) THEN
-                        allocate (xlist(this%glist(iproc)%ng))
-                        allocate (ylist(this%glist(iproc)%ng))
-                        xlist = pack(this%glist(iproc)%ilon, mask=msk)
-                        ylist = pack(this%glist(iproc)%ilat, mask=msk)
-                     ENDIF
-
-                     deallocate (this%glist(iproc)%ilon)
-                     deallocate (this%glist(iproc)%ilat)
-
-                     IF (this%glist(iproc)%ng > 0) THEN
-                        allocate (this%glist(iproc)%ilon(this%glist(iproc)%ng))
-                        allocate (this%glist(iproc)%ilat(this%glist(iproc)%ng))
-                        this%glist(iproc)%ilon = xlist
-                        this%glist(iproc)%ilat = ylist
-                     ENDIF
-
-                     IF (allocated(xlist)) deallocate(xlist)
-                     IF (allocated(ylist)) deallocate(ylist)
-                  ENDIF
-                     
-                  deallocate(msk)
-               ENDIF
-            ENDDO
-         ENDIF
-
-#ifdef USEMPI
-         IF (p_is_io) THEN
-            DO iworker = 0, p_np_worker-1
-
-               idest = p_address_worker(iworker)
-               smesg = (/p_iam_glb, this%glist(iworker)%ng/)
-               CALL mpi_send (smesg, 2, MPI_INTEGER, &
-                  idest, mpi_tag_mesg, p_comm_glb, p_err) 
-
-               IF (this%glist(iworker)%ng > 0) THEN
-                  CALL mpi_send (this%glist(iworker)%ilon, this%glist(iworker)%ng, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err)
-                  CALL mpi_send (this%glist(iworker)%ilat, this%glist(iworker)%ng, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err)
-               ENDIF
-            ENDDO
-         ENDIF 
-         
-         IF (p_is_worker) THEN
-            DO iio = 0, p_np_io-1
-
-               CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
-                  MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-               isrc  = rmesg(1)
-               nrecv = rmesg(2)
-               iproc = p_itis_io(isrc)
-
-               this%glist(iproc)%ng = nrecv
-
-               IF (allocated(this%glist(iproc)%ilon)) deallocate(this%glist(iproc)%ilon)
-               IF (allocated(this%glist(iproc)%ilat)) deallocate(this%glist(iproc)%ilat)
-
-               IF (nrecv > 0) THEN
-                  allocate (this%glist(iproc)%ilon (nrecv))
-                  allocate (this%glist(iproc)%ilat (nrecv))
-
-                  CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
-                     isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-                  CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
-                     isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               ENDIF
-            ENDDO
-         ENDIF
-         
-         CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-         IF (p_is_worker) THEN
-            DO iset = 1, pixelset%nset
-               
-               allocate (msk(gfrom(iset)%ng))
-
-               DO ig = 1, gfrom(iset)%ng
-                  ilon = gfrom(iset)%ilon(ig)
-                  ilat = gfrom(iset)%ilat(ig)
-                  xblk = fgrid%xblk(ilon)
-                  yblk = fgrid%yblk(ilat)
-#ifdef USEMPI
-                  iproc = p_itis_io(gblock%pio(xblk,yblk))
-#else
-                  iproc = 0
-#endif
-                  msk(ig) = find_in_sorted_list2 (ilon, ilat, this%glist(iproc)%ng, &
-                     this%glist(iproc)%ilon, this%glist(iproc)%ilat) > 0
-                  
-               ENDDO
-
-               pfilter(iset) = any(msk)
-
-               ng0 = gfrom(iset)%ng
-               gfrom(iset)%ng = count(msk)
-               IF (any(msk) .and. any(.not. msk)) THEN
-                  ng = gfrom(iset)%ng
-                  gfrom(iset)%ilon(1:ng) = pack(gfrom(iset)%ilon(1:ng0), mask = msk)
-                  gfrom(iset)%ilat(1:ng) = pack(gfrom(iset)%ilat(1:ng0), mask = msk)
-                  afrac(iset)%val (1:ng) = pack(afrac(iset)%val (1:ng0), mask = msk)
-               ENDIF
-
-               deallocate (msk)
-            ENDDO
-         ENDIF
-      ENDIF
-
-      IF (p_is_worker) THEN
-
-         allocate (this%address (pixelset%nset))
-         allocate (this%gweight (pixelset%nset))
-
-         DO iset = 1, pixelset%nset
-
-            ng = gfrom(iset)%ng
-            IF (ng > 0) THEN
-               allocate (this%address(iset)%val (2,ng))
-               allocate (this%gweight(iset)%val (ng))
-
-               IF (sum(afrac(iset)%val(1:ng)) < 1.0e-12) THEN
-                  this%gweight(iset)%val = 1.0_r8 / ng
-               ELSE
-                  this%gweight(iset)%val &
-                     = afrac(iset)%val(1:ng) / sum(afrac(iset)%val(1:ng))
-               ENDIF
-
-               DO ig = 1, gfrom(iset)%ng
-                  ilon = gfrom(iset)%ilon(ig)
-                  ilat = gfrom(iset)%ilat(ig)
-                  xblk = fgrid%xblk(ilon)
-                  yblk = fgrid%yblk(ilat)
-
-#ifdef USEMPI
-                  iproc = p_itis_io(gblock%pio(xblk,yblk))
-#else
-                  iproc = 0
-#endif
-                  this%address(iset)%val(1,ig) = iproc
-                  this%address(iset)%val(2,ig) = find_in_sorted_list2 ( &
-                     ilon, ilat, this%glist(iproc)%ng, this%glist(iproc)%ilon, this%glist(iproc)%ilat)
-               ENDDO
-            ENDIF
-         ENDDO
-
-         DO iset = 1, pixelset%nset
-            deallocate (afrac(iset)%val )
-            deallocate (gfrom(iset)%ilon)
-            deallocate (gfrom(iset)%ilat)
-         ENDDO
-
-         deallocate (afrac)
-         deallocate (gfrom)
-         
-      ENDIF
-
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-#endif
 
    END SUBROUTINE mapping_grid2pset_build 
 
@@ -537,7 +383,6 @@ CONTAINS
       USE mod_pixelset
       USE mod_data_type
       USE spmd_task
-      USE GlobalVars, only : spval
       IMPLICIT NONE
       
       class (mapping_grid2pset_type) :: this
@@ -604,18 +449,14 @@ CONTAINS
          ENDDO
 
          DO iset = 1, this%npset
-            IF (allocated(this%gweight(iset)%val)) THEN
-               pdata(iset) = 0._r8
-               DO ig = 1, size(this%gweight(iset)%val)
-                  iproc = this%address(iset)%val(1,ig)
-                  iloc  = this%address(iset)%val(2,ig)
+            pdata(iset) = 0._r8
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
 
-                  pdata(iset) = pdata(iset) &
-                     + pbuff(iproc)%val(iloc) * this%gweight(iset)%val(ig)
-               ENDDO
-            ELSE
-               pdata(iset) = spval
-            ENDIF
+               pdata(iset) = pdata(iset) &
+                  + pbuff(iproc)%val(iloc) * this%gweight(iset)%val(ig)
+            ENDDO
          ENDDO
 
          DO iproc = 0, p_np_io-1
@@ -638,7 +479,6 @@ CONTAINS
       USE mod_pixelset
       USE mod_data_type
       USE spmd_task
-      USE GlobalVars, only : spval
       IMPLICIT NONE
       
       class (mapping_grid2pset_type) :: this
@@ -706,18 +546,14 @@ CONTAINS
          ENDDO
 
          DO iset = 1, this%npset
-            IF (allocated(this%gweight(iset)%val)) THEN
-               pdata(:,iset) = 0._r8
-               DO ig = 1, size(this%gweight(iset)%val)
-                  iproc = this%address(iset)%val(1,ig)
-                  iloc  = this%address(iset)%val(2,ig)
+            pdata(:,iset) = 0._r8
+            DO ig = 1, size(this%gweight(iset)%val)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
 
-                  pdata(:,iset) = pdata(:,iset) &
-                     + pbuff(iproc)%val(:,iloc) * this%gweight(iset)%val(ig)
-               ENDDO
-            ELSE
-               pdata(:,iset) = spval
-            ENDIF
+               pdata(:,iset) = pdata(:,iset) &
+                  + pbuff(iproc)%val(:,iloc) * this%gweight(iset)%val(ig)
+            ENDDO
          ENDDO
 
          DO iproc = 0, p_np_io-1

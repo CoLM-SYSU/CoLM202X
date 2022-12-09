@@ -24,7 +24,6 @@ MODULE mod_block
    CONTAINS
 
       procedure, PUBLIC :: set_by_size => block_set_by_size
-      procedure, PUBLIC :: set_by_file => block_set_by_file
 
       procedure, PUBLIC :: save_to_file   => block_save_to_file
       procedure, PUBLIC :: load_from_file => block_load_from_file
@@ -58,7 +57,7 @@ CONTAINS
       class (block_type) :: this
       INTEGER,  intent(in) :: nxblk_in, nyblk_in
 
-      ! Local Variables
+      ! Local variables
       INTEGER  :: iblk, jblk
       INTEGER, parameter :: iset(24) = &
          (/1,  2,  3,  4,  5,  6,  8,  9, 10,  12,  15,  18, &
@@ -102,7 +101,7 @@ CONTAINS
 
       IF (p_is_master) THEN
          write (*,*) 'Block information:'
-         write (*,'(I3,A,I3,A)') this%nxblk, ' blocks in longitude,', &
+         write (*,'(I3,A21,I3,A20)') this%nxblk, ' blocks in longitude,', &
             this%nyblk, ' blocks in latitude.'
          write (*,*)
       ENDIF
@@ -110,40 +109,6 @@ CONTAINS
       CALL this%init_pio ()
 
    END SUBROUTINE block_set_by_size
-
-   ! --------------------------------
-   SUBROUTINE block_set_by_file (this, block_file)
-
-      USE ncio_serial
-      USE spmd_task
-      IMPLICIT NONE
-
-      class (block_type) :: this
-      CHARACTER(len=*),  intent(in) :: block_file
-
-      ! Local variables
-      CHARACTER(len=256) :: filename
-         
-      filename = trim(block_file)
-         
-      CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
-      CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
-      CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
-      CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
-         
-      this%nyblk = size(this%lat_s)
-      this%nxblk = size(this%lon_w)
-      
-      IF (p_is_master) THEN
-         write (*,*) 'Block information:'
-         write (*,'(I3,A,I3,A)') this%nxblk, ' blocks in longitude,', &
-            this%nyblk, ' blocks in latitude.'
-         write (*,*)
-      ENDIF
-
-      CALL this%init_pio ()
-
-   END SUBROUTINE block_set_by_file
 
    ! --------------------------------
    SUBROUTINE block_save_to_file (this, dir_landdata)
@@ -178,7 +143,7 @@ CONTAINS
    END SUBROUTINE block_save_to_file
 
    ! --------------------------------
-   SUBROUTINE block_load_from_file (this, dir_landdata)
+   SUBROUTINE block_load_from_file (this, dir_landdata, is_read_pio)
 
       USE ncio_serial
       USE spmd_task
@@ -186,6 +151,7 @@ CONTAINS
 
       class (block_type) :: this
       CHARACTER(len=*),  intent(in) :: dir_landdata
+      LOGICAL, optional, intent(in) :: is_read_pio
 
       ! Local variables
       CHARACTER(len=256) :: filename
@@ -202,12 +168,20 @@ CONTAINS
       
       IF (p_is_master) THEN
          write (*,*) 'Block information:'
-         write (*,'(I3,A,I3,A)') this%nxblk, ' blocks in longitude,', &
+         write (*,'(I3,A21,I3,A20)') this%nxblk, ' blocks in longitude,', &
             this%nyblk, ' blocks in latitude.'
          write (*,*)
       ENDIF
 
-      CALL this%read_pio (dir_landdata)
+      IF (present(is_read_pio)) THEN
+         IF (is_read_pio) THEN
+            CALL this%read_pio (dir_landdata)
+         ELSE
+            CALL this%init_pio ()
+         ENDIF
+      ELSE
+         CALL this%read_pio (dir_landdata)
+      ENDIF 
 
    END SUBROUTINE block_load_from_file
 
@@ -235,6 +209,8 @@ CONTAINS
       iblk_south = find_nearest_south (edges, this%nyblk, this%lat_s)
       iblk_north = find_nearest_north (edgen, this%nyblk, this%lat_n)
 
+      numblocks_y = iblk_north - iblk_south + 1
+
       CALL normalize_longitude (edgew)
       CALL normalize_longitude (edgee)
 
@@ -254,9 +230,6 @@ CONTAINS
       ENDIF
 
       IF (present(numblocks)) THEN
-        
-         numblocks_y = iblk_north - iblk_south + 1
-         
          IF (iblk_east >= iblk_west) THEN
             numblocks_x = iblk_east - iblk_west + 1
          ELSE
@@ -264,7 +237,6 @@ CONTAINS
          ENDIF
 
          numblocks = numblocks_x * numblocks_y
-
       ENDIF
 
    END SUBROUTINE block_clip
@@ -280,10 +252,11 @@ CONTAINS
 
       class (block_type) :: this
       
-      INTEGER :: iblk, jblk, iproc
-      INTEGER :: iblk_south, iblk_north, iblk_west, iblk_east
-      INTEGER :: numblocks
-      INTEGER :: iblkme
+      INTEGER  :: iblk, jblk, iproc
+      INTEGER  :: iblk_south, iblk_north, iblk_west, iblk_east
+      REAL(r8) :: edges, edgen, edgew, edgee
+      INTEGER  :: numblocks
+      INTEGER  :: iblkme
 
       IF (p_is_master) THEN
          CALL this%clip (iblk_south, iblk_north, iblk_west, iblk_east, numblocks)
@@ -352,9 +325,9 @@ CONTAINS
       allocate(this%yblkme(1))
 
       CALL normalize_longitude (SITE_lon_location)
-      this%xblkme(1) = find_nearest_west  (SITE_lon_location, this%nxblk, this%lon_w)
+      this%xblkme(1) = find_nearest_west  (SITE_lon_location, gblock%nxblk, gblock%lon_w)
 
-      this%yblkme(1) = find_nearest_south (SITE_lat_location, this%nyblk, this%lat_s)
+      this%yblkme(1) = find_nearest_south (SITE_lat_location, gblock%nyblk, gblock%lat_s)
 #endif
 
    END SUBROUTINE block_init_pio
@@ -372,15 +345,15 @@ CONTAINS
 
       ! Local Variables
       CHARACTER(len=256) :: filename
-      INTEGER, allocatable :: nelm_io(:), nelmblk(:,:)
+      INTEGER, allocatable :: nbasin_io(:), nbasinblk(:,:)
       INTEGER  :: iblk_south, iblk_north, iblk_west, iblk_east
       INTEGER  :: numblocks, iblk, jblk, iproc, jproc
       INTEGER  :: iblkme
       
       IF (p_is_master) THEN
-         filename = trim(dir_landdata) // '/mesh/mesh.nc'
-         CALL ncio_read_serial (filename, 'nelm_blk', nelmblk)
-         numblocks = count(nelmblk > 0)
+         filename = trim(dir_landdata) // '/landbasin/landbasin.nc'
+         CALL ncio_read_serial (filename, 'nbasin_blk', nbasinblk)
+         numblocks = count(nbasinblk > 0)
       ENDIF 
       
       IF (p_is_master) THEN
@@ -399,8 +372,8 @@ CONTAINS
          this%pio(:,:) = -1
 
 #ifdef USEMPI
-         allocate (nelm_io (0:p_np_io-1))
-         nelm_io(:) = 0
+         allocate (nbasin_io (0:p_np_io-1))
+         nbasin_io(:) = 0
          jproc = -1
 #endif
 
@@ -408,11 +381,11 @@ CONTAINS
             iblk = iblk_west
             DO while (.true.)
 #ifdef USEMPI
-               IF (nelmblk(iblk,jblk) > 0) THEN
-                  iproc = minloc(nelm_io, dim=1) - 1
+               IF (nbasinblk(iblk,jblk) > 0) THEN
+                  iproc = minloc(nbasin_io, dim=1) - 1
                   this%pio(iblk,jblk) = p_address_io(iproc)
-                  nelm_io(iproc) = nelm_io(iproc) + nelmblk(iblk,jblk)
-               ELSEIF (nelmblk(iblk,jblk) == 0) THEN
+                  nbasin_io(iproc) = nbasin_io(iproc) + nbasinblk(iblk,jblk)
+               ELSEIF (nbasinblk(iblk,jblk) == 0) THEN
                   jproc = mod(jproc+1, p_np_io)
                   this%pio(iblk,jblk) = p_address_io(jproc)
                ENDIF
@@ -429,7 +402,7 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         deallocate (nelm_io)
+         deallocate (nbasin_io)
 #endif
       ENDIF
 
@@ -464,7 +437,7 @@ CONTAINS
          
       DO jblk = 1, this%nyblk
          DO iblk = 1, this%nxblk
-            IF (nelmblk(iblk,jblk) > 0) THEN
+            IF (nbasinblk(iblk,jblk) > 0) THEN
                this%xblkme(1) = iblk
                this%yblkme(1) = jblk
             ENDIF
@@ -472,7 +445,7 @@ CONTAINS
       ENDDO
 #endif
 
-      IF (allocated(nelmblk)) deallocate (nelmblk)
+      IF (allocated(nbasinblk)) deallocate (nbasinblk)
 
    END SUBROUTINE block_read_pio
 

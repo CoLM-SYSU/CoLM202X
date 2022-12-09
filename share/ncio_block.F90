@@ -18,7 +18,9 @@ MODULE ncio_block
       MODULE procedure ncio_read_block_real8_2d_time 
    END interface ncio_read_block_time
 
+#ifdef SinglePoint
    PUBLIC :: ncio_read_site_time
+#endif
 
 CONTAINS
 
@@ -329,6 +331,7 @@ CONTAINS
    END SUBROUTINE ncio_read_block_real8_2d_time
 
    ! ----
+#ifdef SinglePoint
    SUBROUTINE ncio_read_site_time (filename, dataname, itime, rdata)
      
       USE netcdf
@@ -363,5 +366,6 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE ncio_read_site_time
+#endif
 
 END MODULE ncio_block

@@ -109,6 +109,10 @@ SUBROUTINE HTOP_readin (dir_landdata)
                ps = patch_pft_s(npatch)
                pe = patch_pft_e(npatch)
 
+               IF ((ps == -1) .or. (pe == -1)) then
+                  write(*,*) p_iam_glb, npatch, numpatch, numpft
+               ENDIF
+
                DO p = ps, pe
                   n = pftclass(p)
 

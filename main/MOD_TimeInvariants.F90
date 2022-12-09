@@ -42,7 +42,9 @@ SAVE
 
   REAL(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
+#ifdef Campbell_SOIL_MODEL
   REAL(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   REAL(r8), allocatable :: theta_r      (:,:)
   REAL(r8), allocatable :: alpha_vgm    (:,:)
@@ -136,7 +138,9 @@ SAVE
         allocate (wf_sand      (nl_soil,numpatch))
         allocate (porsl        (nl_soil,numpatch))
         allocate (psi0         (nl_soil,numpatch))
+#ifdef Campbell_SOIL_MODEL
         allocate (bsw          (nl_soil,numpatch))
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         allocate (theta_r      (nl_soil,numpatch))
         allocate (alpha_vgm    (nl_soil,numpatch))
@@ -229,7 +233,9 @@ SAVE
      call ncio_read_vector (file_restart, 'wf_sand   ',   nl_soil, landpatch, wf_sand   ) ! gravimetric fraction of sand
      call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
+#ifdef Campbell_SOIL_MODEL                                         
      call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) 
      call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) 
@@ -329,60 +335,62 @@ SAVE
 
      call ncio_create_file_vector (file_restart, landpatch)
 
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil', nl_soil)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake', nl_lake)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
+     CALL ncio_define_pixelset_dimension (file_restart, landpatch)
+     CALL ncio_define_dimension_vector (file_restart, 'soil', nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, 'lake', nl_lake)
+     CALL ncio_define_dimension_vector (file_restart, 'band',   2)
+     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
      
-     call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass) !
-     call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype ) !
+     call ncio_write_vector (file_restart, 'patchclass', 'vector', landpatch, patchclass) !
+     call ncio_write_vector (file_restart, 'patchtype' , 'vector', landpatch, patchtype ) !
      
-     call ncio_write_vector (file_restart, 'patchlonr' , 'patch', landpatch, patchlonr ) !
-     call ncio_write_vector (file_restart, 'patchlatr' , 'patch', landpatch, patchlatr ) !
+     call ncio_write_vector (file_restart, 'patchlonr' , 'vector', landpatch, patchlonr ) !
+     call ncio_write_vector (file_restart, 'patchlatr' , 'vector', landpatch, patchlatr ) !
      
-     call ncio_write_vector (file_restart, 'lakedepth', 'patch', landpatch, lakedepth ,      compress) !
-     call ncio_write_vector (file_restart, 'dz_lake' ,  'lake', nl_lake, 'patch', landpatch, dz_lake, compress) !
+     call ncio_write_vector (file_restart, 'lakedepth', 'vector', landpatch, lakedepth ,      compress) !
+     call ncio_write_vector (file_restart, 'dz_lake' ,  'lake', nl_lake, 'vector', landpatch, dz_lake, compress) !
      
-     call ncio_write_vector (file_restart, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, compress) ! albedo of visible of the saturated soil
-     call ncio_write_vector (file_restart, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, compress) ! albedo of visible of the dry soil
-     call ncio_write_vector (file_restart, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, compress) ! albedo of near infrared of the saturated soil
-     call ncio_write_vector (file_restart, 'soil_d_n_alb', 'patch', landpatch, soil_d_n_alb, compress) ! albedo of near infrared of the dry soil
+     call ncio_write_vector (file_restart, 'soil_s_v_alb', 'vector', landpatch, soil_s_v_alb, compress) ! albedo of visible of the saturated soil
+     call ncio_write_vector (file_restart, 'soil_d_v_alb', 'vector', landpatch, soil_d_v_alb, compress) ! albedo of visible of the dry soil
+     call ncio_write_vector (file_restart, 'soil_s_n_alb', 'vector', landpatch, soil_s_n_alb, compress) ! albedo of near infrared of the saturated soil
+     call ncio_write_vector (file_restart, 'soil_d_n_alb', 'vector', landpatch, soil_d_n_alb, compress) ! albedo of near infrared of the dry soil
 
-     call ncio_write_vector (file_restart, 'vf_quartz ', 'soil', nl_soil, 'patch', landpatch, vf_quartz , compress) ! volumetric fraction of quartz within mineral soil
-     call ncio_write_vector (file_restart, 'vf_gravels', 'soil', nl_soil, 'patch', landpatch, vf_gravels, compress) ! volumetric fraction of gravels
-     call ncio_write_vector (file_restart, 'vf_om     ', 'soil', nl_soil, 'patch', landpatch, vf_om     , compress) ! volumetric fraction of organic matter
-     call ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'patch', landpatch, vf_sand   , compress) ! volumetric fraction of sand
-     call ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'patch', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
-     call ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'patch', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
-     call ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'patch', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
-     call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'patch', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
-     call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
+     call ncio_write_vector (file_restart, 'vf_quartz ', 'soil', nl_soil, 'vector', landpatch, vf_quartz , compress) ! volumetric fraction of quartz within mineral soil
+     call ncio_write_vector (file_restart, 'vf_gravels', 'soil', nl_soil, 'vector', landpatch, vf_gravels, compress) ! volumetric fraction of gravels
+     call ncio_write_vector (file_restart, 'vf_om     ', 'soil', nl_soil, 'vector', landpatch, vf_om     , compress) ! volumetric fraction of organic matter
+     call ncio_write_vector (file_restart, 'vf_sand   ', 'soil', nl_soil, 'vector', landpatch, vf_sand   , compress) ! volumetric fraction of sand
+     call ncio_write_vector (file_restart, 'wf_gravels', 'soil', nl_soil, 'vector', landpatch, wf_gravels, compress) ! gravimetric fraction of gravels
+     call ncio_write_vector (file_restart, 'wf_sand   ', 'soil', nl_soil, 'vector', landpatch, wf_sand   , compress) ! gravimetric fraction of sand
+     call ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'vector', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
+     call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'vector', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
+#ifdef Campbell_SOIL_MODEL
+     call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'vector', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) 
-     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) 
-     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress) 
-     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress) 
-     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress) 
-     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) 
+     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'vector', landpatch, theta_r   , compress) 
+     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'vector', landpatch, alpha_vgm , compress) 
+     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'vector', landpatch, L_vgm     , compress) 
+     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'vector', landpatch, n_vgm     , compress) 
+     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, sc_vgm    , compress) 
+     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'vector', landpatch, fc_vgm    , compress) 
 #endif
-     call ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'patch', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
-     call ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'patch', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
-     call ncio_write_vector (file_restart, 'k_solids ' , 'soil', nl_soil, 'patch', landpatch, k_solids  , compress) ! thermal conductivity of soil solids [W/m-K]
-     call ncio_write_vector (file_restart, 'dksatu   ' , 'soil', nl_soil, 'patch', landpatch, dksatu    , compress) ! thermal conductivity of saturated soil [W/m-K]
-     call ncio_write_vector (file_restart, 'dksatf   ' , 'soil', nl_soil, 'patch', landpatch, dksatf    , compress) ! thermal conductivity of saturated soil [W/m-K]
-     call ncio_write_vector (file_restart, 'dkdry    ' , 'soil', nl_soil, 'patch', landpatch, dkdry     , compress) ! thermal conductivity for dry soil  [W/(m-K)]
+     call ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'vector', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
+     call ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'vector', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
+     call ncio_write_vector (file_restart, 'k_solids ' , 'soil', nl_soil, 'vector', landpatch, k_solids  , compress) ! thermal conductivity of soil solids [W/m-K]
+     call ncio_write_vector (file_restart, 'dksatu   ' , 'soil', nl_soil, 'vector', landpatch, dksatu    , compress) ! thermal conductivity of saturated soil [W/m-K]
+     call ncio_write_vector (file_restart, 'dksatf   ' , 'soil', nl_soil, 'vector', landpatch, dksatf    , compress) ! thermal conductivity of saturated soil [W/m-K]
+     call ncio_write_vector (file_restart, 'dkdry    ' , 'soil', nl_soil, 'vector', landpatch, dkdry     , compress) ! thermal conductivity for dry soil  [W/(m-K)]
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
-     call ncio_write_vector (file_restart, 'BA_alpha ' , 'soil', nl_soil, 'patch', landpatch, BA_alpha  , compress) ! alpha in Balland and Arp(2005) thermal conductivity scheme
-     call ncio_write_vector (file_restart, 'BA_beta  ' , 'soil', nl_soil, 'patch', landpatch, BA_beta   , compress) ! beta in Balland and Arp(2005) thermal conductivity scheme
+     call ncio_write_vector (file_restart, 'BA_alpha ' , 'soil', nl_soil, 'vector', landpatch, BA_alpha  , compress) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+     call ncio_write_vector (file_restart, 'BA_beta  ' , 'soil', nl_soil, 'vector', landpatch, BA_beta   , compress) ! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
 
-     call ncio_write_vector (file_restart, 'htop' , 'patch', landpatch, htop) !
-     call ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot) !
+     call ncio_write_vector (file_restart, 'htop' , 'vector', landpatch, htop) !
+     call ncio_write_vector (file_restart, 'hbot' , 'vector', landpatch, hbot) !
 
 #ifdef USE_DEPTH_TO_BEDROCK
-     call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock) !
-     call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock) !
+     call ncio_write_vector (file_restart, 'debdrock' , 'vector', landpatch, dbedrock) !
+     call ncio_write_vector (file_restart, 'ibedrock' , 'vector', landpatch, ibedrock) !
 #endif
 
      if (p_is_master) then
@@ -459,7 +467,9 @@ SAVE
            deallocate (wf_sand   )
            deallocate (porsl  )
            deallocate (psi0   )
+#ifdef Campbell_SOIL_MODEL
            deallocate (bsw    )
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            deallocate (theta_r  )
            deallocate (alpha_vgm)
@@ -536,7 +546,9 @@ SAVE
       call check_vector_data ('wf_sand     ', wf_sand     ) ! gravimetric fraction of sand
       call check_vector_data ('porsl       ', porsl       ) ! fraction of soil that is voids [-]
       call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
+#ifdef Campbell_SOIL_MODEL
       call check_vector_data ('bsw         ', bsw         ) ! clapp and hornbereger "b" parameter [-]
+#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       call check_vector_data ('theta_r     ', theta_r     ) 
       call check_vector_data ('alpha_vgm   ', alpha_vgm   ) 
