@@ -433,7 +433,7 @@ CONTAINS
    END SUBROUTINE vec_gather_scatter_free_mem
 
    ! --------------------------------
-   SUBROUTINE subset_build (this, superset, subset, use_frac)
+   SUBROUTINE subset_build (this, superset, subset, use_frac, shadowfrac)
       
       USE mod_mesh
       USE mod_pixel
@@ -445,6 +445,7 @@ CONTAINS
       TYPE (pixelset_type), intent(in) :: superset
       TYPE (pixelset_type), intent(in) :: subset
       LOGICAL, intent(in) :: use_frac
+      REAL(r8), intent(in), optional :: shadowfrac (:)
 
       ! Local Variables
       INTEGER :: isuperset, isubset, ielm, ipxl, istt, iend
@@ -498,6 +499,9 @@ CONTAINS
                   pixel%lon_w(mesh(ielm)%ilon(ipxl)), &
                   pixel%lon_e(mesh(ielm)%ilon(ipxl)) )
             ENDDO
+            IF (present(shadowfrac)) THEN
+               this%subfrc(isubset) = this%subfrc(isubset) * shadowfrac(isubset)
+            ENDIF
          ENDDO
 
          DO isuperset = 1, superset%nset

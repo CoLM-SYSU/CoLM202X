@@ -152,7 +152,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifndef SinglePoint
    lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
-   CALL ncio_define_dimension_crop (lndname, landpatch, 'patch')
+   CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctcrop, 1)
 #else
    allocate (SITE_croptyp(numpatch))

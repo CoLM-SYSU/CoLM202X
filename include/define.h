@@ -41,7 +41,7 @@
 ! 9. Soil parameter options:
 ! 9.1 If defined, soil parameters are upscaled from rawdata (1 km grids) to model pixels through
 !      FIT algorithm (Montzka et al., 2017), otherwise use median of rawdata within a model pixel.
-#undef SOILPAR_UPS_FIT
+#define  SOILPAR_UPS_FIT
 ! 9.2 Options for soil thermal conductivity schemes.
 !      THERMAL_CONDUCTIVITY_SCHEME_1: Farouki (1981)
 !      THERMAL_CONDUCTIVITY_SCHEME_2: Johansen(1975)
@@ -61,7 +61,7 @@
 #undef CaMa_Flood
 
 ! 12. If defined, BGC model is used.
-#undef BGC
+#define BGC
 !    Conflicts :  only used when PFT_CLASSIFICATION is defined.
 #ifndef PFT_CLASSIFICATION
 #undef BGC
@@ -73,7 +73,7 @@
 #undef LAIfdbk
 #endif
 ! 12.2 If defined, CROP model is used
-#undef CROP
+#define  CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
