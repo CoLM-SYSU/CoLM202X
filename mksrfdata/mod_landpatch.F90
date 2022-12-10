@@ -317,15 +317,17 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
 #endif
 
-      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #if (defined CROP) 
-      elm_patch%subfrc = elm_patch%subfrc * pctcrop
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif
 
 #ifdef CATCHMENT
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #if (defined CROP) 
-      hru_patch%subfrc = hru_patch%subfrc * pctcrop
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true., pctcrop)
+#else
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
 #endif
 

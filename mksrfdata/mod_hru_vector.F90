@@ -42,7 +42,12 @@ CONTAINS
       IF (p_is_worker) THEN
       
          CALL basin_hru%build (landelm, landhru,   use_frac = .true.)
+
+#if (defined CROP) 
+         CALL hru_patch%build (landhru, landpatch, use_frac = .true., pctcrop)
+#else
          CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
+#endif
 
          IF (numelm > 0) THEN
             allocate (nhru_bsn (numelm))

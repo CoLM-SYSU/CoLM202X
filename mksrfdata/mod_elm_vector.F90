@@ -36,7 +36,11 @@ CONTAINS
       INTEGER, allocatable :: order    (:)
       
       IF (p_is_worker) THEN
+#if (defined CROP) 
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true., pctcrop)
+#else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
       ENDIF
 
       IF (p_is_worker) THEN
