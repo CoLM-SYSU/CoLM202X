@@ -1,0 +1,34 @@
+#==========================================================
+# CaMa-Flood Mkinclude (for MaxOSX, gfortran)
+#==========================================================
+RM = /bin/rm -f
+CP = /bin/cp
+
+#======================================
+# Pre-Prosessing options
+# DMPI=-DUseMPI: activate when MPI parallelization is used
+# DCDF=-DUseCDF: activate when using netCDF, comment out when not needed
+# DATM=-DNoAtom: activate when OMP ATOMIC calculation should be avoided (bit identical simulation)
+#======================================
+
+#DMPI=-DUseMPI_CMF
+#DCDF=-DUseCDF_CMF
+#DATM=-DNoAtom_CMF
+CFLAGS=$(DMPI) $(DCDF) $(DATM) 
+
+
+#======================================
+# gfortran Mac OSX 
+#======================================
+
+#INC = -I/usr/local/include 
+#LIB = -L/usr/local/lib -lnetcdff
+
+#==============================
+# FCMP: main program (src/), FC: pre/post process (map/ etc/)
+FCMP = gfortran -fopenmp
+FC = gfortran
+
+LFLAGS =
+FFLAGS = -O3 -Wall -cpp -free -fimplicit-none -fbounds-check -fbacktrace
+
