@@ -23,7 +23,9 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  USE mod_namelist, only : DEF_forcing
  USE mod_forcing, only : forcmask
  use omp_lib
-
+#ifdef CaMa_Flood
+ use MOD_CaMa_Variables, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
+#endif
  IMPLICIT NONE
 
   integer,  INTENT(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
@@ -85,6 +87,9 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          BA_alpha(1:,i),  BA_beta(1:,i),                                     &
 #endif
          rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &  
+#if(defined CaMa_Flood)
+                flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &!
+#endif
 
        ! VEGETATION INFORMATION
          htop(i),         hbot(i),         sqrtdi(m),                        &

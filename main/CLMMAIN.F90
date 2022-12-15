@@ -23,6 +23,9 @@ SUBROUTINE CLMMAIN ( &
            BA_alpha,     BA_beta,                                   &
 #endif
            rootfr,       lakedepth,    dz_lake,                     &
+#if(defined CaMa_Flood)
+         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             & !flddepth is in mm
+#endif
 
          ! vegetation information
            htop,         hbot,         sqrtdi,                      &
@@ -144,6 +147,10 @@ SUBROUTINE CLMMAIN ( &
   USE ALBEDO
   USE timemanager
   USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+#if(defined CaMa_Flood)
+   USE colm_CaMaMod,only:fldfluxes
+   USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
+#endif
 
   IMPLICIT NONE
  
@@ -274,7 +281,12 @@ SUBROUTINE CLMMAIN ( &
         forc_hgt_t  ,&! observational height of temperature [m]
         forc_hgt_q  ,&! observational height of humidity [m]
         forc_rhoair   ! density air [kg/m3]
-
+#if(defined CaMa_Flood)
+   real(r8), intent(in)    :: fldfrc    !effective inundation depth:treat as precipitation--> allow re-evaporation and infiltrition![mm/s]
+   real(r8), intent(inout) :: flddepth
+   real(r8), intent(out)   :: fevpg_fld
+   real(r8), intent(out)   :: qinfl_fld
+#endif
 ! Variables required for restart run
 ! ----------------------------------------------------------------------
   INTEGER, intent(in) :: &
@@ -448,6 +460,26 @@ SUBROUTINE CLMMAIN ( &
 
      REAL(r8) :: a, aa 
      INTEGER ps, pe, pc
+#if(defined CaMa_Flood)
+      real(r8) :: &
+      kk, &
+      taux_fld,     &! wind stress: E-W [kg/m/s**2]
+      tauy_fld,     &! wind stress: N-S [kg/m/s**2]
+      fsena_fld,    &! sensible heat from agcm reference height to atmosphere [W/m2]
+      fevpa_fld,    &! evaporation from agcm reference height to atmosphere [mm/s]
+      fseng_fld,    &! sensible heat flux from ground [W/m2]
+      tref_fld,     &! 2 m height air temperature [kelvin]
+      qref_fld,     &! 2 m height air humidity
+      z0m_fld,      &! effective roughness [m]
+      zol_fld,      &! dimensionless height (z/L) used in Monin-Obukhov theory
+      rib_fld,      &! bulk Richardson number in surface layer
+      ustar_fld,    &! friction velocity [m/s]
+      tstar_fld,    &! temperature scaling parameter
+      qstar_fld,    &! moisture scaling parameter
+      fm_fld,       &! integral of profile function for momentum
+      fh_fld,       &! integral of profile function for heat
+      fq_fld !,       &        !,       & !,       &! integral of profile function for moisture
+#endif
 
 !======================================================================
 !  [1] Solar absorbed by vegetation and ground
@@ -660,8 +692,12 @@ ENDIF
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,pondmx            ,&
               ssi               ,wimp              ,smpmin            ,zwt               ,&
-              wa                ,qcharge           ,errw_rsub)
+              wa                ,qcharge           ,errw_rsub &
 
+#if(defined CaMa_Flood)
+            ,flddepth,fldfrc,qinfl_fld  &
+#endif
+              )
       ELSE
 
          CALL WATER_VSF (ipatch ,patchtype         ,lb                ,nl_soil           ,&
@@ -680,7 +716,11 @@ ENDIF
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
               pondmx,                                                                     & 
               wimp              ,zwt               ,dpond             ,wa                ,&
-              qcharge           ,errw_rsub)
+              qcharge           ,errw_rsub &
+#if(defined CaMa_Flood)
+             ,flddepth,fldfrc,qinfl_fld  &
+#endif
+             )
 
       ENDIF
 
@@ -741,6 +781,13 @@ ENDIF
 
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       IF(patchtype==2) errorw=0.    !wetland
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+   if (patchtype == 0) then
+      errorw=(endwb-totwb)-(forc_prc+forc_prl+qinfl_fld-fevpa-rnof-errw_rsub)*deltim
+   ENDIF
+ENDIF
+#endif
       xerr=errorw/deltim
 
 #if(defined CLMDEBUG)
@@ -983,6 +1030,46 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
 !======================================================================
 
 ENDIF
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+   if (qinfl_fld<0.0) fevpg_fld=0.0d0
+   flddepth        =  flddepth- qinfl_fld*deltim !mm
+endif
+if (LWEVAP) then 
+   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0)then
+         call fldfluxes (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
+            forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
+            taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
+            z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
+      if (fevpg_fld<0.0) fevpg_fld=0.0d0
+      if ((flddepth-deltim*fevpg_fld .GT. 0.0) .and. (fevpg_fld.GT.0.0)) then
+         flddepth=flddepth-deltim*fevpg_fld
+         !taux= taux_fld*fldfrc+(1.0-fldfrc)*taux
+         !tauy= tauy_fld*fldfrc+(1.0-fldfrc)*tauy
+         fseng= fseng_fld*fldfrc+(1.0-fldfrc)*fseng
+         fevpg= fevpg_fld*fldfrc+(1.0-fldfrc)*fevpg
+         !tref=tref_fld*fldfrc+(1.0-fldfrc)*tref! 2 m height air temperature [kelvin]
+         !qref=qref_fld*fldfrc+(1.0-fldfrc)*qref! 2 m height air humidity
+         !z0m=z0m_fld*fldfrc+(1.0-fldfrc)*z0m! effective roughness [m]
+         !zol=zol_fld*fldfrc+(1.0-fldfrc)*zol! dimensionless height (z/L) used in Monin-Obukhov theory
+         !rib=rib_fld*fldfrc+(1.0-fldfrc)*rib! bulk Richardson number in surface layer
+         !ustar=ustar_fld*fldfrc+(1.0-fldfrc)*ustar! friction velocity [m/s]
+         !tstar=tstar_fld*fldfrc+(1.0-fldfrc)*tstar! temperature scaling parameter
+         !qstar=qstar_fld*fldfrc+(1.0-fldfrc)*qstar! moisture scaling parameter
+         !fm=fm_fld*fldfrc+(1.0-fldfrc)*fm! integral of profile function for momentum
+         !fh=fh_fld*fldfrc+(1.0-fldfrc)*fh! integral of profile function for heat
+         !fq=fq_fld*fldfrc+(1.0-fldfrc)*fq!,       &! integral of profile function for moisture
+      else
+         fevpg_fld=0.0d0
+      endif
+   else
+      fevpg_fld=0.0d0
+   endif 
+else
+   fevpg_fld=0.0d0
+endif
+
+#endif
 
 
 !======================================================================

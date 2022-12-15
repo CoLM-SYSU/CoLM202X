@@ -1153,7 +1153,12 @@ contains
             'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
 
 #if(defined CaMa_Flood)
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+if (p_is_master) then
          CALL hist_out_cama (file_hist_cama, itime_in_file_cama)
+ENDIF
 #endif
 
          if (allocated(filter)) deallocate(filter)

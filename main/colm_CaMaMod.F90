@@ -4,18 +4,13 @@ module colm_CaMaMod
    use mod_namelist
    USE MOD_CaMa_Variables
    USE PARKIND1,                ONLY: JPRB, JPRM, JPIM
-   !USE YOS_CMF_TIME,            ONLY: NSTEPS
    USE CMF_DRV_CONTROL_MOD,     ONLY: CMF_DRV_INPUT,   CMF_DRV_INIT,    CMF_DRV_END
    USE CMF_DRV_ADVANCE_MOD,     ONLY: CMF_DRV_ADVANCE
    USE CMF_CTRL_FORCING_MOD,    ONLY: CMF_FORCING_GET, CMF_FORCING_PUT
    USE CMF_CTRL_OUTPUT_MOD,     ONLY: CMF_OUTPUT_INIT,CMF_OUTPUT_END
-   !USE CMF_CTRL_RESTART_MOD,    ONLY: CMF_RESTART_WRITE
    USE YOS_CMF_INPUT,           ONLY: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,RMIS,DMIS
-
-   !use YOS_CMF_MAP,             only: I2NEXTX
    use precision,               only: r8,r4
-   !use YOS_CMF_MAP,             ONLY: D1LON, D1LAT ,D2GRAREA
-   !USE CMF_UTILS_MOD,           ONLY: VEC2MAPD
+   USE YOS_CMF_INPUT,           ONLY: LROSPLIT,LWEVAP,LWINFILT
    use spmd_task
    use CMF_CTRL_TIME_MOD    
    use GlobalVars, only : spval
@@ -43,7 +38,7 @@ module colm_CaMaMod
    end interface
 CONTAINS
 
-   subroutine colm_CaMa_init !(nlon_cama, nlat_cama)
+   subroutine colm_CaMa_init  
 
       use CMF_CTRL_OUTPUT_MOD
       USE mod_landpatch
@@ -51,7 +46,6 @@ CONTAINS
       USE YOS_CMF_TIME,       ONLY: YYYY0
       implicit none
 
-      !INTEGER, intent(in) :: nlon_cama, nlat_cama
       INTEGER nlon_cama, nlat_cama
       integer dtime
       integer nnn,i,j,IX,IY,mmm
@@ -63,9 +57,8 @@ CONTAINS
       if(p_is_master)then 
          !*** 1a. Namelist handling
          CALL CMF_DRV_INPUT
-         DT       = DEF_simulation_time%timestep
-         DTIN     = DEF_simulation_time%timestep
-         IFRQ_INP = DTIN/3600.0
+         DT       = IFRQ_INP*3600!DEF_simulation_time%timestep
+         DTIN     = IFRQ_INP*3600
          SYEAR    = DEF_simulation_time%start_year                              !  start year  
          SMON     = DEF_simulation_time%start_month                            !  month       
          SDAY     = DEF_simulation_time%start_day                             !  day        
@@ -141,17 +134,27 @@ CONTAINS
                DEF_hist_cama_vars%damsto=.true. 
             CASE ('daminf')   !!! added
                DEF_hist_cama_vars%daminf=.true. 
+            CASE ('levsto')   !!! added
+               DEF_hist_cama_vars%levsto=.true. 
+            CASE ('levdph')   !!! added
+               DEF_hist_cama_vars%levdph=.true. 
+            CASE ('wevap')   !!! added
+               DEF_hist_cama_vars%wevap=.true. 
+            CASE ('winfilt')   !!! added
+               DEF_hist_cama_vars%winfilt=.true.             
             CASE DEFAULT
                stop
             END SELECT
          end do
       endif
-      CALL mpi_bcast (NX      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (NY      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (NX      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (NY      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (IFRQ_INP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
 
-      nlon_cama=NX
-      nlat_cama=NY
-      CALL gcama%define_by_ndims (nlon_cama, nlat_cama) 
+      CALL gcama%define_by_ndims (NX, NY) 
       call mp2g_cama%build (landpatch, gcama)
       call mg2p_cama%build (gcama, landpatch)
 
@@ -162,64 +165,81 @@ CONTAINS
       call FLUSH_acc_cama_fluxes    ()
 
       if(p_is_master)then 
-         allocate (runoff_2d (cama_gather%ginfo%nlon,cama_gather%ginfo%nlat))
+         ALLOCATE (runoff_2d (NX,NY))
+         ALLOCATE (fevpg_2d  (NX,NY))
+         ALLOCATE (finfg_2d  (NX,NY))
          !*** 1c. allocate data buffer for input forcing
-         ALLOCATE (ZBUFF(NXIN,NYIN,2))
-         ALLOCATE (Effarea(NX,NY))
-         ALLOCATE (Effdepth(NX,NY))
+         ALLOCATE (ZBUFF(NX,NY,4))
+         ALLOCATE (fldfrc_tmp(NX,NY))
+         ALLOCATE (flddepth_tmp(NX,NY))
+         runoff_2d(:,:)    = 0.0D0
+         fevpg_2d(:,:)     = 0.0D0
+         finfg_2d(:,:)     = 0.0D0
+         ZBUFF(:,:,:)      = 0.0D0
+         fldfrc_tmp(:,:)   = 0.0D0
+         flddepth_tmp(:,:) = 0.0D0
       endif
-
-#ifdef USEMPI  
-      CALL mpi_bcast (DEF_hist_cama_vars%rivout      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%rivsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%rivdph      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%rivvel      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%fldout      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%fldsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%flddph      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%fldfrc      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%fldare      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%sfcelv      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%totout      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%outflw      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%totsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%storge      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%pthout      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%maxflw      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%maxdph      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%maxsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%gwsto       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%gdwsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%gwout       ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%gdwrtn      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%runoff      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%runoffsub   ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%rofsfc      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%rofsub      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%damsto      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_hist_cama_vars%daminf      ,   1, mpi_logical,   p_root, p_comm_glb, p_err)
-#endif  
+      if (p_is_worker) then
+         ALLOCATE (flddepth_cama(numpatch))
+         ALLOCATE (fldfrc_cama(numpatch))
+         ALLOCATE (fevpg_fld(numpatch))
+         ALLOCATE (finfg_fld(numpatch))
+         flddepth_cama(:)     =  0.0D0
+         fldfrc_cama(:)       =  0.0D0
+         fevpg_fld(:)         =  0.0D0
+         finfg_fld(:)         =  0.0D0
+end if  
    end subroutine colm_CaMa_init
 
    ! -----
-   subroutine colm_cama_drv
+   subroutine colm_cama_drv(idate_sec)
       implicit none
-    !  call colm2cama_real8 (rnof, f_rnof_cama, runoff_2d)
-      CALL flush_acc_cama_fluxes 
+      integer, intent(in)  :: idate_sec     ! calendar (year, julian day, seconds)
       call accumulate_cama_fluxes
-      call colm2cama_real8 (a_rnof_cama, f_rnof_cama, runoff_2d)
-      !CALL flush_acc_cama_fluxes !may not need
+      if  (MOD(idate_sec,3600*int(IFRQ_INP))==0) then
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+         call colm2cama_real8 (a_rnof_cama, f_rnof_cama, runoff_2d)
+IF (LWEVAP) THEN
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+         call colm2cama_real8 (a_fevpg_fld, f_fevpg_fld, fevpg_2d)
+ENDIF
+
+IF (LWINFILT) THEN
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+         call colm2cama_real8 (a_finfg_fld, f_finfg_fld, finfg_2d)
+ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+         CALL flush_acc_cama_fluxes
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      if(p_is_master)then
-         do j = 1, cama_gather%ginfo%nlat
-            do i = 1, cama_gather%ginfo%nlon
-               if(runoff_2d(i,j) < 1.e-10) runoff_2d(i,j) = 0.
-               ZBUFF(i,j,1)=runoff_2d(i,j)/1000.0
-               ZBUFF(i,j,2)=0.D0
-            enddo
-         enddo
+         if(p_is_master)then
+               do i = 1,NX ! cama_gather%ginfo%nlon
+                  do j = 1, NY !cama_gather%ginfo%nlat
+                     ZBUFF(i,j,1)=runoff_2d(i,j)/1000.0D0 !mm/s -->m/s
+                     ZBUFF(i,j,2)=0.0D0
+                     IF (LWEVAP) THEN
+                        ZBUFF(i,j,3)=fevpg_2d(i,j)/1000.0D0 !mm/s -->m/s
+                     ELSE
+                        ZBUFF(i,j,3)=0.0D0
+                     ENDIF
+                     IF (LWINFILT) THEN
+                        !if(finfg_2d(i,j)<0.0d0) finfg_2d(i,j)=0.0d0
+                        ZBUFF(i,j,4)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
+                     ELSE                  
+                        ZBUFF(i,j,4)=0.0D0
+                     ENDIF
+                  enddo
+               enddo
    
          ! Simulating the hydrodynamics in continental-scale rivers
          ! ----------------------------------------------------------------------
@@ -228,14 +248,29 @@ CONTAINS
          !CALL CMF_FORCING_GET(ZBUFF(:,:,:))
          !*  2b Interporlate runoff & send to CaMa-Flood 
          
-         CALL CMF_FORCING_PUT(ZBUFF(:,:,:))
+               CALL CMF_FORCING_PUT(ZBUFF)
          !*  2c  Advance CaMa-Flood model for ISTEPADV
          CALL CMF_DRV_ADVANCE(ISTEPADV)
-         Effarea(:,:)=0.0
-         Effdepth(:,:)=0.0
-         call get_flddepth()
-      endif
-      !     call master2IO_2d_real8(Effdepth,IO_Effdepth)
+               IF (LWINFILT .or. LWEVAP) THEN
+                  call get_fldinfo()
+               endif
+         endif
+         IF (LWINFILT .or. LWEVAP) THEN
+
+#ifdef USEMPI
+            CALL mpi_barrier (p_comm_glb, p_err)
+#endif   
+            call cama2colm_real8 (flddepth_tmp, f_flddepth_cama, flddepth_cama)
+#ifdef USEMPI
+            CALL mpi_barrier (p_comm_glb, p_err)
+#endif         
+            call cama2colm_real8 (fldfrc_tmp,   f_fldfrc_cama,   fldfrc_cama  )
+#ifdef USEMPI
+            CALL mpi_barrier (p_comm_glb, p_err)
+#endif               
+            flddepth_cama=flddepth_cama*1000.D0 !m --> mm
+         endif
+   endif
    end subroutine colm_cama_drv
 
    subroutine colm_cama_exit
@@ -247,59 +282,265 @@ CONTAINS
       if(p_is_master)then
          !*** 3a. finalize CaMa-Flood 
          DEALLOCATE(ZBUFF)
-         deallocate (runoff_2d)
-         deallocate (Effarea)
-         deallocate (Effdepth)
+         DEALLOCATE (runoff_2d)
+         DEALLOCATE (fevpg_2d)
+         DEALLOCATE (finfg_2d)
+
          !  CALL CMF_DRV_END
       endif
+      if (p_is_worker) then
+         DEALLOCATE (flddepth_cama)
+         DEALLOCATE (fldfrc_cama)
+         DEALLOCATE (fevpg_fld)
+         DEALLOCATE (finfg_fld)
+      end if
    end subroutine colm_cama_exit
 
 
 
    !####################################################################
-   SUBROUTINE get_flddepth
-      USE CMF_UTILS_MOD,           ONLY: VEC2MAP
+   SUBROUTINE get_fldinfo()
       ! save results to master process
-      USE YOS_CMF_INPUT,      ONLY: NX, NY
-      USE YOS_CMF_PROG,       ONLY:   D2FLDSTO    
-      USE YOS_CMF_MAP,        ONLY:  D2GRAREA,D2RIVWTH,D2RIVLEN
-
-
-      !!!!-----------will be used when master has mutiple nodes
-      !#ifdef UseMPI
-      !   USE CMF_CTRL_MPI_MOD,   ONLY: CMF_MPI_REDUCE_R2MAP, CMF_MPI_REDUCE_R1PTH
-      !#endif
-      !!!!-----------will be used when master has mutiple nodes
+      USE YOS_CMF_INPUT,      ONLY:  NX, NY
+      USE YOS_CMF_PROG,       ONLY:  D2FLDSTO 
+      USE YOS_CMF_DIAG,       ONLY:  D2FLDDPH,D2FLDFRC
+      USE CMF_UTILS_MOD,      ONLY:  VEC2MAPD
 
       IMPLICIT NONE
-      !*** LOCAL
-      REAL(KIND=JPRM)             :: D2RIVWTHVEC(NX,NY)
-      REAL(KIND=JPRM)             :: D2RIVLENVEC(NX,NY)
-      REAL(KIND=JPRM)             :: D2FLDSTOVEC(NX,NY)
-      REAL(KIND=JPRM)             :: D2GRAREAVEC(NX,NY)
+
       integer i,j
 
       !================================================
       !! convert 1Dvector to 2Dmap
-      CALL VEC2MAP(D2RIVWTH,D2RIVWTHVEC)             !! MPI node data is gathered by VEC2MAP
-      CALL VEC2MAP(D2RIVLEN,D2RIVLENVEC)             !! MPI node data is gathered by VEC2MAP
-      CALL VEC2MAP(D2FLDSTO,D2FLDSTOVEC)             !! MPI node data is gathered by VEC2MAP
-      CALL VEC2MAP(D2GRAREA,D2GRAREAVEC)             !! MPI node data is gathered by VEC2MAP
-      do j = 1,NY
-         do i = 1,NX
-            Effarea(i,j)=max(D2GRAREAVEC(i,j)-D2RIVWTHVEC(i,j)*D2RIVLENVEC(i,j),0.0d0)
-            if (Effarea(i,j)>0.0 .and. D2FLDSTOVEC(i,j)>1.e-5) then
-               Effdepth(i,j)=max(D2FLDSTOVEC(i,j)/Effarea(i,j),0.0d0)
-            endif
+      CALL VEC2MAPD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP m
+      CALL VEC2MAPD(D2FLDDPH,fldfrc_tmp)             !! MPI node data is gathered by VEC2MAP m
+      do i    = 1, NX
+         do j = 1, NY
+            if (flddepth_tmp(i,j) .lt.    0.0)      flddepth_tmp(i,j)=0.0
+            if (fldfrc_tmp(i,j)   .lt.    0.0)      fldfrc_tmp(i,j)=0.0
          enddo
       enddo
+   END SUBROUTINE get_fldinfo
 
 
-      !!!!-----------will be used when master has mutiple nodes
-      !#ifdef UseMPI
-      !      CALL CMF_MPI_REDUCE_R2MAP(R2OUT)
-      !#endif
-   END SUBROUTINE get_flddepth
+
+   subroutine fldfluxes (hu,ht,hq,&
+      us,vs,tm,qm,rhoair,psrf,tssea,&
+      taux,tauy,fseng,fevpg,tref,qref,&
+      z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
+      ! compute surface fluxes, derviatives, and exchange coefficiants
+
+      !=======================================================================
+      ! this is the main subroutine to execute the calculation of thermal processes
+      ! and surface fluxes
+      !
+      ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+      !=======================================================================
+   
+      use precision
+      use PhysicalConstants, only : cpair,rgas,vonkar,grav
+      use FRICTION_VELOCITY
+      implicit none
+   
+      !----------------------- Dummy argument --------------------------------
+      real(r8), INTENT(in) :: hu      ! agcm reference height of wind [m]
+      real(r8), INTENT(in) :: ht      ! agcm reference height of temperature [m]
+      real(r8), INTENT(in) :: hq      ! agcm reference height of humidity [m]
+      real(r8), INTENT(in) :: us      ! wind component in eastward direction [m/s]
+      real(r8), INTENT(in) :: vs      ! wind component in northward direction [m/s]
+      real(r8), INTENT(in) :: tm      ! temperature at agcm reference height [kelvin]
+      real(r8), INTENT(in) :: qm      ! specific humidity at agcm reference height [kg/kg]
+      real(r8), INTENT(in) :: rhoair  ! density air [kg/m3]
+      real(r8), INTENT(in) :: psrf    ! atmosphere pressure at the surface [pa] [not used]
+      real(r8), INTENT(in) :: tssea   ! inundation surface temperature [K]-->set to tgrnd
+   
+      real(r8), INTENT(out) :: &
+      taux,     &! wind stress: E-W [kg/m/s**2]
+      tauy,     &! wind stress: N-S [kg/m/s**2]
+      fseng,    &! sensible heat flux from ground [mm/s]
+      fevpg,    &! evaporation heat flux from ground [mm/s]
+   
+      tref,     &! 2 m height air temperature [kelvin]
+      qref,     &! 2 m height air humidity
+      z0m,      &! effective roughness [m]
+      zol,      &! dimensionless height (z/L) used in Monin-Obukhov theory
+      rib,      &! bulk Richardson number in surface layer
+      ustar,    &! friction velocity [m/s]
+      tstar,    &! temperature scaling parameter
+      qstar,    &! moisture scaling parameter
+      fm,       &! integral of profile function for momentum
+      fh,       &! integral of profile function for heat
+      fq!,       &! integral of profile function for moisture
+!      cgrndl,   &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
+!      cgrnds     ! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
+   
+   !------------------------ LOCAL VARIABLES ------------------------------
+   integer i
+   integer niters, &! maximum number of iterations for surface temperature
+   iter,      &! iteration index
+   nmozsgn     ! number of times moz changes sign
+   
+   real(r8) :: &
+   beta,      &! coefficient of conective velocity [-]
+   displax,   &! zero-displacement height [m]
+   dth,       &! diff of virtual temp. between ref. height and surface
+   dqh,       &! diff of humidity between ref. height and surface
+   dthv,      &! diff of vir. poten. temp. between ref. height and surface
+   eg,        &! water vapor pressure at temperature T [Pa]
+   degdT,     &! d(eg)/dT
+   obu,       &! monin-obukhov length (m)
+   obuold,    &! monin-obukhov length from previous iteration
+   qsatg,     &! ground saturated specific humidity [kg/kg]
+   qsatgdT,   &! d(qsatg)/dT
+   ram,       &! aerodynamical resistance [s/m]
+   rah,       &! thermal resistance [s/m]
+   raw,       &! moisture resistance [s/m]
+   raih,      &! temporary variable [kg/m2/s]
+   raiw,      &! temporary variable [kg/m2/s]
+   fh2m,      &! relation for temperature at 2m
+   fq2m,      &! relation for specific humidity at 2m
+   fm10m,     &! integral of profile function for momentum at 10m
+   thm,       &! intermediate variable (tm+0.0098*ht)
+   th,        &! potential temperature (kelvin)
+   thv,       &! virtual potential temperature (kelvin)
+   thvstar,   &! virtual potential temperature scaling parameter
+   um,        &! wind speed including the stablity effect [m/s]
+   ur,        &! wind speed at reference height [m/s]
+   visa,      &! kinematic viscosity of dry air [m2/s]
+   wc,        &! convective velocity [m/s]
+   wc2,       &! wc**2
+   xt,        &!
+   xq,        &!
+   zii,       &! convective boundary height [m]
+   zldis,     &! reference height "minus" zero displacement heght [m]
+   z0mg,      &! roughness length over ground, momentum [m]
+   z0hg,      &! roughness length over ground, sensible heat [m]
+   z0qg        ! roughness length over ground, latent heat [m]
+   
+   real, parameter :: zsice = 0.04  ! sea ice aerodynamic roughness length [m]
+   
+   !-----------------------------------------------------------------------
+   ! potential temperatur at the reference height
+   beta = 1.      ! -  (in computing W_*)
+   zii = 1000.    ! m  (pbl height)
+   
+   !-----------------------------------------------------------------------
+   !     Compute sensible and latent fluxes and their derivatives with respect 
+   !     to ground temperature using ground temperatures from previous time step.
+   !-----------------------------------------------------------------------
+   ! Initialization variables
+   nmozsgn = 0
+   obuold = 0.
+   
+   call qsadv(tssea,psrf,eg,degdT,qsatg,qsatgdT)
+   
+   ! potential temperatur at the reference height
+   thm = tm + 0.0098*ht              ! intermediate variable equivalent to
+                       ! tm*(pgcm/psrf)**(rgas/cpair)
+   th = tm*(100000./psrf)**(rgas/cpair) ! potential T
+   thv = th*(1.+0.61*qm)             ! virtual potential T
+   ur = max(0.1,sqrt(us*us+vs*vs))   ! limit set to 0.1
+   
+   dth   = thm-tssea
+   dqh   = qm-qsatg
+   dthv  = dth*(1.+0.61*qm)+0.61*th*dqh
+   zldis = hu-0.
+   
+   ! Kinematic viscosity of dry air (m2/s)- Andreas (1989) CRREL Rep. 89-11
+   visa=1.326e-5*(1.+6.542e-3*tm + 8.301e-6*tm**2 - 4.84e-9*tm**3)
+   
+   ! loop to obtain initial and good ustar and zo
+   ustar=0.06
+   wc=0.5
+   if(dthv.ge.0.) then
+   um=max(ur,0.1)
+   else
+   um=sqrt(ur*ur+wc*wc)
+   endif
+   
+   do i=1,5
+   z0mg=0.013*ustar*ustar/grav+0.11*visa/ustar
+   ustar=vonkar*um/log(zldis/z0mg)
+   enddo
+
+   
+   call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
+   
+   ! Evaluated stability-dependent variables using moz from prior iteration
+   niters=10
+   displax = 0.
+   
+   !----------------------------------------------------------------
+   ITERATION : do iter = 1, niters         ! begin stability iteration
+   !----------------------------------------------------------------
+   
+   !if(nint(oro).eq.0)then   ! ocean
+   z0mg=0.013*ustar*ustar/grav + 0.11*visa/ustar
+   xq=2.67*(ustar*z0mg/visa)**0.25 - 2.57
+   xt= xq
+   z0qg=z0mg/exp(xq)
+   z0hg=z0mg/exp(xt)
+  ! endif
+   
+   call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+       ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+   
+   tstar = vonkar/fh*dth
+   qstar = vonkar/fq*dqh
+   
+   thvstar=tstar+0.61*th*qstar
+   zol=zldis*vonkar*grav*thvstar/(ustar**2*thv)
+   if(zol >= 0.) then       ! stable
+   zol = min(2.,max(zol,1.e-6))
+   else                     ! unstable
+   zol = max(-100.,min(zol,-1.e-6))
+   endif
+   obu = zldis/zol
+   
+   if(zol >= 0.)then
+   um = max(ur,0.1)
+   else
+   wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
+   wc2 = beta*beta*(wc*wc)
+   um = sqrt(ur*ur+wc2)
+   endif
+   
+   if (obuold*obu < 0.) nmozsgn = nmozsgn+1
+   if(nmozsgn >= 4) EXIT
+   
+   obuold = obu
+   
+   !----------------------------------------------------------------
+   enddo ITERATION                         ! end stability iteration
+   !----------------------------------------------------------------
+   
+   ! Get derivative of fluxes with repect to ground temperature
+   ram    = 1./(ustar*ustar/um)
+   rah    = 1./(vonkar/fh*ustar) 
+   raw    = 1./(vonkar/fq*ustar) 
+   
+   raih   = rhoair*cpair/rah
+   raiw   = rhoair/raw          
+   !cgrnds = raih
+   !cgrndl = raiw*qsatgdT
+   
+   rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
+   
+   ! surface fluxes of momentum, sensible and latent 
+   ! using ground temperatures from previous time step
+   taux   = -rhoair*us/ram        
+   tauy   = -rhoair*vs/ram
+   
+   fseng  = -raih*dth
+   fevpg  = -raiw*dqh 
+   !fsena  = fseng
+   !fevpa  = fevpg
+   
+   ! 2 m height air temperature
+   tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
+   qref   = qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
+   z0m   = z0mg
+   end subroutine fldfluxes
 
 #endif
 end module colm_camaMod

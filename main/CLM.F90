@@ -285,9 +285,8 @@ PROGRAM CLM
       ENDIF
 #endif
 
-!!!! need to acc runoff here!!!
 #if(defined CaMa_Flood)
-      call colm_CaMa_drv
+   call colm_CaMa_drv(idate(3))
 #endif
 
       ! Write out the model variables for restart run and the histroy file

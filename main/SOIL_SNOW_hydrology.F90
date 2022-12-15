@@ -4,6 +4,9 @@ MODULE SOIL_SNOW_hydrology
 
 !-----------------------------------------------------------------------
   use precision
+#if(defined CaMa_Flood)
+   USE YOS_CMF_INPUT,      ONLY: LWINFILT
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -34,8 +37,11 @@ MODULE SOIL_SNOW_hydrology
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,pondmx,&
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
-             qcharge     ,errw_rsub)  
-
+             qcharge     ,errw_rsub     &
+#if(defined CaMa_Flood)
+            ,flddepth,fldfrc,qinfl_fld  &
+#endif
+            )
 !=======================================================================
 ! this is the main subroutine to execute the calculation of 
 ! hydrological processes
@@ -91,7 +97,11 @@ MODULE SOIL_SNOW_hydrology
         qsdew            , &! ground surface dew formation (mm h2o /s) [+]
         qsubl            , &! sublimation rate from snow pack (mm h2o /s) [+]
         qfros               ! surface dew added to snow pack (mm h2o /s) [+]
+#if(defined CaMa_Flood)
+         real(r8), INTENT(inout) :: flddepth ! inundation water depth(mm/s)
+         real(r8), INTENT(in) :: fldfrc ! inundation water depth(mm/s)
 
+#endif
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -106,7 +116,9 @@ MODULE SOIL_SNOW_hydrology
         qinfl            , &! infiltration rate (mm h2o/s)
         qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
-
+#if(defined CaMa_Flood)
+        real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (m/s)
+#endif
   
 !-----------------------Local Variables------------------------------
 !                   
@@ -125,7 +137,9 @@ MODULE SOIL_SNOW_hydrology
        zimm(0:nl_soil)      ! interface level below a "z" level (mm)
 
   real(r8) :: err_solver, w_sum
-
+#if(defined CaMa_Flood)
+  real(r8) ::gfld, qinfl_all ,rsur_fld ! inundation water input from top (mm/s)
+#endif
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
 !=======================================================================
@@ -172,6 +186,23 @@ MODULE SOIL_SNOW_hydrology
 
       ! infiltration into surface soil layer 
       qinfl = gwat - rsur 
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0) then
+         gfld=flddepth/deltim
+         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                       eff_porosity,icefrac,zwt,gwat+gfld,rsur_fld)        
+   ! infiltration into surface soil layer 
+   qinfl_all = gwat+gfld - rsur_fld
+   qinfl_fld = qinfl_all - qinfl
+   qinfl     = qinfl_all
+   else
+      qinfl_fld=0.0d0
+   endif
+   flddepth=flddepth-deltim*qinfl_fld
+ENDIF
+#endif 
 
 !=======================================================================
 ! [3] determine the change of soil water
@@ -221,6 +252,20 @@ MODULE SOIL_SNOW_hydrology
          err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
                     - (gwat-etr-rnof-errw_rsub)*deltim
       endif
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+   if(lb >= 1)then
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
+                 - (gwat+qinfl_fld+qsdew+qfros-qsubl-etr-rnof-errw_rsub)*deltim
+   else
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
+                 - (gwat+qinfl_fld-etr-rnof-errw_rsub)*deltim
+   endif
+
+ENDIF
+
+#endif
+
 
 #if(defined CLMDEBUG)
      if(abs(err_solver) > 1.e-3)then
@@ -281,7 +326,11 @@ MODULE SOIL_SNOW_hydrology
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
              wimp        ,zwt         ,dpond       ,wa      ,qcharge,&
-             errw_rsub)
+             errw_rsub                  &
+#if(defined CaMa_Flood)
+             ,flddepth,fldfrc,qinfl_fld  &
+#endif
+             )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation of 
@@ -348,7 +397,10 @@ MODULE SOIL_SNOW_hydrology
         qsdew            , &! ground surface dew formation (mm h2o /s) [+]
         qsubl            , &! sublimation rate from snow pack (mm h2o /s) [+]
         qfros               ! surface dew added to snow pack (mm h2o /s) [+]
-
+#if(defined CaMa_Flood)
+real(r8), INTENT(inout) :: flddepth ! inundation water input from top (mm/s)
+real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
+#endif
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -365,7 +417,9 @@ MODULE SOIL_SNOW_hydrology
         qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
     
   real(r8), INTENT(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
-  
+#if(defined CaMa_Flood)
+        real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
+#endif
 !-----------------------Local Variables------------------------------
 !                   
   integer j                 ! loop counter
@@ -400,6 +454,9 @@ MODULE SOIL_SNOW_hydrology
   INTEGER, parameter :: nprms = 5
 #endif
   REAL(r8) :: prms(nprms, 1:nl_soil)
+#if(defined CaMa_Flood)
+  real(r8) :: gfld,qinfl_all,rsur_fld ! inundation water input from top (mm/s)
+#endif
 
       nlev = nl_soil
       
@@ -468,6 +525,23 @@ MODULE SOIL_SNOW_hydrology
       ! infiltration into surface soil layer 
       qraing = gwat - rsur 
 
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0) then
+         gfld=flddepth/deltim
+         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                       eff_porosity,icefrac,zwt,gwat+gfld,rsur_fld)        
+      ! infiltration into surface soil layer 
+         qinfl_all = gwat+gfld - rsur_fld
+         qinfl_fld = qinfl_all - qinfl
+         qraing    = qinfl_all
+   else
+      qinfl_fld=0.0
+   endif
+   flddepth=flddepth-deltim*qinfl_fld
+endif
+#endif 
 !=======================================================================
 ! [3] determine the change of soil water
 !=======================================================================
@@ -576,7 +650,11 @@ MODULE SOIL_SNOW_hydrology
       if(lb >= 1)then
          err_solver = err_solver - (qfros-qseva-qsubl)*deltim
       endif
-
+#if(defined CaMa_Flood)
+if (LWINFILT) then 
+	err_solver=err_solver-qinfl_fld*deltim
+endif
+#endif
 #if(defined CLMDEBUG)
      if(abs(err_solver) > 1.e-3)then
         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
