@@ -15,11 +15,13 @@ module bgc_veg_NutrientCompetitionMod
     use MOD_PFTimeVars, only: &
         xsmrpool_p, retransn_p, &
         tempsum_potential_gpp_p, tempmax_retransn_p, annmax_retransn_p, annsum_potential_gpp_p, &
-        c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
-        leafc_p, livestemc_p, frootc_p, &
 ! crop variables
+#ifdef CROP
         croplive_p, hui_p,  peaklai_p, &
-        aroot_p, astem_p, arepr_p, aleaf_p, astemi_p, aleafi_p, vf_p
+        aroot_p, astem_p, arepr_p, aleaf_p, astemi_p, aleafi_p, vf_p, &
+#endif
+        c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
+        leafc_p, livestemc_p, frootc_p
     use GlobalVars, only: nwwheat, nirrig_wwheat 
 
     use MOD_TimeVariables, only: fpg 
@@ -93,6 +95,7 @@ contains
          cndw = deadwdcn(ivt)
          fcur = fcur2(ivt)
 
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             if (croplive_p(m)) then
                f1 = aroot_p(m) / aleaf_p(m)
@@ -106,6 +109,7 @@ contains
                g1 = grperc(ivt)
             end if
          end if
+#endif
 
 !         if(use_fun)then ! if we are using FUN, we get the N available from there.
 !            sminn_to_npool(p) = sminn_to_plant_fun(p)
@@ -151,6 +155,7 @@ contains
             cpool_to_deadcrootc_p(m)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage_p(m) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
          end if
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             cpool_to_livestemc_p(m)          = nlc * f3 * f4 * fcur
             cpool_to_livestemc_storage_p(m)  = nlc * f3 * f4 * (1._r8 - fcur)
@@ -163,6 +168,7 @@ contains
             cpool_to_grainc_p(m)             = nlc * f5 * fcur
             cpool_to_grainc_storage_p(m)     = nlc * f5 * (1._r8 -fcur)
          end if
+#endif
 
          ! corresponding N fluxes
          npool_to_leafn_p(m)          = (nlc / cnl) * fcur
@@ -179,6 +185,7 @@ contains
             npool_to_deadcrootn_p(m)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
             npool_to_deadcrootn_storage_p(m) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
          end if
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             cng = graincn(ivt)
             npool_to_livestemn_p(m)          = (nlc * f3 * f4 / cnlw) * fcur
@@ -192,6 +199,7 @@ contains
             npool_to_grainn_p(m)             = (nlc * f5 / cng) * fcur
             npool_to_grainn_storage_p(m)     = (nlc * f5 / cng) * (1._r8 -fcur)
          end if		
+#endif
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -255,7 +263,9 @@ contains
       if (woody(ivt) == 1.0_r8) then
          mr = mr + livestem_mr_p(m) + livecroot_mr_p(m)
       else if (ivt >= npcropmin) then
+#ifdef CROP
          if (croplive_p(m)) mr = mr + livestem_mr_p(m) + grain_mr_p(m)
+#endif
       end if
 
    ! carbon flux available for allocation
@@ -442,10 +452,12 @@ contains
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
                (f3*(1._r8-f4)*(1._r8+f2))/cndw
       else if (ivt >= npcropmin) then ! skip generic crops
+#ifdef CROP
          cng = graincn(ivt)
          c_allometry_p(m) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
               (f3*(1._r8-f4)*(1._r8+f2))/cndw
+#endif
       else
          c_allometry_p(m) = 1._r8+g1+f1+f1*g1
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr

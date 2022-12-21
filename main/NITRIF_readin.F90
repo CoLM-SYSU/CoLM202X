@@ -52,7 +52,6 @@ SUBROUTINE NITRIF_readin (time, dir_landdata)
    allocate(tCONC_O2_UNSAT_tmp(numpatch))
    allocate(tO2_DECOMP_DEPTH_UNSAT_tmp(numpatch))
 
-   print*,'allocated varialbes'
    landdir = trim(dir_landdata) // '/nitrif'
    DO nsl = 1, nl_soil
       write(cx,'(i2.2)') nsl
@@ -77,7 +76,6 @@ SUBROUTINE NITRIF_readin (time, dir_landdata)
       ENDIF 
    END do
 
-   print*,'reading o2_decomp_depth'
    DO nsl = 1, nl_soil
       write(cx,'(i2.2)') nsl
       write(ctime,'(i2.2)') time

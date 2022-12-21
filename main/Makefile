@@ -83,6 +83,8 @@ OBJS_BGC = \
 			  bgc/bgc_CNBalanceCheckMod.o \
 			  bgc/bgc_CNSASUMod.o \
 			  bgc/bgc_veg_CNNDynamicsMod.o \
+			  bgc/bgc_veg_CNFireBaseMod.o \
+                          bgc/bgc_veg_CNFireLi2016Mod.o \
 			  bgc/bgc_driver.o
 
 BASIC =  \
@@ -135,6 +137,7 @@ OBJS =  \
 		  CROP_readin.o               \
 		  NITRIF_readin.o             \
 		  NDEP_readin.o               \
+		  Fire_readin.o               \
 		  LEAF_interception.o         \
 		  meltf.o                     \
 		  netsolar.o                  \
@@ -151,6 +154,8 @@ OBJS =  \
 		  MOD_CaMa_Variables.o        \
 		  mod_hist_vector.o           \
 		  mod_hist.o                  \
+		  mod_lightning_data.o        \
+		  mod_ozone_data.o            \
 		  colm_CaMaMod.o              \
 		  CLMDRIVER.o                 \
 		  CLMMAIN.o                   \

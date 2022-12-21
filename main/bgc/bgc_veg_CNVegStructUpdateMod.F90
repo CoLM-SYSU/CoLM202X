@@ -8,7 +8,10 @@ use GlobalVars, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub,
                               nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                               nswitchgrass, nirrig_switchgrass, noveg
 
-use MOD_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, peaklai_p, harvdate_p
+use MOD_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
+#ifdef CROP
+use MOD_PFTimeVars, only: peaklai_p
+#endif
 use MOD_PFTimeInvars, only: pftclass
 use MOD_TimeVariables, only: farea_burned
 use PFT_Const, only : dsladlai, slatop, laimx, woody
@@ -165,7 +168,7 @@ contains
 !               hbot_p(m) = max(0._r8, min(3._r8, htop_p(m)-1._r8))
 
             else if (ivt >= npcropmin) then ! prognostic crops
-
+#ifdef CROP
                if (tlai_p(m) >= laimx(ivt)) peaklai_p(m) = 1 ! used in CNAllocation
 
                if (ivt == ntmp_corn .or. ivt == nirrig_tmp_corn .or. &
@@ -184,6 +187,7 @@ contains
 !                  htmx_p(m) = 0._r8
                   peaklai_p(m) = 0
                end if
+#endif
                !if (harvdate(m) < 999 .and. tlai(m) > 0._r8) write(iulog,*) 'CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
 
                ! canopy top and bottom heights

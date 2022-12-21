@@ -52,6 +52,7 @@ SAVE
   REAL(r8) :: rij_kro_beta
   REAL(r8) :: rij_kro_gamma
   REAL(r8) :: rij_kro_delta
+  REAL(r8) :: nfix_timeconst
   REAL(r8) :: organic_max
   REAL(r8) :: d_con_g21
   REAL(r8) :: d_con_g22
@@ -225,6 +226,7 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'rij_kro_beta        ', rij_kro_beta        )
      call ncio_read_bcast_serial (file_restart, 'rij_kro_gamma       ', rij_kro_gamma       )
      call ncio_read_bcast_serial (file_restart, 'rij_kro_delta       ', rij_kro_delta       )
+     call ncio_read_bcast_serial (file_restart, 'nfix_timeconst      ', nfix_timeconst      )
      call ncio_read_bcast_serial (file_restart, 'organic_max         ', organic_max         )
      call ncio_read_bcast_serial (file_restart, 'd_con_g21           ', d_con_g21           )
      call ncio_read_bcast_serial (file_restart, 'd_con_g22           ', d_con_g22           )
@@ -374,6 +376,7 @@ SAVE
         call ncio_write_serial (file_restart, 'rij_kro_beta        ', rij_kro_beta        )
         call ncio_write_serial (file_restart, 'rij_kro_gamma       ', rij_kro_gamma       )
         call ncio_write_serial (file_restart, 'rij_kro_delta       ', rij_kro_delta       )
+        call ncio_write_serial (file_restart, 'nfix_timeconst      ', nfix_timeconst      )
         call ncio_write_serial (file_restart, 'organic_max         ', organic_max         )
         call ncio_write_serial (file_restart, 'd_con_g21           ', d_con_g21           )
         call ncio_write_serial (file_restart, 'd_con_g22           ', d_con_g22           )

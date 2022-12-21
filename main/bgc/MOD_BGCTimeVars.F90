@@ -145,7 +145,7 @@ SAVE
       REAL(r8), allocatable :: wtlf                     (:)
       REAL(r8), allocatable :: trotr1                   (:)
       REAL(r8), allocatable :: trotr2                   (:)
-      REAL(r8), allocatable :: hdmlf                    (:)
+      REAL(r8), allocatable :: hdm_lf                   (:)
       REAL(r8), allocatable :: lnfm                     (:)
       REAL(r8), allocatable :: baf_crop                 (:)
       REAL(r8), allocatable :: baf_peatf                (:)
@@ -161,7 +161,6 @@ SAVE
       REAL(r8), allocatable :: tsoi17                   (:)
       REAL(r8), allocatable :: rh30                     (:) ! 30-day running mean of relative humidity
       REAL(r8), allocatable :: accumnstep               (:) ! 30-day running mean of relative humidity
-      REAL(r8), allocatable :: cphase                   (:) ! 30-day running mean of relative humidity
 
       REAL(r8), allocatable :: dayl                     (:)
       REAL(r8), allocatable :: prev_dayl                (:)
@@ -221,6 +220,7 @@ SAVE
       REAL(r8), allocatable :: lowerVX_n_vr_acc            (:,:,:)
       LOGICAL , allocatable :: skip_balance_check          (:)
 #ifdef CROP
+      REAL(r8), allocatable :: cphase                   (:) ! crop phase
       REAL(r8), allocatable :: vf          (:)
       REAL(r8), allocatable :: gddplant    (:)
       REAL(r8), allocatable :: gddmaturity (:)
@@ -244,6 +244,7 @@ SAVE
       REAL(r8), allocatable :: fertnitro_rice2     (:)
       REAL(r8), allocatable :: fertnitro_sugarcane (:)  
 #endif
+      REAL(r8), allocatable :: lag_npp             (:)
 !------------------------------------------------------
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -412,7 +413,7 @@ SAVE
         allocate (wtlf                         (numpatch))
         allocate (trotr1                       (numpatch))
         allocate (trotr2                       (numpatch))
-        allocate (hdmlf                        (numpatch))
+        allocate (hdm_lf                       (numpatch))
         allocate (lnfm                         (numpatch))
         allocate (baf_crop                     (numpatch))
         allocate (baf_peatf                    (numpatch))
@@ -428,7 +429,6 @@ SAVE
         allocate (tsoi17                       (numpatch))
         allocate (rh30                         (numpatch)) ! 30-day running mean of relative humidity
         allocate (accumnstep                   (numpatch)) ! 30-day running mean of relative humidity
-        allocate (cphase                       (numpatch)) ! 30-day running mean of relative humidity
 
         allocate (dayl                         (numpatch))
         allocate (prev_dayl                    (numpatch))
@@ -493,6 +493,7 @@ SAVE
         allocate (skip_balance_check           (numpatch))
 
 #ifdef CROP
+        allocate (cphase                       (numpatch)) ! 30-day running mean of relative humidity
         allocate (vf                    (numpatch))
         allocate (gddmaturity           (numpatch))
         allocate (gddplant              (numpatch))
@@ -516,6 +517,7 @@ SAVE
         allocate (fertnitro_rice2       (numpatch))
         allocate (fertnitro_sugarcane   (numpatch))  
 #endif
+        allocate (lag_npp               (numpatch))
      end if
   end if
 
@@ -669,7 +671,7 @@ SAVE
            deallocate (wtlf                         )
            deallocate (trotr1                       )
            deallocate (trotr2                       )
-           deallocate (hdmlf                        )
+           deallocate (hdm_lf                       )
            deallocate (lnfm                         )
            deallocate (baf_crop                     )
            deallocate (baf_peatf                    )
@@ -685,7 +687,6 @@ SAVE
            deallocate (tsoi17                       )
            deallocate (rh30                         )
            deallocate (accumnstep                   )
-           deallocate (cphase                       )
 
            deallocate (dayl                         )
            deallocate (prev_dayl                    )
@@ -749,6 +750,7 @@ SAVE
 #endif
            deallocate (skip_balance_check           )
 #ifdef CROP
+           deallocate (cphase                       )
            deallocate (vf         )
            deallocate (gddplant   )
            deallocate (gddmaturity)
@@ -772,6 +774,7 @@ SAVE
            deallocate (fertnitro_rice2    )
            deallocate (fertnitro_sugarcane)
 #endif
+           deallocate (lag_npp    )
         end if
      end if
 
@@ -847,7 +850,6 @@ SAVE
      call ncio_write_vector (file_restart, 'tsoi17               ', 'vector', landpatch, tsoi17               )
      call ncio_write_vector (file_restart, 'rh30                 ', 'vector', landpatch, rh30                 )
      call ncio_write_vector (file_restart, 'accumnstep           ', 'vector', landpatch, accumnstep           )
-     call ncio_write_vector (file_restart, 'cphase               ', 'vector', landpatch, cphase               )
 
 #ifdef SASU
 !---------------SASU variables-----------------------
@@ -917,6 +919,7 @@ SAVE
      call ncio_write_vector (file_restart, 'skip_balance_check           ', 'vector', landpatch, skip_balance_check           )
 
 #ifdef CROP
+     call ncio_write_vector (file_restart, 'cphase     ' , 'vector', landpatch, cphase               )
      call ncio_write_vector (file_restart, 'pdcorn     ' , 'vector', landpatch, pdcorn     , compress)
      call ncio_write_vector (file_restart, 'pdswheat   ' , 'vector', landpatch, pdswheat   , compress)
      call ncio_write_vector (file_restart, 'pdwwheat   ' , 'vector', landpatch, pdwwheat   , compress)
@@ -997,7 +1000,6 @@ SAVE
      call ncio_read_vector (file_restart, 'tsoi17               ', landpatch, tsoi17               )
      call ncio_read_vector (file_restart, 'rh30                 ', landpatch, rh30                 )
      call ncio_read_vector (file_restart, 'accumnstep           ', landpatch, accumnstep           )
-     call ncio_read_vector (file_restart, 'cphase               ', landpatch, cphase               )
 
 #ifdef SASU
 !---------------SASU variables-----------------------
@@ -1058,6 +1060,7 @@ SAVE
 #endif
      call ncio_read_vector (file_restart, 'skip_balance_check           ', landpatch, skip_balance_check           )
 #ifdef CROP
+     call ncio_read_vector (file_restart, 'cphase     ' , landpatch, cphase     )
      call ncio_read_vector (file_restart, 'pdcorn     ' , landpatch, pdcorn     )
      call ncio_read_vector (file_restart, 'pdswheat   ' , landpatch, pdswheat   )
      call ncio_read_vector (file_restart, 'pdwwheat   ' , landpatch, pdwwheat   )
@@ -1227,7 +1230,7 @@ SAVE
      call check_vector_data ('wtlf                     ', wtlf                     ) 
      call check_vector_data ('trotr1                   ', trotr1                   ) 
      call check_vector_data ('trotr2                   ', trotr2                   ) 
-     call check_vector_data ('hdmlf                    ', hdmlf                    ) 
+     call check_vector_data ('hdm_lf                   ', hdm_lf                   ) 
      call check_vector_data ('lnfm                     ', lnfm                     ) 
      call check_vector_data ('baf_crop                 ', baf_crop                 ) 
      call check_vector_data ('baf_peatf                ', baf_peatf                ) 
@@ -1243,7 +1246,6 @@ SAVE
      call check_vector_data ('tsoi17                   ', tsoi17                   ) 
      call check_vector_data ('rh30                     ', rh30                     ) 
      call check_vector_data ('accumnstep               ', accumnstep               ) 
-     call check_vector_data ('cphase                   ', cphase                   ) 
 
      call check_vector_data ('dayl                     ', dayl                     ) 
      call check_vector_data ('prev_dayl                ', prev_dayl                ) 
@@ -1306,6 +1308,7 @@ SAVE
 !------------------------------------------------------
 #endif
 #ifdef CROP
+     call check_vector_data ('cphase     ' , cphase     ) 
      call check_vector_data ('vf         ' , vf         )
      call check_vector_data ('hui        ' , hui        )
      call check_vector_data ('huiswheat  ' , huiswheat  )
@@ -1329,6 +1332,7 @@ SAVE
      call check_vector_data ('fertnitro_rice2    ' , fertnitro_rice1    )
      call check_vector_data ('fertnitro_sugarcane' , fertnitro_sugarcane)
 #endif
+     call check_vector_data ('lag_npp    ' , lag_npp    )
 
   end subroutine check_BGCTimeVars
 #endif

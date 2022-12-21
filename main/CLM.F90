@@ -49,8 +49,16 @@ PROGRAM CLM
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
+
+#ifdef Fire
+   USE mod_lightning_data, only: init_lightning_data, update_lightning_data
+#endif
+
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE mod_unstructured_mesh
+#endif
+#ifdef OzoneData
+   USE mod_ozone_data, only: init_ozone_data, update_ozone_data
 #endif
 
    IMPLICIT NONE
@@ -203,6 +211,12 @@ PROGRAM CLM
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    CALL unstructured_mesh_init ()
 #endif
+#ifdef OzoneData
+   CALL init_Ozone_data(itstamp,sdate)
+#endif
+#ifdef Fire
+   CALL init_lightning_data (itstamp,sdate)
+#endif
 
    ! ======================================================================
    ! begin time stepping loop
@@ -230,6 +244,12 @@ PROGRAM CLM
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
 
+#ifdef OzoneData
+      CALL update_Ozone_data(itstamp, deltim)
+#endif
+#ifdef Fire
+      CALL update_lightning_data (itstamp, deltim)
+#endif
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
@@ -283,7 +303,11 @@ PROGRAM CLM
          isread = .false.
       end if
       CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
-
+#ifdef Fire
+      if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
+         CALL Fire_readin(idate(1), dir_landdata)
+      end if
+#endif
 #endif
 
 !!!! need to acc runoff here!!!

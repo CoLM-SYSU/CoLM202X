@@ -48,6 +48,8 @@ MODULE mod_single_srfdata
    REAL(r8), allocatable :: SITE_soil_vf_om             (:) 
    REAL(r8), allocatable :: SITE_soil_wf_gravels        (:) 
    REAL(r8), allocatable :: SITE_soil_wf_sand           (:) 
+   REAL(r8), allocatable :: SITE_soil_OM_density        (:) 
+   REAL(r8), allocatable :: SITE_soil_BD_all            (:) 
    REAL(r8), allocatable :: SITE_soil_theta_s           (:) 
    REAL(r8), allocatable :: SITE_soil_k_s               (:) 
    REAL(r8), allocatable :: SITE_soil_csol              (:) 
@@ -55,10 +57,8 @@ MODULE mod_single_srfdata
    REAL(r8), allocatable :: SITE_soil_tksatf            (:) 
    REAL(r8), allocatable :: SITE_soil_tkdry             (:) 
    REAL(r8), allocatable :: SITE_soil_k_solids          (:) 
-#ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: SITE_soil_psi_s             (:) 
    REAL(r8), allocatable :: SITE_soil_lambda            (:) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: SITE_soil_theta_r           (:) 
    REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:) 
@@ -160,6 +160,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_vf_om            ', SITE_soil_vf_om            ) 
          CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels       ', SITE_soil_wf_gravels       ) 
          CALL ncio_read_serial (fsrfdata, 'soil_wf_sand          ', SITE_soil_wf_sand          ) 
+         CALL ncio_read_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       ) 
+         CALL ncio_read_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           ) 
          CALL ncio_read_serial (fsrfdata, 'soil_theta_s          ', SITE_soil_theta_s          ) 
          CALL ncio_read_serial (fsrfdata, 'soil_k_s              ', SITE_soil_k_s              ) 
          CALL ncio_read_serial (fsrfdata, 'soil_csol             ', SITE_soil_csol             ) 
@@ -167,10 +169,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_tksatf           ', SITE_soil_tksatf           ) 
          CALL ncio_read_serial (fsrfdata, 'soil_tkdry            ', SITE_soil_tkdry            ) 
          CALL ncio_read_serial (fsrfdata, 'soil_k_solids         ', SITE_soil_k_solids         ) 
-#ifdef Campbell_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_psi_s            ', SITE_soil_psi_s            ) 
          CALL ncio_read_serial (fsrfdata, 'soil_lambda           ', SITE_soil_lambda           ) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          CALL ncio_read_serial (fsrfdata, 'soil_theta_r          ', SITE_soil_theta_r          ) 
          CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        ) 
@@ -297,6 +297,8 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'soil_vf_om            ', SITE_soil_vf_om            , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_wf_gravels       ', SITE_soil_wf_gravels       , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_wf_sand          ', SITE_soil_wf_sand          , 'soil')
+      CALL ncio_write_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       , 'soil') 
+      CALL ncio_write_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           , 'soil') 
       CALL ncio_write_serial (fsrfdata, 'soil_theta_s          ', SITE_soil_theta_s          , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_k_s              ', SITE_soil_k_s              , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_csol             ', SITE_soil_csol             , 'soil')
@@ -310,6 +312,8 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'soil_vf_om            ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_gravels       ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_wf_sand          ', 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'soil_OM_density       ', 'source', source)
+      CALL ncio_put_attr     (fsrfdata, 'soil_BD_all           ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_theta_s          ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_k_s              ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_csol             ', 'source', source)
@@ -317,12 +321,10 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'soil_tksatf           ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_tkdry            ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_k_solids         ', 'source', source)
-#ifdef Campbell_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_psi_s ', SITE_soil_psi_s , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_lambda', SITE_soil_lambda, 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_psi_s ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_lambda', 'source', source)
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       CALL ncio_write_serial (fsrfdata, 'soil_theta_r  ', SITE_soil_theta_r  , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_alpha_vgm', SITE_soil_alpha_vgm, 'soil')
@@ -396,6 +398,8 @@ CONTAINS
       IF (allocated(SITE_soil_vf_om            )) deallocate(SITE_soil_vf_om            ) 
       IF (allocated(SITE_soil_wf_gravels       )) deallocate(SITE_soil_wf_gravels       ) 
       IF (allocated(SITE_soil_wf_sand          )) deallocate(SITE_soil_wf_sand          ) 
+      IF (allocated(SITE_soil_OM_density       )) deallocate(SITE_soil_OM_density       )
+      IF (allocated(SITE_soil_BD_all           )) deallocate(SITE_soil_BD_all           )
       IF (allocated(SITE_soil_theta_s          )) deallocate(SITE_soil_theta_s          ) 
       IF (allocated(SITE_soil_k_s              )) deallocate(SITE_soil_k_s              ) 
       IF (allocated(SITE_soil_csol             )) deallocate(SITE_soil_csol             ) 
@@ -403,10 +407,8 @@ CONTAINS
       IF (allocated(SITE_soil_tksatf           )) deallocate(SITE_soil_tksatf           ) 
       IF (allocated(SITE_soil_tkdry            )) deallocate(SITE_soil_tkdry            ) 
       IF (allocated(SITE_soil_k_solids         )) deallocate(SITE_soil_k_solids         ) 
-#ifdef Campbell_SOIL_MODEL
       IF (allocated(SITE_soil_psi_s            )) deallocate(SITE_soil_psi_s            ) 
       IF (allocated(SITE_soil_lambda           )) deallocate(SITE_soil_lambda           ) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated(SITE_soil_theta_r          )) deallocate(SITE_soil_theta_r          ) 
       IF (allocated(SITE_soil_alpha_vgm        )) deallocate(SITE_soil_alpha_vgm        ) 

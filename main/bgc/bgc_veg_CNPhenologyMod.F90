@@ -56,16 +56,19 @@ module bgc_veg_CNPhenologyMod
       deadstemn_xfer_p   , livecrootn_xfer_p   , deadcrootn_xfer_p   , &
       gresp_storage_p    , &
 
-      leaf_prof_p        , froot_prof_p        , &
-      cropseedc_deficit_p, cropseedn_deficit_p , &
-
 ! crop variables
+#ifdef CROP
       cropplant_p       , idop_p              , a5tmin_p            , a10tmin_p        , t10_p          , &
       cumvd_p           , vf_p                , cphase_p         , fert_counter_p , &
       croplive_p        , gddplant_p          , harvdate_p          , gddmaturity_p  , &
-      hui_p             , peaklai_p           ,&
+      hui_p             , peaklai_p           , &
       tref_min_p        , tref_max_p          , tref_min_inst_p  , tref_max_inst_p, &
-      fertnitro_p       , plantdate_p! input from files
+      fertnitro_p       , plantdate_p         , &! input from files
+#endif
+
+      leaf_prof_p        , froot_prof_p        , &
+      cropseedc_deficit_p, cropseedn_deficit_p 
+
 
   use MOD_1D_BGCPFTFluxes, only: &
       livestemc_to_deadstemc_p       , livecrootc_to_deadcrootc_p   , &
@@ -913,7 +916,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
   end subroutine CNStressDecidPhenology
 
-
+#ifdef CROP 
   subroutine CropPhenology(i,ps,pe,idate,h,deltim,dayspyr,npcropmin)
 
     ! !DESCRIPTION:
@@ -1149,6 +1152,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
       end do ! prognostic crops loop
 
   end subroutine CropPhenology
+#endif
 
  !---------------------------------------------------------
   subroutine CNOnsetGrowth(i,ps,pe,deltim)
@@ -1687,6 +1691,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
 
   end subroutine CNLitterToColumn
 
+#ifdef CROP
   subroutine vernalization(i,m,deltim)
  ! F. Li for winter wheat vernalization 
    integer, intent(in) :: i
@@ -1718,6 +1723,7 @@ subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
         vf_p(m)=(cumvd_p(m)**5._r8)/(22.5_r8**5._r8+cumvd_p(m)**5._r8)
 
   end subroutine vernalization
+#endif
   
 end module bgc_veg_CNPhenologyMod
 #endif

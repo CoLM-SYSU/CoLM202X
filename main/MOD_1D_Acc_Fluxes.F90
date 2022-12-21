@@ -192,8 +192,18 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_grainc_to_cropprodc(:)
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
-   real(r8), allocatable :: a_ndep_to_sminn      (:)
 #endif
+   real(r8), allocatable :: a_ndep_to_sminn      (:)
+#ifdef Fire
+   real(r8), allocatable :: a_abm                (:)
+   real(r8), allocatable :: a_gdp                (:)
+   real(r8), allocatable :: a_peatf              (:)
+   real(r8), allocatable :: a_hdm                (:)
+   real(r8), allocatable :: a_lnfm               (:)
+#endif
+#endif
+#ifdef OzoneStress
+   real(r8), allocatable :: a_ozone              (:)
 #endif
 
    real(r8), allocatable :: a_t_soisno    (:,:)    
@@ -461,8 +471,18 @@ contains
             allocate (a_grainc_to_cropprodc(numpatch))
             allocate (a_grainc_to_seed     (numpatch))
             allocate (a_fert_to_sminn      (numpatch))
-            allocate (a_ndep_to_sminn      (numpatch))
 #endif
+            allocate (a_ndep_to_sminn      (numpatch))
+#ifdef Fire
+            allocate (a_abm                (numpatch))
+            allocate (a_gdp                (numpatch))
+            allocate (a_peatf              (numpatch))
+            allocate (a_hdm                (numpatch))
+            allocate (a_lnfm               (numpatch))
+#endif
+#endif
+#ifdef OzoneStress
+            allocate (a_ozone              (numpatch))
 #endif
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
@@ -727,8 +747,18 @@ contains
             deallocate (a_grainc_to_cropprodc)
             deallocate (a_grainc_to_seed     )
             deallocate (a_fert_to_sminn      )
-            deallocate (a_ndep_to_sminn      )
 #endif
+            deallocate (a_ndep_to_sminn      )
+#ifdef Fire
+            deallocate (a_abm                )
+            deallocate (a_gdp                )
+            deallocate (a_peatf              )
+            deallocate (a_hdm                )
+            deallocate (a_lnfm               )
+#endif
+#endif
+#ifdef OzoneStress
+            deallocate (a_ozone              )
 #endif
 
             deallocate (a_t_soisno    )    
@@ -999,8 +1029,18 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
-            a_ndep_to_sminn      (:) = spval
 #endif
+            a_ndep_to_sminn      (:) = spval
+#ifdef Fire
+            a_abm                (:) = spval
+            a_gdp                (:) = spval
+            a_peatf              (:) = spval
+            a_hdm                (:) = spval
+            a_lnfm               (:) = spval
+#endif            
+#endif
+#ifdef OzoneStress
+            a_ozone              (:) = spval
 #endif
 
             a_t_soisno     (:,:) = spval 
@@ -1323,9 +1363,20 @@ contains
             call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
+#endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
+#ifdef Fire
+            call acc1d (abm_lf             ,   a_abm                )
+            call acc1d (gdp_lf             ,   a_gdp                )
+            call acc1d (peatf_lf           ,   a_peatf              )
+            call acc1d (hdm_lf             ,   a_hdm                )
+            call acc1d (lnfm               ,   a_lnfm               )
 #endif
 #endif
+#ifdef OzoneStress
+            call acc1d (forc_ozone         ,   a_ozone              )
+#endif
+
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)
             call acc2d (wice_soisno, a_wice_soisno)

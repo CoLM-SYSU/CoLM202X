@@ -4,7 +4,7 @@
 Module OzoneMod
 
   use precision
-  use MOD_1D_Forcing, only: forc_ozone, forc_psrf
+!  use MOD_1D_Forcing, only: forc_ozone, forc_psrf
   USE PhysicalConstants, only: rgas
   use PFT_const, only: isevg, leaf_long, woody
   IMPLICIT NONE
@@ -14,12 +14,12 @@ Module OzoneMod
 
   CONTAINS
   
-  subroutine CalcOzoneStress (o3coefv,o3coefg,forc_ozone, forc_psrf, th, ram, &
+  subroutine CalcOzoneStress (o3coefv,o3coefg, forc_ozone, forc_psrf, th, ram, &
                               rs, rb, lai, lai_old, ivt, o3uptake, deltim)
      ! convert o3 from mol/mol to nmol m^-3
      real(r8), intent(out)   :: o3coefv
      real(r8), intent(out)   :: o3coefg
-     real(r8), intent(inout) :: forc_ozone 
+     real(r8), intent(inout) :: forc_ozone
      real(r8), intent(in)    :: forc_psrf
      real(r8), intent(in)    :: th
      real(r8), intent(in)    :: ram
@@ -67,7 +67,9 @@ Module OzoneMod
      real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
      real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
 
+#ifndef OzoneData     
      forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
+#endif
 
      o3concnmolm3 = forc_ozone * 1.e9_r8 * (forc_psrf/(th*rgas*0.001_r8 ))
 

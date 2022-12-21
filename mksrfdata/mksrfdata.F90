@@ -78,7 +78,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gbasin, gridlai, gnitrif, gndep
+   TYPE (grid_type) :: gbasin, gridlai, gnitrif, gndep, gfire
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -154,6 +154,10 @@ PROGRAM mksrfdata
    ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
+#if (defined Fire)
+   ! define grid for crop parameters
+   CALL gfire%define_by_ndims (720,360)
+#endif
 #ifdef NITRIF
    CALL gnitrif%define_by_name ('nitrif_2deg')
 #endif
@@ -176,6 +180,9 @@ PROGRAM mksrfdata
 #if (defined CROP) 
    CALL pixel%assimilate_grid (gcrop )
 #endif
+#if (defined Fire)
+   CALL pixel%assimilate_grid (gfire )
+#endif
 #ifdef NITRIF
    CALL pixel%assimilate_grid (gnitrif)
 #endif
@@ -192,6 +199,9 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (gpatch)
 #if (defined CROP) 
    CALL pixel%map_to_grid (gcrop )
+#endif
+#if (defined Fire)
+   CALL pixel%map_to_grid (gfire )
 #endif
    CALL pixel%map_to_grid (gridlai)
 #ifdef NITRIF
@@ -254,6 +264,9 @@ PROGRAM mksrfdata
    call aggregation_NDEP            (gndep, dir_rawdata, dir_landdata)
 #if (defined CROP)
    call aggregation_crop_parameters (gcrop, dir_rawdata, dir_landdata)
+#endif
+#ifdef Fire
+   call aggregation_fire            (gfire, dir_rawdata, dir_landdata)
 #endif
 #if (defined NITRIF)
    call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)

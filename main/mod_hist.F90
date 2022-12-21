@@ -612,6 +612,7 @@ contains
              a_deadcrootc_xfer, f_deadcrootc_xfer, file_hist, 'f_deadcrootc_xfer', itime_in_file, sumwt, filter, &
              'dead coarse root carbon transfer pool','gC/m2')
 
+#ifdef CROP
          ! grain carbon display pool
          call flux_map_and_write_2d ( DEF_hist_vars%grainc, &
              a_grainc, f_grainc, file_hist, 'f_grainc', itime_in_file, sumwt, filter, &
@@ -626,6 +627,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%grainc_xfer, &
              a_grainc_xfer, f_grainc_xfer, file_hist, 'f_grainc_xfer', itime_in_file, sumwt, filter, &
              'grain carbon transfer pool','gC/m2')
+#endif
 
          ! leaf nitrogen display pool
          call flux_map_and_write_2d ( DEF_hist_vars%leafn, &
@@ -717,6 +719,7 @@ contains
              a_deadcrootn_xfer, f_deadcrootn_xfer, file_hist, 'f_deadcrootn_xfer', itime_in_file, sumwt, filter, &
              'dead coarse root nitrogen transfer pool','gN/m2')
 
+#ifdef CROP
          ! grain nitrogen display pool
          call flux_map_and_write_2d ( DEF_hist_vars%grainn, &
              a_grainn, f_grainn, file_hist, 'f_grainn', itime_in_file, sumwt, filter, &
@@ -731,6 +734,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%grainn_xfer, &
              a_grainn_xfer, f_grainn_xfer, file_hist, 'f_grainn_xfer', itime_in_file, sumwt, filter, &
              'grain nitrogen transfer pool','gN/m2')
+#endif
 
          ! retranslocation nitrogen pool
          call flux_map_and_write_2d ( DEF_hist_vars%retrasn, &
@@ -827,10 +831,18 @@ contains
              a_fert_to_sminn, f_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumwt, filter, &
              'fertilization','gN/m2/s')
 
+#endif
+
          ! grain to crop seed carbon
          call flux_map_and_write_2d ( DEF_hist_vars%ndep_to_sminn, &
              a_ndep_to_sminn, f_ndep_to_sminn, file_hist, 'f_ndep_to_sminn', itime_in_file, sumwt, filter, &
              'nitrogen deposition','gN/m2/s')
+
+#ifdef OzoneStress
+         ! grain to crop seed carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%xy_ozone, &
+             a_ozone, f_xy_ozone, file_hist, 'f_xy_ozone', itime_in_file, sumwt, filter, &
+             'Ozone concentration','mol/mol')
 #endif
 
          ! litter 1 carbon density in soil layers
@@ -933,6 +945,29 @@ contains
          call flux_map_and_write_3d ( DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT, &
             a_o2_decomp_depth_unsat, f_o2_decomp_depth_unsat, file_hist, 'f_O2_DECOMP_DEPTH_UNSAT', 'soil', &
             itime_in_file, sumwt, filter,'O2 consumption from HR and AR for non-inundated area','mol/m3/s')
+
+#endif
+
+#ifdef Fire
+        call flux_map_and_write_2d ( DEF_hist_vars%abm, &
+             vecacc, f_abm, file_hist, 'f_abm', itime_in_file, sumwt, filter, &
+             'peak crop fire month','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%gdp, &
+             vecacc, f_gdp, file_hist, 'f_gdp', itime_in_file, sumwt, filter, &
+             'gdp','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%peatf, &
+             vecacc, f_peatf, file_hist, 'f_peatf', itime_in_file, sumwt, filter, &
+             'peatf','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%hdm, &
+             vecacc, f_hdm, file_hist, 'f_hdm', itime_in_file, sumwt, filter, &
+             'hdm','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%lnfm, &
+             vecacc, f_lnfm, file_hist, 'f_lnfm', itime_in_file, sumwt, filter, &
+             'lnfm','unitless')
 
 #endif
 

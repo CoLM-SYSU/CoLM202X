@@ -45,9 +45,7 @@ SAVE
   REAL(r8), allocatable :: wfc          (:,:)  !field capacity
   REAL(r8), allocatable :: porsl        (:,:)  !fraction of soil that is voids [-]
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
-#ifdef Campbell_SOIL_MODEL
   REAL(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   REAL(r8), allocatable :: theta_r      (:,:)
   REAL(r8), allocatable :: alpha_vgm    (:,:)
@@ -144,9 +142,7 @@ SAVE
         allocate (wfc          (nl_soil,numpatch))
         allocate (porsl        (nl_soil,numpatch))
         allocate (psi0         (nl_soil,numpatch))
-#ifdef Campbell_SOIL_MODEL
         allocate (bsw          (nl_soil,numpatch))
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         allocate (theta_r      (nl_soil,numpatch))
         allocate (alpha_vgm    (nl_soil,numpatch))
@@ -242,9 +238,7 @@ SAVE
      call ncio_read_vector (file_restart, 'wfc       ',   nl_soil, landpatch, wfc       ) ! field capacity
      call ncio_read_vector (file_restart, 'porsl  ' ,     nl_soil, landpatch, porsl     ) ! fraction of soil that is voids [-]
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
-#ifdef Campbell_SOIL_MODEL                                         
      call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) 
      call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) 
@@ -375,9 +369,7 @@ SAVE
      call ncio_write_vector (file_restart, 'wfc       ', 'soil', nl_soil, 'vector', landpatch, wfc       , compress) ! field capacity
      call ncio_write_vector (file_restart, 'porsl     ', 'soil', nl_soil, 'vector', landpatch, porsl     , compress) ! fraction of soil that is voids [-]
      call ncio_write_vector (file_restart, 'psi0      ', 'soil', nl_soil, 'vector', landpatch, psi0      , compress) ! minimum soil suction [mm] (NOTE: "-" valued)
-#ifdef Campbell_SOIL_MODEL
      call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'vector', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
      call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'vector', landpatch, theta_r   , compress) 
      call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'vector', landpatch, alpha_vgm , compress) 
@@ -482,9 +474,7 @@ SAVE
            deallocate (wfc    )
            deallocate (porsl  )
            deallocate (psi0   )
-#ifdef Campbell_SOIL_MODEL
            deallocate (bsw    )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            deallocate (theta_r  )
            deallocate (alpha_vgm)
@@ -564,9 +554,7 @@ SAVE
       call check_vector_data ('wfc         ', wfc         ) ! field capacity
       call check_vector_data ('porsl       ', porsl       ) ! fraction of soil that is voids [-]
       call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
-#ifdef Campbell_SOIL_MODEL
       call check_vector_data ('bsw         ', bsw         ) ! clapp and hornbereger "b" parameter [-]
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       call check_vector_data ('theta_r     ', theta_r     ) 
       call check_vector_data ('alpha_vgm   ', alpha_vgm   ) 

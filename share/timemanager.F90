@@ -518,7 +518,6 @@ CONTAINS
       ELSE 
          longitude = long
       ENDIF
-      
       IF ( .not. isgreenwich ) THEN
          CALL localtime2gmt(idate, longitude)
       ENDIF

@@ -307,7 +307,6 @@ CONTAINS
             count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
             count3(2) = grid%ycnt(jblk)
             count3(3) = 1
-
             IF (count3(1) == grid%xcnt(iblk)) THEN
                CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
                   start3, count3) )

@@ -33,9 +33,11 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_deadcrootc         ! dead coarse root carbon display pool  (gC/m2)
    type(block_data_real8_2d) :: f_deadcrootc_storage ! dead coarse root carbon storage pool  (gC/m2)
    type(block_data_real8_2d) :: f_deadcrootc_xfer    ! dead coarse root carbon transfer pool (gC/m2)
+#ifdef CROP
    type(block_data_real8_2d) :: f_grainc             ! grain carbon display pool (gC/m2)
    type(block_data_real8_2d) :: f_grainc_storage     ! grain carbon storage pool (gC/m2)
    type(block_data_real8_2d) :: f_grainc_xfer        ! grain carbon transfer pool (gC/m2)
+#endif
    type(block_data_real8_2d) :: f_leafn              ! leaf nitrogen display pool  (gN/m2)
    type(block_data_real8_2d) :: f_leafn_storage      ! leaf nitrogen storage pool  (gN/m2)
    type(block_data_real8_2d) :: f_leafn_xfer         ! leaf nitrogen transfer pool (gN/m2)
@@ -55,11 +57,14 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_deadcrootn_storage ! dead coarse root nitrogen storage pool  (gN/m2)
    type(block_data_real8_2d) :: f_deadcrootn_xfer    ! dead coarse root nitrogen transfer pool (gN/m2)
 
+#ifdef CROP
    type(block_data_real8_2d) :: f_grainn             ! grain nitrogen display pool (gN/m2)
    type(block_data_real8_2d) :: f_grainn_storage     ! grain nitrogen storage pool (gN/m2)
    type(block_data_real8_2d) :: f_grainn_xfer        ! grain nitrogen transfer pool (gN/m2)
+#endif
    type(block_data_real8_2d) :: f_retransn           ! retranslocation nitrogen pool (gN/m2)
 
+#ifdef CROP
    type(block_data_real8_2d) :: f_cphase             ! crop phase
    type(block_data_real8_2d) :: f_cropprod1c         ! 1-yr crop production carbon
    type(block_data_real8_2d) :: f_cropprod1c_loss    ! loss of 1-yr crop production carbon
@@ -67,8 +72,9 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_grainc_to_cropprodc! grain to crop production
    type(block_data_real8_2d) :: f_grainc_to_seed     ! grain to crop seed
    type(block_data_real8_2d) :: f_fert_to_sminn      ! grain to crop seed
-   type(block_data_real8_2d) :: f_ndep_to_sminn      ! grain to crop seed
    type(block_data_real8_2d) :: f_plantdate          ! planting date
+#endif
+   type(block_data_real8_2d) :: f_ndep_to_sminn      ! grain to crop seed
 
    type(block_data_real8_2d) :: f_gpp                ! net primary production (gC/m2/s)
    type(block_data_real8_2d) :: f_downreg            ! gpp downregulation due to N limitation
@@ -147,6 +153,14 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_fertnitro_rice2
    type(block_data_real8_2d) :: f_fertnitro_sugarcane
 #endif
+#ifdef Fire
+   type(block_data_real8_2d) :: f_abm
+   type(block_data_real8_2d) :: f_gdp
+   type(block_data_real8_2d) :: f_peatf
+   type(block_data_real8_2d) :: f_hdm
+   type(block_data_real8_2d) :: f_lnfm
+#endif
+
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_BGCFluxes
 
@@ -184,9 +198,11 @@ CONTAINS
          call allocate_block_data (grid, f_deadcrootc         ) ! dead coarse root carbon display pool  (gC/m2)
          call allocate_block_data (grid, f_deadcrootc_storage ) ! dead coarse root carbon storage pool  (gC/m2)
          call allocate_block_data (grid, f_deadcrootc_xfer    ) ! dead coarse root carbon transfer pool (gC/m2)
+#ifdef CROP
          call allocate_block_data (grid, f_grainc             ) ! grain carbon display pool  (gC/m2)
          call allocate_block_data (grid, f_grainc_storage     ) ! grain carbon storage pool  (gC/m2)
          call allocate_block_data (grid, f_grainc_xfer        ) ! grain carbon transfer pool (gC/m2)
+#endif
          call allocate_block_data (grid, f_leafn              ) ! leaf nitrogen display pool  (gN/m2)
          call allocate_block_data (grid, f_leafn_storage      ) ! leaf nitrogen storage pool  (gN/m2)
          call allocate_block_data (grid, f_leafn_xfer         ) ! leaf nitrogen transfer pool (gN/m2)
@@ -206,11 +222,14 @@ CONTAINS
          call allocate_block_data (grid, f_deadcrootn_storage ) ! dead coarse root nitrogen storage pool  (gN/m2)
          call allocate_block_data (grid, f_deadcrootn_xfer    ) ! dead coarse root nitrogen transfer pool (gN/m2)
 
+#ifdef CROP
          call allocate_block_data (grid, f_grainn             ) ! grain nitrogen display pool  (gN/m2)
          call allocate_block_data (grid, f_grainn_storage     ) ! grain nitrogen storage pool  (gN/m2)
          call allocate_block_data (grid, f_grainn_xfer        ) ! grain nitrogen transfer pool (gN/m2)
+#endif
          call allocate_block_data (grid, f_retransn           ) ! retranslocation nitrogen pool (gN/m2)
 
+#ifdef CROP
          call allocate_block_data (grid, f_cphase             )  ! crop phase
          call allocate_block_data (grid, f_cropprod1c         )  ! 1-yr crop production carbon
          call allocate_block_data (grid, f_cropprod1c_loss    )  ! loss of 1-yr crop production carbon
@@ -218,8 +237,9 @@ CONTAINS
          call allocate_block_data (grid, f_grainc_to_cropprodc ) ! grain to crop production
          call allocate_block_data (grid, f_grainc_to_seed     )  ! grain to crop seed
          call allocate_block_data (grid, f_fert_to_sminn      )  ! grain to crop seed
-         call allocate_block_data (grid, f_ndep_to_sminn      )  ! grain to crop seed
          call allocate_block_data (grid, f_plantdate          )  ! planting date
+#endif
+         call allocate_block_data (grid, f_ndep_to_sminn      )  ! grain to crop seed
 
          call allocate_block_data (grid, f_gpp                ) ! net primary production (gC/m2)
          call allocate_block_data (grid, f_downreg            ) ! gpp downregulation due to N limitation
@@ -296,6 +316,13 @@ CONTAINS
          call allocate_block_data (grid, f_fertnitro_rice1     )
          call allocate_block_data (grid, f_fertnitro_rice2     )
          call allocate_block_data (grid, f_fertnitro_sugarcane )
+#endif
+#ifdef Fire
+         call allocate_block_data (grid, f_abm                 )
+         call allocate_block_data (grid, f_gdp                 )
+         call allocate_block_data (grid, f_peatf               )
+         call allocate_block_data (grid, f_hdm                 )
+         call allocate_block_data (grid, f_lnfm                )
 #endif
 
       end if

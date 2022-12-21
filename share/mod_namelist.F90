@@ -165,6 +165,9 @@ MODULE mod_namelist
       LOGICAL :: xy_solarin   = .true. 
       LOGICAL :: xy_rain      = .true. 
       LOGICAL :: xy_snow      = .true. 
+#ifdef OzoneStress
+      LOGICAL :: xy_ozone     = .true.
+#endif
                                        
       LOGICAL :: taux         = .true. 
       LOGICAL :: tauy         = .true. 
@@ -339,7 +342,6 @@ MODULE mod_namelist
 
       LOGICAL :: grainc_to_seed     = .true.
       LOGICAL :: fert_to_sminn      = .true.
-      LOGICAL :: ndep_to_sminn      = .true.
 
       LOGICAL :: huiswheat          = .true.
       LOGICAL :: pdcorn             = .true.
@@ -359,9 +361,17 @@ MODULE mod_namelist
       LOGICAL :: fertnitro_rice2    = .true.
       LOGICAL :: fertnitro_sugarcane= .true.
 #endif
+      LOGICAL :: ndep_to_sminn      = .true.
 #ifdef NITRIF
       LOGICAL :: CONC_O2_UNSAT      = .true.
       LOGICAL :: O2_DECOMP_DEPTH_UNSAT = .true.
+#endif
+#ifdef Fire
+      LOGICAL :: abm                = .true.
+      LOGICAL :: gdp                = .true.
+      LOGICAL :: peatf              = .true.
+      LOGICAL :: hdm                = .true.
+      LOGICAL :: lnfm               = .true.
 #endif
 #endif
 
@@ -861,6 +871,14 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_soybean, set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+#endif
+      CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
+#ifdef Fire
+      CALL sync_hist_vars_one (DEF_hist_vars%abm                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gdp                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%peatf                           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hdm                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lnfm                            , set_defaults)
 #endif
 #endif
       

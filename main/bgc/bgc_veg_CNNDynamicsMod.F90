@@ -1,6 +1,5 @@
 #include <define.h>
 #ifdef BGC
-#ifdef CROP
 module bgc_veg_CNNDynamicsMod
 
 use precision
@@ -11,20 +10,56 @@ use MOD_TimeVariables, only: h2osoi
 
 use MOD_1D_BGCPFTFluxes, only: fert_p  ! intent(in)
  
-use MOD_1D_BGCFluxes, only: fert_to_sminn, soyfixn_to_sminn
+use MOD_1D_BGCFluxes, only: fert_to_sminn, soyfixn_to_sminn, nfix_to_sminn
 
-use MOD_BGCTimeVars, only: sminn, fpg
+use MOD_BGCTimeVars, only: sminn, fpg, lag_npp
+#ifdef CROP
 use MOD_BGCPFTimeVars, only: croplive_p, hui_p
+#endif
 
 use MOD_1D_BGCPFTFluxes, only: plant_ndemand_p, soyfixn_p
 
-use GlobalVars, only: z_soi, dz_soi
+use GlobalVars, only: z_soi, dz_soi, spval
+use timemanager
 implicit none
 
+public CNNFixation
+#ifdef CROP
 public CNNFert
+public CNSoyfix
+#endif
 
 contains
 
+ subroutine CNNFixation(i,idate)
+  integer ,intent(in) :: i
+  integer ,intent(in) :: idate(3)
+  real(r8) t, dayspyr
+
+!    if ( nfix_timeconst > 0._r8 .and. nfix_timeconst < 500._r8 ) then
+    ! use exponential relaxation with time constant nfix_timeconst for NPP - NFIX relation
+    ! Loop through columns
+   if(isleapyear(idate(1)))then
+      dayspyr = 366
+   else
+      dayspyr = 365
+   end if
+
+   if (lag_npp(i) /= spval) then
+       ! need to put npp in units of gC/m^2/year here first
+      t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * lag_npp(i)*(86400._r8 * dayspyr))))/(86400._r8 * dayspyr)
+      nfix_to_sminn(i) = max(0._r8,t)
+   else
+      nfix_to_sminn(i) = 0._r8
+   endif
+!    else
+       ! use annual-mean values for NPP-NFIX relation
+!       t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * cannsum_npp(i))))/(86400._r8 * dayspyr)
+!       nfix_to_sminn(i) = max(0._r8,t)
+!    endif
+  end subroutine CNNFixation
+
+#ifdef CROP
  subroutine CNNFert(i,ps,pe)
 
   integer ,intent(in) :: i
@@ -132,7 +167,7 @@ contains
    soyfixn_to_sminn(i) = sum(soyfixn_p(ps:pe)*pftfrac(ps:pe))
 
  end subroutine CNSoyfix
+#endif
 
 end module bgc_veg_CNNDynamicsMod
-#endif
 #endif

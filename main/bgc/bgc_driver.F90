@@ -31,8 +31,6 @@ SUBROUTINE bgc_driver &
   use bgc_veg_CNGapMortalityMod, only: CNGapMortality
   use bgc_CNCStateUpdate2Mod, only: CStateUpdate2
   use bgc_CNNStateUpdate2Mod, only: NStateUpdate2
-!  use bgc_veg_CNFireLi2016Mod, only: CNFireArea
-!  use bgc_veg_CNFireBaseMod, only: CNFireFluxes
   use bgc_CNCStateUpdate3Mod, only: CStateUpdate3
   use bgc_soil_SoilBiogeochemNLeachingMod, only: SoilBiogeochemNLeaching
   use bgc_CNNStateUpdate3Mod, only: NstateUpdate3
@@ -42,15 +40,21 @@ SUBROUTINE bgc_driver &
   use bgc_veg_CNVegStructUpdateMod, only: CNVegStructUpdate
   use bgc_CNBalanceCheckMod, only: BeginCNBalance, CBalanceCheck, NBalanceCheck
   use bgc_CNSASUMod, only: CNSASU
+  use bgc_veg_CNNDynamicsMod, only: CNNFixation
+#ifdef CROP
   use bgc_veg_CNNDynamicsMod, only: CNNFert, CNSoyfix
+#endif
   use timemanager
   use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                       z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
   use MOD_TimeVariables, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr
-use MOD_PFTimeVars, only: &
+#ifdef Fire
+  use bgc_veg_CNFireBaseMod, only: CNFireFluxes
+  use bgc_veg_CNFireLi2016Mod, only: CNFireArea
+#endif
+
 ! vegetation carbon state variables (inout)
-           leafc_p            , leafc_storage_p     , leafc_xfer_p    ,cropseedc_deficit_p
   implicit none
 
   integer ,intent(in) :: i
@@ -67,6 +71,7 @@ use MOD_PFTimeVars, only: &
 ! update vegetation pools from phenology, allocation and nitrogen uptake
 ! update soil pools from decomposition and nitrogen competition
   call CNZeroFluxes(i, ps, pe, nl_soil, ndecomp_pools, ndecomp_transitions)
+  call CNNFixation(i,idate)
   call CNMResp(i, ps, pe, nl_soil, npcropmin)
   call decomp_rate_constants_bgc(i,nl_soil,z_soi)
   call SoilBiogeochemPotential(i,nl_soil,ndecomp_pools,ndecomp_transitions)
@@ -105,7 +110,7 @@ use MOD_PFTimeVars, only: &
   call NStateUpdate2(i, ps, pe, deltim, nl_soil, dz_soi)
 
 
-#ifdef FIRE
+#ifdef Fire
 ! update vegetation and fire pools from fire
   call CNFireArea(i,ps,pe,dlat,nl_soil,idate,dz_soi)
   call CNFireFluxes(i,ps,pe,dlat,nl_soil,ndecomp_pools)
@@ -122,7 +127,7 @@ use MOD_PFTimeVars, only: &
 #endif
 
   call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
-  call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
+  call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools,deltim)
 
 if( .not. skip_balance_check(i) )then
   call CBalanceCheck(i,ps,pe,deltim,dlat,dlon)

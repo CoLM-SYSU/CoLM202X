@@ -38,12 +38,12 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: grainc_storage_p         (:)
   REAL(r8), allocatable :: grainc_xfer_p            (:)
   REAL(r8), allocatable :: cropseedc_deficit_p      (:)
+  REAL(r8), allocatable :: cropprod1c_p             (:)
   REAL(r8), allocatable :: xsmrpool_p               (:)
   REAL(r8), allocatable :: gresp_storage_p          (:)
   REAL(r8), allocatable :: gresp_xfer_p             (:)
   REAL(r8), allocatable :: cpool_p                  (:)
   REAL(r8), allocatable :: totvegc_p                (:)
-  REAL(r8), allocatable :: cropprod1c_p             (:)
 
   REAL(r8), allocatable :: leaf_prof_p              (:,:) !profile of leaves
   REAL(r8), allocatable :: stem_prof_p              (:,:) !profile of stem
@@ -73,10 +73,10 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: grainn_storage_p         (:)
   REAL(r8), allocatable :: grainn_xfer_p            (:)
   REAL(r8), allocatable :: cropseedn_deficit_p      (:)
+  REAL(r8), allocatable :: harvdate_p               (:)
+  INTEGER , allocatable :: nyrs_crop_active_p       (:)
   REAL(r8), allocatable :: retransn_p               (:)
   REAL(r8), allocatable :: totvegn_p                (:)
-
-  REAL(r8), allocatable :: harvdate_p               (:)
 
   REAL(r8), allocatable :: tempsum_potential_gpp_p  (:)
   REAL(r8), allocatable :: tempmax_retransn_p       (:)
@@ -98,7 +98,6 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: gdd020_p                 (:)
   REAL(r8), allocatable :: gdd820_p                 (:)
   REAL(r8), allocatable :: gdd1020_p                (:)
-  INTEGER , allocatable :: nyrs_crop_active_p       (:)
 
   REAL(r8), allocatable :: offset_flag_p            (:)
   REAL(r8), allocatable :: offset_counter_p         (:)
@@ -127,6 +126,7 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: npool_p                  (:)
 
 !--------------------- CROP variables for GPAM------------------------------
+#ifdef CROP
   LOGICAL, allocatable :: croplive_p                (:)
   REAL(r8),allocatable :: hui_p                     (:)
   REAL(r8),allocatable :: gddplant_p                (:)
@@ -155,6 +155,7 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8),allocatable :: fertnitro_p               (:)
   REAL(r8),allocatable :: latbaset_p                (:)
   REAL(r8),allocatable :: plantdate_p               (:)
+#endif
 ! --------------------- end CROP variables -------------------------
 
 ! --------------------- SASU variables -----------------------------

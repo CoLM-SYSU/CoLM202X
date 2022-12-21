@@ -19,7 +19,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,col_vegendcb, col_vegbegcb, col_soilendcb, col_soilbegcb &
                      ,col_vegendnb, col_vegbegnb, col_soilendnb, col_soilbegnb &
                      ,col_sminnendnb, col_sminnbegnb &
-                     ,altmax, altmax_lastyear, altmax_lastyear_indx &
+                     ,altmax, altmax_lastyear, altmax_lastyear_indx, lag_npp &
                      ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
                      ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30, accumnstep, skip_balance_check &
 #ifdef SASU
@@ -196,7 +196,8 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         ctrunc_veg            , &    
         ctrunc_soil           , &    
         altmax                                                , &
-        altmax_lastyear                                       
+        altmax_lastyear       , &
+        lag_npp        
    INTEGER, intent(out) :: altmax_lastyear_indx     
    REAL(r8),intent(out) ::      &
         decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
@@ -615,6 +616,7 @@ ENDIF
     altmax                          = 10.0
     altmax_lastyear                 = 10.0
     altmax_lastyear_indx            = 10
+    lag_npp                         = 0.0
     decomp_npools_vr          (:,:) = 0.0
     decomp_npools             (:)   = 0.0
     ntrunc_vr                 (:)   = 0.0
@@ -729,6 +731,7 @@ ENDIF
           end if
           totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
           totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+          print*,'totcolc',totcolc,m,leafc_p(m),leafc_storage_p(m),deadstemc_p(m)
        end do
 #ifdef OzoneStress
        o3uptakesun_p            (ps:pe) = 0._r8

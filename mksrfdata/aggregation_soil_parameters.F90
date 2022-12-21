@@ -50,10 +50,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    TYPE (block_data_real8_2d) :: OM_density_s_grid
    TYPE (block_data_real8_2d) :: BD_all_s_grid
    TYPE (block_data_real8_2d) :: theta_s_grid
-#ifdef Campbell_SOIL_MODEL
    TYPE (block_data_real8_2d) :: psi_s_grid  
    TYPE (block_data_real8_2d) :: lambda_grid 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    TYPE (block_data_real8_2d) :: theta_r_grid 
    TYPE (block_data_real8_2d) :: alpha_vgm_grid 
@@ -76,10 +74,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: OM_density_s_patches (:)
    REAL(r8), allocatable :: BD_all_s_patches (:)
    REAL(r8), allocatable :: theta_s_patches (:) 
-#ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_patches   (:) 
    REAL(r8), allocatable :: lambda_patches  (:) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: theta_r_patches (:) 
    REAL(r8), allocatable :: alpha_vgm_patches  (:) 
@@ -106,10 +102,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: OM_density_s_one (:)
    REAL(r8), allocatable :: BD_all_s_one (:)
    REAL(r8), allocatable :: theta_s_one (:) 
-#ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_one   (:) 
    REAL(r8), allocatable :: lambda_one  (:) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: theta_r_one  (:) 
    REAL(r8), allocatable :: alpha_vgm_one  (:) 
@@ -193,11 +187,11 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( SITE_soil_vf_sand           (nl_soil) )
       allocate ( SITE_soil_wf_gravels        (nl_soil) )
       allocate ( SITE_soil_wf_sand           (nl_soil) )
+      allocate ( SITE_soil_OM_density        (nl_soil) )
+      allocate ( SITE_soil_BD_all            (nl_soil) )
       allocate ( SITE_soil_theta_s           (nl_soil) )
-#ifdef Campbell_SOIL_MODEL
-      allocate ( SITE_soil_psi_s  (nl_soil) )
-      allocate ( SITE_soil_lambda (nl_soil) )
-#endif
+      allocate ( SITE_soil_psi_s             (nl_soil) )
+      allocate ( SITE_soil_lambda            (nl_soil) )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       allocate ( SITE_soil_theta_r   (nl_soil) )
       allocate ( SITE_soil_alpha_vgm (nl_soil) )
@@ -228,10 +222,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( OM_density_s_patches       (numpatch) )
       allocate ( BD_all_s_patches           (numpatch) )
       allocate ( theta_s_patches            (numpatch) )
-#ifdef Campbell_SOIL_MODEL
-      allocate ( psi_s_patches  (numpatch) )
-      allocate ( lambda_patches (numpatch) )
-#endif
+      allocate ( psi_s_patches              (numpatch) )
+      allocate ( lambda_patches             (numpatch) )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       allocate ( theta_r_patches   (numpatch) )
       allocate ( alpha_vgm_patches (numpatch) )
@@ -852,7 +844,6 @@ SUBROUTINE aggregation_soil_parameters ( &
       
 #endif
 
-#ifdef Campbell_SOIL_MODEL
       ! (11) saturated water content [cm3/cm3]
       ! (12) matric potential at saturation (psi_s) [cm]
       ! (13) pore size distribution index [dimensionless] 
@@ -969,6 +960,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
 #endif
 
+#ifndef vanGenuchten_Mualem_SOIL_MODEL
 #ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
@@ -976,6 +968,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
 #else
       SITE_soil_theta_s(nsl) = theta_s_patches(1)
+#endif
 #endif
 
 #ifndef SinglePoint
@@ -994,7 +987,6 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'vector', landpatch, lambda_patches, 1)
 #else
       SITE_soil_lambda(nsl) = lambda_patches(1)
-#endif
 #endif
 
       ! (14) saturated hydraulic conductivity [cm/day]
@@ -1347,11 +1339,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('OM_density_s lev '//trim(c), OM_density_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, OM_density_s_patches, 1)
+#else
+      SITE_soil_OM_density(nsl) = OM_density_s_patches(1)
+#endif
 
       ! (21) bulk density of soil (GRAVELS + OM + Mineral Soils)
       IF (p_is_io) THEN
@@ -1397,11 +1393,15 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('BD_all_s lev '//trim(c), BD_all_s_patches)
 #endif
 
+#ifndef SinglePoint
       lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_pixelset_dimension (lndname, landpatch)
       CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'vector',& 
                               landpatch, BD_all_s_patches, 1)
+#else
+      SITE_soil_BD_all(nsl) = BD_all_s_patches(1)
+#endif
 
 
    ENDDO
@@ -1421,10 +1421,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       deallocate ( OM_density_s_patches )
       deallocate ( BD_all_s_patches )
       deallocate ( theta_s_patches )
-#ifdef Campbell_SOIL_MODEL
       deallocate ( psi_s_patches   )
       deallocate ( lambda_patches  )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       deallocate ( theta_r_patches  )
       deallocate ( alpha_vgm_patches)
@@ -1451,10 +1449,8 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
       IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
       IF (allocated(theta_s_one))             deallocate (theta_s_one)
-#ifdef Campbell_SOIL_MODEL
       IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )
-      IF (allocated(lambda_one ))     deallocate (lambda_one )
-#endif
+      IF (allocated(lambda_one ))             deallocate (lambda_one )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated ( theta_r_one  )) deallocate ( theta_r_one  )
       IF (allocated ( alpha_vgm_one)) deallocate ( alpha_vgm_one)

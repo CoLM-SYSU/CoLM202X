@@ -137,6 +137,7 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_2d) :: f_xy_solarin ! downward solar radiation at surface [W/m2]
    type(block_data_real8_2d) :: f_xy_rain    ! rain [mm/s]
    type(block_data_real8_2d) :: f_xy_snow    ! snow [mm/s]
+   type(block_data_real8_2d) :: f_xy_ozone   ! ozone concentration [mol/mol]
    
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Fluxes
@@ -279,6 +280,7 @@ CONTAINS
          call allocate_block_data (grid, f_xy_solarin)  ! downward solar radiation at surface [W/m2]
          call allocate_block_data (grid, f_xy_rain   )  ! rain [mm/s]
          call allocate_block_data (grid, f_xy_snow   )  ! snow [mm/s]
+         call allocate_block_data (grid, f_xy_ozone  )  ! ozone concentration [mol/mol]
 
       end if
 

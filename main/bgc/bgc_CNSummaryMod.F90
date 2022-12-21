@@ -10,32 +10,40 @@ use MOD_BGCTimeVars, only: &
     totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, &
     leafc, frootc, livestemc, deadstemc, livecrootc, deadcrootc, leafc_storage, frootc_storage, livestemc_storage, &
     deadstemc_storage, livecrootc_storage, deadcrootc_storage, leafc_xfer, frootc_xfer, livestemc_xfer, &
-    deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, grainc, grainc_storage, grainc_xfer, &
+    deadstemc_xfer, livecrootc_xfer, deadcrootc_xfer, xsmrpool, &
+#ifdef CROP
+    grainc, grainc_storage, grainc_xfer, &
     cropseedc_deficit, cropprod1c, cphase, hui, vf, gddplant, gddmaturity, & 
     fertnitro_corn, fertnitro_swheat, fertnitro_wwheat, fertnitro_soybean, &
     fertnitro_cotton, fertnitro_rice1, fertnitro_rice2, fertnitro_sugarcane, &
+    grainn, grainn_storage, grainn_xfer, plantdate, &
+#endif
     leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
     deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
-    deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, grainn, grainn_storage, grainn_xfer, downreg, plantdate
+    deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, downreg, lag_npp
 use MOD_BGCTimeInvars, only: &
-    is_litter, is_soil, is_cwd
+    is_litter, is_soil, is_cwd, nfix_timeconst
 use MOD_BGCPFTimeVars, only: &
     leafc_p, frootc_p, livestemc_p, deadstemc_p, livecrootc_p, deadcrootc_p, &
     leafc_storage_p, frootc_storage_p, livestemc_storage_p, &
     deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
     leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
     deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
-    grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, &
-    cropseedc_deficit_p, cropprod1c_p, cpool_p, plantdate_p, &
 #ifdef CROP
-    cphase_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
+    grainc_p, grainc_storage_p, grainc_xfer_p, &
+#endif
+    ctrunc_p, totvegc_p, &
+    cropseedc_deficit_p, cropprod1c_p, cpool_p, &
+#ifdef CROP
+    plantdate_p, cphase_p, fertnitro_p, hui_p, gddmaturity_p, gddplant_p, vf_p, &
+    grainn_p, grainn_storage_p, grainn_xfer_p, cropseedn_deficit_p, & 
 #endif
     leafn_p, frootn_p, livestemn_p, deadstemn_p, livecrootn_p, deadcrootn_p, &
     leafn_storage_p, frootn_storage_p, livestemn_storage_p, &
     deadstemn_storage_p, livecrootn_storage_p, deadcrootn_storage_p, &
     leafn_xfer_p, frootn_xfer_p, livestemn_xfer_p, &
     deadstemn_xfer_p, livecrootn_xfer_p, deadcrootn_xfer_p, retransn_p, npool_p, &
-    grainn_p, grainn_storage_p, grainn_xfer_p, ntrunc_p, totvegn_p, cropseedn_deficit_p, downreg_p
+    ntrunc_p, totvegn_p, downreg_p
 use MOD_PFTimeInvars,  only: pftfrac
 use MOD_1D_BGCFluxes, only: &
     gpp_enftemp, gpp_enfboreal, gpp_dnfboreal, gpp_ebftrop, gpp_ebftemp, gpp_dbftrop, gpp_dbftemp, &
@@ -43,7 +51,9 @@ use MOD_1D_BGCFluxes, only: &
     leafc_enftemp, leafc_enfboreal, leafc_dnfboreal, leafc_ebftrop, leafc_ebftemp, leafc_dbftrop, leafc_dbftemp, &
     leafc_dbfboreal, leafc_ebstemp, leafc_dbstemp, leafc_dbsboreal, leafc_c3arcgrass, leafc_c3grass, leafc_c4grass, &
     decomp_hr, decomp_hr_vr, gpp, ar, er, supplement_to_sminn, supplement_to_sminn_vr, &
+#ifdef CROP
     cropprod1c_loss, grainc_to_cropprodc, grainc_to_seed, grainn_to_cropprodn, &
+#endif
     sminn_leached, sminn_leached_vr, smin_no3_leached, smin_no3_leached_vr, smin_no3_runoff, smin_no3_runoff_vr, &
     f_n2o_nit, f_n2o_nit_vr, decomp_cpools_transport_tendency, decomp_npools_transport_tendency, &
     denit, f_denit_vr, fire_closs, hrv_xsmrpool_to_atm, som_c_leached, som_n_leached, sminn_to_denit_excess_vr, &
@@ -60,15 +70,18 @@ use MOD_1D_BGCPFTFluxes, only: &
     grain_mr_p, xsmrpool_to_atm_p, cpool_grain_gr_p, &
     transfer_grain_gr_p, cpool_grain_storage_gr_p, soil_change_p, &
     fire_closs_p, hrv_xsmrpool_to_atm_p, &
+#ifdef CROP
+    cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p, grainn_to_food_p, &
+#endif
     m_leafc_to_fire_p, m_leafc_storage_to_fire_p, m_leafc_xfer_to_fire_p, &
     m_frootc_to_fire_p, m_frootc_storage_to_fire_p, m_frootc_xfer_to_fire_p, &
     m_livestemc_to_fire_p, m_livestemc_storage_to_fire_p, m_livestemc_xfer_to_fire_p, &
     m_deadstemc_to_fire_p, m_deadstemc_storage_to_fire_p, m_deadstemc_xfer_to_fire_p, &
     m_livecrootc_to_fire_p, m_livecrootc_storage_to_fire_p, m_livecrootc_xfer_to_fire_p, &
     m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
-    m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p, &
-    cropprod1c_loss_p, grainc_to_seed_p, grainc_to_food_p, grainn_to_food_p
+    m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
 use MOD_TimeInvariants, only : patchclass
+use GlobalVars, only : spval
 use spmd_task
     
 implicit none
@@ -104,7 +117,7 @@ call cnveg_nitrogenstate_summary(i,ps,pe)
 
 end subroutine CNDriverSummarizeStates
 
-subroutine CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
+subroutine CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools,deltim)
 
 integer, intent(IN) :: i
 integer, intent(IN) :: ps
@@ -113,12 +126,13 @@ integer, intent(IN) :: nl_soil
 real(r8),intent(IN) :: dz_soi(1:nl_soil)
 integer, intent(IN) :: ndecomp_transitions
 integer, intent(IN) :: ndecomp_pools
+real(r8),intent(IN) :: deltim
 
 call soilbiogeochem_carbonflux_summary(i,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
 
 call soilbiogeochem_nitrogenflux_summary(i,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools)
 
-call cnveg_carbonflux_summary(i,ps,pe)
+call cnveg_carbonflux_summary(i,ps,pe,deltim)
 
 call cnveg_nitrogenflux_summary(i,ps,pe)
 
@@ -233,13 +247,13 @@ livecrootc_xfer(i)    = sum(livecrootc_xfer_p(ps:pe)    * pftfrac(ps:pe))
 deadcrootc(i)         = sum(deadcrootc_p(ps:pe)         * pftfrac(ps:pe))
 deadcrootc_storage(i) = sum(deadcrootc_storage_p(ps:pe) * pftfrac(ps:pe))
 deadcrootc_xfer(i)    = sum(deadcrootc_xfer_p(ps:pe)    * pftfrac(ps:pe))
+xsmrpool(i)           = sum(xsmrpool_p(ps:pe)           * pftfrac(ps:pe))
+#ifdef CROP
 grainc(i)             = sum(grainc_p(ps:pe)             * pftfrac(ps:pe))
 grainc_storage(i)     = sum(grainc_storage_p(ps:pe)     * pftfrac(ps:pe))
 grainc_xfer(i)        = sum(grainc_xfer_p(ps:pe)        * pftfrac(ps:pe))
-xsmrpool(i)           = sum(xsmrpool_p(ps:pe)           * pftfrac(ps:pe))
 cropseedc_deficit(i)  = sum(cropseedc_deficit_p(ps:pe)  * pftfrac(ps:pe))
 cropprod1c(i)         = sum(cropprod1c_p(ps:pe)         * pftfrac(ps:pe))
-#ifdef CROP
 cphase(i)             = sum(cphase_p(ps:pe)             * pftfrac(ps:pe))
 hui(i)                = hui_p(ps)           
 gddplant(i)           = sum(gddplant_p(ps:pe)           * pftfrac(ps:pe))
@@ -254,6 +268,7 @@ fertnitro_cotton(i) = 0._r8
 fertnitro_rice1(i) = 0._r8
 fertnitro_rice2(i) = 0._r8
 fertnitro_sugarcane(i) = 0._r8
+#endif
 do m = ps, pe
    totvegc_p(m) = leafc_p(m)             + frootc_p(m)             + livestemc_p(m) &
                 + deadstemc_p(m)         + livecrootc_p(m)         + deadcrootc_p(m) &
@@ -261,10 +276,13 @@ do m = ps, pe
                 + deadstemc_storage_p(m) + livecrootc_storage_p(m) + deadcrootc_storage_p(m) &
                 + leafc_xfer_p(m)        + frootc_xfer_p(m)        + livestemc_xfer_p(m) &
                 + deadstemc_xfer_p(m)    + livecrootc_xfer_p(m)    + deadcrootc_xfer_p(m) &
-                + gresp_storage_p(m)     + gresp_xfer_p(m)         + xsmrpool_p(m) &
+#ifdef CROP
                 + grainc_p(m)            + grainc_storage_p(m)     + grainc_xfer_p(m) &
-                + cropseedc_deficit_p(m) + cpool_p(m)
+                + cropseedc_deficit_p(m) &
+#endif
+                + gresp_storage_p(m)     + gresp_xfer_p(m)         + xsmrpool_p(m) + cpool_p(m)
 
+#ifdef CROP
    if(     pftclass(m) .eq. 17 .or. pftclass(m) .eq. 18 .or. pftclass(m) .eq. 63 .or. pftclass(m) .eq. 64)then
       fertnitro_corn(i) = fertnitro_p(m) 
    else if(pftclass(m) .eq. 19 .or. pftclass(m) .eq. 20)then
@@ -281,8 +299,8 @@ do m = ps, pe
    else if(pftclass(m) .eq. 67 .or. pftclass(m) .eq. 68)then
       fertnitro_sugarcane(i) = fertnitro_p(m)
    end if
-end do
 #endif
+end do
 
 leafc_enftemp              (i) = 0._r8
 leafc_enfboreal            (i) = 0._r8
@@ -362,9 +380,11 @@ livecrootn_xfer(i)    = sum(livecrootn_xfer_p(ps:pe)    * pftfrac(ps:pe))
 deadcrootn(i)         = sum(deadcrootn_p(ps:pe)         * pftfrac(ps:pe))
 deadcrootn_storage(i) = sum(deadcrootn_storage_p(ps:pe) * pftfrac(ps:pe))
 deadcrootn_xfer(i)    = sum(deadcrootn_xfer_p(ps:pe)    * pftfrac(ps:pe))
+#ifdef CROP
 grainn(i)             = sum(grainn_p(ps:pe)             * pftfrac(ps:pe))
 grainn_storage(i)     = sum(grainn_storage_p(ps:pe)     * pftfrac(ps:pe))
 grainn_xfer(i)        = sum(grainn_xfer_p(ps:pe)        * pftfrac(ps:pe))
+#endif
 retransn(i)           = sum(retransn_p(ps:pe)           * pftfrac(ps:pe))
 
 do m = ps, pe
@@ -374,9 +394,11 @@ do m = ps, pe
                 + deadstemn_storage_p(m) + livecrootn_storage_p(m) + deadcrootn_storage_p(m) &
                 + leafn_xfer_p(m)        + frootn_xfer_p(m)        + livestemn_xfer_p(m) &
                 + deadstemn_xfer_p(m)    + livecrootn_xfer_p(m)    + deadcrootn_xfer_p(m) &
-                + npool_p(m)             + retransn_p(m) &
+#ifdef CROP
                 + grainn_p(m)            + grainn_storage_p(m)     + grainn_xfer_p(m) &
-                + cropseedn_deficit_p(m)
+                + cropseedn_deficit_p(m) &
+#endif
+                + npool_p(m)             + retransn_p(m) 
 end do
 
 totvegn(i) = sum(totvegn_p(ps:pe)*pftfrac(ps:pe))
@@ -448,13 +470,15 @@ do j = 1, nl_soil
 end do
 end subroutine soilbiogeochem_nitrogenflux_summary
 
-subroutine cnveg_carbonflux_summary(i,ps,pe)
+subroutine cnveg_carbonflux_summary(i,ps,pe,deltim)
 
 integer, intent(in) :: i
 integer, intent(in) :: ps
 integer, intent(in) :: pe
+real(r8),intent(in) :: deltim
 
 integer m
+real(r8) nfixlags
 
 gpp(i) = sum(psn_to_cpool_p(ps:pe) * pftfrac(ps:pe))
 downreg(i) = sum(downreg_p(ps:pe) * pftfrac(ps:pe))
@@ -567,6 +591,13 @@ end do
 fire_closs(i)          = sum(fire_closs_p(ps:pe)          * pftfrac(ps:pe))
 hrv_xsmrpool_to_atm(i) = sum(hrv_xsmrpool_to_atm_p(ps:pe) * pftfrac(ps:pe))
 
+nfixlags = nfix_timeconst * 86400._r8
+if(lag_npp(i) /= spval)then
+   lag_npp(i) = lag_npp(i) * exp(-deltim/nfixlags) + &
+                (gpp(i) - ar(i)) * (1._r8 - exp(-deltim/nfixlags))
+else
+   lag_npp(i) = gpp(i) - ar(i)
+end if
 
 end subroutine cnveg_carbonflux_summary
 

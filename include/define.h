@@ -125,9 +125,22 @@
 #undef NITRIF
 #endif
 
-! 16 If defined, OzoneStress on plant physiology is used
-#define OzoneStress
+! 16 If defined, Fire is on
+#undef Fire
+!    Conflicts : only used when BGC is defined
+#ifndef BGC
+#undef Fire
+#endif
 
-! 17 if defined, dynamic phenology is used, not used now.
+! 17 If defined, OzoneStress on plant physiology is used
+#define OzoneStress
+! 17.1 If defined, Ozone Data is used instead of constant ozone concentration
+#undef OzoneData
+!    Conflicts : only used when OzoneStress is defined
+#ifndef OzoneStress
+#undef OzoneData
+#endif
+
+! 18 if defined, dynamic phenology is used, not used now.
 #undef DYN_PHENOLOGY
 
