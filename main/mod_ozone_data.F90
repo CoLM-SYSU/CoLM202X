@@ -36,11 +36,14 @@ CONTAINS
       ! Local Variables
       REAL(r8), allocatable :: lat(:), lon(:)
       INTEGER :: itime
-      INTEGER :: month, mday
+      INTEGER :: iyear, month, mday
       CHARACTER(LEN=8) :: syear, smonth
 
       call julian2monthday(idate(1),idate(2),month,mday)
-      write(syear,"(I4.4)"),idate(1)
+      iyear = idate(1)
+      if(idate(1) .lt. 2013)iyear = 2013
+      if(idate(1) .gt. 2021)iyear = 2021
+      write(syear,"(I4.4)"),iyear
       write(smonth,"(I2.2)"),month
       file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
 
@@ -56,9 +59,7 @@ CONTAINS
       itime = mday
 
       CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, itime, f_ozone)
-#ifdef CLMDEBUG
       CALL check_block_data ('Ozone', f_ozone)
-#endif
 
 !      IF (p_is_worker) THEN
 !         IF (numpatch > 0) THEN
@@ -83,7 +84,7 @@ CONTAINS
       ! Local Variables
       type(timestamp) :: time_next
       INTEGER :: month, mday
-      INTEGER :: imonth, imonth_next, iday, iday_next
+      INTEGER :: iyear, imonth, imonth_next, iday, iday_next
       CHARACTER(LEN=8) :: syear, smonth
 
       call julian2monthday(time%year,time%day,month,mday)
@@ -95,23 +96,22 @@ CONTAINS
       imonth_next = month
       iday_next   = mday
 
+      iyear = time_next%year
+      if(time_next%year .lt. 2013)iyear=2013
+      if(time_next%year .gt. 2021)iyear=2021
       if(imonth_next /= imonth)then
-         write(syear,"(I4.4)"),time_next%year
+         write(syear,"(I4.4)"),iyear
          write(smonth,"(I2.2)"),month
          file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
       end if
 
-      IF (iday_next /= iday) THEN
+      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
          CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
-#ifdef CLMDEBUG
          CALL check_block_data ('Ozone', f_ozone)
-#endif
       
          call mg2p_ozone%map_aweighted (f_ozone, forc_ozone) 
          forc_ozone = forc_ozone * 1.e-9 
-#ifdef CLMDEBUG
          call check_vector_data ('Ozone', forc_ozone)
-#endif
       ENDIF
 
    END SUBROUTINE update_ozone_data 

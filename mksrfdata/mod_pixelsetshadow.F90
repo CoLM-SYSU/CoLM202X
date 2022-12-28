@@ -10,13 +10,13 @@ CONTAINS
          fracout, shadowclass, fracin)
 
       USE spmd_task
-      USE mod_block
       USE mod_grid
       USE mod_data_type
       USE mod_pixel
       USE mod_pixelset
-      USE mod_landbasin
+      USE mod_mesh
       USE mod_utils
+      USE mod_aggregation_generic
       IMPLICIT NONE
 
       TYPE(pixelset_type),       intent(inout) :: pixelset
@@ -29,75 +29,23 @@ CONTAINS
       INTEGER,  intent(out), allocatable :: shadowclass(:)
       REAL(r8), intent(in),  optional    :: fracin (:)
 
-
       ! Local Variables
-      INTEGER :: nreq, ireq, rmesg(2), smesg(2), isrc, idest, iproc
-      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
-      REAL(r8), allocatable :: pctshadow(:,:), sbuf(:,:), rbuf(:,:)
-      REAL(r8), allocatable :: datashadow1d(:,:), areapixel(:)
-      REAL(r8) :: areatotal
+      REAL(r8), allocatable :: pctshadow(:,:)
+      REAL(r8), allocatable :: datashadow1d(:,:), areapixel(:), rbuff(:,:)
       INTEGER  :: nsetshadow, ipset, jpset
-      INTEGER  :: ipxl, iu, ipxstt, ipxend, ishadow
-      INTEGER,  allocatable :: bindex1(:), ibasin1(:), ipxstt1(:), ipxend1(:), ltyp1(:)
-      LOGICAL,  allocatable :: msk(:), worker_done(:)
+      INTEGER  :: ipxl, ie, ipxstt, ipxend, ishadow
+      INTEGER,  allocatable :: eindex1(:), ielm1(:), ipxstt1(:), ipxend1(:), settyp1(:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
          
 #ifdef USEMPI
-      if (p_is_io) then
-         
-         allocate (worker_done (0:p_np_worker-1))
-
-         worker_done(:) = .false.
-         DO while (any(.not. worker_done))
-
-            CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
-               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-            isrc = rmesg(1)
-            nreq = rmesg(2)
-
-            IF (nreq > 0) THEN
-
-               allocate (xlist (nreq))
-               allocate (ylist (nreq))
-
-               CALL mpi_recv (xlist, nreq, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               CALL mpi_recv (ylist, nreq, MPI_INTEGER, isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
-               allocate (sbuf (nshadow,nreq))
-
-               DO ireq = 1, nreq
-                  xblk = gshadow%xblk(xlist(ireq))
-                  yblk = gshadow%yblk(ylist(ireq))
-                  xloc = gshadow%xloc(xlist(ireq))
-                  yloc = gshadow%yloc(ylist(ireq))
-
-                  sbuf(:,ireq) = datashadow%blk(xblk,yblk)%val(:,xloc,yloc)
-               ENDDO
-
-               idest = isrc
-               CALL mpi_send (sbuf, nreq*nshadow, MPI_REAL8, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-               
-               deallocate (ylist)
-               deallocate (xlist)
-               deallocate (sbuf )
-
-            ELSE
-               worker_done(p_itis_worker(isrc)) = .true.
-            ENDIF
-
-         ENDDO
-
-         deallocate (worker_done)
-
-      ENDIF 
+      IF (p_is_io) THEN
+         CALL aggregation_gen_data_daemon (gshadow, data_r8_3d = datashadow, ndim1 = nshadow)
+      ENDIF
 #endif
-
+         
       IF (p_is_worker) THEN
 
          nsetshadow = 0
@@ -105,88 +53,29 @@ CONTAINS
          allocate (pctshadow(nshadow,pixelset%nset))
 
          DO ipset = 1, pixelset%nset
-            IF (any(filter(:) == pixelset%ltyp(ipset))) THEN
+            IF (any(filter(:) == pixelset%settyp(ipset))) THEN
 
-               iu   = pixelset%ibasin(ipset)
+               ie     = pixelset%ielm  (ipset)
                ipxstt = pixelset%ipxstt(ipset)
                ipxend = pixelset%ipxend(ipset)
       
                allocate (datashadow1d (nshadow, ipxstt:ipxend))
 
-#ifdef USEMPI
-               allocate (xlist (ipxstt:ipxend))
-               allocate (ylist (ipxstt:ipxend))
-               allocate (ipt   (ipxstt:ipxend))
-               allocate (msk   (ipxstt:ipxend))
+               CALL aggregation_gen_request_data (gshadow, &
+                  mesh(ie)%ilon(ipxstt:ipxend), mesh(ie)%ilat(ipxstt:ipxend), &
+                  data_r8_3d = datashadow, out_r8_3d = rbuff, ndim1 = nshadow)
 
-               DO ipxl = ipxstt, ipxend
-                  xlist(ipxl) = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
-                  ylist(ipxl) = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
-
-                  xblk = gshadow%xblk(xlist(ipxl))
-                  yblk = gshadow%yblk(ylist(ipxl))
-                  ipt(ipxl) = gblock%pio(xblk,yblk)
-               ENDDO
-
-               DO iproc = 0, p_np_io-1
-                  msk = (ipt == p_address_io(iproc))
-                  nreq = count(msk)
-
-                  IF (nreq > 0) THEN
-
-                     smesg = (/p_iam_glb, nreq/)
-                     idest = p_address_io(iproc)
-                     CALL mpi_send (smesg, 2, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
-
-                     allocate (ibuf (nreq))
-                     allocate (rbuf (nshadow,nreq))
-
-                     ibuf = pack(xlist, msk)
-                     CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                     ibuf = pack(ylist, msk)
-                     CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
-
-                     isrc = idest
-
-                     CALL mpi_recv (rbuf, nreq*nshadow, MPI_REAL8, &
-                        isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-                     CALL unpack_inplace (rbuf, msk, datashadow1d)
-
-                     deallocate (ibuf)
-                     deallocate (rbuf)
-                  ENDIF
-               ENDDO
-
-               deallocate (xlist)
-               deallocate (ylist)
-               deallocate (ipt  )
-               deallocate (msk  )
-
-#else
-               DO ipxl = ipxstt, ipxend
-                  ilon = gshadow%xgrd(landbasin(iu)%ilon(ipxl))
-                  ilat = gshadow%ygrd(landbasin(iu)%ilat(ipxl))
-                  xblk = gshadow%xblk(ilon)
-                  yblk = gshadow%yblk(ilat)
-                  xloc = gshadow%xloc(ilon)
-                  yloc = gshadow%yloc(ilat)
-
-                  datashadow1d(:,ipxl) = datashadow%blk(xblk,yblk)%val(:,xloc,yloc)
-               ENDDO
-#endif
+               datashadow1d = rbuff
 
                allocate (areapixel(ipxstt:ipxend))
                DO ipxl = ipxstt, ipxend
                   areapixel(ipxl) = areaquad (&
-                     pixel%lat_s(landbasin(iu)%ilat(ipxl)), pixel%lat_n(landbasin(iu)%ilat(ipxl)), &
-                     pixel%lon_w(landbasin(iu)%ilon(ipxl)), pixel%lon_e(landbasin(iu)%ilon(ipxl)) )
+                     pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+                     pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
                ENDDO
 
-               areatotal = sum(areapixel)
-
                DO ishadow = 1, nshadow
-                  pctshadow(ishadow,ipset) = sum(datashadow1d(ishadow,:) * areapixel) / areatotal 
+                  pctshadow(ishadow,ipset) = sum(datashadow1d(ishadow,:) * areapixel)
                ENDDO
 
                IF (any(pctshadow(:,ipset) > 0.)) THEN
@@ -194,6 +83,7 @@ CONTAINS
                   pctshadow(:,ipset) = pctshadow(:,ipset) / sum(pctshadow(:,ipset))
                ENDIF
 
+               deallocate (rbuff       )
                deallocate (areapixel   )
                deallocate (datashadow1d)
 
@@ -202,54 +92,53 @@ CONTAINS
             ENDIF
              
          ENDDO
-         
-#ifdef USEMPI
-         DO iproc = 0, p_np_io-1
-            smesg = (/p_iam_glb, -1/)
-            idest = p_address_io(iproc)
-            CALL mpi_send (smesg, 2, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
-         ENDDO
-#endif
 
-         allocate (bindex1(pixelset%nset))
-         allocate (ibasin1(pixelset%nset))
+#ifdef USEMPI
+         CALL aggregation_gen_worker_done ()
+#endif
+      ENDIF
+
+      IF (p_is_worker) THEN
+         
+         allocate (eindex1(pixelset%nset))
          allocate (ipxstt1(pixelset%nset))
          allocate (ipxend1(pixelset%nset))
-         allocate (ltyp1(pixelset%nset))
+         allocate (settyp1(pixelset%nset))
+         allocate (ielm1  (pixelset%nset))
 
-         bindex1 = pixelset%bindex
-         ibasin1 = pixelset%ibasin
+         eindex1 = pixelset%eindex
          ipxstt1 = pixelset%ipxstt
          ipxend1 = pixelset%ipxend
-         ltyp1 = pixelset%ltyp
+         settyp1 = pixelset%settyp
+         ielm1   = pixelset%ielm
 
-         deallocate (pixelset%bindex)
-         deallocate (pixelset%ibasin)
+         deallocate (pixelset%eindex)
          deallocate (pixelset%ipxstt)
          deallocate (pixelset%ipxend)
-         deallocate (pixelset%ltyp)
+         deallocate (pixelset%settyp)
+         deallocate (pixelset%ielm  )
 
-         allocate (pixelset%bindex(nsetshadow))
-         allocate (pixelset%ibasin(nsetshadow))
+         allocate (pixelset%eindex(nsetshadow))
          allocate (pixelset%ipxstt(nsetshadow))
          allocate (pixelset%ipxend(nsetshadow))
-         allocate (pixelset%ltyp(nsetshadow))
+         allocate (pixelset%settyp(nsetshadow))
+         allocate (pixelset%ielm  (nsetshadow))
          
          allocate (fracout    (nsetshadow))
          allocate (shadowclass(nsetshadow))
 
          jpset = 0
          DO ipset = 1, pixelset%nset
-            IF (any(filter(:) == ltyp1(ipset))) THEN
+            IF (any(filter(:) == settyp1(ipset))) THEN
                IF (any(pctshadow(:,ipset) > 0.)) THEN
                   DO ishadow = 1, nshadow
                      IF (pctshadow(ishadow,ipset) > 0.) THEN
                         jpset = jpset + 1
-                        pixelset%bindex(jpset) = bindex1(ipset)
-                        pixelset%ibasin(jpset) = ibasin1(ipset)
+                        pixelset%eindex(jpset) = eindex1(ipset)
                         pixelset%ipxstt(jpset) = ipxstt1(ipset)
                         pixelset%ipxend(jpset) = ipxend1(ipset)
-                        pixelset%ltyp(jpset) = ltyp1(ipset)
+                        pixelset%settyp(jpset) = settyp1(ipset)
+                        pixelset%ielm  (jpset) = ielm1  (ipset)
 
                         IF (present(fracin)) THEN
                            fracout(jpset) = fracin(ipset) * pctshadow(ishadow,ipset)
@@ -263,11 +152,11 @@ CONTAINS
                ENDIF
             ELSE
                jpset = jpset + 1
-               pixelset%bindex(jpset) = bindex1(ipset)
-               pixelset%ibasin(jpset) = ibasin1(ipset)
+               pixelset%eindex(jpset) = eindex1(ipset)
                pixelset%ipxstt(jpset) = ipxstt1(ipset)
                pixelset%ipxend(jpset) = ipxend1(ipset)
-               pixelset%ltyp(jpset) = ltyp1(ipset)
+               pixelset%settyp(jpset) = settyp1(ipset)
+               pixelset%ielm  (jpset) = ielm1  (ipset)
                      
                IF (present(fracin)) THEN
                   fracout(jpset) = fracin(ipset)
@@ -281,11 +170,11 @@ CONTAINS
 
          pixelset%nset = nsetshadow
 
-         deallocate (bindex1)
-         deallocate (ibasin1)
+         deallocate (eindex1)
          deallocate (ipxstt1)
          deallocate (ipxend1)
-         deallocate (ltyp1)
+         deallocate (settyp1)
+         deallocate (ielm1  )
          deallocate (pctshadow)
 
       ENDIF

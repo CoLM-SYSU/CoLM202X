@@ -261,7 +261,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, vf_quartz_mineral_s_grid, &
@@ -273,7 +273,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(vf_quartz_mineral_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_quartz_mineral_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -294,8 +294,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, vf_quartz_mineral_s_patches, 1)
 #else
       SITE_soil_vf_quartz_mineral(nsl) = vf_quartz_mineral_s_patches(1)
@@ -328,7 +328,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
@@ -422,17 +422,17 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(vf_gravels_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_gravels_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(vf_sand_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_sand_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(vf_om_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in vf_om_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -459,8 +459,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, vf_gravels_s_patches, 1)
 #else
       SITE_soil_vf_gravels(nsl) = vf_gravels_s_patches(1)
@@ -469,8 +469,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/vf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'vector',&
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'vf_sand_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, vf_sand_s_patches, 1)
 #else
       SITE_soil_vf_sand(nsl) = vf_sand_s_patches(1)
@@ -479,8 +479,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/vf_om_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'vector',&
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'vf_om_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, vf_om_s_patches, 1)
 #else
       SITE_soil_vf_om(nsl) = vf_om_s_patches(1)
@@ -490,8 +490,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, BA_alpha_patches, 1)
 #else
       SITE_soil_BA_alpha(nsl) = BA_alpha_patches(1)
@@ -500,8 +500,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'vector',&
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', 'patch',&
                               landpatch, BA_beta_patches, 1)
 #else
       SITE_soil_BA_beta(nsl) = BA_beta_patches(1)
@@ -522,7 +522,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, wf_gravels_s_grid, &
@@ -534,7 +534,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(wf_gravels_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in wf_gravels_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -555,8 +555,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, wf_gravels_s_patches, 1)
 #else
       SITE_soil_wf_gravels(nsl) = wf_gravels_s_patches(1)
@@ -577,7 +577,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, wf_sand_s_grid, &
@@ -589,7 +589,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(wf_sand_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in wf_sand_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -610,8 +610,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, wf_sand_s_patches, 1)
 #else
       SITE_soil_wf_sand(nsl) = wf_sand_s_patches(1)
@@ -633,7 +633,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, L_vgm_grid, L_vgm_one)
@@ -644,7 +644,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(L_vgm_patches(ipatch))) THEN
                write(*,*) "NAN appears in L_vgm_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -665,8 +665,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'vector', landpatch, L_vgm_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', 'patch', landpatch, L_vgm_patches, 1)
 #else
       SITE_soil_L_vgm(nsl) = L_vgm_patches(1)
 #endif
@@ -704,7 +704,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
@@ -770,22 +770,22 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(theta_r_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_r_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(alpha_vgm_patches(ipatch))) THEN
                 write(*,*) "NAN appears in alpha_vgm_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(n_vgm_patches(ipatch))) THEN
                 write(*,*) "NAN appears in n_vgm_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(theta_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_s_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -809,8 +809,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'vector', landpatch, theta_r_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'theta_r_l'//trim(c)//'_patches', 'patch', landpatch, theta_r_patches, 1)
 #else
       SITE_soil_theta_r(nsl) = theta_r_patches(1)
 #endif
@@ -818,8 +818,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'vector', landpatch, alpha_vgm_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', 'patch', landpatch, alpha_vgm_patches, 1)
 #else
       SITE_soil_alpha_vgm(nsl) = alpha_vgm_patches(1)
 #endif
@@ -827,8 +827,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'vector', landpatch, n_vgm_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', 'patch', landpatch, n_vgm_patches, 1)
 #else
       SITE_soil_n_vgm(nsl) = n_vgm_patches(1)
 #endif
@@ -836,8 +836,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, theta_s_patches, 1)
 #else
       SITE_soil_theta_s(nsl) = theta_s_patches(1)
 #endif
@@ -871,7 +871,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
@@ -930,17 +930,17 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(theta_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in theta_s_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(psi_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in psi_s_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
             IF (isnan(lambda_patches(ipatch))) THEN
                 write(*,*) "NAN appears in lambda_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -964,8 +964,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'vector', landpatch, theta_s_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, theta_s_patches, 1)
 #else
       SITE_soil_theta_s(nsl) = theta_s_patches(1)
 #endif
@@ -974,8 +974,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'vector', landpatch, psi_s_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'psi_s_l'//trim(c)//'_patches', 'patch', landpatch, psi_s_patches, 1)
 #else
       SITE_soil_psi_s(nsl) = psi_s_patches(1)
 #endif
@@ -983,8 +983,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'vector', landpatch, lambda_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'patch', landpatch, lambda_patches, 1)
 #else
       SITE_soil_lambda(nsl) = lambda_patches(1)
 #endif
@@ -1002,7 +1002,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, k_s_grid, k_s_one, area_one)
@@ -1013,7 +1013,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(k_s_patches(ipatch))) THEN
                 write(*,*) "NAN appears in k_s_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1034,8 +1034,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/k_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'vector', landpatch, k_s_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'k_s_l'//trim(c)//'_patches', 'patch', landpatch, k_s_patches, 1)
 #else
       SITE_soil_k_s(nsl) = k_s_patches(1)
 #endif
@@ -1053,7 +1053,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, csol_grid, csol_one, area_one)
@@ -1064,7 +1064,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(csol_patches(ipatch))) THEN
                 write(*,*) "NAN appears in csol_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1085,8 +1085,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/csol_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'vector', landpatch, csol_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'csol_l'//trim(c)//'_patches', 'patch', landpatch, csol_patches, 1)
 #else
       SITE_soil_csol(nsl) = csol_patches(1)
 #endif
@@ -1104,7 +1104,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, tksatu_grid, tksatu_one, area_one)
@@ -1115,7 +1115,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tksatu_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tksatu_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1136,8 +1136,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/tksatu_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'vector', landpatch, tksatu_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'tksatu_l'//trim(c)//'_patches', 'patch', landpatch, tksatu_patches, 1)
 #else
       SITE_soil_tksatu(nsl) = tksatu_patches(1)
 #endif
@@ -1155,7 +1155,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, tksatf_grid, tksatf_one, area_one)
@@ -1166,7 +1166,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tksatf_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tksatf_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1187,8 +1187,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/tksatf_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'vector', landpatch, tksatf_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'tksatf_l'//trim(c)//'_patches', 'patch', landpatch, tksatf_patches, 1)
 #else
       SITE_soil_tksatf(nsl) = tksatf_patches(1)
 #endif
@@ -1206,7 +1206,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, tkdry_grid, tkdry_one, area_one)
@@ -1217,7 +1217,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(tkdry_patches(ipatch))) THEN
                 write(*,*) "NAN appears in tkdry_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1238,8 +1238,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/tkdry_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'vector', landpatch, tkdry_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'tkdry_l'//trim(c)//'_patches', 'patch', landpatch, tkdry_patches, 1)
 #else
       SITE_soil_tkdry(nsl) = tkdry_patches(1)
 #endif
@@ -1257,7 +1257,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, k_solids_grid, k_solids_one, area_one)
@@ -1268,7 +1268,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(k_solids_patches(ipatch))) THEN
                 write(*,*) "NAN appears in k_solids_patches."
-                write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+                write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1289,8 +1289,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'vector', landpatch, k_solids_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'k_solids_l'//trim(c)//'_patches', 'patch', landpatch, k_solids_patches, 1)
 #else
       SITE_soil_k_solids(nsl) = k_solids_patches(1)
 #endif
@@ -1309,7 +1309,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, OM_density_s_grid, &
@@ -1321,7 +1321,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(OM_density_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in OM_density_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1342,8 +1342,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, OM_density_s_patches, 1)
 #else
       SITE_soil_OM_density(nsl) = OM_density_s_patches(1)
@@ -1363,7 +1363,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
-            L = landpatch%ltyp(ipatch)
+            L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
                CALL aggregation_lc_request_data (ipatch, gland, BD_all_s_grid, &
@@ -1375,7 +1375,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
             IF (isnan(BD_all_s_patches(ipatch))) THEN
                write(*,*) "NAN appears in BD_all_s_patches."
-               write(*,*) landpatch%bindex(ipatch), landpatch%ltyp(ipatch)
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
             ENDIF
 
          ENDDO
@@ -1396,8 +1396,8 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifndef SinglePoint
       lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'vector',& 
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'patch',& 
                               landpatch, BD_all_s_patches, 1)
 #else
       SITE_soil_BD_all(nsl) = BD_all_s_patches(1)

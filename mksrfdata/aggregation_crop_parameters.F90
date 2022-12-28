@@ -159,8 +159,8 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       lndname = trim(landdir) // '/plantdate_patches.nc'
 
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'plantdate_rice2_patches', 'vector', landpatch, plantdate_rice2_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'plantdate_rice2_patches', 'patch', landpatch, plantdate_rice2_patches, 1)
    ENDDO
    
 
@@ -208,7 +208,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    lndname_out = trim(landdir) // '/plantdate_pfts.nc'
 
    CALL ncio_create_file_vector (lndname_out, landpft)
-   CALL ncio_define_pixelset_dimension (lndname_out, landpft)
+   CALL ncio_define_dimension_vector (lndname_out, landpft, 'pft')
 
    DO cft = 15,78
       write(c4, '(i2.2)') cft
@@ -225,9 +225,9 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
             CALL aggregation_lc_request_data (ipatch, gridcrop, plantdate, plantdate_one, area_one)
-            IF(landpatch%ltyp(ipatch) .eq. 12)THEN
+            IF(landpatch%settyp(ipatch) .eq. 12)THEN
                DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
-                  IF(landpft%ltyp(ipft) .eq. cft)THEN
+                  IF(landpft%settyp(ipft) .eq. cft)THEN
                      IF(sum(area_one) .ne. 0)THEN
                         plantdate_pfts(ipft) = sum(plantdate_one * area_one) / sum(area_one)
                      ELSE
@@ -240,7 +240,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
                   ENDIF
                ENDDO
             ELSE
-               IF (landpatch%ltyp(ipatch) == 1) THEN
+               IF (landpatch%settyp(ipatch) == 1) THEN
                   DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
                      plantdate_pfts(ipft) = -9999._r8
                   ENDDO
@@ -282,11 +282,11 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
 #ifdef CLMDEBUG 
    if(p_is_worker)then
-      CALL check_vector_data ('fert nitro value '//trim(c4), plantdate_pfts)
+      CALL check_vector_data ('plantdate_pfts value '//trim(c4), plantdate_pfts)
    endif
 #endif
 
-   CALL ncio_write_vector (lndname_out, 'plantdate_pfts', 'vector', landpft, plantdate_pfts, 1)
+   CALL ncio_write_vector (lndname_out, 'plantdate_pfts', 'pft', landpft, plantdate_pfts, 1)
    
 
 #ifdef USEMPI
@@ -333,7 +333,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    lndname_out = trim(landdir) // '/fertnitro_pfts.nc'
 
    CALL ncio_create_file_vector (lndname_out, landpft)
-   CALL ncio_define_pixelset_dimension (lndname_out, landpft)
+   CALL ncio_define_dimension_vector (lndname_out, landpft, 'pft')
 
    DO cft = 15,78
       write(c4, '(i2.2)') cft
@@ -352,9 +352,9 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          DO ipatch = 1, numpatch
             CALL aggregation_lc_request_data (ipatch, gridcrop, fertnitro, fertnitro_one, area_one, &
                                                       pct_cft, pct_cft_one)
-            IF(landpatch%ltyp(ipatch) .eq. 12)THEN
+            IF(landpatch%settyp(ipatch) .eq. 12)THEN
                DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
-                  IF(landpft%ltyp(ipft) .eq. cft)THEN
+                  IF(landpft%settyp(ipft) .eq. cft)THEN
                      IF(sum(area_one) .ne. 0)THEN
                         fertnitro_pfts(ipft) = sum(fertnitro_one * area_one) / sum(area_one)
                      ELSE
@@ -367,7 +367,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
                   ENDIF
                ENDDO
             ELSE
-               IF (landpatch%ltyp(ipatch) == 1) THEN
+               IF (landpatch%settyp(ipatch) == 1) THEN
                   DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
                      fertnitro_pfts(ipft) = -9999._r8
                   ENDDO
@@ -413,7 +413,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    endif
 #endif
 
-   CALL ncio_write_vector (lndname_out, 'fertnitro_pfts', 'vector', landpft, fertnitro_pfts, 1)
+   CALL ncio_write_vector (lndname_out, 'fertnitro_pfts', 'pft', landpft, fertnitro_pfts, 1)
    
 
 

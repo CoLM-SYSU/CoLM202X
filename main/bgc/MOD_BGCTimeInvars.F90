@@ -321,18 +321,18 @@ SAVE
 
      call ncio_create_file_vector (file_restart, landpatch)
 
-     CALL ncio_define_pixelset_dimension (file_restart, landpatch)
-     CALL ncio_define_dimension_vector (file_restart, 'soil', nl_soil)
-     call ncio_define_dimension_vector (file_restart, 'ndecomp_transitions',ndecomp_transitions)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil', nl_soil)
+     call ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_transitions',ndecomp_transitions)
      
      call ncio_write_vector       (file_restart, 'rf_decomp      ', 'soil'   , nl_soil  , &
-                          'ndecomp_transitions', ndecomp_transitions,'vector', landpatch, rf_decomp      , compress)
+                          'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, rf_decomp      , compress)
      call ncio_write_vector       (file_restart, 'pathfrac_decomp', 'soil'   , nl_soil  , &
-                          'ndecomp_transitions', ndecomp_transitions,'vector', landpatch, pathfrac_decomp, compress)
-     call ncio_write_vector       (file_restart, 'gdp_lf         ',  'vector', landpatch, gdp_lf         , compress)
-     call ncio_write_vector       (file_restart, 'abm_lf         ',  'vector', landpatch, abm_lf         , compress)
-     call ncio_write_vector       (file_restart, 'peatf_lf       ',  'vector', landpatch, peatf_lf       , compress)
-     call ncio_write_vector       (file_restart, 'rice2pdt       ',  'vector', landpatch, rice2pdt       , compress)
+                          'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, pathfrac_decomp, compress)
+     call ncio_write_vector       (file_restart, 'gdp_lf         ',  'patch', landpatch, gdp_lf         , compress)
+     call ncio_write_vector       (file_restart, 'abm_lf         ',  'patch', landpatch, abm_lf         , compress)
+     call ncio_write_vector       (file_restart, 'peatf_lf       ',  'patch', landpatch, peatf_lf       , compress)
+     call ncio_write_vector       (file_restart, 'rice2pdt       ',  'patch', landpatch, rice2pdt       , compress)
 
      if (p_is_master) then
 

@@ -167,8 +167,8 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       lndname = trim(landdir) // '/hdm_'//trim(cyear)//'_patches.nc'
 
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'hdm_patches', 'vector', landpatch, hdm_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'hdm_patches', 'patch', landpatch, hdm_patches, 1)
    ENDDO
    
    IF (p_is_master) THEN
@@ -216,8 +216,8 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       lndname = trim(landdir) // '/abm_patches.nc'
 
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'abm_patches', 'vector', landpatch, abm_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'abm_patches', 'patch', landpatch, abm_patches, 1)
 
 
    IF (p_is_master) THEN
@@ -265,8 +265,8 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       lndname = trim(landdir) // '/peatf_patches.nc'
 
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'peatf_patches', 'vector', landpatch, peatf_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'peatf_patches', 'patch', landpatch, peatf_patches, 1)
 
    IF (p_is_master) THEN
       write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp' 
@@ -313,8 +313,8 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       lndname = trim(landdir) // '/gdp_patches.nc'
 
       CALL ncio_create_file_vector (lndname, landpatch)
-      CALL ncio_define_pixelset_dimension (lndname, landpatch)
-      CALL ncio_write_vector (lndname, 'gdp_patches', 'vector', landpatch, gdp_patches, 1)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'gdp_patches', 'patch', landpatch, gdp_patches, 1)
 
    IF (p_is_worker) THEN
       IF (allocated(hdm_patches)) deallocate(hdm_patches)

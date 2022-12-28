@@ -10,7 +10,7 @@ module mod_hist
    USE GlobalVars, only : spval
    USE mod_landpft, only : patch_pft_s
    USE ncio_serial
-#if (defined HISTORY_IN_VECTOR)
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
    USE mod_hist_vector
 #endif
 
@@ -37,6 +37,7 @@ contains
       USE mod_landpatch
       use mod_mapping_pset2grid
       use MOD_1D_Acc_Fluxes
+      USE mod_forcing, only : gforc
       implicit none
 
       character(len=*), intent(in) :: dir_hist
@@ -49,17 +50,18 @@ contains
       call allocate_acc_fluxes ()
       call FLUSH_acc_fluxes ()
 
-#if (defined HISTORY_IN_VECTOR)
-      CALL hist_vector_init ()
-      RETURN
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+      IF (DEF_HISTORY_IN_VECTOR) THEN
+         RETURN
+      ENDIF
 #endif
 
-      IF ((lon_res > 0) .and. (lat_res > 0)) THEN
+      IF (DEF_hist_grid_as_forcing) then
+         CALL ghist%define_by_copy (gforc)
+      ELSE
          lon_points = nint(360.0/lon_res)
          lat_points = nint(180.0/lat_res)
          call ghist%define_by_ndims (lon_points, lat_points)
-      ELSE
-         call ghist%define_by_name (DEF_hist_gridname)
       ENDIF
 
 #ifndef CROP
@@ -91,9 +93,6 @@ contains
       
       call deallocate_acc_fluxes ()
 
-#if (defined HISTORY_IN_VECTOR)
-      CALL hist_vector_final ()
-#endif
 
    end subroutine hist_final
 
@@ -119,12 +118,10 @@ contains
       use mod_colm_debug
       use GlobalVars, only : spval
       USE MOD_TimeInvariants, only : patchtype, patchclass
-#ifdef USE_DEPTH_TO_BEDROCK
-      USE MOD_TimeInvariants, only : ibedrock
-#endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Variables
 #endif
+      USE mod_forcing, only : forcmask
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
@@ -164,6 +161,8 @@ contains
       end if
 
       select case (trim(DEF_HIST_FREQ))
+      case ('TIMESTEP')
+         lwrite = .true.
       case ('HOURLY')
          lwrite = isendofhour (idate, deltim)
       case ('DAILY')
@@ -198,9 +197,12 @@ contains
          
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
 
-#if (defined HISTORY_IN_VECTOR)
-         CALL hist_vector_out (file_hist, idate)
-         RETURN
+
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+         IF (DEF_HISTORY_IN_VECTOR) THEN
+            CALL hist_vector_out (file_hist, idate)
+            RETURN
+         ENDIF
 #endif
 
          call hist_write_time (file_hist, 'time', ghist, idate, itime_in_file)  
@@ -224,6 +226,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype < 99
                vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -291,6 +296,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype < 99
                vectmp (:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2642,6 +2650,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype <= 3
                vectmp (:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2671,6 +2682,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype <= 2
                vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2694,57 +2708,32 @@ contains
             'vegetation water potential', 'mm')
 #endif
 
-#ifdef VARIABLY_SATURATED_FLOW
+         ! water table depth [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
+            a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
+            'the depth to water table','m')
+
+         ! water storage in aquifer [mm]
+         call flux_map_and_write_2d ( DEF_hist_vars%wa, &
+            a_wa, f_wa, file_hist, 'f_wa', itime_in_file, sumwt, filter, &
+            'water storage in aquifer','mm')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+               vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
          ! depth of ponding water [m]
          call flux_map_and_write_2d ( DEF_hist_vars%dpond, &
             a_dpond, f_dpond, file_hist, 'f_dpond', itime_in_file, sumwt, filter, &
             'depth of ponding water','mm')
-#endif
-
-#ifndef USE_DEPTH_TO_BEDROCK
-         ! water table depth [m]
-         call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
-            a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
-            'the depth to water table','m')
-
-         ! water storage in aquifer [mm]
-         call flux_map_and_write_2d ( DEF_hist_vars%wa, &
-            a_wa, f_wa, file_hist, 'f_wa', itime_in_file, sumwt, filter, &
-            'water storage in aquifer','mm')
-#else
-         if (p_is_worker) then
-            if (numpatch > 0) then
-               filter(:) = (patchtype <= 2) .and. (ibedrock <= nl_soil)
-               vectmp(:) = 1.
-            end if
-         end if
-
-         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
-         
-         ! water table depth [m]
-         call flux_map_and_write_2d ( DEF_hist_vars%dwatsub, &
-            a_dwatsub, f_dwatsub, file_hist, 'f_dwatsub', itime_in_file, sumwt, filter, &
-            'depth of saturated subsurface water above bedrock','m')
-
-         if (p_is_worker) then
-            if (numpatch > 0) then
-               filter(:) = (patchtype <= 2) .and. (ibedrock > nl_soil)
-               vectmp(:) = 1.
-            end if
-         end if
-
-         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
-         
-         ! water table depth [m]
-         call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
-            a_zwt, f_zwt, file_hist, 'f_zwt', itime_in_file, sumwt, filter, &
-            'the depth to water table','m')
-
-         ! water storage in aquifer [mm]
-         call flux_map_and_write_2d ( DEF_hist_vars%wa, &
-            a_wa, f_wa, file_hist, 'f_wa', itime_in_file, sumwt, filter, &
-            'water storage in aquifer','mm')
-#endif
 
          ! -----------------------------------------------
          ! Land water bodies' ice fraction and temperature
@@ -2754,6 +2743,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype == 4
                vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2776,6 +2768,9 @@ contains
             if (numpatch > 0) then
                filter(:) = patchtype < 99
                vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2886,6 +2881,9 @@ contains
             if (numpatch > 0) then
                filter(:) = nac_ln > 0
                vectmp(:) = 1.
+               IF (DEF_forcing%has_missing_value) THEN
+                  filter = filter .and. forcmask
+               ENDIF
             end if
          end if
 
@@ -2932,7 +2930,12 @@ contains
             'reflected diffuse beam nir solar radiation at local noon(W/m2)','W/m2')
 
 #if(defined CaMa_Flood)
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+if (p_is_master) then
          CALL hist_out_cama (file_hist_cama, itime_in_file_cama)
+ENDIF
 #endif
 
          if (allocated(filter)) deallocate(filter)
@@ -3293,8 +3296,14 @@ contains
                call ncio_define_dimension(filename, 'lat' , hist_concat%ginfo%nlat)
                call ncio_define_dimension(filename, 'lon' , hist_concat%ginfo%nlon)
 
-               call ncio_write_serial (filename, 'lat',   hist_concat%ginfo%lat_c, 'lat')
-               call ncio_write_serial (filename, 'lon',   hist_concat%ginfo%lon_c, 'lon')
+               call ncio_write_serial (filename, 'lat', hist_concat%ginfo%lat_c, 'lat')
+               CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
+               CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lon', hist_concat%ginfo%lon_c, 'lon')
+               CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
+               CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
+
 #ifndef SinglePoint
                call ncio_write_serial (filename, 'lat_s', hist_concat%ginfo%lat_s, 'lat')
                call ncio_write_serial (filename, 'lat_n', hist_concat%ginfo%lat_n, 'lat')

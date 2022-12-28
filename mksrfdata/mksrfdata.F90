@@ -52,8 +52,12 @@ PROGRAM mksrfdata
    USE mod_block
    USE mod_pixel
    USE mod_grid
-   USE mod_landbasin
-   USE mod_hydrounit
+   USE mod_mesh
+   USE mod_mesh_filter
+   USE mod_landelm
+#ifdef CATCHMENT
+   USE mod_landhru
+#endif
    USE mod_landpatch
    USE LC_Const
    USE mod_srfdata_restart
@@ -62,9 +66,6 @@ PROGRAM mksrfdata
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-#endif
-#ifdef MAP_PATCH_TO_GRID
-   USE mod_patch2grid
 #endif
 
    IMPLICIT NONE
@@ -78,7 +79,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gbasin, gridlai, gnitrif, gndep, gfire
+   TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -108,7 +109,7 @@ PROGRAM mksrfdata
    
    ! define blocks
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
-   ! CALL gblock%load_from_file (dir_landdata, is_read_pio = .false.)
+   ! CALL gblock%set_by_file (DEF_file_block)
 
    CAll Init_LC_Const
 
@@ -120,20 +121,26 @@ PROGRAM mksrfdata
    CALL pixel%set_edges (edges, edgen, edgew, edgee) 
    CALL pixel%assimilate_gblock ()
 
-   ! define grid coordinates of land basins
+   ! define grid coordinates of mesh
 #ifdef GRIDBASED
-   CALL gbasin%define_from_file (DEF_file_landgrid)
+   CALL gridmesh%define_from_file (DEF_file_mesh)
 #endif
 #ifdef CATCHMENT
-   CALL gbasin%define_by_name ('merit_90m')
+   CALL gridmesh%define_by_name ('merit_90m')
 #endif
 #ifdef UNSTRUCTURED
-   CALL gbasin%define_by_name ('colm_1km')
+   CALL gridmesh%define_from_file (DEF_file_mesh)
 #endif
+   
+   ! define grid coordinates of mesh filter 
+   has_mesh_filter = inquire_mesh_filter ()
+   IF (has_mesh_filter) THEN
+      CALL grid_filter%define_from_file (DEF_file_mesh_filter)
+   ENDIF
 
    ! define grid coordinates of hydro units in catchment
 #ifdef CATCHMENT
-   CALL ghydru%define_by_name ('merit_90m')
+   CALL ghru%define_by_name ('merit_90m')
 #endif
 
    ! define grid coordinates of land types
@@ -169,10 +176,13 @@ PROGRAM mksrfdata
 
    ! assimilate grids to build pixels
 #ifndef SinglePoint
-   CALL pixel%assimilate_grid (gbasin)
+   CALL pixel%assimilate_grid (gridmesh)
 #endif
+   IF (has_mesh_filter) THEN
+      CALL pixel%assimilate_grid (grid_filter)
+   ENDIF
 #ifdef CATCHMENT
-   CALL pixel%assimilate_grid (ghydru)
+   CALL pixel%assimilate_grid (ghru)
 #endif
    CALL pixel%assimilate_grid (gpatch)
    CALL pixel%assimilate_grid (gridlai)
@@ -191,10 +201,13 @@ PROGRAM mksrfdata
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
-   CALL pixel%map_to_grid (gbasin)
+   CALL pixel%map_to_grid (gridmesh)
 #endif
+   IF (has_mesh_filter) THEN
+      CALL pixel%map_to_grid (grid_filter)
+   ENDIF
 #ifdef CATCHMENT
-   CALL pixel%map_to_grid (ghydru)
+   CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
 #if (defined CROP) 
@@ -213,11 +226,20 @@ PROGRAM mksrfdata
 
 
 
-   ! build land basins 
-   CALL landbasin_build (gbasin)
+   ! build land elms 
+   CALL mesh_build ()
+
+   ! Filtering pixels 
+   IF (has_mesh_filter) THEN
+      CALL mesh_filter ()
+   ENDIF
    
    ! build hydro units 
-   CALL hydrounit_build 
+   CALL landelm_build 
+
+#ifdef CATCHMENT
+   CALL landhru_build
+#endif
 
    ! build land patches
    CALL landpatch_build
@@ -238,10 +260,14 @@ PROGRAM mksrfdata
    
    CALL pixel%save_to_file     (dir_landdata)
 
-   CALL landbasin_save_to_file  (dir_landdata)
+   CALL mesh_save_to_file      (dir_landdata)
 
-   CALL pixelset_save_to_file  (dir_landdata, 'hydrounit', hydrounit)
+   CALL pixelset_save_to_file  (dir_landdata, 'landelm', landelm)
    
+#ifdef CATCHMENT
+   CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
+#endif
+
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -250,11 +276,6 @@ PROGRAM mksrfdata
 
 #ifdef PC_CLASSIFICATION
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
-#endif
-
-#ifdef MAP_PATCH_TO_GRID
-   CALL grid_patch2grid%define_from_file (DEF_file_landgrid)
-   CALL patch2grid_init ()
 #endif
 
    ! ................................................................

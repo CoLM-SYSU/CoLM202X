@@ -9,6 +9,7 @@ MODULE ncio_serial
    ! PUBLIC subroutines
 
    PUBLIC :: ncio_create_file
+   PUBLIC :: check_ncfile_exist
 
    INTERFACE ncio_put_attr
       MODULE procedure ncio_put_attr_str
@@ -17,9 +18,11 @@ MODULE ncio_serial
 
    INTERFACE ncio_get_attr
       MODULE procedure ncio_get_attr_str
+      MODULE procedure ncio_get_attr_real8
    END INTERFACE ncio_get_attr
 
    PUBLIC :: ncio_var_exist
+   PUBLIC :: ncio_inquire_varsize
    PUBLIC :: ncio_inquire_length
 
    INTERFACE ncio_read_serial
@@ -176,6 +179,25 @@ CONTAINS
    END SUBROUTINE ncio_get_attr_str
 
    ! ----
+   SUBROUTINE ncio_get_attr_real8 (filename, varname, attrname, attrval)
+
+      USE netcdf
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in)  :: filename, varname, attrname
+      REAL(r8), intent(out) :: attrval
+
+      ! Local Variables
+      INTEGER :: ncid, varid
+
+      CALL nccheck( nf90_open (trim(filename), NF90_NOWRITE, ncid) )
+      CALL nccheck (nf90_inq_varid (ncid, trim(varname), varid))
+      CALL nccheck (nf90_get_att (ncid, varid, trim(attrname), attrval))
+      CALL nccheck (nf90_close (ncid))
+
+   END SUBROUTINE ncio_get_attr_real8
+
+   ! ----
    SUBROUTINE ncio_put_attr_real8 (filename, varname, attrname, attrval)
 
       USE netcdf
@@ -247,6 +269,10 @@ CONTAINS
          CALL nccheck( nf90_close(ncid) )
       ELSE
          ncio_var_exist = .false.
+      ENDIF
+
+      IF (.not. ncio_var_exist) THEN
+         write(*,*) 'Warning: ', trim(dataname), ' not found in ', trim(filename)
       ENDIF
 
    END FUNCTION ncio_var_exist
@@ -822,8 +848,11 @@ CONTAINS
       IF (p_is_master) THEN
          CALL ncio_read_serial_int8_1d(filename, dataname, rdata_byte)
          vlen = size(rdata_byte)
+         
          allocate(rdata(vlen))
          rdata = (rdata_byte == 1)
+
+         deallocate (rdata_byte)
       ENDIF
       
 #ifdef USEMPI
@@ -874,6 +903,7 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, dimid, status
       INTEGER :: varid
+
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
 
       status = nf90_inq_dimid(ncid, trim(dimname), dimid)
@@ -883,7 +913,27 @@ CONTAINS
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), NF90_UNLIMITED, dimid) )
          ELSE
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), dimlen, dimid) )
-         ENDIF 
+         ENDIF
+         if (trim(dimname) .eq. 'lon') then
+            !print *, 'lon-def'
+            call nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+         elseif (trim(dimname) .eq.'lat') then
+            !print *, 'lat-def'
+            call nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lat_cama') then
+               !print *, 'lat-def'
+               call nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
+               call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+               call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lon_cama') then
+            call nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )                            
+         endif 
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
 
@@ -905,6 +955,7 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, dimid, status
       INTEGER :: varid
+
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
 
       status = nf90_inq_dimid(ncid, trim(dimname), dimid)
@@ -914,7 +965,28 @@ CONTAINS
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), NF90_UNLIMITED, dimid) )
          ELSE
             CALL nccheck( nf90_def_dim(ncid, trim(dimname), int(dimlen), dimid) )
-         ENDIF 
+         ENDIF
+         if (trim(dimname) .eq. 'lon') then
+            !print *, 'lon-def'
+            call nccheck( nf90_def_var(ncid, 'lon', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )
+         elseif (trim(dimname) .eq.'lat') then
+            !print *, 'lat-def'
+            call nccheck( nf90_def_var(ncid, 'lat', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lat_cama') then
+               !print *, 'lat-def'
+               call nccheck( nf90_def_var(ncid, 'lat_cama', nf90_float, (/dimid/), varid) )
+               call nccheck( nf90_put_att(ncid, varid, 'long_name','latitude') )
+               call nccheck( nf90_put_att(ncid, varid, 'units','degrees_north') )
+         elseif (trim(dimname) .eq.'lon_cama') then
+            call nccheck( nf90_def_var(ncid, 'lon_cama', nf90_float, (/dimid/), varid) )
+            call nccheck( nf90_put_att(ncid, varid, 'long_name','longitude') )
+            call nccheck( nf90_put_att(ncid, varid, 'units','degrees_east') )          
+                                 
+         endif 
          CALL nccheck (nf90_enddef(ncid))
       ENDIF
 
@@ -1130,6 +1202,8 @@ CONTAINS
       ELSE
          CALL ncio_write_serial_int8_1d (filename, dataname, wdata_byte, dimname)
       ENDIF
+
+      deallocate(wdata_byte)
 
    END SUBROUTINE ncio_write_serial_logical_1d
 

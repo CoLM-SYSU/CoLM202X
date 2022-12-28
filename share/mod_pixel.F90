@@ -76,8 +76,8 @@ CONTAINS
       this%lon_e(1) = this%edgee
 
       IF (p_is_master) THEN
-         write(*,*) 'Region information:'
-         write(*,'(A28,F10.4,A1,F10.4,A1,F10.4,A1,F10.4,A1)') ' (south,north,west,east) = (', &
+         write(*,'(A)') 'Region information:'
+         write(*,'(A,F10.4,A,F10.4,A,F10.4,A,F10.4,A)') ' (south,north,west,east) = (', &
             this%edges, ',', this%edgen, ',', this%edgew, ',', this%edgee, ')'
          write(*,*)
       ENDIF
@@ -99,6 +99,8 @@ CONTAINS
       REAL(r8), intent(in) :: lon_w(nlon), lon_e(nlon)
 
       ! Local variables
+      REAL(r8) :: south, north, west, east
+
       INTEGER :: ny, yinc
       INTEGER :: iy1, iy2, ys2, yn2
       REAL(r8), allocatable :: ytmp(:)
@@ -109,26 +111,36 @@ CONTAINS
 
       IF (lat_s(1) <= lat_s(nlat)) THEN
          yinc = 1
+         south = lat_s(1)
+         north = lat_n(nlat)
       ELSE
          yinc = -1
+         south = lat_s(nlat)
+         north = lat_n(1)
       ENDIF
 
       allocate (ytmp (this%nlat+nlat+2))
 
       ny = 0
       DO iy1 = 1, this%nlat   
-         ys2 = find_nearest_south (this%lat_s(iy1), nlat, lat_s) 
-         yn2 = find_nearest_north (this%lat_n(iy1), nlat, lat_n) 
 
          ny = ny + 1
          ytmp(ny) = this%lat_s(iy1)
 
-         DO iy2 = ys2, yn2, yinc
-            IF (lat_s(iy2) > this%lat_s(iy1)) THEN
+         IF ((this%lat_s(iy1) < north) .and. (this%lat_n(iy1) > south)) THEN 
+            ys2 = find_nearest_south (this%lat_s(iy1), nlat, lat_s) 
+            yn2 = find_nearest_north (this%lat_n(iy1), nlat, lat_n) 
+            DO iy2 = ys2, yn2, yinc
+               IF (lat_s(iy2) > this%lat_s(iy1)) THEN
+                  ny = ny + 1
+                  ytmp(ny) = lat_s(iy2)
+               ENDIF
+            ENDDO
+            IF (lat_n(yn2) < this%lat_n(iy1)) THEN
                ny = ny + 1
-               ytmp(ny) = lat_s(iy2)
+               ytmp(ny) = lat_n(yn2)
             ENDIF
-         ENDDO
+         ENDIF
       ENDDO
 
       ny = ny + 1
@@ -146,26 +158,55 @@ CONTAINS
 
       deallocate (ytmp)
       
+      west = lon_w(1)
+      east = lon_e(nlon)
 
       allocate (xtmp (this%nlon+nlon+2))
 
       nx = 0
       DO ix1 = 1, this%nlon
-         xw2 = find_nearest_west (this%lon_w(ix1), nlon, lon_w) 
-         xe2 = find_nearest_east (this%lon_e(ix1), nlon, lon_e) 
-
          nx = nx + 1
          xtmp(nx) = this%lon_w(ix1)
 
-         IF (xw2 /= xe2) THEN
-            ix2 = mod(xw2,nlon) + 1
-            DO while (.true.) 
-               nx = nx + 1
-               xtmp(nx) = lon_w(ix2)
+         IF (    lon_between_floor(this%lon_w(ix1), west, east) &
+            .or. lon_between_ceil (this%lon_e(ix1), west, east) &
+            .or. lon_between_floor(west, this%lon_w(ix1), this%lon_e(ix1)) &
+            .or. lon_between_ceil (east, this%lon_w(ix1), this%lon_e(ix1))) THEN
 
-               IF (ix2 == xe2)  exit
-               ix2 = mod(ix2,nlon) + 1
-            ENDDO
+            xw2 = find_nearest_west (this%lon_w(ix1), nlon, lon_w) 
+            xe2 = find_nearest_east (this%lon_e(ix1), nlon, lon_e) 
+
+            IF (.not. lon_between_floor(this%lon_w(ix1), lon_w(xw2), lon_e(xw2))) THEN
+               xw2 = mod(xw2,nlon) + 1
+            ENDIF
+
+            IF (.not. lon_between_ceil(this%lon_e(ix1), lon_w(xe2), lon_e(xe2))) THEN
+               xe2 = xe2 - 1
+               IF (xe2 == 0) xe2 = nlon
+            ENDIF
+
+            IF ((lon_between_floor(lon_w(xw2), this%lon_w(ix1), this%lon_e(ix1)) &
+               .and. (lon_w(xw2) /= this%lon_w(ix1)))) THEN
+               nx = nx + 1
+               xtmp(nx) = lon_w(xw2)
+            ENDIF
+
+            IF (xw2 /= xe2) THEN
+               ix2 = mod(xw2,nlon) + 1
+               DO while (.true.) 
+                  nx = nx + 1
+                  xtmp(nx) = lon_w(ix2)
+
+                  IF (ix2 == xe2)  exit
+                  ix2 = mod(ix2,nlon) + 1
+               ENDDO
+            ENDIF
+
+            IF ((lon_between_ceil(lon_e(xe2), this%lon_w(ix1), this%lon_e(ix1))) &
+               .and. (lon_e(xe2) /= this%lon_e(ix1))) THEN
+               nx = nx + 1
+               xtmp(nx) = lon_e(xe2)
+            ENDIF
          ENDIF
       ENDDO
 
@@ -226,39 +267,58 @@ CONTAINS
 
       ! Local variables
       INTEGER :: iy1, iy2, ix1, ix2
+      REAL(r8) :: south, north, west, east
 
       IF (allocated (grd%xgrd))  deallocate (grd%xgrd)
       IF (allocated (grd%ygrd))  deallocate (grd%ygrd)
 
       allocate (grd%ygrd (this%nlat))
+      
+      IF (grd%yinc == 1) THEN
+         south = grd%lat_s(1)
+         north = grd%lat_n(grd%nlat)
+      ELSE
+         south = grd%lat_s(grd%nlat)
+         north = grd%lat_n(1)
+      ENDIF
 
       iy1 = 1
       DO while (.true.)
-         iy2 = find_nearest_south (this%lat_s(iy1), grd%nlat, grd%lat_s) 
-         IF (this%lat_n(iy1) <= grd%lat_n(iy2)) THEN
+         IF ((this%lat_s(iy1) < north) .and. (this%lat_n(iy1) > south)) THEN 
+            iy2 = find_nearest_south (this%lat_s(iy1), grd%nlat, grd%lat_s) 
             DO while (this%lat_n(iy1) <= grd%lat_n(iy2))
                grd%ygrd(iy1) = iy2
                iy1 = iy1 + 1
                IF (iy1 > this%nlat) exit
             ENDDO
          ELSE
-            grd%ygrd(iy1) = iy2
+            grd%ygrd(iy1) = -1
             iy1 = iy1 + 1
          ENDIF
-
          IF (iy1 > this%nlat) exit
       ENDDO
 
       allocate (grd%xgrd (this%nlon))
+
+      west = grd%lon_w(1)
+      east = grd%lon_e(grd%nlon)
       
       ix1 = 1
       DO while (.true.)
-         ix2 = find_nearest_west (this%lon_w(ix1), grd%nlon, grd%lon_w) 
-         DO while (lon_between_ceil(this%lon_e(ix1), grd%lon_w(ix2), grd%lon_e(ix2)))
-            grd%xgrd(ix1) = ix2
+         IF (    lon_between_floor(this%lon_w(ix1), west, east) &
+            .or. lon_between_ceil (this%lon_e(ix1), west, east) ) THEN
+
+            ix2 = find_nearest_west (this%lon_w(ix1), grd%nlon, grd%lon_w) 
+            DO while (lon_between_ceil(this%lon_e(ix1), grd%lon_w(ix2), grd%lon_e(ix2)))
+               grd%xgrd(ix1) = ix2
+               ix1 = ix1 + 1
+               IF (ix1 > this%nlon) exit
+            ENDDO
+
+         ELSE
+            grd%xgrd(ix1) = -1
             ix1 = ix1 + 1
-            IF (ix1 > this%nlon) exit
-         ENDDO
+         ENDIF
          IF (ix1 > this%nlon) exit
       ENDDO
 
@@ -303,7 +363,6 @@ CONTAINS
    ! --------------------------------
    SUBROUTINE pixel_load_from_file (this, dir_landdata)
 
-      USE spmd_task
       USE ncio_serial 
       IMPLICIT NONE
 

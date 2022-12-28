@@ -20,7 +20,7 @@ MODULE mod_namelist
 
    INTEGER :: DEF_nx_blocks = 1
    INTEGER :: DEF_ny_blocks = 1
-   INTEGER :: DEF_PIO_groupsize
+   INTEGER :: DEF_PIO_groupsize = 6
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
@@ -28,7 +28,7 @@ MODULE mod_namelist
    REAL(r8) :: SITE_lat_location = 0.
    
    INTEGER  :: SITE_landtype = 1
-   CHARACTER(len=256) :: SITE_fsrfdata
+   CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
    LOGICAL  :: USE_SITE_pctpfts         = .true.
    LOGICAL  :: USE_SITE_pctcrop         = .true.
@@ -72,29 +72,40 @@ MODULE mod_namelist
    CHARACTER(len=256) :: DEF_dir_restart  = 'path/to/restart'
    CHARACTER(len=256) :: DEF_dir_history  = 'path/to/history'
 
-#if (defined GRIDBASED || defined UNSTRUCTURED)
-   CHARACTER(len=256) :: DEF_file_landgrid = 'path/to/landmask/file'
-#endif
+   CHARACTER(len=256) :: DEF_file_mesh    = 'path/to/mesh/file'
 
 #ifdef CATCHMENT
    LOGICAL :: Catchment_data_in_ONE_file = .false.
-   CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/hydrodata'
+   CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/catchment/data'
 #endif 
 
+   CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
+
+   ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23 
    !To allow read satellite observed LAI        
    logical :: DEF_LAI_CLIM = .FALSE.      
    INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
                  
+   ! ----- Model settings -----
+   LOGICAL :: DEF_LANDONLY = .true.
+   LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
+   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+
+   ! ----- Initialization -----
+   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
 
    ! ----- history -----
+   LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
+
+   LOGICAL  :: DEF_hist_grid_as_forcing   = .false.
    REAL(r8) :: DEF_hist_lon_res = 0.5
    REAL(r8) :: DEF_hist_lat_res = 0.5       
-   CHARACTER(len=256) :: DEF_hist_gridname = 'NONE'
-   CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+
+   CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
+   CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_groupby = 'MONTH' ! history file in one file: DAY/MONTH/YEAR
-   CHARACTER(len=256) :: DEF_HIST_mode    ='block'
+   CHARACTER(len=256) :: DEF_HIST_mode    = 'one'
    INTEGER :: DEF_REST_COMPRESS_LEVEL = 1
    INTEGER :: DEF_HIST_COMPRESS_LEVEL = 1
 
@@ -111,6 +122,10 @@ MODULE mod_namelist
       REAL(r8)           :: HEIGHT_V           = 100.0    
       REAL(r8)           :: HEIGHT_T           = 50.
       REAL(r8)           :: HEIGHT_Q           = 50.
+
+      LOGICAL            :: regional           = .false.
+      REAL(r8)           :: regbnd(4)          = (/-90.0, 90.0, -180.0, 180.0/)
+      LOGICAL            :: has_missing_value  = .false.
 
       INTEGER            :: NVAR               = 8              ! variable number of forcing data
       INTEGER            :: startyr            = 2000           ! start year of forcing data        <MARK #1>
@@ -387,12 +402,7 @@ MODULE mod_namelist
       LOGICAL :: BD_all       = .true.
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
-#ifdef VARIABLY_SATURATED_FLOW
       LOGICAL :: dpond        = .true. 
-#ifdef USE_DEPTH_TO_BEDROCK
-      LOGICAL :: dwatsub      = .true. 
-#endif
-#endif
       LOGICAL :: zwt          = .true. 
       LOGICAL :: wa           = .true. 
                                        
@@ -447,6 +457,14 @@ MODULE mod_namelist
       LOGICAL :: srndln       = .true. 
       LOGICAL :: srniln       = .true. 
 
+      LOGICAL :: rsurf_bsn    = .true. 
+      LOGICAL :: rsubs_bsn    = .true.
+      LOGICAL :: riv_height   = .true.
+      LOGICAL :: riv_veloct   = .true.
+      LOGICAL :: dpond_hru    = .true.
+      LOGICAL :: veloc_hru    = .true.
+      LOGICAL :: zwt_hru      = .true.
+
    END TYPE history_var_type
 
    TYPE (history_var_type) :: DEF_hist_vars
@@ -490,20 +508,27 @@ CONTAINS
          DEF_simulation_time,             &
          DEF_dir_rawdata,                 &  
          DEF_dir_output,                  &  
-#if (defined GRIDBASED || defined UNSTRUCTURED)
-         DEF_file_landgrid,               &
-#endif
+         DEF_file_mesh,                   &
 #ifdef CATCHMENT
          Catchment_data_in_ONE_file,      &
          DEF_path_Catchment_data,         &
 #endif
+         DEF_file_mesh_filter,            &
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
+   
+         DEF_LANDONLY,                    &
+         DEF_USE_DOMINANT_PATCHTYPE,      &
+         DEF_USE_VARIABLY_SATURATED_FLOW, &
+
+         DEF_file_soil_init,              &
+
          DEF_forcing_namelist,            &
-        
+
+         DEF_HISTORY_IN_VECTOR,           &
          DEF_hist_lon_res,                &
          DEF_hist_lat_res,                &
-         DEF_hist_gridname,               &
+         DEF_hist_grid_as_forcing,        &
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
@@ -537,6 +562,9 @@ CONTAINS
             write(*,*) trim(DEF_forcing_namelist), ierr
          ENDIF
          close(10)
+#ifdef SinglePoint
+         DEF_forcing%has_missing_value = .false.
+#endif 
 
          DEF_dir_landdata = trim(DEF_dir_output) // '/' // trim(adjustl(DEF_CASE_NAME)) // '/landdata'
          DEF_dir_restart  = trim(DEF_dir_output) // '/' // trim(adjustl(DEF_CASE_NAME)) // '/restart'
@@ -557,6 +585,10 @@ CONTAINS
          DEF_ny_blocks = 180
          
          DEF_HIST_mode = 'one'
+#endif
+
+#if (defined vanGenuchten_Mualem_SOIL_MODEL)
+         DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
@@ -610,7 +642,7 @@ CONTAINS
       CALL mpi_bcast (DEF_dir_history,  256, mpi_character, p_root, p_comm_glb, p_err)
       
 #if (defined GRIDBASED || defined UNSTRUCTURED)
-      CALL mpi_bcast (DEF_file_landgrid, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
 #ifdef CATCHMENT
@@ -618,19 +650,30 @@ CONTAINS
       CALL mpi_bcast (DEF_path_Catchment_data,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
+      CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      
+      call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err) 
       CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_hist_gridname,     256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_hist_grid_as_forcing, 1, mpi_logical, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_WRST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_FREQ,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_groupby,      256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_HIST_mode,      256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
 
@@ -639,6 +682,9 @@ CONTAINS
       CALL mpi_bcast (DEF_forcing%HEIGHT_V,           1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_T,           1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%HEIGHT_Q,           1, mpi_real8,     p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%regional,           1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%regbnd,             4, mpi_real8,     p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%has_missing_value,  1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%NVAR,               1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%startyr,            1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%startmo,            1, mpi_integer,   p_root, p_comm_glb, p_err)
@@ -894,12 +940,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
-#ifdef VARIABLY_SATURATED_FLOW
       CALL sync_hist_vars_one (DEF_hist_vars%dpond       ,  set_defaults)
-#ifdef USE_DEPTH_TO_BEDROCK
-      CALL sync_hist_vars_one (DEF_hist_vars%dwatsub     ,  set_defaults)
-#endif
-#endif
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
       
@@ -953,6 +994,14 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srviln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
+      
+      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_bsn   ,  set_defaults)  
+      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%zwt_hru     ,  set_defaults) 
 
    END SUBROUTINE sync_hist_vars
    

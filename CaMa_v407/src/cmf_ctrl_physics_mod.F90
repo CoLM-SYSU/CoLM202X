@@ -1,0 +1,269 @@
+MODULE CMF_CTRL_PHYSICS_MOD
+!==========================================================
+!* PURPOSE: call CaMa-Flood physics
+!
+! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
+!
+! Licensed under the Apache License, Version 2.0 (the "License");
+!   You may not use this file except in compliance with the License.
+!   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
+!
+! Unless required by applicable law or agreed to in writing, software distributed under the License is 
+!  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+! See the License for the specific language governing permissions and limitations under the License.
+!==========================================================
+CONTAINS 
+!####################################################################
+! -- CMF_PHYSICS_ADVANCE
+! -- CMF_PHYSICS_FLDSTG
+! --
+!####################################################################
+SUBROUTINE CMF_PHYSICS_ADVANCE
+USE PARKIND1,              ONLY: JPIM,   JPRB,    JPRD,      JPRM
+USE YOS_CMF_INPUT,         ONLY: LOGNAM, DT,      LADPSTP
+USE YOS_CMF_INPUT,         ONLY: LKINE,  LSLPMIX, LFLDOUT,   LPTHOUT,   LDAMOUT, LLEVEE, LOUTINS
+USE YOS_CMF_PROG,          ONLY: D2FLDOUT, D2FLDOUT_PRE
+!
+USE CMF_CALC_OUTFLW_MOD,   ONLY: CMF_CALC_OUTFLW
+USE CMF_CALC_PTHOUT_MOD,   ONLY: CMF_CALC_PTHOUT
+USE CMF_CALC_STONXT_MOD,   ONLY: CMF_CALC_STONXT
+USE CMF_CALC_DIAG_MOD,     ONLY: CMF_DIAG_AVEMAX
+! optional
+USE CMF_OPT_OUTFLW_MOD,    ONLY: CMF_CALC_OUTFLW_KINEMIX, CMF_CALC_OUTFLW_KINE,CMF_CALC_OUTINS
+USE CMF_CTRL_DAMOUT_MOD,   ONLY: CMF_DAMOUT_CALC
+USE CMF_CTRL_LEVEE_MOD,    ONLY: CMF_LEVEE_OPT_PTHOUT
+#ifdef ILS
+USE YOS_CMF_ICI,           ONLY: LLAKEIN
+USE CMF_CALC_LAKEIN_MOD,   ONLY: CMF_CALC_LAKEIN, CMF_LAKEIN_AVE
+#endif
+
+IMPLICIT NONE
+!! LOCAL
+INTEGER(KIND=JPIM)            ::  IT, NT
+REAL(KIND=JPRB)               ::  DT_DEF
+!================================================
+DT_DEF=DT
+
+!=== 0. calculate river and floodplain stage (for DT calc & )
+CALL CMF_PHYSICS_FLDSTG
+
+NT=1
+IF( LADPSTP )THEN    ! adoptive time step
+  CALL CALC_ADPSTP
+ENDIF
+
+!! ==========
+DO IT=1, NT
+!=== 1. Calculate river discharge 
+  IF ( LKINE ) THEN
+    CALL CMF_CALC_OUTFLW_KINE       !!  OPTION: kinematic
+  ELSEIF( LSLPMIX ) THEN
+    CALL CMF_CALC_OUTFLW_KINEMIX    !!  OPTION: mix local-inertial & kinematic based on slope
+  ELSE
+    CALL CMF_CALC_OUTFLW            !!  Default: Local inertial
+  ENDIF
+
+  IF( .not. LFLDOUT )THEN
+    D2FLDOUT(:,:)=0._JPRB    !! OPTION: no high-water channel flow
+    D2FLDOUT_PRE(:,:)=0._JPRB
+  ENDIF
+
+! ---
+  IF( LPTHOUT )THEN
+    IF( LLEVEE )THEN
+      CALL CMF_LEVEE_OPT_PTHOUT            !! bifurcation channel flow
+    ELSE
+      CALL CMF_CALC_PTHOUT            !! bifurcation channel flow
+    ENDIF
+  ENDIF
+! ---
+  IF ( LDAMOUT ) THEN
+    CALL CMF_DAMOUT_CALC            !! reservoir operation
+  ENDIF
+
+! --- save value for next tstep
+  CALL CALC_VARS_PRE
+
+!=== 2.  Calculate the storage in the next time step in FTCS diff. eq.
+  CALL CMF_CALC_STONXT
+
+!=== option for ILS coupling
+#ifdef ILS
+  IF( LLAKEIN )THEN
+    CALL CMF_CALC_LAKEIN            !! calculate lake inflow for river-lake coupling
+  ENDIF
+#endif
+
+
+!=== 3. calculate river and floodplain staging
+  CALL CMF_PHYSICS_FLDSTG
+
+!=== 4.  write water balance monitoring to IOFILE
+  CALL CALC_WATBAL(IT)
+
+
+!=== 5. calculate averages, maximum
+  CALL CMF_DIAG_AVEMAX
+
+!=== option for ILS coupling 
+#ifdef ILS
+  IF( LLAKEIN )THEN
+    CALL CMF_LAKEIN_AVE
+  ENDIF
+#endif
+
+END DO
+DT=DT_DEF   !! reset DT
+
+! --- Optional: calculate instantaneous discharge (only at the end of outer time step)
+IF ( LOUTINS ) THEN
+  CALL CMF_CALC_OUTINS            !! reservoir operation
+ENDIF
+
+
+
+
+CONTAINS
+!==========================================================
+!+ CALC_ADPSTP
+!+ CALC_WATBAL(IT)
+!+ CALC_VARS_PRE
+!==========================================================
+SUBROUTINE CALC_ADPSTP
+USE YOS_CMF_INPUT,      ONLY: PGRV, PDSTMTH, PCADP
+USE YOS_CMF_MAP,        ONLY: D2NXTDST
+USE YOS_CMF_MAP,        ONLY: NSEQALL,NSEQRIV
+USE YOS_CMF_DIAG,       ONLY: D2RIVDPH
+#ifdef UseMPI_CMF
+USE CMF_CTRL_MPI_MOD,   ONLY: CMF_MPI_ADPSTP
+#endif
+IMPLICIT NONE
+! MPI setting
+! SAVE for OpenMP
+INTEGER(KIND=JPIM),SAVE         :: ISEQ
+REAL(KIND=JPRB),SAVE            :: DT_MIN
+REAL(KIND=JPRB),SAVE            :: DDPH, DDST
+!$OMP THREADPRIVATE               (DDPH,DDST)
+!================================================
+
+DT_MIN=DT_DEF
+!$OMP PARALLEL DO REDUCTION(MIN:DT_MIN)
+DO ISEQ=1, NSEQRIV
+  DDPH=MAX(D2RIVDPH(ISEQ,1),0.01_JPRB )
+  DDST=D2NXTDST(ISEQ,1)
+  DT_MIN=min( DT_MIN, PCADP*DDST * (PGRV*DDPH)**(-0.5) )
+END DO
+!$OMP END PARALLEL DO
+
+!$OMP PARALLEL DO REDUCTION(MIN:DT_MIN)
+DO ISEQ=NSEQRIV+1, NSEQALL
+  DDPH=MAX(D2RIVDPH(ISEQ,1),0.01_JPRB )
+  DDST=PDSTMTH
+  DT_MIN=min( DT_MIN, PCADP*DDST * (PGRV*DDPH)**(-0.5) )
+END DO
+!$OMP END PARALLEL DO
+
+!*** MPI: use same DT in all node
+#ifdef UseMPI_CMF
+CALL CMF_MPI_ADPSTP(DT_MIN)
+#endif
+!*********************************
+
+NT=INT( DT_DEF * DT_MIN**(-1.) -0.01 )+1
+DT=DT_DEF * REAL(NT)**(-1.)
+
+IF( NT>=2 ) WRITE(LOGNAM,'(A15,I4,3F10.2)') "ADPSTP: NT=",NT, DT_DEF, DT_MIN, DT
+
+END SUBROUTINE CALC_ADPSTP
+!==========================================================
+!+
+!+
+!+
+!==========================================================
+SUBROUTINE CALC_WATBAL(IT)
+USE YOS_CMF_TIME,            ONLY: KMIN
+USE YOS_CMF_DIAG,            ONLY: DGLBSTOPRE, DGLBSTONXT, DGLBSTONEW,DGLBRIVINF,DGLBRIVOUT !! dischrge calculation
+USE YOS_CMF_DIAG,            ONLY: DGLBSTOPRE2,DGLBSTONEW2,DGLBRIVSTO,DGLBFLDSTO,DGLBFLDARE
+USE CMF_UTILS_MOD,           ONLY: MIN2DATE,SPLITDATE,SPLITHOUR
+IMPLICIT NONE
+INTEGER(KIND=JPIM),INTENT(IN)   :: IT        !! step in adaptive time loop
+!*** LOCAL
+REAL(KIND=JPRD)                 :: DERROR  !! water ballance error1 (discharge calculation)   [m3]
+REAL(KIND=JPRD)                 :: DERROR2 !! water ballance error2 (flood stage calculation) [m3]
+
+!*** local physics time
+INTEGER(KIND=JPIM)              :: PKMIN
+INTEGER(KIND=JPIM)              :: PYEAR, PMON, PDAY, PHOUR, PMIN
+INTEGER(KIND=JPIM)              :: PYYYYMMDD, PHHMM
+!*** PARAMETER
+REAL(KIND=JPRD)                 ::  DORD
+PARAMETER                          (DORD=1.D-9)
+! ================================================
+PKMIN=INT ( KMIN + IT*DT/60_JPRB )
+CALL MIN2DATE(PKMIN,PYYYYMMDD,PHHMM)
+CALL SPLITDATE(PYYYYMMDD,PYEAR,PMON,PDAY)
+CALL SPLITHOUR(PHHMM,PHOUR,PMIN)
+
+! poisitive error when water appears from somewhere, negative error when water is lost to somewhere
+DERROR   = - (DGLBSTOPRE  - DGLBSTONXT  + DGLBRIVINF - DGLBRIVOUT )  !! flux  calc budget error
+DERROR2  = - (DGLBSTOPRE2 - DGLBSTONEW2 )                            !! stage calc budget error
+WRITE(LOGNAM,'(I4.4,4(A1,I2.2),I6,a6,3F12.3,G12.3,2x,2F12.3,a6, 2F12.3,G12.3,3F12.3)') &
+  PYEAR, '/', PMON, '/', PDAY, '_', PHOUR, ':', PMIN, IT, ' flx: ', &
+  DGLBSTOPRE*DORD, DGLBSTONXT*DORD, DGLBSTONEW*DORD ,DERROR*DORD,    DGLBRIVINF*DORD, DGLBRIVOUT*DORD, ' stg: ', &
+  DGLBSTOPRE2*DORD,DGLBSTONEW2*DORD,DERROR2*DORD,    DGLBRIVSTO*DORD,DGLBFLDSTO*DORD, DGLBFLDARE*DORD
+
+END SUBROUTINE CALC_WATBAL
+!==========================================================
+!+
+!+
+!+
+!==========================================================
+SUBROUTINE CALC_VARS_PRE
+USE YOS_CMF_MAP,             ONLY: NSEQALL
+USE YOS_CMF_PROG,            ONLY: D2RIVOUT,     D2FLDOUT,     D2FLDSTO
+USE YOS_CMF_PROG,            ONLY: D2RIVOUT_PRE, D2FLDOUT_PRE, D2FLDSTO_PRE, D2RIVDPH_PRE
+USE YOS_CMF_DIAG,            ONLY: D2RIVDPH
+IMPLICIT NONE
+INTEGER(KIND=JPIM),SAVE         :: ISEQ
+! ================================================
+!$OMP PARALLEL DO
+DO ISEQ=1, NSEQALL ! for river mouth
+  D2RIVOUT_PRE(ISEQ,1)=D2RIVOUT(ISEQ,1)                              !! save outflow (t)
+  D2RIVDPH_PRE(ISEQ,1)=D2RIVDPH(ISEQ,1)                              !! save depth   (t)
+  D2FLDOUT_PRE(ISEQ,1)=D2FLDOUT(ISEQ,1)                              !! save outflow (t)
+  D2FLDSTO_PRE(ISEQ,1)=D2FLDSTO(ISEQ,1)
+END DO
+!$OMP END PARALLEL DO
+
+END SUBROUTINE CALC_VARS_PRE
+!==========================================================
+
+END SUBROUTINE CMF_PHYSICS_ADVANCE
+!###############################################################
+
+
+
+
+
+!###############################################################
+SUBROUTINE CMF_PHYSICS_FLDSTG
+! flood stage scheme selecter
+USE YOS_CMF_INPUT,      ONLY: LLEVEE, LSTG_ES
+USE CMF_CALC_FLDSTG_MOD,ONLY: CMF_CALC_FLDSTG_DEF, CMF_OPT_FLDSTG_ES
+USE CMF_CTRL_LEVEE_MOD, ONLY: CMF_LEVEE_FLDSTG
+IMPLICIT NONE
+
+IF( LLEVEE )THEN
+  CALL CMF_LEVEE_FLDSTG  !! levee floodstage (Vector processor option not available)
+ELSE
+  IF( LSTG_ES )THEN
+    CALL CMF_OPT_FLDSTG_ES  !! Alternative subroutine optimized for vector processor
+  ELSE 
+    CALL CMF_CALC_FLDSTG_DEF     !! Default
+  ENDIF
+ENDIF
+
+END SUBROUTINE CMF_PHYSICS_FLDSTG
+!###############################################################
+
+END MODULE CMF_CTRL_PHYSICS_MOD

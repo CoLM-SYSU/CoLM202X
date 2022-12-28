@@ -20,8 +20,12 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
  USE mod_landpatch, only : numpatch
+ USE mod_namelist, only : DEF_forcing
+ USE mod_forcing, only : forcmask
  use omp_lib
-
+#ifdef CaMa_Flood
+ use MOD_CaMa_Variables, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
+#endif
  IMPLICIT NONE
 
   integer,  INTENT(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
@@ -51,6 +55,10 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP SCHEDULE(STATIC, 1)
 #endif
       DO i = 1, numpatch
+
+         IF (DEF_forcing%has_missing_value) THEN
+            IF (.not. forcmask(i)) cycle
+         ENDIF
          
          m = patchclass(i)
          !TODO: can be removed
@@ -68,9 +76,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
          vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
          wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
-#ifdef Campbell_SOIL_MODEL
          bsw(1:,i),                                                          &
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
          sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
@@ -81,6 +87,9 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          BA_alpha(1:,i),  BA_beta(1:,i),                                     &
 #endif
          rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &  
+#if(defined CaMa_Flood)
+                flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &!
+#endif
 
        ! VEGETATION INFORMATION
          htop(i),         hbot(i),         sqrtdi(m),                        &
@@ -118,11 +127,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #ifdef OzoneStress
          lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
 #endif
-         zwt(i),                                                             &
-#ifdef VARIABLY_SATURATED_FLOW
-         dpond(i),                                                           &
-#endif
-         wa(i),                                                              &
+         zwt(i),          dpond(i),        wa(i),                            &
          t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    & 
 
        ! additional diagnostic variables for output

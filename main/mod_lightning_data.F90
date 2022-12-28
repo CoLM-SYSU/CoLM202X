@@ -1,7 +1,7 @@
 #include <define.h>
 
 MODULE mod_lightning_data
-
+#ifdef Fire
    USE mod_grid
    USE mod_data_type
    USE mod_mapping_grid2pset
@@ -99,4 +99,5 @@ CONTAINS
 
    END SUBROUTINE update_lightning_data 
 
+#endif
 END MODULE mod_lightning_data

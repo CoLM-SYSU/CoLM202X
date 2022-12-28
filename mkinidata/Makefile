@@ -27,7 +27,8 @@ OBJS_SHARED = \
 				  ../share/mod_data_type.o \
 				  ../share/ncio_block.o \
 				  ../share/mod_catchment_data.o \
-				  ../share/mod_landbasin.o \
+				  ../share/mod_modis_data.o \
+				  ../share/mod_mesh.o \
 				  ../share/mod_pixelset.o \
 				  ../share/ncio_vector.o \
 				  ../share/mod_colm_debug.o \
@@ -35,15 +36,29 @@ OBJS_SHARED = \
 				  ../share/LC_Const.o
 
 OBJS_MKSRFDATA = \
+				  ../mksrfdata/mod_aggregation_generic.o \
 				  ../mksrfdata/mod_srfdata_restart.o \
-				  ../mksrfdata/mod_hydrounit.o \
-				  ../mksrfdata/mod_modis_data.o \
+				  ../mksrfdata/mod_landelm.o \
+				  ../mksrfdata/mod_landhru.o \
 		 		  ../mksrfdata/mod_pixelsetshadow.o \
 				  ../mksrfdata/mod_landpatch.o \
 				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o \
-				  ../mksrfdata/mod_single_srfdata.o
+				  ../mksrfdata/mod_single_srfdata.o \
+				  ../mksrfdata/mod_elm_vector.o \
+				  ../mksrfdata/mod_hru_vector.o
+
+BASIC_HYDRO = \
+				  ../main/hydro/mod_soil_function.o
+
+BASIC_BGC = \
+			  ../main/bgc/MOD_1D_BGCFluxes.o  \
+			  ../main/bgc/MOD_1D_BGCPFTFluxes.o  \
+			  ../main/bgc/MOD_2D_BGCFluxes.o  \
+			  ../main/bgc/MOD_BGCPFTimeVars.o  \
+			  ../main/bgc/MOD_BGCTimeInvars.o  \
+			  ../main/bgc/MOD_BGCTimeVars.o 
 
 BASIC =  \
 		  ../main/PFT_Const.o \
@@ -56,16 +71,7 @@ BASIC =  \
 		  ../main/MOD_1D_PFTFluxes.o          \
 		  ../main/MOD_1D_PCFluxes.o           \
 		  ../main/MOD_1D_Fluxes.o \
-		  ../main/MOD_1D_Forcing.o         
-
-BASIC_BGC = \
-			  ../main/bgc/MOD_1D_BGCFluxes.o  \
-			  ../main/bgc/MOD_1D_BGCPFTFluxes.o  \
-			  ../main/bgc/MOD_2D_BGCFluxes.o  \
-			  ../main/bgc/MOD_BGCPFTimeVars.o  \
-			  ../main/bgc/MOD_BGCTimeInvars.o  \
-			  ../main/bgc/MOD_BGCTimeVars.o 
-
+		  ../main/MOD_1D_Forcing.o 
 
 OBJS_MAIN = \
 				  ../main/LAI_empirical.o  \
@@ -74,9 +80,6 @@ OBJS_MAIN = \
 				  ../main/ThreeDCanopy.o \
 				  ../main/ALBEDO.o    \
 				  ../main/snowfraction.o
-
-OBJS_HYDRO = \
-				  ../main/hydro/mod_soil_function.o
 
 OBJS = \
 		 pct_readin.o       \
@@ -98,10 +101,10 @@ OBJS = \
 all: ${EXECUTABLE}
 
 ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC} ${BASIC_BGC} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} 
+	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${OBJS_MAIN} ${OBJS} 
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC} ${BASIC_BGC} ${OBJS_MAIN} ${OBJS_HYDRO} ${OBJS} -o $@ ${LDFLAGS}
+	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${OBJS_MAIN} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM initial data completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
@@ -116,14 +119,14 @@ $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER}
 $(BASIC_BGC) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/bgc
 
-$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC}
+$(BASIC_HYDRO) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/hydro
+
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main
 
 $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main
-
-$(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/hydro
 
 clean :
 	${RM} -f *.o *.mod ${EXECUTABLE}

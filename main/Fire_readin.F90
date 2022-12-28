@@ -1,4 +1,5 @@
 #include <define.h>
+#ifdef BGC
 
 SUBROUTINE Fire_readin (year, dir_landdata)
    ! ===========================================================
@@ -108,3 +109,4 @@ SUBROUTINE Fire_readin (year, dir_landdata)
 
 #endif
 END SUBROUTINE Fire_readin
+#endif

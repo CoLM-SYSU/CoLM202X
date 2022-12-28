@@ -147,36 +147,36 @@ CONTAINS
      compress = DEF_REST_COMPRESS_LEVEL 
 
      call ncio_create_file_vector (file_restart, landpc)
-     CALL ncio_define_pixelset_dimension (file_restart, landpc)
-     CALL ncio_define_dimension_vector (file_restart, 'pft', N_PFT)
-     CALL ncio_define_dimension_vector (file_restart, 'band',   2)
-     CALL ncio_define_dimension_vector (file_restart, 'rtyp', 2)
+     CALL ncio_define_dimension_vector (file_restart, landpc, 'pc')
+     CALL ncio_define_dimension_vector (file_restart, landpc, 'pft', N_PFT)
+     CALL ncio_define_dimension_vector (file_restart, landpc, 'band',   2)
+     CALL ncio_define_dimension_vector (file_restart, landpc, 'rtyp', 2)
 #ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, 'vegnodes', nvegwcs)
+     CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
 #endif
 
-      call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'vector', landpc, tleaf_c  , compress) !  
-      call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'vector', landpc, ldew_c   , compress) ! 
-      call ncio_write_vector (file_restart, 'ldew_rain_c   ', 'pft', N_PFT, 'vector', landpc, ldew_rain_c   , compress) ! 
-      call ncio_write_vector (file_restart, 'ldew_snow_c   ', 'pft', N_PFT, 'vector', landpc, ldew_snow_c   , compress) ! 
+      call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !  
+      call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) ! 
+      call ncio_write_vector (file_restart, 'ldew_rain_c   ', 'pft', N_PFT, 'pc', landpc, ldew_rain_c   , compress) ! 
+      call ncio_write_vector (file_restart, 'ldew_snow_c   ', 'pft', N_PFT, 'pc', landpc, ldew_snow_c   , compress) ! 
 
-      call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'vector', landpc, sigf_c   , compress) !  
-      call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'vector', landpc, tlai_c   , compress) !  
-      call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'vector', landpc, lai_c    , compress) !  
-      call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'vector', landpc, tsai_c   , compress) !  
-      call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'vector', landpc, sai_c    , compress) !  
-      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'vector', landpc, ssun_c, compress) !  
-      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'vector', landpc, ssha_c, compress) !  
-      call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'vector', landpc, thermk_c , compress) !  
-      call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'vector', landpc, fshade_c , compress) !  
-      call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'vector', landpc, extkb_c  , compress) !  
-      call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'vector', landpc, extkd_c  , compress) !  
-      call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'vector', landpc, rst_c    , compress) !  
-      call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'vector', landpc, z0m_c    , compress) !  
+      call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'pc', landpc, sigf_c   , compress) !  
+      call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'pc', landpc, tlai_c   , compress) !  
+      call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'pc', landpc, lai_c    , compress) !  
+      call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'pc', landpc, tsai_c   , compress) !  
+      call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'pc', landpc, sai_c    , compress) !  
+      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssun_c, compress) !  
+      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssha_c, compress) !  
+      call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'pc', landpc, thermk_c , compress) !  
+      call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'pc', landpc, fshade_c , compress) !  
+      call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'pc', landpc, extkb_c  , compress) !  
+      call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !  
+      call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !  
+      call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !  
 #ifdef PLANT_HYDRAULIC_STRESS
-      call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT,  'vector', landpc, vegwp_c, compress)
-      call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft', N_PFT, 'vector', landpc, gs0sun_c , compress) !
-      call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft', N_PFT, 'vector', landpc, gs0sha_c , compress) !
+      call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT,  'pc', landpc, vegwp_c, compress)
+      call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft', N_PFT, 'pc', landpc, gs0sun_c , compress) !
+      call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft', N_PFT, 'pc', landpc, gs0sha_c , compress) !
 #endif
 
    END SUBROUTINE WRITE_PCTimeVars
