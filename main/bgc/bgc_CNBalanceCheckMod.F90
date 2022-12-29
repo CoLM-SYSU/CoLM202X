@@ -22,6 +22,10 @@ use MOD_BGCPFTimeVars, only: &
     leafc_xfer_p, frootc_xfer_p, livestemc_xfer_p, &
     deadstemc_xfer_p, livecrootc_xfer_p, deadcrootc_xfer_p, gresp_xfer_p, xsmrpool_p, &
     grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, cropseedc_deficit_p
+use MOD_1D_BGCPFTFluxes, only: &
+    grainc_to_food_p
+use spmd_task
+use MOD_PFTimeInvars, only: pftclass
 
 implicit none
 
@@ -75,7 +79,7 @@ col_errcb = (col_cinputs - col_coutputs)*deltim - &
 
 if(abs(col_errcb) > cerror) then
 !if(i .eq. 71006)then
-   write(*,*)'column cbalance error    = ', col_errcb, i
+   write(*,*)'column cbalance error    = ', col_errcb, i, p_iam_glb
    write(*,*)'Latdeg,Londeg='             , dlat, dlon
    write(*,*)'begcb                    = ',col_begcb(i)
    write(*,*)'endcb                    = ',col_endcb(i)
@@ -83,7 +87,7 @@ if(abs(col_errcb) > cerror) then
    write(*,*)'delta veg                = ',col_vegendcb(i) - col_vegbegcb(i),totvegc(i),col_vegendcb(i),col_vegbegcb(i)
    write(*,*)'delta soil               = ',col_soilendcb(i) - col_soilbegcb(i),totsomc(i),totlitc(i),totcwdc(i),col_soilendcb(i),col_soilbegcb(i)
    do m = ps, pe
-      write(*,*)'m=',m
+      write(*,*)'m=',m,pftclass(m)
       write(*,*)'vegc,leafc              = ',leafc_p(m)+leafc_storage_p(m)+leafc_xfer_p(m)
       write(*,*)'vegc,frootc             = ',frootc_p(m)+frootc_storage_p(m)+frootc_xfer_p(m)
       write(*,*)'vegc,livestemc          = ',livestemc_p(m)+livestemc_storage_p(m)+livestemc_xfer_p(m)
@@ -102,7 +106,7 @@ if(abs(col_errcb) > cerror) then
    write(*,*)'fire_closs           = ',fire_closs(i)*deltim
    write(*,*)'col_hrv_xsmrpool_to_atm  = ',hrv_xsmrpool_to_atm(i)*deltim
    write(*,*)'wood_harvestc            = ',wood_harvestc(i)*deltim
-   write(*,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(i)*deltim
+   write(*,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(i)*deltim, grainc_to_food_p(ps)*deltim
    write(*,*)'-1*som_c_leached         = ',som_c_leached(i)*deltim
    call abort
 end if
@@ -142,13 +146,10 @@ col_noutputs = col_noutputs + sminn_leached(i)
 #endif
 
 col_noutputs = col_noutputs - som_n_leached(i)
-!if(i .eq. 79738)print*,'in NBalanceCheck',col_begnb(i)
 col_errnb    =(col_ninputs - col_noutputs)*deltim - (col_endnb(i) - col_begnb(i))
 
-if (abs(col_errnb) > nerror) then !208
-!if (i .eq. 79738) then !208
-!if(i .eq. 123226)then
-   write(*,*)'column nbalance error    = ',col_errnb, i
+if (abs(col_errnb) > nerror) then !
+   write(*,*)'column nbalance error    = ',col_errnb, i, p_iam_glb
    write(*,*)'Latdeg,Londeg            = ',dlat, dlon
    write(*,*)'begnb                    = ',col_begnb(i)
    write(*,*)'endnb                    = ',col_endnb(i)
@@ -158,7 +159,7 @@ if (abs(col_errnb) > nerror) then !208
    write(*,*)'delta sminn              = ',col_sminnendnb(i)-col_sminnbegnb(i)
    write(*,*)'smin_to_plant            = ',sminn_to_plant(i)*deltim
    write(*,*)'input mass               = ',col_ninputs*deltim
-   write(*,*)'output mass              = ',col_noutputs*deltim
+   write(*,*)'output mass              = ',col_noutputs*deltim,f_n2o_nit(i)*deltim,smin_no3_leached(i)*deltim,smin_no3_runoff(i)*deltim, denit(i)*deltim,fire_nloss(i)*deltim,( wood_harvestn(i) + grainn_to_cropprodn(i))*deltim
    write(*,*)'net flux                 = ',(col_ninputs-col_noutputs)*deltim
    write(*,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(i)*deltim,nfix_to_sminn(i)*deltim,ndep_to_sminn(i)*deltim,&
                                           fert_to_sminn(i)*deltim,soyfixn_to_sminn(i)*deltim
@@ -168,7 +169,6 @@ if (abs(col_errnb) > nerror) then !208
    write(*,*)'outputs,leached,denit,fire,harvest,som_n_leached',&
              sminn_leached(i)*deltim,denit(i)*deltim,fire_nloss(i)*deltim,&
              (wood_harvestn(i)+grainn_to_cropprodn(i))*deltim, - som_n_leached(i)
-!   print*,'woodharvestn,grainn_to_cropprodn(i)',wood_harvestn(i)*deltim,grainn_to_cropprodn(i)*deltim
 #endif
    call abort
 end if

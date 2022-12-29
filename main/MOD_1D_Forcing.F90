@@ -33,6 +33,7 @@ SAVE
   REAL(r8), allocatable :: forc_hgt_t (:) ! observational height of temperature [m]
   REAL(r8), allocatable :: forc_hgt_q (:) ! observational height of humidity [m]
   REAL(r8), allocatable :: forc_rhoair(:) ! air density [kg/m3]
+  REAL(r8), allocatable :: forc_ozone (:) ! air density [kg/m3]
 
   ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Forcing
@@ -77,6 +78,7 @@ SAVE
         allocate (forc_hgt_t  (numpatch) ) ! observational height of temperature [m]
         allocate (forc_hgt_q  (numpatch) ) ! observational height of humidity [m]
         allocate (forc_rhoair (numpatch) ) ! air density [kg/m3]
+        allocate (forc_ozone (numpatch) ) ! air density [kg/m3]
 
      ENDIF
   ENDIF
@@ -115,6 +117,7 @@ SAVE
            deallocate ( forc_hgt_t  ) ! observational height of temperature [m]
            deallocate ( forc_hgt_q  ) ! observational height of humidity [m]
            deallocate ( forc_rhoair ) ! air density [kg/m3]
+           deallocate ( forc_ozone  ) ! Ozone partial pressure [mol/mol]
 
         ENDIF
      ENDIF

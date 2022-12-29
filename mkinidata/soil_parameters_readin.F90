@@ -35,11 +35,11 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    real(r8), allocatable :: soil_vf_sand_s_l           (:) ! volumetric fraction of sand
    real(r8), allocatable :: soil_wf_gravels_s_l        (:) ! gravimetric fraction of gravels
    real(r8), allocatable :: soil_wf_sand_s_l           (:) ! gravimetric fraction of sand
+   real(r8), allocatable :: soil_OM_density_s_l        (:) ! OM_density (kg/m3)
+   real(r8), allocatable :: soil_BD_all_s_l            (:) ! bulk density of soil (GRAVELS + OM + mineral soils, kg/m3)
    real(r8), allocatable :: soil_theta_s_l             (:) ! saturated water content (cm3/cm3)
-#ifdef Campbell_SOIL_MODEL
    real(r8), allocatable :: soil_psi_s_l               (:) ! matric potential at saturation (cm)
    real(r8), allocatable :: soil_lambda_l              (:) ! pore size distribution index (dimensionless)
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: soil_theta_r_l   (:)  ! residual water content (cm3/cm3)
    real(r8), allocatable :: soil_alpha_vgm_l (:)  
@@ -67,6 +67,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 
    landdir = trim(dir_landdata) // '/soil'
 
+   write(*,*),'soil parameter readin',landdir
    if (p_is_worker) then
 
       if (numpatch > 0) then
@@ -77,11 +78,11 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
          allocate ( soil_vf_sand_s_l           (numpatch) )
          allocate ( soil_wf_gravels_s_l        (numpatch) )
          allocate ( soil_wf_sand_s_l           (numpatch) )
+         allocate ( soil_OM_density_s_l        (numpatch) )
+         allocate ( soil_BD_all_s_l            (numpatch) )
          allocate ( soil_theta_s_l             (numpatch) )
-#ifdef Campbell_SOIL_MODEL
          allocate ( soil_psi_s_l               (numpatch) )
          allocate ( soil_lambda_l              (numpatch) )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          allocate ( soil_theta_r_l   (numpatch) )  
          allocate ( soil_alpha_vgm_l (numpatch) )  
@@ -115,11 +116,11 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
       soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
       soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
+      soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
+      soil_BD_all_s_l            (:) = SITE_soil_BD_all            (nsl)
       soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
-#ifdef Campbell_SOIL_MODEL
       soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
       soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
       soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
@@ -168,7 +169,6 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'theta_s_l'//trim(c)//'_patches', landpatch, soil_theta_s_l)
 
-#ifdef Campbell_SOIL_MODEL
       ! (8) read in the matric potential at saturation [cm]
       lndname = trim(landdir)//'/psi_s_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'psi_s_l'//trim(c)//'_patches', landpatch, soil_psi_s_l)
@@ -176,7 +176,6 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       ! (9) read in the pore size distribution index [dimensionless]
       lndname = trim(landdir)//'/lambda_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'lambda_l'//trim(c)//'_patches', landpatch, soil_lambda_l)
-#endif
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       ! (10) read in residual water content [cm3/cm3]
@@ -229,6 +228,15 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', landpatch, soil_BA_beta_l)
 #endif
+
+      ! (22) read in the OM density (kg/m3)
+      lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', landpatch, soil_OM_density_s_l)
+
+      ! (23) read in the bulk density of soil (kg/m3)
+      lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
+      call ncio_read_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', landpatch, soil_BD_all_s_l)
+
 #endif
 
       if (p_is_worker) then
@@ -242,11 +250,12 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
                vf_sand   (nsl,ipatch) = -1.e36
                wf_gravels(nsl,ipatch) = -1.e36
                wf_sand   (nsl,ipatch) = -1.e36
+               OM_density(nsl,ipatch) = -1.e36
+               BD_all    (nsl,ipatch) = -1.e36
+               wfc       (nsl,ipatch) = -1.e36
                porsl     (nsl,ipatch) = -1.e36
-#ifdef Campbell_SOIL_MODEL
                psi0      (nsl,ipatch) = -1.e36
                bsw       (nsl,ipatch) = -1.e36
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                theta_r   (nsl,ipatch) = -1.e36
                alpha_vgm (nsl,ipatch) = -1.e36
@@ -270,17 +279,21 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
                vf_sand    (nsl,ipatch) = soil_vf_sand_s_l          (ipatch)
                wf_gravels (nsl,ipatch) = soil_wf_gravels_s_l       (ipatch)
                wf_sand    (nsl,ipatch) = soil_wf_sand_s_l          (ipatch)
+               OM_density (nsl,ipatch) = soil_OM_density_s_l       (ipatch)
+               BD_all     (nsl,ipatch) = soil_BD_all_s_l           (ipatch)
                porsl      (nsl,ipatch) = soil_theta_s_l            (ipatch)        ! cm/cm
-#ifdef Campbell_SOIL_MODEL
                psi0       (nsl,ipatch) = soil_psi_s_l              (ipatch) * 10.  ! cm -> mm
                bsw        (nsl,ipatch) = 1./soil_lambda_l          (ipatch)        ! dimensionless
-#endif
+               wfc        (nsl,ipatch) = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch))&
+                                       * soil_theta_s_l(ipatch)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                psi0       (nsl,ipatch) = -10.      ! mm
                theta_r    (nsl,ipatch) = soil_theta_r_l  (ipatch)
                alpha_vgm  (nsl,ipatch) = soil_alpha_vgm_l(ipatch)
                L_vgm      (nsl,ipatch) = soil_L_vgm_l    (ipatch)
                n_vgm      (nsl,ipatch) = soil_n_vgm_l    (ipatch)
+               wfc        (nsl,ipatch) = soil_theta_r_l  (ipatch)+(soil_theta_s_l(ipatch)-soil_theta_r_l(ipatch))*&
+                          (1+(soil_alpha_vgm_l(ipatch)*339.9)**soil_n_vgm_l(ipatch))**(1.0/soil_n_vgm_l(ipatch)-1)
 #endif
                hksati     (nsl,ipatch) = soil_k_s_l      (ipatch) * 10./86400.  ! cm/day -> mm/s
                csol       (nsl,ipatch) = soil_csol_l     (ipatch)               ! J/(m2 K)
@@ -308,11 +321,11 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
          deallocate ( soil_vf_sand_s_l           )
          deallocate ( soil_wf_gravels_s_l        )
          deallocate ( soil_wf_sand_s_l           )
+         deallocate ( soil_OM_density_s_l        )
+         deallocate ( soil_BD_all_s_l            )
          deallocate ( soil_theta_s_l             )
-#ifdef Campbell_SOIL_MODEL
          deallocate ( soil_psi_s_l               )
          deallocate ( soil_lambda_l              )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          deallocate ( soil_theta_r_l   )
          deallocate ( soil_alpha_vgm_l )
@@ -347,11 +360,12 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
          vf_sand    (nsl,:) = vf_sand   (nsl-1,:)
          wf_gravels (nsl,:) = wf_gravels(nsl-1,:)
          wf_sand    (nsl,:) = wf_sand   (nsl-1,:)
+         OM_density (nsl,:) = OM_density(nsl-1,:)
+         BD_all     (nsl,:) = BD_all    (nsl-1,:)
+         wfc        (nsl,:) = wfc       (nsl-1,:)
          porsl      (nsl,:) = porsl     (nsl-1,:)
-#ifdef Campbell_SOIL_MODEL         
          psi0       (nsl,:) = psi0      (nsl-1,:)
          bsw        (nsl,:) = bsw       (nsl-1,:)
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          theta_r    (nsl,:) = theta_r   (nsl-1,:)
          alpha_vgm  (nsl,:) = alpha_vgm (nsl-1,:)
@@ -377,11 +391,12 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
          vf_sand    (nsl,:) = vf_sand   (9,:)
          wf_gravels (nsl,:) = wf_gravels(9,:)
          wf_sand    (nsl,:) = wf_sand   (9,:)
+         OM_density (nsl,:) = OM_density(9,:)
+         BD_all     (nsl,:) = BD_all    (9,:)
+         wfc        (nsl,:) = wfc       (9,:)
          porsl      (nsl,:) = porsl     (9,:)
-#ifdef Campbell_SOIL_MODEL
          psi0       (nsl,:) = psi0      (9,:)
          bsw        (nsl,:) = bsw       (9,:)
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
          theta_r    (nsl,:) = theta_r   (9,:)
          alpha_vgm  (nsl,:) = alpha_vgm (9,:)

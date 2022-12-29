@@ -1,3 +1,4 @@
+#include<define.h>
 
 MODULE ASSIM_STOMATA_conductance
 
@@ -24,6 +25,9 @@ MODULE ASSIM_STOMATA_conductance
   subroutine stomata (vmax25,effcon,slti,hlti,shti, &
                       hhti,trda,trdm,trop,gradm,binter,tm, &
                       psrf,po2m,pco2m,pco2a,ea,ei,tlef,par, &
+#ifdef OzoneStress
+                      o3coefv,o3coefg, &
+#endif
                       rb,ra,rstfac,cint,assim,respc,rst)  
 
 !=======================================================================        
@@ -90,6 +94,10 @@ MODULE ASSIM_STOMATA_conductance
       ei,           &! saturation h2o vapor pressure in leaf stomata (pa)
       tlef,         &! leaf temperature (K)
       par,          &! photosynthetic active radiation (W m-2)
+#ifdef OzoneStress
+      o3coefv,      &
+      o3coefg,      &
+#endif
 
       rb,           &! boundary resistance from canopy to cas (s m-1)
       ra,           &! aerodynamic resistance from cas to refence height (s m-1)

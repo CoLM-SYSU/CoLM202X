@@ -7,9 +7,9 @@
 
 ! 2. Land TYPE classification : 
 !    Select one of the following options.
-#define USGS_CLASSIFICATION       
+#undef USGS_CLASSIFICATION       
 #undef IGBP_CLASSIFICATION       
-#undef PFT_CLASSIFICATION       
+#define PFT_CLASSIFICATION       
 #undef PC_CLASSIFICATION       
 
 ! 3. If defined, debug information is output.
@@ -55,25 +55,24 @@
 ! 10. If defined, plant hydraulic scheme is used
 #define PLANT_HYDRAULIC_STRESS
 
-#undef  DYN_PHENOLOGY             
 
 ! 11. If defined, CaMa-Flood model will be used.
 #define CaMa_Flood
 
 ! 12. If defined, BGC model is used.
-#undef BGC
+#define BGC
 !    Conflicts :  only used when PFT_CLASSIFICATION is defined.
 #ifndef PFT_CLASSIFICATION
 #undef BGC
 #endif
 ! 12.1 If defined, LAI is prognostically calculated from leaf carbon and specific leaf area
-#undef LAIfdbk
+#define LAIfdbk
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef LAIfdbk
 #endif
 ! 12.2 If defined, CROP model is used
-#undef CROP
+#define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
@@ -83,4 +82,32 @@
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef SASU
+#endif
+! 12.4 If defined, Fertlization on crop is used
+#define FERT
+!    Conflicts : only used when CROP is defined
+#ifndef CROP
+#undef FERT
+#endif
+! 12.5 If defined, Nitrification-Denitrification is used
+#define NITRIF
+!    Conflicts : only used when BGC is defined
+#ifndef BGC
+#undef NITRIF
+#endif
+
+! 13 If defined, Fire is on
+#undef Fire
+!    Conflicts : only used when BGC is defined
+#ifndef BGC
+#undef Fire
+#endif
+
+! 14 If defined, OzoneStress on plant physiology is used
+#define OzoneStress
+! 14.1 If defined, Ozone Data is used instead of constant ozone concentration
+#undef OzoneData
+!    Conflicts : only used when OzoneStress is defined
+#ifndef OzoneStress
+#undef OzoneData
 #endif

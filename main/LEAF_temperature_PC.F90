@@ -41,6 +41,10 @@ MODULE LEAF_temperature_PC
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
               psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
 #endif
+#ifdef OzoneStress
+              o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
+              lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
+#endif
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
  
@@ -69,6 +73,9 @@ MODULE LEAF_temperature_PC
   USE ASSIM_STOMATA_conductance
 #ifdef PLANT_HYDRAULIC_STRESS
   USE PlantHydraulic, only : PlantHydraulicStress_twoleaf
+#endif
+#ifdef OzoneStress
+  use OzoneMod, only: CalcOzoneStress
 #endif
   IMPLICIT NONE
  
@@ -182,9 +189,22 @@ MODULE LEAF_temperature_PC
         ldew,       &! depth of water on foliage [mm]
         ldew_rain,       &! depth of rain on foliage [mm]
         ldew_snow,       &! depth of snow on foliage [mm]
+#ifdef OzoneStress
+        lai_old    ,&! lai in last time step
+        o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
+        o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
+        o3coefv_sun,&! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
+        o3coefg_sun,&! Ozone stress factor for stomata on shaded leaf
+        o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
+#endif
         rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha    ! factor of soil water stress to transpiration on shaded leaf
   
+#ifdef OzoneStress
+  REAL(r8), intent(inout) :: forc_ozone
+#endif
+
   REAL(r8), intent(inout) :: &
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
@@ -990,6 +1010,13 @@ MODULE LEAF_temperature_PC
                 clev = canlev(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
+#ifdef OzoneStress
+            call CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
+                                 rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
+            call CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
+                                 rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
+                lai_old(i) = lai(i)
+#endif
 #ifdef PLANT_HYDRAULIC_STRESS
             call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
                      dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
@@ -1009,15 +1036,21 @@ MODULE LEAF_temperature_PC
                 CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,&
-                   parsun(i)  ,rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
+                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     , parsun(i)  ,&
+#ifdef OzoneStress
+                   o3coefv_sun(i), o3coefg_sun(i), &
+#endif 
+                   rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
                    assimsun(i),respcsun(i),rssun(i)     )
 
                 CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,&
-                   parsha(i)  ,rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
+                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
+#ifdef OzoneStress
+                   o3coefv_sun(i), o3coefg_sun(i), &
+#endif 
+                   rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
                    assimsha(i),respcsha(i),rssha(i)     )
 
 #ifdef PLANT_HYDRAULIC_STRESS

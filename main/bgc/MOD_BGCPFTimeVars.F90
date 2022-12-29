@@ -38,12 +38,12 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: grainc_storage_p         (:)
   REAL(r8), allocatable :: grainc_xfer_p            (:)
   REAL(r8), allocatable :: cropseedc_deficit_p      (:)
+  REAL(r8), allocatable :: cropprod1c_p             (:)
   REAL(r8), allocatable :: xsmrpool_p               (:)
   REAL(r8), allocatable :: gresp_storage_p          (:)
   REAL(r8), allocatable :: gresp_xfer_p             (:)
   REAL(r8), allocatable :: cpool_p                  (:)
   REAL(r8), allocatable :: totvegc_p                (:)
-  REAL(r8), allocatable :: cropprod1c_p             (:)
 
   REAL(r8), allocatable :: leaf_prof_p              (:,:) !profile of leaves
   REAL(r8), allocatable :: stem_prof_p              (:,:) !profile of stem
@@ -73,10 +73,10 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: grainn_storage_p         (:)
   REAL(r8), allocatable :: grainn_xfer_p            (:)
   REAL(r8), allocatable :: cropseedn_deficit_p      (:)
+  REAL(r8), allocatable :: harvdate_p               (:)
+  INTEGER , allocatable :: nyrs_crop_active_p       (:)
   REAL(r8), allocatable :: retransn_p               (:)
   REAL(r8), allocatable :: totvegn_p                (:)
-
-  REAL(r8), allocatable :: harvdate_p               (:)
 
   REAL(r8), allocatable :: tempsum_potential_gpp_p  (:)
   REAL(r8), allocatable :: tempmax_retransn_p       (:)
@@ -98,7 +98,6 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: gdd020_p                 (:)
   REAL(r8), allocatable :: gdd820_p                 (:)
   REAL(r8), allocatable :: gdd1020_p                (:)
-  INTEGER , allocatable :: nyrs_crop_active_p       (:)
 
   REAL(r8), allocatable :: offset_flag_p            (:)
   REAL(r8), allocatable :: offset_counter_p         (:)
@@ -126,12 +125,11 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8), allocatable :: ntrunc_p                 (:)
   REAL(r8), allocatable :: npool_p                  (:)
 
-!--------------------- CROP variables ------------------------------
+!--------------------- CROP variables for GPAM------------------------------
+#ifdef CROP
   LOGICAL, allocatable :: croplive_p                (:)
-  REAL(r8),allocatable :: gddtsoi_p                 (:)
-  REAL(r8),allocatable :: huileaf_p                 (:)
+  REAL(r8),allocatable :: hui_p                     (:)
   REAL(r8),allocatable :: gddplant_p                (:)
-  REAL(r8),allocatable :: huigrain_p                (:)
   INTEGER ,allocatable :: peaklai_p                 (:)
   REAL(r8),allocatable :: aroot_p                   (:)
   REAL(r8),allocatable :: astem_p                   (:)
@@ -147,17 +145,17 @@ MODULE MOD_BGCPFTimeVars
   REAL(r8),allocatable :: a10tmin_p                 (:)
   REAL(r8),allocatable :: t10_p                     (:)
   REAL(r8),allocatable :: cumvd_p                   (:)
-  REAL(r8),allocatable :: hdidx_p                   (:)
   REAL(r8),allocatable :: vf_p                      (:)
   REAL(r8),allocatable :: cphase_p                  (:)
   REAL(r8),allocatable :: fert_counter_p            (:)
-  REAL(r8),allocatable :: fert_p                    (:)
   REAL(r8),allocatable :: tref_min_p                (:)
   REAL(r8),allocatable :: tref_max_p                (:)
   REAL(r8),allocatable :: tref_min_inst_p           (:)
   REAL(r8),allocatable :: tref_max_inst_p           (:)
   REAL(r8),allocatable :: fertnitro_p               (:)
   REAL(r8),allocatable :: latbaset_p                (:)
+  REAL(r8),allocatable :: plantdate_p               (:)
+#endif
 ! --------------------- end CROP variables -------------------------
 
 ! --------------------- SASU variables -----------------------------
@@ -485,10 +483,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
             allocate (croplive_p               (numpft))
-            allocate (gddtsoi_p                (numpft))
-            allocate (huileaf_p                (numpft))
+            allocate (hui_p                    (numpft))
             allocate (gddplant_p               (numpft))
-            allocate (huigrain_p               (numpft))
             allocate (peaklai_p                (numpft))
             allocate (aroot_p                  (numpft))
             allocate (astem_p                  (numpft))
@@ -504,17 +500,16 @@ CONTAINS
             allocate (a10tmin_p                (numpft))
             allocate (t10_p                    (numpft))
             allocate (cumvd_p                  (numpft))
-            allocate (hdidx_p                  (numpft))
             allocate (vf_p                     (numpft))
             allocate (cphase_p                 (numpft))
             allocate (fert_counter_p           (numpft))
-            allocate (fert_p                   (numpft))
             allocate (tref_min_p               (numpft))
             allocate (tref_max_p               (numpft))
             allocate (tref_min_inst_p          (numpft))
             allocate (tref_max_inst_p          (numpft))
             allocate (fertnitro_p              (numpft))
             allocate (latbaset_p               (numpft))
+            allocate (plantdate_p              (numpft))
 #endif
 
 #ifdef SASU
@@ -744,12 +739,6 @@ CONTAINS
      call ncio_read_vector (file_restart, 'totvegc_p              ', landpft, totvegc_p             )
      call ncio_read_vector (file_restart, 'cropprod1c_p           ', landpft, cropprod1c_p          )
 
-  !   call ncio_read_vector (file_restart, 'leaf_prof_p            ', landpft, leaf_prof_p           )
-  !   call ncio_read_vector (file_restart, 'froot_prof_p           ', landpft, froot_prof_p          )
-  !   call ncio_read_vector (file_restart, 'croot_prof_p           ', landpft, croot_prof_p          )
-  !   call ncio_read_vector (file_restart, 'stem_prof_p            ', landpft, stem_prof_p           )
-  !   call ncio_read_vector (file_restart, 'cinput_rootfr_p        ', landpft, cinput_rootfr_p       )
-
      call ncio_read_vector (file_restart, 'leafn_p                ', landpft, leafn_p               )
      call ncio_read_vector (file_restart, 'leafn_storage_p        ', landpft, leafn_storage_p       )
      call ncio_read_vector (file_restart, 'leafn_xfer_p           ', landpft, leafn_xfer_p          )
@@ -815,9 +804,6 @@ CONTAINS
      call ncio_read_vector (file_restart, 'days_active_p          ', landpft, days_active_p         )
 
      call ncio_read_vector (file_restart, 'burndate_p             ', landpft, burndate_p            )
-!     call ncio_read_vector (file_restart, 'c_allometry_p          ', landpft, c_allometry_p         )
-!     call ncio_read_vector (file_restart, 'n_allometry_p          ', landpft, n_allometry_p         )
-!     call ncio_read_vector (file_restart, 'downreg_p              ', landpft, downreg_p             )
      call ncio_read_vector (file_restart, 'grain_flag_p           ', landpft, grain_flag_p          )
      call ncio_read_vector (file_restart, 'ctrunc_p               ', landpft, ctrunc_p              )
      call ncio_read_vector (file_restart, 'ntrunc_p               ', landpft, ntrunc_p              )
@@ -826,10 +812,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
      call ncio_read_vector (file_restart, 'croplive_p             ', landpft, croplive_p            )
-     call ncio_read_vector (file_restart, 'gddtsoi_p              ', landpft, gddtsoi_p             )
-     call ncio_read_vector (file_restart, 'huileaf_p              ', landpft, huileaf_p             )
+     call ncio_read_vector (file_restart, 'hui_p                  ', landpft, hui_p                 )
      call ncio_read_vector (file_restart, 'gddplant_p             ', landpft, gddplant_p            )
-     call ncio_read_vector (file_restart, 'huigrain_p             ', landpft, huigrain_p            )
      call ncio_read_vector (file_restart, 'peaklai_p              ', landpft, peaklai_p             )
      call ncio_read_vector (file_restart, 'aroot_p                ', landpft, aroot_p               )
      call ncio_read_vector (file_restart, 'astem_p                ', landpft, astem_p               )
@@ -845,17 +829,16 @@ CONTAINS
      call ncio_read_vector (file_restart, 'a10tmin_p              ', landpft, a10tmin_p             )
      call ncio_read_vector (file_restart, 't10_p                  ', landpft, t10_p                 )
      call ncio_read_vector (file_restart, 'cumvd_p                ', landpft, cumvd_p               )
-     call ncio_read_vector (file_restart, 'hdidx_p                ', landpft, hdidx_p               )
      call ncio_read_vector (file_restart, 'vf_p                   ', landpft, vf_p                  )
      call ncio_read_vector (file_restart, 'cphase_p               ', landpft, cphase_p              )
      call ncio_read_vector (file_restart, 'fert_counter_p         ', landpft, fert_counter_p        )
-     call ncio_read_vector (file_restart, 'fert_p                 ', landpft, fert_p                )
      call ncio_read_vector (file_restart, 'tref_min_p             ', landpft, tref_min_p            )
      call ncio_read_vector (file_restart, 'tref_max_p             ', landpft, tref_max_p            )
      call ncio_read_vector (file_restart, 'tref_min_inst_p        ', landpft, tref_min_inst_p       )
      call ncio_read_vector (file_restart, 'tref_max_inst_p        ', landpft, tref_max_inst_p       )
      call ncio_read_vector (file_restart, 'fertnitro_p            ', landpft, fertnitro_p           )
      call ncio_read_vector (file_restart, 'latbaset_p             ', landpft, latbaset_p            )
+     call ncio_read_vector (file_restart, 'plantdate_p            ', landpft, plantdate_p           )
 #endif
 
 #ifdef SASU
@@ -1152,624 +1135,601 @@ CONTAINS
      compress = DEF_REST_COMPRESS_LEVEL 
 
 ! bgc variables
-     call ncio_write_vector (file_restart, 'leafc_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc_p                ', 'pft', landpft, &
      leafc_p               , compress)
-     call ncio_write_vector (file_restart, 'leafc_storage_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc_storage_p        ', 'pft', landpft, &
      leafc_storage_p       , compress)
-     call ncio_write_vector (file_restart, 'leafc_xfer_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc_xfer_p           ', 'pft', landpft, &
      leafc_xfer_p          , compress)
-     call ncio_write_vector (file_restart, 'frootc_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc_p               ', 'pft', landpft, &
      frootc_p              , compress)
-     call ncio_write_vector (file_restart, 'frootc_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc_storage_p       ', 'pft', landpft, &
      frootc_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'frootc_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc_xfer_p          ', 'pft', landpft, &
      frootc_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'livestemc_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc_p            ', 'pft', landpft, &
      livestemc_p           , compress)
-     call ncio_write_vector (file_restart, 'livestemc_storage_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc_storage_p    ', 'pft', landpft, &
      livestemc_storage_p   , compress)
-     call ncio_write_vector (file_restart, 'livestemc_xfer_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc_xfer_p       ', 'pft', landpft, &
      livestemc_xfer_p      , compress)
-     call ncio_write_vector (file_restart, 'deadstemc_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc_p            ', 'pft', landpft, &
      deadstemc_p           , compress)
-     call ncio_write_vector (file_restart, 'deadstemc_storage_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc_storage_p    ', 'pft', landpft, &
      deadstemc_storage_p   , compress)
-     call ncio_write_vector (file_restart, 'deadstemc_xfer_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc_xfer_p       ', 'pft', landpft, &
      deadstemc_xfer_p      , compress)
-     call ncio_write_vector (file_restart, 'livecrootc_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc_p           ', 'pft', landpft, &
      livecrootc_p          , compress)
-     call ncio_write_vector (file_restart, 'livecrootc_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc_storage_p   ', 'pft', landpft, &
      livecrootc_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'livecrootc_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc_xfer_p      ', 'pft', landpft, &
      livecrootc_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc_p           ', 'pft', landpft, &
      deadcrootc_p          , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc_storage_p   ', 'pft', landpft, &
      deadcrootc_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc_xfer_p      ', 'pft', landpft, &
      deadcrootc_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'grainc_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc_p               ', 'pft', landpft, &
      grainc_p              , compress)
-     call ncio_write_vector (file_restart, 'grainc_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc_storage_p       ', 'pft', landpft, &
      grainc_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'grainc_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc_xfer_p          ', 'pft', landpft, &
      grainc_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'cropseedc_deficit_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cropseedc_deficit_p    ', 'pft', landpft, &
      cropseedc_deficit_p   , compress)
-     call ncio_write_vector (file_restart, 'xsmrpool_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'xsmrpool_p             ', 'pft', landpft, &
      xsmrpool_p            , compress)
-     call ncio_write_vector (file_restart, 'gresp_storage_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gresp_storage_p        ', 'pft', landpft, &
      gresp_storage_p       , compress)
-     call ncio_write_vector (file_restart, 'gresp_xfer_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gresp_xfer_p           ', 'pft', landpft, &
      gresp_xfer_p          , compress)
-     call ncio_write_vector (file_restart, 'cpool_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cpool_p                ', 'pft', landpft, &
      cpool_p               , compress)
-     call ncio_write_vector (file_restart, 'totvegc_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'totvegc_p              ', 'pft', landpft, &
      totvegc_p             , compress)
-     call ncio_write_vector (file_restart, 'cropprod1c_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cropprod1c_p           ', 'pft', landpft, &
      cropprod1c_p          , compress)
 
-!     call ncio_write_vector (file_restart, 'leaf_prof_p            ', 'vector', landpft, &
-!     leaf_prof_p           , compress)
-!     call ncio_write_vector (file_restart, 'froot_prof_p           ', 'vector', landpft, &
-!     froot_prof_p          , compress)
-!     call ncio_write_vector (file_restart, 'croot_prof_p           ', 'vector', landpft, &
-!     croot_prof_p          , compress)
-!     call ncio_write_vector (file_restart, 'stem_prof_p            ', 'vector', landpft, &
-!     stem_prof_p           , compress)
-!     call ncio_write_vector (file_restart, 'cinput_rootfr_p        ', 'vector', landpft, &
-!     cinput_rootfr_p       , compress)
-
-     call ncio_write_vector (file_restart, 'leafn_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn_p                ', 'pft', landpft, &
      leafn_p               , compress)
-     call ncio_write_vector (file_restart, 'leafn_storage_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn_storage_p        ', 'pft', landpft, &
      leafn_storage_p       , compress)
-     call ncio_write_vector (file_restart, 'leafn_xfer_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn_xfer_p           ', 'pft', landpft, &
      leafn_xfer_p          , compress)
-     call ncio_write_vector (file_restart, 'frootn_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn_p               ', 'pft', landpft, &
      frootn_p              , compress)
-     call ncio_write_vector (file_restart, 'frootn_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn_storage_p       ', 'pft', landpft, &
      frootn_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'frootn_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn_xfer_p          ', 'pft', landpft, &
      frootn_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'livestemn_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn_p            ', 'pft', landpft, &
      livestemn_p           , compress)
-     call ncio_write_vector (file_restart, 'livestemn_storage_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn_storage_p    ', 'pft', landpft, &
      livestemn_storage_p   , compress)
-     call ncio_write_vector (file_restart, 'livestemn_xfer_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn_xfer_p       ', 'pft', landpft, &
      livestemn_xfer_p      , compress)
-     call ncio_write_vector (file_restart, 'deadstemn_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn_p            ', 'pft', landpft, &
      deadstemn_p           , compress)
-     call ncio_write_vector (file_restart, 'deadstemn_storage_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn_storage_p    ', 'pft', landpft, &
      deadstemn_storage_p   , compress)
-     call ncio_write_vector (file_restart, 'deadstemn_xfer_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn_xfer_p       ', 'pft', landpft, &
      deadstemn_xfer_p      , compress)
-     call ncio_write_vector (file_restart, 'livecrootn_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn_p           ', 'pft', landpft, &
      livecrootn_p          , compress)
-     call ncio_write_vector (file_restart, 'livecrootn_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn_storage_p   ', 'pft', landpft, &
      livecrootn_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'livecrootn_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn_xfer_p      ', 'pft', landpft, &
      livecrootn_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn_p           ', 'pft', landpft, &
      deadcrootn_p          , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn_storage_p   ', 'pft', landpft, &
      deadcrootn_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn_xfer_p      ', 'pft', landpft, &
      deadcrootn_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'grainn_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn_p               ', 'pft', landpft, &
      grainn_p              , compress)
-     call ncio_write_vector (file_restart, 'grainn_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn_storage_p       ', 'pft', landpft, &
      grainn_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'grainn_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn_xfer_p          ', 'pft', landpft, &
      grainn_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'cropseedn_deficit_p    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cropseedn_deficit_p    ', 'pft', landpft, &
      cropseedn_deficit_p   , compress)
-     call ncio_write_vector (file_restart, 'retransn_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'retransn_p             ', 'pft', landpft, &
      retransn_p            , compress)
-     call ncio_write_vector (file_restart, 'totvegn_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'totvegn_p              ', 'pft', landpft, &
      totvegn_p             , compress)
 
-     call ncio_write_vector (file_restart, 'harvdate_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'harvdate_p             ', 'pft', landpft, &
      harvdate_p            , compress)
 
-     call ncio_write_vector (file_restart, 'tempsum_potential_gpp_p', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tempsum_potential_gpp_p', 'pft', landpft, &
      tempsum_potential_gpp_p, compress)
-     call ncio_write_vector (file_restart, 'tempmax_retransn_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tempmax_retransn_p     ', 'pft', landpft, &
      tempmax_retransn_p    , compress)
-     call ncio_write_vector (file_restart, 'tempavg_tref_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tempavg_tref_p         ', 'pft', landpft, &
      tempavg_tref_p        , compress)
-     call ncio_write_vector (file_restart, 'tempsum_npp_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tempsum_npp_p          ', 'pft', landpft, &
      tempsum_npp_p         , compress)
-     call ncio_write_vector (file_restart, 'tempsum_litfall_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tempsum_litfall_p      ', 'pft', landpft, &
      tempsum_litfall_p     , compress)
-     call ncio_write_vector (file_restart, 'annsum_potential_gpp_p ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'annsum_potential_gpp_p ', 'pft', landpft, &
      annsum_potential_gpp_p, compress)
-     call ncio_write_vector (file_restart, 'annmax_retransn_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'annmax_retransn_p      ', 'pft', landpft, &
      annmax_retransn_p     , compress)
-     call ncio_write_vector (file_restart, 'annavg_tref_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'annavg_tref_p          ', 'pft', landpft, &
      annavg_tref_p         , compress)
-     call ncio_write_vector (file_restart, 'annsum_npp_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'annsum_npp_p           ', 'pft', landpft, &
      annsum_npp_p          , compress)
-     call ncio_write_vector (file_restart, 'annsum_litfall_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'annsum_litfall_p       ', 'pft', landpft, &
      annsum_litfall_p      , compress)
 
-     call ncio_write_vector (file_restart, 'bglfr_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'bglfr_p                ', 'pft', landpft, &
      bglfr_p               , compress)
-     call ncio_write_vector (file_restart, 'bgtr_p                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'bgtr_p                 ', 'pft', landpft, &
      bgtr_p                , compress)
-     call ncio_write_vector (file_restart, 'lgsf_p                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'lgsf_p                 ', 'pft', landpft, &
      lgsf_p                , compress)
-     call ncio_write_vector (file_restart, 'gdd0_p                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd0_p                 ', 'pft', landpft, &
      gdd0_p                , compress)
-     call ncio_write_vector (file_restart, 'gdd8_p                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd8_p                 ', 'pft', landpft, &
      gdd8_p                , compress)
-     call ncio_write_vector (file_restart, 'gdd10_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd10_p                ', 'pft', landpft, &
      gdd10_p               , compress)
-     call ncio_write_vector (file_restart, 'gdd020_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd020_p               ', 'pft', landpft, &
      gdd020_p              , compress)
-     call ncio_write_vector (file_restart, 'gdd820_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd820_p               ', 'pft', landpft, &
      gdd820_p              , compress)
-     call ncio_write_vector (file_restart, 'gdd1020_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gdd1020_p              ', 'pft', landpft, &
      gdd1020_p             , compress)
-     call ncio_write_vector (file_restart, 'nyrs_crop_active_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'nyrs_crop_active_p     ', 'pft', landpft, &
      nyrs_crop_active_p    , compress)
 
-     call ncio_write_vector (file_restart, 'offset_flag_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'offset_flag_p          ', 'pft', landpft, &
      offset_flag_p         , compress)
-     call ncio_write_vector (file_restart, 'offset_counter_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'offset_counter_p       ', 'pft', landpft, &
      offset_counter_p      , compress)
-     call ncio_write_vector (file_restart, 'onset_flag_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_flag_p           ', 'pft', landpft, &
      onset_flag_p          , compress)
-     call ncio_write_vector (file_restart, 'onset_counter_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_counter_p        ', 'pft', landpft, &
      onset_counter_p       , compress)
-     call ncio_write_vector (file_restart, 'onset_gddflag_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_gddflag_p        ', 'pft', landpft, &
      onset_gddflag_p       , compress)
-     call ncio_write_vector (file_restart, 'onset_gdd_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_gdd_p            ', 'pft', landpft, &
      onset_gdd_p           , compress)
-     call ncio_write_vector (file_restart, 'onset_fdd_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_fdd_p            ', 'pft', landpft, &
      onset_fdd_p           , compress)
-     call ncio_write_vector (file_restart, 'onset_swi_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'onset_swi_p            ', 'pft', landpft, &
      onset_swi_p           , compress)
-     call ncio_write_vector (file_restart, 'offset_fdd_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'offset_fdd_p           ', 'pft', landpft, &
      offset_fdd_p          , compress)
-     call ncio_write_vector (file_restart, 'offset_swi_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'offset_swi_p           ', 'pft', landpft, &
      offset_swi_p          , compress)
-     call ncio_write_vector (file_restart, 'dormant_flag_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'dormant_flag_p         ', 'pft', landpft, &
      dormant_flag_p        , compress)
-     call ncio_write_vector (file_restart, 'prev_leafc_to_litter_p ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'prev_leafc_to_litter_p ', 'pft', landpft, &
      prev_leafc_to_litter_p, compress)
-     call ncio_write_vector (file_restart, 'prev_frootc_to_litter_p', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'prev_frootc_to_litter_p', 'pft', landpft, &
      prev_frootc_to_litter_p, compress)
-     call ncio_write_vector (file_restart, 'days_active_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'days_active_p          ', 'pft', landpft, &
      days_active_p         , compress)
 
-     call ncio_write_vector (file_restart, 'burndate_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'burndate_p             ', 'pft', landpft, &
      burndate_p            , compress)
-!     call ncio_write_vector (file_restart, 'c_allometry_p          ', 'vector', landpft, &
-!     c_allometry_p         , compress)
-!     call ncio_write_vector (file_restart, 'n_allometry_p          ', 'vector', landpft, &
-!     n_allometry_p         , compress)
-!     call ncio_write_vector (file_restart, 'downreg_p              ', 'vector', landpft, &
-!     downreg_p             , compress)
-     call ncio_write_vector (file_restart, 'grain_flag_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grain_flag_p           ', 'pft', landpft, &
      grain_flag_p          , compress)
-     call ncio_write_vector (file_restart, 'ctrunc_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'ctrunc_p               ', 'pft', landpft, &
      ctrunc_p              , compress)
-     call ncio_write_vector (file_restart, 'ntrunc_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'ntrunc_p               ', 'pft', landpft, &
      ntrunc_p              , compress)
-     call ncio_write_vector (file_restart, 'npool_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'npool_p                ', 'pft', landpft, &
      npool_p               , compress)
 
 #ifdef CROP
 ! crop variables 
-     call ncio_write_vector (file_restart, 'croplive_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'croplive_p             ', 'pft', landpft, &
      croplive_p            , compress)
-     call ncio_write_vector (file_restart, 'gddtsoi_p              ', 'vector', landpft, &
-     gddtsoi_p             , compress)
-     call ncio_write_vector (file_restart, 'huileaf_p              ', 'vector', landpft, &
-     huileaf_p             , compress)
-     call ncio_write_vector (file_restart, 'gddplant_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'hui_p                   ', 'pft', landpft, &
+     hui_p             , compress)
+     call ncio_write_vector (file_restart, 'gddplant_p             ', 'pft', landpft, &
      gddplant_p            , compress)
-     call ncio_write_vector (file_restart, 'huigrain_p             ', 'vector', landpft, &
-     huigrain_p            , compress)
-     call ncio_write_vector (file_restart, 'peaklai_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'peaklai_p              ', 'pft', landpft, &
      peaklai_p             , compress)
-     call ncio_write_vector (file_restart, 'aroot_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'aroot_p                ', 'pft', landpft, &
      aroot_p               , compress)
-     call ncio_write_vector (file_restart, 'astem_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'astem_p                ', 'pft', landpft, &
      astem_p               , compress)
-     call ncio_write_vector (file_restart, 'arepr_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'arepr_p                ', 'pft', landpft, &
      arepr_p               , compress)
-     call ncio_write_vector (file_restart, 'aleaf_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'aleaf_p                ', 'pft', landpft, &
      aleaf_p               , compress)
-     call ncio_write_vector (file_restart, 'astemi_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'astemi_p               ', 'pft', landpft, &
      astemi_p              , compress)
-     call ncio_write_vector (file_restart, 'aleafi_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'aleafi_p               ', 'pft', landpft, &
      aleafi_p              , compress)
-     call ncio_write_vector (file_restart, 'gddmaturity_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'gddmaturity_p          ', 'pft', landpft, &
      gddmaturity_p         , compress)
 
-     call ncio_write_vector (file_restart, 'cropplant_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cropplant_p            ', 'pft', landpft, &
      cropplant_p           , compress)
-     call ncio_write_vector (file_restart, 'idop_p                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'idop_p                 ', 'pft', landpft, &
      idop_p                , compress)
-     call ncio_write_vector (file_restart, 'a5tmin_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'a5tmin_p               ', 'pft', landpft, &
      a5tmin_p              , compress)
-     call ncio_write_vector (file_restart, 'a10tmin_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'a10tmin_p              ', 'pft', landpft, &
      a10tmin_p             , compress)
-     call ncio_write_vector (file_restart, 't10_p                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 't10_p                  ', 'pft', landpft, &
      t10_p                 , compress)
-     call ncio_write_vector (file_restart, 'cumvd_p                ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cumvd_p                ', 'pft', landpft, &
      cumvd_p               , compress)
-     call ncio_write_vector (file_restart, 'hdidx_p                ', 'vector', landpft, &
-     hdidx_p               , compress)
-     call ncio_write_vector (file_restart, 'vf_p                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'vf_p                   ', 'pft', landpft, &
      vf_p                  , compress)
-     call ncio_write_vector (file_restart, 'cphase_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'cphase_p               ', 'pft', landpft, &
      cphase_p              , compress)
-     call ncio_write_vector (file_restart, 'fert_counter_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'fert_counter_p         ', 'pft', landpft, &
      fert_counter_p        , compress)
-     call ncio_write_vector (file_restart, 'fert_p                 ', 'vector', landpft, &
-     fert_p                , compress)
-     call ncio_write_vector (file_restart, 'tref_min_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tref_min_p             ', 'pft', landpft, &
      tref_min_p            , compress)
-     call ncio_write_vector (file_restart, 'tref_max_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tref_max_p             ', 'pft', landpft, &
      tref_max_p            , compress)
-     call ncio_write_vector (file_restart, 'tref_min_inst_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tref_min_inst_p        ', 'pft', landpft, &
      tref_min_inst_p       , compress)
-     call ncio_write_vector (file_restart, 'tref_max_inst_p        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'tref_max_inst_p        ', 'pft', landpft, &
      tref_max_inst_p       , compress)
-     call ncio_write_vector (file_restart, 'fertnitro_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'fertnitro_p            ', 'pft', landpft, &
      fertnitro_p           , compress)
-     call ncio_write_vector (file_restart, 'latbaset_p             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'latbaset_p             ', 'pft', landpft, &
      latbaset_p            , compress)
+     call ncio_write_vector (file_restart, 'plantdate_p            ', 'pft', landpft, &
+     plantdate_p           , compress)
 #endif
 
 #ifdef SASU
 ! SASU variables
-     call ncio_write_vector (file_restart, 'leafc0_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc0_p               ', 'pft', landpft, &
      leafc0_p              , compress)
-     call ncio_write_vector (file_restart, 'leafc0_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc0_storage_p       ', 'pft', landpft, &
      leafc0_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'leafc0_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafc0_xfer_p          ', 'pft', landpft, &
      leafc0_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'frootc0_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc0_p              ', 'pft', landpft, &
      frootc0_p             , compress)
-     call ncio_write_vector (file_restart, 'frootc0_storage_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc0_storage_p      ', 'pft', landpft, &
      frootc0_storage_p     , compress)
-     call ncio_write_vector (file_restart, 'frootc0_xfer_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootc0_xfer_p         ', 'pft', landpft, &
      frootc0_xfer_p        , compress)
-     call ncio_write_vector (file_restart, 'livestemc0_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc0_p           ', 'pft', landpft, &
      livestemc0_p          , compress)
-     call ncio_write_vector (file_restart, 'livestemc0_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc0_storage_p   ', 'pft', landpft, &
      livestemc0_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'livestemc0_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemc0_xfer_p      ', 'pft', landpft, &
      livestemc0_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'deadstemc0_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc0_p           ', 'pft', landpft, &
      deadstemc0_p          , compress)
-     call ncio_write_vector (file_restart, 'deadstemc0_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc0_storage_p   ', 'pft', landpft, &
      deadstemc0_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'deadstemc0_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemc0_xfer_p      ', 'pft', landpft, &
      deadstemc0_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'livecrootc0_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc0_p          ', 'pft', landpft, &
      livecrootc0_p         , compress)
-     call ncio_write_vector (file_restart, 'livecrootc0_storage_p  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc0_storage_p  ', 'pft', landpft, &
      livecrootc0_storage_p , compress)
-     call ncio_write_vector (file_restart, 'livecrootc0_xfer_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootc0_xfer_p     ', 'pft', landpft, &
      livecrootc0_xfer_p    , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc0_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc0_p          ', 'pft', landpft, &
      deadcrootc0_p         , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc0_storage_p  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc0_storage_p  ', 'pft', landpft, &
      deadcrootc0_storage_p , compress)
-     call ncio_write_vector (file_restart, 'deadcrootc0_xfer_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootc0_xfer_p     ', 'pft', landpft, &
      deadcrootc0_xfer_p    , compress)
-     call ncio_write_vector (file_restart, 'grainc0_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc0_p              ', 'pft', landpft, &
      grainc0_p             , compress)
-     call ncio_write_vector (file_restart, 'grainc0_storage_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc0_storage_p      ', 'pft', landpft, &
      grainc0_storage_p     , compress)
-     call ncio_write_vector (file_restart, 'grainc0_xfer_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainc0_xfer_p         ', 'pft', landpft, &
      grainc0_xfer_p        , compress)
 
-     call ncio_write_vector (file_restart, 'leafn0_p               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn0_p               ', 'pft', landpft, &
      leafn0_p              , compress)
-     call ncio_write_vector (file_restart, 'leafn0_storage_p       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn0_storage_p       ', 'pft', landpft, &
      leafn0_storage_p      , compress)
-     call ncio_write_vector (file_restart, 'leafn0_xfer_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'leafn0_xfer_p          ', 'pft', landpft, &
      leafn0_xfer_p         , compress)
-     call ncio_write_vector (file_restart, 'frootn0_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn0_p              ', 'pft', landpft, &
      frootn0_p             , compress)
-     call ncio_write_vector (file_restart, 'frootn0_storage_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn0_storage_p      ', 'pft', landpft, &
      frootn0_storage_p     , compress)
-     call ncio_write_vector (file_restart, 'frootn0_xfer_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'frootn0_xfer_p         ', 'pft', landpft, &
      frootn0_xfer_p        , compress)
-     call ncio_write_vector (file_restart, 'livestemn0_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn0_p           ', 'pft', landpft, &
      livestemn0_p          , compress)
-     call ncio_write_vector (file_restart, 'livestemn0_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn0_storage_p   ', 'pft', landpft, &
      livestemn0_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'livestemn0_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livestemn0_xfer_p      ', 'pft', landpft, &
      livestemn0_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'deadstemn0_p           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn0_p           ', 'pft', landpft, &
      deadstemn0_p          , compress)
-     call ncio_write_vector (file_restart, 'deadstemn0_storage_p   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn0_storage_p   ', 'pft', landpft, &
      deadstemn0_storage_p  , compress)
-     call ncio_write_vector (file_restart, 'deadstemn0_xfer_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadstemn0_xfer_p      ', 'pft', landpft, &
      deadstemn0_xfer_p     , compress)
-     call ncio_write_vector (file_restart, 'livecrootn0_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn0_p          ', 'pft', landpft, &
      livecrootn0_p         , compress)
-     call ncio_write_vector (file_restart, 'livecrootn0_storage_p  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn0_storage_p  ', 'pft', landpft, &
      livecrootn0_storage_p , compress)
-     call ncio_write_vector (file_restart, 'livecrootn0_xfer_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'livecrootn0_xfer_p     ', 'pft', landpft, &
      livecrootn0_xfer_p    , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn0_p          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn0_p          ', 'pft', landpft, &
      deadcrootn0_p         , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn0_storage_p  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn0_storage_p  ', 'pft', landpft, &
      deadcrootn0_storage_p , compress)
-     call ncio_write_vector (file_restart, 'deadcrootn0_xfer_p     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'deadcrootn0_xfer_p     ', 'pft', landpft, &
      deadcrootn0_xfer_p    , compress)
-     call ncio_write_vector (file_restart, 'grainn0_p              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn0_p              ', 'pft', landpft, &
      grainn0_p             , compress)
-     call ncio_write_vector (file_restart, 'grainn0_storage_p      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn0_storage_p      ', 'pft', landpft, &
      grainn0_storage_p     , compress)
-     call ncio_write_vector (file_restart, 'grainn0_xfer_p         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'grainn0_xfer_p         ', 'pft', landpft, &
      grainn0_xfer_p        , compress)
-     call ncio_write_vector (file_restart, 'retransn0_p            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'retransn0_p            ', 'pft', landpft, &
      retransn0_p           , compress)
 
-     call ncio_write_vector (file_restart, 'I_leafc_p_acc            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_leafc_p_acc            ', 'pft', landpft, &
      I_leafc_p_acc           , compress)
-     call ncio_write_vector (file_restart, 'I_leafc_st_p_acc         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_leafc_st_p_acc         ', 'pft', landpft, &
      I_leafc_st_p_acc        , compress)
-     call ncio_write_vector (file_restart, 'I_frootc_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_frootc_p_acc           ', 'pft', landpft, &
      I_frootc_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'I_frootc_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_frootc_st_p_acc        ', 'pft', landpft, &
      I_frootc_st_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_livestemc_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livestemc_p_acc        ', 'pft', landpft, &
      I_livestemc_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_livestemc_st_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livestemc_st_p_acc     ', 'pft', landpft, &
      I_livestemc_st_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'I_deadstemc_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadstemc_p_acc        ', 'pft', landpft, &
      I_deadstemc_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_deadstemc_st_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadstemc_st_p_acc     ', 'pft', landpft, &
      I_deadstemc_st_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'I_livecrootc_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livecrootc_p_acc       ', 'pft', landpft, &
      I_livecrootc_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'I_livecrootc_st_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livecrootc_st_p_acc    ', 'pft', landpft, &
      I_livecrootc_st_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'I_deadcrootc_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadcrootc_p_acc       ', 'pft', landpft, &
      I_deadcrootc_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'I_deadcrootc_st_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadcrootc_st_p_acc    ', 'pft', landpft, &
      I_deadcrootc_st_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'I_grainc_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_grainc_p_acc           ', 'pft', landpft, &
      I_grainc_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'I_grainc_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_grainc_st_p_acc        ', 'pft', landpft, &
      I_grainc_st_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_leafn_p_acc            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_leafn_p_acc            ', 'pft', landpft, &
      I_leafn_p_acc           , compress)
-     call ncio_write_vector (file_restart, 'I_leafn_st_p_acc         ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_leafn_st_p_acc         ', 'pft', landpft, &
      I_leafn_st_p_acc        , compress)
-     call ncio_write_vector (file_restart, 'I_frootn_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_frootn_p_acc           ', 'pft', landpft, &
      I_frootn_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'I_frootn_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_frootn_st_p_acc        ', 'pft', landpft, &
      I_frootn_st_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_livestemn_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livestemn_p_acc        ', 'pft', landpft, &
      I_livestemn_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_livestemn_st_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livestemn_st_p_acc     ', 'pft', landpft, &
      I_livestemn_st_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'I_deadstemn_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadstemn_p_acc        ', 'pft', landpft, &
      I_deadstemn_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'I_deadstemn_st_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadstemn_st_p_acc     ', 'pft', landpft, &
      I_deadstemn_st_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'I_livecrootn_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livecrootn_p_acc       ', 'pft', landpft, &
      I_livecrootn_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'I_livecrootn_st_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_livecrootn_st_p_acc    ', 'pft', landpft, &
      I_livecrootn_st_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'I_deadcrootn_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadcrootn_p_acc       ', 'pft', landpft, &
      I_deadcrootn_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'I_deadcrootn_st_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_deadcrootn_st_p_acc    ', 'pft', landpft, &
      I_deadcrootn_st_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'I_grainn_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_grainn_p_acc           ', 'pft', landpft, &
      I_grainn_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'I_grainn_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'I_grainn_st_p_acc        ', 'pft', landpft, &
      I_grainn_st_p_acc       , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafc_xf_to_leafc_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafc_xf_to_leafc_p_acc               ', 'pft', landpft, &
      AKX_leafc_xf_to_leafc_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootc_xf_to_frootc_p_acc             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootc_xf_to_frootc_p_acc             ', 'pft', landpft, &
      AKX_frootc_xf_to_frootc_p_acc            , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_xf_to_livestemc_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_xf_to_livestemc_p_acc       ', 'pft', landpft, &
      AKX_livestemc_xf_to_livestemc_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemc_xf_to_deadstemc_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemc_xf_to_deadstemc_p_acc       ', 'pft', landpft, &
      AKX_deadstemc_xf_to_deadstemc_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_xf_to_livecrootc_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_xf_to_livecrootc_p_acc     ', 'pft', landpft, &
      AKX_livecrootc_xf_to_livecrootc_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootc_xf_to_deadcrootc_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootc_xf_to_deadcrootc_p_acc     ', 'pft', landpft, &
      AKX_deadcrootc_xf_to_deadcrootc_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainc_xf_to_grainc_p_acc             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainc_xf_to_grainc_p_acc             ', 'pft', landpft, &
      AKX_grainc_xf_to_grainc_p_acc            , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_to_deadstemc_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_to_deadstemc_p_acc          ', 'pft', landpft, &
      AKX_livestemc_to_deadstemc_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_to_deadcrootc_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_to_deadcrootc_p_acc        ', 'pft', landpft, &
      AKX_livecrootc_to_deadcrootc_p_acc       , compress)
 
            
-     call ncio_write_vector (file_restart, 'AKX_leafc_st_to_leafc_xf_p_acc            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafc_st_to_leafc_xf_p_acc            ', 'pft', landpft, &
      AKX_leafc_st_to_leafc_xf_p_acc           , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootc_st_to_frootc_xf_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootc_st_to_frootc_xf_p_acc          ', 'pft', landpft, &
      AKX_frootc_st_to_frootc_xf_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_st_to_livestemc_xf_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_st_to_livestemc_xf_p_acc    ', 'pft', landpft, &
      AKX_livestemc_st_to_livestemc_xf_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemc_st_to_deadstemc_xf_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemc_st_to_deadstemc_xf_p_acc    ', 'pft', landpft, &
      AKX_deadstemc_st_to_deadstemc_xf_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_st_to_livecrootc_xf_p_acc  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_st_to_livecrootc_xf_p_acc  ', 'pft', landpft, &
      AKX_livecrootc_st_to_livecrootc_xf_p_acc , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootc_st_to_deadcrootc_xf_p_acc  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootc_st_to_deadcrootc_xf_p_acc  ', 'pft', landpft, &
      AKX_deadcrootc_st_to_deadcrootc_xf_p_acc , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainc_st_to_grainc_xf_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainc_st_to_grainc_xf_p_acc          ', 'pft', landpft, &
      AKX_grainc_st_to_grainc_xf_p_acc         , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafc_exit_p_acc                      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafc_exit_p_acc                      ', 'pft', landpft, &
      AKX_leafc_exit_p_acc                     , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootc_exit_p_acc                     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootc_exit_p_acc                     ', 'pft', landpft, &
      AKX_frootc_exit_p_acc                    , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_exit_p_acc                  ', 'pft', landpft, &
      AKX_livestemc_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemc_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemc_exit_p_acc                  ', 'pft', landpft, &
      AKX_deadstemc_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_exit_p_acc                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_exit_p_acc                 ', 'pft', landpft, &
      AKX_livecrootc_exit_p_acc                , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootc_exit_p_acc                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootc_exit_p_acc                 ', 'pft', landpft, &
      AKX_deadcrootc_exit_p_acc                , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainc_exit_p_acc                     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainc_exit_p_acc                     ', 'pft', landpft, &
      AKX_grainc_exit_p_acc                    , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafc_st_exit_p_acc                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafc_st_exit_p_acc                   ', 'pft', landpft, &
      AKX_leafc_st_exit_p_acc                  , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootc_st_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootc_st_exit_p_acc                  ', 'pft', landpft, &
      AKX_frootc_st_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_st_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_st_exit_p_acc               ', 'pft', landpft, &
      AKX_livestemc_st_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemc_st_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemc_st_exit_p_acc               ', 'pft', landpft, &
      AKX_deadstemc_st_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_st_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_st_exit_p_acc              ', 'pft', landpft, &
      AKX_livecrootc_st_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootc_st_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootc_st_exit_p_acc              ', 'pft', landpft, &
      AKX_deadcrootc_st_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainc_st_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainc_st_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainc_st_exit_p_acc                 , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafc_xf_exit_p_acc                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafc_xf_exit_p_acc                   ', 'pft', landpft, &
      AKX_leafc_xf_exit_p_acc                  , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootc_xf_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootc_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_frootc_xf_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemc_xf_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemc_xf_exit_p_acc               ', 'pft', landpft, &
      AKX_livestemc_xf_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemc_xf_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemc_xf_exit_p_acc               ', 'pft', landpft, &
      AKX_deadstemc_xf_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootc_xf_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootc_xf_exit_p_acc              ', 'pft', landpft, &
      AKX_livecrootc_xf_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootc_xf_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootc_xf_exit_p_acc              ', 'pft', landpft, &
      AKX_deadcrootc_xf_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainc_xf_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainc_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainc_xf_exit_p_acc                 , compress)
            
-     call ncio_write_vector (file_restart, 'AKX_leafn_xf_to_leafn_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_xf_to_leafn_p_acc               ', 'pft', landpft, &
      AKX_leafn_xf_to_leafn_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_xf_to_frootn_p_acc             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_xf_to_frootn_p_acc             ', 'pft', landpft, &
      AKX_frootn_xf_to_frootn_p_acc            , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_xf_to_livestemn_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_xf_to_livestemn_p_acc       ', 'pft', landpft, &
      AKX_livestemn_xf_to_livestemn_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemn_xf_to_deadstemn_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemn_xf_to_deadstemn_p_acc       ', 'pft', landpft, &
      AKX_deadstemn_xf_to_deadstemn_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_xf_to_livecrootn_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_xf_to_livecrootn_p_acc     ', 'pft', landpft, &
      AKX_livecrootn_xf_to_livecrootn_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootn_xf_to_deadcrootn_p_acc     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootn_xf_to_deadcrootn_p_acc     ', 'pft', landpft, &
      AKX_deadcrootn_xf_to_deadcrootn_p_acc    , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainn_xf_to_grainn_p_acc             ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainn_xf_to_grainn_p_acc             ', 'pft', landpft, &
      AKX_grainn_xf_to_grainn_p_acc            , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_to_deadstemn_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_to_deadstemn_p_acc          ', 'pft', landpft, &
      AKX_livestemn_to_deadstemn_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_to_deadcrootn_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_to_deadcrootn_p_acc        ', 'pft', landpft, &
      AKX_livecrootn_to_deadcrootn_p_acc       , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafn_st_to_leafn_xf_p_acc            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_st_to_leafn_xf_p_acc            ', 'pft', landpft, &
      AKX_leafn_st_to_leafn_xf_p_acc           , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_st_to_frootn_xf_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_st_to_frootn_xf_p_acc          ', 'pft', landpft, &
      AKX_frootn_st_to_frootn_xf_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_st_to_livestemn_xf_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_st_to_livestemn_xf_p_acc    ', 'pft', landpft, &
      AKX_livestemn_st_to_livestemn_xf_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemn_st_to_deadstemn_xf_p_acc    ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemn_st_to_deadstemn_xf_p_acc    ', 'pft', landpft, &
      AKX_deadstemn_st_to_deadstemn_xf_p_acc   , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_st_to_livecrootn_xf_p_acc  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_st_to_livecrootn_xf_p_acc  ', 'pft', landpft, &
      AKX_livecrootn_st_to_livecrootn_xf_p_acc , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootn_st_to_deadcrootn_xf_p_acc  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootn_st_to_deadcrootn_xf_p_acc  ', 'pft', landpft, &
      AKX_deadcrootn_st_to_deadcrootn_xf_p_acc , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainn_st_to_grainn_xf_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainn_st_to_grainn_xf_p_acc          ', 'pft', landpft, &
      AKX_grainn_st_to_grainn_xf_p_acc         , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafn_to_retransn_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_to_retransn_p_acc               ', 'pft', landpft, &
      AKX_leafn_to_retransn_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_to_retransn_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_to_retransn_p_acc              ', 'pft', landpft, &
      AKX_frootn_to_retransn_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_to_retransn_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_to_retransn_p_acc           ', 'pft', landpft, &
      AKX_livestemn_to_retransn_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_to_retransn_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_to_retransn_p_acc          ', 'pft', landpft, &
      AKX_livecrootn_to_retransn_p_acc         , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_leafn_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_leafn_p_acc               ', 'pft', landpft, &
      AKX_retransn_to_leafn_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_frootn_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_frootn_p_acc              ', 'pft', landpft, &
      AKX_retransn_to_frootn_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_livestemn_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_livestemn_p_acc           ', 'pft', landpft, &
      AKX_retransn_to_livestemn_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadstemn_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadstemn_p_acc           ', 'pft', landpft, &
      AKX_retransn_to_deadstemn_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_livecrootn_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_livecrootn_p_acc          ', 'pft', landpft, &
      AKX_retransn_to_livecrootn_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadcrootn_p_acc          ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadcrootn_p_acc          ', 'pft', landpft, &
      AKX_retransn_to_deadcrootn_p_acc         , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_grainn_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_grainn_p_acc              ', 'pft', landpft, &
      AKX_retransn_to_grainn_p_acc             , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_leafn_st_p_acc            ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_leafn_st_p_acc            ', 'pft', landpft, &
      AKX_retransn_to_leafn_st_p_acc           , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_frootn_st_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_frootn_st_p_acc           ', 'pft', landpft, &
      AKX_retransn_to_frootn_st_p_acc          , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_livestemn_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_livestemn_st_p_acc        ', 'pft', landpft, &
      AKX_retransn_to_livestemn_st_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadstemn_st_p_acc        ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadstemn_st_p_acc        ', 'pft', landpft, &
      AKX_retransn_to_deadstemn_st_p_acc       , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_livecrootn_st_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_livecrootn_st_p_acc       ', 'pft', landpft, &
      AKX_retransn_to_livecrootn_st_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadcrootn_st_p_acc       ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_deadcrootn_st_p_acc       ', 'pft', landpft, &
      AKX_retransn_to_deadcrootn_st_p_acc      , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_to_grainn_st_p_acc           ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_to_grainn_st_p_acc           ', 'pft', landpft, &
      AKX_retransn_to_grainn_st_p_acc          , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafn_exit_p_acc                      ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_exit_p_acc                      ', 'pft', landpft, &
      AKX_leafn_exit_p_acc                     , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_exit_p_acc                     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_exit_p_acc                     ', 'pft', landpft, &
      AKX_frootn_exit_p_acc                    , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_exit_p_acc                  ', 'pft', landpft, &
      AKX_livestemn_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemn_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemn_exit_p_acc                  ', 'pft', landpft, &
      AKX_deadstemn_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_exit_p_acc                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_exit_p_acc                 ', 'pft', landpft, &
      AKX_livecrootn_exit_p_acc                , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootn_exit_p_acc                 ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootn_exit_p_acc                 ', 'pft', landpft, &
      AKX_deadcrootn_exit_p_acc                , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainn_exit_p_acc                     ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainn_exit_p_acc                     ', 'pft', landpft, &
      AKX_grainn_exit_p_acc                    , compress)
-     call ncio_write_vector (file_restart, 'AKX_retransn_exit_p_acc                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_retransn_exit_p_acc                   ', 'pft', landpft, &
      AKX_retransn_exit_p_acc                  , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafn_st_exit_p_acc                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_st_exit_p_acc                   ', 'pft', landpft, &
      AKX_leafn_st_exit_p_acc                  , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_st_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_st_exit_p_acc                  ', 'pft', landpft, &
      AKX_frootn_st_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_st_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_st_exit_p_acc               ', 'pft', landpft, &
      AKX_livestemn_st_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemn_st_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemn_st_exit_p_acc               ', 'pft', landpft, &
      AKX_deadstemn_st_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_st_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_st_exit_p_acc              ', 'pft', landpft, &
      AKX_livecrootn_st_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootn_st_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootn_st_exit_p_acc              ', 'pft', landpft, &
      AKX_deadcrootn_st_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainn_st_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainn_st_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainn_st_exit_p_acc                 , compress)
 
-     call ncio_write_vector (file_restart, 'AKX_leafn_xf_exit_p_acc                   ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_leafn_xf_exit_p_acc                   ', 'pft', landpft, &
      AKX_leafn_xf_exit_p_acc                  , compress)
-     call ncio_write_vector (file_restart, 'AKX_frootn_xf_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_frootn_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_frootn_xf_exit_p_acc                 , compress)
-     call ncio_write_vector (file_restart, 'AKX_livestemn_xf_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livestemn_xf_exit_p_acc               ', 'pft', landpft, &
      AKX_livestemn_xf_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadstemn_xf_exit_p_acc               ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadstemn_xf_exit_p_acc               ', 'pft', landpft, &
      AKX_deadstemn_xf_exit_p_acc              , compress)
-     call ncio_write_vector (file_restart, 'AKX_livecrootn_xf_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_livecrootn_xf_exit_p_acc              ', 'pft', landpft, &
      AKX_livecrootn_xf_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_deadcrootn_xf_exit_p_acc              ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_deadcrootn_xf_exit_p_acc              ', 'pft', landpft, &
      AKX_deadcrootn_xf_exit_p_acc             , compress)
-     call ncio_write_vector (file_restart, 'AKX_grainn_xf_exit_p_acc                  ', 'vector', landpft, &
+     call ncio_write_vector (file_restart, 'AKX_grainn_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainn_xf_exit_p_acc                 , compress)
 #endif
    END SUBROUTINE WRITE_BGCPFTimeVars
@@ -1898,10 +1858,8 @@ CONTAINS
 #ifdef CROP
 ! crop variables 
             deallocate (croplive_p               )
-            deallocate (gddtsoi_p                )
-            deallocate (huileaf_p                )
+            deallocate (hui_p                    )
             deallocate (gddplant_p               )
-            deallocate (huigrain_p               )
             deallocate (peaklai_p                )
             deallocate (aroot_p                  )
             deallocate (astem_p                  )
@@ -1917,17 +1875,16 @@ CONTAINS
             deallocate (a10tmin_p                )
             deallocate (t10_p                    )
             deallocate (cumvd_p                  )
-            deallocate (hdidx_p                  )
             deallocate (vf_p                     )
             deallocate (cphase_p                 )
             deallocate (fert_counter_p           )
-            deallocate (fert_p                   )
             deallocate (tref_min_p               )
             deallocate (tref_max_p               )
             deallocate (tref_min_inst_p          )
             deallocate (tref_max_inst_p          )
             deallocate (fertnitro_p              )
             deallocate (latbaset_p               )
+            deallocate (plantdate_p              )
 #endif
 
 #ifdef SASU
@@ -2121,6 +2078,7 @@ CONTAINS
    SUBROUTINE check_BGCPFTimeVars
 
       use mod_colm_debug
+      use spmd_task
       IMPLICIT NONE
 
 ! bgc variables
@@ -2206,7 +2164,6 @@ CONTAINS
       call check_vector_data ('gdd020_p               ', gdd020_p               )
       call check_vector_data ('gdd820_p               ', gdd820_p               )
       call check_vector_data ('gdd1020_p              ', gdd1020_p              )
-!      call check_vector_data ('nyrs_crop_active_p     ', nyrs_crop_active_p     )
 
       call check_vector_data ('offset_flag_p          ', offset_flag_p          )
       call check_vector_data ('offset_counter_p       ', offset_counter_p       )
@@ -2236,12 +2193,8 @@ CONTAINS
 
 #ifdef CROP
 ! crop variables 
-!      call check_vector_data ('croplive_p             ', croplive_p             )
-      call check_vector_data ('gddtsoi_p              ', gddtsoi_p              )
-      call check_vector_data ('huileaf_p              ', huileaf_p              )
+      call check_vector_data ('hui_p                  ', hui_p                  )
       call check_vector_data ('gddplant_p             ', gddplant_p             )
-      call check_vector_data ('huigrain_p             ', huigrain_p             )
-!      call check_vector_data ('peaklai_p              ', peaklai_p              )
       call check_vector_data ('aroot_p                ', aroot_p                )
       call check_vector_data ('astem_p                ', astem_p                )
       call check_vector_data ('arepr_p                ', arepr_p                )
@@ -2250,23 +2203,20 @@ CONTAINS
       call check_vector_data ('aleafi_p               ', aleafi_p               )
       call check_vector_data ('gddmaturity_p          ', gddmaturity_p          )
 
-!      call check_vector_data ('cropplant_p            ', cropplant_p            )
-!      call check_vector_data ('idop_p                 ', idop_p                 )
       call check_vector_data ('a5tmin_p               ', a5tmin_p               )
       call check_vector_data ('a10tmin_p              ', a10tmin_p              )
       call check_vector_data ('t10_p                  ', t10_p                  )
       call check_vector_data ('cumvd_p                ', cumvd_p                )
-      call check_vector_data ('hdidx_p                ', hdidx_p                )
       call check_vector_data ('vf_p                   ', vf_p                   )
       call check_vector_data ('cphase_p               ', cphase_p               )
       call check_vector_data ('fert_counter_p         ', fert_counter_p         )
-      call check_vector_data ('fert_p                 ', fert_p                 )
       call check_vector_data ('tref_min_p             ', tref_min_p             )
       call check_vector_data ('tref_max_p             ', tref_max_p             )
       call check_vector_data ('tref_min_inst_p        ', tref_min_inst_p        )
       call check_vector_data ('tref_max_inst_p        ', tref_max_inst_p        )
       call check_vector_data ('fertnitro_p            ', fertnitro_p            )
       call check_vector_data ('latbaset_p             ', latbaset_p             )
+      call check_vector_data ('plantdate_p            ', plantdate_p            )
 #endif
 
 #ifdef SASU

@@ -180,6 +180,9 @@ MODULE mod_namelist
       LOGICAL :: xy_solarin   = .true. 
       LOGICAL :: xy_rain      = .true. 
       LOGICAL :: xy_snow      = .true. 
+#ifdef OzoneStress
+      LOGICAL :: xy_ozone     = .true.
+#endif
                                        
       LOGICAL :: taux         = .true. 
       LOGICAL :: tauy         = .true. 
@@ -273,13 +276,117 @@ MODULE mod_namelist
       LOGICAL :: gpp                = .true.
       LOGICAL :: downreg            = .true.
       LOGICAL :: ar                 = .true.
+      LOGICAL :: fpg                = .true.
+      LOGICAL :: fpi                = .true.
+      LOGICAL :: gpp_enftemp        = .true. !1
+      LOGICAL :: gpp_enfboreal      = .true. !2
+      LOGICAL :: gpp_dnfboreal      = .true. !3
+      LOGICAL :: gpp_ebftrop        = .true. !4
+      LOGICAL :: gpp_ebftemp        = .true. !5
+      LOGICAL :: gpp_dbftrop        = .true. !6
+      LOGICAL :: gpp_dbftemp        = .true. !7
+      LOGICAL :: gpp_dbfboreal      = .true. !8
+      LOGICAL :: gpp_ebstemp        = .true. !9
+      LOGICAL :: gpp_dbstemp        = .true. !10
+      LOGICAL :: gpp_dbsboreal      = .true. !11
+      LOGICAL :: gpp_c3arcgrass     = .true. !12
+      LOGICAL :: gpp_c3grass        = .true. !13
+      LOGICAL :: gpp_c4grass        = .true. !14
+      LOGICAL :: leafc_enftemp      = .true. !1
+      LOGICAL :: leafc_enfboreal    = .true. !2
+      LOGICAL :: leafc_dnfboreal    = .true. !3
+      LOGICAL :: leafc_ebftrop      = .true. !4
+      LOGICAL :: leafc_ebftemp      = .true. !5
+      LOGICAL :: leafc_dbftrop      = .true. !6
+      LOGICAL :: leafc_dbftemp      = .true. !7
+      LOGICAL :: leafc_dbfboreal    = .true. !8
+      LOGICAL :: leafc_ebstemp      = .true. !9
+      LOGICAL :: leafc_dbstemp      = .true. !10
+      LOGICAL :: leafc_dbsboreal    = .true. !11
+      LOGICAL :: leafc_c3arcgrass   = .true. !12
+      LOGICAL :: leafc_c3grass      = .true. !13
+      LOGICAL :: leafc_c4grass      = .true. !14
 #ifdef CROP
       LOGICAL :: cphase             = .true.
+      LOGICAL :: gddmaturity        = .true.
+      LOGICAL :: gddplant           = .true.
+      LOGICAL :: vf                 = .true.
+      LOGICAL :: hui                = .true.
       LOGICAL :: cropprod1c         = .true.
       LOGICAL :: cropprod1c_loss    = .true.
       LOGICAL :: cropseedc_deficit  = .true.
       LOGICAL :: grainc_to_cropprodc= .true.
+      LOGICAL :: plantdate_rainfed_temp_corn= .true.
+      LOGICAL :: plantdate_irrigated_temp_corn= .true.
+      LOGICAL :: plantdate_rainfed_spwheat= .true.
+      LOGICAL :: plantdate_irrigated_spwheat= .true.
+      LOGICAL :: plantdate_rainfed_wtwheat= .true.
+      LOGICAL :: plantdate_irrigated_wtwheat= .true.
+      LOGICAL :: plantdate_rainfed_temp_soybean= .true.
+      LOGICAL :: plantdate_irrigated_temp_soybean= .true.
+      LOGICAL :: plantdate_rainfed_cotton= .true.
+      LOGICAL :: plantdate_irrigated_cotton= .true.
+      LOGICAL :: plantdate_rainfed_rice= .true.
+      LOGICAL :: plantdate_irrigated_rice= .true.
+      LOGICAL :: plantdate_rainfed_sugarcane= .true.
+      LOGICAL :: plantdate_irrigated_sugarcane= .true.
+      LOGICAL :: plantdate_rainfed_trop_corn= .true.
+      LOGICAL :: plantdate_irrigated_trop_corn= .true.
+      LOGICAL :: plantdate_rainfed_trop_soybean= .true.
+      LOGICAL :: plantdate_irrigated_trop_soybean= .true.
+      LOGICAL :: plantdate_unmanagedcrop= .true.
+      LOGICAL :: cropprodc_rainfed_temp_corn= .true.
+      LOGICAL :: cropprodc_irrigated_temp_corn= .true.
+      LOGICAL :: cropprodc_rainfed_spwheat= .true.
+      LOGICAL :: cropprodc_irrigated_spwheat= .true.
+      LOGICAL :: cropprodc_rainfed_wtwheat= .true.
+      LOGICAL :: cropprodc_irrigated_wtwheat= .true.
+      LOGICAL :: cropprodc_rainfed_temp_soybean= .true.
+      LOGICAL :: cropprodc_irrigated_temp_soybean= .true.
+      LOGICAL :: cropprodc_rainfed_cotton= .true.
+      LOGICAL :: cropprodc_irrigated_cotton= .true.
+      LOGICAL :: cropprodc_rainfed_rice= .true.
+      LOGICAL :: cropprodc_irrigated_rice= .true.
+      LOGICAL :: cropprodc_rainfed_sugarcane= .true.
+      LOGICAL :: cropprodc_irrigated_sugarcane= .true.
+      LOGICAL :: cropprodc_rainfed_trop_corn= .true.
+      LOGICAL :: cropprodc_irrigated_trop_corn= .true.
+      LOGICAL :: cropprodc_rainfed_trop_soybean= .true.
+      LOGICAL :: cropprodc_irrigated_trop_soybean= .true.
+      LOGICAL :: cropprodc_unmanagedcrop= .true.
+
       LOGICAL :: grainc_to_seed     = .true.
+      LOGICAL :: fert_to_sminn      = .true.
+
+      LOGICAL :: huiswheat          = .true.
+      LOGICAL :: pdcorn             = .true.
+      LOGICAL :: pdswheat           = .true.
+      LOGICAL :: pdwwheat           = .true.
+      LOGICAL :: pdsoybean          = .true.
+      LOGICAL :: pdcotton           = .true.
+      LOGICAL :: pdrice1            = .true.
+      LOGICAL :: pdrice2            = .true.
+      LOGICAL :: pdsugarcane        = .true.
+      LOGICAL :: fertnitro_corn     = .true.
+      LOGICAL :: fertnitro_swheat   = .true.
+      LOGICAL :: fertnitro_wwheat   = .true.
+      LOGICAL :: fertnitro_soybean  = .true.
+      LOGICAL :: fertnitro_cotton   = .true.
+      LOGICAL :: fertnitro_rice1    = .true.
+      LOGICAL :: fertnitro_rice2    = .true.
+      LOGICAL :: fertnitro_sugarcane= .true.
+#endif
+      LOGICAL :: ndep_to_sminn      = .true.
+#ifdef NITRIF
+      LOGICAL :: CONC_O2_UNSAT      = .true.
+      LOGICAL :: O2_DECOMP_DEPTH_UNSAT = .true.
+#endif
+#ifdef Fire
+      LOGICAL :: abm                = .true.
+      LOGICAL :: gdp                = .true.
+      LOGICAL :: peatf              = .true.
+      LOGICAL :: hdm                = .true.
+      LOGICAL :: lnfm               = .true.
 #endif
 #endif
 
@@ -292,6 +399,9 @@ MODULE mod_namelist
       LOGICAL :: rstfacsha    = .true.
       LOGICAL :: rootr        = .true.
       LOGICAL :: vegwp        = .true.
+      LOGICAL :: BD_all       = .true.
+      LOGICAL :: wfc          = .true.
+      LOGICAL :: OM_density   = .true.
       LOGICAL :: dpond        = .true. 
       LOGICAL :: zwt          = .true. 
       LOGICAL :: wa           = .true. 
@@ -727,13 +837,94 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%gpp                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%downreg            ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%ar                 ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fpg                ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fpi                ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gpp_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enftemp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_enfboreal    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dnfboreal    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftrop      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebftemp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftrop      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbftemp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbfboreal    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_ebstemp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbstemp      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_dbsboreal    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
 #ifdef CROP
-      CALL sync_hist_vars_one (DEF_hist_vars%cphase             ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c         ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c_loss    ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cropseedc_deficit  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_cropprodc,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c_loss                 , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropseedc_deficit               , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_cropprodc             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%grainc_to_seed                  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hui                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vf                              , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddmaturity                     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gddplant                        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_temp_corn     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_temp_corn   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_spwheat       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_spwheat     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_wtwheat       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_wtwheat     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_temp_soybean  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_temp_soybean, set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_cotton        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_cotton      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_rice          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_rice        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_sugarcane     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_sugarcane   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_trop_corn     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_trop_corn   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_rainfed_trop_soybean  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_irrigated_trop_soybean, set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%plantdate_unmanagedcrop         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_temp_corn     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_temp_corn   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_spwheat       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_spwheat     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_wtwheat       , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_wtwheat     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_temp_soybean  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_temp_soybean, set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_cotton        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_cotton      , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_rice          , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_rice        , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_sugarcane     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_sugarcane   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_trop_corn     , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_corn   , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_rainfed_trop_soybean  , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_soybean, set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+#endif
+      CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
+#ifdef Fire
+      CALL sync_hist_vars_one (DEF_hist_vars%abm                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gdp                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%peatf                           , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hdm                             , set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lnfm                            , set_defaults)
 #endif
 #endif
       
@@ -746,6 +937,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rootr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%vegwp       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%dpond       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)

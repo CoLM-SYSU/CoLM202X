@@ -52,6 +52,10 @@ OBJS = \
 		 mod_mesh_filter.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
+		 aggregation_NDEP.o \
+		 aggregation_fire.o \
+		 aggregation_crop_parameters.o \
+		 aggregation_nitrif_parameters.o \
 		 aggregation_soil_brightness.o \
 		 aggregation_lakedepth.o \
 		 aggregation_forest_height.o \

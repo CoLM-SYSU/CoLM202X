@@ -44,6 +44,15 @@ MODULE MOD_PFTimeVars
   real(r8), allocatable :: gs0sun_p  (:) ! working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_p  (:) ! working copy of shalit stomata conductance
 #endif
+#ifdef OzoneStress
+  real(r8), allocatable :: o3coefv_sun_p(:) ! Ozone stress factor for photosynthesis on sunlit leaf
+  real(r8), allocatable :: o3coefv_sha_p(:) ! Ozone stress factor for photosynthesis on shaded leaf
+  real(r8), allocatable :: o3coefg_sun_p(:) ! Ozone stress factor for stomata on sunlit leaf
+  real(r8), allocatable :: o3coefg_sha_p(:) ! Ozone stress factor for stomata on shaded leaf
+  real(r8), allocatable :: lai_old_p    (:) ! lai in last time step
+  real(r8), allocatable :: o3uptakesun_p(:) ! Ozone does, sunlit leaf (mmol O3/m^2)
+  real(r8), allocatable :: o3uptakesha_p(:) ! Ozone does, shaded leaf (mmol O3/m^2)
+#endif
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PFTimeVars
@@ -99,6 +108,15 @@ CONTAINS
             allocate (gs0sun_p     (numpft))
             allocate (gs0sha_p     (numpft))
 #endif
+#ifdef OzoneStress
+            allocate (o3coefv_sun_p(numpft)) ! Ozone stress factor for photosynthesis on sunlit leaf
+            allocate (o3coefv_sha_p(numpft)) ! Ozone stress factor for photosynthesis on shaded leaf
+            allocate (o3coefg_sun_p(numpft)) ! Ozone stress factor for stomata on sunlit leaf
+            allocate (o3coefg_sha_p(numpft)) ! Ozone stress factor for stomata on shaded leaf
+            allocate (lai_old_p    (numpft)) ! lai in last time step
+            allocate (o3uptakesun_p(numpft)) ! Ozone does, sunlit leaf (mmol O3/m^2)
+            allocate (o3uptakesha_p(numpft)) ! Ozone does, shaded leaf (mmol O3/m^2)
+#endif
          ENDIF
       ENDIF 
 
@@ -142,6 +160,11 @@ CONTAINS
       call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
       call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) ! 
       call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
+#endif
+#ifdef OzoneStress
+      call ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
+      call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
+      call ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
 #endif
 
 #ifdef BGC
@@ -198,6 +221,11 @@ CONTAINS
      call ncio_write_vector (file_restart, 'gs0sun_p ', 'pft', landpft, gs0sun_p , compress) !
      call ncio_write_vector (file_restart, 'gs0sha_p ', 'pft', landpft, gs0sha_p , compress) !
 #endif
+#ifdef OzoneStress
+     call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
+     call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
+     call ncio_write_vector (file_restart, 'o3uptakesha_p', 'pft', landpft, o3uptakesha_p, compress)
+#endif
 
 #ifdef BGC
       CALL WRITE_BGCPFTimeVars (file_restart)
@@ -238,6 +266,15 @@ CONTAINS
             deallocate (gs0sun_p ) ! working copy of sunlit stomata conductance
             deallocate (gs0sha_p ) ! working copy of shalit stomata conductance
 #endif
+#ifdef OzoneStress
+            deallocate (o3coefv_sun_p ) ! Ozone stress factor for photosynthesis on sunlit leaf
+            deallocate (o3coefv_sha_p ) ! Ozone stress factor for photosynthesis on shaded leaf
+            deallocate (o3coefg_sun_p ) ! Ozone stress factor for stomata on sunlit leaf
+            deallocate (o3coefg_sha_p ) ! Ozone stress factor for stomata on shaded leaf
+            deallocate (lai_old_p     ) ! lai in last time step
+            deallocate (o3uptakesun_p ) ! Ozone does, sunlit leaf (mmol O3/m^2)
+            deallocate (o3uptakesha_p ) ! Ozone does, shaded leaf (mmol O3/m^2)
+#endif
          ENDIF
       ENDIF 
 
@@ -277,6 +314,15 @@ CONTAINS
       call check_vector_data ('vegwp_p  ', vegwp_p  )      !  
       call check_vector_data ('gs0sun_p ', gs0sun_p )      !
       call check_vector_data ('gs0sha_p ', gs0sha_p )      !
+#endif
+#ifdef OzoneStress
+      call check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
+      call check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
+      call check_vector_data ('o3coefg_sun_p', o3coefg_sun_p)
+      call check_vector_data ('o3coefg_sha_p', o3coefg_sha_p)
+      call check_vector_data ('lai_old_p    ', lai_old_p    )
+      call check_vector_data ('o3uptakesun_p', o3uptakesun_p)
+      call check_vector_data ('o3uptakesha_p', o3uptakesha_p)
 #endif
 
 #ifdef BGC

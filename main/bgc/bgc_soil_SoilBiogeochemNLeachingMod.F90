@@ -67,7 +67,6 @@ real(r8), parameter :: depth_runoff_Nloss = 0.05   ! (m) depth over which runoff
        !----------------------------------------
        ! --------- NITRIF_NITRIF OFF------------
        !----------------------------------------
-!   print*,'NITRIF OFF in leaching'
        do j = 1,nl_soil
           ! Loop through columns
 !          do fc = 1,num_soilc
@@ -119,7 +118,6 @@ real(r8), parameter :: depth_runoff_Nloss = 0.05   ! (m) depth over which runoff
        ! --------- NITRIF_NITRIF ON-------------
        !----------------------------------------
 
-   print*,'NITRIF ON in leaching'
        do j = 1,nl_soil
           ! Loop through columns
 !          do fc = 1,num_soilc

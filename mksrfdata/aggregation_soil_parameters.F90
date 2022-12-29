@@ -47,11 +47,11 @@ SUBROUTINE aggregation_soil_parameters ( &
    TYPE (block_data_real8_2d) :: vf_sand_s_grid
    TYPE (block_data_real8_2d) :: wf_gravels_s_grid
    TYPE (block_data_real8_2d) :: wf_sand_s_grid
+   TYPE (block_data_real8_2d) :: OM_density_s_grid
+   TYPE (block_data_real8_2d) :: BD_all_s_grid
    TYPE (block_data_real8_2d) :: theta_s_grid
-#ifdef Campbell_SOIL_MODEL
    TYPE (block_data_real8_2d) :: psi_s_grid  
    TYPE (block_data_real8_2d) :: lambda_grid 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    TYPE (block_data_real8_2d) :: theta_r_grid 
    TYPE (block_data_real8_2d) :: alpha_vgm_grid 
@@ -71,11 +71,11 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: vf_sand_s_patches (:)
    REAL(r8), allocatable :: wf_gravels_s_patches (:)
    REAL(r8), allocatable :: wf_sand_s_patches (:)
+   REAL(r8), allocatable :: OM_density_s_patches (:)
+   REAL(r8), allocatable :: BD_all_s_patches (:)
    REAL(r8), allocatable :: theta_s_patches (:) 
-#ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_patches   (:) 
    REAL(r8), allocatable :: lambda_patches  (:) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: theta_r_patches (:) 
    REAL(r8), allocatable :: alpha_vgm_patches  (:) 
@@ -99,11 +99,11 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: vf_sand_s_one (:)
    REAL(r8), allocatable :: wf_gravels_s_one (:)
    REAL(r8), allocatable :: wf_sand_s_one (:) 
+   REAL(r8), allocatable :: OM_density_s_one (:)
+   REAL(r8), allocatable :: BD_all_s_one (:)
    REAL(r8), allocatable :: theta_s_one (:) 
-#ifdef Campbell_SOIL_MODEL
    REAL(r8), allocatable :: psi_s_one   (:) 
    REAL(r8), allocatable :: lambda_one  (:) 
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    REAL(r8), allocatable :: theta_r_one  (:) 
    REAL(r8), allocatable :: alpha_vgm_one  (:) 
@@ -145,8 +145,8 @@ SUBROUTINE aggregation_soil_parameters ( &
    integer, parameter   :: nb = 2         ! the number of fitted parameters in Ke-Sr relationship (alpha and beta)
 
 ! Variables needed for Levenberg–Marquardt algorithm in MINPACK library      
-   real(r8),parameter   :: factor = 0.01
-   real(r8),parameter   :: ftol = 1.0e-3
+   real(r8),parameter   :: factor = 0.1
+   real(r8),parameter   :: ftol = 1.0e-5
    real(r8),parameter   :: xtol = 1.0e-4
    real(r8),parameter   :: gtol = 0.0
    integer, parameter   :: mode = 1
@@ -158,7 +158,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
    external SW_CB_dist                    ! the objective function to be fitted for Campbell SW retention curve
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
-   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
+!   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
 #endif
       
    landdir = trim(dir_model_landdata) // '/soil'
@@ -187,11 +187,11 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( SITE_soil_vf_sand           (nl_soil) )
       allocate ( SITE_soil_wf_gravels        (nl_soil) )
       allocate ( SITE_soil_wf_sand           (nl_soil) )
+      allocate ( SITE_soil_OM_density        (nl_soil) )
+      allocate ( SITE_soil_BD_all            (nl_soil) )
       allocate ( SITE_soil_theta_s           (nl_soil) )
-#ifdef Campbell_SOIL_MODEL
-      allocate ( SITE_soil_psi_s  (nl_soil) )
-      allocate ( SITE_soil_lambda (nl_soil) )
-#endif
+      allocate ( SITE_soil_psi_s             (nl_soil) )
+      allocate ( SITE_soil_lambda            (nl_soil) )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       allocate ( SITE_soil_theta_r   (nl_soil) )
       allocate ( SITE_soil_alpha_vgm (nl_soil) )
@@ -219,11 +219,11 @@ SUBROUTINE aggregation_soil_parameters ( &
       allocate ( vf_sand_s_patches          (numpatch) )
       allocate ( wf_gravels_s_patches       (numpatch) )
       allocate ( wf_sand_s_patches          (numpatch) )
+      allocate ( OM_density_s_patches       (numpatch) )
+      allocate ( BD_all_s_patches           (numpatch) )
       allocate ( theta_s_patches            (numpatch) )
-#ifdef Campbell_SOIL_MODEL
-      allocate ( psi_s_patches  (numpatch) )
-      allocate ( lambda_patches (numpatch) )
-#endif
+      allocate ( psi_s_patches              (numpatch) )
+      allocate ( lambda_patches             (numpatch) )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       allocate ( theta_r_patches   (numpatch) )
       allocate ( alpha_vgm_patches (numpatch) )
@@ -364,47 +364,47 @@ SUBROUTINE aggregation_soil_parameters ( &
                BA_beta_patches (ipatch) = median (BA_beta_one, size(BA_beta_one), spval)
 
 #ifdef SOILPAR_UPS_FIT
-               np = size(BA_alpha_one)
-               IF( np > 1 ) then
-                  allocate ( ydatb  (ipxstt:ipxend,npointb) )
-! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacb  (ipxstt:ipxend,nb) )           ! calculated in Ke_Sr_dist
-! the values of objective functions to be fitted 
-                  allocate ( fvecb  (ipxstt:ipxend)    )           ! calculated in Ke_Sr_dist 
+!               np = size(BA_alpha_one)
+!               IF( np > 1 ) then
+!                  allocate ( ydatb  (ipxstt:ipxend,npointb) )
+!! the jacobian matrix required in Levenberg–Marquardt fitting method
+!                  allocate ( fjacb  (npointb,nb) )           ! calculated in Ke_Sr_dist
+!! the values of objective functions to be fitted 
+!                  allocate ( fvecb  (npointb)    )           ! calculated in Ke_Sr_dist 
 
-! Ke-Sr relationship at fine grids for each patch
-                  do LL = ipxstt,ipxend
-                     ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
-                                 - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
-                                 - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
-                  end do                  
+!! Ke-Sr relationship at fine grids for each patch
+!                  do LL = ipxstt,ipxend
+!                     ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
+!                                 - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
+!                                 - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
+!                  end do                  
                   
-! Fitting the parameters in the Balland and Arp (2005) Ke-Sr relationship            
-                  ldfjac = np
-                  xb(1) = BA_alpha_patches (ipatch)  
-                  xb(2) = BA_beta_patches (ipatch)
-                  maxfev = 100 * ( nb + 1 )
-                  isiter = 1
+!! Fitting the parameters in the Balland and Arp (2005) Ke-Sr relationship            
+!                  ldfjac = npointb
+!                  xb(1) = BA_alpha_patches (ipatch)  
+!                  xb(2) = BA_beta_patches (ipatch)
+!                  maxfev = 100 * ( nb + 1 )
+!                  isiter = 1
 
-                  call lmder ( Ke_Sr_dist, np, nb, xb, fvecb, fjacb, ldfjac, ftol, xtol, gtol, maxfev, &
-                        diagb, mode, factor, nprint, info, nfev, njev, ipvtb, qtfb,&
-                        xdatsr,npointb,ydatb, np, vf_gravels_s_patches (ipatch), isiter,&
-                        vf_om_s_patches(ipatch),vf_sand_s_patches(ipatch),vf_gravels_s_patches(ipatch))
+!                  call lmder ( Ke_Sr_dist, npointb, nb, xb, fvecb, fjacb, ldfjac, ftol, xtol, gtol, maxfev, &
+!                        diagb, mode, factor, nprint, info, nfev, njev, ipvtb, qtfb,&
+!                        xdatsr,npointb,ydatb, np, vf_gravels_s_patches (ipatch), isiter,&
+!                        vf_om_s_patches(ipatch),vf_sand_s_patches(ipatch),vf_gravels_s_patches(ipatch))
 
-                  ydatb(ipxstt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
-                             - vf_gravels_s_patches(ipatch))) * ((1.0/(1.0+exp(-xb(2)*xdatsr)))**3 &
-                             - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_patches(ipatch))
+!                  ydatb(ipxstt,:) = xdatsr**(0.5*(1.0+vf_om_s_patches(ipatch)-xb(1)*vf_sand_s_patches(ipatch) &
+!                             - vf_gravels_s_patches(ipatch))) * ((1.0/(1.0+exp(-xb(2)*xdatsr)))**3 &
+!                             - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_patches(ipatch))
 
-                  if ( all(ydatb(ipxstt,:) >= 0.) .and. all(ydatb(ipxstt,:) <= 1.) .and. isiter == 1 ) then
-                       BA_alpha_patches(ipatch) = xb(1)
-                       BA_beta_patches (ipatch) = xb(2)
-                  end if
+!                  if ( all(ydatb(ipxstt,:) >= 0.) .and. all(ydatb(ipxstt,:) <= 1.) .and. isiter == 1 ) then
+!                       BA_alpha_patches(ipatch) = xb(1)
+!                       BA_beta_patches (ipatch) = xb(2)
+!                  end if
 
-                  deallocate(ydatb)
-                  deallocate(fjacb)
-                  deallocate(fvecb)
+!                  deallocate(ydatb)
+!                  deallocate(fjacb)
+!                  deallocate(fvecb)
 
-               ENDIF 
+!               ENDIF 
 #endif
                deallocate(BA_alpha_one)
                deallocate(BA_beta_one)
@@ -725,9 +725,9 @@ SUBROUTINE aggregation_soil_parameters ( &
                IF( np > 1 ) then
                   allocate ( ydatv  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacv  (ipxstt:ipxend,nv) )           ! calculated in SW_VG_dist
+                  allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecv  (ipxstt:ipxend)    )           ! calculated in SW_VG_dist 
+                  allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist 
 
 ! SW VG retentions at fine grids for each patch
                   do LL = ipxstt,ipxend
@@ -736,14 +736,14 @@ SUBROUTINE aggregation_soil_parameters ( &
                   end do                  
                   
 ! Fitting the van Genuchten SW retention parameters             
-                  ldfjac = np
+                  ldfjac = npointw
                   xv(1) = theta_r_patches (ipatch)  
                   xv(2) = alpha_vgm_patches (ipatch) 
                   xv(3) = n_vgm_patches (ipatch)
                   maxfev = 100 * ( nv + 1 )
                   isiter = 1
 
-                  call lmder ( SW_VG_dist, np, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
+                  call lmder ( SW_VG_dist, npointw, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
                         diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
                         xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
 
@@ -844,7 +844,6 @@ SUBROUTINE aggregation_soil_parameters ( &
       
 #endif
 
-#ifdef Campbell_SOIL_MODEL
       ! (11) saturated water content [cm3/cm3]
       ! (12) matric potential at saturation (psi_s) [cm]
       ! (13) pore size distribution index [dimensionless] 
@@ -891,9 +890,9 @@ SUBROUTINE aggregation_soil_parameters ( &
                IF( np > 1 ) then
                   allocate ( ydatc  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacc  (ipxstt:ipxend,nc) )           ! calculated in SW_CB_dist
+                  allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted 
-                  allocate ( fvecc  (ipxstt:ipxend)    )           ! calculated in SW_CB_dist 
+                  allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist 
 
 ! SW CB retentions at fine grids for each patch
                   do LL = ipxstt,ipxend
@@ -901,13 +900,13 @@ SUBROUTINE aggregation_soil_parameters ( &
                   end do                  
                   
 ! Fitting the Campbell SW retention parameters             
-                  ldfjac = np
+                  ldfjac = npointw
                   xc(1) = psi_s_patches (ipatch)  
                   xc(2) = lambda_patches (ipatch) 
                   maxfev = 100 * ( nc + 1 )
                   isiter = 1
 
-                  call lmder ( SW_CB_dist, np, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
+                  call lmder ( SW_CB_dist, npointw, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
                         diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
                         xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
 
@@ -961,6 +960,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
 #endif
 
+#ifndef vanGenuchten_Mualem_SOIL_MODEL
 #ifndef SinglePoint
       lndname = trim(landdir)//'/theta_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
@@ -968,6 +968,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL ncio_write_vector (lndname, 'theta_s_l'//trim(c)//'_patches', 'patch', landpatch, theta_s_patches, 1)
 #else
       SITE_soil_theta_s(nsl) = theta_s_patches(1)
+#endif
 #endif
 
 #ifndef SinglePoint
@@ -986,7 +987,6 @@ SUBROUTINE aggregation_soil_parameters ( &
       CALL ncio_write_vector (lndname, 'lambda_l'//trim(c)//'_patches', 'patch', landpatch, lambda_patches, 1)
 #else
       SITE_soil_lambda(nsl) = lambda_patches(1)
-#endif
 #endif
 
       ! (14) saturated hydraulic conductivity [cm/day]
@@ -1295,6 +1295,115 @@ SUBROUTINE aggregation_soil_parameters ( &
       SITE_soil_k_solids(nsl) = k_solids_patches(1)
 #endif
 
+      ! (20) OM_density [kg/m3]
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, OM_density_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/OM_density_s.nc'
+         CALL ncio_read_block (lndname, 'OM_density_s_l'//trim(c), gland, OM_density_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, OM_density_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%settyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, OM_density_s_grid, &
+                                                 OM_density_s_one, area_one)
+               OM_density_s_patches (ipatch) = sum (OM_density_s_one * (area_one/sum(area_one)))
+            ELSE
+               OM_density_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(OM_density_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in OM_density_s_patches."
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('OM_density_s lev '//trim(c), OM_density_s_patches)
+#endif
+
+#ifndef SinglePoint
+      lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'patch',& 
+                              landpatch, OM_density_s_patches, 1)
+#else
+      SITE_soil_OM_density(nsl) = OM_density_s_patches(1)
+#endif
+
+      ! (21) bulk density of soil (GRAVELS + OM + Mineral Soils)
+      IF (p_is_io) THEN
+        
+         CALL allocate_block_data (gland, BD_all_s_grid)
+         lndname = trim(dir_rawdata)//'/soil/BD_all_s.nc'
+         CALL ncio_read_block (lndname, 'BD_all_s_l'//trim(c), gland, BD_all_s_grid)
+#ifdef USEMPI
+         CALL aggregation_lc_data_daemon (gland, BD_all_s_grid)
+#endif
+      ENDIF
+      
+      IF (p_is_worker) THEN
+
+         DO ipatch = 1, numpatch
+            L = landpatch%settyp(ipatch)
+
+            IF (L /= 0) THEN
+               CALL aggregation_lc_request_data (ipatch, gland, BD_all_s_grid, &
+                                                 BD_all_s_one, area_one)
+               BD_all_s_patches (ipatch) = sum (BD_all_s_one * (area_one/sum(area_one)))
+            ELSE
+               BD_all_s_patches (ipatch) = -1.0e36_r8
+            ENDIF
+
+            IF (isnan(BD_all_s_patches(ipatch))) THEN
+               write(*,*) "NAN appears in BD_all_s_patches."
+               write(*,*) landpatch%eindex(ipatch), landpatch%settyp(ipatch)
+            ENDIF
+
+         ENDDO
+      
+#ifdef USEMPI
+         CALL aggregation_lc_worker_done ()
+#endif
+      ENDIF
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CLMDEBUG
+      CALL check_vector_data ('BD_all_s lev '//trim(c), BD_all_s_patches)
+#endif
+
+#ifndef SinglePoint
+      lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
+      CALL ncio_create_file_vector (lndname, landpatch)
+      CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
+      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'patch',& 
+                              landpatch, BD_all_s_patches, 1)
+#else
+      SITE_soil_BD_all(nsl) = BD_all_s_patches(1)
+#endif
+
+
    ENDDO
 
 
@@ -1309,11 +1418,11 @@ SUBROUTINE aggregation_soil_parameters ( &
       deallocate ( vf_sand_s_patches )
       deallocate ( wf_gravels_s_patches )
       deallocate ( wf_sand_s_patches )
+      deallocate ( OM_density_s_patches )
+      deallocate ( BD_all_s_patches )
       deallocate ( theta_s_patches )
-#ifdef Campbell_SOIL_MODEL
       deallocate ( psi_s_patches   )
       deallocate ( lambda_patches  )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       deallocate ( theta_r_patches  )
       deallocate ( alpha_vgm_patches)
@@ -1337,11 +1446,11 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (allocated(vf_sand_s_one))           deallocate (vf_sand_s_one)
       IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
       IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one) 
+      IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
+      IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
       IF (allocated(theta_s_one))             deallocate (theta_s_one)
-#ifdef Campbell_SOIL_MODEL
       IF (allocated(psi_s_one  ))             deallocate (psi_s_one  )
       IF (allocated(lambda_one ))     deallocate (lambda_one )
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (allocated ( theta_r_one  )) deallocate ( theta_r_one  )
       IF (allocated ( alpha_vgm_one)) deallocate ( alpha_vgm_one)
@@ -1366,62 +1475,62 @@ END SUBROUTINE aggregation_soil_parameters
 
 #ifdef SOILPAR_UPS_FIT
 
-SUBROUTINE Ke_Sr_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatb, nptf, phi, isiter, &
-                        vf_om_s, vf_sand_s, vf_gravels_s )
+!SUBROUTINE Ke_Sr_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatb, nptf, phi, isiter, &
+!                        vf_om_s, vf_sand_s, vf_gravels_s )
 
-!=================================================================
-! This is the subroutine for calculating the function/jacobian matrix 
-! of the distance between the fitted and prescribed Ke-Sr relationship 
-! for the Balland V. and P. A. Arp (2005) model.
-!
-! Nan Wei, 02/2020
-! ----------------------------------------------------------------
+!!=================================================================
+!! This is the subroutine for calculating the function/jacobian matrix 
+!! of the distance between the fitted and prescribed Ke-Sr relationship 
+!! for the Balland V. and P. A. Arp (2005) model.
+!!
+!! Nan Wei, 02/2020
+!! ----------------------------------------------------------------
 
-      use precision
-      implicit none
+!      use precision
+!      implicit none
 
-      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
-      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatb(nptf,npoint),phi
-      real(r8) vf_om_s, vf_sand_s, vf_gravels_s
+!      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
+!      real(r8) x(n),fjac(ldfjac,n),fvec(m),xdat(npoint),ydatb(nptf,npoint),phi
+!      real(r8) vf_om_s, vf_sand_s, vf_gravels_s
 
-      if ( iflag == 0 ) then
+!      if ( iflag == 0 ) then
 
-         print*,x
+!         print*,x
 
-      else if ( iflag == 1 ) then
+!      else if ( iflag == 1 ) then
 
-         if (x(2) <= 0.0) then
-             isiter = 0
-             return
-         end if
+!         if (x(2) <= 0.0) then
+!             isiter = 0
+!             return
+!         end if
 
-         do i = 1, m
-            fvec(i) = sum((xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
-                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:))**2)
-         end do
+!         do i = 1, m
+!             fvec(i) = sum((xdat(i)**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+!                       ((1.0/(1.0+exp(-x(2)*xdat(i))))**3 - ((1.0-xdat(i))/2.0)**3)**(1.0-vf_om_s) - ydatb(:,i))**2)
+!         end do
 
-      else if ( iflag == 2 ) then
+!      else if ( iflag == 2 ) then
 
-         if (x(2) <= 0.0) then
-             isiter = 0
-             return
-         end if
+!         if (x(2) <= 0.0) then
+!             isiter = 0
+!             return
+!         end if
 
-         do i = 1, m
-            fjac(i,1) = sum(-2.0*(xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
-                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:)) * &
-                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) * &
-                      xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * log(xdat) * 0.5 * vf_sand_s)
-            fjac(i,2) = sum(2.0*(xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
-                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(1.0-vf_om_s) - ydatb(i,:)) * &
-                      xdat**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * (1.0-vf_om_s) * &
-                      ((1.0/(1.0+exp(-x(2)*xdat)))**3 - ((1.0-xdat)/2.0)**3)**(-vf_om_s) * 3.0 * &
-                      (1.0/(1.0+exp(-x(2)*xdat)))**4 * exp(-x(2)*xdat) * xdat)
-         end do
+!         do i = 1, m
+!             fjac(i,1) = sum(-2.0*(xdat(i)**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+!                       ((1.0/(1.0+exp(-x(2)*xdat(i))))**3 - ((1.0-xdat(i))/2.0)**3)**(1.0-vf_om_s) - ydatb(:,i)) * &
+!                       ((1.0/(1.0+exp(-x(2)*xdat(i))))**3 - ((1.0-xdat(i))/2.0)**3)**(1.0-vf_om_s) * &
+!                       xdat(i)**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * log(xdat(i)) * 0.5 * vf_sand_s)
+!             fjac(i,2) = sum(2.0*(xdat(i)**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * &
+!                       ((1.0/(1.0+exp(-x(2)*xdat(i))))**3 - ((1.0-xdat(i))/2.0)**3)**(1.0-vf_om_s) - ydatb(:,i)) * &
+!                       xdat(i)**(0.5*(1.0+vf_om_s-x(1)*vf_sand_s-vf_gravels_s)) * (1.0-vf_om_s) * &
+!                       ((1.0/(1.0+exp(-x(2)*xdat(i))))**3 - ((1.0-xdat(i))/2.0)**3)**(-vf_om_s) * 3.0 * &
+!                       (1.0/(1.0+exp(-x(2)*xdat(i))))**4 * exp(-x(2)*xdat(i)) * xdat(i))
+!         end do
 
-      end if
+!      end if
 
-end subroutine Ke_Sr_dist
+!end subroutine Ke_Sr_dist
 
 subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
 
@@ -1451,7 +1560,7 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
          end if
 
          do i = 1, m
-            fvec(i) = sum(((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))**2)
+            fvec(i) = sum(((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))**2)
          end do
 
       else if ( iflag == 2 ) then
@@ -1462,10 +1571,10 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
          end if
 
          do i = 1, m
-            fjac(i,1) = sum(2.0*((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))*&
-                        phi * x(2) * (-1.0*xdat/x(1))**(-1.0*x(2)) / x(1))
-            fjac(i,2) = sum(-2.0*((-1.0*xdat/x(1))**(-1.0*x(2)) * phi - ydatc(i,:))*&
-                        phi * (-1.0*xdat/x(1))**(-1.0*x(2)) * log(-1.0*xdat/x(1)))
+            fjac(i,1) = sum(2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
+                        phi * x(2) * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) / x(1))
+            fjac(i,2) = sum(-2.0*((-1.0*xdat(i)/x(1))**(-1.0*x(2)) * phi - ydatc(:,i))*&
+                        phi * (-1.0*xdat(i)/x(1))**(-1.0*x(2)) * log(-1.0*xdat(i)/x(1)))
          end do
 
       end if
@@ -1500,7 +1609,7 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
          end if
 
          do i = 1, m
-            fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))**2)
+            fvec(i) = sum((x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))**2)
          end do
 
       else if ( iflag == 2 ) then
@@ -1511,14 +1620,14 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
          end if
 
          do i = 1, m
-            fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
-                        (1 - (1+(x(2)*xdat)**x(3))**(1.0/x(3)-1)))
-            fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
-                        (phi - x(1)) * (1 - x(3)) * (1+(x(2)*xdat)**x(3))**(1.0/x(3)-2) * x(2)**(x(3)-1) * xdat**x(3))
-            fjac(i,3) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) - ydatv(i,:))*&
-                        (phi - x(1)) * (1+(x(2)*xdat)**x(3))**(1.0/x(3)-1) *&
-                        ((1.0-x(3))*(x(2)*xdat)**x(3)*log(x(2)*xdat)/(x(3)*(1+(x(2)*xdat)**x(3))) &
-                        - log(1+(x(2)*xdat)**x(3))/x(3)**2))
+            fjac(i,1) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                        (1 - (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1)))
+            fjac(i,2) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                        (phi - x(1)) * (1 - x(3)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-2) * x(2)**(x(3)-1) * xdat(i)**x(3))
+            fjac(i,3) = sum(2*(x(1) + (phi - x(1))*(1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) - ydatv(:,i))*&
+                        (phi - x(1)) * (1+(x(2)*xdat(i))**x(3))**(1.0/x(3)-1) *&
+                        ((1.0-x(3))*(x(2)*xdat(i))**x(3)*log(x(2)*xdat(i))/(x(3)*(1+(x(2)*xdat(i))**x(3))) &
+                        - log(1+(x(2)*xdat(i))**x(3))/x(3)**2))
          end do
 
       end if

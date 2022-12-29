@@ -91,6 +91,9 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_3d) :: f_wice_soisno  ! ice lens in soil layers [kg/m2]
    type(block_data_real8_3d) :: f_h2osoi       ! volumetric soil water in layers [m3/m3]
    type(block_data_real8_3d) :: f_rootr        ! water exchange between soil layers and root
+   type(block_data_real8_3d) :: f_BD_all       ! bulk density in soil layers [kg/m3]
+   type(block_data_real8_3d) :: f_wfc          ! water field capacity [m3/m3]
+   type(block_data_real8_3d) :: f_OM_density   ! soil organic matter density [kg/m3]
 #ifdef PLANT_HYDRAULIC_STRESS
    type(block_data_real8_3d) :: f_vegwp        ! vegetation water potential [mm]
 #endif
@@ -129,6 +132,7 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_2d) :: f_xy_solarin ! downward solar radiation at surface [W/m2]
    type(block_data_real8_2d) :: f_xy_rain    ! rain [mm/s]
    type(block_data_real8_2d) :: f_xy_snow    ! snow [mm/s]
+   type(block_data_real8_2d) :: f_xy_ozone   ! ozone concentration [mol/mol]
    
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Fluxes
@@ -228,6 +232,9 @@ CONTAINS
          call allocate_block_data (grid, f_wice_soisno, nl_soil-maxsnl, maxsnl+1)  ! ice lens in soil layers [kg/m2]
          call allocate_block_data (grid, f_h2osoi     , nl_soil)  ! volumetric soil water in layers [m3/m3]
          call allocate_block_data (grid, f_rootr      , nl_soil)  ! water exchange between soil layers and root
+         call allocate_block_data (grid, f_BD_all     , nl_soil)
+         call allocate_block_data (grid, f_wfc        , nl_soil)
+         call allocate_block_data (grid, f_OM_density , nl_soil)
 #ifdef PLANT_HYDRAULIC_STRESS
          call allocate_block_data (grid, f_vegwp      , nvegwcs)  ! vegetation water potential [mm]
 #endif
@@ -268,6 +275,7 @@ CONTAINS
          call allocate_block_data (grid, f_xy_solarin)  ! downward solar radiation at surface [W/m2]
          call allocate_block_data (grid, f_xy_rain   )  ! rain [mm/s]
          call allocate_block_data (grid, f_xy_snow   )  ! snow [mm/s]
+         call allocate_block_data (grid, f_xy_ozone  )  ! ozone concentration [mol/mol]
 
       end if
 

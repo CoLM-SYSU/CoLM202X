@@ -123,14 +123,82 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_gpp                (:)
    real(r8), allocatable :: a_downreg            (:)
    real(r8), allocatable :: a_ar                 (:)
+   real(r8), allocatable :: a_fpg                (:)
+   real(r8), allocatable :: a_fpi                (:)
+   real(r8), allocatable :: a_gpp_enftemp        (:) !1
+   real(r8), allocatable :: a_gpp_enfboreal      (:) !2
+   real(r8), allocatable :: a_gpp_dnfboreal      (:) !3
+   real(r8), allocatable :: a_gpp_ebftrop        (:) !4
+   real(r8), allocatable :: a_gpp_ebftemp        (:) !5
+   real(r8), allocatable :: a_gpp_dbftrop        (:) !6
+   real(r8), allocatable :: a_gpp_dbftemp        (:) !7
+   real(r8), allocatable :: a_gpp_dbfboreal      (:) !8
+   real(r8), allocatable :: a_gpp_ebstemp        (:) !9
+   real(r8), allocatable :: a_gpp_dbstemp        (:) !10
+   real(r8), allocatable :: a_gpp_dbsboreal      (:) !11
+   real(r8), allocatable :: a_gpp_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_gpp_c3grass        (:) !13
+   real(r8), allocatable :: a_gpp_c4grass        (:) !14
+   real(r8), allocatable :: a_leafc_enftemp        (:) !1
+   real(r8), allocatable :: a_leafc_enfboreal    (:) !2
+   real(r8), allocatable :: a_leafc_dnfboreal    (:) !3
+   real(r8), allocatable :: a_leafc_ebftrop      (:) !4
+   real(r8), allocatable :: a_leafc_ebftemp      (:) !5
+   real(r8), allocatable :: a_leafc_dbftrop      (:) !6
+   real(r8), allocatable :: a_leafc_dbftemp      (:) !7
+   real(r8), allocatable :: a_leafc_dbfboreal    (:) !8
+   real(r8), allocatable :: a_leafc_ebstemp      (:) !9
+   real(r8), allocatable :: a_leafc_dbstemp      (:) !10
+   real(r8), allocatable :: a_leafc_dbsboreal    (:) !11
+   real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
+   real(r8), allocatable :: a_leafc_c3grass      (:) !13
+   real(r8), allocatable :: a_leafc_c4grass      (:) !14
+
+#ifdef NITRIF
+   real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
+   real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
+#endif
 #ifdef CROP
+   real(r8), allocatable :: a_pdcorn                (:)
+   real(r8), allocatable :: a_pdswheat              (:)
+   real(r8), allocatable :: a_pdwwheat              (:)
+   real(r8), allocatable :: a_pdsoybean             (:)
+   real(r8), allocatable :: a_pdcotton              (:)
+   real(r8), allocatable :: a_pdrice1               (:)
+   real(r8), allocatable :: a_pdrice2               (:)
+   real(r8), allocatable :: a_pdsugarcane           (:)
+   real(r8), allocatable :: a_plantdate             (:)
+   real(r8), allocatable :: a_fertnitro_corn        (:)
+   real(r8), allocatable :: a_fertnitro_swheat      (:)
+   real(r8), allocatable :: a_fertnitro_wwheat      (:)
+   real(r8), allocatable :: a_fertnitro_soybean     (:)
+   real(r8), allocatable :: a_fertnitro_cotton      (:)
+   real(r8), allocatable :: a_fertnitro_rice1       (:)
+   real(r8), allocatable :: a_fertnitro_rice2       (:)
+   real(r8), allocatable :: a_fertnitro_sugarcane   (:)
    real(r8), allocatable :: a_cphase             (:)
+   real(r8), allocatable :: a_gddplant           (:)
+   real(r8), allocatable :: a_gddmaturity        (:)
+   real(r8), allocatable :: a_vf                 (:)
+   real(r8), allocatable :: a_hui                (:)
    real(r8), allocatable :: a_cropprod1c         (:)
    real(r8), allocatable :: a_cropprod1c_loss    (:)
    real(r8), allocatable :: a_cropseedc_deficit  (:)
    real(r8), allocatable :: a_grainc_to_cropprodc(:)
    real(r8), allocatable :: a_grainc_to_seed     (:)
+   real(r8), allocatable :: a_fert_to_sminn      (:)
 #endif
+   real(r8), allocatable :: a_ndep_to_sminn      (:)
+#ifdef Fire
+   real(r8), allocatable :: a_abm                (:)
+   real(r8), allocatable :: a_gdp                (:)
+   real(r8), allocatable :: a_peatf              (:)
+   real(r8), allocatable :: a_hdm                (:)
+   real(r8), allocatable :: a_lnfm               (:)
+#endif
+#endif
+#ifdef OzoneStress
+   real(r8), allocatable :: a_ozone              (:)
 #endif
 
    real(r8), allocatable :: a_t_soisno    (:,:)    
@@ -138,6 +206,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_wice_soisno (:,:)
    real(r8), allocatable :: a_h2osoi      (:,:)
    real(r8), allocatable :: a_rootr       (:,:)
+   real(r8), allocatable :: a_BD_all      (:,:)
+   real(r8), allocatable :: a_wfc         (:,:)
+   real(r8), allocatable :: a_OM_density  (:,:)
 #ifdef PLANT_HYDRAULIC_STRESS
    real(r8), allocatable :: a_vegwp       (:,:)
 #endif
@@ -328,20 +399,90 @@ contains
             allocate (a_gpp                (numpatch))
             allocate (a_downreg            (numpatch))
             allocate (a_ar                 (numpatch))
+            allocate (a_fpg                (numpatch))
+            allocate (a_fpi                (numpatch))
+            allocate (a_gpp_enftemp        (numpatch)) !1
+            allocate (a_gpp_enfboreal      (numpatch)) !2
+            allocate (a_gpp_dnfboreal      (numpatch)) !3
+            allocate (a_gpp_ebftrop        (numpatch)) !4
+            allocate (a_gpp_ebftemp        (numpatch)) !5
+            allocate (a_gpp_dbftrop        (numpatch)) !6
+            allocate (a_gpp_dbftemp        (numpatch)) !7
+            allocate (a_gpp_dbfboreal      (numpatch)) !8
+            allocate (a_gpp_ebstemp        (numpatch)) !9
+            allocate (a_gpp_dbstemp        (numpatch)) !10
+            allocate (a_gpp_dbsboreal      (numpatch)) !11
+            allocate (a_gpp_c3arcgrass     (numpatch)) !12
+            allocate (a_gpp_c3grass        (numpatch)) !13
+            allocate (a_gpp_c4grass        (numpatch)) !14
+            allocate (a_leafc_enftemp      (numpatch)) !1
+            allocate (a_leafc_enfboreal    (numpatch)) !2
+            allocate (a_leafc_dnfboreal    (numpatch)) !3
+            allocate (a_leafc_ebftrop      (numpatch)) !4
+            allocate (a_leafc_ebftemp      (numpatch)) !5
+            allocate (a_leafc_dbftrop      (numpatch)) !6
+            allocate (a_leafc_dbftemp      (numpatch)) !7
+            allocate (a_leafc_dbfboreal    (numpatch)) !8
+            allocate (a_leafc_ebstemp      (numpatch)) !9
+            allocate (a_leafc_dbstemp      (numpatch)) !10
+            allocate (a_leafc_dbsboreal    (numpatch)) !11
+            allocate (a_leafc_c3arcgrass   (numpatch)) !12
+            allocate (a_leafc_c3grass      (numpatch)) !13
+            allocate (a_leafc_c4grass      (numpatch)) !14
+#ifdef NITRIF
+            allocate (a_O2_DECOMP_DEPTH_UNSAT (1:nl_soil,numpatch))
+            allocate (a_CONC_O2_UNSAT         (1:nl_soil,numpatch))
+#endif
 #ifdef CROP
+            allocate (a_pdcorn             (numpatch))
+            allocate (a_pdswheat           (numpatch))
+            allocate (a_pdwwheat           (numpatch))
+            allocate (a_pdsoybean          (numpatch))
+            allocate (a_pdcotton           (numpatch))
+            allocate (a_pdrice1            (numpatch))
+            allocate (a_pdrice2            (numpatch))
+            allocate (a_pdsugarcane        (numpatch))
+            allocate (a_plantdate          (numpatch))
+            allocate (a_fertnitro_corn     (numpatch))
+            allocate (a_fertnitro_swheat   (numpatch))
+            allocate (a_fertnitro_wwheat   (numpatch))
+            allocate (a_fertnitro_soybean  (numpatch))
+            allocate (a_fertnitro_cotton   (numpatch))
+            allocate (a_fertnitro_rice1    (numpatch))
+            allocate (a_fertnitro_rice2    (numpatch))
+            allocate (a_fertnitro_sugarcane(numpatch))
             allocate (a_cphase             (numpatch))
+            allocate (a_hui                (numpatch))
+            allocate (a_gddmaturity        (numpatch))
+            allocate (a_gddplant           (numpatch))
+            allocate (a_vf                 (numpatch))
             allocate (a_cropprod1c         (numpatch))
             allocate (a_cropprod1c_loss    (numpatch))
             allocate (a_cropseedc_deficit  (numpatch))
             allocate (a_grainc_to_cropprodc(numpatch))
             allocate (a_grainc_to_seed     (numpatch))
+            allocate (a_fert_to_sminn      (numpatch))
 #endif
+            allocate (a_ndep_to_sminn      (numpatch))
+#ifdef Fire
+            allocate (a_abm                (numpatch))
+            allocate (a_gdp                (numpatch))
+            allocate (a_peatf              (numpatch))
+            allocate (a_hdm                (numpatch))
+            allocate (a_lnfm               (numpatch))
+#endif
+#endif
+#ifdef OzoneStress
+            allocate (a_ozone              (numpatch))
 #endif
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_h2osoi      (1:nl_soil,       numpatch))
             allocate (a_rootr       (1:nl_soil,       numpatch))
+            allocate (a_BD_all      (1:nl_soil,       numpatch))
+            allocate (a_wfc         (1:nl_soil,       numpatch))
+            allocate (a_OM_density  (1:nl_soil,       numpatch))
 #ifdef PLANT_HYDRAULIC_STRESS
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
 #endif
@@ -530,14 +671,81 @@ contains
             deallocate (a_gpp                )
             deallocate (a_downreg            )
             deallocate (a_ar                 )
+            deallocate (a_fpg                )
+            deallocate (a_fpi                )
+            deallocate (a_gpp_enftemp        ) !1
+            deallocate (a_gpp_enfboreal      ) !2
+            deallocate (a_gpp_dnfboreal      ) !3
+            deallocate (a_gpp_ebftrop        ) !4
+            deallocate (a_gpp_ebftemp        ) !5
+            deallocate (a_gpp_dbftrop        ) !6
+            deallocate (a_gpp_dbftemp        ) !7
+            deallocate (a_gpp_dbfboreal      ) !8
+            deallocate (a_gpp_ebstemp        ) !9
+            deallocate (a_gpp_dbstemp        ) !10
+            deallocate (a_gpp_dbsboreal      ) !11
+            deallocate (a_gpp_c3arcgrass     ) !12
+            deallocate (a_gpp_c3grass        ) !13
+            deallocate (a_gpp_c4grass        ) !14
+            deallocate (a_leafc_enftemp      ) !1
+            deallocate (a_leafc_enfboreal    ) !2
+            deallocate (a_leafc_dnfboreal    ) !3
+            deallocate (a_leafc_ebftrop      ) !4
+            deallocate (a_leafc_ebftemp      ) !5
+            deallocate (a_leafc_dbftrop      ) !6
+            deallocate (a_leafc_dbftemp      ) !7
+            deallocate (a_leafc_dbfboreal    ) !8
+            deallocate (a_leafc_ebstemp      ) !9
+            deallocate (a_leafc_dbstemp      ) !10
+            deallocate (a_leafc_dbsboreal    ) !11
+            deallocate (a_leafc_c3arcgrass   ) !12
+            deallocate (a_leafc_c3grass      ) !13
+            deallocate (a_leafc_c4grass      ) !14
+#ifdef NITRIF
+            deallocate (a_O2_DECOMP_DEPTH_UNSAT )
+            deallocate (a_CONC_O2_UNSAT         )
+#endif
 #ifdef CROP
+            deallocate (a_pdcorn             )
+            deallocate (a_pdswheat           )
+            deallocate (a_pdwwheat           )
+            deallocate (a_pdsoybean          )
+            deallocate (a_pdcotton           )
+            deallocate (a_pdrice1            )
+            deallocate (a_pdrice2            )
+            deallocate (a_pdsugarcane        )
+            deallocate (a_plantdate          )
+            deallocate (a_fertnitro_corn     )
+            deallocate (a_fertnitro_swheat   )
+            deallocate (a_fertnitro_wwheat   )
+            deallocate (a_fertnitro_soybean  )
+            deallocate (a_fertnitro_cotton   )
+            deallocate (a_fertnitro_rice1    )
+            deallocate (a_fertnitro_rice2    )
+            deallocate (a_fertnitro_sugarcane)
             deallocate (a_cphase             )
+            deallocate (a_hui                )
+            deallocate (a_vf                 )
+            deallocate (a_gddmaturity        )
+            deallocate (a_gddplant           )
             deallocate (a_cropprod1c         )
             deallocate (a_cropprod1c_loss    )
             deallocate (a_cropseedc_deficit  )
             deallocate (a_grainc_to_cropprodc)
             deallocate (a_grainc_to_seed     )
+            deallocate (a_fert_to_sminn      )
 #endif
+            deallocate (a_ndep_to_sminn      )
+#ifdef Fire
+            deallocate (a_abm                )
+            deallocate (a_gdp                )
+            deallocate (a_peatf              )
+            deallocate (a_hdm                )
+            deallocate (a_lnfm               )
+#endif
+#endif
+#ifdef OzoneStress
+            deallocate (a_ozone              )
 #endif
 
             deallocate (a_t_soisno    )    
@@ -545,6 +753,9 @@ contains
             deallocate (a_wice_soisno )
             deallocate (a_h2osoi      ) 
             deallocate (a_rootr       )
+            deallocate (a_BD_all      )
+            deallocate (a_wfc         )
+            deallocate (a_OM_density  )
 #ifdef PLANT_HYDRAULIC_STRESS
             deallocate (a_vegwp       )
 #endif
@@ -566,6 +777,7 @@ contains
             deallocate (a_soil3n_vr   )
             deallocate (a_cwdn_vr     )
             deallocate (a_sminn_vr    )
+            deallocate (decomp_vr_tmp )
 #endif
 
             deallocate (a_ustar     ) 
@@ -737,14 +949,81 @@ contains
             a_gpp                (:) = spval
             a_downreg            (:) = spval
             a_ar                 (:) = spval
+            a_fpg                (:) = spval
+            a_fpi                (:) = spval
+            a_gpp_enftemp        (:) = spval
+            a_gpp_enfboreal      (:) = spval
+            a_gpp_dnfboreal      (:) = spval
+            a_gpp_ebftrop        (:) = spval
+            a_gpp_ebftemp        (:) = spval
+            a_gpp_dbftrop        (:) = spval
+            a_gpp_dbftemp        (:) = spval
+            a_gpp_dbfboreal      (:) = spval
+            a_gpp_ebstemp        (:) = spval
+            a_gpp_dbstemp        (:) = spval
+            a_gpp_dbsboreal      (:) = spval
+            a_gpp_c3arcgrass     (:) = spval
+            a_gpp_c3grass        (:) = spval
+            a_gpp_c4grass        (:) = spval
+            a_leafc_enftemp      (:) = spval
+            a_leafc_enfboreal    (:) = spval
+            a_leafc_dnfboreal    (:) = spval
+            a_leafc_ebftrop      (:) = spval
+            a_leafc_ebftemp      (:) = spval
+            a_leafc_dbftrop      (:) = spval
+            a_leafc_dbftemp      (:) = spval
+            a_leafc_dbfboreal    (:) = spval
+            a_leafc_ebstemp      (:) = spval
+            a_leafc_dbstemp      (:) = spval
+            a_leafc_dbsboreal    (:) = spval
+            a_leafc_c3arcgrass   (:) = spval
+            a_leafc_c3grass      (:) = spval
+            a_leafc_c4grass      (:) = spval
+#ifdef NITRIF
+            a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
+            a_CONC_O2_UNSAT         (:,:) = spval
+#endif
 #ifdef CROP
+            a_pdcorn             (:) = spval
+            a_pdswheat           (:) = spval
+            a_pdwwheat           (:) = spval
+            a_pdsoybean          (:) = spval
+            a_pdcotton           (:) = spval
+            a_pdrice1            (:) = spval
+            a_pdrice2            (:) = spval
+            a_pdsugarcane        (:) = spval
+            a_plantdate          (:) = spval
+            a_fertnitro_corn     (:) = spval
+            a_fertnitro_swheat   (:) = spval
+            a_fertnitro_wwheat   (:) = spval
+            a_fertnitro_soybean  (:) = spval
+            a_fertnitro_cotton   (:) = spval
+            a_fertnitro_rice1    (:) = spval
+            a_fertnitro_rice2    (:) = spval
+            a_fertnitro_sugarcane(:) = spval
             a_cphase             (:) = spval
+            a_vf                 (:) = spval
+            a_gddmaturity        (:) = spval
+            a_gddplant           (:) = spval
+            a_hui                (:) = spval
             a_cropprod1c         (:) = spval
             a_cropprod1c_loss    (:) = spval
             a_cropseedc_deficit  (:) = spval
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
+            a_fert_to_sminn      (:) = spval
 #endif
+            a_ndep_to_sminn      (:) = spval
+#ifdef Fire
+            a_abm                (:) = spval
+            a_gdp                (:) = spval
+            a_peatf              (:) = spval
+            a_hdm                (:) = spval
+            a_lnfm               (:) = spval
+#endif            
+#endif
+#ifdef OzoneStress
+            a_ozone              (:) = spval
 #endif
 
             a_t_soisno     (:,:) = spval 
@@ -752,6 +1031,9 @@ contains
             a_wice_soisno  (:,:) = spval
             a_h2osoi       (:,:) = spval
             a_rootr        (:,:) = spval
+            a_BD_all       (:,:) = spval
+            a_wfc          (:,:) = spval
+            a_OM_density   (:,:) = spval
 #ifdef PLANT_HYDRAULIC_STRESS
             a_vegwp        (:,:) = spval
 #endif
@@ -832,6 +1114,7 @@ contains
       use FRICTION_VELOCITY
       use mod_colm_debug
       use GlobalVars
+      
 
       IMPLICIT NONE
 
@@ -996,21 +1279,92 @@ contains
             call acc1d (gpp                , a_gpp                 )
             call acc1d (downreg            , a_downreg             )
             call acc1d (ar                 , a_ar                  )
+            call acc1d (fpg                , a_fpg                 )
+            call acc1d (fpi                , a_fpi                 )
+            call acc1d (gpp_enftemp        , a_gpp_enftemp         )
+            call acc1d (gpp_enfboreal      , a_gpp_enfboreal       )
+            call acc1d (gpp_dnfboreal      , a_gpp_dnfboreal       )
+            call acc1d (gpp_ebftrop        , a_gpp_ebftrop         )
+            call acc1d (gpp_ebftemp        , a_gpp_ebftemp         )
+            call acc1d (gpp_dbftrop        , a_gpp_dbftrop         )
+            call acc1d (gpp_dbftemp        , a_gpp_dbftemp         )
+            call acc1d (gpp_dbfboreal      , a_gpp_dbfboreal       )
+            call acc1d (gpp_ebstemp        , a_gpp_ebstemp         )
+            call acc1d (gpp_dbstemp        , a_gpp_dbstemp         )
+            call acc1d (gpp_dbsboreal      , a_gpp_dbsboreal       )
+            call acc1d (gpp_c3arcgrass     , a_gpp_c3arcgrass      )
+            call acc1d (gpp_c3grass        , a_gpp_c3grass         )
+            call acc1d (gpp_c4grass        , a_gpp_c4grass         )
+            call acc1d (leafc_enftemp      , a_leafc_enftemp       )
+            call acc1d (leafc_enfboreal    , a_leafc_enfboreal     )
+            call acc1d (leafc_dnfboreal    , a_leafc_dnfboreal     )
+            call acc1d (leafc_ebftrop      , a_leafc_ebftrop       )
+            call acc1d (leafc_ebftemp      , a_leafc_ebftemp       )
+            call acc1d (leafc_dbftrop      , a_leafc_dbftrop       )
+            call acc1d (leafc_dbftemp      , a_leafc_dbftemp       )
+            call acc1d (leafc_dbfboreal    , a_leafc_dbfboreal     )
+            call acc1d (leafc_ebstemp      , a_leafc_ebstemp       )
+            call acc1d (leafc_dbstemp      , a_leafc_dbstemp       )
+            call acc1d (leafc_dbsboreal    , a_leafc_dbsboreal     )
+            call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
+            call acc1d (leafc_c3grass      , a_leafc_c3grass       )
+            call acc1d (leafc_c4grass      , a_leafc_c4grass       )
+#ifdef NITRIF
+            call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
+            call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
+#endif
 #ifdef CROP
-            call acc1d (cphase             , a_cphase             )
-            call acc1d (cropprod1c         , a_cropprod1c         )
-            call acc1d (cropprod1c_loss    , a_cropprod1c_loss    )
-            call acc1d (cropseedc_deficit  , a_cropseedc_deficit  )
-            call acc1d (grainc_to_cropprodc, a_grainc_to_cropprodc)
-            call acc1d (grainc_to_seed     , a_grainc_to_seed     )
+            call acc1d (pdcorn             ,   a_pdcorn             )
+            call acc1d (pdswheat           ,   a_pdswheat           )
+            call acc1d (pdwwheat           ,   a_pdwwheat           )
+            call acc1d (pdsoybean          ,   a_pdsoybean          )
+            call acc1d (pdcotton           ,   a_pdcotton           )
+            call acc1d (pdrice1            ,   a_pdrice1            )
+            call acc1d (pdrice2            ,   a_pdrice2            )
+            call acc1d (pdsugarcane        ,   a_pdsugarcane        )
+            call acc1d (plantdate          ,   a_plantdate          )
+            call acc1d (fertnitro_corn     ,   a_fertnitro_corn     )
+            call acc1d (fertnitro_swheat   ,   a_fertnitro_swheat   )
+            call acc1d (fertnitro_wwheat   ,   a_fertnitro_wwheat   )
+            call acc1d (fertnitro_soybean  ,   a_fertnitro_soybean  )
+            call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
+            call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
+            call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
+            call acc1d (fertnitro_sugarcane, a_fertnitro_sugarcane  )
+            call acc1d (cphase             ,   a_cphase             )
+            call acc1d (hui                ,   a_hui                )
+            call acc1d (vf                 ,   a_vf                 )
+            call acc1d (gddmaturity        ,   a_gddmaturity        )
+            call acc1d (gddplant           ,   a_gddplant           )           
+            call acc1d (cropprod1c         ,   a_cropprod1c         )
+            call acc1d (cropprod1c_loss    ,   a_cropprod1c_loss    )
+            call acc1d (cropseedc_deficit  ,   a_cropseedc_deficit  )
+            call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
+            call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
+            call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
+#endif
+            call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
+#ifdef Fire
+            call acc1d (abm_lf             ,   a_abm                )
+            call acc1d (gdp_lf             ,   a_gdp                )
+            call acc1d (peatf_lf           ,   a_peatf              )
+            call acc1d (hdm_lf             ,   a_hdm                )
+            call acc1d (lnfm               ,   a_lnfm               )
 #endif
 #endif
+#ifdef OzoneStress
+            call acc1d (forc_ozone         ,   a_ozone              )
+#endif
+
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)
             call acc2d (wice_soisno, a_wice_soisno)
 
             call acc2d (h2osoi     , a_h2osoi     )
             call acc2d (rootr      , a_rootr      )
+            call acc2d (BD_all     , a_BD_all      )
+            call acc2d (wfc        , a_wfc         )
+            call acc2d (OM_density , a_OM_density  )
 #ifdef PLANT_HYDRAULIC_STRESS
             call acc2d (vegwp      , a_vegwp      )
 #endif
@@ -1101,7 +1455,7 @@ contains
                end do
             end do
             call acc2d (decomp_vr_tmp, a_cwdn_vr     )
-            call acc2d (sminn_vr    , a_sminn_vr    )
+            call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
             allocate (r_tstar (numpatch))

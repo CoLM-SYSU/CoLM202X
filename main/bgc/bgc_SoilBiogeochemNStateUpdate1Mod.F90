@@ -25,8 +25,9 @@ use MOD_1D_BGCFluxes, only: &
            gross_nmin_vr           , actual_immob_nh4_vr      , actual_immob_no3_vr      , &
            sminn_to_plant_vr       , smin_nh4_to_plant_vr     , smin_no3_to_plant_vr     , supplement_to_sminn_vr, &
            sminn_to_plant_fun_vr   , sminn_to_plant_fun_nh4_vr, sminn_to_plant_fun_no3_vr, &
-           sminn_to_denit_excess_vr, f_nit_vr                 , f_denit_vr               , &
-           ndep_to_sminn           , ffix_to_sminn            , nfix_to_sminn            
+           sminn_to_denit_excess_vr, f_nit_vr                 , f_denit_vr               , soyfixn_to_sminn, &
+           ndep_to_sminn           , ffix_to_sminn            , nfix_to_sminn            , fert_to_sminn
+   use spmd_task
 
 implicit none
 
@@ -45,15 +46,6 @@ real(r8),intent(iN) :: dz_soi(1:nl_soil)
 integer j,k
 real(r8):: sminflux,minerflux
 
-!if(i .eq. 123226)print*,'nsource_sink before SoilNStateUpdate1',&
-!  sum(decomp_npools_sourcesink(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil))
-
-!      if(i .eq. 123226)print*,'sminn before ndep',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
       do j = 1, nl_soil
 #ifdef FUN
                ! N deposition and fixation (put all into NH4 pool)
@@ -62,10 +54,8 @@ real(r8):: sminflux,minerflux
 #else
 #ifndef NITRIF
                ! N deposition and fixation
-!               if(i .eq. 123226)print*,'ndep_to_sminn before ndep',i,j,ndep_to_sminn(i)*deltim,ndep_prof(j,i),sminn_vr(j,i)
                sminn_vr(j,i) = sminn_vr(j,i) + ndep_to_sminn(i)*deltim * ndep_prof(j,i)
                sminn_vr(j,i) = sminn_vr(j,i) + nfix_to_sminn(i)*deltim * nfixation_prof(j,i)
-!               if(i .eq. 123226)print*,'ndep_to_sminn',i,j,ndep_to_sminn(i)*deltim,ndep_prof(j,i),sminn_vr(j,i)
 #else
                ! N deposition and fixation (put all into NH4 pool)
                smin_nh4_vr(j,i) = smin_nh4_vr(j,i) + ndep_to_sminn(i)*deltim * ndep_prof(j,i)
@@ -73,42 +63,34 @@ real(r8):: sminflux,minerflux
                        
 #endif
 #endif
-!         print*,'after ndep and ffix',i,j,sminn_vr(j,i),ndep_to_sminn(i),deltim , ndep_prof(j,i),&
-!                                                        nfix_to_sminn(i)*deltim * nfixation_prof(j,i)          
       end do
-!      if(i .eq. 123226)print*,'sminn after ndep',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil)), &
-!                    sum(ndep_to_sminn(i)*deltim * ndep_prof(1:nl_soil,i)*dz_soi(1:nl_soil))
 
 !      ! repeating N dep and fixation for crops
-!      if ( use_crop )then
-!         do j = 1, nl_soil
-!
-!            ! column loop
-!            do fc = 1,num_soilc
-!               c = filter_soilc(fc)
-!               if (.not. use_nitrif_denitrif) then
-!
-!                  ! N deposition and fixation
-!                  sminn_vr(j) = sminn_vr(j) &
-!                       + fert_to_sminn(*deltim * ndep_prof(c,j)
-!                  sminn_vr(j) = sminn_vr(j) &
-!                       + soyfixn_to_sminn(*deltim * nfixation_prof(c,j)
-!
-!               else
-!
-!                  ! N deposition and fixation (put all into NH4 pool)
-!                  smin_nh4_vr(j) = smin_nh4_vr(j) &
-!                       + fert_to_sminn(*deltim * ndep_prof(c,j)
-!                  smin_nh4_vr(j) = smin_nh4_vr(j) &
-!                       + soyfixn_to_sminn(*deltim * nfixation_prof(c,j)
-!
-!               end if
-!            end do
-!         end do
-!      end if
+#ifdef CROP
+      do j = 1, nl_soil
+
+            ! column loop
+#ifndef NITRIF
+                  ! N deposition and fixation
+         sminn_vr(j,i) = sminn_vr(j,i) &
+                     + fert_to_sminn(i) * deltim * ndep_prof(j,i)
+#ifdef CNSOYFIXN
+         sminn_vr(j,i) = sminn_vr(j,i) &
+                     + soyfixn_to_sminn(i) * deltim * nfixation_prof(j,i)
+#endif
+#else
+                  ! N deposition and fixation (put all into NH4 pool)
+         smin_nh4_vr(j,i) = smin_nh4_vr(j,i) &
+                        + fert_to_sminn(i) * deltim * ndep_prof(j,i)
+#ifdef CNSOYFIXN
+         smin_nh4_vr(j,i) = smin_nh4_vr(j,i) &
+                        + soyfixn_to_sminn(i) * deltim * nfixation_prof(j,i)
+#endif
+#endif
+      end do
+#endif
 
       ! decomposition fluxes
-!   if (.not. use_soil_matrixcn) then
       do k = 1, ndecomp_transitions
          do j = 1, nl_soil
 
@@ -136,7 +118,6 @@ real(r8):: sminflux,minerflux
             end do
          end if
       end do
-!  end if  ! 
 
 #ifdef SASU
    do j = 1, nl_soil
@@ -171,18 +152,12 @@ real(r8):: sminflux,minerflux
          !--------------------------------------------------------
 
          ! immobilization/mineralization in litter-to-SOM and SOM-to-SOM fluxes and denitrification fluxes
-!     if(i .eq. 123226)sminflux=0
-!     if(i .eq. 123226)minerflux=0
-     ! if(i .eq. 123226)print*,'sminn before immob/miner',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
          do k = 1, ndecomp_transitions
             if ( receiver_pool(k) /= 0 ) then  ! skip terminal transitions
                do j = 1, nl_soil
                      sminn_vr(j,i)  = sminn_vr(j,i) - &
                           (sminn_to_denit_decomp_vr(j,k,i) + &
                           decomp_sminn_flux_vr(j,k,i))* deltim
-!                  if(i .eq. 123226)sminflux  = sminflux - sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j) * deltim
-!                  if(i .eq. 123226)minerflux = minerflux - decomp_sminn_flux_vr(j,k,i) * dz_soi(j) * deltim
-!                  print*,'sminflux',k,donor_pool(k),receiver_pool(k),j,sminflux,minerflux
                end do
             else
                do j = 1, nl_soil
@@ -192,14 +167,9 @@ real(r8):: sminflux,minerflux
                      sminn_vr(j,i)  = sminn_vr(j,i) + &
                           decomp_sminn_flux_vr(j,k,i)* deltim
 
-!                  if(i .eq. 123226)sminflux  = sminflux - sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)*deltim
-!                  if(i .eq. 123226)minerflux = minerflux + decomp_sminn_flux_vr(j,k,i) * dz_soi(j)*deltim
-!                  print*,'sminflux',k,donor_pool(k),receiver_pool(k),j,sminflux,minerflux
                end do
             endif
          end do
-!      if(i .eq. 123226)print*,'sminn after immob/miner',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil)), &
-!                              sminflux, minerflux, sminflux+minerflux
                      
 
          do j = 1, nl_soil
@@ -215,10 +185,6 @@ real(r8):: sminflux,minerflux
                ! flux that prevents N limitation (when Carbon_only is set)
                sminn_vr(j,i) = sminn_vr(j,i) + supplement_to_sminn_vr(j,i)*deltim
          end do
-!      if(i .eq. 123226)print*,'sminn after suppl smintodenit and toplant',sum(sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil))
-!      if(i .eq. 123226)print*,'smin to plant',sum(sminn_to_plant_vr(1:nl_soil,i)*dz_soi(1:nl_soil))* deltim
-!      if(i .eq. 123226)print*,'smin to denit excess',sum(sminn_to_denit_excess_vr(1:nl_soil,i)*dz_soi(1:nl_soil)) * deltim
-!      if(i .eq. 123226)print*,'supplement to sminn',sum(supplement_to_sminn_vr(1:nl_soil,i)*dz_soi(1:nl_soil)) * deltim
                
 #else
 
@@ -266,14 +232,6 @@ real(r8):: sminflux,minerflux
          end do
               
 #endif
-
-!if(i .eq. 123226)print*,'nsource_sink after SoilNStateUpdate1',&
-!  sum(decomp_npools_sourcesink(1:nl_soil,i_met_lit,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_cel_lit,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_cwd,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil1,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil2,i)*dz_soi(1:nl_soil)) &
-! +sum(decomp_npools_sourcesink(1:nl_soil,i_soil3,i)*dz_soi(1:nl_soil))
 
 end subroutine SoilBiogeochemNStateUpdate1
 

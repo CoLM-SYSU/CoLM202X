@@ -58,6 +58,14 @@ PROGRAM CLM
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
+
+#ifdef Fire
+   USE mod_lightning_data, only: init_lightning_data, update_lightning_data
+#endif
+
+#ifdef OzoneData
+   USE mod_ozone_data, only: init_ozone_data, update_ozone_data
+#endif
    use mod_srfdata_restart
 
    IMPLICIT NONE
@@ -93,6 +101,7 @@ PROGRAM CLM
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
    
    integer*8 :: start_time, end_time, c_per_sec, time_used
+   logical isread
 
 #ifdef USEMPI
    call spmd_init ()
@@ -218,6 +227,12 @@ PROGRAM CLM
    CALL hru_vector_init ()
 #endif
 #endif
+#ifdef OzoneData
+   CALL init_Ozone_data(itstamp,sdate)
+#endif
+#ifdef Fire
+   CALL init_lightning_data (itstamp,sdate)
+#endif
 
    ! ======================================================================
    ! begin time stepping loop
@@ -245,6 +260,13 @@ PROGRAM CLM
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
+
+#ifdef OzoneData
+      CALL update_Ozone_data(itstamp, deltim)
+#endif
+#ifdef Fire
+      CALL update_lightning_data (itstamp, deltim)
+#endif
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
@@ -283,6 +305,26 @@ PROGRAM CLM
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
       ENDIF
+#endif
+
+#ifdef BGC
+#ifdef NITRIF
+      CALL julian2monthday (idate(1), idate(2), month, mday)
+      if(mday .eq. 1)then
+         CALL NITRIF_readin(month, dir_landdata)
+      end if
+#endif
+      if(idate(2) .eq. 1)then
+         isread = .true.
+      else
+         isread = .false.
+      end if
+      CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
+#ifdef Fire
+      if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
+         CALL Fire_readin(idate(1), dir_landdata)
+      end if
+#endif
 #endif
 
 #if(defined CaMa_Flood)

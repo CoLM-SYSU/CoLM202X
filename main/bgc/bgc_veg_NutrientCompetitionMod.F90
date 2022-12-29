@@ -7,19 +7,22 @@ module bgc_veg_NutrientCompetitionMod
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2, &
 ! crop variables
-        aleaff, astemf, arooti, arootf, fleafi, bfact, declfact, allconss, allconsl, fleafcn, fstemcn, ffrootcn
+        astemf, arooti, arootf, fleafi, bfact, declfact, allconss, allconsl, fleafcn, fstemcn, ffrootcn, &
+        lfemerg, grnfill
     
     use MOD_PFTimeInvars, only: pftclass, pftfrac
 
     use MOD_PFTimeVars, only: &
         xsmrpool_p, retransn_p, &
         tempsum_potential_gpp_p, tempmax_retransn_p, annmax_retransn_p, annsum_potential_gpp_p, &
-        c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
-        leafc_p, livestemc_p, frootc_p, &
 ! crop variables
-        croplive_p, gddtsoi_p, huileaf_p, gddplant_p, huigrain_p, peaklai_p, &
-        aroot_p, astem_p, arepr_p, aleaf_p, astemi_p, aleafi_p, gddmaturity_p
-  
+#ifdef CROP
+        croplive_p, hui_p,  peaklai_p, &
+        aroot_p, astem_p, arepr_p, aleaf_p, astemi_p, aleafi_p, vf_p, &
+#endif
+        c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
+        leafc_p, livestemc_p, frootc_p
+    use GlobalVars, only: nwwheat, nirrig_wwheat 
 
     use MOD_TimeVariables, only: fpg 
     use GlobalVars, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
@@ -92,6 +95,7 @@ contains
          cndw = deadwdcn(ivt)
          fcur = fcur2(ivt)
 
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             if (croplive_p(m)) then
                f1 = aroot_p(m) / aleaf_p(m)
@@ -105,6 +109,7 @@ contains
                g1 = grperc(ivt)
             end if
          end if
+#endif
 
 !         if(use_fun)then ! if we are using FUN, we get the N available from there.
 !            sminn_to_npool(p) = sminn_to_plant_fun(p)
@@ -121,22 +126,8 @@ contains
 	    ! reduce gpp fluxes due to N limitation
 	    if (gpp_p(m) > 0.0_r8) then
 	       downreg_p(m) = excess_cflux_p(m)/gpp_p(m)
-!	       psnsun_to_cpool(m) = psnsun_to_cpool(m)*(1._r8 - downreg(m))
-!	       psnsha_to_cpool(m) = psnsha_to_cpool(m)*(1._r8 - downreg(m))
                psn_to_cpool_p(m) = psn_to_cpool_p(m) * (1._r8 - downreg_p(m))
 
-!	       if ( use_c13 ) then
-!	          c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-!	               c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-!	          c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-!	               c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-!	       end if
-!	       if ( use_c14 ) then
-!	          c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = &
-!	               c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)  *(1._r8 - downreg(p))
-!	          c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = &
-!	               c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p)*(1._r8 - downreg(p))
-!	       end if
 	    end if
 !	         
 !	 end if !use_fun
@@ -164,6 +155,7 @@ contains
             cpool_to_deadcrootc_p(m)         = nlc * f2 * f3 * (1._r8 - f4) * fcur
             cpool_to_deadcrootc_storage_p(m) = nlc * f2 * f3 * (1._r8 - f4) * (1._r8 - fcur)
          end if
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             cpool_to_livestemc_p(m)          = nlc * f3 * f4 * fcur
             cpool_to_livestemc_storage_p(m)  = nlc * f3 * f4 * (1._r8 - fcur)
@@ -176,6 +168,7 @@ contains
             cpool_to_grainc_p(m)             = nlc * f5 * fcur
             cpool_to_grainc_storage_p(m)     = nlc * f5 * (1._r8 -fcur)
          end if
+#endif
 
          ! corresponding N fluxes
          npool_to_leafn_p(m)          = (nlc / cnl) * fcur
@@ -192,6 +185,7 @@ contains
             npool_to_deadcrootn_p(m)         = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * fcur
             npool_to_deadcrootn_storage_p(m) = (nlc * f2 * f3 * (1._r8 - f4) / cndw) * (1._r8 - fcur)
          end if
+#ifdef CROP
          if (ivt >= npcropmin) then ! skip 2 generic crops
             cng = graincn(ivt)
             npool_to_livestemn_p(m)          = (nlc * f3 * f4 / cnlw) * fcur
@@ -205,6 +199,7 @@ contains
             npool_to_grainn_p(m)             = (nlc * f5 / cng) * fcur
             npool_to_grainn_storage_p(m)     = (nlc * f5 / cng) * (1._r8 -fcur)
          end if		
+#endif
 
          ! Calculate the amount of carbon that needs to go into growth
          ! respiration storage to satisfy all of the storage growth demands.
@@ -259,16 +254,6 @@ contains
       ivt = pftclass(m)
       psn_to_cpool_p(m) = assim_p(m) * 12.011_r8
 
-  !       if ( use_c13 ) then
-  !          c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = c13_psnsun(p) * laisun(p) * 12.011e-6_r8
-  !          c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = c13_psnsha(p) * laisha(p) * 12.011e-6_r8
-  !       endif
-
-  !       if ( use_c14 ) then
-  !          c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)   = c14_psnsun(p) * laisun(p) * 12.011e-6_r8
-  !          c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p) = c14_psnsha(p) * laisha(p) * 12.011e-6_r8
-  !       endif
-
      gpp_p(m) = psn_to_cpool_p(m)
 
    ! get the time step total maintenance respiration
@@ -278,7 +263,9 @@ contains
       if (woody(ivt) == 1.0_r8) then
          mr = mr + livestem_mr_p(m) + livecroot_mr_p(m)
       else if (ivt >= npcropmin) then
+#ifdef CROP
          if (croplive_p(m)) mr = mr + livestem_mr_p(m) + grain_mr_p(m)
+#endif
       end if
 
    ! carbon flux available for allocation
@@ -359,12 +346,9 @@ contains
 
          ! Phase 1 completed:
          ! ==================
-         ! if hui (gddplant) is less than the number of gdd needed for filling of grain
-         ! leaf emergence also has to have taken place for lai changes to occur
-         ! and carbon assimilation
          ! Next phase: leaf emergence to start of leaf decline
            
-            if (gddtsoi_p(m) >= huileaf_p(m) .and. gddplant_p(m) < huigrain_p(m)) then
+            if (hui_p(m) >= lfemerg(ivt) .and. hui_p(m) < grnfill(ivt)) then
             ! allocation rules for crops based on maturity and linear decrease
             ! of amount allocated to roots over course of the growing season
 
@@ -375,11 +359,9 @@ contains
                   aroot_p(m) = 1._r8 - arepr_p(m) - aleaf_p(m) - astem_p(m)
                else
                   arepr_p(m) = 0._r8
-                  aroot_p(m) = max(0._r8, min(1._r8, arooti(ivt) -   &
-                       (arooti(ivt) - arootf(ivt)) *  &
-                       min(1._r8, gddplant_p(m)/gddmaturity_p(m))))
+                  aroot_p(m) = arooti(ivt) - (arooti(ivt) - arootf(ivt)) * hui_p(m)
                   fleaf = fleafi(ivt) * (exp(-bfact(ivt)) -         &
-                       exp(-bfact(ivt)*gddplant_p(m)/huigrain_p(m))) / &
+                       exp(-bfact(ivt)*hui_p(m)/grnfill(ivt))) / &
                        (exp(-bfact(ivt))-1) ! fraction alloc to leaf (from J Norman alloc curve)
                   aleaf_p(m) = max(1.e-5_r8, (1._r8 - aroot_p(m)) * fleaf)
                   astem_p(m) = 1._r8 - arepr_p(m) - aleaf_p(m) - aroot_p(m)
@@ -389,49 +371,24 @@ contains
             ! We have decided to live with lais slightly higher than laimx by
             ! enforcing the cap in the following tstep through the peaklai logic above.
 
-               astemi_p(m) = astem_p(m) ! save for use by equations after shift
-               aleafi_p(m) = aleaf_p(m) ! to reproductive phenology stage begins
-               grain_flag_p(m) = 0._r8 ! setting to 0 while in phase 2
+               astemi_p(m) = astem_p(m) ! save for use by equations after shift to reproductive
+               grain_flag_p(m) = 0._r8  ! phenology stage begins setting to 0 while in phase 2
 
             ! Phase 2 completed:
             ! ==================
-            ! shift allocation either when enough gdd are accumulated or maximum number
+            ! shift allocation either when enough hui are accumulated or maximum number
             ! of days has elapsed since planting
 
-            else if (gddplant_p(m) >= huigrain_p(m)) then
+            else if (hui_p(m) >= grnfill(ivt)) then
 
-               aroot_p(m) = max(0._r8, min(1._r8, arooti(ivt) - &
-                    (arooti(ivt) - arootf(ivt)) * min(1._r8, gddplant_p(m)/gddmaturity_p(m))))
-               if (astemi_p(m) > astemf(ivt)) then
-                  astem_p(m) = max(0._r8, max(astemf(ivt), astem_p(m) * &
-                       (1._r8 - min((gddplant_p(m)-                 &
-                       huigrain_p(m))/((gddmaturity_p(m)*declfact(ivt))- &
-                       huigrain_p(m)),1._r8)**allconss(ivt) )))
-               end if
-               if (aleafi_p(m) > aleaff(ivt)) then
-                  aleaf_p(m) = max(1.e-5_r8, max(aleaff(ivt), aleaf_p(m) * &
-                       (1._r8 - min((gddplant_p(m)-                    &
-                       huigrain_p(m))/((gddmaturity_p(m)*declfact(ivt))- &
-                       huigrain_p(m)),1._r8)**allconsl(ivt) )))
-               end if
+               aroot_p(m) = arooti(ivt) - (arooti(ivt) - arootf(ivt)) * min(1._r8, hui_p(m))
+                  astem_p(m) = max(astemf(ivt), astem_p(m) * max(0._r8, (1._r8-hui_p(m))/  &
+                          (1._r8-grnfill(ivt)))**allconss(ivt))
+                  aleaf_p(m) = 1.e-5_r8
 
             !Beth's retranslocation of leafn, stemn, rootn to organ
             !Filter excess plant N to retransn pool for organ N
             !Only do one time then hold grain_flag till onset next season
-
-            ! slevis: Will astem ever = astemf exactly?
-            ! Beth's response: ...looks like astem can equal astemf under the right circumstances. 
-            !It might be worth a rewrite to capture what I was trying to do, but the retranslocation for 
-            !corn and wheat begins at the beginning of the grain fill stage, but for soybean I was holding it 
-            !until after the leaf and stem decline were complete. Looking at how astem is calculated, once the 
-            !stem decline is near complete, astem should (usually) be set to astemf. The reason for holding off 
-            !on soybean is that the retranslocation scheme begins at the beginning of the grain phase, when the 
-            !leaf and stem are still growing, but declining. Since carbon is still getting allocated and now 
-            !there is more nitrogen available, the nitrogen can be diverted from grain. For corn and wheat 
-            !the impact was probably enough to boost productivity, but for soybean the nitrogen was better off 
-            !fulfilling the grain fill. It seems that if the peak lai is reached for soybean though that this 
-            !would be bypassed altogether, not the intended outcome. I checked several of my output files and 
-            !they all seemed to be going through the retranslocation loop for soybean - good news.
 
                if (astem_p(m) == astemf(ivt) .or. &
                     (ivt /= ntmp_soybean .and. ivt /= nirrig_tmp_soybean .and.&
@@ -457,7 +414,11 @@ contains
                end if
 
                arepr_p(m) = 1._r8 - aroot_p(m) - astem_p(m) - aleaf_p(m)
-
+!F. Li for vernalization effect 2 
+             if(ivt == nwwheat .or. ivt == nirrig_wwheat) then
+                  arepr_p(m) = arepr_p(m)*vf_p(m)
+                  aroot_p(m) = 1._r8 - aleaf_p(m) - astem_p(m) - arepr_p(m)
+              end if
            else                   ! pre emergence
               aleaf_p(m) = 1.e-5_r8 ! allocation coefficients should be irrelevant
               astem_p(m) = 0._r8    ! because crops have no live carbon pools;
@@ -491,10 +452,12 @@ contains
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
                (f3*(1._r8-f4)*(1._r8+f2))/cndw
       else if (ivt >= npcropmin) then ! skip generic crops
+#ifdef CROP
          cng = graincn(ivt)
          c_allometry_p(m) = (1._r8+g1)*(1._r8+f1+f5+f3*(1._r8+f2))
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr + f5/cng + (f3*f4*(1._r8+f2))/cnlw + &
               (f3*(1._r8-f4)*(1._r8+f2))/cndw
+#endif
       else
          c_allometry_p(m) = 1._r8+g1+f1+f1*g1
          n_allometry_p(m) = 1._r8/cnl + f1/cnfr

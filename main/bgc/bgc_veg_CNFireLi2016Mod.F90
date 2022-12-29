@@ -7,18 +7,24 @@ use timemanager
 use PhysicalConstants, only: tfrz
 use MOD_1D_Forcing, only: &
     forc_q, forc_t, forc_psrf, forc_us, forc_vs
+use PFT_const, only: isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, fd_pft, fsr_pft, rootfr_p
 use MOD_TimeInvariants, only: &
-    i_cwd, occur_hi_gdp_tree, isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, gdp_lf, abm_lf, peatf_lf, &
+    i_cwd, occur_hi_gdp_tree, gdp_lf, abm_lf, peatf_lf, &
     lfuel, ufuel, cropfire_a1, borealat, troplat, non_boreal_peatfire_c, boreal_peatfire_c, rh_low, rh_hgh, &
-    bt_min, bt_max, pot_hmn_ign_counts_alpha, g0, fd_pft, fsr_pft, psi0, porsl, bsw, rootfr
+    bt_min, bt_max, pot_hmn_ign_counts_alpha, g0, psi0, porsl, bsw
 use MOD_TimeVariables, only: &
-    leafc     , leafc_storage     , leafc_xfer     , frootc    , frootc_storage    , frootc_xfer    , &
-    deadcrootc, deadcrootc_storage, deadcrootc_xfer, livecrootc, livecrootc_storage, livecrootc_xfer, &
     decomp_cpools_vr,  totlitc,  totvegc,  cropf   , lfwt      , fuelc             , fuelc_crop     , fsr            , &
     fd        , rootc             , lgdp           , lgdp1     , lpop              , wtlf           , &
-    trotr1    , trotr2            , hdmlf          , lnfm      , baf_crop          , baf_peatf      , &
-    burndate  , farea_burned      , nfire          , fsat      , prec60            , wf2            , &
+    trotr1    , trotr2            , hdm_lf          , lnfm      , baf_crop          , baf_peatf      , &
+    farea_burned      , nfire          , fsat      , prec60            , wf2            , &
     tsoi17    , rh30              , t_soisno       , wliq_soisno     
+use MOD_BGCPFTimeVars, only: &
+    burndate_p
+use MOD_PFTimeInvars, only: pftclass, pftfrac
+use MOD_PFTimeVars, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p, &
+                           frootc_p    , frootc_storage_p    , frootc_xfer_p , &
+                           deadcrootc_p, deadcrootc_storage_p, deadcrootc_xfer_p, &
+                           livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p
 
 
 implicit none
@@ -27,16 +33,18 @@ public CNFireArea
 
 contains
 
-subroutine CNFireArea(i,dlat,nl_soil,ivt,idate,dz_soi)
+subroutine CNFireArea(i,ps,pe,dlat,nl_soil,idate,dz_soi)
 
 integer ,intent(in) :: i
+integer ,intent(in) :: ps
+integer ,intent(in) :: pe
 real(r8),intent(in) :: dlat
 integer ,intent(in) :: nl_soil
-integer ,intent(in) :: ivt
 integer ,intent(in) :: idate(3)
 real(r8),intent(in) :: dz_soi(1:nl_soil)
 
 integer  :: g,l,c,p,j,fc,fp,kyr, kmo, kda, mcsec   ! index variables
+integer  :: ivt
 real(r8) :: dayspyr  ! days per year
 real(r8) :: fb       ! availability of fuel for regs A and C
 real(r8) :: fhd      ! impact of hd on agricultural fire
@@ -61,6 +69,7 @@ real(r8) :: s_node
 real(r8) :: tmp1d(nl_soil)
 real(r8) :: tmp0d
 real(r8) :: btran2
+real(r8) :: btran2_p(ps:pe)
 
 !logical  :: transient_landcover  ! whether this run has any prescribed transient landcover
 !real(r8), target  :: prec60_col_target(bounds%begc:bounds%endc)
@@ -72,22 +81,26 @@ real(r8) :: btran2
 real(r8),parameter :: secsphr = 3600._r8
 real(r8),parameter :: secspday = 86400._r8
 real(r8),parameter :: PI = 4.*atan(1.)
+integer m
 
      tsoi17 = forc_t(i)  ! Temporarily use air temperature for tsoi17, need to revised later.
      prec60 = 0          ! Temporarily use 0 for prec60, need to revised later
      wf2    = 0.5        ! Temporarily set up, need to revise later.
      fsat   = 0          ! Temporarily set up, need to revise later.
      rh30   = 0          ! Temporarily set up, need to revise later.
-     hdmlf  = 0._r8      ! Temporarily set up, need to revise later.
-     gdp_lf = 0._r8      ! Temporarily set up, need to revise later.
-     abm_lf = 8
-     peatf_lf = 0._r8
-     lnfm   = 0._r8      ! Temporarily set up, need to revise later.
+!     hdm_lf  = 0._r8      ! Temporarily set up, need to revise later.
+!     gdp_lf = 0._r8      ! Temporarily set up, need to revise later.
+!     abm_lf = 8
+!     peatf_lf = 0._r8
+!     lnfm   = 0._r8      ! Temporarily set up, need to revise later.
 
      call julian2monthday(idate(1),idate(2),kmo,kda)
 
-     call eroot(nl_soil,0._r8,porsl(1:,i),bsw(1:,i),psi0(1:,i),rootfr(1:,i),dz_soi(1:),&
-          t_soisno(1:,i),wliq_soisno(1:,i),tmp1d,tmp0d,btran2)
+     do m = ps, pe
+        call eroot(nl_soil,0._r8,porsl(1:,i),bsw(1:,i),psi0(1:,i),rootfr_p(1:,pftclass(m)),dz_soi(1:),&
+             t_soisno(1:,i),wliq_soisno(1:,i),tmp1d,tmp0d,btran2_p(m))
+        btran2 = sum(btran2_p(ps:pe) * pftfrac(m))
+     end do
      !
      ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil 
      ! vegetation (lfwt) in vegetated column
@@ -96,13 +109,15 @@ real(r8),parameter :: PI = 4.*atan(1.)
      lfwt (i) = 0._r8   
 
      ! For crop veg types
-     if( iscrop(ivt) )then
-        cropf(i) = 1._r8
-     end if
+     do m = ps, pe
+        if( iscrop(pftclass(m)) )then
+           cropf(i) = cropf(i) + pftfrac(m)
+        end if
      ! For natural vegetation (non-crop and non-bare-soil)
-     if( isnatveg(ivt))then
-        lfwt (i) = 1._r8
-     end if
+        if( isnatveg(pftclass(m)))then
+           lfwt (i) = lfwt(i) + pftfrac(m)
+        end if
+     end do
 
      ! 
      ! Calculate crop fuel   
@@ -113,9 +128,12 @@ real(r8),parameter :: PI = 4.*atan(1.)
      ! column-level litter carbon
      ! is available, so we use leaf carbon to estimate the
      ! litter carbon for crop PFTs
-     if( iscrop(ivt) .and. leafc(i) > 0._r8 )then
-         fuelc_crop(i)=fuelc_crop(i) + leafc(i) + leafc_storage(i) + leafc_xfer(i) +  totlitc(i)
-     end if
+     do m = ps, pe
+        if( iscrop(pftclass(m)) .and. sum(leafc_p(ps:pe)*pftfrac(ps:pe)) > 0._r8 )then
+           fuelc_crop(i)= fuelc_crop(i) + (leafc_p(m) + leafc_storage_p(m) + leafc_xfer_p(m))*pftfrac(m)/cropf(i) &
+                        + totlitc(i)*leafc_p(m)/sum(leafc_p(ps:pe)*pftfrac(ps:pe))*pftfrac(m)/cropf(i)
+        end if
+     end do
      !   
      ! Calculate noncrop column variables
      !
@@ -200,20 +218,20 @@ real(r8),parameter :: PI = 4.*atan(1.)
 !                         livecrootc(p)+livecrootc_storage(p) +           &
 !                         livecrootc_xfer(p))*patch%wtcol(p)
 !                 else
-        rootc(i) = rootc(i) + frootc(i) + frootc_storage(i) + &
-                         frootc_xfer(i) + deadcrootc(i) +                &
-                         deadcrootc_storage(i) + deadcrootc_xfer(i) +    &
-                         livecrootc(i)+livecrootc_storage(i) +           &
-                         livecrootc_xfer(i)
+        rootc(i) = rootc(i) + sum((frootc_p(ps:pe) + frootc_storage_p(ps:pe) + &
+                         frootc_xfer_p(ps:pe) + deadcrootc_p(ps:pe) +                &
+                         deadcrootc_storage_p(ps:pe) + deadcrootc_xfer_p(ps:pe) +    &
+                         livecrootc_p(ps:pe)+livecrootc_storage_p(ps:pe) +           &
+                         livecrootc_xfer_p(ps:pe)) * pftfrac(ps:pe))
 !                 endif
 
         fsr(i) = fsr_pft(ivt)
 
-!        hdmlf=this%forc_hdm(i)
+!        hdm_lf=this%forc_hdm(i)
 
         ! all these constants are in Li et al. BG (2012a,b;2013)
 
-        if( hdmlf(i)  >  0.1_r8 )then           
+        if( hdm_lf(i)  >  0.1_r8 )then           
            ! For NOT bare-soil
            if(.not. isbare(ivt) )then
               ! For shrub and grass (crop already excluded above)
@@ -226,7 +244,7 @@ real(r8),parameter :: PI = 4.*atan(1.)
                                 (gdp_lf(i)/7._r8)))/(1._r8-cropf(i))
                  lpop(i)  = lpop(i) + (0.2_r8 + 0.8_r8*    &
                                 exp(-1._r8*PI* &
-                                (hdmlf(i)/450._r8)**0.5_r8))/(1._r8-cropf(i))
+                                (hdm_lf(i)/450._r8)**0.5_r8))/(1._r8-cropf(i))
               else   ! for trees
                  if( gdp_lf(i)  >  20._r8 )then
                     lgdp(i) =lgdp(i)+occur_hi_gdp_tree/(1._r8-cropf(i))
@@ -242,7 +260,7 @@ real(r8),parameter :: PI = 4.*atan(1.)
                  end if
                  lpop(i) = lpop(i) + (0.4_r8 + 0.6_r8*    &
                                   exp(-1._r8*PI* &
-                                  (hdmlf(i)/125._r8)))/(1._r8-cropf(i))
+                                  (hdm_lf(i)/125._r8)))/(1._r8-cropf(i))
               end if
            end if
         else
@@ -273,30 +291,34 @@ real(r8),parameter :: PI = 4.*atan(1.)
      !
      baf_crop(i)=0._r8
 
-     if( kmo == 1 .and. kda == 1 .and. idate(3) == 0 )then
-        burndate(i) = 10000 ! init. value; actual range [0 365]
-     end if
+     do m = ps, pe
+        if( kmo == 1 .and. kda == 1 .and. idate(3) == 0 )then
+           burndate_p(m) = 10000 ! init. value; actual range [0 365]
+        end if
+     end do
 
      ! For crop
-     if( forc_t(i)  >=  tfrz .and. iscrop(ivt) .and.  &
-        kmo == abm_lf(i) .and. burndate(i) >= 999)then ! catch  crop burn time
+     do m = ps, pe
+        if( forc_t(i)  >=  tfrz .and. iscrop(ivt) .and.  &
+           kmo == abm_lf(i) .and. burndate_p(m) >= 999)then ! catch  crop burn time
 
         ! calculate human density impact on ag. fire
-        fhd = 0.04_r8+0.96_r8*exp(-1._r8*PI*(hdmlf(i)/350._r8)**0.5_r8)
+           fhd = 0.04_r8+0.96_r8*exp(-1._r8*PI*(hdm_lf(i)/350._r8)**0.5_r8)
 
         ! calculate impact of GDP on ag. fire
-        fgdp = 0.01_r8+0.99_r8*exp(-1._r8*PI*(gdp_lf(i)/10._r8))
+           fgdp = 0.01_r8+0.99_r8*exp(-1._r8*PI*(gdp_lf(i)/10._r8))
 
         ! calculate burned area
-        fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(i)-lfuel)/(ufuel-lfuel)))
+           fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(i)-lfuel)/(ufuel-lfuel)))
 
         ! crop fire only for generic crop types at this time
         ! managed crops are treated as grasses if crop model is turned on
-        baf_crop(i) = baf_crop(i) + cropfire_a1/secsphr*fhd*fgdp
-        if( fb*fhd*fgdp  >  0._r8)then
-           burndate(i)  =  kda
+           baf_crop(i) = baf_crop(i) + cropfire_a1/secsphr*fhd*fgdp
+           if( fb*fhd*fgdp  >  0._r8)then
+              burndate_p(m)  =  kda
+           end if
         end if
-     end if
+     end do
 
      !
      ! calculate peatland fire
@@ -358,8 +380,8 @@ real(r8),parameter :: PI = 4.*atan(1.)
            else
               fire_m   = 0._r8
            end if
-           lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf(i)**(0.43_r8)/30._r8/24._r8
-           fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf(i)))
+           lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdm_lf(i)**(0.43_r8)/30._r8/24._r8
+           fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdm_lf(i)))
            ig       = (lh+lnfm(i)/(5.16_r8+2.16_r8*cos(PI/180._r8*3*min(60._r8,abs(dlat/PI*180))))*0.22_r8)  &
                       *(1._r8-fs)*(1._r8-cropf(i))
            nfire(i) = ig/secsphr*fb*fire_m*lgdp(i) !fire counts/km2/sec

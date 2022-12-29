@@ -465,6 +465,7 @@ contains
          a_deadcrootc_xfer, file_hist, 'f_deadcrootc_xfer', itime_in_file, filter, &
          'dead coarse root carbon transfer pool','gC/m2')
 
+#ifdef CROP
       ! grain carbon display pool
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%grainc, &
          a_grainc, file_hist, 'f_grainc', itime_in_file, filter, &
@@ -479,6 +480,7 @@ contains
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%grainc_xfer, &
          a_grainc_xfer, file_hist, 'f_grainc_xfer', itime_in_file, filter, &
          'grain carbon transfer pool','gC/m2')
+#endif
 
       ! leaf nitrogen display pool
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%leafn, &
@@ -570,6 +572,7 @@ contains
          a_deadcrootn_xfer, file_hist, 'f_deadcrootn_xfer', itime_in_file, filter, &
          'dead coarse root nitrogen transfer pool','gN/m2')
 
+#ifdef CROP
       ! grain nitrogen display pool
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%grainn, &
          a_grainn, file_hist, 'f_grainn', itime_in_file, filter, &
@@ -584,6 +587,7 @@ contains
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%grainn_xfer, &
          a_grainn_xfer, file_hist, 'f_grainn_xfer', itime_in_file, filter, &
          'grain nitrogen transfer pool','gN/m2')
+#endif
 
       ! retranslocation nitrogen pool
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%retrasn, &

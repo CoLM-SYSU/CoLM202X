@@ -79,7 +79,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gridlai
+   TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -152,12 +152,23 @@ PROGRAM mksrfdata
 #endif
 #ifdef PFT_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
-#if (defined CROP) 
-   CALL gcrop%define_by_ndims (720,360)
-#endif
 #endif
 #ifdef PC_CLASSIFICATION
    CALL gpatch%define_by_name ('colm_500m')
+#endif
+#ifdef BGC
+#if (defined CROP) 
+   ! define grid for crop parameters
+   CALL gcrop%define_by_ndims (720,360)
+#endif
+#if (defined Fire)
+   ! define grid for crop parameters
+   CALL gfire%define_by_ndims (720,360)
+#endif
+#ifdef NITRIF
+   CALL gnitrif%define_by_name ('nitrif_2deg')
+#endif
+   CALL gndep%define_by_name ('nitrif_2deg')
 #endif
 
    ! define grid for land characteristics
@@ -174,10 +185,19 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (ghru)
 #endif
    CALL pixel%assimilate_grid (gpatch)
+   CALL pixel%assimilate_grid (gridlai)
+#ifdef BGC
 #if (defined CROP) 
    CALL pixel%assimilate_grid (gcrop )
 #endif
-   CALL pixel%assimilate_grid (gridlai)
+#if (defined Fire)
+   CALL pixel%assimilate_grid (gfire )
+#endif
+#ifdef NITRIF
+   CALL pixel%assimilate_grid (gnitrif)
+#endif
+   CALL pixel%assimilate_grid (gndep)
+#endif
 
    ! map pixels to grid coordinates
 #ifndef SinglePoint
@@ -193,7 +213,17 @@ PROGRAM mksrfdata
 #if (defined CROP) 
    CALL pixel%map_to_grid (gcrop )
 #endif
+#if (defined Fire)
+   CALL pixel%map_to_grid (gfire )
+#endif
    CALL pixel%map_to_grid (gridlai)
+#ifdef NITRIF
+   CALL pixel%map_to_grid (gnitrif)
+#endif
+#ifdef BGC
+   CALL pixel%map_to_grid (gndep)
+#endif
+
 
 
    ! build land elms 
@@ -251,6 +281,18 @@ PROGRAM mksrfdata
    ! ................................................................
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
+#ifdef BGC
+   call aggregation_NDEP            (gndep, dir_rawdata, dir_landdata)
+#if (defined CROP)
+   call aggregation_crop_parameters (gcrop, dir_rawdata, dir_landdata)
+#endif
+#ifdef Fire
+   call aggregation_fire            (gfire, dir_rawdata, dir_landdata)
+#endif
+#if (defined NITRIF)
+   call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)
+#endif
+#endif
 
    CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
    

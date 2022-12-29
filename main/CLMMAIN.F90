@@ -59,6 +59,9 @@ SUBROUTINE CLMMAIN ( &
 #ifdef PLANT_HYDRAULIC_STRESS
            vegwp,        gs0sun,       gs0sha,                      &
 #endif
+#ifdef OzoneStress
+           lai_old,      o3uptakesun,  o3uptakesha       ,forc_ozone        , &
+#endif
            zwt,          dpond,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
 
@@ -309,6 +312,12 @@ SUBROUTINE CLMMAIN ( &
         vegwp(nvegwcs)        ,&! ground surface temperature [k]
         gs0sun                ,&! working copy of sunlit stomata conductance
         gs0sha                ,&! working copy of shalit stomata conductance
+#endif
+#ifdef OzoneStress
+        lai_old    ,&! lai in last time step
+        o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
+        o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
+        forc_ozone ,&
 #endif
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
@@ -659,6 +668,9 @@ ENDIF
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&  
            psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&  
            ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
+#endif
+#ifdef OzoneStress
+           lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        , &
 #endif
            slti              ,hlti              ,shti              ,hhti              ,&
            trda              ,trdm              ,trop              ,gradm             ,&

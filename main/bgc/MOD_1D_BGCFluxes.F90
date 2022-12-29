@@ -13,6 +13,34 @@ MODULE MOD_1D_BGCFluxes
 !--------------------- BGC variables --------------------------------------
 ! ecosystem vegetation carbon/nitrogen flux
   REAL(r8), allocatable :: gpp                        (:)
+  REAL(r8), allocatable :: gpp_enftemp                (:) !1
+  REAL(r8), allocatable :: gpp_enfboreal              (:) !2
+  REAL(r8), allocatable :: gpp_dnfboreal              (:) !3
+  REAL(r8), allocatable :: gpp_ebftrop                (:) !4
+  REAL(r8), allocatable :: gpp_ebftemp                (:) !5
+  REAL(r8), allocatable :: gpp_dbftrop                (:) !6
+  REAL(r8), allocatable :: gpp_dbftemp                (:) !7
+  REAL(r8), allocatable :: gpp_dbfboreal              (:) !8
+  REAL(r8), allocatable :: gpp_ebstemp                (:) !9
+  REAL(r8), allocatable :: gpp_dbstemp                (:) !10
+  REAL(r8), allocatable :: gpp_dbsboreal              (:) !11
+  REAL(r8), allocatable :: gpp_c3arcgrass             (:) !12
+  REAL(r8), allocatable :: gpp_c3grass                (:) !13
+  REAL(r8), allocatable :: gpp_c4grass                (:) !14
+  REAL(r8), allocatable :: leafc_enftemp              (:) !1
+  REAL(r8), allocatable :: leafc_enfboreal            (:) !2
+  REAL(r8), allocatable :: leafc_dnfboreal            (:) !3
+  REAL(r8), allocatable :: leafc_ebftrop              (:) !4
+  REAL(r8), allocatable :: leafc_ebftemp              (:) !5
+  REAL(r8), allocatable :: leafc_dbftrop              (:) !6
+  REAL(r8), allocatable :: leafc_dbftemp              (:) !7
+  REAL(r8), allocatable :: leafc_dbfboreal            (:) !8
+  REAL(r8), allocatable :: leafc_ebstemp              (:) !9
+  REAL(r8), allocatable :: leafc_dbstemp              (:) !10
+  REAL(r8), allocatable :: leafc_dbsboreal            (:) !11
+  REAL(r8), allocatable :: leafc_c3arcgrass           (:) !12
+  REAL(r8), allocatable :: leafc_c3grass              (:) !13
+  REAL(r8), allocatable :: leafc_c4grass              (:) !14
   REAL(r8), allocatable :: ar                         (:)
   REAL(r8), allocatable :: er                         (:)
   REAL(r8), allocatable :: fire_closs                 (:)!
@@ -96,6 +124,10 @@ MODULE MOD_1D_BGCFluxes
   REAL(r8), allocatable :: f_nit_vr                 (:,:)
   REAL(r8), allocatable :: f_denit_vr               (:,:)
   REAL(r8), allocatable :: f_n2o_nit_vr             (:,:)
+  REAL(r8), allocatable :: f_n2o_denit_vr           (:,:)
+  REAL(r8), allocatable :: pot_f_nit_vr             (:,:)
+  REAL(r8), allocatable :: pot_f_denit_vr           (:,:)
+  REAL(r8), allocatable :: n2_n2o_ratio_denit_vr    (:,:)
   REAL(r8), allocatable :: ndep_to_sminn            (:)
   REAL(r8), allocatable :: ffix_to_sminn            (:)
   REAL(r8), allocatable :: nfix_to_sminn            (:)
@@ -140,6 +172,34 @@ MODULE MOD_1D_BGCFluxes
 ! bgc variables
 ! ecosystem carbon flux
             allocate (gpp                        (numpatch))
+            allocate (gpp_enftemp                (numpatch)) !1
+            allocate (gpp_enfboreal              (numpatch)) !2
+            allocate (gpp_dnfboreal              (numpatch)) !3
+            allocate (gpp_ebftrop                (numpatch)) !4
+            allocate (gpp_ebftemp                (numpatch)) !5
+            allocate (gpp_dbftrop                (numpatch)) !6
+            allocate (gpp_dbftemp                (numpatch)) !7
+            allocate (gpp_dbfboreal              (numpatch)) !8
+            allocate (gpp_ebstemp                (numpatch)) !9
+            allocate (gpp_dbstemp                (numpatch)) !10
+            allocate (gpp_dbsboreal              (numpatch)) !11
+            allocate (gpp_c3arcgrass             (numpatch)) !12
+            allocate (gpp_c3grass                (numpatch)) !13
+            allocate (gpp_c4grass                (numpatch)) !14
+            allocate (leafc_enftemp              (numpatch)) !1
+            allocate (leafc_enfboreal            (numpatch)) !2
+            allocate (leafc_dnfboreal            (numpatch)) !3
+            allocate (leafc_ebftrop              (numpatch)) !4
+            allocate (leafc_ebftemp              (numpatch)) !5
+            allocate (leafc_dbftrop              (numpatch)) !6
+            allocate (leafc_dbftemp              (numpatch)) !7
+            allocate (leafc_dbfboreal            (numpatch)) !8
+            allocate (leafc_ebstemp              (numpatch)) !9
+            allocate (leafc_dbstemp              (numpatch)) !10
+            allocate (leafc_dbsboreal            (numpatch)) !11
+            allocate (leafc_c3arcgrass           (numpatch)) !12
+            allocate (leafc_c3grass              (numpatch)) !13
+            allocate (leafc_c4grass              (numpatch)) !14
             allocate (ar                         (numpatch))
             allocate (er                         (numpatch))
             allocate (fire_closs                 (numpatch))
@@ -224,8 +284,11 @@ MODULE MOD_1D_BGCFluxes
             allocate (f_nit_vr                 (nl_soil,numpatch))
             allocate (f_denit_vr               (nl_soil,numpatch))
             allocate (f_n2o_nit_vr             (nl_soil,numpatch))
+            allocate (f_n2o_denit_vr           (nl_soil,numpatch))
+            allocate (pot_f_nit_vr             (nl_soil,numpatch))
+            allocate (pot_f_denit_vr           (nl_soil,numpatch))
+            allocate (n2_n2o_ratio_denit_vr    (nl_soil,numpatch))
             allocate (ndep_to_sminn            (numpatch))
-            ndep_to_sminn(:) = 4.912128313723134E-009_r8 * 1000
             allocate (ffix_to_sminn            (numpatch))
             allocate (nfix_to_sminn            (numpatch))
             allocate (somc_fire                (numpatch))
@@ -257,6 +320,34 @@ MODULE MOD_1D_BGCFluxes
 ! bgc variables
 ! ecosystem carbon flux
            deallocate (gpp                        )
+           deallocate (gpp_enftemp                ) !1
+           deallocate (gpp_enfboreal              ) !2
+           deallocate (gpp_dnfboreal              ) !3
+           deallocate (gpp_ebftrop                ) !4
+           deallocate (gpp_ebftemp                ) !5
+           deallocate (gpp_dbftrop                ) !6
+           deallocate (gpp_dbftemp                ) !7
+           deallocate (gpp_dbfboreal              ) !8
+           deallocate (gpp_ebstemp                ) !9
+           deallocate (gpp_dbstemp                ) !10
+           deallocate (gpp_dbsboreal              ) !11
+           deallocate (gpp_c3arcgrass             ) !12
+           deallocate (gpp_c3grass                ) !13
+           deallocate (gpp_c4grass                ) !14
+           deallocate (leafc_enftemp              ) !1
+           deallocate (leafc_enfboreal            ) !2
+           deallocate (leafc_dnfboreal            ) !3
+           deallocate (leafc_ebftrop              ) !4
+           deallocate (leafc_ebftemp              ) !5
+           deallocate (leafc_dbftrop              ) !6
+           deallocate (leafc_dbftemp              ) !7
+           deallocate (leafc_dbfboreal            ) !8
+           deallocate (leafc_ebstemp              ) !9
+           deallocate (leafc_dbstemp              ) !10
+           deallocate (leafc_dbsboreal            ) !11
+           deallocate (leafc_c3arcgrass           ) !12
+           deallocate (leafc_c3grass              ) !13
+           deallocate (leafc_c4grass              ) !14
            deallocate (ar                         )
            deallocate (er                         )
            deallocate (fire_closs                 )
@@ -341,6 +432,9 @@ MODULE MOD_1D_BGCFluxes
            deallocate (f_nit_vr                 )
            deallocate (f_denit_vr               )
            deallocate (f_n2o_nit_vr             )
+           deallocate (f_n2o_denit_vr           )
+           deallocate (pot_f_nit_vr             )
+           deallocate (n2_n2o_ratio_denit_vr    )
            deallocate (ndep_to_sminn            )
            deallocate (ffix_to_sminn            )
            deallocate (nfix_to_sminn            )

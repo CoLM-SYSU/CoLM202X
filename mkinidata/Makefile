@@ -88,6 +88,10 @@ OBJS = \
 		 soil_color_refl.o        \
 		 soil_parameters_readin.o \
 		 HTOP_readin.o \
+		 CROP_readin.o \
+		 NITRIF_readin.o \
+	         NDEP_readin.o   \
+		 Fire_readin.o   \
 		 IniTimeVar.o             \
 		 initialize.o             \
 		 CLMINI.o 

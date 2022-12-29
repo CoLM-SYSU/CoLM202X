@@ -6,7 +6,9 @@ module mod_hist
    use mod_grid
    use mod_mapping_pset2grid
    USE mod_namelist
+   USE MOD_PFTimeInvars, only: pftclass
    USE GlobalVars, only : spval
+   USE mod_landpft, only : patch_pft_s
    USE ncio_serial
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    USE mod_hist_vector
@@ -115,7 +117,7 @@ contains
       use MOD_2D_Fluxes
       use mod_colm_debug
       use GlobalVars, only : spval
-      USE MOD_TimeInvariants, only : patchtype
+      USE MOD_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
       use MOD_CaMa_Variables
 #endif
@@ -145,9 +147,10 @@ contains
       
       type(block_data_real8_2d) :: sumwt
       real(r8), allocatable ::  vectmp(:)  
+      real(r8), allocatable ::  vecacc(:)  
       logical,  allocatable ::  filter(:)
 
-      
+      integer i     
       if (itstamp <= ptstamp) then
          call FLUSH_acc_fluxes ()
          return 
@@ -208,6 +211,7 @@ contains
             if (numpatch > 0) then
                allocate (filter (numpatch))
                allocate (vectmp (numpatch))
+               allocate (vecacc (numpatch))
             end if
          end if
 
@@ -616,6 +620,7 @@ contains
              a_deadcrootc_xfer, f_deadcrootc_xfer, file_hist, 'f_deadcrootc_xfer', itime_in_file, sumwt, filter, &
              'dead coarse root carbon transfer pool','gC/m2')
 
+#ifdef CROP
          ! grain carbon display pool
          call flux_map_and_write_2d ( DEF_hist_vars%grainc, &
              a_grainc, f_grainc, file_hist, 'f_grainc', itime_in_file, sumwt, filter, &
@@ -630,6 +635,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%grainc_xfer, &
              a_grainc_xfer, f_grainc_xfer, file_hist, 'f_grainc_xfer', itime_in_file, sumwt, filter, &
              'grain carbon transfer pool','gC/m2')
+#endif
 
          ! leaf nitrogen display pool
          call flux_map_and_write_2d ( DEF_hist_vars%leafn, &
@@ -721,6 +727,7 @@ contains
              a_deadcrootn_xfer, f_deadcrootn_xfer, file_hist, 'f_deadcrootn_xfer', itime_in_file, sumwt, filter, &
              'dead coarse root nitrogen transfer pool','gN/m2')
 
+#ifdef CROP
          ! grain nitrogen display pool
          call flux_map_and_write_2d ( DEF_hist_vars%grainn, &
              a_grainn, f_grainn, file_hist, 'f_grainn', itime_in_file, sumwt, filter, &
@@ -735,6 +742,7 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%grainn_xfer, &
              a_grainn_xfer, f_grainn_xfer, file_hist, 'f_grainn_xfer', itime_in_file, sumwt, filter, &
              'grain nitrogen transfer pool','gN/m2')
+#endif
 
          ! retranslocation nitrogen pool
          call flux_map_and_write_2d ( DEF_hist_vars%retrasn, &
@@ -751,6 +759,14 @@ contains
              a_downreg, f_downreg, file_hist, 'f_downreg', itime_in_file, sumwt, filter, &
              'gpp downregulation due to N limitation','unitless')
 
+         call flux_map_and_write_2d ( DEF_hist_vars%fpg, &
+             a_fpg, f_fpg, file_hist, 'f_fpg', itime_in_file, sumwt, filter, &
+             'fraction of gpp potential','unitless')
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fpi, &
+             a_fpi, f_fpi, file_hist, 'f_fpi', itime_in_file, sumwt, filter, &
+             'fraction of immobalization','unitless')
+
          ! autotrophic respiration
          call flux_map_and_write_2d ( DEF_hist_vars%ar , &
              a_ar , f_ar , file_hist, 'f_ar', itime_in_file, sumwt, filter, &
@@ -761,6 +777,32 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%cphase, &
              a_cphase, f_cphase, file_hist, 'f_cphase', itime_in_file, sumwt, filter, &
              'crop phase','unitless')
+          
+        ! heat unit index
+        if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_hui (:)
+            end if
+         end if
+
+        call flux_map_and_write_2d ( DEF_hist_vars%hui, &
+             vecacc, f_hui, file_hist, 'f_hui', itime_in_file, sumwt, filter, &
+             'heat unit index','unitless')
+        
+         ! gdd needed to harvest 
+        call flux_map_and_write_2d ( DEF_hist_vars%gddmaturity, &
+             a_gddmaturity, f_gddmaturity, file_hist, 'f_gddmaturity', itime_in_file, sumwt, filter, &
+             'gdd needed to harvest','ddays')
+
+        ! gdd past planting date for crop  
+        call flux_map_and_write_2d ( DEF_hist_vars%gddplant, &
+             a_gddplant, f_gddplant, file_hist, 'f_gddplant', itime_in_file, sumwt, filter, &
+             'gdd past planting date for crop','ddays')
+        
+        ! vernalization response
+        call flux_map_and_write_2d ( DEF_hist_vars%vf, &
+             a_vf, f_vf, file_hist, 'f_vf', itime_in_file, sumwt, filter, &
+             'vernalization response', 'unitless')
 
          ! 1-yr crop production carbon
          call flux_map_and_write_2d ( DEF_hist_vars%cropprod1c, &
@@ -777,15 +819,38 @@ contains
              a_cropseedc_deficit, f_cropseedc_deficit, file_hist, 'f_cropseedc_deficit', itime_in_file, sumwt, filter, &
              'crop seed deficit','gC/m2/s')
 
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
          ! grain to crop production carbon
          call flux_map_and_write_2d ( DEF_hist_vars%grainc_to_cropprodc, &
-             a_grainc_to_cropprodc, f_grainc_to_cropprodc, file_hist, 'f_grainc_to_cropprodc', itime_in_file, sumwt, filter, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_grainc_to_cropprodc', itime_in_file, sumwt, filter, &
              'grain to crop production carbon','gC/m2/s')
 
          ! grain to crop seed carbon
          call flux_map_and_write_2d ( DEF_hist_vars%grainc_to_seed, &
              a_grainc_to_seed, f_grainc_to_seed, file_hist, 'f_grainc_to_seed', itime_in_file, sumwt, filter, &
              'grain to crop seed carbon','gC/m2/s')
+
+         ! grain to crop seed carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%fert_to_sminn, &
+             a_fert_to_sminn, f_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumwt, filter, &
+             'fertilization','gN/m2/s')
+
+#endif
+
+         ! grain to crop seed carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%ndep_to_sminn, &
+             a_ndep_to_sminn, f_ndep_to_sminn, file_hist, 'f_ndep_to_sminn', itime_in_file, sumwt, filter, &
+             'nitrogen deposition','gN/m2/s')
+
+#ifdef OzoneStress
+         ! grain to crop seed carbon
+         call flux_map_and_write_2d ( DEF_hist_vars%xy_ozone, &
+             a_ozone, f_xy_ozone, file_hist, 'f_xy_ozone', itime_in_file, sumwt, filter, &
+             'Ozone concentration','mol/mol')
 #endif
 
          ! litter 1 carbon density in soil layers
@@ -863,6 +928,1718 @@ contains
             a_sminn_vr, f_sminn_vr, file_hist, 'f_sminn_vr', 'soil', &
             itime_in_file, sumwt, filter,'mineral nitrogen density in soil layers','gN/m3')
 
+         ! bulk density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%BD_all, &
+            a_BD_all, f_BD_all, file_hist, 'f_BD_all', 'soil', &
+            itime_in_file, sumwt, filter,'bulk density in soil layers','kg/m3')
+
+         ! field capacity in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%wfc, &
+            a_wfc, f_wfc, file_hist, 'f_wfc', 'soil', &
+            itime_in_file, sumwt, filter,'field capacity in soil layers','m3/m3')
+
+         ! organic matter density in soil layers
+         call flux_map_and_write_3d ( DEF_hist_vars%OM_density, &
+            a_OM_density, f_OM_density, file_hist, 'f_OM_density', 'soil', &
+            itime_in_file, sumwt, filter,'organic matter density in soil layers','kg/m3')
+
+#ifdef NITRIF
+         ! O2 soil Concentration for non-inundated area
+         call flux_map_and_write_3d ( DEF_hist_vars%CONC_O2_UNSAT, &
+            a_conc_o2_unsat, f_conc_o2_unsat, file_hist, 'f_CONC_O2_UNSAT', 'soil', &
+            itime_in_file, sumwt, filter,'O2 soil Concentration for non-inundated area','mol/m3')
+
+         ! O2 consumption from HR and AR for non-inundated area
+         call flux_map_and_write_3d ( DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT, &
+            a_o2_decomp_depth_unsat, f_o2_decomp_depth_unsat, file_hist, 'f_O2_DECOMP_DEPTH_UNSAT', 'soil', &
+            itime_in_file, sumwt, filter,'O2 consumption from HR and AR for non-inundated area','mol/m3/s')
+
+#endif
+
+#ifdef Fire
+        call flux_map_and_write_2d ( DEF_hist_vars%abm, &
+             vecacc, f_abm, file_hist, 'f_abm', itime_in_file, sumwt, filter, &
+             'peak crop fire month','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%gdp, &
+             vecacc, f_gdp, file_hist, 'f_gdp', itime_in_file, sumwt, filter, &
+             'gdp','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%peatf, &
+             vecacc, f_peatf, file_hist, 'f_peatf', itime_in_file, sumwt, filter, &
+             'peatf','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%hdm, &
+             vecacc, f_hdm, file_hist, 'f_hdm', itime_in_file, sumwt, filter, &
+             'hdm','unitless')
+
+        call flux_map_and_write_2d ( DEF_hist_vars%lnfm, &
+             vecacc, f_lnfm, file_hist, 'f_lnfm', itime_in_file, sumwt, filter, &
+             'lnfm','unitless')
+
+#endif
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) .ne. 12 .and. patchtype(i) .eq. 0)then
+                     filter(i) = .true.
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! 1: gpp enf temperate
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_enftemp, &
+             a_gpp_enftemp, f_gpp_enftemp, file_hist, 'f_gpp_enftemp', itime_in_file, sumwt, filter, &
+             'gross primary productivity for needleleaf evergreen temperate tree','gC/m2/s')
+
+         ! 1: leaf carbon display pool enf temperate
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_enftemp, &
+             a_leafc_enftemp, f_leafc_enftemp, file_hist, 'f_leafc_enftemp', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for needleleaf evergreen temperate tree','gC/m2')
+
+         ! 2: gpp enf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_enfboreal, &
+             a_gpp_enfboreal, f_gpp_enfboreal, file_hist, 'f_gpp_enfboreal', itime_in_file, sumwt, filter, &
+             'gross primary productivity for needleleaf evergreen boreal tree','gC/m2/s')
+
+         ! 2: leaf carbon display pool enf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_enfboreal, &
+             a_leafc_enfboreal, f_leafc_enfboreal, file_hist, 'f_leafc_enfboreal', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for needleleaf evergreen boreal tree','gC/m2')
+
+         ! 3: gpp dnf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dnfboreal, &
+             a_gpp_dnfboreal, f_gpp_dnfboreal, file_hist, 'f_gpp_dnfboreal', itime_in_file, sumwt, filter, &
+             'gross primary productivity for needleleaf deciduous boreal tree','gC/m2/s')
+
+         ! 3: leaf carbon display pool dnf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dnfboreal, &
+             a_leafc_dnfboreal, f_leafc_dnfboreal, file_hist, 'f_leafc_dnfboreal', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for needleleaf deciduous boreal tree','gC/m2')
+
+         ! 4: gpp ebf trop
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_ebftrop, &
+             a_gpp_ebftrop, f_gpp_ebftrop, file_hist, 'f_gpp_ebftrop', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf evergreen tropical tree','gC/m2/s')
+
+         ! 4: leaf carbon display pool ebf trop
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_ebftrop, &
+             a_leafc_ebftrop, f_leafc_ebftrop, file_hist, 'f_leafc_ebftrop', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf evergreen tropical tree','gC/m2')
+
+         ! 5: gpp ebf temp
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_ebftemp, &
+             a_gpp_ebftemp, f_gpp_ebftemp, file_hist, 'f_gpp_ebftemp', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf evergreen temperate tree','gC/m2/s')
+
+         ! 5: leaf carbon display pool ebf temp
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_ebftemp, &
+             a_leafc_ebftemp, f_leafc_ebftemp, file_hist, 'f_leafc_ebftemp', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf evergreen temperate tree','gC/m2')
+
+         ! 6: gpp dbf trop
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dbftrop, &
+             a_gpp_dbftrop, f_gpp_dbftrop, file_hist, 'f_gpp_dbftrop', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf deciduous tropical tree','gC/m2/s')
+
+         ! 6: leaf carbon display pool dbf trop
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dbftrop, &
+             a_leafc_dbftrop, f_leafc_dbftrop, file_hist, 'f_leafc_dbftrop', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf deciduous tropical tree','gC/m2')
+
+         ! 7: gpp dbf temp
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dbftemp, &
+             a_gpp_dbftemp, f_gpp_dbftemp, file_hist, 'f_gpp_dbftemp', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf deciduous temperate tree','gC/m2/s')
+
+         ! 7: leaf carbon display pool dbf temp
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dbftemp, &
+             a_leafc_dbftemp, f_leafc_dbftemp, file_hist, 'f_leafc_dbftemp', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf deciduous temperate tree','gC/m2')
+
+         ! 8: gpp dbf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dbfboreal, &
+             a_gpp_dbfboreal, f_gpp_dbfboreal, file_hist, 'f_gpp_dbfboreal', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf deciduous boreal tree','gC/m2/s')
+
+         ! 8: leaf carbon display pool dbf boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dbfboreal, &
+             a_leafc_dbfboreal, f_leafc_dbfboreal, file_hist, 'f_leafc_dbfboreal', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf deciduous boreal tree','gC/m2')
+
+         ! 9: gpp ebs temp
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_ebstemp, &
+             a_gpp_ebstemp, f_gpp_ebstemp, file_hist, 'f_gpp_ebstemp', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf evergreen temperate shrub','gC/m2/s')
+
+         ! 9: leaf carbon display pool ebs temp
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_ebstemp, &
+             a_leafc_ebstemp, f_leafc_ebstemp, file_hist, 'f_leafc_ebstemp', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf evergreen temperate shrub','gC/m2')
+
+         ! 10: gpp dbs temp
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dbstemp, &
+             a_gpp_dbstemp, f_gpp_dbstemp, file_hist, 'f_gpp_dbstemp', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf deciduous temperate shrub','gC/m2/s')
+
+         ! 10: leaf carbon display pool dbs temp
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dbstemp, &
+             a_leafc_dbstemp, f_leafc_dbstemp, file_hist, 'f_leafc_dbstemp', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf deciduous temperate shrub','gC/m2')
+
+         ! 11: gpp dbs boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_dbsboreal, &
+             a_gpp_dbsboreal, f_gpp_dbsboreal, file_hist, 'f_gpp_dbsboreal', itime_in_file, sumwt, filter, &
+             'gross primary productivity for broadleaf deciduous boreal shrub','gC/m2/s')
+
+         ! 11: leaf carbon display pool dbs boreal
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_dbsboreal, &
+             a_leafc_dbsboreal, f_leafc_dbsboreal, file_hist, 'f_leafc_dbsboreal', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for broadleaf deciduous boreal shrub','gC/m2')
+
+         ! 12: gpp arctic c3 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_c3arcgrass, &
+             a_gpp_c3arcgrass, f_gpp_c3arcgrass, file_hist, 'f_gpp_c3arcgrass', itime_in_file, sumwt, filter, &
+             'gross primary productivity for c3 arctic grass','gC/m2/s')
+
+         ! 12: leaf carbon display pool c3 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_c3grass, &
+             a_leafc_c3grass, f_leafc_c3grass, file_hist, 'f_leafc_c3grass', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for c3 grass','gC/m2')
+
+         ! 13: gpp c3 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_c3grass, &
+             a_gpp_c3grass, f_gpp_c3grass, file_hist, 'f_gpp_c3grass', itime_in_file, sumwt, filter, &
+             'gross primary productivity for c3 grass','gC/m2/s')
+
+         ! 13: leaf carbon display pool arctic c3 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_c3grass, &
+             a_leafc_c3grass, f_leafc_c3grass, file_hist, 'f_leafc_c3grass', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for c3 arctic grass','gC/m2')
+
+         ! 14: gpp c4 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%gpp_c4grass, &
+             a_gpp_c4grass, f_gpp_c4grass, file_hist, 'f_gpp_c4grass', itime_in_file, sumwt, filter, &
+             'gross primary productivity for c4 grass','gC/m2/s')
+
+         ! 14: leaf carbon display pool arctic c4 grass
+         call flux_map_and_write_2d ( DEF_hist_vars%leafc_c4grass, &
+             a_leafc_c4grass, f_leafc_c4grass, file_hist, 'f_leafc_c4grass', itime_in_file, sumwt, filter, &
+             'leaf carbon display pool for c4 arctic grass','gC/m2')
+
+#ifdef CROP
+!*****************************************
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                      if(pftclass(patch_pft_s(i)) .eq. 19 .or. pftclass(patch_pft_s(i)) .eq. 20)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_hui (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%huiswheat, &
+             vecacc, f_hui, file_hist, 'f_huiswheat', itime_in_file, sumwt, filter, &
+             'heat unit index  (rainfed spring wheat)','unitless')
+
+!************************************************************
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 17 .or. pftclass(patch_pft_s(i)) .eq. 18 &
+                   .or. pftclass(patch_pft_s(i)) .eq. 75 .or. pftclass(patch_pft_s(i)) .eq. 76)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdcorn, &
+            a_pdcorn, f_pdcorn, file_hist, 'f_pdcorn', &
+            itime_in_file, sumwt, filter,'planting date of corn','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 19 .or. pftclass(patch_pft_s(i)) .eq. 20)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdswheat, &
+            a_pdswheat, f_pdswheat, file_hist, 'f_pdswheat', &
+            itime_in_file, sumwt, filter,'planting date of spring wheat','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 21 .or. pftclass(patch_pft_s(i)) .eq. 22)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdwwheat, &
+            a_pdwwheat, f_pdwwheat, file_hist, 'f_pdwwheat', &
+            itime_in_file, sumwt, filter,'planting date of winter wheat','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 23 .or. pftclass(patch_pft_s(i)) .eq. 24 &
+                   .or. pftclass(patch_pft_s(i)) .eq. 77 .or. pftclass(patch_pft_s(i)) .eq. 78)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdsoybean, &
+            a_pdsoybean, f_pdsoybean, file_hist, 'f_pdsoybean', &
+            itime_in_file, sumwt, filter,'planting date of soybean','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 41 .or. pftclass(patch_pft_s(i)) .eq. 42)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdcotton, &
+            a_pdcotton, f_pdcotton, file_hist, 'f_pdcotton', &
+            itime_in_file, sumwt, filter,'planting date of cotton','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 61 .or. pftclass(patch_pft_s(i)) .eq. 62)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdrice1, &
+            a_pdrice1, f_pdrice1, file_hist, 'f_pdrice1', &
+            itime_in_file, sumwt, filter,'planting date of rice1','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 67 .or. pftclass(patch_pft_s(i)) .eq. 68)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdrice2, &
+            a_pdrice2, f_pdrice2, file_hist, 'f_pdrice2', &
+            itime_in_file, sumwt, filter,'planting date of rice2','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 67 .or. pftclass(patch_pft_s(i)) .eq. 68)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%pdsugarcane, &
+            a_pdsugarcane, f_pdsugarcane, file_hist, 'f_pdsugarcane', &
+            itime_in_file, sumwt, filter,'planting date of sugarcane','day')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 17 .or. pftclass(patch_pft_s(i)) .eq. 18 &
+                   .or. pftclass(patch_pft_s(i)) .eq. 75 .or. pftclass(patch_pft_s(i)) .eq. 76)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_corn, &
+            a_fertnitro_corn, f_fertnitro_corn, file_hist, 'f_fertnitro_corn', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for corn','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 19 .or. pftclass(patch_pft_s(i)) .eq. 20)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_swheat, &
+            a_fertnitro_swheat, f_fertnitro_swheat, file_hist, 'f_fertnitro_swheat', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for spring wheat','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 21 .or. pftclass(patch_pft_s(i)) .eq. 22)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_wwheat, &
+            a_fertnitro_wwheat, f_fertnitro_wwheat, file_hist, 'f_fertnitro_wwheat', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for winter wheat','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 23 .or. pftclass(patch_pft_s(i)) .eq. 24 &
+                   .or. pftclass(patch_pft_s(i)) .eq. 77 .or. pftclass(patch_pft_s(i)) .eq. 78)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_soybean, &
+            a_fertnitro_soybean, f_fertnitro_soybean, file_hist, 'f_fertnitro_soybean', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for soybean','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 41 .or. pftclass(patch_pft_s(i)) .eq. 42)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_cotton, &
+            a_fertnitro_cotton, f_fertnitro_cotton, file_hist, 'f_fertnitro_cotton', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for cotton','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 61 .or. pftclass(patch_pft_s(i)) .eq. 62)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_rice1, &
+            a_fertnitro_rice1, f_fertnitro_rice1, file_hist, 'f_fertnitro_rice1', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for rice1','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 61 .or. pftclass(patch_pft_s(i)) .eq. 62)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_rice2, &
+            a_fertnitro_rice2, f_fertnitro_rice2, file_hist, 'f_fertnitro_rice2', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for rice2','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 67 .or. pftclass(patch_pft_s(i)) .eq. 68)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         call flux_map_and_write_2d ( DEF_hist_vars%fertnitro_sugarcane, &
+            a_fertnitro_sugarcane, f_fertnitro_sugarcane, file_hist, 'f_fertnitro_sugarcane', &
+            itime_in_file, sumwt, filter,'nitrogen fertilizer for sugarcane','gN/m2/yr')
+  
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 17)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to corn production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_temp_corn, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_temp_corn', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed temperate corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 18)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to corn production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_temp_corn, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_temp_corn', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated temperate corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 19)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to spring wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_spwheat, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_spwheat', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed spring wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 20)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to spring wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_spwheat, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_spwheat', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated spring wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 21)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to winter wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_wtwheat, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_wtwheat', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed winter wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 22)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to winter wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_wtwheat, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_wtwheat', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated winter wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 23)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to soybean production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_temp_soybean, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_temp_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed temperate soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 24)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to soybean production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_temp_soybean, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_temp_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated temperate soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 41)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to cotton production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_cotton, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_cotton', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed cotton)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 42)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to cotton production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_cotton, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_cotton', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated cotton)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 61)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to rice production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_rice, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_rice', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed rice)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 62)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to rice production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_rice, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_rice', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated rice)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 67)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_sugarcane, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_sugarcane', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed sugarcane)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 68)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_sugarcane, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_sugarcane', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated sugarcane)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 75)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_trop_corn, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_trop_corn', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed_trop_corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 76)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter) 
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_trop_corn, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_trop_corn', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated_trop_corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 77)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_rainfed_trop_soybean, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_rainfed_trop_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed trop soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 78)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_irrigated_trop_soybean, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_irrigated_trop_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated trop soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 15)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to unmanaged crop production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_plantdate (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%plantdate_unmanagedcrop, &
+             vecacc, f_plantdate, file_hist, 'f_plantdate_unmanagedcrop', itime_in_file, sumwt, filter, &
+             'Crop production (unmanaged crop production)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 17)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to corn production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_temp_corn, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_temp_corn', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed temperate corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 18)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to corn production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_temp_corn, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_temp_corn', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated temperate corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 19)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to spring wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_spwheat, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_spwheat', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed spring wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 20)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to spring wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_spwheat, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_spwheat', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated spring wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 21)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to winter wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_wtwheat, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_wtwheat', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed winter wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 22)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to winter wheat production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_wtwheat, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_wtwheat', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated winter wheat)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 23)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to soybean production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_temp_soybean, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_temp_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed temperate soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 24)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to soybean production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_temp_soybean, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_temp_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated temperate soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 41)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to cotton production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_cotton, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_cotton', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed cotton)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 42)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to cotton production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_cotton, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_cotton', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated cotton)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 61)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to rice production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_rice, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_rice', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed rice)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 62)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to rice production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_rice, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_rice', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated rice)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 67)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_sugarcane, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_sugarcane', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed sugarcane)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 68)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_sugarcane, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_sugarcane', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated sugarcane)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 75)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_trop_corn, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_trop_corn', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed_trop_corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 76)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter) 
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_trop_corn, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_trop_corn', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated_trop_corn)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 77)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_rainfed_trop_soybean, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_rainfed_trop_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (rainfed trop soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 78)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to sugarcane production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_irrigated_trop_soybean, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_irrigated_trop_soybean', itime_in_file, sumwt, filter, &
+             'Crop production (irrigated trop soybean)','gC/m2/s')
+
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               do i=1,numpatch
+                  if(patchclass(i) == 12)then
+                     if(pftclass(patch_pft_s(i)) .eq. 15)then
+                        filter(i) = .true.
+                     else
+                        filter(i) = .false.
+                     end if
+                  else
+                     filter(i) = .false.
+                  end if
+                  vectmp(i) = 1.
+               end do
+            end if
+         end if
+
+
+         call mp2g_hist%map (vectmp, sumwt, spv = spval, msk = filter)
+
+         ! grain to unmanaged crop production carbon
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               vecacc (:) = a_grainc_to_cropprodc (:)
+            end if
+         end if
+         call flux_map_and_write_2d ( DEF_hist_vars%cropprodc_unmanagedcrop, &
+             vecacc, f_grainc_to_cropprodc, file_hist, 'f_cropprodc_unmanagedcrop', itime_in_file, sumwt, filter, &
+             'Crop production (unmanaged crop production)','gC/m2/s')
+#endif
 #endif
          ! --------------------------------------------------------------------
          ! Temperature and water (excluding land water bodies and ocean patches)

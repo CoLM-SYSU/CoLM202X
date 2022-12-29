@@ -19,7 +19,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
                      ,col_vegendcb, col_vegbegcb, col_soilendcb, col_soilbegcb &
                      ,col_vegendnb, col_vegbegnb, col_soilendnb, col_soilbegnb &
                      ,col_sminnendnb, col_sminnbegnb &
-                     ,altmax, altmax_lastyear, altmax_lastyear_indx &
+                     ,altmax, altmax_lastyear, altmax_lastyear_indx, lag_npp &
                      ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
                      ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30, accumnstep, skip_balance_check &
 #ifdef SASU
@@ -194,7 +194,8 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         ctrunc_veg            , &    
         ctrunc_soil           , &    
         altmax                                                , &
-        altmax_lastyear                                       
+        altmax_lastyear       , &
+        lag_npp        
    INTEGER, intent(out) :: altmax_lastyear_indx     
    REAL(r8),intent(out) ::      &
         decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
@@ -576,7 +577,6 @@ ENDIF
     totsomn                         = 0.0
     totcwdn                         = 0.0
     totvegn                         = 0.0
-    totcoln                         = 0.0
     col_endcb                       = 0.0
     col_begcb                       = 0.0
     col_vegendcb                    = 0.0
@@ -589,8 +589,6 @@ ENDIF
     col_vegbegnb                    = 0.0
     col_soilendnb                   = 0.0
     col_soilbegnb                   = 0.0
-    col_sminnendnb                  = 0.0
-    col_sminnbegnb                  = 0.0
     decomp_cpools_vr          (:,:) = 0.0
     decomp_cpools             (:)   = 0.0
     ctrunc_vr                 (:)   = 0.0
@@ -599,16 +597,22 @@ ENDIF
     altmax                          = 10.0
     altmax_lastyear                 = 10.0
     altmax_lastyear_indx            = 10
+    lag_npp                         = 0.0
     decomp_npools_vr          (:,:) = 0.0
     decomp_npools             (:)   = 0.0
     ntrunc_vr                 (:)   = 0.0
     ntrunc_veg                      = 0.0
     ntrunc_soil                     = 0.0
-    sminn_vr                  (:)   = 0.0
+    smin_no3_vr               (:)   = 5.0
+    smin_nh4_vr               (:)   = 5.0
+    sminn_vr                  (:)   = 10.0
     sminn                           = 0.0
-    smin_no3_vr               (:)   = 0.0
-    smin_nh4_vr               (:)   = 0.0
-    sminn_vr                  (:)   = 0.0
+    do j = 1, nl_soil
+       sminn                        = sminn + sminn_vr(j) * dz_soisno(j)
+    end do
+    col_sminnendnb                  = sminn
+    col_sminnbegnb                  = sminn
+    totcoln                         = totvegn + totcwdn + totlitn + totsomn + sminn + ntrunc_veg + ntrunc_soil
     prec10                          = 0._r8
     prec60                          = 0._r8
     prec365                         = 0._r8
@@ -708,7 +712,12 @@ ENDIF
           end if
           totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
           totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
+          print*,'totcolc',totcolc,m,leafc_p(m),leafc_storage_p(m),deadstemc_p(m)
        end do
+#ifdef OzoneStress
+       o3uptakesun_p            (ps:pe) = 0._r8
+       o3uptakesha_p            (ps:pe) = 0._r8
+#endif
        leafc_xfer_p             (ps:pe) = 0.0
        frootc_p                 (ps:pe) = 0.0
        frootc_storage_p         (ps:pe) = 0.0
@@ -800,10 +809,8 @@ ENDIF
 #ifdef CROP
 ! crop variables
        croplive_p               (ps:pe) = .false.
-       gddtsoi_p                (ps:pe) =  spval
-       huileaf_p                (ps:pe) =  spval
+       hui_p                    (ps:pe) =  spval
        gddplant_p               (ps:pe) =  spval
-       huigrain_p               (ps:pe) =  0.0_r8
        peaklai_p                (ps:pe) =  0
        aroot_p                  (ps:pe) =  spval
        astem_p                  (ps:pe) =  spval
@@ -815,20 +822,14 @@ ENDIF
 
        cropplant_p              (ps:pe) = .false.
        idop_p                   (ps:pe) = 99999999
-       a5tmin_p                 (ps:pe) = spval
-       a10tmin_p                (ps:pe) = spval
-       t10_p                    (ps:pe) = spval
        cumvd_p                  (ps:pe) = spval
-       hdidx_p                  (ps:pe) = spval
        vf_p                     (ps:pe) = 0._r8
        cphase_p                 (ps:pe) = 4._r8
        fert_counter_p           (ps:pe) = 0._r8
-       fert_p                   (ps:pe) = 0._r8
        tref_min_p               (ps:pe) = 273.15_r8
        tref_max_p               (ps:pe) = 273.15_r8
        tref_min_inst_p          (ps:pe) = spval
        tref_max_inst_p          (ps:pe) = spval
-       fertnitro_p              (ps:pe) = spval
        latbaset_p               (ps:pe) = spval
 #endif
 

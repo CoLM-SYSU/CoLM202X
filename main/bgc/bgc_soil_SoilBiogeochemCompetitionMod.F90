@@ -4,12 +4,15 @@ module bgc_soil_SoilBiogeochemCompetitionMod
 
 use precision
 use MOD_1D_BGCFluxes, only: &
-    potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, &
-    actual_immob_vr, sminn_to_plant
+    pot_f_nit_vr, potential_immob_vr, sminn_to_plant_vr, sminn_to_denit_excess_vr, plant_ndemand, &
+    actual_immob_vr, sminn_to_plant, pot_f_nit_vr, actual_immob_nh4_vr, f_nit_vr, &
+    smin_nh4_to_plant_vr, pot_f_denit_vr, actual_immob_no3_vr, f_denit_vr, smin_no3_to_plant_vr, &
+    n2_n2o_ratio_denit_vr, f_n2o_nit_vr, f_n2o_denit_vr
 use MOD_BGCTimeVars, only: &
     sminn_vr, smin_no3_vr, smin_nh4_vr, nfixation_prof, fpi_vr, fpi, fpg
 use MOD_BGCTimeInVars,only: &
-    bdnr
+    bdnr, compet_plant_no3, compet_plant_nh4, compet_decomp_no3, compet_decomp_nh4, compet_denit, compet_nit, &
+    nitrif_n2o_loss_frac
 
 implicit none
 
@@ -25,15 +28,8 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
   real(r8),intent(in) :: dz_soi(1:nl_soil)
 
 
-    integer  :: c,p,l,pi,j                                            ! indices
-    integer  :: fc                                                    ! filter column index
+    integer  :: p,l,pi,j                                            ! indices
 !    logical :: local_use_fun                                          ! local version of use_fun
-    real(r8) :: compet_plant_no3                                      ! (unitless) relative compettiveness of plants for NO3
-    real(r8) :: compet_plant_nh4                                      ! (unitless) relative compettiveness of plants for NH4
-    real(r8) :: compet_decomp_no3                                     ! (unitless) relative competitiveness of immobilizers for NO3
-    real(r8) :: compet_decomp_nh4                                     ! (unitless) relative competitiveness of immobilizers for NH4
-    real(r8) :: compet_denit                                          ! (unitless) relative competitiveness of denitrifiers for NO3
-    real(r8) :: compet_nit                                            ! (unitless) relative competitiveness of nitrifiers for NH4
     real(r8) :: fpi_no3_vr(1:nl_soil)      ! fraction of potential immobilization supplied by no3(no units)
     real(r8) :: fpi_nh4_vr(1:nl_soil)      ! fraction of potential immobilization supplied by nh4 (no units)
     real(r8) :: sum_nh4_demand(1:nl_soil)
@@ -43,9 +39,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
     real(r8) :: sum_ndemand_vr( 1:nl_soil) !total column N demand (gN/m3/s) at a given level
     real(r8) :: nuptake_prof( 1:nl_soil)
     real(r8) :: sminn_tot
-    integer  :: nlimit(0:nl_soil)          !flag for N limitation
-    integer  :: nlimit_no3(0:nl_soil)      !flag for NO3 limitation
-    integer  :: nlimit_nh4(0:nl_soil)      !flag for NH4 limitation
+    integer  :: nlimit(1:nl_soil)          !flag for N limitation
+    integer  :: nlimit_no3(1:nl_soil)      !flag for NO3 limitation
+    integer  :: nlimit_nh4(1:nl_soil)      !flag for NH4 limitation
     real(r8) :: residual_sminn_vr( 1:nl_soil)
     real(r8) :: residual_sminn
     real(r8) :: residual_smin_nh4_vr( 1:nl_soil)
@@ -272,25 +268,25 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 !               l = col%landunit(c)
 
                !  first compete for nh4
-               sum_nh4_demand(j,i) = plant_ndemand(i) * nuptake_prof(j) + potential_immob_vr(j,i) + pot_f_nit_vr(j,i)
-               sum_nh4_demand_scaled(j,i) = plant_ndemand(i)* nuptake_prof(j) * compet_plant_nh4 + &
+               sum_nh4_demand(j) = plant_ndemand(i) * nuptake_prof(j) + potential_immob_vr(j,i) + pot_f_nit_vr(j,i)
+               sum_nh4_demand_scaled(j) = plant_ndemand(i)* nuptake_prof(j) * compet_plant_nh4 + &
                     potential_immob_vr(j,i)*compet_decomp_nh4 + pot_f_nit_vr(j,i)*compet_nit
 
-               if (sum_nh4_demand(j,i)*deltim < smin_nh4_vr(j,i)) then
+               if (sum_nh4_demand(j)*deltim < smin_nh4_vr(j,i)) then
 
                   ! NH4 availability is not limiting immobilization or plant
                   ! uptake, and all can proceed at their potential rates
-                  nlimit_nh4(j,i) = 0
-                  fpi_nh4_vr(j,i) = 1.0_r8
+                  nlimit_nh4(j) = 0
+                  fpi_nh4_vr(j) = 1.0_r8
                   actual_immob_nh4_vr(j,i) = potential_immob_vr(j,i)
                   !RF added new term. 
 
                   f_nit_vr(j,i) = pot_f_nit_vr(j,i)
                   
 #ifndef FUN
-                     smin_nh4_to_plant_vr(j,i) = plant_ndemand(i) * nuptake_prof(j)
+                  smin_nh4_to_plant_vr(j,i) = plant_ndemand(i) * nuptake_prof(j)
 #else
-                     smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/deltim - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
+                  smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/deltim - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
 #endif
 
                else
@@ -298,18 +294,18 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                   ! NH4 availability can not satisfy the sum of immobilization, nitrification, and
                   ! plant growth demands, so these three demands compete for available
                   ! soil mineral NH4 resource.
-                  nlimit_nh4(j,i) = 1
-                  if (sum_nh4_demand(j,i) > 0.0_r8) then
+                  nlimit_nh4(j) = 1
+                  if (sum_nh4_demand(j) > 0.0_r8) then
                   ! RF microbes compete based on the hypothesised plant demand. 
                      actual_immob_nh4_vr(j,i) = min((smin_nh4_vr(j,i)/deltim)*(potential_immob_vr(j,i)* &
-                          compet_decomp_nh4 / sum_nh4_demand_scaled(j,i)), potential_immob_vr(j,i))
+                          compet_decomp_nh4 / sum_nh4_demand_scaled(j)), potential_immob_vr(j,i))
 
                      f_nit_vr(j,i) =  min((smin_nh4_vr(j,i)/deltim)*(pot_f_nit_vr(j,i)*compet_nit / &
-                          sum_nh4_demand_scaled(j,i)), pot_f_nit_vr(j,i))
+                          sum_nh4_demand_scaled(j)), pot_f_nit_vr(j,i))
                                                  
 #ifndef FUN
                          smin_nh4_to_plant_vr(j,i) = min((smin_nh4_vr(j,i)/deltim)*(plant_ndemand(i)* &
-                          nuptake_prof(j)*compet_plant_nh4 / sum_nh4_demand_scaled(j,i)), plant_ndemand(i)*nuptake_prof(j))
+                          nuptake_prof(j)*compet_plant_nh4 / sum_nh4_demand_scaled(j)), plant_ndemand(i)*nuptake_prof(j))
                           
 #else
                         ! RF added new term. send rest of N to plant - which decides whether it should pay or not? 
@@ -323,9 +319,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                   end if
 
                   if (potential_immob_vr(j,i) > 0.0_r8) then
-                     fpi_nh4_vr(j,i) = actual_immob_nh4_vr(j,i) / potential_immob_vr(j,i)
+                     fpi_nh4_vr(j) = actual_immob_nh4_vr(j,i) / potential_immob_vr(j,i)
                   else
-                     fpi_nh4_vr(j,i) = 0.0_r8
+                     fpi_nh4_vr(j) = 0.0_r8
                   end if
 
                end if
@@ -333,9 +329,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
               
               
 #ifndef FUN
-                   sum_no3_demand(j,i) = (plant_ndemand(i)*nuptake_prof(j)-smin_nh4_to_plant_vr(j,i)) + &
+                   sum_no3_demand(j) = (plant_ndemand(i)*nuptake_prof(j)-smin_nh4_to_plant_vr(j,i)) + &
                   (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i)) + pot_f_denit_vr(j,i)
-                   sum_no3_demand_scaled(j,i) = (plant_ndemand(i)*nuptake_prof(j) &
+                   sum_no3_demand_scaled(j) = (plant_ndemand(i)*nuptake_prof(j) &
                                                  -smin_nh4_to_plant_vr(j,i))*compet_plant_no3 + &
                   (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i))*compet_decomp_no3 + pot_f_denit_vr(j,i)*compet_denit
 #else
@@ -347,12 +343,12 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                   
           
 
-               if (sum_no3_demand(j,i)*deltim < smin_no3_vr(j,i)) then
+               if (sum_no3_demand(j)*deltim < smin_no3_vr(j,i)) then
 
                   ! NO3 availability is not limiting immobilization or plant
                   ! uptake, and all can proceed at their potential rates
-                  nlimit_no3(j,i) = 0
-                  fpi_no3_vr(j,i) = 1.0_r8 -  fpi_nh4_vr(j,i)
+                  nlimit_no3(j) = 0
+                  fpi_no3_vr(j) = 1.0_r8 -  fpi_nh4_vr(j)
                   actual_immob_no3_vr(j,i) = (potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i))
 
                   f_denit_vr(j,i) = pot_f_denit_vr(j,i)
@@ -375,20 +371,20 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                   ! NO3 availability can not satisfy the sum of immobilization, denitrification, and
                   ! plant growth demands, so these three demands compete for available
                   ! soil mineral NO3 resource.
-                  nlimit_no3(j,i) = 1
+                  nlimit_no3(j) = 1
                                   
-                  if (sum_no3_demand(j,i) > 0.0_r8) then
+                  if (sum_no3_demand(j) > 0.0_r8) then
 #ifndef FUN
                         actual_immob_no3_vr(j,i) = min((smin_no3_vr(j,i)/deltim)*((potential_immob_vr(j,i)- &
-                        actual_immob_nh4_vr(j,i))*compet_decomp_no3 / sum_no3_demand_scaled(j,i)), &
+                        actual_immob_nh4_vr(j,i))*compet_decomp_no3 / sum_no3_demand_scaled(j)), &
                                   potential_immob_vr(j,i)-actual_immob_nh4_vr(j,i))
         
                         smin_no3_to_plant_vr(j,i) = min((smin_no3_vr(j,i)/deltim)*((plant_ndemand(i)* &
-                                  nuptake_prof(j)-smin_nh4_to_plant_vr(j,i))*compet_plant_no3 / sum_no3_demand_scaled(j,i)), &
+                                  nuptake_prof(j)-smin_nh4_to_plant_vr(j,i))*compet_plant_no3 / sum_no3_demand_scaled(j)), &
                                   plant_ndemand(i)*nuptake_prof(j)-smin_nh4_to_plant_vr(j,i))
         
                         f_denit_vr(j,i) = min((smin_no3_vr(j,i)/deltim)*(pot_f_denit_vr(j,i)*compet_denit / &
-                                  sum_no3_demand_scaled(j,i)), pot_f_denit_vr(j,i))
+                                  sum_no3_demand_scaled(j)), pot_f_denit_vr(j,i))
 #else
                         actual_immob_no3_vr(c,j) = min((smin_no3_vr(c,j)/deltim)*((potential_immob_vr(c,j)- &
                         actual_immob_nh4_vr(c,j))*compet_decomp_no3 / sum_no3_demand_scaled(c,j)), &
@@ -417,9 +413,9 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                   
 
                   if (potential_immob_vr(j,i) > 0.0_r8) then
-                     fpi_no3_vr(j,i) = actual_immob_no3_vr(j,i) / potential_immob_vr(j,i)
+                     fpi_no3_vr(j) = actual_immob_no3_vr(j,i) / potential_immob_vr(j,i)
                   else
-                     fpi_no3_vr(j,i) = 0.0_r8
+                     fpi_no3_vr(j) = 0.0_r8
                   end if
 
                end if
@@ -439,27 +435,10 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                ! eliminate N limitations, so there is still a diagnostic quantity
                ! that describes the degree of N limitation at steady-state.
 
-               if ( cnallocate_carbon_only()) then !.or. &
-                  if ( fpi_no3_vr(j,i) + fpi_nh4_vr(j,i) < 1._r8 ) then
-                     fpi_nh4_vr(j,i) = 1.0_r8 - fpi_no3_vr(j,i)
-                     supplement_to_sminn_vr(j,i) = (potential_immob_vr(j,i) &
-                                                  - actual_immob_no3_vr(j,i)) - actual_immob_nh4_vr(j,i)
-                     ! update to new values that satisfy demand
-                     actual_immob_nh4_vr(j,i) = potential_immob_vr(j,i) -  actual_immob_no3_vr(j,i)   
-                  end if
-                  if ( smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i) < plant_ndemand(i)*nuptake_prof(j) ) then
-                     supplement_to_sminn_vr(j,i) = supplement_to_sminn_vr(j,i) + &
-                          (plant_ndemand(i)*nuptake_prof(j) - smin_no3_to_plant_vr(j,i)) - smin_nh4_to_plant_vr(j,i)  ! use old values
-                     smin_nh4_to_plant_vr(j,i) = plant_ndemand(i)*nuptake_prof(j) - smin_no3_to_plant_vr(j,i)
-                  end if
-                  sminn_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i)
-               end if
-
                ! sum up no3 and nh4 fluxes
-               fpi_vr(j,i) = fpi_no3_vr(j,i) + fpi_nh4_vr(j,i)
+               fpi_vr(j,i) = fpi_no3_vr(j) + fpi_nh4_vr(j)
                sminn_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + smin_nh4_to_plant_vr(j,i)
                actual_immob_vr(j,i) = actual_immob_no3_vr(j,i) + actual_immob_nh4_vr(j,i)
-            end do
          end do
 
 #ifdef FUN
@@ -515,22 +494,22 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 #ifndef FUN
             ! give plants a second pass to see if there is any mineral N left over with which to satisfy residual N demand.
             ! first take frm nh4 pool; then take from no3 pool
-            residual_plant_ndemand(i) = plant_ndemand(i) - sminn_to_plant(i)
-            residual_smin_nh4(i) = 0._r8
+            residual_plant_ndemand = plant_ndemand(i) - sminn_to_plant(i)
+            residual_smin_nh4 = 0._r8
             do j = 1, nl_soil  
-               if (residual_plant_ndemand(i)  >  0._r8 ) then
-                  if (nlimit_nh4(j,i) .eq. 0) then
-                     residual_smin_nh4_vr(j,i) = max(smin_nh4_vr(j,i) - (actual_immob_nh4_vr(j,i) + &
+               if (residual_plant_ndemand  >  0._r8 ) then
+                  if (nlimit_nh4(j) .eq. 0) then
+                     residual_smin_nh4_vr(j) = max(smin_nh4_vr(j,i) - (actual_immob_nh4_vr(j,i) + &
                                                  smin_nh4_to_plant_vr(j,i) + f_nit_vr(j,i) ) * deltim, 0._r8)
 
-                     residual_smin_nh4(i) = residual_smin_nh4(i) + residual_smin_nh4_vr(j,i) * dz_soi(j)
+                     residual_smin_nh4 = residual_smin_nh4 + residual_smin_nh4_vr(j) * dz_soi(j)
                   else
-                     residual_smin_nh4_vr(j,i)  = 0._r8
+                     residual_smin_nh4_vr(j)  = 0._r8
                   endif
    
-                  if ( residual_smin_nh4(i) > 0._r8 .and. nlimit_nh4(j,i) .eq. 0 ) then
-                     smin_nh4_to_plant_vr(j,i) = smin_nh4_to_plant_vr(j,i) + residual_smin_nh4_vr(j,i) * &
-                          min(( residual_plant_ndemand(i) *  deltim ) / residual_smin_nh4(i), 1._r8) / deltim
+                  if ( residual_smin_nh4 > 0._r8 .and. nlimit_nh4(j) .eq. 0 ) then
+                     smin_nh4_to_plant_vr(j,i) = smin_nh4_to_plant_vr(j,i) + residual_smin_nh4_vr(j) * &
+                          min(( residual_plant_ndemand *  deltim ) / residual_smin_nh4, 1._r8) / deltim
                   endif
                end if
             end do
@@ -544,22 +523,22 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
 
             !
             ! and now do second pass for no3
-            residual_plant_ndemand(i) = plant_ndemand(i) - sminn_to_plant(i)
-            residual_smin_no3(i) = 0._r8
+            residual_plant_ndemand = plant_ndemand(i) - sminn_to_plant(i)
+            residual_smin_no3 = 0._r8
 
             do j = 1, nl_soil
-               if (residual_plant_ndemand(i) > 0._r8 ) then
-                  if (nlimit_no3(j,i) .eq. 0) then
-                    residual_smin_no3_vr(j,i) = max(smin_no3_vr(j,i) - (actual_immob_no3_vr(j,i) + &
+               if (residual_plant_ndemand > 0._r8 ) then
+                  if (nlimit_no3(j) .eq. 0) then
+                     residual_smin_no3_vr(j) = max(smin_no3_vr(j,i) - (actual_immob_no3_vr(j,i) + &
                                                 smin_no3_to_plant_vr(j,i) + f_denit_vr(j,i) ) * deltim, 0._r8)
-                     residual_smin_no3(i) = residual_smin_no3(i) + residual_smin_no3_vr(j,i) * dz_soi(j)
+                     residual_smin_no3 = residual_smin_no3 + residual_smin_no3_vr(j) * dz_soi(j)
                   else
-                     residual_smin_no3_vr(j,i)  = 0._r8
+                     residual_smin_no3_vr(j)  = 0._r8
                   endif
 
-                  if ( residual_smin_no3(i) > 0._r8 .and. nlimit_no3(j,i) .eq. 0) then
-                     smin_no3_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + residual_smin_no3_vr(j,i) * &
-                          min(( residual_plant_ndemand(i) *  deltim ) / residual_smin_no3(i), 1._r8) / deltim
+                  if ( residual_smin_no3 > 0._r8 .and. nlimit_no3(j) .eq. 0) then
+                     smin_no3_to_plant_vr(j,i) = smin_no3_to_plant_vr(j,i) + residual_smin_no3_vr(j) * &
+                          min(( residual_plant_ndemand *  deltim ) / residual_smin_no3, 1._r8) / deltim
                   endif
                endif
             end do
@@ -600,11 +579,11 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                               
 #endif
          ! sum up N fluxes to immobilization
-         actual_immob(i) = 0._r8
-         potential_immob(i) = 0._r8
+         actual_immob = 0._r8
+         potential_immob = 0._r8
          do j = 1, nl_soil  
-            actual_immob(i) = actual_immob(i) + actual_immob_vr(j,i) * dz_soi(j)
-            potential_immob(i) = potential_immob(i) + potential_immob_vr(j,i) * dz_soi(j)
+            actual_immob = actual_immob + actual_immob_vr(j,i) * dz_soi(j)
+            potential_immob = potential_immob + potential_immob_vr(j,i) * dz_soi(j)
          end do
         
         
@@ -622,10 +601,10 @@ subroutine SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
                end if
 #endif
 
-            if (potential_immob(c) > 0.0_r8) then
-               fpi(c) = actual_immob(c) / potential_immob(c)
+            if (potential_immob > 0.0_r8) then
+               fpi(i) = actual_immob / potential_immob
             else
-               fpi(c) = 1._r8
+               fpi(i) = 1._r8
             end if
 #endif
 

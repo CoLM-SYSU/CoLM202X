@@ -158,6 +158,12 @@ CONTAINS
 
       ENDIF
 
+      IF (trim(gridname) == 'nitrif_2deg') THEN
+
+         CALL this%define_by_ndims (144,96)
+
+      ENDIF
+
    END SUBROUTINE grid_define_by_name
 
    !-----------------------------------------------------

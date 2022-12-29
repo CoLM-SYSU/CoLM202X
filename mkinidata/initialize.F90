@@ -216,11 +216,10 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    receiver_pool = (/i_soil1  , i_soil1  , i_soil2  , i_soil2, i_cel_lit, i_lig_lit, i_soil3, i_soil1, i_soil3, i_soil1/)
    am = 0.02_r8
    floating_cn_ratio = (/.true., .true., .true., .true., .false. ,.false., .false./)
-   initial_cn_ratio  = (/90._r8, 90._r8, 90._r8, 90._r8, 200._r8, 200._r8, 200._r8/)      ! 1:ndecomp_pools
+   initial_cn_ratio  = (/90._r8, 90._r8, 90._r8, 90._r8,    8._r8, 11._r8,  11._r8/)      ! 1:ndecomp_pools
 
    f_s2s1 = 0.42_r8/(0.45_r8)
    f_s2s3 = 0.03_r8/(0.45_r8)
-
    if (p_is_worker) THEN
       if(numpatch > 0)then
          do j=1,nl_soil
@@ -241,15 +240,43 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
-
-   gdp_lf (:)    = 0._r8
-   abm_lf (:)    = 0._r8
-   peatf_lf (:)  = 0._r8
+   
+!   gdp_lf (:)    = 0._r8
+!   abm_lf (:)    = 0._r8
+!   peatf_lf (:)  = 0._r8
    cmb_cmplt_fact = (/0.5_r8,0.25_r8/)
 
    nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
    dnp    = 0.01_r8
    bdnr   = 0.5_r8
+   compet_plant_no3 = 1._r8
+   compet_plant_nh4 = 1._r8
+   compet_decomp_no3 = 1._r8
+   compet_decomp_nh4 = 1._r8
+   compet_denit = 1._r8
+   compet_nit = 1._r8
+   surface_tension_water = 0.073
+   rij_kro_a     = 1.5e-10_r8
+   rij_kro_alpha = 1.26_r8
+   rij_kro_beta  = 0.6_r8
+   rij_kro_gamma = 0.6_r8
+   rij_kro_delta = 0.85_r8
+#ifdef NITRIF
+   nfix_timeconst = 10._r8
+#else
+   nfix_timeconst = 0._r8
+#endif
+   organic_max        = 130
+   d_con_g21          = 0.1759_r8
+   d_con_g22          = 0.00117_r8
+   d_con_w21          = 1.172_r8
+   d_con_w22          = 0.03443_r8
+   d_con_w23          = 0.0005048_r8
+   denit_resp_coef    = 0.1_r8
+   denit_resp_exp     = 1.3_r8
+   denit_nitrate_coef = 1.15_r8
+   denit_nitrate_exp  = 0.57_r8
+   k_nitr_max         = 1.1574074e-06_r8
    Q10       = 1.5_r8
    froz_q10  = 1.5_r8
    tau_l1    = 1._r8/18.5_r8
@@ -280,7 +307,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    soilpsi_on      = -0.6
    soilpsi_off     = -0.8
 
-   ! constant for fire module
+! constant for fire module
    occur_hi_gdp_tree        = 0.39_r8
    lfuel                    = 75._r8
    ufuel                    = 650._r8
@@ -434,30 +461,44 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    CALL check_vector_data ('SAI ', tsai)
 #endif
 
-#ifdef CROP
-   if (p_is_worker) then
-      do i = 1, numpatch
-         if(patchtype(i) .eq.  0)then
-            ps = patch_pft_s(i)
-            pe = patch_pft_e(i)
-            do m = ps, pe
-               ivt = pftclass(m)
-               if(ivt >= npcropmin)then
 #ifdef BGC
-                  leafc_p (m) = 0._r8
-                  frootc_p(m) = 0._r8
-#endif
-                  tlai    (i) = 0._r8
-                  tsai    (i) = 0._r8
-                  tlai_p  (m) = 0._r8
-                  tsai_p  (m) = 0._r8
-               end if 
-            end do
-         end if
-      end do
-   end if
+      CALL NDEP_readin(year, dir_landdata, .true., .false.)
+      print*,'after NDEP readin'
+#ifdef NITRIF
+      CALL NITRIF_readin (month, dir_landdata)
+      print*,'after NITRIF readin'
 #endif
 
+#ifdef CROP
+      CALL CROP_readin (dir_landdata)
+      print*,'after CROP readin'
+#endif
+#endif 
+      if (p_is_worker) then
+         do i = 1, numpatch
+            if(patchtype(i) .eq.  0)then
+               ps = patch_pft_s(i)
+               pe = patch_pft_e(i)
+               do m = ps, pe
+                  ivt = pftclass(m)
+                  if(ivt >= npcropmin)then
+#ifdef BGC
+                    leafc_p (m) = 0._r8
+                    frootc_p(m) = 0._r8
+#endif
+                    tlai    (i) = 0._r8
+                    tsai    (i) = 0._r8
+                    tlai_p  (m) = 0._r8
+                    tsai_p  (m) = 0._r8
+                  end if 
+               end do
+            end if
+         end do
+      end if
+#endif
+#ifdef Fire
+      CALL Fire_readin (year,dir_landdata)
+      print*,'after Fire readin'
 #endif
 
    ! ..............................................................................
@@ -475,6 +516,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       do i = 1, numpatch
          m = patchclass(i)
+         print*,'before IniTimeVar',i
          CALL iniTimeVar(i, patchtype(i)&
             ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
             ,soil_s_v_alb(i),soil_d_v_alb(i),soil_s_n_alb(i),soil_d_n_alb(i)&
@@ -500,7 +542,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             ,col_vegendcb(i), col_vegbegcb(i), col_soilendcb(i), col_soilbegcb(i) &
             ,col_vegendnb(i), col_vegbegnb(i), col_soilendnb(i), col_soilbegnb(i) &
             ,col_sminnendnb(i), col_sminnbegnb(i) &
-            ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i)&
+            ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i), lag_npp(i) &
             ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
             ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) , skip_balance_check(i) &
 #ifdef SASU
@@ -528,6 +570,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #else
           )
 #endif
+            print*,'after IniTimeVar',i
       enddo
 
       do i = 1, numpatch
