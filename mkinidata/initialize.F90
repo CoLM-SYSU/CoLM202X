@@ -472,8 +472,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef CROP
       CALL CROP_readin (dir_landdata)
       print*,'after CROP readin'
-#endif
-#endif 
       if (p_is_worker) then
          do i = 1, numpatch
             if(patchtype(i) .eq.  0)then
@@ -482,10 +480,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
                do m = ps, pe
                   ivt = pftclass(m)
                   if(ivt >= npcropmin)then
-#ifdef BGC
                     leafc_p (m) = 0._r8
                     frootc_p(m) = 0._r8
-#endif
                     tlai    (i) = 0._r8
                     tsai    (i) = 0._r8
                     tlai_p  (m) = 0._r8
@@ -495,6 +491,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             end if
          end do
       end if
+#endif
+#endif
 #endif
 #ifdef Fire
       CALL Fire_readin (year,dir_landdata)
