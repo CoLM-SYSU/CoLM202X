@@ -1,5 +1,5 @@
 #include <define.h>
-
+#ifdef CROP
 SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
    ! 1. Global land cover types (updated with the specific dataset)
@@ -419,3 +419,4 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
 
 END SUBROUTINE aggregation_crop_parameters
+#endif

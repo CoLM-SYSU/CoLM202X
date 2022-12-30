@@ -6,9 +6,11 @@ module mod_hist
    use mod_grid
    use mod_mapping_pset2grid
    USE mod_namelist
+#ifdef PFT_CLASSIFICATION
    USE MOD_PFTimeInvars, only: pftclass
-   USE GlobalVars, only : spval
    USE mod_landpft, only : patch_pft_s
+#endif
+   USE GlobalVars, only : spval
    USE ncio_serial
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    USE mod_hist_vector

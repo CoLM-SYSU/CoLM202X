@@ -78,7 +78,6 @@ MODULE LEAF_temperature
   use PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
 USE PhysicalConstants, only: tfrz
-  use MOD_PFTimeInvars, only: pftclass
 #ifdef OzoneStress
   use OzoneMod, only: CalcOzoneStress
 #endif

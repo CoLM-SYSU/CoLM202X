@@ -105,6 +105,10 @@
 
 ! 14 If defined, OzoneStress on plant physiology is used
 #define OzoneStress
+!    Conflicts : only used when PFT_CLASSIFICATION is used
+#ifndef PFT_CLASSIFICATION
+#undef OzoneStress
+#endif
 ! 14.1 If defined, Ozone Data is used instead of constant ozone concentration
 #undef OzoneData
 !    Conflicts : only used when OzoneStress is defined
