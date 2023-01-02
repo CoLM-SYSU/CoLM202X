@@ -5,7 +5,7 @@
 
    DEF_forcing%dataset           = 'ERA5' 
    DEF_forcing%solarin_all_band  = .true.  
-   DEF_forcing%HEIGHT_V          = 100.0    
+   DEF_forcing%HEIGHT_V          = 50.0    
    DEF_forcing%HEIGHT_T          = 40.0
    DEF_forcing%HEIGHT_Q          = 40.0
    
@@ -32,13 +32,13 @@
    DEF_forcing%fprefix(2) = 'Specific_Humdity/ERA5'
    DEF_forcing%fprefix(3) = 'surface_pressure/ERA5'
    DEF_forcing%fprefix(4) = 'mean_total_precipitation_rate/ERA5'
-   DEF_forcing%fprefix(5) = '100m_u_component_of_wind/ERA5'
-   DEF_forcing%fprefix(6) = '100m_v_component_of_wind/ERA5'
+   DEF_forcing%fprefix(5) = '10m_u_component_of_wind/ERA5'
+   DEF_forcing%fprefix(6) = '10m_v_component_of_wind/ERA5'
    DEF_forcing%fprefix(7) = 'mean_surface_downward_short_wave_radiation_flux/ERA5'
    DEF_forcing%fprefix(8) = 'mean_surface_downward_long_wave_radiation_flux/ERA5'
 
 
-   DEF_forcing%vname    = 't2m' 'q' 'sp' 'mtpr' 'u100' 'v100' 'msdwswrf' 'msdwlwrf'
+   DEF_forcing%vname    = 't2m' 'q' 'sp' 'mtpr' 'u10' 'v10' 'msdwswrf' 'msdwlwrf'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
 /
