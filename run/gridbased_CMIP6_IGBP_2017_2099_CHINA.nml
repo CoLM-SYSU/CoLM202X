@@ -42,7 +42,7 @@
    DEF_USE_DOMINANT_PATCHTYPE = .false.
    DEF_USE_VARIABLY_SATURATED_FLOW = .false.
    ! option to use different CO2 path data if CMIP6 is used.
-   DEF_SSP='585'    #126,245,370,585 is availabe        
+   DEF_SSP='585'    !126,245,370,585 are available        
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
    
