@@ -91,7 +91,7 @@ MODULE mod_namelist
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
-
+   CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    ! ----- Initialization -----
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
 
@@ -516,7 +516,8 @@ CONTAINS
          DEF_file_mesh_filter,            &
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
-   
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
+
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
@@ -656,6 +657,8 @@ CONTAINS
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
+      call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
       
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
