@@ -295,8 +295,12 @@ contains
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )         
-
+            call block_data_copy (forcn(6), forc_xy_vs )     
+         ELSEif (trim(dataset) == 'CMIP6') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+            call block_data_copy (forcn(5), forc_xy_us )
+            call block_data_copy (forcn(6), forc_xy_vs )       
          ELSE
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)

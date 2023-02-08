@@ -190,6 +190,8 @@ CONTAINS
          metfilename = '/'//trim(fprefix(var_i))//'-'//trim(yearstr)//trim(monthstr)//'.nc'
       case ('CMFD')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
+      case ('CMIP6')
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       case ('POINT')
          metfilename = '/'//trim(fprefix(1))
       end select
@@ -385,7 +387,14 @@ CONTAINS
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
-
+                  case ('CMIP6')
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                   end select
 
                end do
