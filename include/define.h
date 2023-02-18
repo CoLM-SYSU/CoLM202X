@@ -115,3 +115,9 @@
 #ifndef OzoneStress
 #undef OzoneData
 #endif
+
+#undef   SNICAR
+#undef   Forcing_Downscaling
+#define option_precipitation_adjust_II
+#define option_longwave_adjust_II
+#define option_precip_phase_discrimination_II
