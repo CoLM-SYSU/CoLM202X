@@ -117,8 +117,12 @@ OBJS =  \
 		  MOD_2D_Fluxes.o             \
 		  MOD_2D_Forcing.o            \
 		  user_specified_forcing.o    \
+		  DownscalingForcingMod.o     \
 		  mod_forcing.o               \
 		  ThreeDCanopy.o              \
+		  AerosolMod.o                \
+		  SnowSnicarMod.o             \
+		  SnowAlbedo.o                \
 		  ALBEDO.o                    \
 		  ASSIM_STOMATA_conductance.o \
 		  PlantHydraulic.o            \

@@ -527,7 +527,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #endif
             ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
             ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
-            ,alb(1:,1:,i),ssun(1:,1:,i),ssha(1:,1:,i)&
+            ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
+            ,mss_dst1(:,i),mss_dst2(:,i),mss_dst3(:,i),mss_dst4(:,i)&
+            ,alb(1:,1:,i),ssun(1:,1:,i),ssha(1:,1:,i),ssno(1:,1:,:,i)&
             ,thermk(i),extkb(i),extkd(i)&
             ,trad(i),tref(i),qref(i),rst(i),emis(i),zol(i),rib(i)&
             ,ustar(i),qstar(i),tstar(i),fm(i),fh(i),fq(i)&

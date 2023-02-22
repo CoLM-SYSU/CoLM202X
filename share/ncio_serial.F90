@@ -49,6 +49,7 @@ MODULE ncio_serial
       MODULE procedure ncio_read_bcast_serial_int32_2d 
       MODULE procedure ncio_read_bcast_serial_real8_1d 
       MODULE procedure ncio_read_bcast_serial_real8_2d 
+      MODULE procedure ncio_read_bcast_serial_real8_3d 
       MODULE procedure ncio_read_bcast_serial_logical_1d 
    END INTERFACE ncio_read_bcast_serial
 
@@ -832,6 +833,32 @@ CONTAINS
 #endif 
 
    END SUBROUTINE ncio_read_bcast_serial_real8_2d
+   
+   !---------------------------------------------------------
+   SUBROUTINE ncio_read_bcast_serial_real8_3d (filename, dataname, rdata)
+
+      USE netcdf
+      USE spmd_task
+      USE precision
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      REAL(r8), allocatable, intent(out) :: rdata (:,:,:)
+      INTEGER :: vsize(3)
+
+      IF (p_is_master) THEN
+         CALL ncio_read_serial_real8_3d(filename, dataname, rdata)
+         vsize = shape(rdata)
+      ENDIF
+      
+#ifdef USEMPI
+      CALL mpi_bcast (vsize, 3, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3)))
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3), MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif 
+
+   END SUBROUTINE ncio_read_bcast_serial_real8_3d
    
    ! -------------------------------
    SUBROUTINE ncio_read_bcast_serial_logical_1d (filename, dataname, rdata)

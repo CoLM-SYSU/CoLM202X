@@ -262,6 +262,9 @@ MODULE LAKE
            wliq_soisno  , wice_soisno , imelt_soisno , t_lake    ,&
            lake_icefrac , savedtke1, &
 
+           ! SNICAR
+           snofrz       , sabg_lyr    , &
+
            ! "out" arguments
            ! -------------------
            taux         , tauy        , fsena                    ,&
@@ -317,7 +320,7 @@ MODULE LAKE
 ! [ts] n   = old temperature (kelvin)
 ! [ts] n+1 = new temperature (kelvin)
 ! fin      = heat flux into lake (w/m**2)
-!          = beta*sabg+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake) 
+!          = beta*sabg_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake) 
 ! -----------------------------------------------------------------
   use precision
   use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
@@ -348,6 +351,7 @@ MODULE LAKE
   real(r8), INTENT(in) :: forc_solld  ! atm nir diffuse solar rad onto srf [W/m2]
   real(r8), INTENT(in) :: forc_frl    ! atmospheric infrared (longwave) radiation [W/m2]
   real(r8), INTENT(in) :: sabg        ! solar radiation absorbed by ground [W/m2]
+  real(r8), INTENT(in) :: sabg_lyr (maxsnl+1:1)       ! solar radiation absorbed by ground [W/m2]
 
   real(r8), INTENT(in) :: dz_soisno(maxsnl+1:nl_soil) ! soil/snow layer thickness (m)
   real(r8), INTENT(in) :: z_soisno(maxsnl+1:nl_soil)  ! soil/snow node depth [m]
@@ -386,6 +390,8 @@ MODULE LAKE
   real(r8), INTENT(inout) :: t_lake(nl_lake)       ! lake temperature (kelvin)
   real(r8), INTENT(inout) :: lake_icefrac(nl_lake) ! lake mass fraction of lake layer that is frozen
   real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K) 
+
+  REAL(r8), intent(out) :: snofrz (maxsnl+1:0)     ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
   real(r8), INTENT(out) :: taux   ! wind stress: E-W [kg/m/s**2]
   real(r8), INTENT(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
@@ -519,6 +525,7 @@ MODULE LAKE
 
   real(r8) t_soisno_bef(maxsnl+1:nl_soil) ! beginning soil/snow temp for E cons. check [K]
   real(r8) t_lake_bef(1:nl_lake)          ! beginning lake temp for energy conservation check [K]
+  real(r8) wice_soisno_bef(maxsnl+1:0)    ! ice lens [kg/m2]
 
   real(r8) cvx    (maxsnl+1:nl_lake+nl_soil) ! heat capacity for whole column [J/(m2 K)]
   real(r8) tkix   (maxsnl+1:nl_lake+nl_soil) ! thermal conductivity at layer interfaces for whole column [W/(m K)]
@@ -643,7 +650,9 @@ MODULE LAKE
 !*[2] pre-processing for the calcilation of the surface temperature and fluxes
 ! ======================================================================
 
+#ifndef SNICAR
       if (snl == 0) then
+#endif
          ! calculate the nir fraction of absorbed solar.
          betaprime = (forc_soll+forc_solld)/max(1.e-5,forc_sols+forc_soll+forc_solsd+forc_solld)
          betavis = 0. ! The fraction of the visible (e.g. vis not nir from atm) sunlight
@@ -652,12 +661,14 @@ MODULE LAKE
                       ! of atmospheric radiative transfer.
                       ! As long as NIR = 700 nm and up, this can be zero.
          betaprime = betaprime + (1.0-betaprime)*betavis
+#ifndef SNICAR
       else 
          ! or frozen but no snow layers or 
          ! currently ignor the transmission of solar in snow and ice layers
          ! to be updated in the future version
          betaprime = 1.0
       end if
+#endif
 
       call qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 ! potential temperatur at the reference height
@@ -852,6 +863,11 @@ MODULE LAKE
 !The actual heat flux from the ground interface into the lake, not including the light that penetrates the surface.
       fgrnd1 = betaprime*sabg + forc_frl - olrg - fseng - htvp*fevpg
 
+#ifdef SNICAR
+      ! January 12, 2023 by Yuan Hua
+      hs = sabg_lyr(lb) + forc_frl - olrg - fseng - htvp*fevpg
+      dhsdT = 0.0
+#endif
 !------------------------------------------------------------
 ! Set up vector r and vectors a, b, c that define tridiagonal matrix
 ! snow and lake and soil layer temperature
@@ -952,8 +968,10 @@ MODULE LAKE
       end do
 
       ! Set up solar source terms (phix)
-
+      ! Modified January 12, 2023 by Yuan Hua
+#ifndef SNICAR
       if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0)) then      !no snow cover, unfrozen layer lakes
+#endif
          do j = 1, nl_lake
             ! extinction coefficient from surface data (1/m), if no eta from surface data,
             ! set eta, the extinction coefficient, according to L Hakanson, Aquatic Sciences, 1995
@@ -970,9 +988,15 @@ MODULE LAKE
             ! This looks like it should be robust even for pathological cases,
             ! like lakes thinner than za(idlak).
 
+#ifndef SNICAR
             phi(j) = (rsfin-rsfout) * sabg * (1.-betaprime)
             if (j == nl_lake) phi_soil = rsfout * sabg * (1.-betaprime)
+#else
+            phi(j) = (rsfin-rsfout) * sabg_lyr(1) * (1.-betaprime)
+            if (j == nl_lake) phi_soil = rsfout * sabg_lyr(1) * (1.-betaprime)
+#endif
          end do
+#ifndef SNICAR
       else if (snl == 0) then     !no snow-covered layers, but partially frozen 
           phi(1) = sabg * (1.-betaprime)
           phi(2:nl_lake) = 0.
@@ -982,6 +1006,7 @@ MODULE LAKE
          phi(:) = 0.
          phi_soil = 0.
       end if
+#endif
 
       phix(:) = 0.
       phix(1:nl_lake) = phi(1:nl_lake)         !lake layer
@@ -1056,6 +1081,58 @@ MODULE LAKE
          end if
       end do
 
+#ifdef SNICAR
+      if (lb <= 0) then                        ! snow covered
+         do j = lb, 1
+            if (j == lb) then                  ! top snow layer
+               dzp  = zx(j+1)-zx(j)
+               a(j) = 0.0
+               b(j) = 1. + (1.-cnfac)*factx(j)*tkix(j)/dzp
+               c(j) = -(1.-cnfac)*factx(j)* tkix(j)/dzp
+               r(j) = tx_bef(j)+ factx(j)*(hs - dhsdT*tx_bef(j) + cnfac*fnx(j))
+            else if (j <= 0) then              ! non-top snow layers
+               dzm  = (zx(j)-zx(j-1))
+               dzp  = (zx(j+1)-zx(j))
+               a(j) =   - (1.-cnfac)*factx(j)* tkix(j-1)/dzm
+               b(j) = 1.+ (1.-cnfac)*factx(j)*(tkix(j)/dzp + tkix(j-1)/dzm)
+               c(j) =   - (1.-cnfac)*factx(j)* tkix(j)/dzp
+               r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*sabg_lyr(j)
+            else                               ! snow covered top lake layer
+               dzm  = (zx(j)-zx(j-1))
+               dzp  = (zx(j+1)-zx(j))
+               a(j) =   - (1.-cnfac)*factx(j)* tkix(j-1)/dzm
+               b(j) = 1.+ (1.-cnfac)*factx(j)*(tkix(j)/dzp + tkix(j-1)/dzm)
+               c(j) =   - (1.-cnfac)*factx(j)* tkix(j)/dzp
+               r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*(phix(j) + betaprime*sabg_lyr(j))
+            endif
+         enddo
+      else
+         j = 1                                 ! no snow covered top lake layer
+         dzp  = zx(j+1)-zx(j)
+         a(j) = 0.0
+         b(j) = 1. + (1.-cnfac)*factx(j)*tkix(j)/dzp
+         c(j) = -(1.-cnfac)*factx(j)* tkix(j)/dzp
+         r(j) = tx_bef(j)+ factx(j)*(cnfac*fnx(j)+ phix(j)+fgrnd1)
+      endif
+
+      do j = 2, nl_lake+nl_soil
+         if (j < nl_lake+nl_soil) then         ! middle lake and soil layers
+            dzm  = (zx(j)-zx(j-1))
+            dzp  = (zx(j+1)-zx(j))
+            a(j) =   - (1.-cnfac)*factx(j)* tkix(j-1)/dzm
+            b(j) = 1.+ (1.-cnfac)*factx(j)*(tkix(j)/dzp + tkix(j-1)/dzm)
+            c(j) =   - (1.-cnfac)*factx(j)* tkix(j)/dzp
+            r(j) = tx_bef(j) + cnfac*factx(j)*(fnx(j) - fnx(j-1)) + factx(j)*phix(j)
+         else                                  ! bottom soil layer
+            dzm  = (zx(j)-zx(j-1))
+            a(j) =   - (1.-cnfac)*factx(j)*tkix(j-1)/dzm
+            b(j) = 1.+ (1.-cnfac)*factx(j)*tkix(j-1)/dzm
+            c(j) = 0.
+            r(j) = tx_bef(j) - cnfac*factx(j)*fnx(j-1)
+         end if
+      end do
+! January 12, 2023
+#else
          do j = lb, nl_lake+nl_soil
             if (j == lb) then                     ! top layer
                 dzp  = zx(j+1)-zx(j)
@@ -1078,6 +1155,7 @@ MODULE LAKE
                r(j) = tx_bef(j) - cnfac*factx(j)*fnx(j-1)
             end if
          end do
+#endif
 
 !------------------------------------------------------------
 ! Solve for tdsolution
@@ -1170,6 +1248,9 @@ MODULE LAKE
       imelt_soisno(:) = 0
       imelt_lake(:) = 0
 
+#ifdef SNICAR
+      wice_soisno_bef(lb:0) = wice_soisno(lb:0)
+#endif
       ! Check for case of snow without snow layers and top lake layer temp above freezing.
 
       if (snl == 0 .and. scv > 0. .and. t_lake(1) > tfrz) then
@@ -1241,6 +1322,16 @@ MODULE LAKE
       end do
       !------------------------------------------------------------
 
+#ifdef SNICAR
+      !for SNICAR: layer freezing mass flux (positive): 
+      DO j = lb, 0
+         IF (imelt_soisno(j)==2 .and. j<1) THEN
+            snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
+         ENDIF
+      ENDDO
+#else
+      snofrz(:) = 0.
+#endif
 #if (defined CLMDEBUG)
       ! second energy check and water check. now check energy balance before and after phase
       ! change, considering the possibility of changed heat capacity during phase change, by
@@ -1387,7 +1478,14 @@ MODULE LAKE
              z_soisno    , dz_soisno   , zi_soisno , t_soisno ,&
              wice_soisno , wliq_soisno , t_lake    , lake_icefrac ,&
              fseng       , fgrnd       , snl       , scv ,&
-             snowdp      , sm )
+             snowdp      , sm            &
+#ifdef SNICAR
+             ! SNICAR
+             ,forc_aer,&
+             mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, &
+             mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4   &
+#endif
+             )
 
 !-----------------------------------------------------------------------------------------------
 ! Calculation of Lake Hydrology. Lake water mass is kept constant. The soil is simply maintained at
@@ -1449,6 +1547,21 @@ MODULE LAKE
   real(r8), INTENT(inout) :: snowdp ! snow height (m)
   real(r8), INTENT(inout) :: sm     ! rate of snow melt (mm H2O /s)
 
+#ifdef SNICAR
+! Aerosol Fluxes (Jan. 07, 2023 by Yuan Hua)
+  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+
+  real(r8), INTENT(inout) :: &
+        mss_bcpho (maxsnl+1:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (maxsnl+1:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (maxsnl+1:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (maxsnl+1:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (maxsnl+1:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (maxsnl+1:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (maxsnl+1:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (maxsnl+1:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+! Aerosol Fluxes (Jan. 07, 2023)
+#endif
 
 ! ------------- other local variables -----------------------------------------
   integer  j          ! indices
@@ -1478,9 +1591,18 @@ MODULE LAKE
       ! ----------------------------------------------------------
       if (snl < 0) then 
          lb = snl + 1
+#ifdef SNICAR
+         call snowwater_SNICAR (lb,deltim,ssi,wimp,&
+                         pg_rain,qseva,qsdew,qsubl,qfros,&
+                         dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),qout_snowb,    &
+                         forc_aer,&
+                         mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                         mss_dst1(lb:0),  mss_dst2(lb:0),  mss_dst3(lb:0),  mss_dst4(lb:0) )
+#else
          call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),qout_snowb)
+#endif
 
          ! Natural compaction and metamorphosis.
          lb = snl + 1
@@ -1490,15 +1612,30 @@ MODULE LAKE
 
          ! Combine thin snow elements
          lb = maxsnl + 1
+#ifdef SNICAR
+         call snowlayerscombine_SNICAR (lb, snl,&
+                                 z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:0),&
+                                 wliq_soisno(lb:1),wice_soisno(lb:1), t_soisno(lb:1),scv,snowdp, &
+                                 mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                                 mss_dst1(lb:0),  mss_dst2(lb:0),  mss_dst3(lb:0),  mss_dst4(lb:0))
+#else
          call snowlayerscombine (lb, snl,&
                                  z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:0),&
                                  wliq_soisno(lb:1),wice_soisno(lb:1),&
-                                 t_soisno(lb:1),scv,snowdp )
+                                 t_soisno(lb:1),scv,snowdp)
+#endif
 
          ! Divide thick snow elements
          if (snl < 0) then
+#ifdef SNICAR
+         call snowlayersdivide_SNICAR (lb,snl,z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
+                                wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0)     ,&
+                                 mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                                 mss_dst1(lb:0),  mss_dst2(lb:0),  mss_dst3(lb:0),  mss_dst4(lb:0) )
+#else
          call snowlayersdivide (lb,snl,z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
                                 wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0))
+#endif
          endif
 
       ! ----------------------------------------------------------

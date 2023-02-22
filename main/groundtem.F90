@@ -8,8 +8,8 @@
 #endif
                        sigf,dz_soisno,z_soisno,zi_soisno,&
                        t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
-                       frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                       imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
+                       frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
+                       imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! Snow and soil temperatures
@@ -70,6 +70,8 @@
   real(r8), INTENT(in) :: z_soisno (lb:nl_soil)   !node depth [m]
   real(r8), INTENT(in) :: zi_soisno(lb-1:nl_soil) !interface depth [m]
 
+  REAL(r8), intent(in) :: sabg_lyr(lb:1)          !snow layer absorption [W/m-2]
+
   real(r8), INTENT(in) :: sabg     !solar radiation absorbed by ground [W/m2]
   real(r8), INTENT(in) :: frl      !atmospheric infrared (longwave) radiation [W/m2]
   real(r8), INTENT(in) :: dlrad    !downward longwave radiation blow the canopy [W/m2]
@@ -93,6 +95,8 @@
   real(r8), INTENT(out) :: fact(lb:nl_soil) !used in computing tridiagonal matrix
   integer,  INTENT(out) :: imelt(lb:nl_soil)!flag for melting or freezing [-]
 
+  REAL(r8), intent(out) :: snofrz(lb:0)      !snow freezing rate (lyr) [kg m-2 s-1]
+
 !------------------------ local variables ------------------------------
   real(r8) cv(lb:nl_soil)     ! heat capacity [J/(m2 K)]
   real(r8) tk(lb:nl_soil)     ! thermal conductivity [W/(m K)]
@@ -110,6 +114,7 @@
   real(r8) dzp                !used in computing tridiagonal matrix
 
   real(r8) t_soisno_bef(lb:nl_soil) !soil/snow temperature before update
+  real(r8) wice_soisno_bef(lb:0)    !ice lens [kg/m2]
   real(r8) hs                 !net energy flux into the surface (w/m2)
   real(r8) dhsdt              !d(hs)/dT
   real(r8) brr(lb:nl_soil)    !temporay set
@@ -182,7 +187,11 @@
       tk(nl_soil) = 0.
      
 ! net ground heat flux into the surface and its temperature derivative
+#ifdef SNICAR
+      hs = sabg_lyr(lb) + dlrad*emg &
+#else
       hs = sabg + dlrad*emg &
+#endif
 ! 08/19/2021, yuan: remove sigf, LAI->100% cover
          !+ (1.-sigf)*emg*frl - emg*stefnc*t_soisno(lb)**4 &
          - emg*stefnc*t_soisno(lb)**4 &
@@ -213,8 +222,20 @@
       ct(j) =  -(1.-cnfac)*fact(j)*tk(j)/dzp
       rt(j) = t_soisno(j) + fact(j)*( hs - dhsdT*t_soisno(j) + cnfac*fn(j) )
 
+! January 12, 2023
+      if (lb <= 0) then
+          do j = lb + 1, 1
+             dzm   = (z_soisno(j)-z_soisno(j-1))
+             dzp   = (z_soisno(j+1)-z_soisno(j))
+             at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
+             bt(j) = 1.+ (1.-cnfac)*fact(j)*(tk(j)/dzp + tk(j-1)/dzm)
+             ct(j) =   - (1.-cnfac)*fact(j)* tk(j)/dzp
+             rt(j) = t_soisno(j) + fact(j)*sabg_lyr(j) + cnfac*fact(j)*( fn(j) - fn(j-1) )
+          end do
+      endif
 
-      do j = lb + 1, nl_soil - 1
+      do j = 2, nl_soil - 1
+! January 12, 2023
          dzm   = (z_soisno(j)-z_soisno(j-1))
          dzp   = (z_soisno(j+1)-z_soisno(j))
          at(j) =   - (1.-cnfac)*fact(j)* tk(j-1)/dzm
@@ -249,10 +270,28 @@
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       enddo
 
+#ifdef SNICAR
+
+      wice_soisno_bef(lb:0) = wice_soisno(lb:0)
+
+      call meltf_snicar (lb,nl_soil,deltim, &
+                  fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
+                  t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
+                  scv,snowdp,sm,xmf)
+
+      ! layer freezing mass flux (positive):
+      DO j = lb, 0
+         IF (imelt(j)==2 .and. j<1) THEN
+            snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
+         ENDIF
+      ENDDO
+
+#else
       call meltf (lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf)
+#endif
 !-----------------------------------------------------------------------
 
  end subroutine groundtem

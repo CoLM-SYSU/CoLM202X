@@ -48,7 +48,8 @@
                      errore      ,emis        ,z0m         ,zol        ,&
                      rib         ,ustar       ,qstar       ,tstar      ,&
                      fm          ,fh          ,fq          ,pg_rain    ,&
-                     pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow )
+                     pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow ,&
+                     snofrz      ,sabg_lyr                              )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation 
@@ -215,6 +216,9 @@ use spmd_task
         z_soisno (lb:nl_soil),  &! node depth [m]
         zi_soisno(lb-1:nl_soil)  ! interface depth [m]
 
+  REAL(r8), intent(in) :: &
+        sabg_lyr(lb:1)           ! snow layer aborption
+
         ! state variables (2)
   REAL(r8), intent(inout) :: &
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -240,6 +244,9 @@ use spmd_task
         ldew_snow,        &! depth of rain on foliage [kg/(m2 s)] 
         scv,         &! snow cover, water equivalent [mm, kg/m2]
         snowdp        ! snow depth [m]
+
+  REAL(r8), intent(out) :: &
+        snofrz (lb:0) !snow freezing rate (col,lyr) [kg m-2 s-1]
 
   INTEGER, intent(out) :: & 
        imelt(lb:nl_soil) ! flag for melting or freezing [-]
@@ -1038,8 +1045,8 @@ ENDIF
 #endif
                       sigf,dz_soisno,z_soisno,zi_soisno,&
                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
-                      frl,dlrad,sabg,fseng,fevpg,cgrnd,htvp,emg,&
-                      imelt,sm,xmf,fact,pg_rain,pg_snow,t_precip)
+                      frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
+                      imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! [6] Correct fluxes to present soil temperature

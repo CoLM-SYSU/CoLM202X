@@ -93,7 +93,9 @@ MODULE mod_namelist
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    ! ----- Initialization -----
-   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+   CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
+   CHARACTER(len=256) :: DEF_file_snowoptics = 'snicar_optics_5bnd_mam_c211006.nc'
+   CHARACTER(len=256) :: DEF_file_snowaging  = 'snicar_drdt_bst_fit_60_c070416.nc'
 
    ! ----- history -----
    LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
@@ -523,6 +525,8 @@ CONTAINS
          DEF_USE_VARIABLY_SATURATED_FLOW, &
 
          DEF_file_soil_init,              &
+         DEF_file_snowoptics,             &
+         DEF_file_snowaging ,             &
 
          DEF_forcing_namelist,            &
 
@@ -664,7 +668,9 @@ CONTAINS
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_soil_init , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 

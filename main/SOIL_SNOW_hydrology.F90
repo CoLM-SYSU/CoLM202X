@@ -15,6 +15,7 @@ MODULE SOIL_SNOW_hydrology
   PUBLIC :: WATER_VSF
   public :: snowwater
   public :: soilwater
+  public :: snowwater_snicar
 
 
 ! PRIVATE MEMBER FUNCTIONS:
@@ -40,6 +41,11 @@ MODULE SOIL_SNOW_hydrology
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
             ,flddepth,fldfrc,qinfl_fld  &
+#endif
+#ifdef SNICAR
+             ,forc_aer   ,&
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
 #endif
             )
 !=======================================================================
@@ -119,7 +125,23 @@ MODULE SOIL_SNOW_hydrology
 #if(defined CaMa_Flood)
         real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (m/s)
 #endif
+
+#ifdef SNICAR
+! Aerosol Fluxes (Jan. 07, 2023)
+  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
   
+  real(r8), INTENT(inout) :: &
+        mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lb:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lb:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lb:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+! Aerosol Fluxes (Jan. 07, 2023)
+#endif
+
 !-----------------------Local Variables------------------------------
 !                   
   integer j                 ! loop counter
@@ -147,9 +169,18 @@ MODULE SOIL_SNOW_hydrology
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
+#ifndef SNICAR
          call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
+#else
+         call snowwater_snicar (lb,deltim,ssi,wimp,&
+                         pg_rain,qseva,qsdew,qsubl,qfros,&
+                         dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
+                         forc_aer,&
+                         mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                         mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
+#endif
       endif
 
 !=======================================================================
@@ -330,6 +361,11 @@ ENDIF
 #if(defined CaMa_Flood)
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
+#ifdef SNICAR
+             ,forc_aer   ,&
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
+#endif
              )
 
 !=======================================================================
@@ -420,6 +456,23 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 #if(defined CaMa_Flood)
         real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
+
+#ifdef SNICAR
+! Aerosol Fluxes (Jan. 07, 2023)
+  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+  
+  real(r8), INTENT(inout) :: &
+        mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lb:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lb:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lb:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+! Aerosol Fluxes (Jan. 07, 2023)
+#endif
+
 !-----------------------Local Variables------------------------------
 !                   
   integer j                 ! loop counter
@@ -472,9 +525,18 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
          ! gwat = pg_rain + sm - qseva + qsdew
          gwat = pg_rain + sm + qsdew
       else
+#ifndef SNICAR
          call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
+#else
+         call snowwater_snicar (lb,deltim,ssi,wimp,&
+                         pg_rain,qseva,qsdew,qsubl,qfros,&
+                         dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
+                         forc_aer,&
+                         mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                         mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
+#endif
       endif
 
 !=======================================================================
@@ -817,6 +879,441 @@ endif
   end subroutine snowwater
 
 
+!-----------------------------------------------------------------------
+  subroutine SnowWater_snicar (lb,deltim,ssi,wimp, &
+                        pg_rain,qseva,qsdew,qsubl,qfros, &
+                        dz_soisno,wice_soisno,wliq_soisno,qout_snowb, &
+
+! Aerosol Fluxes (Jan. 07, 2023)
+                        forc_aer, &
+                        mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, &
+                        mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4 )
+! Aerosol Fluxes (Jan. 07, 2023)
+
+
+!-----------------------------------------------------------------------
+! Original author : Yongjiu Dai, /09/1999, /04/2014, /01/2023/
+!
+! Water flow wihtin snow is computed by an explicit and non-physical based scheme,
+! which permits a part of liquid water over the holding capacity (a tentative value
+! is used, i.e., equal to 0.033*porosity) to percolate into the underlying layer,
+! except the case of that the porosity of one of the two neighboring layers is
+! less than 0.05, the zero flow is assumed. The water flow out of the bottom
+! snow pack will participate as the input of the soil water and runoff.
+!
+!-----------------------------------------------------------------------
+
+  IMPLICIT NONE
+
+  integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
+  real(r8), parameter :: denice = 917.0_r8  ! density of ice [kg/m3]
+  real(r8), parameter :: denh2o = 1000.0_r8 ! density of liquid water [kg/m3]
+
+!----------------------- dummy argument --------------------------------
+  integer, INTENT(in) :: &
+        lb          ! lower bound of array
+
+  real(r8), INTENT(in) :: &
+        deltim,    &! seconds in a time step (s)
+        ssi,       &! irreducible water saturation of snow
+        wimp,      &! water impremeable if porosity less than wimp
+        dz_soisno(lb:0),  &! layer thickness (m)
+
+        pg_rain,   &! rainfall after removal of interception (mm h2o/s)
+        qseva,     &! ground surface evaporation rate (mm h2o/s)
+        qsdew,     &! ground surface dew formation (mm h2o /s) [+]
+        qsubl,     &! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros       ! surface dew added to snow pack (mm h2o /s) [+]
+
+  real(r8), INTENT(inout) :: &
+        wice_soisno(lb:0),&! ice lens (kg/m2)
+        wliq_soisno(lb:0)  ! liquid water (kg/m2)
+
+  real(r8), INTENT(out) :: &
+        qout_snowb  ! rate of water out of snow bottom (mm/s)
+
+! Aerosol Fluxes (Jan. 07, 2023)
+  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+
+  real(r8), INTENT(inout) :: &
+        mss_bcpho (lb:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lb:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lb:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lb:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lb:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lb:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+! Aerosol Fluxes (Jan. 07, 2023)
+
+!----------------------- local variables --------------------------------
+  integer j         ! do loop/array indices
+
+  real(r8) :: &
+       qin,        &! water flow into the elmement (mm/s)
+       qout,       &! water flow out of the elmement (mm/s)
+       zwice,      &! the sum of ice mass of snow cover (kg/m2)
+       wgdif,      &! ice mass after minus sublimation
+    vol_liq(lb:0), &! partitial volume of liquid water in layer
+    vol_ice(lb:0), &! partitial volume of ice lens in layer
+ eff_porosity(lb:0) ! effective porosity = porosity - vol_ice
+
+! Aerosol Fluxes (Jan. 07, 2023)
+  !  Aerosol species indices:
+  !  1= hydrophillic (bulk model) or within-ice (modal model) black carbon
+  !  2= hydrophobic (bulk model) or external (modal model) black carbon
+  !  3= hydrophilic organic carbon
+  !  4= hydrophobic organic carbon
+  !  5= dust species 1
+  !  6= dust species 2
+  !  7= dust species 3
+  !  8= dust species 4
+  !
+  real(r8), parameter :: scvng_fct_mlt_bcphi = 0.20 ! scavenging factor for hydrophillic BC inclusion in meltwater [frc]
+  real(r8), parameter :: scvng_fct_mlt_bcpho = 0.03 ! scavenging factor for hydrophobic BC inclusion in meltwater  [frc]
+  real(r8), parameter :: scvng_fct_mlt_ocphi = 0.20 ! scavenging factor for hydrophillic OC inclusion in meltwater [frc]
+  real(r8), parameter :: scvng_fct_mlt_ocpho = 0.03 ! scavenging factor for hydrophobic OC inclusion in meltwater  [frc]
+  real(r8), parameter :: scvng_fct_mlt_dst1  = 0.02 ! scavenging factor for dust species 1 inclusion in meltwater  [frc]
+  real(r8), parameter :: scvng_fct_mlt_dst2  = 0.02 ! scavenging factor for dust species 2 inclusion in meltwater  [frc]
+  real(r8), parameter :: scvng_fct_mlt_dst3  = 0.01 ! scavenging factor for dust species 3 inclusion in meltwater  [frc]
+  real(r8), parameter :: scvng_fct_mlt_dst4  = 0.01 ! scavenging factor for dust species 4 inclusion in meltwater  [frc]
+
+  ! !LOCAL VARIABLES:
+  real(r8) :: qin_bc_phi       ! flux of hydrophilic BC into   layer [kg]
+  real(r8) :: qout_bc_phi      ! flux of hydrophilic BC out of layer [kg]
+  real(r8) :: qin_bc_pho       ! flux of hydrophobic BC into   layer [kg]
+  real(r8) :: qout_bc_pho      ! flux of hydrophobic BC out of layer [kg]
+  real(r8) :: qin_oc_phi       ! flux of hydrophilic OC into   layer [kg]
+  real(r8) :: qout_oc_phi      ! flux of hydrophilic OC out of layer [kg]
+  real(r8) :: qin_oc_pho       ! flux of hydrophobic OC into   layer [kg]
+  real(r8) :: qout_oc_pho      ! flux of hydrophobic OC out of layer [kg]
+  real(r8) :: qin_dst1         ! flux of dust species 1 into   layer [kg]
+  real(r8) :: qout_dst1        ! flux of dust species 1 out of layer [kg]
+  real(r8) :: qin_dst2         ! flux of dust species 2 into   layer [kg]
+  real(r8) :: qout_dst2        ! flux of dust species 2 out of layer [kg]
+  real(r8) :: qin_dst3         ! flux of dust species 3 into   layer [kg]
+  real(r8) :: qout_dst3        ! flux of dust species 3 out of layer [kg]
+  real(r8) :: qin_dst4         ! flux of dust species 4 into   layer [kg]
+  real(r8) :: qout_dst4        ! flux of dust species 4 out of layer [kg]
+  real(r8) :: mss_liqice(lb:0) ! mass of liquid+ice in a layer
+
+  real(r8) :: subsnow          ! sublimated snow [kg m-2]
+  real(r8) :: frc_sub          ! fraction of layer mass that has sublimated [frc]
+  real(r8) :: frc_transfer     ! frc_refrz + frc_sub
+  real(r8) :: dm_int           ! mass transfer [kg]
+
+  ! !LOCAL VARIABLES for AerosolFluxes
+  real(r8) :: flx_bc_dep       ! total BC deposition        (col) [kg m-2 s-1]
+  real(r8) :: flx_bc_dep_phi   ! hydrophillic BC deposition (col) [kg m-1 s-1]
+  real(r8) :: flx_bc_dep_pho   ! hydrophobic BC deposition  (col) [kg m-1 s-1]
+  real(r8) :: flx_oc_dep       ! total OC deposition        (col) [kg m-2 s-1]
+  real(r8) :: flx_oc_dep_phi   ! hydrophillic OC deposition (col) [kg m-1 s-1]
+  real(r8) :: flx_oc_dep_pho   ! hydrophobic OC deposition  (col) [kg m-1 s-1]
+  real(r8) :: flx_dst_dep      ! total dust deposition      (col) [kg m-2 s-1]
+
+  real(r8) :: flx_dst_dep_wet1 ! wet dust (species 1) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_dry1 ! dry dust (species 1) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_wet2 ! wet dust (species 2) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_dry2 ! dry dust (species 2) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_wet3 ! wet dust (species 3) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_dry3 ! dry dust (species 3) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_wet4 ! wet dust (species 4) deposition (col) [kg m-2 s-1]
+  real(r8) :: flx_dst_dep_dry4 ! dry dust (species 4) deposition (col) [kg m-2 s-1]
+! Aerosol Fluxes (Jan. 07, 2023)
+
+!=======================================================================
+! renew the mass of ice lens (wice_soisno) and liquid (wliq_soisno) in the surface snow layer,
+! resulted by sublimation (frost) / evaporation (condense)
+
+      wgdif = wice_soisno(lb) + (qfros - qsubl)*deltim
+      wice_soisno(lb) = wgdif
+      if(wgdif < 0.)then
+         wice_soisno(lb) = 0.
+         wliq_soisno(lb) = wliq_soisno(lb) + wgdif
+      endif
+      wliq_soisno(lb) = wliq_soisno(lb) + (pg_rain + qsdew - qseva)*deltim
+      wliq_soisno(lb) = max(0., wliq_soisno(lb))
+
+! Porosity and partitial volume
+      do j = lb, 0
+         vol_ice(j) = min(1., wice_soisno(j)/(dz_soisno(j)*denice))
+         eff_porosity(j) = max(0.01, 1. - vol_ice(j))
+         vol_liq(j) = min(eff_porosity(j), wliq_soisno(j)/(dz_soisno(j)*denh2o))
+      enddo
+
+! Capillary force within snow could be two or more orders of magnitude
+! less than those of gravity, this term may be ignored.
+! Here we could keep the garavity term only. The genernal expression
+! for water flow is "K * ss**3", however, no effective paramterization
+! for "K". Thus, a very simple treatment (not physical based) is introduced:
+! when the liquid water of layer exceeds the layer's holding
+! capacity, the excess meltwater adds to the underlying neighbor layer.
+
+! Aerosol Fluxes (Jan. 07, 2023)
+! Also compute aerosol fluxes through snowpack in this loop:
+! 1) compute aerosol mass in each layer
+! 2) add aerosol mass flux from above layer to mass of this layer
+! 3) qout_xxx is mass flux of aerosol species xxx out bottom of
+!    layer in water flow, proportional to (current) concentration
+!    of aerosol in layer multiplied by a scavenging ratio.
+! 4) update mass of aerosol in top layer, accordingly
+! 5) update mass concentration of aerosol accordingly
+
+      qin        = 0._r8
+
+! Aerosol Fluxes (Jan. 07, 2023)
+      qin_bc_phi = 0._r8
+      qin_bc_pho = 0._r8
+      qin_oc_phi = 0._r8
+      qin_oc_pho = 0._r8
+      qin_dst1   = 0._r8
+      qin_dst2   = 0._r8
+      qin_dst3   = 0._r8
+      qin_dst4   = 0._r8
+! Aerosol Fluxes (Jan. 07, 2023)
+
+      do j= lb, 0
+
+         wliq_soisno(j) = wliq_soisno(j) + qin
+
+! Aerosol Fluxes (Jan. 07, 2023)
+         mss_bcphi(j) = mss_bcphi(j) + qin_bc_phi
+         mss_bcpho(j) = mss_bcpho(j) + qin_bc_pho
+         mss_ocphi(j) = mss_ocphi(j) + qin_oc_phi
+         mss_ocpho(j) = mss_ocpho(j) + qin_oc_pho
+
+         mss_dst1(j)  = mss_dst1(j) + qin_dst1
+         mss_dst2(j)  = mss_dst2(j) + qin_dst2
+         mss_dst3(j)  = mss_dst3(j) + qin_dst3
+         mss_dst4(j)  = mss_dst4(j) + qin_dst4
+! Aerosol Fluxes (Jan. 07, 2023)
+
+         if(j <= -1)then
+         ! no runoff over snow surface, just ponding on surface
+           if(eff_porosity(j)<wimp .OR. eff_porosity(j+1)<wimp)then
+             qout = 0._r8
+           else
+             qout = max(0._r8,(vol_liq(j)-ssi*eff_porosity(j))*dz_soisno(j))
+             qout = min(qout,(1.-vol_ice(j+1)-vol_liq(j+1))*dz_soisno(j+1))
+           endif
+         else
+           qout = max(0._r8,(vol_liq(j)-ssi*eff_porosity(j))*dz_soisno(j))
+         endif
+
+         qout = qout*1000._r8
+         wliq_soisno(j) = wliq_soisno(j) - qout
+         qin = qout
+
+! Aerosol Fluxes (Jan. 07, 2023)
+         ! mass of ice+water: in extremely rare circumstances, this can
+         ! be zero, even though there is a snow layer defined. In
+         ! this case, set the mass to a very small value to
+         ! prevent division by zero.
+
+         mss_liqice(j) = wliq_soisno(j)+wice_soisno(j)
+         if (mss_liqice(j) < 1E-30_r8) then
+            mss_liqice(j) = 1E-30_r8
+         endif
+
+         ! BCPHI:
+         ! 1. flux with meltwater:
+         qout_bc_phi = qout*scvng_fct_mlt_bcphi*(mss_bcphi(j)/mss_liqice(j))
+         if (qout_bc_phi > mss_bcphi(j)) then
+            qout_bc_phi = mss_bcphi(j)
+         endif
+         mss_bcphi(j) = mss_bcphi(j) - qout_bc_phi
+         qin_bc_phi = qout_bc_phi
+
+         ! BCPHO:
+         ! 1. flux with meltwater:
+         qout_bc_pho = qout*scvng_fct_mlt_bcpho*(mss_bcpho(j)/mss_liqice(j))
+         if (qout_bc_pho > mss_bcpho(j)) then
+            qout_bc_pho = mss_bcpho(j)
+         endif
+         mss_bcpho(j) = mss_bcpho(j) - qout_bc_pho
+         qin_bc_pho = qout_bc_pho
+
+         ! OCPHI:
+         ! 1. flux with meltwater:
+         qout_oc_phi = qout*scvng_fct_mlt_ocphi*(mss_ocphi(j)/mss_liqice(j))
+         if (qout_oc_phi > mss_ocphi(j)) then
+            qout_oc_phi = mss_ocphi(j)
+         endif
+         mss_ocphi(j) = mss_ocphi(j) - qout_oc_phi
+         qin_oc_phi = qout_oc_phi
+
+         ! OCPHO:
+         ! 1. flux with meltwater:
+         qout_oc_pho = qout*scvng_fct_mlt_ocpho*(mss_ocpho(j)/mss_liqice(j))
+         if (qout_oc_pho > mss_ocpho(j)) then
+            qout_oc_pho = mss_ocpho(j)
+         endif
+         mss_ocpho(j) = mss_ocpho(j) - qout_oc_pho
+         qin_oc_pho = qout_oc_pho
+
+         ! DUST 1:
+         ! 1. flux with meltwater:
+         qout_dst1 = qout*scvng_fct_mlt_dst1*(mss_dst1(j)/mss_liqice(j))
+         if (qout_dst1 > mss_dst1(j)) then
+            qout_dst1 = mss_dst1(j)
+         endif
+         mss_dst1(j) = mss_dst1(j) - qout_dst1
+         qin_dst1 = qout_dst1
+
+         ! DUST 2:
+         ! 1. flux with meltwater:
+         qout_dst2 = qout*scvng_fct_mlt_dst2*(mss_dst2(j)/mss_liqice(j))
+         if (qout_dst2 > mss_dst2(j)) then
+            qout_dst2 = mss_dst2(j)
+         endif
+         mss_dst2(j) = mss_dst2(j) - qout_dst2
+         qin_dst2 = qout_dst2
+
+         ! DUST 3:
+         ! 1. flux with meltwater:
+         qout_dst3 = qout*scvng_fct_mlt_dst3*(mss_dst3(j)/mss_liqice(j))
+         if (qout_dst3 > mss_dst3(j)) then
+            qout_dst3 = mss_dst3(j)
+         endif
+         mss_dst3(j) = mss_dst3(j) - qout_dst3
+         qin_dst3 = qout_dst3
+
+         ! DUST 4:
+         ! 1. flux with meltwater:
+         qout_dst4 = qout*scvng_fct_mlt_dst4*(mss_dst4(j)/mss_liqice(j))
+         if (qout_dst4 > mss_dst4(j)) then
+            qout_dst4 = mss_dst4(j)
+         endif
+         mss_dst4(j) = mss_dst4(j) - qout_dst4
+         qin_dst4 = qout_dst4
+! Aerosol Fluxes (Jan. 07, 2023)
+
+      enddo
+
+      qout_snowb = qout/deltim
+
+
+! Aerosol Fluxes (Jan. 07, 2023)
+! Compute aerosol fluxes through snowpack and aerosol deposition fluxes into top layere
+!-----------------------------------------------------------------------
+! set aerosol deposition fluxes from forcing array
+! The forcing array is either set from an external file
+! or from fluxes received from the atmosphere model
+#ifdef MODAL_AER
+    ! Mapping for modal aerosol scheme where within-hydrometeor and
+    ! interstitial aerosol fluxes are differentiated. Here, "phi"
+    ! flavors of BC and OC correspond to within-hydrometeor
+    ! (cloud-borne) aerosol, and "pho" flavors are interstitial
+    ! aerosol. "wet" and "dry" fluxes of BC and OC specified here are
+    ! purely diagnostic
+
+    flx_bc_dep_phi   = forc_aer(3)
+    flx_bc_dep_pho   = forc_aer(1) + forc_aer(2)
+    flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
+
+    flx_oc_dep_phi   = forc_aer(6)
+    flx_oc_dep_pho   = forc_aer(4) + forc_aer(5)
+    flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
+
+    flx_dst_dep_wet1 = forc_aer(7)
+    flx_dst_dep_dry1 = forc_aer(8)
+    flx_dst_dep_wet2 = forc_aer(9)
+    flx_dst_dep_dry2 = forc_aer(10)
+    flx_dst_dep_wet3 = forc_aer(11)
+    flx_dst_dep_dry3 = forc_aer(12)
+    flx_dst_dep_wet4 = forc_aer(13)
+    flx_dst_dep_dry4 = forc_aer(14)
+    flx_dst_dep      = forc_aer(7)  + forc_aer(8)  + forc_aer(9) + &
+                       forc_aer(10) + forc_aer(11) + forc_aer(12) + &
+                       forc_aer(13) + forc_aer(14)
+#else
+    ! Original mapping for bulk aerosol deposition. phi and pho BC/OC
+    ! species are distinguished in model, other fluxes (e.g., dry and
+    ! wet BC/OC) are purely diagnostic.
+
+    flx_bc_dep_phi   = forc_aer(1) + forc_aer(3)
+    flx_bc_dep_pho   = forc_aer(2)
+    flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
+
+    flx_oc_dep_phi   = forc_aer(4) + forc_aer(6)
+    flx_oc_dep_pho   = forc_aer(5)
+    flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
+
+    flx_dst_dep_wet1 = forc_aer(7)
+    flx_dst_dep_dry1 = forc_aer(8)
+    flx_dst_dep_wet2 = forc_aer(9)
+    flx_dst_dep_dry2 = forc_aer(10)
+    flx_dst_dep_wet3 = forc_aer(11)
+    flx_dst_dep_dry3 = forc_aer(12)
+    flx_dst_dep_wet4 = forc_aer(13)
+    flx_dst_dep_dry4 = forc_aer(14)
+    flx_dst_dep      = forc_aer(7)  + forc_aer(8)  + forc_aer(9) + &
+                       forc_aer(10) + forc_aer(11) + forc_aer(12) + &
+                       forc_aer(13) + forc_aer(14)
+#endif
+
+    ! aerosol deposition fluxes into top layer
+    ! This is done after the inter-layer fluxes so that some aerosol
+    ! is in the top layer after deposition, and is not immediately
+    ! washed out before radiative calculations are done
+
+    mss_bcphi(lb) = mss_bcphi(lb) + (flx_bc_dep_phi*deltim)
+    mss_bcpho(lb) = mss_bcpho(lb) + (flx_bc_dep_pho*deltim)
+    mss_ocphi(lb) = mss_ocphi(lb) + (flx_oc_dep_phi*deltim)
+    mss_ocpho(lb) = mss_ocpho(lb) + (flx_oc_dep_pho*deltim)
+
+    mss_dst1(lb) = mss_dst1(lb) + (flx_dst_dep_dry1 + flx_dst_dep_wet1)*deltim
+    mss_dst2(lb) = mss_dst2(lb) + (flx_dst_dep_dry2 + flx_dst_dep_wet2)*deltim
+    mss_dst3(lb) = mss_dst3(lb) + (flx_dst_dep_dry3 + flx_dst_dep_wet3)*deltim
+    mss_dst4(lb) = mss_dst4(lb) + (flx_dst_dep_dry4 + flx_dst_dep_wet4)*deltim
+
+#ifdef MODAL_AER
+    !
+    ! Transfer BC and OC from the within-ice state to the external
+    ! state based on snow sublimation and re-freezing of liquid water.
+    ! Re-freezing effect is inactived by default because of
+    ! uncertainty in how this process operates.
+
+    do j= lb, 0
+       if (j >= lb) then
+          if (j == lb) then
+             ! snow that has sublimated [kg/m2] (top layer only)
+             subsnow = max(0._r8, (qsubl*deltim))
+
+             ! fraction of layer mass that has sublimated:
+             if ((wliq_soisno(j) + wice_soisno(j)) > 0._r8) then
+                frc_sub = subsnow / (wliq_soisno(j) + wice_soisno(j))
+             else
+                frc_sub = 0._r8
+             endif
+          else
+             ! prohibit sublimation effect to operate on sub-surface layers:
+             frc_sub = 0._r8
+          endif
+
+          ! fraction of layer mass transformed (sublimation only)
+          frc_transfer = frc_sub
+
+          ! cap the fraction at 1
+          if (frc_transfer > 1._r8) then
+             frc_transfer = 1._r8
+          endif
+
+          ! transfer proportionate mass of BC and OC:
+          dm_int       = mss_bcphi(j)*frc_transfer
+          mss_bcphi(j) = mss_bcphi(j) - dm_int
+          mss_bcpho(j) = mss_bcpho(j) + dm_int
+
+          dm_int       = mss_ocphi(j)*frc_transfer
+          mss_ocphi(j) = mss_ocphi(j) - dm_int
+          mss_ocpho(j) = mss_ocpho(j) + dm_int
+
+       end if
+    end do
+#endif
+! Aerosol Fluxes (Jan. 7, 2023)
+
+  end subroutine SnowWater_snicar
 
   subroutine surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                             z_soisno,dz_soisno,zi_soisno,&
