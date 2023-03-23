@@ -94,8 +94,8 @@ MODULE mod_namelist
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    ! ----- Initialization -----
    CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
-   CHARACTER(len=256) :: DEF_file_snowoptics = 'snicar_optics_5bnd_mam_c211006.nc'
-   CHARACTER(len=256) :: DEF_file_snowaging  = 'snicar_drdt_bst_fit_60_c070416.nc'
+   CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
+   CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
    ! ----- history -----
    LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
@@ -605,6 +605,9 @@ CONTAINS
          ENDIF
 #endif
 
+        DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+        DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+
       ENDIF
 
 #ifdef USEMPI
@@ -714,6 +717,8 @@ CONTAINS
          CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
       ENDDO
+      CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
