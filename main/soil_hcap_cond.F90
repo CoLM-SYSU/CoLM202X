@@ -14,6 +14,7 @@ SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
 ! Yongjiu Dai, 02/2018, 06/2018
 ! -------------------------------------------------------------------
 use precision
+USE PhysicalConstants,only:tfrz
 
 IMPLICIT NONE
       real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within the soil solids
@@ -79,7 +80,7 @@ if(sr >= 1.0e-10) then
 ! [1] Oleson et al., 2013: Technical Description of version 4.5 of the Community Land Model
 !     (CLM). NCAR/TN-503+STR (Section 6.3: Soil and Snow Thermal Properties)
 ! -----------------------------------------------------------------------------------------
-      if(temperature > 273.15)then ! Unfrozen soil
+      if(temperature > tfrz)then ! Unfrozen soil
          ke = log10(sr) + 1.0
       else                         ! Fozen or partially frozen soils
          ke = sr
@@ -92,7 +93,7 @@ if(sr >= 1.0e-10) then
 !     University of Trondheim. US army Crops of Engineerings,
 !     CRREL English Translation 637.
 ! -----------------------------------------------------------------------------------------
-      if(temperature > 273.15)then ! Unfrozen soils
+      if(temperature > tfrz)then ! Unfrozen soils
          if(a > 0.4)then ! coarse-grained
             ke = 0.7*log10(max(sr,0.05)) + 1.0
          else            ! Fine-grained
@@ -108,7 +109,7 @@ if(sr >= 1.0e-10) then
 ! [3] Cote, J., and J.-M. Konrad (2005), A generalized thermal conductivity model for soils
 !     and construction materials. Canadian Geotechnical Journal, 42(2): 443-458.
 ! -----------------------------------------------------------------------------------------
-      if(temperature > 273.15)then ! Unfrozen soils
+      if(temperature > tfrz)then ! Unfrozen soils
 !        kappa =                       Unfrozen
 !        /gravels and coarse sand     /4.60/
 !        /medium and fine sands       /3.55/
@@ -150,7 +151,7 @@ if(sr >= 1.0e-10) then
 ! be careful in specifying all k affecting fractions as VOLUME FRACTION,
 ! whether these fractions are part of the bulk volume, the pore space, or the solid space.
 ! -----------------------------------------------------------------------------------------
-      if(temperature > 273.15)then ! Unfrozen soil
+      if(temperature > tfrz)then ! Unfrozen soil
 !         alpha = 0.24 ! adjustable parameter
 !         beta = 18.1  ! adjustable parameter
 
@@ -174,7 +175,7 @@ if(sr >= 1.0e-10) then
          beta = 1.29
       endif
 
-      if(temperature > 273.15)then ! Unfrozen soils
+      if(temperature > tfrz)then ! Unfrozen soils
          ke = exp(alpha*(1.0-sr**(alpha-beta)))
       else                         ! Fozen or partially frozen soils
          ke = sr
@@ -186,7 +187,7 @@ endif
 #if(defined THERMAL_CONDUCTIVITY_SCHEME_1 || defined THERMAL_CONDUCTIVITY_SCHEME_2 || defined THERMAL_CONDUCTIVITY_SCHEME_3 || defined THERMAL_CONDUCTIVITY_SCHEME_4 || defined THERMAL_CONDUCTIVITY_SCHEME_5)
       ke = max(ke, 0.0)
       ke = min(ke, 1.0)
-      if(temperature > 273.15)then ! Unfrozen soil
+      if(temperature > tfrz)then ! Unfrozen soil
          thk = (ksat_u-kdry)*ke + kdry
       else                         ! Frozen or partially frozen soils
          thk = (ksat_f-kdry)*ke + kdry
@@ -213,7 +214,7 @@ endif
          nw_nwm = exp(1.0-sr**(-x))
       endif
 
-      if(temperature > 273.15)then ! Unfrozen soil
+      if(temperature > tfrz)then ! Unfrozen soil
          thk = k_solids*aa + (1.0-vf_pores_s-aa+nwm)**2 &
                 / ((1.0-vf_pores_s-aa)/k_solids+nwm/(k_water*nw_nwm+k_air*(1.0-nw_nwm))) &
                 + k_water*(vf_pores_s*sr-nwm*nw_nwm) &
@@ -238,7 +239,7 @@ endif
       endif
          gc = 1.0-2.0*ga
 
-      if(temperature > 273.15)then ! Unfrozen soil
+      if(temperature > tfrz)then ! Unfrozen soil
          aa = (2.0/(1.0+(k_air/k_water-1.0)*ga) &    ! the shape factor
             +  1.0/(1.0+(k_air/k_water-1.0)*gc))/3.0
          aaa = (2.0/(1.0+(k_solids/k_water-1.0)*0.125) &    ! the shape factor
