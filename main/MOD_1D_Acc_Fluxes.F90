@@ -42,6 +42,8 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_qdrip  (:)
    real(r8), allocatable :: a_rstfacsun (:)
    real(r8), allocatable :: a_rstfacsha (:)
+   real(r8), allocatable :: a_gs_sun (:)
+   real(r8), allocatable :: a_gs_sha (:)
    real(r8), allocatable :: a_dpond  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
@@ -123,6 +125,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_gpp                (:)
    real(r8), allocatable :: a_downreg            (:)
    real(r8), allocatable :: a_ar                 (:)
+   real(r8), allocatable :: a_cwdprod            (:)
+   real(r8), allocatable :: a_cwddecomp          (:)
+   real(r8), allocatable :: a_hr                 (:)
    real(r8), allocatable :: a_fpg                (:)
    real(r8), allocatable :: a_fpi                (:)
    real(r8), allocatable :: a_gpp_enftemp        (:) !1
@@ -153,7 +158,375 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
-
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+   real(r8), allocatable :: a_assim_RuBP_sun_enftemp        (:) !1
+   real(r8), allocatable :: a_assim_RuBP_sun_enfboreal      (:) !2
+   real(r8), allocatable :: a_assim_RuBP_sun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assim_RuBP_sun_ebftrop        (:) !4
+   real(r8), allocatable :: a_assim_RuBP_sun_ebftemp        (:) !5
+   real(r8), allocatable :: a_assim_RuBP_sun_dbftrop        (:) !6
+   real(r8), allocatable :: a_assim_RuBP_sun_dbftemp        (:) !7
+   real(r8), allocatable :: a_assim_RuBP_sun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assim_RuBP_sun_ebstemp        (:) !9
+   real(r8), allocatable :: a_assim_RuBP_sun_dbstemp        (:) !10
+   real(r8), allocatable :: a_assim_RuBP_sun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assim_RuBP_sun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assim_RuBP_sun_c3grass        (:) !13
+   real(r8), allocatable :: a_assim_RuBP_sun_c4grass        (:) !14
+   real(r8), allocatable :: a_assim_RuBP_sha_enftemp        (:) !1
+   real(r8), allocatable :: a_assim_RuBP_sha_enfboreal      (:) !2
+   real(r8), allocatable :: a_assim_RuBP_sha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assim_RuBP_sha_ebftrop        (:) !4
+   real(r8), allocatable :: a_assim_RuBP_sha_ebftemp        (:) !5
+   real(r8), allocatable :: a_assim_RuBP_sha_dbftrop        (:) !6
+   real(r8), allocatable :: a_assim_RuBP_sha_dbftemp        (:) !7
+   real(r8), allocatable :: a_assim_RuBP_sha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assim_RuBP_sha_ebstemp        (:) !9
+   real(r8), allocatable :: a_assim_RuBP_sha_dbstemp        (:) !10
+   real(r8), allocatable :: a_assim_RuBP_sha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assim_RuBP_sha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assim_RuBP_sha_c3grass        (:) !13
+   real(r8), allocatable :: a_assim_RuBP_sha_c4grass        (:) !14
+   real(r8), allocatable :: a_assim_Rubisco_sun_enftemp        (:) !1
+   real(r8), allocatable :: a_assim_Rubisco_sun_enfboreal      (:) !2
+   real(r8), allocatable :: a_assim_Rubisco_sun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assim_Rubisco_sun_ebftrop        (:) !4
+   real(r8), allocatable :: a_assim_Rubisco_sun_ebftemp        (:) !5
+   real(r8), allocatable :: a_assim_Rubisco_sun_dbftrop        (:) !6
+   real(r8), allocatable :: a_assim_Rubisco_sun_dbftemp        (:) !7
+   real(r8), allocatable :: a_assim_Rubisco_sun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assim_Rubisco_sun_ebstemp        (:) !9
+   real(r8), allocatable :: a_assim_Rubisco_sun_dbstemp        (:) !10
+   real(r8), allocatable :: a_assim_Rubisco_sun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assim_Rubisco_sun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assim_Rubisco_sun_c3grass        (:) !13
+   real(r8), allocatable :: a_assim_Rubisco_sun_c4grass        (:) !14
+   real(r8), allocatable :: a_assim_Rubisco_sha_enftemp        (:) !1
+   real(r8), allocatable :: a_assim_Rubisco_sha_enfboreal      (:) !2
+   real(r8), allocatable :: a_assim_Rubisco_sha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assim_Rubisco_sha_ebftrop        (:) !4
+   real(r8), allocatable :: a_assim_Rubisco_sha_ebftemp        (:) !5
+   real(r8), allocatable :: a_assim_Rubisco_sha_dbftrop        (:) !6
+   real(r8), allocatable :: a_assim_Rubisco_sha_dbftemp        (:) !7
+   real(r8), allocatable :: a_assim_Rubisco_sha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assim_Rubisco_sha_ebstemp        (:) !9
+   real(r8), allocatable :: a_assim_Rubisco_sha_dbstemp        (:) !10
+   real(r8), allocatable :: a_assim_Rubisco_sha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assim_Rubisco_sha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assim_Rubisco_sha_c3grass        (:) !13
+   real(r8), allocatable :: a_assim_Rubisco_sha_c4grass        (:) !14
+   real(r8), allocatable :: a_assimsun_enftemp        (:) !1
+   real(r8), allocatable :: a_assimsun_enfboreal      (:) !2
+   real(r8), allocatable :: a_assimsun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assimsun_ebftrop        (:) !4
+   real(r8), allocatable :: a_assimsun_ebftemp        (:) !5
+   real(r8), allocatable :: a_assimsun_dbftrop        (:) !6
+   real(r8), allocatable :: a_assimsun_dbftemp        (:) !7
+   real(r8), allocatable :: a_assimsun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assimsun_ebstemp        (:) !9
+   real(r8), allocatable :: a_assimsun_dbstemp        (:) !10
+   real(r8), allocatable :: a_assimsun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assimsun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assimsun_c3grass        (:) !13
+   real(r8), allocatable :: a_assimsun_c4grass        (:) !14
+   real(r8), allocatable :: a_assimsha_enftemp        (:) !1
+   real(r8), allocatable :: a_assimsha_enfboreal      (:) !2
+   real(r8), allocatable :: a_assimsha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_assimsha_ebftrop        (:) !4
+   real(r8), allocatable :: a_assimsha_ebftemp        (:) !5
+   real(r8), allocatable :: a_assimsha_dbftrop        (:) !6
+   real(r8), allocatable :: a_assimsha_dbftemp        (:) !7
+   real(r8), allocatable :: a_assimsha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_assimsha_ebstemp        (:) !9
+   real(r8), allocatable :: a_assimsha_dbstemp        (:) !10
+   real(r8), allocatable :: a_assimsha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_assimsha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_assimsha_c3grass        (:) !13
+   real(r8), allocatable :: a_assimsha_c4grass        (:) !14
+   real(r8), allocatable :: a_etrsun_enftemp        (:) !1
+   real(r8), allocatable :: a_etrsun_enfboreal      (:) !2
+   real(r8), allocatable :: a_etrsun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_etrsun_ebftrop        (:) !4
+   real(r8), allocatable :: a_etrsun_ebftemp        (:) !5
+   real(r8), allocatable :: a_etrsun_dbftrop        (:) !6
+   real(r8), allocatable :: a_etrsun_dbftemp        (:) !7
+   real(r8), allocatable :: a_etrsun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_etrsun_ebstemp        (:) !9
+   real(r8), allocatable :: a_etrsun_dbstemp        (:) !10
+   real(r8), allocatable :: a_etrsun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_etrsun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_etrsun_c3grass        (:) !13
+   real(r8), allocatable :: a_etrsun_c4grass        (:) !14
+   real(r8), allocatable :: a_etrsha_enftemp        (:) !1
+   real(r8), allocatable :: a_etrsha_enfboreal      (:) !2
+   real(r8), allocatable :: a_etrsha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_etrsha_ebftrop        (:) !4
+   real(r8), allocatable :: a_etrsha_ebftemp        (:) !5
+   real(r8), allocatable :: a_etrsha_dbftrop        (:) !6
+   real(r8), allocatable :: a_etrsha_dbftemp        (:) !7
+   real(r8), allocatable :: a_etrsha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_etrsha_ebstemp        (:) !9
+   real(r8), allocatable :: a_etrsha_dbstemp        (:) !10
+   real(r8), allocatable :: a_etrsha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_etrsha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_etrsha_c3grass        (:) !13
+   real(r8), allocatable :: a_etrsha_c4grass        (:) !14
+   real(r8), allocatable :: a_cisun_enftemp        (:) !1
+   real(r8), allocatable :: a_cisun_enfboreal      (:) !2
+   real(r8), allocatable :: a_cisun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_cisun_ebftrop        (:) !4
+   real(r8), allocatable :: a_cisun_ebftemp        (:) !5
+   real(r8), allocatable :: a_cisun_dbftrop        (:) !6
+   real(r8), allocatable :: a_cisun_dbftemp        (:) !7
+   real(r8), allocatable :: a_cisun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_cisun_ebstemp        (:) !9
+   real(r8), allocatable :: a_cisun_dbstemp        (:) !10
+   real(r8), allocatable :: a_cisun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_cisun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_cisun_c3grass        (:) !13
+   real(r8), allocatable :: a_cisun_c4grass        (:) !14
+   real(r8), allocatable :: a_cisha_enftemp        (:) !1
+   real(r8), allocatable :: a_cisha_enfboreal      (:) !2
+   real(r8), allocatable :: a_cisha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_cisha_ebftrop        (:) !4
+   real(r8), allocatable :: a_cisha_ebftemp        (:) !5
+   real(r8), allocatable :: a_cisha_dbftrop        (:) !6
+   real(r8), allocatable :: a_cisha_dbftemp        (:) !7
+   real(r8), allocatable :: a_cisha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_cisha_ebstemp        (:) !9
+   real(r8), allocatable :: a_cisha_dbstemp        (:) !10
+   real(r8), allocatable :: a_cisha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_cisha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_cisha_c3grass        (:) !13
+   real(r8), allocatable :: a_cisha_c4grass        (:) !14
+   real(r8), allocatable :: a_essun_enftemp        (:) !1
+   real(r8), allocatable :: a_essun_enfboreal      (:) !2
+   real(r8), allocatable :: a_essun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_essun_ebftrop        (:) !4
+   real(r8), allocatable :: a_essun_ebftemp        (:) !5
+   real(r8), allocatable :: a_essun_dbftrop        (:) !6
+   real(r8), allocatable :: a_essun_dbftemp        (:) !7
+   real(r8), allocatable :: a_essun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_essun_ebstemp        (:) !9
+   real(r8), allocatable :: a_essun_dbstemp        (:) !10
+   real(r8), allocatable :: a_essun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_essun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_essun_c3grass        (:) !13
+   real(r8), allocatable :: a_essun_c4grass        (:) !14
+   real(r8), allocatable :: a_essha_enftemp        (:) !1
+   real(r8), allocatable :: a_essha_enfboreal      (:) !2
+   real(r8), allocatable :: a_essha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_essha_ebftrop        (:) !4
+   real(r8), allocatable :: a_essha_ebftemp        (:) !5
+   real(r8), allocatable :: a_essha_dbftrop        (:) !6
+   real(r8), allocatable :: a_essha_dbftemp        (:) !7
+   real(r8), allocatable :: a_essha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_essha_ebstemp        (:) !9
+   real(r8), allocatable :: a_essha_dbstemp        (:) !10
+   real(r8), allocatable :: a_essha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_essha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_essha_c3grass        (:) !13
+   real(r8), allocatable :: a_essha_c4grass        (:) !14
+   real(r8), allocatable :: a_gssun_enftemp        (:) !1
+   real(r8), allocatable :: a_gssun_enfboreal      (:) !2
+   real(r8), allocatable :: a_gssun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_gssun_ebftrop        (:) !4
+   real(r8), allocatable :: a_gssun_ebftemp        (:) !5
+   real(r8), allocatable :: a_gssun_dbftrop        (:) !6
+   real(r8), allocatable :: a_gssun_dbftemp        (:) !7
+   real(r8), allocatable :: a_gssun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_gssun_ebstemp        (:) !9
+   real(r8), allocatable :: a_gssun_dbstemp        (:) !10
+   real(r8), allocatable :: a_gssun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_gssun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_gssun_c3grass        (:) !13
+   real(r8), allocatable :: a_gssun_c4grass        (:) !14
+   real(r8), allocatable :: a_gssha_enftemp        (:) !1
+   real(r8), allocatable :: a_gssha_enfboreal      (:) !2
+   real(r8), allocatable :: a_gssha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_gssha_ebftrop        (:) !4
+   real(r8), allocatable :: a_gssha_ebftemp        (:) !5
+   real(r8), allocatable :: a_gssha_dbftrop        (:) !6
+   real(r8), allocatable :: a_gssha_dbftemp        (:) !7
+   real(r8), allocatable :: a_gssha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_gssha_ebstemp        (:) !9
+   real(r8), allocatable :: a_gssha_dbstemp        (:) !10
+   real(r8), allocatable :: a_gssha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_gssha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_gssha_c3grass        (:) !13
+   real(r8), allocatable :: a_gssha_c4grass        (:) !14
+   real(r8), allocatable :: a_gammasun_enftemp        (:) !1
+   real(r8), allocatable :: a_gammasun_enfboreal      (:) !2
+   real(r8), allocatable :: a_gammasun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_gammasun_ebftrop        (:) !4
+   real(r8), allocatable :: a_gammasun_ebftemp        (:) !5
+   real(r8), allocatable :: a_gammasun_dbftrop        (:) !6
+   real(r8), allocatable :: a_gammasun_dbftemp        (:) !7
+   real(r8), allocatable :: a_gammasun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_gammasun_ebstemp        (:) !9
+   real(r8), allocatable :: a_gammasun_dbstemp        (:) !10
+   real(r8), allocatable :: a_gammasun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_gammasun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_gammasun_c3grass        (:) !13
+   real(r8), allocatable :: a_gammasun_c4grass        (:) !14
+   real(r8), allocatable :: a_gammasha_enftemp        (:) !1
+   real(r8), allocatable :: a_gammasha_enfboreal      (:) !2
+   real(r8), allocatable :: a_gammasha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_gammasha_ebftrop        (:) !4
+   real(r8), allocatable :: a_gammasha_ebftemp        (:) !5
+   real(r8), allocatable :: a_gammasha_dbftrop        (:) !6
+   real(r8), allocatable :: a_gammasha_dbftemp        (:) !7
+   real(r8), allocatable :: a_gammasha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_gammasha_ebstemp        (:) !9
+   real(r8), allocatable :: a_gammasha_dbstemp        (:) !10
+   real(r8), allocatable :: a_gammasha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_gammasha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_gammasha_c3grass        (:) !13
+   real(r8), allocatable :: a_gammasha_c4grass        (:) !14
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_enftemp        (:) !1
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_enfboreal      (:) !2
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_ebftrop        (:) !4
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_ebftemp        (:) !5
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dbftrop        (:) !6
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dbftemp        (:) !7
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_ebstemp        (:) !9
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dbstemp        (:) !10
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_c3grass        (:) !13
+   real(r8), allocatable :: a_RuBPlimitfrac_sun_c4grass        (:) !14
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_enftemp        (:) !1
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_enfboreal      (:) !2
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_ebftrop        (:) !4
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_ebftemp        (:) !5
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dbftrop        (:) !6
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dbftemp        (:) !7
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_ebstemp        (:) !9
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dbstemp        (:) !10
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_c3grass        (:) !13
+   real(r8), allocatable :: a_RuBPlimitfrac_sha_c4grass        (:) !14
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_enftemp        (:) !1
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_enfboreal      (:) !2
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_ebftrop        (:) !4
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_ebftemp        (:) !5
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dbftrop        (:) !6
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dbftemp        (:) !7
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_ebstemp        (:) !9
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dbstemp        (:) !10
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_c3grass        (:) !13
+   real(r8), allocatable :: a_Rubiscolimitfrac_sun_c4grass        (:) !14
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_enftemp        (:) !1
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_enfboreal      (:) !2
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_ebftrop        (:) !4
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_ebftemp        (:) !5
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dbftrop        (:) !6
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dbftemp        (:) !7
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_ebstemp        (:) !9
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dbstemp        (:) !10
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_c3grass        (:) !13
+   real(r8), allocatable :: a_Rubiscolimitfrac_sha_c4grass        (:) !14
+   real(r8), allocatable :: a_Sinklimitfrac_sun_enftemp        (:) !1
+   real(r8), allocatable :: a_Sinklimitfrac_sun_enfboreal      (:) !2
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_Sinklimitfrac_sun_ebftrop        (:) !4
+   real(r8), allocatable :: a_Sinklimitfrac_sun_ebftemp        (:) !5
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dbftrop        (:) !6
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dbftemp        (:) !7
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_Sinklimitfrac_sun_ebstemp        (:) !9
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dbstemp        (:) !10
+   real(r8), allocatable :: a_Sinklimitfrac_sun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_Sinklimitfrac_sun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_Sinklimitfrac_sun_c3grass        (:) !13
+   real(r8), allocatable :: a_Sinklimitfrac_sun_c4grass        (:) !14
+   real(r8), allocatable :: a_Sinklimitfrac_sha_enftemp        (:) !1
+   real(r8), allocatable :: a_Sinklimitfrac_sha_enfboreal      (:) !2
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_Sinklimitfrac_sha_ebftrop        (:) !4
+   real(r8), allocatable :: a_Sinklimitfrac_sha_ebftemp        (:) !5
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dbftrop        (:) !6
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dbftemp        (:) !7
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_Sinklimitfrac_sha_ebstemp        (:) !9
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dbstemp        (:) !10
+   real(r8), allocatable :: a_Sinklimitfrac_sha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_Sinklimitfrac_sha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_Sinklimitfrac_sha_c3grass        (:) !13
+   real(r8), allocatable :: a_Sinklimitfrac_sha_c4grass        (:) !14
+   real(r8), allocatable :: a_rstfacsun_enftemp        (:) !1
+   real(r8), allocatable :: a_rstfacsun_enfboreal      (:) !2
+   real(r8), allocatable :: a_rstfacsun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_rstfacsun_ebftrop        (:) !4
+   real(r8), allocatable :: a_rstfacsun_ebftemp        (:) !5
+   real(r8), allocatable :: a_rstfacsun_dbftrop        (:) !6
+   real(r8), allocatable :: a_rstfacsun_dbftemp        (:) !7
+   real(r8), allocatable :: a_rstfacsun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_rstfacsun_ebstemp        (:) !9
+   real(r8), allocatable :: a_rstfacsun_dbstemp        (:) !10
+   real(r8), allocatable :: a_rstfacsun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_rstfacsun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_rstfacsun_c3grass        (:) !13
+   real(r8), allocatable :: a_rstfacsun_c4grass        (:) !14
+   real(r8), allocatable :: a_rstfacsha_enftemp        (:) !1
+   real(r8), allocatable :: a_rstfacsha_enfboreal      (:) !2
+   real(r8), allocatable :: a_rstfacsha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_rstfacsha_ebftrop        (:) !4
+   real(r8), allocatable :: a_rstfacsha_ebftemp        (:) !5
+   real(r8), allocatable :: a_rstfacsha_dbftrop        (:) !6
+   real(r8), allocatable :: a_rstfacsha_dbftemp        (:) !7
+   real(r8), allocatable :: a_rstfacsha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_rstfacsha_ebstemp        (:) !9
+   real(r8), allocatable :: a_rstfacsha_dbstemp        (:) !10
+   real(r8), allocatable :: a_rstfacsha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_rstfacsha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_rstfacsha_c3grass        (:) !13
+   real(r8), allocatable :: a_rstfacsha_c4grass        (:) !14
+   real(r8), allocatable :: a_lambdasun_enftemp        (:) !1
+   real(r8), allocatable :: a_lambdasun_enfboreal      (:) !2
+   real(r8), allocatable :: a_lambdasun_dnfboreal      (:) !3
+   real(r8), allocatable :: a_lambdasun_ebftrop        (:) !4
+   real(r8), allocatable :: a_lambdasun_ebftemp        (:) !5
+   real(r8), allocatable :: a_lambdasun_dbftrop        (:) !6
+   real(r8), allocatable :: a_lambdasun_dbftemp        (:) !7
+   real(r8), allocatable :: a_lambdasun_dbfboreal      (:) !8
+   real(r8), allocatable :: a_lambdasun_ebstemp        (:) !9
+   real(r8), allocatable :: a_lambdasun_dbstemp        (:) !10
+   real(r8), allocatable :: a_lambdasun_dbsboreal      (:) !11
+   real(r8), allocatable :: a_lambdasun_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_lambdasun_c3grass        (:) !13
+   real(r8), allocatable :: a_lambdasun_c4grass        (:) !14
+   real(r8), allocatable :: a_lambdasha_enftemp        (:) !1
+   real(r8), allocatable :: a_lambdasha_enfboreal      (:) !2
+   real(r8), allocatable :: a_lambdasha_dnfboreal      (:) !3
+   real(r8), allocatable :: a_lambdasha_ebftrop        (:) !4
+   real(r8), allocatable :: a_lambdasha_ebftemp        (:) !5
+   real(r8), allocatable :: a_lambdasha_dbftrop        (:) !6
+   real(r8), allocatable :: a_lambdasha_dbftemp        (:) !7
+   real(r8), allocatable :: a_lambdasha_dbfboreal      (:) !8
+   real(r8), allocatable :: a_lambdasha_ebstemp        (:) !9
+   real(r8), allocatable :: a_lambdasha_dbstemp        (:) !10
+   real(r8), allocatable :: a_lambdasha_dbsboreal      (:) !11
+   real(r8), allocatable :: a_lambdasha_c3arcgrass     (:) !12
+   real(r8), allocatable :: a_lambdasha_c3grass        (:) !13
+   real(r8), allocatable :: a_lambdasha_c4grass        (:) !14
+   real(r8), allocatable :: a_lambda                   (:) !14
+#endif
+#endif
 #ifdef NITRIF
    real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
    real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
@@ -317,6 +690,8 @@ contains
             allocate (a_qdrip     (numpatch))
             allocate (a_rstfacsun (numpatch))
             allocate (a_rstfacsha (numpatch))
+            allocate (a_gs_sun     (numpatch))
+            allocate (a_gs_sha     (numpatch))
             allocate (a_dpond     (numpatch))
 
             allocate (a_zwt       (numpatch))
@@ -324,6 +699,376 @@ contains
             allocate (a_wat       (numpatch))
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
+
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            allocate (a_assim_RuBP_sun_enftemp        (numpatch)) !1
+            allocate (a_assim_RuBP_sun_enfboreal      (numpatch)) !2
+            allocate (a_assim_RuBP_sun_dnfboreal      (numpatch)) !3
+            allocate (a_assim_RuBP_sun_ebftrop        (numpatch)) !4
+            allocate (a_assim_RuBP_sun_ebftemp        (numpatch)) !5
+            allocate (a_assim_RuBP_sun_dbftrop        (numpatch)) !6
+            allocate (a_assim_RuBP_sun_dbftemp        (numpatch)) !7
+            allocate (a_assim_RuBP_sun_dbfboreal      (numpatch)) !8
+            allocate (a_assim_RuBP_sun_ebstemp        (numpatch)) !9
+            allocate (a_assim_RuBP_sun_dbstemp        (numpatch)) !10
+            allocate (a_assim_RuBP_sun_dbsboreal      (numpatch)) !11
+            allocate (a_assim_RuBP_sun_c3arcgrass     (numpatch)) !12
+            allocate (a_assim_RuBP_sun_c3grass        (numpatch)) !13
+            allocate (a_assim_RuBP_sun_c4grass        (numpatch)) !14
+            allocate (a_assim_RuBP_sha_enftemp        (numpatch)) !1
+            allocate (a_assim_RuBP_sha_enfboreal      (numpatch)) !2
+            allocate (a_assim_RuBP_sha_dnfboreal      (numpatch)) !3
+            allocate (a_assim_RuBP_sha_ebftrop        (numpatch)) !4
+            allocate (a_assim_RuBP_sha_ebftemp        (numpatch)) !5
+            allocate (a_assim_RuBP_sha_dbftrop        (numpatch)) !6
+            allocate (a_assim_RuBP_sha_dbftemp        (numpatch)) !7
+            allocate (a_assim_RuBP_sha_dbfboreal      (numpatch)) !8
+            allocate (a_assim_RuBP_sha_ebstemp        (numpatch)) !9
+            allocate (a_assim_RuBP_sha_dbstemp        (numpatch)) !10
+            allocate (a_assim_RuBP_sha_dbsboreal      (numpatch)) !11
+            allocate (a_assim_RuBP_sha_c3arcgrass     (numpatch)) !12
+            allocate (a_assim_RuBP_sha_c3grass        (numpatch)) !13
+            allocate (a_assim_RuBP_sha_c4grass        (numpatch)) !14
+            allocate (a_assim_Rubisco_sun_enftemp        (numpatch)) !1
+            allocate (a_assim_Rubisco_sun_enfboreal      (numpatch)) !2
+            allocate (a_assim_Rubisco_sun_dnfboreal      (numpatch)) !3
+            allocate (a_assim_Rubisco_sun_ebftrop        (numpatch)) !4
+            allocate (a_assim_Rubisco_sun_ebftemp        (numpatch)) !5
+            allocate (a_assim_Rubisco_sun_dbftrop        (numpatch)) !6
+            allocate (a_assim_Rubisco_sun_dbftemp        (numpatch)) !7
+            allocate (a_assim_Rubisco_sun_dbfboreal      (numpatch)) !8
+            allocate (a_assim_Rubisco_sun_ebstemp        (numpatch)) !9
+            allocate (a_assim_Rubisco_sun_dbstemp        (numpatch)) !10
+            allocate (a_assim_Rubisco_sun_dbsboreal      (numpatch)) !11
+            allocate (a_assim_Rubisco_sun_c3arcgrass     (numpatch)) !12
+            allocate (a_assim_Rubisco_sun_c3grass        (numpatch)) !13
+            allocate (a_assim_Rubisco_sun_c4grass        (numpatch)) !14
+            allocate (a_assim_Rubisco_sha_enftemp        (numpatch)) !1
+            allocate (a_assim_Rubisco_sha_enfboreal      (numpatch)) !2
+            allocate (a_assim_Rubisco_sha_dnfboreal      (numpatch)) !3
+            allocate (a_assim_Rubisco_sha_ebftrop        (numpatch)) !4
+            allocate (a_assim_Rubisco_sha_ebftemp        (numpatch)) !5
+            allocate (a_assim_Rubisco_sha_dbftrop        (numpatch)) !6
+            allocate (a_assim_Rubisco_sha_dbftemp        (numpatch)) !7
+            allocate (a_assim_Rubisco_sha_dbfboreal      (numpatch)) !8
+            allocate (a_assim_Rubisco_sha_ebstemp        (numpatch)) !9
+            allocate (a_assim_Rubisco_sha_dbstemp        (numpatch)) !10
+            allocate (a_assim_Rubisco_sha_dbsboreal      (numpatch)) !11
+            allocate (a_assim_Rubisco_sha_c3arcgrass     (numpatch)) !12
+            allocate (a_assim_Rubisco_sha_c3grass        (numpatch)) !13
+            allocate (a_assim_Rubisco_sha_c4grass        (numpatch)) !14
+            allocate (a_assimsun_enftemp        (numpatch)) !1
+            allocate (a_assimsun_enfboreal      (numpatch)) !2
+            allocate (a_assimsun_dnfboreal      (numpatch)) !3
+            allocate (a_assimsun_ebftrop        (numpatch)) !4
+            allocate (a_assimsun_ebftemp        (numpatch)) !5
+            allocate (a_assimsun_dbftrop        (numpatch)) !6
+            allocate (a_assimsun_dbftemp        (numpatch)) !7
+            allocate (a_assimsun_dbfboreal      (numpatch)) !8
+            allocate (a_assimsun_ebstemp        (numpatch)) !9
+            allocate (a_assimsun_dbstemp        (numpatch)) !10
+            allocate (a_assimsun_dbsboreal      (numpatch)) !11
+            allocate (a_assimsun_c3arcgrass     (numpatch)) !12
+            allocate (a_assimsun_c3grass        (numpatch)) !13
+            allocate (a_assimsun_c4grass        (numpatch)) !14
+            allocate (a_assimsha_enftemp        (numpatch)) !1
+            allocate (a_assimsha_enfboreal      (numpatch)) !2
+            allocate (a_assimsha_dnfboreal      (numpatch)) !3
+            allocate (a_assimsha_ebftrop        (numpatch)) !4
+            allocate (a_assimsha_ebftemp        (numpatch)) !5
+            allocate (a_assimsha_dbftrop        (numpatch)) !6
+            allocate (a_assimsha_dbftemp        (numpatch)) !7
+            allocate (a_assimsha_dbfboreal      (numpatch)) !8
+            allocate (a_assimsha_ebstemp        (numpatch)) !9
+            allocate (a_assimsha_dbstemp        (numpatch)) !10
+            allocate (a_assimsha_dbsboreal      (numpatch)) !11
+            allocate (a_assimsha_c3arcgrass     (numpatch)) !12
+            allocate (a_assimsha_c3grass        (numpatch)) !13
+            allocate (a_assimsha_c4grass        (numpatch)) !14
+            allocate (a_etrsun_enftemp        (numpatch)) !1
+            allocate (a_etrsun_enfboreal      (numpatch)) !2
+            allocate (a_etrsun_dnfboreal      (numpatch)) !3
+            allocate (a_etrsun_ebftrop        (numpatch)) !4
+            allocate (a_etrsun_ebftemp        (numpatch)) !5
+            allocate (a_etrsun_dbftrop        (numpatch)) !6
+            allocate (a_etrsun_dbftemp        (numpatch)) !7
+            allocate (a_etrsun_dbfboreal      (numpatch)) !8
+            allocate (a_etrsun_ebstemp        (numpatch)) !9
+            allocate (a_etrsun_dbstemp        (numpatch)) !10
+            allocate (a_etrsun_dbsboreal      (numpatch)) !11
+            allocate (a_etrsun_c3arcgrass     (numpatch)) !12
+            allocate (a_etrsun_c3grass        (numpatch)) !13
+            allocate (a_etrsun_c4grass        (numpatch)) !14
+            allocate (a_etrsha_enftemp        (numpatch)) !1
+            allocate (a_etrsha_enfboreal      (numpatch)) !2
+            allocate (a_etrsha_dnfboreal      (numpatch)) !3
+            allocate (a_etrsha_ebftrop        (numpatch)) !4
+            allocate (a_etrsha_ebftemp        (numpatch)) !5
+            allocate (a_etrsha_dbftrop        (numpatch)) !6
+            allocate (a_etrsha_dbftemp        (numpatch)) !7
+            allocate (a_etrsha_dbfboreal      (numpatch)) !8
+            allocate (a_etrsha_ebstemp        (numpatch)) !9
+            allocate (a_etrsha_dbstemp        (numpatch)) !10
+            allocate (a_etrsha_dbsboreal      (numpatch)) !11
+            allocate (a_etrsha_c3arcgrass     (numpatch)) !12
+            allocate (a_etrsha_c3grass        (numpatch)) !13
+            allocate (a_etrsha_c4grass        (numpatch)) !14
+            allocate (a_cisun_enftemp        (numpatch)) !1
+            allocate (a_cisun_enfboreal      (numpatch)) !2
+            allocate (a_cisun_dnfboreal      (numpatch)) !3
+            allocate (a_cisun_ebftrop        (numpatch)) !4
+            allocate (a_cisun_ebftemp        (numpatch)) !5
+            allocate (a_cisun_dbftrop        (numpatch)) !6
+            allocate (a_cisun_dbftemp        (numpatch)) !7
+            allocate (a_cisun_dbfboreal      (numpatch)) !8
+            allocate (a_cisun_ebstemp        (numpatch)) !9
+            allocate (a_cisun_dbstemp        (numpatch)) !10
+            allocate (a_cisun_dbsboreal      (numpatch)) !11
+            allocate (a_cisun_c3arcgrass     (numpatch)) !12
+            allocate (a_cisun_c3grass        (numpatch)) !13
+            allocate (a_cisun_c4grass        (numpatch)) !14
+            allocate (a_cisha_enftemp        (numpatch)) !1
+            allocate (a_cisha_enfboreal      (numpatch)) !2
+            allocate (a_cisha_dnfboreal      (numpatch)) !3
+            allocate (a_cisha_ebftrop        (numpatch)) !4
+            allocate (a_cisha_ebftemp        (numpatch)) !5
+            allocate (a_cisha_dbftrop        (numpatch)) !6
+            allocate (a_cisha_dbftemp        (numpatch)) !7
+            allocate (a_cisha_dbfboreal      (numpatch)) !8
+            allocate (a_cisha_ebstemp        (numpatch)) !9
+            allocate (a_cisha_dbstemp        (numpatch)) !10
+            allocate (a_cisha_dbsboreal      (numpatch)) !11
+            allocate (a_cisha_c3arcgrass     (numpatch)) !12
+            allocate (a_cisha_c3grass        (numpatch)) !13
+            allocate (a_cisha_c4grass        (numpatch)) !14
+            allocate (a_essun_enftemp        (numpatch)) !1
+            allocate (a_essun_enfboreal      (numpatch)) !2
+            allocate (a_essun_dnfboreal      (numpatch)) !3
+            allocate (a_essun_ebftrop        (numpatch)) !4
+            allocate (a_essun_ebftemp        (numpatch)) !5
+            allocate (a_essun_dbftrop        (numpatch)) !6
+            allocate (a_essun_dbftemp        (numpatch)) !7
+            allocate (a_essun_dbfboreal      (numpatch)) !8
+            allocate (a_essun_ebstemp        (numpatch)) !9
+            allocate (a_essun_dbstemp        (numpatch)) !10
+            allocate (a_essun_dbsboreal      (numpatch)) !11
+            allocate (a_essun_c3arcgrass     (numpatch)) !12
+            allocate (a_essun_c3grass        (numpatch)) !13
+            allocate (a_essun_c4grass        (numpatch)) !14
+            allocate (a_essha_enftemp        (numpatch)) !1
+            allocate (a_essha_enfboreal      (numpatch)) !2
+            allocate (a_essha_dnfboreal      (numpatch)) !3
+            allocate (a_essha_ebftrop        (numpatch)) !4
+            allocate (a_essha_ebftemp        (numpatch)) !5
+            allocate (a_essha_dbftrop        (numpatch)) !6
+            allocate (a_essha_dbftemp        (numpatch)) !7
+            allocate (a_essha_dbfboreal      (numpatch)) !8
+            allocate (a_essha_ebstemp        (numpatch)) !9
+            allocate (a_essha_dbstemp        (numpatch)) !10
+            allocate (a_essha_dbsboreal      (numpatch)) !11
+            allocate (a_essha_c3arcgrass     (numpatch)) !12
+            allocate (a_essha_c3grass        (numpatch)) !13
+            allocate (a_essha_c4grass        (numpatch)) !14
+            allocate (a_gssun_enftemp        (numpatch)) !1
+            allocate (a_gssun_enfboreal      (numpatch)) !2
+            allocate (a_gssun_dnfboreal      (numpatch)) !3
+            allocate (a_gssun_ebftrop        (numpatch)) !4
+            allocate (a_gssun_ebftemp        (numpatch)) !5
+            allocate (a_gssun_dbftrop        (numpatch)) !6
+            allocate (a_gssun_dbftemp        (numpatch)) !7
+            allocate (a_gssun_dbfboreal      (numpatch)) !8
+            allocate (a_gssun_ebstemp        (numpatch)) !9
+            allocate (a_gssun_dbstemp        (numpatch)) !10
+            allocate (a_gssun_dbsboreal      (numpatch)) !11
+            allocate (a_gssun_c3arcgrass     (numpatch)) !12
+            allocate (a_gssun_c3grass        (numpatch)) !13
+            allocate (a_gssun_c4grass        (numpatch)) !14
+            allocate (a_gssha_enftemp        (numpatch)) !1
+            allocate (a_gssha_enfboreal      (numpatch)) !2
+            allocate (a_gssha_dnfboreal      (numpatch)) !3
+            allocate (a_gssha_ebftrop        (numpatch)) !4
+            allocate (a_gssha_ebftemp        (numpatch)) !5
+            allocate (a_gssha_dbftrop        (numpatch)) !6
+            allocate (a_gssha_dbftemp        (numpatch)) !7
+            allocate (a_gssha_dbfboreal      (numpatch)) !8
+            allocate (a_gssha_ebstemp        (numpatch)) !9
+            allocate (a_gssha_dbstemp        (numpatch)) !10
+            allocate (a_gssha_dbsboreal      (numpatch)) !11
+            allocate (a_gssha_c3arcgrass     (numpatch)) !12
+            allocate (a_gssha_c3grass        (numpatch)) !13
+            allocate (a_gssha_c4grass        (numpatch)) !14
+            allocate (a_gammasun_enftemp        (numpatch)) !1
+            allocate (a_gammasun_enfboreal      (numpatch)) !2
+            allocate (a_gammasun_dnfboreal      (numpatch)) !3
+            allocate (a_gammasun_ebftrop        (numpatch)) !4
+            allocate (a_gammasun_ebftemp        (numpatch)) !5
+            allocate (a_gammasun_dbftrop        (numpatch)) !6
+            allocate (a_gammasun_dbftemp        (numpatch)) !7
+            allocate (a_gammasun_dbfboreal      (numpatch)) !8
+            allocate (a_gammasun_ebstemp        (numpatch)) !9
+            allocate (a_gammasun_dbstemp        (numpatch)) !10
+            allocate (a_gammasun_dbsboreal      (numpatch)) !11
+            allocate (a_gammasun_c3arcgrass     (numpatch)) !12
+            allocate (a_gammasun_c3grass        (numpatch)) !13
+            allocate (a_gammasun_c4grass        (numpatch)) !14
+            allocate (a_gammasha_enftemp        (numpatch)) !1
+            allocate (a_gammasha_enfboreal      (numpatch)) !2
+            allocate (a_gammasha_dnfboreal      (numpatch)) !3
+            allocate (a_gammasha_ebftrop        (numpatch)) !4
+            allocate (a_gammasha_ebftemp        (numpatch)) !5
+            allocate (a_gammasha_dbftrop        (numpatch)) !6
+            allocate (a_gammasha_dbftemp        (numpatch)) !7
+            allocate (a_gammasha_dbfboreal      (numpatch)) !8
+            allocate (a_gammasha_ebstemp        (numpatch)) !9
+            allocate (a_gammasha_dbstemp        (numpatch)) !10
+            allocate (a_gammasha_dbsboreal      (numpatch)) !11
+            allocate (a_gammasha_c3arcgrass     (numpatch)) !12
+            allocate (a_gammasha_c3grass        (numpatch)) !13
+            allocate (a_gammasha_c4grass        (numpatch)) !14
+            allocate (a_RuBPlimitfrac_sun_enftemp          (numpatch)) !1
+            allocate (a_RuBPlimitfrac_sun_enfboreal        (numpatch)) !2
+            allocate (a_RuBPlimitfrac_sun_dnfboreal        (numpatch)) !3
+            allocate (a_RuBPlimitfrac_sun_ebftrop          (numpatch)) !4
+            allocate (a_RuBPlimitfrac_sun_ebftemp          (numpatch)) !5
+            allocate (a_RuBPlimitfrac_sun_dbftrop          (numpatch)) !6
+            allocate (a_RuBPlimitfrac_sun_dbftemp          (numpatch)) !7
+            allocate (a_RuBPlimitfrac_sun_dbfboreal        (numpatch)) !8
+            allocate (a_RuBPlimitfrac_sun_ebstemp          (numpatch)) !9
+            allocate (a_RuBPlimitfrac_sun_dbstemp          (numpatch)) !10
+            allocate (a_RuBPlimitfrac_sun_dbsboreal        (numpatch)) !11
+            allocate (a_RuBPlimitfrac_sun_c3arcgrass       (numpatch)) !12
+            allocate (a_RuBPlimitfrac_sun_c3grass          (numpatch)) !13
+            allocate (a_RuBPlimitfrac_sun_c4grass          (numpatch)) !14
+            allocate (a_RuBPlimitfrac_sha_enftemp          (numpatch)) !1
+            allocate (a_RuBPlimitfrac_sha_enfboreal        (numpatch)) !2
+            allocate (a_RuBPlimitfrac_sha_dnfboreal        (numpatch)) !3
+            allocate (a_RuBPlimitfrac_sha_ebftrop          (numpatch)) !4
+            allocate (a_RuBPlimitfrac_sha_ebftemp          (numpatch)) !5
+            allocate (a_RuBPlimitfrac_sha_dbftrop          (numpatch)) !6
+            allocate (a_RuBPlimitfrac_sha_dbftemp          (numpatch)) !7
+            allocate (a_RuBPlimitfrac_sha_dbfboreal        (numpatch)) !8
+            allocate (a_RuBPlimitfrac_sha_ebstemp          (numpatch)) !9
+            allocate (a_RuBPlimitfrac_sha_dbstemp          (numpatch)) !10
+            allocate (a_RuBPlimitfrac_sha_dbsboreal        (numpatch)) !11
+            allocate (a_RuBPlimitfrac_sha_c3arcgrass       (numpatch)) !12
+            allocate (a_RuBPlimitfrac_sha_c3grass          (numpatch)) !13
+            allocate (a_RuBPlimitfrac_sha_c4grass          (numpatch)) !14
+            allocate (a_Rubiscolimitfrac_sun_enftemp          (numpatch)) !1
+            allocate (a_Rubiscolimitfrac_sun_enfboreal        (numpatch)) !2
+            allocate (a_Rubiscolimitfrac_sun_dnfboreal        (numpatch)) !3
+            allocate (a_Rubiscolimitfrac_sun_ebftrop          (numpatch)) !4
+            allocate (a_Rubiscolimitfrac_sun_ebftemp          (numpatch)) !5
+            allocate (a_Rubiscolimitfrac_sun_dbftrop          (numpatch)) !6
+            allocate (a_Rubiscolimitfrac_sun_dbftemp          (numpatch)) !7
+            allocate (a_Rubiscolimitfrac_sun_dbfboreal        (numpatch)) !8
+            allocate (a_Rubiscolimitfrac_sun_ebstemp          (numpatch)) !9
+            allocate (a_Rubiscolimitfrac_sun_dbstemp          (numpatch)) !10
+            allocate (a_Rubiscolimitfrac_sun_dbsboreal        (numpatch)) !11
+            allocate (a_Rubiscolimitfrac_sun_c3arcgrass       (numpatch)) !12
+            allocate (a_Rubiscolimitfrac_sun_c3grass          (numpatch)) !13
+            allocate (a_Rubiscolimitfrac_sun_c4grass          (numpatch)) !14
+            allocate (a_Rubiscolimitfrac_sha_enftemp          (numpatch)) !1
+            allocate (a_Rubiscolimitfrac_sha_enfboreal        (numpatch)) !2
+            allocate (a_Rubiscolimitfrac_sha_dnfboreal        (numpatch)) !3
+            allocate (a_Rubiscolimitfrac_sha_ebftrop          (numpatch)) !4
+            allocate (a_Rubiscolimitfrac_sha_ebftemp          (numpatch)) !5
+            allocate (a_Rubiscolimitfrac_sha_dbftrop          (numpatch)) !6
+            allocate (a_Rubiscolimitfrac_sha_dbftemp          (numpatch)) !7
+            allocate (a_Rubiscolimitfrac_sha_dbfboreal        (numpatch)) !8
+            allocate (a_Rubiscolimitfrac_sha_ebstemp          (numpatch)) !9
+            allocate (a_Rubiscolimitfrac_sha_dbstemp          (numpatch)) !10
+            allocate (a_Rubiscolimitfrac_sha_dbsboreal        (numpatch)) !11
+            allocate (a_Rubiscolimitfrac_sha_c3arcgrass       (numpatch)) !12
+            allocate (a_Rubiscolimitfrac_sha_c3grass          (numpatch)) !13
+            allocate (a_Rubiscolimitfrac_sha_c4grass          (numpatch)) !14
+            allocate (a_Sinklimitfrac_sun_enftemp          (numpatch)) !1
+            allocate (a_Sinklimitfrac_sun_enfboreal        (numpatch)) !2
+            allocate (a_Sinklimitfrac_sun_dnfboreal        (numpatch)) !3
+            allocate (a_Sinklimitfrac_sun_ebftrop          (numpatch)) !4
+            allocate (a_Sinklimitfrac_sun_ebftemp          (numpatch)) !5
+            allocate (a_Sinklimitfrac_sun_dbftrop          (numpatch)) !6
+            allocate (a_Sinklimitfrac_sun_dbftemp          (numpatch)) !7
+            allocate (a_Sinklimitfrac_sun_dbfboreal        (numpatch)) !8
+            allocate (a_Sinklimitfrac_sun_ebstemp          (numpatch)) !9
+            allocate (a_Sinklimitfrac_sun_dbstemp          (numpatch)) !10
+            allocate (a_Sinklimitfrac_sun_dbsboreal        (numpatch)) !11
+            allocate (a_Sinklimitfrac_sun_c3arcgrass       (numpatch)) !12
+            allocate (a_Sinklimitfrac_sun_c3grass          (numpatch)) !13
+            allocate (a_Sinklimitfrac_sun_c4grass          (numpatch)) !14
+            allocate (a_Sinklimitfrac_sha_enftemp          (numpatch)) !1
+            allocate (a_Sinklimitfrac_sha_enfboreal        (numpatch)) !2
+            allocate (a_Sinklimitfrac_sha_dnfboreal        (numpatch)) !3
+            allocate (a_Sinklimitfrac_sha_ebftrop          (numpatch)) !4
+            allocate (a_Sinklimitfrac_sha_ebftemp          (numpatch)) !5
+            allocate (a_Sinklimitfrac_sha_dbftrop          (numpatch)) !6
+            allocate (a_Sinklimitfrac_sha_dbftemp          (numpatch)) !7
+            allocate (a_Sinklimitfrac_sha_dbfboreal        (numpatch)) !8
+            allocate (a_Sinklimitfrac_sha_ebstemp          (numpatch)) !9
+            allocate (a_Sinklimitfrac_sha_dbstemp          (numpatch)) !10
+            allocate (a_Sinklimitfrac_sha_dbsboreal        (numpatch)) !11
+            allocate (a_Sinklimitfrac_sha_c3arcgrass       (numpatch)) !12
+            allocate (a_Sinklimitfrac_sha_c3grass          (numpatch)) !13
+            allocate (a_Sinklimitfrac_sha_c4grass          (numpatch)) !14
+            allocate (a_rstfacsun_enftemp        (numpatch)) !1
+            allocate (a_rstfacsun_enfboreal      (numpatch)) !2
+            allocate (a_rstfacsun_dnfboreal      (numpatch)) !3
+            allocate (a_rstfacsun_ebftrop        (numpatch)) !4
+            allocate (a_rstfacsun_ebftemp        (numpatch)) !5
+            allocate (a_rstfacsun_dbftrop        (numpatch)) !6
+            allocate (a_rstfacsun_dbftemp        (numpatch)) !7
+            allocate (a_rstfacsun_dbfboreal      (numpatch)) !8
+            allocate (a_rstfacsun_ebstemp        (numpatch)) !9
+            allocate (a_rstfacsun_dbstemp        (numpatch)) !10
+            allocate (a_rstfacsun_dbsboreal      (numpatch)) !11
+            allocate (a_rstfacsun_c3arcgrass     (numpatch)) !12
+            allocate (a_rstfacsun_c3grass        (numpatch)) !13
+            allocate (a_rstfacsun_c4grass        (numpatch)) !14
+            allocate (a_rstfacsha_enftemp        (numpatch)) !1
+            allocate (a_rstfacsha_enfboreal      (numpatch)) !2
+            allocate (a_rstfacsha_dnfboreal      (numpatch)) !3
+            allocate (a_rstfacsha_ebftrop        (numpatch)) !4
+            allocate (a_rstfacsha_ebftemp        (numpatch)) !5
+            allocate (a_rstfacsha_dbftrop        (numpatch)) !6
+            allocate (a_rstfacsha_dbftemp        (numpatch)) !7
+            allocate (a_rstfacsha_dbfboreal      (numpatch)) !8
+            allocate (a_rstfacsha_ebstemp        (numpatch)) !9
+            allocate (a_rstfacsha_dbstemp        (numpatch)) !10
+            allocate (a_rstfacsha_dbsboreal      (numpatch)) !11
+            allocate (a_rstfacsha_c3arcgrass     (numpatch)) !12
+            allocate (a_rstfacsha_c3grass        (numpatch)) !13
+            allocate (a_rstfacsha_c4grass        (numpatch)) !14
+            allocate (a_lambdasun_enftemp        (numpatch)) !1
+            allocate (a_lambdasun_enfboreal      (numpatch)) !2
+            allocate (a_lambdasun_dnfboreal      (numpatch)) !3
+            allocate (a_lambdasun_ebftrop        (numpatch)) !4
+            allocate (a_lambdasun_ebftemp        (numpatch)) !5
+            allocate (a_lambdasun_dbftrop        (numpatch)) !6
+            allocate (a_lambdasun_dbftemp        (numpatch)) !7
+            allocate (a_lambdasun_dbfboreal      (numpatch)) !8
+            allocate (a_lambdasun_ebstemp        (numpatch)) !9
+            allocate (a_lambdasun_dbstemp        (numpatch)) !10
+            allocate (a_lambdasun_dbsboreal      (numpatch)) !11
+            allocate (a_lambdasun_c3arcgrass     (numpatch)) !12
+            allocate (a_lambdasun_c3grass        (numpatch)) !13
+            allocate (a_lambdasun_c4grass        (numpatch)) !14
+            allocate (a_lambdasha_enftemp        (numpatch)) !1
+            allocate (a_lambdasha_enfboreal      (numpatch)) !2
+            allocate (a_lambdasha_dnfboreal      (numpatch)) !3
+            allocate (a_lambdasha_ebftrop        (numpatch)) !4
+            allocate (a_lambdasha_ebftemp        (numpatch)) !5
+            allocate (a_lambdasha_dbftrop        (numpatch)) !6
+            allocate (a_lambdasha_dbftemp        (numpatch)) !7
+            allocate (a_lambdasha_dbfboreal      (numpatch)) !8
+            allocate (a_lambdasha_ebstemp        (numpatch)) !9
+            allocate (a_lambdasha_dbstemp        (numpatch)) !10
+            allocate (a_lambdasha_dbsboreal      (numpatch)) !11
+            allocate (a_lambdasha_c3arcgrass     (numpatch)) !12
+            allocate (a_lambdasha_c3grass        (numpatch)) !13
+            allocate (a_lambdasha_c4grass        (numpatch)) !14
+            allocate (a_lambda                   (numpatch)) !1
+#endif 
+#endif
 
             allocate (a_qcharge   (numpatch))
 
@@ -399,6 +1144,9 @@ contains
             allocate (a_gpp                (numpatch))
             allocate (a_downreg            (numpatch))
             allocate (a_ar                 (numpatch))
+            allocate (a_cwdprod            (numpatch))
+            allocate (a_cwddecomp          (numpatch))
+            allocate (a_hr                 (numpatch))
             allocate (a_fpg                (numpatch))
             allocate (a_fpi                (numpatch))
             allocate (a_gpp_enftemp        (numpatch)) !1
@@ -590,6 +1338,8 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
+            deallocate (a_gs_sun )
+            deallocate (a_gs_sha )
             deallocate (a_dpond     )
 
             deallocate (a_zwt       )
@@ -671,6 +1421,9 @@ contains
             deallocate (a_gpp                )
             deallocate (a_downreg            )
             deallocate (a_ar                 )
+            deallocate (a_cwdprod            )
+            deallocate (a_cwddecomp          )
+            deallocate (a_hr                 )
             deallocate (a_fpg                )
             deallocate (a_fpi                )
             deallocate (a_gpp_enftemp        ) !1
@@ -701,6 +1454,375 @@ contains
             deallocate (a_leafc_c3arcgrass   ) !12
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            deallocate (a_assim_RuBP_sun_enftemp        ) !1
+            deallocate (a_assim_RuBP_sun_enfboreal      ) !2
+            deallocate (a_assim_RuBP_sun_dnfboreal      ) !3
+            deallocate (a_assim_RuBP_sun_ebftrop        ) !4
+            deallocate (a_assim_RuBP_sun_ebftemp        ) !5
+            deallocate (a_assim_RuBP_sun_dbftrop        ) !6
+            deallocate (a_assim_RuBP_sun_dbftemp        ) !7
+            deallocate (a_assim_RuBP_sun_dbfboreal      ) !8
+            deallocate (a_assim_RuBP_sun_ebstemp        ) !9
+            deallocate (a_assim_RuBP_sun_dbstemp        ) !10
+            deallocate (a_assim_RuBP_sun_dbsboreal      ) !11
+            deallocate (a_assim_RuBP_sun_c3arcgrass     ) !12
+            deallocate (a_assim_RuBP_sun_c3grass        ) !13
+            deallocate (a_assim_RuBP_sun_c4grass        ) !14
+            deallocate (a_assim_RuBP_sha_enftemp        ) !1
+            deallocate (a_assim_RuBP_sha_enfboreal      ) !2
+            deallocate (a_assim_RuBP_sha_dnfboreal      ) !3
+            deallocate (a_assim_RuBP_sha_ebftrop        ) !4
+            deallocate (a_assim_RuBP_sha_ebftemp        ) !5
+            deallocate (a_assim_RuBP_sha_dbftrop        ) !6
+            deallocate (a_assim_RuBP_sha_dbftemp        ) !7
+            deallocate (a_assim_RuBP_sha_dbfboreal      ) !8
+            deallocate (a_assim_RuBP_sha_ebstemp        ) !9
+            deallocate (a_assim_RuBP_sha_dbstemp        ) !10
+            deallocate (a_assim_RuBP_sha_dbsboreal      ) !11
+            deallocate (a_assim_RuBP_sha_c3arcgrass     ) !12
+            deallocate (a_assim_RuBP_sha_c3grass        ) !13
+            deallocate (a_assim_RuBP_sha_c4grass        ) !14
+            deallocate (a_assim_Rubisco_sun_enftemp        ) !1
+            deallocate (a_assim_Rubisco_sun_enfboreal      ) !2
+            deallocate (a_assim_Rubisco_sun_dnfboreal      ) !3
+            deallocate (a_assim_Rubisco_sun_ebftrop        ) !4
+            deallocate (a_assim_Rubisco_sun_ebftemp        ) !5
+            deallocate (a_assim_Rubisco_sun_dbftrop        ) !6
+            deallocate (a_assim_Rubisco_sun_dbftemp        ) !7
+            deallocate (a_assim_Rubisco_sun_dbfboreal      ) !8
+            deallocate (a_assim_Rubisco_sun_ebstemp        ) !9
+            deallocate (a_assim_Rubisco_sun_dbstemp        ) !10
+            deallocate (a_assim_Rubisco_sun_dbsboreal      ) !11
+            deallocate (a_assim_Rubisco_sun_c3arcgrass     ) !12
+            deallocate (a_assim_Rubisco_sun_c3grass        ) !13
+            deallocate (a_assim_Rubisco_sun_c4grass        ) !14
+            deallocate (a_assim_Rubisco_sha_enftemp        ) !1
+            deallocate (a_assim_Rubisco_sha_enfboreal      ) !2
+            deallocate (a_assim_Rubisco_sha_dnfboreal      ) !3
+            deallocate (a_assim_Rubisco_sha_ebftrop        ) !4
+            deallocate (a_assim_Rubisco_sha_ebftemp        ) !5
+            deallocate (a_assim_Rubisco_sha_dbftrop        ) !6
+            deallocate (a_assim_Rubisco_sha_dbftemp        ) !7
+            deallocate (a_assim_Rubisco_sha_dbfboreal      ) !8
+            deallocate (a_assim_Rubisco_sha_ebstemp        ) !9
+            deallocate (a_assim_Rubisco_sha_dbstemp        ) !10
+            deallocate (a_assim_Rubisco_sha_dbsboreal      ) !11
+            deallocate (a_assim_Rubisco_sha_c3arcgrass     ) !12
+            deallocate (a_assim_Rubisco_sha_c3grass        ) !13
+            deallocate (a_assim_Rubisco_sha_c4grass        ) !14
+            deallocate (a_assimsun_enftemp        ) !1
+            deallocate (a_assimsun_enfboreal      ) !2
+            deallocate (a_assimsun_dnfboreal      ) !3
+            deallocate (a_assimsun_ebftrop        ) !4
+            deallocate (a_assimsun_ebftemp        ) !5
+            deallocate (a_assimsun_dbftrop        ) !6
+            deallocate (a_assimsun_dbftemp        ) !7
+            deallocate (a_assimsun_dbfboreal      ) !8
+            deallocate (a_assimsun_ebstemp        ) !9
+            deallocate (a_assimsun_dbstemp        ) !10
+            deallocate (a_assimsun_dbsboreal      ) !11
+            deallocate (a_assimsun_c3arcgrass     ) !12
+            deallocate (a_assimsun_c3grass        ) !13
+            deallocate (a_assimsun_c4grass        ) !14
+            deallocate (a_assimsha_enftemp        ) !1
+            deallocate (a_assimsha_enfboreal      ) !2
+            deallocate (a_assimsha_dnfboreal      ) !3
+            deallocate (a_assimsha_ebftrop        ) !4
+            deallocate (a_assimsha_ebftemp        ) !5
+            deallocate (a_assimsha_dbftrop        ) !6
+            deallocate (a_assimsha_dbftemp        ) !7
+            deallocate (a_assimsha_dbfboreal      ) !8
+            deallocate (a_assimsha_ebstemp        ) !9
+            deallocate (a_assimsha_dbstemp        ) !10
+            deallocate (a_assimsha_dbsboreal      ) !11
+            deallocate (a_assimsha_c3arcgrass     ) !12
+            deallocate (a_assimsha_c3grass        ) !13
+            deallocate (a_assimsha_c4grass        ) !14
+            deallocate (a_etrsun_enftemp        ) !1
+            deallocate (a_etrsun_enfboreal      ) !2
+            deallocate (a_etrsun_dnfboreal      ) !3
+            deallocate (a_etrsun_ebftrop        ) !4
+            deallocate (a_etrsun_ebftemp        ) !5
+            deallocate (a_etrsun_dbftrop        ) !6
+            deallocate (a_etrsun_dbftemp        ) !7
+            deallocate (a_etrsun_dbfboreal      ) !8
+            deallocate (a_etrsun_ebstemp        ) !9
+            deallocate (a_etrsun_dbstemp        ) !10
+            deallocate (a_etrsun_dbsboreal      ) !11
+            deallocate (a_etrsun_c3arcgrass     ) !12
+            deallocate (a_etrsun_c3grass        ) !13
+            deallocate (a_etrsun_c4grass        ) !14
+            deallocate (a_etrsha_enftemp        ) !1
+            deallocate (a_etrsha_enfboreal      ) !2
+            deallocate (a_etrsha_dnfboreal      ) !3
+            deallocate (a_etrsha_ebftrop        ) !4
+            deallocate (a_etrsha_ebftemp        ) !5
+            deallocate (a_etrsha_dbftrop        ) !6
+            deallocate (a_etrsha_dbftemp        ) !7
+            deallocate (a_etrsha_dbfboreal      ) !8
+            deallocate (a_etrsha_ebstemp        ) !9
+            deallocate (a_etrsha_dbstemp        ) !10
+            deallocate (a_etrsha_dbsboreal      ) !11
+            deallocate (a_etrsha_c3arcgrass     ) !12
+            deallocate (a_etrsha_c3grass        ) !13
+            deallocate (a_etrsha_c4grass        ) !14
+            deallocate (a_cisun_enftemp        ) !1
+            deallocate (a_cisun_enfboreal      ) !2
+            deallocate (a_cisun_dnfboreal      ) !3
+            deallocate (a_cisun_ebftrop        ) !4
+            deallocate (a_cisun_ebftemp        ) !5
+            deallocate (a_cisun_dbftrop        ) !6
+            deallocate (a_cisun_dbftemp        ) !7
+            deallocate (a_cisun_dbfboreal      ) !8
+            deallocate (a_cisun_ebstemp        ) !9
+            deallocate (a_cisun_dbstemp        ) !10
+            deallocate (a_cisun_dbsboreal      ) !11
+            deallocate (a_cisun_c3arcgrass     ) !12
+            deallocate (a_cisun_c3grass        ) !13
+            deallocate (a_cisun_c4grass        ) !14
+            deallocate (a_cisha_enftemp        ) !1
+            deallocate (a_cisha_enfboreal      ) !2
+            deallocate (a_cisha_dnfboreal      ) !3
+            deallocate (a_cisha_ebftrop        ) !4
+            deallocate (a_cisha_ebftemp        ) !5
+            deallocate (a_cisha_dbftrop        ) !6
+            deallocate (a_cisha_dbftemp        ) !7
+            deallocate (a_cisha_dbfboreal      ) !8
+            deallocate (a_cisha_ebstemp        ) !9
+            deallocate (a_cisha_dbstemp        ) !10
+            deallocate (a_cisha_dbsboreal      ) !11
+            deallocate (a_cisha_c3arcgrass     ) !12
+            deallocate (a_cisha_c3grass        ) !13
+            deallocate (a_cisha_c4grass        ) !14
+            deallocate (a_essun_enftemp        ) !1
+            deallocate (a_essun_enfboreal      ) !2
+            deallocate (a_essun_dnfboreal      ) !3
+            deallocate (a_essun_ebftrop        ) !4
+            deallocate (a_essun_ebftemp        ) !5
+            deallocate (a_essun_dbftrop        ) !6
+            deallocate (a_essun_dbftemp        ) !7
+            deallocate (a_essun_dbfboreal      ) !8
+            deallocate (a_essun_ebstemp        ) !9
+            deallocate (a_essun_dbstemp        ) !10
+            deallocate (a_essun_dbsboreal      ) !11
+            deallocate (a_essun_c3arcgrass     ) !12
+            deallocate (a_essun_c3grass        ) !13
+            deallocate (a_essun_c4grass        ) !14
+            deallocate (a_essha_enftemp        ) !1
+            deallocate (a_essha_enfboreal      ) !2
+            deallocate (a_essha_dnfboreal      ) !3
+            deallocate (a_essha_ebftrop        ) !4
+            deallocate (a_essha_ebftemp        ) !5
+            deallocate (a_essha_dbftrop        ) !6
+            deallocate (a_essha_dbftemp        ) !7
+            deallocate (a_essha_dbfboreal      ) !8
+            deallocate (a_essha_ebstemp        ) !9
+            deallocate (a_essha_dbstemp        ) !10
+            deallocate (a_essha_dbsboreal      ) !11
+            deallocate (a_essha_c3arcgrass     ) !12
+            deallocate (a_essha_c3grass        ) !13
+            deallocate (a_essha_c4grass        ) !14
+            deallocate (a_gssun_enftemp        ) !1
+            deallocate (a_gssun_enfboreal      ) !2
+            deallocate (a_gssun_dnfboreal      ) !3
+            deallocate (a_gssun_ebftrop        ) !4
+            deallocate (a_gssun_ebftemp        ) !5
+            deallocate (a_gssun_dbftrop        ) !6
+            deallocate (a_gssun_dbftemp        ) !7
+            deallocate (a_gssun_dbfboreal      ) !8
+            deallocate (a_gssun_ebstemp        ) !9
+            deallocate (a_gssun_dbstemp        ) !10
+            deallocate (a_gssun_dbsboreal      ) !11
+            deallocate (a_gssun_c3arcgrass     ) !12
+            deallocate (a_gssun_c3grass        ) !13
+            deallocate (a_gssun_c4grass        ) !14
+            deallocate (a_gssha_enftemp        ) !1
+            deallocate (a_gssha_enfboreal      ) !2
+            deallocate (a_gssha_dnfboreal      ) !3
+            deallocate (a_gssha_ebftrop        ) !4
+            deallocate (a_gssha_ebftemp        ) !5
+            deallocate (a_gssha_dbftrop        ) !6
+            deallocate (a_gssha_dbftemp        ) !7
+            deallocate (a_gssha_dbfboreal      ) !8
+            deallocate (a_gssha_ebstemp        ) !9
+            deallocate (a_gssha_dbstemp        ) !10
+            deallocate (a_gssha_dbsboreal      ) !11
+            deallocate (a_gssha_c3arcgrass     ) !12
+            deallocate (a_gssha_c3grass        ) !13
+            deallocate (a_gssha_c4grass        ) !14
+            deallocate (a_gammasun_enftemp        ) !1
+            deallocate (a_gammasun_enfboreal      ) !2
+            deallocate (a_gammasun_dnfboreal      ) !3
+            deallocate (a_gammasun_ebftrop        ) !4
+            deallocate (a_gammasun_ebftemp        ) !5
+            deallocate (a_gammasun_dbftrop        ) !6
+            deallocate (a_gammasun_dbftemp        ) !7
+            deallocate (a_gammasun_dbfboreal      ) !8
+            deallocate (a_gammasun_ebstemp        ) !9
+            deallocate (a_gammasun_dbstemp        ) !10
+            deallocate (a_gammasun_dbsboreal      ) !11
+            deallocate (a_gammasun_c3arcgrass     ) !12
+            deallocate (a_gammasun_c3grass        ) !13
+            deallocate (a_gammasun_c4grass        ) !14
+            deallocate (a_gammasha_enftemp        ) !1
+            deallocate (a_gammasha_enfboreal      ) !2
+            deallocate (a_gammasha_dnfboreal      ) !3
+            deallocate (a_gammasha_ebftrop        ) !4
+            deallocate (a_gammasha_ebftemp        ) !5
+            deallocate (a_gammasha_dbftrop        ) !6
+            deallocate (a_gammasha_dbftemp        ) !7
+            deallocate (a_gammasha_dbfboreal      ) !8
+            deallocate (a_gammasha_ebstemp        ) !9
+            deallocate (a_gammasha_dbstemp        ) !10
+            deallocate (a_gammasha_dbsboreal      ) !11
+            deallocate (a_gammasha_c3arcgrass     ) !12
+            deallocate (a_gammasha_c3grass        ) !13
+            deallocate (a_gammasha_c4grass        ) !14
+            deallocate (a_RuBPlimitfrac_sun_enftemp          )
+            deallocate (a_RuBPlimitfrac_sun_enfboreal        )
+            deallocate (a_RuBPlimitfrac_sun_dnfboreal        )
+            deallocate (a_RuBPlimitfrac_sun_ebftrop          )
+            deallocate (a_RuBPlimitfrac_sun_ebftemp          )
+            deallocate (a_RuBPlimitfrac_sun_dbftrop          )
+            deallocate (a_RuBPlimitfrac_sun_dbftemp          )
+            deallocate (a_RuBPlimitfrac_sun_dbfboreal        )
+            deallocate (a_RuBPlimitfrac_sun_ebstemp          )
+            deallocate (a_RuBPlimitfrac_sun_dbstemp          )
+            deallocate (a_RuBPlimitfrac_sun_dbsboreal        )
+            deallocate (a_RuBPlimitfrac_sun_c3arcgrass       )
+            deallocate (a_RuBPlimitfrac_sun_c3grass          )
+            deallocate (a_RuBPlimitfrac_sun_c4grass          )
+            deallocate (a_RuBPlimitfrac_sha_enftemp          )
+            deallocate (a_RuBPlimitfrac_sha_enfboreal        )
+            deallocate (a_RuBPlimitfrac_sha_dnfboreal        )
+            deallocate (a_RuBPlimitfrac_sha_ebftrop          )
+            deallocate (a_RuBPlimitfrac_sha_ebftemp          )
+            deallocate (a_RuBPlimitfrac_sha_dbftrop          )
+            deallocate (a_RuBPlimitfrac_sha_dbftemp          )
+            deallocate (a_RuBPlimitfrac_sha_dbfboreal        )
+            deallocate (a_RuBPlimitfrac_sha_ebstemp          )
+            deallocate (a_RuBPlimitfrac_sha_dbstemp          )
+            deallocate (a_RuBPlimitfrac_sha_dbsboreal        )
+            deallocate (a_RuBPlimitfrac_sha_c3arcgrass       )
+            deallocate (a_RuBPlimitfrac_sha_c3grass          )
+            deallocate (a_RuBPlimitfrac_sha_c4grass          )
+            deallocate (a_Rubiscolimitfrac_sun_enftemp          )
+            deallocate (a_Rubiscolimitfrac_sun_enfboreal        )
+            deallocate (a_Rubiscolimitfrac_sun_dnfboreal        )
+            deallocate (a_Rubiscolimitfrac_sun_ebftrop          )
+            deallocate (a_Rubiscolimitfrac_sun_ebftemp          )
+            deallocate (a_Rubiscolimitfrac_sun_dbftrop          )
+            deallocate (a_Rubiscolimitfrac_sun_dbftemp          )
+            deallocate (a_Rubiscolimitfrac_sun_dbfboreal        )
+            deallocate (a_Rubiscolimitfrac_sun_ebstemp          )
+            deallocate (a_Rubiscolimitfrac_sun_dbstemp          )
+            deallocate (a_Rubiscolimitfrac_sun_dbsboreal        )
+            deallocate (a_Rubiscolimitfrac_sun_c3arcgrass       )
+            deallocate (a_Rubiscolimitfrac_sun_c3grass          )
+            deallocate (a_Rubiscolimitfrac_sun_c4grass          )
+            deallocate (a_Rubiscolimitfrac_sha_enftemp          )
+            deallocate (a_Rubiscolimitfrac_sha_enfboreal        )
+            deallocate (a_Rubiscolimitfrac_sha_dnfboreal        )
+            deallocate (a_Rubiscolimitfrac_sha_ebftrop          )
+            deallocate (a_Rubiscolimitfrac_sha_ebftemp          )
+            deallocate (a_Rubiscolimitfrac_sha_dbftrop          )
+            deallocate (a_Rubiscolimitfrac_sha_dbftemp          )
+            deallocate (a_Rubiscolimitfrac_sha_dbfboreal        )
+            deallocate (a_Rubiscolimitfrac_sha_ebstemp          )
+            deallocate (a_Rubiscolimitfrac_sha_dbstemp          )
+            deallocate (a_Rubiscolimitfrac_sha_dbsboreal        )
+            deallocate (a_Rubiscolimitfrac_sha_c3arcgrass       )
+            deallocate (a_Rubiscolimitfrac_sha_c3grass          )
+            deallocate (a_Rubiscolimitfrac_sha_c4grass          )
+            deallocate (a_Sinklimitfrac_sun_enftemp          )
+            deallocate (a_Sinklimitfrac_sun_enfboreal        )
+            deallocate (a_Sinklimitfrac_sun_dnfboreal        )
+            deallocate (a_Sinklimitfrac_sun_ebftrop          )
+            deallocate (a_Sinklimitfrac_sun_ebftemp          )
+            deallocate (a_Sinklimitfrac_sun_dbftrop          )
+            deallocate (a_Sinklimitfrac_sun_dbftemp          )
+            deallocate (a_Sinklimitfrac_sun_dbfboreal        )
+            deallocate (a_Sinklimitfrac_sun_ebstemp          )
+            deallocate (a_Sinklimitfrac_sun_dbstemp          )
+            deallocate (a_Sinklimitfrac_sun_dbsboreal        )
+            deallocate (a_Sinklimitfrac_sun_c3arcgrass       )
+            deallocate (a_Sinklimitfrac_sun_c3grass          )
+            deallocate (a_Sinklimitfrac_sun_c4grass          )
+            deallocate (a_Sinklimitfrac_sha_enftemp          )
+            deallocate (a_Sinklimitfrac_sha_enfboreal        )
+            deallocate (a_Sinklimitfrac_sha_dnfboreal        )
+            deallocate (a_Sinklimitfrac_sha_ebftrop          )
+            deallocate (a_Sinklimitfrac_sha_ebftemp          )
+            deallocate (a_Sinklimitfrac_sha_dbftrop          )
+            deallocate (a_Sinklimitfrac_sha_dbftemp          )
+            deallocate (a_Sinklimitfrac_sha_dbfboreal        )
+            deallocate (a_Sinklimitfrac_sha_ebstemp          )
+            deallocate (a_Sinklimitfrac_sha_dbstemp          )
+            deallocate (a_Sinklimitfrac_sha_dbsboreal        )
+            deallocate (a_Sinklimitfrac_sha_c3arcgrass       )
+            deallocate (a_Sinklimitfrac_sha_c3grass          )
+            deallocate (a_Sinklimitfrac_sha_c4grass          )
+            deallocate (a_rstfacsun_enftemp        ) !1
+            deallocate (a_rstfacsun_enfboreal      ) !2
+            deallocate (a_rstfacsun_dnfboreal      ) !3
+            deallocate (a_rstfacsun_ebftrop        ) !4
+            deallocate (a_rstfacsun_ebftemp        ) !5
+            deallocate (a_rstfacsun_dbftrop        ) !6
+            deallocate (a_rstfacsun_dbftemp        ) !7
+            deallocate (a_rstfacsun_dbfboreal      ) !8
+            deallocate (a_rstfacsun_ebstemp        ) !9
+            deallocate (a_rstfacsun_dbstemp        ) !10
+            deallocate (a_rstfacsun_dbsboreal      ) !11
+            deallocate (a_rstfacsun_c3arcgrass     ) !12
+            deallocate (a_rstfacsun_c3grass        ) !13
+            deallocate (a_rstfacsun_c4grass        ) !14
+            deallocate (a_rstfacsha_enftemp        ) !1
+            deallocate (a_rstfacsha_enfboreal      ) !2
+            deallocate (a_rstfacsha_dnfboreal      ) !3
+            deallocate (a_rstfacsha_ebftrop        ) !4
+            deallocate (a_rstfacsha_ebftemp        ) !5
+            deallocate (a_rstfacsha_dbftrop        ) !6
+            deallocate (a_rstfacsha_dbftemp        ) !7
+            deallocate (a_rstfacsha_dbfboreal      ) !8
+            deallocate (a_rstfacsha_ebstemp        ) !9
+            deallocate (a_rstfacsha_dbstemp        ) !10
+            deallocate (a_rstfacsha_dbsboreal      ) !11
+            deallocate (a_rstfacsha_c3arcgrass     ) !12
+            deallocate (a_rstfacsha_c3grass        ) !13
+            deallocate (a_rstfacsha_c4grass        ) !14
+            deallocate (a_lambdasun_enftemp        ) !1
+            deallocate (a_lambdasun_enfboreal      ) !2
+            deallocate (a_lambdasun_dnfboreal      ) !3
+            deallocate (a_lambdasun_ebftrop        ) !4
+            deallocate (a_lambdasun_ebftemp        ) !5
+            deallocate (a_lambdasun_dbftrop        ) !6
+            deallocate (a_lambdasun_dbftemp        ) !7
+            deallocate (a_lambdasun_dbfboreal      ) !8
+            deallocate (a_lambdasun_ebstemp        ) !9
+            deallocate (a_lambdasun_dbstemp        ) !10
+            deallocate (a_lambdasun_dbsboreal      ) !11
+            deallocate (a_lambdasun_c3arcgrass     ) !12
+            deallocate (a_lambdasun_c3grass        ) !13
+            deallocate (a_lambdasun_c4grass        ) !14
+            deallocate (a_lambdasha_enftemp        ) !1
+            deallocate (a_lambdasha_enfboreal      ) !2
+            deallocate (a_lambdasha_dnfboreal      ) !3
+            deallocate (a_lambdasha_ebftrop        ) !4
+            deallocate (a_lambdasha_ebftemp        ) !5
+            deallocate (a_lambdasha_dbftrop        ) !6
+            deallocate (a_lambdasha_dbftemp        ) !7
+            deallocate (a_lambdasha_dbfboreal      ) !8
+            deallocate (a_lambdasha_ebstemp        ) !9
+            deallocate (a_lambdasha_dbstemp        ) !10
+            deallocate (a_lambdasha_dbsboreal      ) !11
+            deallocate (a_lambdasha_c3arcgrass     ) !12
+            deallocate (a_lambdasha_c3grass        ) !13
+            deallocate (a_lambdasha_c4grass        ) !14
+            deallocate (a_lambda                   ) !1
+#endif
+#endif
 #ifdef NITRIF
             deallocate (a_O2_DECOMP_DEPTH_UNSAT )
             deallocate (a_CONC_O2_UNSAT         )
@@ -868,6 +1990,8 @@ contains
             a_qdrip   (:) = spval
             a_rstfacsun(:) = spval
             a_rstfacsha(:) = spval
+            a_gs_sun   (:) = spval
+            a_gs_sha   (:) = spval
 
             a_dpond   (:) = spval
             a_zwt     (:) = spval
@@ -949,6 +2073,9 @@ contains
             a_gpp                (:) = spval
             a_downreg            (:) = spval
             a_ar                 (:) = spval
+            a_cwdprod            (:) = spval
+            a_cwddecomp          (:) = spval
+            a_hr                 (:) = spval
             a_fpg                (:) = spval
             a_fpi                (:) = spval
             a_gpp_enftemp        (:) = spval
@@ -979,6 +2106,375 @@ contains
             a_leafc_c3arcgrass   (:) = spval
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            a_assim_RuBP_sun_enftemp        (:) = spval !1
+            a_assim_RuBP_sun_enfboreal      (:) = spval !2
+            a_assim_RuBP_sun_dnfboreal      (:) = spval !3
+            a_assim_RuBP_sun_ebftrop        (:) = spval !4
+            a_assim_RuBP_sun_ebftemp        (:) = spval !5
+            a_assim_RuBP_sun_dbftrop        (:) = spval !6
+            a_assim_RuBP_sun_dbftemp        (:) = spval !7
+            a_assim_RuBP_sun_dbfboreal      (:) = spval !8
+            a_assim_RuBP_sun_ebstemp        (:) = spval !9
+            a_assim_RuBP_sun_dbstemp        (:) = spval !10
+            a_assim_RuBP_sun_dbsboreal      (:) = spval !11
+            a_assim_RuBP_sun_c3arcgrass     (:) = spval !12
+            a_assim_RuBP_sun_c3grass        (:) = spval !13
+            a_assim_RuBP_sun_c4grass        (:) = spval !14
+            a_assim_RuBP_sha_enftemp        (:) = spval !1
+            a_assim_RuBP_sha_enfboreal      (:) = spval !2
+            a_assim_RuBP_sha_dnfboreal      (:) = spval !3
+            a_assim_RuBP_sha_ebftrop        (:) = spval !4
+            a_assim_RuBP_sha_ebftemp        (:) = spval !5
+            a_assim_RuBP_sha_dbftrop        (:) = spval !6
+            a_assim_RuBP_sha_dbftemp        (:) = spval !7
+            a_assim_RuBP_sha_dbfboreal      (:) = spval !8
+            a_assim_RuBP_sha_ebstemp        (:) = spval !9
+            a_assim_RuBP_sha_dbstemp        (:) = spval !10
+            a_assim_RuBP_sha_dbsboreal      (:) = spval !11
+            a_assim_RuBP_sha_c3arcgrass     (:) = spval !12
+            a_assim_RuBP_sha_c3grass        (:) = spval !13
+            a_assim_RuBP_sha_c4grass        (:) = spval !14
+            a_assim_Rubisco_sun_enftemp        (:) = spval !1
+            a_assim_Rubisco_sun_enfboreal      (:) = spval !2
+            a_assim_Rubisco_sun_dnfboreal      (:) = spval !3
+            a_assim_Rubisco_sun_ebftrop        (:) = spval !4
+            a_assim_Rubisco_sun_ebftemp        (:) = spval !5
+            a_assim_Rubisco_sun_dbftrop        (:) = spval !6
+            a_assim_Rubisco_sun_dbftemp        (:) = spval !7
+            a_assim_Rubisco_sun_dbfboreal      (:) = spval !8
+            a_assim_Rubisco_sun_ebstemp        (:) = spval !9
+            a_assim_Rubisco_sun_dbstemp        (:) = spval !10
+            a_assim_Rubisco_sun_dbsboreal      (:) = spval !11
+            a_assim_Rubisco_sun_c3arcgrass     (:) = spval !12
+            a_assim_Rubisco_sun_c3grass        (:) = spval !13
+            a_assim_Rubisco_sun_c4grass        (:) = spval !14
+            a_assim_Rubisco_sha_enftemp        (:) = spval !1
+            a_assim_Rubisco_sha_enfboreal      (:) = spval !2
+            a_assim_Rubisco_sha_dnfboreal      (:) = spval !3
+            a_assim_Rubisco_sha_ebftrop        (:) = spval !4
+            a_assim_Rubisco_sha_ebftemp        (:) = spval !5
+            a_assim_Rubisco_sha_dbftrop        (:) = spval !6
+            a_assim_Rubisco_sha_dbftemp        (:) = spval !7
+            a_assim_Rubisco_sha_dbfboreal      (:) = spval !8
+            a_assim_Rubisco_sha_ebstemp        (:) = spval !9
+            a_assim_Rubisco_sha_dbstemp        (:) = spval !10
+            a_assim_Rubisco_sha_dbsboreal      (:) = spval !11
+            a_assim_Rubisco_sha_c3arcgrass     (:) = spval !12
+            a_assim_Rubisco_sha_c3grass        (:) = spval !13
+            a_assim_Rubisco_sha_c4grass        (:) = spval !14
+            a_assimsun_enftemp        (:) = spval !1
+            a_assimsun_enfboreal      (:) = spval !2
+            a_assimsun_dnfboreal      (:) = spval !3
+            a_assimsun_ebftrop        (:) = spval !4
+            a_assimsun_ebftemp        (:) = spval !5
+            a_assimsun_dbftrop        (:) = spval !6
+            a_assimsun_dbftemp        (:) = spval !7
+            a_assimsun_dbfboreal      (:) = spval !8
+            a_assimsun_ebstemp        (:) = spval !9
+            a_assimsun_dbstemp        (:) = spval !10
+            a_assimsun_dbsboreal      (:) = spval !11
+            a_assimsun_c3arcgrass     (:) = spval !12
+            a_assimsun_c3grass        (:) = spval !13
+            a_assimsun_c4grass        (:) = spval !14
+            a_assimsha_enftemp        (:) = spval !1
+            a_assimsha_enfboreal      (:) = spval !2
+            a_assimsha_dnfboreal      (:) = spval !3
+            a_assimsha_ebftrop        (:) = spval !4
+            a_assimsha_ebftemp        (:) = spval !5
+            a_assimsha_dbftrop        (:) = spval !6
+            a_assimsha_dbftemp        (:) = spval !7
+            a_assimsha_dbfboreal      (:) = spval !8
+            a_assimsha_ebstemp        (:) = spval !9
+            a_assimsha_dbstemp        (:) = spval !10
+            a_assimsha_dbsboreal      (:) = spval !11
+            a_assimsha_c3arcgrass     (:) = spval !12
+            a_assimsha_c3grass        (:) = spval !13
+            a_assimsha_c4grass        (:) = spval !14
+            a_etrsun_enftemp        (:) = spval !1
+            a_etrsun_enfboreal      (:) = spval !2
+            a_etrsun_dnfboreal      (:) = spval !3
+            a_etrsun_ebftrop        (:) = spval !4
+            a_etrsun_ebftemp        (:) = spval !5
+            a_etrsun_dbftrop        (:) = spval !6
+            a_etrsun_dbftemp        (:) = spval !7
+            a_etrsun_dbfboreal      (:) = spval !8
+            a_etrsun_ebstemp        (:) = spval !9
+            a_etrsun_dbstemp        (:) = spval !10
+            a_etrsun_dbsboreal      (:) = spval !11
+            a_etrsun_c3arcgrass     (:) = spval !12
+            a_etrsun_c3grass        (:) = spval !13
+            a_etrsun_c4grass        (:) = spval !14
+            a_etrsha_enftemp        (:) = spval !1
+            a_etrsha_enfboreal      (:) = spval !2
+            a_etrsha_dnfboreal      (:) = spval !3
+            a_etrsha_ebftrop        (:) = spval !4
+            a_etrsha_ebftemp        (:) = spval !5
+            a_etrsha_dbftrop        (:) = spval !6
+            a_etrsha_dbftemp        (:) = spval !7
+            a_etrsha_dbfboreal      (:) = spval !8
+            a_etrsha_ebstemp        (:) = spval !9
+            a_etrsha_dbstemp        (:) = spval !10
+            a_etrsha_dbsboreal      (:) = spval !11
+            a_etrsha_c3arcgrass     (:) = spval !12
+            a_etrsha_c3grass        (:) = spval !13
+            a_etrsha_c4grass        (:) = spval !14
+            a_cisun_enftemp        (:) = spval !1
+            a_cisun_enfboreal      (:) = spval !2
+            a_cisun_dnfboreal      (:) = spval !3
+            a_cisun_ebftrop        (:) = spval !4
+            a_cisun_ebftemp        (:) = spval !5
+            a_cisun_dbftrop        (:) = spval !6
+            a_cisun_dbftemp        (:) = spval !7
+            a_cisun_dbfboreal      (:) = spval !8
+            a_cisun_ebstemp        (:) = spval !9
+            a_cisun_dbstemp        (:) = spval !10
+            a_cisun_dbsboreal      (:) = spval !11
+            a_cisun_c3arcgrass     (:) = spval !12
+            a_cisun_c3grass        (:) = spval !13
+            a_cisun_c4grass        (:) = spval !14
+            a_cisha_enftemp        (:) = spval !1
+            a_cisha_enfboreal      (:) = spval !2
+            a_cisha_dnfboreal      (:) = spval !3
+            a_cisha_ebftrop        (:) = spval !4
+            a_cisha_ebftemp        (:) = spval !5
+            a_cisha_dbftrop        (:) = spval !6
+            a_cisha_dbftemp        (:) = spval !7
+            a_cisha_dbfboreal      (:) = spval !8
+            a_cisha_ebstemp        (:) = spval !9
+            a_cisha_dbstemp        (:) = spval !10
+            a_cisha_dbsboreal      (:) = spval !11
+            a_cisha_c3arcgrass     (:) = spval !12
+            a_cisha_c3grass        (:) = spval !13
+            a_cisha_c4grass        (:) = spval !14
+            a_essun_enftemp        (:) = spval !1
+            a_essun_enfboreal      (:) = spval !2
+            a_essun_dnfboreal      (:) = spval !3
+            a_essun_ebftrop        (:) = spval !4
+            a_essun_ebftemp        (:) = spval !5
+            a_essun_dbftrop        (:) = spval !6
+            a_essun_dbftemp        (:) = spval !7
+            a_essun_dbfboreal      (:) = spval !8
+            a_essun_ebstemp        (:) = spval !9
+            a_essun_dbstemp        (:) = spval !10
+            a_essun_dbsboreal      (:) = spval !11
+            a_essun_c3arcgrass     (:) = spval !12
+            a_essun_c3grass        (:) = spval !13
+            a_essun_c4grass        (:) = spval !14
+            a_essha_enftemp        (:) = spval !1
+            a_essha_enfboreal      (:) = spval !2
+            a_essha_dnfboreal      (:) = spval !3
+            a_essha_ebftrop        (:) = spval !4
+            a_essha_ebftemp        (:) = spval !5
+            a_essha_dbftrop        (:) = spval !6
+            a_essha_dbftemp        (:) = spval !7
+            a_essha_dbfboreal      (:) = spval !8
+            a_essha_ebstemp        (:) = spval !9
+            a_essha_dbstemp        (:) = spval !10
+            a_essha_dbsboreal      (:) = spval !11
+            a_essha_c3arcgrass     (:) = spval !12
+            a_essha_c3grass        (:) = spval !13
+            a_essha_c4grass        (:) = spval !14
+            a_gssun_enftemp        (:) = spval !1
+            a_gssun_enfboreal      (:) = spval !2
+            a_gssun_dnfboreal      (:) = spval !3
+            a_gssun_ebftrop        (:) = spval !4
+            a_gssun_ebftemp        (:) = spval !5
+            a_gssun_dbftrop        (:) = spval !6
+            a_gssun_dbftemp        (:) = spval !7
+            a_gssun_dbfboreal      (:) = spval !8
+            a_gssun_ebstemp        (:) = spval !9
+            a_gssun_dbstemp        (:) = spval !10
+            a_gssun_dbsboreal      (:) = spval !11
+            a_gssun_c3arcgrass     (:) = spval !12
+            a_gssun_c3grass        (:) = spval !13
+            a_gssun_c4grass        (:) = spval !14
+            a_gssha_enftemp        (:) = spval !1
+            a_gssha_enfboreal      (:) = spval !2
+            a_gssha_dnfboreal      (:) = spval !3
+            a_gssha_ebftrop        (:) = spval !4
+            a_gssha_ebftemp        (:) = spval !5
+            a_gssha_dbftrop        (:) = spval !6
+            a_gssha_dbftemp        (:) = spval !7
+            a_gssha_dbfboreal      (:) = spval !8
+            a_gssha_ebstemp        (:) = spval !9
+            a_gssha_dbstemp        (:) = spval !10
+            a_gssha_dbsboreal      (:) = spval !11
+            a_gssha_c3arcgrass     (:) = spval !12
+            a_gssha_c3grass        (:) = spval !13
+            a_gssha_c4grass        (:) = spval !14
+            a_gammasun_enftemp        (:) = spval !1
+            a_gammasun_enfboreal      (:) = spval !2
+            a_gammasun_dnfboreal      (:) = spval !3
+            a_gammasun_ebftrop        (:) = spval !4
+            a_gammasun_ebftemp        (:) = spval !5
+            a_gammasun_dbftrop        (:) = spval !6
+            a_gammasun_dbftemp        (:) = spval !7
+            a_gammasun_dbfboreal      (:) = spval !8
+            a_gammasun_ebstemp        (:) = spval !9
+            a_gammasun_dbstemp        (:) = spval !10
+            a_gammasun_dbsboreal      (:) = spval !11
+            a_gammasun_c3arcgrass     (:) = spval !12
+            a_gammasun_c3grass        (:) = spval !13
+            a_gammasun_c4grass        (:) = spval !14
+            a_gammasha_enftemp        (:) = spval !1
+            a_gammasha_enfboreal      (:) = spval !2
+            a_gammasha_dnfboreal      (:) = spval !3
+            a_gammasha_ebftrop        (:) = spval !4
+            a_gammasha_ebftemp        (:) = spval !5
+            a_gammasha_dbftrop        (:) = spval !6
+            a_gammasha_dbftemp        (:) = spval !7
+            a_gammasha_dbfboreal      (:) = spval !8
+            a_gammasha_ebstemp        (:) = spval !9
+            a_gammasha_dbstemp        (:) = spval !10
+            a_gammasha_dbsboreal      (:) = spval !11
+            a_gammasha_c3arcgrass     (:) = spval !12
+            a_gammasha_c3grass        (:) = spval !13
+            a_gammasha_c4grass        (:) = spval !14
+            a_RuBPlimitfrac_sun_enftemp          (:) = spval
+            a_RuBPlimitfrac_sun_enfboreal        (:) = spval
+            a_RuBPlimitfrac_sun_dnfboreal        (:) = spval
+            a_RuBPlimitfrac_sun_ebftrop          (:) = spval
+            a_RuBPlimitfrac_sun_ebftemp          (:) = spval
+            a_RuBPlimitfrac_sun_dbftrop          (:) = spval
+            a_RuBPlimitfrac_sun_dbftemp          (:) = spval
+            a_RuBPlimitfrac_sun_dbfboreal        (:) = spval
+            a_RuBPlimitfrac_sun_ebstemp          (:) = spval
+            a_RuBPlimitfrac_sun_dbstemp          (:) = spval
+            a_RuBPlimitfrac_sun_dbsboreal        (:) = spval
+            a_RuBPlimitfrac_sun_c3arcgrass       (:) = spval
+            a_RuBPlimitfrac_sun_c3grass          (:) = spval
+            a_RuBPlimitfrac_sun_c4grass          (:) = spval
+            a_RuBPlimitfrac_sha_enftemp          (:) = spval
+            a_RuBPlimitfrac_sha_enfboreal        (:) = spval
+            a_RuBPlimitfrac_sha_dnfboreal        (:) = spval
+            a_RuBPlimitfrac_sha_ebftrop          (:) = spval
+            a_RuBPlimitfrac_sha_ebftemp          (:) = spval
+            a_RuBPlimitfrac_sha_dbftrop          (:) = spval
+            a_RuBPlimitfrac_sha_dbftemp          (:) = spval
+            a_RuBPlimitfrac_sha_dbfboreal        (:) = spval
+            a_RuBPlimitfrac_sha_ebstemp          (:) = spval
+            a_RuBPlimitfrac_sha_dbstemp          (:) = spval
+            a_RuBPlimitfrac_sha_dbsboreal        (:) = spval
+            a_RuBPlimitfrac_sha_c3arcgrass       (:) = spval
+            a_RuBPlimitfrac_sha_c3grass          (:) = spval
+            a_RuBPlimitfrac_sha_c4grass          (:) = spval
+            a_Rubiscolimitfrac_sun_enftemp          (:) = spval
+            a_Rubiscolimitfrac_sun_enfboreal        (:) = spval
+            a_Rubiscolimitfrac_sun_dnfboreal        (:) = spval
+            a_Rubiscolimitfrac_sun_ebftrop          (:) = spval
+            a_Rubiscolimitfrac_sun_ebftemp          (:) = spval
+            a_Rubiscolimitfrac_sun_dbftrop          (:) = spval
+            a_Rubiscolimitfrac_sun_dbftemp          (:) = spval
+            a_Rubiscolimitfrac_sun_dbfboreal        (:) = spval
+            a_Rubiscolimitfrac_sun_ebstemp          (:) = spval
+            a_Rubiscolimitfrac_sun_dbstemp          (:) = spval
+            a_Rubiscolimitfrac_sun_dbsboreal        (:) = spval
+            a_Rubiscolimitfrac_sun_c3arcgrass       (:) = spval
+            a_Rubiscolimitfrac_sun_c3grass          (:) = spval
+            a_Rubiscolimitfrac_sun_c4grass          (:) = spval
+            a_Rubiscolimitfrac_sha_enftemp          (:) = spval
+            a_Rubiscolimitfrac_sha_enfboreal        (:) = spval
+            a_Rubiscolimitfrac_sha_dnfboreal        (:) = spval
+            a_Rubiscolimitfrac_sha_ebftrop          (:) = spval
+            a_Rubiscolimitfrac_sha_ebftemp          (:) = spval
+            a_Rubiscolimitfrac_sha_dbftrop          (:) = spval
+            a_Rubiscolimitfrac_sha_dbftemp          (:) = spval
+            a_Rubiscolimitfrac_sha_dbfboreal        (:) = spval
+            a_Rubiscolimitfrac_sha_ebstemp          (:) = spval
+            a_Rubiscolimitfrac_sha_dbstemp          (:) = spval
+            a_Rubiscolimitfrac_sha_dbsboreal        (:) = spval
+            a_Rubiscolimitfrac_sha_c3arcgrass       (:) = spval
+            a_Rubiscolimitfrac_sha_c3grass          (:) = spval
+            a_Rubiscolimitfrac_sha_c4grass          (:) = spval
+            a_Sinklimitfrac_sun_enftemp          (:) = spval
+            a_Sinklimitfrac_sun_enfboreal        (:) = spval
+            a_Sinklimitfrac_sun_dnfboreal        (:) = spval
+            a_Sinklimitfrac_sun_ebftrop          (:) = spval
+            a_Sinklimitfrac_sun_ebftemp          (:) = spval
+            a_Sinklimitfrac_sun_dbftrop          (:) = spval
+            a_Sinklimitfrac_sun_dbftemp          (:) = spval
+            a_Sinklimitfrac_sun_dbfboreal        (:) = spval
+            a_Sinklimitfrac_sun_ebstemp          (:) = spval
+            a_Sinklimitfrac_sun_dbstemp          (:) = spval
+            a_Sinklimitfrac_sun_dbsboreal        (:) = spval
+            a_Sinklimitfrac_sun_c3arcgrass       (:) = spval
+            a_Sinklimitfrac_sun_c3grass          (:) = spval
+            a_Sinklimitfrac_sun_c4grass          (:) = spval
+            a_Sinklimitfrac_sha_enftemp          (:) = spval
+            a_Sinklimitfrac_sha_enfboreal        (:) = spval
+            a_Sinklimitfrac_sha_dnfboreal        (:) = spval
+            a_Sinklimitfrac_sha_ebftrop          (:) = spval
+            a_Sinklimitfrac_sha_ebftemp          (:) = spval
+            a_Sinklimitfrac_sha_dbftrop          (:) = spval
+            a_Sinklimitfrac_sha_dbftemp          (:) = spval
+            a_Sinklimitfrac_sha_dbfboreal        (:) = spval
+            a_Sinklimitfrac_sha_ebstemp          (:) = spval
+            a_Sinklimitfrac_sha_dbstemp          (:) = spval
+            a_Sinklimitfrac_sha_dbsboreal        (:) = spval
+            a_Sinklimitfrac_sha_c3arcgrass       (:) = spval
+            a_Sinklimitfrac_sha_c3grass          (:) = spval
+            a_Sinklimitfrac_sha_c4grass          (:) = spval
+            a_rstfacsun_enftemp        (:) = spval  !1
+            a_rstfacsun_enfboreal      (:) = spval  !2
+            a_rstfacsun_dnfboreal      (:) = spval  !3
+            a_rstfacsun_ebftrop        (:) = spval  !4
+            a_rstfacsun_ebftemp        (:) = spval  !5
+            a_rstfacsun_dbftrop        (:) = spval  !6
+            a_rstfacsun_dbftemp        (:) = spval  !7
+            a_rstfacsun_dbfboreal      (:) = spval  !8
+            a_rstfacsun_ebstemp        (:) = spval  !9
+            a_rstfacsun_dbstemp        (:) = spval  !10
+            a_rstfacsun_dbsboreal      (:) = spval  !11
+            a_rstfacsun_c3arcgrass     (:) = spval  !12
+            a_rstfacsun_c3grass        (:) = spval  !13
+            a_rstfacsun_c4grass        (:) = spval  !14
+            a_rstfacsha_enftemp        (:) = spval  !1
+            a_rstfacsha_enfboreal      (:) = spval  !2
+            a_rstfacsha_dnfboreal      (:) = spval  !3
+            a_rstfacsha_ebftrop        (:) = spval  !4
+            a_rstfacsha_ebftemp        (:) = spval  !5
+            a_rstfacsha_dbftrop        (:) = spval  !6
+            a_rstfacsha_dbftemp        (:) = spval  !7
+            a_rstfacsha_dbfboreal      (:) = spval  !8
+            a_rstfacsha_ebstemp        (:) = spval  !9
+            a_rstfacsha_dbstemp        (:) = spval  !10
+            a_rstfacsha_dbsboreal      (:) = spval  !11
+            a_rstfacsha_c3arcgrass     (:) = spval  !12
+            a_rstfacsha_c3grass        (:) = spval  !13
+            a_rstfacsha_c4grass        (:) = spval  !14
+            a_lambdasun_enftemp        (:) = spval  !1
+            a_lambdasun_enfboreal      (:) = spval  !2
+            a_lambdasun_dnfboreal      (:) = spval  !3
+            a_lambdasun_ebftrop        (:) = spval  !4
+            a_lambdasun_ebftemp        (:) = spval  !5
+            a_lambdasun_dbftrop        (:) = spval  !6
+            a_lambdasun_dbftemp        (:) = spval  !7
+            a_lambdasun_dbfboreal      (:) = spval  !8
+            a_lambdasun_ebstemp        (:) = spval  !9
+            a_lambdasun_dbstemp        (:) = spval  !10
+            a_lambdasun_dbsboreal      (:) = spval  !11
+            a_lambdasun_c3arcgrass     (:) = spval  !12
+            a_lambdasun_c3grass        (:) = spval  !13
+            a_lambdasun_c4grass        (:) = spval  !14
+            a_lambdasha_enftemp        (:) = spval  !1
+            a_lambdasha_enfboreal      (:) = spval  !2
+            a_lambdasha_dnfboreal      (:) = spval  !3
+            a_lambdasha_ebftrop        (:) = spval  !4
+            a_lambdasha_ebftemp        (:) = spval  !5
+            a_lambdasha_dbftrop        (:) = spval  !6
+            a_lambdasha_dbftemp        (:) = spval  !7
+            a_lambdasha_dbfboreal      (:) = spval  !8
+            a_lambdasha_ebstemp        (:) = spval  !9
+            a_lambdasha_dbstemp        (:) = spval  !10
+            a_lambdasha_dbsboreal      (:) = spval  !11
+            a_lambdasha_c3arcgrass     (:) = spval  !12
+            a_lambdasha_c3grass        (:) = spval  !13
+            a_lambdasha_c4grass        (:) = spval  !14
+            a_lambda                   (:) = spval  !1
+#endif
+#endif
 #ifdef NITRIF
             a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
             a_CONC_O2_UNSAT         (:,:) = spval
@@ -1189,6 +2685,8 @@ contains
             call acc1d (qdrip  , a_qdrip  )
             call acc1d (rstfacsun , a_rstfacsun )
             call acc1d (rstfacsha , a_rstfacsha )
+            call acc1d (gs_sun     , a_gs_sun )
+            call acc1d (gs_sha     , a_gs_sha )
 
             call acc1d (dpond  , a_dpond  )
             call acc1d (zwt    , a_zwt    )
@@ -1279,6 +2777,9 @@ contains
             call acc1d (gpp                , a_gpp                 )
             call acc1d (downreg            , a_downreg             )
             call acc1d (ar                 , a_ar                  )
+            call acc1d (cwdprod            , a_cwdprod             )
+            call acc1d (cwddecomp          , a_cwddecomp           )
+            call acc1d (decomp_hr          , a_hr                  )
             call acc1d (fpg                , a_fpg                 )
             call acc1d (fpi                , a_fpi                 )
             call acc1d (gpp_enftemp        , a_gpp_enftemp         )
@@ -1309,6 +2810,375 @@ contains
             call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            call acc1d (assim_RuBP_sun_enftemp        , a_assim_RuBP_sun_enftemp        )
+            call acc1d (assim_RuBP_sun_enfboreal      , a_assim_RuBP_sun_enfboreal      )
+            call acc1d (assim_RuBP_sun_dnfboreal      , a_assim_RuBP_sun_dnfboreal      )
+            call acc1d (assim_RuBP_sun_ebftrop        , a_assim_RuBP_sun_ebftrop        )
+            call acc1d (assim_RuBP_sun_ebftemp        , a_assim_RuBP_sun_ebftemp        )
+            call acc1d (assim_RuBP_sun_dbftrop        , a_assim_RuBP_sun_dbftrop        )
+            call acc1d (assim_RuBP_sun_dbftemp        , a_assim_RuBP_sun_dbftemp        )
+            call acc1d (assim_RuBP_sun_dbfboreal      , a_assim_RuBP_sun_dbfboreal      )
+            call acc1d (assim_RuBP_sun_ebstemp        , a_assim_RuBP_sun_ebstemp        )
+            call acc1d (assim_RuBP_sun_dbstemp        ,  a_assim_RuBP_sun_dbstemp        )
+            call acc1d (assim_RuBP_sun_dbsboreal      ,  a_assim_RuBP_sun_dbsboreal      )
+            call acc1d (assim_RuBP_sun_c3arcgrass     ,  a_assim_RuBP_sun_c3arcgrass     )
+            call acc1d (assim_RuBP_sun_c3grass        ,  a_assim_RuBP_sun_c3grass        )
+            call acc1d (assim_RuBP_sun_c4grass        ,  a_assim_RuBP_sun_c4grass        )
+            call acc1d (assim_RuBP_sha_enftemp        , a_assim_RuBP_sha_enftemp        )
+            call acc1d (assim_RuBP_sha_enfboreal      , a_assim_RuBP_sha_enfboreal      )
+            call acc1d (assim_RuBP_sha_dnfboreal      , a_assim_RuBP_sha_dnfboreal      )
+            call acc1d (assim_RuBP_sha_ebftrop        , a_assim_RuBP_sha_ebftrop        )
+            call acc1d (assim_RuBP_sha_ebftemp        , a_assim_RuBP_sha_ebftemp        )
+            call acc1d (assim_RuBP_sha_dbftrop        , a_assim_RuBP_sha_dbftrop        )
+            call acc1d (assim_RuBP_sha_dbftemp        , a_assim_RuBP_sha_dbftemp        )
+            call acc1d (assim_RuBP_sha_dbfboreal      , a_assim_RuBP_sha_dbfboreal      )
+            call acc1d (assim_RuBP_sha_ebstemp        , a_assim_RuBP_sha_ebstemp        )
+            call acc1d (assim_RuBP_sha_dbstemp        ,  a_assim_RuBP_sha_dbstemp        )
+            call acc1d (assim_RuBP_sha_dbsboreal      ,  a_assim_RuBP_sha_dbsboreal      )
+            call acc1d (assim_RuBP_sha_c3arcgrass     ,  a_assim_RuBP_sha_c3arcgrass     )
+            call acc1d (assim_RuBP_sha_c3grass        ,  a_assim_RuBP_sha_c3grass        )
+            call acc1d (assim_RuBP_sha_c4grass        ,  a_assim_RuBP_sha_c4grass        )
+            call acc1d (assim_Rubisco_sun_enftemp        , a_assim_Rubisco_sun_enftemp        )
+            call acc1d (assim_Rubisco_sun_enfboreal      , a_assim_Rubisco_sun_enfboreal      )
+            call acc1d (assim_Rubisco_sun_dnfboreal      , a_assim_Rubisco_sun_dnfboreal      )
+            call acc1d (assim_Rubisco_sun_ebftrop        , a_assim_Rubisco_sun_ebftrop        )
+            call acc1d (assim_Rubisco_sun_ebftemp        , a_assim_Rubisco_sun_ebftemp        )
+            call acc1d (assim_Rubisco_sun_dbftrop        , a_assim_Rubisco_sun_dbftrop        )
+            call acc1d (assim_Rubisco_sun_dbftemp        , a_assim_Rubisco_sun_dbftemp        )
+            call acc1d (assim_Rubisco_sun_dbfboreal      , a_assim_Rubisco_sun_dbfboreal      )
+            call acc1d (assim_Rubisco_sun_ebstemp        , a_assim_Rubisco_sun_ebstemp        )
+            call acc1d (assim_Rubisco_sun_dbstemp        ,  a_assim_Rubisco_sun_dbstemp        )
+            call acc1d (assim_Rubisco_sun_dbsboreal      ,  a_assim_Rubisco_sun_dbsboreal      )
+            call acc1d (assim_Rubisco_sun_c3arcgrass     ,  a_assim_Rubisco_sun_c3arcgrass     )
+            call acc1d (assim_Rubisco_sun_c3grass        ,  a_assim_Rubisco_sun_c3grass        )
+            call acc1d (assim_Rubisco_sun_c4grass        ,  a_assim_Rubisco_sun_c4grass        )
+            call acc1d (assim_Rubisco_sha_enftemp        , a_assim_Rubisco_sha_enftemp        )
+            call acc1d (assim_Rubisco_sha_enfboreal      , a_assim_Rubisco_sha_enfboreal      )
+            call acc1d (assim_Rubisco_sha_dnfboreal      , a_assim_Rubisco_sha_dnfboreal      )
+            call acc1d (assim_Rubisco_sha_ebftrop        , a_assim_Rubisco_sha_ebftrop        )
+            call acc1d (assim_Rubisco_sha_ebftemp        , a_assim_Rubisco_sha_ebftemp        )
+            call acc1d (assim_Rubisco_sha_dbftrop        , a_assim_Rubisco_sha_dbftrop        )
+            call acc1d (assim_Rubisco_sha_dbftemp        , a_assim_Rubisco_sha_dbftemp        )
+            call acc1d (assim_Rubisco_sha_dbfboreal      , a_assim_Rubisco_sha_dbfboreal      )
+            call acc1d (assim_Rubisco_sha_ebstemp        , a_assim_Rubisco_sha_ebstemp        )
+            call acc1d (assim_Rubisco_sha_dbstemp        ,  a_assim_Rubisco_sha_dbstemp        )
+            call acc1d (assim_Rubisco_sha_dbsboreal      ,  a_assim_Rubisco_sha_dbsboreal      )
+            call acc1d (assim_Rubisco_sha_c3arcgrass     ,  a_assim_Rubisco_sha_c3arcgrass     )
+            call acc1d (assim_Rubisco_sha_c3grass        ,  a_assim_Rubisco_sha_c3grass        )
+            call acc1d (assim_Rubisco_sha_c4grass        ,  a_assim_Rubisco_sha_c4grass        )
+            call acc1d (assimsun_enftemp        , a_assimsun_enftemp        )
+            call acc1d (assimsun_enfboreal      , a_assimsun_enfboreal      )
+            call acc1d (assimsun_dnfboreal      , a_assimsun_dnfboreal      )
+            call acc1d (assimsun_ebftrop        , a_assimsun_ebftrop        )
+            call acc1d (assimsun_ebftemp        , a_assimsun_ebftemp        )
+            call acc1d (assimsun_dbftrop        , a_assimsun_dbftrop        )
+            call acc1d (assimsun_dbftemp        , a_assimsun_dbftemp        )
+            call acc1d (assimsun_dbfboreal      , a_assimsun_dbfboreal      )
+            call acc1d (assimsun_ebstemp        , a_assimsun_ebstemp        )
+            call acc1d (assimsun_dbstemp        ,  a_assimsun_dbstemp        )
+            call acc1d (assimsun_dbsboreal      ,  a_assimsun_dbsboreal      )
+            call acc1d (assimsun_c3arcgrass     ,  a_assimsun_c3arcgrass     )
+            call acc1d (assimsun_c3grass        ,  a_assimsun_c3grass        )
+            call acc1d (assimsun_c4grass        ,  a_assimsun_c4grass        )
+            call acc1d (assimsha_enftemp        , a_assimsha_enftemp        )
+            call acc1d (assimsha_enfboreal      , a_assimsha_enfboreal      )
+            call acc1d (assimsha_dnfboreal      , a_assimsha_dnfboreal      )
+            call acc1d (assimsha_ebftrop        , a_assimsha_ebftrop        )
+            call acc1d (assimsha_ebftemp        , a_assimsha_ebftemp        )
+            call acc1d (assimsha_dbftrop        , a_assimsha_dbftrop        )
+            call acc1d (assimsha_dbftemp        , a_assimsha_dbftemp        )
+            call acc1d (assimsha_dbfboreal      , a_assimsha_dbfboreal      )
+            call acc1d (assimsha_ebstemp        , a_assimsha_ebstemp        )
+            call acc1d (assimsha_dbstemp        ,  a_assimsha_dbstemp        )
+            call acc1d (assimsha_dbsboreal      ,  a_assimsha_dbsboreal      )
+            call acc1d (assimsha_c3arcgrass     ,  a_assimsha_c3arcgrass     )
+            call acc1d (assimsha_c3grass        ,  a_assimsha_c3grass        )
+            call acc1d (assimsha_c4grass        ,  a_assimsha_c4grass        )
+            call acc1d (etrsun_enftemp        , a_etrsun_enftemp        )
+            call acc1d (etrsun_enfboreal      , a_etrsun_enfboreal      )
+            call acc1d (etrsun_dnfboreal      , a_etrsun_dnfboreal      )
+            call acc1d (etrsun_ebftrop        , a_etrsun_ebftrop        )
+            call acc1d (etrsun_ebftemp        , a_etrsun_ebftemp        )
+            call acc1d (etrsun_dbftrop        , a_etrsun_dbftrop        )
+            call acc1d (etrsun_dbftemp        , a_etrsun_dbftemp        )
+            call acc1d (etrsun_dbfboreal      , a_etrsun_dbfboreal      )
+            call acc1d (etrsun_ebstemp        , a_etrsun_ebstemp        )
+            call acc1d (etrsun_dbstemp        ,  a_etrsun_dbstemp        )
+            call acc1d (etrsun_dbsboreal      ,  a_etrsun_dbsboreal      )
+            call acc1d (etrsun_c3arcgrass     ,  a_etrsun_c3arcgrass     )
+            call acc1d (etrsun_c3grass        ,  a_etrsun_c3grass        )
+            call acc1d (etrsun_c4grass        ,  a_etrsun_c4grass        )
+            call acc1d (etrsha_enftemp        , a_etrsha_enftemp        )
+            call acc1d (etrsha_enfboreal      , a_etrsha_enfboreal      )
+            call acc1d (etrsha_dnfboreal      , a_etrsha_dnfboreal      )
+            call acc1d (etrsha_ebftrop        , a_etrsha_ebftrop        )
+            call acc1d (etrsha_ebftemp        , a_etrsha_ebftemp        )
+            call acc1d (etrsha_dbftrop        , a_etrsha_dbftrop        )
+            call acc1d (etrsha_dbftemp        , a_etrsha_dbftemp        )
+            call acc1d (etrsha_dbfboreal      , a_etrsha_dbfboreal      )
+            call acc1d (etrsha_ebstemp        , a_etrsha_ebstemp        )
+            call acc1d (etrsha_dbstemp        ,  a_etrsha_dbstemp        )
+            call acc1d (etrsha_dbsboreal      ,  a_etrsha_dbsboreal      )
+            call acc1d (etrsha_c3arcgrass     ,  a_etrsha_c3arcgrass     )
+            call acc1d (etrsha_c3grass        ,  a_etrsha_c3grass        )
+            call acc1d (etrsha_c4grass        ,  a_etrsha_c4grass        )
+            call acc1d (cisun_enftemp        , a_cisun_enftemp        )
+            call acc1d (cisun_enfboreal      , a_cisun_enfboreal      )
+            call acc1d (cisun_dnfboreal      , a_cisun_dnfboreal      )
+            call acc1d (cisun_ebftrop        , a_cisun_ebftrop        )
+            call acc1d (cisun_ebftemp        , a_cisun_ebftemp        )
+            call acc1d (cisun_dbftrop        , a_cisun_dbftrop        )
+            call acc1d (cisun_dbftemp        , a_cisun_dbftemp        )
+            call acc1d (cisun_dbfboreal      , a_cisun_dbfboreal      )
+            call acc1d (cisun_ebstemp        , a_cisun_ebstemp        )
+            call acc1d (cisun_dbstemp        ,  a_cisun_dbstemp        )
+            call acc1d (cisun_dbsboreal      ,  a_cisun_dbsboreal      )
+            call acc1d (cisun_c3arcgrass     ,  a_cisun_c3arcgrass     )
+            call acc1d (cisun_c3grass        ,  a_cisun_c3grass        )
+            call acc1d (cisun_c4grass        ,  a_cisun_c4grass        )
+            call acc1d (cisha_enftemp        , a_cisha_enftemp        )
+            call acc1d (cisha_enfboreal      , a_cisha_enfboreal      )
+            call acc1d (cisha_dnfboreal      , a_cisha_dnfboreal      )
+            call acc1d (cisha_ebftrop        , a_cisha_ebftrop        )
+            call acc1d (cisha_ebftemp        , a_cisha_ebftemp        )
+            call acc1d (cisha_dbftrop        , a_cisha_dbftrop        )
+            call acc1d (cisha_dbftemp        , a_cisha_dbftemp        )
+            call acc1d (cisha_dbfboreal      , a_cisha_dbfboreal      )
+            call acc1d (cisha_ebstemp        , a_cisha_ebstemp        )
+            call acc1d (cisha_dbstemp        ,  a_cisha_dbstemp        )
+            call acc1d (cisha_dbsboreal      ,  a_cisha_dbsboreal      )
+            call acc1d (cisha_c3arcgrass     ,  a_cisha_c3arcgrass     )
+            call acc1d (cisha_c3grass        ,  a_cisha_c3grass        )
+            call acc1d (cisha_c4grass        ,  a_cisha_c4grass        )
+            call acc1d (essun_enftemp        , a_essun_enftemp        )
+            call acc1d (essun_enfboreal      , a_essun_enfboreal      )
+            call acc1d (essun_dnfboreal      , a_essun_dnfboreal      )
+            call acc1d (essun_ebftrop        , a_essun_ebftrop        )
+            call acc1d (essun_ebftemp        , a_essun_ebftemp        )
+            call acc1d (essun_dbftrop        , a_essun_dbftrop        )
+            call acc1d (essun_dbftemp        , a_essun_dbftemp        )
+            call acc1d (essun_dbfboreal      , a_essun_dbfboreal      )
+            call acc1d (essun_ebstemp        , a_essun_ebstemp        )
+            call acc1d (essun_dbstemp        ,  a_essun_dbstemp        )
+            call acc1d (essun_dbsboreal      ,  a_essun_dbsboreal      )
+            call acc1d (essun_c3arcgrass     ,  a_essun_c3arcgrass     )
+            call acc1d (essun_c3grass        ,  a_essun_c3grass        )
+            call acc1d (essun_c4grass        ,  a_essun_c4grass        )
+            call acc1d (essha_enftemp        , a_essha_enftemp        )
+            call acc1d (essha_enfboreal      , a_essha_enfboreal      )
+            call acc1d (essha_dnfboreal      , a_essha_dnfboreal      )
+            call acc1d (essha_ebftrop        , a_essha_ebftrop        )
+            call acc1d (essha_ebftemp        , a_essha_ebftemp        )
+            call acc1d (essha_dbftrop        , a_essha_dbftrop        )
+            call acc1d (essha_dbftemp        , a_essha_dbftemp        )
+            call acc1d (essha_dbfboreal      , a_essha_dbfboreal      )
+            call acc1d (essha_ebstemp        , a_essha_ebstemp        )
+            call acc1d (essha_dbstemp        ,  a_essha_dbstemp        )
+            call acc1d (essha_dbsboreal      ,  a_essha_dbsboreal      )
+            call acc1d (essha_c3arcgrass     ,  a_essha_c3arcgrass     )
+            call acc1d (essha_c3grass        ,  a_essha_c3grass        )
+            call acc1d (essha_c4grass        ,  a_essha_c4grass        )
+            call acc1d (gssun_enftemp        , a_gssun_enftemp        )
+            call acc1d (gssun_enfboreal      , a_gssun_enfboreal      )
+            call acc1d (gssun_dnfboreal      , a_gssun_dnfboreal      )
+            call acc1d (gssun_ebftrop        , a_gssun_ebftrop        )
+            call acc1d (gssun_ebftemp        , a_gssun_ebftemp        )
+            call acc1d (gssun_dbftrop        , a_gssun_dbftrop        )
+            call acc1d (gssun_dbftemp        , a_gssun_dbftemp        )
+            call acc1d (gssun_dbfboreal      , a_gssun_dbfboreal      )
+            call acc1d (gssun_ebstemp        , a_gssun_ebstemp        )
+            call acc1d (gssun_dbstemp        ,  a_gssun_dbstemp        )
+            call acc1d (gssun_dbsboreal      ,  a_gssun_dbsboreal      )
+            call acc1d (gssun_c3arcgrass     ,  a_gssun_c3arcgrass     )
+            call acc1d (gssun_c3grass        ,  a_gssun_c3grass        )
+            call acc1d (gssun_c4grass        ,  a_gssun_c4grass        )
+            call acc1d (gssha_enftemp        , a_gssha_enftemp        )
+            call acc1d (gssha_enfboreal      , a_gssha_enfboreal      )
+            call acc1d (gssha_dnfboreal      , a_gssha_dnfboreal      )
+            call acc1d (gssha_ebftrop        , a_gssha_ebftrop        )
+            call acc1d (gssha_ebftemp        , a_gssha_ebftemp        )
+            call acc1d (gssha_dbftrop        , a_gssha_dbftrop        )
+            call acc1d (gssha_dbftemp        , a_gssha_dbftemp        )
+            call acc1d (gssha_dbfboreal      , a_gssha_dbfboreal      )
+            call acc1d (gssha_ebstemp        , a_gssha_ebstemp        )
+            call acc1d (gssha_dbstemp        ,  a_gssha_dbstemp        )
+            call acc1d (gssha_dbsboreal      ,  a_gssha_dbsboreal      )
+            call acc1d (gssha_c3arcgrass     ,  a_gssha_c3arcgrass     )
+            call acc1d (gssha_c3grass        ,  a_gssha_c3grass        )
+            call acc1d (gssha_c4grass        ,  a_gssha_c4grass        )
+            call acc1d (gammasun_enftemp        , a_gammasun_enftemp        )
+            call acc1d (gammasun_enfboreal      , a_gammasun_enfboreal      )
+            call acc1d (gammasun_dnfboreal      , a_gammasun_dnfboreal      )
+            call acc1d (gammasun_ebftrop        , a_gammasun_ebftrop        )
+            call acc1d (gammasun_ebftemp        , a_gammasun_ebftemp        )
+            call acc1d (gammasun_dbftrop        , a_gammasun_dbftrop        )
+            call acc1d (gammasun_dbftemp        , a_gammasun_dbftemp        )
+            call acc1d (gammasun_dbfboreal      , a_gammasun_dbfboreal      )
+            call acc1d (gammasun_ebstemp        , a_gammasun_ebstemp        )
+            call acc1d (gammasun_dbstemp        ,  a_gammasun_dbstemp        )
+            call acc1d (gammasun_dbsboreal      ,  a_gammasun_dbsboreal      )
+            call acc1d (gammasun_c3arcgrass     ,  a_gammasun_c3arcgrass     )
+            call acc1d (gammasun_c3grass        ,  a_gammasun_c3grass        )
+            call acc1d (gammasun_c4grass        ,  a_gammasun_c4grass        )
+            call acc1d (gammasha_enftemp        , a_gammasha_enftemp        )
+            call acc1d (gammasha_enfboreal      , a_gammasha_enfboreal      )
+            call acc1d (gammasha_dnfboreal      , a_gammasha_dnfboreal      )
+            call acc1d (gammasha_ebftrop        , a_gammasha_ebftrop        )
+            call acc1d (gammasha_ebftemp        , a_gammasha_ebftemp        )
+            call acc1d (gammasha_dbftrop        , a_gammasha_dbftrop        )
+            call acc1d (gammasha_dbftemp        , a_gammasha_dbftemp        )
+            call acc1d (gammasha_dbfboreal      , a_gammasha_dbfboreal      )
+            call acc1d (gammasha_ebstemp        , a_gammasha_ebstemp        )
+            call acc1d (gammasha_dbstemp        ,  a_gammasha_dbstemp        )
+            call acc1d (gammasha_dbsboreal      ,  a_gammasha_dbsboreal      )
+            call acc1d (gammasha_c3arcgrass     ,  a_gammasha_c3arcgrass     )
+            call acc1d (gammasha_c3grass        ,  a_gammasha_c3grass        )
+            call acc1d (gammasha_c4grass        ,  a_gammasha_c4grass        )
+            call acc1d (RuBPlimitfrac_sun_enftemp        , a_RuBPlimitfrac_sun_enftemp        )
+            call acc1d (RuBPlimitfrac_sun_enfboreal      , a_RuBPlimitfrac_sun_enfboreal      )
+            call acc1d (RuBPlimitfrac_sun_dnfboreal      , a_RuBPlimitfrac_sun_dnfboreal      )
+            call acc1d (RuBPlimitfrac_sun_ebftrop        , a_RuBPlimitfrac_sun_ebftrop        )
+            call acc1d (RuBPlimitfrac_sun_ebftemp        , a_RuBPlimitfrac_sun_ebftemp        )
+            call acc1d (RuBPlimitfrac_sun_dbftrop        , a_RuBPlimitfrac_sun_dbftrop        )
+            call acc1d (RuBPlimitfrac_sun_dbftemp        , a_RuBPlimitfrac_sun_dbftemp        )
+            call acc1d (RuBPlimitfrac_sun_dbfboreal      , a_RuBPlimitfrac_sun_dbfboreal      )
+            call acc1d (RuBPlimitfrac_sun_ebstemp        , a_RuBPlimitfrac_sun_ebstemp        )
+            call acc1d (RuBPlimitfrac_sun_dbstemp        , a_RuBPlimitfrac_sun_dbstemp        )
+            call acc1d (RuBPlimitfrac_sun_dbsboreal      , a_RuBPlimitfrac_sun_dbsboreal      )
+            call acc1d (RuBPlimitfrac_sun_c3arcgrass     , a_RuBPlimitfrac_sun_c3arcgrass     )
+            call acc1d (RuBPlimitfrac_sun_c3grass        , a_RuBPlimitfrac_sun_c3grass        )
+            call acc1d (RuBPlimitfrac_sun_c4grass        , a_RuBPlimitfrac_sun_c4grass        )
+            call acc1d (RuBPlimitfrac_sha_enftemp        , a_RuBPlimitfrac_sha_enftemp        )
+            call acc1d (RuBPlimitfrac_sha_enfboreal      , a_RuBPlimitfrac_sha_enfboreal      )
+            call acc1d (RuBPlimitfrac_sha_dnfboreal      , a_RuBPlimitfrac_sha_dnfboreal      )
+            call acc1d (RuBPlimitfrac_sha_ebftrop        , a_RuBPlimitfrac_sha_ebftrop        )
+            call acc1d (RuBPlimitfrac_sha_ebftemp        , a_RuBPlimitfrac_sha_ebftemp        )
+            call acc1d (RuBPlimitfrac_sha_dbftrop        , a_RuBPlimitfrac_sha_dbftrop        )
+            call acc1d (RuBPlimitfrac_sha_dbftemp        , a_RuBPlimitfrac_sha_dbftemp        )
+            call acc1d (RuBPlimitfrac_sha_dbfboreal      , a_RuBPlimitfrac_sha_dbfboreal      )
+            call acc1d (RuBPlimitfrac_sha_ebstemp        , a_RuBPlimitfrac_sha_ebstemp        )
+            call acc1d (RuBPlimitfrac_sha_dbstemp        , a_RuBPlimitfrac_sha_dbstemp        )
+            call acc1d (RuBPlimitfrac_sha_dbsboreal      , a_RuBPlimitfrac_sha_dbsboreal      )
+            call acc1d (RuBPlimitfrac_sha_c3arcgrass     , a_RuBPlimitfrac_sha_c3arcgrass     )
+            call acc1d (RuBPlimitfrac_sha_c3grass        , a_RuBPlimitfrac_sha_c3grass        )
+            call acc1d (RuBPlimitfrac_sha_c4grass        , a_RuBPlimitfrac_sha_c4grass        )
+            call acc1d (Rubiscolimitfrac_sun_enftemp     , a_Rubiscolimitfrac_sun_enftemp     )
+            call acc1d (Rubiscolimitfrac_sun_enfboreal   , a_Rubiscolimitfrac_sun_enfboreal   )
+            call acc1d (Rubiscolimitfrac_sun_dnfboreal   , a_Rubiscolimitfrac_sun_dnfboreal   )
+            call acc1d (Rubiscolimitfrac_sun_ebftrop     , a_Rubiscolimitfrac_sun_ebftrop     )
+            call acc1d (Rubiscolimitfrac_sun_ebftemp     , a_Rubiscolimitfrac_sun_ebftemp     )
+            call acc1d (Rubiscolimitfrac_sun_dbftrop     , a_Rubiscolimitfrac_sun_dbftrop     )
+            call acc1d (Rubiscolimitfrac_sun_dbftemp     , a_Rubiscolimitfrac_sun_dbftemp     )
+            call acc1d (Rubiscolimitfrac_sun_dbfboreal   , a_Rubiscolimitfrac_sun_dbfboreal   )
+            call acc1d (Rubiscolimitfrac_sun_ebstemp     , a_Rubiscolimitfrac_sun_ebstemp     )
+            call acc1d (Rubiscolimitfrac_sun_dbstemp     , a_Rubiscolimitfrac_sun_dbstemp     )
+            call acc1d (Rubiscolimitfrac_sun_dbsboreal   , a_Rubiscolimitfrac_sun_dbsboreal   )
+            call acc1d (Rubiscolimitfrac_sun_c3arcgrass  , a_Rubiscolimitfrac_sun_c3arcgrass  )
+            call acc1d (Rubiscolimitfrac_sun_c3grass     , a_Rubiscolimitfrac_sun_c3grass     )
+            call acc1d (Rubiscolimitfrac_sun_c4grass     , a_Rubiscolimitfrac_sun_c4grass     )
+            call acc1d (Rubiscolimitfrac_sha_enftemp     , a_Rubiscolimitfrac_sha_enftemp     )
+            call acc1d (Rubiscolimitfrac_sha_enfboreal   , a_Rubiscolimitfrac_sha_enfboreal   )
+            call acc1d (Rubiscolimitfrac_sha_dnfboreal   , a_Rubiscolimitfrac_sha_dnfboreal   )
+            call acc1d (Rubiscolimitfrac_sha_ebftrop     , a_Rubiscolimitfrac_sha_ebftrop     )
+            call acc1d (Rubiscolimitfrac_sha_ebftemp     , a_Rubiscolimitfrac_sha_ebftemp     )
+            call acc1d (Rubiscolimitfrac_sha_dbftrop     , a_Rubiscolimitfrac_sha_dbftrop     )
+            call acc1d (Rubiscolimitfrac_sha_dbftemp     , a_Rubiscolimitfrac_sha_dbftemp     )
+            call acc1d (Rubiscolimitfrac_sha_dbfboreal   , a_Rubiscolimitfrac_sha_dbfboreal   )
+            call acc1d (Rubiscolimitfrac_sha_ebstemp     , a_Rubiscolimitfrac_sha_ebstemp     )
+            call acc1d (Rubiscolimitfrac_sha_dbstemp     , a_Rubiscolimitfrac_sha_dbstemp     )
+            call acc1d (Rubiscolimitfrac_sha_dbsboreal   , a_Rubiscolimitfrac_sha_dbsboreal   )
+            call acc1d (Rubiscolimitfrac_sha_c3arcgrass  , a_Rubiscolimitfrac_sha_c3arcgrass  )
+            call acc1d (Rubiscolimitfrac_sha_c3grass     , a_Rubiscolimitfrac_sha_c3grass     )
+            call acc1d (Rubiscolimitfrac_sha_c4grass     , a_Rubiscolimitfrac_sha_c4grass     )
+            call acc1d (Sinklimitfrac_sun_enftemp        , a_Sinklimitfrac_sun_enftemp        )
+            call acc1d (Sinklimitfrac_sun_enfboreal      , a_Sinklimitfrac_sun_enfboreal      )
+            call acc1d (Sinklimitfrac_sun_dnfboreal      , a_Sinklimitfrac_sun_dnfboreal      )
+            call acc1d (Sinklimitfrac_sun_ebftrop        , a_Sinklimitfrac_sun_ebftrop        )
+            call acc1d (Sinklimitfrac_sun_ebftemp        , a_Sinklimitfrac_sun_ebftemp        )
+            call acc1d (Sinklimitfrac_sun_dbftrop        , a_Sinklimitfrac_sun_dbftrop        )
+            call acc1d (Sinklimitfrac_sun_dbftemp        , a_Sinklimitfrac_sun_dbftemp        )
+            call acc1d (Sinklimitfrac_sun_dbfboreal      , a_Sinklimitfrac_sun_dbfboreal      )
+            call acc1d (Sinklimitfrac_sun_ebstemp        , a_Sinklimitfrac_sun_ebstemp        )
+            call acc1d (Sinklimitfrac_sun_dbstemp        , a_Sinklimitfrac_sun_dbstemp        )
+            call acc1d (Sinklimitfrac_sun_dbsboreal      , a_Sinklimitfrac_sun_dbsboreal      )
+            call acc1d (Sinklimitfrac_sun_c3arcgrass     , a_Sinklimitfrac_sun_c3arcgrass     )
+            call acc1d (Sinklimitfrac_sun_c3grass        , a_Sinklimitfrac_sun_c3grass        )
+            call acc1d (Sinklimitfrac_sun_c4grass        , a_Sinklimitfrac_sun_c4grass        )
+            call acc1d (Sinklimitfrac_sha_enftemp        , a_Sinklimitfrac_sha_enftemp        )
+            call acc1d (Sinklimitfrac_sha_enfboreal      , a_Sinklimitfrac_sha_enfboreal      )
+            call acc1d (Sinklimitfrac_sha_dnfboreal      , a_Sinklimitfrac_sha_dnfboreal      )
+            call acc1d (Sinklimitfrac_sha_ebftrop        , a_Sinklimitfrac_sha_ebftrop        )
+            call acc1d (Sinklimitfrac_sha_ebftemp        , a_Sinklimitfrac_sha_ebftemp        )
+            call acc1d (Sinklimitfrac_sha_dbftrop        , a_Sinklimitfrac_sha_dbftrop        )
+            call acc1d (Sinklimitfrac_sha_dbftemp        , a_Sinklimitfrac_sha_dbftemp        )
+            call acc1d (Sinklimitfrac_sha_dbfboreal      , a_Sinklimitfrac_sha_dbfboreal      )
+            call acc1d (Sinklimitfrac_sha_ebstemp        , a_Sinklimitfrac_sha_ebstemp        )
+            call acc1d (Sinklimitfrac_sha_dbstemp        , a_Sinklimitfrac_sha_dbstemp        )
+            call acc1d (Sinklimitfrac_sha_dbsboreal      , a_Sinklimitfrac_sha_dbsboreal      )
+            call acc1d (Sinklimitfrac_sha_c3arcgrass     , a_Sinklimitfrac_sha_c3arcgrass     )
+            call acc1d (Sinklimitfrac_sha_c3grass        , a_Sinklimitfrac_sha_c3grass        )
+            call acc1d (Sinklimitfrac_sha_c4grass        , a_Sinklimitfrac_sha_c4grass        )
+            call acc1d (rstfacsun_enftemp        , a_rstfacsun_enftemp        )
+            call acc1d (rstfacsun_enfboreal      , a_rstfacsun_enfboreal      )
+            call acc1d (rstfacsun_dnfboreal      , a_rstfacsun_dnfboreal      )
+            call acc1d (rstfacsun_ebftrop        , a_rstfacsun_ebftrop        )
+            call acc1d (rstfacsun_ebftemp        , a_rstfacsun_ebftemp        )
+            call acc1d (rstfacsun_dbftrop        , a_rstfacsun_dbftrop        )
+            call acc1d (rstfacsun_dbftemp        , a_rstfacsun_dbftemp        )
+            call acc1d (rstfacsun_dbfboreal      , a_rstfacsun_dbfboreal      )
+            call acc1d (rstfacsun_ebstemp        , a_rstfacsun_ebstemp        )
+            call acc1d (rstfacsun_dbstemp        , a_rstfacsun_dbstemp        )
+            call acc1d (rstfacsun_dbsboreal      , a_rstfacsun_dbsboreal      )
+            call acc1d (rstfacsun_c3arcgrass     , a_rstfacsun_c3arcgrass     )
+            call acc1d (rstfacsun_c3grass        , a_rstfacsun_c3grass        )
+            call acc1d (rstfacsun_c4grass        , a_rstfacsun_c4grass        )
+            call acc1d (rstfacsha_enftemp        , a_rstfacsha_enftemp        )
+            call acc1d (rstfacsha_enfboreal      , a_rstfacsha_enfboreal      )
+            call acc1d (rstfacsha_dnfboreal      , a_rstfacsha_dnfboreal      )
+            call acc1d (rstfacsha_ebftrop        , a_rstfacsha_ebftrop        )
+            call acc1d (rstfacsha_ebftemp        , a_rstfacsha_ebftemp        )
+            call acc1d (rstfacsha_dbftrop        , a_rstfacsha_dbftrop        )
+            call acc1d (rstfacsha_dbftemp        , a_rstfacsha_dbftemp        )
+            call acc1d (rstfacsha_dbfboreal      , a_rstfacsha_dbfboreal      )
+            call acc1d (rstfacsha_ebstemp        , a_rstfacsha_ebstemp        )
+            call acc1d (rstfacsha_dbstemp        , a_rstfacsha_dbstemp        )
+            call acc1d (rstfacsha_dbsboreal      , a_rstfacsha_dbsboreal      )
+            call acc1d (rstfacsha_c3arcgrass     , a_rstfacsha_c3arcgrass     )
+            call acc1d (rstfacsha_c3grass        , a_rstfacsha_c3grass        )
+            call acc1d (rstfacsha_c4grass        , a_rstfacsha_c4grass        )
+            call acc1d (lambdasun_enftemp        , a_lambdasun_enftemp        )
+            call acc1d (lambdasun_enfboreal      , a_lambdasun_enfboreal      )
+            call acc1d (lambdasun_dnfboreal      , a_lambdasun_dnfboreal      )
+            call acc1d (lambdasun_ebftrop        , a_lambdasun_ebftrop        )
+            call acc1d (lambdasun_ebftemp        , a_lambdasun_ebftemp        )
+            call acc1d (lambdasun_dbftrop        , a_lambdasun_dbftrop        )
+            call acc1d (lambdasun_dbftemp        , a_lambdasun_dbftemp        )
+            call acc1d (lambdasun_dbfboreal      , a_lambdasun_dbfboreal      )
+            call acc1d (lambdasun_ebstemp        , a_lambdasun_ebstemp        )
+            call acc1d (lambdasun_dbstemp        , a_lambdasun_dbstemp        )
+            call acc1d (lambdasun_dbsboreal      , a_lambdasun_dbsboreal      )
+            call acc1d (lambdasun_c3arcgrass     , a_lambdasun_c3arcgrass     )
+            call acc1d (lambdasun_c3grass        , a_lambdasun_c3grass        )
+            call acc1d (lambdasun_c4grass        , a_lambdasun_c4grass        )
+            call acc1d (lambdasha_enftemp        , a_lambdasha_enftemp        )
+            call acc1d (lambdasha_enfboreal      , a_lambdasha_enfboreal      )
+            call acc1d (lambdasha_dnfboreal      , a_lambdasha_dnfboreal      )
+            call acc1d (lambdasha_ebftrop        , a_lambdasha_ebftrop        )
+            call acc1d (lambdasha_ebftemp        , a_lambdasha_ebftemp        )
+            call acc1d (lambdasha_dbftrop        , a_lambdasha_dbftrop        )
+            call acc1d (lambdasha_dbftemp        , a_lambdasha_dbftemp        )
+            call acc1d (lambdasha_dbfboreal      , a_lambdasha_dbfboreal      )
+            call acc1d (lambdasha_ebstemp        , a_lambdasha_ebstemp        )
+            call acc1d (lambdasha_dbstemp        , a_lambdasha_dbstemp        )
+            call acc1d (lambdasha_dbsboreal      , a_lambdasha_dbsboreal      )
+            call acc1d (lambdasha_c3arcgrass     , a_lambdasha_c3arcgrass     )
+            call acc1d (lambdasha_c3grass        , a_lambdasha_c3grass        )
+            call acc1d (lambdasha_c4grass        , a_lambdasha_c4grass        )
+            call acc1d (lambda                   , a_lambda                   )
+#endif
+#endif
 #ifdef NITRIF
             call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
             call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )

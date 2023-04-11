@@ -276,36 +276,408 @@ MODULE mod_namelist
       LOGICAL :: gpp                = .true.
       LOGICAL :: downreg            = .true.
       LOGICAL :: ar                 = .true.
+      LOGICAL :: cwdprod            = .true.
+      LOGICAL :: cwddecomp          = .true.
+      LOGICAL :: hr                 = .true.
       LOGICAL :: fpg                = .true.
       LOGICAL :: fpi                = .true.
-      LOGICAL :: gpp_enftemp        = .true. !1
-      LOGICAL :: gpp_enfboreal      = .true. !2
-      LOGICAL :: gpp_dnfboreal      = .true. !3
-      LOGICAL :: gpp_ebftrop        = .true. !4
-      LOGICAL :: gpp_ebftemp        = .true. !5
-      LOGICAL :: gpp_dbftrop        = .true. !6
-      LOGICAL :: gpp_dbftemp        = .true. !7
-      LOGICAL :: gpp_dbfboreal      = .true. !8
-      LOGICAL :: gpp_ebstemp        = .true. !9
-      LOGICAL :: gpp_dbstemp        = .true. !10
-      LOGICAL :: gpp_dbsboreal      = .true. !11
-      LOGICAL :: gpp_c3arcgrass     = .true. !12
-      LOGICAL :: gpp_c3grass        = .true. !13
-      LOGICAL :: gpp_c4grass        = .true. !14
-      LOGICAL :: leafc_enftemp      = .true. !1
-      LOGICAL :: leafc_enfboreal    = .true. !2
-      LOGICAL :: leafc_dnfboreal    = .true. !3
-      LOGICAL :: leafc_ebftrop      = .true. !4
-      LOGICAL :: leafc_ebftemp      = .true. !5
-      LOGICAL :: leafc_dbftrop      = .true. !6
-      LOGICAL :: leafc_dbftemp      = .true. !7
-      LOGICAL :: leafc_dbfboreal    = .true. !8
-      LOGICAL :: leafc_ebstemp      = .true. !9
-      LOGICAL :: leafc_dbstemp      = .true. !10
-      LOGICAL :: leafc_dbsboreal    = .true. !11
-      LOGICAL :: leafc_c3arcgrass   = .true. !12
-      LOGICAL :: leafc_c3grass      = .true. !13
-      LOGICAL :: leafc_c4grass      = .true. !14
+      LOGICAL :: gpp_enftemp        = .false. !1
+      LOGICAL :: gpp_enfboreal      = .false. !2
+      LOGICAL :: gpp_dnfboreal      = .false. !3
+      LOGICAL :: gpp_ebftrop        = .false. !4
+      LOGICAL :: gpp_ebftemp        = .false. !5
+      LOGICAL :: gpp_dbftrop        = .false. !6
+      LOGICAL :: gpp_dbftemp        = .false. !7
+      LOGICAL :: gpp_dbfboreal      = .false. !8
+      LOGICAL :: gpp_ebstemp        = .false. !9
+      LOGICAL :: gpp_dbstemp        = .false. !10
+      LOGICAL :: gpp_dbsboreal      = .false. !11
+      LOGICAL :: gpp_c3arcgrass     = .false. !12
+      LOGICAL :: gpp_c3grass        = .false. !13
+      LOGICAL :: gpp_c4grass        = .false. !14
+      LOGICAL :: leafc_enftemp      = .false. !1
+      LOGICAL :: leafc_enfboreal    = .false. !2
+      LOGICAL :: leafc_dnfboreal    = .false. !3
+      LOGICAL :: leafc_ebftrop      = .false. !4
+      LOGICAL :: leafc_ebftemp      = .false. !5
+      LOGICAL :: leafc_dbftrop      = .false. !6
+      LOGICAL :: leafc_dbftemp      = .false. !7
+      LOGICAL :: leafc_dbfboreal    = .false. !8
+      LOGICAL :: leafc_ebstemp      = .false. !9
+      LOGICAL :: leafc_dbstemp      = .false. !10
+      LOGICAL :: leafc_dbsboreal    = .false. !11
+      LOGICAL :: leafc_c3arcgrass   = .false. !12
+      LOGICAL :: leafc_c3grass      = .false. !13
+      LOGICAL :: leafc_c4grass      = .false. !14
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+      LOGICAL :: assim_RuBP_sun_enftemp        = .true. !1
+      LOGICAL :: assim_RuBP_sun_enfboreal      = .true. !2
+      LOGICAL :: assim_RuBP_sun_dnfboreal      = .true. !3
+      LOGICAL :: assim_RuBP_sun_ebftrop        = .true. !4
+      LOGICAL :: assim_RuBP_sun_ebftemp        = .true. !5
+      LOGICAL :: assim_RuBP_sun_dbftrop        = .true. !6
+      LOGICAL :: assim_RuBP_sun_dbftemp        = .true. !7
+      LOGICAL :: assim_RuBP_sun_dbfboreal      = .true. !8
+      LOGICAL :: assim_RuBP_sun_ebstemp        = .true. !9
+      LOGICAL :: assim_RuBP_sun_dbstemp        = .true. !10
+      LOGICAL :: assim_RuBP_sun_dbsboreal      = .true. !11
+      LOGICAL :: assim_RuBP_sun_c3arcgrass     = .true. !12
+      LOGICAL :: assim_RuBP_sun_c3grass        = .true. !13
+      LOGICAL :: assim_RuBP_sun_c4grass        = .true. !14
+      LOGICAL :: assim_RuBP_sha_enftemp        = .true. !1
+      LOGICAL :: assim_RuBP_sha_enfboreal      = .true. !2
+      LOGICAL :: assim_RuBP_sha_dnfboreal      = .true. !3
+      LOGICAL :: assim_RuBP_sha_ebftrop        = .true. !4
+      LOGICAL :: assim_RuBP_sha_ebftemp        = .true. !5
+      LOGICAL :: assim_RuBP_sha_dbftrop        = .true. !6
+      LOGICAL :: assim_RuBP_sha_dbftemp        = .true. !7
+      LOGICAL :: assim_RuBP_sha_dbfboreal      = .true. !8
+      LOGICAL :: assim_RuBP_sha_ebstemp        = .true. !9
+      LOGICAL :: assim_RuBP_sha_dbstemp        = .true. !10
+      LOGICAL :: assim_RuBP_sha_dbsboreal      = .true. !11
+      LOGICAL :: assim_RuBP_sha_c3arcgrass     = .true. !12
+      LOGICAL :: assim_RuBP_sha_c3grass        = .true. !13
+      LOGICAL :: assim_RuBP_sha_c4grass        = .true. !14
+      LOGICAL :: assim_Rubisco_sun_enftemp        = .true. !1
+      LOGICAL :: assim_Rubisco_sun_enfboreal      = .true. !2
+      LOGICAL :: assim_Rubisco_sun_dnfboreal      = .true. !3
+      LOGICAL :: assim_Rubisco_sun_ebftrop        = .true. !4
+      LOGICAL :: assim_Rubisco_sun_ebftemp        = .true. !5
+      LOGICAL :: assim_Rubisco_sun_dbftrop        = .true. !6
+      LOGICAL :: assim_Rubisco_sun_dbftemp        = .true. !7
+      LOGICAL :: assim_Rubisco_sun_dbfboreal      = .true. !8
+      LOGICAL :: assim_Rubisco_sun_ebstemp        = .true. !9
+      LOGICAL :: assim_Rubisco_sun_dbstemp        = .true. !10
+      LOGICAL :: assim_Rubisco_sun_dbsboreal      = .true. !11
+      LOGICAL :: assim_Rubisco_sun_c3arcgrass     = .true. !12
+      LOGICAL :: assim_Rubisco_sun_c3grass        = .true. !13
+      LOGICAL :: assim_Rubisco_sun_c4grass        = .true. !14
+      LOGICAL :: assim_Rubisco_sha_enftemp        = .true. !1
+      LOGICAL :: assim_Rubisco_sha_enfboreal      = .true. !2
+      LOGICAL :: assim_Rubisco_sha_dnfboreal      = .true. !3
+      LOGICAL :: assim_Rubisco_sha_ebftrop        = .true. !4
+      LOGICAL :: assim_Rubisco_sha_ebftemp        = .true. !5
+      LOGICAL :: assim_Rubisco_sha_dbftrop        = .true. !6
+      LOGICAL :: assim_Rubisco_sha_dbftemp        = .true. !7
+      LOGICAL :: assim_Rubisco_sha_dbfboreal      = .true. !8
+      LOGICAL :: assim_Rubisco_sha_ebstemp        = .true. !9
+      LOGICAL :: assim_Rubisco_sha_dbstemp        = .true. !10
+      LOGICAL :: assim_Rubisco_sha_dbsboreal      = .true. !11
+      LOGICAL :: assim_Rubisco_sha_c3arcgrass     = .true. !12
+      LOGICAL :: assim_Rubisco_sha_c3grass        = .true. !13
+      LOGICAL :: assim_Rubisco_sha_c4grass        = .true. !14
+      LOGICAL :: assimsun_enftemp        = .true. !1
+      LOGICAL :: assimsun_enfboreal      = .true. !2
+      LOGICAL :: assimsun_dnfboreal      = .true. !3
+      LOGICAL :: assimsun_ebftrop        = .true. !4
+      LOGICAL :: assimsun_ebftemp        = .true. !5
+      LOGICAL :: assimsun_dbftrop        = .true. !6
+      LOGICAL :: assimsun_dbftemp        = .true. !7
+      LOGICAL :: assimsun_dbfboreal      = .true. !8
+      LOGICAL :: assimsun_ebstemp        = .true. !9
+      LOGICAL :: assimsun_dbstemp        = .true. !10
+      LOGICAL :: assimsun_dbsboreal      = .true. !11
+      LOGICAL :: assimsun_c3arcgrass     = .true. !12
+      LOGICAL :: assimsun_c3grass        = .true. !13
+      LOGICAL :: assimsun_c4grass        = .true. !14
+      LOGICAL :: assimsha_enftemp        = .true. !1
+      LOGICAL :: assimsha_enfboreal      = .true. !2
+      LOGICAL :: assimsha_dnfboreal      = .true. !3
+      LOGICAL :: assimsha_ebftrop        = .true. !4
+      LOGICAL :: assimsha_ebftemp        = .true. !5
+      LOGICAL :: assimsha_dbftrop        = .true. !6
+      LOGICAL :: assimsha_dbftemp        = .true. !7
+      LOGICAL :: assimsha_dbfboreal      = .true. !8
+      LOGICAL :: assimsha_ebstemp        = .true. !9
+      LOGICAL :: assimsha_dbstemp        = .true. !10
+      LOGICAL :: assimsha_dbsboreal      = .true. !11
+      LOGICAL :: assimsha_c3arcgrass     = .true. !12
+      LOGICAL :: assimsha_c3grass        = .true. !13
+      LOGICAL :: assimsha_c4grass        = .true. !14
+      LOGICAL :: etrsun_enftemp        = .true. !1
+      LOGICAL :: etrsun_enfboreal      = .true. !2
+      LOGICAL :: etrsun_dnfboreal      = .true. !3
+      LOGICAL :: etrsun_ebftrop        = .true. !4
+      LOGICAL :: etrsun_ebftemp        = .true. !5
+      LOGICAL :: etrsun_dbftrop        = .true. !6
+      LOGICAL :: etrsun_dbftemp        = .true. !7
+      LOGICAL :: etrsun_dbfboreal      = .true. !8
+      LOGICAL :: etrsun_ebstemp        = .true. !9
+      LOGICAL :: etrsun_dbstemp        = .true. !10
+      LOGICAL :: etrsun_dbsboreal      = .true. !11
+      LOGICAL :: etrsun_c3arcgrass     = .true. !12
+      LOGICAL :: etrsun_c3grass        = .true. !13
+      LOGICAL :: etrsun_c4grass        = .true. !14
+      LOGICAL :: etrsha_enftemp        = .true. !1
+      LOGICAL :: etrsha_enfboreal      = .true. !2
+      LOGICAL :: etrsha_dnfboreal      = .true. !3
+      LOGICAL :: etrsha_ebftrop        = .true. !4
+      LOGICAL :: etrsha_ebftemp        = .true. !5
+      LOGICAL :: etrsha_dbftrop        = .true. !6
+      LOGICAL :: etrsha_dbftemp        = .true. !7
+      LOGICAL :: etrsha_dbfboreal      = .true. !8
+      LOGICAL :: etrsha_ebstemp        = .true. !9
+      LOGICAL :: etrsha_dbstemp        = .true. !10
+      LOGICAL :: etrsha_dbsboreal      = .true. !11
+      LOGICAL :: etrsha_c3arcgrass     = .true. !12
+      LOGICAL :: etrsha_c3grass        = .true. !13
+      LOGICAL :: etrsha_c4grass        = .true. !14
+      LOGICAL :: cisun_enftemp        = .true. !1
+      LOGICAL :: cisun_enfboreal      = .true. !2
+      LOGICAL :: cisun_dnfboreal      = .true. !3
+      LOGICAL :: cisun_ebftrop        = .true. !4
+      LOGICAL :: cisun_ebftemp        = .true. !5
+      LOGICAL :: cisun_dbftrop        = .true. !6
+      LOGICAL :: cisun_dbftemp        = .true. !7
+      LOGICAL :: cisun_dbfboreal      = .true. !8
+      LOGICAL :: cisun_ebstemp        = .true. !9
+      LOGICAL :: cisun_dbstemp        = .true. !10
+      LOGICAL :: cisun_dbsboreal      = .true. !11
+      LOGICAL :: cisun_c3arcgrass     = .true. !12
+      LOGICAL :: cisun_c3grass        = .true. !13
+      LOGICAL :: cisun_c4grass        = .true. !14
+      LOGICAL :: cisha_enftemp        = .true. !1
+      LOGICAL :: cisha_enfboreal      = .true. !2
+      LOGICAL :: cisha_dnfboreal      = .true. !3
+      LOGICAL :: cisha_ebftrop        = .true. !4
+      LOGICAL :: cisha_ebftemp        = .true. !5
+      LOGICAL :: cisha_dbftrop        = .true. !6
+      LOGICAL :: cisha_dbftemp        = .true. !7
+      LOGICAL :: cisha_dbfboreal      = .true. !8
+      LOGICAL :: cisha_ebstemp        = .true. !9
+      LOGICAL :: cisha_dbstemp        = .true. !10
+      LOGICAL :: cisha_dbsboreal      = .true. !11
+      LOGICAL :: cisha_c3arcgrass     = .true. !12
+      LOGICAL :: cisha_c3grass        = .true. !13
+      LOGICAL :: cisha_c4grass        = .true. !14
+      LOGICAL :: essun_enftemp        = .true. !1
+      LOGICAL :: essun_enfboreal      = .true. !2
+      LOGICAL :: essun_dnfboreal      = .true. !3
+      LOGICAL :: essun_ebftrop        = .true. !4
+      LOGICAL :: essun_ebftemp        = .true. !5
+      LOGICAL :: essun_dbftrop        = .true. !6
+      LOGICAL :: essun_dbftemp        = .true. !7
+      LOGICAL :: essun_dbfboreal      = .true. !8
+      LOGICAL :: essun_ebstemp        = .true. !9
+      LOGICAL :: essun_dbstemp        = .true. !10
+      LOGICAL :: essun_dbsboreal      = .true. !11
+      LOGICAL :: essun_c3arcgrass     = .true. !12
+      LOGICAL :: essun_c3grass        = .true. !13
+      LOGICAL :: essun_c4grass        = .true. !14
+      LOGICAL :: essha_enftemp        = .true. !1
+      LOGICAL :: essha_enfboreal      = .true. !2
+      LOGICAL :: essha_dnfboreal      = .true. !3
+      LOGICAL :: essha_ebftrop        = .true. !4
+      LOGICAL :: essha_ebftemp        = .true. !5
+      LOGICAL :: essha_dbftrop        = .true. !6
+      LOGICAL :: essha_dbftemp        = .true. !7
+      LOGICAL :: essha_dbfboreal      = .true. !8
+      LOGICAL :: essha_ebstemp        = .true. !9
+      LOGICAL :: essha_dbstemp        = .true. !10
+      LOGICAL :: essha_dbsboreal      = .true. !11
+      LOGICAL :: essha_c3arcgrass     = .true. !12
+      LOGICAL :: essha_c3grass        = .true. !13
+      LOGICAL :: essha_c4grass        = .true. !14
+      LOGICAL :: gssun_enftemp        = .true. !1
+      LOGICAL :: gssun_enfboreal      = .true. !2
+      LOGICAL :: gssun_dnfboreal      = .true. !3
+      LOGICAL :: gssun_ebftrop        = .true. !4
+      LOGICAL :: gssun_ebftemp        = .true. !5
+      LOGICAL :: gssun_dbftrop        = .true. !6
+      LOGICAL :: gssun_dbftemp        = .true. !7
+      LOGICAL :: gssun_dbfboreal      = .true. !8
+      LOGICAL :: gssun_ebstemp        = .true. !9
+      LOGICAL :: gssun_dbstemp        = .true. !10
+      LOGICAL :: gssun_dbsboreal      = .true. !11
+      LOGICAL :: gssun_c3arcgrass     = .true. !12
+      LOGICAL :: gssun_c3grass        = .true. !13
+      LOGICAL :: gssun_c4grass        = .true. !14
+      LOGICAL :: gssha_enftemp        = .true. !1
+      LOGICAL :: gssha_enfboreal      = .true. !2
+      LOGICAL :: gssha_dnfboreal      = .true. !3
+      LOGICAL :: gssha_ebftrop        = .true. !4
+      LOGICAL :: gssha_ebftemp        = .true. !5
+      LOGICAL :: gssha_dbftrop        = .true. !6
+      LOGICAL :: gssha_dbftemp        = .true. !7
+      LOGICAL :: gssha_dbfboreal      = .true. !8
+      LOGICAL :: gssha_ebstemp        = .true. !9
+      LOGICAL :: gssha_dbstemp        = .true. !10
+      LOGICAL :: gssha_dbsboreal      = .true. !11
+      LOGICAL :: gssha_c3arcgrass     = .true. !12
+      LOGICAL :: gssha_c3grass        = .true. !13
+      LOGICAL :: gssha_c4grass        = .true. !14
+      LOGICAL :: gammasun_enftemp        = .true. !1
+      LOGICAL :: gammasun_enfboreal      = .true. !2
+      LOGICAL :: gammasun_dnfboreal      = .true. !3
+      LOGICAL :: gammasun_ebftrop        = .true. !4
+      LOGICAL :: gammasun_ebftemp        = .true. !5
+      LOGICAL :: gammasun_dbftrop        = .true. !6
+      LOGICAL :: gammasun_dbftemp        = .true. !7
+      LOGICAL :: gammasun_dbfboreal      = .true. !8
+      LOGICAL :: gammasun_ebstemp        = .true. !9
+      LOGICAL :: gammasun_dbstemp        = .true. !10
+      LOGICAL :: gammasun_dbsboreal      = .true. !11
+      LOGICAL :: gammasun_c3arcgrass     = .true. !12
+      LOGICAL :: gammasun_c3grass        = .true. !13
+      LOGICAL :: gammasun_c4grass        = .true. !14
+      LOGICAL :: gammasha_enftemp        = .true. !1
+      LOGICAL :: gammasha_enfboreal      = .true. !2
+      LOGICAL :: gammasha_dnfboreal      = .true. !3
+      LOGICAL :: gammasha_ebftrop        = .true. !4
+      LOGICAL :: gammasha_ebftemp        = .true. !5
+      LOGICAL :: gammasha_dbftrop        = .true. !6
+      LOGICAL :: gammasha_dbftemp        = .true. !7
+      LOGICAL :: gammasha_dbfboreal      = .true. !8
+      LOGICAL :: gammasha_ebstemp        = .true. !9
+      LOGICAL :: gammasha_dbstemp        = .true. !10
+      LOGICAL :: gammasha_dbsboreal      = .true. !11
+      LOGICAL :: gammasha_c3arcgrass     = .true. !12
+      LOGICAL :: gammasha_c3grass        = .true. !13
+      LOGICAL :: gammasha_c4grass        = .true. !14
+      LOGICAL :: RuBPlimitfrac_sun_enftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_enfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dnfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sun_ebftrop        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_ebftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dbftrop        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dbftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dbfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sun_ebstemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dbstemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_dbsboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sun_c3arcgrass     = .true.
+      LOGICAL :: RuBPlimitfrac_sun_c3grass        = .true.
+      LOGICAL :: RuBPlimitfrac_sun_c4grass        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_enftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_enfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dnfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sha_ebftrop        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_ebftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dbftrop        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dbftemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dbfboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sha_ebstemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dbstemp        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_dbsboreal      = .true.
+      LOGICAL :: RuBPlimitfrac_sha_c3arcgrass     = .true.
+      LOGICAL :: RuBPlimitfrac_sha_c3grass        = .true.
+      LOGICAL :: RuBPlimitfrac_sha_c4grass        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_enftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_enfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dnfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_ebftrop        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_ebftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dbftrop        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dbftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dbfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_ebstemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dbstemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_dbsboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_c3arcgrass     = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_c3grass        = .true.
+      LOGICAL :: Rubiscolimitfrac_sun_c4grass        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_enftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_enfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dnfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_ebftrop        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_ebftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dbftrop        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dbftemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dbfboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_ebstemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dbstemp        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_dbsboreal      = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_c3arcgrass     = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_c3grass        = .true.
+      LOGICAL :: Rubiscolimitfrac_sha_c4grass        = .true.
+      LOGICAL :: Sinklimitfrac_sun_enftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sun_enfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sun_dnfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sun_ebftrop        = .true.
+      LOGICAL :: Sinklimitfrac_sun_ebftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sun_dbftrop        = .true.
+      LOGICAL :: Sinklimitfrac_sun_dbftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sun_dbfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sun_ebstemp        = .true.
+      LOGICAL :: Sinklimitfrac_sun_dbstemp        = .true.
+      LOGICAL :: Sinklimitfrac_sun_dbsboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sun_c3arcgrass     = .true.
+      LOGICAL :: Sinklimitfrac_sun_c3grass        = .true.
+      LOGICAL :: Sinklimitfrac_sun_c4grass        = .true.
+      LOGICAL :: Sinklimitfrac_sha_enftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sha_enfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sha_dnfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sha_ebftrop        = .true.
+      LOGICAL :: Sinklimitfrac_sha_ebftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sha_dbftrop        = .true.
+      LOGICAL :: Sinklimitfrac_sha_dbftemp        = .true.
+      LOGICAL :: Sinklimitfrac_sha_dbfboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sha_ebstemp        = .true.
+      LOGICAL :: Sinklimitfrac_sha_dbstemp        = .true.
+      LOGICAL :: Sinklimitfrac_sha_dbsboreal      = .true.
+      LOGICAL :: Sinklimitfrac_sha_c3arcgrass     = .true.
+      LOGICAL :: Sinklimitfrac_sha_c3grass        = .true.
+      LOGICAL :: Sinklimitfrac_sha_c4grass        = .true.
+      LOGICAL :: rstfacsun_enftemp        = .true.
+      LOGICAL :: rstfacsun_enfboreal      = .true.
+      LOGICAL :: rstfacsun_dnfboreal      = .true.
+      LOGICAL :: rstfacsun_ebftrop        = .true.
+      LOGICAL :: rstfacsun_ebftemp        = .true.
+      LOGICAL :: rstfacsun_dbftrop        = .true.
+      LOGICAL :: rstfacsun_dbftemp        = .true.
+      LOGICAL :: rstfacsun_dbfboreal      = .true.
+      LOGICAL :: rstfacsun_ebstemp        = .true.
+      LOGICAL :: rstfacsun_dbstemp        = .true.
+      LOGICAL :: rstfacsun_dbsboreal      = .true.
+      LOGICAL :: rstfacsun_c3arcgrass     = .true.
+      LOGICAL :: rstfacsun_c3grass        = .true.
+      LOGICAL :: rstfacsun_c4grass        = .true.
+      LOGICAL :: rstfacsha_enftemp        = .true.
+      LOGICAL :: rstfacsha_enfboreal      = .true.
+      LOGICAL :: rstfacsha_dnfboreal      = .true.
+      LOGICAL :: rstfacsha_ebftrop        = .true.
+      LOGICAL :: rstfacsha_ebftemp        = .true.
+      LOGICAL :: rstfacsha_dbftrop        = .true.
+      LOGICAL :: rstfacsha_dbftemp        = .true.
+      LOGICAL :: rstfacsha_dbfboreal      = .true.
+      LOGICAL :: rstfacsha_ebstemp        = .true.
+      LOGICAL :: rstfacsha_dbstemp        = .true.
+      LOGICAL :: rstfacsha_dbsboreal      = .true.
+      LOGICAL :: rstfacsha_c3arcgrass     = .true.
+      LOGICAL :: rstfacsha_c3grass        = .true.
+      LOGICAL :: rstfacsha_c4grass        = .true.
+      LOGICAL :: lambdasun_enftemp        = .true.
+      LOGICAL :: lambdasun_enfboreal      = .true.
+      LOGICAL :: lambdasun_dnfboreal      = .true.
+      LOGICAL :: lambdasun_ebftrop        = .true.
+      LOGICAL :: lambdasun_ebftemp        = .true.
+      LOGICAL :: lambdasun_dbftrop        = .true.
+      LOGICAL :: lambdasun_dbftemp        = .true.
+      LOGICAL :: lambdasun_dbfboreal      = .true.
+      LOGICAL :: lambdasun_ebstemp        = .true.
+      LOGICAL :: lambdasun_dbstemp        = .true.
+      LOGICAL :: lambdasun_dbsboreal      = .true.
+      LOGICAL :: lambdasun_c3arcgrass     = .true.
+      LOGICAL :: lambdasun_c3grass        = .true.
+      LOGICAL :: lambdasun_c4grass        = .true.
+      LOGICAL :: lambdasha_enftemp        = .true.
+      LOGICAL :: lambdasha_enfboreal      = .true.
+      LOGICAL :: lambdasha_dnfboreal      = .true.
+      LOGICAL :: lambdasha_ebftrop        = .true.
+      LOGICAL :: lambdasha_ebftemp        = .true.
+      LOGICAL :: lambdasha_dbftrop        = .true.
+      LOGICAL :: lambdasha_dbftemp        = .true.
+      LOGICAL :: lambdasha_dbfboreal      = .true.
+      LOGICAL :: lambdasha_ebstemp        = .true.
+      LOGICAL :: lambdasha_dbstemp        = .true.
+      LOGICAL :: lambdasha_dbsboreal      = .true.
+      LOGICAL :: lambdasha_c3arcgrass     = .true.
+      LOGICAL :: lambdasha_c3grass        = .true.
+      LOGICAL :: lambdasha_c4grass        = .true.
+      LOGICAL :: lambda                   = .true.
+#endif
+#endif
 #ifdef CROP
       LOGICAL :: cphase             = .true.
       LOGICAL :: gddmaturity        = .true.
@@ -397,6 +769,8 @@ MODULE mod_namelist
       LOGICAL :: h2osoi       = .true. 
       LOGICAL :: rstfacsun    = .true.
       LOGICAL :: rstfacsha    = .true.
+      LOGICAL :: gs_sun        = .true.
+      LOGICAL :: gs_sha        = .true.
       LOGICAL :: rootr        = .true.
       LOGICAL :: vegwp        = .true.
       LOGICAL :: BD_all       = .true.
@@ -837,6 +1211,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%gpp                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%downreg            ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%ar                 ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdprod            ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwddecomp          ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hr                 ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpg                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpi                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        ,  set_defaults)
@@ -867,6 +1244,375 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%essha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_enftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_enfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dnfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_ebftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_ebftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dbftrop        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dbftemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dbfboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_ebstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dbstemp        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_dbsboreal      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_c3arcgrass     ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_c3grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha_c4grass        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sun_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%RuBPlimitfrac_sha_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sun_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%Rubiscolimitfrac_sha_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sun_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%Sinklimitfrac_sha_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_enftemp        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_enfboreal      ,  set_defaults) !2
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dnfboreal      ,  set_defaults) !3
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_ebftrop        ,  set_defaults) !4
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_ebftemp        ,  set_defaults) !5
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dbftrop        ,  set_defaults) !6
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dbftemp        ,  set_defaults) !7
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dbfboreal      ,  set_defaults) !8
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_ebstemp        ,  set_defaults) !9
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dbstemp        ,  set_defaults) !10
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_dbsboreal      ,  set_defaults) !11
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_c3arcgrass     ,  set_defaults) !12
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_c3grass        ,  set_defaults) !13
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha_c4grass        ,  set_defaults) !14
+      CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
+#endif
+#endif
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -935,6 +1681,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%h2osoi      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gs_sun   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gs_sha   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rootr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%vegwp       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)

@@ -115,3 +115,5 @@
 #ifndef OzoneStress
 #undef OzoneData
 #endif
+! 15. If defined, output diagnostics in wue model
+#undef WUEdiag

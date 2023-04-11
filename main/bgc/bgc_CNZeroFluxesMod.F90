@@ -270,7 +270,6 @@ use MOD_1D_BGCPFTFluxes, only:            &
    wood_harvestn_p                      , &
    grainc_to_cropprodc_p                , &
    grainn_to_cropprodn_p                , &
-   fert_p                               , &
    soyfixn_p
 
 use MOD_1D_BGCFluxes, only:             &
@@ -644,7 +643,6 @@ subroutine CNZeroFluxes (i,ps,pe,nl_soil,ndecomp_pools,ndecomp_transitions)
      wood_harvestn_p(m)                       = 0._r8
      grainc_to_cropprodc_p(m)                 = 0._r8
      grainn_to_cropprodn_p(m)                 = 0._r8
-     fert_p(m)                                = 0._r8 
      soyfixn_p(m)                             = 0._r8 
 !4386        this%npp_Nactive_patch(i)     = value_patch
 !4387        this%npp_burnedoff_patch(i)     = value_patch
