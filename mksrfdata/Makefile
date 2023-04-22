@@ -61,6 +61,7 @@ OBJS = \
 		 aggregation_forest_height.o \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
+		 aggregation_topography.o \
 		 mksrfdata.o
 
 ####################################################################

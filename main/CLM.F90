@@ -67,6 +67,9 @@ PROGRAM CLM
    USE mod_ozone_data, only: init_ozone_data, update_ozone_data
 #endif
    use mod_srfdata_restart
+      
+   ! SNICAR
+   USE SnowSnicarMod , only:SnowAge_init, SnowOptics_init
 
    IMPLICIT NONE
 
@@ -202,15 +205,19 @@ PROGRAM CLM
    CALL allocate_TimeVariables  ()
    CALL READ_TimeVariables (sdate, casename, dir_restart)
 
+   ! Read in SNICAR optical and aging parameters
+   CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
+   CALL SnowAge_init( DEF_file_snowaging )     ! SNICAR aging   parameters
+
    !-----------------------
    doalb = .true.
    dolai = .true.
    dosst = .false.
 
    ! Initialize meteorological forcing data module
+   call allocate_1D_Forcing ()
    CALL forcing_init (dir_forcing, deltim, sdate)
    call allocate_2D_Forcing (gforc)
-   call allocate_1D_Forcing ()
 
    ! Initialize history data module
    call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)

@@ -64,6 +64,11 @@ SUBROUTINE CLMMAIN ( &
 #endif
            zwt,          dpond,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
+         
+         ! SNICAR snow model related
+           snw_rds,      ssno,                                     &
+           mss_bcpho,    mss_bcphi,   mss_ocpho,     mss_ocphi,    &
+           mss_dst1,     mss_dst2,    mss_dst3,      mss_dst4,     &
 
          ! additional diagnostic variables for output
            laisun,       laisha,       rootr,                       &
@@ -154,6 +159,10 @@ SUBROUTINE CLMMAIN ( &
    USE colm_CaMaMod,only:fldfluxes
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
+
+  ! SNICAR
+  USE AerosolMod,    only : AerosolFluxes, AerosolMasses
+  USE SnowSnicarMod, only : SnowAge_grain
 
   IMPLICIT NONE
  
@@ -331,6 +340,17 @@ SUBROUTINE CLMMAIN ( &
         dpond       ,&! depth of ponding water [mm]
         wa          ,&! water storage in aquifer [mm]
 
+        snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
+        mss_bcpho ( maxsnl+1:0 ) ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi ( maxsnl+1:0 ) ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho ( maxsnl+1:0 ) ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi ( maxsnl+1:0 ) ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  ( maxsnl+1:0 ) ,&! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  ( maxsnl+1:0 ) ,&! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  ( maxsnl+1:0 ) ,&! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  ( maxsnl+1:0 ) ,&! mass of dust species 4 in snow  (col,lyr) [kg]
+        ssno    (2,2,maxsnl+1:1) ,&! snow layer absorption [-]
+
         fveg        ,&! fraction of vegetation cover
         fsno        ,&! fractional snow cover
         sigf        ,&! fraction of veg cover, excluding snow-covered veg [-]
@@ -433,7 +453,7 @@ SUBROUTINE CLMMAIN ( &
         fiold(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old       ,&! liquid water mass of the column at the previous time step (mm)
         orb_coszen  ,&! cosine of the solar zenith angle
-        sabvg       ,&! solar absorbed by ground + vegetation [W/m2]
+        ! sabvg       ,&! solar absorbed by ground + vegetation [W/m2]
         parsun      ,&! PAR by sunlit leaves [W/m2]
         parsha      ,&! PAR by shaded leaves [W/m2]
         qseva       ,&! ground surface evaporation rate (mm h2o/s)
@@ -464,11 +484,34 @@ SUBROUTINE CLMMAIN ( &
 
   INTEGER snl       ,&! number of snow layers
         imelt(maxsnl+1:nl_soil), &! flag for: melting=1, freezing=2, Nothing happended=0
-        lb          ,&! lower bound of arrays
+        lb          , lbsn, &! lower bound of arrays
         j             ! do looping index
+
+      ! For SNICAR snow model
+      !----------------------------------------------------------------------
+      LOGICAL  do_capsnow              !true => do snow capping
+      INTEGER  snl_bef                 !number of snow layers
+      REAL(r8) snwcp_ice               !excess precipitation due to snow capping [kg m-2 s-1]
+      REAL(r8) forc_aer        ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+      REAL(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+      REAL(r8) t_soisno_ (maxsnl+1:1)  !soil + snow layer temperature [K]
+      REAL(r8) dz_soisno_(maxsnl+1:1)  !layer thickness (m)
+      REAL(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
+
+      REAL(r8) mss_cnc_bcphi ( maxsnl+1:0 )     !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_bcpho ( maxsnl+1:0 )     !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_ocphi ( maxsnl+1:0 )     !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_ocpho ( maxsnl+1:0 )     !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_dst1  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_dst2  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_dst3  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
+      REAL(r8) mss_cnc_dst4  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+      !----------------------------------------------------------------------
 
      REAL(r8) :: a, aa 
      INTEGER ps, pe, pc
+      
+!======================================================================
 #if(defined CaMa_Flood)
       real(r8) :: &
       kk, &
@@ -495,14 +538,22 @@ SUBROUTINE CLMMAIN ( &
 !      and precipitation information (rain/snow fall and precip temperature
 !======================================================================
 
+     ! SNICAR
+     do_capsnow  = .false.   !true => DO snow capping
+     snwcp_ice   = 0.0       !excess precipitation due to snow capping [kg m-2 s-1]
+     snofrz(:)   = 0.        !snow freezing rate (col,lyr) [kg m-2 s-1]
+     forc_aer(:) = 4.2E-7    !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+     !forc_aer(:) = 0.        !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&
-                     alb,ssun,ssha,lai,sai,rho,tau,&
-                     parsun,parsha,sabvsun,sabvsha,sabg,sabvg,sr,&
+                     alb,ssun,ssha,lai,sai,rho,tau,ssno,&
+                     parsun,parsha,sabvsun,sabvsha,sabg,sabg_lyr,sr,&
                      solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                      solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
-      CALL rain_snow_temp (forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
+      CALL rain_snow_temp (patchtype, &
+                           forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
       forc_rain = prc_rain + prl_rain
@@ -635,14 +686,23 @@ ENDIF
 ! [3] Initilize new snow nodes for snowfall / sleet
 !----------------------------------------------------------------------
 
+      snl_bef = snl
+
       CALL newsnow (patchtype,maxsnl,deltim,t_grnd,pg_rain,pg_snow,bifall,&
                     t_precip,zi_soisno(:0),z_soisno(:0),dz_soisno(:0),t_soisno(:0),&
                     wliq_soisno(:0),wice_soisno(:0),fiold(:0),snl,sag,scv,snowdp,fsno)
+
+      ! new snow layer
+      IF (snl .lt. snl_bef) THEN
+         sabg_lyr(snl+1:snl-snl_bef+1) = sabg_lyr(snl_bef+1:1)
+         sabg_lyr(snl-snl_bef+2:1) = 0.
+      ENDIF
 
 !----------------------------------------------------------------------
 ! [4] Energy and Water balance 
 !----------------------------------------------------------------------
       lb  = snl + 1           !lower bound of array 
+      lbsn = min(lb,0)
 
       CALL THERMAL (ipatch   ,patchtype         ,lb                ,deltim            ,&
            trsmx0            ,zlnd              ,zsno              ,csoilc            ,&
@@ -692,7 +752,8 @@ ENDIF
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&
-           pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        )
+           pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
+           snofrz(lbsn:0), sabg_lyr(lb:1)                                        )
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
 
@@ -708,6 +769,11 @@ ENDIF
 
 #if(defined CaMa_Flood)
             ,flddepth,fldfrc,qinfl_fld  &
+#endif
+#ifdef SNICAR
+             ,forc_aer          ,&
+             mss_bcpho(lbsn:0)   ,mss_bcphi(lbsn:0)   ,mss_ocpho(lbsn:0)   ,mss_ocphi(lbsn:0)   ,&
+             mss_dst1(lbsn:0)    ,mss_dst2(lbsn:0)    ,mss_dst3(lbsn:0)    ,mss_dst4(lbsn:0)     &
 #endif
               )
       ELSE
@@ -732,6 +798,11 @@ ENDIF
 #if(defined CaMa_Flood)
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
+#ifdef SNICAR
+             ,forc_aer         ,&
+             mss_bcpho(lbsn:0)   ,mss_bcphi(lbsn:0)   ,mss_ocpho(lbsn:0)   ,mss_ocphi(lbsn:0)   ,&
+             mss_dst1(lbsn:0)    ,mss_dst2(lbsn:0)    ,mss_dst3(lbsn:0)    ,mss_dst4(lbsn:0)     &
+#endif
              )
 
       ENDIF
@@ -747,15 +818,31 @@ ENDIF
 
          ! Combine thin snow elements
          lb = maxsnl + 1
+#ifdef SNICAR
+         CALL snowlayerscombine_snicar (lb,snl,&
+                         z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:1),&
+                         wliq_soisno(lb:1),wice_soisno(lb:1),t_soisno(lb:1),scv,snowdp,&
+                         mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                         mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
+#else
          CALL snowlayerscombine (lb,snl,&
                          z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:1),&
                          wliq_soisno(lb:1),wice_soisno(lb:1),t_soisno(lb:1),scv,snowdp)
+#endif
 
          ! Divide thick snow elements
          IF(snl<0) &
+#ifdef SNICAR
+         CALL snowlayersdivide_snicar (lb,snl,&
+                         z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
+                         wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0),&
+                         mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
+                         mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
+#else
          CALL snowlayersdivide (lb,snl,&
                          z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
                          wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0))
+#endif
       ENDIF
       
       ! Set zero to the empty node
@@ -848,14 +935,23 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ! Initilize new snow nodes for snowfall / sleet
       !----------------------------------------------------------------
 
+      snl_bef = snl
+
       CALL newsnow (patchtype,maxsnl,deltim,t_grnd,pg_rain,pg_snow,bifall,&
                     t_precip,zi_soisno(:0),z_soisno(:0),dz_soisno(:0),t_soisno(:0),&
                     wliq_soisno(:0),wice_soisno(:0),fiold(:0),snl,sag,scv,snowdp,fsno)
+
+      ! new snow layer
+      IF (snl .lt. snl_bef) THEN
+         sabg_lyr(snl+1:snl-snl_bef+1) = sabg_lyr(snl_bef+1:1)
+         sabg_lyr(snl-snl_bef+2:1) = 0.
+      ENDIF
 
       !----------------------------------------------------------------
       ! Energy and Water balance 
       !----------------------------------------------------------------
       lb  = snl + 1            !lower bound of array 
+      lbsn = min(lb,0)
 
       CALL GLACIER_TEMP (lb    ,nl_soil     ,deltim     ,&
                    zlnd        ,zsno        ,capr       ,cnfac       ,&
@@ -872,9 +968,23 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    errore      ,emis        ,z0m        ,zol         ,&
                    rib         ,ustar       ,qstar      ,tstar       ,&
                    fm          ,fh          ,fq         ,pg_rain     ,&
-                   pg_snow     ,t_precip)
+                   pg_snow     ,t_precip    ,                         &
+                   snofrz(lbsn:0), sabg_lyr(lb:1)               )
 
 
+#ifdef SNICAR
+      CALL GLACIER_WATER_snicar (nl_soil    ,maxsnl     ,deltim      ,&
+                   z_soisno    ,dz_soisno   ,zi_soisno  ,t_soisno    ,&
+                   wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
+                   sm          ,scv         ,snowdp     ,imelt       ,&
+                   fiold       ,snl         ,qseva      ,qsdew       ,&
+                   qsubl       ,qfros       ,rsur       ,rnof        ,&
+                   ssi         ,wimp                                 ,&
+                   ! SNICAR
+                   forc_aer    ,&
+                   mss_bcpho   ,mss_bcphi   ,mss_ocpho  ,mss_ocphi   ,&
+                   mss_dst1    ,mss_dst2    ,mss_dst3   ,mss_dst4     )
+#else
       CALL GLACIER_WATER (nl_soil,maxsnl,deltim                      ,&
                    z_soisno    ,dz_soisno   ,zi_soisno  ,t_soisno    ,&
                    wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
@@ -882,6 +992,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
                    ssi         ,wimp                                  )
+#endif
 
 
       lb = snl + 1
@@ -967,6 +1078,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            wliq_soisno  ,wice_soisno  ,imelt           ,t_lake          ,&
            lake_icefrac ,savedtke1, &
 
+           ! SNICAR
+           snofrz       ,sabg_lyr     ,&
+
            ! "out" laketem arguments
            ! ---------------------------
            taux         ,tauy         ,fsena                            ,&
@@ -990,7 +1104,15 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            z_soisno     ,dz_soisno    ,zi_soisno       ,t_soisno        ,&
            wice_soisno  ,wliq_soisno  ,t_lake          ,lake_icefrac    ,&
            fseng        ,fgrnd        ,snl             ,scv             ,&
-           snowdp       ,sm )
+           snowdp       ,sm            & 
+
+#ifdef SNICAR
+           ! SNICAR
+           ,forc_aer    ,&
+           mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
+           mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         &
+#endif
+           )
 
       ! We assume the land water bodies have zero extra liquid water capacity 
       ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
@@ -1147,6 +1269,44 @@ ENDIF
        ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
        IF (patchtype >= 3) ssw = 1.0
 
+! ============================================================================
+!  Calculate column-integrated aerosol masses, and
+!  mass concentrations for radiative calculations and output
+!  (based on new snow level state, after SnowFilter is rebuilt.
+!  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
+!  can be zero snow layers but an active column in filter)
+
+       CALL AerosolMasses( snl ,do_capsnow ,&
+            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
+
+            mss_bcpho     ,mss_bcphi       ,mss_ocpho      ,mss_ocphi     ,&
+            mss_dst1      ,mss_dst2        ,mss_dst3       ,mss_dst4      ,&
+
+            mss_cnc_bcphi ,mss_cnc_bcpho   ,mss_cnc_ocphi  ,mss_cnc_ocpho ,&
+            mss_cnc_dst1  ,mss_cnc_dst2    ,mss_cnc_dst3   ,mss_cnc_dst4  )
+
+! ============================================================================
+! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
+! microphysics and albedo evolution, JGR, and Brun (1989), Investigation of
+! wet-snow metamorphism in respect of liquid-water content, Ann. Glaciol.
+
+       dz_soisno_(:1) = dz_soisno(:1)
+       t_soisno_ (:1) = t_soisno (:1)
+
+       IF (patchtype == 4) THEN
+          dz_soisno_(1) = dz_lake(1)
+          t_soisno_ (1) = t_lake (1)
+       ENDIF
+
+       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno_(:1) ,&
+            pg_snow         ,snwcp_ice      ,snofrz         ,&
+
+            do_capsnow      ,fsno           ,scv            ,&
+            wliq_soisno (:0),wice_soisno(:0),&
+            t_soisno_   (:1),t_grnd         ,&
+            snw_rds         )
+
+! ============================================================================
        ! albedos 
        ! we supposed CALL it every time-step, because 
        ! other vegeation related parameters are needed to create
@@ -1154,7 +1314,10 @@ ENDIF
             CALL albland (ipatch, patchtype,&
                  soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                  chil,rho,tau,fveg,green,lai,sai,coszen,wt,fsno,scv,sag,ssw,t_grnd,&
-                 alb,ssun,ssha,thermk,extkb,extkd)
+                 snl,wliq_soisno,wice_soisno,snw_rds,&
+                 mss_cnc_bcpho,mss_cnc_bcphi,mss_cnc_ocpho,mss_cnc_ocphi,&
+                 mss_cnc_dst1,mss_cnc_dst2,mss_cnc_dst3,mss_cnc_dst4,&
+                 alb,ssun,ssha,ssno,thermk,extkb,extkd)
        ENDIF
     ELSE                   !OCEAN
        sag = 0.0

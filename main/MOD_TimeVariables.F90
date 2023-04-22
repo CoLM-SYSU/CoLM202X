@@ -452,6 +452,17 @@ SAVE
       real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
       real(r8), allocatable :: savedtke1(:)     ! top level eddy conductivity (W/m K) 
 
+      REAL(r8), allocatable :: snw_rds     (:,:) !effective grain radius (col,lyr) [microns, m-6]
+      REAL(r8), allocatable :: mss_bcpho   (:,:) !mass of hydrophobic BC in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_bcphi   (:,:) !mass of hydrophillic BC in snow (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_ocpho   (:,:) !mass of hydrophobic OC in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_ocphi   (:,:) !mass of hydrophillic OC in snow (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_dst1    (:,:) !mass of dust species 1 in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_dst2    (:,:) !mass of dust species 2 in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_dst3    (:,:) !mass of dust species 3 in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: mss_dst4    (:,:) !mass of dust species 4 in snow  (col,lyr) [kg]
+      REAL(r8), allocatable :: ssno    (:,:,:,:) !snow layer absorption [-]
+
       real(r8), allocatable :: trad     (:) ! radiative temperature of surface [K]
       real(r8), allocatable :: tref     (:) ! 2 m height air temperature [kelvin]
       real(r8), allocatable :: qref     (:) ! 2 m height air specific humidity
@@ -929,6 +940,17 @@ SAVE
         allocate (t_lake       (nl_lake,numpatch))    !new lake scheme
         allocate (lake_icefrac (nl_lake,numpatch))    !new lake scheme
         allocate (savedtke1            (numpatch))    !new lake scheme
+
+        allocate (snw_rds           (maxsnl+1:0,numpatch))
+        allocate (mss_bcpho         (maxsnl+1:0,numpatch))
+        allocate (mss_bcphi         (maxsnl+1:0,numpatch))
+        allocate (mss_ocpho         (maxsnl+1:0,numpatch))
+        allocate (mss_ocphi         (maxsnl+1:0,numpatch))
+        allocate (mss_dst1          (maxsnl+1:0,numpatch))
+        allocate (mss_dst2          (maxsnl+1:0,numpatch))
+        allocate (mss_dst3          (maxsnl+1:0,numpatch))
+        allocate (mss_dst4          (maxsnl+1:0,numpatch))
+        allocate (ssno          (2,2,maxsnl+1:1,numpatch))
 
         allocate (trad                 (numpatch))
         allocate (tref                 (numpatch))
@@ -1409,6 +1431,17 @@ SAVE
            deallocate (lake_icefrac) ! new lake scheme
            deallocate (savedtke1)    ! new lake scheme
 
+           deallocate (snw_rds  )
+           deallocate (mss_bcpho)
+           deallocate (mss_bcphi)
+           deallocate (mss_ocpho)
+           deallocate (mss_ocphi)
+           deallocate (mss_dst1 )
+           deallocate (mss_dst2 )
+           deallocate (mss_dst3 )
+           deallocate (mss_dst4 )
+           deallocate (ssno     )
+
            deallocate (trad   )
            deallocate (tref   )
            deallocate (qref   )
@@ -1507,6 +1540,7 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
      
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snowp1',   -maxsnl+1     )
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
@@ -1566,6 +1600,16 @@ SAVE
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
      call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
      call ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress) !
+     call ncio_write_vector (file_restart, 'snw_rds  ', 'snow', -maxsnl, 'patch', landpatch, snw_rds  , compress) 
+     call ncio_write_vector (file_restart, 'mss_bcpho', 'snow', -maxsnl, 'patch', landpatch, mss_bcpho, compress) 
+     call ncio_write_vector (file_restart, 'mss_bcphi', 'snow', -maxsnl, 'patch', landpatch, mss_bcphi, compress) 
+     call ncio_write_vector (file_restart, 'mss_ocpho', 'snow', -maxsnl, 'patch', landpatch, mss_ocpho, compress) 
+     call ncio_write_vector (file_restart, 'mss_ocphi', 'snow', -maxsnl, 'patch', landpatch, mss_ocphi, compress) 
+     call ncio_write_vector (file_restart, 'mss_dst1 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst1 , compress) 
+     call ncio_write_vector (file_restart, 'mss_dst2 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst2 , compress) 
+     call ncio_write_vector (file_restart, 'mss_dst3 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst3 , compress) 
+     call ncio_write_vector (file_restart, 'mss_dst4 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst4 , compress) 
+     call ncio_write_vector (file_restart, 'ssno', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno, compress) 
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM) 
      call ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) !     radiative temperature of surface [K]
@@ -1685,6 +1729,17 @@ SAVE
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
      call ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1) !
+     
+     call ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  ) !
+     call ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho) !
+     call ncio_read_vector (file_restart, 'mss_bcphi', -maxsnl, landpatch, mss_bcphi) !
+     call ncio_read_vector (file_restart, 'mss_ocpho', -maxsnl, landpatch, mss_ocpho) !
+     call ncio_read_vector (file_restart, 'mss_ocphi', -maxsnl, landpatch, mss_ocphi) !
+     call ncio_read_vector (file_restart, 'mss_dst1 ', -maxsnl, landpatch, mss_dst1 ) !
+     call ncio_read_vector (file_restart, 'mss_dst2 ', -maxsnl, landpatch, mss_dst2 ) !
+     call ncio_read_vector (file_restart, 'mss_dst3 ', -maxsnl, landpatch, mss_dst3 ) !
+     call ncio_read_vector (file_restart, 'mss_dst4 ', -maxsnl, landpatch, mss_dst4 ) !
+     call ncio_read_vector (file_restart, 'ssno', 2,2, -maxsnl+1, landpatch, ssno) !
 
      ! Additional variables required by reginal model (such as WRF ) RSM) 
      call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) !     radiative temperature of surface [K]

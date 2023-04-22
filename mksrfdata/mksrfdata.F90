@@ -79,7 +79,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire
+   TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -173,6 +173,9 @@ PROGRAM mksrfdata
 
    ! define grid for land characteristics
    CALL gridlai%define_by_name ('colm_500m')
+   
+   ! define grid for topography
+   CALL gtopo%define_by_name ('colm_500m')
 
    ! assimilate grids to build pixels
 #ifndef SinglePoint
@@ -199,6 +202,8 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (gndep)
 #endif
 
+   CALL pixel%assimilate_grid (gtopo)
+
    ! map pixels to grid coordinates
 #ifndef SinglePoint
    CALL pixel%map_to_grid (gridmesh)
@@ -224,7 +229,7 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (gndep)
 #endif
 
-
+   CALL pixel%map_to_grid (gtopo)
 
    ! build land elms 
    CALL mesh_build ()
@@ -309,6 +314,8 @@ PROGRAM mksrfdata
    CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
    CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
+
+   CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
    ! ................................................................
    ! 4. Free memories. 

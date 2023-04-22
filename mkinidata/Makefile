@@ -78,6 +78,8 @@ OBJS_MAIN = \
 				  ../main/LAI_readin.o \
 				  ../main/orb_coszen.o \
 				  ../main/ThreeDCanopy.o \
+				  ../main/SnowSnicarMod.o \
+				  ../main/SnowAlbedo.o \
 				  ../main/ALBEDO.o    \
 				  ../main/snowfraction.o
 

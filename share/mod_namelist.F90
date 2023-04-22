@@ -91,9 +91,11 @@ MODULE mod_namelist
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
-
+   CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    ! ----- Initialization -----
-   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+   CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
+   CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
+   CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
    ! ----- history -----
    LOGICAL  :: DEF_HISTORY_IN_VECTOR = .false.
@@ -890,12 +892,15 @@ CONTAINS
          DEF_file_mesh_filter,            &
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
-   
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
+
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
 
          DEF_file_soil_init,              &
+         DEF_file_snowoptics,             &
+         DEF_file_snowaging ,             &
 
          DEF_forcing_namelist,            &
 
@@ -974,6 +979,9 @@ CONTAINS
          ENDIF
 #endif
 
+        DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+        DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+
       ENDIF
 
 #ifdef USEMPI
@@ -1030,12 +1038,16 @@ CONTAINS
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
+      call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
       
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_soil_init , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 
@@ -1079,6 +1091,8 @@ CONTAINS
          CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
       ENDDO
+      CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)

@@ -130,6 +130,11 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          zwt(i),          dpond(i),        wa(i),                            &
          t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    & 
 
+       ! SNICAR snow model related
+         snw_rds(:,i),    ssno(:,:,:,i),                                     &
+         mss_bcpho(:,i),  mss_bcphi(:,i),  mss_ocpho(:,i),  mss_ocphi(:,i),  &
+         mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
+
        ! additional diagnostic variables for output
          laisun(i),       laisha(i),       rootr(1:,i),                      &
          rstfacsun(i),    rstfacsha(i),    h2osoi(1:,i),    wat(i),          &
