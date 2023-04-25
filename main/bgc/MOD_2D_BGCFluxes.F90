@@ -79,6 +79,9 @@ MODULE MOD_2D_BGCFluxes
    type(block_data_real8_2d) :: f_gpp                ! net primary production (gC/m2/s)
    type(block_data_real8_2d) :: f_downreg            ! gpp downregulation due to N limitation
    type(block_data_real8_2d) :: f_ar                 ! autotrophic respiration (gC/m2/s)
+   type(block_data_real8_2d) :: f_cwdprod            
+   type(block_data_real8_2d) :: f_cwddecomp          
+   type(block_data_real8_2d) :: f_hr                 
    type(block_data_real8_2d) :: f_fpg                ! fraction of potential gpp
    type(block_data_real8_2d) :: f_fpi                ! fraction of potential immobilization
    type(block_data_real8_2d) :: f_gpp_enftemp        !1
@@ -244,6 +247,9 @@ CONTAINS
          call allocate_block_data (grid, f_gpp                ) ! net primary production (gC/m2)
          call allocate_block_data (grid, f_downreg            ) ! gpp downregulation due to N limitation
          call allocate_block_data (grid, f_ar                 )
+         call allocate_block_data (grid, f_cwdprod            )
+         call allocate_block_data (grid, f_cwddecomp          )
+         call allocate_block_data (grid, f_hr                 )
          call allocate_block_data (grid, f_fpg                ) ! fraction of potential gpp
          call allocate_block_data (grid, f_fpi                ) ! fraction of potential immobilization
          call allocate_block_data (grid, f_gpp_enftemp        ) !1

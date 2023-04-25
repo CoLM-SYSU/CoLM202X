@@ -59,7 +59,9 @@ CONTAINS
       itime = mday
 
       CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, itime, f_ozone)
+#ifdef CLMDEBUG
       CALL check_block_data ('Ozone', f_ozone)
+#endif
 
 !      IF (p_is_worker) THEN
 !         IF (numpatch > 0) THEN
@@ -107,11 +109,15 @@ CONTAINS
 
       IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
          CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
+#ifdef CLMDEBUG
          CALL check_block_data ('Ozone', f_ozone)
+#endif         
       
          call mg2p_ozone%map_aweighted (f_ozone, forc_ozone) 
          forc_ozone = forc_ozone * 1.e-9 
+#ifdef CLMDEBUG
          call check_vector_data ('Ozone', forc_ozone)
+#endif         
       ENDIF
 
    END SUBROUTINE update_ozone_data 

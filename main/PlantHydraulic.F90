@@ -1164,8 +1164,8 @@ end do
     implicit none
     !
     ! !ARGUMENTS:
-    real(r8) , intent(in)     :: gb_mol ! Shaded leaf boundary layer conductance (mol H2O/m**2/s), leaf scale
-    real(r8) , intent(inout)  :: gs_mol ! Ball-Berry leaf conductance (mol H2O/m**2/s), leaf scale
+    real(r8) , intent(in)     :: gb_mol ! Shaded leaf boundary layer conductance (umol H2O/m**2/s), leaf scale
+    real(r8) , intent(inout)  :: gs_mol ! Ball-Berry leaf conductance (umol H2O/m**2/s), leaf scale
     real(r8) , intent(inout)  :: qflx   ! Shaded leaf transpiration [kg/m2/s]
     real(r8) , intent(in)     :: qsatl   ! Shaded leaf specific humidity [kg/kg]
     real(r8) , intent(in)     :: qaf        ! humidity of canopy air [kg/kg]

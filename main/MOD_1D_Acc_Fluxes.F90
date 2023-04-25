@@ -42,6 +42,8 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_qdrip  (:)
    real(r8), allocatable :: a_rstfacsun (:)
    real(r8), allocatable :: a_rstfacsha (:)
+   real(r8), allocatable :: a_gssun (:)
+   real(r8), allocatable :: a_gssha (:)
    real(r8), allocatable :: a_dpond  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
@@ -123,6 +125,9 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_gpp                (:)
    real(r8), allocatable :: a_downreg            (:)
    real(r8), allocatable :: a_ar                 (:)
+   real(r8), allocatable :: a_cwdprod            (:)
+   real(r8), allocatable :: a_cwddecomp          (:)
+   real(r8), allocatable :: a_hr                 (:)
    real(r8), allocatable :: a_fpg                (:)
    real(r8), allocatable :: a_fpi                (:)
    real(r8), allocatable :: a_gpp_enftemp        (:) !1
@@ -153,7 +158,27 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
-
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+   real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
+   real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
+   real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
+   real(r8), allocatable :: a_assim_Rubisco_sha        (:) !1
+   real(r8), allocatable :: a_assimsun        (:) !1
+   real(r8), allocatable :: a_assimsha        (:) !1
+   real(r8), allocatable :: a_etrsun        (:) !1
+   real(r8), allocatable :: a_etrsha        (:) !1
+   real(r8), allocatable :: a_cisun        (:) !1
+   real(r8), allocatable :: a_cisha        (:) !1
+   real(r8), allocatable :: a_Dsun        (:) !1
+   real(r8), allocatable :: a_Dsha        (:) !1
+   real(r8), allocatable :: a_gammasun        (:) !1
+   real(r8), allocatable :: a_gammasha        (:) !1
+   real(r8), allocatable :: a_lambdasun        (:) !1
+   real(r8), allocatable :: a_lambdasha        (:) !1
+   real(r8), allocatable :: a_lambda                   (:) !14
+#endif
+#endif
 #ifdef NITRIF
    real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
    real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
@@ -317,6 +342,8 @@ contains
             allocate (a_qdrip     (numpatch))
             allocate (a_rstfacsun (numpatch))
             allocate (a_rstfacsha (numpatch))
+            allocate (a_gssun     (numpatch))
+            allocate (a_gssha     (numpatch))
             allocate (a_dpond     (numpatch))
 
             allocate (a_zwt       (numpatch))
@@ -324,6 +351,28 @@ contains
             allocate (a_wat       (numpatch))
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
+
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            allocate (a_assim_RuBP_sun        (numpatch)) !1
+            allocate (a_assim_RuBP_sha        (numpatch)) !1
+            allocate (a_assim_Rubisco_sun        (numpatch)) !1
+            allocate (a_assim_Rubisco_sha        (numpatch)) !1
+            allocate (a_assimsun        (numpatch)) !1
+            allocate (a_assimsha        (numpatch)) !1
+            allocate (a_etrsun        (numpatch)) !1
+            allocate (a_etrsha        (numpatch)) !1
+            allocate (a_cisun        (numpatch)) !1
+            allocate (a_cisha        (numpatch)) !1
+            allocate (a_Dsun        (numpatch)) !1
+            allocate (a_Dsha        (numpatch)) !1
+            allocate (a_gammasun        (numpatch)) !1
+            allocate (a_gammasha        (numpatch)) !1
+            allocate (a_lambdasun        (numpatch)) !1
+            allocate (a_lambdasha        (numpatch)) !1
+            allocate (a_lambda                   (numpatch)) !1
+#endif 
+#endif
 
             allocate (a_qcharge   (numpatch))
 
@@ -399,6 +448,9 @@ contains
             allocate (a_gpp                (numpatch))
             allocate (a_downreg            (numpatch))
             allocate (a_ar                 (numpatch))
+            allocate (a_cwdprod            (numpatch))
+            allocate (a_cwddecomp          (numpatch))
+            allocate (a_hr                 (numpatch))
             allocate (a_fpg                (numpatch))
             allocate (a_fpi                (numpatch))
             allocate (a_gpp_enftemp        (numpatch)) !1
@@ -590,6 +642,8 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
+            deallocate (a_gssun )
+            deallocate (a_gssha )
             deallocate (a_dpond     )
 
             deallocate (a_zwt       )
@@ -671,6 +725,9 @@ contains
             deallocate (a_gpp                )
             deallocate (a_downreg            )
             deallocate (a_ar                 )
+            deallocate (a_cwdprod            )
+            deallocate (a_cwddecomp          )
+            deallocate (a_hr                 )
             deallocate (a_fpg                )
             deallocate (a_fpi                )
             deallocate (a_gpp_enftemp        ) !1
@@ -701,6 +758,27 @@ contains
             deallocate (a_leafc_c3arcgrass   ) !12
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            deallocate (a_assim_RuBP_sun        ) !1
+            deallocate (a_assim_RuBP_sha        ) !1
+            deallocate (a_assim_Rubisco_sun        ) !1
+            deallocate (a_assim_Rubisco_sha        ) !1
+            deallocate (a_assimsun        ) !1
+            deallocate (a_assimsha        ) !1
+            deallocate (a_etrsun        ) !1
+            deallocate (a_etrsha        ) !1
+            deallocate (a_cisun        ) !1
+            deallocate (a_cisha        ) !1
+            deallocate (a_Dsun        ) !1
+            deallocate (a_Dsha        ) !1
+            deallocate (a_gammasun        ) !1
+            deallocate (a_gammasha        ) !1
+            deallocate (a_lambdasun        ) !1
+            deallocate (a_lambdasha        ) !1
+            deallocate (a_lambda                   ) !1
+#endif
+#endif
 #ifdef NITRIF
             deallocate (a_O2_DECOMP_DEPTH_UNSAT )
             deallocate (a_CONC_O2_UNSAT         )
@@ -868,6 +946,8 @@ contains
             a_qdrip   (:) = spval
             a_rstfacsun(:) = spval
             a_rstfacsha(:) = spval
+            a_gssun   (:) = spval
+            a_gssha   (:) = spval
 
             a_dpond   (:) = spval
             a_zwt     (:) = spval
@@ -949,6 +1029,9 @@ contains
             a_gpp                (:) = spval
             a_downreg            (:) = spval
             a_ar                 (:) = spval
+            a_cwdprod            (:) = spval
+            a_cwddecomp          (:) = spval
+            a_hr                 (:) = spval
             a_fpg                (:) = spval
             a_fpi                (:) = spval
             a_gpp_enftemp        (:) = spval
@@ -979,6 +1062,27 @@ contains
             a_leafc_c3arcgrass   (:) = spval
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            a_assim_RuBP_sun        (:) = spval !1
+            a_assim_RuBP_sha        (:) = spval !1
+            a_assim_Rubisco_sun        (:) = spval !1
+            a_assim_Rubisco_sha        (:) = spval !1
+            a_assimsun        (:) = spval !1
+            a_assimsha        (:) = spval !1
+            a_etrsun        (:) = spval !1
+            a_etrsha        (:) = spval !1
+            a_cisun        (:) = spval !1
+            a_cisha        (:) = spval !1
+            a_Dsun        (:) = spval !1
+            a_Dsha        (:) = spval !1
+            a_gammasun        (:) = spval !1
+            a_gammasha        (:) = spval !1
+            a_lambdasun        (:) = spval  !1
+            a_lambdasha        (:) = spval  !1
+            a_lambda                   (:) = spval  !1
+#endif
+#endif
 #ifdef NITRIF
             a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
             a_CONC_O2_UNSAT         (:,:) = spval
@@ -1187,8 +1291,10 @@ contains
             call acc1d (qintr  , a_qintr  )
             call acc1d (qinfl  , a_qinfl  )
             call acc1d (qdrip  , a_qdrip  )
-            call acc1d (rstfacsun , a_rstfacsun )
-            call acc1d (rstfacsha , a_rstfacsha )
+            call acc1d (rstfacsun_out , a_rstfacsun )
+            call acc1d (rstfacsha_out , a_rstfacsha )
+            call acc1d (gssun_out     , a_gssun )
+            call acc1d (gssha_out     , a_gssha )
 
             call acc1d (dpond  , a_dpond  )
             call acc1d (zwt    , a_zwt    )
@@ -1279,6 +1385,9 @@ contains
             call acc1d (gpp                , a_gpp                 )
             call acc1d (downreg            , a_downreg             )
             call acc1d (ar                 , a_ar                  )
+            call acc1d (cwdprod            , a_cwdprod             )
+            call acc1d (cwddecomp          , a_cwddecomp           )
+            call acc1d (decomp_hr          , a_hr                  )
             call acc1d (fpg                , a_fpg                 )
             call acc1d (fpi                , a_fpi                 )
             call acc1d (gpp_enftemp        , a_gpp_enftemp         )
@@ -1309,6 +1418,27 @@ contains
             call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
+            call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
+            call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )
+            call acc1d (assim_Rubisco_sha_out    , a_assim_Rubisco_sha        )
+            call acc1d (assimsun_out    , a_assimsun        )
+            call acc1d (assimsha_out    , a_assimsha        )
+            call acc1d (etrsun_out    , a_etrsun        )
+            call acc1d (etrsha_out    , a_etrsha        )
+            call acc1d (cisun_out    , a_cisun        )
+            call acc1d (cisha_out    , a_cisha        )
+            call acc1d (Dsun_out    , a_Dsun        )
+            call acc1d (Dsha_out    , a_Dsha        )
+            call acc1d (gammasun_out    , a_gammasun        )
+            call acc1d (gammasha_out    , a_gammasha        )
+            call acc1d (lambdasun_out    , a_lambdasun        )
+            call acc1d (lambdasha_out    , a_lambdasha        )
+            call acc1d (lambda_out               , a_lambda                   )
+#endif
+#endif
 #ifdef NITRIF
             call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
             call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )

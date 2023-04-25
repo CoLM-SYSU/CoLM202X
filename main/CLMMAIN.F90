@@ -72,7 +72,16 @@ SUBROUTINE CLMMAIN ( &
 
          ! additional diagnostic variables for output
            laisun,       laisha,       rootr,                       &
-           rstfacsun,    rstfacsha,    h2osoi,       wat,           &
+           rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
+#ifdef WUEdiag
+           assimsun_out, etrsun_out,   assim_RuBP_sun_out,          & 
+           assim_Rubisco_sun_out,      cisun_out,    Dsun_out,      & 
+           gammasun_out,lambdasun_out,                              &
+           assimsha_out, etrsha_out,   assim_RuBP_sha_out,          &
+           assim_Rubisco_sha_out,      cisha_out,    Dsha_out,      &
+           gammasha_out, lambdasha_out,lambda_out,                  &
+#endif
+           h2osoi,       wat,           &
 
          ! FLUXES
            taux,         tauy,         fsena,        fevpa,         &
@@ -371,12 +380,34 @@ SUBROUTINE CLMMAIN ( &
   REAL(r8), intent(out) :: &
         laisun      ,&! sunlit leaf area index
         laisha      ,&! shaded leaf area index
-        rstfacsun   ,&! factor of soil water stress
-        rstfacsha   ,&! factor of soil water stress
+        rstfacsun_out,&! factor of soil water stress
+        rstfacsha_out,&! factor of soil water stress
+        gssun_out,    &! sunlit stomata conductance
+        gssha_out,    &! shaded stomata conductance
         wat         ,&! total water storage
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
+#ifdef WUEdiag
+  REAL(r8), intent(out) :: &
+       assimsun_out           ,&
+       etrsun_out             ,&
+       assim_RuBP_sun_out     ,&
+       assim_Rubisco_sun_out  ,&
+       cisun_out              ,&
+       Dsun_out               ,&
+       gammasun_out           ,&
+       lambdasun_out          ,&
+       assimsha_out           ,&
+       etrsha_out             ,&
+       assim_RuBP_sha_out     ,&
+       assim_Rubisco_sha_out  ,&
+       cisha_out              ,&
+       Dsha_out               ,&
+       gammasha_out           ,&
+       lambdasha_out          ,&
+       lambda_out             
+#endif
 ! Fluxes
 ! ----------------------------------------------------------------------
   REAL(r8), intent(out) :: &
@@ -722,7 +753,17 @@ ENDIF
 #endif
            lai               ,laisun            ,laisha                               ,&
            sai               ,htop              ,hbot              ,sqrtdi            ,&
-           rootfr            ,rstfacsun         ,rstfacsha         ,effcon            ,&
+           rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
+           gssun_out         ,gssha_out         ,&
+#ifdef WUEdiag
+           assimsun_out      ,etrsun_out        ,assim_RuBP_sun_out                   ,& 
+           assim_Rubisco_sun_out                ,cisun_out         ,Dsun_out          ,& 
+           gammasun_out      ,lambdasun_out     ,&
+           assimsha_out      ,etrsha_out        ,assim_RuBP_sha_out,&
+           assim_Rubisco_sha_out                ,cisha_out         ,Dsha_out          ,&
+           gammasha_out      ,lambdasha_out     ,lambda_out        ,& 
+#endif
+           effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
 #ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&  
@@ -1359,8 +1400,29 @@ ENDIF
        qdrip = forc_rain + forc_snow
        qintr = 0.
        h2osoi = 0. 
-       rstfacsun = 0.
-       rstfacsha = 0.
+       rstfacsun_out = 0.
+       rstfacsha_out = 0.
+       gssun_out = 0.
+       gssha_out = 0.
+#ifdef WUEdiag
+       assimsun_out           =0.
+       etrsun_out             =0.
+       assim_RuBP_sun_out     =0.
+       assim_Rubisco_sun_out  =0.
+       cisun_out              =0.
+       Dsun_out               =0.
+       gammasun_out           =0.
+       lambdasun_out          =0.
+       assimsha_out           =0.
+       etrsha_out             =0.
+       assim_RuBP_sha_out     =0.
+       assim_Rubisco_sha_out  =0.
+       cisha_out              =0.
+       Dsha_out               =0.
+       gammasha_out           =0.
+       lambdasha_out          =0.
+       lambda_out             =0.
+#endif
        rootr = 0.
        zwt = 0.
       

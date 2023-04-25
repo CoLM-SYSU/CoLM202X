@@ -741,7 +741,6 @@ ENDIF
           end if
           totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
           totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
-          print*,'totcolc',totcolc,m,leafc_p(m),leafc_storage_p(m),deadstemc_p(m)
        end do
 #ifdef OzoneStress
        o3uptakesun_p            (ps:pe) = 0._r8

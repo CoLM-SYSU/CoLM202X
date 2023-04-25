@@ -278,36 +278,60 @@ MODULE mod_namelist
       LOGICAL :: gpp                = .true.
       LOGICAL :: downreg            = .true.
       LOGICAL :: ar                 = .true.
+      LOGICAL :: cwdprod            = .true.
+      LOGICAL :: cwddecomp          = .true.
+      LOGICAL :: hr                 = .true.
       LOGICAL :: fpg                = .true.
       LOGICAL :: fpi                = .true.
-      LOGICAL :: gpp_enftemp        = .true. !1
-      LOGICAL :: gpp_enfboreal      = .true. !2
-      LOGICAL :: gpp_dnfboreal      = .true. !3
-      LOGICAL :: gpp_ebftrop        = .true. !4
-      LOGICAL :: gpp_ebftemp        = .true. !5
-      LOGICAL :: gpp_dbftrop        = .true. !6
-      LOGICAL :: gpp_dbftemp        = .true. !7
-      LOGICAL :: gpp_dbfboreal      = .true. !8
-      LOGICAL :: gpp_ebstemp        = .true. !9
-      LOGICAL :: gpp_dbstemp        = .true. !10
-      LOGICAL :: gpp_dbsboreal      = .true. !11
-      LOGICAL :: gpp_c3arcgrass     = .true. !12
-      LOGICAL :: gpp_c3grass        = .true. !13
-      LOGICAL :: gpp_c4grass        = .true. !14
-      LOGICAL :: leafc_enftemp      = .true. !1
-      LOGICAL :: leafc_enfboreal    = .true. !2
-      LOGICAL :: leafc_dnfboreal    = .true. !3
-      LOGICAL :: leafc_ebftrop      = .true. !4
-      LOGICAL :: leafc_ebftemp      = .true. !5
-      LOGICAL :: leafc_dbftrop      = .true. !6
-      LOGICAL :: leafc_dbftemp      = .true. !7
-      LOGICAL :: leafc_dbfboreal    = .true. !8
-      LOGICAL :: leafc_ebstemp      = .true. !9
-      LOGICAL :: leafc_dbstemp      = .true. !10
-      LOGICAL :: leafc_dbsboreal    = .true. !11
-      LOGICAL :: leafc_c3arcgrass   = .true. !12
-      LOGICAL :: leafc_c3grass      = .true. !13
-      LOGICAL :: leafc_c4grass      = .true. !14
+      LOGICAL :: gpp_enftemp        = .false. !1
+      LOGICAL :: gpp_enfboreal      = .false. !2
+      LOGICAL :: gpp_dnfboreal      = .false. !3
+      LOGICAL :: gpp_ebftrop        = .false. !4
+      LOGICAL :: gpp_ebftemp        = .false. !5
+      LOGICAL :: gpp_dbftrop        = .false. !6
+      LOGICAL :: gpp_dbftemp        = .false. !7
+      LOGICAL :: gpp_dbfboreal      = .false. !8
+      LOGICAL :: gpp_ebstemp        = .false. !9
+      LOGICAL :: gpp_dbstemp        = .false. !10
+      LOGICAL :: gpp_dbsboreal      = .false. !11
+      LOGICAL :: gpp_c3arcgrass     = .false. !12
+      LOGICAL :: gpp_c3grass        = .false. !13
+      LOGICAL :: gpp_c4grass        = .false. !14
+      LOGICAL :: leafc_enftemp      = .false. !1
+      LOGICAL :: leafc_enfboreal    = .false. !2
+      LOGICAL :: leafc_dnfboreal    = .false. !3
+      LOGICAL :: leafc_ebftrop      = .false. !4
+      LOGICAL :: leafc_ebftemp      = .false. !5
+      LOGICAL :: leafc_dbftrop      = .false. !6
+      LOGICAL :: leafc_dbftemp      = .false. !7
+      LOGICAL :: leafc_dbfboreal    = .false. !8
+      LOGICAL :: leafc_ebstemp      = .false. !9
+      LOGICAL :: leafc_dbstemp      = .false. !10
+      LOGICAL :: leafc_dbsboreal    = .false. !11
+      LOGICAL :: leafc_c3arcgrass   = .false. !12
+      LOGICAL :: leafc_c3grass      = .false. !13
+      LOGICAL :: leafc_c4grass      = .false. !14
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+      LOGICAL :: assim_RuBP_sun        = .true. !1
+      LOGICAL :: assim_RuBP_sha        = .true. !1
+      LOGICAL :: assim_Rubisco_sun        = .true. !1
+      LOGICAL :: assim_Rubisco_sha        = .true. !1
+      LOGICAL :: assimsun        = .true. !1
+      LOGICAL :: assimsha        = .true. !1
+      LOGICAL :: etrsun        = .true. !1
+      LOGICAL :: etrsha        = .true. !1
+      LOGICAL :: cisun        = .true. !1
+      LOGICAL :: cisha        = .true. !1
+      LOGICAL :: Dsun        = .true. !1
+      LOGICAL :: Dsha        = .true. !1
+      LOGICAL :: gammasun        = .true. !1
+      LOGICAL :: gammasha        = .true. !1
+      LOGICAL :: lambdasun        = .true.
+      LOGICAL :: lambdasha        = .true.
+      LOGICAL :: lambda                   = .true.
+#endif
+#endif
 #ifdef CROP
       LOGICAL :: cphase             = .true.
       LOGICAL :: gddmaturity        = .true.
@@ -399,6 +423,8 @@ MODULE mod_namelist
       LOGICAL :: h2osoi       = .true. 
       LOGICAL :: rstfacsun    = .true.
       LOGICAL :: rstfacsha    = .true.
+      LOGICAL :: gssun        = .true.
+      LOGICAL :: gssha        = .true.
       LOGICAL :: rootr        = .true.
       LOGICAL :: vegwp        = .true.
       LOGICAL :: BD_all       = .true.
@@ -851,6 +877,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%gpp                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%downreg            ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%ar                 ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwdprod            ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cwddecomp          ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%hr                 ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpg                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fpi                ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%gpp_enftemp        ,  set_defaults)
@@ -881,6 +910,27 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%cisha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%Dsun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%Dsha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasun        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gammasha        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha        ,  set_defaults) !1
+      CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
+#endif
+#endif
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -949,6 +999,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%h2osoi      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssun   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%gssha   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rootr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%vegwp       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)

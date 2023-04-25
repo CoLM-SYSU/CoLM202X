@@ -59,6 +59,27 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_2d) :: f_qdrip   ! throughfall [mm/s]
    type(block_data_real8_2d) :: f_assim   ! canopy assimilation rate [mol m-2 s-1]
    type(block_data_real8_2d) :: f_respc   ! respiration (plant+soil) [mol m-2 s-1]
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+   type(block_data_real8_2d) :: f_assim_RuBP_sun        
+   type(block_data_real8_2d) :: f_assim_RuBP_sha        
+   type(block_data_real8_2d) :: f_assim_Rubisco_sun        
+   type(block_data_real8_2d) :: f_assim_Rubisco_sha        
+   type(block_data_real8_2d) :: f_assimsun        
+   type(block_data_real8_2d) :: f_assimsha        
+   type(block_data_real8_2d) :: f_etrsun        
+   type(block_data_real8_2d) :: f_etrsha        
+   type(block_data_real8_2d) :: f_cisun        
+   type(block_data_real8_2d) :: f_cisha        
+   type(block_data_real8_2d) :: f_Dsun        
+   type(block_data_real8_2d) :: f_Dsha        
+   type(block_data_real8_2d) :: f_gammasun        
+   type(block_data_real8_2d) :: f_gammasha        
+   type(block_data_real8_2d) :: f_lambdasun      
+   type(block_data_real8_2d) :: f_lambdasha      
+   type(block_data_real8_2d) :: f_lambda                 
+#endif
+#endif
    type(block_data_real8_2d) :: f_qcharge ! groundwater recharge rate [mm/s] 
 
    !---------------------------------------------------------------------
@@ -99,6 +120,8 @@ MODULE MOD_2D_Fluxes
 #endif
    type(block_data_real8_2d) :: f_rstfacsun    ! factor of soil water stress
    type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
+   type(block_data_real8_2d) :: f_gssun    ! factor of soil water stress
+   type(block_data_real8_2d) :: f_gssha    ! factor of soil water stress
    type(block_data_real8_2d) :: f_dpond        ! depth of ponding water [mm]
    type(block_data_real8_2d) :: f_zwt          ! the depth to water table [m]
    type(block_data_real8_2d) :: f_wa           ! water storage in aquifer [mm]
@@ -202,6 +225,27 @@ CONTAINS
          call allocate_block_data (grid, f_qdrip  )  ! throughfall [mm/s]
          call allocate_block_data (grid, f_assim  )  ! canopy assimilation rate [mol m-2 s-1]
          call allocate_block_data (grid, f_respc  )  ! respiration (plant+soil) [mol m-2 s-1]
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+         call allocate_block_data (grid, f_assim_RuBP_sun        )
+         call allocate_block_data (grid, f_assim_RuBP_sha        )
+         call allocate_block_data (grid, f_assim_Rubisco_sun        )
+         call allocate_block_data (grid, f_assim_Rubisco_sha        )
+         call allocate_block_data (grid, f_assimsun        )
+         call allocate_block_data (grid, f_assimsha        )
+         call allocate_block_data (grid, f_etrsun        )
+         call allocate_block_data (grid, f_etrsha        )
+         call allocate_block_data (grid, f_cisun        )
+         call allocate_block_data (grid, f_cisha        )
+         call allocate_block_data (grid, f_Dsun        )
+         call allocate_block_data (grid, f_Dsha        )
+         call allocate_block_data (grid, f_gammasun        )
+         call allocate_block_data (grid, f_gammasha        )
+         call allocate_block_data (grid, f_lambdasun        )
+         call allocate_block_data (grid, f_lambdasha        )
+         call allocate_block_data (grid, f_lambda                   )
+#endif
+#endif
          call allocate_block_data (grid, f_qcharge)  ! groundwater recharge rate [mm/s] 
 
          !---------------------------------------------------------------------
@@ -240,6 +284,8 @@ CONTAINS
 #endif
          call allocate_block_data (grid, f_rstfacsun)  ! factor of soil water stress
          call allocate_block_data (grid, f_rstfacsha)  ! factor of soil water stress
+         call allocate_block_data (grid, f_gssun)  ! factor of soil water stress
+         call allocate_block_data (grid, f_gssha)  ! factor of soil water stress
 
          call allocate_block_data (grid, f_dpond  )  ! depth of ponding water [m]
 

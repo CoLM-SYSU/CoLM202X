@@ -42,6 +42,9 @@ MODULE MOD_1D_BGCFluxes
   REAL(r8), allocatable :: leafc_c3grass              (:) !13
   REAL(r8), allocatable :: leafc_c4grass              (:) !14
   REAL(r8), allocatable :: ar                         (:)
+  REAL(r8), allocatable :: cwdprod                    (:)
+  REAL(r8), allocatable :: cwddecomp                  (:)
+  REAL(r8), allocatable :: hr                         (:)
   REAL(r8), allocatable :: er                         (:)
   REAL(r8), allocatable :: fire_closs                 (:)!
   REAL(r8), allocatable :: fire_nloss                 (:)!
@@ -201,6 +204,9 @@ MODULE MOD_1D_BGCFluxes
             allocate (leafc_c3grass              (numpatch)) !13
             allocate (leafc_c4grass              (numpatch)) !14
             allocate (ar                         (numpatch))
+            allocate (cwdprod                    (numpatch))
+            allocate (cwddecomp                  (numpatch))
+            allocate (hr                         (numpatch))
             allocate (er                         (numpatch))
             allocate (fire_closs                 (numpatch))
             allocate (fire_nloss                 (numpatch))
@@ -349,6 +355,9 @@ MODULE MOD_1D_BGCFluxes
            deallocate (leafc_c3grass              ) !13
            deallocate (leafc_c4grass              ) !14
            deallocate (ar                         )
+           deallocate (cwdprod                    )
+           deallocate (cwddecomp                  )
+           deallocate (hr                         )
            deallocate (er                         )
            deallocate (fire_closs                 )
            deallocate (fire_nloss                 )

@@ -104,7 +104,7 @@
 #endif
 
 ! 14 If defined, OzoneStress on plant physiology is used
-#define OzoneStress
+#undef OzoneStress
 !    Conflicts : only used when PFT_CLASSIFICATION is used
 #ifndef PFT_CLASSIFICATION
 #undef OzoneStress
@@ -115,9 +115,12 @@
 #ifndef OzoneStress
 #undef OzoneData
 #endif
-
+! 15 If defined, SNICAR is on
 #undef   SNICAR
+! 16 If defined, ... need some one to finish here
 #undef   Forcing_Downscaling
 #define option_precipitation_adjust_II
 #define option_longwave_adjust_II
 #define option_precip_phase_discrimination_II
+! 17. If defined, diagnostics in wue model will be output
+#undef WUEdiag

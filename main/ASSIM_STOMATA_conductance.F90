@@ -24,11 +24,15 @@ MODULE ASSIM_STOMATA_conductance
 
   subroutine stomata (vmax25,effcon,slti,hlti,shti, &
                       hhti,trda,trdm,trop,gradm,binter,tm, &
-                      psrf,po2m,pco2m,pco2a,ea,ei,tlef,par, &
+                      psrf,po2m,pco2m,pco2a,ea,ei,tlef,par &
 #ifdef OzoneStress
-                      o3coefv,o3coefg, &
+                      ,o3coefv,o3coefg &
 #endif
-                      rb,ra,rstfac,cint,assim,respc,rst)  
+                      ,rb,ra,rstfac,cint,assim,respc,rst &
+#ifdef WUEdiag
+                      ,assim_RuBP, assim_Rubisco, ci, vpd, gammas &
+#endif
+                              )  
 
 !=======================================================================        
 !                                                                               
@@ -110,6 +114,14 @@ MODULE ASSIM_STOMATA_conductance
       assim,        &! canopy assimilation rate (mol m-2 s-1)                       
       respc,        &! canopy respiration (mol m-2 s-1) 
       rst            ! canopy stomatal resistance (s m-1)
+#ifdef WUEdiag
+ real(r8),intent(out) :: &     
+      assim_RuBP,   &
+      assim_Rubisco,&
+      ci,           &
+      vpd,          &
+      gammas        
+#endif
 
 !-------------------- local --------------------------------------------       
 
@@ -118,7 +130,9 @@ MODULE ASSIM_STOMATA_conductance
  real(r8) c3,       &! c3 vegetation : 1; 0 for c4
       c4,           &! c4 vegetation : 1; 0 for c3
       qt,           &! (tleaf - 298.16) / 10
+#ifndef WUEdiag
       gammas,       &! co2 compensation point (pa)
+#endif
       kc,           &! Michaelis-Menten constant for co2
       ko,           &! Michaelis-Menten constant for o2
       rrkk,         &! kc (1+o2/ko)
@@ -377,6 +391,12 @@ MODULE ASSIM_STOMATA_conductance
 
 ! convert gsh2o (mol m-2 s-1) to resistance rst ( s m-1)
       rst   = min( 1.e6, 1./(gsh2o*tlef/tprcor) )     ! s m-1                  
+#ifdef WUEdiag
+      assim_RuBP    = ome
+      assim_Rubisco = omc
+      ci            = pco2i / psrf
+      vpd           = (ei - es) / psrf
+#endif
 
 
   end subroutine stomata

@@ -137,7 +137,16 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
        ! additional diagnostic variables for output
          laisun(i),       laisha(i),       rootr(1:,i),                      &
-         rstfacsun(i),    rstfacsha(i),    h2osoi(1:,i),    wat(i),          &
+         rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
+#ifdef WUEdiag
+         assimsun_out(i), etrsun_out(i),   assim_RuBP_sun_out(i)          ,& 
+         assim_Rubisco_sun_out(i)      ,   cisun_out(i)    ,Dsun_out(i)   ,& 
+         gammasun_out(i)               ,   lambdasun_out(i)               ,&
+         assimsha_out(i), etrsha_out(i),   assim_RuBP_sha_out(i)          ,&
+         assim_Rubisco_sha_out(i)      ,   cisha_out(i)    ,Dsha_out(i)   ,&
+         gammasha_out(i), lambdasha_out(i),lambda_out(i)                  ,&
+#endif
+         h2osoi(1:,i),    wat(i),          &
 
        ! FLUXES
          taux(i),         tauy(i),         fsena(i),        fevpa(i),        &

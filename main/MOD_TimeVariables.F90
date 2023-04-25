@@ -43,9 +43,33 @@ SAVE
       real(r8), allocatable :: o3uptakesun(:) ! Ozone does, sunlit leaf (mmol O3/m^2)
       real(r8), allocatable :: o3uptakesha(:) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
-      real(r8), allocatable :: rstfacsun(:)     ! factor of soil water stress on sunlit leaf
-      real(r8), allocatable :: rstfacsha(:)     ! factor of soil water stress on shaded leaf
+      real(r8), allocatable :: rstfacsun_out(:)     ! factor of soil water stress on sunlit leaf
+      real(r8), allocatable :: rstfacsha_out(:)     ! factor of soil water stress on shaded leaf
+      real(r8), allocatable :: gssun_out(:)      ! stomata conductance on sunlit leaf
+      real(r8), allocatable :: gssha_out(:)      ! stomata conductance on shaded leaf
       real(r8), allocatable :: t_grnd   (:)     ! ground surface temperature [K]
+
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+      real(r8), allocatable :: assim_RuBP_sun_out   (:) !1
+      real(r8), allocatable :: assim_RuBP_sha_out   (:) !1
+      real(r8), allocatable :: assim_Rubisco_sun_out(:) !1
+      real(r8), allocatable :: assim_Rubisco_sha_out(:) !1
+      real(r8), allocatable :: assimsun_out         (:) !1
+      real(r8), allocatable :: assimsha_out         (:) !1
+      real(r8), allocatable :: etrsun_out           (:) !1
+      real(r8), allocatable :: etrsha_out           (:) !1
+      real(r8), allocatable :: cisun_out            (:) !1
+      real(r8), allocatable :: cisha_out            (:) !1
+      real(r8), allocatable :: Dsun_out             (:) !1
+      real(r8), allocatable :: Dsha_out             (:) !1
+      real(r8), allocatable :: gammasun_out         (:) !1
+      real(r8), allocatable :: gammasha_out         (:) !1
+      real(r8), allocatable :: lambdasun_out        (:)
+      real(r8), allocatable :: lambdasha_out        (:)
+      real(r8), allocatable :: lambda_out           (:)
+#endif
+#endif
 
       real(r8), allocatable :: tleaf    (:)     ! leaf temperature [K]
       real(r8), allocatable :: ldew     (:)     ! depth of water on foliage [mm]
@@ -60,8 +84,8 @@ SAVE
       real(r8), allocatable :: green    (:)     ! leaf greenness
       real(r8), allocatable :: tlai     (:)     ! leaf area index
       real(r8), allocatable :: lai      (:)     ! leaf area index
-      real(r8), allocatable :: laisun   (:)     ! leaf area index
-      real(r8), allocatable :: laisha   (:)     ! leaf area index
+      real(r8), allocatable :: laisun   (:)     ! leaf area index for sunlit leaf
+      real(r8), allocatable :: laisha   (:)     ! leaf area index for shaded leaf
       real(r8), allocatable :: tsai     (:)     ! stem area index
       real(r8), allocatable :: sai      (:)     ! stem area index
       real(r8), allocatable :: coszen   (:)     ! cosine of solar zenith angle
@@ -162,9 +186,32 @@ SAVE
         allocate (o3uptakesun          (numpatch)) ! Ozone does, sunlit leaf (mmol O3/m^2)
         allocate (o3uptakesha          (numpatch)) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
-        allocate (rstfacsun            (numpatch))
-        allocate (rstfacsha            (numpatch))
+        allocate (rstfacsun_out        (numpatch))
+        allocate (rstfacsha_out        (numpatch))
+        allocate (gssun_out            (numpatch))
+        allocate (gssha_out            (numpatch))
         allocate (t_grnd               (numpatch))
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+            allocate ( assim_RuBP_sun_out        (numpatch) )
+            allocate ( assim_RuBP_sha_out        (numpatch) )
+            allocate ( assim_Rubisco_sun_out        (numpatch) )
+            allocate ( assim_Rubisco_sha_out        (numpatch) )
+            allocate ( assimsun_out        (numpatch) )
+            allocate ( assimsha_out        (numpatch) )
+            allocate ( etrsun_out        (numpatch) )
+            allocate ( etrsha_out        (numpatch) )
+            allocate ( cisun_out        (numpatch) )
+            allocate ( cisha_out        (numpatch) )
+            allocate ( Dsun_out        (numpatch) )
+            allocate ( Dsha_out        (numpatch) )
+            allocate ( gammasun_out        (numpatch) )
+            allocate ( gammasha_out        (numpatch) )
+            allocate ( lambdasun_out        (numpatch) )
+            allocate ( lambdasha_out        (numpatch) )
+            allocate ( lambda_out                   (numpatch) )
+#endif
+#endif
         allocate (tleaf                (numpatch))
         allocate (ldew                 (numpatch))
         allocate (ldew_rain            (numpatch))
@@ -267,8 +314,31 @@ SAVE
            deallocate (hk  )
            deallocate (h2osoi )
            deallocate (rootr  )
-           deallocate (rstfacsun )
-           deallocate (rstfacsha )
+           deallocate (rstfacsun_out )
+           deallocate (rstfacsha_out )
+           deallocate (gssun_out )
+           deallocate (gssha_out )
+#ifdef WUEdiag
+#ifdef PFT_CLASSIFICATION
+           deallocate ( assim_RuBP_sun_out        )
+           deallocate ( assim_RuBP_sha_out        )
+           deallocate ( assim_Rubisco_sun_out        )
+           deallocate ( assim_Rubisco_sha_out        )
+           deallocate ( assimsun_out        )
+           deallocate ( assimsha_out        )
+           deallocate ( etrsun_out        )
+           deallocate ( etrsha_out        )
+           deallocate ( cisun_out        )
+           deallocate ( cisha_out        )
+           deallocate ( Dsun_out        )
+           deallocate ( Dsha_out        )
+           deallocate ( gammasun_out        )
+           deallocate ( gammasha_out        )
+           deallocate ( lambdasun_out        )
+           deallocate ( lambdasha_out        )
+           deallocate ( lambda_out                   )
+#endif
+#endif
 #ifdef PLANT_HYDRAULIC_STRESS 
            deallocate (vegwp  )
            deallocate (gs0sun )
