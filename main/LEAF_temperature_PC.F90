@@ -28,7 +28,7 @@ MODULE LEAF_temperature_PC
               extkn   ,extkb   ,extkd   ,hu      ,ht      ,hq      ,&
               us      ,vs      ,thm     ,th      ,thv     ,qm      ,&
               psrf    ,rhoair  ,parsun  ,parsha  ,fsun    ,sabv    ,&
-              frl     ,thermk  ,fshade  ,rstfacsun,rstfacsha,po2m  ,pco2m   ,&
+              frl     ,thermk  ,fshade  ,rstfacsun,rstfacsha,gssun,gssha,po2m  ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,& 
               sigf    ,etrc    ,tg      ,qg      ,dqgdT   ,emg     ,&
                z0mpc   ,tl      ,ldew, ldew_rain,ldew_snow    ,taux    ,tauy    ,fseng   ,&
@@ -40,6 +40,12 @@ MODULE LEAF_temperature_PC
 #ifdef PLANT_HYDRAULIC_STRESS
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
               psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
+#endif
+#ifdef WUEdiag
+              assimsun,etrsun  ,assimsha,etrsha  ,&
+              assim_RuBP_sun   ,assim_Rubisco_sun, cisun  ,Dsun    ,gammasun, &
+              assim_RuBP_sha   ,assim_Rubisco_sha, cisha  ,Dsha    ,gammasha, &
+              lambdasun        ,lambdasha        ,&
 #endif
 #ifdef OzoneStress
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
@@ -199,7 +205,29 @@ MODULE LEAF_temperature_PC
         o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
 #endif
         rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
-        rstfacsha    ! factor of soil water stress to transpiration on shaded leaf
+        rstfacsha,  &! factor of soil water stress to transpiration on shaded leaf
+        gssun,      &
+        gssha
+
+#ifdef WUEdiag
+  REAL(r8), dimension(npft), intent(inout) :: &
+        assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
+        etrsun,     &
+        assim_RuBP_sun, &
+        assim_Rubisco_sun, &
+        cisun,             &
+        Dsun,              &
+        gammasun,          &
+        lambdasun,         &
+        assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
+        etrsha,     &
+        assim_RuBP_sha, &
+        assim_Rubisco_sha, &
+        cisha,             &
+        Dsha,              &
+        gammasha,          &
+        lambdasha
+#endif
   
 #ifdef OzoneStress
   REAL(r8), intent(inout) :: forc_ozone
@@ -314,8 +342,10 @@ MODULE LEAF_temperature_PC
         laisha(npft),  &! shaded leaf area index, one-sided
         rssun(npft),   &! sunlit leaf stomatal resistance [s/m]
         rssha(npft),   &! shaded leaf stomatal resistance [s/m]
+#ifndef WUEdiag
         assimsun(npft),&! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         assimsha(npft),&! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
+#endif
         respcsun(npft),&! sunlit leaf respiration rate [umol co2 /m**2/ s] [+]
         respcsha(npft),&! shaded leaf respiration rate [umol co2 /m**2/ s] [+]
         
@@ -337,7 +367,10 @@ MODULE LEAF_temperature_PC
    REAL(r8) w, csoilcn, z0mg, z0hg, z0qg, cintsun(3, npft), cintsha(3, npft)
    REAL(r8), dimension(npft) :: fevpl_bef, fevpl_noadj, dtl_noadj, erre
 #ifdef PLANT_HYDRAULIC_STRESS
-   real(r8),dimension(npft) :: gb_mol_sun,gb_mol_sha,gssun,gssha,etrsun,etrsha
+   real(r8),dimension(npft) :: gb_mol_sun,gb_mol_sha
+#ifndef WUEdiag
+   real(r8),dimension(npft) :: etrsun,etrsha
+#endif
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 #endif
@@ -1041,7 +1074,11 @@ MODULE LEAF_temperature_PC
                    o3coefv_sun(i), o3coefg_sun(i), &
 #endif 
                    rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
-                   assimsun(i),respcsun(i),rssun(i)     )
+                   assimsun(i),respcsun(i),rssun(i)  &
+#ifdef WUEdiag
+                   ,assim_RuBP_sun(i),assim_Rubisco_sun(i)  ,cisun(i)  ,Dsun(i)  ,gammasun(i)  &
+#endif
+                   )
 
                 CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
@@ -1051,7 +1088,11 @@ MODULE LEAF_temperature_PC
                    o3coefv_sun(i), o3coefg_sun(i), &
 #endif 
                    rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
-                   assimsha(i),respcsha(i),rssha(i)     )
+                   assimsha(i),respcsha(i),rssha(i) &
+#ifdef WUEdiag
+                   ,assim_RuBP_sha(i),assim_Rubisco_sha(i)  ,cisha(i)  ,Dsha(i)  ,gammasha(i)  &
+#endif
+                   )
 
 #ifdef PLANT_HYDRAULIC_STRESS
             gssun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) ) / cintsun(3,i) * 1.e6
@@ -1616,6 +1657,34 @@ MODULE LEAF_temperature_PC
              fsenl(i) = fsenl(i) + hvap*elwdif
              hprl(i) = cpliq*qintr_rain(i)*(t_precip-tl(i)) + cpice*qintr_snow(i)*(t_precip-tl(i))
 
+#ifdef WUEdiag
+      if(assim_RuBP_sun(i) .gt. assim_Rubisco_sun(i))then
+         if(assim_Rubisco_sun(i) .gt. 0)then
+            lambdasun(i) = (pco2a/psrf - gammasun(i) / psrf)/(1.6*Dsun(i)) * (etrsun(i) / assim_Rubisco_sun(i)) ** 2
+         else 
+            lambdasun(i) = 0._r8
+         end if
+      else
+         if(assim_RuBP_sun(i) .gt. 0)then
+            lambdasun(i) = 1./ Dsun(i) / gammasun(i) * (pco2a/psrf * etrsun(i) / (2.2 * assim_RuBP_sun(i)) - 0.73 * Dsun(i)) ** 2
+         else
+            lambdasun(i) = 0._r8
+         end if
+      end if
+      if(assim_RuBP_sha(i) .gt. assim_Rubisco_sha(i))then
+         if(assim_Rubisco_sha(i) .gt. 0)then
+            lambdasha(i) = (pco2a/psrf - gammasha(i) / psrf)/(1.6*Dsha(i)) * (etrsha(i) / assim_Rubisco_sha(i)) ** 2
+         else 
+            lambdasha(i) = 0._r8
+         end if
+      else
+         if(assim_RuBP_sha(i) .gt. 0)then
+            lambdasha(i) = 1/Dsha(i)/gammasha(i) * (pco2a/psrf*etrsha(i)/(2.2*assim_RuBP_sha(i)) - 0.73*Dsha(i)) ** 2
+         else
+            lambdasha(i) = 0._r8
+         end if
+      end if
+#endif
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------

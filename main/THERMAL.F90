@@ -18,8 +18,17 @@
 #endif
                      lai         ,laisun      ,laisha                  ,&
                      sai         ,htop        ,hbot        ,sqrtdi     ,&
-                     rootfr      ,rstfacsun   ,rstfacsha   ,effcon     ,&
-                     vmax25      ,hksati      ,smp         ,hk         ,&
+                     rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                     gssun_out   ,gssha_out   ,&
+#ifdef WUEdiag
+                     assimsun_out,etrsun_out  ,assim_RuBP_sun_out      ,& 
+                     assim_Rubisco_sun_out    ,cisun_out   ,Dsun_out   ,& 
+                     gammasun_out             ,lambdasun_out           ,&
+                     assimsha_out,etrsha_out  ,assim_RuBP_sha_out      ,&
+                     assim_Rubisco_sha_out    ,cisha_out   ,Dsha_out   ,&
+                     gammasha_out,lambdasha_out            ,lambda_out ,&
+#endif
+                     effcon      ,vmax25      ,hksati      ,smp        ,hk,&
 #ifdef PLANT_HYDRAULIC_STRESS
                      kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&   
                      psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&   
@@ -254,8 +263,30 @@ use spmd_task
   REAL(r8), intent(out) :: &
        laisun,       &! sunlit leaf area index
        laisha,       &! shaded leaf area index
-       rstfacsun,    &! factor of soil water stress on sunlit leaf
-       rstfacsha      ! factor of soil water stress on shaded leaf
+       gssun_out,    &! sunlit stomata conductance
+       gssha_out,    &! shaded stomata conductance
+       rstfacsun_out,&! factor of soil water stress on sunlit leaf
+       rstfacsha_out  ! factor of soil water stress on shaded leaf
+#ifdef WUEdiag
+  REAL(r8), intent(out) :: &
+       assimsun_out           ,&
+       etrsun_out             ,&
+       assim_RuBP_sun_out     ,&
+       assim_Rubisco_sun_out  ,&
+       cisun_out              ,&
+       Dsun_out               ,&
+       gammasun_out           ,&
+       lambdasun_out          ,&
+       assimsha_out           ,&
+       etrsha_out             ,&
+       assim_RuBP_sha_out     ,&
+       assim_Rubisco_sha_out  ,&
+       cisha_out              ,&
+       Dsha_out               ,&
+       gammasha_out           ,&
+       lambdasha_out          ,&
+       lambda_out             
+#endif
  
         ! Output fluxes
   REAL(r8), intent(out) :: &
@@ -360,6 +391,8 @@ use spmd_task
   REAL(r8), allocatable :: rstfac_p(:)
   REAL(r8), allocatable :: rstfacsun_p(:)
   REAL(r8), allocatable :: rstfacsha_p(:)
+  REAL(r8), allocatable :: gssun_p(:)
+  REAL(r8), allocatable :: gssha_p(:)
   REAL(r8), allocatable :: fsun_p  (:)
   REAL(r8), allocatable :: sabv_p  (:)
   REAL(r8), allocatable :: cgrnd_p (:)
@@ -376,6 +409,24 @@ use spmd_task
   REAL(r8), allocatable :: fh_p    (:)
   REAL(r8), allocatable :: fq_p    (:) 
   REAL(r8), allocatable :: hprl_p  (:)
+#ifdef WUEdiag
+  REAL(r8), allocatable :: assimsun_p          (:)
+  REAL(r8), allocatable :: etrsun_p            (:)
+  REAL(r8), allocatable :: assim_RuBP_sun_p    (:)
+  REAL(r8), allocatable :: assim_Rubisco_sun_p (:)
+  REAL(r8), allocatable :: cisun_p             (:)
+  REAL(r8), allocatable :: Dsun_p              (:)
+  REAL(r8), allocatable :: gammasun_p          (:)
+  REAL(r8), allocatable :: lambdasun_p         (:)
+  REAL(r8), allocatable :: assimsha_p          (:)
+  REAL(r8), allocatable :: etrsha_p            (:)
+  REAL(r8), allocatable :: assim_RuBP_sha_p    (:)
+  REAL(r8), allocatable :: assim_Rubisco_sha_p (:)
+  REAL(r8), allocatable :: cisha_p             (:)
+  REAL(r8), allocatable :: Dsha_p              (:)
+  REAL(r8), allocatable :: gammasha_p          (:)
+  REAL(r8), allocatable :: lambdasha_p         (:)
+#endif
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -384,11 +435,31 @@ use spmd_task
   REAL(r8) :: rstfac_c(0:N_PFT-1)
   REAL(r8) :: rstfacsun_c(0:N_PFT-1)
   REAL(r8) :: rstfacsha_c(0:N_PFT-1)
+  REAL(r8) :: gssun_c (0:N_PFT-1)
+  REAL(r8) :: gssha_c (0:N_PFT-1)
   REAL(r8) :: laisun_c(0:N_PFT-1)
   REAL(r8) :: laisha_c(0:N_PFT-1)
   REAL(r8) :: fsun_c  (0:N_PFT-1)
   REAL(r8) :: sabv_c  (0:N_PFT-1)
   REAL(r8) :: hprl_c  (0:N_PFT-1)
+#ifdef WUEdiag
+  REAL(r8) :: assimsun_p          (0:N_PFT-1)
+  REAL(r8) :: etrsun_p            (0:N_PFT-1)
+  REAL(r8) :: assim_RuBP_sun_p    (0:N_PFT-1)
+  REAL(r8) :: assim_Rubisco_sun_p (0:N_PFT-1)
+  REAL(r8) :: cisun_p             (0:N_PFT-1)
+  REAL(r8) :: Dsun_p              (0:N_PFT-1)
+  REAL(r8) :: gammasun_p          (0:N_PFT-1)
+  REAL(r8) :: lambdasun_p         (0:N_PFT-1)
+  REAL(r8) :: assimsha_p          (0:N_PFT-1)
+  REAL(r8) :: etrsha_p            (0:N_PFT-1)
+  REAL(r8) :: assim_RuBP_sha_p    (0:N_PFT-1)
+  REAL(r8) :: assim_Rubisco_sha_p (0:N_PFT-1)
+  REAL(r8) :: cisha_p             (0:N_PFT-1)
+  REAL(r8) :: Dsha_p              (0:N_PFT-1)
+  REAL(r8) :: gammasha_p          (0:N_PFT-1)
+  REAL(r8) :: lambdasha_p         (0:N_PFT-1)
+#endif
 #endif
 
 !=======================================================================
@@ -517,8 +588,8 @@ IF (patchtype == 0) THEN
          
          laisun = lai*fsun
          laisha = lai*(1-fsun)
-         rstfacsun = rstfac
-         rstfacsha = rstfac
+         rstfacsun_out = rstfac
+         rstfacsha_out = rstfac
 
          CALL LeafTemp (ipatch,1,deltim   ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
@@ -528,7 +599,8 @@ IF (patchtype == 0) THEN
                  forc_hgt_t ,forc_hgt_q ,forc_us   ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q    ,forc_psrf  ,forc_rhoair,&
                  parsun     ,parsha     ,sabv      ,frl        ,fsun       ,&
-                 thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
+                 thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
+                 gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew, ldew_rain, ldew_snow      ,taux       ,tauy       ,&
@@ -541,6 +613,14 @@ IF (patchtype == 0) THEN
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&   
+#endif
+#ifdef WUEdiag
+                 assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
+                 assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
+                 cisun_out   ,Dsun_out  ,gammasun_out                      ,&
+                 assim_RuBP_sha_out     ,assim_Rubisco_sha_out             ,&
+                 cisha_out   ,Dsha_out  ,gammasha_out                      ,&
+                 lambdasun_out          ,lambdasha_out                     ,&
 #endif
 #ifdef OzoneStress
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
@@ -559,8 +639,8 @@ IF (patchtype == 0) THEN
          ldew_rain   = 0.
          ldew_snow   = 0.
          ldew   = 0.
-         rstfacsun = 0.
-         rstfacsha = 0.
+         rstfacsun_out = 0.
+         rstfacsha_out = 0.
 #ifdef PLANT_HYDRAULIC_STRESS
          vegwp = -2.5e4
 #endif
@@ -579,6 +659,8 @@ IF (patchtype == 0) THEN
       allocate ( rstfac_p(ps:pe) )
       allocate ( rstfacsun_p(ps:pe) )
       allocate ( rstfacsha_p(ps:pe) )
+      allocate ( gssun_p(ps:pe) )
+      allocate ( gssha_p(ps:pe) )
       allocate ( fsun_p  (ps:pe) )
       allocate ( sabv_p  (ps:pe) )
       allocate ( cgrnd_p (ps:pe) ) 
@@ -595,6 +677,24 @@ IF (patchtype == 0) THEN
       allocate ( fh_p    (ps:pe) )
       allocate ( fq_p    (ps:pe) )
       allocate ( hprl_p  (ps:pe) )
+#ifdef WUEdiag
+      allocate ( assimsun_p         (ps:pe) )
+      allocate ( etrsun_p           (ps:pe) )
+      allocate ( assim_RuBP_sun_p   (ps:pe) )
+      allocate ( assim_Rubisco_sun_p(ps:pe) )
+      allocate ( cisun_p            (ps:pe) )
+      allocate ( Dsun_p             (ps:pe) )
+      allocate ( gammasun_p         (ps:pe) )
+      allocate ( lambdasun_p        (ps:pe) )
+      allocate ( assimsha_p         (ps:pe) )
+      allocate ( etrsha_p           (ps:pe) )
+      allocate ( assim_RuBP_sha_p   (ps:pe) )
+      allocate ( assim_Rubisco_sha_p(ps:pe) )
+      allocate ( cisha_p            (ps:pe) )
+      allocate ( Dsha_p             (ps:pe) )
+      allocate ( gammasha_p         (ps:pe) )
+      allocate ( lambdasha_p        (ps:pe) )
+#endif
 
       ! always DO CALL groundfluxes
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
@@ -646,7 +746,8 @@ IF (patchtype == 0) THEN
                  forc_hgt_t ,forc_hgt_q ,forc_us    ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q     ,forc_psrf  ,forc_rhoair,&
                  parsun_p(i),parsha_p(i),sabv_p(i)  ,frl        ,fsun_p(i)  ,&
-                 thermk_p(i),rstfacsun_p(i),rstfacsha_p(i),forc_po2m  ,forc_pco2m ,z0h_g ,&
+                 thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
+                 gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_p_rain(i)  ,ldew_p_snow(i)  ,taux_p(i)  ,tauy_p(i)  ,&
@@ -659,6 +760,12 @@ IF (patchtype == 0) THEN
                  kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
                  psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
                  gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
+#endif
+#ifdef WUEdiag
+                 assimsun_p(i)      , etrsun_p(i) , assimsha_p(i)      ,etrsha_p(i) ,&
+                 assim_RuBP_sun_p(i), assim_Rubisco_sun_p(i), cisun_p(i), Dsun_p(i), gammasun_p(i), &
+                 assim_RuBP_sha_p(i), assim_Rubisco_sha_p(i), cisha_p(i), Dsha_p(i), gammasha_p(i), &
+                 lambdasun_p(i)     , lambdasha_p(i)        ,&
 #endif
 #ifdef OzoneStress
                  o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i), &
@@ -685,6 +792,26 @@ IF (patchtype == 0) THEN
             rootr_p(:,i) = 0.
             rstfacsun_p(i) = 0.
             rstfacsha_p(i) = 0.
+            gssun_p(i)   = 0.
+            gssha_p(i)   = 0.
+#ifdef WUEdiag
+            assimsun_p          (i) = 0.
+            etrsun_p            (i) = 0.
+            assim_RuBP_sun_p    (i) = 0.
+            assim_Rubisco_sun_p (i) = 0.
+            cisun_p             (i) = 0.
+            Dsun_p              (i) = 0.
+            gammasun_p          (i) = 0.
+            lambdasun_p         (i) = 0.
+            assimsha_p          (i) = 0.
+            etrsha_p            (i) = 0.
+            assim_RuBP_sha_p    (i) = 0.
+            assim_Rubisco_sha_p (i) = 0.
+            cisha_p             (i) = 0.
+            Dsha_p              (i) = 0.
+            gammasha_p          (i) = 0.
+            lambdasha_p         (i) = 0.
+#endif
             rst_p(i)     = 2.0e4
             assim_p(i)   = 0.
             respc_p(i)   = 0.
@@ -698,6 +825,7 @@ IF (patchtype == 0) THEN
             vegwp_p(:,i) = -2.5e4
 #endif
          ENDIF
+!         if(p_iam_glb .eq. 85)print*,'gssun_p THERMAL',ipatch,i,p,gssun_p(i),lai_p(i),sai_p(i)
       ENDDO 
    
       laisun = sum( laisun_p(ps:pe)*pftfrac(ps:pe) )
@@ -752,8 +880,30 @@ IF (patchtype == 0) THEN
       ENDIF
 #ENDIF
 
-      rstfacsun = sum( rstfacsun_p(ps:pe)*pftfrac(ps:pe) )
-      rstfacsha = sum( rstfacsha_p(ps:pe)*pftfrac(ps:pe) )
+      rstfacsun_out = sum( rstfacsun_p(ps:pe)*pftfrac(ps:pe) )
+      rstfacsha_out = sum( rstfacsha_p(ps:pe)*pftfrac(ps:pe) )
+      gssun_out              = sum( gssun_p             (ps:pe) * pftfrac(ps:pe) )
+      gssha_out              = sum( gssha_p             (ps:pe) * pftfrac(ps:pe) )
+#ifdef WUEdiag
+      assimsun_out           = sum( assimsun_p          (ps:pe) * pftfrac(ps:pe) )
+      etrsun_out             = sum( etrsun_p            (ps:pe) * pftfrac(ps:pe) )
+      assim_RuBP_sun_out     = sum( assim_RuBP_sun_p    (ps:pe) * pftfrac(ps:pe) )
+      assim_Rubisco_sun_out  = sum( assim_Rubisco_sun_p (ps:pe) * pftfrac(ps:pe) )
+      cisun_out              = sum( cisun_p             (ps:pe) * pftfrac(ps:pe) )
+      Dsun_out               = sum( Dsun_p              (ps:pe) * pftfrac(ps:pe) )
+      gammasun_out           = sum( gammasun_p          (ps:pe) * pftfrac(ps:pe) )
+      lambdasun_out          = sum( lambdasun_p         (ps:pe) * pftfrac(ps:pe) )
+      assimsha_out           = sum( assimsha_p          (ps:pe) * pftfrac(ps:pe) )
+      etrsha_out             = sum( etrsha_p            (ps:pe) * pftfrac(ps:pe) )
+      assim_RuBP_sha_out     = sum( assim_RuBP_sha_p    (ps:pe) * pftfrac(ps:pe) )
+      assim_Rubisco_sha_out  = sum( assim_Rubisco_sha_p (ps:pe) * pftfrac(ps:pe) )
+      cisha_out              = sum( cisha_p             (ps:pe) * pftfrac(ps:pe) )
+      Dsha_out               = sum( Dsha_p              (ps:pe) * pftfrac(ps:pe) )
+      gammasha_out           = sum( gammasha_p          (ps:pe) * pftfrac(ps:pe) )
+      lambdasha_out          = sum( lambdasha_p         (ps:pe) * pftfrac(ps:pe) )
+      lambda_out             = sum((lambdasun_p(ps:pe)*laisun_p(ps:pe)+lambdasun_p(ps:pe)*laisun_p(ps:pe))*pftfrac(ps:pe))
+#endif
+
       hprl   = sum( hprl_p  (ps:pe)*pftfrac(ps:pe) )
 
       deallocate ( rootr_p  )
@@ -867,7 +1017,8 @@ IF (patchtype == 0) THEN
            forc_us       ,forc_vs       ,thm           ,th            ,thv           ,&
            forc_q        ,forc_psrf     ,forc_rhoair   ,parsun_c(:,pc),parsha_c(:,pc),&
            fsun_c(:)     ,sabv_c(:)     ,frl           ,thermk_c(:,pc),fshade_c(:,pc),&
-           rstfacsun_c(:),rstfacsha_c(:),forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
+           rstfacsun_c(:)            ,rstfacsha_c(:)            ,&
+           gssun_c(:) ,gssha_c(:) ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
            ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
            z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,ldew_rain_c(:,pc)  ,ldew_snow_c(:,pc)  ,taux          ,tauy          ,&
@@ -880,6 +1031,13 @@ IF (patchtype == 0) THEN
            kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
            psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
            gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&   
+#endif
+#ifdef WUEdiag
+           assimsun_c(:)             ,etrsun_c(:)      ,assimsha_c(:) ,etrsha_c(:),&
+           assim_RuBP_sun_c (:)      ,assim_Rubisco_sun_c(:)          ,cisun_c(:) ,&
+           Dsun_c(:)                 ,gammasun_c(:), &
+           assim_RuBP_sha_c (:)      ,assim_Rubisco_sha_c(:)          ,cisha_c(:) ,&
+           Dsha_c(:)                 ,gammasha_c(:), &
 #endif
 #ifdef OzoneStress
            o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
@@ -939,8 +1097,29 @@ IF (patchtype == 0) THEN
       ENDIF
 #endif
 
-      rstfacsun = sum( rstfacsun_c(:)*pcfrac(:,pc) )
-      rstfacsha = sum( rstfacsha_c(:)*pcfrac(:,pc) )
+      rstfacsun_out          = sum( rstfacsun_c(:)         * pcfrac(:,pc) )
+      rstfacsha_out          = sum( rstfacsha_c(:)         * pcfrac(:,pc) )
+      gssun_out              = sum( gssun_c(:)             * pcfrac(:,pc) )
+      gssha_out              = sum( gssha_c(:)             * pcfrac(:,pc) )
+#ifdef WUEdiag
+      assimsun_out           = sum( assimsun_c(:)          * pcfrac(:,pc) )
+      etrsun_out             = sum( etrsun_c(:)            * pcfrac(:,pc) )
+      assim_RuBP_sun_out     = sum( assim_RuBP_sun_c(:)    * pcfrac(:,pc) )
+      assim_Rubisco_sun_out  = sum( assim_Rubisco_sun_c(:) * pcfrac(:,pc) )
+      cisun_out              = sum( cisun_c(:)             * pcfrac(:,pc) )
+      Dsun_out               = sum( Dsun_c(:)              * pcfrac(:,pc) )
+      gammasun_out           = sum( gammasun_c(:)          * pcfrac(:,pc) )
+      lambdasun_out          = sum( lambdasun_c(:)         * pcfrac(:,pc) )
+      assimsha_out           = sum( assimsha_c(:)          * pcfrac(:,pc) )
+      etrsha_out             = sum( etrsha_c(:)            * pcfrac(:,pc) )
+      assim_RuBP_sha_out     = sum( assim_RuBP_sha_c(:)    * pcfrac(:,pc) )
+      assim_Rubisco_sha_out  = sum( assim_Rubisco_sha_c(:) * pcfrac(:,pc) )
+      cisha_out              = sum( cisha_c(:)             * pcfrac(:,pc) )
+      Dsha_out               = sum( Dsha_c(:)              * pcfrac(:,pc) )
+      gammasha_out           = sum( gammasha_c(:)          * pcfrac(:,pc) )
+      lambdasha_out          = sum( lambdasha_c(:)         * pcfrac(:,pc) )
+      lambda_out             = sum((lambdasun_c(:)*laisun_c(:)+lambdasun_c(:)*laisun_c(:))*pcfrac(:,pc))
+#endif
       hprl   = sum( hprl_c  (:)   *pcfrac(:,pc) )
 
 #endif
@@ -982,8 +1161,8 @@ ELSE
          
          laisun = lai*fsun
          laisha = lai*(1-fsun)
-         rstfacsun = rstfac
-         rstfacsha = rstfac
+         rstfacsun_out = rstfac
+         rstfacsha_out = rstfac
 
          CALL LeafTemp (ipatch,1,deltim ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
@@ -993,7 +1172,8 @@ ELSE
                  forc_hgt_t ,forc_hgt_q ,forc_us   ,forc_vs    ,thm        ,&
                  th         ,thv        ,forc_q    ,forc_psrf  ,forc_rhoair,&
                  parsun     ,parsha     ,sabv      ,frl        ,fsun       ,&
-                 thermk     ,rstfacsun  ,rstfacsha ,forc_po2m ,forc_pco2m ,z0h_g ,&
+                 thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
+                 gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
                  sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew,ldew_rain,ldew_snow      ,taux       ,tauy       ,&
@@ -1006,6 +1186,14 @@ ELSE
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
+#endif
+#ifdef WUEdiag
+                 assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
+                 assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
+                 cisun_out   ,Dsun_out  ,gammasun_out                      ,&
+                 assim_RuBP_sha_out     ,assim_Rubisco_sha_out             ,&
+                 cisha_out   ,Dsha_out  ,gammasha_out                      ,&
+                 lambdasun_out          ,lambdasha_out                     ,&
 #endif
 #ifdef OzoneStress
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
@@ -1024,8 +1212,8 @@ ELSE
          ldew_rain  = 0.
          ldew_snow  = 0.
          ldew   = 0.
-         rstfacsun = 0.
-         rstfacsha = 0.
+         rstfacsun_out = 0.
+         rstfacsha_out = 0.
 #ifdef PLANT_HYDRAULIC_STRESS
          vegwp = -2.5e4
 #endif
