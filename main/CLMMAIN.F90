@@ -994,7 +994,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       lb  = snl + 1            !lower bound of array 
       lbsn = min(lb,0)
 
-      CALL GLACIER_TEMP (lb    ,nl_soil     ,deltim     ,&
+      CALL GLACIER_TEMP (patchtype,   lb    ,nl_soil     ,deltim     ,&
                    zlnd        ,zsno        ,capr       ,cnfac       ,&
                    forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q ,forc_us     ,&
                    forc_vs     ,forc_t      ,forc_q     ,forc_rhoair ,&

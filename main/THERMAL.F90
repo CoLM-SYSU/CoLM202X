@@ -134,7 +134,7 @@ use spmd_task
         wf_sand   (1:nl_soil), &! gravimetric fraction of sand
         csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
         porsl     (1:nl_soil), &! soil porosity [-]
-        psi0      (1:nl_soil), &! soil water suction, negative potential [m]
+        psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
         bsw(1:nl_soil),    &! clapp and hornbereger "b" parameter [-]
 #endif
@@ -1227,7 +1227,15 @@ ENDIF
 
       CALL groundtem (patchtype,lb,nl_soil,deltim,&
                       capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
-                      porsl,csol,k_solids,dksatu,dksatf,dkdry,&
+                      porsl,psi0,&   
+#ifdef Campbell_SOIL_MODEL
+                      bsw,&    
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                      theta_r, alpha_vgm, n_vgm, L_vgm,&   
+                      sc_vgm , fc_vgm,&
+#endif
+                      csol,k_solids,dksatu,dksatf,dkdry,&
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                       BA_alpha,BA_beta,&
 #endif
@@ -1349,6 +1357,7 @@ ENDIF
       IF (abs(errore) > .5) THEN 
       write(6,*) 'THERMAL.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
+      stop
       ENDIF
 100   format(10(f15.3))
 #endif

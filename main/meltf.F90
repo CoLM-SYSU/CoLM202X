@@ -1,9 +1,17 @@
 #include <define.h>
 
- subroutine meltf (lb,nl_soil,deltim, &
+ subroutine meltf (itypwat,lb,nl_soil,deltim, &
                    fact,brr,hs,dhsdT, &
                    t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
-                   scv,snowdp,sm,xmf)
+                   scv,snowdp,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                   bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                   theta_r,alpha_vgm,n_vgm,L_vgm,&
+                   sc_vgm,fc_vgm,&
+#endif
+                   dz)
 
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, /09/1999/, /03/2014/
@@ -18,15 +26,18 @@
 ! (2) assess the rate of phase change from the energy excess (or deficit)
 !     after setting the layer temperature to freezing point;
 ! (3) re-adjust the ice and liquid mass, and the layer temperature
-!
+! (4) supercooled soil water is included IF supercool is defined, Nan Wei 2023/04/20.
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : tfrz, hfus
+  USE mod_soil_function
+  use PhysicalConstants, only : tfrz, hfus,grav
   IMPLICIT NONE
 
 !-----------------------------------------------------------------------
 
+   integer, INTENT(in) :: itypwat      !land water type (0=soil,1=urban or built-up,2=wetland,
+                                       !3=land ice, 4=deep lake, 5=shallow lake)
    integer, INTENT(in) :: nl_soil             ! upper bound of array (i.e., soil layers)
    integer, INTENT(in) :: lb                  ! lower bound of array (i.e., snl +1)
   real(r8), INTENT(in) :: deltim              ! time step [second]
@@ -35,6 +46,20 @@
   real(r8), INTENT(in) :: fact(lb:nl_soil)    ! temporary variables
   real(r8), INTENT(in) :: hs                  ! net ground heat flux into the surface
   real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
+  real(r8), INTENT(in) :: porsl(1:nl_soil)    ! soil porosity [-]
+  real(r8), INTENT(in) :: psi0 (1:nl_soil)    ! soil water suction, negative potential [mm]
+#ifdef Campbell_SOIL_MODEL
+  real(r8), INTENT(in) :: bsw(1:nl_soil)      ! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8), INTENT(in) :: theta_r  (1:nl_soil), &
+                          alpha_vgm(1:nl_soil), &
+                          n_vgm    (1:nl_soil), &
+                          L_vgm    (1:nl_soil), &
+                          sc_vgm   (1:nl_soil), &
+                          fc_vgm   (1:nl_soil)
+#endif
+  real(r8), INTENT(in) :: dz(1:nl_soil)      ! soil layer thickiness [m]
 
   real(r8), INTENT(inout) :: t_soisno (lb:nl_soil) ! temperature at current time step [K]
   real(r8), INTENT(inout) :: wice_soisno(lb:nl_soil) ! ice lens [kg/m2]
@@ -52,13 +77,15 @@
   real(r8) :: heatr                           ! energy residual or loss after melting or freezing
   real(r8) :: temp1                           ! temporary variables [kg/m2]
   real(r8) :: temp2                           ! temporary variables [kg/m2]
-
+#ifdef supercool_water
+  REAL(r8) :: smp
+  REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the freezing point [mm3/mm3]
+#endif
   real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
   real(r8) :: propor, tinc, we, scvold  
   integer j
 
 !-----------------------------------------------------------------------
-
   sm = 0.
   xmf = 0.
   do j = lb, nl_soil
@@ -74,6 +101,27 @@
   we=0.
   if(lb<=0) we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))
 
+! supercooling water
+#ifdef supercool_water
+  DO j = 1, nl_soil
+     supercool(j) = 0.0
+     if(t_soisno(j) < tfrz .and. itypwat <=2 ) then
+        smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
+        if (porsl(j) > 0.) then
+#ifdef Campbell_SOIL_MODEL
+           supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
+#ELSE
+           supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
+              (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
+#endif
+        else
+           supercool(j) = 0.
+        end if
+        supercool(j) = supercool(j)*dz(j)*1000.              ! mm
+     end if
+  END do
+#endif
+
   do j = lb, nl_soil
      ! Melting identification
      ! if ice exists above melt point, melt some to liquid.
@@ -84,10 +132,24 @@
 
      ! Freezing identification
      ! if liquid exists below melt point, freeze some to ice.
-     if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
-        imelt(j) = 2
-        t_soisno(j) = tfrz
-     endif
+     IF(j <= 0)then
+        if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2 
+           t_soisno(j) = tfrz
+        endif
+     ELSE
+#ifdef supercool_water
+        if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2
+           t_soisno(j) = tfrz
+        endif
+#else
+        if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2
+           t_soisno(j) = tfrz
+        endif
+#endif
+     END if
   enddo
 
 ! If snow exists, but its thickness less than the critical value (0.01 m)
@@ -152,7 +214,19 @@
            wice_soisno(j) = max(0., wice0(j)-xm(j))
            heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
         else
-           wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+           if(j <= 0) then  ! snow
+              wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+           else
+#ifdef supercool_water
+              if(wmass0(j) < supercool(j)) then                         
+                   wice_soisno(j) = 0.                                          
+              else                                                      
+                   wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+              endif 
+#else
+              wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+#endif
+           endif
            heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim  
         endif
 
@@ -164,7 +238,13 @@
            else
               t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
            endif
+#ifdef supercool_water
+           IF(j <= 0 .or. itypwat == 3)THEN !snow
+#endif
            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
+#ifdef supercool_water
+           ENDIF
+#endif
         endif
 
         xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim
@@ -186,10 +266,18 @@
  end subroutine meltf
  
 
- subroutine meltf_snicar (lb,nl_soil,deltim, &
+ subroutine meltf_snicar (itypwat,lb,nl_soil,deltim, &
                    fact,brr,hs,dhsdT,sabg_lyr, &
                    t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
-                   scv,snowdp,sm,xmf)
+                   scv,snowdp,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                   bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                   theta_r,alpha_vgm,n_vgm,L_vgm,&
+                   sc_vgm,fc_vgm,&
+#endif
+                   dz)
 
 !-----------------------------------------------------------------------
 ! Original author : Yongjiu Dai, /09/1999/, /03/2014/
@@ -204,15 +292,18 @@
 ! (2) assess the rate of phase change from the energy excess (or deficit)
 !     after setting the layer temperature to freezing point;
 ! (3) re-adjust the ice and liquid mass, and the layer temperature
-!
+! (4) supercooled soil water is included IF supercool is defined, Nan Wei 2023/04/20.
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : tfrz, hfus
+  USE mod_soil_function
+  use PhysicalConstants, only : tfrz, hfus, grav
   IMPLICIT NONE
 
 !-----------------------------------------------------------------------
 
+   integer, INTENT(in) :: itypwat      !land water type (0=soil,1=urban or built-up,2=wetland,
+                                       !3=land ice, 4=deep lake, 5=shallow lake)
    integer, INTENT(in) :: nl_soil             ! upper bound of array (i.e., soil layers)
    integer, INTENT(in) :: lb                  ! lower bound of array (i.e., snl +1)
   real(r8), INTENT(in) :: deltim              ! time step [second]
@@ -222,6 +313,20 @@
   real(r8), INTENT(in) :: hs                  ! net ground heat flux into the surface
   real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
   real(r8), INTENT(in) :: sabg_lyr (lb:1)     ! snow layer absorption [W/m-2]
+  real(r8), INTENT(in) :: porsl(1:nl_soil)    ! soil porosity [-]
+  real(r8), INTENT(in) :: psi0 (1:nl_soil)    ! soil water suction, negative potential [mm]
+#ifdef Campbell_SOIL_MODEL
+  real(r8), INTENT(in) :: bsw(1:nl_soil)      ! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8), INTENT(in) :: theta_r  (1:nl_soil), &
+                          alpha_vgm(1:nl_soil), &
+                          n_vgm    (1:nl_soil), &
+                          L_vgm    (1:nl_soil), &
+                          sc_vgm   (1:nl_soil), &
+                          fc_vgm   (1:nl_soil)
+#endif
+  real(r8), INTENT(in) :: dz(1:nl_soil)       ! soil layer thickiness [m]
 
   real(r8), INTENT(inout) :: t_soisno (lb:nl_soil) ! temperature at current time step [K]
   real(r8), INTENT(inout) :: wice_soisno(lb:nl_soil) ! ice lens [kg/m2]
@@ -238,8 +343,11 @@
   real(r8) :: xm(lb:nl_soil)                  ! metling or freezing within a time step [kg/m2]
   real(r8) :: heatr                           ! energy residual or loss after melting or freezing
   real(r8) :: temp1                           ! temporary variables [kg/m2]
-  real(r8) :: temp2                           ! temporary variables [kg/m2]
-
+  real(r8) :: temp2                           ! temporary variables [kg/m2] 
+#ifdef supercool_water
+  REAL(r8) :: smp
+  REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the   freezing point [mm3/mm3]
+#endif
   real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
   real(r8) :: propor, tinc, we, scvold
   integer j
@@ -261,6 +369,28 @@
   we=0.
   if(lb<=0) we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))
 
+! supercooling water
+#ifdef supercool_water
+  DO j = 1, nl_soil
+     supercool(j) = 0.0 
+     if(t_soisno(j) < tfrz .and. itypwat <= 2) then
+        smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
+        if (porsl(j) > 0.) then
+#ifdef Campbell_SOIL_MODEL
+           supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
+#ELSE
+           supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
+              (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
+#endif
+        else
+           supercool(j) = 0.
+        end if
+        supercool(j) = supercool(j)*dz(j)*1000.              ! mm
+     end if
+  END do
+#endif
+
+
   do j = lb, nl_soil
      ! Melting identification
      ! if ice exists above melt point, melt some to liquid.
@@ -271,10 +401,24 @@
 
      ! Freezing identification
      ! if liquid exists below melt point, freeze some to ice.
-     if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
-        imelt(j) = 2
-        t_soisno(j) = tfrz
-     endif
+     IF(j <= 0)then
+        if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2
+           t_soisno(j) = tfrz
+        endif
+     ELSE 
+#ifdef supercool_water
+        if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2
+           t_soisno(j) = tfrz
+        endif
+#else
+        if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+           imelt(j) = 2
+           t_soisno(j) = tfrz
+        endif
+#endif
+     END if
   enddo
 
 ! If snow exists, but its thickness less than the critical value (0.01 m)
@@ -343,7 +487,19 @@
            wice_soisno(j) = max(0., wice0(j)-xm(j))
            heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
         else
-           wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+           IF(j <= 0) THEN ! snow
+              wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+           ELSE 
+#ifdef supercool_water
+              if(wmass0(j) < supercool(j)) then
+                   wice_soisno(j) = 0.
+              else
+                   wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+              endif
+#else
+              wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
+#endif
+           endif
            heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
         endif
 
@@ -355,7 +511,13 @@
            else
               t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
            endif
+#ifdef supercool_water
+           IF(j <= 0 .or. itypwat == 3)THEN !snow
+#endif
            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
+#ifdef supercool_water
+           ENDIF
+#ENDIF
         endif
 
         xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim

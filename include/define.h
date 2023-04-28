@@ -124,3 +124,8 @@
 #define option_precip_phase_discrimination_II
 ! 17. If defined, diagnostics in wue model will be output
 #undef WUEdiag
+! 18. If defined, supercooled soil water is implemented, Niu & Yang (2006)
+#undef supercool_water
+!#ifdef BGC
+!#define supercool_water
+!#endif

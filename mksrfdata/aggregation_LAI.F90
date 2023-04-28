@@ -160,10 +160,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
          IF (p_is_io) THEN
             IF (DEF_LAI_CLIM) THEN
-               dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+               dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
                CALL modis_read_data_time (dir_modis, 'MONTHLY_LC_LAI', gridlai, itime, LAI)
             ELSE
-               lndname = trim(dir_rawdata)//'/global_lai_15s_release/lai_8-day_15s_'//trim(cyear)//'.nc'
+               lndname = trim(dir_rawdata)//'/lai_15s_8day/lai_8-day_15s_'//trim(cyear)//'.nc'
                CALL ncio_read_block_time (lndname, 'lai', gridlai, itime, LAI)
                CALL block_data_linear_transform (LAI, scl = 0.1)
             ENDIF
@@ -232,7 +232,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       allocate (SITE_SAI_clim (12))
 #endif
 
-      dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+      dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
 
       DO itime = 1, 12 
          write(c3, '(i2.2)') itime
@@ -294,7 +294,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
       
    IF (p_is_io) THEN
       CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gridlai, pftPCT)
@@ -506,7 +506,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
       
    IF (p_is_io) THEN
       CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gridlai, pftPCT)
