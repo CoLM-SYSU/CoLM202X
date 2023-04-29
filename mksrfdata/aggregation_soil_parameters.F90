@@ -8,6 +8,16 @@ SUBROUTINE aggregation_soil_parameters ( &
    !
    ! Created by Yongjiu Dai, 02/2014
    ! ----------------------------------------------------------------------
+   !Description: create soil hydraulic and thermal parameters for the running reolustion
+   !Oringinal: Yongjiu Dai, Nan Wei
+   !Reference: 
+   !     Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
+   !          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
+   !     Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
+   !          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
+   !     Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters 
+   !         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
+   !Revision: Description added by Wei Shangguan, 04/2023
    USE precision
    USE GlobalVars
    USE mod_namelist
