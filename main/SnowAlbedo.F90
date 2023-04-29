@@ -21,6 +21,20 @@
   !    or
   !    SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
   !
+  ! ORIGINAL:
+  ! 1) The Community Land Model version5.0 (CLM5.0)
+  ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
+  !
+  ! REFERENCES:
+  ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
+  ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
+  ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
+  ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
+  ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
+  !
+  ! REVISIONS:
+  ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+
   !-----------------------------------------------------------------------
   ! !USES:
     use SnowSnicarMod , only : SNICAR_RT, SNICAR_AD_RT
