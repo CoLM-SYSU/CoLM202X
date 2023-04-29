@@ -219,7 +219,7 @@ MODULE SOIL_SNOW_hydrology
       qinfl = gwat - rsur 
 #if(defined CaMa_Flood)
 if (LWINFILT) then 
-   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0) then
+   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and. (patchtype == 0) .and. (rsur == 0.)) then
          gfld=flddepth/deltim
          call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -589,7 +589,7 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 
 #if(defined CaMa_Flood)
 if (LWINFILT) then 
-   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0) then
+   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.(patchtype == 0) .and. (rsur == 0.)) then
          gfld=flddepth/deltim
          call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&

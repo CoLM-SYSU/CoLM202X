@@ -1,5 +1,5 @@
 &NRUNVER
-LADPSTP  = .TRUE.                      ! true: use adaptive time step
+LADPSTP  = .FALSE.                      ! true: use adaptive time step
 LFPLAIN  = .TRUE.                      ! true: consider floodplain (false: only river channel)
 LKINE    = .FALSE.                     ! true: use kinematic wave
 LFLDOUT  = .TRUE.                      ! true: floodplain flow (high-water channel flow) active
@@ -11,7 +11,7 @@ LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under dev
 LROSPLIT     = .FALSE.                          ! true: input if surface (Qs) and sub-surface (Qsb) runoff
 LWEVAP       = .TRUE.                           ! true: input water evaporation to extract from floodplain
 LWEVAPFIX    = .FALSE.                          ! true: water balance closure extracting water from evap when available
-LWINFILT     = .TRUE.                          ! true: input water infiltration to extract from floodplain
+LWINFILT     = .TRUE.                           ! true: input water infiltration to extract from floodplain
 LWINFILTFIX  = .FALSE.                          ! true: water balance closure extracting water from Infiltration when available
 LWEXTRACTRIV = .FALSE.                          ! true: also extract water from rivers 
 LSLOPEMOUTH  = .FALSE.                          ! true: prescribe water level slope == elevation slope on river month
@@ -35,7 +35,7 @@ LMAPEND  = .FALSE.                     ! true: for map data endian conversion
 LSTG_ES  = .FALSE.                     ! true: for Vector Processor optimization (CMF_OPT_FLDSTG_ES) 
 /
 &NDIMTIME
-CDIMINFO = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/CRU-diminfo.txt"               ! text file for dimention information
+CDIMINFO = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/CRU-diminfo.txt"               ! text file for dimention information
 DT       = 21600                                                                            ! time step length (sec)
 IFRQ_INP = 6                                                                               ! input forcing update frequency (hour)
 /
@@ -66,22 +66,22 @@ EHOUR   = 00                        	!  hour       : will not gonna used in here
 /
 &NMAP
 LMAPCDF    = .FALSE.                ! * true for netCDF map input
-CNEXTXY    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/nextxy.bin"              ! river network nextxy
-CGRAREA    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/ctmare.bin"              ! catchment area
-CELEVTN    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/elevtn.bin"              ! bank top elevation
-CNXTDST    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/nxtdst.bin"              ! distance to next outlet
-CRIVLEN    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivlen.bin"              ! river channel length
-CFLDHGT    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/fldhgt.bin"              ! floodplain elevation profile
-CRIVWTH    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivwth_gwdlr.bin"        ! channel width
-CRIVHGT    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivhgt.bin"              ! channel depth
-CRIVMAN    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivman.bin"              ! river manning coefficient
-CPTHOUT    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/bifprm.txt"              ! bifurcation channel table
+CNEXTXY    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nextxy.bin"              ! river network nextxy
+CGRAREA    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/ctmare.bin"              ! catchment area
+CELEVTN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/elevtn.bin"              ! bank top elevation
+CNXTDST    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/nxtdst.bin"              ! distance to next outlet
+CRIVLEN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivlen.bin"              ! river channel length
+CFLDHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/fldhgt.bin"              ! floodplain elevation profile
+CRIVWTH    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivwth_gwdlr.bin"        ! channel width
+CRIVHGT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivhgt.bin"              ! channel depth
+CRIVMAN    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/rivman.bin"              ! river manning coefficient
+CPTHOUT    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/bifprm.txt"              ! bifurcation channel table
 CGDWDLY    = ""              							    ! Groundwater Delay Parameter
 CMEANSL    = ""              							    ! mean sea level
 CRIVCLINC  = ""            							        ! * river map netcdf
 CRIVPARNC  = ""            							        ! * river parameter netcdf (width, height, manning, ground water delay)
 CMEANSLNC  = ""            							        ! * mean sea level netCDF
-!CMPIREG    = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/mpireg-2.bin"
+!CMPIREG    = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/mpireg-2.bin"
 /
 &NRESTART
 CRESTSTO = ""               ! restart file
@@ -94,7 +94,7 @@ IFRQ_RST = 0                 ! restart write frequency (1-24: hour, 0:end of run
 LINTERP   = .FALSE.                  ! true for runoff interpolation using input matrix
 LINPEND   = .TRUE.                  ! true for runoff endian conversion
 LITRPCDF  = .FALSE.                  ! * true for netCDF input matrix
-CINPMAT   = "../CaMa_v407/map/CaMaMap4CoLM_glb_0.25in_0.25out/CRU-inpmat.bin"                ! input matrix file name
+CINPMAT   = "../CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out/CRU-inpmat.bin"                ! input matrix file name
 DROFUNIT  = 1.0                 ! runoff unit conversion
 
 /

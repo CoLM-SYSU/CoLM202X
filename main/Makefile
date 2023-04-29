@@ -189,7 +189,7 @@ $(OBJS) : %.o : %.F90 ${HEADER}
 else
 ####################################################################
 # The global river model CaMa-Flood (version 4.0.1)
-CaMa_DIR = ../CaMa_v407
+CaMa_DIR = ../CaMa
 
 # CaMa Flood Model modules directories
 CaMa_MODS = -I$(CaMa_DIR)/src
@@ -213,7 +213,7 @@ $(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
 mk_CaMa : 
-	cd ../CaMa_v407/src && make
+	cd ../CaMa/src && make
 
 endif
 

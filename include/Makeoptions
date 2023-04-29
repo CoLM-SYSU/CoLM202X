@@ -2,12 +2,10 @@
 # mpif90 - ifort 
 # 
 
-FF = mpiifort 
+ FF = /opt/mpich-3.4.2-intel/bin/mpif90
 
-NETCDF_LIB = /share/home/dq013/software/netcdf-single/lib          #wherry
-NETCDF_INC = /share/home/dq013/software/netcdf-single/include      #wherry
-# NETCDF_LIB = /opt/netcdf/lib     #land machine
-# NETCDF_INC = /opt/netcdf/include #land machine
+ NETCDF_LIB = /opt/netcdf/lib
+ NETCDF_INC = /opt/netcdf/include
 
 MOD_CMD = -module 
 
@@ -21,7 +19,7 @@ MOD_CMD = -module
 #LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 
- FOPTS = -qopenmp -g -traceback -r8 -free -check uninit -check bounds
+ FOPTS = -qopenmp -O2 -traceback -r8 -free #-check uninit -check bounds
 
  LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
