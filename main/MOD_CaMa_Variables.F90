@@ -2,45 +2,44 @@
 
 module MOD_CaMa_Variables
 #if(defined CaMa_Flood)
-
    use precision
    USE mod_grid
    use mod_data_type
    USE mod_mapping_pset2grid
    USE mod_mapping_grid2pset
-   USE YOS_CMF_INPUT,           ONLY:RMIS,DMIS
+   USE YOS_CMF_INPUT,            ONLY:RMIS,DMIS
    real(r8) :: nacc              ! number of accumulation
-   real(r8), allocatable     :: a_rnof_cama (:) ! on worker : total runoff [mm/s]
-   type(block_data_real8_2d) :: f_rnof_cama     ! on IO     : total runoff [mm/s]
-   real(r8), allocatable     :: runoff_2d (:,:) ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: a_rnof_cama (:) ! on worker : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_rnof_cama     ! on IO     : total runoff [mm/s]
+   real(r8), allocatable         :: runoff_2d (:,:) ! on Master : total runoff [mm/s]
 
    real(r8), allocatable         :: flddepth_cama (:)      ! on worker : flddepth [m]
    type(block_data_real8_2d)     :: f_flddepth_cama        ! on IO     : flddepth [m]
    real(r8), allocatable         :: flddepth_tmp(:,:) 
  
-   real(r8), allocatable          :: fldfrc_cama (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)      :: f_fldfrc_cama         ! on IO     : flddepth [m]
-   real(r8), allocatable          :: fldfrc_tmp (:,:)      ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: fldfrc_cama (:)       ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_fldfrc_cama         ! on IO     : flddepth [m]
+   real(r8), allocatable         :: fldfrc_tmp (:,:)      ! on Master : total runoff [mm/s]
 
-   real(r8), allocatable          :: fevpg_fld(:)          ! m/s
-   real(r8), allocatable          :: finfg_fld(:)          ! m/s
+   real(r8), allocatable         :: fevpg_fld(:)          ! m/s
+   real(r8), allocatable         :: finfg_fld(:)          ! m/s
 
-   real(r8), allocatable          :: a_fevpg_fld (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)      :: f_fevpg_fld           ! on IO : total runoff [mm/s]
-   real(r8), allocatable          :: fevpg_2d (:,:)        ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: a_fevpg_fld (:)       ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_fevpg_fld           ! on IO : total runoff [mm/s]
+   real(r8), allocatable         :: fevpg_2d (:,:)        ! on Master : total runoff [mm/s]
 
-   real(r8), allocatable          :: a_finfg_fld (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)      :: f_finfg_fld           ! on IO : total runoff [mm/s]
-   real(r8), allocatable          :: finfg_2d (:,:)        ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: a_finfg_fld (:)       ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_finfg_fld           ! on IO : total runoff [mm/s]
+   real(r8), allocatable         :: finfg_2d (:,:)        ! on Master : total runoff [mm/s]
    TYPE(grid_type) :: gcama
    
    TYPE (mapping_pset2grid_type) :: mp2g_cama
    TYPE (mapping_grid2pset_type) :: mg2p_cama
 
-   TYPE (grid_concat_type) :: cama_gather
+   TYPE (grid_concat_type)       :: cama_gather
  
-   type(block_data_real8_2d) :: IO_Effdepth    ! inundation to water depth [m]
-   type(block_data_real8_2d) :: IO_Effarea
+   type(block_data_real8_2d)     :: IO_Effdepth    ! inundation to water depth [m]
+   type(block_data_real8_2d)     :: IO_Effarea
 
    TYPE history_var_cama_type
       LOGICAL :: rivout       = .false.
@@ -205,7 +204,7 @@ contains
 
       use spmd_task
       use mod_grid
-      use mod_data_type
+      use mod_data_type 
       implicit none
 
       type(grid_type), intent(in) :: grid
@@ -216,7 +215,7 @@ contains
          call allocate_block_data (grid, f_fldfrc_cama)    ! f_fldfrc [m]
          call allocate_block_data (grid, f_fevpg_fld)      ! f_fldfrc [m]
          call allocate_block_data (grid, f_finfg_fld)      ! f_fldfrc [m]
-      end if
+      end if 
 
    END SUBROUTINE allocate_2D_cama_Fluxes
 
@@ -225,8 +224,8 @@ contains
 
       USE spmd_task
       USE CMF_CALC_DIAG_MOD,  ONLY: CMF_DIAG_AVERAGE, CMF_DIAG_RESET
-      USE YOS_CMF_PROG,       ONLY: D2RIVSTO,     D2FLDSTO,     D2GDWSTO, &
-         d2damsto,D2LEVSTO !!! added
+      USE YOS_CMF_PROG,       ONLY: P2RIVSTO,     P2FLDSTO,     P2GDWSTO, &
+         P2damsto,P2LEVSTO !!! added
       USE YOS_CMF_DIAG,       ONLY: D2RIVDPH,     D2FLDDPH,     D2FLDFRC,     D2FLDARE,     &
          D2SFCELV,     D2STORGE, &
          D2OUTFLW_AVG, D2RIVOUT_AVG, D2FLDOUT_AVG, D2PTHOUT_AVG, D1PTHFLW_AVG, &
@@ -249,7 +248,7 @@ contains
          real(D2RIVOUT_AVG), file_hist, 'rivout', itime_in_file,'river discharge','m3/s')
 
          call flux_map_and_write_2d_cama (DEF_hist_cama_vars%rivsto, &
-         real(D2RIVSTO), file_hist, 'rivsto', itime_in_file,'river storage','m3')
+         real(P2RIVSTO), file_hist, 'rivsto', itime_in_file,'river storage','m3')
 
          call flux_map_and_write_2d_cama (DEF_hist_cama_vars%rivdph, &
          real(D2RIVDPH), file_hist, 'rivdph', itime_in_file,'river depth','m')
@@ -261,7 +260,7 @@ contains
          real(D2FLDOUT_AVG), file_hist, 'fldout', itime_in_file,'floodplain discharge','m3/s')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldsto, &
-         real(D2FLDSTO), file_hist, 'fldsto', itime_in_file,'floodplain storage','m3')
+         real(P2FLDSTO), file_hist, 'fldsto', itime_in_file,'floodplain storage','m3')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%flddph, &
          real(D2FLDDPH), file_hist, 'flddph', itime_in_file,'floodplain depth','m')
@@ -291,10 +290,10 @@ contains
          real(D2PTHOUT_AVG), file_hist, 'pthout', itime_in_file,'net bifurcation discharge','m3/s')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gdwsto, &
-         real(D2GDWSTO), file_hist, 'gdwsto', itime_in_file,'ground water storage','m3')
+         real(P2GDWSTO), file_hist, 'gdwsto', itime_in_file,'ground water storage','m3')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gwsto, &
-         real(D2GDWSTO), file_hist, 'gwsto', itime_in_file,'ground water storage','m3')
+         real(P2GDWSTO), file_hist, 'gwsto', itime_in_file,'ground water storage','m3')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%gwout, &
          real(D2GDWRTN_AVG), file_hist, 'gwout', itime_in_file,'ground water discharge','m3/s')
@@ -315,7 +314,7 @@ contains
          real(D2RIVDPH_MAX), file_hist, 'maxdph', itime_in_file,'daily maximum river depth','m')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%damsto, &
-         real(d2damsto), file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
+         real(p2damsto), file_hist, 'damsto', itime_in_file,'reservoir storage','m3')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf, &
          real(d2daminf_avg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
@@ -327,7 +326,7 @@ contains
          real(D2WINFILTEX_AVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%levsto, &
-         real(D2LEVSTO), file_hist, 'levsto', itime_in_file,'protected area storage','m3')
+         real(P2LEVSTO), file_hist, 'levsto', itime_in_file,'protected area storage','m3')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%levdph, &
          real(D2LEVDPH), file_hist, 'levdph', itime_in_file,'protected area depth','m')
@@ -377,7 +376,7 @@ contains
       USE YOS_CMF_INPUT,  ONLY: NX, NY
       USE YOS_CMF_MAP,    ONLY: NSEQALL
       USE PARKIND1,       ONLY: JPRM
-      USE CMF_UTILS_MOD,  ONLY: VEC2MAPD,VEC2MAP
+      USE CMF_UTILS_MOD,  ONLY: vecP2mapR
       use ncio_serial
 
       IMPLICIT NONE
@@ -395,7 +394,7 @@ contains
 
       if (.not. is_hist) return
 
-      CALL VEC2MAP(var_in,R2OUT)
+      CALL vecP2mapR(var_in,R2OUT)
       compress = DEF_HIST_COMPRESS_LEVEL 
       call ncio_write_serial_time (file_hist, varname,  &
          itime_in_file, real(R2OUT), 'lon_cama', 'lat_cama', 'time',compress)

@@ -1,5 +1,7 @@
 #include <define.h>
+!description:
 
+!mainfunction
 SUBROUTINE CLMMAIN ( &
    
          ! 模型运行信息
@@ -303,8 +305,8 @@ SUBROUTINE CLMMAIN ( &
         forc_hgt_q  ,&! observational height of humidity [m]
         forc_rhoair   ! density air [kg/m3]
 #if(defined CaMa_Flood)
-   real(r8), intent(in)    :: fldfrc    !effective inundation depth:treat as precipitation--> allow re-evaporation and infiltrition![mm/s]
-   real(r8), intent(inout) :: flddepth
+   real(r8), intent(in)    :: fldfrc   
+   real(r8), intent(inout) :: flddepth  !effective inundation depth:treat as precipitation--> allow re-evaporation and infiltrition![mm/s]
    real(r8), intent(out)   :: fevpg_fld
    real(r8), intent(out)   :: qinfl_fld
 #endif
