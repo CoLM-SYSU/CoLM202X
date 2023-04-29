@@ -25,12 +25,12 @@
   real(r8), INTENT(in) :: bifall    ! bulk density of newly fallen dry snow [kg/m3]
   real(r8), INTENT(in) :: t_precip  ! snowfall/rainfall temperature [kelvin]
 
-  real(r8), INTENT(inout) ::    zi_soisno(maxsnl:0)   ! interface level below a "z" level (m)
-  real(r8), INTENT(inout) ::     z_soisno(maxsnl+1:0) ! layer depth (m)
-  real(r8), INTENT(inout) ::    dz_soisno(maxsnl+1:0) ! layer thickness (m)
-  real(r8), INTENT(inout) ::     t_soisno(maxsnl+1:0) ! soil + snow layer temperature [K]
-  real(r8), INTENT(inout) ::  wliq_soisno(maxsnl+1:0) ! liquid water (kg/m2)
-  real(r8), INTENT(inout) ::  wice_soisno(maxsnl+1:0) ! ice lens (kg/m2)
+  real(r8), INTENT(inout) ::   zi_soisno(maxsnl:0)   ! interface level below a "z" level (m)
+  real(r8), INTENT(inout) ::    z_soisno(maxsnl+1:0) ! layer depth (m)
+  real(r8), INTENT(inout) ::   dz_soisno(maxsnl+1:0) ! layer thickness (m)
+  real(r8), INTENT(inout) ::    t_soisno(maxsnl+1:0) ! soil + snow layer temperature [K]
+  real(r8), INTENT(inout) :: wliq_soisno(maxsnl+1:0) ! liquid water (kg/m2)
+  real(r8), INTENT(inout) :: wice_soisno(maxsnl+1:0) ! ice lens (kg/m2)
   real(r8), INTENT(inout) :: fiold(maxsnl+1:0) ! fraction of ice relative to the total water
    integer, INTENT(inout) :: snl               ! number of snow layers
   real(r8), INTENT(inout) :: sag               ! non dimensional snow age [-]
