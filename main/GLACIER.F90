@@ -29,7 +29,7 @@
 !-----------------------------------------------------------------------
 
 
- subroutine GLACIER_TEMP (lb    ,nl_ice     ,deltim      ,&
+ subroutine GLACIER_TEMP (patchtype,   lb   ,nl_ice      ,deltim      ,&
                     zlnd        ,zsno       ,capr        ,cnfac       ,&
                     forc_hgt_u ,forc_hgt_t  ,forc_hgt_q  ,&
                     forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
@@ -71,6 +71,7 @@
 !---------------------Argument------------------------------------------
 
   integer, INTENT(in) :: &
+        patchtype,&   ! land water type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
         lb,          &! lower bound of array 
         nl_ice        ! upper bound of array
 
@@ -233,7 +234,7 @@
 ! [4] Gound temperature
 !=======================================================================
 
-      call groundtem_glacier (lb,nl_ice,deltim,&
+      call groundtem_glacier (patchtype,lb,nl_ice,deltim,&
                      capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                      t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
                      forc_frl,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
@@ -529,7 +530,7 @@
 
 
 
- subroutine groundtem_glacier (lb,nl_ice,deltim,&
+ subroutine groundtem_glacier (patchtype,lb,nl_ice,deltim,&
                       capr,cnfac,dz_icesno,z_icesno,zi_icesno,&
                       t_icesno,wice_icesno,wliq_icesno,scv,snowdp,&
                       forc_frl,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
@@ -561,6 +562,8 @@
 
   IMPLICIT NONE
 
+  integer, INTENT(in) :: patchtype     ! land water type (0=soil, 1=urban and built-up,
+                              ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
   integer, INTENT(in) :: lb         !lower bound of array
   integer, INTENT(in) :: nl_ice     !upper bound of array
   real(r8), INTENT(in) :: deltim    !seconds in a time step [second]
@@ -620,6 +623,20 @@
   real(r8) brr(lb:nl_ice)  ! temporay set
 
   integer i,j
+
+  real(r8) :: porsl(1:nl_ice)    ! not used
+  real(r8) :: psi0 (1:nl_ice)    ! not used
+#ifdef Campbell_SOIL_MODEL
+  real(r8) :: bsw(1:nl_ice)      ! not used
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8) :: theta_r  (1:nl_ice), &
+              alpha_vgm(1:nl_ice), &
+              n_vgm    (1:nl_ice), &
+              L_vgm    (1:nl_ice), &
+              sc_vgm   (1:nl_ice), &
+              fc_vgm   (1:nl_ice)
+#endif
 
 !=======================================================================
 ! SNOW and LAND ICE heat capacity 
@@ -765,10 +782,18 @@
 
       wice_icesno_bef(lb:0) = wice_icesno(lb:0)
 
-      call meltf_snicar (lb,nl_ice,deltim, &
+      call meltf_snicar (patchtype,lb,nl_ice,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf)
+                  scv,snowdp,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                   bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                   theta_r,alpha_vgm,n_vgm,L_vgm,&
+                   sc_vgm,fc_vgm,&
+#endif
+                   dz_icesno(1:))
 
       ! layer freezing mass flux (positive):
       DO j = lb, 0
@@ -778,10 +803,18 @@
       ENDDO
 
 #else
-      call meltf (lb,nl_ice,deltim, &
+      call meltf (patchtype,lb,nl_ice,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf)
+                  scv,snowdp,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                   bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                   theta_r,alpha_vgm,n_vgm,L_vgm,&
+                   sc_vgm,fc_vgm,&
+#endif
+                   dz_icesno(1:))
 #endif
 
 !-----------------------------------------------------------------------

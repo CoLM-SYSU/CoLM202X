@@ -144,7 +144,7 @@ SUBROUTINE aggregation_forest_height ( &
    ENDIF
 
    IF (p_is_io) THEN
-      dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+      dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
       CALL modis_read_data (dir_modis, 'HTOP', gland, htop)
 #ifdef USEMPI
       CALL aggregation_lc_data_daemon (gland, htop)
@@ -199,7 +199,7 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
       
    IF (p_is_io) THEN
       CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )
@@ -283,7 +283,7 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
       
    IF (p_is_io) THEN
       CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )

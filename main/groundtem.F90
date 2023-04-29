@@ -2,7 +2,15 @@
 
  subroutine groundtem (itypwat,lb,nl_soil,deltim,&
                        capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
-                       porsl,csol,k_solids,dksatu,dksatf,dkdry,&
+                       porsl,psi0,&   
+#ifdef Campbell_SOIL_MODEL
+                       bsw,&    
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                       theta_r, alpha_vgm, n_vgm, L_vgm,&   
+                       sc_vgm , fc_vgm,&
+#endif
+                       csol,k_solids,dksatu,dksatf,dkdry,&
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                        BA_alpha,BA_beta,&
 #endif
@@ -55,6 +63,18 @@
   real(r8), INTENT(in) :: wf_sand   (1:nl_soil) ! gravimetric fraction of sand
 
   real(r8), INTENT(in) :: porsl(1:nl_soil) ! soil porosity [-]
+  real(r8), INTENT(in) :: psi0 (1:nl_soil) ! soil water suction, negative potential [mm]
+#ifdef Campbell_SOIL_MODEL
+  real(r8), INTENT(in) :: bsw(1:nl_soil)   ! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8), INTENT(in) :: theta_r  (1:nl_soil), &
+                          alpha_vgm(1:nl_soil), &
+                          n_vgm    (1:nl_soil), &
+                          L_vgm    (1:nl_soil), &
+                          sc_vgm   (1:nl_soil), &
+                          fc_vgm   (1:nl_soil)
+#endif
   real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil solids [J/(m3 K)]
   real(r8), INTENT(in) :: k_solids(1:nl_soil) ! thermal conductivity of minerals soil [W/m-K]
   real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
@@ -274,10 +294,18 @@
 
       wice_soisno_bef(lb:0) = wice_soisno(lb:0)
 
-      call meltf_snicar (lb,nl_soil,deltim, &
+      call meltf_snicar (itypwat,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf)
+                  scv,snowdp,sm,xmf,porsl,psi0,&   
+#ifdef Campbell_SOIL_MODEL
+                  bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&   
+                  sc_vgm,fc_vgm,&
+#endif
+                  dz_soisno(1:nl_soil))
 
       ! layer freezing mass flux (positive):
       DO j = lb, 0
@@ -287,10 +315,20 @@
       ENDDO
 
 #else
-      call meltf (lb,nl_soil,deltim, &
+
+      call meltf (itypwat,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf)
+                  scv,snowdp,sm,xmf,porsl,psi0,&   
+#ifdef Campbell_SOIL_MODEL
+                  bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&   
+                  sc_vgm,fc_vgm,&    
+#endif
+                  dz_soisno(1:nl_soil))
+
 #endif
 !-----------------------------------------------------------------------
 

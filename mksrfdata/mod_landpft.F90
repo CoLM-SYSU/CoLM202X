@@ -119,7 +119,7 @@ CONTAINS
          call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
-         dir_modis = trim(DEF_dir_rawdata) // '/srf_5x5' 
+         dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
          CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gpatch, pctpft)
 
 #ifdef USEMPI
