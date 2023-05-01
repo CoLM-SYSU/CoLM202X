@@ -177,6 +177,9 @@ ALLOCATE(VAROUT(NVARSOUT))
 WRITE(CTIME,'(A14,I4.4,A1,I2.2,A1,I2.2,A1,I2.2,A1,I2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
 
 !* Loop on variables and create files 
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation
+! currently was not used in colm-cama coupling model
+
 DO JF=1,NVARSOUT
   WRITE(LOGNAM,*) "Creating output for variable:", TRIM( CVNAMES(JF) )
   SELECT CASE (CVNAMES(JF))
@@ -247,7 +250,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='net bifurcation discharge'
       VAROUT(JF)%CVUNITS='m3/s'
-
 
     CASE ('maxsto')
       VAROUT(JF)%CVNAME=CVNAMES(JF)

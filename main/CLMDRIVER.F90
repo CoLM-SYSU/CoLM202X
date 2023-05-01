@@ -24,6 +24,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  USE mod_forcing, only : forcmask
  use omp_lib
 #ifdef CaMa_Flood
+ !get flood variables
  use MOD_CaMa_Variables, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
 #endif
  IMPLICIT NONE
@@ -88,7 +89,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
          rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &  
 #if(defined CaMa_Flood)
-                flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &!
+         flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &! flood variables
 #endif
 
        ! VEGETATION INFORMATION

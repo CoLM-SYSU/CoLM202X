@@ -121,7 +121,7 @@ contains
       use GlobalVars, only : spval
       USE MOD_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
-      use MOD_CaMa_Variables
+      use MOD_CaMa_Variables !defination of CaMa variables
 #endif
       USE mod_forcing, only : forcmask
       IMPLICIT NONE
@@ -193,8 +193,9 @@ contains
          end if
 
 #if(defined CaMa_Flood)
-         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
-         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
+         !zhongwang wei, 20221220: add variables to write cama-flood output.
+         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' !file name of cama-flood output
+         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         ! write CaMa-Flood output  
 #endif
          
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'

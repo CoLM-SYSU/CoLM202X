@@ -40,7 +40,7 @@ MODULE SOIL_SNOW_hydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  &
+            ,flddepth,fldfrc,qinfl_fld  &  ! zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
 #endif
 #ifdef SNICAR
              ,forc_aer   ,&
@@ -105,7 +105,7 @@ MODULE SOIL_SNOW_hydrology
         qfros               ! surface dew added to snow pack (mm h2o /s) [+]
 #if(defined CaMa_Flood)
          real(r8), INTENT(inout) :: flddepth ! inundation water depth(mm/s)
-         real(r8), INTENT(in) :: fldfrc ! inundation water depth(mm/s)
+         real(r8), INTENT(in)    :: fldfrc ! inundation water depth(mm/s)
 
 #endif
   real(r8), INTENT(inout) :: &
@@ -214,25 +214,26 @@ MODULE SOIL_SNOW_hydrology
       else
            rsur = 0.
       endif
-
       ! infiltration into surface soil layer 
       qinfl = gwat - rsur 
 #if(defined CaMa_Flood)
-if (LWINFILT) then 
-   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and. (patchtype == 0) .and. (rsur == 0.)) then
+   IF (LWINFILT) then 
+         ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+      IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and. (patchtype == 0) .and. (rsur == 0.)) then
          gfld=flddepth/deltim
-         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+         ! surface runoff from inundation 
+         CALL surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                        eff_porosity,icefrac,zwt,gwat+gfld,rsur_fld)        
-   ! infiltration into surface soil layer 
-   qinfl_all = gwat+gfld - rsur_fld
-   qinfl_fld = qinfl_all - qinfl
-   qinfl     = qinfl_all
-   else
-      qinfl_fld=0.0d0
-   endif
-   flddepth=flddepth-deltim*qinfl_fld
-ENDIF
+         ! infiltration into surface soil layer 
+         qinfl_all = gwat+gfld - rsur_fld
+         qinfl_fld = qinfl_all - qinfl
+         qinfl     = qinfl_all
+      ELSE
+         qinfl_fld=0.0d0
+      ENDIF
+      flddepth=flddepth-deltim*qinfl_fld
+   ENDIF
 #endif 
 
 !=======================================================================

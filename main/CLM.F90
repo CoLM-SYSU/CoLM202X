@@ -53,7 +53,7 @@ PROGRAM CLM
    USE mod_hru_vector
 #endif
 #if(defined CaMa_Flood)
-   use colm_CaMaMod
+   use colm_CaMaMod ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -73,7 +73,6 @@ PROGRAM CLM
 
    IMPLICIT NONE
 
-   ! ----------------local variables ---------------------------------
    character(LEN=256) :: nlfile
    character(LEN=256) :: casename   
    character(len=256) :: dir_landdata
@@ -226,7 +225,7 @@ PROGRAM CLM
 
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_init
+   call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    CALL elm_vector_init ()
@@ -335,7 +334,7 @@ PROGRAM CLM
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_drv(idate(3))
+   call colm_CaMa_drv(idate(3)) !zhongwang wei, 20210927: run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file
@@ -392,7 +391,7 @@ PROGRAM CLM
 #endif
 
 #if(defined CaMa_Flood) 
-   call colm_cama_exit
+   call colm_cama_exit !zhongwang wei, 20210927: finalize CaMa-Flood
 #endif
 
    if (p_is_master) then

@@ -1,38 +1,61 @@
 #include <define.h>
 
 MODULE user_specified_forcing
+!DESCRIPTION
+!===========
+   !---This MODULE is used for read atmospheric forcing dataset from various sources.
+   ! ------------------------------------------------------------
+   !     Read forcing data from :     
+   !     1)  PRINCETON     2)  GSWP2         3)  GSWP3 
+   !     4)  QIAN          5)  CRUNCEPV4     6)  CRUNCEPV7  
+   !     7)  ERA5LAND      8)  ERA5          9)  MSWX 
+   !     10) WFDE5         11) CRUJRA        12) WFDEI 
+   !     13) JRA55         14) GDAS          15) CLDAS 
+   !     16) CMFD          17) TPMFD         18) CMIP6
+   !     19) POINT
+   !
+   !     PLEASE modify the following codes when specified forcing used
+   !     metpreprocess modified by siguang & weinan for forc_q calibration
+   ! ------------------------------------------------------------
+!Original Author: 
+!-------------------
+   !---Shupeng Zhang and Zhongwang Wei
 
-! ------------------------------------------------------------
-! PURPOSE :
-!     Read forcing data from :     
-!     1)  PRINCETON     2)  GSWP2         3)  GSWP3 
-!     4)  QIAN          5)  CRUNCEPV4     6)  CRUNCEPV7  
-!     7)  ERA5LAND      8)  ERA5          9)  MSWX 
-!     10) WFDE5         11) CRUJRA        12) WFDEI 
-!     13) JRA55         14) GDAS          15) CLDAS 
-!     16) CMFD          17) POINT         18) test
-!
-!     PLEASE modify the following codes when specified forcing used
-!     metpreprocess modified by siguang & weinan for forc_q calibration
-! ------------------------------------------------------------
+!References:
+!-------------------
+   !---In preparation
+
+
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
+   !* :SUBROUTINE:"init_user_specified_forcing" : initialization of the selected forcing dataset
+   !* :SUBROUTINE:"metfilename"  :  identify the forcing file name
+   !* :SUBROUTINE:"metpreprocess" :  preprocess the forcing data
+   
+!REVISION HISTORY
+   !----------------
+   !---2023.05.01  Zhongwang Wei @ SYSU
+   ! 2021.12.02    Zhongwang Wei @ SYSU 
+   ! ??
 
    use precision
+
    implicit none
 
    character(len=256) :: dataset
 
-   logical  :: solarin_all_band   
-   real(r8) :: HEIGHT_V            
-   real(r8) :: HEIGHT_T           
-   real(r8) :: HEIGHT_Q           
+   logical  :: solarin_all_band   ! whether solar radiation in all bands is available
+   real(r8) :: HEIGHT_V           ! observation height of wind speed        
+   real(r8) :: HEIGHT_T           ! observation height of air temperature      
+   real(r8) :: HEIGHT_Q           ! observation height of specific humidity      
 
    integer  :: NVAR      ! variable number of forcing data
    integer  :: startyr   ! start year of forcing data        <MARK #1>
    integer  :: startmo   ! start month of forcing data
    integer  :: endyr     ! end year of forcing data
    integer  :: endmo     ! end month of forcing data
-   integer, allocatable :: dtime(:)          
-   integer, allocatable :: offset(:)        
+   integer, allocatable :: dtime(:)          ! time interval of forcing data
+   integer, allocatable :: offset(:)         ! offset of forcing data
    
    logical :: leapyear   ! leapyear calendar
    logical :: data2d     ! data in 2 dimension (lon, lat)
@@ -44,9 +67,9 @@ MODULE user_specified_forcing
 
    character(len=256) :: groupby                   ! file grouped by year/month
 
-   character(len=256), allocatable :: fprefix(:) 
-   character(len=256), allocatable :: vname(:) 
-   character(len=256), allocatable :: tintalgo(:) 
+   character(len=256), allocatable :: fprefix(:)   ! file prefix
+   character(len=256), allocatable :: vname(:)     ! variable name
+   character(len=256), allocatable :: tintalgo(:)  ! interpolation algorithm
 
    ! ----- public subroutines -----
    public :: init_user_specified_forcing
@@ -85,8 +108,8 @@ CONTAINS
       dtime(:)         = DEF_forcing%dtime(:)          
       offset(:)        = DEF_forcing%offset(:)        
 
-      leapyear         = DEF_forcing%leapyear   
-      data2d           = DEF_forcing%data2d     
+      leapyear         = DEF_forcing%leapyear !whether leapyear calendar  
+      data2d           = DEF_forcing%data2d   !whether data in 2 dimension (lon, lat) 
       hightdim         = DEF_forcing%hightdim   
       dim2d            = DEF_forcing%dim2d      
 
@@ -177,7 +200,6 @@ CONTAINS
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)//'.nc'
       case ('WFDE5')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'_v2.0.nc'
-         !print *, metfilename
       case ('CRUJRA')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'.365d.noc.nc'
       case ('WFDEI')
@@ -192,6 +214,8 @@ CONTAINS
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
       case ('CMIP6')
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
+      case ('TPMFD')
+         metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
       case ('POINT')
          metfilename = '/'//trim(fprefix(1))
       end select
@@ -387,6 +411,15 @@ CONTAINS
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
+                  
+                  case ('TPMFD')
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                     call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
+                        es,esdT,qsat_tmp,dqsat_tmpdT)
+                     if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
+                        forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
+                     endif
+
                   case ('CMIP6')
                      if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
