@@ -9,7 +9,8 @@ MODULE CMF_CALC_DIAG_MOD
 ! -- CMF_DIAG_RESET     : Reset Diagnostic Variables (Average & Maximum )
 !!
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
-!
+! Revised by Zhongwang Wei, add re-infiltation varialbe (WINFILT,D2WINFILTEX) 2023/04/31
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0

@@ -10,6 +10,8 @@ MODULE CMF_DRV_ADVANCE_MOD
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
 !
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: modified for colm-cama coupling
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -93,6 +95,9 @@ DO ISTEP=1,KSTEPS
   !$ ZTT1=OMP_GET_WTIME()
 
   !============================
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: do not write output file in cmf_drv_advance
+! the output file will be written in colm driver
+
   !*** 3. Write output file (when needed)
  ! IF( LOUTPUT .and. MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 )then
     !*** average variable
@@ -111,11 +116,12 @@ DO ISTEP=1,KSTEPS
     CALL CMF_OUTTXT_WRTE            !! reservoir operation
     CALL CMF_DAMOUT_WRTE            !! reservoir operation
 
-
+  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: not need to reset variable here, will be reset in colm driver
     !*** reset variable
-!    CALL CMF_DIAG_RESET
-!  ENDIF
-
+  !    CALL CMF_DIAG_RESET
+  !  ENDIF
+  
+  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: not need to write restart file here, will be written in colm driver
   !============================ 
   !*** 4. Write restart file 
  ! CALL CMF_RESTART_WRITE

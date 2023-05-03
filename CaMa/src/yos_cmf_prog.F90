@@ -2,7 +2,9 @@ MODULE YOS_CMF_PROG
 !==========================================================
 !* PURPOSE: Shared prognostic variables for CaMa-Flood
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  2Aug 2019
-!
+
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -26,6 +28,8 @@ REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2COPY(:,:)        !! Dammy Array for 
 !*** input runoff (interporlated)
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2RUNOFF(:,:)         !! input runoff             [m3/s]
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2ROFSUB(:,:)         !! input sub-surface runoff [m3/s]
+
+!TODO: check d2wevap and d2winfilt units!
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2WEVAP(:,:)          !! input Evaporation [m3/s]
 REAL(KIND=JPRB),ALLOCATABLE,TARGET     :: D2WINFILT(:,:)        !! input Infiltration [m3/s]
 

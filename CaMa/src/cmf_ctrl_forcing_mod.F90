@@ -242,7 +242,7 @@ IF ( .NOT. LWEVAP ) THEN
   ROFCDF%CVAR(3)="NONE"
   ROFCDF%NVARID(3)=-1
 ENDIF 
-
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 IF ( .NOT. LWINFILT ) THEN
   ROFCDF%CVAR(4)="NONE"
   ROFCDF%NVARID(4)=-1
@@ -260,6 +260,7 @@ ENDIF
 IF ( LWEVAP ) THEN
   CALL NCERROR( NF90_INQ_VARID(ROFCDF%NCID,ROFCDF%CVAR(3),ROFCDF%NVARID(3)) )
 ENDIF
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 IF ( LWINFILT ) THEN
   CALL NCERROR( NF90_INQ_VARID(ROFCDF%NCID,ROFCDF%CVAR(4),ROFCDF%NVARID(4)) )
 ENDIF
@@ -618,6 +619,7 @@ END SUBROUTINE CMF_FORCING_COM
 SUBROUTINE CMF_FORCING_PUT(PBUFF)
 ! interporlate with inpmat, then send runoff data to CaMa-Flood 
 ! -- called from "Main Program / Coupler" or CMF_DRV_ADVANCE
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 USE YOS_CMF_INPUT,           ONLY: LROSPLIT,LWEVAP,LWINFILT
 USE YOS_CMF_PROG,            ONLY: D2RUNOFF,D2ROFSUB,D2WEVAP,D2WINFILT
 IMPLICIT NONE 
@@ -633,18 +635,11 @@ IF (LINTERP) THEN ! mass conservation using "input matrix table (inpmat)"
     D2ROFSUB(:,:) = 0._JPRB
   ENDIF
   IF (LWEVAP) THEN
-    !IF ( SIZE(PBUFF,3) == 3 ) THEN
       CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
   ENDIF
+  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
   IF (LWINFILT) THEN
-    !D2WINFILT=0.0
-    !IF ( SIZE(PBUFF,4) == 4 ) THEN
       CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
-    !ELSE
-    !  WRITE(LOGNAM,*)  "LWINFILT is true but infiltration not provide in input array for interpolation"
-    !  WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 4 fields for interpolation "
-    !  STOP 9
-    !ENDIF
   ENDIF
 ELSE !  nearest point
   CALL CONV_RESOL(PBUFF(:,:,1),D2RUNOFF)
@@ -654,24 +649,13 @@ ELSE !  nearest point
     D2ROFSUB(:,:) = 0._JPRB
   ENDIF
   IF (LWEVAP) THEN
-    !IF ( SIZE(PBUFF,3) == 3 ) THEN
       CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
-ENDIF 
-
-  IF (LWEVAP) THEN
-    !IF ( SIZE(PBUFF,3) == 3 ) THEN
-      CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
+  ENDIF 
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+  IF (LWINFILT) THEN
+    CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
   ENDIF
 ENDIF 
-IF (LWINFILT) THEN
-  !IF ( SIZE(PBUFF,3) == 3 ) THEN
-    CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
-  !ELSE
-  !  WRITE(LOGNAM,*)  "LWEVAP is true but evaporation not provide in input array for interpolation"
-  !  WRITE(LOGNAM,*)  "CMF_FORCING_PUT(PBUFF), PBUFF should have 3 fields for interpolation "
-  !  STOP 9
-  !ENDIF
-ENDIF
 
 CONTAINS
 !==========================================================

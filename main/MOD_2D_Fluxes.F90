@@ -121,8 +121,8 @@ MODULE MOD_2D_Fluxes
 #endif
    type(block_data_real8_2d) :: f_rstfacsun    ! factor of soil water stress
    type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
-   type(block_data_real8_2d) :: f_gssun    ! factor of soil water stress
-   type(block_data_real8_2d) :: f_gssha    ! factor of soil water stress
+   type(block_data_real8_2d) :: f_gssun        ! factor of soil water stress
+   type(block_data_real8_2d) :: f_gssha        ! factor of soil water stress
    type(block_data_real8_2d) :: f_dpond        ! depth of ponding water [mm]
    type(block_data_real8_2d) :: f_zwt          ! the depth to water table [m]
    type(block_data_real8_2d) :: f_wa           ! water storage in aquifer [mm]

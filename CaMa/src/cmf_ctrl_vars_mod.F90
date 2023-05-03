@@ -7,7 +7,9 @@ MODULE CMF_CTRL_VARS_MOD
 ! -- CMF_DIAG_INIT      : Initialize Diagnostic variables
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
-!
+  
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -87,14 +89,13 @@ IF( LLEVEE ) THEN  !! additional prognostics for LLEVEE
   P2LEVSTO(:,:)=0._JPRD
 ENDIF
 
-!! Used in ECMWF
-IF( LWEVAP ) THEN  !! additional prognostics for LLEVEE
+IF( LWEVAP ) THEN  !! additional prognostics for LWEVAP
   ALLOCATE( D2WEVAP(NSEQMAX,1)     )
   D2WEVAP(:,:)=0._JPRB
 ENDIF
 
-!! Used in ECMWF
-IF( LWINFILT ) THEN  !! additional prognostics for LLEVEE
+!! Used in CoLM
+IF( LWINFILT ) THEN  !! additional prognostics for LWINFILT
   ALLOCATE( D2WINFILT(NSEQMAX,1)     )
   D2WEVAP(:,:)=0._JPRB
 ENDIF
@@ -217,6 +218,7 @@ WRITE(LOGNAM,*) "CMF::DIAG_INIT: initialize diagnostic variables"
 !*** 1. snapshot 2D diagnostics
 N2DIAG=12
 IF ( LLEVEE  ) N2DIAG=N2DIAG+1 !! levee variables are added     (P2LEVSTO )
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 IF ( LWEVAP  ) N2DIAG=N2DIAG+1 !! evapolation added             (D2WEVAPEX) 
 IF ( LWINFILT  ) N2DIAG=N2DIAG+1 !! Infiltration added            (D2WEVAPEX) 
 IF ( LOUTINS ) N2DIAG=N2DIAG+1 !! instantaneous discharge added (D2OUTINS )
@@ -293,6 +295,7 @@ ELSE
   D2WEVAPEX_AVG => D2DAMMY(:,:)
 ENDIF
 
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 IF ( LWINFILT ) THEN
   IND=IND+1
   D2WINFILTEX_AVG => D2DIAG_AVG(:,:,IND)
