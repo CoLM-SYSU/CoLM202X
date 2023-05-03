@@ -7,9 +7,19 @@
  NETCDF_LIB = /opt/netcdf/lib
  NETCDF_INC = /opt/netcdf/include
 
- MOD_CMD = -module 
+MOD_CMD = -module 
 
- FOPTS = -qopenmp -g -traceback -r8 -free -check uninit -check bounds # -warn unused
+#<<<<<<< HEAD
+#FOPTS = -qopenmp -g -traceback -r8 -free -check uninit 
+       # -r8 -free -O0 -check uninit -check bounds -check pointers \
+       # -traceback  -assume byterecl -pthread -heap-arrays #-nogen-interface
+
+#INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
+#               -I../mkinidata -I../main -I../hydro -I${NETCDF_INC}
+#LDFLAGS = -L${NETCDF_LIB} -lnetcdff
+
+
+ FOPTS = -qopenmp -O2 -traceback -r8 -free #-check uninit -check bounds
 
  LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
