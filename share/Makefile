@@ -25,6 +25,7 @@ OBJS =  \
 	mod_data_type.o         \
 	ncio_block.o            \
 	mod_catchment_data.o    \
+	mod_5x5_data.o    \
 	mod_mesh.o              \
 	mod_pixelset.o          \
 	ncio_vector.o           \

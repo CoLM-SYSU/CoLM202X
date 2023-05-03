@@ -59,6 +59,10 @@ PROGRAM CLM
    USE mod_single_srfdata
 #endif
 
+#if (defined LATERAL_FLOW)
+   USE mod_lateral_flow
+#endif
+
 #ifdef Fire
    USE mod_lightning_data, only: init_lightning_data, update_lightning_data
 #endif
@@ -182,6 +186,13 @@ PROGRAM CLM
    CALL map_patch_to_pc
 #endif
 
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   CALL elm_vector_init ()
+#ifdef CATCHMENT
+   CALL hru_vector_init ()
+#endif
+#endif
+
    call adj2end(sdate)
    call adj2end(edate)
    call adj2end(pdate)
@@ -241,6 +252,10 @@ PROGRAM CLM
    CALL init_lightning_data (itstamp,sdate)
 #endif
 
+#if (defined LATERAL_FLOW)
+   CALL lateral_flow_init ()
+#endif
+
    ! ======================================================================
    ! begin time stepping loop
    ! ======================================================================
@@ -280,6 +295,11 @@ PROGRAM CLM
       CALL TICKTIME (deltim,idate)
       itstamp = itstamp + int(deltim)
 
+      ! lateral flow
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+   
       ! Call clm driver
       ! ----------------------------------------------------------------------
       IF (p_is_worker) THEN
@@ -380,6 +400,9 @@ PROGRAM CLM
    call deallocate_1D_Forcing     ()
    call deallocate_1D_Fluxes      ()
 
+#if (defined LATERAL_FLOW)
+   CALL lateral_flow_final ()
+#endif
 
    call hist_final ()
 

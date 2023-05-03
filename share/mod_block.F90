@@ -2,6 +2,10 @@
 
 MODULE mod_block
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+
    USE precision
    IMPLICIT NONE
 
@@ -507,7 +511,7 @@ CONTAINS
       ! Local variables
       CHARACTER(len=4) :: cx
       CHARACTER(len=3) :: cy
-      INTEGER :: n, i
+      INTEGER :: i
 
       IF (gblock%lat_s(jblk) < 0) THEN
          write (cy, '(A1,I2.2)') 's', - floor(gblock%lat_s(jblk))

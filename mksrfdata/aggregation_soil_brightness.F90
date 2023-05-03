@@ -19,7 +19,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+   USE mod_aggregation
    USE mod_utils
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -138,7 +138,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 
 #ifdef USEMPI
    IF (p_is_io) THEN
-      CALL aggregation_lc_data_daemon (gland, a_s_v_refl)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = a_s_v_refl)
    ENDIF
 #endif
 
@@ -153,7 +153,8 @@ SUBROUTINE aggregation_soil_brightness ( &
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-            CALL aggregation_lc_request_data (ipatch, gland, a_s_v_refl, soil_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = a_s_v_refl, data_r8_2d_out1 = soil_one)
             soil_s_v_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
@@ -163,7 +164,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -173,7 +174,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 
 #ifdef USEMPI
    IF (p_is_io) THEN
-      CALL aggregation_lc_data_daemon (gland, a_d_v_refl)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = a_d_v_refl)
    ENDIF
 #endif
 
@@ -188,7 +189,8 @@ SUBROUTINE aggregation_soil_brightness ( &
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-            CALL aggregation_lc_request_data (ipatch, gland, a_d_v_refl, soil_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = a_d_v_refl, data_r8_2d_out1 = soil_one)
             soil_d_v_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
@@ -198,7 +200,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -208,7 +210,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 
 #ifdef USEMPI
    IF (p_is_io) THEN
-      CALL aggregation_lc_data_daemon (gland, a_s_n_refl)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = a_s_n_refl)
    ENDIF
 #endif
 
@@ -223,7 +225,8 @@ SUBROUTINE aggregation_soil_brightness ( &
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-            CALL aggregation_lc_request_data (ipatch, gland, a_s_n_refl, soil_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = a_s_n_refl, data_r8_2d_out1 = soil_one)
             soil_s_n_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
@@ -233,7 +236,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -243,7 +246,7 @@ SUBROUTINE aggregation_soil_brightness ( &
 
 #ifdef USEMPI
    IF (p_is_io) THEN
-      CALL aggregation_lc_data_daemon (gland, a_d_n_refl)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = a_d_n_refl)
    ENDIF
 #endif
 
@@ -258,7 +261,8 @@ SUBROUTINE aggregation_soil_brightness ( &
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
 #endif
-            CALL aggregation_lc_request_data (ipatch, gland, a_d_n_refl, soil_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = a_d_n_refl, data_r8_2d_out1 = soil_one)
             soil_d_n_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
@@ -268,7 +272,7 @@ SUBROUTINE aggregation_soil_brightness ( &
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 

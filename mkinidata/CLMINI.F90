@@ -40,6 +40,12 @@ PROGRAM CLMINI
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   USE mod_elm_vector
+#endif
+#ifdef CATCHMENT
+   USE mod_hru_vector
+#endif
    implicit none
 
    ! ----------------local variables ---------------------------------
@@ -112,6 +118,13 @@ PROGRAM CLMINI
 #ifdef PC_CLASSIFICATION
    call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
    CALL map_patch_to_pc
+#endif
+
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   CALL elm_vector_init ()
+#ifdef CATCHMENT
+   CALL hru_vector_init ()
+#endif
 #endif
 
    CALL initialize (casename, dir_landdata, dir_restart, idate, greenwich)

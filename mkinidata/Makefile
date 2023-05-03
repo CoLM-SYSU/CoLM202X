@@ -27,22 +27,22 @@ OBJS_SHARED = \
 				  ../share/mod_data_type.o \
 				  ../share/ncio_block.o \
 				  ../share/mod_catchment_data.o \
-				  ../share/mod_modis_data.o \
+				  ../share/mod_5x5_data.o \
 				  ../share/mod_mesh.o \
 				  ../share/mod_pixelset.o \
 				  ../share/ncio_vector.o \
 				  ../share/mod_colm_debug.o \
 				  ../share/GlobalVars.o \
-				  ../share/LC_Const.o
+				  ../share/LC_Const.o \
+				  ../share/mod_mapping_grid2pset.o
 
 OBJS_MKSRFDATA = \
-				  ../mksrfdata/mod_aggregation_generic.o \
+				  ../mksrfdata/mod_aggregation.o \
 				  ../mksrfdata/mod_srfdata_restart.o \
 				  ../mksrfdata/mod_landelm.o \
 				  ../mksrfdata/mod_landhru.o \
 		 		  ../mksrfdata/mod_pixelsetshadow.o \
 				  ../mksrfdata/mod_landpatch.o \
-				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o \
 				  ../mksrfdata/mod_single_srfdata.o \
@@ -50,7 +50,11 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_hru_vector.o
 
 BASIC_HYDRO = \
-				  ../main/hydro/mod_soil_function.o
+				  ../main/hydro/mod_io_basin.o \
+				  ../main/hydro/MOD_HydroTimeVars.o \
+				  ../main/hydro/MOD_1D_HydroFluxes.o \
+				  ../main/hydro/mod_soil_function.o \
+				  ../main/hydro/mod_soil_water.o
 
 BASIC_BGC = \
 			  ../main/bgc/MOD_1D_BGCFluxes.o  \

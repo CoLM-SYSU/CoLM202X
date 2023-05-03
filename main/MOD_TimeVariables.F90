@@ -16,6 +16,9 @@ USE MOD_PCTimeVars
 #ifdef BGC
 USE MOD_BGCTimeVars
 #endif
+#ifdef LATERAL_FLOW
+USE MOD_HydroTimeVars
+#endif
 IMPLICIT NONE
 SAVE
 ! -----------------------------------------------------------------
@@ -287,6 +290,10 @@ SAVE
      CALL allocate_BGCTimeVars
 #endif
 
+#ifdef LATERAL_FLOW
+     CALL allocate_HydroTimeVars
+#endif
+
   END SUBROUTINE allocate_TimeVariables
 
 
@@ -427,6 +434,10 @@ SAVE
 
 #if (defined BGC)
      CALL deallocate_BGCTimeVars
+#endif
+
+#ifdef LATERAL_FLOW
+     CALL deallocate_HydroTimeVars
 #endif
 
   END SUBROUTINE deallocate_TimeVariables
@@ -598,6 +609,11 @@ SAVE
      CALL WRITE_BGCTimeVars (file_restart)
 #endif
 
+#if (defined LATERAL_FLOW)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     CALL WRITE_HydroTimeVars (file_restart)
+#endif
+
   end subroutine WRITE_TimeVariables
 
   !---------------------------------------
@@ -726,6 +742,11 @@ SAVE
 #if (defined BGC)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'.nc'
      CALL READ_BGCTimeVars (file_restart)
+#endif
+
+#if (defined LATERAL_FLOW)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     CALL READ_HydroTimeVars (file_restart)
 #endif
 
 #ifdef CLMDEBUG

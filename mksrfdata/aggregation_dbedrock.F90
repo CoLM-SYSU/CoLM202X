@@ -13,7 +13,7 @@ SUBROUTINE aggregation_dbedrock ( &
    USE ncio_vector
    USE ncio_block
    USE mod_colm_debug
-   USE mod_aggregation_lc
+   USE mod_aggregation
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
@@ -62,10 +62,9 @@ SUBROUTINE aggregation_dbedrock ( &
          
       lndname = trim(dir_rawdata)//'/dbedrock.nc' 
       CALL ncio_read_block (lndname, 'dbedrock', gland, dbedrock)
-      CALL block_data_linear_transform (dbedrock, scl = 0.1)
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gland, dbedrock)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in_1 = dbedrock)
 #endif
    ENDIF
 
@@ -78,12 +77,13 @@ SUBROUTINE aggregation_dbedrock ( &
       allocate (dbedrock_patches (numpatch))
       
       DO ipatch = 1, numpatch
-         CALL aggregation_lc_request_data (ipatch, gland, dbedrock, dbedrock_one, area_one)
+         CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+            data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
          dbedrock_patches (ipatch) = sum(dbedrock_one * area_one) / sum(area_one)
       ENDDO
    
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 

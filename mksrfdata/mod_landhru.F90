@@ -28,9 +28,10 @@ CONTAINS
       USE mod_grid
       USE mod_data_type
       USE mod_mesh
+      USE mod_landelm
       USE mod_catchment_data
       USE mod_namelist
-      USE mod_aggregation_generic
+      USE mod_aggregation
 
       IMPLICIT NONE
 
@@ -88,7 +89,7 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_io) THEN 
-         CALL aggregation_gen_data_daemon (ghru, data_i4 = hrudata)
+         CALL aggregation_data_daemon (ghru, data_i4_2d_in1 = hrudata)
       ENDIF
 #endif
 
@@ -108,8 +109,8 @@ CONTAINS
             
             allocate (types (1:npxl))
 
-            CALL aggregation_gen_request_data (ghru, &
-               mesh(ie)%ilon, mesh(ie)%ilat, data_i4 = hrudata, out_i4 = ibuff)
+            CALL aggregation_request_data (landelm, ie, ghru, &
+               data_i4_2d_in1 = hrudata, data_i4_2d_out1 = ibuff)
 
             types = ibuff
                
@@ -165,7 +166,7 @@ CONTAINS
          deallocate (ielm_tmp  )
 
 #ifdef USEMPI
-         CALL aggregation_gen_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

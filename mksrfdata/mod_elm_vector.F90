@@ -37,7 +37,7 @@ CONTAINS
       
       IF (p_is_worker) THEN
 #if (defined CROP) 
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., pctcrop)
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
 #else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif
