@@ -243,6 +243,11 @@ contains
          a_rsur, file_hist, 'f_rsur', itime_in_file, filter, &
          'surface runoff','mm/s')
 
+      ! subsurface runoff [mm/s]
+      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%rsub, &
+         a_rsub, file_hist, 'f_rsub', itime_in_file, filter, &
+         'subsurface runoff','mm/s')
+
       ! total runoff [mm/s]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%rnof, &
          a_rnof, file_hist, 'f_rnof', itime_in_file, filter, &

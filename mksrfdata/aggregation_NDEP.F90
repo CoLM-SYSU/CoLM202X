@@ -30,18 +30,10 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
-#ifdef PFT_CLASSIFICATION
-   USE mod_landpft
-   USE mod_aggregation_pft
-#endif
-#ifdef PC_CLASSIFICATION
-   USE mod_landpc
-   USE mod_aggregation_pft
-#endif
 
    IMPLICIT NONE
 
@@ -57,18 +49,11 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
    TYPE (block_data_real8_2d) :: NDEP          ! nitrogen deposition (gN/m2/s)
    REAL(r8), allocatable :: NDEP_patches(:), ndep_one(:), area_one(:)
-   INTEGER :: itime, ntime, Julian_day, ipatch
-   CHARACTER(LEN=4) :: c2, c3, cyear
+   INTEGER :: itime, ipatch
+   CHARACTER(LEN=4) :: cyear
    integer :: start_year, end_year, YY   
 
-   ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
-   INTEGER :: month
 
-   ! for PFT
-   INTEGER :: p, ip
-
-   ! for PC
    landdir = trim(dir_model_landdata) // '/NDEP/'
 
 #ifdef USEMPI
@@ -122,7 +107,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       ENDIF
 
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gridndep, NDEP)
+         CALL aggregation_data_daemon (gridndep, data_r8_2d_in1 = NDEP)
 #endif
 
          ! ---------------------------------------------------------------
@@ -131,12 +116,13 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gridndep, NDEP, ndep_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridndep, area = area_one, &
+               data_r8_2d_in1 = NDEP, data_r8_2d_out1 = ndep_one)
             NDEP_patches(ipatch) = sum(ndep_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

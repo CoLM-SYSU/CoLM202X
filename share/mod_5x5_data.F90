@@ -1,24 +1,19 @@
 #include <define.h>
 
-module mod_modis_data
+module mod_5x5_data
 
    implicit none
 
-   integer, parameter :: nxbox = 1200
-   integer, parameter :: nybox = 1200
-   integer, parameter :: nxglb = 86400
-   integer, parameter :: nyglb = 43200
-   
    INTEGER, parameter :: N_PFT_modis = 16
-   
-   interface modis_read_data
-      MODULE procedure modis_read_data_int32
-      MODULE procedure modis_read_data_real8
-   END interface modis_read_data
 
-   PUBLIC :: modis_read_data_pft
-   PUBLIC :: modis_read_data_time
-   PUBLIC :: modis_read_data_pft_time
+   interface read_5x5_data
+      MODULE procedure read_5x5_data_int32
+      MODULE procedure read_5x5_data_real8
+   END interface read_5x5_data
+
+   PUBLIC :: read_5x5_data_pft
+   PUBLIC :: read_5x5_data_time
+   PUBLIC :: read_5x5_data_pft_time
 
 contains
 
@@ -35,27 +30,28 @@ contains
    END SUBROUTINE nccheck
 
    ! -----
-   subroutine this_block_and_move_to_next (dir_modis, grid, &
-         isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-         i0, i1, j0, j1, il0, il1, jl0, jl1, &
-         file_modis)
+   subroutine this_block_and_move_to_next ( &
+         dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+         ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+         file_5x5)
 
       use mod_grid
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      type (grid_type),  intent(in) :: grid
-      
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
+
+      integer, intent(in)    :: nxbox, nybox, nxglb
       integer, intent(in)    :: isouth, inorth, iwest, ieast
       INTEGER, intent(inout) :: ibox, jbox, ibox0
-      integer, intent(out)   :: i0, i1, j0, j1, il0, il1, jl0, jl1
+      integer, intent(out)   :: i0,  i1,  j0,  j1
+      integer, intent(out)   :: il0, il1, jl0, jl1
 
-      character (len=*), intent(out) :: file_modis
+      character (len=*), intent(out) :: file_5x5
 
       ! Local variables
       integer :: xdsp, ydsp
       character(len=4) :: str
-
 
       xdsp = (ibox-1) * nxbox
       ydsp = (jbox-1) * nybox
@@ -84,19 +80,19 @@ contains
          end if
       end if
 
-      file_modis = trim(dir_modis) // '/RG'
+      file_5x5 = trim(dir_5x5) // '/RG'
       write(str, '(I4)') (19-jbox)*5
-      file_modis = trim(file_modis) // '_' // trim(adjustl(str))
+      file_5x5 = trim(file_5x5) // '_' // trim(adjustl(str))
       write(str, '(I4)') (ibox-37)*5
-      file_modis = trim(file_modis) // '_' // trim(adjustl(str))
+      file_5x5 = trim(file_5x5) // '_' // trim(adjustl(str))
       write(str, '(I4)') (18-jbox)*5
-      file_modis = trim(file_modis) // '_' // trim(adjustl(str))
+      file_5x5 = trim(file_5x5) // '_' // trim(adjustl(str))
       write(str, '(I4)') (ibox-36)*5
-      file_modis = trim(file_modis) // '_' // trim(adjustl(str))
-      file_modis = trim(file_modis) // '.MOD2005.nc'
+      file_5x5 = trim(file_5x5) // '_' // trim(adjustl(str))
+      file_5x5 = trim(file_5x5) // '.' // trim(sfx) // '.nc'
 
-      if ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxbox)) then 
-         if (isouth <= ydsp + nybox) then 
+      if ((ieast >= xdsp + 1) .and. (ieast <= xdsp + nxbox)) then
+         if (isouth <= ydsp + nybox) then
             jbox = -1
          else
             ibox = ibox0
@@ -106,10 +102,10 @@ contains
          ibox = mod(ibox, nxglb/nxbox) + 1
       end if
 
-   end subroutine this_block_and_move_to_next 
+   end subroutine this_block_and_move_to_next
 
    ! -----
-   subroutine modis_read_data_int32 (dir_modis, dataname, grid, rdata)
+   subroutine read_5x5_data_int32 (dir_5x5, sfx, grid, dataname, rdata)
 
       use spmd_task
       use mod_block
@@ -118,28 +114,36 @@ contains
       use netcdf
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      character (len=*), intent(in) :: dataname
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
       type (grid_type),  intent(in) :: grid
+
+      character (len=*), intent(in) :: dataname
       type (block_data_int32_2d), intent(inout) :: rdata
 
       ! Local variables
+      integer :: nxbox, nybox, nxglb, nyglb
       integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
-      character(len=256) :: file_modis
+      character(len=256) :: file_5x5
       INTEGER :: ncid, varid
       integer, allocatable :: dcache(:,:)
       logical :: fexists
 
+      nxglb = grid%nlon
+      nyglb = grid%nlat
+
+      nxbox = nxglb / 360
+      nybox = nyglb / 180
 
       if (p_is_io) then
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-                     
+
             rdata%blk(iblk,jblk)%val(:,:) = 0
 
             inorth = grid%ydsp(jblk) + 1
@@ -155,16 +159,16 @@ contains
 
             do while (.true.)
 
-               CALL this_block_and_move_to_next (dir_modis, grid, &
-                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                  file_modis)
+               CALL this_block_and_move_to_next ( &
+                  dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+                  ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_5x5)
 
-               inquire(file=file_modis, exist=fexists)
+               inquire(file=file_5x5, exist=fexists)
                if (fexists) then
                   allocate (dcache (i1-i0+1,j1-j0+1))
 
-                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_open(trim(file_5x5), NF90_NOWRITE, ncid) )
                   CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                   CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
                   CALL nccheck( nf90_close(ncid) )
@@ -182,10 +186,10 @@ contains
 
       end if
 
-   end subroutine modis_read_data_int32
+   end subroutine read_5x5_data_int32
 
    ! -----
-   subroutine modis_read_data_real8 (dir_modis, dataname, grid, rdata)
+   subroutine read_5x5_data_real8 (dir_5x5, sfx, grid, dataname, rdata)
 
       USE precision
       use spmd_task
@@ -195,28 +199,36 @@ contains
       use netcdf
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      character (len=*), intent(in) :: dataname
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
       type (grid_type),  intent(in) :: grid
+
+      character (len=*), intent(in) :: dataname
       type (block_data_real8_2d), intent(inout) :: rdata
 
       ! Local variables
+      integer :: nxbox, nybox, nxglb, nyglb
       integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
-      character(len=256) :: file_modis
+      character(len=256) :: file_5x5
       INTEGER :: ncid, varid
       REAL(r8), allocatable :: dcache(:,:)
       logical :: fexists
 
+      nxglb = grid%nlon
+      nyglb = grid%nlat
+
+      nxbox = nxglb / 360
+      nybox = nyglb / 180
 
       if (p_is_io) then
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-                     
+
             rdata%blk(iblk,jblk)%val(:,:) = 0
 
             inorth = grid%ydsp(jblk) + 1
@@ -232,16 +244,16 @@ contains
 
             do while (.true.)
 
-               CALL this_block_and_move_to_next (dir_modis, grid, &
-                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                  file_modis)
+               CALL this_block_and_move_to_next ( &
+                  dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+                  ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_5x5)
 
-               inquire(file=file_modis, exist=fexists)
+               inquire(file=file_5x5, exist=fexists)
                if (fexists) then
                   allocate (dcache (i1-i0+1,j1-j0+1))
 
-                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_open(trim(file_5x5), NF90_NOWRITE, ncid) )
                   CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                   CALL nccheck( nf90_get_var(ncid, varid, dcache, (/i0,j0/), (/i1-i0+1,j1-j0+1/)) )
                   CALL nccheck( nf90_close(ncid) )
@@ -259,10 +271,10 @@ contains
 
       end if
 
-   end subroutine modis_read_data_real8
-   
+   end subroutine read_5x5_data_real8
+
    ! -----
-   subroutine modis_read_data_pft (dir_modis, dataname, grid, rdata)
+   subroutine read_5x5_data_pft (dir_5x5, sfx, grid, dataname, rdata)
 
       USE precision
       use spmd_task
@@ -272,29 +284,37 @@ contains
       use netcdf
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      character (len=*), intent(in) :: dataname
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
       type (grid_type),  intent(in) :: grid
-      
+
+      character (len=*), intent(in) :: dataname
       type (block_data_real8_3d), intent(inout) :: rdata
 
       ! Local variables
+      integer :: nxbox, nybox, nxglb, nyglb
       integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
-      character(len=256) :: file_modis
+      character(len=256) :: file_5x5
       INTEGER :: ncid, varid
       REAL(r8), allocatable :: dcache(:,:,:)
       logical :: fexists
       INTEGER :: ipft
 
+      nxglb = grid%nlon
+      nyglb = grid%nlat
+
+      nxbox = nxglb / 360
+      nybox = nyglb / 180
+
       if (p_is_io) then
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-         
+
             rdata%blk(iblk,jblk)%val(:,:,:) = 0
 
             inorth = grid%ydsp(jblk) + 1
@@ -310,16 +330,16 @@ contains
 
             do while (.true.)
 
-               CALL this_block_and_move_to_next (dir_modis, grid, &
-                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                  file_modis)
+               CALL this_block_and_move_to_next ( &
+                  dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+                  ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_5x5)
 
-               inquire(file=file_modis, exist=fexists)
+               inquire(file=file_5x5, exist=fexists)
                if (fexists) then
                   allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
-                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_open(trim(file_5x5), NF90_NOWRITE, ncid) )
                   CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                   CALL nccheck( nf90_get_var(ncid, varid, dcache, &
                      (/i0,j0,1/), (/i1-i0+1,j1-j0+1,N_PFT_modis/)) )
@@ -340,10 +360,10 @@ contains
 
       end if
 
-   end subroutine modis_read_data_pft
+   end subroutine read_5x5_data_pft
 
    ! -----
-   subroutine modis_read_data_time (dir_modis, dataname, grid, time, rdata)
+   subroutine read_5x5_data_time (dir_5x5, sfx, grid, dataname, time, rdata)
 
       USE precision
       use spmd_task
@@ -353,30 +373,37 @@ contains
       use netcdf
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      character (len=*), intent(in) :: dataname
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
       type (grid_type),  intent(in) :: grid
+
+      character (len=*), intent(in) :: dataname
       integer, intent(in) :: time
-      
       type (block_data_real8_2d), intent(inout) :: rdata
 
       ! Local variables
+      integer :: nxbox, nybox, nxglb, nyglb
       integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
-      character(len=256) :: file_modis
+      character(len=256) :: file_5x5
       INTEGER :: ncid, varid
       REAL(r8), allocatable :: dcache(:,:)
       logical :: fexists
 
+      nxglb = grid%nlon
+      nyglb = grid%nlat
+
+      nxbox = nxglb / 360
+      nybox = nyglb / 180
+
       if (p_is_io) then
 
-                     
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-         
+
             rdata%blk(iblk,jblk)%val(:,:) = 0
 
             inorth = grid%ydsp(jblk) + 1
@@ -392,16 +419,16 @@ contains
 
             do while (.true.)
 
-               CALL this_block_and_move_to_next (dir_modis, grid, &
-                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                  file_modis)
+               CALL this_block_and_move_to_next ( &
+                  dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+                  ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_5x5)
 
-               inquire(file=file_modis, exist=fexists)
+               inquire(file=file_5x5, exist=fexists)
                if (fexists) then
                   allocate (dcache (i1-i0+1,j1-j0+1))
 
-                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_open(trim(file_5x5), NF90_NOWRITE, ncid) )
                   CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                   CALL nccheck( nf90_get_var(ncid, varid, dcache, &
                      (/i0,j0,time/), (/i1-i0+1,j1-j0+1,1/)) )
@@ -420,10 +447,10 @@ contains
 
       end if
 
-   end subroutine modis_read_data_time
+   end subroutine read_5x5_data_time
 
    ! -----
-   subroutine modis_read_data_pft_time (dir_modis, dataname, grid, time, rdata)
+   subroutine read_5x5_data_pft_time (dir_5x5, sfx, grid, dataname, time, rdata)
 
       USE precision
       use spmd_task
@@ -433,30 +460,38 @@ contains
       use netcdf
       implicit none
 
-      character (len=*), intent(in) :: dir_modis
-      character (len=*), intent(in) :: dataname
+      character (len=*), intent(in) :: dir_5x5
+      character (len=*), intent(in) :: sfx
       type (grid_type),  intent(in) :: grid
+
+      character (len=*), intent(in) :: dataname
       INTEGER, intent(in) :: time
-      
       type (block_data_real8_3d), intent(inout) :: rdata
 
       ! Local variables
+      integer :: nxbox, nybox, nxglb, nyglb
       integer :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox, ibox0
       integer :: i0, i1, j0, j1, il0, il1, jl0, jl1
-      character(len=256) :: file_modis
+      character(len=256) :: file_5x5
       INTEGER :: ncid, varid
       REAL(r8), allocatable :: dcache(:,:,:)
       logical :: fexists
       INTEGER :: ipft
 
+      nxglb = grid%nlon
+      nyglb = grid%nlat
+
+      nxbox = nxglb / 360
+      nybox = nyglb / 180
+
       if (p_is_io) then
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
             IF (grid%xcnt(iblk) == 0) cycle
             IF (grid%ycnt(jblk) == 0) cycle
-                     
+
             rdata%blk(iblk,jblk)%val(:,:,:) = 0
 
             inorth = grid%ydsp(jblk) + 1
@@ -472,16 +507,16 @@ contains
 
             do while (.true.)
 
-               CALL this_block_and_move_to_next (dir_modis, grid, &
-                  isouth, inorth, iwest, ieast, ibox, jbox, ibox0, &
-                  i0, i1, j0, j1, il0, il1, jl0, jl1, &
-                  file_modis)
+               CALL this_block_and_move_to_next ( &
+                  dir_5x5, sfx, nxbox, nybox, nxglb, isouth, inorth, iwest, ieast, &
+                  ibox, jbox, ibox0, i0, i1, j0, j1, il0, il1, jl0, jl1, &
+                  file_5x5)
 
-               inquire(file=file_modis, exist=fexists)
+               inquire(file=file_5x5, exist=fexists)
                if (fexists) then
                   allocate (dcache (i1-i0+1,j1-j0+1,0:N_PFT_modis-1))
 
-                  CALL nccheck( nf90_open(trim(file_modis), NF90_NOWRITE, ncid) )
+                  CALL nccheck( nf90_open(trim(file_5x5), NF90_NOWRITE, ncid) )
                   CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
                   CALL nccheck( nf90_get_var(ncid, varid, dcache, &
                      (/i0,j0,1,time/), (/i1-i0+1,j1-j0+1,N_PFT_modis,1/)) )
@@ -502,6 +537,6 @@ contains
 
       end if
 
-   end subroutine modis_read_data_pft_time
+   end subroutine read_5x5_data_pft_time
 
-end module mod_modis_data
+end module mod_5x5_data

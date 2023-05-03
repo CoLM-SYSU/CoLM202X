@@ -74,6 +74,79 @@ module mod_soil_water
 
 contains 
 
+   ! ---- get equilibrium state ----
+   SUBROUTINE get_water_equilibrium_state ( &
+         zwtmm, nlev, wliq, smp, hk, wa, sp_zc, sp_zi, porsl, vl_r, psi_s, hksat, nprm, prms)
+
+      IMPLICIT NONE
+
+      real(r8), intent(in) :: zwtmm   ! location of water table [mm]
+
+      integer,  intent(in) :: nlev    ! number of levels
+      
+      REAL(r8), intent(out) :: wliq(1:nlev) ! [mm] or [kg/m2]
+      REAL(r8), intent(out) :: smp (1:nlev) ! [mm]
+      REAL(r8), intent(out) :: hk  (1:nlev) ! [mm/s]
+      real(r8), intent(out) :: wa    ! water in aquifer [mm]
+
+      real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level [mm]
+      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
+
+      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity
+      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture
+      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential
+      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
+
+      integer,  intent(in) :: nprm      ! number of parameters included in soil function
+      real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+
+      ! Local Variables
+      INTEGER  :: izwt, ilev
+      REAL(r8) :: psi_zwt, smp_up, vliq_up, vliq(1:nlev), psi, vl
+
+      ! water table location
+      izwt = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
+
+      IF (izwt <= nlev) THEN
+         psi_zwt = psi_s(izwt)
+      ELSE
+         psi_zwt = psi_s(nlev)
+      ENDIF
+
+      DO ilev = 1, nlev
+         IF (ilev < izwt) THEN 
+            smp (ilev) = psi_zwt - (zwtmm - sp_zc(ilev)) 
+            vliq(ilev) = soil_vliq_from_psi (smp(ilev), porsl(ilev), vl_r(ilev), psi_s(ilev), &
+               nprm, prms(:,ilev))
+            wliq(ilev) = vliq(ilev) * (sp_zi(ilev)-sp_zi(ilev-1))
+            hk (ilev)  = soil_hk_from_psi (smp(ilev), psi_s(ilev), hksat(ilev), nprm, prms(:,ilev))
+         ELSEIF (ilev == izwt) THEN
+            smp_up = psi_zwt &
+               - (zwtmm-sp_zi(ilev-1)) * (sp_zi(ilev)-sp_zc(ilev))/(sp_zi(ilev)-sp_zi(ilev-1))  
+            vliq_up = soil_vliq_from_psi (smp_up, porsl(ilev), vl_r(ilev), psi_s(ilev), &
+               nprm, prms(:,ilev))
+            wliq(ilev) = vliq(ilev) * (zwtmm-sp_zi(ilev-1)) + porsl(ilev)*(sp_zi(ilev)-zwtmm)
+            vliq(ilev) = wliq(ilev) / (sp_zi(ilev)-sp_zi(ilev-1))
+            smp(ilev) = soil_psi_from_vliq (vliq(ilev), porsl(ilev), vl_r(ilev), psi_s(ilev), &
+               nprm, prms(:,ilev))
+            hk (ilev) = soil_hk_from_psi (smp(ilev), psi_s(ilev), hksat(ilev), nprm, prms(:,ilev))
+         ELSE
+            wliq(ilev) = porsl(ilev) * (sp_zi(ilev)-sp_zi(ilev-1)) 
+            smp (ilev) = psi_s(ilev)
+            hk  (ilev) = hksat(ilev)
+         ENDIF
+      ENDDO
+            
+      IF (izwt == nlev+1) THEN
+         psi = psi_zwt - (zwtmm - sp_zi(nlev)) * 0.5
+         vl  = soil_vliq_from_psi (psi, porsl(nlev), vl_r(nlev), psi_s(nlev), nprm, prms(:,nlev))
+         wa  = -(zwtmm-sp_zi(nlev))*(porsl(nlev)-vl)
+      ELSE
+         wa = 0.
+      ENDIF
+
+   END SUBROUTINE get_water_equilibrium_state 
+
    !-----------------------------------------------------------------------------
    subroutine soil_water_vertical_movement (         &
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
@@ -113,8 +186,8 @@ contains
       REAL(r8), intent(in) :: etr            ! transpiration rate
       REAL(r8), intent(in) :: rootr(1:nlev)  ! root fractions
 
-      REAL(r8), intent(inout) :: rsubst      ! subsurface runoff
-      REAL(r8), intent(out)   :: qinfl       ! infiltration into soil
+      REAL(r8), intent(in)  :: rsubst      ! subsurface runoff
+      REAL(r8), intent(out) :: qinfl       ! infiltration into soil
 
       real(r8), intent(inout) :: ss_dp ! soil water state : depth of ponding water
       real(r8), intent(inout) :: zwt   ! location of water table 
@@ -178,11 +251,11 @@ contains
 #endif
 
       ! transpiration
-      sumroot   = sum(rootr, mask = is_permeable)
+      sumroot   = sum(rootr, mask = is_permeable .and. (rootr > 0.))
       etroot(:) = 0.
       IF (sumroot > 0.) THEN
          where (is_permeable)
-            etroot = etr * rootr / sumroot
+            etroot = etr * max(rootr, 0.) / sumroot
          END where
          deficit = 0.
       ELSE
@@ -872,7 +945,7 @@ contains
 
 #ifdef  SoilWaterDebug
          IF (abs(werr) > 1.0e-3) then
-             write(*,*)  'Richards solver water balance violation: ', werr
+             write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
          ENDIF 
 #endif
 
@@ -3417,7 +3490,7 @@ contains
 #endif
          IF (p_iam_worker == 0) THEN
             write(*,*)
-            write(fmtt,'("(A,",I1,"I10)")') max_iters_richards
+            write(fmtt,'("(A,",I1,"I12)")') max_iters_richards
             write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
 
             count_iters_accm = count_iters_accm + count_iters_this

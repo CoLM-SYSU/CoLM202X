@@ -30,15 +30,15 @@ CONTAINS
       USE mod_grid
       USE mod_data_type
       USE mod_namelist
-      USE mod_modis_data
+      USE mod_5x5_data
       USE mod_landpatch
-      USE mod_aggregation_PFT
+      USE mod_aggregation
       USE LC_const
 
       IMPLICIT NONE
 
       ! Local Variables
-      CHARACTER(len=256) :: dir_modis
+      CHARACTER(len=256) :: dir_5x5, suffix
       TYPE (block_data_real8_3d) :: pctpft
       REAL(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
       REAL(r8), allocatable :: area_one(:)
@@ -119,11 +119,12 @@ CONTAINS
          call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
-         dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
-         CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gpatch, pctpft)
+         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+         suffix  = 'MOD2005'
+         CALL read_5x5_data_pft (dir_5x5, suffix, gpatch, 'PCT_PFT', pctpft)
 
 #ifdef USEMPI
-         CALL aggregation_pft_data_daemon (gpatch, pctpft)
+         CALL aggregation_data_daemon (gpatch, data_r8_3d_in1 = pctpft, n1_r8_3d_in1 = N_PFT_modis)
 #endif
       end if
 
@@ -141,7 +142,8 @@ CONTAINS
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 1) THEN
                
-               CALL aggregation_pft_request_data (ipatch, gpatch, pctpft, pctpft_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gpatch, area = area_one, &
+                  data_r8_3d_in1 = pctpft, data_r8_3d_out1 = pctpft_one, n1_r8_3d_in1 = N_PFT_modis)
 
                sumarea = sum(area_one)
 
@@ -156,7 +158,7 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_pft_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
 
          IF (numpatch > 0) THEN

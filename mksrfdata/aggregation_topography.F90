@@ -16,7 +16,7 @@ SUBROUTINE aggregation_topography ( &
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+   USE mod_aggregation
    USE mod_utils
 
    IMPLICIT NONE
@@ -59,7 +59,7 @@ SUBROUTINE aggregation_topography ( &
       CALL ncio_read_block (lndname, 'elevation', gtopo, topography)
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gtopo, topography)
+      CALL aggregation_data_daemon (gtopo, data_r8_2d_in1 = topography)
 #endif
    ENDIF
 
@@ -72,12 +72,13 @@ SUBROUTINE aggregation_topography ( &
       allocate (topography_patches (numpatch))
    
       DO ipatch = 1, numpatch
-         CALL aggregation_lc_request_data (ipatch, gtopo, topography, topography_one, area_one)
+         CALL aggregation_request_data (landpatch, ipatch, gtopo, area = area_one, &
+            data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
          topography_patches (ipatch) = sum(topography_one * area_one) / sum(area_one)
       ENDDO
       
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 

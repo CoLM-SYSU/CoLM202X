@@ -273,7 +273,7 @@ CONTAINS
       INTEGER, intent(in)  :: year, month, mday
       INTEGER, intent(out) :: day
       
-      INTEGER :: i, months(0:12)
+      INTEGER :: months(0:12)
       
       IF ( isleapyear(year) ) THEN
          months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
@@ -355,7 +355,6 @@ CONTAINS
 
       TYPE(timestamp) :: tstamp1
       TYPE(timestamp) :: tstamp2
-      INTEGER :: month1, month2, day
 
       tstamp1 = idate
       tstamp2 = tstamp1 + int(sec)
@@ -561,7 +560,6 @@ CONTAINS
       IMPLICIT NONE
       INTEGER, intent(in) :: year, julianday, second
 
-      INTEGER :: minutes_allyear = 8760
       INTEGER :: refyear(10) = (/1, 1900, 1950, 1980, 1990, 2000, 2005, 2010, 2015, 2020/)
       INTEGER :: refval (10) = (/-998776800,0,26297280,42075360,47335680,52594560,55225440,&
                                  57854880,60484320,63113760/)
