@@ -650,16 +650,12 @@ ELSE !  nearest point
   ENDIF
   IF (LWEVAP) THEN
       CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
-ENDIF 
-
-  IF (LWEVAP) THEN
-      CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
+  ENDIF 
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+  IF (LWINFILT) THEN
+    CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
   ENDIF
 ENDIF 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
-IF (LWINFILT) THEN
-    CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
-ENDIF
 
 CONTAINS
 !==========================================================

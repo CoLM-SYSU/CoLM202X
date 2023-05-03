@@ -7,6 +7,7 @@ MODULE CMF_CTRL_VARS_MOD
 ! -- CMF_DIAG_INIT      : Initialize Diagnostic variables
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
+  
 ! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 
 ! Licensed under the Apache License, Version 2.0 (the "License");
