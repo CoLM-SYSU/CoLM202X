@@ -847,6 +847,21 @@ CONTAINS
 
    END FUNCTION areaquad
 
+   ! --- spherical distance  ---
+   FUNCTION arclen (lat1, lon1, lat2, lon2)
+
+      USE precision
+      IMPLICIT NONE
+
+      REAL(r8) :: arclen
+      REAL(r8), intent(in) :: lat1, lon1, lat2, lon2
+      
+      REAL(r8), parameter :: re = 6.37122e3 ! kilometer 
+      
+      arclen = re * acos (sin(lat1)*sin(lat2) + cos(lat1)*cos(lat2) * cos(lon1-lon2))
+
+   END FUNCTION arclen
+
    !-----------------------------------------------------
    SUBROUTINE unpack_inplace_int32 (din, msk, dout)
 
@@ -914,5 +929,40 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE unpack_inplace_lastdim_real8
+
+   !---------------------------------------------------
+   INTEGER FUNCTION num_max_frequency (data_in)
+      
+      IMPLICIT NONE
+
+      INTEGER, intent(in) :: data_in(:)
+
+      ! Local Variables
+      INTEGER, allocatable :: data_(:), cnts(:)
+      INTEGER :: ndata, i, n, iloc
+      LOGICAL :: is_new
+
+      ndata = size(data_in)
+      allocate (data_(ndata))
+      allocate (cnts (ndata))
+
+      n = 0
+      cnts(:) = 0
+      DO i = 1, ndata
+         CALL insert_into_sorted_list1 (data_in(i), n, data_, iloc, is_new) 
+         IF (is_new) THEN
+            IF (iloc < n) cnts(iloc+1:ndata) = cnts(iloc:ndata-1)
+            cnts(iloc) = 1
+         ELSE
+            cnts(iloc) = cnts(iloc) + 1
+         ENDIF
+      ENDDO
+
+      num_max_frequency = data_(maxloc(cnts,dim=1))
+
+      deallocate(data_)
+      deallocate(cnts )
+
+   END FUNCTION num_max_frequency 
 
 END MODULE mod_utils

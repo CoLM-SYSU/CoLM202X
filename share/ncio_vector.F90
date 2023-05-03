@@ -143,7 +143,7 @@ CONTAINS
       LOGICAL, intent(in), optional :: defval
 
       ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, istt, iend, i
+      INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER(1), allocatable :: sbuff(:), rbuff(:)
 
@@ -880,7 +880,7 @@ CONTAINS
       INTEGER, intent(in), optional :: compress_level
 
       ! Local variables
-      INTEGER :: iblkgrp, iblk, jblk, iproc, istt, iend
+      INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER, allocatable :: sbuff(:,:,:), rbuff(:,:,:)
 

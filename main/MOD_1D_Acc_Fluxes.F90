@@ -36,6 +36,7 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_xerr   (:)
    real(r8), allocatable :: a_zerr   (:)
    real(r8), allocatable :: a_rsur   (:)
+   real(r8), allocatable :: a_rsub   (:)
    real(r8), allocatable :: a_rnof   (:)
    real(r8), allocatable :: a_qintr  (:)
    real(r8), allocatable :: a_qinfl  (:)
@@ -336,6 +337,7 @@ contains
             allocate (a_xerr      (numpatch))
             allocate (a_zerr      (numpatch))
             allocate (a_rsur      (numpatch))
+            allocate (a_rsub      (numpatch))
             allocate (a_rnof      (numpatch))
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
@@ -636,6 +638,7 @@ contains
             deallocate (a_xerr      )
             deallocate (a_zerr      )
             deallocate (a_rsur      )
+            deallocate (a_rsub      )
             deallocate (a_rnof      )
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
@@ -940,6 +943,7 @@ contains
             a_xerr    (:) = spval
             a_zerr    (:) = spval
             a_rsur    (:) = spval
+            a_rsub    (:) = spval
             a_rnof    (:) = spval
             a_qintr   (:) = spval
             a_qinfl   (:) = spval
@@ -1218,7 +1222,9 @@ contains
       use FRICTION_VELOCITY
       use mod_colm_debug
       use GlobalVars
-      
+#ifdef LATERAL_FLOW
+      USE mod_hist_basin, only : accumulate_fluxes_basin
+#endif
 
       IMPLICIT NONE
 
@@ -1287,6 +1293,7 @@ contains
             call acc1d (xerr   , a_xerr   )
             call acc1d (zerr   , a_zerr   )
             call acc1d (rsur   , a_rsur   )
+            call acc1d (rsub   , a_rsub   )
             call acc1d (rnof   , a_rnof   )
             call acc1d (qintr  , a_qintr  )
             call acc1d (qinfl  , a_qinfl  )
@@ -1714,6 +1721,10 @@ contains
 
          end if
       end if
+
+#ifdef LATERAL_FLOW
+      CALL accumulate_fluxes_basin ()
+#endif
 
    END SUBROUTINE accumulate_fluxes
 

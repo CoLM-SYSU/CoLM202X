@@ -30,14 +30,13 @@ CONTAINS
       INTEGER, intent(in), optional :: spv
 
       ! Local Variables
-      INTEGER :: nlat, nlon, ilon, ilat
+      INTEGER :: nlat, nlon, ilon
       INTEGER :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox
       INTEGER :: xdsp, ydsp, i0, i1, j0, j1, il0, il1, jl0, jl1
       INTEGER :: i0min, i1max, if0, if1, jf0, jf1, i0next, i1next
       CHARACTER(len=256) :: file_hydro
       CHARACTER(len=3)   :: pre1
       CHARACTER(len=4)   :: pre2
-      INTEGER :: ncid, varid
       INTEGER,  allocatable :: dcache(:,:)
       REAL(r8), allocatable :: latitude(:), longitude(:)
       LOGICAL :: fexists

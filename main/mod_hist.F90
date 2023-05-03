@@ -39,6 +39,9 @@ contains
       USE mod_landpatch
       use mod_mapping_pset2grid
       use MOD_1D_Acc_Fluxes
+#ifdef LATERAL_FLOW
+      USE mod_hist_basin
+#endif
       USE mod_forcing, only : gforc
       implicit none
 
@@ -51,6 +54,10 @@ contains
       
       call allocate_acc_fluxes ()
       call FLUSH_acc_fluxes ()
+
+#ifdef LATERAL_FLOW
+      CALL hist_basin_init ()
+#endif
 
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
       IF (DEF_HISTORY_IN_VECTOR) THEN
@@ -91,10 +98,16 @@ contains
    subroutine hist_final ()
 
       use MOD_1D_Acc_Fluxes
+#ifdef LATERAL_FLOW
+      USE mod_hist_basin
+#endif
       implicit none
       
       call deallocate_acc_fluxes ()
 
+#ifdef LATERAL_FLOW
+      CALL hist_basin_final ()
+#endif
 
    end subroutine hist_final
 
@@ -122,6 +135,9 @@ contains
       USE MOD_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
       use MOD_CaMa_Variables !defination of CaMa variables
+#endif
+#ifdef LATERAL_FLOW
+      USE mod_hist_basin
 #endif
       USE mod_forcing, only : forcmask
       IMPLICIT NONE
@@ -200,6 +216,9 @@ contains
          
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
 
+#ifdef LATERAL_FLOW
+         CALL hist_basin_out (file_hist, idate)
+#endif
 
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
          IF (DEF_HISTORY_IN_VECTOR) THEN
@@ -401,6 +420,11 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%rsur, &
             a_rsur, f_rsur, file_hist, 'f_rsur', itime_in_file, sumwt, filter, &
             'surface runoff','mm/s')
+         
+         ! subsurface runoff [mm/s]
+         call flux_map_and_write_2d ( DEF_hist_vars%rsub, &
+            a_rsub, f_rsub, file_hist, 'f_rsub', itime_in_file, sumwt, filter, &
+            'subsurface runoff','mm/s')
 
          ! total runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rnof, &

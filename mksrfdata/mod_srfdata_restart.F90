@@ -34,7 +34,6 @@ CONTAINS
       INTEGER, allocatable :: elmindx(:)
       INTEGER, allocatable :: npxlall(:)
       INTEGER, allocatable :: elmpixels(:,:,:)
-      INTEGER, allocatable :: rbuf(:,:)
       REAL(r8),allocatable :: lon(:), lat(:)
 
 #ifdef USEMPI

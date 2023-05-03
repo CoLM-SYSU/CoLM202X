@@ -16,7 +16,7 @@ CONTAINS
       USE mod_pixelset
       USE mod_mesh
       USE mod_utils
-      USE mod_aggregation_generic
+      USE mod_aggregation
       IMPLICIT NONE
 
       TYPE(pixelset_type),       intent(inout) :: pixelset
@@ -42,7 +42,7 @@ CONTAINS
          
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_gen_data_daemon (gshadow, data_r8_3d = datashadow, ndim1 = nshadow)
+         CALL aggregation_data_daemon (gshadow, data_r8_3d_in1 = datashadow, n1_r8_3d_in1 = nshadow)
       ENDIF
 #endif
          
@@ -61,9 +61,8 @@ CONTAINS
       
                allocate (datashadow1d (nshadow, ipxstt:ipxend))
 
-               CALL aggregation_gen_request_data (gshadow, &
-                  mesh(ie)%ilon(ipxstt:ipxend), mesh(ie)%ilat(ipxstt:ipxend), &
-                  data_r8_3d = datashadow, out_r8_3d = rbuff, ndim1 = nshadow)
+               CALL aggregation_request_data (pixelset, ipset, gshadow, &
+                  data_r8_3d_in1 = datashadow, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nshadow)
 
                datashadow1d = rbuff
 
@@ -94,7 +93,7 @@ CONTAINS
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_gen_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

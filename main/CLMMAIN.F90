@@ -162,6 +162,11 @@ SUBROUTINE CLMMAIN ( &
   USE SIMPLE_OCEAN
   USE ALBEDO
   USE timemanager
+#ifndef LATERAL_FLOW
+  USE MOD_1D_Fluxes, only : rsub
+#else
+  USE MOD_1D_Fluxes, only : rsubs_pch, rsub
+#endif
   USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
   USE MOD_CLEAF_interception
 #if(defined CaMa_Flood)
@@ -927,7 +932,11 @@ ENDIF
          endwb = endwb + dpond
       ENDIF
 
+#ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
+#else
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+#endif
       IF(patchtype==2) errorw=0.    !wetland
 #if(defined CaMa_Flood)
 if (LWINFILT) then 
@@ -1168,8 +1177,14 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ! this unreasonable assumption should be updated in the future version
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
+#ifndef LATERAL_FLOW
       rsur = max(0., pg_rain + pg_snow - aa - a)
+      rsub(ipatch) = 0.
       rnof = rsur
+#else
+      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      rnof = rsur + rsub(ipatch)
+#endif
 
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN

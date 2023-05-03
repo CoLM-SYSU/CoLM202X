@@ -388,6 +388,11 @@ ENDIF
   use PhysicalConstants, only : denice, denh2o, tfrz
   USE mod_soil_water
 
+#ifndef LATERAL_FLOW
+  USE MOD_1D_Fluxes, only : rsub
+#else
+  USE MOD_1D_Fluxes, only : rsub, rsubs_pch 
+#endif
 
   implicit none
     
@@ -577,6 +582,7 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 
       ! surface runoff including water table and surface staturated area
 
+#ifndef LATERAL_FLOW
       if (gwat > 0.) then
       call surfacerunoff (nlev,wtfact,wimp,porsl,psi0,hksati,&
                           z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -587,6 +593,11 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 
       ! infiltration into surface soil layer 
       qraing = gwat - rsur 
+#else
+      ! for lateral flow, "rsur" is calculated in hydro/mod_surface_flow.F90 
+      ! and is removed from surface water there.
+      qraing = gwat
+#endif
 
 #if(defined CaMa_Flood)
 if (LWINFILT) then 
@@ -621,6 +632,7 @@ endif
          ENDIF
       ENDDO
 
+#ifndef LATERAL_FLOW
       !-- Topographic runoff  ----------------------------------------------------------
       imped = 1.0
       IF (zwtmm < sp_zi(nlev)) THEN
@@ -642,6 +654,13 @@ endif
       ENDIF 
          
       rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+      rsub(ipatch) = rsubst
+#else
+      ! for lateral flow:
+      ! "rsub" is defined as baseflow to river, which is calculated in hydro/mod_subsurface_flow.F90
+      ! "rsubs_pch" is defined as baseflow to neighbouring patches
+      rsubst = rsubs_pch(ipatch)
+#endif
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nlev)
@@ -705,11 +724,23 @@ endif
       
       zwt = zwtmm/1000.0
 
-      ! total runoff (mm/s)
-      rnof = rsubst + rsur
+#ifndef LATERAL_FLOW
+     IF (dpond > pondmx) THEN
+        rsur = rsur + (dpond - pondmx) / deltim
+        dpond = pondmx
+     ENDIF
+#endif
 
+      ! total runoff (mm/s)
+      rnof = rsub(ipatch) + rsur
+
+#ifndef LATERAL_FLOW
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
-         - (gwat-etr-rnof)*deltim
+         - (gwat-etr-rsur-rsubst)*deltim
+#else
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+         - (gwat-etr-rsubst)*deltim
+#endif
       if(lb >= 1)then
          err_solver = err_solver - (qfros-qseva-qsubl)*deltim
       endif

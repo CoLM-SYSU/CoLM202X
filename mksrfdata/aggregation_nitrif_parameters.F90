@@ -20,17 +20,15 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
 #endif
 
    IMPLICIT NONE
@@ -111,7 +109,7 @@ DO nsl = 1, 20
                CALL ncio_read_block_time (lndname, 'CONC_O2_UNSAT', gridnitrif, itime, CONC_O2_UNSAT)
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridnitrif, CONC_O2_UNSAT)
+            CALL aggregation_data_daemon (gridnitrif, data_r8_2d_in1 = CONC_O2_UNSAT)
 #endif
          ENDIF
 
@@ -122,12 +120,13 @@ DO nsl = 1, 20
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_lc_request_data (ipatch, gridnitrif, CONC_O2_UNSAT, CONC_O2_UNSAT_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridnitrIF, area = area_one, &
+                  data_r8_2d_in1 = CONC_O2_UNSAT, data_r8_2d_out1 = CONC_O2_UNSAT_one)
                CONC_O2_UNSAT_patches(ipatch) = sum(CONC_O2_UNSAT_one * area_one) / sum(area_one)
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 
@@ -211,7 +210,7 @@ DO nsl = 1, 25
                CALL ncio_read_block_time (lndname, 'O2_DECOMP_DEPTH_UNSAT', gridnitrif, itime, O2_DECOMP_DEPTH_UNSAT)
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridnitrif, O2_DECOMP_DEPTH_UNSAT)
+            CALL aggregation_data_daemon (gridnitrif, data_r8_2d_in1 = O2_DECOMP_DEPTH_UNSAT)
 #endif
          ENDIF
 
@@ -222,12 +221,13 @@ DO nsl = 1, 25
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_lc_request_data (ipatch, gridnitrif, O2_DECOMP_DEPTH_UNSAT, O2_DECOMP_DEPTH_UNSAT_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridnitrIF, area = area_one, &
+                  data_r8_2d_in1 = O2_DECOMP_DEPTH_UNSAT, data_r8_2d_out1 = O2_DECOMP_DEPTH_UNSAT_one)
                O2_DECOMP_DEPTH_UNSAT_patches(ipatch) = sum(O2_DECOMP_DEPTH_UNSAT_one * area_one) / sum(area_one)
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 

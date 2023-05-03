@@ -70,8 +70,8 @@ CONTAINS
 
       INTEGER  :: ie, iset
       INTEGER  :: ng, ig, ng_all, iloc
-      INTEGER  :: npxl, ipxl, ilat, ilon, ipxstt, ipxend
-      INTEGER  :: iworker, iproc, idest, isrc, nrecv, nsend
+      INTEGER  :: npxl, ipxl, ilat, ilon
+      INTEGER  :: iworker, iproc, idest, isrc, nrecv
       INTEGER  :: rmesg(2), smesg(2)
       INTEGER  :: iy, ix, xblk, yblk, xloc, yloc
       REAL(r8) :: lat_s, lat_n, lon_w, lon_e, area

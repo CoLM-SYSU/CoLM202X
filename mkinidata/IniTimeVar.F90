@@ -45,10 +45,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 !------------------------------------------------------------
 #endif
 #if(defined SOILINI)
-                     ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d)
-#else
-                     )
+                     ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d
 #endif
+                     ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 !=======================================================================
 ! Created by Yongjiu Dai, 09/15/1999
@@ -76,6 +75,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE GlobalVars
   USE ALBEDO
   USE mod_namelist
+  USE mod_soil_water
 
   IMPLICIT NONE 
 
@@ -108,6 +108,14 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         soil_w(nl_soil_ini),    &! soil wetness from initial file (-)
         snow_d                   ! snow depth (m)
 #endif
+
+  LOGICAL,  intent(in) :: use_wtd
+  REAL(r8), intent(in) :: zwtmm
+  REAL(r8), intent(in) :: zc_soimm(1:nl_soil)
+  REAL(r8), intent(in) :: zi_soimm(1:nl_soil)
+  REAL(r8), INTENT(in) :: vliq_r  (1:nl_soil)
+  INTEGER,  intent(in) :: nprms
+  REAL(r8), intent(in) :: prms(nprms, 1:nl_soil)
 
   REAL(r8), intent(inout) ::    &!
         z_soisno (maxsnl+1:nl_soil),   &! node depth [m]
@@ -407,14 +415,22 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
 !                    is below the model bottom zi(nl_soil)
 
-     wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-     zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+     IF (.not. use_wtd) THEN
+        wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+        zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
 
-     IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-        wa = 0.
-        zwt = zi_soi(nl_soil)
-        dpond = 0.
+        IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+           wa = -1.0e5
+           zwt = zi_soi(nl_soil)
+        ENDIF
+     ELSE
+        IF (patchtype /= 3) THEN
+           CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
+              zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms) 
+        ENDIF
      ENDIF
+           
+     dpond = 0.
 
 ! snow temperature and water content
      t_soisno(maxsnl+1:0) = -999.

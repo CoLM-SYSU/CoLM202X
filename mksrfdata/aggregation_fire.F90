@@ -30,18 +30,8 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
 
-   USE LC_Const
-   USE mod_modis_data
-#ifdef PFT_CLASSIFICATION
-   USE mod_landpft
-   USE mod_aggregation_pft
-#endif
-#ifdef PC_CLASSIFICATION
-   USE mod_landpc
-   USE mod_aggregation_pft
-#endif
+   USE mod_aggregation
 
    IMPLICIT NONE
 
@@ -63,18 +53,11 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    REAL(r8), allocatable :: hdm_patches(:), hdm_one(:)
    REAL(r8), allocatable :: peatf_patches(:), peatf_one(:)
    REAL(r8), allocatable :: gdp_patches(:), gdp_one(:)
-   INTEGER :: itime, ntime, Julian_day, ipatch
-   CHARACTER(LEN=4) :: c2, c3, cyear
+   INTEGER :: itime, ipatch
+   CHARACTER(LEN=4) :: c3, cyear
    integer :: start_year, end_year, YY   
 
-   ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
-   INTEGER :: month
 
-   ! for PFT
-   INTEGER :: p, ip
-
-   ! for PC
    landdir = trim(dir_model_landdata) // '/FIRE/'
 
 #ifdef USEMPI
@@ -135,7 +118,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, hdm)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = hdm)
 #endif
 
          ! ---------------------------------------------------------------
@@ -144,12 +127,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, hdm, hdm_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = hdm, data_r8_2d_out1 = hdm_one)
             hdm_patches(ipatch) = sum(hdm_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -184,7 +168,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, abm)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = abm)
 #endif
 
          ! ---------------------------------------------------------------
@@ -193,12 +177,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, abm, abm_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = abm, data_r8_2d_out1 = abm_one)
             abm_patches(ipatch) = sum(abm_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -233,7 +218,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, peatf)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = peatf)
 #endif
 
          ! ---------------------------------------------------------------
@@ -242,12 +227,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, peatf, peatf_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = peatf, data_r8_2d_out1 = peatf_one)
             peatf_patches(ipatch) = sum(peatf_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -281,7 +267,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, gdp)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = gdp)
 #endif
 
          ! ---------------------------------------------------------------
@@ -290,12 +276,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, gdp, gdp_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = gdp, data_r8_2d_out1 = gdp_one)
             gdp_patches(ipatch) = sum(gdp_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

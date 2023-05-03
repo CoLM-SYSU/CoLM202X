@@ -3,11 +3,24 @@
 SUBROUTINE aggregation_soil_parameters ( &
       gland, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! Creates land model surface dataset from original "raw" data files -
-   !     data with 30 arc seconds resolution
+   !DESCRIPTION:
+   !Create soil hydraulic and thermal parameters for the modeling reolustion
    !
-   ! Created by Yongjiu Dai, 02/2014
-   ! ----------------------------------------------------------------------
+   !ORIGINAL: 
+   !Yongjiu Dai and Wei Shangguan, 02/2014
+   !
+   !REFERENCES:
+   ! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
+   !          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
+   ! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
+   !          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
+   ! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters 
+   !         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
+   !
+   !REVISIONS:
+   !Nan Wei, 06/2019, 02/2020: add three subroutines to  calculate the function/jacobian matrix
+   !
+   ! !USES:
    USE precision
    USE GlobalVars
    USE mod_namelist
@@ -16,7 +29,7 @@ SUBROUTINE aggregation_soil_parameters ( &
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-   USE mod_aggregation_lc
+   USE mod_aggregation
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
@@ -254,7 +267,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/vf_quartz_mineral_s.nc'
          CALL ncio_read_block (lndname, 'vf_quartz_mineral_s_l'//trim(c), gland, vf_quartz_mineral_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, vf_quartz_mineral_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = vf_quartz_mineral_s_grid)
 #endif
       ENDIF
       
@@ -264,8 +277,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, vf_quartz_mineral_s_grid, &
-                                                 vf_quartz_mineral_s_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = vf_quartz_mineral_s_grid, data_r8_2d_out1 = vf_quartz_mineral_s_one)
                vf_quartz_mineral_s_patches (ipatch) = sum (vf_quartz_mineral_s_one * (area_one/sum(area_one)))
             ELSE
                vf_quartz_mineral_s_patches (ipatch) = -1.0e36_r8
@@ -279,7 +292,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -320,8 +333,8 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL ncio_read_block (lndname, 'vf_om_s_l'//trim(c), gland, vf_om_s_grid)
 
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, data_in1 = vf_gravels_s_grid, data_in2 = vf_sand_s_grid, &
-                                                 data_in3 = vf_om_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = vf_gravels_s_grid, &
+            data_r8_2d_in2 = vf_sand_s_grid,  data_r8_2d_in3 = vf_om_s_grid)
 #endif
       ENDIF
       
@@ -331,10 +344,10 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
-                                 data_in1 = vf_gravels_s_grid, data_out1 = vf_gravels_s_one, &
-                                 data_in2 = vf_sand_s_grid,    data_out2 = vf_sand_s_one, &
-                                 data_in3 = vf_om_s_grid,      data_out3 = vf_om_s_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = vf_gravels_s_grid, data_r8_2d_out1 = vf_gravels_s_one, &
+                  data_r8_2d_in2 = vf_sand_s_grid,    data_r8_2d_out2 = vf_sand_s_one, &
+                  data_r8_2d_in3 = vf_om_s_grid,      data_r8_2d_out3 = vf_om_s_one)
 
                vf_gravels_s_patches (ipatch) = sum (vf_gravels_s_one * (area_one/sum(area_one)))
                vf_sand_s_patches (ipatch) = sum (vf_sand_s_one * (area_one/sum(area_one)))
@@ -438,7 +451,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -515,7 +528,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/wf_gravels_s.nc'
          CALL ncio_read_block (lndname, 'wf_gravels_s_l'//trim(c), gland, wf_gravels_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, wf_gravels_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_gravels_s_grid)
 #endif
       ENDIF
       
@@ -525,9 +538,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, wf_gravels_s_grid, &
-                                                 wf_gravels_s_one, area_one)
-               wf_gravels_s_patches (ipatch) = sum (wf_gravels_s_one * (area_one/sum(area_one)))
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = wf_gravels_s_grid, data_r8_2d_out1 = wf_gravels_s_one)
             ELSE
                wf_gravels_s_patches (ipatch) = -1.0e36_r8
             ENDIF
@@ -540,7 +552,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -570,7 +582,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/wf_sand_s.nc'
          CALL ncio_read_block (lndname, 'wf_sand_s_l'//trim(c), gland, wf_sand_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, wf_sand_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_sand_s_grid)
 #endif
       ENDIF
       
@@ -580,8 +592,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, wf_sand_s_grid, &
-                                                 wf_sand_s_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = wf_sand_s_grid, data_r8_2d_out1 = wf_sand_s_one)
                wf_sand_s_patches (ipatch) = sum (wf_sand_s_one * (area_one/sum(area_one)))
             ELSE
                wf_sand_s_patches (ipatch) = -1.0e36_r8
@@ -595,7 +607,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -626,7 +638,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/VGM_L.nc'
          CALL ncio_read_block (lndname, 'VGM_L_l'//trim(c), gland, L_vgm_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, L_vgm_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = L_vgm_grid)
 #endif
       ENDIF
       
@@ -636,7 +648,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, L_vgm_grid, L_vgm_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, &
+                  data_r8_2d_in1 = L_vgm_grid, data_r8_2d_out1 = L_vgm_one)
                L_vgm_patches (ipatch) = median (L_vgm_one, size(L_vgm_one), spval)
             ELSE
                L_vgm_patches (ipatch) = -1.0e36_r8
@@ -650,7 +663,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -696,8 +709,9 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL ncio_read_block (lndname, 'theta_s_l'//trim(c), gland, theta_s_grid)
 
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, data_in1 = theta_r_grid, data_in2 = alpha_vgm_grid, &
-                                                 data_in3 = n_vgm_grid, data_in4 = theta_s_grid)
+         CALL aggregation_data_daemon (gland, &
+            data_r8_2d_in1 = theta_r_grid, data_r8_2d_in2 = alpha_vgm_grid, &
+            data_r8_2d_in3 = n_vgm_grid,   data_r8_2d_in4 = theta_s_grid)
 #endif
       ENDIF
       
@@ -707,11 +721,11 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
-                      data_in1 = theta_r_grid,   data_out1 = theta_r_one, &
-                      data_in2 = alpha_vgm_grid, data_out2 = alpha_vgm_one, &
-                      data_in3 = n_vgm_grid,     data_out3 = n_vgm_one, &
-                      data_in4 = theta_s_grid,   data_out4 = theta_s_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                      data_r8_2d_in1 = theta_r_grid,   data_r8_2d_out1 = theta_r_one, &
+                      data_r8_2d_in2 = alpha_vgm_grid, data_r8_2d_out2 = alpha_vgm_one, &
+                      data_r8_2d_in3 = n_vgm_grid,     data_r8_2d_out3 = n_vgm_one, &
+                      data_r8_2d_in4 = theta_s_grid,   data_r8_2d_out4 = theta_s_one)
                theta_r_patches (ipatch) = median (theta_r_one, size(theta_r_one), spval)
                alpha_vgm_patches (ipatch) = median (alpha_vgm_one, size(alpha_vgm_one), spval)
                n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval) 
@@ -791,7 +805,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -863,8 +877,8 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL ncio_read_block (lndname, 'lambda_l'//trim(c), gland, lambda_grid)
 
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, data_in1 = theta_s_grid, &
-                                  data_in2 = psi_s_grid, data_in3 = lambda_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = theta_s_grid, &
+                            data_r8_2d_in2 = psi_s_grid, data_r8_2d_in3 = lambda_grid)
 #endif
       ENDIF
       
@@ -874,10 +888,10 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, areall = area_one, &
-                            data_in1 = theta_s_grid, data_out1 = theta_s_one, &
-                            data_in2 = psi_s_grid,   data_out2 = psi_s_one, &
-                            data_in3 = lambda_grid,  data_out3 = lambda_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                            data_r8_2d_in1 = theta_s_grid, data_r8_2d_out1 = theta_s_one, &
+                            data_r8_2d_in2 = psi_s_grid,   data_r8_2d_out2 = psi_s_one, &
+                            data_r8_2d_in3 = lambda_grid,  data_r8_2d_out3 = lambda_one)
                theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))
                psi_s_patches (ipatch) = median (psi_s_one, size(psi_s_one), spval)
                lambda_patches (ipatch) = median (lambda_one, size(lambda_one), spval)
@@ -946,7 +960,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -995,7 +1009,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/k_s.nc'
          CALL ncio_read_block (lndname, 'k_s_l'//trim(c), gland, k_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, k_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_s_grid)
 #endif
       ENDIF
       
@@ -1005,7 +1019,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, k_s_grid, k_s_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = k_s_grid, data_r8_2d_out1 = k_s_one)
                k_s_patches (ipatch) = product(k_s_one**(area_one/sum(area_one)))
             ELSE
                k_s_patches (ipatch) = -1.0e36_r8
@@ -1019,7 +1034,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1046,7 +1061,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/csol.nc'
          CALL ncio_read_block (lndname, 'csol_l'//trim(c), gland, csol_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, csol_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = csol_grid)
 #endif
       ENDIF
       
@@ -1056,7 +1071,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, csol_grid, csol_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = csol_grid, data_r8_2d_out1 = csol_one)
                csol_patches (ipatch) = sum(csol_one*(area_one/sum(area_one)))
             ELSE
                csol_patches (ipatch) = -1.0e36_r8
@@ -1070,7 +1086,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1097,7 +1113,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/tksatu.nc'
          CALL ncio_read_block (lndname, 'tksatu_l'//trim(c), gland, tksatu_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, tksatu_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatu_grid)
 #endif
       ENDIF
       
@@ -1107,7 +1123,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, tksatu_grid, tksatu_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = tksatu_grid, data_r8_2d_out1 = tksatu_one)
                tksatu_patches (ipatch) = product(tksatu_one**(area_one/sum(area_one)))
             ELSE
                tksatu_patches (ipatch) = -1.0e36_r8
@@ -1121,7 +1138,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1148,7 +1165,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/tksatf.nc'
          CALL ncio_read_block (lndname, 'tksatf_l'//trim(c), gland, tksatf_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, tksatf_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatf_grid)
 #endif
       ENDIF
       
@@ -1158,7 +1175,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, tksatf_grid, tksatf_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = tksatf_grid, data_r8_2d_out1 = tksatf_one)
                tksatf_patches (ipatch) = product(tksatf_one**(area_one/sum(area_one)))
             ELSE
                tksatf_patches (ipatch) = -1.0e36_r8
@@ -1172,7 +1190,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1199,7 +1217,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/tkdry.nc'
          CALL ncio_read_block (lndname, 'tkdry_l'//trim(c), gland, tkdry_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, tkdry_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tkdry_grid)
 #endif
       ENDIF
       
@@ -1209,7 +1227,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, tkdry_grid, tkdry_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = tkdry_grid, data_r8_2d_out1 = tkdry_one)
                tkdry_patches (ipatch) = product(tkdry_one**(area_one/sum(area_one)))
             ELSE
                tkdry_patches (ipatch) = -1.0e36_r8
@@ -1223,7 +1242,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1250,7 +1269,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/k_solids.nc'
          CALL ncio_read_block (lndname, 'k_solids_l'//trim(c), gland, k_solids_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, k_solids_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_solids_grid)
 #endif
       ENDIF
       
@@ -1260,7 +1279,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, k_solids_grid, k_solids_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = k_solids_grid, data_r8_2d_out1 = k_solids_one)
                k_solids_patches (ipatch) = product(k_solids_one**(area_one/sum(area_one)))
             ELSE
                k_solids_patches (ipatch) = -1.0e36_r8
@@ -1274,7 +1294,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1302,7 +1322,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/OM_density_s.nc'
          CALL ncio_read_block (lndname, 'OM_density_s_l'//trim(c), gland, OM_density_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, OM_density_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = OM_density_s_grid)
 #endif
       ENDIF
       
@@ -1312,8 +1332,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, OM_density_s_grid, &
-                                                 OM_density_s_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = OM_density_s_grid, data_r8_2d_out1 = OM_density_s_one)
                OM_density_s_patches (ipatch) = sum (OM_density_s_one * (area_one/sum(area_one)))
             ELSE
                OM_density_s_patches (ipatch) = -1.0e36_r8
@@ -1327,7 +1347,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -1356,7 +1376,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          lndname = trim(dir_rawdata)//'/soil/BD_all_s.nc'
          CALL ncio_read_block (lndname, 'BD_all_s_l'//trim(c), gland, BD_all_s_grid)
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gland, BD_all_s_grid)
+         CALL aggregation_data_daemon (gland, data_r8_2d_in1 = BD_all_s_grid)
 #endif
       ENDIF
       
@@ -1366,8 +1386,8 @@ SUBROUTINE aggregation_soil_parameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_lc_request_data (ipatch, gland, BD_all_s_grid, &
-                                                 BD_all_s_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+                  data_r8_2d_in1 = BD_all_s_grid, data_r8_2d_out1 = BD_all_s_one)
                BD_all_s_patches (ipatch) = sum (BD_all_s_one * (area_one/sum(area_one)))
             ELSE
                BD_all_s_patches (ipatch) = -1.0e36_r8
@@ -1381,7 +1401,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          ENDDO
       
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
