@@ -1,6 +1,7 @@
 #include <define.h>
 module colm_CaMaMod
 #if(defined CaMa_Flood)
+
    use mod_namelist
    USE MOD_CaMa_Variables
    USE PARKIND1,                ONLY: JPRB, JPRM, JPIM
@@ -138,7 +139,7 @@ CONTAINS
                DEF_hist_cama_vars%levsto=.true. 
             CASE ('levdph')   !!! added
                DEF_hist_cama_vars%levdph=.true. 
-            CASE ('wevap')   !!! added
+            CASE ('wevap')     !!! added
                DEF_hist_cama_vars%wevap=.true. 
             CASE ('winfilt')   !!! added
                DEF_hist_cama_vars%winfilt=.true.             
@@ -285,7 +286,6 @@ ENDIF
          DEALLOCATE (runoff_2d)
          DEALLOCATE (fevpg_2d)
          DEALLOCATE (finfg_2d)
-
          !  CALL CMF_DRV_END
       endif
       if (p_is_worker) then
@@ -302,9 +302,8 @@ ENDIF
    SUBROUTINE get_fldinfo()
       ! save results to master process
       USE YOS_CMF_INPUT,      ONLY:  NX, NY
-      USE YOS_CMF_PROG,       ONLY:  D2FLDSTO 
       USE YOS_CMF_DIAG,       ONLY:  D2FLDDPH,D2FLDFRC
-      USE CMF_UTILS_MOD,      ONLY:  VEC2MAPD
+      USE CMF_UTILS_MOD,      ONLY:  vecD2mapD
 
       IMPLICIT NONE
 
@@ -312,8 +311,8 @@ ENDIF
 
       !================================================
       !! convert 1Dvector to 2Dmap
-      CALL VEC2MAPD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP m
-      CALL VEC2MAPD(D2FLDDPH,fldfrc_tmp)             !! MPI node data is gathered by VEC2MAP m
+      CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP m
+      CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)             !! MPI node data is gathered by VEC2MAP m
       do i    = 1, NX
          do j = 1, NY
             if (flddepth_tmp(i,j) .lt.    0.0)      flddepth_tmp(i,j)=0.0
@@ -322,14 +321,11 @@ ENDIF
       enddo
    END SUBROUTINE get_fldinfo
 
-
-
-   subroutine fldfluxes (hu,ht,hq,&
+   SUBROUTINE FLDFLUXES (hu,ht,hq,&
       us,vs,tm,qm,rhoair,psrf,tssea,&
       taux,tauy,fseng,fevpg,tref,qref,&
       z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
       ! compute surface fluxes, derviatives, and exchange coefficiants
-
       !=======================================================================
       ! this is the main subroutine to execute the calculation of thermal processes
       ! and surface fluxes
@@ -352,8 +348,7 @@ ENDIF
       real(r8), INTENT(in) :: qm      ! specific humidity at agcm reference height [kg/kg]
       real(r8), INTENT(in) :: rhoair  ! density air [kg/m3]
       real(r8), INTENT(in) :: psrf    ! atmosphere pressure at the surface [pa] [not used]
-      real(r8), INTENT(in) :: tssea   ! inundation surface temperature [K]-->set to tgrnd
-   
+      real(r8), INTENT(in) :: tssea   ! inundation surface temperature [K]-->set to tgrnd 
       real(r8), INTENT(out) :: &
       taux,     &! wind stress: E-W [kg/m/s**2]
       tauy,     &! wind stress: N-S [kg/m/s**2]
