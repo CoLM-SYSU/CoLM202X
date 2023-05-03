@@ -291,11 +291,11 @@ contains
 
       if (p_is_io) then
          call allocate_block_data (grid, f_rnof_cama)      ! total runoff         [m/s]
-         call allocate_block_data (grid, f_flddepth_cama)  ! inundation depth     [m]
-         call allocate_block_data (grid, f_fldfrc_cama)    ! inundation fraction  [m]
+         call allocate_block_data (grid, f_flddepth_cama)  ! inundation depth     [m/s]
+         call allocate_block_data (grid, f_fldfrc_cama)    ! inundation fraction  [m/s]
          !TODO: check the following variables
-         call allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m?]
-         call allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m?]
+         call allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m/s]
+         call allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m/s]
       end if 
 
    END SUBROUTINE allocate_2D_cama_Fluxes

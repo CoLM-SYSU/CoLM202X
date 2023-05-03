@@ -40,9 +40,6 @@ INTEGER I,J
 INTEGER(KIND=JPIM)              :: ISTEPX              ! total time step
 INTEGER(KIND=JPIM)              :: ISTEPADV            ! time step to be advanced within DRV_ADVANCE
 REAL(KIND=JPRB),ALLOCATABLE     :: ZBUFF(:,:,:)        ! Buffer to store forcing runoff
-!Only for bi-directional coupled mode
-REAL(r8), ALLOCATABLE           :: Effarea(:,:)        ! effective inundation area, see CAMA/CMF_CALC_STONXT_MOD.F90
-REAL(r8), ALLOCATABLE           :: Effdepth     (:,:)  ! effective inundation depth, see CAMA/CMF_CALC_STONXT_MOD.F90
 
 INTERFACE colm_CaMa_init
    MODULE PROCEDURE colm_CaMa_init
@@ -62,9 +59,8 @@ SUBROUTINE colm_CaMa_init
    USE YOS_CMF_TIME,          ONLY: YYYY0
    IMPLICIT NONE
    !** local variables
-   INTEGER nlon_cama, nlat_cama
-   INTEGER dtime
-   INTEGER i,j,IX,IY,mmm
+
+   INTEGER i,j
    INTEGER(KIND=JPIM)          :: JF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -90,9 +86,8 @@ SUBROUTINE colm_CaMa_init
       RMIS     = spval
       DMIS     = spval
 
-      !INITIALIZATION
-      CALL CMF_DRV_INIT
-      
+      CALL CMF_DRV_INIT       !INITIALIZATION
+
       !Initialize varialbes to be outputed from variable list 
       DO JF=1,NVARSOUT
          SELECT CASE (VAROUT(JF)%CVNAME)
@@ -170,16 +165,16 @@ SUBROUTINE colm_CaMa_init
       end do
    ENDIF
       !Broadcast the variables to all the processors
-      CALL mpi_bcast (NX      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (NY      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (IFRQ_INP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (NX      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
+      CALL mpi_bcast (NY      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
+      CALL mpi_bcast (IFRQ_INP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
+      CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
+      CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
       
       !Allocate the data structure for cama
-      CALL gcama%define_by_ndims (NX, NY) 
-      CALL mp2g_cama%build (landpatch, gcama)
-      CALL mg2p_cama%build (gcama, landpatch)
+      CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
+      CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
+      CALL mg2p_cama%build (gcama, landpatch) 
 
       CALL cama_gather%set (gcama)
       
@@ -198,19 +193,19 @@ SUBROUTINE colm_CaMa_init
          ALLOCATE (fldfrc_tmp(NX,NY))
          ALLOCATE (flddepth_tmp(NX,NY))
          !Initialize the data buffer for input forcing, flood fraction and flood depth
-         runoff_2d(:,:)    = 0.0D0
-         fevpg_2d(:,:)     = 0.0D0
-         finfg_2d(:,:)     = 0.0D0
-         ZBUFF(:,:,:)      = 0.0D0
-         fldfrc_tmp(:,:)   = 0.0D0
-         flddepth_tmp(:,:) = 0.0D0
+         runoff_2d(:,:)    = 0.0D0 !runoff in master processor
+         fevpg_2d(:,:)     = 0.0D0 !evaporation in master processor
+         finfg_2d(:,:)     = 0.0D0 !re-infiltration in master processor
+         ZBUFF(:,:,:)      = 0.0D0 !input forcing in master processor
+         fldfrc_tmp(:,:)   = 0.0D0 !flood fraction in master processor
+         flddepth_tmp(:,:) = 0.0D0 !flood depth in master processor
       ENDIF
       !Allocate the cama-flood related variable in worker processors
       IF (p_is_worker) THEN
-         ALLOCATE (flddepth_cama(numpatch))
-         ALLOCATE (fldfrc_cama(numpatch))
-         ALLOCATE (fevpg_fld(numpatch))
-         ALLOCATE (finfg_fld(numpatch))
+         ALLOCATE (flddepth_cama(numpatch)) !flood depth in worker processors
+         ALLOCATE (fldfrc_cama(numpatch))   !flood fraction in worker processors
+         ALLOCATE (fevpg_fld(numpatch))     !evaporation in worker processors
+         ALLOCATE (finfg_fld(numpatch))     !re-infiltration in worker processors
          flddepth_cama(:)     =  0.0D0
          fldfrc_cama(:)       =  0.0D0
          fevpg_fld(:)         =  0.0D0
@@ -295,15 +290,16 @@ SUBROUTINE colm_cama_drv(idate_sec)
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif   
-         CALL cama2colm_real8 (flddepth_tmp, f_flddepth_cama, flddepth_cama)
+         CALL cama2colm_real8 (flddepth_tmp, f_flddepth_cama, flddepth_cama)! unit [m]
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif         
-         CALL cama2colm_real8 (fldfrc_tmp,   f_fldfrc_cama,   fldfrc_cama  )
+         CALL cama2colm_real8 (fldfrc_tmp,   f_fldfrc_cama,   fldfrc_cama  ) ! unit [%]
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif               
          flddepth_cama=flddepth_cama*1000.D0 !m --> mm
+         fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
       ENDIF
    ENDIF
 END SUBROUTINE colm_cama_drv
@@ -345,9 +341,9 @@ SUBROUTINE get_fldinfo()
    !----------------
    ! 2020.10.01  Zhongwang Wei @ SYSU
 
-   USE YOS_CMF_INPUT,      ONLY:  NX, NY
-   USE YOS_CMF_DIAG,       ONLY:  D2FLDDPH,D2FLDFRC
-   USE CMF_UTILS_MOD,      ONLY:  vecD2mapD
+   USE YOS_CMF_INPUT,      ONLY:  NX, NY !grid number
+   USE YOS_CMF_DIAG,       ONLY:  D2FLDDPH,D2FLDFRC !1D vector data of flood depth and flood fraction
+   USE CMF_UTILS_MOD,      ONLY:  vecD2mapD          !convert 1D vector data -> 2D map data (REAL*8)
 
    IMPLICIT NONE
       
@@ -356,12 +352,14 @@ SUBROUTINE get_fldinfo()
 
    !================================================
    !! convert 1Dvector to 2Dmap
-   CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP m
-   CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP m
+   CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP 
+   CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP 
+
    do i    = 1, NX
       do j = 1, NY
-         IF (flddepth_tmp(i,j) .lt.    0.0)      flddepth_tmp(i,j)=0.0
-         IF (fldfrc_tmp(i,j)   .lt.    0.0)      fldfrc_tmp(i,j)=0.0
+         IF (flddepth_tmp(i,j) .LT.    0.0)        flddepth_tmp(i,j) = 0.0
+         IF (fldfrc_tmp(i,j)   .LT.    0.0)        fldfrc_tmp(i,j)   = 0.0
+         IF (fldfrc_tmp(i,j)   .GT.    100.0)      fldfrc_tmp(i,j)   = 100.0    !!If fraction is larger than 100%, it is set to 100%. 
       ENDDO
    ENDDO
 END SUBROUTINE get_fldinfo
@@ -537,11 +535,11 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    obu = zldis/zol
    
    IF(zol >= 0.)THEN
-   um = max(ur,0.1)
+   um = max(ur,0.1) !wind speed at reference height
    else
-   wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
-   wc2 = beta*beta*(wc*wc)
-   um = sqrt(ur*ur+wc2)
+   wc = (-grav*ustar*thvstar*zii/thv)**(1./3.) !convective velocity scale
+   wc2 = beta*beta*(wc*wc)                     !convective velocity scale squared
+   um = sqrt(ur*ur+wc2)                        !wind speed with convective velocity scale
    ENDIF
    
    IF (obuold*obu < 0.) nmozsgn = nmozsgn+1

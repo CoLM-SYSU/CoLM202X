@@ -309,8 +309,8 @@ SUBROUTINE CLMMAIN ( &
         forc_hgt_q  ,&! observational height of humidity [m]
         forc_rhoair   ! density air [kg/m3]
 #if(defined CaMa_Flood)
-   REAL(r8), intent(in)    :: fldfrc    !effective inundation fraction--> allow re-evaporation and infiltrition![0-1]
-   REAL(r8), intent(inout) :: flddepth  !effective inundation depth--> allow re-evaporation and infiltrition![mm/s]
+   REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
+   REAL(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
    REAL(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
    REAL(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
@@ -820,8 +820,7 @@ ENDIF
               wa                ,qcharge           ,errw_rsub &
 
 #if(defined CaMa_Flood)
-            !TODO: chek if both flood evaporation and re-infiltration are needed here
-            !zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
             ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -850,6 +849,7 @@ ENDIF
               wimp              ,zwt               ,dpond             ,wa                ,&
               qcharge           ,errw_rsub &
 #if(defined CaMa_Flood)
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -931,6 +931,13 @@ ENDIF
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          endwb = endwb + dpond
       ENDIF
+#if(defined CaMa_Flood)
+   if (LWINFILT) then 
+       if (patchtype == 0) then
+            endwb=endwb - qinfl_fld*deltim
+       ENDIF
+   ENDIF
+#endif
 
 #ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
@@ -938,13 +945,7 @@ ENDIF
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
-#if(defined CaMa_Flood)
-if (LWINFILT) then 
-   if (patchtype == 0) then
-      errorw=(endwb-totwb)-(forc_prc+forc_prl+qinfl_fld-fevpa-rnof-errw_rsub)*deltim
-   ENDIF
-ENDIF
-#endif
+
       xerr=errorw/deltim
 
 #if(defined CLMDEBUG)
@@ -1229,10 +1230,6 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
 
 ENDIF
 #if(defined CaMa_Flood)
-if (LWINFILT) then 
-   if (qinfl_fld<0.0) fevpg_fld=0.0d0
-   flddepth        =  flddepth- qinfl_fld*deltim !mm
-endif
 if (LWEVAP) then 
    if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0)then
          call get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
@@ -1246,6 +1243,7 @@ if (LWEVAP) then
          !tauy= tauy_fld*fldfrc+(1.0-fldfrc)*tauy
          fseng= fseng_fld*fldfrc+(1.0-fldfrc)*fseng
          fevpg= fevpg_fld*fldfrc+(1.0-fldfrc)*fevpg
+         fevpg_fld=fevpg_fld*fldfrc
          !tref=tref_fld*fldfrc+(1.0-fldfrc)*tref! 2 m height air temperature [kelvin]
          !qref=qref_fld*fldfrc+(1.0-fldfrc)*qref! 2 m height air humidity
          !z0m=z0m_fld*fldfrc+(1.0-fldfrc)*z0m! effective roughness [m]
