@@ -29,6 +29,12 @@
 ! 6.1 Two soil hydraulic models can be used.   
 #define  Campbell_SOIL_MODEL
 #undef   vanGenuchten_Mualem_SOIL_MODEL
+! 6.2 If defined, lateral flow is modeled.
+#define  LATERAL_FLOW
+!    Conflicts : 
+#ifndef CATCHMENT
+#undef LATERAL_FLOW
+#endif
 
 ! 7. If defined, soil temperature, wetness and snow depth
 !     are initialized by input data.

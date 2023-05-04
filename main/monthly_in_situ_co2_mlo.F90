@@ -48,7 +48,8 @@ MODULE co2_mlo
 ! Created by Hua Yuan, 05/2022
 !
 ! REVISIONS:
-! TODO...
+! !---2023.02.23  Zhongwang Wei @ SYSU: Added CO2 data (TODO:details?@zhongwang) in init_monthly_co2_mlo()
+! !---2022.12.12  Zhongwang Wei @ SYSU: Added history and SSP CO2 data in init_monthly_co2_mlo()
 ! -------------------------------
 
    USE precision
@@ -57,8 +58,8 @@ MODULE co2_mlo
    SAVE
 
    ! define the CO2 data time range
-   INTEGER, parameter :: syear  = 1849
-   INTEGER, parameter :: eyear  = 2100
+   INTEGER, parameter :: syear  = 1849 !Modified by Zhongwang Wei @ SYSU 2022.12.12
+   INTEGER, parameter :: eyear  = 2100 !Modified by Zhongwang Wei @ SYSU 2022.12.12
    INTEGER, parameter :: smonth = 1
    INTEGER, parameter :: emonth = 12
 
@@ -71,14 +72,45 @@ MODULE co2_mlo
    CONTAINS
 
    SUBROUTINE init_monthly_co2_mlo
+   !DESCRIPTION
+   !===========
+      !---This MODULE is used for initilize the CO2 concentration.
+
+   !ANCILLARY FUNCTIONS AND SUBROUTINES
+   !-------------------
+
+   !Original Author:
+   !-------------------
+      !Hua Yuan @ SYSU 2021.05.05
+
+   !References:
+   !-------------------
+      !---1850-1957 obtained from https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/
+      ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
+      ! https://doi.org/10.48364/ISIMIP.482153.1
+      !---1958-2022 obtained from https://www.esrl.noaa.gov/gmd/ccgg/trends/data.html
+      !---!May 2022  ~ Dec 2022 data obtained from https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii)
+      !---Due to the eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were suspended as of Nov. 29. 2022
+      !   New Observations starting in December 2022 are from a site at the Maunakea Observatories,
+      !   approximately 21 miles north of the Mauna Loa Observatory.
+      !---CMIP6 co2 data is obtainted from :
+      !   Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
+      !   https://doi.org/10.48364/ISIMIP.482153.1
+
+   !REVISION HISTORY
+   !----------------
+      !---2023.02.23  Zhongwang Wei @ SYSU
+      !---2022.12.12  Zhongwang Wei @ SYSU
+      !---2021.05.05  Hua Yuan @ SYSU
 
       IMPLICIT NONE
 
       ! fillvalue
-      co2mlo(:,:) = -99.99
+      co2mlo(:,:) = -99.99 !monthly mean CO2 concentration in ppm
       !1850-1957 obtained from https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/
       ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
       ! https://doi.org/10.48364/ISIMIP.482153.1
+      !added by Zhongwang Wei @ SYSU 2022.12.12
       co2mlo( 1849 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
       co2mlo( 1850 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
       co2mlo( 1851 ,:) = (/ 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 , 284.88 /)
@@ -320,6 +352,7 @@ MODULE co2_mlo
       !CMIP6 co2 data is obtainted from :
       !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
       !https://doi.org/10.48364/ISIMIP.482153.1
+      !added by Zhongwang Wei @ SYSU 2022.12.12
       select case (trim(DEF_SSP))
       case ('126')
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
@@ -408,6 +441,7 @@ MODULE co2_mlo
             co2mlo(2098,:) =  (/ 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73 /)
             co2mlo(2099,:) =  (/ 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67 /)
             co2mlo(2100,:) =  (/ 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62 /)
+      !added by Zhongwang Wei @ SYSU 2022.12.12
       case ('245')
             print *,'245'
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
@@ -496,8 +530,8 @@ MODULE co2_mlo
             co2mlo(2098,:) =  (/ 602.18, 602.18, 602.18, 602.18, 602.18, 602.18, 602.18, 602.18, 602.18, 602.18, 850.55, 850.55 /)
             co2mlo(2099,:) =  (/ 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 602.51, 858.83, 858.83 /)
             co2mlo(2100,:) =  (/ 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 602.78, 867.19, 867.19 /)
+      !added by Zhongwang Wei @ SYSU 2022.12.12
       case ('370')
-            print *,'370'
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) =  (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)
             !co2mlo(2017,:) =  (/ 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81, 405.81 /)
@@ -584,6 +618,7 @@ MODULE co2_mlo
             co2mlo(2098,:) =  (/ 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55, 850.55 /)
             co2mlo(2099,:) =  (/ 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83, 858.83 /)
             co2mlo(2100,:) =  (/ 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19, 867.19 /)
+      !added by Zhongwang Wei @ SYSU 2022.12.12
       case ('585')
             !co2mlo(2015,:) = (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)
             !co2mlo(2016,:) = (/ 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12, 403.12 /)

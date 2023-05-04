@@ -52,7 +52,7 @@ CONTAINS
 #if (defined CROP)
       USE mod_pixelsetshadow
 #endif
-      USE mod_aggregation_generic
+      USE mod_aggregation
 
       IMPLICIT NONE
 
@@ -60,7 +60,7 @@ CONTAINS
       CHARACTER(len=256) :: file_patch
       TYPE (block_data_int32_2d) :: patchdata
       INTEGER :: iloc, npxl, ipxl, numset
-      INTEGER :: ie, iset, ipxstt, ipxend, ipatch
+      INTEGER :: ie, iset, ipxstt, ipxend
       INTEGER, allocatable :: types(:), order(:), ibuff(:)
       INTEGER, allocatable :: eindex_tmp(:), settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
       LOGICAL, allocatable :: msk(:)
@@ -71,8 +71,6 @@ CONTAINS
 #endif
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)
-
-      INTEGER :: iblk, jblk
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land patches :'
@@ -121,7 +119,7 @@ CONTAINS
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
 #ifdef USEMPI
-         CALL aggregation_gen_data_daemon (gpatch, data_i4 = patchdata)
+         CALL aggregation_data_daemon (gpatch, data_i4_2d_in1 = patchdata)
 #endif
       ENDIF
 #endif
@@ -160,9 +158,14 @@ CONTAINS
             allocate (types (ipxstt:ipxend))
 
 #ifndef SinglePoint
-            CALL aggregation_gen_request_data (gpatch, &
-               mesh(ie)%ilon(ipxstt:ipxend), mesh(ie)%ilat(ipxstt:ipxend), &
-               data_i4 = patchdata, out_i4 = ibuff)
+#ifdef CATCHMENT
+            CALL aggregation_request_data (landhru, iset, gpatch, &
+#else
+            CALL aggregation_request_data (landelm, iset, gpatch, &
+#endif
+               data_i4_2d_in1 = patchdata, data_i4_2d_out1 = ibuff)
+
+
             types(:) = ibuff
             deallocate (ibuff)
 #else
@@ -269,7 +272,7 @@ CONTAINS
          ENDIF
 
 #ifdef USEMPI
-         CALL aggregation_gen_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
 
       ENDIF
@@ -326,7 +329,7 @@ CONTAINS
 
 #ifdef CATCHMENT
 #if (defined CROP)
-      CALL hru_patch%build (landhru, landpatch, use_frac = .true., pctcrop)
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
 #else
       CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif

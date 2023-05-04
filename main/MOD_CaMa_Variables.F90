@@ -1,45 +1,70 @@
 #include <define.h>
 
 module MOD_CaMa_Variables
+!DESCRIPTION
+!===========
+   !---This MODULE is the coupler for the colm and CaMa-Flood model.
+
+!ANCILLARY FUNCTIONS AND SUBROUTINES
+!-------------------
+   !* :SUBROUTINE:"allocate_acc_cama_fluxes"   :  Initilization Accumulation of cama-flood variables
+   !* :SUBROUTINE:"deallocate_acc_cama_fluxes" :  Deallocate Accumulation of cama-flood variables
+   !* :SUBROUTINE:"FLUSH_acc_cama_fluxes"      :  Reset Accumulation of cama-flood variables
+   !* :SUBROUTINE:"accumulate_cama_fluxes"     :  Get accumulated cama-flood variables
+   !* :SUBROUTINE:"allocate_2D_cama_Fluxes"    :  Get floodplain evaporation
+   !* :SUBROUTINE:"hist_out_cama"              :  Average camaflood history variables and write out
+   !* :SUBROUTINE:"hist_write_cama_time"       :  write out cama-flood history variables
+   !* :SUBROUTINE:"flux_map_and_write_2d_cama" :  map cama output and write 1 or 2D variables, e.g. lon, lat
+   !* :SUBROUTINE:"colm2cama_real8"            :  Send variables from worker processors to master processors
+   !* :SUBROUTINE:"cama2colm_real8"            :  Send variables from master processors (cama) to worker processors (colm)
+
+!REVISION HISTORY
+!----------------
+   !---2023.02.23  Zhongwang Wei @ SYSU
+   !---2021.12.12  Zhongwang Wei @ SYSU 
+   !---2020.10.21  Zhongwang Wei @ SYSU
+
 #if(defined CaMa_Flood)
-   use precision
+
+   USE precision
    USE mod_grid
-   use mod_data_type
+   USE mod_data_type
    USE mod_mapping_pset2grid
    USE mod_mapping_grid2pset
    USE YOS_CMF_INPUT,            ONLY:RMIS,DMIS
-   real(r8) :: nacc              ! number of accumulation
-   real(r8), allocatable         :: a_rnof_cama (:) ! on worker : total runoff [mm/s]
-   type(block_data_real8_2d)     :: f_rnof_cama     ! on IO     : total runoff [mm/s]
-   real(r8), allocatable         :: runoff_2d (:,:) ! on Master : total runoff [mm/s]
+
+   real(r8) :: nacc                                        ! number of accumulation
+   real(r8), allocatable         :: a_rnof_cama (:)        ! on worker : total runoff [mm/s]
+   type(block_data_real8_2d)     :: f_rnof_cama            ! on IO     : total runoff [mm/s]
+   real(r8), allocatable         :: runoff_2d (:,:)        ! on Master : total runoff [mm/s]
 
    real(r8), allocatable         :: flddepth_cama (:)      ! on worker : flddepth [m]
    type(block_data_real8_2d)     :: f_flddepth_cama        ! on IO     : flddepth [m]
    real(r8), allocatable         :: flddepth_tmp(:,:) 
  
-   real(r8), allocatable         :: fldfrc_cama (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)     :: f_fldfrc_cama         ! on IO     : flddepth [m]
-   real(r8), allocatable         :: fldfrc_tmp (:,:)      ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: fldfrc_cama (:)        ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_fldfrc_cama          ! on IO     : flddepth [m]
+   real(r8), allocatable         :: fldfrc_tmp (:,:)       ! on Master : total runoff [mm/s]
 
-   real(r8), allocatable         :: fevpg_fld(:)          ! m/s
-   real(r8), allocatable         :: finfg_fld(:)          ! m/s
+   real(r8), allocatable         :: fevpg_fld(:)           ! m/s
+   real(r8), allocatable         :: finfg_fld(:)           ! m/s
 
-   real(r8), allocatable         :: a_fevpg_fld (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)     :: f_fevpg_fld           ! on IO : total runoff [mm/s]
-   real(r8), allocatable         :: fevpg_2d (:,:)        ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: a_fevpg_fld (:)        ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_fevpg_fld            ! on IO : total runoff [mm/s]
+   real(r8), allocatable         :: fevpg_2d (:,:)         ! on Master : total runoff [mm/s]
 
-   real(r8), allocatable         :: a_finfg_fld (:)       ! on worker : flddepth [m]
-   type(block_data_real8_2d)     :: f_finfg_fld           ! on IO : total runoff [mm/s]
-   real(r8), allocatable         :: finfg_2d (:,:)        ! on Master : total runoff [mm/s]
+   real(r8), allocatable         :: a_finfg_fld (:)        ! on worker : flddepth [m]
+   type(block_data_real8_2d)     :: f_finfg_fld            ! on IO : total runoff [mm/s]
+   real(r8), allocatable         :: finfg_2d (:,:)         ! on Master : total runoff [mm/s]
    TYPE(grid_type) :: gcama
    
-   TYPE (mapping_pset2grid_type) :: mp2g_cama
-   TYPE (mapping_grid2pset_type) :: mg2p_cama
+   TYPE (mapping_pset2grid_type) :: mp2g_cama               ! mapping pset to grid
+   TYPE (mapping_grid2pset_type) :: mg2p_cama               ! mapping grid to pset
 
-   TYPE (grid_concat_type)       :: cama_gather
+   TYPE (grid_concat_type)       :: cama_gather            ! gather grid
  
-   type(block_data_real8_2d)     :: IO_Effdepth    ! inundation to water depth [m]
-   type(block_data_real8_2d)     :: IO_Effarea
+   type(block_data_real8_2d)     :: IO_Effdepth            ! inundation to water depth [m]
+   type(block_data_real8_2d)     :: IO_Effarea             ! inundation to water area [m2]
 
    TYPE history_var_cama_type
       LOGICAL :: rivout       = .false.
@@ -56,6 +81,7 @@ module MOD_CaMa_Variables
       LOGICAL :: outflw       = .false.
       LOGICAL :: totsto       = .false.
       LOGICAL :: storge       = .false.
+      LOGICAL :: pthflw       = .false.
       LOGICAL :: pthout       = .false.
       LOGICAL :: maxflw       = .false.
       LOGICAL :: maxdph       = .false.
@@ -83,24 +109,32 @@ module MOD_CaMa_Variables
    public :: deallocate_acc_cama_fluxes
    public :: flush_acc_cama_fluxes
    public :: accumulate_cama_fluxes
-   
    public :: allocate_2D_cama_Fluxes
-   
    PUBLIC :: colm2cama_real8
    PUBLIC :: cama2colm_real8
-
    PUBLIC :: hist_out_cama
 
 contains
 
-   ! -----
-   subroutine allocate_acc_cama_fluxes 
+   SUBROUTINE allocate_acc_cama_fluxes 
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for initilization Accumulation of cama-flood variables
 
-      use spmd_task
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+
+      !REVISION HISTORY
+      !----------------
+      ! 2021.12.12  Zhongwang Wei @ SYSU
+
+      USE spmd_task
       USE GlobalVars
-      use mod_landpatch, only : numpatch
-      implicit none
+      USE mod_landpatch, ONLY : numpatch
 
+      IMPLICIT NONE
+      
+      !allocate cama-flood variables on worker
       if (p_is_worker) then
          if (numpatch > 0) then
             allocate (a_rnof_cama(numpatch))
@@ -109,14 +143,24 @@ contains
          end if
       end if
 
-   end subroutine allocate_acc_cama_fluxes
+   END SUBROUTINE allocate_acc_cama_fluxes
 
-   ! -----
-   subroutine deallocate_acc_cama_fluxes()
+   SUBROUTINE deallocate_acc_cama_fluxes()
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for deallocate Accumulation of cama-flood variables
 
-      use spmd_task
-      use mod_landpatch, only : numpatch
-      implicit none
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
+      
+      USE spmd_task
+      USE mod_landpatch, ONLY : numpatch
+
+      IMPLICIT NONE
 
       if (p_is_worker) then
          if (numpatch > 0) then
@@ -126,15 +170,24 @@ contains
          end if
       end if
 
-   end subroutine deallocate_acc_cama_fluxes
+   END SUBROUTINE deallocate_acc_cama_fluxes
 
-   ! -----
    SUBROUTINE FLUSH_acc_cama_fluxes ()
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for reset Accumulation of cama-flood variables
 
-      use spmd_task
-      use mod_landpatch, only : numpatch
-      use GlobalVars,    only : spval 
-      implicit none
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
+      USE spmd_task
+      USE mod_landpatch, ONLY : numpatch
+      USE GlobalVars,    ONLY : spval 
+
+      IMPLICIT NONE
 
       if (p_is_worker) then
 
@@ -150,13 +203,23 @@ contains
 
    END SUBROUTINE FLUSH_acc_cama_fluxes
 
-   ! -----
    SUBROUTINE accumulate_cama_fluxes 
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for accumulating  cama-flood variables
 
-      use precision
-      use spmd_task
-      USE MOD_1D_Fluxes, only : rnof
-      use mod_landpatch, only : numpatch
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"acc1d_cama"            :  accumulating 1D cama-flood variables
+
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
+      
+      USE precision
+      USE spmd_task
+      USE MOD_1D_Fluxes, ONLY : rnof
+      USE mod_landpatch, ONLY : numpatch
 
       IMPLICIT NONE
 
@@ -171,17 +234,26 @@ contains
 
    END SUBROUTINE accumulate_cama_fluxes
 
-   ! -----
    SUBROUTINE acc1d_cama (var, s)
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for accumulating 1D cama-flood variables
 
-      use precision
-      use GlobalVars, only: spval
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
+
+      USE precision
+      USE GlobalVars, ONLY: spval
 
       IMPLICIT NONE
 
-      real(r8), intent(in)    :: var(:)
-      real(r8), intent(inout) :: s  (:)
-      ! Local variables
+      real(r8), intent(in)    :: var(:) ! variable to be accumulated
+      real(r8), intent(inout) :: s  (:) ! new added value
+      !----------------------- Dummy argument --------------------------------
       integer :: i
 
       do i = lbound(var,1), ubound(var,1)
@@ -196,31 +268,51 @@ contains
       
    END SUBROUTINE acc1d_cama
 
-   ! -----
    SUBROUTINE allocate_2D_cama_Fluxes (grid)
-      ! --------------------------------------------------------------------
-      ! Allocates memory for CLM 2d [lon_points,lat_points] variables
-      ! --------------------------------------------------------------------
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for accumulating 2D cama-flood variables
 
-      use spmd_task
-      use mod_grid
-      use mod_data_type 
-      implicit none
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"allocate_block_data"            :  allocate 2D cama-flood variables to colm block
+
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
+
+      USE spmd_task
+      USE mod_grid
+      USE mod_data_type 
+
+      IMPLICIT NONE
 
       type(grid_type), intent(in) :: grid
 
       if (p_is_io) then
-         call allocate_block_data (grid, f_rnof_cama)      ! total runoff [m/s]
-         call allocate_block_data (grid, f_flddepth_cama)  ! f_flddepth [m]
-         call allocate_block_data (grid, f_fldfrc_cama)    ! f_fldfrc [m]
-         call allocate_block_data (grid, f_fevpg_fld)      ! f_fldfrc [m]
-         call allocate_block_data (grid, f_finfg_fld)      ! f_fldfrc [m]
+         call allocate_block_data (grid, f_rnof_cama)      ! total runoff         [m/s]
+         call allocate_block_data (grid, f_flddepth_cama)  ! inundation depth     [m/s]
+         call allocate_block_data (grid, f_fldfrc_cama)    ! inundation fraction  [m/s]
+         !TODO: check the following variables
+         call allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m/s]
+         call allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m/s]
       end if 
 
    END SUBROUTINE allocate_2D_cama_Fluxes
 
-   ! -----
    SUBROUTINE hist_out_cama (file_hist, itime_in_file)
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for averaging and writing 2D cama-flood variables out
+
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"CMF_DIAG_AVERAGE"                      :  averaging the diagnostic variables of cama-flood
+      !* :SUBROUTINE:"flux_map_and_write_2d_cama"            :  map camaflood variables to colm block and write out
+      !* :SUBROUTINE:"CMF_DIAG_RESET"                        :  reset diagnostic variables of cama-flood
+      !REVISION HISTORY
+      !----------------
+      ! 2020.10.21  Zhongwang Wei @ SYSU
 
       USE spmd_task
       USE CMF_CALC_DIAG_MOD,  ONLY: CMF_DIAG_AVERAGE, CMF_DIAG_RESET
@@ -232,7 +324,7 @@ contains
          D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,               &
          D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX, &
          d2daminf_avg,D2WEVAPEX_AVG,D2WINFILTEX_AVG,D2LEVDPH !!! added
-      use mod_2d_fluxes
+      USE mod_2d_fluxes
 
       IMPLICIT NONE
       
@@ -286,6 +378,9 @@ contains
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%storge, &
          real(D2STORGE), file_hist, 'storge', itime_in_file,'total storage (river+floodplain)','m3')
 
+         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%pthflw, &
+         real(D1PTHFLW_AVG), file_hist, 'pthflw', itime_in_file,'bifurcation channel discharge ','m3/s')
+
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%pthout, &
          real(D2PTHOUT_AVG), file_hist, 'pthout', itime_in_file,'net bifurcation discharge','m3/s')
 
@@ -335,19 +430,33 @@ contains
 
    END SUBROUTINE hist_out_cama 
 
-   ! -----
    SUBROUTINE hist_write_cama_time (filename, dataname, time, itime)
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for writing time,longitude and latitude of cama-flood output using netcdf format.
 
-      use spmd_task
-      use ncio_serial
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"ncio_create_file"                      :  create netcdf file, see ncio_serial.F90
+      !* :SUBROUTINE:"ncio_define_dimension"                 :  define dimension of netcdf file, see ncio_serial.F90
+      !* :SUBROUTINE:"ncio_write_serial"                     :  write serial data into netcdf file (lon, lat), see ncio_serial.F90
+      !* :SUBROUTINE:"ncio_write_time"                       :  write time serial into netcdf file (lon, lat), see ncio_serial.F90
+
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
+
+      USE spmd_task
+      USE ncio_serial
       USE YOS_CMF_INPUT, ONLY: NX, NY
       USE YOS_CMF_MAP,   ONLY: D1LON, D1LAT
-      implicit none
 
-      character (len=*), intent(in) :: filename
-      character (len=*), intent(in) :: dataname
-      integer, intent(in)  :: time(3)
-      integer, intent(out) :: itime
+      IMPLICIT NONE
+
+      character (len=*), intent(in) :: filename ! file name
+      character (len=*), intent(in) :: dataname ! data name
+      integer, intent(in)  :: time(3)           ! time (year, month, day)
+      integer, intent(out) :: itime             ! number of time step
 
       ! Local variables
       logical :: fexists
@@ -368,16 +477,29 @@ contains
 
    END SUBROUTINE hist_write_cama_time
 
-   ! -----
-   subroutine flux_map_and_write_2d_cama (is_hist, &
+   SUBROUTINE flux_map_and_write_2d_cama (is_hist, &
          var_in, file_hist, varname, itime_in_file,longname,units)
+      
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for mapping cama-flood output using netcdf format.
+
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"ncio_put_attr"                      :  write netcdf attribute, see ncio_serial.F90
+      !* :SUBROUTINE:"vecP2mapR"                          :  convert 1D vector data -> 2D map data (REAL*4), CAMA/cmf_utils_mod.F90
+      !* :SUBROUTINE:"ncio_write_serial_time"             :  define dimension of netcdf file, see ncio_serial.F90
+
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
 
       USE mod_namelist
       USE YOS_CMF_INPUT,  ONLY: NX, NY
       USE YOS_CMF_MAP,    ONLY: NSEQALL
       USE PARKIND1,       ONLY: JPRM
       USE CMF_UTILS_MOD,  ONLY: vecP2mapR
-      use ncio_serial
+      USE ncio_serial,    ONLY: ncio_write_serial_time, ncio_put_attr
 
       IMPLICIT NONE
       logical, intent(in) :: is_hist
@@ -404,38 +526,44 @@ contains
          CALL ncio_put_attr (file_hist, varname, 'missing_value',DMIS)
       ENDIF
 
-   end subroutine flux_map_and_write_2d_cama
+   END SUBROUTINE flux_map_and_write_2d_cama
 
-   ! -----
    SUBROUTINE colm2cama_real8 (WorkerVar, IOVar, MasterVar)
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for mapping colm output to cama input.
 
-      !=======================================================================
-      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-      !=======================================================================
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"allocate_block_data"                      :  allocate data into block
 
-      use precision
-      use mod_namelist
-      use timemanager
-      use spmd_task
-      use mod_block
-      use mod_data_type
-      use mod_landpatch
-      use mod_mapping_pset2grid
-      use mod_colm_debug
-      USE MOD_TimeInvariants, only : patchtype
-      USE mod_forcing, only : forcmask
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
 
-      !use GlobalVars, only : spval
+      USE precision
+      USE mod_namelist
+      USE timemanager
+      USE spmd_task
+      USE mod_block
+      USE mod_data_type
+      USE mod_landpatch
+      USE mod_mapping_pset2grid
+      USE mod_colm_debug
+      USE MOD_TimeInvariants, ONLY : patchtype
+      USE mod_forcing, ONLY : forcmask
+
       IMPLICIT NONE
 
-      real(r8),                  intent(inout) :: WorkerVar(:)
-      TYPE(block_data_real8_2d), intent(inout) :: IOVar
-      real(r8),                  INTENT(inout) :: MasterVar(:,:)
+      real(r8),                  intent(inout) :: WorkerVar(:)    !varialbe on worker processer   
+      TYPE(block_data_real8_2d), intent(inout) :: IOVar           !varialbe on IO processer   
+      real(r8),                  INTENT(inout) :: MasterVar(:,:)  !varialbe on master processer
 
-      type(block_data_real8_2d) :: sumwt
-      real(r8), allocatable     :: vectmp(:)  
-      logical,  allocatable     :: filter(:)
-      integer :: xblk, yblk, xloc, yloc
+      type(block_data_real8_2d) :: sumwt                          !sum of weight
+      real(r8), allocatable     :: vectmp(:)                      !temporary vector
+      logical,  allocatable     :: filter(:)                      !filter for patchtype
+      !----------------------- Dummy argument --------------------------------
+      integer :: xblk, yblk, xloc, yloc 
       integer :: iblk, jblk, idata, ixseg, iyseg
       integer :: rmesg(3), smesg(3), isrc
       real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
@@ -548,27 +676,38 @@ contains
 
    END SUBROUTINE colm2cama_real8
 
-   ! -----
    SUBROUTINE cama2colm_real8 (MasterVar, IOVar, WorkerVar)
-      !=======================================================================
-      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-      !=======================================================================     
-      use precision
-      use mod_namelist
-      use timemanager
-      use spmd_task
-      use mod_block
-      use mod_data_type
-      use mod_landpatch
-      use mod_mapping_pset2grid
-      use mod_colm_debug
-      USE MOD_TimeInvariants, only : patchtype
-      use mod_grid
-      !use GlobalVars, only : spval
+      
+      !DESCRIPTION
+      !===========
+      ! This subrountine is used for mapping cama-flood output to colm input
+
+      !ANCILLARY FUNCTIONS AND SUBROUTINES
+      !-------------------
+      !* :SUBROUTINE:"mg2p_cama%map_aweighted"                 :  mapping grid to pset_type
+
+      !REVISION HISTORY
+      !----------------
+      ! 2023.02.23  Zhongwang Wei @ SYSU
+      ! 2022.?      Zhongwang Wei and ShuPeng Zhang @ SYSU
+
+      USE precision
+      USE mod_namelist
+      USE timemanager
+      USE spmd_task
+      USE mod_block
+      USE mod_data_type
+      USE mod_landpatch
+      USE mod_mapping_pset2grid
+      USE mod_colm_debug
+      USE MOD_TimeInvariants, ONLY : patchtype
+      USE mod_grid
+
       IMPLICIT NONE
-      real(r8),                  INTENT(in)    :: MasterVar (:,:)
-      type(block_data_real8_2d), INTENT(inout) :: IOVar
-      REAL(r8),                  intent(inout) :: WorkerVar (:)
+
+      real(r8),                  INTENT(in)    :: MasterVar (:,:) ! Variable at master processor
+      type(block_data_real8_2d), INTENT(inout) :: IOVar           ! Variable at io processor
+      REAL(r8),                  intent(inout) :: WorkerVar (:)   ! Variable at worker processor
 
       integer :: xblk, yblk, xloc, yloc
       integer :: iblk, jblk, idata, ixseg, iyseg
@@ -629,7 +768,7 @@ contains
          end do
       endif
 
-      CALL mg2p_cama%map_aweighted (IOVar, WorkerVar)
+      CALL mg2p_cama%map_aweighted (IOVar, WorkerVar) !mapping grid to pset_type
 
    END SUBROUTINE cama2colm_real8
 

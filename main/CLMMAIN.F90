@@ -1,5 +1,4 @@
 #include <define.h>
-
 SUBROUTINE CLMMAIN ( &
 
          ! model running information
@@ -23,7 +22,8 @@ SUBROUTINE CLMMAIN ( &
 #endif
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             & !flddepth is in mm
+         !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
+         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
 #endif
 
          ! vegetation information
@@ -162,9 +162,16 @@ SUBROUTINE CLMMAIN ( &
   USE SIMPLE_OCEAN
   USE ALBEDO
   USE timemanager
+#ifndef LATERAL_FLOW
+  USE MOD_1D_Fluxes, only : rsub
+#else
+  USE MOD_1D_Fluxes, only : rsubs_pch, rsub
+#endif
   USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+  USE MOD_CLEAF_interception
 #if(defined CaMa_Flood)
-   USE colm_CaMaMod,only:fldfluxes
+   !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
+   USE colm_CaMaMod,only:get_fldevp
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
 
@@ -298,10 +305,10 @@ SUBROUTINE CLMMAIN ( &
         forc_hgt_q  ,&! observational height of humidity [m]
         forc_rhoair   ! density air [kg/m3]
 #if(defined CaMa_Flood)
-   real(r8), intent(in)    :: fldfrc
-   real(r8), intent(inout) :: flddepth  !effective inundation depth:treat as precipitation--> allow re-evaporation and infiltrition![mm/s]
-   real(r8), intent(out)   :: fevpg_fld
-   real(r8), intent(out)   :: qinfl_fld
+   REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
+   REAL(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+   REAL(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
+   REAL(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
 ! Variables required for restart run
 ! ----------------------------------------------------------------------
@@ -335,8 +342,8 @@ SUBROUTINE CLMMAIN ( &
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
-        ldew_rain   ,&
-        ldew_snow   ,&
+        ldew_rain   ,&! depth of rain on foliage[kg/m2/s]
+        ldew_snow   ,&! depth of snow on foliage[kg/m2/s]
         sag         ,&! non dimensional snow age [-]
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
@@ -530,24 +537,24 @@ SUBROUTINE CLMMAIN ( &
 
 !======================================================================
 #if(defined CaMa_Flood)
-      real(r8) :: &
-      kk, &
-      taux_fld,     &! wind stress: E-W [kg/m/s**2]
-      tauy_fld,     &! wind stress: N-S [kg/m/s**2]
-      fsena_fld,    &! sensible heat from agcm reference height to atmosphere [W/m2]
-      fevpa_fld,    &! evaporation from agcm reference height to atmosphere [mm/s]
-      fseng_fld,    &! sensible heat flux from ground [W/m2]
-      tref_fld,     &! 2 m height air temperature [kelvin]
-      qref_fld,     &! 2 m height air humidity
-      z0m_fld,      &! effective roughness [m]
-      zol_fld,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-      rib_fld,      &! bulk Richardson number in surface layer
-      ustar_fld,    &! friction velocity [m/s]
-      tstar_fld,    &! temperature scaling parameter
-      qstar_fld,    &! moisture scaling parameter
-      fm_fld,       &! integral of profile function for momentum
-      fh_fld,       &! integral of profile function for heat
-      fq_fld !,       &        !,       & !,       &! integral of profile function for moisture
+      !zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+      REAL(r8) :: kk
+      REAL(r8) :: taux_fld       ! wind stress: E-W [kg/m/s**2]
+      REAL(r8) :: tauy_fld       ! wind stress: N-S [kg/m/s**2]
+      REAL(r8) :: fsena_fld      ! sensible heat from agcm reference height to atmosphere [W/m2]
+      REAL(r8) :: fevpa_fld      ! evaporation from agcm reference height to atmosphere [mm/s]
+      REAL(r8) :: fseng_fld      ! sensible heat flux from ground [W/m2]
+      REAL(r8) :: tref_fld       ! 2 m height air temperature [kelvin]
+      REAL(r8) :: qref_fld       ! 2 m height air humidity
+      REAL(r8) :: z0m_fld        ! effective roughness [m]
+      REAL(r8) :: zol_fld        ! dimensionless height (z/L) used in Monin-Obukhov theory
+      REAL(r8) :: rib_fld        ! bulk Richardson number in surface layer
+      REAL(r8) :: ustar_fld      ! friction velocity [m/s]
+      REAL(r8) :: tstar_fld      ! temperature scaling parameter
+      REAL(r8) :: qstar_fld      ! moisture scaling parameter
+      REAL(r8) :: fm_fld         ! integral of profile function for momentum
+      REAL(r8) :: fh_fld         ! integral of profile function for heat
+      REAL(r8) :: fq_fld         ! integral of profile function for moisture
 #endif
 
       ! 09/2022, yuan: move from CLMDRIVER to SAVE memory
@@ -624,30 +631,34 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+!zhongwang wei, 20221220: add option for canopy interception calculation.
 if (DEF_Interception_scheme==1) then
-   CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 ELSEIF (DEF_Interception_scheme==2) then
-   CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF (DEF_Interception_scheme==3) then
-   CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CLM5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF (DEF_Interception_scheme==4) then
-   CALL LEAF_interception_noahmp (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_NoahMP (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF  (DEF_Interception_scheme==5) then
    CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-
 ELSEIF  (DEF_Interception_scheme==6) then
    CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+ELSEIF  (DEF_Interception_scheme==7) then
+   CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 endif
@@ -669,7 +680,7 @@ endif
 
 ELSE
    if (DEF_Interception_scheme==1) then
-      CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      CALL LEAF_interception_colm2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                  ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
@@ -694,11 +705,12 @@ ELSE
       CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                  ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   ELSEIF (DEF_Interception_scheme==7) then
+      CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
    endif
 
-   !   CALL LEAF_interception (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tleaf,&
-   !                           prc_rain,prc_snow,prl_rain,prl_snow,&
-   !                           ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ENDIF
 
       qdrip = pg_rain + pg_snow
@@ -799,6 +811,7 @@ ENDIF
               wa                ,qcharge           ,errw_rsub &
 
 #if(defined CaMa_Flood)
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
             ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -827,6 +840,7 @@ ENDIF
               wimp              ,zwt               ,dpond             ,wa                ,&
               qcharge           ,errw_rsub &
 #if(defined CaMa_Flood)
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -906,16 +920,21 @@ ENDIF
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          endwb = endwb + dpond
       ENDIF
-
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
-      IF(patchtype==2) errorw=0.    !wetland
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-   if (patchtype == 0) then
-      errorw=(endwb-totwb)-(forc_prc+forc_prl+qinfl_fld-fevpa-rnof-errw_rsub)*deltim
+   if (LWINFILT) then
+       if (patchtype == 0) then
+            endwb=endwb - qinfl_fld*deltim
+       ENDIF
    ENDIF
-ENDIF
 #endif
+
+#ifndef LATERAL_FLOW
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
+#else
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+#endif
+      IF(patchtype==2) errorw=0.    !wetland
+
       xerr=errorw/deltim
 
 #if(defined CLMDEBUG)
@@ -1148,8 +1167,14 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       ! this unreasonable assumption should be updated in the future version
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
+#ifndef LATERAL_FLOW
       rsur = max(0., pg_rain + pg_snow - aa - a)
+      rsub(ipatch) = 0.
       rnof = rsur
+#else
+      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      rnof = rsur + rsub(ipatch)
+#endif
 
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
@@ -1194,13 +1219,9 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
 
 ENDIF
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-   if (qinfl_fld<0.0) fevpg_fld=0.0d0
-   flddepth        =  flddepth- qinfl_fld*deltim !mm
-endif
 if (LWEVAP) then
    if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0)then
-         call fldfluxes (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
+         call get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
             forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
             taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
             z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
@@ -1211,6 +1232,7 @@ if (LWEVAP) then
          !tauy= tauy_fld*fldfrc+(1.0-fldfrc)*tauy
          fseng= fseng_fld*fldfrc+(1.0-fldfrc)*fseng
          fevpg= fevpg_fld*fldfrc+(1.0-fldfrc)*fevpg
+         fevpg_fld=fevpg_fld*fldfrc
          !tref=tref_fld*fldfrc+(1.0-fldfrc)*tref! 2 m height air temperature [kelvin]
          !qref=qref_fld*fldfrc+(1.0-fldfrc)*qref! 2 m height air humidity
          !z0m=z0m_fld*fldfrc+(1.0-fldfrc)*z0m! effective roughness [m]

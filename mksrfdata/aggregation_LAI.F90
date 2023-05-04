@@ -25,17 +25,16 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
+   USE mod_5x5_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -60,7 +59,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    integer :: start_year, end_year, YY
 
    ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
+   CHARACTER(len=256) :: dir_5x5, suffix
    INTEGER :: month
    TYPE (block_data_real8_2d) :: SAI          ! plant stem area index (m2/m2)
    REAL(r8), allocatable :: SAI_patches(:), sai_one(:)
@@ -155,8 +154,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
          IF (p_is_io) THEN
             IF (DEF_LAI_CLIM) THEN
-               dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim'
-               CALL modis_read_data_time (dir_modis, 'MONTHLY_LC_LAI', gridlai, itime, LAI)
+               dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+               suffix  = 'MOD2005'
+               CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_LAI', itime, LAI)
             ELSE
                lndname = trim(dir_rawdata)//'/lai_15s_8day/lai_8-day_15s_'//trim(cyear)//'.nc'
                CALL ncio_read_block_time (lndname, 'lai', gridlai, itime, LAI)
@@ -164,7 +164,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             ENDIF
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridlai, LAI)
+            CALL aggregation_data_daemon (gridlai, data_r8_2d_in1 = LAI)
 #endif
          ENDIF
 
@@ -175,12 +175,13 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_lc_request_data (ipatch, gridlai, LAI, lai_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+                  data_r8_2d_in1 = LAI, data_r8_2d_out1 = lai_one)
                LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 
@@ -227,7 +228,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       allocate (SITE_SAI_clim (12))
 #endif
 
-      dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+      suffix  = 'MOD2005'
 
       DO itime = 1, 12
          write(c3, '(i2.2)') itime
@@ -237,10 +239,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          endif
 
          IF (p_is_io) THEN
-            CALL modis_read_data_time (dir_modis, 'MONTHLY_LC_SAI', gridlai, itime, SAI)
+            CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_SAI', itime, SAI)
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridlai, SAI)
+            CALL aggregation_data_daemon (gridlai, data_r8_2d_in1 = SAI)
 #endif
          ENDIF
 
@@ -251,13 +253,14 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
 
-               CALL aggregation_lc_request_data (ipatch, gridlai, SAI, sai_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+                  data_r8_2d_in1 = SAI, data_r8_2d_out1 = sai_one)
                SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
 
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 
@@ -289,10 +292,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
    ENDIF
 
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   suffix  = 'MOD2005'
 
    IF (p_is_io) THEN
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gridlai, pftPCT)
+      CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
    ENDIF
 
    IF (p_is_worker) THEN
@@ -306,9 +310,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    DO month = 1, 12
       IF (p_is_io) THEN
-         CALL modis_read_data_pft_time (dir_modis, 'MONTHLY_LAI', gridlai, month, pftLSAI)
+         CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_LAI', month, pftLSAI)
 #ifdef USEMPI
-         CALL aggregation_pft_data_daemon (gridlai, pftPCT, data3 = pftLSAI)
+         CALL aggregation_data_daemon (gridlai, &
+            data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
+            data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
       ENDIF
 
@@ -319,8 +325,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
 
-            CALL aggregation_pft_request_data (ipatch, gridlai, pftPCT, pct_pft_one, &
-               area = area_one, data3 = pftLSAI, dout3 = lai_pft_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+               data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
+               data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16)
 
             IF (allocated(lai_one)) deallocate(lai_one)
             allocate(lai_one(size(area_one)))
@@ -353,7 +360,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_pft_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -405,9 +412,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    DO month = 1, 12
       IF (p_is_io) THEN
-         CALL modis_read_data_pft_time (dir_modis, 'MONTHLY_SAI', gridlai, month, pftLSAI)
+         CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_SAI', month, pftLSAI)
 #ifdef USEMPI
-         CALL aggregation_pft_data_daemon (gridlai, pftPCT, data3 = pftLSAI)
+         CALL aggregation_data_daemon (gridlai, &
+            data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
+            data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
       ENDIF
 
@@ -418,8 +427,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
 
-            CALL aggregation_pft_request_data (ipatch, gridlai, pftPCT, pct_pft_one, &
-               area = area_one, data3 = pftLSAI, dout3 = sai_pft_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+               data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
+               data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16)
 
             IF (allocated(sai_one)) deallocate(sai_one)
             allocate(sai_one(size(area_one)))
@@ -452,7 +462,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_pft_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -501,10 +511,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
    ENDIF
 
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   suffix  = 'MOD2005'
 
    IF (p_is_io) THEN
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gridlai, pftPCT)
+      CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
    ENDIF
 
    IF (p_is_worker) THEN
@@ -518,9 +529,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    DO month = 1, 12
       IF (p_is_io) THEN
-         CALL modis_read_data_pft_time (dir_modis, 'MONTHLY_LAI', gridlai, month, pftLSAI)
+         CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_LAI', month, pftLSAI)
 #ifdef USEMPI
-         CALL aggregation_pft_data_daemon (gridlai, pftPCT, data3 = pftLSAI)
+         CALL aggregation_data_daemon (gridlai, &
+            data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
+            data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
       ENDIF
 
@@ -531,8 +544,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
 
-            CALL aggregation_pft_request_data (ipatch, gridlai, pftPCT, pct_pft_one, &
-               area = area_one, data3 = pftLSAI, dout3 = lai_pft_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+               data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
+               data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16)
 
             IF (allocated(lai_one)) deallocate(lai_one)
             allocate(lai_one(size(area_one)))
@@ -560,7 +574,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_pft_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -612,9 +626,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    DO month = 1, 12
       IF (p_is_io) THEN
-         CALL modis_read_data_pft_time (dir_modis, 'MONTHLY_SAI', gridlai, month, pftLSAI)
+         CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_SAI', month, pftLSAI)
 #ifdef USEMPI
-         CALL aggregation_pft_data_daemon (gridlai, pftPCT, data3 = pftLSAI)
+         CALL aggregation_data_daemon (gridlai, &
+            data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
+            data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
 #endif
       ENDIF
 
@@ -625,8 +641,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
 
-            CALL aggregation_pft_request_data (ipatch, gridlai, pftPCT, pct_pft_one, &
-               area = area_one, data3 = pftLSAI, dout3 = sai_pft_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
+               data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
+               data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16)
 
             IF (allocated(sai_one)) deallocate(sai_one)
             allocate(sai_one(size(area_one)))
@@ -654,7 +671,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_pft_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

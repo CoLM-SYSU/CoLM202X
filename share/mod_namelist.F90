@@ -18,8 +18,8 @@ MODULE mod_namelist
 
    TYPE (nl_domain_type) :: DEF_domain
 
-   INTEGER :: DEF_nx_blocks = 1
-   INTEGER :: DEF_ny_blocks = 1
+   INTEGER :: DEF_nx_blocks = 72
+   INTEGER :: DEF_ny_blocks = 36
    INTEGER :: DEF_PIO_groupsize = 6
 
    ! ----- For Single Point -----
@@ -80,6 +80,8 @@ MODULE mod_namelist
 #endif 
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
+
+   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23 
@@ -205,6 +207,7 @@ MODULE mod_namelist
       LOGICAL :: xerr         = .true. 
       LOGICAL :: zerr         = .true. 
       LOGICAL :: rsur         = .true. 
+      LOGICAL :: rsub         = .true. 
       LOGICAL :: rnof         = .true. 
       LOGICAL :: qintr        = .true. 
       LOGICAL :: qinfl        = .true. 
@@ -485,8 +488,8 @@ MODULE mod_namelist
       LOGICAL :: srndln       = .true. 
       LOGICAL :: srniln       = .true. 
 
-      LOGICAL :: rsurf_bsn    = .true. 
-      LOGICAL :: rsubs_bsn    = .true.
+      LOGICAL :: rsurf_hru    = .true. 
+      LOGICAL :: rsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
       LOGICAL :: dpond_hru    = .true.
@@ -542,6 +545,7 @@ CONTAINS
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
+         DEF_file_water_table_depth,      &
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
@@ -685,6 +689,7 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -804,6 +809,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
@@ -1061,8 +1067,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
       
-      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_bsn   ,  set_defaults)  
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults) 
+      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_hru   ,  set_defaults)  
+      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults) 
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults) 
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults) 
       CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults) 

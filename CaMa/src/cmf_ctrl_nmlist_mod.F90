@@ -8,7 +8,9 @@ MODULE CMF_CTRL_NMLIST_MOD
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  29Jul 2019
 !             Adapted mostly from CMF v362 CONTROL0.F90
-!
+
+  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
@@ -337,10 +339,13 @@ IF ( LWEVAPFIX .AND. .NOT. LWEVAP ) THEN
   WRITE(LOGNAM,*) "LWEVAPFIX=true and LWEVAP=false"
   WRITE(LOGNAM,*) "LWEVAPFIX can only be active if LWEVAP is active"
 ENDIF 
+
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
 IF ( LWINFILTFIX .AND. .NOT. LWINFILT ) THEN
   WRITE(LOGNAM,*) "LWINFILTFIX=true and LWINFILT=false"
   WRITE(LOGNAM,*) "LWINFILTFIX can only be active if LWINFILT is active"
 ENDIF
+
 IF ( LWEXTRACTRIV .AND. .NOT. LWEVAP ) THEN
   WRITE(LOGNAM,*) "LWEXTRACTRIV=true and LWEVAP=false"
   WRITE(LOGNAM,*) "LWEXTRACTRIV can only be active if LWEVAP is active"

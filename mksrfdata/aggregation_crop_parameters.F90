@@ -25,17 +25,15 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 #ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
 #endif
 
    IMPLICIT NONE
@@ -125,18 +123,19 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 !------------distribute plantdate_rice2 to worker---------------------
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_lc_data_daemon (gridcrop, plantdate_rice2)
+         CALL aggregation_data_daemon (gridcrop, data_r8_2d_in1 = plantdate_rice2)
       ENDIF
 #endif
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gridcrop, plantdate_rice2, plantdate_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridcrop, area = area_one, &
+               data_r8_2d_in1 = plantdate_rice2, data_r8_2d_out1 = plantdate_one)
             plantdate_rice2_patches(ipatch) = sum(plantdate_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -213,13 +212,14 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_lc_data_daemon (gridcrop, plantdate)
+         CALL aggregation_data_daemon (gridcrop, data_r8_2d_in1 = plantdate)
       ENDIF
 #endif
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gridcrop, plantdate, plantdate_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridcrop, area = area_one, &
+               data_r8_2d_in1 = plantdate, data_r8_2d_out1 = plantdate_one)
             IF(landpatch%settyp(ipatch) .eq. 12)THEN
                DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
                   IF(landpft%settyp(ipft) .eq. cft)THEN
@@ -244,7 +244,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -339,14 +339,15 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_lc_data_daemon (gridcrop, fertnitro, pct_cft)
+         CALL aggregation_data_daemon (gridcrop, data_r8_2d_in1 = fertnitro, data_r8_2d_in2 = pct_cft)
       ENDIF
 #endif
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gridcrop, fertnitro, fertnitro_one, area_one, &
-                                                      pct_cft, pct_cft_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridcrop, area = area_one, &
+               data_r8_2d_in1 = fertnitro, data_r8_2d_out1 = fertnitro_one, &
+               data_r8_2d_in2 = pct_cft  , data_r8_2d_out2 = pct_cft_one    )
             IF(landpatch%settyp(ipatch) .eq. 12)THEN
                DO ipft = patch_pft_s(ipatch),patch_pft_e(ipatch)
                   IF(landpft%settyp(ipft) .eq. cft)THEN
@@ -371,7 +372,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 

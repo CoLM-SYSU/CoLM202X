@@ -229,14 +229,12 @@ PROGRAM mksrfdata
 
    ! build land elms
    CALL mesh_build ()
+   CALL landelm_build
 
    ! Filtering pixels
    IF (has_mesh_filter) THEN
       CALL mesh_filter ()
    ENDIF
-
-   ! build hydro units
-   CALL landelm_build
 
 #ifdef CATCHMENT
    CALL landhru_build

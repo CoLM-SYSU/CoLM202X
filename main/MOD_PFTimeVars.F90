@@ -141,8 +141,8 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
       call ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
-      call ncio_read_vector (file_restart, 'ldew_p_rain', landpft, ldew_p_rain) !
-      call ncio_read_vector (file_restart, 'ldew_p_snow', landpft, ldew_p_snow) !
+      call ncio_read_vector (file_restart, 'ldew_p_rain', landpft, ldew_p_rain) !depth of rain on foliage [mm]
+      call ncio_read_vector (file_restart, 'ldew_p_snow', landpft, ldew_p_snow) !depth of snow on foliage [mm]
       call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
       call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
       call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
@@ -199,26 +199,26 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
 #endif
 
-     call ncio_write_vector (file_restart, 'tleaf_p  '  , 'pft', landpft, tleaf_p    , compress) !
-     call ncio_write_vector (file_restart, 'ldew_p   '  , 'pft', landpft, ldew_p     , compress) !
-     call ncio_write_vector (file_restart, 'ldew_p_rain', 'pft', landpft, ldew_p_rain, compress) !
-     call ncio_write_vector (file_restart, 'ldew_p_snow', 'pft', landpft, ldew_p_snow, compress) !
-     call ncio_write_vector (file_restart, 'sigf_p   '  , 'pft', landpft, sigf_p     , compress) !
-     call ncio_write_vector (file_restart, 'tlai_p   '  , 'pft', landpft, tlai_p     , compress) !
-     call ncio_write_vector (file_restart, 'lai_p    '  , 'pft', landpft, lai_p      , compress) !
-     call ncio_write_vector (file_restart, 'laisun_p '  , 'pft', landpft, laisun_p   , compress) !
-     call ncio_write_vector (file_restart, 'laisha_p '  , 'pft', landpft, laisha_p   , compress) !
-     call ncio_write_vector (file_restart, 'tsai_p   '  , 'pft', landpft, tsai_p     , compress) !
-     call ncio_write_vector (file_restart, 'sai_p    '  , 'pft', landpft, sai_p      , compress) !
-     call ncio_write_vector (file_restart, 'ssun_p   '  , 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !
-     call ncio_write_vector (file_restart, 'ssha_p   '  , 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress) !
-     call ncio_write_vector (file_restart, 'thermk_p '  , 'pft', landpft, thermk_p   , compress) !
-     call ncio_write_vector (file_restart, 'extkb_p  '  , 'pft', landpft, extkb_p    , compress) !
-     call ncio_write_vector (file_restart, 'extkd_p  '  , 'pft', landpft, extkd_p    , compress) !
-     call ncio_write_vector (file_restart, 'tref_p   '  , 'pft', landpft, tref_p     , compress) !
-     call ncio_write_vector (file_restart, 'qref_p   '  , 'pft', landpft, qref_p     , compress) !
-     call ncio_write_vector (file_restart, 'rst_p    '  , 'pft', landpft, rst_p      , compress) !
-     call ncio_write_vector (file_restart, 'z0m_p    '  , 'pft', landpft, z0m_p      , compress) !
+     call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
+     call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
+     call ncio_write_vector (file_restart, 'ldew_p_rain', 'pft', landpft, ldew_p_rain, compress) !depth of rain on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_p_snow', 'pft', landpft, ldew_p_snow, compress) !depth of snow on foliage [mm]
+     call ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
+     call ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
+     call ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
+     call ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !
+     call ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !
+     call ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress) !
+     call ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress) !
+     call ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !
+     call ncio_write_vector (file_restart, 'ssha_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress) !
+     call ncio_write_vector (file_restart, 'thermk_p ', 'pft', landpft, thermk_p , compress) !
+     call ncio_write_vector (file_restart, 'extkb_p  ', 'pft', landpft, extkb_p  , compress) !
+     call ncio_write_vector (file_restart, 'extkd_p  ', 'pft', landpft, extkd_p  , compress) !
+     call ncio_write_vector (file_restart, 'tref_p   ', 'pft', landpft, tref_p   , compress) !
+     call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
+     call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
+     call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
 #ifdef PLANT_HYDRAULIC_STRESS
      call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
      call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
@@ -295,8 +295,8 @@ CONTAINS
 
       call check_vector_data ('tleaf_p  ', tleaf_p  )      !
       call check_vector_data ('ldew_p   ', ldew_p   )      !
-      call check_vector_data ('ldew_p_rain   ', ldew_p_rain   )      !
-      call check_vector_data ('ldew_p_snow   ', ldew_p_snow   )      !
+      call check_vector_data ('ldew_p_rain', ldew_p_rain ) !depth of rain on foliage [mm]
+      call check_vector_data ('ldew_p_snow', ldew_p_snow ) !depth of snow on foliage [mm]
       call check_vector_data ('sigf_p   ', sigf_p   )      !
       call check_vector_data ('tlai_p   ', tlai_p   )      !
       call check_vector_data ('lai_p    ', lai_p    )      !

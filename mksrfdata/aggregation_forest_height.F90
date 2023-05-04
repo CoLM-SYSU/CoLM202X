@@ -24,18 +24,16 @@ SUBROUTINE aggregation_forest_height ( &
 #ifdef CLMDEBUG 
    use mod_colm_debug
 #endif
-   use mod_aggregation_lc
+   use mod_aggregation
    USE mod_utils
 
    USE LC_Const
-   USE mod_modis_data
+   USE mod_5x5_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -56,7 +54,7 @@ SUBROUTINE aggregation_forest_height ( &
    real(r8), allocatable :: tree_height_patches(:), tree_height_one(:)
 
    ! for IGBP data
-   character(len=256) :: dir_modis
+   character(len=256) :: dir_5x5, suffix
    type (block_data_real8_2d) :: htop
    type (block_data_real8_3d) :: pftPCT
    real(r8), allocatable :: htop_patches(:), htop_pfts(:), htop_pcs(:,:)
@@ -91,7 +89,7 @@ SUBROUTINE aggregation_forest_height ( &
       call ncio_read_block (lndname, 'forest_height', gland, tree_height)
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gland, tree_height)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tree_height)
 #endif
    end if
 
@@ -103,7 +101,8 @@ SUBROUTINE aggregation_forest_height ( &
          L = landpatch%settyp(ipatch)
          if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   
             ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
-            CALL aggregation_lc_request_data (ipatch, gland, tree_height, tree_height_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
             tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
          ELSE
             tree_height_patches (ipatch) = -1.0e36_r8
@@ -111,7 +110,7 @@ SUBROUTINE aggregation_forest_height ( &
       end do
       
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    end if
 
@@ -144,10 +143,11 @@ SUBROUTINE aggregation_forest_height ( &
    ENDIF
 
    IF (p_is_io) THEN
-      dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
-      CALL modis_read_data (dir_modis, 'HTOP', gland, htop)
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+      suffix  = 'MOD2005'
+      CALL read_5x5_data (dir_5x5, suffix, gland, 'HTOP', htop)
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gland, htop)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = htop)
 #endif
    ENDIF
 
@@ -158,14 +158,15 @@ SUBROUTINE aggregation_forest_height ( &
       DO ipatch = 1, numpatch
 
          IF (landpatch%settyp(ipatch) /= 0) THEN
-            CALL aggregation_lc_request_data (ipatch, gland, htop, htop_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               data_r8_2d_in1 = htop, data_r8_2d_out1 = htop_one)
             htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
          ENDIF
 
       ENDDO
       
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -199,13 +200,15 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   suffix  = 'MOD2005'
       
    IF (p_is_io) THEN
-      CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+      CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
+      CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
 #ifdef USEMPI
-      CALL aggregation_pft_data_daemon (gland, pftPCT, data2 = htop)
+      CALL aggregation_data_daemon (gland, &
+         data_r8_2d_in1 = htop, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = 16)
 #endif
    ENDIF
 
@@ -216,8 +219,9 @@ SUBROUTINE aggregation_forest_height ( &
 
       DO ipatch = 1, numpatch
 
-         CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_one, &
-            area = area_one, data2 = htop, dout2 = htop_one)
+         CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+            data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
+            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16)
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 
@@ -240,7 +244,7 @@ SUBROUTINE aggregation_forest_height ( &
       ENDDO
 
 #ifdef USEMPI
-   CALL aggregation_pft_worker_done ()
+   CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -283,13 +287,15 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
      
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   suffix  = 'MOD2005'
       
    IF (p_is_io) THEN
-      CALL modis_read_data     (dir_modis, 'HTOP',    gland, htop  )
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+      CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
+      CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
 #ifdef USEMPI
-      CALL aggregation_pft_data_daemon (gland, pftPCT, data2 = htop)
+      CALL aggregation_data_daemon (gland, &
+         data_r8_2d_in1 = htop, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = 16)
 #endif
    ENDIF
 
@@ -300,8 +306,9 @@ SUBROUTINE aggregation_forest_height ( &
 
       DO ipatch = 1, numpatch
 
-         CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_one, &
-            area = area_one, data2 = htop, dout2 = htop_one)
+         CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+            data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
+            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16)
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 
@@ -319,7 +326,7 @@ SUBROUTINE aggregation_forest_height ( &
       ENDDO
 
 #ifdef USEMPI
-   CALL aggregation_pft_worker_done ()
+   CALL aggregation_worker_done ()
 #endif
    ENDIF
 

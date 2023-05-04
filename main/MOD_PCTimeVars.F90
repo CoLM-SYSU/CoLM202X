@@ -74,8 +74,8 @@ CONTAINS
          IF (numpc > 0) THEN
             allocate (tleaf_c    (0:N_PFT-1,numpc)) !leaf temperature [K]
             allocate (ldew_c     (0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-            allocate (ldew_rain_c(0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-            allocate (ldew_snow_c(0:N_PFT-1,numpc)) !depth of water on foliage [mm]
+            allocate (ldew_rain_c(0:N_PFT-1,numpc)) !depth of rain on foliage [mm]
+            allocate (ldew_snow_c(0:N_PFT-1,numpc)) !depth of snow on foliage [mm]
             allocate (sigf_c     (0:N_PFT-1,numpc)) !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_c     (0:N_PFT-1,numpc)) !leaf area index
             allocate (lai_c      (0:N_PFT-1,numpc)) !leaf area index
@@ -111,8 +111,8 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'tleaf_c  ', N_PFT,     landpc, tleaf_c  ) !
       call ncio_read_vector (file_restart, 'ldew_c   ', N_PFT,     landpc, ldew_c   ) !
-      call ncio_read_vector (file_restart, 'ldew_rain_c   ', N_PFT,     landpc, ldew_rain_c   ) !
-      call ncio_read_vector (file_restart, 'ldew_snow_c   ', N_PFT,     landpc, ldew_snow_c   ) !
+      call ncio_read_vector (file_restart, 'ldew_rain_c', N_PFT,   landpc, ldew_rain_c) !depth of rain on foliage [mm]
+      call ncio_read_vector (file_restart, 'ldew_snow_c', N_PFT,   landpc, ldew_snow_c) !depth of snow on foliage [mm]
       call ncio_read_vector (file_restart, 'sigf_c   ', N_PFT,     landpc, sigf_c   ) !
       call ncio_read_vector (file_restart, 'tlai_c   ', N_PFT,     landpc, tlai_c   ) !
       call ncio_read_vector (file_restart, 'lai_c    ', N_PFT,     landpc, lai_c    ) !
@@ -158,24 +158,24 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
 #endif
 
-      call ncio_write_vector (file_restart, 'tleaf_c  '  , 'pft' , N_PFT, 'pc'  , landpc, tleaf_c    , compress) !
-      call ncio_write_vector (file_restart, 'ldew_c   '  , 'pft' , N_PFT, 'pc'  , landpc, ldew_c     , compress) !
-      call ncio_write_vector (file_restart, 'ldew_rain_c', 'pft' , N_PFT, 'pc'  , landpc, ldew_rain_c, compress) !
-      call ncio_write_vector (file_restart, 'ldew_snow_c', 'pft' , N_PFT, 'pc'  , landpc, ldew_snow_c, compress) !
+      call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !
+      call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) !
+      call ncio_write_vector (file_restart, 'ldew_rain_c', 'pft', N_PFT, 'pc', landpc, ldew_rain_c, compress) ! depth of rain on foliage [mm]
+      call ncio_write_vector (file_restart, 'ldew_snow_c', 'pft', N_PFT, 'pc', landpc, ldew_snow_c, compress) ! depth of snow on foliage [mm]
 
-      call ncio_write_vector (file_restart, 'sigf_c   '  , 'pft' , N_PFT, 'pc'  , landpc, sigf_c     , compress) !
-      call ncio_write_vector (file_restart, 'tlai_c   '  , 'pft' , N_PFT, 'pc'  , landpc, tlai_c     , compress) !
-      call ncio_write_vector (file_restart, 'lai_c    '  , 'pft' , N_PFT, 'pc'  , landpc, lai_c      , compress) !
-      call ncio_write_vector (file_restart, 'tsai_c   '  , 'pft' , N_PFT, 'pc'  , landpc, tsai_c     , compress) !
-      call ncio_write_vector (file_restart, 'sai_c    '  , 'pft' , N_PFT, 'pc'  , landpc, sai_c      , compress) !
-      call ncio_write_vector (file_restart, 'ssun_c   '  , 'band', 2    , 'rtyp', 2     , 'pft'      , N_PFT, 'pc', landpc, ssun_c, compress) !
-      call ncio_write_vector (file_restart, 'ssha_c   '  , 'band', 2    , 'rtyp', 2     , 'pft'      , N_PFT, 'pc', landpc, ssha_c, compress) !
-      call ncio_write_vector (file_restart, 'thermk_c '  , 'pft' , N_PFT, 'pc'  , landpc, thermk_c   , compress) !
-      call ncio_write_vector (file_restart, 'fshade_c '  , 'pft' , N_PFT, 'pc'  , landpc, fshade_c   , compress) !
-      call ncio_write_vector (file_restart, 'extkb_c  '  , 'pft' , N_PFT, 'pc'  , landpc, extkb_c    , compress) !
-      call ncio_write_vector (file_restart, 'extkd_c  '  , 'pft' , N_PFT, 'pc'  , landpc, extkd_c    , compress) !
-      call ncio_write_vector (file_restart, 'rst_c    '  , 'pft' , N_PFT, 'pc'  , landpc, rst_c      , compress) !
-      call ncio_write_vector (file_restart, 'z0m_c    '  , 'pft' , N_PFT, 'pc'  , landpc, z0m_c      , compress) !
+      call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'pc', landpc, sigf_c   , compress) !
+      call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'pc', landpc, tlai_c   , compress) !
+      call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'pc', landpc, lai_c    , compress) !
+      call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'pc', landpc, tsai_c   , compress) !
+      call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'pc', landpc, sai_c    , compress) !
+      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssun_c, compress) !
+      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssha_c, compress) !
+      call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'pc', landpc, thermk_c , compress) !
+      call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'pc', landpc, fshade_c , compress) !
+      call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'pc', landpc, extkb_c  , compress) !
+      call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !
+      call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !
+      call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !
 #ifdef PLANT_HYDRAULIC_STRESS
       call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
       call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
@@ -230,8 +230,8 @@ CONTAINS
 
       call check_vector_data ('tleaf_c  ', tleaf_c  )      !
       call check_vector_data ('ldew_c   ', ldew_c   )      !
-      call check_vector_data ('ldew_rain_c', ldew_rain_c)  !
-      call check_vector_data ('ldew_snow_c', ldew_snow_c)  !
+      call check_vector_data ('ldew_rain_c', ldew_rain_c)  !  depth of rain on foliage [mm]
+      call check_vector_data ('ldew_snow_c', ldew_snow_c)  !  depth of snow on foliage [mm]
       call check_vector_data ('sigf_c   ', sigf_c   )      !
       call check_vector_data ('tlai_c   ', tlai_c   )      !
       call check_vector_data ('lai_c    ', lai_c    )      !

@@ -16,6 +16,9 @@ USE MOD_PCTimeVars
 #ifdef BGC
 USE MOD_BGCTimeVars
 #endif
+#ifdef LATERAL_FLOW
+USE MOD_HydroTimeVars
+#endif
 IMPLICIT NONE
 SAVE
 ! -----------------------------------------------------------------
@@ -287,6 +290,10 @@ SAVE
      CALL allocate_BGCTimeVars
 #endif
 
+#ifdef LATERAL_FLOW
+     CALL allocate_HydroTimeVars
+#endif
+
   END SUBROUTINE allocate_TimeVariables
 
 
@@ -427,6 +434,10 @@ SAVE
 
 #if (defined BGC)
      CALL deallocate_BGCTimeVars
+#endif
+
+#ifdef LATERAL_FLOW
+     CALL deallocate_HydroTimeVars
 #endif
 
   END SUBROUTINE deallocate_TimeVariables
@@ -598,6 +609,11 @@ SAVE
      CALL WRITE_BGCTimeVars (file_restart)
 #endif
 
+#if (defined LATERAL_FLOW)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     CALL WRITE_HydroTimeVars (file_restart)
+#endif
+
   end subroutine WRITE_TimeVariables
 
   !---------------------------------------
@@ -658,8 +674,8 @@ SAVE
      call ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) !  ground surface temperature [K]
      call ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) !  leaf temperature [K]
      call ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) !  depth of water on foliage [mm]
-     call ncio_read_vector (file_restart, 'ldew_rain    '   , landpatch, ldew_rain       ) !  depth of water on foliage [mm]
-     call ncio_read_vector (file_restart, 'ldew_snow    '   , landpatch, ldew_snow       ) !  depth of water on foliage [mm]
+     call ncio_read_vector (file_restart, 'ldew_rain    '   , landpatch, ldew_rain       ) !  depth of rain on foliage [mm]
+     call ncio_read_vector (file_restart, 'ldew_snow    '   , landpatch, ldew_snow       ) !  depth of snow on foliage [mm]
      call ncio_read_vector (file_restart, 'sag     '   , landpatch, sag        ) !  non dimensional snow age [-]
      call ncio_read_vector (file_restart, 'scv     '   , landpatch, scv        ) !  snow cover, water equivalent [mm]
      call ncio_read_vector (file_restart, 'snowdp  '   , landpatch, snowdp     ) !  snow depth [meter]
@@ -728,6 +744,11 @@ SAVE
      CALL READ_BGCTimeVars (file_restart)
 #endif
 
+#if (defined LATERAL_FLOW)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     CALL READ_HydroTimeVars (file_restart)
+#endif
+
 #ifdef CLMDEBUG
      call check_TimeVariables
 #endif
@@ -778,8 +799,8 @@ SAVE
      call check_vector_data ('t_grnd      ', t_grnd     ) !  ground surface temperature [K]
      call check_vector_data ('tleaf       ', tleaf      ) !  leaf temperature [K]
      call check_vector_data ('ldew        ', ldew       ) !  depth of water on foliage [mm]
-     call check_vector_data ('ldew_rain        ', ldew_rain       ) !  depth of water on foliage [mm]
-     call check_vector_data ('ldew_snow        ', ldew_snow       ) !  depth of water on foliage [mm]
+     call check_vector_data ('ldew_rain   ', ldew_rain       ) !  depth of rain on foliage [mm]
+     call check_vector_data ('ldew_snow   ', ldew_snow       ) !  depth of snow on foliage [mm]
      call check_vector_data ('sag         ', sag        ) !  non dimensional snow age [-]
      call check_vector_data ('scv         ', scv        ) !  snow cover, water equivalent [mm]
      call check_vector_data ('snowdp      ', snowdp     ) !  snow depth [meter]

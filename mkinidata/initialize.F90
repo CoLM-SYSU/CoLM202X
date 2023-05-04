@@ -45,6 +45,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    USE mod_soil_function
 #endif
+   USE mod_mapping_grid2pset
+#ifdef LATERAL_FLOW
+   USE mod_mesh
+   USE mod_landhru
+   USE mod_landpatch
+#endif
 
    IMPLICIT NONE
 
@@ -57,6 +63,25 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! ------------------------ local variables -----------------------------
    real(r8) :: rlon, rlat
+
+   LOGICAL  :: use_wtd
+   
+   CHARACTER(len=256) :: fwtd
+   type(grid_type)    :: gwtd
+   type(block_data_real8_2d)    :: wtd_xy  ! [m]
+   type(mapping_grid2pset_type) :: m_wtd2p
+
+   REAL(r8) :: zwtmm 
+   real(r8) :: zc_soimm(1:nl_soil)
+   real(r8) :: zi_soimm(0:nl_soil)
+   real(r8) :: vliq_r  (1:nl_soil)
+#ifdef Campbell_SOIL_MODEL
+   INTEGER, parameter :: nprms = 1
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   INTEGER, parameter :: nprms = 5
+#endif
+   REAL(r8) :: prms(nprms, 1:nl_soil)
 
 #if(defined SOILINI)
    character(len=256) :: fsoildat
@@ -414,6 +439,34 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 #endif
 
+   fwtd = DEF_file_water_table_depth
+
+   IF (p_is_master) THEN
+      inquire (file=trim(fwtd), exist=use_wtd)
+      IF (use_wtd) THEN
+         write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
+            // ' to initialize soil water content: ', trim(fwtd)
+      ENDIF
+   ENDIF
+#ifdef USEMPI
+   call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+#endif
+
+   IF (use_wtd) THEN
+
+      CALL julian2monthday (idate(1), idate(2), month, mday)
+      call gwtd%define_from_file (fwtd)
+   
+      if (p_is_io) then
+         call allocate_block_data (gwtd, wtd_xy)
+         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)  
+      ENDIF
+   
+      call m_wtd2p%build (gwtd, landpatch)
+      call m_wtd2p%map_aweighted (wtd_xy, zwt)
+
+   ENDIF
+
    ! ...................
    ! 2.4 LEAF area index
    ! ...................
@@ -515,6 +568,26 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       do i = 1, numpatch
          m = patchclass(i)
          print*,'before IniTimeVar',i
+
+         IF (use_wtd) THEN
+            zwtmm = zwt(i) * 1000.
+            zc_soimm = z_soi  * 1000.
+            zi_soimm(0) = 0.
+            zi_soimm(1:nl_soil) = zi_soi * 1000.
+#ifdef Campbell_SOIL_MODEL
+            vliq_r(:) = 0.
+            prms(1,1:nl_soil) = bsw(1:nl_soil,i)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+            vliq_r(:) = theta_r(i,:) 
+            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
+            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
+            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
+            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
+            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
+#endif
+         ENDIF
+
          CALL iniTimeVar(i, patchtype(i)&
             ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
             ,soil_s_v_alb(i),soil_d_v_alb(i),soil_s_n_alb(i),soil_d_n_alb(i)&
@@ -566,11 +639,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 !------------------------------------------------------------
 #endif
 #if(defined SOILINI)
-            ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i))
-#else
-          )
+            ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i)
 #endif
-            print*,'after IniTimeVar',i
+
+            ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+
+         print*,'after IniTimeVar',i
       enddo
 
       do i = 1, numpatch
@@ -592,6 +666,34 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    end if
    ! ------------------------------------------
+
+   ! -----
+#ifdef LATERAL_FLOW
+      
+#if (defined CROP) 
+   IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+   IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
+#endif
+
+   IF (p_is_worker) THEN
+      IF (numelm > 0) THEN
+         riverheight(:) = 0
+         riverveloct(:) = 0
+      ENDIF
+
+      IF (numhru > 0) THEN
+         veloc_hru(:) = 0
+            
+         DO i = 1, numhru
+            ps = hru_patch%substt(i)
+            pe = hru_patch%subend(i)
+            dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
+            dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+         ENDDO
+      ENDIF
+   ENDIF
+#endif
 
    ! ...............................................................
    ! 2.6 Write out the model variables for restart run [histTimeVar]

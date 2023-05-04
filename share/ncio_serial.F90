@@ -1658,7 +1658,7 @@ CONTAINS
 
       ! Local variables
       INTEGER, allocatable :: time_file(:)
-      INTEGER :: ncid, varid, time_id, component_id, status
+      INTEGER :: ncid, varid, time_id, status
       INTEGER :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))

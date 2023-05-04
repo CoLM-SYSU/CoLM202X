@@ -40,7 +40,7 @@ MODULE SOIL_SNOW_hydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  &
+            ,flddepth,fldfrc,qinfl_fld  &  ! zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
 #endif
 #ifdef SNICAR
              ,forc_aer   ,&
@@ -104,9 +104,9 @@ MODULE SOIL_SNOW_hydrology
         qsubl            , &! sublimation rate from snow pack (mm h2o /s) [+]
         qfros               ! surface dew added to snow pack (mm h2o /s) [+]
 #if(defined CaMa_Flood)
-         real(r8), INTENT(inout) :: flddepth ! inundation water depth(mm/s)
-         real(r8), INTENT(in) :: fldfrc ! inundation water depth(mm/s)
-
+         real(r8), INTENT(inout) :: flddepth  ! inundation water depth [mm]
+         real(r8), INTENT(in)    :: fldfrc    ! inundation water depth   [0-1]
+         real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
@@ -122,9 +122,7 @@ MODULE SOIL_SNOW_hydrology
         qinfl            , &! infiltration rate (mm h2o/s)
         qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
-#if(defined CaMa_Flood)
-        real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (m/s)
-#endif
+
 
 #ifdef SNICAR
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -160,7 +158,7 @@ MODULE SOIL_SNOW_hydrology
 
   real(r8) :: err_solver, w_sum
 #if(defined CaMa_Flood)
-  real(r8) ::gfld, qinfl_all ,rsur_fld ! inundation water input from top (mm/s)
+  real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
@@ -218,21 +216,32 @@ MODULE SOIL_SNOW_hydrology
       ! infiltration into surface soil layer
       qinfl = gwat - rsur
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and. (patchtype == 0) .and. (rsur == 0.)) then
-         gfld=flddepth/deltim
-         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
-                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                       eff_porosity,icefrac,zwt,gwat+gfld,rsur_fld)
-   ! infiltration into surface soil layer
-   qinfl_all = gwat+gfld - rsur_fld
-   qinfl_fld = qinfl_all - qinfl
-   qinfl     = qinfl_all
-   else
-      qinfl_fld=0.0d0
-   endif
-   flddepth=flddepth-deltim*qinfl_fld
-ENDIF
+   IF (LWINFILT) then
+         ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+         ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
+         ! the re-infiltration will not be calculated.
+      IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
+!         write(6,*) 'flddepth=',flddepth,'fldfrc=',fldfrc
+         gfld=flddepth/deltim ! [mm/s]
+         ! surface runoff from inundation, this should not be added to the surface runoff from soil
+         ! otherwise, the surface runoff will be double counted.
+         ! only the re-infiltration is added to water balance calculation.
+         CALL surfacerunoff (nl_soil,1.0,wimp,porsl,psi0,hksati,&
+                    z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                    eff_porosity,icefrac,zwt,gfld,rsur_fld)
+         ! infiltration into surface soil layer
+         qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occured in whole patch area.
+!         write(6,*) 'gfld=',gfld,'   qinfl_fld_subgrid=',qinfl_fld_subgrid
+      ELSE
+         qinfl_fld_subgrid=0.0d0
+         gfld=0.0d0
+         rsur_fld=0.0d0
+
+      ENDIF
+         qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
+         qinfl=qinfl_fld+qinfl ! [mm/s] total infiltration in grid.
+         flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
+   ENDIF
 #endif
 
 !=======================================================================
@@ -275,26 +284,16 @@ ENDIF
          wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
       end if
 
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
+      - (gwat-etr-rnof-errw_rsub)*deltim
 
       if(lb >= 1)then
-         err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                    - (gwat+qsdew+qfros-qsubl-etr-rnof-errw_rsub)*deltim
-      else
-         err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                    - (gwat-etr-rnof-errw_rsub)*deltim
+         err_solver = err_solver-(qsdew+qfros-qsubl)*deltim
       endif
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-   if(lb >= 1)then
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat+qinfl_fld+qsdew+qfros-qsubl-etr-rnof-errw_rsub)*deltim
-   else
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-                 - (gwat+qinfl_fld-etr-rnof-errw_rsub)*deltim
-   endif
-
-ENDIF
-
+      IF (LWINFILT) THEN
+         err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
+      ENDIF
 #endif
 
 
@@ -387,6 +386,11 @@ ENDIF
   use PhysicalConstants, only : denice, denh2o, tfrz
   USE mod_soil_water
 
+#ifndef LATERAL_FLOW
+  USE MOD_1D_Fluxes, only : rsub
+#else
+  USE MOD_1D_Fluxes, only : rsub, rsubs_pch
+#endif
 
   implicit none
 
@@ -436,6 +440,7 @@ ENDIF
 #if(defined CaMa_Flood)
 real(r8), INTENT(inout) :: flddepth ! inundation water input from top (mm/s)
 real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
+real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
@@ -453,9 +458,6 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
         qcharge             ! groundwater recharge (positive to aquifer) [mm/s]
 
   real(r8), INTENT(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
-#if(defined CaMa_Flood)
-        real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
-#endif
 
 #ifdef SNICAR
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -508,7 +510,7 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 #endif
   REAL(r8) :: prms(nprms, 1:nl_soil)
 #if(defined CaMa_Flood)
-  real(r8) :: gfld,qinfl_all,rsur_fld ! inundation water input from top (mm/s)
+  real(r8) :: gfld,qinfl_all,rsur_fld, qinfl_fld_subgrid! inundation water input from top (mm/s)
 #endif
 
       nlev = nl_soil
@@ -576,6 +578,7 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 
       ! surface runoff including water table and surface staturated area
 
+#ifndef LATERAL_FLOW
       if (gwat > 0.) then
       call surfacerunoff (nlev,wtfact,wimp,porsl,psi0,hksati,&
                           z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
@@ -586,23 +589,39 @@ real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
 
       ! infiltration into surface soil layer
       qraing = gwat - rsur
+#else
+      ! for lateral flow, "rsur" is calculated in hydro/mod_surface_flow.F90
+      ! and is removed from surface water there.
+      qraing = gwat
+#endif
 
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-   if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.(patchtype == 0) .and. (rsur == 0.)) then
-         gfld=flddepth/deltim
-         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+      IF (LWINFILT) then
+            ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+            ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
+            ! the re-infiltration will not be calculated.
+         IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
+ !           write(6,*) 'flddepth=',flddepth,'fldfrc=',fldfrc
+            gfld=flddepth/deltim ! [mm/s]
+            ! surface runoff from inundation, this should not be added to the surface runoff from soil
+            ! otherwise, the surface runoff will be double counted.
+            ! only the re-infiltration is added to water balance calculation.
+            CALL surfacerunoff (nl_soil,1.0,wimp,porsl,psi0,hksati,&
                        z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                       eff_porosity,icefrac,zwt,gwat+gfld,rsur_fld)
-      ! infiltration into surface soil layer
-         qinfl_all = gwat+gfld - rsur_fld
-         qinfl_fld = qinfl_all - qinfl
-         qraing    = qinfl_all
-   else
-      qinfl_fld=0.0
-   endif
-   flddepth=flddepth-deltim*qinfl_fld
-endif
+                       eff_porosity,icefrac,zwt,gfld,rsur_fld)
+            ! infiltration into surface soil layer
+            qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occured in whole patch area.
+!            write(6,*) 'gfld=',gfld,'   qinfl_fld_subgrid=',qinfl_fld_subgrid
+         ELSE
+            qinfl_fld_subgrid=0.0d0
+            gfld=0.0d0
+            rsur_fld=0.0d0
+
+         ENDIF
+            qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
+            qraing=qinfl_fld+qraing ! [mm/s] total infiltration in grid.
+            flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
+      ENDIF
 #endif
 !=======================================================================
 ! [3] determine the change of soil water
@@ -620,6 +639,7 @@ endif
          ENDIF
       ENDDO
 
+#ifndef LATERAL_FLOW
       !-- Topographic runoff  ----------------------------------------------------------
       imped = 1.0
       IF (zwtmm < sp_zi(nlev)) THEN
@@ -641,6 +661,13 @@ endif
       ENDIF
 
       rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+      rsub(ipatch) = rsubst
+#else
+      ! for lateral flow:
+      ! "rsub" is defined as baseflow to river, which is calculated in hydro/mod_subsurface_flow.F90
+      ! "rsubs_pch" is defined as baseflow to neighbouring patches
+      rsubst = rsubs_pch(ipatch)
+#endif
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nlev)
@@ -704,18 +731,30 @@ endif
 
       zwt = zwtmm/1000.0
 
-      ! total runoff (mm/s)
-      rnof = rsubst + rsur
+#ifndef LATERAL_FLOW
+     IF (dpond > pondmx) THEN
+        rsur = rsur + (dpond - pondmx) / deltim
+        dpond = pondmx
+     ENDIF
+#endif
 
+      ! total runoff (mm/s)
+      rnof = rsub(ipatch) + rsur
+
+#ifndef LATERAL_FLOW
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
-         - (gwat-etr-rnof)*deltim
+         - (gwat-etr-rsur-rsubst)*deltim
+#else
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+         - (gwat-etr-rsubst)*deltim
+#endif
       if(lb >= 1)then
          err_solver = err_solver - (qfros-qseva-qsubl)*deltim
       endif
 #if(defined CaMa_Flood)
-if (LWINFILT) then
-	err_solver=err_solver-qinfl_fld*deltim
-endif
+   IF (LWINFILT) THEN
+         err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
+   ENDIF
 #endif
 #if(defined CLMDEBUG)
      if(abs(err_solver) > 1.e-3)then

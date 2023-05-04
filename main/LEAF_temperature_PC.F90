@@ -1722,12 +1722,7 @@ MODULE LEAF_temperature_PC
 !----------------------------------------------------------------------         
 
 
-!#ifdef CLM5_INTERCEPTION
-
   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
-!#else
-!   SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,fwet,fdry)
-!#endif
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
@@ -1744,10 +1739,8 @@ MODULE LEAF_temperature_PC
   REAL(r8), intent(in) :: sai    !stem area index  [-]
   REAL(r8), intent(in) :: dewmx  !maximum allowed dew [0.1 mm]
   REAL(r8), intent(in) :: ldew   !depth of water on foliage [kg/m2/s]
-!#ifdef CLM5_INTERCEPTION
-  REAL(r8), intent(in) :: ldew_rain   !depth of water on foliage [kg/m2/s]
-  REAL(r8), intent(in) :: ldew_snow   !depth of water on foliage [kg/m2/s]
-!#endif
+  REAL(r8), intent(in) :: ldew_rain   !depth of rain on foliage [kg/m2/s]
+  REAL(r8), intent(in) :: ldew_snow   !depth of snow on foliage [kg/m2/s]
   REAL(r8), intent(out) :: fwet  !fraction of foliage covered by water [-]
   REAL(r8), intent(out) :: fdry  !fraction of foliage that is green and dry [-]
 

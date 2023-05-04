@@ -3,7 +3,8 @@ PROGRAM MAIN_cmf
 !* PURPOSE: CaMa-Flood default stand-alone driver
 !
 ! (C) D.Yamazaki & E. Dutra  (U-Tokyo/FCUL)  Aug 2019
-!
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: no longer used for colm-cama coupling mode
+
 ! Licensed under the Apache License, Version 2.0 (the "License");
 !   You may not use this file except in compliance with the License.
 !   You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0

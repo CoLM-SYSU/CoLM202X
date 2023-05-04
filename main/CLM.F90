@@ -53,10 +53,14 @@ PROGRAM CLM
    USE mod_hru_vector
 #endif
 #if(defined CaMa_Flood)
-   use colm_CaMaMod
+   use colm_CaMaMod ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
+#endif
+
+#if (defined LATERAL_FLOW)
+   USE mod_lateral_flow
 #endif
 
 #ifdef Fire
@@ -73,7 +77,6 @@ PROGRAM CLM
 
    IMPLICIT NONE
 
-   ! ----------------local variables ---------------------------------
    character(LEN=256) :: nlfile
    character(LEN=256) :: casename   
    character(len=256) :: dir_landdata
@@ -182,6 +185,13 @@ PROGRAM CLM
    CALL map_patch_to_pc
 #endif
 
+#if (defined UNSTRUCTURED || defined CATCHMENT) 
+   CALL elm_vector_init ()
+#ifdef CATCHMENT
+   CALL hru_vector_init ()
+#endif
+#endif
+
    call adj2end(sdate)
    call adj2end(edate)
    call adj2end(pdate)
@@ -226,7 +236,7 @@ PROGRAM CLM
 
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_init
+   call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    CALL elm_vector_init ()
@@ -239,6 +249,10 @@ PROGRAM CLM
 #endif
 #ifdef Fire
    CALL init_lightning_data (itstamp,sdate)
+#endif
+
+#if (defined LATERAL_FLOW)
+   CALL lateral_flow_init ()
 #endif
 
    ! ======================================================================
@@ -280,6 +294,11 @@ PROGRAM CLM
       CALL TICKTIME (deltim,idate)
       itstamp = itstamp + int(deltim)
 
+      ! lateral flow
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+   
       ! Call clm driver
       ! ----------------------------------------------------------------------
       IF (p_is_worker) THEN
@@ -335,7 +354,7 @@ PROGRAM CLM
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_drv(idate(3))
+   call colm_CaMa_drv(idate(3)) !zhongwang wei, 20210927: run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file
@@ -380,6 +399,9 @@ PROGRAM CLM
    call deallocate_1D_Forcing     ()
    call deallocate_1D_Fluxes      ()
 
+#if (defined LATERAL_FLOW)
+   CALL lateral_flow_final ()
+#endif
 
    call hist_final ()
 
@@ -392,7 +414,7 @@ PROGRAM CLM
 #endif
 
 #if(defined CaMa_Flood) 
-   call colm_cama_exit
+   call colm_cama_exit !zhongwang wei, 20210927: finalize CaMa-Flood
 #endif
 
    if (p_is_master) then

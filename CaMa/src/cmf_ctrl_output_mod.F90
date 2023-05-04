@@ -177,6 +177,9 @@ ALLOCATE(VAROUT(NVARSOUT))
 WRITE(CTIME,'(A14,I4.4,A1,I2.2,A1,I2.2,A1,I2.2,A1,I2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
 
 !* Loop on variables and create files 
+! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation
+! currently was not used in colm-cama coupling model
+
 DO JF=1,NVARSOUT
   WRITE(LOGNAM,*) "Creating output for variable:", TRIM( CVNAMES(JF) )
   SELECT CASE (CVNAMES(JF))
@@ -248,7 +251,6 @@ DO JF=1,NVARSOUT
       VAROUT(JF)%CVLNAME='net bifurcation discharge'
       VAROUT(JF)%CVUNITS='m3/s'
 
-
     CASE ('maxsto')
       VAROUT(JF)%CVNAME=CVNAMES(JF)
       VAROUT(JF)%CVLNAME='daily maximum storage'
@@ -316,20 +318,10 @@ DO JF=1,NVARSOUT
 
     CASE DEFAULT
     WRITE(LOGNAM,*) trim(CVNAMES(JF)), ' Not defined in CMF_CREATE_OUTCDF_MOD'
-!#ifdef IFS_CMF
-!    CALL ABORT
-!#endif
-!    stop
+
   END SELECT
   VAROUT(JF)%BINID=INQUIRE_FID()
 
- ! IF( LOUTCDF )THEN
- !   IF( REGIONTHIS==1 )THEN
- !     CALL CREATE_OUTCDF
- !   ENDIF
- ! ELSE
- !   CALL CREATE_OUTBIN
- ! ENDIF
 END DO
 
 IRECOUT=0  ! Initialize Output record to 1 (shared in netcdf & binary)
@@ -570,10 +562,7 @@ IF ( MOD(JHOUR,IFRQ_OUT)==0 .and. JMIN==0 ) THEN             ! JHOUR: end of tim
         D2VEC =>  D2LEVDPH
 
       CASE DEFAULT
-!        WRITE(LOGNAM,*) VAROUT(JF)%CVNAME, ' Not defined in CMF_OUTPUT_MOD'
-!#ifdef IFS_CMF
-!        CALL ABORT
-!#endif
+
     END SELECT   !! variable name select
 
     IF( KSTEP==0 .and. LOUTINI )THEN  !! write storage only when LOUTINI specified

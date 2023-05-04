@@ -32,7 +32,9 @@ SUBROUTINE aggregation_lakedepth ( &
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+   
+   USE mod_aggregation
+
    USE mod_utils
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -83,7 +85,7 @@ SUBROUTINE aggregation_lakedepth ( &
       CALL block_data_linear_transform (lakedepth, scl = 0.1)
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gland, lakedepth)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = lakedepth)
 #endif
    ENDIF
 
@@ -109,7 +111,8 @@ SUBROUTINE aggregation_lakedepth ( &
 #ifdef PC_CLASSIFICATION
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-            CALL aggregation_lc_request_data (ipatch, gland, lakedepth, lakedepth_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, &
+               data_r8_2d_in1 = lakedepth, data_r8_2d_out1 = lakedepth_one)
             lakedepth_patches (ipatch) = median (lakedepth_one, size(lakedepth_one))
          ELSE
             lakedepth_patches (ipatch) = -1.0e36_r8
@@ -117,7 +120,7 @@ SUBROUTINE aggregation_lakedepth ( &
       ENDDO
       
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 

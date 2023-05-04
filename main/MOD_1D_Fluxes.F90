@@ -15,6 +15,9 @@ MODULE MOD_1D_Fluxes
 #ifdef BGC
   USE MOD_1D_BGCFluxes
 #endif
+#ifdef LATERAL_FLOW
+  USE MOD_1D_HydroFluxes
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -58,6 +61,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
 
   REAL(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
+  REAL(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
   REAL(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
   REAL(r8), allocatable :: qintr  (:) !interception (mm h2o/s)
   REAL(r8), allocatable :: qinfl  (:) !inflitration (mm h2o/s)
@@ -132,6 +136,7 @@ MODULE MOD_1D_Fluxes
             allocate ( zerr   (numpatch) )  ! the error of energy balance [W/m2]
 
             allocate ( rsur   (numpatch) )  ! surface runoff (mm h2o/s)
+            allocate ( rsub   (numpatch) )  ! subsurface runoff (mm h2o/s)
             allocate ( rnof   (numpatch) )  ! total runoff (mm h2o/s)
             allocate ( qintr  (numpatch) )  ! interception (mm h2o/s)
             allocate ( qinfl  (numpatch) )  ! inflitration (mm h2o/s)
@@ -156,6 +161,10 @@ MODULE MOD_1D_Fluxes
 
 #ifdef BGC
       CALL allocate_1D_BGCFluxes
+#endif
+
+#ifdef LATERAL_FLOW
+      CALL allocate_1D_HydroFluxes
 #endif
 
    END SUBROUTINE allocate_1D_Fluxes
@@ -208,6 +217,7 @@ MODULE MOD_1D_Fluxes
            deallocate ( zerr    )  ! the error of energy balance [W/m2]
 
            deallocate ( rsur    )  ! surface runoff (mm h2o/s)
+           deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
            deallocate ( rnof    )  ! total runoff (mm h2o/s)
            deallocate ( qintr   )  ! interception (mm h2o/s)
            deallocate ( qinfl   )  ! inflitration (mm h2o/s)
@@ -232,6 +242,10 @@ MODULE MOD_1D_Fluxes
 
 #ifdef BGC
      CALL deallocate_1D_BGCFluxes
+#endif
+
+#ifdef LATERAL_FLOW
+     CALL deallocate_1D_HydroFluxes
 #endif
 
    END SUBROUTINE deallocate_1D_Fluxes
