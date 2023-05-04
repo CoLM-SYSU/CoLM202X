@@ -1,23 +1,23 @@
 #include <define.h>
 
 MODULE user_specified_forcing
+
 !DESCRIPTION
 !===========
    !---This MODULE is used for read atmospheric forcing dataset from various sources.
    ! ------------------------------------------------------------
-   !     Read forcing data from :     
-   !     1)  PRINCETON     2)  GSWP2         3)  GSWP3 
-   !     4)  QIAN          5)  CRUNCEPV4     6)  CRUNCEPV7  
-   !     7)  ERA5LAND      8)  ERA5          9)  MSWX 
-   !     10) WFDE5         11) CRUJRA        12) WFDEI 
-   !     13) JRA55         14) GDAS          15) CLDAS 
+   !     Read forcing data from :
+   !     1)  PRINCETON     2)  GSWP2         3)  GSWP3
+   !     4)  QIAN          5)  CRUNCEPV4     6)  CRUNCEPV7
+   !     7)  ERA5LAND      8)  ERA5          9)  MSWX
+   !     10) WFDE5         11) CRUJRA        12) WFDEI
+   !     13) JRA55         14) GDAS          15) CLDAS
    !     16) CMFD          17) TPMFD         18) CMIP6
    !     19) POINT
    !
    !     PLEASE modify the following codes when specified forcing used
-   !     metpreprocess modified by siguang & weinan for forc_q calibration
    ! ------------------------------------------------------------
-!Original Author: 
+!Original Author:
 !-------------------
    !---Shupeng Zhang and Zhongwang Wei
 
@@ -31,12 +31,13 @@ MODULE user_specified_forcing
    !* :SUBROUTINE:"init_user_specified_forcing" : initialization of the selected forcing dataset
    !* :SUBROUTINE:"metfilename"  :  identify the forcing file name
    !* :SUBROUTINE:"metpreprocess" :  preprocess the forcing data
-   
+
 !REVISION HISTORY
    !----------------
-   !---2023.05.01  Zhongwang Wei @ SYSU
-   ! 2021.12.02    Zhongwang Wei @ SYSU 
-   ! ??
+   ! 2023.05.01  Zhongwang Wei @ SYSU
+   ! 2021.12.02  Zhongwang Wei @ SYSU
+   ! Siguang Zhu and Nan Wei, 10/2014: metpreprocess for forc_q calibration
+   ! Hua Yuan, 04/2014: initial code of forcing structure for CoLM2014
 
    use precision
 
@@ -45,18 +46,19 @@ MODULE user_specified_forcing
    character(len=256) :: dataset
 
    logical  :: solarin_all_band   ! whether solar radiation in all bands is available
-   real(r8) :: HEIGHT_V           ! observation height of wind speed        
-   real(r8) :: HEIGHT_T           ! observation height of air temperature      
-   real(r8) :: HEIGHT_Q           ! observation height of specific humidity      
+   real(r8) :: HEIGHT_V           ! observation height of wind speed
+   real(r8) :: HEIGHT_T           ! observation height of air temperature
+   real(r8) :: HEIGHT_Q           ! observation height of specific humidity
 
    integer  :: NVAR      ! variable number of forcing data
    integer  :: startyr   ! start year of forcing data        <MARK #1>
    integer  :: startmo   ! start month of forcing data
    integer  :: endyr     ! end year of forcing data
    integer  :: endmo     ! end month of forcing data
+
    integer, allocatable :: dtime(:)          ! time interval of forcing data
    integer, allocatable :: offset(:)         ! offset of forcing data
-   
+
    logical :: leapyear   ! leapyear calendar
    logical :: data2d     ! data in 2 dimension (lon, lat)
    logical :: hightdim   ! have "z" dimension
@@ -79,7 +81,7 @@ MODULE user_specified_forcing
 CONTAINS
 
    ! ----------------
-   subroutine init_user_specified_forcing 
+   subroutine init_user_specified_forcing
 
       use mod_namelist
       implicit none
@@ -95,36 +97,36 @@ CONTAINS
       allocate (fprefix  (NVAR))
       allocate (vname    (NVAR))
       allocate (tintalgo (NVAR))
-   
-      solarin_all_band = DEF_forcing%solarin_all_band   
-      HEIGHT_V         = DEF_forcing%HEIGHT_V            
-      HEIGHT_T         = DEF_forcing%HEIGHT_T           
-      HEIGHT_Q         = DEF_forcing%HEIGHT_Q           
 
-      startyr          = DEF_forcing%startyr  
-      startmo          = DEF_forcing%startmo   
-      endyr            = DEF_forcing%endyr     
-      endmo            = DEF_forcing%endmo     
-      dtime(:)         = DEF_forcing%dtime(:)          
-      offset(:)        = DEF_forcing%offset(:)        
+      solarin_all_band = DEF_forcing%solarin_all_band
+      HEIGHT_V         = DEF_forcing%HEIGHT_V
+      HEIGHT_T         = DEF_forcing%HEIGHT_T
+      HEIGHT_Q         = DEF_forcing%HEIGHT_Q
 
-      leapyear         = DEF_forcing%leapyear !whether leapyear calendar  
-      data2d           = DEF_forcing%data2d   !whether data in 2 dimension (lon, lat) 
-      hightdim         = DEF_forcing%hightdim   
-      dim2d            = DEF_forcing%dim2d      
+      startyr          = DEF_forcing%startyr
+      startmo          = DEF_forcing%startmo
+      endyr            = DEF_forcing%endyr
+      endmo            = DEF_forcing%endmo
+      dtime(:)         = DEF_forcing%dtime(:)
+      offset(:)        = DEF_forcing%offset(:)
 
-      latname          = DEF_forcing%latname                   
-      lonname          = DEF_forcing%lonname                  
+      leapyear         = DEF_forcing%leapyear !whether leapyear calendar
+      data2d           = DEF_forcing%data2d   !whether data in 2 dimension (lon, lat)
+      hightdim         = DEF_forcing%hightdim
+      dim2d            = DEF_forcing%dim2d
 
-      groupby          = DEF_forcing%groupby                   
+      latname          = DEF_forcing%latname
+      lonname          = DEF_forcing%lonname
+
+      groupby          = DEF_forcing%groupby
 
       do ivar = 1, NVAR
-         fprefix (ivar) = DEF_forcing%fprefix(ivar) 
-         vname   (ivar) = DEF_forcing%vname(ivar) 
-         tintalgo(ivar) = DEF_forcing%tintalgo(ivar) 
+         fprefix (ivar) = DEF_forcing%fprefix(ivar)
+         vname   (ivar) = DEF_forcing%vname(ivar)
+         tintalgo(ivar) = DEF_forcing%tintalgo(ivar)
       end do
 
-   end subroutine init_user_specified_forcing 
+   end subroutine init_user_specified_forcing
 
    ! ----------------
    FUNCTION metfilename(year, month, day, var_i)
@@ -134,7 +136,7 @@ CONTAINS
 
       integer, intent(in) :: year
       integer, intent(in) :: month
-      integer, intent(in) :: day 
+      integer, intent(in) :: day
       integer, intent(in) :: var_i
       character(len=256)  :: metfilename
       character(len=256)  :: yearstr
@@ -144,7 +146,7 @@ CONTAINS
       write(monthstr, '(I2.2)') month
 
       select case (trim(DEF_forcing%dataset))
-      case ('PRINCETON')  
+      case ('PRINCETON')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(yearstr)//'.nc'
       case ('GSWP2')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
@@ -205,7 +207,7 @@ CONTAINS
       case ('WFDEI')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       case ('JRA55')
-         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc' 
+         metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       case ('GDAS')
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
       case ('CLDAS')
@@ -254,12 +256,12 @@ CONTAINS
          ENDIF
 #endif
       else
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
             do j = 1, grid%ycnt(jb)
-               do i = 1, grid%xcnt(ib) 
+               do i = 1, grid%xcnt(ib)
 
                   select case (trim(DEF_forcing%dataset))
                   case ('PRINCETON')
@@ -300,11 +302,11 @@ CONTAINS
                      ea = 0.70_R8 + 5.95e-05_R8 * 0.01_R8 * e * exp(1500.0_R8/forcn(1)%blk(ib,jb)%val(i,j))
                      forcn(8)%blk(ib,jb)%val(i,j) = ea * stefnc * forcn(1)%blk(ib,jb)%val(i,j)**4
 
-                  case ('CRUNCEPV4')  
+                  case ('CRUNCEPV4')
 
                      if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
-                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
-                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
                      if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
                         40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
@@ -315,11 +317,11 @@ CONTAINS
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
-                  case ('CRUNCEPV7')  
+                  case ('CRUNCEPV7')
 
                      if (forcn(1)%blk(ib,jb)%val(i,j) < 212.0) forcn(1)%blk(ib,jb)%val(i,j) = 212.0
-                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
-                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
+                     if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
                      if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
                         40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
@@ -340,7 +342,7 @@ CONTAINS
                      endif
 
                   case ('ERA5')
-                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
@@ -387,7 +389,7 @@ CONTAINS
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
 
-                  case ('CRUJRA') 
+                  case ('CRUJRA')
                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/21600.
                      forcn(7)%blk(ib,jb)%val(i,j)=forcn(7)%blk(ib,jb)%val(i,j)/21600.
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
@@ -396,7 +398,7 @@ CONTAINS
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
 
-                  case ('GDAS') 
+                  case ('GDAS')
 
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
@@ -411,7 +413,7 @@ CONTAINS
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then
                         forcn(2)%blk(ib,jb)%val(i,j) = qsat_tmp
                      endif
-                  
+
                   case ('TPMFD')
                      forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
@@ -421,7 +423,7 @@ CONTAINS
                      endif
 
                   case ('CMIP6')
-                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0 
+                     if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then

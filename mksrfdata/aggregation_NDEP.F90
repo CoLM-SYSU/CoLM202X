@@ -7,16 +7,11 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    ! 2. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface 
+   !    Reprocessing the MODIS Leaf Area Index products for land surface
    !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering 
-   !               partial overlap between fine grid and model grid for a user
-   !               defined domain file.
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -27,7 +22,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -51,7 +46,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    REAL(r8), allocatable :: NDEP_patches(:), ndep_one(:), area_one(:)
    INTEGER :: itime, ipatch
    CHARACTER(LEN=4) :: cyear
-   integer :: start_year, end_year, YY   
+   integer :: start_year, end_year, YY
 
 
    landdir = trim(dir_model_landdata) // '/NDEP/'
@@ -84,7 +79,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    IF (p_is_io) THEN
       CALL allocate_block_data (gridndep, NDEP)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (NDEP_patches (numpatch))
    ENDIF
@@ -98,7 +93,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
          ! read in nitrofen deposition
          ! ---------------------------
       IF (p_is_master) THEN
-         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate NDEP:', YY,'(data in:',itime+1848,')' 
+         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate NDEP:', YY,'(data in:',itime+1848,')'
       endif
 
       IF (p_is_io) THEN
@@ -130,7 +125,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('NDEP value ', NDEP_patches)
 #endif
 
@@ -143,12 +138,12 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'NDEP_patches', 'patch', landpatch, NDEP_patches, 1)
    ENDDO
-   
+
 
    IF (p_is_worker) THEN
       IF (allocated(NDEP_patches)) deallocate(NDEP_patches)
       IF (allocated(ndep_one    )) deallocate(ndep_one    )
       IF (allocated(area_one    )) deallocate(area_one    )
    ENDIF
-   
+
 END SUBROUTINE aggregation_NDEP

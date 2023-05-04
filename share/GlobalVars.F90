@@ -2,47 +2,62 @@
 
 MODULE GlobalVars
 !-------------------------------------------------------------------------------
-! PURPOSE:
-!       define some global variables 
-!-------------------------------------------------------------------------------
+!
+! !DESCRIPTION:
+! Define some global variables
+!
+! REVISIONS:
+! Hua Yuan, 08/2019: initial version partly adapted from CoLM2014
+! TODO ...
+!
+! !USES:
    USE precision
    IMPLICIT NONE
    SAVE
-   
+
 #ifdef USGS_CLASSIFICATION
    ! GLCC USGS number of land cover category
-   INTEGER, parameter :: N_land_classification = 24 
-#else 
+   INTEGER, parameter :: N_land_classification = 24
+   ! GLCC USGS land cover named index (could be added IF needed)
+   INTEGER, parameter :: URBAN    = 1
+   INTEGER, parameter :: WATERBODY= 16
+#else
    ! MODIS IGBP number of land cover category
-   INTEGER, parameter :: N_land_classification = 17 
+   INTEGER, parameter :: N_land_classification = 17
+   ! MODIS IGBP land cover named index (could be added IF needed)
+   INTEGER, parameter :: WETLAND  = 11
+   INTEGER, parameter :: CROPLAND = 12
+   INTEGER, parameter :: URBAN    = 13
+   INTEGER, parameter :: GLACIERS = 15
+   INTEGER, parameter :: WATERBODY= 17
 #endif
-   
+
    ! number of plant functional types
 #ifndef CROP
-   INTEGER, parameter :: N_PFT    = 16 
+   INTEGER, parameter :: N_PFT    = 16
    INTEGER, parameter :: N_CFT    = 0
 #else
    INTEGER, parameter :: N_PFT    = 15
    INTEGER, parameter :: N_CFT    = 64
 #endif
-   
+
    ! vertical layer number
    INTEGER, parameter :: maxsnl   = -5
    INTEGER, parameter :: nl_soil  = 10
    INTEGER, parameter :: nl_soil_full  = 15
-   
+
    INTEGER, parameter :: nl_lake  = 10
-   INTEGER, parameter :: nl_roof  = 5
-   INTEGER, parameter :: nl_wall  = 5
+   INTEGER, parameter :: nl_roof  = 10
+   INTEGER, parameter :: nl_wall  = 10
    INTEGER, parameter :: nvegwcs  = 4  ! number of vegetation water potential nodes
 
    ! bgc variables
-   integer, parameter :: ndecomp_pools = 7
-   integer, parameter :: ndecomp_transitions = 10
-   integer, parameter :: npcropmin = 17
-   real(r8),parameter :: zmin_bedrock = 0.4
-   integer, parameter :: nbedrock = 10
-   integer, parameter :: ndecomp_pools_vr = ndecomp_pools * nl_soil
+   integer, parameter :: ndecomp_pools        = 7
+   integer, parameter :: ndecomp_transitions  = 10
+   integer, parameter :: npcropmin            = 17
+   real(r8),parameter :: zmin_bedrock         = 0.4
+   integer, parameter :: nbedrock             = 10
+   integer, parameter :: ndecomp_pools_vr     = ndecomp_pools * nl_soil
 
    ! crop index
    integer, parameter :: noveg                = 0
@@ -73,25 +88,26 @@ MODULE GlobalVars
    integer, parameter :: ntrp_soybean         = 77 ! tropical soybean
    integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
 
+   !TODO: need moved when coupling urban model
    INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
 
    REAL(r8) :: z_soi (1:nl_soil)       !node depth [m]
    REAL(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]
    REAL(r8) :: zi_soi(1:nl_soil)       !interface level below a zsoi level [m]
    REAL(r8) :: dz_soi(1:nl_soil)       !soil node thickness [m]
-  
+
    REAL(r8), parameter :: spval = -1.e36_r8  !missing value
    REAL(r8), parameter :: PI    = 4*atan(1.) !pi value
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlovalVars
 
-CONTAINS 
+CONTAINS
 
    SUBROUTINE Init_GlovalVars
 
       IMPLICIT NONE
-      
+
       INTEGER :: nsl
 
       DO nsl = 1, nl_soil
@@ -102,7 +118,7 @@ CONTAINS
       dz_soi(nl_soil) = z_soi(nl_soil)-z_soi(nl_soil-1)
       DO nsl = 2, nl_soil-1
          ! thickness between two interfaces
-         dz_soi(nsl) = 0.5*(z_soi(nsl+1)-z_soi(nsl-1)) 
+         dz_soi(nsl) = 0.5*(z_soi(nsl+1)-z_soi(nsl-1))
       ENDDO
 
       z_soih(nl_soil) = z_soi(nl_soil) + 0.5*dz_soi(nl_soil)
@@ -115,7 +131,7 @@ CONTAINS
          zi_soi(nsl) = zi_soi(nsl-1) + dz_soi(nsl)
       ENDDO
 
-!      ndecomp_pools_vr = ndecomp_pools * nl_soil
+!     ndecomp_pools_vr = ndecomp_pools * nl_soil
 
    END SUBROUTINE Init_GlovalVars
 

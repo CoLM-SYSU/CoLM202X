@@ -15,10 +15,10 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
    use mod_landpatch
    use MOD_TimeInvariants
    use MOD_TimeVariables
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    use mod_colm_debug
 #endif
-   
+
    USE GlobalVars
    USE LC_Const
 #ifdef PFT_CLASSIFICATION
@@ -81,7 +81,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
       lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
    ELSE
-      write(cyear,'(i4.4)') year 
+      write(cyear,'(i4.4)') year
       write(ctime,'(i3.3)') time
       lndname = trim(landdir)// '/' // trim(cyear) //'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
@@ -108,16 +108,16 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
                      tsai(npatch)  = sai0(m) !stem are index
                   ENDIF
                   green(npatch) = 1.      !fraction of green leaf
-               ELSE 
-                  tlai(npatch)  = 0.  
-                  tsai(npatch)  = 0.   
-                  green(npatch) = 0.    
-               ENDIF 
+               ELSE
+                  tlai(npatch)  = 0.
+                  tsai(npatch)  = 0.
+                  green(npatch) = 0.
+               ENDIF
             endif
          end do
 
       ENDIF
-   ENDIF 
+   ENDIF
 
 #endif
 
@@ -153,12 +153,12 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
          do npatch = 1, numpatch
             m = patchclass(npatch)
 
-            green(npatch) = 1.                
+            green(npatch) = 1.
             fveg (npatch)  = fveg0(m)
 
          end do
       ENDIF
-   ENDIF 
+   ENDIF
 
 #endif
 
@@ -193,10 +193,10 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
          do npatch = 1, numpatch
             m = patchclass(npatch)
             fveg (npatch)  = fveg0(m)
-            green(npatch) = 1.                 
+            green(npatch) = 1.
          end do
-      ENDIF 
-   ENDIF 
+      ENDIF
+   ENDIF
 
 #endif
 

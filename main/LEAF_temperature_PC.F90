@@ -55,9 +55,10 @@ MODULE LEAF_temperature_PC
               hksati  ,rootr                                       )
  
 !=======================================================================
-! Original author : Yongjiu Dai, August 15, 2001
 !
-! Foliage energy conservation is given by foliage energy budget equation
+! !DESCRIPTION:
+! Leaf temperature resolved for Plant Community (3D) case
+! Foliage energy conservation for each PFT is given by foliage energy budget equation
 !                      Rnet - Hf - LEf = 0
 ! The equation is solved by Newton-Raphson iteration, in which this iteration
 ! includes the calculation of the photosynthesis and stomatal resistance, and the
@@ -65,10 +66,16 @@ MODULE LEAF_temperature_PC
 ! transfer between foliage and atmosphere and ground is linked by the equations:
 !                      Ha = Hf + Hg and Ea = Ef + Eg
 !
-! ________________
-! REVISION HISTORY:
-! 07/09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is
-!                       allocated to sensible heat flux.
+! Original author : Yongjiu Dai, August 15, 2001
+!                   Hua Yuan, September, 2017
+!
+! REFERENCES:
+! 1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et al. (2019). 
+! Different representations of canopy structure—A large source of uncertainty in 
+! global land surface modeling. Agricultural and Forest Meteorology, 269–270, 119–135.
+! https://doi.org/10.1016/j.agrformet.2019.02.006
+!
+! REVISIONS:
 !
 !=======================================================================
 
@@ -328,10 +335,10 @@ MODULE LEAF_temperature_PC
 
         del(npft),  &! absolute change in leaf temp in current iteration [K]
         del2(npft), &! change in leaf temperature in previous iteration [K]
-        dele(npft), &! change in heat fluxes from leaf [K]
-        dele2(npft),&! change in heat fluxes from leaf [K]
+        dele(npft), &! change in heat fluxes from leaf [W/m2]
+        dele2(npft),&! change in heat fluxes from leaf in previous iteration [W/m2]
         det,        &! maximum leaf temp. change in two consecutive iter [K]
-        dee,        &! maximum leaf temp. change in two consecutive iter [K]
+        dee,        &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
  
         obuold,     &! monin-obukhov length from previous iteration
         tlbef(npft),&! leaf temperature from previous iteration [K]
@@ -380,7 +387,6 @@ MODULE LEAF_temperature_PC
    ! .................................................................
 
    INTEGER , parameter :: nlay = 3
-!   REAL(r8), parameter :: pi   = 3.14159265358979323846_r8  !pi
 
    REAL(r8), parameter :: &
         c1   = 0.320,  &! parameter to calculate drag coefficients of Massman's method
@@ -427,7 +433,6 @@ MODULE LEAF_temperature_PC
         taf,           &! air temperature within canopy space [K]
         qaf,           &! humidity of canopy air [kg/kg]
         rd,            &! aerodynamic resistance between layers [s/m]
-        rd_,           &! aerodynamic resistance between layers [s/m]
         cah,           &! heat conductance for air [m/s]
         cgh,           &! heat conductance for ground [m/s]
         caw,           &! latent heat conductance for air [m/s]
@@ -559,8 +564,8 @@ MODULE LEAF_temperature_PC
           ENDIF
        ENDDO
 
-       ! 12/12/2017: calculate fcover_lays
-! 03/16/2020, yuan: TODO, determine to set fc=0 or fcover above for
+       ! calculate fcover_lays
+! 03/16/2020, yuan: determine to set fc=0 or fcover above for
 ! gaps between layers, 0 maybe more consistent
        fcover_lays(0) = sum(fcover_lay(:))
        fcover_lays(1) = sum(fcover_lay(1:3))
@@ -571,10 +576,7 @@ MODULE LEAF_temperature_PC
 !-----------------------------------------------------------------------
 ! scaling factor bee
 !-----------------------------------------------------------------------
-! 09/26/2017
-! NOTE: bee value, the default is 1
-       !bee = 1. / sum(fcover_lay(1:3))
-       !bee = 2./ (1+sum(fcover_lay(1:3)))
+! 09/26/2017, yuan: NOTE! bee value, the default is 1
        bee = 1.
 
 !-----------------------------------------------------------------------
@@ -830,7 +832,6 @@ MODULE LEAF_temperature_PC
 
        DO WHILE (it .le. itmax) 
 
-          !print *,"iteration index:", it
           tlbef = tl
 
           del2  = del
@@ -880,14 +881,12 @@ MODULE LEAF_temperature_PC
 
           ! initialization
           rd(:)  = 0.
-          rd_(:) = 0.
           upplay = 0
           
           ! calculate canopy top wind speed (utop) and exchange coefficient (ktop)
           ! need to update each time as obu changed after each iteration
           utop = ustar/vonkar * fmtop
           ktop = vonkar * (htop_lay(toplay)-displa_lays(toplay)) * ustar / phih
-          !print *, "ktop:", ktop, htop_lay(toplay),displa_lays(toplay),ustar,phih ! fordebug
 
           ! start layer loop
           DO i = toplay, 1, -1
@@ -908,11 +907,7 @@ MODULE LEAF_temperature_PC
                       hbot_lay(upplay), htop_lay(i), obug, ustarg, htop_lay(i)) 
   
                    ! areodynamic resistance between this layer top and above layer bottom
-! 03/15/2020, yuan: TODO, vertical gaps between layers, fc = fcover_lays(upplay) or just 0? 
-                   !rd(upplay) = rd(upplay) + kintegral(kbot_lay(upplay), fcover_lays(upplay), bee, 0., &
-                   !   z0mg, displa_lays(toplay)/htop_lay(toplay), &
-                   !   hbot_lay(upplay), htop_lay(i), obug, ustarg, hbot_lay(upplay), htop_lay(i) )
-
+                   ! 03/15/2020, yuan: TODO, vertical gaps between layers, fc = fcover_lays(upplay) or just 0? 
                    rd(upplay) = rd(upplay) + frd(kbot_lay(upplay), hbot_lay(upplay), htop_lay(i), &
                       hbot_lay(upplay), htop_lay(i), displa_lays(toplay)/htop_lay(toplay), &
                       z0h_g, obug, ustarg, z0mg, 0., bee, fcover_lays(upplay))
@@ -926,14 +921,7 @@ MODULE LEAF_temperature_PC
                 ubot_lay(i) = uprofile(utop_lay(i), fcover_lay(i), bee, a_lay(i), &
                    z0mg, htop_lay(i), hbot_lay(i), hbot_lay(i))
 
-                ! effective wind speed for rb calculation
-                !ueff_lay(i) = uintegral(utop_lay(i), fcover_lay(i), bee, a_lay(i), &
-                !   z0mg, htop_lay(i), hbot_lay(i))
-
                 IF (it == 1) THEN
-
-                   !REAL(r8) FUNCTION ueffect(utop, htop, hbot, &
-                   !         z0mg, alpha, bee, fc)
                    ueff_lay_norm(i) = ueffect(1., htop_lay(i), hbot_lay(i), &
                       z0mg, a_lay(i), bee, fcover_lay(i))
                 ENDIF
@@ -947,30 +935,10 @@ MODULE LEAF_temperature_PC
                 ! areodynamic resistance from effective fluxes exchange height of 
                 ! of this layer to the top of this layer
                 IF (upplay > 0) THEN
-                   !rd(upplay) = rd(upplay) + kintegral(ktop_lay(i), fcover_lay(i), bee, &
-                   !   a_lay(i), z0mg, displa_lays(toplay)/htop_lay(toplay), &
-                   !   htop_lay(i), hbot_lay(i), obug, ustarg, htop_lay(i), displa_lay(i)+z0m_lay(i))
-
-                   !REAL(r8) FUNCTION frd(ktop, htop, hbot, &
-                   !      ztop, zbot, displah, z0h, obu, ustar, &
-                   !      z0mg, alpha, bee, fc)
                    rd(upplay) = rd(upplay) + frd(ktop_lay(i), htop_lay(i), hbot_lay(i), &
                       htop_lay(i), displa_lay(i)+z0m_lay(i), displa_lays(toplay)/htop_lay(toplay), &
                       z0h_g, obug, ustarg, z0mg, a_lay(i), bee, fcover_lay(i))
                 ENDIF
-
-                ! areodynamic resistance from effective 'sink' height of 
-                ! this layer to the bottom of this layer
-                ! can not be lower than hbot_lay, otherwise, may introduce
-                ! some contradiction.
-                !rd(i) = rd(i) + kintegral(ktop_lay(i), fcover_lay(i), bee, a_lay(i), &
-                !   z0mg, displa_lays(toplay)/htop_lay(toplay), &
-                   ! 11/20/2017: integrate to z0qg, ONLY right for hbot=0
-                   ! otherwise change to hbot_lay(i)
-                   !htop_lay(i), hbot_lay(i), obug, ustarg, displa_lay(i)+z0m_lay(i), z0qg)
-                   !htop_lay(i), hbot_lay(i), obug, ustarg, displa_lay(i)+z0m_lay(i), hbot_lay(i) )
-! 01/06/2020, yuan: adjust to 0 hbot
-                !   htop_lay(i), hbot_lay(i), obug, ustarg, displa_lay(i)+z0m_lay(i), max(z0qg,hbot_lay(i)) )
 
                 rd(i) = rd(i) + frd(ktop_lay(i), htop_lay(i), hbot_lay(i), &
                    displa_lay(i)+z0m_lay(i), max(z0qg,hbot_lay(i)), &
@@ -978,7 +946,6 @@ MODULE LEAF_temperature_PC
                    z0mg, a_lay(i), bee, fcover_lay(i))
 
                 upplay = i
-                !print *, "rd(i)", rd(i), i  ! fordebug
              
              ENDIF
           ENDDO
@@ -1335,10 +1302,8 @@ MODULE LEAF_temperature_PC
 ! sensible heat fluxes and their derivatives
                 fsenl(i) = rhoair * cpair * cfh(i) * (tl(i) - taf(clev))
                 
-                ! 09/24/2017: why fact/facq here? bugs? YES
                 ! 09/25/2017: re-written, check it clearfully 
-                !NOTE: 当numlay<3时，无论如何计算求解，fact一致
-                !      当clev==2时,taf(clev)倒数直接计算为wtl0(i)/fact
+                ! When numlay<3, no matter how to calculate, /fact is consistent
                 IF (numlay < 3 .or. clev == 2) THEN
                    fsenl_dtl(i) = rhoair * cpair * cfh(i) * (1. - wtl0(i)/fact)
                 ELSE
@@ -1412,7 +1377,6 @@ MODULE LEAF_temperature_PC
                 ! 09/05/2019: back to fc area
                 IF(evplwet(i).ge.ldew(i)/deltim)THEN
                    evplwet(i) = ldew(i)/deltim
-! 01/07/2020, yuan: bug? 不会产生计算的错误
                    evplwet_dtl(i) = 0.
                 ENDIF
 
@@ -1440,14 +1404,12 @@ MODULE LEAF_temperature_PC
  
                 IF(it .le. itmax) THEN
  
-                  ! put brakes on large temperature excursions
+                 ! put brakes on large temperature excursions
                    IF(abs(dtl(it,i)).gt.delmax)THEN
                       dtl(it,i) = delmax*dtl(it,i)/abs(dtl(it,i))
                    ENDIF
  
-                   ! 09/26/2017
-                   ! could be a bug IF dtl*dtl==0? 
-                   ! should le -> lt
+                 ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
                    IF((it.ge.2) .and. (dtl(it-1,i)*dtl(it,i).le.0.))THEN
                       dtl(it,i) = 0.5*(dtl(it-1,i) + dtl(it,i))
                    ENDIF
@@ -1534,9 +1496,6 @@ MODULE LEAF_temperature_PC
 
           ENDIF
 
-          ! fordebug
-          !print *, "taf", taf
- 
 ! update co2 partial pressure within canopy air
           ! 05/02/2016: may have some problem with gdh2o, however,
           ! this variable seems never used here. Different height
@@ -1552,8 +1511,6 @@ MODULE LEAF_temperature_PC
 ! Update monin-obukhov length and wind speed including the stability effect
 !-----------------------------------------------------------------------
 
-          ! 这里使用的是最高层的taf和qaf
-          ! 如何进行限制?是不是梯度太大的问题?运行单点模型测试
           dth = thm - taf(toplay)
           dqh =  qm - qaf(toplay)
  
@@ -1590,14 +1547,13 @@ MODULE LEAF_temperature_PC
           IF(it .gt. itmin) THEN
              fevpl_bef = fevpl
              det = maxval(max(del,del2))
-             ! 10/03/2017: possible diff
+             ! 10/03/2017, yuan: possible bugs here, solution: 
+             ! define dee, change del => dee
              dee = maxval(max(dele,dele2))
              IF(det .lt. dtmin .and. dee .lt. dlemin) EXIT 
           ENDIF
  
        ENDDO 
-
-       !IF (it > itmax) print *, "*** NOTE: it = 41! ***"
 
 ! ======================================================================
 !     END stability iteration 
@@ -1701,7 +1657,6 @@ MODULE LEAF_temperature_PC
 !#else
 !       ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
 !#endif
-            ! ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
 
 !-----------------------------------------------------------------------
 ! balance check
@@ -1746,7 +1701,7 @@ MODULE LEAF_temperature_PC
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)
 !-----------------------------------------------------------------------
 
-       !NOTE: 当numlay<3时，无论如何计算求解，/fact一致
+       !NOTE: When numlay<3, no matter how to get the solution, /fact is consistent
        IF (numlay < 3) THEN
           cgrnds = cpair*rhoair*cgh(botlay)*(1.-wtg0(botlay)/fact)
           cgrndl = rhoair*cgw(botlay)*(1.-wtgq0(botlay)/fact)*dqgdT
@@ -1791,18 +1746,14 @@ MODULE LEAF_temperature_PC
 
   REAL(r8) lsai                  !lai + sai
   REAL(r8) dewmxi                !inverse of maximum allowed dew [1/mm]
-  REAL(r8) vegt                  !sigf*lsai
+  REAL(r8) vegt                  !sigf*lsai, NOTE: remove sigf
 !
 !-----------------------------------------------------------------------
 ! Fwet is the fraction of all vegetation surfaces which are wet 
 ! including stem area which contribute to evaporation
       lsai = lai + sai
       dewmxi = 1.0/dewmx
-      ! why * sigf? may have bugs
-      ! 06/17/2018:
-      ! for ONLY one PFT, there may be no problem
-      ! but for multiple PFTs, bugs exist!!!
-      ! convert the whole area ldew to sigf ldew
+      ! 06/2018, yuan: remove sigf, to compatible with PFT
       vegt   =  lsai
 
       fwet = 0
@@ -1902,7 +1853,7 @@ MODULE LEAF_temperature_PC
      REAL(r8) :: dz, z, u
 
      ! 09/26/2017: change fixed n -> fixed dz
-     dz = 0.01 !fordebug
+     dz = 0.01
      n  = int( (htop-hbot) / dz ) + 1
 
      uintegral = 0.
@@ -1919,9 +1870,10 @@ MODULE LEAF_temperature_PC
 
         u = max(0._r8, u)
         !uintegral = uintegral + sqrt(u)*dz / (htop-hbot)
-        ! 03/04/2020, yuan: TODO-hard to solve
-        ! u开根号后不能解析求解积分，可近似直接对u积分
-        ! 如此，最后就不用平方
+! 03/04/2020, yuan: NOTE: the above is hard to solve
+        !NOTE: The integral cannot be solved analytically after
+        !the square root sign of u, and the integral can be approximated
+        !directly for u, In this way, there is no need to square
         uintegral = uintegral + u*dz / (htop-hbot)
      ENDDO
       
@@ -2131,8 +2083,7 @@ MODULE LEAF_temperature_PC
      ENDIF
         
      ! 09/26/2017: change fixed n -> fixed dz
-     ! 10/05/2017: need to improve
-     dz = 0.01 !fordebug
+     dz = 0.01
      n  = int( (ztop-zbot) / dz ) + 1
 
      DO i = 1, n
@@ -2224,8 +2175,9 @@ MODULE LEAF_temperature_PC
      ! local variables
      REAL(r8) :: fkexpint, fkcobint
      
-     !klin = ktop*z/htop
-     !kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
+     !NOTE:
+     ! klin = ktop*z/htop
+     ! kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
      fkcobint = fac*htop/ktop*(log(ztop)-log(zbot)) +&
         (1.-fac)*kintmoninobuk(0.,z0h,obu,ustar,ztop,zbot)
 

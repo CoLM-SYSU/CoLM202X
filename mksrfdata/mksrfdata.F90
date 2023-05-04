@@ -2,7 +2,7 @@
 
 PROGRAM mksrfdata
    ! ======================================================================
-   ! Surface grid edges: 
+   ! Surface grid edges:
    ! The model domain was defined with the north, east, south, west edges:
    !          edgen: northern edge of grid : > -90 and <= 90 (degrees)
    !          edgee: eastern edge of grid  : > western edge and <= 180
@@ -13,8 +13,8 @@ PROGRAM mksrfdata
    !                 NORTHERN edge (POLE) to SOUTHERN edge (POLE)
    ! Region (global) longitude grid starts at:
    !                 WESTERN edge (DATELINE with western edge)
-   !                 West of Greenwich defined negative for global grids, 
-   !                 the western edge of the longitude grid starts at the dateline 
+   !                 West of Greenwich defined negative for global grids,
+   !                 the western edge of the longitude grid starts at the dateline
    !
    ! Land characteristics at the 30 arc-seconds grid resolution (RAW DATA):
    !              1. Global Terrain Dataset (elevation height,...)
@@ -28,7 +28,7 @@ PROGRAM mksrfdata
    ! Land charateristics at the model grid resolution (CREATED):
    !              1. Model grid (longitude, latitude)
    !              2. Fraction (area) of patches of grid (0-1)
-   !                 2.1 Fraction of land water bodies (lake, reservoir, river) 
+   !                 2.1 Fraction of land water bodies (lake, reservoir, river)
    !                 2.2 Fraction of wetland
    !                 2.3 Fraction of glacier
    !                 2.4 Fraction of urban and built-up
@@ -40,10 +40,6 @@ PROGRAM mksrfdata
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: modifiy the aggregation_xxx
-   !               interfaces for reading a user defined domain file.
    !
    ! ======================================================================
    USE precision
@@ -100,7 +96,7 @@ PROGRAM mksrfdata
    CALL getarg(1, nlfile)
 
    CALL read_namelist (nlfile)
-   
+
 #ifdef SinglePoint
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
 #endif
@@ -111,7 +107,7 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
-   
+
    ! define blocks
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
    ! CALL gblock%set_by_file (DEF_file_block)
@@ -123,7 +119,7 @@ PROGRAM mksrfdata
    ! ...........................................................................
 
    ! define domain in pixel coordinate
-   CALL pixel%set_edges (edges, edgen, edgew, edgee) 
+   CALL pixel%set_edges (edges, edgen, edgew, edgee)
    CALL pixel%assimilate_gblock ()
 
    ! define grid coordinates of mesh
@@ -136,8 +132,8 @@ PROGRAM mksrfdata
 #ifdef UNSTRUCTURED
    CALL gridmesh%define_from_file (DEF_file_mesh)
 #endif
-   
-   ! define grid coordinates of mesh filter 
+
+   ! define grid coordinates of mesh filter
    has_mesh_filter = inquire_mesh_filter ()
    IF (has_mesh_filter) THEN
       CALL grid_filter%define_from_file (DEF_file_mesh_filter)
@@ -162,7 +158,7 @@ PROGRAM mksrfdata
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 #ifdef BGC
-#if (defined CROP) 
+#if (defined CROP)
    ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
@@ -178,7 +174,7 @@ PROGRAM mksrfdata
 
    ! define grid for land characteristics
    CALL gridlai%define_by_name ('colm_500m')
-   
+
    ! define grid for topography
    CALL gtopo%define_by_name ('colm_500m')
 
@@ -195,7 +191,7 @@ PROGRAM mksrfdata
    CALL pixel%assimilate_grid (gpatch)
    CALL pixel%assimilate_grid (gridlai)
 #ifdef BGC
-#if (defined CROP) 
+#if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
 #endif
 #if (defined Fire)
@@ -220,7 +216,7 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
-#if (defined CROP) 
+#if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
 #if (defined Fire)
@@ -236,11 +232,11 @@ PROGRAM mksrfdata
 
    CALL pixel%map_to_grid (gtopo)
 
-   ! build land elms 
+   ! build land elms
    CALL mesh_build ()
-   CALL landelm_build 
+   CALL landelm_build
 
-   ! Filtering pixels 
+   ! Filtering pixels
    IF (has_mesh_filter) THEN
       CALL mesh_filter ()
    ENDIF
@@ -255,23 +251,23 @@ PROGRAM mksrfdata
 #ifdef PFT_CLASSIFICATION
    CALL landpft_build
 #endif
-   
+
 #ifdef PC_CLASSIFICATION
    CALL landpc_build
 #endif
 
    ! ................................................................
-   ! 2. SAVE land surface tessellation information 
+   ! 2. SAVE land surface tessellation information
    ! ................................................................
 
    CALL gblock%save_to_file    (dir_landdata)
-   
+
    CALL pixel%save_to_file     (dir_landdata)
 
    CALL mesh_save_to_file      (dir_landdata)
 
    CALL pixelset_save_to_file  (dir_landdata, 'landelm', landelm)
-   
+
 #ifdef CATCHMENT
    CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
 #endif
@@ -313,9 +309,9 @@ PROGRAM mksrfdata
 #endif
 
    CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
-   
+
    CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
-   
+
    CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
 
    CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
@@ -331,14 +327,14 @@ PROGRAM mksrfdata
    CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
    ! ................................................................
-   ! 4. Free memories. 
+   ! 4. Free memories.
    ! ................................................................
-   
+
 #ifdef SinglePoint
 #if (defined PFT_CLASSIFICATION)
    CALL write_surface_data_single (numpatch, numpft)
 #else
-   CALL write_surface_data_single (numpatch) 
+   CALL write_surface_data_single (numpatch)
 #endif
    CALL single_srfdata_final ()
 #endif
@@ -346,7 +342,7 @@ PROGRAM mksrfdata
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   
+
    IF (p_is_master) THEN
       CALL system_clock (end_time, count_rate = c_per_sec)
       time_used = (end_time - start_time) / c_per_sec
@@ -356,7 +352,7 @@ PROGRAM mksrfdata
       ELSEIF (time_used >= 60) THEN
          write(*,102) time_used/60, mod(time_used,60)
          102 format (/, 'Overall system time used:', I3, ' minutes', I3, ' seconds.')
-      ELSE 
+      ELSE
          write(*,103) time_used
          103 format (/, 'Overall system time used:', I3, ' seconds.')
       ENDIF
@@ -365,7 +361,7 @@ PROGRAM mksrfdata
    ENDIF
 
 #ifdef USEMPI
-   CALL spmd_exit          
+   CALL spmd_exit
 #endif
 
 END PROGRAM mksrfdata
