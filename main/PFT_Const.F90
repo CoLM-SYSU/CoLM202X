@@ -1,10 +1,18 @@
 #include <define.h>
 
 MODULE PFT_Const
-! -------------------------------
-! Created by Hua Yuan, 08/2019
-! -------------------------------
 
+!-----------------------------------------------------------------------
+!
+! !DESCRIPTION:
+! Set constants for plant functional types (PFTs)
+!
+! Created by Hua Yuan, 08/2019
+!
+! REVISIONS:
+! Xingjie Lu, TODO:10/2021?: added for crop PFTs
+!
+! !USES:
    USE precision
    USE GlobalVars
    USE timemanager, only: get_calday
@@ -12,10 +20,10 @@ MODULE PFT_Const
    IMPLICIT NONE
    SAVE
 
-! Plant Functional Type classification 
+! Plant Functional Type classification
 !---------------------------
 ! 0  not vegetated
-! 1  needleleaf evergreen temperate tree 
+! 1  needleleaf evergreen temperate tree
 ! 2  needleleaf evergreen boreal tree
 ! 3  needleleaf deciduous boreal tree
 ! 4  broadleaf evergreen tropical tree
@@ -93,7 +101,7 @@ MODULE PFT_Const
 !76  irrigated_tropical_corn
 !77  tropical_soybean
 !78  irrigated_tropical_soybean
-   
+
    ! canopy layer number
    INTEGER , parameter :: canlay(0:N_PFT+N_CFT-1) &
       = (/0, 2, 2, 2, 2, 2, 2, 2 &
@@ -129,6 +137,7 @@ MODULE PFT_Const
    ! canopy bottom height
    REAL(r8), parameter :: hbot0_p(0:N_PFT+N_CFT-1) &
 ! 01/06/2020, yuan: adjust htop: grass/shrub -> 0, tree->1
+      !TODO: check the setting values
       !=(/0.01,   8.5,   8.5,   7.0,   1.0,   1.0,  10.0,  11.5&
       !   11.5,   0.1,   0.1,   0.1,  0.01,  0.01,  0.01,  0.01/)
       =(/0.00,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0,   1.0&
@@ -166,14 +175,14 @@ MODULE PFT_Const
          /)
 
    ! ratio to calculate roughness length z0m
-   REAL(r8), parameter :: z0mr_p(0:N_PFT+N_CFT-1) = 0.1 
-   
-   ! ratio to calculate displacement height d 
+   REAL(r8), parameter :: z0mr_p(0:N_PFT+N_CFT-1) = 0.1
+
+   ! ratio to calculate displacement height d
    REAL(r8), parameter :: displar_p(0:N_PFT+N_CFT-1) = 0.667
 
    ! inverse&sqrt leaf specific dimension size 4 cm
    REAL(r8), parameter :: sqrtdi_p(0:N_PFT+N_CFT-1) = 5.0
-      
+
    ! leaf angle distribution parameter
    REAL(r8), parameter :: chil_p(0:N_PFT+N_CFT-1) &
       = (/-0.300,  0.010,  0.010,  0.010,  0.100,  0.100,  0.010,  0.250&
@@ -196,7 +205,7 @@ MODULE PFT_Const
    REAL(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.110,  0.100,  0.100&
         , 0.100,  0.070,  0.100,  0.100,  0.110,  0.110,  0.110,  0.110&
-#else 
+#else
    REAL(r8), parameter :: rhol_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.110,  0.070,  0.070,  0.070,  0.100,  0.100,  0.100,  0.100&
         , 0.100,  0.070,  0.100,  0.100,  0.110,  0.110,  0.110,  0.110&
@@ -213,7 +222,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! reflectance of dead leaf in virsible band 
+   ! reflectance of dead leaf in virsible band
    REAL(r8), parameter :: rhos_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.310,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160,  0.160&
         , 0.160,  0.160,  0.160,  0.160,  0.310,  0.310,  0.310,  0.310&
@@ -233,9 +242,9 @@ MODULE PFT_Const
 #if(defined PC_CLASSIFICATION)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    REAL(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
-      = (/0.350,  0.360,  0.370,  0.360,  0.450,  0.460,  0.450,  0.450&
+      = (/0.350,  0.360,  0.370,  0.360,  0.450,  0.460,  0.450,  0.420&
         , 0.450,  0.350,  0.450,  0.450,  0.350,  0.350,  0.350,  0.350&
-#else 
+#else
    REAL(r8), parameter :: rhol_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.350,  0.350,  0.350,  0.350,  0.450,  0.450,  0.450,  0.450&
         , 0.450,  0.350,  0.450,  0.450,  0.350,  0.350,  0.350,  0.350&
@@ -252,7 +261,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! reflectance of dead leaf in near infrared band 
+   ! reflectance of dead leaf in near infrared band
    REAL(r8), parameter :: rhos_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.530,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390,  0.390&
         , 0.390,  0.390,  0.390,  0.390,  0.530,  0.530,  0.530,  0.530&
@@ -268,7 +277,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! transmittance of green leaf in visible band 
+   ! transmittance of green leaf in visible band
 #if(defined PC_CLASSIFICATION)
    ! Leaf optical properties adpated from measured data (Dong et al., 2021)
    REAL(r8), parameter :: taul_vis_p(0:N_PFT+N_CFT-1) &
@@ -291,7 +300,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! transmittance of dead leaf in visible band 
+   ! transmittance of dead leaf in visible band
    REAL(r8), parameter :: taus_vis_p(0:N_PFT+N_CFT-1) &
       = (/0.120,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001&
         , 0.001,  0.001,  0.001,  0.001,  0.120,  0.120,  0.120,  0.120&
@@ -307,11 +316,11 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! transmittance of green leaf in near infrared band 
+   ! transmittance of green leaf in near infrared band
 #if(defined PC_CLASSIFICATION)
    ! Leaf optical properties adapted from measured data (Dong et al., 2021)
    REAL(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
-      = (/0.340,  0.280,  0.290,  0.380,  0.350,  0.340,  0.350,  0.400&
+      = (/0.340,  0.280,  0.290,  0.380,  0.250,  0.330,  0.250,  0.430&
         , 0.400,  0.100,  0.250,  0.250,  0.340,  0.340,  0.340,  0.340&
 #else
    REAL(r8), parameter :: taul_nir_p(0:N_PFT+N_CFT-1) &
@@ -330,7 +339,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! transmittance of dead leaf in near infrared band 
+   ! transmittance of dead leaf in near infrared band
    REAL(r8), parameter :: taus_nir_p(0:N_PFT+N_CFT-1) &
       = (/0.250,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001,  0.001&
         , 0.001,  0.001,  0.001,  0.001,  0.250,  0.250,  0.250,  0.250&
@@ -347,11 +356,14 @@ MODULE PFT_Const
          /)
 
    ! maximum carboxylation rate at 25 C at canopy top
-   ! /06/03/2014/ based on Bonan et al., 2010 (Table 2)
+   ! /06/03/2014/ based on Bonan et al., 2011 (Table 2)
+   !REAL(r8), parameter :: vmax25_p(0:N_PFT+N_CFT-1) &
+   !   = (/ 52.0, 61.0, 54.0, 57.0, 72.0, 72.0, 52.0, 52.0&
+   !      , 52.0, 72.0, 52.0, 52.0, 52.0, 52.0, 52.0, 57.0&
+   ! /07/27/2022/ based on Bonan et al., 2011 (Table 2, VmaxF(N))
    REAL(r8), parameter :: vmax25_p(0:N_PFT+N_CFT-1) &
-!      = (/ 52.0, 61.0, 54.0, 57.0, 72.0, 72.0, 52.0, 52.0&
-      = (/ 52.0, 61.0, 54.0, 57.0, 30.0, 72.0, 52.0, 52.0&
-         , 52.0, 72.0, 52.0, 52.0, 52.0, 52.0, 52.0, 57.0&
+      = (/ 52.0, 55.0, 42.0, 29.0, 41.0, 51.0, 36.0, 30.0&
+         , 40.0, 36.0, 30.0, 19.0, 21.0, 26.0, 25.0, 57.0&
 #ifdef CROP
          , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
          , 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0, 57.0&
@@ -431,12 +443,12 @@ MODULE PFT_Const
    ! slope of high temperature inhibition FUNCTION (s1)
    REAL(r8), parameter :: shti_p(0:N_PFT+N_CFT-1) = 0.3
 
-   ! slope of low temperature inhibition FUNCTION (s3) 
+   ! slope of low temperature inhibition FUNCTION (s3)
    REAL(r8), parameter :: slti_p(0:N_PFT+N_CFT-1) = 0.2
 
    ! temperature coefficient in gs-a model (s5)
    REAL(r8), parameter :: trda_p(0:N_PFT+N_CFT-1) = 1.3
-   
+
    ! temperature coefficient in gs-a model (s6)
    REAL(r8), parameter :: trdm_p(0:N_PFT+N_CFT-1) = 328.0
 
@@ -530,7 +542,7 @@ MODULE PFT_Const
 #endif
          /)
 
-   !设定PFT的根分布参数 
+   ! Set the root distribution parameters of PFT
    REAL(r8), PRIVATE, parameter :: roota(0:N_PFT+N_CFT-1) &
       =(/  0.0,   7.0,   7.0,   7.0,   7.0,   7.0,   6.0,   6.0&
         ,  6.0,   7.0,   7.0,   7.0,  11.0,  11.0,  11.0,   6.0&
@@ -545,7 +557,7 @@ MODULE PFT_Const
         ,  6.0,   6.0,   6.0,   6.0,   6.0,   6.0,   6.0      &
 #endif
          /)
-   
+
    REAL(r8), PRIVATE, parameter :: rootb(0:N_PFT+N_CFT-1) &
       =(/  0.0,   2.0,   2.0,   2.0,   1.0,   1.0,   2.0,   2.0&
         ,  2.0,   1.5,   1.5,   1.5,   2.0,   2.0,   2.0,   3.0&
@@ -680,7 +692,7 @@ MODULE PFT_Const
 
    LOGICAL , parameter, dimension(0:N_PFT+N_CFT-1) :: isstd   & ! True => is a stress deciduous tree
       =(/.False., .False., .False., .False., .False., .False., .True.,  .False. &
-       , .False., .False., .True.,  .False., .False., .True.,  .True.,  .True.  & 
+       , .False., .False., .True.,  .False., .False., .True.,  .True.,  .True.  &
 #ifdef CROP
        , .False., .False., .False., .False., .False., .False., .False., .False. &
        , .False., .False., .False., .False., .False., .False., .False., .False. &
@@ -774,22 +786,22 @@ MODULE PFT_Const
        , 23.4521575984991, 36.4166059723234, 23.2558139534884, 23.2558139534884 &
        , 28.0269058295964, 28.0269058295964, 35.3606789250354, 28.0269058295964 &
 #ifdef CROP
-       ,               25.,               25.,               25.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               25. &
-       ,               25.,               20.,               20.,               20. &
-       ,               20.,               20.,               20.,               25. &
-       ,               25.,               20.,               20.      &
+       ,              25.,              25.,              25.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              25. &
+       ,              25.,              20.,              20.,              20. &
+       ,              20.,              20.,              20.,              25. &
+       ,              25.,              20.,              20.             &
 #endif
          /)
 
@@ -825,7 +837,7 @@ MODULE PFT_Const
 
    REAL(r8), parameter, dimension(0:N_PFT+N_CFT-1) :: deadwdcn &
       =(/   1.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
-       ,  500.,    500.,    500.,    500.,      0.,      0.,      0.,      0.& 
+       ,  500.,    500.,    500.,    500.,      0.,      0.,      0.,      0.&
 #ifdef CROP
        ,    0.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
        ,  500.,    500.,    500.,    500.,    500.,    500.,    500.,    500.&
@@ -1180,7 +1192,7 @@ MODULE PFT_Const
          /)
 
     INTEGER, parameter, dimension(0:N_PFT+N_CFT-1) :: mxmat   & ! parameter used in CNPhenology
-      = (/-999, -999, -999, -999, -999, -99, -999, -999 &
+      = (/-999, -999, -999, -999, -999, -99 , -999, -999 &
       ,   -999, -999, -999, -999, -999, -999, -999, -999 &
 #ifdef CROP
       ,   -999,  150,  150,  150,  150,  270,  270,  150 &
@@ -1217,11 +1229,11 @@ MODULE PFT_Const
       ,   0.,  8.,  8.,  0.,  0.,  0.,  0., 10. &
       ,   10., 0.,  0.,  0.,  0.,  0.,  0.,  0. &
       ,   0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
-      ,   0., 10.,  10.,  0.,  0.,  0.,  0.,  0. &
+      ,   0., 10., 10.,  0.,  0.,  0.,  0.,  0. &
       ,   0.,  0.,  0.,  0.,  0.,  0.,  0.,  0. &
       ,   0.,  0.,  0.,  0.,  0., 10., 10.,  0. &
       ,   0.,  0.,  0., 10., 10.,  0.,  0.,  0. &
-      ,   0.,  0.,  0.,  8.,  8., 10., 10.      &     
+      ,   0.,  0.,  0.,  8.,  8., 10., 10.      &
 #endif
          /)
 
@@ -1418,7 +1430,7 @@ MODULE PFT_Const
 #ifdef PLANT_HYDRAULIC_STRESS
 ! Plant Hydraulics Paramters
    REAL(r8), parameter :: kmax_sun_p(0:N_PFT+N_CFT-1) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+      = (/     0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
 #ifdef CROP
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
@@ -1433,7 +1445,7 @@ MODULE PFT_Const
          /)
 
    REAL(r8), parameter :: kmax_sha_p(0:N_PFT+N_CFT-1) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+      = (/     0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
 #ifdef CROP
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
@@ -1447,7 +1459,7 @@ MODULE PFT_Const
 #endif
          /)
    REAL(r8), parameter :: kmax_xyl_p(0:N_PFT+N_CFT-1) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+      = (/     0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
 #ifdef CROP
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
@@ -1462,7 +1474,7 @@ MODULE PFT_Const
          /)
 
    REAL(r8), parameter :: kmax_root_p(0:N_PFT+N_CFT-1) &
-      = (/0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
+      = (/     0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
 #ifdef CROP
          ,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
@@ -1476,10 +1488,10 @@ MODULE PFT_Const
 #endif
          /)
 
-   ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O) 
+   ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
    REAL(r8), parameter :: psi50_sun_p(0:N_PFT+N_CFT-1) &
-      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000& 
-         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000&
 #ifdef CROP
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
@@ -1494,8 +1506,8 @@ MODULE PFT_Const
 
    ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
    REAL(r8), parameter :: psi50_sha_p(0:N_PFT+N_CFT-1) &
-      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000& 
-         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+      = (/-150000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000&
 #ifdef CROP
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
@@ -1511,7 +1523,7 @@ MODULE PFT_Const
    ! water potential at 50% loss of xylem tissue conductance (mmH2O)
    REAL(r8), parameter :: psi50_xyl_p(0:N_PFT+N_CFT-1) &
       = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
-         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000&
 #ifdef CROP
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
@@ -1527,7 +1539,7 @@ MODULE PFT_Const
    ! water potential at 50% loss of root tissue conductance (mmH2O)
    REAL(r8), parameter :: psi50_root_p(0:N_PFT+N_CFT-1) &
       = (/-200000, -530000, -400000, -380000, -250000, -270000, -340000, -270000&
-         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000& 
+         ,-200000, -400000, -390000, -390000, -340000, -340000, -340000, -340000&
 #ifdef CROP
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
          ,-340000, -340000, -340000, -340000, -340000, -340000, -340000, -340000&
@@ -1542,7 +1554,7 @@ MODULE PFT_Const
 
    ! shape-fitting parameter for vulnerability curve (-)
    REAL(r8), parameter :: ck_p(0:N_PFT+N_CFT-1) &
-      = (/0., 3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95  &
+      = (/  0.,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
 #ifdef CROP
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95, 3.95&
@@ -1558,19 +1570,19 @@ MODULE PFT_Const
 #endif
 
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
-   INTEGER, PRIVATE :: ROOTFR_SCHEME = 1 
-   
-   !fraction of roots in each soil layer 
+   INTEGER, PRIVATE :: ROOTFR_SCHEME = 1
+
+   !fraction of roots in each soil layer
 #ifdef CROP
    REAL(r8), dimension(nl_soil,N_PFT+N_CFT) :: &
       rootfr_p(1:nl_soil, 0:N_PFT+N_CFT-1)
 #else
    REAL(r8), dimension(nl_soil,N_PFT) :: &
-      rootfr_p(1:nl_soil, 0:N_PFT-1) 
+      rootfr_p(1:nl_soil, 0:N_PFT-1)
 #endif
 
    INTEGER, PRIVATE :: i, nsl
-   
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_PFT_Const
 
@@ -1595,14 +1607,14 @@ IF (ROOTFR_SCHEME == 1) THEN
 #else
       DO i = 0, N_PFT-1
 #endif
-         rootfr_p(1,i)=1./(1.+(z_soih(1)*100./d50_p(i))**beta_p(i)) 
-         rootfr_p(nl_soil,i)=1.-1./(1.+(z_soih(nl_soil-1)*100./d50_p(i))**beta_p(i)) 
+         rootfr_p(1,i)=1./(1.+(z_soih(1)*100./d50_p(i))**beta_p(i))
+         rootfr_p(nl_soil,i)=1.-1./(1.+(z_soih(nl_soil-1)*100./d50_p(i))**beta_p(i))
 
          DO nsl=2,nl_soil-1
             rootfr_p(nsl,i)=1./(1.+(z_soih(nsl)*100./d50_p(i))**beta_p(i)) &
                -1./(1.+(z_soih(nsl-1)*100./d50_p(i))**beta_p(i))
          ENDDO
-      ENDDO 
+      ENDDO
 ELSE
       ! PFT rootfr_p (Zeng, 2001)
 #ifdef CROP
@@ -1613,11 +1625,11 @@ ELSE
          rootfr_p(1,i) = 1. - 0.5*( &
               exp(-roota(i) * z_soih(1)) &
             + exp(-rootb(i) * z_soih(1)) )
-            
+
          rootfr_p(nl_soil,i) = 0.5*( &
               exp(-roota(i) * z_soih(nl_soil)) &
             + exp(-rootb(i) * z_soih(nl_soil)) )
-         
+
          DO nsl = 2, nl_soil-1
             rootfr_p(nsl,i) = 0.5*( &
                  exp(-roota(i) * z_soih(nsl-1)) &
@@ -1628,7 +1640,7 @@ ELSE
       ENDDO
 ENDIF
 
-   
+
    END SUBROUTINE Init_PFT_Const
 
 END MODULE PFT_Const

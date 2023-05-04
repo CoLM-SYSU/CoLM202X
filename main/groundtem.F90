@@ -2,12 +2,12 @@
 
  subroutine groundtem (itypwat,lb,nl_soil,deltim,&
                        capr,cnfac,vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
-                       porsl,psi0,&   
+                       porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
-                       bsw,&    
+                       bsw,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                       theta_r, alpha_vgm, n_vgm, L_vgm,&   
+                       theta_r, alpha_vgm, n_vgm, L_vgm,&
                        sc_vgm , fc_vgm,&
 #endif
                        csol,k_solids,dksatu,dksatf,dkdry,&
@@ -37,9 +37,14 @@
 !   method and resulted in a tridiagonal system equation.
 !
 ! Phase change (see meltf.F90)
-! 
+!
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
+!
+! REVISIONS:
 ! Modified by Nan Wei, 07/21/2017, interaction btw prec and land surface
+!
+! Hua Yuan, 01/2023: modified ground heat flux, temperature and meltf
+!                    calculation for SNICAR model
 !=======================================================================
 
   use precision
@@ -83,7 +88,7 @@
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
   real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
   real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif 
+#endif
 
   real(r8), INTENT(in) :: sigf     !fraction of veg cover, excluding snow-covered veg [-]
   real(r8), INTENT(in) :: dz_soisno(lb:nl_soil)   !layer thickiness [m]
@@ -144,14 +149,14 @@
   integer i,j
 
 !=======================================================================
-! soil ground and wetland heat capacity 
+! soil ground and wetland heat capacity
       do i = 1, nl_soil
          vf_water(i) = wliq_soisno(i)/(dz_soisno(i)*denh2o)
          vf_ice(i) = wice_soisno(i)/(dz_soisno(i)*denice)
          CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                              wf_gravels(i),wf_sand(i),k_solids(i),&
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4 
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                              BA_alpha(i),BA_beta(i),&
 #endif
                              t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
@@ -183,10 +188,10 @@
         ! thk(i) = 2.2*(rhosnow/denice)**1.88
         ! [6] van Dusen (1992) presented in Sturm et al. (1997)
         ! thk(i) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
-          
+
         enddo
       endif
-      
+
 ! Thermal conductivity at the layer interface
       do i = lb, nl_soil-1
 
@@ -205,15 +210,14 @@
          endif
       enddo
       tk(nl_soil) = 0.
-     
+
 ! net ground heat flux into the surface and its temperature derivative
 #ifdef SNICAR
       hs = sabg_lyr(lb) + dlrad*emg &
 #else
       hs = sabg + dlrad*emg &
 #endif
-! 08/19/2021, yuan: remove sigf, LAI->100% cover
-         !+ (1.-sigf)*emg*frl - emg*stefnc*t_soisno(lb)**4 &
+! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
          - emg*stefnc*t_soisno(lb)**4 &
          - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_soisno(lb)) &
          + cpice * pg_snow * (t_precip - t_soisno(lb))
@@ -273,9 +277,9 @@
 
 ! solve for t_soisno
       i = size(at)
-      call tridia (i ,at ,bt ,ct ,rt ,t_soisno) 
+      call tridia (i ,at ,bt ,ct ,rt ,t_soisno)
 !=======================================================================
-! melting or freezing 
+! melting or freezing
 !=======================================================================
 
       do j = lb, nl_soil - 1
@@ -297,12 +301,12 @@
       call meltf_snicar (itypwat,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf,porsl,psi0,&   
+                  scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
                   bsw,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                  theta_r,alpha_vgm,n_vgm,L_vgm,&   
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&
                   sc_vgm,fc_vgm,&
 #endif
                   dz_soisno(1:nl_soil))
@@ -319,13 +323,13 @@
       call meltf (itypwat,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf,porsl,psi0,&   
+                  scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
                   bsw,&
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                  theta_r,alpha_vgm,n_vgm,L_vgm,&   
-                  sc_vgm,fc_vgm,&    
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&
+                  sc_vgm,fc_vgm,&
 #endif
                   dz_soisno(1:nl_soil))
 

@@ -67,15 +67,11 @@
          zi_soisno(-1) = -dz_soisno(0)
 
          sag = 0.                           ! snow age
-! 03/16/2020, yuan: TODO, why not a combination of T 
          t_soisno (0) = min(tfrz, t_precip) ! K
          wice_soisno(0) = scv               ! kg/m2
          wliq_soisno(0) = 0.                ! kg/m2
          fiold(0) = 1.
-! 03/16/2020, yuan: TODO, why don't apply the snowfall on snow pack case 
          fsno = min(1.,tanh(0.1*pg_snow*deltim))
-         !fsno = 1. - (1. - tanh(0.1*pg_snow*deltim))*(1. - fsno)
-         !fsno = min(1., fsno)
 !**      write(6,*) 'snow layer is built'
       endif
 

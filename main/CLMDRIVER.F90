@@ -38,17 +38,9 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
   real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
-! -------------- Local varaibles -------------------
-  real(r8), allocatable :: z_soisno (:,:)
-  real(r8), allocatable :: dz_soisno(:,:)
-
   integer :: i, m
 
 ! ======================================================================
-
-  !TODO: can be removed below
-  allocate ( z_soisno  (maxsnl+1:nl_soil,numpatch) )
-  allocate ( dz_soisno (maxsnl+1:nl_soil,numpatch) )
 
 #ifdef OPENMP
 !$OMP PARALLEL DO NUM_THREADS(OPENMP) &
@@ -62,13 +54,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          ENDIF
          
          m = patchclass(i)
-         !TODO: can be removed
-         z_soisno (maxsnl+1:0,i) = z_sno (maxsnl+1:0,i)
-         z_soisno (1:nl_soil ,i) = z_soi (1:nl_soil)
-         dz_soisno(maxsnl+1:0,i) = dz_sno(maxsnl+1:0,i)
-         dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
 
-         !TODO: 整理变量次序
          CALL CLMMAIN (i, idate,           coszen(i),       deltim,          &
          patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i),    &
          doalb,           dolai,           dosst,           oro(i),          &
@@ -114,7 +100,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          forc_rhoair(i),                                                     &
 
        ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
-         z_soisno(maxsnl+1:,i),            dz_soisno(maxsnl+1:,i),           &
+         z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
          t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
          wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
          t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
@@ -174,10 +160,6 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          ustar(i),        qstar(i),        tstar(i),                         &
          fm(i),           fh(i),           fq(i) )
 
-
-         z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
-         dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
-
 #if(defined BGC)
          if(patchtype(i) .eq. 0)then
             CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
@@ -188,8 +170,6 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP END PARALLEL DO
 #endif
 
-  deallocate ( z_soisno  )
-  deallocate ( dz_soisno )
 
 END SUBROUTINE CLMDRIVER
 ! ---------- EOP ------------

@@ -124,8 +124,7 @@ contains
                mss_cnc_dst4(j)  = mss_dst4(j)  / snowmass
 
             else
-               !set variables of empty snow layers to zero
-               ! 01/10/2023, yuan: set to snw_rds_min
+               ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
                !snw_rds(j)       = 0._r8
                snw_rds(j)       = snw_rds_min
 

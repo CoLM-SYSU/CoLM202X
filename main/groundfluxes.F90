@@ -2,7 +2,7 @@
  subroutine groundfluxes (zlnd, zsno, hu, ht, hq,&
                           us, vs, tm, qm, rhoair, psrf,&
                           ur, thm, th, thv, t_grnd, qg, dqgdT, htvp,&
-                          fsno, cgrnd, cgrndl, cgrnds,& 
+                          fsno, cgrnd, cgrndl, cgrnds,&
                           taux, tauy, fseng, fevpg, tref, qref,&
                           z0m, z0hg, zol, rib, ustar, qstar, tstar, fm, fh, fq)
 
@@ -11,13 +11,17 @@
 ! and surface fluxes
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
+!
+! REVISIONS:
+! Hua Yuan, 09/2019: removed sigf to be consistant with PFT runs, removed fsena,
+!                    fevpa, renamed z0ma to z0m
 !=======================================================================
 
   use precision
   use PhysicalConstants, only: cpair,vonkar,grav
   use FRICTION_VELOCITY
   implicit none
- 
+
 !----------------------- Dummy argument --------------------------------
   real(r8), INTENT(in) :: &
         zlnd,     &! roughness length for soil [m]
@@ -101,6 +105,7 @@
 
 !----------------------- Dummy argument --------------------------------
 ! initial roughness length
+      ! 09/2019, yuan: change to a combination of zlnd and zsno
       z0mg = (1.-fsno)*zlnd + fsno*zsno
       z0hg = z0mg
       z0qg = z0mg
@@ -111,7 +116,7 @@
       z0m = z0mg
 
 !-----------------------------------------------------------------------
-!     Compute sensible and latent fluxes and their derivatives with respect 
+!     Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
 !-----------------------------------------------------------------------
 ! Initialization variables
@@ -124,7 +129,7 @@
       zldis = hu-0.
 
       call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
- 
+
 ! Evaluated stability-dependent variables using moz from prior iteration
       niters=6
 
@@ -141,7 +146,7 @@
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
 
-! 2023.04.06, weinan         
+! 2023.04.06, weinan
          thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
 !        thvstar=tstar+0.61*th*qstar
          zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
@@ -171,12 +176,12 @@
 
 ! Get derivative of fluxes with repect to ground temperature
       ram    = 1./(ustar*ustar/um)
-      rah    = 1./(vonkar/fh*ustar) 
-      raw    = 1./(vonkar/fq*ustar) 
+      rah    = 1./(vonkar/fh*ustar)
+      raw    = 1./(vonkar/fq*ustar)
 
 ! 08/23/2019, yuan:
       raih   = rhoair*cpair/rah
-      raiw   = rhoair/raw          
+      raiw   = rhoair/raw
       cgrnds = raih
       cgrndl = raiw*dqgdT
       cgrnd  = cgrnds + htvp*cgrndl
@@ -184,12 +189,12 @@
       zol = zeta
       rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
-! surface fluxes of momentum, sensible and latent 
+! surface fluxes of momentum, sensible and latent
 ! using ground temperatures from previous time step
-      taux   = -rhoair*us/ram        
+      taux   = -rhoair*us/ram
       tauy   = -rhoair*vs/ram
       fseng  = -raih*dth
-      fevpg  = -raiw*dqh 
+      fevpg  = -raiw*dqh
 
 ! 2 m height air temperature
       tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)

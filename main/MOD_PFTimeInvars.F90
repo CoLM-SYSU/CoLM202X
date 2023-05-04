@@ -1,11 +1,14 @@
-#include <define.h> 
+#include <define.h>
 
 #ifdef PFT_CLASSIFICATION
 
-MODULE MOD_PFTimeInvars 
-! -------------------------------
+MODULE MOD_PFTimeInvars
+! -----------------------------------------------------------------
+! !DESCRIPTION:
+! Define PFT time invariables
+!
 ! Created by Hua Yuan, 08/2019
-! -------------------------------
+! -----------------------------------------------------------------
 
   USE precision
   USE GlobalVars
@@ -14,9 +17,9 @@ MODULE MOD_PFTimeInvars
 
   ! for PFT_CLASSIFICATION
   INTEGER , allocatable :: pftclass    (:)    !PFT type
-!  INTEGER , allocatable :: patch_pft_s (:)    !start PFT index of a patch
-!  INTEGER , allocatable :: patch_pft_e (:)    !end PFT index of a patch
-!  INTEGER , allocatable :: pft2patch   (:)    !patch index of a PFT
+! INTEGER , allocatable :: patch_pft_s (:)    !start PFT index of a patch
+! INTEGER , allocatable :: patch_pft_e (:)    !end PFT index of a patch
+! INTEGER , allocatable :: pft2patch   (:)    !patch index of a PFT
   REAL(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
   REAL(r8), allocatable :: htop_p      (:)    !canopy top height [m]
   REAL(r8), allocatable :: hbot_p      (:)    !canopy bottom height [m]
@@ -49,14 +52,14 @@ MODULE MOD_PFTimeInvars
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
-        IF (numpft > 0) THEN 
-           allocate (pftclass      (numpft))   
-           allocate (pftfrac       (numpft))   
-           allocate (htop_p        (numpft)) 
-           allocate (hbot_p        (numpft)) 
+        IF (numpft > 0) THEN
+           allocate (pftclass      (numpft))
+           allocate (pftfrac       (numpft))
+           allocate (htop_p        (numpft))
+           allocate (hbot_p        (numpft))
         ENDIF
      ENDIF
-     
+
   END SUBROUTINE allocate_PFTimeInvars
 
   SUBROUTINE READ_PFTimeInvars (file_restart)
@@ -66,7 +69,7 @@ MODULE MOD_PFTimeInvars
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
-  
+
      call ncio_read_vector (file_restart, 'pftclass', landpft, pftclass) !
      call ncio_read_vector (file_restart, 'pftfrac ', landpft, pftfrac ) !
      call ncio_read_vector (file_restart, 'htop_p  ', landpft, htop_p  ) !
@@ -85,18 +88,18 @@ MODULE MOD_PFTimeInvars
      ! Local variables
      character(len=*), intent(in) :: file_restart
      integer :: compress
-     
-     compress = DEF_REST_COMPRESS_LEVEL 
+
+     compress = DEF_REST_COMPRESS_LEVEL
 
      call ncio_create_file_vector (file_restart, landpft)
      CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
-     
+
      call ncio_write_vector (file_restart, 'pftclass', 'pft', landpft, pftclass, compress) !
      call ncio_write_vector (file_restart, 'pftfrac ', 'pft', landpft, pftfrac , compress) !
      call ncio_write_vector (file_restart, 'htop_p  ', 'pft', landpft, htop_p  , compress) !
      call ncio_write_vector (file_restart, 'hbot_p  ', 'pft', landpft, hbot_p  , compress) !
-    
-  end subroutine WRITE_PFTimeInvars 
+
+  end subroutine WRITE_PFTimeInvars
 
   SUBROUTINE deallocate_PFTimeInvars
 ! --------------------------------------------------
@@ -106,14 +109,14 @@ MODULE MOD_PFTimeInvars
      USE mod_landpft
 
      IF (p_is_worker) THEN
-        IF (numpft > 0) THEN 
+        IF (numpft > 0) THEN
            deallocate (pftclass)
            deallocate (pftfrac )
-           deallocate (htop_p  ) 
-           deallocate (hbot_p  ) 
+           deallocate (htop_p  )
+           deallocate (hbot_p  )
         ENDIF
      ENDIF
-     
+
   END SUBROUTINE deallocate_PFTimeInvars
 
 #ifdef CLMDEBUG
@@ -126,7 +129,7 @@ MODULE MOD_PFTimeInvars
      call check_vector_data ('htop_p ', htop_p ) !
      call check_vector_data ('hbot_p ', hbot_p ) !
 
-  end subroutine check_PFTimeInvars 
+  end subroutine check_PFTimeInvars
 #endif
 
 END MODULE MOD_PFTimeInvars

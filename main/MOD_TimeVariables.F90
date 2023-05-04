@@ -46,10 +46,10 @@ SAVE
       real(r8), allocatable :: o3uptakesun(:) ! Ozone does, sunlit leaf (mmol O3/m^2)
       real(r8), allocatable :: o3uptakesha(:) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
-      real(r8), allocatable :: rstfacsun_out(:)     ! factor of soil water stress on sunlit leaf
-      real(r8), allocatable :: rstfacsha_out(:)     ! factor of soil water stress on shaded leaf
-      real(r8), allocatable :: gssun_out(:)      ! stomata conductance on sunlit leaf
-      real(r8), allocatable :: gssha_out(:)      ! stomata conductance on shaded leaf
+      real(r8), allocatable :: rstfacsun_out(:) ! factor of soil water stress on sunlit leaf
+      real(r8), allocatable :: rstfacsha_out(:) ! factor of soil water stress on shaded leaf
+      real(r8), allocatable :: gssun_out(:)     ! stomata conductance on sunlit leaf
+      real(r8), allocatable :: gssha_out(:)     ! stomata conductance on shaded leaf
       real(r8), allocatable :: t_grnd   (:)     ! ground surface temperature [K]
 
 #ifdef WUEdiag
@@ -105,7 +105,7 @@ SAVE
 
       real(r8), allocatable :: t_lake(:,:)      ! lake layer teperature [K]
       real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
-      real(r8), allocatable :: savedtke1(:)     ! top level eddy conductivity (W/m K) 
+      real(r8), allocatable :: savedtke1(:)     ! top level eddy conductivity (W/m K)
 
       REAL(r8), allocatable :: snw_rds     (:,:) !effective grain radius (col,lyr) [microns, m-6]
       REAL(r8), allocatable :: mss_bcpho   (:,:) !mass of hydrophobic BC in snow  (col,lyr) [kg]
@@ -150,7 +150,7 @@ SAVE
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_TimeVariables 
+  SUBROUTINE allocate_TimeVariables
 ! --------------------------------------------------------------------
 ! Allocates memory for CLM 1d [numpatch] variables
 ! ------------------------------------------------------
@@ -243,7 +243,7 @@ SAVE
         allocate (wa                   (numpatch))
         allocate (wat                  (numpatch))
         allocate (dpond                (numpatch))
-        
+
         allocate (t_lake       (nl_lake,numpatch))    !new lake scheme
         allocate (lake_icefrac (nl_lake,numpatch))    !new lake scheme
         allocate (savedtke1            (numpatch))    !new lake scheme
@@ -286,7 +286,7 @@ SAVE
      CALL allocate_PCTimeVars
 #endif
 
-#ifdef BGC 
+#ifdef BGC
      CALL allocate_BGCTimeVars
 #endif
 
@@ -309,7 +309,7 @@ SAVE
      ! --------------------------------------------------
 
      if (p_is_worker) then
-        
+
         if (numpatch > 0) then
 
            deallocate (z_sno    )
@@ -346,7 +346,7 @@ SAVE
            deallocate ( lambda_out                   )
 #endif
 #endif
-#ifdef PLANT_HYDRAULIC_STRESS 
+#ifdef PLANT_HYDRAULIC_STRESS
            deallocate (vegwp  )
            deallocate (gs0sun )
            deallocate (gs0sha )
@@ -364,7 +364,7 @@ SAVE
            deallocate (tleaf  )
            deallocate (ldew   )
            deallocate (ldew_rain)
-           deallocate (ldew_snow)   
+           deallocate (ldew_snow)
            deallocate (sag    )
            deallocate (scv    )
            deallocate (snowdp )
@@ -465,7 +465,7 @@ SAVE
      case ('DAILY')
         rwrite = isendofday(idate, deltim)
      case ('MONTHLY')
-        rwrite = isendofmonth(idate, deltim)       
+        rwrite = isendofmonth(idate, deltim)
      case ('YEARLY')
         rwrite = isendofyear(idate, deltim)
      end select
@@ -483,7 +483,7 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpatch
      use ncio_vector
      USE GlobalVars
@@ -492,20 +492,20 @@ SAVE
      integer, INTENT(in) :: idate(3)
      character(LEN=*), intent(in) :: site
      character(LEN=*), intent(in) :: dir_restart
-     
+
      ! Local variables
      character(LEN=256) :: file_restart
      character(len=14)  :: cdate
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
      write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_'//trim(cdate)//'.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
-     
+
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'snowp1',   -maxsnl+1     )
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
@@ -515,7 +515,7 @@ SAVE
 #ifdef PLANT_HYDRAULIC_STRESS
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
 #endif
-     
+
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
 
@@ -567,18 +567,18 @@ SAVE
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
      call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
      call ncio_write_vector (file_restart, 'savedtke1  ', 'patch', landpatch, savedtke1   , compress) !
-     call ncio_write_vector (file_restart, 'snw_rds  ', 'snow', -maxsnl, 'patch', landpatch, snw_rds  , compress) 
-     call ncio_write_vector (file_restart, 'mss_bcpho', 'snow', -maxsnl, 'patch', landpatch, mss_bcpho, compress) 
-     call ncio_write_vector (file_restart, 'mss_bcphi', 'snow', -maxsnl, 'patch', landpatch, mss_bcphi, compress) 
-     call ncio_write_vector (file_restart, 'mss_ocpho', 'snow', -maxsnl, 'patch', landpatch, mss_ocpho, compress) 
-     call ncio_write_vector (file_restart, 'mss_ocphi', 'snow', -maxsnl, 'patch', landpatch, mss_ocphi, compress) 
-     call ncio_write_vector (file_restart, 'mss_dst1 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst1 , compress) 
-     call ncio_write_vector (file_restart, 'mss_dst2 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst2 , compress) 
-     call ncio_write_vector (file_restart, 'mss_dst3 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst3 , compress) 
-     call ncio_write_vector (file_restart, 'mss_dst4 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst4 , compress) 
-     call ncio_write_vector (file_restart, 'ssno', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno, compress) 
+     call ncio_write_vector (file_restart, 'snw_rds  ', 'snow', -maxsnl, 'patch', landpatch, snw_rds  , compress)
+     call ncio_write_vector (file_restart, 'mss_bcpho', 'snow', -maxsnl, 'patch', landpatch, mss_bcpho, compress)
+     call ncio_write_vector (file_restart, 'mss_bcphi', 'snow', -maxsnl, 'patch', landpatch, mss_bcphi, compress)
+     call ncio_write_vector (file_restart, 'mss_ocpho', 'snow', -maxsnl, 'patch', landpatch, mss_ocpho, compress)
+     call ncio_write_vector (file_restart, 'mss_ocphi', 'snow', -maxsnl, 'patch', landpatch, mss_ocphi, compress)
+     call ncio_write_vector (file_restart, 'mss_dst1 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst1 , compress)
+     call ncio_write_vector (file_restart, 'mss_dst2 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst2 , compress)
+     call ncio_write_vector (file_restart, 'mss_dst3 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst3 , compress)
+     call ncio_write_vector (file_restart, 'mss_dst4 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst4 , compress)
+     call ncio_write_vector (file_restart, 'ssno', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno, compress)
 
-     ! Additional va_vectorriables required by reginal model (such as WRF ) RSM) 
+     ! Additional va_vectorriables required by reginal model (such as WRF ) RSM)
      call ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) !     radiative temperature of surface [K]
      call ncio_write_vector (file_restart, 'tref ', 'patch', landpatch, tref , compress) !     2 m height air temperature [kelvin]
      call ncio_write_vector (file_restart, 'qref ', 'patch', landpatch, qref , compress) !     2 m height air specific humidity
@@ -626,7 +626,7 @@ SAVE
      use mod_namelist
      use spmd_task
      use ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
      USE mod_colm_debug
 #endif
      USE mod_landpatch
@@ -641,7 +641,7 @@ SAVE
      ! Local variables
      character(LEN=256) :: file_restart
      character(len=14)  :: cdate
-     
+
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -701,7 +701,7 @@ SAVE
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
      call ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1) !
-     
+
      call ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  ) !
      call ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho) !
      call ncio_read_vector (file_restart, 'mss_bcphi', -maxsnl, landpatch, mss_bcphi) !
@@ -713,21 +713,21 @@ SAVE
      call ncio_read_vector (file_restart, 'mss_dst4 ', -maxsnl, landpatch, mss_dst4 ) !
      call ncio_read_vector (file_restart, 'ssno', 2,2, -maxsnl+1, landpatch, ssno) !
 
-     ! Additional variables required by reginal model (such as WRF ) RSM) 
-     call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) !     radiative temperature of surface [K]
-     call ncio_read_vector (file_restart, 'tref ', landpatch, tref ) !     2 m height air temperature [kelvin]
-     call ncio_read_vector (file_restart, 'qref ', landpatch, qref ) !     2 m height air specific humidity
-     call ncio_read_vector (file_restart, 'rst  ', landpatch, rst  ) !     canopy stomatal resistance (s/m)
-     call ncio_read_vector (file_restart, 'emis ', landpatch, emis ) !     averaged bulk surface emissivity
-     call ncio_read_vector (file_restart, 'z0m  ', landpatch, z0m  ) !     effective roughness [m]
-     call ncio_read_vector (file_restart, 'zol  ', landpatch, zol  ) !     dimensionless height (z/L) used in Monin-Obukhov theory
-     call ncio_read_vector (file_restart, 'rib  ', landpatch, rib  ) !     bulk Richardson number in surface layer
-     call ncio_read_vector (file_restart, 'ustar', landpatch, ustar) !     u* in similarity theory [m/s]
-     call ncio_read_vector (file_restart, 'qstar', landpatch, qstar) !     q* in similarity theory [kg/kg]
-     call ncio_read_vector (file_restart, 'tstar', landpatch, tstar) !     t* in similarity theory [K]
-     call ncio_read_vector (file_restart, 'fm   ', landpatch, fm   ) !     integral of profile function for momentum
-     call ncio_read_vector (file_restart, 'fh   ', landpatch, fh   ) !     integral of profile function for heat
-     call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) !     integral of profile function for moisture
+     ! Additional variables required by reginal model (such as WRF ) RSM)
+     call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) ! radiative temperature of surface [K]
+     call ncio_read_vector (file_restart, 'tref ', landpatch, tref ) ! 2 m height air temperature [kelvin]
+     call ncio_read_vector (file_restart, 'qref ', landpatch, qref ) ! 2 m height air specific humidity
+     call ncio_read_vector (file_restart, 'rst  ', landpatch, rst  ) ! canopy stomatal resistance (s/m)
+     call ncio_read_vector (file_restart, 'emis ', landpatch, emis ) ! averaged bulk surface emissivity
+     call ncio_read_vector (file_restart, 'z0m  ', landpatch, z0m  ) ! effective roughness [m]
+     call ncio_read_vector (file_restart, 'zol  ', landpatch, zol  ) ! dimensionless height (z/L) used in Monin-Obukhov theory
+     call ncio_read_vector (file_restart, 'rib  ', landpatch, rib  ) ! bulk Richardson number in surface layer
+     call ncio_read_vector (file_restart, 'ustar', landpatch, ustar) ! u* in similarity theory [m/s]
+     call ncio_read_vector (file_restart, 'qstar', landpatch, qstar) ! q* in similarity theory [kg/kg]
+     call ncio_read_vector (file_restart, 'tstar', landpatch, tstar) ! t* in similarity theory [K]
+     call ncio_read_vector (file_restart, 'fm   ', landpatch, fm   ) ! integral of profile function for momentum
+     call ncio_read_vector (file_restart, 'fh   ', landpatch, fh   ) ! integral of profile function for heat
+     call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) ! integral of profile function for moisture
 
 #if (defined PFT_CLASSIFICATION)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'.nc'
@@ -738,7 +738,7 @@ SAVE
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'.nc'
      CALL READ_PCTimeVars (file_restart)
 #endif
-     
+
 #if (defined BGC)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'.nc'
      CALL READ_BGCTimeVars (file_restart)
@@ -752,7 +752,7 @@ SAVE
 #ifdef CLMDEBUG
      call check_TimeVariables
 #endif
-     
+
      if (p_is_master) then
         write(*,*) 'Loading Time Variables done.'
      end if
@@ -842,7 +842,7 @@ SAVE
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)
 #endif
-     
+
   end subroutine check_TimeVariables
 #endif
 

@@ -28,7 +28,7 @@ MODULE SNOW_Layers_CombineDivide
 
 
  subroutine snowcompaction (lb,deltim,imelt,fiold,t_soisno,wliq_soisno,wice_soisno,dz_soisno)
- 
+
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
@@ -49,13 +49,13 @@ MODULE SNOW_Layers_CombineDivide
   integer, INTENT(in) :: &
         lb             ! lower bound of array
 
-  integer, INTENT(in) :: & 
+  integer, INTENT(in) :: &
         imelt(lb : 0)  ! signifies if node in melting (imelt = 1)
 
   real(r8), INTENT(in) :: &
         deltim,       &! seconds i a time step [second]
-        fiold(lb : 0),&! fraction of ice relative to 
-                       ! the total water content at the previous time step 
+        fiold(lb : 0),&! fraction of ice relative to
+                       ! the total water content at the previous time step
         t_soisno (lb : 0),   &! nodal temperature [K]
         wice_soisno(lb : 0), &! ice lens [kg/m2]
         wliq_soisno(lb : 0)   ! liquid water [kg/m2]
@@ -65,13 +65,13 @@ MODULE SNOW_Layers_CombineDivide
 !
 !----------------------- local variables ------------------------------
   integer i            ! Numeber of doing loop
-  
+
   real(r8) :: &
        c1,            &! = 2.777e-7 [m2/(kg s)]
        c2,            &! = 21e-3 [m3/kg]
        c3,            &! = 2.777e-6 [1/s]
        c4,            &! = 0.04 [1/K]
-       c5,            &! = 2.0 
+       c5,            &! = 2.0
        c6,            &! = 5.15e-7.
        c7,            &! = 4.
        dm,            &! Upper Limit on Destructive Metamorphism Compaction [kg/m3]
@@ -83,10 +83,10 @@ MODULE SNOW_Layers_CombineDivide
        ddz2,          &! Rate of compaction of snowpack due to overburden.
        ddz3,          &! Rate of compaction of snowpack due to melt [1/s]
        dexpf,         &! expf=exp(-c4*(273.15-t_soisno)).
-       fi,            &! Fraction of ice relative to the total water content 
+       fi,            &! Fraction of ice relative to the total water content
                        ! at the current time step
        td,            &! t_soisno - tfrz [K]
-       pdzdtc,        &! Nodal rate of change in fractional-thickness 
+       pdzdtc,        &! Nodal rate of change in fractional-thickness
                        ! due to compaction [fraction/s]
        void,          &! void (1 - vol_ice - vol_liq)
        wx,            &! water mass (ice+liquid) [kg/m2]
@@ -94,8 +94,8 @@ MODULE SNOW_Layers_CombineDivide
 
   data c2,c3,c4,c5/23.e-3, 2.777e-6, 0.04, 2.0/
   data c6/5.15e-7/, c7/4./
-  data dm/100./         
-  data eta0/9.e5/      
+  data dm/100./
+  data eta0/9.e5/
 
 !=======================================================================
 
@@ -114,7 +114,7 @@ MODULE SNOW_Layers_CombineDivide
          bi = wice_soisno(i) / dz_soisno(i)
          fi = wice_soisno(i) / wx
          td = tfrz-t_soisno(i)
-         
+
          dexpf = exp(-c4*td)
 
 ! Settling as a result of destructive metamorphism
@@ -159,7 +159,7 @@ MODULE SNOW_Layers_CombineDivide
 ! If snow element thickness or mass is less than a prescribed minimum,
 ! it is combined with neighboring element to be best combine with,
 ! and executes the combination of mass and energy in clm_combo.f90
-! 
+!
 !=======================================================================
 
   use precision
@@ -241,8 +241,8 @@ MODULE SNOW_Layers_CombineDivide
 !-----------------------------------------------------------------------
 ! check the snow depth
 
-      if(snowdp < 0.01)then       !!! all snow gone 
-          
+      if(snowdp < 0.01)then       !!! all snow gone
+
          snl = 0
          scv = zwice
          if(scv <= 0.) snowdp = 0.
@@ -254,7 +254,7 @@ MODULE SNOW_Layers_CombineDivide
 
       else                        !!! snow layers combined
 
-! two or more layers 
+! two or more layers
 
         if(snl < -1)then
            msn_old = snl
@@ -308,7 +308,7 @@ MODULE SNOW_Layers_CombineDivide
 ! The layer thickness great than the prescibed minimum value
 
               else
-                 mssi = mssi + 1 
+                 mssi = mssi + 1
               endif
            enddo
 
@@ -322,7 +322,7 @@ MODULE SNOW_Layers_CombineDivide
            zi_soisno(k-1) = zi_soisno(k) - dz_soisno(k)
         enddo
 
-      endif                       !!! snow layers combined 
+      endif                       !!! snow layers combined
 
  end subroutine snowlayerscombine
 
@@ -354,7 +354,7 @@ MODULE SNOW_Layers_CombineDivide
 
 ! numbering from 1 (surface) msno (bottom)
   real(r8) :: drr      ! thickness of the combined [m]
-  real(r8) :: dzsno(5) ! Snow layer thickness [m] 
+  real(r8) :: dzsno(5) ! Snow layer thickness [m]
   real(r8) :: swice(5) ! Partial volume of ice [m3/m3]
   real(r8) :: swliq(5) ! Partial volume of liquid water [m3/m3]
   real(r8) :: tsno(5)  ! Nodel temperature [K]
@@ -488,7 +488,7 @@ MODULE SNOW_Layers_CombineDivide
          endif
          endif
       endif
-         
+
       if(msno > 4)then
          if(dzsno(4) > 0.23)then
          drr = dzsno(4) - 0.23
@@ -508,7 +508,7 @@ MODULE SNOW_Layers_CombineDivide
 !                   'and combined into underlying neighbor'
          endif
       endif
-         
+
       snl = - msno
 
       do k = snl+1, 0
@@ -585,7 +585,7 @@ MODULE SNOW_Layers_CombineDivide
       endif
 
       dz_soisno = dzc
-      wice_soisno = wicec 
+      wice_soisno = wicec
       wliq_soisno = wliqc
       t = tc
 
@@ -609,6 +609,8 @@ MODULE SNOW_Layers_CombineDivide
 ! it is combined with neighboring element to be best combine with,
 ! and executes the combination of mass and energy in clm_combo.f90
 !
+! REVISIONS:
+! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
   IMPLICIT NONE
@@ -874,6 +876,9 @@ MODULE SNOW_Layers_CombineDivide
 ! Original author : Yongjiu Dai, September 15, 1999, January 07, 2023
 !
 ! subdivides snow layer when its thickness exceed the prescribed maximum
+!
+! REVISIONS:
+! Yongjiu Dai, 01/2023: added Aerosol fluxes from SNICAR model
 !=======================================================================
 
   IMPLICIT NONE
