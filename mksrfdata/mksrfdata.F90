@@ -68,6 +68,11 @@ PROGRAM mksrfdata
    USE mod_landpc
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag, only : gdiag, srfdata_diag_init
+#endif
+
+
    IMPLICIT NONE
 
    CHARACTER(len=256) :: nlfile
@@ -284,6 +289,16 @@ PROGRAM mksrfdata
    ! ................................................................
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
+#ifdef SrfdataDiag
+#ifdef GRIDBASED
+   CALL gdiag%define_by_copy (gridmesh)
+#else
+   CALL gdiag%define_by_ndims(720,360)
+#endif
+
+   CALL srfdata_diag_init (dir_landdata)
+#endif
+
 #ifdef BGC
    call aggregation_NDEP            (gndep, dir_rawdata, dir_landdata)
 #if (defined CROP)
