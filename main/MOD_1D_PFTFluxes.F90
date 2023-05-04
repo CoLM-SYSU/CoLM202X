@@ -3,9 +3,12 @@
 #ifdef PFT_CLASSIFICATION
 
 MODULE MOD_1D_PFTFluxes
-! -------------------------------
+! -----------------------------------------------------------------
+! !DESCRIPTION:
+! Define PFT flux variables
+!
 ! Created by Hua Yuan, 08/2019
-! -------------------------------
+! -----------------------------------------------------------------
 
   USE precision
 #ifdef BGC

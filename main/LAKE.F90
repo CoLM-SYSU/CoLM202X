@@ -8,7 +8,7 @@ MODULE LAKE
  SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: newsnow_lake 
+  public :: newsnow_lake
   public :: laketem
   public :: snowwater_lake
 
@@ -37,7 +37,7 @@ MODULE LAKE
             t_lake    , zi_soisno , z_soisno ,&
             dz_soisno , t_soisno  , wliq_soisno , wice_soisno ,&
             fiold     , snl       , sag         , scv         ,&
-            snowdp    , lake_icefrac ) 
+            snowdp    , lake_icefrac )
 
 !=======================================================================
 ! Add new snow nodes.        ! Created by Yongjiu Dai, December, 2012
@@ -83,8 +83,8 @@ MODULE LAKE
 !-----------------------------------------------------------------------
 
       newnode = 0
-      dz_snowf = pg_snow/bifall                
-      snowdp = snowdp + dz_snowf*deltim         
+      dz_snowf = pg_snow/bifall
+      snowdp = snowdp + dz_snowf*deltim
       scv = scv + pg_snow*deltim      ! snow water equivalent (mm)
 
 
@@ -92,7 +92,7 @@ MODULE LAKE
 
       IF (snl==0 .and. snowdp < 0.01) then       ! no snow layer, energy exchange between prec and lake surface
 
-          a = cpliq*pg_rain*deltim*(t_precip-tfrz)                          !cool down rainfall to tfrz 
+          a = cpliq*pg_rain*deltim*(t_precip-tfrz)                          !cool down rainfall to tfrz
           b = pg_rain*deltim*hfus                                           !all rainfall frozen
           c = cpice*denh2o*dz_lake(1)*lake_icefrac(1)*(tfrz-t_lake(1))      !warm up lake surface ice to tfrz
           d = denh2o*dz_lake(1)*lake_icefrac(1)*hfus                        !all lake surface ice melt
@@ -103,8 +103,8 @@ MODULE LAKE
           sag = 0.0
 
           if (lake_icefrac(1) > 0.999) then
-              ! all rainfall frozen, release heat to warm up frozen lake surface 
-              if (a+b<=c) then 
+              ! all rainfall frozen, release heat to warm up frozen lake surface
+              if (a+b<=c) then
                   tw=min(tfrz,t_precip)
                   t_lake(1)=(a+b+cpice*(pg_rain+pg_snow)*deltim*tw+cpice*denh2o*dz_lake(1)*t_lake(1)*lake_icefrac(1))/&
                             (cpice*denh2o*dz_lake(1)*lake_icefrac(1)+cpice*(pg_rain+pg_snow)*deltim)
@@ -125,7 +125,7 @@ MODULE LAKE
                   wice_lake(1) = denh2o*dz_lake(1) - (a-c)/hfus
                   wliq_lake(1) = (a-c)/hfus
                   lake_icefrac(1) = wice_lake(1)/(wice_lake(1) + wliq_lake(1))
-              ! all lake surface melt, absorb heat to cool down rainfall 
+              ! all lake surface melt, absorb heat to cool down rainfall
               else  !(a>c+d)
                   t_lake(1)=(cpliq*pg_rain*deltim*t_precip+cpliq*denh2o*dz_lake(1)*tfrz-c-d)/&
                             (cpliq*denh2o*dz_lake(1)+cpliq*pg_rain*deltim)
@@ -201,7 +201,7 @@ MODULE LAKE
                   t_lake(1) = (g+h+cpice*denh2o*dz_lake(1)*tfrz+cpice*pg_snow*deltim*t_precip)/&
                               (cpice*pg_snow*deltim+cpice*denh2o*dz_lake(1))
                   lake_icefrac(1) = 1.0
-              end if 
+              end if
           end if
 
       ELSE IF (snl==0 .and. snowdp >= 0.01) then
@@ -290,18 +290,18 @@ MODULE LAKE
 ! lake water, soil, and bedrock beneath lake.
 ! Snow and soil temperatures are determined as in SoilTemperature, except
 ! for appropriate boundary conditions at the top of the snow (the flux is fixed
-! to be the ground heat flux), the bottom of the snow (adjacent to top lake layer), 
-! and the top of the soil (adjacent to the bottom lake layer). 
+! to be the ground heat flux), the bottom of the snow (adjacent to top lake layer),
+! and the top of the soil (adjacent to the bottom lake layer).
 ! Also, the soil is kept fully saturated.
 ! The whole column is solved simultaneously as one tridiagonal matrix.
 !
 ! calculate lake temperatures from one-dimensional thermal
-! stratification model based on eddy diffusion concepts to 
+! stratification model based on eddy diffusion concepts to
 ! represent vertical mixing of heat
 !
 ! d ts    d            d ts     1 ds
 ! ---- = -- [(km + ke) ----] + -- --
-!  dt    dz             dz     cw dz   
+!  dt    dz             dz     cw dz
 ! where: ts = temperature (kelvin)
 !         t = time (s)
 !         z = depth (m)
@@ -316,11 +316,16 @@ MODULE LAKE
 ! the solution conserves energy as
 ! cw*([ts(  1)] n+1 - [ts(  1)] n)*dz(  1)/dt + ... +
 ! cw*([ts(nl_lake)] n+1 - [ts(nl_lake)] n)*dz(nl_lake)/dt = fin
-! where 
+! where
 ! [ts] n   = old temperature (kelvin)
 ! [ts] n+1 = new temperature (kelvin)
 ! fin      = heat flux into lake (w/m**2)
-!          = beta*sabg_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake) 
+!          = beta*sabg_lyr(1)+forc_frl-olrg-fsena-lfevpa-hm + phi(1) + ... + phi(nl_lake)
+!
+! REVISIONS:
+! Yongjiu Dai and Hua Yuan, 01/2023: added SNICAR for layer solar absorption, ground heat
+!                                    flux, temperature and freezing mass calculations
+!
 ! -----------------------------------------------------------------
   use precision
   use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
@@ -355,7 +360,7 @@ MODULE LAKE
 
   real(r8), INTENT(in) :: dz_soisno(maxsnl+1:nl_soil) ! soil/snow layer thickness (m)
   real(r8), INTENT(in) :: z_soisno(maxsnl+1:nl_soil)  ! soil/snow node depth [m]
-  real(r8), INTENT(in) :: zi_soisno(maxsnl:nl_soil)   ! soil/snow depth of layer interface [m] 
+  real(r8), INTENT(in) :: zi_soisno(maxsnl:nl_soil)   ! soil/snow depth of layer interface [m]
 
   real(r8), INTENT(in) :: dz_lake(nl_lake)  ! lake layer thickness (m)
   real(r8), INTENT(in) :: lakedepth         ! column lake depth (m)
@@ -389,7 +394,7 @@ MODULE LAKE
 
   real(r8), INTENT(inout) :: t_lake(nl_lake)       ! lake temperature (kelvin)
   real(r8), INTENT(inout) :: lake_icefrac(nl_lake) ! lake mass fraction of lake layer that is frozen
-  real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K) 
+  real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K)
 
   REAL(r8), intent(out) :: snofrz (maxsnl+1:0)     ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
@@ -498,10 +503,10 @@ MODULE LAKE
   !--------------------
   real(r8) fetch     ! lake fetch (m)
   real(r8) cur       ! Charnock parameter (-)
-  real(r8) betavis   ! 
+  real(r8) betavis   !
   real(r8) betaprime ! Effective beta
   real(r8) tdmax     ! temperature of maximum water density
-  real(r8) cfus      ! effective heat of fusion per unit volume 
+  real(r8) cfus      ! effective heat of fusion per unit volume
   real(r8) tkice_eff ! effective conductivity since layer depth is constant
   real(r8) cice_eff  ! effective heat capacity of ice (using density of
                      ! water because layer depth is not adjusted when freezing
@@ -517,8 +522,8 @@ MODULE LAKE
   integer  imelt_lake(1:nl_lake)       ! lake flag for melting or freezing snow and soil layer [-]
   real(r8) cv_lake(1:nl_lake)          ! heat capacity [J/(m2 K)]
   real(r8) tk_lake(1:nl_lake)          ! thermal conductivity at layer node [W/(m K)]
-  real(r8) cv_soisno(maxsnl+1:nl_soil) ! heat capacity of soil/snow [J/(m2 K)] 
-  real(r8) tk_soisno(maxsnl+1:nl_soil) ! thermal conductivity of soil/snow [W/(m K)] (at interface below, except for j=0) 
+  real(r8) cv_soisno(maxsnl+1:nl_soil) ! heat capacity of soil/snow [J/(m2 K)]
+  real(r8) tk_soisno(maxsnl+1:nl_soil) ! thermal conductivity of soil/snow [W/(m K)] (at interface below, except for j=0)
   real(r8) hcap(1:nl_soil)           ! J/(m3 K)
   real(r8) thk(maxsnl+1:nl_soil)     ! W/(m K)
   real(r8) tktopsoil                   ! thermal conductivity of the top soil layer [W/(m K)]
@@ -540,7 +545,7 @@ MODULE LAKE
   real(r8) c      (maxsnl+1:nl_lake+nl_soil) ! "c" vector for tridiagonal matrix
   real(r8) r      (maxsnl+1:nl_lake+nl_soil) ! "r" vector for tridiagonal solution
   real(r8) fn1    (maxsnl+1:nl_lake+nl_soil) ! heat diffusion through the layer interface below [W/m2]
-  real(r8) brr    (maxsnl+1:nl_lake+nl_soil) ! 
+  real(r8) brr    (maxsnl+1:nl_lake+nl_soil) !
   integer  imelt_x(maxsnl+1:nl_lake+nl_soil) ! flag for melting (=1), freezing (=2), Not=0 (new)
 
   real(r8) dzm       ! used in computing tridiagonal matrix [m]
@@ -572,15 +577,15 @@ MODULE LAKE
   real(r8) qav       ! used in calc aver heat content for conv. mixed layers
   real(r8) tav       ! used in aver temp for convectively mixed layers
   real(r8) tav_froz  ! used in aver temp for convectively mixed layers (C)
-  real(r8) tav_unfr  ! "    
+  real(r8) tav_unfr  ! "
   real(r8) nav       ! used in aver temp for convectively mixed layers
 
   real(r8) fevpg_lim ! temporary evap_soi limited by top snow layer content [mm/s]
   real(r8) scv_temp  ! temporary h2osno [kg/m^2]
-  real(r8) tmp       ! 
-  real(r8) h_fin     ! 
-  real(r8) h_finDT   ! 
-  real(r8) del_T_grnd   ! 
+  real(r8) tmp       !
+  real(r8) h_fin     !
+  real(r8) h_finDT   !
+  real(r8) del_T_grnd   !
 !  real(r8) savedtke1
 
   integer iter       ! iteration index
@@ -608,7 +613,7 @@ MODULE LAKE
 ! ======================================================================
 
 ! constants for lake temperature model
-      za = (/0.5, 0.6/)    
+      za = (/0.5, 0.6/)
       cwat = cpliq*denh2o     ! water heat capacity per unit volume
       cice_eff = cpice*denh2o ! use water density because layer depth is not adjusted for freezing
       cfus = hfus*denh2o      ! latent heat per unit volume
@@ -622,7 +627,7 @@ MODULE LAKE
       enddo
       lb = snl + 1
 
-! latent heat 
+! latent heat
       if (t_grnd > tfrz )then
          htvp = hvap
       else
@@ -662,8 +667,8 @@ MODULE LAKE
                       ! As long as NIR = 700 nm and up, this can be zero.
          betaprime = betaprime + (1.0-betaprime)*betavis
 #ifndef SNICAR
-      else 
-         ! or frozen but no snow layers or 
+      else
+         ! or frozen but no snow layers or
          ! currently ignor the transmission of solar in snow and ice layers
          ! to be updated in the future version
          betaprime = 1.0
@@ -733,7 +738,7 @@ MODULE LAKE
 
 
     ! =====================================
-      ITERATION : DO WHILE (iter <= itmax)       
+      ITERATION : DO WHILE (iter <= itmax)
     ! =====================================
 
          t_grnd_bef = t_grnd
@@ -770,7 +775,7 @@ MODULE LAKE
              + forc_rhoair*cpair/rah*thm &
              - htvp*forc_rhoair/raw*(qsatg-qsatgdT*t_grnd_bef - forc_q) &
              + tksur*tsur/dzsur
-           
+
          bx  = 4.*stftg3 + forc_rhoair*cpair/rah &
              + htvp*forc_rhoair/raw*qsatgdT + tksur/dzsur
 
@@ -784,13 +789,13 @@ MODULE LAKE
        !     + htvp*forc_rhoair/raw*qsatgdT                             !
        ! del_T_grnd = t_grnd - t_grnd_bef                               !
        !----------------------------------------------------------------!
-          
+
 ! surface fluxes of momentum, sensible and latent
 ! using ground temperatures from previous time step
 
          fseng = forc_rhoair*cpair*(t_grnd-thm)/rah
          fevpg = forc_rhoair*(qsatg+qsatgdT*(t_grnd-t_grnd_bef)-forc_q)/raw
-          
+
          call qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
          dth = thm-t_grnd
          dqh = forc_q-qsatg
@@ -799,9 +804,9 @@ MODULE LAKE
          thvstar = tstar*(1.+0.61*forc_q)+0.61*th*qstar
          zeta = zldis*vonkar*grav*thvstar/(ustar**2*thv)
          if(zeta >= 0.) then     !stable
-           zeta = min(2.,max(zeta,1.e-6))               
+           zeta = min(2.,max(zeta,1.e-6))
          else                    !unstable
-           zeta = max(-100.,min(zeta,-1.e-6))           
+           zeta = max(-100.,min(zeta,-1.e-6))
          endif
          obu = zldis/zeta
          if(zeta >= 0.)then
@@ -816,7 +821,7 @@ MODULE LAKE
                               cur,ustar,z0mg,z0hg,z0qg)
 
          iter = iter + 1
-         del_T_grnd = abs(t_grnd - t_grnd_bef)                
+         del_T_grnd = abs(t_grnd - t_grnd_bef)
 
          if(iter .gt. itmin) then
             if(del_T_grnd <= dtmin) then
@@ -850,7 +855,7 @@ MODULE LAKE
          fevpg = forc_rhoair*(qsatg+qsatgdT*(t_grnd-t_grnd_bef)-forc_q)/raw
     end if
 !*----------------------------------------------------------------------
-       
+
 ! net longwave from ground to atmosphere
        stftg3 = emg*stefnc*t_grnd_bef*t_grnd_bef*t_grnd_bef
        olrg = (1.-emg)*forc_frl + emg*stefnc*t_grnd_bef**4 + 4.*stftg3*(t_grnd - t_grnd_bef)
@@ -872,7 +877,7 @@ MODULE LAKE
 ! Set up vector r and vectors a, b, c that define tridiagonal matrix
 ! snow and lake and soil layer temperature
 !------------------------------------------------------------
-       
+
 !------------------------------------------------------------
 ! Lake density
 !------------------------------------------------------------
@@ -901,7 +906,7 @@ MODULE LAKE
                               dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake,savedtke1)
 
 !------------------------------------------------------------
-! Set the thermal properties of the snow above frozen lake and underlying soil 
+! Set the thermal properties of the snow above frozen lake and underlying soil
 ! and check initial energy content.
 !------------------------------------------------------------
 
@@ -931,18 +936,18 @@ MODULE LAKE
 ! Thermal conductivity at the layer interface
       do i = lb, nl_soil-1
 
-! the following consideration is try to avoid the snow conductivity 
-! to be dominant in the thermal conductivity of the interface. 
-! Because when the distance of bottom snow node to the interfacee 
+! the following consideration is try to avoid the snow conductivity
+! to be dominant in the thermal conductivity of the interface.
+! Because when the distance of bottom snow node to the interfacee
 ! is larger than that of interface to top soil node,
-! the snow thermal conductivity will be dominant, and the result is that 
-! lees heat tranfer between snow and soil 
+! the snow thermal conductivity will be dominant, and the result is that
+! lees heat tranfer between snow and soil
 
 ! modified by Nan Wei, 08/25/2014
          if (i /= 0) then
             tk_soisno(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
                   /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
-         else 
+         else
             tk_soisno(i) = thk(i)
          end if
       end do
@@ -997,7 +1002,7 @@ MODULE LAKE
 #endif
          end do
 #ifndef SNICAR
-      else if (snl == 0) then     !no snow-covered layers, but partially frozen 
+      else if (snl == 0) then     !no snow-covered layers, but partially frozen
           phi(1) = sabg * (1.-betaprime)
           phi(2:nl_lake) = 0.
           phi_soil = 0.
@@ -1186,7 +1191,7 @@ MODULE LAKE
 ! radiative temperature
       trad = (olrg/stefnc)**0.25
 
-! solar absorption below the surface.  
+! solar absorption below the surface.
       fgrnd = sabg + forc_frl - olrg - fseng - htvp*fevpg
       taux = -forc_rhoair*forc_us/ram
       tauy = -forc_rhoair*forc_vs/ram
@@ -1205,7 +1210,7 @@ MODULE LAKE
       qfros = 0.
 
       if (fevpg >= 0.0) then
-         if(lb < 0)then 
+         if(lb < 0)then
             qseva = min(wliq_soisno(lb)/deltim, fevpg)
             qsubl = fevpg - qseva
          else
@@ -1229,9 +1234,9 @@ MODULE LAKE
       do j = lb, nl_lake + nl_soil
          esum1 = esum1 + (tx(j)-tx_bef(j))*cvx(j)
          esum2 = esum2 + (tx(j)-tfrz)*cvx(j)
-      end do       
+      end do
                            ! fgrnd includes all the solar radiation absorbed in the lake,
-      errsoi = esum1/deltim - fgrnd  
+      errsoi = esum1/deltim - fgrnd
       if(abs(errsoi) > 0.1) then
          write(6,*)'energy conservation error in LAND WATER COLUMN during tridiagonal solution,', &
                    'error (W/m^2):', errsoi, fgrnd
@@ -1323,7 +1328,7 @@ MODULE LAKE
       !------------------------------------------------------------
 
 #ifdef SNICAR
-      !for SNICAR: layer freezing mass flux (positive): 
+      !for SNICAR: layer freezing mass flux (positive):
       DO j = lb, 0
          IF (imelt_soisno(j)==2 .and. j<1) THEN
             snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
@@ -1339,14 +1344,14 @@ MODULE LAKE
       ! and differences from tfrz only to avoid enthalpy correction for (cpliq-cpice)*melt*tfrz.
       ! also check soil water sum.
       do j = 1, nl_lake
-         esum2 = esum2 - (t_lake(j)-tfrz)*cv_lake(j) 
+         esum2 = esum2 - (t_lake(j)-tfrz)*cv_lake(j)
       end do
 
       do j = lb, nl_soil
-         esum2 = esum2 - (t_soisno(j)-tfrz)*cv_soisno(j) 
+         esum2 = esum2 - (t_soisno(j)-tfrz)*cv_soisno(j)
       end do
 
-      esum2 = esum2 - xmf 
+      esum2 = esum2 - xmf
       errsoi = esum2/deltim
 
       if(abs(errsoi) > 0.1) then
@@ -1374,7 +1379,7 @@ MODULE LAKE
 
          if (rhow(j)>rhow(j+1) .or. (lake_icefrac(j)<1.0 .and. lake_icefrac(j+1)>0.)) then
             do i = 1, j+1
-               qav = qav + dz_lake(i)*(t_lake(i)-tfrz) * & 
+               qav = qav + dz_lake(i)*(t_lake(i)-tfrz) * &
                        ((1. - lake_icefrac(i))*cwat + lake_icefrac(i)*cice_eff)
                iceav = iceav + lake_icefrac(i)*dz_lake(i)
                nav = nav + dz_lake(i)
@@ -1439,11 +1444,11 @@ MODULE LAKE
       ! do as above to sum energy content
       ncvts = 0.
       do j = 1, nl_lake
-         ncvts = ncvts + cv_lake(j)*(t_lake(j)-tfrz) + cfus*dz_lake(j)*(1.-lake_icefrac(j)) 
+         ncvts = ncvts + cv_lake(j)*(t_lake(j)-tfrz) + cfus*dz_lake(j)*(1.-lake_icefrac(j))
       end do
 
       do j = lb, nl_soil
-         ncvts = ncvts + cv_soisno(j)*(t_soisno(j)-tfrz) + hfus*wliq_soisno(j) 
+         ncvts = ncvts + cv_soisno(j)*(t_soisno(j)-tfrz) + hfus*wliq_soisno(j)
          if (j == 1 .and. scv > 0. .and. j == lb) then
             ncvts = ncvts - scv*hfus
          end if
@@ -1451,7 +1456,7 @@ MODULE LAKE
 
       ! check energy conservation.
       errsoi = (ncvts-ocvts)/deltim - fgrnd
-      if (abs(errsoi) < 0.10) then 
+      if (abs(errsoi) < 0.10) then
          fseng = fseng - errsoi
          fsena = fseng
          fgrnd = fgrnd + errsoi
@@ -1489,16 +1494,20 @@ MODULE LAKE
 
 !-----------------------------------------------------------------------------------------------
 ! Calculation of Lake Hydrology. Lake water mass is kept constant. The soil is simply maintained at
-! volumetric saturation if ice melting frees up pore space. 
+! volumetric saturation if ice melting frees up pore space.
 !
-! Called: 
-!    -> snowwater:             change of snow mass and snow water onto soil
-!    -> snowcompaction:        compaction of snow layers
-!    -> combinesnowlayers:     combine snow layers that are thinner than minimum
-!    -> dividesnowlayers:      subdivide snow layers that are thicker than maximum
+! Called:
+!    -> snowwater:                  change of snow mass and snow water onto soil
+!    -> snowcompaction:             compaction of snow layers
+!    -> combinesnowlayers:          combine snow layers that are thinner than minimum
+!    -> dividesnowlayers:           subdivide snow layers that are thicker than maximum
 !
 ! Initial: Yongjiu Dai, December, 2012
 !                          April, 2014
+! REVISIONS:
+! Yongjiu Dai, 01/2023: added for SNICAR model effects for snowwater,
+! combinesnowlayers, dividesnowlayers processes by calling snowwater_snicar(),
+! SnowLayersCombine_snicar, SnowLayersDivide_snicar()
 !-----------------------------------------------------------------------------------------------
 
   use precision
@@ -1589,7 +1598,7 @@ MODULE LAKE
       ! ----------------------------------------------------------
       !*[1] snow layer on frozen lake
       ! ----------------------------------------------------------
-      if (snl < 0) then 
+      if (snl < 0) then
          lb = snl + 1
 #ifdef SNICAR
          call snowwater_SNICAR (lb,deltim,ssi,wimp,&
@@ -1639,10 +1648,10 @@ MODULE LAKE
          endif
 
       ! ----------------------------------------------------------
-      !*[2] check for single completely unfrozen snow layer over lake. 
-      !     Modeling this ponding is unnecessary and can cause instability after the timestep 
-      !     when melt is completed, as the temperature after melt can be excessive 
-      !     because the fluxes were calculated with a fixed ground temperature of freezing, but the 
+      !*[2] check for single completely unfrozen snow layer over lake.
+      !     Modeling this ponding is unnecessary and can cause instability after the timestep
+      !     when melt is completed, as the temperature after melt can be excessive
+      !     because the fluxes were calculated with a fixed ground temperature of freezing, but the
       !     phase change was unable to restore the temperature to freezing.  (Zack Subnin 05/2010)
       ! ----------------------------------------------------------
 
@@ -1658,7 +1667,7 @@ MODULE LAKE
             snowdp = 0.
          end if
 
-      endif 
+      endif
 
       ! ----------------------------------------------------------
       !*[3] check for snow layers above lake with unfrozen top layer. Mechanically,
@@ -1690,7 +1699,7 @@ MODULE LAKE
          ! changed by weinan as the subroutine newsnow_lake
          ! Remove snow and subtract the latent heat from the top layer.
 
-         t_ave = tfrz - heatsum/(sumsnowice*cpice + sumsnowliq*cpliq)        
+         t_ave = tfrz - heatsum/(sumsnowice*cpice + sumsnowliq*cpliq)
 
          a = heatsum
          b = sumsnowice*hfus
@@ -1724,22 +1733,22 @@ MODULE LAKE
 
 
       ! ----------------------------------------------------------
-      !*[4] Soil water and ending water balance 
+      !*[4] Soil water and ending water balance
       ! ----------------------------------------------------------
       ! Here this consists only of making sure that soil is saturated even as it melts and
       ! pore space opens up. Conversely, if excess ice is melting and the liquid water exceeds the
       ! saturation value, then remove water.
 
-      do j = 1, nl_soil 
+      do j = 1, nl_soil
          a = wliq_soisno(j)/(dz_soisno(j)*denh2o) + wice_soisno(j)/(dz_soisno(j)*denice)
- 
+
          if (a < porsl(j)) then
             wliq_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wice_soisno(j)/denice)*denh2o )
             wice_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
-         else 
+         else
             wliq_soisno(j) = max(0., wliq_soisno(j) - (a - porsl(j))*denh2o*dz_soisno(j) )
             wice_soisno(j) = max( 0., (porsl(j)*dz_soisno(j) - wliq_soisno(j)/denh2o)*denice )
-         end if 
+         end if
 
          if (wliq_soisno(j) > porsl(j)*denh2o*dz_soisno(j)) then
              wliq_soisno(j) = porsl(j)*denh2o*dz_soisno(j)
@@ -1805,7 +1814,7 @@ MODULE LAKE
 
   subroutine hConductivity_lake(nl_lake,snl,t_grnd,&
                                 z_lake,t_lake,lake_icefrac,rhow,&
-                                dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake, savedtke1) 
+                                dlat,ustar,z0mg,lakedepth,depthcrit,tk_lake, savedtke1)
 
 ! -------------------------------------------------------------------------
 ! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
@@ -1872,13 +1881,13 @@ MODULE LAKE
          n2 = max(7.5e-5, grav / rhow(j) * drhodz)
          num = 40. * n2 * (vonkar*z_lake(j))**2
          tmp = -2.*ks*z_lake(j)        ! to avoid underflow computing
-         if(tmp < -40.) tmp = -40.     ! 
+         if(tmp < -40.) tmp = -40.     !
          den = max( (ws**2) * exp(tmp), 1.e-10 )
          ri = ( -1. + sqrt( max(1.+num/den, 0.) ) ) / 20.
 
          if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0) ) then
             tmp = -ks*z_lake(j)        ! to avoid underflow computing
-            if(tmp < -40.) tmp = -40.  ! 
+            if(tmp < -40.) tmp = -40.  !
             ke = vonkar*ws*z_lake(j)/p0 * exp(tmp) / (1.+37.*ri*ri)
             kme(j) = km + ke
 

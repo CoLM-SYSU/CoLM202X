@@ -3,15 +3,15 @@
 SUBROUTINE soil_color_refl(L,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb)
 ! ======================================================================
 ! Guess the soil color (reflectance) based on the land cover types
-! 
+!
 ! Created by Yongjiu Dai, 03/2014
 ! ======================================================================
 use precision
 
 IMPLICIT NONE
       integer, intent(in) :: L  ! land cover types (GLCC USGS/MODIS IGBP)
-      real(r8), intent(out) :: soil_s_v_alb ! albedo of visible of the saturated soil 
-      real(r8), intent(out) :: soil_d_v_alb ! albedo of visible of the dry soil 
+      real(r8), intent(out) :: soil_s_v_alb ! albedo of visible of the saturated soil
+      real(r8), intent(out) :: soil_d_v_alb ! albedo of visible of the dry soil
       real(r8), intent(out) :: soil_s_n_alb ! albedo of near infrared of the saturated soil
       real(r8), intent(out) :: soil_d_n_alb ! albedo of near infrared of the dry soil
 
@@ -23,9 +23,9 @@ IMPLICIT NONE
       real(r8) soil_d_n_refl(20) ! Dry near infrared soil reflectance
 
 ! ----------------------------------------------------------------------
-! The soil color and reflectance is from the work: 
-! Peter J. Lawrence and Thomas N. Chase, 2007: 
-! Representing a MODIS consistent land surface in the Community Land Model (CLM 3.0): 
+! The soil color and reflectance is from the work:
+! Peter J. Lawrence and Thomas N. Chase, 2007:
+! Representing a MODIS consistent land surface in the Community Land Model (CLM 3.0):
 ! Part 1 generating MODIS consistent land surface parameters
 
       soil_s_v_refl = (/ 0.26, 0.24, 0.22, 0.20, 0.19, 0.18, 0.17, 0.16, 0.15, 0.14, &
@@ -44,7 +44,7 @@ IMPLICIT NONE
 #if(defined USGS_CLASSIFICATION)
       if(L.eq. 0) isc = 1  ! 0  Ocean (not used)
       if(L.eq. 1) isc = 16 ! 1  Urban and Built-Up Land
-      if(L.eq. 2) isc = 3  ! 2  Dryland Cropland and Pasture 
+      if(L.eq. 2) isc = 3  ! 2  Dryland Cropland and Pasture
       if(L.eq. 3) isc = 9  ! 3  Irrigated Cropland and Pasture
       if(L.eq. 4) isc = 10 ! 4  Mixed Dryland/Irrigated Cropland and Pasture
       if(L.eq. 5) isc = 4  ! 5  Cropland/Grassland Mosaic
@@ -53,19 +53,19 @@ IMPLICIT NONE
       if(L.eq. 8) isc = 8  ! 8  Shrubland
       if(L.eq. 9) isc = 7  ! 9  Mixed Shrubland/Grassland
       if(L.eq.10) isc = 5  !10  Savanna
-      if(L.eq.11) isc = 19 !11  Deciduous Broadleaf Forest 
-      if(L.eq.12) isc = 20 !12  Deciduous Needleleaf Forest 
-      if(L.eq.13) isc = 18 !13  Evergreen Broadleaf Forest  
-      if(L.eq.14) isc = 17 !14  Evergreen Needleleaf Forest 
+      if(L.eq.11) isc = 19 !11  Deciduous Broadleaf Forest
+      if(L.eq.12) isc = 20 !12  Deciduous Needleleaf Forest
+      if(L.eq.13) isc = 18 !13  Evergreen Broadleaf Forest
+      if(L.eq.14) isc = 17 !14  Evergreen Needleleaf Forest
       if(L.eq.15) isc = 16 !15  Mixed Forest
       if(L.eq.16) isc = 1  !16  Water Bodies (not used)
-      if(L.eq.17) isc = 15 !17  Herbaceous Wetland 
+      if(L.eq.17) isc = 15 !17  Herbaceous Wetland
       if(L.eq.18) isc = 14 !18  Wooded Wetland
       if(L.eq.19) isc = 1  !19  Barren or Sparsely Vegetated
       if(L.eq.20) isc = 12 !20  Herbaceous Tundra
       if(L.eq.21) isc = 12 !21  Wooded Tundra
       if(L.eq.22) isc = 13 !22  Mixed Tundra
-      if(L.eq.23) isc = 11 !23  Bare Ground Tundra  
+      if(L.eq.23) isc = 11 !23  Bare Ground Tundra
       if(L.eq.24) isc = 1  !24  Snow or Ice (not used)
 #endif
 

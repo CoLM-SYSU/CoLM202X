@@ -3,9 +3,12 @@
 #ifdef PC_CLASSIFICATION
 
 MODULE MOD_1D_PCFluxes
-! -------------------------------
+! -----------------------------------------------------------------
+! !DESCRIPTION:
+! Define Plant Community flux variables
+!
 ! Created by Hua Yuan, 08/2019
-! -------------------------------
+! -----------------------------------------------------------------
 
   USE precision
   IMPLICIT NONE
@@ -99,7 +102,7 @@ MODULE MOD_1D_PCFluxes
            deallocate (qintr_snow_c)
            deallocate (assim_c   )
            deallocate (respc_c   )
-           
+
         ENDIF
      ENDIF
 

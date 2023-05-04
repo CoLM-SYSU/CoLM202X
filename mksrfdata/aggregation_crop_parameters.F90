@@ -7,16 +7,11 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    ! 2. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface 
+   !    Reprocessing the MODIS Leaf Area Index products for land surface
    !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering 
-   !               partial overlap between fine grid and model grid for a user
-   !               defined domain file.
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -27,7 +22,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
    USE mod_aggregation_lc
@@ -63,7 +58,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    REAL(r8), allocatable :: fertnitro_one(:)
    REAL(r8), allocatable :: pct_cft_one(:)
    REAL(r8), allocatable :: area_one(:)
-   REAL(r8), allocatable :: plantdate_rice2_patches(:) 
+   REAL(r8), allocatable :: plantdate_rice2_patches(:)
    REAL(r8), allocatable :: plantdate_pfts(:)
    REAL(r8), allocatable :: fertnitro_pfts(:)
 
@@ -94,7 +89,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 !   IF (DEF_LAI_CLIM) THEN
       start_year = 1
       end_year   = 1
-      ntime = 1 
+      ntime = 1
 !   ELSE
 !      start_year = DEF_simulation_time%start_year
 !      end_year   = DEF_simulation_time%end_year
@@ -104,12 +99,12 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    IF (p_is_io) THEN
       CALL allocate_block_data (gridcrop, plantdate_rice2)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (plantdate_rice2_patches     (numpatch))
    ENDIF
-   
-   
+
+
 !   DO YY = start_year, end_year
    DO itime = 1, ntime
          ! -----------------------
@@ -117,10 +112,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! -----------------------
       write(c3, '(i2.2)') itime
         ! IF (p_is_master) THEN
-        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime 
+        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime
         ! endif
 
-      IF (p_is_io) THEN   
+      IF (p_is_io) THEN
          lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
          print *, lndname
          CALL ncio_read_block_time (lndname, 'pdrice2', gridcrop, itime, plantdate_rice2)
@@ -149,7 +144,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('plant date value for rice2 '//trim(c3), plantdate_rice2_patches)
 #endif
 
@@ -162,7 +157,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'plantdate_rice2_patches', 'patch', landpatch, plantdate_rice2_patches, 1)
    ENDDO
-   
+
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -182,7 +177,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 !   IF (DEF_LAI_CLIM) THEN
       start_year = 1
       end_year   = 1
-      ntime = 1 
+      ntime = 1
 !   ELSE
 !      start_year = DEF_simulation_time%start_year
 !      end_year   = DEF_simulation_time%end_year
@@ -194,11 +189,11 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       CALL allocate_block_data (gridcrop, pct_cft)
       CALL allocate_block_data (gridcrop, plantdate)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (plantdate_pfts (numpft))
    ENDIF
-   
+
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
       print *, lndname
@@ -212,12 +207,12 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    DO cft = 15,78
       write(c4, '(i2.2)') cft
-      IF (p_is_io) THEN   
+      IF (p_is_io) THEN
          CALL ncio_read_block_time (lndname, 'PLANTDATE_CFT_'//trim(c4), gridcrop, 1, plantdate)
       ENDIF
 
 #ifdef USEMPI
-      IF (p_is_io) THEN   
+      IF (p_is_io) THEN
          CALL aggregation_lc_data_daemon (gridcrop, plantdate)
       ENDIF
 #endif
@@ -280,14 +275,14 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('plantdate_pfts value '//trim(c4), plantdate_pfts)
    endif
 #endif
 
    CALL ncio_write_vector (lndname_out, 'plantdate_pfts', 'pft', landpft, plantdate_pfts, 1)
-   
+
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -307,7 +302,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 !   IF (DEF_LAI_CLIM) THEN
       start_year = 1
       end_year   = 1
-      ntime = 1 
+      ntime = 1
 !   ELSE
 !      start_year = DEF_simulation_time%start_year
 !      end_year   = DEF_simulation_time%end_year
@@ -319,11 +314,11 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       CALL allocate_block_data (gridcrop, pct_cft)
       CALL allocate_block_data (gridcrop, fertnitro)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (fertnitro_pfts (numpft))
    ENDIF
-   
+
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/fertnitro_fillcoast.nc'
       print *, lndname
@@ -337,13 +332,13 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    DO cft = 15,78
       write(c4, '(i2.2)') cft
-      IF (p_is_io) THEN   
+      IF (p_is_io) THEN
          CALL ncio_read_block_time (lndname, 'CONST_FERTNITRO_CFT_'//trim(c4), gridcrop, 1, fertnitro)
          CALL ncio_read_block_time (lndname, 'PCT_CFT_'//trim(c4), gridcrop, 1, pct_cft)
       ENDIF
 
 #ifdef USEMPI
-      IF (p_is_io) THEN   
+      IF (p_is_io) THEN
          CALL aggregation_lc_data_daemon (gridcrop, fertnitro, pct_cft)
       ENDIF
 #endif
@@ -407,14 +402,14 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('fert nitro value '//trim(c4), fertnitro_pfts)
    endif
 #endif
 
    CALL ncio_write_vector (lndname_out, 'fertnitro_pfts', 'pft', landpft, fertnitro_pfts, 1)
-   
+
 
 
 

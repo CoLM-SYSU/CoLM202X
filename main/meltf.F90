@@ -17,7 +17,7 @@
 ! Original author : Yongjiu Dai, /09/1999/, /03/2014/
 !
 ! calculation of the phase change within snow and soil layers:
-! 
+!
 ! (1) check the conditions which the phase change may take place,
 !     i.e., the layer temperature is great than the freezing point
 !     and the ice mass is not equal to zero (i.e., melting),
@@ -42,7 +42,7 @@
    integer, INTENT(in) :: lb                  ! lower bound of array (i.e., snl +1)
   real(r8), INTENT(in) :: deltim              ! time step [second]
   real(r8), INTENT(in) :: t_soisno_bef(lb:nl_soil)  ! temperature at previous time step [K]
-  real(r8), INTENT(in) :: brr (lb:nl_soil)    ! 
+  real(r8), INTENT(in) :: brr (lb:nl_soil)    !
   real(r8), INTENT(in) :: fact(lb:nl_soil)    ! temporary variables
   real(r8), INTENT(in) :: hs                  ! net ground heat flux into the surface
   real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
@@ -71,7 +71,7 @@
   real(r8), INTENT(out) :: xmf                ! total latent heat of phase change
    integer, INTENT(out) :: imelt(lb:nl_soil)  ! flag for melting or freezing [-]
 
-! Local 
+! Local
   real(r8) :: hm(lb:nl_soil)                  ! energy residual [W/m2]
   real(r8) :: xm(lb:nl_soil)                  ! metling or freezing within a time step [kg/m2]
   real(r8) :: heatr                           ! energy residual or loss after melting or freezing
@@ -82,7 +82,7 @@
   REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the freezing point [mm3/mm3]
 #endif
   real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
-  real(r8) :: propor, tinc, we, scvold  
+  real(r8) :: propor, tinc, we, scvold
   integer j
 
 !-----------------------------------------------------------------------
@@ -134,7 +134,7 @@
      ! if liquid exists below melt point, freeze some to ice.
      IF(j <= 0)then
         if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
-           imelt(j) = 2 
+           imelt(j) = 2
            t_soisno(j) = tfrz
         endif
      ELSE
@@ -165,9 +165,9 @@
      if(imelt(j) > 0)then
         tinc = t_soisno(j)-t_soisno_bef(j)
         if(j > lb)then
-           hm(j) = brr(j) - tinc/fact(j) 
+           hm(j) = brr(j) - tinc/fact(j)
         else
-           hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j) 
+           hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
         endif
      endif
   enddo
@@ -218,16 +218,16 @@
               wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
            else
 #ifdef supercool_water
-              if(wmass0(j) < supercool(j)) then                         
-                   wice_soisno(j) = 0.                                          
-              else                                                      
+              if(wmass0(j) < supercool(j)) then
+                   wice_soisno(j) = 0.
+              else
                    wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
-              endif 
+              endif
 #else
               wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
 #endif
            endif
-           heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim  
+           heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
         endif
 
         wliq_soisno(j) = max(0.,wmass0(j)-wice_soisno(j))
@@ -250,7 +250,7 @@
         xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim
 
         if(imelt(j) == 1 .and. j < 1) &
-        sm = sm + max(0.,(wice0(j)-wice_soisno(j)))/deltim  
+        sm = sm + max(0.,(wice0(j)-wice_soisno(j)))/deltim
 
      endif
   enddo
@@ -264,7 +264,7 @@
   endif
 
  end subroutine meltf
- 
+
 
  subroutine meltf_snicar (itypwat,lb,nl_soil,deltim, &
                    fact,brr,hs,dhsdT,sabg_lyr, &
@@ -293,6 +293,9 @@
 !     after setting the layer temperature to freezing point;
 ! (3) re-adjust the ice and liquid mass, and the layer temperature
 ! (4) supercooled soil water is included IF supercool is defined, Nan Wei 2023/04/20.
+!
+! REVISIONS:
+! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
 !-----------------------------------------------------------------------
 
   use precision
@@ -343,7 +346,7 @@
   real(r8) :: xm(lb:nl_soil)                  ! metling or freezing within a time step [kg/m2]
   real(r8) :: heatr                           ! energy residual or loss after melting or freezing
   real(r8) :: temp1                           ! temporary variables [kg/m2]
-  real(r8) :: temp2                           ! temporary variables [kg/m2] 
+  real(r8) :: temp2                           ! temporary variables [kg/m2]
 #ifdef supercool_water
   REAL(r8) :: smp
   REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the   freezing point [mm3/mm3]
@@ -372,7 +375,7 @@
 ! supercooling water
 #ifdef supercool_water
   DO j = 1, nl_soil
-     supercool(j) = 0.0 
+     supercool(j) = 0.0
      if(t_soisno(j) < tfrz .and. itypwat <= 2) then
         smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
         if (porsl(j) > 0.) then
@@ -406,7 +409,7 @@
            imelt(j) = 2
            t_soisno(j) = tfrz
         endif
-     ELSE 
+     ELSE
 #ifdef supercool_water
         if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
            imelt(j) = 2
@@ -489,7 +492,7 @@
         else
            IF(j <= 0) THEN ! snow
               wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
-           ELSE 
+           ELSE
 #ifdef supercool_water
               if(wmass0(j) < supercool(j)) then
                    wice_soisno(j) = 0.

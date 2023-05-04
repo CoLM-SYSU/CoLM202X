@@ -40,11 +40,19 @@
 
 MODULE co2_mlo
 ! -------------------------------
+!
+! !DESCRIPTION:
+! Monthly atmospheric CO2 concentrations (ppm) for model input derived from
+! in situ air measurements at Mauna Loa, Observatory, Hawaii
+!
 ! Created by Hua Yuan, 05/2022
+!
+! REVISIONS:
+! TODO...
 ! -------------------------------
 
    USE precision
-   use mod_namelist, only :DEF_SSP
+   use mod_namelist, only: DEF_SSP
    IMPLICIT NONE
    SAVE
 
@@ -69,7 +77,7 @@ MODULE co2_mlo
       ! fillvalue
       co2mlo(:,:) = -99.99
       !1850-1957 obtained from https://data.isimip.org/datasets/0497b2a7-fd37-4fe0-8d05-ea3057272731/
-      ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository. 
+      ! Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
       ! https://doi.org/10.48364/ISIMIP.482153.1
       co2mlo( 1849 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
       co2mlo( 1850 ,:) = (/ 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 , 284.73 /)
@@ -307,10 +315,10 @@ MODULE co2_mlo
       !noted by Zhongwang Wei
       !May 2022  ~ Dec 2022 data obtained from https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt (Mauna Loa, Hawaii)
       !Due to the eruption of the Mauna Loa Volcano, measurements from Mauna Loa Observatory were suspended as of Nov. 29. 2022
-      !New Observations starting in December 2022 are from a site at the Maunakea Observatories, 
-      !approximately 21 miles north of the Mauna Loa Observatory. 
+      !New Observations starting in December 2022 are from a site at the Maunakea Observatories,
+      !approximately 21 miles north of the Mauna Loa Observatory.
       !CMIP6 co2 data is obtainted from :
-      !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository. 
+      !Matthias Büchner, Christopher Reyer (2022): ISIMIP3b atmospheric composition input data (v1.1). ISIMIP Repository.
       !https://doi.org/10.48364/ISIMIP.482153.1
       select case (trim(DEF_SSP))
       case ('126')
@@ -394,12 +402,12 @@ MODULE co2_mlo
             co2mlo(2092,:) =  (/ 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50, 454.50 /)
             co2mlo(2093,:) =  (/ 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32, 453.32 /)
             co2mlo(2094,:) =  (/ 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16, 452.16 /)
-      co2mlo(2095,:) =  (/ 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02 /)
-      co2mlo(2096,:) =  (/ 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91 /)
-      co2mlo(2097,:) =  (/ 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81 /)
-      co2mlo(2098,:) =  (/ 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73 /)
-      co2mlo(2099,:) =  (/ 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67 /)
-      co2mlo(2100,:) =  (/ 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62 /)
+            co2mlo(2095,:) =  (/ 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02, 451.02 /)
+            co2mlo(2096,:) =  (/ 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91, 449.91 /)
+            co2mlo(2097,:) =  (/ 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81, 448.81 /)
+            co2mlo(2098,:) =  (/ 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73, 447.73 /)
+            co2mlo(2099,:) =  (/ 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67, 446.67 /)
+            co2mlo(2100,:) =  (/ 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62, 445.62 /)
       case ('245')
             print *,'245'
             !co2mlo(2015,:) =  (/ 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95, 399.95 /)

@@ -1,18 +1,19 @@
 #include <define.h>
+
 ! --------------------------------------------------------
-! MODULE NANE: 
-!     time manager model
+MODULE timemanager
+
 !
-! PURPOSE :
-!     To provide some basic operations for time stamp
+! !DESCRIPTION:
+! Time manager module: to provide some basic operations for time stamp
 !
-! Initial author: Hua Yuan, /04/2014/
+! Created by Hua Yuan, 04/2014
 !
-! REVISION HISTORY:
+! REVISIONS:
 ! 06/28/2017, Hua Yuan: added issame() and monthday2julian()
+! TODO...
 ! --------------------------------------------------------
 
-MODULE timemanager
 
    USE precision
    IMPLICIT NONE
@@ -20,8 +21,8 @@ MODULE timemanager
    TYPE :: timestamp
       INTEGER :: year, day, sec
    END TYPE timestamp
-  
-   INTERFACE ASSIGNMENT (=) 
+
+   INTERFACE ASSIGNMENT (=)
       MODULE procedure assignidate
       MODULE procedure assigntstamp
    END INTERFACE
@@ -37,7 +38,7 @@ MODULE timemanager
    INTERFACE OPERATOR (<=)
       MODULE procedure lessequal
    END INTERFACE
-   
+
    INTERFACE OPERATOR (<)
       MODULE procedure lessthan
    END INTERFACE
@@ -51,14 +52,14 @@ MODULE timemanager
       MODULE procedure calendarday_date
       MODULE procedure calendarday_stamp
    END INTERFACE
-   
+
    LOGICAL, SAVE :: isgreenwich
    public get_calday
- 
+
 CONTAINS
-   
+
    SUBROUTINE initimetype(greenwich)
-      
+
       IMPLICIT NONE
       LOGICAL, intent(in) :: greenwich
 
@@ -68,42 +69,42 @@ CONTAINS
       IF (.not. isgreenwich) THEN
          write(*,*) 'Warning: Please Use Greenwich time for non-SinglePoint case.'
          isgreenwich = .true.
-      ENDIF 
+      ENDIF
 #endif
-      
+
    END SUBROUTINE initimetype
- 
+
    SUBROUTINE assignidate(tstamp, idate)
-      
+
       IMPLICIT NONE
       TYPE(timestamp), intent(inout) :: tstamp
       INTEGER,         intent(in)    :: idate(3)
-      
+
       tstamp%year = idate(1)
       tstamp%day  = idate(2)
       tstamp%sec  = idate(3)
 
    END SUBROUTINE assignidate
- 
+
    SUBROUTINE assigntstamp(tstamp1, tstamp2)
-      
+
       IMPLICIT NONE
       TYPE(timestamp), intent(out) :: tstamp1
       TYPE(timestamp), intent(in)  :: tstamp2
-      
+
       tstamp1%year = tstamp2%year
       tstamp1%day  = tstamp2%day
       tstamp1%sec  = tstamp2%sec
 
    END SUBROUTINE assigntstamp
-   
+
    FUNCTION addsec(tstamp, sec)
 
       IMPLICIT NONE
       TYPE(timestamp), intent(in) :: tstamp
       INTEGER,         intent(in) :: sec
       TYPE(timestamp) :: addsec
-      INTEGER         :: maxday  
+      INTEGER         :: maxday
 
       addsec = tstamp
       addsec%sec = addsec%sec + sec
@@ -130,7 +131,7 @@ CONTAINS
       TYPE(timestamp), intent(in) :: tstamp1
       TYPE(timestamp), intent(in) :: tstamp2
       INTEGER :: subtstamp
-     
+
       subtstamp = tstamp1%sec - tstamp2%sec
       IF (subtstamp < 0) THEN
          subtstamp = subtstamp + 86400
@@ -138,7 +139,7 @@ CONTAINS
       RETURN
 
    END FUNCTION subtstamp
-  
+
    LOGICAL FUNCTION lessequal(tstamp1, tstamp2)
 
       IMPLICIT NONE
@@ -153,15 +154,15 @@ CONTAINS
       lessequal = .false.
 
       IF (ts1 < ts2) lessequal = .true.
-      
+
       IF (ts1==ts2 .AND. tstamp1%sec<=tstamp2%sec) THEN
          lessequal = .true.
       ENDIF
- 
+
       RETURN
 
    END FUNCTION lessequal
- 
+
    LOGICAL FUNCTION lessthan(tstamp1, tstamp2)
 
       IMPLICIT NONE
@@ -169,7 +170,7 @@ CONTAINS
       TYPE(timestamp), intent(in) :: tstamp2
 
       INTEGER(kind=4) :: ts1, ts2
-      
+
       ts1 = tstamp1%year*1000 + tstamp1%day
       ts2 = tstamp2%year*1000 + tstamp2%day
 
@@ -184,7 +185,7 @@ CONTAINS
       RETURN
 
    END FUNCTION lessthan
-   
+
    LOGICAL FUNCTION isnull(tstamp, nullstr)
 
       IMPLICIT NONE
@@ -197,9 +198,9 @@ CONTAINS
          isnull = .false.
       ENDIF
       RETURN
-      
+
    END FUNCTION isnull
-   
+
    LOGICAL FUNCTION besame(tstamp1, tstamp2)
 
       IMPLICIT NONE
@@ -207,7 +208,7 @@ CONTAINS
       TYPE(timestamp), intent(in) :: tstamp2
 
       INTEGER :: idate1(3), idate2(3)
-      
+
       idate1(1) = tstamp1%year
       idate1(2) = tstamp1%day
       idate1(3) = tstamp1%sec
@@ -226,7 +227,7 @@ CONTAINS
          besame = .false.
       ENDIF
       RETURN
-      
+
    END FUNCTION besame
 
    LOGICAL FUNCTION isleapyear(year)
@@ -248,9 +249,9 @@ CONTAINS
       IMPLICIT NONE
       INTEGER, intent(in)  :: year, day
       INTEGER, intent(out) :: month, mday
-      
+
       INTEGER :: i, months(0:12)
-      
+
       IF ( isleapyear(year) ) THEN
          months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
       ELSE
@@ -266,15 +267,15 @@ CONTAINS
       mday = day - months(i-1)
 
    END SUBROUTINE julian2monthday
- 
+
    SUBROUTINE monthday2julian(year, month, mday, day)
 
       IMPLICIT NONE
       INTEGER, intent(in)  :: year, month, mday
       INTEGER, intent(out) :: day
-      
+
       INTEGER :: i, months(0:12)
-      
+
       IF ( isleapyear(year) ) THEN
          months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
       ELSE
@@ -300,7 +301,7 @@ CONTAINS
       isendofhour = (hour1 /= hour2)
 
    END FUNCTION isendofhour
-   
+
    LOGICAL FUNCTION isendofday(idate, sec)
 
       IMPLICIT NONE
@@ -318,10 +319,10 @@ CONTAINS
       ELSE
          isendofday = .false.
       ENDIF
-      RETURN 
+      RETURN
 
    END FUNCTION isendofday
-   
+
    LOGICAL FUNCTION isendofmonth(idate, sec)
 
       IMPLICIT NONE
@@ -343,10 +344,10 @@ CONTAINS
       ELSE
          isendofmonth = .false.
       ENDIF
-      RETURN 
+      RETURN
 
    END FUNCTION isendofmonth
- 
+
    LOGICAL FUNCTION isendofyear(idate, sec)
 
       IMPLICIT NONE
@@ -365,15 +366,15 @@ CONTAINS
       ELSE
          isendofyear = .false.
       ENDIF
-      RETURN 
+      RETURN
 
    END FUNCTION isendofyear
-   
+
    SUBROUTINE adj2begin(idate)
-      
+
       IMPLICIT NONE
       INTEGER, intent(inout) :: idate(3)
-      
+
       IF (idate(3) == 86400) THEN
          idate(3) = 0
          idate(2) = idate(2) + 1
@@ -386,12 +387,12 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE adj2begin
-  
+
    SUBROUTINE adj2end(idate)
-      
+
       IMPLICIT NONE
       INTEGER, intent(inout) :: idate(3)
-      
+
       IF (idate(3) == 0) THEN
          idate(3) = 86400
          idate(2) = idate(2) - 1
@@ -412,15 +413,15 @@ CONTAINS
       IMPLICIT NONE
       INTEGER, intent(inout) :: idate(3)
       REAL(r8),intent(in)    :: long
-      
-      INTEGER  maxday                   
+
+      INTEGER  maxday
       REAL(r8) tdiff
 
       tdiff = long/15.*3600.
       idate(3) = idate(3) - int(tdiff)
-      
+
       IF (idate(3) < 0) THEN
-         
+
          idate(3) = 86400 + idate(3)
          idate(2) = idate(2) - 1
 
@@ -433,12 +434,12 @@ CONTAINS
             ENDIF
          ENDIF
       ENDIF
-      
+
       IF (idate(3) > 86400) THEN
 
          idate(3) = idate(3) - 86400
          idate(2) = idate(2) + 1
-         
+
          IF ( isleapyear(idate(1)) ) THEN
             maxday = 366
          ELSE
@@ -450,23 +451,23 @@ CONTAINS
             idate(2) = 1
          ENDIF
       ENDIF
-      
+
    END SUBROUTINE localtime2gmt
 
    SUBROUTINE ticktime(deltim, idate)
 
       IMPLICIT NONE
 
-      REAL(r8),INTENT(in)    :: deltim   
+      REAL(r8),INTENT(in)    :: deltim
       INTEGER, INTENT(inout) :: idate(3)
-      INTEGER maxday                   
+      INTEGER maxday
 
       idate(3) = idate(3) + nint(deltim)
       IF (idate(3) > 86400) THEN
 
          idate(3) = idate(3) - 86400
          idate(2) = idate(2) + 1
-         
+
          IF ( isleapyear(idate(1)) ) THEN
             maxday = 366
          ELSE
@@ -480,33 +481,33 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE ticktime
-   
+
    REAL(r8) FUNCTION calendarday_date(date, long)
 
       IMPLICIT NONE
       INTEGER, intent(in) :: date(3)
       REAL(r8),optional   :: long
-      
+
       INTEGER idate(3)
       REAL(r8) longitude
 
       idate(:) = date(:)
-      
+
       IF (.NOT. present(long)) THEN
          longitude = 0._r8
-      ELSE 
+      ELSE
          longitude = long
       ENDIF
 
       IF ( .not. isgreenwich ) THEN
          CALL localtime2gmt(idate, longitude)
       ENDIF
-      
+
       calendarday_date = float(idate(2)) + float(idate(3))/86400.
-      RETURN 
+      RETURN
 
    END FUNCTION calendarday_date
-   
+
    REAL(r8) FUNCTION calendarday_stamp(stamp, long)
 
       IMPLICIT NONE
@@ -515,22 +516,22 @@ CONTAINS
 
       INTEGER idate(3)
       REAL(r8) longitude
-      
-      idate(1) = stamp%year 
+
+      idate(1) = stamp%year
       idate(2) = stamp%day
       idate(3) = stamp%sec
-      
+
       IF (.NOT. present(long)) THEN
          longitude = 0._r8
-      ELSE 
+      ELSE
          longitude = long
       ENDIF
       IF ( .not. isgreenwich ) THEN
          CALL localtime2gmt(idate, longitude)
       ENDIF
-      
+
       calendarday_stamp = float(idate(2)) + float(idate(3))/86400.
-      RETURN 
+      RETURN
 
    END FUNCTION calendarday_stamp
 
@@ -582,5 +583,5 @@ CONTAINS
 
    END FUNCTION minutes_since_1900
 
-      
+
 END MODULE timemanager

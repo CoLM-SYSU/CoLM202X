@@ -66,7 +66,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: respc  (:) !canopy respiration (mol m-2 s-1)
 
   REAL(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
-  
+
   INTEGER,  allocatable :: oroflag(:) !groundwater recharge [mm/s]
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -140,8 +140,8 @@ MODULE MOD_1D_Fluxes
             allocate ( respc  (numpatch) )  ! canopy respiration (mol m-2 s-1)
 
             allocate ( qcharge(numpatch) )  ! groundwater recharge [mm/s]
-            
-            allocate ( oroflag(numpatch) )  ! 
+
+            allocate ( oroflag(numpatch) )  !
 
          end if
       end if
@@ -154,7 +154,7 @@ MODULE MOD_1D_Fluxes
       CALL allocate_1D_PCFluxes
 #endif
 
-#ifdef BGC 
+#ifdef BGC
       CALL allocate_1D_BGCFluxes
 #endif
 
@@ -168,7 +168,7 @@ MODULE MOD_1D_Fluxes
      USE mod_landpatch
 
      if (p_is_worker) then
-        
+
         if (numpatch > 0) then
 
            deallocate ( taux    )  ! wind stress: E-W [kg/m/s2]
@@ -216,8 +216,8 @@ MODULE MOD_1D_Fluxes
            deallocate ( respc   )  ! canopy respiration (mol m-2 s-1)
 
            deallocate ( qcharge )  ! groundwater recharge [mm/s]
-           
-           deallocate ( oroflag )  ! 
+
+           deallocate ( oroflag )  !
 
         end if
      end if
@@ -230,7 +230,7 @@ MODULE MOD_1D_Fluxes
      CALL deallocate_1D_PCFluxes
 #endif
 
-#ifdef BGC 
+#ifdef BGC
      CALL deallocate_1D_BGCFluxes
 #endif
 

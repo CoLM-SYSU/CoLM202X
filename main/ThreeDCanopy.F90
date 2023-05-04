@@ -1,13 +1,25 @@
 #include <define.h>
-!-----------------------------------------------------------------------
-!BOP
-!
-!IROUTINE: ThreeDCanopy
-!
-! !INTERFACE:
 
 #ifdef PC_CLASSIFICATION
+
+!-----------------------------------------------------------------------
 SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
+
+!
+! !DESCRIPTION:
+! This is a wrap SUBROUTINE to CALL 3D canopy radiative model below
+!   CALL ThreeDCanopy()
+!
+! Created by Hua Yuan, 08/2019
+!
+! REFERENCE:
+! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+! modeling: Description, validation, and application. Journal of Climate,
+! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
+!
+! REVISIONS:
+!
 
    USE precision
    USE GlobalVars
@@ -38,7 +50,7 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: albd, albi, fabd, fabi, fadd
    REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: ftdd, ftid, ftii
    REAL(r8), dimension(0:N_PFT+N_CFT-1, 2) :: rho, tau
-   REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: csiz, chgt, lsai 
+   REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: csiz, chgt, lsai
    REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: fsun_id, fsun_ii, psun
    REAL(r8), dimension(0:N_PFT+N_CFT-1)    :: phi1, phi2, gdir
 #endif
@@ -89,11 +101,6 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    fsun_id(:) = 0.
    fsun_ii(:) = 0.
 
-   ! lai还是lsai? 应该是lsai. 吸收的辐射都算在叶子上? curr. no.
-   ! par for lai or lai+sai. curr. lai+sai
-   ! 如果lai比较小，sai比较大时，会不会造成虚假par吸收?
-   ! 一般来讲，叶子在阳面的概率会更高，但并不能把所有阳面
-   ! 的吸收都算在叶子上
    DO p = 1, N_PFT-1
       IF (lsai(p) > 0.) THEN
          fsun_id(p) = (1._r8 - exp(-2._r8*extkb_c(p,pc)*lsai(p))) / &
@@ -146,6 +153,14 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 ! to calculate fluxes absorbed by vegetation, reflected by vegetation,
 ! and transmitted through vegetation for unit incoming direct or
 ! diffuse flux given an underlying surface with known albedo.
+!
+! Created by Hua Yuan, 08/2019
+!
+! !REFERENCE:
+! Yuan, H., R. E. Dickinson, Y. Dai, M. J. Shaikh, L. Zhou, W. Shangguan,
+! and D. Ji, 2014: A 3D canopy radiative transfer model for global climate
+! modeling: Description, validation, and application. Journal of Climate,
+! 27, 1168–1192, https://doi.org/10.1175/JCLI-D-13-00155.1.
 
 !
 ! !ARGUMENTS:
@@ -158,10 +173,10 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    INTEGER , intent(in) :: lbp, ubp                   !pft bounds
    INTEGER , intent(in) :: canlev(lbp:ubp)            !canopy level for current pft
    REAL(r8), intent(in) :: pwtcol(lbp:ubp)            !weight of pft wrt corresponding column
-   REAL(r8), intent(in) :: csiz  (lbp:ubp)            !
-   REAL(r8), intent(in) :: chgt  (lbp:ubp)            !
+   REAL(r8), intent(in) :: csiz  (lbp:ubp)            !crown size of vegetation
+   REAL(r8), intent(in) :: chgt  (lbp:ubp)            !central height of crown
    REAL(r8), intent(in) :: chil  (lbp:ubp)            !leaf angle distribution parameter
-   REAL(r8), intent(in) :: lsai  (lbp:ubp)            !
+   REAL(r8), intent(in) :: lsai  (lbp:ubp)            !LAI+SAI
    REAL(r8), intent(in) :: rho   (lbp:ubp,numrad)     !leaf/stem refl weighted by fraction LAI and SAI
    REAL(r8), intent(in) :: tau   (lbp:ubp,numrad)     !leaf/stem tran weighted by fraction LAI and SAI
 
@@ -176,10 +191,10 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8), intent(out) :: ftdd(lbp:ubp,numrad)      !down direct flux below veg per unit dir flx
    REAL(r8), intent(out) :: ftid(lbp:ubp,numrad)      !down diffuse flux below veg per unit dir flx
    REAL(r8), intent(out) :: ftii(lbp:ubp,numrad)      !down diffuse flux below veg per unit dif flx
-   REAL(r8), intent(out) :: fadd(lbp:ubp,numrad)      !
-   REAL(r8), intent(out) :: psun  (lbp:ubp)           !
-   REAL(r8), intent(out) :: thermk(lbp:ubp)           !
-   REAL(r8), intent(out) :: fshade(lbp:ubp)           !
+   REAL(r8), intent(out) :: fadd(lbp:ubp,numrad)      !absorbed flux in direct mode per unit direct flux
+   REAL(r8), intent(out) :: psun  (lbp:ubp)           !percent sunlit vegetation cover
+   REAL(r8), intent(out) :: thermk(lbp:ubp)           !direct transmittance of diffuse radiation
+   REAL(r8), intent(out) :: fshade(lbp:ubp)           !shadow in diffuse case of vegetation
 
 ! !LOCAL VARIABLES:
    REAL(selected_real_kind(12)), external::OverlapArea
@@ -237,9 +252,9 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8) :: fabi_lay(nlay,numrad)!layer absorption for diffuse beam
    REAL(r8) :: fabs_lay(0:4,numrad) !layer absorption for all five layers
    REAL(r8) :: fabs_leq(0:4,numrad) !layer absorption for all five layers
-   REAL(r8) :: A(6,6)               !
-   REAL(r8) :: B(6,2)               !
-   REAL(r8) :: X(6,2)               !
+   REAL(r8) :: A(6,6)               !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
+   REAL(r8) :: B(6,2)               !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
+   REAL(r8) :: X(6,2)               !three-layer radiation transfer eqation (EQ. 19, Yuan et al., 2014)
    REAL(r8) :: fabsm                !pft absorption for multiple reflections
    REAL(r8) :: faid_lay(nlay)       !layer diffused absorption for direct beam
    REAL(r8) :: faid_p               !pft absorption direct beam
@@ -270,13 +285,13 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8) :: pfc                  !contribution of current pft in layer
    REAL(r8) :: probm                !prob photon reflect diffusly from grnd reach canopy
    REAL(r8) :: ref(0:nlay+1,0:nlay+1)!radiation reflected between five layers
-   REAL(r8) :: fadd_lay(nlay,numrad)!
+   REAL(r8) :: fadd_lay(nlay,numrad)!layer absorbed flux in direct mode per unit direct flux
    REAL(r8) :: shad_oa(nlay,nlay)   !shadow overlaps (direct beam)
    REAL(r8) :: shadow_d(nlay)       !layer shadow for direct beam
    REAL(r8) :: shadow_i(nlay)       !layer shadow for diffuse beam
    REAL(r8) :: sum_fabd(3)          !sum of absorption for all pfts in grid (direct)
    REAL(r8) :: sum_fabi(3)          !sum of absorption for all pfts in grid (diffuse)
-   REAL(r8) :: sum_fadd(nlay)       !
+   REAL(r8) :: sum_fadd(nlay)       !sum of absorbed flux in direct mode per unit direct flux
    REAL(r8) :: taud_lay(nlay)       !direct transmission for a layer
    REAL(r8) :: taui_lay(nlay)       !diffuse transmission for a layer
    REAL(r8) :: trd(0:nlay+1,0:nlay+1)!direct radiation transmitted between five layers
@@ -318,6 +333,7 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    rho_lay  = D0
    tau_lay  = D0
    hgt_lay  = D0
+   bot_lay  = D0
    siz_lay  = D0
    lsai_lay = D0
    gdir_lay = D0
@@ -327,7 +343,7 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
       shadow_sky(ip) = D1
 
       ! check elai and pft weight are non-zero
-      IF( lsai(ip) > 1.e-6_r8 .and. pwtcol(ip) > D0 ) THEN
+      IF ( lsai(ip)>1.e-6_r8 .and. pwtcol(ip)>D0 ) THEN
 
          soilveg(ip) = .true.
          nsoilveg = nsoilveg + 1
@@ -335,8 +351,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
          clev      = canlev(ip)
          fc0(clev) = fc0(clev) + pwtcol(ip)
 
-         siz_lay(clev)  = siz_lay(clev)  + pwtcol(ip)*csiz(ip)
-         hgt_lay(clev)  = hgt_lay(clev)  + pwtcol(ip)*chgt(ip)
+         siz_lay (clev) = siz_lay (clev) + pwtcol(ip)*csiz(ip)
+         hgt_lay (clev) = hgt_lay (clev) + pwtcol(ip)*chgt(ip)
          lsai_lay(clev) = lsai_lay(clev) + pwtcol(ip)*lsai(ip)
          gdir_lay(clev) = gdir_lay(clev) + pwtcol(ip)*gdir(ip)
          gdif_lay(clev) = gdif_lay(clev) + pwtcol(ip)*gdif(ip)
@@ -360,8 +376,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 ! layer average of lsai,tau,rho,omega...
 !=============================================================
 
-   DO lev=1,3
-      IF( fc0(lev) > D0) THEN
+   DO lev = 1, 3
+      IF (fc0(lev) > D0) THEN
          siz_lay(lev)  = max(siz_lay(lev)/fc0(lev),D0)
          hgt_lay(lev)  = max(hgt_lay(lev)/fc0(lev),D0)
          bot_lay(lev)  = hgt_lay(lev)-siz_lay(lev)
@@ -382,8 +398,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 
    shadow_d        = D0
    shadow_i        = D0
-   DO lev =1,3
-      IF( fc0(lev) >  D0 .and. cosz > D0 ) THEN
+   DO lev =1, 3
+      IF ( fc0(lev)>D0 .and. cosz>D0 ) THEN
          shadow_d(lev) = (D1 - exp(-D1*fc0(lev)/cosz))/&
             (D1 - fc0(lev)*exp(-D1/cosz))
          shadow_d(lev) = max(fc0(lev), shadow_d(lev))
@@ -406,8 +422,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    ftdd_lay_orig = D0
    ftdi_lay_orig = D0
 
-   DO lev=1,3
-      IF( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
+   DO lev = 1, 3
+      IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
 
          taud_lay(lev) = D3/D4*gee*fc0(lev)*lsai_lay(lev)/&
             (cosz*shadow_d(lev))
@@ -462,10 +478,10 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 
 !=============================================================
 ! unscattered direct sunlight available at  each layer
-! 0:sky, 1:top 2:middle 3:bottom and 4:ground layer
+! 4:sky, 3:top 2:middle 1:bottom and 0:ground layer
 !=============================================================
 
-   ftdd_col=D0
+   ftdd_col = D0
    tt = D0
    tt(4,3) = shadow_d(3)
    tt(4,3) = min(D1, max(D0, tt(4,3)))
@@ -524,7 +540,7 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    tt(3,2) = tt(4,2) + tt(3,2)
    tt(2,1) = tt(4,1) + tt(3,1) + tt(2,1)
    tt(1,0) = tt(4,0) + tt(3,0) + tt(2,0) + tt(1,0)
-   ftdd_col = tt(1,0)
+   ftdd_col= tt(1,0)
 
    tt(0:4,4) = D0
    tt(0:3,3) = D0
@@ -554,7 +570,7 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
          shadow_pd(ip)=D0
          shadow_pi(ip)=D0
 
-         IF( soilveg(ip) ) THEN
+         IF (soilveg(ip)) THEN
             clev = canlev(ip)
 
          !================================================
@@ -590,34 +606,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
             fcad(ip) = (D1-ftdd(ip,ib)) / (D1-ftdd_orig(ip,ib))
             fcai(ip) = (D1-ftdi(ip,ib)) / (D1-ftdi_orig(ip,ib))
 
-         !========================================
-         ! sum transmissions of pfts in layer
-         !========================================
-
-         ! Deleted by Yuan, 06/03/2012
-         !sum_ftdd(clev) = sum_ftdd(clev) + pwtcol(ip)* &
-         !     shadow_d(clev)*(D1-ftdd(ip,ib))
-         !
-         !sum_ftdi(clev) = sum_ftdi(clev) + pwtcol(ip)* &
-         !     shadow_i(clev)*(D1-ftdi(ip,ib))
-
          ENDIF ! ENDIF soilveg
       ENDDO ! ENDDO ip
-
-   !==========================================
-   ! adjust ftdd using factor (1-sum(ftdd))
-   !==========================================
-
-      ! Deleted by Yuan, 06/03/2012
-      !DO ip=pfti(ic),pftf(ic)
-      !   IF( soilveg(ip)) THEN
-      !
-      !      clev = canlev(ip)
-      !      ftdd(ip,ib) = ftdd(ip,ib)*(D1 - sum_ftdd(clev))
-      !      ftdi(ip,ib) = ftdi(ip,ib)*(D1 - sum_ftdi(clev))
-      !
-      !   ENDIF ! ENDIF canlev
-      !ENDDO ! ENDDO ip
 
    !===============================================================
    ! absorption, reflection and transmittance for three canopy layer
@@ -629,8 +619,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
       frid_lay=D0; frii_lay=D0
       faid_lay=D0; faii_lay=D0
 
-      DO lev=1, 3
-         IF( shadow_d(lev) > D0 ) THEN
+      DO lev = 1, 3
+         IF (shadow_d(lev) > D0) THEN
             CALL CanopyRad(taud_lay(lev), taui_lay(lev), ftdd_lay_orig(lev),&
                ftdi_lay_orig(lev), cosz, cosd, shadow_d(lev), shadow_i(lev), &
                fc0(lev), omg_lay(lev,ib), lsai_lay(lev), &
@@ -656,11 +646,9 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
       fadd_lay(:,ib) = D0
 
       DO lev = 1, nlay
-         IF( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
-
+         IF ( fc0(lev)>D0 .and. lsai_lay(lev)>D0 ) THEN
             fadd_lay(lev,ib) = tt(lev+1,lev) * &
                (D1-ftdd_lay(lev)) * (D1-omg_lay(lev,ib))
-
          ENDIF
       ENDDO
 
@@ -705,138 +693,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
       fabs_leq(0,1) = X(6,1) * (1.0 - albgri(ib)) + tt(1,0) * (1.0 - albgrd(ib))
       fabs_leq(0,2) = X(6,2) * (1.0 - albgri(ib))
 
-   !=============================================================
-   ! main process for 3-layer  sunlight radiation
-   !=============================================================
-   ! available direct and diffuse energy continue to be absorbed
-   ! reflect and transmit up and down direction till most of
-   ! enery is absorbed by ground, sky and three canopy layers
-   !=============================================================
-   ! layers numbering: 0:sky, 1,2,3=canopy layers 4:ground
-   ! downward direction: from = 0,1,2,3  lay=1,2,3,4 to =2,3,4,5
-   ! upward direction:   from = 4,3,2    lay=3,2,1 to =2,1,0
-   !=============================================================
-
-      ! --- START delete ---
-!      DO kband=1,2 !1:direct band  2:diffuse band
-!
-!         delta = -1
-!         klay  =  3
-!         tri   = D0
-!         trd   = D0
-!         ref   = D0
-!         fabs_lay(:,kband)=D0
-!
-!         !available radiation
-!         IF (kband == 1) THEN     !direct sunlight case
-!            trd(:,:)=tt
-!            tri(:,:)=D0
-!            ref(:,:)=D0
-!         ELSE                     !diffuse sunlight case
-!            tri(4,3)=D1
-!            trd(:,:)=D0
-!            ref(:,:)=D0
-!         ENDIF
-!
-!         ! start layer integration
-!         DO nn=1,40
-!
-!            ! terminate loop iteration IF total available energy is small
-!            IF ( sum(trd+tri+ref) < 0.0001) EXIT
-!            kfr = klay - delta
-!            kto = klay + delta
-!
-!            ! direct and diffuse radiation at layer
-!            dir = trd(kfr,klay)
-!            dif = tri(kfr,klay) + ref(kfr,klay)
-!
-!            ! ground layer
-!            IF( kto == -1 ) THEN
-!               ref(klay,kfr) = (dir+dif)*albgrd(ib)
-!               fabs_lay(klay,kband)=fabs_lay(klay,kband)+ &
-!                  (dir+dif)*(D1-albgrd(ib))
-!            ELSE
-!
-!               tri(klay,kto)= dir*ftid_lay(klay) + &
-!                  dif*(D1-shadow_i(klay)) + &
-!                  dif*shadow_i(klay)*ftii_lay(klay)
-!
-!               ref(klay,kfr)= dir*frid_lay(klay) + &
-!                  dif*shadow_i(klay)*frii_lay(klay)
-!
-!               fabs_lay(klay,kband)=fabs_lay(klay,kband) + &
-!                  dir*faid_lay(klay) + &
-!                  dif*shadow_i(klay)*faii_lay(klay)
-!
-!               ! reflection to sky --> albedo
-!               IF( kfr == 4) THEN
-!                  fabs_lay(kfr,kband) = fabs_lay(kfr,kband) + ref(klay,kfr)
-!                  ref(klay,kfr)=D0
-!               ENDIF
-!
-!               ! transmit to sky -> albedo
-!               IF (kto == 4 ) THEN
-!                  fabs_lay(kto,kband) = fabs_lay(kto,kband) + tri(klay,kto)
-!                  tri(klay,kto) = 0.
-!               ENDIF
-!            ENDIF
-!
-!            ! clear the radiation source
-!            trd(kfr,klay) = D0
-!            tri(kfr,klay) = D0
-!            ref(kfr,klay) = D0
-!
-!            ! change radiation direction: delta=1 down,
-!            ! delta=-1 upward radiation
-!            IF (klay == 0) delta = 1
-!            IF (klay == 3) delta =-1
-!
-!            ! Change lay
-!            klay = klay + delta
-!         ENDDO ! ENDDO nn loop
-!
-!         ! Need to assign the remain radiation
-!         ! Simple method: totally absorbed by to
-!         DO kfr=0,4
-!            DO kto=0,4
-!               IF (trd(kfr,kto) > D0)fabs_lay(kfr,kband)=fabs_lay(kfr,kband)+&
-!                  trd(kfr,kto)
-!               IF (tri(kfr,kto) > D0)fabs_lay(kfr,kband)=fabs_lay(kfr,kband)+&
-!                  tri(kfr,kto)
-!               IF (ref(kfr,kto) > D0)fabs_lay(kfr,kband)=fabs_lay(kfr,kband)+&
-!                  ref(kfr,kto)
-!            ENDDO
-!         ENDDO
-!
-!         IF (maxval(abs(fabs_lay(:,kband)-fabs_leq(:,kband))) > 1.e-4) THEN
-!            print *, maxval(abs(fabs_lay(:,kband)-fabs_leq(:,kband)))
-!            print *, "linear equation solution error!"
-!         ENDIF
-!         !print *, maxval(abs(fabs_lay(:,kband)-fabs_leq(:,kband)))
-!
-!         fabs_lay = fabs_leq
-!
-!         ! set column absorption and reflection
-!         IF( kband==1) THEN
-!            fabd_lay(1:3,ib) = fabs_lay(1:3,kband)
-!            fabd_col(ib) = fabs_lay(1,kband)+fabs_lay(2,kband)+fabs_lay(3,kband)
-!            albd_col(ib) = fabs_lay(4,kband)
-!            IF (abs(fabd_col(ib)+albd_col(ib)+fabs_lay(0,kband)-1) > 1e-6) THEN
-!               print *, "Imbalance kband=1"
-!               print *, fabd_col(ib)+albd_col(ib)+fabs_lay(0,kband)-1
-!            ENDIF
-!         ELSE
-!            fabi_lay(1:3,ib) = fabs_lay(1:3,kband)
-!            fabi_col(ib) = fabs_lay(1,kband)+fabs_lay(2,kband)+fabs_lay(3,kband)
-!            albi_col(ib) = fabs_lay(4,kband)
-!            IF (abs(fabi_col(ib)+albi_col(ib)+fabs_lay(0,kband)-1) > 1e-6) THEN
-!               print *, "Imbalance kband=2"
-!               print *, fabi_col(ib)+albi_col(ib)+fabs_lay(0,kband)-1
-!            ENDIF
-!         ENDIF
-!      ENDDO ! ENDDO kband (direct/diffuse beams)
-!      ! --- END delete ---
-
       ! IF everything is ok, substitute fabs_lay for fabs_leq
       ! and delete the following line and the variables defined
       ! but not used anymore
@@ -868,8 +724,8 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 
       DO ip = lbp, ubp
          clev = canlev(ip)
-         IF(clev == D0) cycle
-         IF(shadow_d(clev) > D0 .and. soilveg(ip)) THEN
+         IF (clev == D0) CYCLE
+         IF ( shadow_d(clev)>D0 .and. soilveg(ip) ) THEN
 
          !=================================================
          ! fractional contribution of current pft in layer
@@ -881,7 +737,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
          ! shadow contribution from ground to sky
          !=========================================
 
-            !shadow_sky(ip) = pfc*shadow_i(clev)
             shadow_sky(ip) = shadow_pi(ip)
 
          !=======================================================
@@ -916,11 +771,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
             fabsm = ftran*albgri(ib)*faii_p*shadow_sky(ip)/(D1-probm)
             fabi(ip,ib) = shadow_pi(ip)*faii_p + fabsm
 
-            ! column albedo is assigned to each pft in column
-            ! Deleted by Yuan, 06/03/2012
-            !albd(ip,ib) =albd_col(ib)
-            !albi(ip,ib) =albi_col(ib)
-
             ! sum of pft absorptions in column
             sum_fabd(clev) = sum_fabd(clev) + fabd(ip,ib)
             sum_fabi(clev) = sum_fabi(clev) + fabi(ip,ib)
@@ -936,10 +786,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 
       DO ip = lbp, ubp
          clev = canlev(ip)
-
-         !IF(shadow_d(clev) > D0 .and. soilveg(ip)) THEN
-         ! Modified by Yuan, 06/03/2012
-         !IF(soilveg(ip) .or. ivt(ip) == 0) THEN
 
       !===========================================================
       ! adjust pft absorption for total column absorption per
@@ -964,9 +810,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
             psun(ip) = D0
          ENDIF
 
-         !fabd(ip,ib) = fabd_col(ib)
-         !fabi(ip,ib) = fabi_col(ib)
-
          ! column albedo is assigned to each pft in column
          ! Added by Yuan, 06/03/2012
          albd(ip,ib) =albd_col(ib)
@@ -980,9 +823,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
          ftdd(ip,ib) = ftdd_col
          ftid(ip,ib)=(D1-albd(ip,ib)-fabd_col(ib)-&
             ftdd(ip,ib)*(D1-albgrd(ib)))/(D1-albgri(ib))
-
-         !ftdd(ip,ib) = (D1 - albd(ip,ib) - fabd(ip,ib) - &
-         !     ftid(ip,ib)*(D1-albgri(ib)))/(D1-albgrd(ib))
          ftii(ip,ib)=(D1-albi(ip,ib)-fabi_col(ib))/(D1-albgri(ib))
 
          !ftdd(ip,ib) = min(max(ftdd(ip,ib),D0),D1)
@@ -1012,13 +852,13 @@ END SUBROUTINE ThreeDCanopy
 REAL(selected_real_kind(12)) FUNCTION tee(tau)
 
    IMPLICIT NONE
-   INTEGER,parameter::r8 = selected_real_kind(12)  ! 64 bit REAL
-   INTEGER,parameter::r16 = selected_real_kind(24) ! 128 bit REAL
+   INTEGER,  parameter :: r8  = selected_real_kind(12) !64 bit REAL
+   INTEGER,  parameter :: r16 = selected_real_kind(24) !128 bit REAL
 
-   REAL(r16),parameter::DDH=0.50_r16 !128-bit accuracy REAL
-   REAL(r16),parameter::DD1=1.0_r16  !128-bit accuracy REAL
-   REAL(r16),parameter::DD2=2.0_r16  !128-bit accuracy REAL
-   REAL(r16)::tau ! transmittance
+   REAL(r16),parameter :: DDH = 0.50_r16 !128-bit accuracy REAL
+   REAL(r16),parameter :: DD1 = 1.0_r16  !128-bit accuracy REAL
+   REAL(r16),parameter :: DD2 = 2.0_r16  !128-bit accuracy REAL
+   REAL(r16) :: tau ! transmittance
 
    tee = DDH*(DD1/tau/tau-(DD1/tau/tau+DD2/tau)*exp(-DD2*tau))
 
@@ -1031,25 +871,25 @@ END FUNCTION tee
 REAL(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
 
    IMPLICIT NONE
-   INTEGER,parameter :: r8  = selected_real_kind(12)
-   INTEGER,parameter :: r16 = selected_real_kind(24)
+   INTEGER, parameter :: r8  = selected_real_kind(12)
+   INTEGER, parameter :: r16 = selected_real_kind(24)
 
-   REAL(r8),parameter :: rpi = 3.14159265358979323846_R8  ! pi
-   REAL(r8),parameter::D0=0.0_r8  !128-bit accuracy REAL
-   REAL(r8),parameter::D1=1.0_r8  !128-bit accuracy REAL
+   REAL(r8),parameter :: rpi = 3.14159265358979323846_R8  !pi
+   REAL(r8),parameter :: D0  = 0.0_r8  !128-bit accuracy REAL
+   REAL(r8),parameter :: D1  = 1.0_r8  !128-bit accuracy REAL
 
-   REAL(r8)::radius !radius of bus
-   REAL(r8)::hgt    !height of canopy
-   REAL(r8)::zenith !zenith angle
-   REAL(r8)::cost   !cosine of angle
-   REAL(r8)::theta  !angle
+   REAL(r8) :: radius !radius of bus
+   REAL(r8) :: hgt    !height of canopy
+   REAL(r8) :: zenith !zenith angle
+   REAL(r8) :: cost   !cosine of angle
+   REAL(r8) :: theta  !angle
 
-   IF( radius == D0) THEN
+   IF (radius == D0) THEN
       OverlapArea= D0
       RETURN
    ENDIF
    cost = hgt*tan(zenith)/radius/(D1+D1/cos(zenith))
-   IF ( cost >= 1) THEN
+   IF (cost >= 1) THEN
       OverlapArea= D0
       RETURN
    ENDIF
@@ -1064,8 +904,8 @@ END FUNCTION OverlapArea
 !=========================================================
 
 SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
-      shadow_d, shadow_i, fc, omg, lsai, &
-      tau_p,  rho_p, ftid, ftii, frid, frii, faid, faii)
+      shadow_d, shadow_i, fc, omg, lsai, tau_p,  rho_p, &
+      ftid, ftii, frid, frii, faid, faii)
    IMPLICIT NONE
 
    INTEGER,parameter::r8 = selected_real_kind(12) ! 8 byte REAL
@@ -1110,10 +950,10 @@ SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
    REAL(r8)::ald       !forward frac of 3D scat rad in all direction for diffuse
    REAL(r8)::ali       !forward frac of 3D scat rad in all direction for diffuse
 
-   REAL(r8)::wb
-   REAL(r8)::alpha
-   REAL(r8)::nd
-   REAL(r8)::ni
+   REAL(r8)::wb        !EQ. (2.14), Dickinson 1983, omega*beta
+   REAL(r8)::alpha     !EQ. (2.14), Dickinson 1983, alpha
+   REAL(r8)::nd        !EQ. (4), Appendix 1, Yuan, dissertation
+   REAL(r8)::ni        !EQ. (4), Appendix 1, Yuan, dissertation
    REAL(r8)::gee=0.5_r8                !Ross factor geometric blocking
 
    REAL(r8),parameter::D0 = 0.0_r8     !64-bit REAL number
@@ -1125,7 +965,7 @@ SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
    REAL(r8),parameter::DH = 0.5_r8     !64-bit REAL number
    REAL(r16),parameter::DD1 = 1.0_r16  !128-bit REAL number
 
-   REAL(r8),parameter :: pi = 3.14159265358979323846_R8  ! pi
+   REAL(r8),parameter :: pi = 3.14159265358979323846_R8  !pi
    REAL(selected_real_kind(12)), external::tee
 
    tau = D3/D4*gee*lsai
@@ -1200,7 +1040,7 @@ SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
       frid = D0
       faid = D0
    ENDIF
-   IF ( shadow_i == D0) THEN
+   IF (shadow_i == D0) THEN
       ftii = D1
       frii = D0
       faii = D0
@@ -1253,10 +1093,10 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
 
    REAL(selected_real_kind(12)), external::tee
 
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 ! single scattering terms for sphere with overlap corrections to path
 ! for direct and diffuse beams
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 
    ! forward first order normalized scattering
    phi_1f =(DD1/tau/tau - (DD1/tau/tau + DD2/tau + DD2)*exp(-DD2*tau))
@@ -1264,9 +1104,9 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
    ! backward first order normalized scattering
    phi_1b = DDH*(DD1 - tee(DD2*tau))
 
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 ! sphere double scattering terms (RED 2008 Eq 19,20)
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 
    IF (.not. runmode) THEN
 
@@ -1294,9 +1134,9 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
    ! second order avaerage scattering
    phi_2a = DDH*(phi_2b + phi_2f)
 
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 ! probabilty of absorption after two scattering
-!---------------------------------------------------------------------
+!----------------------------------------------------------------------
 
    ! probabilty of absorption for diffuse beam
    ! corrected probabilty of absorption for direct beam
@@ -1307,9 +1147,9 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
    pac = max(min(pac,D1),D0)
    pa2 = pac
 
-!---------------------------------------------------
+!----------------------------------------------------------------------
 !third order and higher order scatterings
-!---------------------------------------------------
+!----------------------------------------------------------------------
 
    phi_mf = phi_2f + omg*pac*phi_2a/(DD1-omg*pac)
    phi_mb = phi_2b + omg*pac*phi_2a/(DD1-omg*pac)
@@ -1344,7 +1184,7 @@ SUBROUTINE mGauss(A, B, X)
    ! Elimination
    DO i = 1, 5
       DO j = i+1, i+nstep(i)
-         IF (abs(A(i,i)) < 1.E-10) THEN
+         IF (abs(A(i,i)) < 1.e-10) THEN
             print *, "Error in Gauss's solution"
             RETURN
          ENDIF

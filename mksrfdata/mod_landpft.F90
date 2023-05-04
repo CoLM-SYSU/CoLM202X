@@ -6,13 +6,13 @@ MODULE mod_landpft
 
    USE mod_pixelset
    USE LC_const
-   USE GlobalVars, only : N_PFT
+   USE GlobalVars
    IMPLICIT NONE
 
    ! ---- Instance ----
    INTEGER :: numpft
    TYPE(pixelset_type) :: landpft
-  
+
    INTEGER , allocatable :: pft2patch   (:)  !patch index of a PFT
    INTEGER , allocatable :: patch_pft_s (:)  !start PFT index of a patch
    INTEGER , allocatable :: patch_pft_e (:)  !end PFT index of a patch
@@ -21,7 +21,7 @@ MODULE mod_landpft
    PUBLIC :: landpft_build
 
 CONTAINS
-   
+
    ! -------------------------------
    SUBROUTINE landpft_build ()
 
@@ -45,7 +45,7 @@ CONTAINS
       INTEGER  :: ipatch, ipft, npatch, npft
       REAL(r8) :: sumarea
       LOGICAL, allocatable :: patchmask (:)
-      INTEGER  :: npft_glb 
+      INTEGER  :: npft_glb
 
 
       IF (p_is_master) THEN
@@ -57,7 +57,7 @@ CONTAINS
          IF (landpatch%settyp(1) == 1) THEN
             numpft = count(SITE_pctpfts > 0.)
 #ifdef CROP
-         ELSEIF (landpatch%settyp(1) == 12) THEN
+         ELSEIF (landpatch%settyp(1) == CROPLAND) THEN
             numpft = numpatch
 #endif
          ELSE
@@ -85,20 +85,20 @@ CONTAINS
                landpft%settyp = pack(SITE_pfttyp, SITE_pctpfts > 0.)
 
                pft2patch  (:) = 1
-               patch_pft_s(:) = 1 
+               patch_pft_s(:) = 1
                patch_pft_e(:) = numpft
 #ifdef CROP
-            ELSEIF (landpatch%settyp(1) == 12) THEN
+            ELSEIF (landpatch%settyp(1) == CROPLAND) THEN
                DO ipft = 1, numpft
                   landpft%settyp(ipft) = cropclass(ipft) + N_PFT - 1
                   pft2patch   (ipft) = ipft
-                  patch_pft_s (ipft) = ipft 
+                  patch_pft_s (ipft) = ipft
                   patch_pft_e (ipft) = ipft
                ENDDO
 #endif
             ENDIF
          ELSE
-            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for PFT_CLASSIFICATION' 
+            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for PFT_CLASSIFICATION'
             patch_pft_s(:) = -1
             patch_pft_e(:) = -1
          ENDIF
@@ -115,11 +115,11 @@ CONTAINS
 #endif
 
       if (p_is_io) then
-      
+
          call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
-         dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+         dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim'
          CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gpatch, pctpft)
 
 #ifdef USEMPI
@@ -140,7 +140,7 @@ CONTAINS
 
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 1) THEN
-               
+
                CALL aggregation_pft_request_data (ipatch, gpatch, pctpft, pctpft_one, area_one)
 
                sumarea = sum(area_one)
@@ -162,8 +162,8 @@ CONTAINS
          IF (numpatch > 0) THEN
             npatch = count(patchmask)
             numpft = count(pctpft_patch > 0.)
-#ifdef CROP            
-            numpft = numpft + count(landpatch%settyp == 12) 
+#ifdef CROP
+            numpft = numpft + count(landpatch%settyp == CROPLAND)
 #endif
             IF (npatch > 0) THEN
                allocate (patch_pft_s (npatch))
@@ -207,11 +207,11 @@ CONTAINS
                         ENDIF
                      ENDDO
 #ifdef CROP
-                  ELSEIF (landpatch%settyp(ipatch) == 12) THEN
+                  ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                      npft = npft + 1
                      patch_pft_s(npatch) = npft
                      patch_pft_e(npatch) = npft
-                     
+
                      landpft%ielm  (npft) = landpatch%ielm  (ipatch)
                      landpft%eindex(npft) = landpatch%eindex(ipatch)
                      landpft%ipxstt(npft) = landpatch%ipxstt(ipatch)
@@ -243,12 +243,12 @@ CONTAINS
             write(*,'(A,I12,A)') 'Total: ', npft_glb, ' plant function type tiles.'
          ENDIF
       ENDIF
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numpft, ' plant function type tiles.'
 #endif
-            
+
 #ifdef SinglePoint
       allocate  (SITE_pfttyp(numpft))
       SITE_pfttyp(:) = landpft%settyp
@@ -258,18 +258,18 @@ CONTAINS
       IF (allocated(pctpft_one  )) deallocate (pctpft_one  )
       IF (allocated(area_one    )) deallocate (area_one    )
       IF (allocated(patchmask   )) deallocate (patchmask   )
-      
+
    END SUBROUTINE landpft_build
 
    ! ----------------------
-   SUBROUTINE map_patch_to_pft 
+   SUBROUTINE map_patch_to_pft
 
       USE spmd_task
       USE mod_landpatch
       IMPLICIT NONE
 
       INTEGER :: ipatch, ipft
-      
+
       IF (p_is_worker) THEN
 
          IF ((numpatch <= 0) .or. (numpft <= 0)) return
@@ -281,7 +281,7 @@ CONTAINS
          ipft = 1
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 1) THEN
-                  
+
                patch_pft_s(ipatch) = ipft
 
                DO WHILE (ipft <= numpft)
@@ -295,7 +295,7 @@ CONTAINS
                   ENDIF
                ENDDO
 #ifdef CROP
-            ELSEIF (landpatch%settyp(ipatch) == 12) THEN
+            ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                patch_pft_s(ipatch) = ipft
                patch_pft_e(ipatch) = ipft
                pft2patch  (ipft  ) = ipatch
@@ -305,7 +305,7 @@ CONTAINS
                patch_pft_s(ipatch) = -1
                patch_pft_e(ipatch) = -1
             ENDIF
-         
+
          ENDDO
 
       ENDIF

@@ -9,7 +9,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! Created by Yongjiu Dai, 09/15/1999
    ! Revised by Yongjiu Dai, 08/30/2002
    ! Revised by Yongjiu Dai, 03/2014
-   !             
+   !
    ! ======================================================================
    use precision
    USE GlobalVars
@@ -39,7 +39,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 !   use mod_mapping_grid2pset
    use ncio_serial
    use ncio_block
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    use mod_colm_debug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
@@ -65,9 +65,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    type(mapping_grid2pset_type) :: ms2p
 
    integer :: nl_soil_ini
-   
+
    real(r8), allocatable :: soil_z(:)
-   
+
    type(block_data_real8_2d) :: snow_d_grid
    type(block_data_real8_3d) :: soil_t_grid
    type(block_data_real8_3d) :: soil_w_grid
@@ -109,15 +109,15 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! Allocates memory for CLM 1d [numpatch] variables
    ! --------------------------------------------------------------------
 
-   CALL allocate_TimeInvariants 
-   CALL allocate_TimeVariables  
+   CALL allocate_TimeInvariants
+   CALL allocate_TimeVariables
 
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
 
    if (p_is_worker) then
-      
+
       patchclass = landpatch%settyp
 
       DO ipatch = 1, numpatch
@@ -129,13 +129,13 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef PFT_CLASSIFICATION
       pftclass = landpft%settyp
 #endif
-   
+
    ENDIF
 
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
    CALL pct_readin (dir_landdata)
 #endif
-   
+
    ! ------------------------------------------
    ! 1.1 Ponding water
    ! ------------------------------------------
@@ -170,14 +170,14 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
                CALL get_derived_parameters_vGM ( &
                   psi0(i,ipatch), alpha_vgm(i,ipatch), n_vgm(i,ipatch), &
                   sc_vgm(i,ipatch), fc_vgm(i,ipatch))
-            ENDDO 
-         ENDDO 
-      ENDIF 
-   ENDIF  
+            ENDDO
+         ENDDO
+      ENDIF
+   ENDIF
 #endif
 
    ! ...............................................................
-   ! 1.4 Plant time-invariant variables (based on the look-up tables) 
+   ! 1.4 Plant time-invariant variables
    ! ...............................................................
 
    ! read global tree top height from nc file
@@ -240,7 +240,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
-   
+
 !   gdp_lf (:)    = 0._r8
 !   abm_lf (:)    = 0._r8
 !   peatf_lf (:)  = 0._r8
@@ -331,7 +331,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! 1.6 Write out as a restart file [histTimeConst]
    ! ...............................................
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    call check_TimeInvariants ()
 #endif
 
@@ -344,20 +344,20 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    if (p_is_master) write (6,*) ('Successfully Initialize the Land Time-Invariants')
 
    ! ----------------------------------------------------------------------
-   ! [2] INITIALIZE TIME-VARYING VARIABLES 
+   ! [2] INITIALIZE TIME-VARYING VARIABLES
    ! as subgrid vectors of length [numpatch]
    ! initial run: create the time-varying variables based on :
    !              i) observation (NOT CODING CURRENTLY), or
    !             ii) some already-known information (NO CODING CURRENTLY), or
-   !            iii) arbitrarily 
-   ! continuation run: time-varying data read in from restart file 
+   !            iii) arbitrarily
+   ! continuation run: time-varying data read in from restart file
    ! ----------------------------------------------------------------------
 
    ! 2.1 current time of model run
    ! ............................
 
    call initimetype(greenwich)
-      
+
    IF (p_is_master) THEN
       IF(.not. greenwich)THEN
          print *, ".........greenwich false"
@@ -366,7 +366,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 
    ! ................................
-   ! 2.2 cosine of solar zenith angle 
+   ! 2.2 cosine of solar zenith angle
    ! ................................
    calday = calendarday(idate)
    if (p_is_worker) then
@@ -396,7 +396,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)  ! soil layer temperature (K)
       call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)  ! soil layer wetness (-)
-      call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  ! snow depth (m)              
+      call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  ! snow depth (m)
 
    end if
 
@@ -411,7 +411,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
    call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
    call ms2p%map_aweighted (snow_d_grid, snow_d)
-   
+
 #endif
 
    ! ...................
@@ -420,7 +420,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #if(defined DYN_PHENOLOGY)
    ! CREAT fraction of vegetation cover, greenness, leaf area index, stem index
    if (p_is_worker) then
-      
+
       do i = 1, numpatch
 #if(defined SOILINI)
          do nsl = 1, nl_soil
@@ -433,7 +433,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       tlai(:)=0.0; tsai(:)=0.0; green(:)=0.0; fveg(:)=0.0
       do i = 1, numpatch
-         ! Call Ecological Model() 
+         ! Call Ecological Model()
          ltyp = patchtype(i)
          if(ltyp > 0) then
             call lai_empirical(ltyp, nl_soil,rootfr(1:,i), t_soisno(1:,i),tlai(i),tsai(i),fveg(i),green(i))
@@ -449,7 +449,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    jday = idate0(2)
 
    IF (DEF_LAI_CLIM) then
-      ! yuan, 08/03/2019: read global LAI/SAI data
+      ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)
    ELSE
@@ -486,7 +486,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
                     tsai    (i) = 0._r8
                     tlai_p  (m) = 0._r8
                     tsai_p  (m) = 0._r8
-                  end if 
+                  end if
                end do
             end if
          end do
@@ -503,7 +503,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! 2.5 initialize time-varying variables, as subgrid vectors of length [numpatch]
    ! ..............................................................................
    if (p_is_worker) then
-      
+
       allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) )
       allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) )
 
@@ -581,7 +581,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    end if
 
    ! ------------------------------------------
-   ! PLEASE  
+   ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
    if (p_is_worker) then
@@ -596,8 +596,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! ...............................................................
    ! 2.6 Write out the model variables for restart run [histTimeVar]
    ! ...............................................................
-   
-#ifdef CLMDEBUG 
+
+#ifdef CLMDEBUG
    call check_TimeVariables ()
 #endif
 
@@ -615,7 +615,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! --------------------------------------------------
 
    CALL deallocate_TimeInvariants
-   CALL deallocate_TimeVariables 
+   CALL deallocate_TimeVariables
 
    IF (allocated(z_soisno )) deallocate (z_soisno )
    IF (allocated(dz_soisno)) deallocate (dz_soisno)

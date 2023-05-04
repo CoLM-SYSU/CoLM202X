@@ -7,16 +7,11 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ! 2. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface 
+   !    Reprocessing the MODIS Leaf Area Index products for land surface
    !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering 
-   !               partial overlap between fine grid and model grid for a user
-   !               defined domain file.
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -27,7 +22,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
    USE mod_aggregation_lc
@@ -65,7 +60,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    REAL(r8), allocatable :: gdp_patches(:), gdp_one(:)
    INTEGER :: itime, ntime, Julian_day, ipatch
    CHARACTER(LEN=4) :: c2, c3, cyear
-   integer :: start_year, end_year, YY   
+   integer :: start_year, end_year, YY
 
    ! for IGBP data
    CHARACTER(len=256) :: dir_modis
@@ -108,7 +103,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gfire, peatf)
       CALL allocate_block_data (gfire, gdp)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (abm_patches   (numpatch))
       allocate (hdm_patches   (numpatch))
@@ -125,7 +120,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
          ! read in hdm
          ! ---------------------------
       IF (p_is_master) THEN
-         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate Human population density (hdm):', YY,'(data in:',itime+1849,')' 
+         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate Human population density (hdm):', YY,'(data in:',itime+1849,')'
       endif
 
       IF (p_is_io) THEN
@@ -157,7 +152,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('hdm value ', hdm_patches)
 #endif
 
@@ -170,12 +165,12 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'hdm_patches', 'patch', landpatch, hdm_patches, 1)
    ENDDO
-   
+
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate abm' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate abm'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -206,7 +201,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('abm value ', abm_patches)
 #endif
 
@@ -221,10 +216,10 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
 
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate peatf' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate peatf'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -255,7 +250,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('peatf value ', peatf_patches)
 #endif
 
@@ -269,10 +264,10 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_write_vector (lndname, 'peatf_patches', 'patch', landpatch, peatf_patches, 1)
 
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -303,7 +298,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('gdp value ', gdp_patches)
 #endif
 
@@ -327,5 +322,5 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       IF (allocated(gdp_one    )) deallocate(gdp_one    )
       IF (allocated(area_one   )) deallocate(area_one    )
    ENDIF
-   
+
 END SUBROUTINE aggregation_fire

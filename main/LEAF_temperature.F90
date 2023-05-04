@@ -42,7 +42,7 @@ MODULE LEAF_temperature
               rootfr                             ,&
 #ifdef PLANT_HYDRAULIC_STRESS
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
-              psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&     
+              psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
 #endif
 #ifdef WUEdiag
               assimsun,etrsun  ,assimsha,etrsha  ,&
@@ -55,11 +55,10 @@ MODULE LEAF_temperature
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
-              hksati  ,rootr                                       ) 
- 
+              hksati  ,rootr                                       )
+
 !=======================================================================
-! Original author : Yongjiu Dai, August 15, 2001
-!
+! !DESCRIPTION:
 ! Foliage energy conservation is given by foliage energy budget equation
 !                      Rnet - Hf - LEf = 0
 ! The equation is solved by Newton-Raphson iteration, in which this iteration
@@ -68,11 +67,22 @@ MODULE LEAF_temperature
 ! transfer between foliage and atmosphere and ground is linked by the equations:
 !                      Ha = Hf + Hg and Ea = Ef + Eg
 !
-! ________________
-! REVISION HISTORY:
-! 07/09/2014, Hua Yuan: imbalanced energy due to T/q adjustment is
-!                       allocated to sensible heat flux.
+! Original author : Yongjiu Dai, August 15, 2001
 !
+! REVISIONS:
+! Hua Yuan, 09/2014: imbalanced energy due to T/q adjustment is
+!                    allocated to sensible heat flux.
+!
+! Hua Yuan, 10/2017: added options for z0, displa, rb and rd calculation
+!                    (Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W.,
+!                    Zhang, S., et al. (2019). Different representations of
+!                    canopy structure—A large source of uncertainty in global
+!                    land surface modeling. Agricultural and Forest Meteorology,
+!                    269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
+!
+! Hua Yuan, 10/2019: change leaf tempertature from two-leaf to one-leaf
+!                    (due to large differences may existed btween sunlit/shaded
+!                    leaf temperature.
 !=======================================================================
 
   USE precision
@@ -91,7 +101,7 @@ USE PhysicalConstants, only: tfrz
 #endif
 
   IMPLICIT NONE
- 
+
 !-----------------------Arguments---------------------------------------
 
   INTEGER,  intent(in) :: ipatch,ivt
@@ -121,9 +131,9 @@ USE PhysicalConstants, only: tfrz
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
 #ifdef PLANT_HYDRAULIC_STRESS
-        kmax_sun,   &    
-        kmax_sha,   &    
-        kmax_xyl,   &    
+        kmax_sun,   &
+        kmax_sha,   &
+        kmax_xyl,   &
         kmax_root,  &
         psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
         psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
@@ -284,7 +294,7 @@ USE PhysicalConstants, only: tfrz
         beta,       &! coefficient of conective velocity [-]
         wc,         &! convective velocity [m/s]
         wc2,        &! wc**2
-        dth,        &! diff of virtual temp. between ref. height and surface 
+        dth,        &! diff of virtual temp. between ref. height and surface
         dthv,       &! diff of vir. poten. temp. between ref. height and surface
         dqh,        &! diff of humidity between ref. height and surface
         obu,        &! monin-obukhov length (m)
@@ -305,9 +315,9 @@ USE PhysicalConstants, only: tfrz
         fwet,       &! fraction of foliage covered by water [-]
         cf,         &! heat transfer coefficient from leaves [-]
         rb,         &! leaf boundary layer resistance [s/m]
-        rbone,      &! canopy bulk boundary layer resistance 
-        rbsun,      &! canopy bulk boundary layer resistance 
-        rbsha,      &! canopy bulk boundary layer resistance 
+        rbone,      &! canopy bulk boundary layer resistance
+        rbsun,      &! canopy bulk boundary layer resistance
+        rbsha,      &! canopy bulk boundary layer resistance
         rd,         &! aerodynamical resistance between ground and canopy air
         ram,        &! aerodynamical resistance [s/m]
         rah,        &! thermal resistance [s/m]
@@ -334,12 +344,12 @@ USE PhysicalConstants, only: tfrz
         qsatldT,    &! derivative of "qsatl" on "tlef"
 
         del,        &! absolute change in leaf temp in current iteration [K]
-        dee,        &! maximum leaf temp. change in two consecutive iter [K]
         del2,       &! change in leaf temperature in previous iteration [K]
-        dele,       &! change in heat fluxes from leaf [K]
-        dele2,      &! change in heat fluxes from leaf [K]
+        dele,       &! change in heat fluxes from leaf [W/m2]
+        dele2,      &! change in heat fluxes from leaf in previous iteration [W/m2]
         det,        &! maximum leaf temp. change in two consecutive iter [K]
- 
+        dee,        &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
+
         obuold,     &! monin-obukhov length from previous iteration
         tlbef,      &! leaf temperature from previous iteration [K]
         ecidif,     &! excess energies [W/m2]
@@ -361,22 +371,22 @@ USE PhysicalConstants, only: tfrz
         gdh2o,      &! conductance between canopy and ground
         tprcor       ! tf*psur*100./1.013e5
 
-   INTEGER it, nmozsgn 
+   INTEGER it, nmozsgn
 
    REAL(r8) delta, fac
    REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif,etr0
-   REAL(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl  
+   REAL(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
    REAL(r8) w, csoilcn, z0mg, cint(3), cintsun(3), cintsha(3)
    REAL(r8) fevpl_bef, fevpl_noadj, dtl_noadj, errt, erre
 
    REAL(r8) lt, egvf
-   
+
    REAL(r8) :: sqrtdragc !sqrt(drag coefficient)
    REAL(r8) :: fai       !canopy frontal area index
    REAL(r8) :: a_k71     !exponential extinction factor for u/k decline within canopy (Kondo 1971)
    REAL(r8) :: fqt, fht, fmtop
    REAL(r8) :: utop, ueff, ktop
-   REAL(r8) :: phih, z0qg, z0hg 
+   REAL(r8) :: phih, z0qg, z0hg
    REAL(r8) :: hsink, displasink
 #ifdef PLANT_HYDRAULIC_STRESS
    real(r8) gb_mol_sun,gb_mol_sha
@@ -387,10 +397,10 @@ USE PhysicalConstants, only: tfrz
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 #endif
 
-   INTEGER,  parameter :: zd_opt = 3   
+   INTEGER,  parameter :: zd_opt = 3
    INTEGER,  parameter :: rb_opt = 3
    INTEGER,  parameter :: rd_opt = 3
- 
+
 !-----------------------End Variable List-------------------------------
 
 ! initialization of errors and  iteration parameters
@@ -403,7 +413,7 @@ USE PhysicalConstants, only: tfrz
 
        fht  = 0.     !integral of profile function for heat
        fqt  = 0.     !integral of profile function for moisture
-          
+
 !-----------------------------------------------------------------------
 ! scaling-up coefficients from leaf to canopy
 !-----------------------------------------------------------------------
@@ -445,9 +455,7 @@ USE PhysicalConstants, only: tfrz
        z0mg = (1.-fsno)*zlnd + fsno*zsno
        z0hg = z0mg
        z0qg = z0mg
-      
-! 12/27/2019, yuan: bug found
-       ! initialize z0m for 1D case
+
        z0m    = htop * z0mr(patchclass(ipatch))
        displa = htop * displar(patchclass(ipatch))
 
@@ -458,27 +466,27 @@ USE PhysicalConstants, only: tfrz
        egvf   = (1._r8 - exp(-lt)) / (1._r8 - exp(-2.))
        displa = egvf * displa
        z0mv   = exp(egvf * log(z0mv) + (1._r8 - egvf) * log(z0mg))
-       
+
        z0hv   = z0mv
        z0qv   = z0mv
 
-       !print *, ipatch
-       ! 10/17/2017: 3D z0m and displa
-       IF (zd_opt == 3) THEN 
+! 10/17/2017, yuan: 3D z0m and displa
+       IF (zd_opt == 3) THEN
 
           CALL cal_z0_displa(lai+sai, htop, 1., z0mv, displa)
-             
+
           ! NOTE: adjusted for samll displa
           displasink = max(htop/2., displa)
           hsink = z0mv + displasink
-          
+
           z0hv   = z0mv
           z0qv   = z0mv
-       ENDIF 
-       
+
+       ENDIF
+
        fai    = 1. - exp(-0.5*(lai+sai))
        sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
-       
+
        a_k71 = htop/(htop-displa)/(vonkar/sqrtdragc)
 
        taf = 0.5 * (tg + thm)
@@ -506,10 +514,10 @@ USE PhysicalConstants, only: tfrz
        CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mv,um,obu)
 
 ! ======================================================================
-!      BEGIN stability iteration 
+!      BEGIN stability iteration
 ! ======================================================================
 
-       DO WHILE (it .le. itmax) 
+       DO WHILE (it .le. itmax)
 
           tlbef = tl
 
@@ -526,15 +534,15 @@ USE PhysicalConstants, only: tfrz
                htop,fmtop,fm,fh,fq,fht,fqt,phih)
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
-            rah = 1./(vonkar/(fh-fht)*ustar) 
-            raw = 1./(vonkar/(fq-fqt)*ustar) 
-         ELSE 
+            rah = 1./(vonkar/(fh-fht)*ustar)
+            raw = 1./(vonkar/(fq-fqt)*ustar)
+         ELSE
             CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
                ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
-            rah = 1./(vonkar/fh*ustar) 
-            raw = 1./(vonkar/fq*ustar) 
+            rah = 1./(vonkar/fh*ustar)
+            raw = 1./(vonkar/fq*ustar)
          ENDIF
 
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
@@ -545,18 +553,15 @@ USE PhysicalConstants, only: tfrz
          cf = 0.01*sqrtdi/sqrt(uaf)
          rb = 1/(cf*uaf)
 
-        ! 11/17/2017: 3D rb calculation
-! 03/13/2020, yuan: TODO, add analytical solution
-         IF (rb_opt == 3) THEN 
+! 11/17/2017, yuan: 3D rb calculation
+! 03/13/2020, yuan: added analytical solution
+         IF (rb_opt == 3) THEN
             utop = ustar/vonkar * fmtop
-            !REAL(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
-            !ueff = uintegral(utop, 1._r8, 1._r8, a_k71, z0mg, htop, z0mg)
-            !REAL(r8) FUNCTION ueffect(utop, htop, hbot, z0mg, alpha, bee, fc)
             ueff = ueffect(utop, htop, z0mg, z0mg, a_k71, 1._r8, 1._r8)
             cf = 0.01*sqrtdi*sqrt(ueff)
             rb = 1./cf
          ENDIF
-         
+
        ! rd = 1./(csoilc*uaf)                 ! BATS legacy
        ! w = exp(-0.5*(lai+sai))              ! Dickinson's modification :
        ! csoilc = ( 1.-w + w*um/uaf)/rah      ! "rah" here is the resistance over
@@ -567,43 +572,35 @@ USE PhysicalConstants, only: tfrz
          csoilcn = (vonkar/(0.13*(z0mg*uaf/1.5e-5)**0.45))*w + csoilc*(1.-w)
          rd = 1./(csoilcn*uaf)
 
-         ! 11/17/2017: 3D rd calculation
-! 03/13/2020, yuan: TODO, add analytical solution
-         IF (rd_opt == 3) THEN 
+! 11/17/2017, yuan: 3D rd calculation
+! 03/13/2020, yuan: added analytical solution
+         IF (rd_opt == 3) THEN
             ktop = vonkar * (htop-displa) * ustar / phih
-            !REAL(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
-            !  displah, htop, hbot, obu, ustar, ztop, zbot)
-            !rd = kintegral(ktop, 1._r8, 1._r8, a_k71, z0mg, &
-            !   displa/htop, htop, z0qg, obug, ustarg, hsink, z0qg )
- 
-            !REAL(r8) FUNCTION frd(ktop, htop, hbot, ztop, zbot, displah, &
-            !  z0h, obu, ustar, z0mg, alpha, bee, fc)
             rd = frd(ktop, htop, z0qg, hsink, z0qg, displa/htop, &
                z0qg, obug, ustar, z0mg, a_k71, 1._r8, 1._r8)
-            !print *, "ktop:", ktop, htop,z0mv,ustar,phih !fordebug
          ENDIF
 
 !-----------------------------------------------------------------------
-! stomatal resistances 
+! stomatal resistances
 !-----------------------------------------------------------------------
 
          IF(lai .gt. 0.001) THEN
-            
+
             rbsun = rb / laisun
             rbsha = rb / laisha
- 
+
             eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
 #ifdef PLANT_HYDRAULIC_STRESS
-            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&   
-                     dz_soi    ,rootfr    ,psrf       ,qsatl      ,qsatl      ,&   
-                     qaf       ,tl        ,tl         ,rbsun      ,rbsha      ,&   
-                     raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&   
-                     cintsha   ,laisun    ,laisha     ,rhoair     ,fwet       ,&   
+            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
+                     dz_soi    ,rootfr    ,psrf       ,qsatl      ,qsatl      ,&
+                     qaf       ,tl        ,tl         ,rbsun      ,rbsha      ,&
+                     raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&
+                     cintsha   ,laisun    ,laisha     ,rhoair     ,fwet       ,&
                      sai       ,kmax_sun  ,kmax_sha   ,kmax_xyl   ,kmax_root  ,&
-                     psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&   
-                     ck        ,smp       ,hk         ,hksati     ,vegwp      ,&   
-                     etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&   
+                     psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&
+                     ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
+                     etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&
                      qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
             etr = etrsun + etrsha
 #endif
@@ -638,15 +635,15 @@ USE PhysicalConstants, only: tfrz
 #endif
                  )
 
-            gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6 
-            gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6 
+            gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6
+            gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6
 #ifdef PLANT_HYDRAULIC_STRESS
             gs0sun  = gssun/amax1(rstfacsun,1.e-2)
             gs0sha  = gssha/amax1(rstfacsha,1.e-2)
 
             gb_mol_sun = 1./rbsun * tprcor/tl / cintsun(3) * 1.e6  ! leaf to canopy
             gb_mol_sha = 1./rbsha * tprcor/tl / cintsha(3) * 1.e6  ! leaf to canopy
-#endif              
+#endif
 
          ELSE
             rssun = 2.e4; assimsun = 0.; respcsun = 0.
@@ -674,7 +671,7 @@ USE PhysicalConstants, only: tfrz
          ENDIF
 
 !         if(p_iam_glb .eq. 85)print*,'etrsun in Leaftemp',p_iam_glb,ivt,lai,etrsun,etrsha
-! above stomatal resistances are for the canopy, the stomatal rsistances 
+! above stomatal resistances are for the canopy, the stomatal rsistances
 ! and the "rb" in the following calculations are the average for single leaf. thus,
          rssun = rssun * laisun
          rssha = rssha * laisha
@@ -694,7 +691,7 @@ USE PhysicalConstants, only: tfrz
          caw = 1. / raw
          cgw = 1. / rd
          cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
-            ( laisun/(rb+rssun) + laisha/(rb+rssha) ) 
+            ( laisun/(rb+rssun) + laisha/(rb+rssha) )
 
          wtshi = 1. / ( cah + cgh + cfh )
          wtsqi = 1. / ( caw + cgw + cfw )
@@ -706,15 +703,16 @@ USE PhysicalConstants, only: tfrz
          wtaq0 = caw * wtsqi
          wtgq0 = cgw * wtsqi
          wtlq0 = cfw * wtsqi
- 
+
 !-----------------------------------------------------------------------
 ! IR radiation, sensible and latent heat fluxes and their derivatives
 !-----------------------------------------------------------------------
-! the partial derivatives of areodynamical resistance are ignored 
+! the partial derivatives of areodynamical resistance are ignored
 ! which cannot be determined analtically
          fac = 1. - thermk
 
-! longwave absorption and their derivatives 
+! longwave absorption and their derivatives
+         ! yuan: added reflected longwave by the ground
          irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
             + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
          dirab_dtl = - 8. * stefnc * tl**3                      * fac &
@@ -736,30 +734,30 @@ USE PhysicalConstants, only: tfrz
 #endif
          etr_dtl = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
-             * (wtaq0 + wtgq0)*qsatlDT 
+             * (wtaq0 + wtgq0)*qsatlDT
 
-#ifndef PLANT_HYDRAULIC_STRESS          
+#ifndef PLANT_HYDRAULIC_STRESS
          IF(etr.ge.etrc)THEN
             etr = etrc
             etr_dtl = 0.
          ENDIF
 #endif
- 
+
          evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
                  * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
          evplwet_dtl = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
-                     * (wtaq0 + wtgq0)*qsatlDT 
+                     * (wtaq0 + wtgq0)*qsatlDT
          IF(evplwet.ge.ldew/deltim)THEN
             evplwet = ldew/deltim
             evplwet_dtl = 0.
          ENDIF
-  
+
          fevpl = etr + evplwet
          fevpl_dtl = etr_dtl + evplwet_dtl
- 
+
          erre = 0.
          fevpl_noadj = fevpl
-         IF ( fevpl*fevpl_bef < 0. ) THEN 
+         IF ( fevpl*fevpl_bef < 0. ) THEN
             erre  = -0.9*fevpl
             fevpl =  0.1*fevpl
          ENDIF
@@ -773,22 +771,23 @@ USE PhysicalConstants, only: tfrz
              / ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl  &
              + cpliq*qintr_rain + cpice*qintr_snow)
          dtl_noadj = dtl(it)
- 
+
          ! check magnitude of change in leaf temperature limit to maximum allowed value
- 
+
          IF(it .le. itmax) THEN
- 
+
          ! put brakes on large temperature excursions
            IF(abs(dtl(it)).gt.delmax)THEN
                dtl(it) = delmax*dtl(it)/abs(dtl(it))
            ENDIF
- 
+
+         ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
            IF((it.ge.2) .and. (dtl(it-1)*dtl(it).le.0.))THEN
                dtl(it) = 0.5*(dtl(it-1) + dtl(it))
            ENDIF
- 
+
          ENDIF
- 
+
          tl = tlbef + dtl(it)
 
 !-----------------------------------------------------------------------
@@ -796,7 +795,7 @@ USE PhysicalConstants, only: tfrz
 !-----------------------------------------------------------------------
 
          del  = sqrt( dtl(it)*dtl(it) )
-         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 ) 
+         dele = dtl(it) * dtl(it) * ( dirab_dtl**2 + fsenl_dtl**2 + hvap*fevpl_dtl**2 )
          dele = sqrt(dele)
 
 !-----------------------------------------------------------------------
@@ -806,12 +805,12 @@ USE PhysicalConstants, only: tfrz
 ! and adjust specific humidity (qsatl_) proportionately
          CALL qsadv(tl,psrf,ei,deiDT,qsatl,qsatlDT)
 
-! update vegetation/ground surface temperature, canopy air temperature, 
+! update vegetation/ground surface temperature, canopy air temperature,
 ! canopy air humidity
-         taf = wta0*thm + wtg0*tg + wtl0*tl 
- 
+         taf = wta0*thm + wtg0*tg + wtl0*tl
+
          qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
- 
+
 ! update co2 partial pressure within canopy air
          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
          gdh2o = 1.0/rd  * tprcor/thm                     !mol m-2 s-1
@@ -822,12 +821,12 @@ USE PhysicalConstants, only: tfrz
 ! Update monin-obukhov length and wind speed including the stability effect
 !-----------------------------------------------------------------------
 
-         dth = thm - taf       
+         dth = thm - taf
          dqh = qm - qaf
- 
+
          tstar = vonkar/(fh-fht)*dth
          qstar = vonkar/(fq-fqt)*dqh
- 
+
          thvstar = tstar + 0.61*th*qstar
          zeta = zldis*vonkar*grav*thvstar / (ustar**2*thv)
          IF(zeta .ge. 0.)THEN                             !stable
@@ -836,7 +835,7 @@ USE PhysicalConstants, only: tfrz
             zeta = max(-100.,min(zeta,-1.e-6))
          ENDIF
          obu = zldis/zeta
- 
+
          IF(zeta .ge. 0.)THEN
            um = max(ur,.1)
          ELSE
@@ -844,27 +843,27 @@ USE PhysicalConstants, only: tfrz
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
          ENDIF
- 
+
          IF(obuold*obu .lt. 0.) nmozsgn = nmozsgn+1
          IF(nmozsgn .ge. 4) obu = zldis/(-0.01)
          obuold = obu
- 
+
 !-----------------------------------------------------------------------
 ! Test for convergence
 !-----------------------------------------------------------------------
 
          it = it+1
- 
+
          IF(it .gt. itmin) THEN
             fevpl_bef = fevpl
             det = max(del,del2)
+            ! 10/03/2017, yuan: possible bugs here, solution:
+            ! define dee, change del => dee
             dee = max(dele,dele2)
-            IF(det .lt. dtmin .and. dee .lt. dlemin) exit 
+            IF(det .lt. dtmin .and. dee .lt. dlemin) exit
          ENDIF
- 
-       ENDDO 
-        
-       !IF (it > itmax) print *, "*** NOTE: it = 41! ***"
+
+       ENDDO
 
 #ifdef OzoneStress
        call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
@@ -878,7 +877,7 @@ USE PhysicalConstants, only: tfrz
        rssha    = rssha / o3coefg_sha
 #endif
 ! ======================================================================
-!      END stability iteration 
+!      END stability iteration
 ! ======================================================================
 
        z0m = z0mv
@@ -900,10 +899,10 @@ USE PhysicalConstants, only: tfrz
 
 ! canopy fluxes and total assimilation amd respiration
        fsenl = fsenl + fsenl_dtl*dtl(it-1) &
-               ! add the imbalanced energy below due to T adjustment to sensibel heat
+               ! yuan: add the imbalanced energy below due to T adjustment to sensibel heat
                + (dtl_noadj-dtl(it-1)) * ((lai+sai)*clai/deltim - dirab_dtl + fsenl_dtl + hvap*fevpl_dtl &
                + cpliq * qintr_rain + cpice * qintr_snow) &
-               ! add the imbalanced energy below due to q adjustment to sensibel heat
+               ! yuan: add the imbalanced energy below due to q adjustment to sensibel heat
                + hvap*erre
        etr0    = etr
        etr     = etr     +     etr_dtl*dtl(it-1)
@@ -918,14 +917,14 @@ USE PhysicalConstants, only: tfrz
        evplwet = evplwet + evplwet_dtl*dtl(it-1)
        fevpl   = fevpl_noadj
        fevpl   = fevpl   +   fevpl_dtl*dtl(it-1)
- 
+
        elwmax  = ldew/deltim
        elwdif  = max(0., evplwet-elwmax)
        evplwet = min(evplwet, elwmax)
- 
+
        fevpl = fevpl - elwdif
-       fsenl = fsenl + hvap*elwdif 
- 
+       fsenl = fsenl + hvap*elwdif
+
        taux = - rhoair*us/ram
        tauy = - rhoair*vs/ram
 
@@ -940,10 +939,9 @@ USE PhysicalConstants, only: tfrz
 ! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
 !-----------------------------------------------------------------------
 
-       ! 10/16/2017: add soil reflectance
-       ! ONLY for vegetation covered area
+       ! 10/16/2017, yuan: add soil reflected longwave
        dlrad = thermk * frl &
-             + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) 
+             + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
        ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
              + thermk*emg*tg**4 ) &
              + (1-emg)*thermk*thermk*frl &
@@ -955,7 +953,7 @@ USE PhysicalConstants, only: tfrz
       if(assim_RuBP_sun .gt. assim_Rubisco_sun)then
          if(assim_Rubisco_sun .gt. 0 .and. Dsun .gt. 0)then
             lambdasun = (pco2a/psrf - gammasun / psrf)/(1.6*Dsun) * (etrsun*18000 / assim_Rubisco_sun) ** 2
-         else 
+         else
             lambdasun = 0._r8
          end if
       else
@@ -968,7 +966,7 @@ USE PhysicalConstants, only: tfrz
       if(assim_RuBP_sha .gt. assim_Rubisco_sha)then
          if(assim_Rubisco_sha .gt. 0 .and. Dsha .gt. 0)then
             lambdasha = (pco2a/psrf - gammasha / psrf)/(1.6*Dsha) * (etrsha*18000 / assim_Rubisco_sha) ** 2
-         else 
+         else
             lambdasha = 0._r8
          end if
       else
@@ -990,7 +988,7 @@ USE PhysicalConstants, only: tfrz
 
 !-----------------------------------------------------------------------
 ! balance check
-! (the computational error was created by the assumed 'dtl' in line 406-408) 
+! (the computational error was created by the assumed 'dtl' in line 406-408)
 !-----------------------------------------------------------------------
 
        err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl
@@ -1039,7 +1037,7 @@ USE PhysicalConstants, only: tfrz
          ldew_snow=max(ldew_snow,0.0)
       endif
          ldew=ldew_rain+ldew_snow
-   
+
    elseif (DEF_Interception_scheme .eq. 6) then !VIC
       if (taf .gt. tfrz) then
          ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
@@ -1050,7 +1048,7 @@ USE PhysicalConstants, only: tfrz
       endif
          ldew=ldew_rain+ldew_snow
 
-   else 
+   else
       call abort
 
  endif
@@ -1059,14 +1057,15 @@ USE PhysicalConstants, only: tfrz
 !-----------------------------------------------------------------------
 ! 2 m height air temperature
 !-----------------------------------------------------------------------
-       tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar) 
+       tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
        qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
+
   END SUBROUTINE LeafTemp
-!----------------------------------------------------------------------         
+!----------------------------------------------------------------------
 
 SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
-       
+
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
 !
@@ -1090,15 +1089,16 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
   REAL(r8) lsai                  !lai + sai
   REAL(r8) dewmxi                !inverse of maximum allowed dew [1/mm]
-  REAL(r8) vegt                  !sigf*lsai
+  REAL(r8) vegt                  !sigf*lsai, NOTE: remove sigf
   REAL(r8) satcap_rain,satcap_snow           !
 !-----------------------------------------------------------------------
-! Fwet is the fraction of all vegetation surfaces which are wet 
+! Fwet is the fraction of all vegetation surfaces which are wet
 ! including stem area which contribute to evaporation
   if (DEF_Interception_scheme .eq. 1) then !CoLM2014
 
       lsai = lai + sai
       dewmxi = 1.0/dewmx
+      ! 06/2018, yuan: remove sigf, to compatible with PFT
       vegt   =  lsai
 
       fwet = 0
@@ -1158,52 +1158,52 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
    endif
 
 
-! fdry is the fraction of lai which is dry because only leaves can 
+! fdry is the fraction of lai which is dry because only leaves can
 ! transpire. Adjusted for stem area which does not transpire
       fdry = (1.-fwet)*lai/lsai
 
 
   END SUBROUTINE dewfraction
 
-!----------------------------------------------------------------------         
+!----------------------------------------------------------------------
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
-     
+
      USE precision
      USE FRICTION_VELOCITY
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
      REAL(r8), intent(in) :: fc
-     REAL(r8), intent(in) :: bee 
+     REAL(r8), intent(in) :: bee
      REAL(r8), intent(in) :: alpha
      REAL(r8), intent(in) :: z0mg
      REAL(r8), intent(in) :: htop
      REAL(r8), intent(in) :: hbot
      REAL(r8), intent(in) :: z
-     
+
      REAL(r8) :: ulog,uexp
 
      ! when canopy LAI->0, z0->zs, fac->1, u->umoninobuk
      ! canopy LAI->large, fac->0 or=0, u->log profile
      ulog = utop*log(z/z0mg)/log(htop/z0mg)
      uexp = utop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-     
+
      uprofile = bee*fc*min(uexp,ulog) + (1-bee*fc)*ulog
-     
+
      RETURN
   END FUNCTION uprofile
 
   REAL(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
                     displah, htop, hbot, obu, ustar, z)
-     
+
      USE precision
      USE FRICTION_VELOCITY
      IMPLICIT NONE
-     
+
      REAL(r8), parameter :: com1 = 0.4
      REAL(r8), parameter :: com2 = 0.08
-     
+
      REAL(r8), intent(in) :: ktop
      REAL(r8), intent(in) :: fc
      REAL(r8), intent(in) :: bee
@@ -1214,15 +1214,15 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      REAL(r8), intent(in) :: obu
      REAL(r8), intent(in) :: ustar
      REAL(r8), intent(in) :: z
-     
+
      REAL(r8) :: fac
      REAL(r8) :: kcob, klin, kexp
 
      klin = ktop*z/htop
-     
+
      fac  = 1. / (1.+exp(-(displah-com1)/com2))
      kcob = 1. / (fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
-     
+
      kexp = ktop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
 
      kprofile = 1./( bee*fc/min(kexp,kcob) + (1-bee*fc)/kcob )
@@ -1234,7 +1234,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
      USE precision
      IMPLICIT NONE
-     
+
      REAL(r8), intent(in) :: utop
      REAL(r8), intent(in) :: fc
      REAL(r8), intent(in) :: bee
@@ -1242,13 +1242,12 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      REAL(r8), intent(in) :: z0mg
      REAL(r8), intent(in) :: htop
      REAL(r8), intent(in) :: hbot
-     
+
      INTEGER  :: i, n
      REAL(r8) :: dz, z, u
 
      ! 09/26/2017: change fixed n -> fixed dz
-     !dz = 0.001 !fordebug
-     dz = 0.05 !fordebug
+     dz = 0.01
      n  = int( (htop-hbot) / dz ) + 1
 
      uintegral = 0.
@@ -1265,12 +1264,13 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
         u = max(0._r8, u)
         !uintegral = uintegral + sqrt(u)*dz / (htop-hbot)
-        ! 03/04/2020, yuan: TODO-hard to solve
-        ! u开根号后不能解析求解积分，可近似直接对u积分
-        ! 如此，最后就不用平方
+! 03/04/2020, yuan: NOTE: the above is hard to solve
+        !NOTE: The integral cannot be solved analytically after
+        !the square root sign of u, and the integral can be approximated
+        !directly for u, In this way, there is no need to square
         uintegral = uintegral + u*dz / (htop-hbot)
      ENDDO
-      
+
      !uintegral = uintegral * uintegral
 
      RETURN
@@ -1281,7 +1281,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
                             z0mg, alpha, bee, fc)
      USE precision
      IMPLICIT NONE
-     
+
      REAL(r8), intent(in) :: utop
      REAL(r8), intent(in) :: htop
      REAL(r8), intent(in) :: hbot
@@ -1289,7 +1289,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      REAL(r8), intent(in) :: alpha
      REAL(r8), intent(in) :: bee
      REAL(r8), intent(in) :: fc
-     
+
      REAL(r8) :: roots(2), uint
      INTEGER  :: rootn
 
@@ -1303,7 +1303,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
         uint = uint + fuint(utop, htop, hbot, &
            htop, hbot, z0mg, alpha, bee, fc)
      ENDIF
-     
+
      IF (rootn == 1) THEN
         uint = uint + fuint(utop, htop, roots(1), &
            htop, hbot, z0mg, alpha, bee, fc)
@@ -1318,7 +1318,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
            htop, hbot, z0mg, alpha, bee, fc)
         uint = uint + fuint(utop, roots(2), hbot,     &
            htop, hbot, z0mg, alpha, bee, fc)
-     ENDIF 
+     ENDIF
 
      ueffect = uint / (htop-hbot)
 
@@ -1339,7 +1339,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
      ! local variables
      REAL(r8) :: fuexpint, fulogint
-     
+
      fulogint = utop/log(htop/z0mg) *&
         (ztop*log(ztop/z0mg) - zbot*log(zbot/z0mg) + zbot - ztop)
 
@@ -1354,7 +1354,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
         ! ulog is smaller
         fuint = fulogint
      ENDIF
-     
+
      RETURN
   END FUNCTION fuint
 
@@ -1363,25 +1363,25 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      utop, htop, hbot, z0mg, alpha, roots, rootn)
 
      USE precision
-     IMPLICIT NONE 
+     IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
      REAL(r8), intent(in) :: utop, htop, hbot
      REAL(r8), intent(in) :: z0mg, alpha
-     
+
      REAL(r8), intent(inout) :: roots(2)
      INTEGER,  intent(inout) :: rootn
 
      ! local variables
      REAL(r8) :: udif_ub, udif_lb
-     
+
      udif_ub = udif(ztop,utop,htop,hbot,z0mg,alpha)
      udif_lb = udif(zmid,utop,htop,hbot,z0mg,alpha)
 
      IF (udif_ub*udif_lb == 0) THEN
         IF (udif_lb == 0) THEN !root found
            rootn = rootn + 1
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "U root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1390,7 +1390,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      ELSE IF (udif_ub*udif_lb < 0) THEN
         IF (ztop-zmid < 0.01) THEN
            rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "U root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1400,14 +1400,14 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
               utop, htop, hbot, z0mg, alpha, roots, rootn)
         ENDIF
      ENDIF
-     
+
      udif_ub = udif(zmid,utop,htop,hbot,z0mg,alpha)
      udif_lb = udif(zbot,utop,htop,hbot,z0mg,alpha)
 
      IF (udif_ub*udif_lb == 0) THEN
         IF (udif_ub == 0) THEN !root found
            rootn = rootn + 1
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "U root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1416,7 +1416,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      ELSE IF (udif_ub*udif_lb < 0) THEN
         IF (zmid-zbot < 0.01) THEN
            rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "U root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1431,7 +1431,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
 
   REAL(r8) FUNCTION udif(z, utop, htop, hbot, z0mg, alpha)
-     
+
      USE precision
      IMPLICIT NONE
 
@@ -1448,12 +1448,12 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      RETURN
   END FUNCTION udif
 
-  
+
   REAL(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
                     displah, htop, hbot, obu, ustar, ztop, zbot)
      USE precision
-     IMPLICIT NONE            
-     
+     IMPLICIT NONE
+
      REAL(r8), intent(in) :: ktop
      REAL(r8), intent(in) :: fc
      REAL(r8), intent(in) :: bee
@@ -1466,20 +1466,18 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      REAL(r8), intent(in) :: ustar
      REAL(r8), intent(in) :: ztop
      REAL(r8), intent(in) :: zbot
-     
+
      INTEGER  :: i, n
      REAL(r8) :: dz, z, k
-     
+
      kintegral = 0.
 
      IF (ztop <= zbot) THEN
         RETURN
      ENDIF
-        
+
      ! 09/26/2017: change fixed n -> fixed dz
-     ! 10/05/2017: need to improve
-     !dz = 0.001 !fordebug
-     dz = 0.05 !fordebug
+     dz = 0.01
      n  = int( (ztop-zbot) / dz ) + 1
 
      DO i = 1, n
@@ -1491,31 +1489,31 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
         ENDIF
 
         k = kprofile(ktop, fc, bee, alpha, &
-           displah, htop, hbot, obu, ustar, z) 
+           displah, htop, hbot, obu, ustar, z)
 
         kintegral = kintegral + 1./k * dz
 
      ENDDO
-      
+
      RETURN
   END FUNCTION kintegral
-  
+
   REAL(r8) FUNCTION frd(ktop, htop, hbot, &
         ztop, zbot, displah, z0h, obu, ustar, &
         z0mg, alpha, bee, fc)
-     
+
      USE precision
      IMPLICIT NONE
-     
+
      REAL(r8), intent(in) :: ktop, htop, hbot
      REAL(r8), intent(in) :: ztop, zbot
      REAL(r8), intent(in) :: displah, z0h, obu, ustar
      REAL(r8), intent(in) :: z0mg, alpha, bee, fc
-     
+
      ! local parameters
      REAL(r8), parameter :: com1 = 0.4
      REAL(r8), parameter :: com2 = 0.08
-     
+
      REAL(r8) :: roots(2), fac, kint
      INTEGER  :: rootn
 
@@ -1533,7 +1531,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
         kint = kint + fkint(ktop, ztop, zbot, htop, hbot, &
            z0h, obu, ustar, fac, alpha, bee, fc)
      ENDIF
-     
+
      IF (rootn == 1) THEN
         kint = kint + fkint(ktop, ztop, roots(1), htop, hbot, &
            z0h, obu, ustar, fac, alpha, bee, fc)
@@ -1548,7 +1546,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
            z0h, obu, ustar, fac, alpha, bee, fc)
         kint = kint + fkint(ktop, roots(2), zbot, htop, hbot, &
            z0h, obu, ustar, fac, alpha, bee, fc)
-     ENDIF 
+     ENDIF
 
      frd = kint
 
@@ -1570,9 +1568,10 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
      ! local variables
      REAL(r8) :: fkexpint, fkcobint
-     
-     !klin = ktop*z/htop
-     !kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
+
+     !NOTE:
+     ! klin = ktop*z/htop
+     ! kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
      fkcobint = fac*htop/ktop*(log(ztop)-log(zbot)) +&
         (1.-fac)*kintmoninobuk(0.,z0h,obu,ustar,ztop,zbot)
 
@@ -1584,14 +1583,14 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
               exp(alpha*(htop-zbot)/(htop-hbot)) )
         ELSE
            fkexpint = (ztop-zbot)/ktop
-        ENDIF 
+        ENDIF
 
         fkint = bee*fc*fkexpint + (1.-bee*fc)*fkcobint
      ELSE
         ! kcob is smaller
         fkint = fkcobint
      ENDIF
-     
+
      RETURN
   END FUNCTION fkint
 
@@ -1600,18 +1599,18 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
      USE precision
-     IMPLICIT NONE 
+     IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
      REAL(r8), intent(in) :: ktop, htop, hbot
      REAL(r8), intent(in) :: obu, ustar, fac, alpha
-     
+
      REAL(r8), intent(inout) :: roots(2)
      INTEGER,  intent(inout) :: rootn
 
      ! local variables
      REAL(r8) :: kdif_ub, kdif_lb
-     
+
      !print *, "*** CALL recursive SUBROUTINE kfindroots!!"
      kdif_ub = kdif(ztop,ktop,htop,hbot,obu,ustar,fac,alpha)
      kdif_lb = kdif(zmid,ktop,htop,hbot,obu,ustar,fac,alpha)
@@ -1619,7 +1618,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      IF (kdif_ub*kdif_lb == 0) THEN
         IF (kdif_lb == 0) THEN !root found
            rootn = rootn + 1
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "K root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1628,7 +1627,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      ELSE IF (kdif_ub*kdif_lb < 0) THEN
         IF (ztop-zmid < 0.01) THEN
            rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "K root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1638,14 +1637,14 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
               ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
         ENDIF
      ENDIF
-     
+
      kdif_ub = kdif(zmid,ktop,htop,hbot,obu,ustar,fac,alpha)
      kdif_lb = kdif(zbot,ktop,htop,hbot,obu,ustar,fac,alpha)
 
      IF (kdif_ub*kdif_lb == 0) THEN
         IF (kdif_ub == 0) THEN !root found
            rootn = rootn + 1
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "K root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1654,7 +1653,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      ELSE IF (kdif_ub*kdif_lb < 0) THEN
         IF (zmid-zbot < 0.01) THEN
            rootn = rootn + 1 !root found
-           IF (rootn > 2) THEN 
+           IF (rootn > 2) THEN
               print *, "K root number > 2, abort!"
               CALL abort
            ENDIF
@@ -1670,18 +1669,18 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
 
   REAL(r8) FUNCTION kdif(z, ktop, htop, hbot, &
         obu, ustar, fac, alpha)
-     
+
      USE precision
      USE FRICTION_VELOCITY
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, ktop, htop, hbot
-     REAL(r8), intent(in) :: obu, ustar, fac, alpha 
+     REAL(r8), intent(in) :: obu, ustar, fac, alpha
 
      REAL(r8) :: kexp, klin, kcob
 
      kexp = ktop*exp(-alpha*(1-(z-hbot)/(htop-hbot)))
-     
+
      klin = ktop*z/htop
      kcob = 1./(fac/klin + (1.-fac)/kmoninobuk(0.,obu,ustar,z))
 
@@ -1727,7 +1726,7 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      temp1 = (2.*cd1*fai)**0.5
      delta = -h * ( fc*1.1*log(1. + (Cd*lai0*fc)**0.25) + &
         (1.-fc)*(1.-(1.-exp(-temp1))/temp1) )
-     
+
      ! calculate z0m, displa
      !----------------------------------------------------
      ! NOTE: potential bug below, ONLY apply for spheric
@@ -1735,12 +1734,12 @@ SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)
      fai   = fc*(1. - exp(-0.5*lai))
      sqrtdragc = min( (0.003+0.3*fai)**0.5, 0.3 )
      temp1 = (2.*cd1*fai)**0.5
-     
+
      IF (lai > lai0) THEN
         displa = delta + h*( &
            (  fc)*1.1*log(1. + (Cd*lai*fc)**0.25) + &
            (1-fc)*(1.-(1.-exp(-temp1))/temp1) )
-     ELSE 
+     ELSE
         displa = h*( &
            (  fc)*1.1*log(1. + (Cd*lai*fc)**0.25) + &
            (1-fc)*(1.-(1.-exp(-temp1))/temp1) )
