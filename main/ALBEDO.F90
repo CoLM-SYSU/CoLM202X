@@ -594,6 +594,7 @@ ENDIF
 
 ! account for stem optical property effects
       upscat = lai/lsai*tau(iw,1) + sai_/lsai*tau(iw,2)
+      ! 09/12/2014, yuan: a bug, change 1. - chil -> 1. + chil
       upscat = 0.5 * ( scat + ( scat - 2. * upscat ) * &
                (( 1. + chil ) / 2. ) ** 2 )
       betao = ( 1. + zmu * extkb ) / ( scat * zmu * extkb ) * as

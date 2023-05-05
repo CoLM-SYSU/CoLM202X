@@ -310,6 +310,10 @@ MODULE SOIL_SNOW_hydrology
 
   else
       if(patchtype==2)then        ! WETLAND
+         ! 09/20/2019, by Chaoqun Li: a potential bug below
+         ! surface runoff could > total runoff
+         ! original CoLM: rusr=0., qinfl=gwat, rsubst=0., rnof=0.
+         ! i.e., all water to be infiltration
          qinfl = 0.
          rsur = max(0.,gwat)
          rsubst = 0.
@@ -1978,6 +1982,9 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
        wliq_soisno(j-1) = wliq_soisno(j-1) + xsi
     end do
 
+    ! 12/2022, note by yuan: a potential bug below which needs check,
+    ! if wice_soisno(1) > pondmx + porsl*dzmm, so xs1>0, in that case,
+    ! wliq_soisno(1) will be nagtive, and xs1 is positive.
     xs1 = wliq_soisno(1) - (pondmx+porsl(1)*dzmm(1)-wice_soisno(1))
     if(xs1 > 0.)then
        wliq_soisno(1) = pondmx+porsl(1)*dzmm(1)-wice_soisno(1)
