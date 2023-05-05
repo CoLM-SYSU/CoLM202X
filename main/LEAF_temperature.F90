@@ -77,7 +77,7 @@ CONTAINS
 !                    269–270, 119–135. https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 ! Hua Yuan, 10/2019: change leaf tempertature from two-leaf to one-leaf
-!                    (due to large differences may existed btween sunlit/shaded
+!                    (due to large differences may exist btween sunlit/shaded
 !                    leaf temperature.
 !=======================================================================
 
@@ -372,7 +372,7 @@ USE PhysicalConstants, only: tfrz
    REAL(r8) delta, fac
    REAL(r8) evplwet, evplwet_dtl, etr_dtl, elwmax, elwdif,etr0
    REAL(r8) irab, dirab_dtl, fsenl_dtl, fevpl_dtl
-   REAL(r8) w, csoilcn, z0mg, cint(3), cintsun(3), cintsha(3)
+   REAL(r8) w, csoilcn, z0mg, cintsun(3), cintsha(3)
    REAL(r8) fevpl_bef, fevpl_noadj, dtl_noadj, errt, erre
 
    REAL(r8) lt, egvf
@@ -414,7 +414,7 @@ USE PhysicalConstants, only: tfrz
 ! scaling-up coefficients from leaf to canopy
 !-----------------------------------------------------------------------
 
-       fsha   = 1. - fsun
+       fsha   = 1. -fsun
        laisun = lai*fsun
        laisha = lai*fsha
 
@@ -708,7 +708,7 @@ USE PhysicalConstants, only: tfrz
          fac = 1. - thermk
 
 ! longwave absorption and their derivatives
-         ! yuan: added reflected longwave by the ground
+         ! 10/16/2017, yuan: added reflected longwave by the ground
          irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
             + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
          dirab_dtl = - 8. * stefnc * tl**3                      * fac &
@@ -751,6 +751,7 @@ USE PhysicalConstants, only: tfrz
          fevpl = etr + evplwet
          fevpl_dtl = etr_dtl + evplwet_dtl
 
+         ! 07/09/2014, yuan: added for energy balance
          erre = 0.
          fevpl_noadj = fevpl
          IF ( fevpl*fevpl_bef < 0. ) THEN
@@ -770,6 +771,7 @@ USE PhysicalConstants, only: tfrz
 
          ! check magnitude of change in leaf temperature limit to maximum allowed value
 
+         ! 06/12/2014, yuan: .lt. -> .le.
          IF(it .le. itmax) THEN
 
          ! put brakes on large temperature excursions
@@ -777,6 +779,7 @@ USE PhysicalConstants, only: tfrz
                dtl(it) = delmax*dtl(it)/abs(dtl(it))
            ENDIF
 
+         ! 06/12/2014, yuan: .lt. -> .le.
          ! NOTE: could be a bug IF dtl*dtl==0, changed from lt->le
            IF((it.ge.2) .and. (dtl(it-1)*dtl(it).le.0.))THEN
                dtl(it) = 0.5*(dtl(it-1) + dtl(it))
@@ -935,7 +938,7 @@ USE PhysicalConstants, only: tfrz
 ! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
 !-----------------------------------------------------------------------
 
-       ! 10/16/2017, yuan: add soil reflected longwave
+       ! 10/16/2017, yuan: added reflected longwave by the ground
        dlrad = thermk * frl &
              + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
        ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &

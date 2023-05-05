@@ -14,7 +14,9 @@
 ! Original author : Yongjiu Dai, 09/15/1999; 09/11/2001
 !
 ! REVISIONS:
-! Hua Yuan, 05/2014: added for local noon calculation
+! Hua Yuan, 05/2014: added for solar radiation output [vars: so*, sr*]
+!
+! Hua Yuan, 08/2014: added for local noon calculation
 !
 ! Hua Yuan, 08/2020: added for PFT and PC calculation
 !

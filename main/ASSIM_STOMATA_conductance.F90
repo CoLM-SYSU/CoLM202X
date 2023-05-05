@@ -32,12 +32,12 @@ MODULE ASSIM_STOMATA_conductance
 #ifdef WUEdiag
                       ,assim_RuBP, assim_Rubisco, ci, vpd, gammas &
 #endif
-                              )  
+                              )
 
-!=======================================================================        
-!                                                                               
-!     calculation of canopy photosynthetic rate using the integrated            
-!     model relating assimilation and stomatal conductance.                     
+!=======================================================================
+!
+!     calculation of canopy photosynthetic rate using the integrated
+!     model relating assimilation and stomatal conductance.
 !
 !     Original author: Yongjiu Dai, 08/11/2001
 !
@@ -45,37 +45,37 @@ MODULE ASSIM_STOMATA_conductance
 !         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
 !
 !
-!     units are converted from mks to biological units in this routine.         
-!                                                                               
-!                          units                                                
-!                         -------                                               
-!                                                                               
-!      pco2m, pco2a, pco2i, po2m                : pascals                       
-!      co2a, co2s, co2i, h2oa, h2os, h2oa       : mol mol-1                     
-!      vmax25, respcp, assim, gs, gb, ga        : mol m-2 s-1                   
-!      effcon                                   : mol co2 mol quanta-1          
-!      1/rb, 1/ra, 1/rst                        : m s-1                         
-!                                                                               
-!                       conversions                                             
-!                      -------------                                            
-!                                                                               
-!      1 mol h2o           = 0.018 kg                                           
-!      1 mol co2           = 0.044 kg                                           
-!      h2o (mol mol-1)     = ea / psrf ( pa pa-1 )                              
-!      h2o (mol mol-1)     = q*mm/(q*mm + 1)                                    
-!      gs  (co2)           = gs (h2o) * 1./1.6                                  
-!      gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po                        
-!      par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6                             
-!      mm  (molair/molh2o) = 1.611                                              
-!                                                                               
-!----------------------------------------------------------------------         
+!     units are converted from mks to biological units in this routine.
+!
+!                          units
+!                         -------
+!
+!      pco2m, pco2a, pco2i, po2m                : pascals
+!      co2a, co2s, co2i, h2oa, h2os, h2oa       : mol mol-1
+!      vmax25, respcp, assim, gs, gb, ga        : mol m-2 s-1
+!      effcon                                   : mol co2 mol quanta-1
+!      1/rb, 1/ra, 1/rst                        : m s-1
+!
+!                       conversions
+!                      -------------
+!
+!      1 mol h2o           = 0.018 kg
+!      1 mol co2           = 0.044 kg
+!      h2o (mol mol-1)     = ea / psrf ( pa pa-1 )
+!      h2o (mol mol-1)     = q*mm/(q*mm + 1)
+!      gs  (co2)           = gs (h2o) * 1./1.6
+!      gs  (mol m-2 s-1 )  = gs (m s-1) * 44.6*tf/t*p/po
+!      par (mol m-2 s-1 )  = par(w m-2) * 4.6*1.e-6
+!      mm  (molair/molh2o) = 1.611
+!
+!----------------------------------------------------------------------
 
  use precision
- IMPLICIT NONE                                                                        
+ IMPLICIT NONE
 
  real(r8),intent(in) :: &
       effcon,       &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-      vmax25,       &! maximum carboxylation rate at 25 C at canopy top 
+      vmax25,       &! maximum carboxylation rate at 25 C at canopy top
                      ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
 
       slti,         &! slope of low temperature inhibition function      (0.2)
@@ -105,28 +105,28 @@ MODULE ASSIM_STOMATA_conductance
 
       rb,           &! boundary resistance from canopy to cas (s m-1)
       ra,           &! aerodynamic resistance from cas to refence height (s m-1)
-      rstfac         ! canopy resistance stress factors to soil moisture                         
+      rstfac         ! canopy resistance stress factors to soil moisture
 
  real(r8),intent(in), dimension(3) :: &
       cint           ! scaling up from leaf to canopy
 
  real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
-      assim,        &! canopy assimilation rate (mol m-2 s-1)                       
-      respc,        &! canopy respiration (mol m-2 s-1) 
+      assim,        &! canopy assimilation rate (mol m-2 s-1)
+      respc,        &! canopy respiration (mol m-2 s-1)
       rst            ! canopy stomatal resistance (s m-1)
 #ifdef WUEdiag
- real(r8),intent(out) :: &     
+ real(r8),intent(out) :: &
       assim_RuBP,   &
       assim_Rubisco,&
       ci,           &
       vpd,          &
-      gammas        
+      gammas
 #endif
 
-!-------------------- local --------------------------------------------       
+!-------------------- local --------------------------------------------
 
  integer, parameter :: iterationtotal = 6   ! total iteration number in pco2i calculation
-                                                                               
+
  real(r8) c3,       &! c3 vegetation : 1; 0 for c4
       c4,           &! c4 vegetation : 1; 0 for c3
       qt,           &! (tleaf - 298.16) / 10
@@ -139,7 +139,7 @@ MODULE ASSIM_STOMATA_conductance
 
       templ,        &! intermediate value
       temph,        &! intermediate value
-             
+
       vm,           &! maximum catalytic activity of Rubison (mol co2 m-2 s-1)
       jmax25,       &! potential rate of whole-chain electron transport at 25 C
       jmax,         &! potential rate of whole-chain electron transport (mol electron m-2 s-1)
@@ -148,27 +148,27 @@ MODULE ASSIM_STOMATA_conductance
       bintc,        &! residual stomatal conductance for co2 (mol co2 m-2 s-1)
 
       rgas,         &! universal gas contant (8.314 J mol-1 K-1)
-      tprcor,       &! coefficient for unit transfer 
+      tprcor,       &! coefficient for unit transfer
       gbh2o,        &! one side leaf boundary layer conductance (mol m-2 s-1)
       gah2o,        &! aerodynamic conductance between cas and reference height (mol m-2 s-1)
-      gsh2o,        &! canopy conductance (mol m-2 s-1)                         
+      gsh2o,        &! canopy conductance (mol m-2 s-1)
 
       atheta,       &! wc, we coupling parameter
       btheta,       &! wc & we, ws coupling parameter
       omss,         &! intermediate calcuation for oms
-      omc,          &! rubisco limited assimilation (omega-c: mol m-2 s-1)               
-      ome,          &! light limited assimilation (omega-e: mol m-2 s-1)                 
-      oms,          &! sink limited assimilation (omega-s: mol m-2 s-1)                  
+      omc,          &! rubisco limited assimilation (omega-c: mol m-2 s-1)
+      ome,          &! light limited assimilation (omega-e: mol m-2 s-1)
+      oms,          &! sink limited assimilation (omega-s: mol m-2 s-1)
       omp,          &! intermediate calcuation for omc, ome
 
       co2m,         &! co2 concentration in atmos (mol mol-1)
       co2a,         &! co2 concentration at cas (mol mol-1)
-      co2s,         &! co2 concentration at canopy surface (mol mol-1)             
+      co2s,         &! co2 concentration at canopy surface (mol mol-1)
       co2st,        &! co2 concentration at canopy surface (mol mol-1)
       co2i,         &! internal co2 concentration (mol mol-1)
       pco2in,       &! internal co2 concentration at the new iteration (pa)
-      pco2i,        &! internal co2 concentration (pa) 
-      es,           &! canopy surface h2o vapor pressure (pa)             
+      pco2i,        &! internal co2 concentration (pa)
+      es,           &! canopy surface h2o vapor pressure (pa)
 
       sqrtin,       &! intermediate calculation for quadratic
       assmt,        &! net assimilation with a positive limitation (mol co2 m-2 s-1)
@@ -185,39 +185,39 @@ MODULE ASSIM_STOMATA_conductance
 
  integer ic
 
-!=======================================================================        
+!=======================================================================
 
       c3 = 0.
       if( effcon .gt. 0.07 ) c3 = 1.
-      c4 = 1. - c3 
+      c4 = 1. - c3
 
-!-----------------------------------------------------------------------        
-! dependence on leaf temperature 
-!     gammas - CO2 compensation point in the absence of day respiration 
-!     ko     - Michaelis-Menton constant for carboxylation by Rubisco 
+!-----------------------------------------------------------------------
+! dependence on leaf temperature
+!     gammas - CO2 compensation point in the absence of day respiration
+!     ko     - Michaelis-Menton constant for carboxylation by Rubisco
 !     kc     - Michaelis-Menton constant for oxygenation by Rubisco
-!-----------------------------------------------------------------------        
+!-----------------------------------------------------------------------
 
       qt = 0.1*( tlef - trop )
 
-      kc = 30.     * 2.1**qt  
-      ko = 30000.  * 1.2**qt 
+      kc = 30.     * 2.1**qt
+      ko = 30000.  * 1.2**qt
       gammas = 0.5 * po2m / (2600. * 0.57**qt) * c3        ! = 0. for c4 plant ???
 
       rrkk = kc * ( 1. + po2m/ko ) * c3
 
-!----------------------------------------------------------------------         
-! maximun capacity 
-! vm     - maximum catalytic activity of Rubisco in the presence of 
+!----------------------------------------------------------------------
+! maximun capacity
+! vm     - maximum catalytic activity of Rubisco in the presence of
 !          saturating level of RuP2 and CO2 (mol m-2s-1)
 ! jmax   - potential rate of whole-chain electron transport (mol m-2s-1)
 ! epar   - electron transport rate for a given absorbed photon radiation
 ! respc  - dark resipration (mol m-2s-1)
 ! omss   - capacity of the leaf to export or utilize the products of photosynthesis.
-! binter - coefficient from observation, 0.01 for c3 plant, 0.04 for c4 plant 
-!-----------------------------------------------------------------------        
+! binter - coefficient from observation, 0.01 for c3 plant, 0.04 for c4 plant
+!-----------------------------------------------------------------------
 
-      vm = vmax25 * 2.1**qt        ! (mol m-2 s-1) 
+      vm = vmax25 * 2.1**qt        ! (mol m-2 s-1)
       templ = 1. + exp(slti*(hlti-tlef))
       temph = 1. + exp(shti*(tlef-hhti))
       vm = vm / temph * rstfac * c3 + vm / (templ*temph) * rstfac * c4
@@ -227,10 +227,10 @@ MODULE ASSIM_STOMATA_conductance
 !---> jmax25 = 2.39 * vmax25 - 14.2e-6        ! (mol m-2 s-1)
 !--->      jmax25 = 2.1 * vmax25        ! (mol m-2 s-1)
 !/05/2014/
-      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)   
-      jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * & 
-             ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &          
-             ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) ) 
+      jmax25 = 1.97 * vmax25       ! (mol m-2 s-1)
+      jmax = jmax25 * exp( 37.e3 * (tlef - trop) / (rgas*trop*tlef) ) * &
+             ( 1. + exp( (710.*trop-220.e3)/(rgas*trop) ) ) / &
+             ( 1. + exp( (710.*tlef-220.e3)/(rgas*tlef) ) )
                                    ! 37000  (J mol-1)
                                    ! 220000 (J mol-1)
                                    ! 710    (J K-1)
@@ -242,13 +242,13 @@ MODULE ASSIM_STOMATA_conductance
 ! /05/2014/
       epar = min(4.6e-6 * par * effcon, jmax)
 
-      respcp = 0.015 * c3 + 0.025 * c4 
+      respcp = 0.015 * c3 + 0.025 * c4
       respc = respcp * vmax25 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
 !     respc = 0.7e-6 * 2.0**qt / ( 1. + exp( trda*(tlef-trdm )) ) * rstfac
       respc = respc * cint(1)
 
       omss = ( vmax25/2. ) * (1.8**qt) / templ * rstfac * c3 &
-           + ( vmax25/5. ) * (1.8**qt) * rstfac * c4 
+           + ( vmax25/5. ) * (1.8**qt) * rstfac * c4
       omss = omss * cint(1)
 
       bintc = binter * max( 0.1, rstfac )
@@ -258,20 +258,22 @@ MODULE ASSIM_STOMATA_conductance
       tprcor = 44.6*273.16*psrf/1.013e5
 
 ! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
-! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for 
+! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
 ! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tlef "
 !     gbh2o  = 0.5/rb * tprcor/tlef                   ! mol m-2 s-1
       gbh2o  = 1./rb * tprcor/tlef                    ! mol m-2 s-1
 
 ! rb is for single leaf, but here the flux is for canopy, thus
-!      gbh2o  = gbh2o * cint(3)  !debug by Xingjie Lu
+       ! Xingjie Lu: rb has already been converted to canopy scale,
+       ! thus, there is no need for gbh2o *cint(3) (sunlit/shaded LAI)
+!      gbh2o  = gbh2o * cint(3)
 
 !  aerodynamic condutance between canopy and reference height atmosphere
       gah2o  = 1.0/ra * tprcor/tm                     ! mol m-2 s-1
 
-!-----------------------------------------------------------------------        
-!     first guess is midway between compensation point and maximum              
-!     assimilation rate. ! pay attention on this iteration 
+!-----------------------------------------------------------------------
+!     first guess is midway between compensation point and maximum
+!     assimilation rate. ! pay attention on this iteration
 
       co2m = pco2m/psrf                               ! mol mol-1
       co2a = pco2a/psrf
@@ -290,7 +292,7 @@ MODULE ASSIM_STOMATA_conductance
 
 !-----------------------------------------------------------------------
 !                      NET ASSIMILATION
-!     the leaf assimilation (or gross photosynthesis) rate is described 
+!     the leaf assimilation (or gross photosynthesis) rate is described
 !     as the minimum of three limiting rates:
 !     omc: the efficiency of the photosynthetic enzyme system (Rubisco-limited);
 !     ome: the amount of PAR captured by leaf chlorophyll;
@@ -299,15 +301,15 @@ MODULE ASSIM_STOMATA_conductance
 !             atheta*omp^2 - omp*(omc+ome) + omc*ome = 0
 !         btheta*assim^2 - assim*(omp+oms) + omp*oms = 0
 !-----------------------------------------------------------------------
- 
+
       atheta = 0.877
       btheta = 0.95
 
-      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4 
-      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4 
-      oms   = omss * c3 + omss*pco2i * c4 
+      omc = vm   * ( pco2i-gammas ) / ( pco2i + rrkk ) * c3 + vm * c4
+      ome = epar * ( pco2i-gammas ) / ( pco2i+2.*gammas ) * c3 + epar * c4
+      oms   = omss * c3 + omss*pco2i * c4
 
-      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) ) 
+      sqrtin= max( 0., ( (ome+omc)**2 - 4.*atheta*ome*omc ) )
       omp   = ( ( ome+omc ) - sqrt( sqrtin ) ) / ( 2.*atheta )
       sqrtin= max( 0., ( (omp+oms)**2 - 4.*btheta*omp*oms ) )
       assim = max( 0., ( ( oms+omp ) - sqrt( sqrtin ) ) / ( 2.*btheta ))
@@ -320,8 +322,8 @@ MODULE ASSIM_STOMATA_conductance
 !  (1)   pathway for co2 flux
 !                                                  co2m
 !                                                   o
-!                                                   |   
-!                                                   |    
+!                                                   |
+!                                                   |
 !                                                   <  |
 !                                        1.37/gsh2o >  |  Ac-Rd-Rsoil
 !                                                   <  v
@@ -329,16 +331,16 @@ MODULE ASSIM_STOMATA_conductance
 !                                     <--- Ac-Rd    |
 !     o------/\/\/\/\/\------o------/\/\/\/\/\------o
 !    co2i     1.6/gsh2o     co2s    1.37/gbh2o     co2a
-!                                                   | ^                        
-!                                                   | | Rsoil                        
-!                                                   | |                        
+!                                                   | ^
+!                                                   | | Rsoil
+!                                                   | |
 !
-!  (2)   pathway for water vapor flux 
+!  (2)   pathway for water vapor flux
 !
 !                                                  em
 !                                                   o
-!                                                   |   
-!                                                   |    
+!                                                   |
+!                                                   |
 !                                                   <  ^
 !                                           1/gsh2o >  | Ea
 !                                                   <  |
@@ -346,9 +348,9 @@ MODULE ASSIM_STOMATA_conductance
 !                                     ---> Ec       !
 !     o------/\/\/\/\/\------o------/\/\/\/\/\------o
 !     ei       1/gsh2o      es       1/gbh2o       ea
-!                                                   | ^                        
+!                                                   | ^
 !                                                   | | Eg
-!                                                   | |                        
+!                                                   | |
 !
 !  (3)   the relationship between net assimilation and tomatal conductance :
 !        gsh2o = m * An * [es/ei] / [pco2s/p] + b
@@ -363,34 +365,34 @@ MODULE ASSIM_STOMATA_conductance
 
       co2st = min( co2s, co2a )
       co2st = max( co2st,1.e-5 )
-                               
+
       assmt = max( 1.e-12, assimn )
-      hcdma = ei*co2st / ( gradm*assmt ) 
+      hcdma = ei*co2st / ( gradm*assmt )
 
-      aquad = hcdma                     
+      aquad = hcdma
       bquad = gbh2o*hcdma - ei - bintc*hcdma
-      cquad = -gbh2o*( ea + hcdma*bintc )  
-                                             
-      sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
-      gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad) 
+      cquad = -gbh2o*( ea + hcdma*bintc )
 
-      es  = ( gsh2o-bintc ) * hcdma                   ! pa 
+      sqrtin= max( 0., ( bquad**2 - 4.*aquad*cquad ) )
+      gsh2o = ( -bquad + sqrt ( sqrtin ) ) / (2.*aquad)
+
+      es  = ( gsh2o-bintc ) * hcdma                   ! pa
       es  = min( es, ei )
       es  = max( es, 1.e-2)
 
-      gsh2o = es/hcdma + bintc                        ! mol m-2 s-1                                      
+      gsh2o = es/hcdma + bintc                        ! mol m-2 s-1
 
       pco2in = ( co2s - 1.6 * assimn / gsh2o )*psrf   ! pa
       eyy(ic) = pco2i - pco2in                        ! pa
 
-!-----------------------------------------------------------------------        
+!-----------------------------------------------------------------------
 
       if( abs(eyy(ic)) .lt. 0.1 ) exit
 
       enddo ITERATION_LOOP
 
 ! convert gsh2o (mol m-2 s-1) to resistance rst ( s m-1)
-      rst   = min( 1.e6, 1./(gsh2o*tlef/tprcor) )     ! s m-1                  
+      rst   = min( 1.e6, 1./(gsh2o*tlef/tprcor) )     ! s m-1
 #ifdef WUEdiag
       assim_RuBP    = ome
       assim_Rubisco = omc
@@ -405,97 +407,97 @@ MODULE ASSIM_STOMATA_conductance
 
   subroutine sortin( eyy, pco2y, range, gammas, ic, iterationtotal )
 
-!-----------------------------------------------------------------------        
-!     arranges successive pco2/error pairs in order of increasing pco2.         
-!     estimates next guess for pco2 using combination of linear and             
-!     quadratic fits.                                                           
+!-----------------------------------------------------------------------
+!     arranges successive pco2/error pairs in order of increasing pco2.
+!     estimates next guess for pco2 using combination of linear and
+!     quadratic fits.
 !
 !     original author: P. J. Sellers (SiB2)
-!-----------------------------------------------------------------------        
+!-----------------------------------------------------------------------
 
       use precision
       IMPLICIT NONE
- 
+
       integer, intent(in) :: ic,iterationtotal
-      real(r8), INTENT(in) :: range      
-      real(r8), INTENT(in) :: gammas     
+      real(r8), INTENT(in) :: range
+      real(r8), INTENT(in) :: gammas
       real(r8), INTENT(inout), dimension(iterationtotal) :: eyy, pco2y
 
-!----- Local -----------------------------------------------------------        
+!----- Local -----------------------------------------------------------
       integer i, j, n, i1, i2, i3, is, isp, ix
       real(r8) a, b, pmin, emin, eyy_a
       real(r8) pco2b, pco2yl, pco2yq
       real(r8) ac1, ac2, bc1, bc2, cc1, cc2
       real(r8) bterm, aterm, cterm
 
-!-----------------------------------------------------------------------        
-                                                                               
-      if( ic .ge. 4 ) go to 500                                                
+!-----------------------------------------------------------------------
+
+      if( ic .ge. 4 ) go to 500
       eyy_a = 1.0
       if(eyy(1).lt.0.) eyy_a = -1.0
-      pco2y(1) = gammas + 0.5*range                                            
-      pco2y(2) = gammas + range*( 0.5 - 0.3*eyy_a )                 
-      pco2y(3) = pco2y(1) - (pco2y(1)-pco2y(2))/(eyy(1)-eyy(2)+1.e-10)*eyy(1)  
-                                                                               
-      pmin = min( pco2y(1), pco2y(2) )                                         
-      emin = min(   eyy(1),   eyy(2) )                                         
-      if ( emin .gt. 0. .and. pco2y(3) .gt. pmin ) pco2y(3) = gammas           
-      go to 200                                                                
-500   continue                                                                 
-                                                                               
-      n = ic - 1                                                               
-      do 1000 j = 2, n                                                         
-      a = eyy(j)                                                               
-      b = pco2y(j)                                                             
-      do 2000 i = j-1,1,-1                                                     
-      if(eyy(i) .le. a ) go to 100                                             
-      eyy(i+1) = eyy(i)                                                        
-      pco2y(i+1) = pco2y(i)                                                    
-2000  continue                                                                 
-      i = 0                                                                    
-100   eyy(i+1) = a                                                             
-      pco2y(i+1) = b                                                           
-1000  continue                                                                 
-                                                                               
-      pco2b = 0.                                                               
-      is    = 1                                                                
-      do 3000 ix = 1, n                                                        
-      if( eyy(ix) .lt. 0. ) pco2b = pco2y(ix)                                  
-      if( eyy(ix) .lt. 0. ) is = ix                                            
-3000  continue                                                                 
-      i1 = is-1                                                                
-      i1 = max(1, i1)                                                          
-      i1 = min(n-2, i1)                                                        
-      i2 = i1 + 1                                                              
-      i3 = i1 + 2                                                              
-      isp   = is + 1                                                           
-      isp = min( isp, n )                                                      
-      is = isp - 1                                                             
-                                                                               
-      pco2yl=pco2y(is) - (pco2y(is)-pco2y(isp))/(eyy(is)-eyy(isp)+1.e-10)*eyy(is)     
-                                                                               
-!----------------------------------------------------------------------       
-!   method using a quadratic fit                                                
-!----------------------------------------------------------------------         
-                                                                               
-      ac1 = eyy(i1)*eyy(i1) - eyy(i2)*eyy(i2)                                  
-      ac2 = eyy(i2)*eyy(i2) - eyy(i3)*eyy(i3)                                  
-      bc1 = eyy(i1) - eyy(i2)                                                  
-      bc2 = eyy(i2) - eyy(i3)                                                  
-      cc1 = pco2y(i1) - pco2y(i2)                                              
-      cc2 = pco2y(i2) - pco2y(i3)                                              
-      bterm = (cc1*ac2-cc2*ac1)/(bc1*ac2-ac1*bc2+1.e-10)                              
-      aterm = (cc1-bc1*bterm)/(ac1+1.e-10)                                              
-      cterm = pco2y(i2) - aterm*eyy(i2)*eyy(i2) - bterm*eyy(i2)                
-      pco2yq= cterm                                                            
-      pco2yq= max( pco2yq, pco2b )                                             
-      pco2y(ic) = ( pco2yl+pco2yq)/2.                                          
-                                                                               
-200   continue                                                                 
-                                                                               
-      pco2y(ic) = max ( pco2y(ic), 0.01 )                                      
-                                                                               
-  end subroutine sortin                                                    
+      pco2y(1) = gammas + 0.5*range
+      pco2y(2) = gammas + range*( 0.5 - 0.3*eyy_a )
+      pco2y(3) = pco2y(1) - (pco2y(1)-pco2y(2))/(eyy(1)-eyy(2)+1.e-10)*eyy(1)
+
+      pmin = min( pco2y(1), pco2y(2) )
+      emin = min(   eyy(1),   eyy(2) )
+      if ( emin .gt. 0. .and. pco2y(3) .gt. pmin ) pco2y(3) = gammas
+      go to 200
+500   continue
+
+      n = ic - 1
+      do 1000 j = 2, n
+      a = eyy(j)
+      b = pco2y(j)
+      do 2000 i = j-1,1,-1
+      if(eyy(i) .le. a ) go to 100
+      eyy(i+1) = eyy(i)
+      pco2y(i+1) = pco2y(i)
+2000  continue
+      i = 0
+100   eyy(i+1) = a
+      pco2y(i+1) = b
+1000  continue
+
+      pco2b = 0.
+      is    = 1
+      do 3000 ix = 1, n
+      if( eyy(ix) .lt. 0. ) pco2b = pco2y(ix)
+      if( eyy(ix) .lt. 0. ) is = ix
+3000  continue
+      i1 = is-1
+      i1 = max(1, i1)
+      i1 = min(n-2, i1)
+      i2 = i1 + 1
+      i3 = i1 + 2
+      isp   = is + 1
+      isp = min( isp, n )
+      is = isp - 1
+
+      pco2yl=pco2y(is) - (pco2y(is)-pco2y(isp))/(eyy(is)-eyy(isp)+1.e-10)*eyy(is)
+
+!----------------------------------------------------------------------
+!   method using a quadratic fit
+!----------------------------------------------------------------------
+
+      ac1 = eyy(i1)*eyy(i1) - eyy(i2)*eyy(i2)
+      ac2 = eyy(i2)*eyy(i2) - eyy(i3)*eyy(i3)
+      bc1 = eyy(i1) - eyy(i2)
+      bc2 = eyy(i2) - eyy(i3)
+      cc1 = pco2y(i1) - pco2y(i2)
+      cc2 = pco2y(i2) - pco2y(i3)
+      bterm = (cc1*ac2-cc2*ac1)/(bc1*ac2-ac1*bc2+1.e-10)
+      aterm = (cc1-bc1*bterm)/(ac1+1.e-10)
+      cterm = pco2y(i2) - aterm*eyy(i2)*eyy(i2) - bterm*eyy(i2)
+      pco2yq= cterm
+      pco2yq= max( pco2yq, pco2b )
+      pco2y(ic) = ( pco2yl+pco2yq)/2.
+
+200   continue
+
+      pco2y(ic) = max ( pco2y(ic), 0.01 )
+
+  end subroutine sortin
 
 
 
