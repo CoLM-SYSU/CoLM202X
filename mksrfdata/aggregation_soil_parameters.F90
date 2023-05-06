@@ -540,6 +540,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             IF (L /= 0) THEN
                CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
                   data_r8_2d_in1 = wf_gravels_s_grid, data_r8_2d_out1 = wf_gravels_s_one)
+               wf_gravels_s_patches (ipatch) = sum (wf_gravels_s_one * (area_one/sum(area_one)))
             ELSE
                wf_gravels_s_patches (ipatch) = -1.0e36_r8
             ENDIF

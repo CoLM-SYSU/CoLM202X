@@ -27,6 +27,10 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    USE mod_single_srfdata
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:
@@ -54,6 +58,13 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
    INTEGER  :: ipatch, ipc, ipft, p
    REAL(r8) :: sumarea
+#ifdef SrfdataDiag
+#ifdef CROP
+   INTEGER :: typindex(0:N_PFT+N_CFT-1)   
+#else
+   INTEGER :: typindex(0:N_PFT-1)   
+#endif
+#endif
       
    landdir = trim(dir_model_landdata) // '/pctpft/'
 
@@ -135,6 +146,16 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
    CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', landpft, pct_pfts, 1)
+#ifdef SrfdataDiag
+#ifdef CROP
+   typindex = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
+#else
+   typindex = (/(ipft, ipft = 0, N_PFT-1)/)
+#endif
+   lndname = trim(dir_model_landdata)//'/diag/pct_pfts.nc'
+   CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typindex, m_pft2diag, &
+      -1.0e36_r8, lndname, 'pctpfts', compress = 0, write_mode = 'one')
+#endif
 #else
    allocate (SITE_pctpfts(numpft))
    SITE_pctpfts = pct_pfts

@@ -78,7 +78,8 @@ CONTAINS
          jelm = 0
          DO ielm = 1, numelm
             CALL aggregation_request_data (landelm, ielm, grid_filter, &
-               data_i4_2d_in1 = datafilter, data_i4_2d_out1 = ifilter)
+               data_i4_2d_in1 = datafilter, data_i4_2d_out1 = ifilter, &
+               filledvalue_i4 = -1)
    
             allocate (filter (mesh(ielm)%npxl))
             filter = ifilter > 0
@@ -123,6 +124,16 @@ CONTAINS
          CALL aggregation_worker_done ()
 #endif
       ENDIF
+
+      IF (p_is_worker) THEN
+         IF (allocated(landelm%eindex))   deallocate (landelm%eindex)
+         IF (allocated(landelm%ipxstt))   deallocate (landelm%ipxstt)
+         IF (allocated(landelm%ipxend))   deallocate (landelm%ipxend)
+         IF (allocated(landelm%settyp))   deallocate (landelm%settyp)
+         IF (allocated(landelm%ielm  ))   deallocate (landelm%ielm  )
+      ENDIF
+
+      CALL landelm_build ()
       
 #ifdef USEMPI
       IF (p_is_worker) THEN

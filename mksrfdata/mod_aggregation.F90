@@ -244,7 +244,8 @@ CONTAINS
 #endif
 
    !----------------------------------------------------
-   SUBROUTINE aggregation_request_data (pixelset, iset, grid_in, area, &
+   SUBROUTINE aggregation_request_data (  &
+         pixelset, iset, grid_in, area,   &
          data_r8_2d_in1, data_r8_2d_out1, &
          data_r8_2d_in2, data_r8_2d_out2, &
          data_r8_2d_in3, data_r8_2d_out3, &
@@ -253,7 +254,8 @@ CONTAINS
          data_r8_2d_in6, data_r8_2d_out6, &
          data_r8_3d_in1, data_r8_3d_out1, n1_r8_3d_in1, &
          data_r8_3d_in2, data_r8_3d_out2, n1_r8_3d_in2, &
-         data_i4_2d_in1, data_i4_2d_out1)
+         data_i4_2d_in1, data_i4_2d_out1, &
+         filledvalue_i4)
 
       USE precision
       USE spmd_task
@@ -303,10 +305,12 @@ CONTAINS
       TYPE (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in1
       INTEGER, allocatable,       intent(out), optional :: data_i4_2d_out1 (:)
 
+      INTEGER, intent(in), optional :: filledvalue_i4
+
       ! Local Variables
       INTEGER :: nreq, smesg(2), isrc, idest, iproc
       INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: ipxl, ie, ipxstt, ipxend
+      INTEGER :: ipxl, ie, ipxstt, ipxend, lb1
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
 
       REAL(r8), allocatable :: rbuf_r8_1d(:), rbuf_r8_2d(:,:)
@@ -353,15 +357,20 @@ CONTAINS
       ENDIF
 
       IF (present(data_r8_3d_in1) .and. present(data_r8_3d_out1) .and. present(n1_r8_3d_in1)) THEN
-         allocate (data_r8_3d_out1 (n1_r8_3d_in1,ipxstt:ipxend))
+         lb1 = data_r8_3d_in1%lb1
+         allocate (data_r8_3d_out1 (lb1:lb1-1+n1_r8_3d_in1,ipxstt:ipxend))
       ENDIF
 
       IF (present(data_r8_3d_in2) .and. present(data_r8_3d_out2) .and. present(n1_r8_3d_in2)) THEN
-         allocate (data_r8_3d_out2 (n1_r8_3d_in2,ipxstt:ipxend))
+         lb1 = data_r8_3d_in2%lb1
+         allocate (data_r8_3d_out2 (lb1:lb1-1+n1_r8_3d_in2,ipxstt:ipxend))
       ENDIF
 
       IF (present(data_i4_2d_in1) .and. present(data_i4_2d_out1)) THEN
          allocate (data_i4_2d_out1 (ipxstt:ipxend))
+         IF (present(filledvalue_i4)) THEN
+            data_i4_2d_out1 = filledvalue_i4
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -371,13 +380,20 @@ CONTAINS
       allocate (ipt   (ipxstt:ipxend))
       allocate (msk   (ipxstt:ipxend))
 
+      ipt(:) = -1
+
       DO ipxl = ipxstt, ipxend
          xlist(ipxl) = grid_in%xgrd(mesh(ie)%ilon(ipxl))
          ylist(ipxl) = grid_in%ygrd(mesh(ie)%ilat(ipxl))
 
-         xblk = grid_in%xblk(xlist(ipxl))
-         yblk = grid_in%yblk(ylist(ipxl))
-         ipt(ipxl) = gblock%pio(xblk,yblk)
+         IF ((xlist(ipxl) < 0) .or. (ylist(ipxl) < 0)) THEN
+            write(*,*) 'Warning: request data out of range.'
+         ELSE
+            xblk = grid_in%xblk(xlist(ipxl))
+            yblk = grid_in%yblk(ylist(ipxl))
+            ipt(ipxl) = gblock%pio(xblk,yblk)
+         ENDIF
+
       ENDDO
 
       DO iproc = 0, p_np_io-1
@@ -479,6 +495,12 @@ CONTAINS
 
          ilon = grid_in%xgrd(mesh(ie)%ilon(ipxl))
          ilat = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+
+         IF ((ilon < 0) .or. (ilat < 0)) THEN
+            write(*,*) 'Warning: request data out of range.'
+            cycle
+         ENDIF
+
          xblk = grid_in%xblk(ilon)
          yblk = grid_in%yblk(ilat)
          xloc = grid_in%xloc(ilon)

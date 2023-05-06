@@ -18,6 +18,10 @@ SUBROUTINE aggregation_dbedrock ( &
    USE mod_single_srfdata
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
    ! arguments:
 

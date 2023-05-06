@@ -40,6 +40,10 @@ SUBROUTINE aggregation_lakedepth ( &
    USE mod_single_srfdata
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
    ! arguments:
 
@@ -54,6 +58,9 @@ SUBROUTINE aggregation_lakedepth ( &
 
    TYPE (block_data_real8_2d) :: lakedepth
    REAL(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
+#ifdef SrfdataDiag
+   INTEGER :: typindex(1) = (/17/)   
+#endif
 
    landdir = trim(dir_model_landdata) // '/lakedepth/'
 
@@ -138,9 +145,16 @@ SUBROUTINE aggregation_lakedepth ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'patch', landpatch, lakedepth_patches, 1)
+
+#ifdef SrfdataDiag
+   lndname = trim(dir_model_landdata)//'/diag/lakedepth.nc'
+   CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typindex, m_patch2diag, &
+      -1.0e36_r8, lndname, 'lakedepth', compress = 0, write_mode = 'one')
+#endif
 #else
    SITE_lakedepth = lakedepth_patches(1)
 #endif
+
 
    IF (p_is_worker) THEN
       deallocate ( lakedepth_patches )

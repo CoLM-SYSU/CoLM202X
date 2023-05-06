@@ -64,7 +64,6 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    CHARACTER(LEN=4) ::cx, c2, c3, c4, cyear,c
    integer :: start_year, end_year, YY,nsl, cft
 
-
    landdir = trim(dir_model_landdata) // '/crop/'
 
 #ifdef USEMPI

@@ -49,6 +49,7 @@ OBJS = \
 		 mod_landpc.o \
 		 par_fitting.o \
 		 mod_mesh_filter.o \
+		 mod_srfdata_diag.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
 		 aggregation_NDEP.o \
