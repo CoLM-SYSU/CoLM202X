@@ -596,7 +596,7 @@ IF (patchtype == 0) THEN
          rstfacsun_out = rstfac
          rstfacsha_out = rstfac
 
-         CALL LeafTemp (ipatch,1,deltim   ,csoilc    ,dewmx      ,htvp       ,&
+         CALL LeafTemp (ipatch,1,deltim ,csoilc    ,dewmx      ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
                  effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
                  hhti       ,trda       ,trdm      ,trop       ,gradm      ,&
