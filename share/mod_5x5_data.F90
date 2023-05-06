@@ -2,6 +2,30 @@
 
 module mod_5x5_data
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Reading data in netcdf files by 5 degree blocks.   
+   !
+   !    The file name gives the boundaries of the block. 
+   !    For example, file "RG_65_75_60_80.URB2010.nc" stores data in region 
+   !    from 65N to 60N and 75E to 80E. 
+   !
+   !    Subroutines loop over all 5 degree blocks in simulation region and 
+   !    save data in variables with types of "block_data_xxxxx_xd".
+   ! 
+   !    Notice that:
+   !    1. Latitude in files is from north to south. 
+   !    2. "read_5x5_data_pft" reads data with dimension "pft" and permute 
+   !       dimension (lon,lat,pft) in files to (pft,lon,lat) in variables.
+   !    3. "read_5x5_data_time" reads data with dimension "time" 
+   !       at given time.
+   !    4. "read_5x5_data_pft_time" reads data with dimension "pft" and "time" 
+   !       at given time and permute dimension (lon,lat,pft) in files 
+   !       to (pft,lon,lat) in variables.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+
    implicit none
 
    INTEGER, parameter :: N_PFT_modis = 16
@@ -133,8 +157,8 @@ contains
       nxglb = grid%nlon
       nyglb = grid%nlat
 
-      nxbox = nxglb / 360
-      nybox = nyglb / 180
+      nxbox = nxglb / 360 * 5
+      nybox = nyglb / 180 * 5
 
       if (p_is_io) then
 
@@ -218,8 +242,8 @@ contains
       nxglb = grid%nlon
       nyglb = grid%nlat
 
-      nxbox = nxglb / 360
-      nybox = nyglb / 180
+      nxbox = nxglb / 360 * 5
+      nybox = nyglb / 180 * 5
 
       if (p_is_io) then
 
@@ -304,8 +328,8 @@ contains
       nxglb = grid%nlon
       nyglb = grid%nlat
 
-      nxbox = nxglb / 360
-      nybox = nyglb / 180
+      nxbox = nxglb / 360 * 5
+      nybox = nyglb / 180 * 5
 
       if (p_is_io) then
 
@@ -393,8 +417,8 @@ contains
       nxglb = grid%nlon
       nyglb = grid%nlat
 
-      nxbox = nxglb / 360
-      nybox = nyglb / 180
+      nxbox = nxglb / 360 * 5
+      nybox = nyglb / 180 * 5
 
       if (p_is_io) then
 
@@ -481,8 +505,8 @@ contains
       nxglb = grid%nlon
       nyglb = grid%nlat
 
-      nxbox = nxglb / 360
-      nybox = nyglb / 180
+      nxbox = nxglb / 360 * 5
+      nybox = nyglb / 180 * 5
 
       if (p_is_io) then
 

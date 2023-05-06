@@ -36,6 +36,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    USE mod_landpc
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:
@@ -63,7 +67,6 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    INTEGER :: itime, ntime, Julian_day, ipatch, ipft
    CHARACTER(LEN=4) ::cx, c2, c3, c4, cyear,c
    integer :: start_year, end_year, YY,nsl, cft
-
 
    landdir = trim(dir_model_landdata) // '/crop/'
 
@@ -115,7 +118,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
       IF (p_is_io) THEN
          lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
-         print *, lndname
+         ! print *, lndname
          CALL ncio_read_block_time (lndname, 'pdrice2', gridcrop, itime, plantdate_rice2)
 
       ENDIF
@@ -195,8 +198,8 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
+      ! print *, lndname
+      ! call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/plantdate_pfts.nc'
@@ -321,8 +324,8 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/fertnitro_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
+      ! print *, lndname
+      ! call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/fertnitro_pfts.nc'

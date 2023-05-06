@@ -2,6 +2,22 @@
 
 MODULE mod_catchment_data
 
+   !--------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Reading preprocessed MERIT Hydro data and generated catchment data in netcdf files.
+   !
+   !    1. If "in_one_file" is false, then the data is orgnized by 5 degree blocks.   
+   !    The file name gives the southwest corner of the block. 
+   !    For example, file "n60e075.nc" stores data in region from 65N to 60N and 75E to 80E, 
+   !    Subroutines loop over all 5 degree blocks in simulation region.
+   ! 
+   !    2. Data is saved in variables with types of "block_data_xxxxx_xd".
+   ! 
+   !    3. Latitude in files is from north to south. 
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+
    IMPLICIT NONE
 
    INTEGER, parameter :: nxhbox = 6000

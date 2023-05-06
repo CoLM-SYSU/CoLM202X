@@ -83,7 +83,9 @@ OBJS_MAIN = \
 				  ../main/orb_coszen.o \
 				  ../main/ThreeDCanopy.o \
 				  ../main/SnowSnicarMod.o \
+				  ../main/snowage.o \
 				  ../main/SnowAlbedo.o \
+				  ../main/AerosolMod.o    \
 				  ../main/ALBEDO.o    \
 				  ../main/snowfraction.o
 

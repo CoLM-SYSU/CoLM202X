@@ -1,7 +1,17 @@
 #include <define.h>
 
-
 MODULE mod_colm_debug
+
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Subroutines show the range of values in block data or vector data.
+   !    
+   !    Notice that:
+   !    1. "check_block_data"  can only be called by IO     processes.
+   !    2. "check_vector_data" can only be called by worker processes.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
 
 #ifdef CLMDEBUG
    IMPLICIT NONE

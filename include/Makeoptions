@@ -19,7 +19,7 @@ MOD_CMD = -module
 #LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 
- FOPTS = -qopenmp -O2 -traceback -r8 -free #-check uninit -check bounds
+ FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
 
  LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 

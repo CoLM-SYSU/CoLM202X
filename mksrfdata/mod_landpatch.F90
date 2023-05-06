@@ -174,11 +174,7 @@ CONTAINS
 
 #ifdef CATCHMENT
             IF (landhru%settyp(iset) == 0) THEN
-#if (defined IGBP_CLASSIFICATION || defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
                types(ipxstt:ipxend) = WATERBODY
-#elif (defined USGS_CLASSIFICATION)
-               types(ipxstt:ipxend) = WATERBODY
-#endif
             ENDIF
 #endif
 

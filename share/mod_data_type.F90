@@ -2,6 +2,13 @@
 
 MODULE mod_data_type
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Definations of data types used in CoLM.
+   !   
+   ! Created by Shupeng Zhang, May 2023
+
    USE precision
 
    ! ---- data types ----

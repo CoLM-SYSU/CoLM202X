@@ -38,6 +38,11 @@ SUBROUTINE aggregation_forest_height ( &
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:

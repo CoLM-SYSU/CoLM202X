@@ -27,6 +27,8 @@ MODULE mod_mapping_pset2grid
       procedure, PRIVATE :: map_4d => map_p2g_4d
       generic, PUBLIC :: map => map_2d, map_3d, map_4d
       
+      procedure, PUBLIC  :: map_split => map_p2g_split_to_3d
+      
       final :: mapping_pset2grid_free_mem
 
    END TYPE mapping_pset2grid_type
@@ -953,6 +955,142 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE map_p2g_4d
+
+   !-----------------------------------------------------
+   SUBROUTINE map_p2g_split_to_3d (this, pdata, settyp, typidx, gdata, spv)
+
+      USE precision
+      USE mod_grid
+      USE mod_data_type
+      USE spmd_task
+      IMPLICIT NONE
+      
+      class (mapping_pset2grid_type) :: this
+      
+      REAL(r8), intent(in) :: pdata (:)
+      INTEGER , intent(in) :: settyp(:)
+      INTEGER , intent(in) :: typidx(:)
+      TYPE(block_data_real8_3d), intent(inout) :: gdata
+
+      REAL(r8), intent(in) :: spv
+
+      ! Local variables
+      INTEGER :: iproc, idest, isrc
+      INTEGER :: ig, ilon, ilat, iloc, iset, ityp, ntyps
+      INTEGER :: xblk, yblk, xloc, yloc
+
+      REAL(r8), allocatable :: gbuff(:)
+      TYPE(pointer_real8_1d), allocatable :: pbuff (:)
+
+      IF (p_is_worker) THEN
+         allocate (pbuff (0:p_np_io-1))
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               allocate (pbuff(iproc)%val  (this%glist(iproc)%ng))
+            ENDIF
+         ENDDO
+      ENDIF
+         
+      IF (p_is_io) THEN
+         CALL flush_block_data (gdata, spv)
+      ENDIF
+
+      ntyps = size(typidx)
+
+      DO ityp = 1, ntyps
+
+         IF (p_is_worker) THEN
+
+            DO iproc = 0, p_np_io-1
+               IF (this%glist(iproc)%ng > 0) THEN
+                  pbuff(iproc)%val(:) = spv
+               ENDIF
+            ENDDO
+
+            DO iset = 1, this%npset
+               IF ((settyp(iset) == typidx(ityp)) .and. (pdata(iset) /= spv)) THEN
+                  DO ig = 1, size(this%gweight(iset)%val)
+                     iproc = this%address(iset)%val(1,ig)
+                     iloc  = this%address(iset)%val(2,ig)
+
+                     IF (pbuff(iproc)%val(iloc) /= spv) THEN
+                        pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
+                           + pdata(iset) * this%gweight(iset)%val(ig)
+                     ELSE
+                        pbuff(iproc)%val(iloc) = &
+                           pdata(iset) * this%gweight(iset)%val(ig)
+                     ENDIF
+                  ENDDO
+               ENDIF
+            ENDDO
+
+#ifdef USEMPI
+            DO iproc = 0, p_np_io-1
+               IF (this%glist(iproc)%ng > 0) THEN
+                  idest = p_address_io(iproc)
+                  CALL mpi_send (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+                     idest, mpi_tag_data, p_comm_glb, p_err) 
+               ENDIF
+            ENDDO
+#endif
+
+         ENDIF
+
+         IF (p_is_io) THEN
+
+            DO iproc = 0, p_np_worker-1
+               IF (this%glist(iproc)%ng > 0) THEN
+
+                  allocate (gbuff (this%glist(iproc)%ng))
+
+#ifdef USEMPI
+                  isrc = p_address_worker(iproc)
+                  CALL mpi_recv (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
+                     isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+                  gbuff = pbuff(0)%val
+#endif
+               
+                  DO ig = 1, this%glist(iproc)%ng
+                     IF (gbuff(ig) /= spv) THEN
+                        ilon = this%glist(iproc)%ilon(ig)
+                        ilat = this%glist(iproc)%ilat(ig)
+                        xblk = this%grid%xblk (ilon)
+                        yblk = this%grid%yblk (ilat)
+                        xloc = this%grid%xloc (ilon)
+                        yloc = this%grid%yloc (ilat)
+
+                        IF (gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) /= spv) THEN
+                           gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) = &
+                              gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) + gbuff(ig) 
+                        ELSE
+                           gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) = gbuff(ig)
+                        ENDIF
+                     ENDIF
+                  ENDDO
+
+                  deallocate (gbuff)
+               ENDIF
+
+            ENDDO
+
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+      ENDDO
+
+      IF (p_is_worker) THEN
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+         deallocate (pbuff)
+      ENDIF
+
+   END SUBROUTINE map_p2g_split_to_3d
 
    !-----------------------------------------------------
    SUBROUTINE mapping_pset2grid_free_mem (this)
