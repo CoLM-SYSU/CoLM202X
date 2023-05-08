@@ -1,10 +1,11 @@
 #include <define.h>
-! -----------------------------------------------------------------------------------------
+
 SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
            vf_gravels_s,vf_om_s,vf_sand_s,vf_clay_s,vf_silt_s,vf_pores_s,&
            vf_quartz_mineral_s,BD_mineral_s,k_solids,&
            csol,kdry,ksat_u,ksat_f)
 
+!------------------------------------------------------------------------------------------
 ! DESCRIPTION:
 ! Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes
 ! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)

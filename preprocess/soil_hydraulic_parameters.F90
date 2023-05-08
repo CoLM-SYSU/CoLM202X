@@ -117,7 +117,7 @@ SUBROUTINE CampBC(BD,SAND,CLAY,SOM,SOC,phi,psi_s,lambda_s)
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
 use precision
-use par_fitting
+use mod_utils
 
 IMPLICIT NONE
 real(r8), intent(in) :: BD   ! bulk density (g cm-3)
@@ -391,7 +391,7 @@ SUBROUTINE VGM(BD,sand,clay,SOM,SOC,TOPSOIL,phi,theta_r_l,alpha_l,n_l,L_l,&
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
 use precision
-use par_fitting
+use mod_utils
 
 IMPLICIT NONE
 

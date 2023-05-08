@@ -47,7 +47,6 @@ OBJS = \
 		 mod_landurban.o \
 		 mod_landpft.o \
 		 mod_landpc.o \
-		 par_fitting.o \
 		 mod_mesh_filter.o \
 		 mod_srfdata_diag.o \
 		 aggregation_percentages.o \
