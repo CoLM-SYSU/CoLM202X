@@ -311,6 +311,13 @@ contains
             a_snow, f_xy_snow, file_hist, 'f_xy_snow', itime_in_file, sumwt, filter, &
             'snow','mm/s')
 
+		 if (DEF_USE_CBL_HEIGHT) then
+         ! atmospheric boundary layer height [m]
+           call flux_map_and_write_2d ( DEF_hist_vars%xy_hpbl, &
+              a_hpbl, f_xy_hpbl, file_hist, 'f_xy_hpbl', itime_in_file, sumwt, filter, &
+              'boundary layer height','m')
+		 endif
+
          ! ------------------------------------------------------------------------------------------
          ! Mapping the fluxes and state variables at patch [numpatch] to grid 
          ! ------------------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
+#include <define.h> 
 
  subroutine groundfluxes (zlnd, zsno, hu, ht, hq,&
+						  hpbl, &
                           us, vs, tm, qm, rhoair, psrf,&
                           ur, thm, th, thv, t_grnd, qg, dqgdT, htvp,&
                           fsno, cgrnd, cgrndl, cgrnds,&
@@ -15,11 +17,16 @@
 ! REVISIONS:
 ! Hua Yuan, 09/2019: removed sigf to be consistant with PFT runs, removed fsena,
 !                    fevpa, renamed z0ma to z0m
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy 
+!					     surface turbulence scheme (LZD2022); 
+!						 make a proper update of um.
 !=======================================================================
 
   use precision
   use PhysicalConstants, only: cpair,vonkar,grav
   use FRICTION_VELOCITY
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_Turbulence_LEddy
   implicit none
 
 !----------------------- Dummy argument --------------------------------
@@ -31,6 +38,7 @@
         hu,       &! observational height of wind [m]
         ht,       &! observational height of temperature [m]
         hq,       &! observational height of humidity [m]
+        hpbl,     &! atmospheric boundary layer height [m]
         us,       &! wind component in eastward direction [m/s]
         vs,       &! wind component in northward direction [m/s]
         tm,       &! temperature at agcm reference height [kelvin] [not used]
@@ -137,8 +145,13 @@
       ITERATION : do iter = 1, niters         ! begin stability iteration
       !----------------------------------------------------------------
          displax = 0.
-         call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+		 if (DEF_USE_CBL_HEIGHT) then
+           call moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+                              ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+         else
+           call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+		 endif
 
          tstar = vonkar/fh*dth
          qstar = vonkar/fq*dqh
@@ -163,6 +176,9 @@
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
+		   if (DEF_USE_CBL_HEIGHT) then
+		     um = max(ur,0.5)
+		   endif
          endif
 
          if (obuold*obu < 0.) nmozsgn = nmozsgn+1

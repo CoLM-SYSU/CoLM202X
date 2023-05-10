@@ -166,9 +166,17 @@ MODULE mod_namelist
          'linear ','linear ','linear ','nearest', &
          'NULL   ','linear ','coszen ','linear ' /)
 
+      CHARACTER(len=256) :: CBL_fprefix        = 'TPHWL6Hrly/clmforc.cruncep.V4.c2011.0.5d.TPQWL.'
+      CHARACTER(len=256) :: CBL_vname          = 'blh'
+      CHARACTER(len=256) :: CBL_tintalgo       = 'linear'
+      INTEGER            :: CBL_dtime          = 21600
+      INTEGER            :: CBL_offset         = 10800
    END TYPE nl_forcing_type
 
    TYPE (nl_forcing_type) :: DEF_forcing
+   
+   !CBL height
+   LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
 
    ! ----- history variables -----
    TYPE history_var_type
@@ -187,7 +195,9 @@ MODULE mod_namelist
 #ifdef OzoneStress
       LOGICAL :: xy_ozone     = .true.
 #endif
-                                       
+
+      LOGICAL :: xy_hpbl      = .true.
+
       LOGICAL :: taux         = .true. 
       LOGICAL :: tauy         = .true. 
       LOGICAL :: fsena        = .true. 
@@ -550,6 +560,9 @@ CONTAINS
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
 
+         DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
+
+
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
@@ -697,7 +710,10 @@ CONTAINS
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
       call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
+      !zhongwang wei, 20221231: add option to read CBL height
+      call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+ 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -748,6 +764,12 @@ CONTAINS
          CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
       ENDDO
+      call mpi_bcast (DEF_forcing%CBL_fprefix,      256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_forcing%CBL_vname,        256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_forcing%CBL_tintalgo,     256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_dtime,          1, mpi_integer,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_forcing%CBL_offset,         1, mpi_integer,   p_root, p_comm_glb, p_err)
+      
       CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
@@ -789,7 +811,9 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xy_solarin  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xy_rain     ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xy_snow     ,  set_defaults)
-      
+
+      CALL sync_hist_vars_one (DEF_hist_vars%xy_hpbl     ,  set_defaults)
+
       CALL sync_hist_vars_one (DEF_hist_vars%taux        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tauy        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fsena       ,  set_defaults)

@@ -98,6 +98,8 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
          forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
          forc_rhoair(i),                                                     &
+       ! CBL height forcing 
+         forc_hpbl(i),                                                       &
 
        ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
          z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &

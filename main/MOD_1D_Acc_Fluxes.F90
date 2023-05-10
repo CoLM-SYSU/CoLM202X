@@ -16,6 +16,7 @@ module MOD_1D_Acc_Fluxes
    real(r8), allocatable :: a_pbot   (:)
    real(r8), allocatable :: a_frl    (:)
    real(r8), allocatable :: a_solarin(:)
+   real(r8), allocatable :: a_hpbl   (:)
 
    real(r8), allocatable :: a_taux   (:)
    real(r8), allocatable :: a_tauy   (:)
@@ -317,6 +318,7 @@ contains
             allocate (a_pbot   (numpatch))
             allocate (a_frl    (numpatch))
             allocate (a_solarin(numpatch))
+            allocate (a_hpbl   (numpatch))
 
             allocate (a_taux      (numpatch))
             allocate (a_tauy      (numpatch))
@@ -618,6 +620,7 @@ contains
             deallocate (a_pbot   )
             deallocate (a_frl    )
             deallocate (a_solarin)
+            deallocate (a_hpbl   )
 
             deallocate (a_taux      )
             deallocate (a_tauy      )
@@ -923,6 +926,7 @@ contains
             a_pbot   (:) = spval
             a_frl    (:) = spval
             a_solarin(:) = spval
+            a_hpbl   (:) = spval
 
             a_taux    (:) = spval
             a_tauy    (:) = spval
@@ -1220,6 +1224,8 @@ contains
       use MOD_1D_Forcing
       use MOD_1D_Fluxes
       use FRICTION_VELOCITY
+      USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_Turbulence_LEddy
       use mod_colm_debug
       use GlobalVars
 #ifdef LATERAL_FLOW
@@ -1248,6 +1254,7 @@ contains
       !---------------------------------------------------------------------
       integer  ib, jb, i, j
       real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
+	  real(r8) hpbl ! atmospheric boundary layer height [m]
       real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf
       real(r8) obu,fh2m,fq2m
       real(r8) um,thvstar,beta,zii,wc,wc2
@@ -1270,6 +1277,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
+			if (DEF_USE_CBL_HEIGHT) then
+              call acc1d (forc_hpbl , a_hpbl )
+		    endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1654,11 +1664,20 @@ contains
                   wc = (-grav*r_ustar(i)*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
+                  if (DEF_USE_CBL_HEIGHT) then
+                    um = max(ur,0.5)
+				  endif
                endif
 
                obu = zldis/r_zol(i)
-               call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                  obu,um,r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+               if (DEF_USE_CBL_HEIGHT) then
+			     hpbl = forc_hpbl(i)
+                 call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um, hpbl, r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+		       else
+                 call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um,r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+		       endif
 
                ! bug found by chen qiying 2013/07/01 
                r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)

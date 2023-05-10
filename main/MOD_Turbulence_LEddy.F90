@@ -1,6 +1,4 @@
-#include <define.h>
-
-MODULE FRICTION_VELOCITY
+MODULE MOD_Turbulence_LEddy
 
 !-----------------------------------------------------------------------
  use precision
@@ -8,9 +6,8 @@ MODULE FRICTION_VELOCITY
  SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: moninobuk
-  public :: moninobukm
-  public :: moninobukini
+  public :: moninobuk_leddy
+  public :: moninobukm_leddy
 
 
 ! PRIVATE MEMBER FUNCTIONS:
@@ -23,17 +20,25 @@ MODULE FRICTION_VELOCITY
 
 !-----------------------------------------------------------------------
 
- subroutine moninobuk(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,&
-                      ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+ subroutine moninobuk_leddy(hu,ht,hq,displa,z0m,z0h,z0q,obu,um, hpbl, &
+                            ustar,fh2m,fq2m,fm10m,fm,fh,fq)
 
 ! ======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
 !
-! calculation of friction velocity, relation for potential temperatur
-! and humidity profiles of surface boundary layer.
-! the scheme is based on the work of Zeng et al. (1998):
-! Intercomparison of bulk aerodynamic algorithms for the computation
-! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
+! Implement the LZD2022 scheme (Liu et al., 2022), which accounts for large
+! eddy effects by inlcuding the boundary layer height in the phim function,
+! to compute friction velocity, relation for potential temperature and
+! humidity profiles of surface boundary layer.
+!
+! References:
+! [1] Zeng et al., 1998: Intercomparison of bulk aerodynamic algorithms
+!     for the computation of sea surface fluxes using TOGA CORE and TAO data. 
+!     J. Climate, 11: 2628-2644.
+! [2] Liu et al., 2022: A surface flux estimation scheme accounting for
+!     large-eddy effects for land surface modeling. GRL, 49, e2022GL101754.
+!
+! Created by Shaofeng Liu, May 5, 2023
+!
 ! ======================================================================
 
   use precision
@@ -51,6 +56,7 @@ MODULE FRICTION_VELOCITY
   real(r8), INTENT(in) :: z0q      ! roughness length, latent heat [m]
   real(r8), INTENT(in) :: obu      ! monin-obukhov length (m)
   real(r8), INTENT(in) :: um       ! wind speed including the stablity effect [m/s]
+  real(r8), INTENT(in) :: hpbl     ! atmospheric boundary layer height [m]
 
   real(r8), INTENT(out) :: ustar   ! friction velocity [m/s]
   real(r8), INTENT(out) :: fh2m    ! relation for temperature at 2m
@@ -63,9 +69,12 @@ MODULE FRICTION_VELOCITY
 !------------------------ local variables ------------------------------
 
   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
-  real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
+  real(r8) zetam, &
+           zetam2 ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
+  real(r8) Bm     ! Coefficient of the LZD2022 scheme: Bm = 0.0047*(-hpbl/L) + 0.1854
+  real(r8) Bm2    ! max(Bm, 0.2722)
 
 ! real(r8), external :: psi    ! stability function for unstable case
 !-----------------------------------------------------------------------
@@ -74,12 +83,22 @@ MODULE FRICTION_VELOCITY
 ! wind profile
         zldis=hu-displa
         zeta=zldis/obu
-        zetam=1.574
-        if(zeta < -zetam)then           ! zeta < -1
-          fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+!
+! Begin: Shaofeng Liu, 2023.05.05
+!
+		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
+		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
+		Bm2    = max(Bm, 0.2722)
+		zetam2 = min(zetam, -0.13)
+
+        if(zeta < zetam2)then           ! zeta < zetam2
+          fm    = log(zetam2*obu/z0m) - psi(1,zetam2) &
+                + psi(1,z0m/obu) - 2.*Bm2 * ( (-zeta)**(-0.5)-(-zetam2)**(-0.5) )
           ustar = vonkar*um / fm
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
+!
+! End: Shaofeng Liu, 2023.05.05
+!
+        else if(zeta < 0.)then          ! zetam2 <= zeta < 0
           fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
           ustar = vonkar*um / fm
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
@@ -165,11 +184,11 @@ MODULE FRICTION_VELOCITY
            fq2m = log(obu/z0q)+5.-5.*z0q/obu+(5.*log(zeta)+zeta-1.)
         endif
 
- end subroutine moninobuk
+ end subroutine moninobuk_leddy
 
 
- subroutine moninobukm(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,displat,z0mt,&
-                       ustar,fh2m,fq2m,htop,fmtop,fm,fh,fq,fht,fqt,phih)
+ subroutine moninobukm_leddy(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,displat,z0mt, hpbl, &
+                             ustar,fh2m,fq2m,htop,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! ======================================================================
 !
@@ -187,6 +206,9 @@ MODULE FRICTION_VELOCITY
 ! REVISIONS:
 ! Hua Yuan, 09/2017: adapted from moninobuk FUNCTION to calculate canopy top
 !                    fm, fq and phih for roughness sublayer u/k profile calculation
+! Shaofeng Liu, 05/2023: implement the LZD2022 scheme (Liu et al., 2022), which 
+!						 accounts for large eddy effects by including the 
+!                        boundary leyer height in the phim function. 
 ! ======================================================================
 
   use precision
@@ -207,6 +229,7 @@ MODULE FRICTION_VELOCITY
   real(r8), INTENT(in) :: htop     ! canopy top height of the top layer [m]
   real(r8), INTENT(in) :: obu      ! monin-obukhov length (m)
   real(r8), INTENT(in) :: um       ! wind speed including the stablity effect [m/s]
+  real(r8), INTENT(in) :: hpbl     ! atmospheric boundary layer height [m]
 
   real(r8), INTENT(out) :: ustar   ! friction velocity [m/s]
   real(r8), INTENT(out) :: fh2m    ! relation for temperature at 2m
@@ -222,9 +245,12 @@ MODULE FRICTION_VELOCITY
 !------------------------ local variables ------------------------------
 
   real(r8) zldis  ! reference height "minus" zero displacement heght [m]
-  real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
+  real(r8) zetam, &
+           zetam2 ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
+  real(r8) Bm     ! Coefficient of the LZD2022 scheme: Bm = 0.0047*(-hpbl/L) + 0.1854
+  real(r8) Bm2    ! max(Bm, 0.2722)
 
 ! real(r8), external :: psi    ! stability function for unstable case
 !-----------------------------------------------------------------------
@@ -233,12 +259,22 @@ MODULE FRICTION_VELOCITY
 ! wind profile
         zldis=hu-displa
         zeta=zldis/obu
-        zetam=1.574
-        if(zeta < -zetam)then           ! zeta < -1
-          fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+!
+! Begin: Shaofeng Liu, 2023.05.05
+!
+		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
+		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
+		Bm2    = max(Bm, 0.2722)
+		zetam2 = min(zetam, -0.13)
+
+        if(zeta < zetam2)then           ! zeta < zetam2
+          fm    = log(zetam2*obu/z0m) - psi(1,zetam2) &
+                + psi(1,z0m/obu) - 2.*Bm2 * ( (-zeta)**(-0.5)-(-zetam2)**(-0.5) )
           ustar = vonkar*um / fm
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
+!
+! End: Shaofeng Liu, 2023.05.05
+!
+        else if(zeta < 0.)then          ! zetam2 <= zeta < 0
           fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
           ustar = vonkar*um / fm
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
@@ -370,189 +406,10 @@ MODULE FRICTION_VELOCITY
            fqt = log(obu/z0q)+5.-5.*z0q/obu+(5.*log(zeta)+zeta-1.)
         endif
 
- end subroutine moninobukm
-
-!-----------------------------------------------------------------------
- real(r8) function kmoninobuk(displa,obu,ustar,z)
-!
-! !DESCRIPTION:
-! k profile calculation for bare ground case
-!
-! Created by Hua Yuan, 09/2017
-!
-  use precision
-  use PhysicalConstants, only : vonkar
-  implicit none
-
-! ---------------------- dummy argument --------------------------------
-
-  real(r8), INTENT(in) :: displa   ! displacement height [m]
-  real(r8), INTENT(in) :: obu      ! monin-obukhov length (m)
-  real(r8), INTENT(in) :: ustar    ! friction velocity [m/s]
-  real(r8), INTENT(in) :: z        ! height of windspeed [m]
-
-!------------------------ local variables ------------------------------
-
-  real(r8) zldis  ! reference height "minus" zero displacement heght [m]
-  real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
-  real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
-  real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-  real(r8) phih   ! phi(h), similarity function for sensible heat
-
-        if ( z .le. displa ) then
-           kmoninobuk = 0.
-           return
-        end if
-
-        ! for canopy top phi(h)
-        zldis=z-displa  ! ht-displa
-        zeta=zldis/obu
-        zetat=0.465
-        if(zeta < -zetat)then           ! zeta < -1
-           phih = 0.9*vonkar**(1.333)*(-zeta)**(-0.333)
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
-           phih = (1. - 16.*zeta)**(-0.5)
-        else if(zeta <= 1.)then         !  0 <= ztea <= 1
-           phih = 1. + 5.*zeta
-        else                            !  1 < zeta, phi=5+zeta
-           phih = 5. + zeta
-        endif
-
-        kmoninobuk = vonkar*(z-displa)*ustar/phih
-
- end function kmoninobuk
-
-!-----------------------------------------------------------------------
- real(r8) function kintmoninobuk(displa,z0h,obu,ustar,ztop,zbot)
-!
-! !DESCRIPTION:
-! k profile integration for bare ground case
-!
-! Created by Hua Yuan, 09/2017
-!
-
-  use precision
-  use PhysicalConstants, only : vonkar
-  implicit none
-
-! ---------------------- dummy argument --------------------------------
-
-  real(r8), INTENT(in) :: displa   ! displacement height [m]
-  real(r8), INTENT(in) :: z0h      ! roughness length, sensible heat [m]
-  real(r8), INTENT(in) :: obu      ! monin-obukhov length (m)
-  real(r8), INTENT(in) :: ustar    ! friction velocity [m/s]
-  real(r8), INTENT(in) :: ztop     ! height top
-  real(r8), INTENT(in) :: zbot     ! height bottom
-
-!------------------------ local variables ------------------------------
-
-  real(r8) zldis  ! reference height "minus" zero displacement heght [m]
-  real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
-  real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
-  real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-
-  REAL(r8) :: fh_top, fh_bot         ! integral of profile function for heat
-
-        zldis=ztop-displa
-        zeta=zldis/obu
-        zetat=0.465
-        if(zeta < -zetat)then           ! zeta < -1
-          fh_top = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-        else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
-        else                            !  1 < zeta, phi=5+zeta
-          fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
-        endif
-
-        zldis=zbot-displa
-        zeta=zldis/obu
-        zetat=0.465
-        if(zeta < -zetat)then           ! zeta < -1
-          fh_bot = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
-        else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
-        else                            !  1 < zeta, phi=5+zeta
-          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
-        endif
-
-        kintmoninobuk = 1./(vonkar/(fh_top-fh_bot)*ustar)
-
- END FUNCTION kintmoninobuk
+ end subroutine moninobukm_leddy
 
 
- subroutine moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0m,um,obu)
-
-! ======================================================================
-! Original author : Yongjiu Dai, September 15, 1999
-!
-! initialzation of Monin-Obukhov length,
-! the scheme is based on the work of Zeng et al. (1998):
-! Intercomparison of bulk aerodynamic algorithms for the computation
-! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
-!
-! REVISIONS:
-! Shaofeng Liu, 05/2023: make a different initialization of um for the
-!	                     LargeEddy surface turbulence scheme (LZD2022)
-! ======================================================================
-
-   use precision
-   use PhysicalConstants, only : grav, vonkar
-   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-   implicit none
-
-! Dummy argument
-  real(r8), INTENT(in) :: ur    ! wind speed at reference height [m/s]
-  real(r8), INTENT(in) :: thm   ! intermediate variable (tm+0.0098*ht)
-  real(r8), INTENT(in) :: th    ! potential temperature [kelvin]
-  real(r8), INTENT(in) :: thv   ! virtual potential temperature (kelvin)
-  real(r8), INTENT(in) :: dth   ! diff of virtual temp. between ref. height and surface
-  real(r8), INTENT(in) :: dthv  ! diff of vir. poten. temp. between ref. height and surface
-  real(r8), INTENT(in) :: dqh   ! diff of humidity between ref. height and surface
-  real(r8), INTENT(in) :: zldis ! reference height "minus" zero displacement heght [m]
-  real(r8), INTENT(in) :: z0m   ! roughness length, momentum [m]
-
-  real(r8), INTENT(out) :: um   ! wind speed including the stablity effect [m/s]
-  real(r8), INTENT(out) :: obu  ! monin-obukhov length (m)
-
-! Local
-  real(r8) wc     ! convective velocity [m/s]
-  real(r8) rib    ! bulk Richardson number
-  real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-
-!-----------------------------------------------------------------------
-! Initial values of u* and convective velocity
-
-        wc=0.5
-        if(dthv >= 0.)then
-          um=max(ur,0.1)
-        else
-          um=sqrt(ur*ur+wc*wc)
-		  if (DEF_USE_CBL_HEIGHT) then
-           um=max(ur,0.5)
-		  endif
-        endif
-
-        rib=grav*zldis*dthv/(thv*um*um)
-
-        if(rib >= 0.)then      ! neutral or stable
-          zeta = rib*log(zldis/z0m)/(1.-5.*min(rib,0.19))
-          zeta = min(2.,max(zeta,1.e-6))
-        else                   ! unstable
-          zeta = rib*log(zldis/z0m)
-          zeta = max(-100.,min(zeta,-1.e-6))
-        endif
-        obu=zldis/zeta
-
- end subroutine moninobukini
-
-
-
+ 
  real(r8) function psi(k,zeta)
 
 !=======================================================================
@@ -575,6 +432,6 @@ MODULE FRICTION_VELOCITY
  end function psi
 
 
-END MODULE FRICTION_VELOCITY
+END MODULE MOD_Turbulence_LEddy
 ! --------- EOP ------------
 

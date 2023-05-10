@@ -31,6 +31,7 @@ MODULE MOD_2D_Forcing
    type(block_data_real8_2d) :: forc_xy_hgt_t  ! observational height of temperature [m]
    type(block_data_real8_2d) :: forc_xy_hgt_q  ! observational height of humidity [m]
    type(block_data_real8_2d) :: forc_xy_rhoair ! air density [kg/m3]
+   type(block_data_real8_2d) :: forc_xy_hpbl   ! atmospheric boundary layer height [m]
 
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Forcing
@@ -71,7 +72,7 @@ CONTAINS
          call allocate_block_data (grid, forc_xy_hgt_t ) ! observational height of temperature [m]
          call allocate_block_data (grid, forc_xy_hgt_q ) ! observational height of humidity [m]
          call allocate_block_data (grid, forc_xy_rhoair) ! air density [kg/m3]
-
+         call allocate_block_data (grid, forc_xy_hpbl  ) ! atmospheric boundary layer height [m]
       end if
 
    END SUBROUTINE allocate_2D_Forcing

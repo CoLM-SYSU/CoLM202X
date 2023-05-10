@@ -51,6 +51,7 @@ MODULE LEAF_temperature_PC
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
+              hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
  
@@ -76,13 +77,17 @@ MODULE LEAF_temperature_PC
 ! https://doi.org/10.1016/j.agrformet.2019.02.006
 !
 ! REVISIONS:
-!
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
   USE precision
   USE GlobalVars
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE FRICTION_VELOCITY
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_Turbulence_LEddy
   USE ASSIM_STOMATA_conductance
 #ifdef PLANT_HYDRAULIC_STRESS
   USE PlantHydraulic, only : PlantHydraulicStress_twoleaf
@@ -196,6 +201,8 @@ MODULE LEAF_temperature_PC
         gs0sun(npft),           &!
         gs0sha(npft)
 #endif
+  REAL(r8), intent(in) :: &
+        hpbl        ! atmospheric boundary layer height [m]
 
   REAL(r8), dimension(npft), intent(inout) :: &
         tl,         &! leaf temperature [K]
@@ -842,9 +849,15 @@ MODULE LEAF_temperature_PC
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
 
-          CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
-                          displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
-                          htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+          if (DEF_USE_CBL_HEIGHT) then	
+             CALL moninobukm_leddy(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+                                  displa_lay(toplay),z0m_lay(toplay), hpbl, ustar,fh2m,fq2m, &
+                                  htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+          else
+             CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+                            displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
+                            htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+          endif
  
 ! Aerodynamic resistance
           ! 09/16/2017:
@@ -1532,6 +1545,9 @@ MODULE LEAF_temperature_PC
              wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
              wc2 = beta*beta*(wc*wc)
              um = sqrt(ur*ur+wc2)
+			 if (DEF_USE_CBL_HEIGHT) then
+              um = max(ur,0.5)
+			 endif
           ENDIF
  
           IF(obuold*obu .lt. 0.) nmozsgn = nmozsgn+1
