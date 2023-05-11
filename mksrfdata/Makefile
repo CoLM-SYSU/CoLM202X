@@ -7,7 +7,7 @@ INCLUDE_DIR = -I../include -I../share -I${NETCDF_INC}
 VPATH = ../share
 
 # name of executable
-EXECUTABLE = mksrfdata.x
+EXECUTABLE = mksrfdata_laiv2.x
 
 ####################################################################
 .DEFAULT :
@@ -19,6 +19,7 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/spmd_task.o \
 					../share/GlobalVars.o \
 					../share/LC_Const.o  \
+					../share/UrbanLCZ_Const.o \
 					../share/mod_namelist.o \
 					../share/timemanager.o   \
 					../share/mod_utils.o \
@@ -62,6 +63,7 @@ OBJS = \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
 		 aggregation_topography.o \
+		 aggregation_urban.o \
 		 mksrfdata.o
 
 ####################################################################

@@ -58,7 +58,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       ! parameters for LUCY
       INTEGER , allocatable :: urbanlucy(:)       ! LUCY region id
 
-      REAL(r8), allocatable :: urbanpop (:)       ! population density [person/km2]
+      REAL(r8), allocatable :: popden(:)          ! population density [person/km2]
 
       INTEGER , allocatable :: lweek_holiday(:,:) ! week holidays
       REAL(r8), allocatable :: lwdh_prof    (:,:) ! Diurnal traffic flow profile [-]
@@ -112,31 +112,32 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/POP.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'POP_DEN'     , landurban, urbanpop   )
+      CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, popden        )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/LUCY_country_id.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, urbanlucy  )
+      CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, urbanlucy     )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/WT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'WT_ROOF', landurban, wtroof)
+      CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, wtroof        )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/HT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'HT_ROOF'     , landurban, htroof     )
+      CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, htroof        )
 
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Water.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, urbanwaterpct)
+      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, urbanwaterpct )
 
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Tree.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, urbantreepct )
+      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, urbantreepct  )
 
       lndname = trim(dir_landdata)//'/urban/2005/htop_urb.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, urbantreetop )
+      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, urbantreetop  )
+
 #else
       ! READ in urban data
       ! write(cyear,'(i4.4)') lc_year
@@ -167,6 +168,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tkwall   )
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_roof, landurban, tkimproad)
 
+!TODO: add point case
 !#ifdef USE_POINT_DATA
 !#ifdef USE_OBS_PARA
 
@@ -204,34 +206,36 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 !#endif
 #endif
 
+      !TODO: duplication
+      !TODO: 2005 -> year, 变量区分time变化和时间不变量
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/POP.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'POP_DEN'     , landurban, urbanpop   )
+      CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, popden        )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/LUCY_country_id.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, urbanlucy  )
+      CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, urbanlucy     )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/WT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'WT_ROOF', landurban, wtroof)
+      CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, wtroof        )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/HT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'HT_ROOF'     , landurban, htroof     )
+      CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, htroof        )
 
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Water.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, urbanwaterpct)
+      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, urbanwaterpct )
 
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Tree.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, urbantreepct )
+      CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, urbantreepct  )
 
       lndname = trim(dir_landdata)//'/urban/2005/htop_urb.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, urbantreetop )
+      CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, urbantreetop  )
 
       lndname = trim("/stu01/dongwz/data/CLMrawdata/urban_5x5/LUCY_rawdata.nc")
       print*, lndname
@@ -260,7 +264,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                      fix_holiday (:,u) = lfix_holiday (lucy_id,:)
                   ENDIF
 
-                  popcell(u)      = urbanpop      (u) !population density [person/km2]
+                  pop_den(u)      = popden        (u) !population density [person/km2]
                   froof(u)        = wtroof        (u) !roof fractional cover
                   hroof(u)        = htroof        (u) !average building height
 
@@ -293,8 +297,8 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                   t_roommax(u)    = tbuildingmax  (u) !maximum temperature of inner room [K]
                   t_roommin(u)    = tbuildingmin  (u) !minimum temperature of inner room [K]
 #else
-                  t_roommax(u)    = 373.16                !maximum temperature of inner room [K]
-                  t_roommin(u)    = 180.00                !minimum temperature of inner room [K]
+                  t_roommax(u)    = 373.16            !maximum temperature of inner room [K]
+                  t_roommin(u)    = 180.00            !minimum temperature of inner room [K]
 #endif
 #else
                   ! read in LCZ constants

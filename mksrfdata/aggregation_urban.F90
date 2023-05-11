@@ -6,7 +6,7 @@
 ! regional or point cases.
 ! ======================================================
 
-SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
+SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
 
    USE precision
@@ -46,13 +46,7 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
    TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
-   ! Local Variables
-   CHARACTER(len=*), parameter :: DATASRC = "MOD"
-   CHARACTER(len=*), parameter :: Title   = "Land surface model input urban data"
-   CHARACTER(len=*), parameter :: Authors = "Dai YJ group at Sun Yat-sen University"
-   CHARACTER(len=*), parameter :: Address = "School of Atmospheric Sciences, Sun Yat-sen University, Zhuhai, China"
-   CHARACTER(len=*), parameter :: Email   = "yuanh25@mail.sysu.edu.cn"
-
+   ! dimensions
    INTEGER, parameter :: rid  = 33
    INTEGER, parameter :: ns   = 2
    INTEGER, parameter :: nr   = 2
@@ -70,22 +64,23 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
    TYPE(block_data_real8_2d) :: usai
 
    ! output variables
-   INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: LUCY_coun_
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_urbwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: wt_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: ht_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: urb_lai
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: urb_sai
+   INTEGER , allocatable, dimension(:) :: LUCY_coun
+   REAL(r8), allocatable, dimension(:) :: LUCY_coun_
+   REAL(r8), allocatable, dimension(:) :: pop_den
+   REAL(r8), allocatable, dimension(:) :: pct_tree
+   REAL(r8), allocatable, dimension(:) :: htop_urb
+   REAL(r8), allocatable, dimension(:) :: pct_urbwt
+   REAL(r8), allocatable, dimension(:) :: wt_roof
+   REAL(r8), allocatable, dimension(:) :: ht_roof
+   REAL(r8), allocatable, dimension(:) :: lai_urb
+   REAL(r8), allocatable, dimension(:) :: sai_urb
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: area
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tc
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: urwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop
+   !TODO: check the below
+   REAL(r8), allocatable, dimension(:,:)   :: area
+   REAL(r8), allocatable, dimension(:,:,:) :: wgt_top
+   REAL(r8), allocatable, dimension(:,:,:) :: tc
+   REAL(r8), allocatable, dimension(:,:,:) :: urwt
+   REAL(r8), allocatable, dimension(:,:,:) :: htop
 
    INTEGER , allocatable, dimension(:) :: LUCY_reg_one
    REAL(r8), allocatable, dimension(:) :: area_one
@@ -110,7 +105,7 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: area_urb
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_tbd
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_tb
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_hd
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: area_md
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: hwr_can
@@ -239,15 +234,15 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    IF (p_is_worker) THEN
 
-      allocate (pop_urb (numurban))
+      allocate (pop_den (numurban))
 
-      pop_urb (:) = 0.
+      pop_den (:) = 0.
 
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
-         pop_urb(iurban) = sum(pop_one * area_one) / sum(area_one)
+         pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
 
 #ifdef USEMPI
@@ -258,12 +253,12 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/POP.nc'
    CALL ncio_create_file_vector (landname, landurban)
    CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-   CALL ncio_write_vector (landname, 'POP_DEN', 'urban', landurban, pop_urb, 1)
+   CALL ncio_write_vector (landname, 'POP_DEN', 'urban', landurban, pop_den, 1)
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/POP.nc'
-   CALL srfdata_map_and_write (pop_urb, landurban%settyp, typindex, m_urb2diag, &
+   CALL srfdata_map_and_write (pop_den, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one')
 #endif
 
@@ -497,6 +492,7 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    ! ******* LAI, SAI *******
    landdir = TRIM(dir_rawdata)//'/lai_5x5/'
+   !TODO: rename Ur
    suffix  = 'UrLAI_v5'//trim(c5year)
 
    IF (p_is_io) THEN
@@ -505,11 +501,11 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
    IF (p_is_worker) THEN
-      allocate (urb_lai (numurban))
-      allocate (urb_sai (numurban))
+      allocate (lai_urb (numurban))
+      allocate (sai_urb (numurban))
 
-      urb_lai(:) = 0.
-      urb_sai(:) = 0.
+      lai_urb(:) = 0.
+      sai_urb(:) = 0.
    ENDIF
 
    DO imonth = 1, 12
@@ -535,9 +531,10 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
                data_r8_2d_in2 = ulai   , data_r8_2d_out2 = ulai_one   , &
                data_r8_2d_in3 = usai   , data_r8_2d_out3 = slai_one   )
 
-            urb_lai(iurban) = sum(ulai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
+            !TODO: check below
+            lai_urb(iurban) = sum(ulai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
                               sum(gfcc_tc_one * area_one, mask = gfcc_tc_one<=0)
-            urb_sai(iurban) = sum(slai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
+            sai_urb(iurban) = sum(slai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
                               sum(gfcc_tc_one * area_one, mask = gfcc_tc_one<=0)
          ENDDO
 
@@ -549,12 +546,12 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/urban_LAI_'//trim(cmonth)//'.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'TREE_LAI', 'urban', landurban, urb_lai, 1)
+      CALL ncio_write_vector (landname, 'TREE_LAI', 'urban', landurban, lai_urb, 1)
 
       landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/urban_SAI_'//trim(cmonth)//'.nc'
       CALL ncio_create_file_vector (landname, landurban)
       CALL ncio_define_dimension_vector (landname, landurban, 'urban')
-      CALL ncio_write_vector (landname, 'TREE_SAI', 'urban', landurban, urb_sai, 1)
+      CALL ncio_write_vector (landname, 'TREE_SAI', 'urban', landurban, sai_urb, 1)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -601,35 +598,35 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    IF (p_is_worker) THEN
 
-      allocate ( area_urb      (3, numurban))
-      allocate ( area_tbd         (numurban))
-      allocate ( area_hd          (numurban))
-      allocate ( area_md          (numurban))
-      allocate ( hwr_can          (numurban))
-      allocate ( wt_rd            (numurban))
-      allocate ( em_roof          (numurban))
-      allocate ( em_wall          (numurban))
-      allocate ( em_imrd          (numurban))
-      allocate ( em_perd          (numurban))
-      allocate ( th_roof          (numurban))
-      allocate ( th_wall          (numurban))
-      allocate ( tb_min           (numurban))
-      allocate ( tb_max           (numurban))
-      allocate ( tk_wgt     (ulev, numurban))
-      allocate ( cv_wgt     (ulev, numurban))
-      allocate ( cv_roof    (ulev, numurban))
-      allocate ( cv_wall    (ulev, numurban))
-      allocate ( cv_imrd    (ulev, numurban))
-      allocate ( tk_roof    (ulev, numurban))
-      allocate ( tk_wall    (ulev, numurban))
-      allocate ( tk_imrd    (ulev, numurban))
-      allocate ( alb_roof (nr, ns, numurban))
-      allocate ( alb_wall (nr, ns, numurban))
-      allocate ( alb_imrd (nr, ns, numurban))
-      allocate ( alb_perd (nr, ns, numurban))
+      allocate (area_urb      (3, numurban))
+      allocate (area_tb          (numurban))
+      allocate (area_hd          (numurban))
+      allocate (area_md          (numurban))
+      allocate (hwr_can          (numurban))
+      allocate (wt_rd            (numurban))
+      allocate (em_roof          (numurban))
+      allocate (em_wall          (numurban))
+      allocate (em_imrd          (numurban))
+      allocate (em_perd          (numurban))
+      allocate (th_roof          (numurban))
+      allocate (th_wall          (numurban))
+      allocate (tb_min           (numurban))
+      allocate (tb_max           (numurban))
+      allocate (tk_wgt     (ulev, numurban))
+      allocate (cv_wgt     (ulev, numurban))
+      allocate (cv_roof    (ulev, numurban))
+      allocate (cv_wall    (ulev, numurban))
+      allocate (cv_imrd    (ulev, numurban))
+      allocate (tk_roof    (ulev, numurban))
+      allocate (tk_wall    (ulev, numurban))
+      allocate (tk_imrd    (ulev, numurban))
+      allocate (alb_roof (nr, ns, numurban))
+      allocate (alb_wall (nr, ns, numurban))
+      allocate (alb_imrd (nr, ns, numurban))
+      allocate (alb_perd (nr, ns, numurban))
 
       area_urb (:,:)   = 0.
-      area_tbd (:)     = 0.
+      area_tb  (:)     = 0.
       area_hd  (:)     = 0.
       area_md  (:)     = 0.
       hwr_can  (:)     = 0.
@@ -703,7 +700,7 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
          ENDDO
 
-         area_tbd (iurban) = area_urb(1,iurban) / sumarea
+         area_tb  (iurban) = area_urb(1,iurban) / sumarea
          area_hd  (iurban) = area_urb(2,iurban) / sumarea
          area_md  (iurban) = area_urb(3,iurban) / sumarea
          hwr_can  (iurban) = hwr_can   (iurban) / sumarea
@@ -746,19 +743,19 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
    CALL ncio_define_dimension_vector (landname, landurban, 'numrad'  , nr)
    CALL ncio_define_dimension_vector (landname, landurban, 'ulev'    , ulev)
 
-   CALL ncio_write_vector (landname, 'PCT_TBD'       , 'urban', landurban, area_tbd, 1)
-   CALL ncio_write_vector (landname, 'PCT_HD'        , 'urban', landurban, area_hd , 1)
-   CALL ncio_write_vector (landname, 'PCT_MD'        , 'urban', landurban, area_md , 1)
-   CALL ncio_write_vector (landname, 'CANYON_HWR'    , 'urban', landurban, hwr_can , 1)
-   CALL ncio_write_vector (landname, 'WTROAD_PERV'   , 'urban', landurban, wt_rd   , 1)
-   CALL ncio_write_vector (landname, 'EM_ROOF'       , 'urban', landurban, em_roof , 1)
-   CALL ncio_write_vector (landname, 'EM_WALL'       , 'urban', landurban, em_wall , 1)
-   CALL ncio_write_vector (landname, 'EM_IMPROAD'    , 'urban', landurban, em_imrd , 1)
-   CALL ncio_write_vector (landname, 'EM_PERROAD'    , 'urban', landurban, em_perd , 1)
-   CALL ncio_write_vector (landname, 'THICK_ROOF'    , 'urban', landurban, th_roof , 1)
-   CALL ncio_write_vector (landname, 'THICK_WALL'    , 'urban', landurban, th_wall , 1)
-   CALL ncio_write_vector (landname, 'T_BUILDING_MIN', 'urban', landurban, tb_min  , 1)
-   CALL ncio_write_vector (landname, 'T_BUILDING_MAX', 'urban', landurban, tb_max  , 1)
+   CALL ncio_write_vector (landname, 'PCT_TB'        , 'urban', landurban, area_tb, 1)
+   CALL ncio_write_vector (landname, 'PCT_HD'        , 'urban', landurban, area_hd, 1)
+   CALL ncio_write_vector (landname, 'PCT_MD'        , 'urban', landurban, area_md, 1)
+   CALL ncio_write_vector (landname, 'CANYON_HWR'    , 'urban', landurban, hwr_can, 1)
+   CALL ncio_write_vector (landname, 'WTROAD_PERV'   , 'urban', landurban, wt_rd  , 1)
+   CALL ncio_write_vector (landname, 'EM_ROOF'       , 'urban', landurban, em_roof, 1)
+   CALL ncio_write_vector (landname, 'EM_WALL'       , 'urban', landurban, em_wall, 1)
+   CALL ncio_write_vector (landname, 'EM_IMPROAD'    , 'urban', landurban, em_imrd, 1)
+   CALL ncio_write_vector (landname, 'EM_PERROAD'    , 'urban', landurban, em_perd, 1)
+   CALL ncio_write_vector (landname, 'THICK_ROOF'    , 'urban', landurban, th_roof, 1)
+   CALL ncio_write_vector (landname, 'THICK_WALL'    , 'urban', landurban, th_wall, 1)
+   CALL ncio_write_vector (landname, 'T_BUILDING_MIN', 'urban', landurban, tb_min , 1)
+   CALL ncio_write_vector (landname, 'T_BUILDING_MAX', 'urban', landurban, tb_max , 1)
 
    CALL ncio_write_vector (landname, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, 1)
    CALL ncio_write_vector (landname, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, 1)
@@ -780,7 +777,7 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Urban.nc'
-   CALL srfdata_map_and_write (area_tbd, landurban%settyp, typindex, m_urb2diag, &
+   CALL srfdata_map_and_write (area_tb, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Urban', compress = 0, write_mode = 'one')
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Urban.nc'
@@ -804,14 +801,14 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 
    IF (p_is_worker) THEN
       IF (allocated(LUCY_coun)) deallocate (LUCY_coun)
-      IF (allocated(pop_urb  )) deallocate (pop_urb  )
+      IF (allocated(pop_den  )) deallocate (pop_den  )
       IF (allocated(pct_tree )) deallocate (pct_tree )
       IF (allocated(htop_urb )) deallocate (htop_urb )
       IF (allocated(pct_urbwt)) deallocate (pct_urbwt)
       IF (allocated(wt_roof  )) deallocate (wt_roof  )
       IF (allocated(ht_roof  )) deallocate (ht_roof  )
-      IF (allocated(urb_lai  )) deallocate (urb_lai  )
-      IF (allocated(urb_sai  )) deallocate (urb_sai  )
+      IF (allocated(lai_urb  )) deallocate (lai_urb  )
+      IF (allocated(sai_urb  )) deallocate (sai_urb  )
 #ifndef USE_LCZ
       IF (allocated(area_urb )) deallocate (area_urb )
       IF (allocated(hwr_can  )) deallocate (hwr_can  )
@@ -839,4 +836,4 @@ SUBROUTINE makeurbandata (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
-END SUBROUTINE makeurbandata
+END SUBROUTINE aggregation_urban

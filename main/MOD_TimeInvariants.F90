@@ -304,7 +304,7 @@ SAVE
 
 #if (defined URBAN_MODEL)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
-     CALL READ_URBTimeInvars (file_restart)
+     CALL READ_UrbanTimeInvars (file_restart)
 #endif
 
 #ifdef CLMDEBUG
@@ -453,7 +453,7 @@ SAVE
 
 #if (defined URBAN_MODEL)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
-     CALL WRITE_URBTimeInvars (file_restart)
+     CALL WRITE_UrbanTimeInvars (file_restart)
 #endif
 
    end subroutine WRITE_TimeInvariants

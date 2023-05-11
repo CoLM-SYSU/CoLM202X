@@ -330,11 +330,6 @@ PROGRAM mksrfdata
    CALL srfdata_diag_init (dir_landdata)
 #endif
 
-#ifdef URBAN_MODEL
-   CALL makeurbandata (dir_rawdata, srf_diag_dir, 2005, &
-                        grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
-#endif
-
 #ifdef BGC
    call aggregation_NDEP            (gndep, dir_rawdata, dir_landdata)
 #if (defined CROP)
@@ -366,10 +361,11 @@ PROGRAM mksrfdata
 
    CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
-! #ifdef URBAN_MODEL
-!    CALL makeurbandata (dir_rawdata, '/stu01/dongwz/urban_diag/output', 2005, &
-!                         grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
-! #endif
+#ifdef URBAN_MODEL
+   CALL aggregation_urban (dir_rawdata, srf_diag_dir, 2005, &
+                           grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+#endif
+
 
    ! ................................................................
    ! 4. Free memories.
