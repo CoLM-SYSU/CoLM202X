@@ -62,6 +62,7 @@ OBJS = \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
 		 aggregation_topography.o \
+		 mod_region_clip.o \
 		 mksrfdata.o
 
 ####################################################################

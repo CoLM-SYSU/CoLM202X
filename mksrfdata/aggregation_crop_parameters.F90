@@ -36,6 +36,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    USE mod_landpc
 #endif
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:
@@ -63,6 +67,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    INTEGER :: itime, ntime, Julian_day, ipatch, ipft
    CHARACTER(LEN=4) ::cx, c2, c3, c4, cyear,c
    integer :: start_year, end_year, YY,nsl, cft
+
+#ifdef SrfdataDiag
+   INTEGER :: typcrop(N_CFT), typpft(N_CFT), ityp
+#endif
 
    landdir = trim(dir_model_landdata) // '/crop/'
 
@@ -154,6 +162,13 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'plantdate_rice2_patches', 'patch', landpatch, plantdate_rice2_patches, 1)
+
+#ifdef SrfdataDiag
+      typcrop = (/(ityp, ityp = 1, N_CFT)/)
+      lndname = trim(dir_model_landdata) // '/diag/plantdate_rice2_patch.nc'
+      CALL srfdata_map_and_write (plantdate_rice2_patches, cropclass, typcrop, m_patch2diag, &
+         -1.0e36_r8, lndname, 'plantdate_rice2', compress = 1, write_mode = 'one')
+#endif
    ENDDO
 
 
@@ -282,6 +297,12 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    CALL ncio_write_vector (lndname_out, 'plantdate_pfts', 'pft', landpft, plantdate_pfts, 1)
 
+#ifdef SrfdataDiag
+   typpft  = (/(ityp, ityp = N_PFT, N_PFT+N_CFT-1)/)
+   lndname = trim(dir_model_landdata) // '/diag/plantdate_pft.nc'
+   CALL srfdata_map_and_write (plantdate_pfts, landpft%settyp, typpft, m_pft2diag, &
+      -1.0e36_r8, lndname, 'plantdate', compress = 1, write_mode = 'one')
+#endif
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -410,6 +431,12 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    CALL ncio_write_vector (lndname_out, 'fertnitro_pfts', 'pft', landpft, fertnitro_pfts, 1)
 
+#ifdef SrfdataDiag
+   typpft  = (/(ityp, ityp = N_PFT, N_PFT+N_CFT-1)/)
+   lndname = trim(dir_model_landdata) // '/diag/fertnitro_pft.nc'
+   CALL srfdata_map_and_write (fertnitro_pfts, landpft%settyp, typpft, m_pft2diag, &
+      -1.0e36_r8, lndname, 'fertnitro', compress = 1, write_mode = 'one')
+#endif
 
 
 

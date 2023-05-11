@@ -67,6 +67,8 @@ PROGRAM mksrfdata
 #ifdef SrfdataDiag
    USE mod_srfdata_diag, only : gdiag, srfdata_diag_init
 #endif
+   
+   USE mod_region_clip
 
 
    IMPLICIT NONE
@@ -100,6 +102,17 @@ PROGRAM mksrfdata
 #ifdef SinglePoint
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
 #endif
+
+   IF (DEF_srfdata_region_clip) THEN
+      
+      CALL srfdata_region_clip (DEF_dir_landdata_in, DEF_dir_landdata)
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      CALL spmd_exit
+#endif
+      CALL exit()
+   ENDIF
 
    dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata

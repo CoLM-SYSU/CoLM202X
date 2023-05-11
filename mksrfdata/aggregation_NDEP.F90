@@ -30,6 +30,10 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
    USE LC_Const
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:
@@ -48,6 +52,10 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    CHARACTER(LEN=4) :: cyear
    integer :: start_year, end_year, YY
 
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+   CHARACTER(len=256) :: varname
+#endif
 
    landdir = trim(dir_model_landdata) // '/NDEP/'
 
@@ -137,6 +145,14 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'NDEP_patches', 'patch', landpatch, NDEP_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/NDEP_patch.nc'
+      varname = 'NDEP_' // trim(cyear)
+      CALL srfdata_map_and_write (NDEP_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
    ENDDO
 
 
