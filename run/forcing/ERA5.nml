@@ -41,9 +41,9 @@
    DEF_forcing%vname    = 't2m' 'q' 'sp' 'mtpr' 'u10' 'v10' 'msdwswrf' 'msdwlwrf'
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
 
-   CBL_fprefix        = 'boundary_layer_height/ERA5'
-   CBL_vname          = 'blh'
-   CBL_tintalgo       = 'linear'
-   CBL_dtime          = 3600
-   CBL_offset         = 3600
+   DEF_forcing%CBL_fprefix        = 'boundary_layer_height/ERA5'
+   DEF_forcing%CBL_vname          = 'blh'
+   DEF_forcing%CBL_tintalgo       = 'linear'
+   DEF_forcing%CBL_dtime          = 3600
+   DEF_forcing%CBL_offset         = 3600
 /
