@@ -73,6 +73,7 @@ MODULE MOD_Turbulence_LEddy
            zetam2 ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
+  real(r8) zetazi ! hpbl/obu, dimensionless height used in the LZD2022 scheme
   real(r8) Bm     ! Coefficient of the LZD2022 scheme: Bm = 0.0047*(-hpbl/L) + 0.1854
   real(r8) Bm2    ! max(Bm, 0.2722)
 
@@ -86,6 +87,13 @@ MODULE MOD_Turbulence_LEddy
 !
 ! Begin: Shaofeng Liu, 2023.05.05
 !
+        zetazi = min(5.e3, max(5.*hu, hpbl))/obu
+        if(zetazi >= 0.) then     !stable
+           zetazi = min(200.,max(zetazi,1.e-5))
+        else                    !unstable
+           zetazi = max(-1.e4,min(zetazi,-1.e-5))
+        endif
+
 		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
 		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
 		Bm2    = max(Bm, 0.2722)
@@ -249,6 +257,7 @@ MODULE MOD_Turbulence_LEddy
            zetam2 ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
+  real(r8) zetazi ! hpbl/obu, dimensionless height used in the LZD2022 scheme
   real(r8) Bm     ! Coefficient of the LZD2022 scheme: Bm = 0.0047*(-hpbl/L) + 0.1854
   real(r8) Bm2    ! max(Bm, 0.2722)
 
@@ -262,6 +271,13 @@ MODULE MOD_Turbulence_LEddy
 !
 ! Begin: Shaofeng Liu, 2023.05.05
 !
+        zetazi = min(5.e3, max(5.*hu, hpbl))/obu
+        if(zetazi >= 0.) then     !stable
+           zetazi = min(200.,max(zetazi,1.e-5))
+        else                    !unstable
+           zetazi = max(-1.e4,min(zetazi,-1.e-5))
+        endif
+
 		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
 		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
 		Bm2    = max(Bm, 0.2722)
