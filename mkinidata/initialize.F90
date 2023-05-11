@@ -17,6 +17,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    use spmd_task
    use mod_pixel
    use mod_landpatch
+#ifdef URBAN_MODEL
+   use mod_landurban
+#endif
    use PhysicalConstants
    use MOD_TimeInvariants
    use MOD_TimeVariables
@@ -111,7 +114,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    integer  :: year, jday                ! Julian day and seconds
    INTEGER  :: month, mday
 
-   integer  :: i,j,ipatch,nsl,ps,pe,ivt,m  ! indices
+   integer  :: i,j,ipatch,nsl,ps,pe,ivt,m, u  ! indices
    INTEGER  :: hs, he
 
    integer :: Julian_8day
@@ -136,7 +139,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    CALL allocate_TimeInvariants
    CALL allocate_TimeVariables
-
+   print*, count(landpatch%settyp==13)
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
@@ -207,7 +210,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! read global tree top height from nc file
    CALL HTOP_readin (dir_landdata)
-
+#ifdef URBAN_MODEL
+   CALL Urban_readin (dir_landdata)
+#endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
    ! ................................
@@ -509,6 +514,10 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
+
+#ifdef URBAN_MODEL
+   CALL UrbanLAI_readin_nc (year, month, dir_landdata)
+#endif
 #ifdef CLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
    CALL check_vector_data ('SAI ', tsai)
@@ -567,7 +576,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       do i = 1, numpatch
          m = patchclass(i)
-         print*,'before IniTimeVar',i
+         ! print*,'before IniTimeVar',i
+         ! print*, 'patch class is ',m
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
@@ -644,8 +654,79 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
+#ifdef URBAN_MODEL
+         IF (m == URBAN) THEN
+            u = patch2urban(i)
+
+            print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
+            lwsun         (u) = 0.   !net longwave radiation of sunlit wall
+            lwsha         (u) = 0.   !net longwave radiation of shaded wall
+            lgimp         (u) = 0.   !net longwave radiation of impervious road
+            lgper         (u) = 0.   !net longwave radiation of pervious road
+            lveg          (u) = 0.   !net longwave radiation of vegetation [W/m2]
+
+            t_roofsno   (:,u) = 283. !temperatures of roof layers
+            t_wallsun   (:,u) = 283. !temperatures of sunlit wall layers
+            t_wallsha   (:,u) = 283. !temperatures of shaded wall layers
+            t_gimpsno   (:,u) = 283. !temperatures of impervious road layers
+            t_gpersno   (:,u) = 283. !soil temperature [K]
+            t_lakesno   (:,u) = 283. !lake soil temperature [K]
+
+            wice_roofsno(:,u) = 0.   !ice lens [kg/m2]
+            wice_gimpsno(:,u) = 0.   !ice lens [kg/m2]
+            wice_gpersno(:,u) = 0.   !ice lens [kg/m2]
+            wice_lakesno(:,u) = 0.   !ice lens [kg/m2]
+            wliq_roofsno(:,u) = 0.   !liqui water [kg/m2]
+            wliq_gimpsno(:,u) = 0.   !liqui water [kg/m2]
+            wliq_gpersno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
+            wliq_lakesno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
+
+            wliq_soisno (: ,i) = 0.
+            wliq_soisno (:1,i) = wliq_roofsno(:1,u)*froof(u)
+            wliq_soisno (: ,i) = wliq_soisno(: ,i) + wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
+            wliq_soisno (:1,i) = wliq_soisno(:1,i) + wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+
+            snowdp_roof   (u) = 0.   !snow depth [m]
+            snowdp_gimp   (u) = 0.   !snow depth [m]
+            snowdp_gper   (u) = 0.   !snow depth [m]
+            snowdp_lake   (u) = 0.   !snow depth [m]
+
+            z_sno_roof  (:,u) = 0.   !node depth of roof [m]
+            z_sno_gimp  (:,u) = 0.   !node depth of impervious [m]
+            z_sno_gper  (:,u) = 0.   !node depth pervious [m]
+            z_sno_lake  (:,u) = 0.   !node depth lake [m]
+
+            dz_sno_roof (:,u) = 0.   !interface depth of roof [m]
+            dz_sno_gimp (:,u) = 0.   !interface depth of impervious [m]
+            dz_sno_gper (:,u) = 0.   !interface depth pervious [m]
+            dz_sno_lake (:,u) = 0.   !interface depth lake [m]
+
+            t_room        (u) = 283. !temperature of inner building [K]
+            troof_inner   (u) = 283. !temperature of inner roof [K]
+            twsun_inner   (u) = 283. !temperature of inner sunlit wall [K]
+            twsha_inner   (u) = 283. !temperature of inner shaded wall [K]
+            Fhac          (u) = 0.   !sensible flux from heat or cool AC [W/m2]
+            Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
+            Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
+
+            ! CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
+            !    alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
+            !    rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
+            !    fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
+            !    scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
+            !    sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
+            !    fwsun(u),dfwsun(u),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
+            !    swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
+
+         ENDIF
+#endif
          print*,'after IniTimeVar',i
       enddo
+
+      ! for urban debug
+      ! print*, patch2urb
+      ! print*, numurban
+      ! print*, count(landpatch%settyp==13)
 
       do i = 1, numpatch
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
@@ -675,7 +756,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #else
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
-
    IF (p_is_worker) THEN
       IF (numelm > 0) THEN
          riverheight(:) = 0
@@ -694,7 +774,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       ENDIF
    ENDIF
 #endif
-
    ! ...............................................................
    ! 2.6 Write out the model variables for restart run [histTimeVar]
    ! ...............................................................
@@ -702,9 +781,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef CLMDEBUG
    call check_TimeVariables ()
 #endif
-
    CALL WRITE_TimeVariables (idate, casename, dir_restart)
-
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -715,7 +792,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! --------------------------------------------------
    ! Deallocates memory for CLM 1d [numpatch] variables
    ! --------------------------------------------------
-
    CALL deallocate_TimeInvariants
    CALL deallocate_TimeVariables
 

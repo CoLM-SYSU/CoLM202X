@@ -41,6 +41,12 @@ MODULE GlobalVars
    INTEGER, parameter :: N_CFT    = 64
 #endif
 
+#ifdef USE_LCZ
+   INTEGER, parameter :: N_URB    = 10
+#else
+   INTEGER, parameter :: N_URB    = 3
+#endif
+
    ! vertical layer number
    INTEGER, parameter :: maxsnl   = -5
    INTEGER, parameter :: nl_soil  = 10
@@ -89,7 +95,7 @@ MODULE GlobalVars
    integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
 
    !TODO: need moved when coupling urban model
-   INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
+   !INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
 
    REAL(r8) :: z_soi (1:nl_soil)       !node depth [m]
    REAL(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]

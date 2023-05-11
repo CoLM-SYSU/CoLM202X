@@ -15,6 +15,9 @@ USE MOD_PCTimeInvars
 #ifdef BGC
 USE MOD_BGCTimeInvars
 #endif
+#ifdef URBAN_MODEL
+USE MOD_UrbanTimeInvars
+#endif
 IMPLICIT NONE
 SAVE
 ! -----------------------------------------------------------------
@@ -182,6 +185,10 @@ SAVE
      CALL allocate_BGCTimeInvars
 #endif
 
+#ifdef URBAN_MODEL
+     CALL allocate_UrbanTimeInvars
+#endif
+
   end if
 
   END SUBROUTINE allocate_TimeInvariants
@@ -295,6 +302,11 @@ SAVE
      CALL READ_BGCTimeInvars (file_restart)
 #endif
 
+#if (defined URBAN_MODEL)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
+     CALL READ_URBTimeInvars (file_restart)
+#endif
+
 #ifdef CLMDEBUG
      call check_TimeInvariants ()
 #endif
@@ -343,6 +355,11 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake', nl_lake)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snowp1',   -maxsnl+1     )
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
      call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass) !
      call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype ) !
@@ -434,6 +451,11 @@ SAVE
      CALL WRITE_BGCTimeInvars (file_restart)
 #endif
 
+#if (defined URBAN_MODEL)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
+     CALL WRITE_URBTimeInvars (file_restart)
+#endif
+
    end subroutine WRITE_TimeInvariants
 
   SUBROUTINE deallocate_TimeInvariants ()
@@ -518,6 +540,9 @@ SAVE
      CALL deallocate_BGCTimeInvars
 #endif
 
+#ifdef URBAN_MODEL
+     CALL deallocate_UrbanTimeInvars
+#endif
   END SUBROUTINE deallocate_TimeInvariants
 
 #ifdef CLMDEBUG
