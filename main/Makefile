@@ -139,6 +139,7 @@ OBJS =  \
 		  ASSIM_STOMATA_conductance.o \
 		  PlantHydraulic.o            \
 		  FRICTION_VELOCITY.o         \
+		  MOD_Turbulence_LEddy.o      \
 		  OzoneMod.o                  \
 		  LEAF_temperature.o          \
 		  LEAF_temperature_PC.o       \
