@@ -12,6 +12,7 @@
    DEF_hist_vars%xy_solarin   = .true.
    DEF_hist_vars%xy_rain      = .true.
    DEF_hist_vars%xy_snow      = .true.
+   DEF_hist_vars%xy_hpbl      = .true.
 
    DEF_hist_vars%taux         = .true. 
    DEF_hist_vars%tauy         = .true. 

@@ -325,6 +325,7 @@ CONTAINS
          call allocate_block_data (grid, f_xy_rain   )  ! rain [mm/s]
          call allocate_block_data (grid, f_xy_snow   )  ! snow [mm/s]
          call allocate_block_data (grid, f_xy_ozone  )  ! ozone concentration [mol/mol]
+		 call allocate_block_data (grid, f_xy_hpbl   )  ! height of planetary boundary layer [m]
 
       end if
 
