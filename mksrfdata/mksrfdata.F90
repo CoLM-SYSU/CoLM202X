@@ -367,6 +367,12 @@ PROGRAM mksrfdata
 #endif
 
 
+#ifdef URBAN_MODEL
+   CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &
+                           grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+#endif
+
+
    ! ................................................................
    ! 4. Free memories.
    ! ................................................................

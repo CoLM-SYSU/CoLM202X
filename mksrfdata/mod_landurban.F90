@@ -129,12 +129,13 @@ CONTAINS
                   data_i4_2d_in2 = data_urb_regid, data_i4_2d_out2 = rbuff)
 
 #ifndef USE_LCZ
-               !??? 作用？
+               ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
+               ! so the these points are assigned by the 3(medium density), or can define by ueser
                where (ibuff < 1 .or. ibuff > 3)
                   ibuff = 3
                END where
 #else
-               !??? 作用？
+               ! Same for NCAR, fill the gap LCZ class of urban path if LCZ is non-urban
                where (ibuff > 10)
                   ibuff = 9
                END where
@@ -156,7 +157,8 @@ CONTAINS
 
                !???may have bugs below
                CALL quicksort (npxl, types, order)
-               CALL quicksort (npxl, regid, order)
+               ! CALL quicksort (npxl, regid, order)
+               (ipxstt:ipxend) = regid(order)
 
                !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
@@ -183,6 +185,7 @@ CONTAINS
                   urbregid(iurban) = regid(ipxl)
                ENDDO
                !???
+               !mod_landhru.F90
                ipxend_(jpatch) = ipxend
 
                deallocate (types)

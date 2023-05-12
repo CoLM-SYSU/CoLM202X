@@ -20,6 +20,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
  USE mod_landpatch, only : numpatch
+ USE mod_landurban, only : patch2urban
  USE mod_namelist, only : DEF_forcing
  USE mod_forcing, only : forcmask
  use omp_lib
@@ -39,8 +40,13 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
   real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
   integer :: i, m
+  logical :: run_urban
 
 ! ======================================================================
+
+#ifdef URBAN_MODEL
+  run_urban = True
+#endif
 
 #ifdef OPENMP
 !$OMP PARALLEL DO NUM_THREADS(OPENMP) &
@@ -164,6 +170,14 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          if(patchtype(i) .eq. 0)then
             CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
          end if
+#endif
+
+#ifdef URBAN_MODEL
+         if(run_urban .and. m==URBAN) THEN
+           u = path2urban(i)
+           print*, hroof(U)
+           !CALL URBAN_CLMAIN()
+         endif
 #endif
       ENDDO
 #ifdef OPENMP

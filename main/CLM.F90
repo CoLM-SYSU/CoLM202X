@@ -185,6 +185,11 @@ PROGRAM CLM
    CALL map_patch_to_pc
 #endif
 
+#ifdef URBAN_MODEL
+   call pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   CALL map_patch_to_urban
+#endif
+
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    CALL elm_vector_init ()
 #ifdef CATCHMENT

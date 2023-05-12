@@ -19,6 +19,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    use mod_landpatch
 #ifdef URBAN_MODEL
    use mod_landurban
+   USE UrbanALBEDO
 #endif
    use PhysicalConstants
    use MOD_TimeInvariants
@@ -657,10 +658,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 #ifdef URBAN_MODEL
          IF (m == URBAN) THEN
-
             u = patch2urban(i)
-            print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
 
+            print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
             lwsun         (u) = 0.   !net longwave radiation of sunlit wall
             lwsha         (u) = 0.   !net longwave radiation of shaded wall
             lgimp         (u) = 0.   !net longwave radiation of impervious road
@@ -711,14 +711,14 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
             Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
 
-            ! CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
-            !    alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
-            !    rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
-            !    fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
-            !    scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
-            !    sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
-            !    fwsun(u),dfwsun(u),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
-            !    swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
+            CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
+               alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
+               rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
+               fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
+               scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
+               sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lakesno(1,u),&
+               fwsun(u),dfwsun(u),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
+               swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
 
          ENDIF
 #endif
