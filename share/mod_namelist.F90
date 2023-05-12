@@ -20,7 +20,7 @@ MODULE mod_namelist
 
    INTEGER :: DEF_nx_blocks = 72
    INTEGER :: DEF_ny_blocks = 36
-   INTEGER :: DEF_PIO_groupsize = 6
+   INTEGER :: DEF_PIO_groupsize = 12
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
@@ -82,6 +82,10 @@ MODULE mod_namelist
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
 
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
+
+   ! ----- use surface data from a large region -----
+   LOGICAL :: DEF_srfdata_region_clip = .false.
+   CHARACTER(len=256) :: DEF_dir_landdata_in = 'path/to/landdata'
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -546,9 +550,13 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
          DEF_file_water_table_depth,      &
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
-         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
-         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
+
+         DEF_srfdata_region_clip,         &
+         DEF_dir_landdata_in,             &
+
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
@@ -690,6 +698,9 @@ CONTAINS
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
+      
+      call mpi_bcast (DEF_srfdata_region_clip , 1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_landdata_in, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)

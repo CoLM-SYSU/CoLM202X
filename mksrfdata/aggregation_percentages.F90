@@ -60,9 +60,10 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    REAL(r8) :: sumarea
 #ifdef SrfdataDiag
 #ifdef CROP
-   INTEGER :: typindex(0:N_PFT+N_CFT-1)   
+   INTEGER :: typcrop(N_CFT), ityp
+   INTEGER :: typpft(0:N_PFT+N_CFT-1)   
 #else
-   INTEGER :: typindex(0:N_PFT-1)   
+   INTEGER :: typpft(0:N_PFT-1)   
 #endif
 #endif
       
@@ -148,13 +149,13 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', landpft, pct_pfts, 1)
 #ifdef SrfdataDiag
 #ifdef CROP
-   typindex = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
+   typpft = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
 #else
-   typindex = (/(ipft, ipft = 0, N_PFT-1)/)
+   typpft = (/(ipft, ipft = 0, N_PFT-1)/)
 #endif
    lndname = trim(dir_model_landdata)//'/diag/pct_pfts.nc'
-   CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typindex, m_pft2diag, &
-      -1.0e36_r8, lndname, 'pctpfts', compress = 0, write_mode = 'one')
+   CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
+      -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
 #endif
 #else
    allocate (SITE_pctpfts(numpft))
@@ -174,6 +175,13 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctcrop, 1)
+
+#ifdef SrfdataDiag
+   typcrop = (/(ityp, ityp = 1, N_CFT)/)
+   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch.nc'
+   CALL srfdata_map_and_write (pctcrop, cropclass, typcrop, m_patch2diag, &
+      -1.0e36_r8, lndname, 'pctcrop', compress = 1, write_mode = 'one')
+#endif
 #else
    allocate (SITE_croptyp(numpatch))
    allocate (SITE_pctcrop(numpatch))

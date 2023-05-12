@@ -61,7 +61,7 @@ SUBROUTINE aggregation_lakedepth ( &
    TYPE (block_data_real8_2d) :: lakedepth
    REAL(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
 #ifdef SrfdataDiag
-   INTEGER :: typindex(1) = (/17/)
+   INTEGER :: typlake(1) = (/17/)   
 #endif
 
    landdir = trim(dir_model_landdata) // '/lakedepth/'
@@ -150,8 +150,8 @@ SUBROUTINE aggregation_lakedepth ( &
 
 #ifdef SrfdataDiag
    lndname = trim(dir_model_landdata)//'/diag/lakedepth.nc'
-   CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typindex, m_patch2diag, &
-      -1.0e36_r8, lndname, 'lakedepth', compress = 0, write_mode = 'one')
+   CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
+      -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
 #endif
 #else
    SITE_lakedepth = lakedepth_patches(1)

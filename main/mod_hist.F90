@@ -178,7 +178,7 @@ contains
 
       end if
 
-      select case (trim(DEF_HIST_FREQ))
+      select case (trim(adjustl(DEF_HIST_FREQ)))
       case ('TIMESTEP')
          lwrite = .true.
       case ('HOURLY')
@@ -189,6 +189,8 @@ contains
          lwrite = isendofmonth(idate, deltim)       
       case ('YEARLY')
          lwrite = isendofyear(idate, deltim)
+      case default
+         write(*,*) 'Warning : Please use one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for history frequency.'
       end select
 
       if (lwrite)  then
@@ -206,6 +208,8 @@ contains
             write(cdate,'(i4.4,"-",i2.2)') idate(1), month
          elseif ( trim(groupby) == 'DAY' ) then
             write(cdate,'(i4.4,"-",i2.2,"-",i2.2)') idate(1), month, day
+         else
+            write(*,*) 'Warning : Please use one of DAY/MONTH/YEAR for history group.'
          end if
 
 #if(defined CaMa_Flood)
