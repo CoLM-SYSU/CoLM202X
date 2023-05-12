@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef URBAN_MODEL
 ! ======================================================
 ! Aggreate/screen high-resolution urban dataset
 ! to a lower resolutioin/subset data, suitable for running
@@ -201,7 +202,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/LUCY_country_id.nc'
+   landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
    CALL srfdata_map_and_write (LUCY_coun_, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one')
 #endif
@@ -242,6 +243,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
+         ! deallocate pop_one...
          pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
 
@@ -257,7 +259,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/POP.nc'
+   landname  = trim(dir_srfdata) // '/diag/POP.nc'
    CALL srfdata_map_and_write (pop_den, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'POP_DEN', compress = 0, write_mode = 'one')
 #endif
@@ -328,12 +330,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Tree.nc'
+   landname  = trim(dir_srfdata) // '/diag/PCT_Tree.nc'
    CALL srfdata_map_and_write (pct_tree, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'pct_tree', compress = 0, write_mode = 'one')
 
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/htop_urb.nc'
+   landname  = trim(dir_srfdata) // '/diag/htop_urb.nc'
    CALL srfdata_map_and_write (htop_urb, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'URBAN_TREE_TOP', compress = 0, write_mode = 'one')
 #endif
@@ -383,7 +385,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Water.nc'
+   landname  = trim(dir_srfdata) // '/diag/PCT_Water.nc'
    CALL srfdata_map_and_write (pct_urbwt, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Water', compress = 0, write_mode = 'one')
 #endif
@@ -476,12 +478,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/ht_roof.nc'
+   landname  = trim(dir_srfdata) // '/diag/ht_roof.nc'
    CALL srfdata_map_and_write (ht_roof, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'HT_ROOF', compress = 0, write_mode = 'one')
 
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/wt_roof.nc'
+   landname  = trim(dir_srfdata) // '/diag/wt_roof.nc'
    CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'WT_ROOF', compress = 0, write_mode = 'one')
 #endif
@@ -532,10 +534,10 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
                data_r8_2d_in3 = usai   , data_r8_2d_out3 = slai_one   )
 
             !TODO: check below
-            lai_urb(iurban) = sum(ulai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
-                              sum(gfcc_tc_one * area_one, mask = gfcc_tc_one<=0)
-            sai_urb(iurban) = sum(slai_one * gfcc_tc_one * area_one, mask = gfcc_tc_one<=0) / &
-                              sum(gfcc_tc_one * area_one, mask = gfcc_tc_one<=0)
+            lai_urb(iurban) = sum(ulai_one * gfcc_tc_one * area_one) / &
+                              sum(gfcc_tc_one * area_one)
+            sai_urb(iurban) = sum(slai_one * gfcc_tc_one * area_one) / &
+                              sum(gfcc_tc_one * area_one)
          ENDDO
 
 #ifdef USEMPI
@@ -771,20 +773,20 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/hwr.nc'
+   landname  = trim(dir_srfdata) // '/diag/hwr.nc'
    CALL srfdata_map_and_write (hwr_can, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'CANYON_HWR', compress = 0, write_mode = 'one')
 
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Urban.nc'
+   landname  = trim(dir_srfdata) // '/diag/PCT_Urban.nc'
    CALL srfdata_map_and_write (area_tb, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Urban', compress = 0, write_mode = 'one')
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Urban.nc'
+   landname  = trim(dir_srfdata) // '/diag/PCT_Urban.nc'
    CALL srfdata_map_and_write (area_hd, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Urban', compress = 0, write_mode = 'one')
    typindex = (/(ityp, ityp = 1, N_URB)/)
-   landname  = trim('/stu01/dongwz/urban_diag') // '/diag_v2/PCT_Urban.nc'
+   landname  = trim(dir_srfdata) // '/diag/PCT_Urban.nc'
    CALL srfdata_map_and_write (area_md, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Urban', compress = 0, write_mode = 'one')
    ! typindex = (/(ityp, ityp = 1, N_URB)/)
@@ -837,3 +839,4 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE aggregation_urban
+#endif

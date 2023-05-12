@@ -43,8 +43,8 @@ CONTAINS
 
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
-      TYPE (block_data_int32_2d) :: data_ur_class
-      TYPE (block_data_int32_2d) :: data_ur_regid
+      TYPE (block_data_int32_2d) :: data_urb_class
+      TYPE (block_data_int32_2d) :: data_urb_regid
       INTEGER, allocatable :: ibuff(:), rbuff(:), types(:), order(:), regid(:)
 
       INTEGER :: ipatch, jpatch, iurban
@@ -76,23 +76,24 @@ CONTAINS
 
          dir_urban = trim(DEF_dir_rawdata) // '/urban'
 
-         CALL allocate_block_data (gurban, data_ur_class)
-         CALL flush_block_data (data_ur_class, 0)
+         !???怎么知道分配多大
+         CALL allocate_block_data (gurban, data_urb_class)
+         CALL flush_block_data (data_urb_class, 0)
 
-         CALL allocate_block_data (gurban, data_ur_regid)
-         CALL flush_block_data (data_ur_regid, 0)
+         CALL allocate_block_data (gurban, data_urb_regid)
+         CALL flush_block_data (data_urb_regid, 0)
 
          suffix = 'URB2005'
 #ifdef USE_LCZ
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_ur_class)
+         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
 #else
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_ur_class)
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'REGION_ID'          , data_ur_regid)
+         CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
+         CALL read_5x5_data (dir_urban, suffix, gurban, 'REGION_ID'          , data_urb_regid)
 #endif
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (gurban, &
-               data_i4_2d_in1 = data_ur_class, data_i4_2d_in2 = data_ur_regid)
+               data_i4_2d_in1 = data_urb_class, data_i4_2d_in2 = data_urb_regid)
 #endif
       end if
 
@@ -118,19 +119,22 @@ CONTAINS
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 13) THEN
 
+               !???
                ie     = landpatch%ielm  (ipatch)
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
                CALL aggregation_request_data (landpatch, ipatch, gurban, &
-                  data_i4_2d_in1 = data_ur_class, data_i4_2d_out1 = ibuff, &
-                  data_i4_2d_in2 = data_ur_regid, data_i4_2d_out2 = rbuff)
+                  data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff, &
+                  data_i4_2d_in2 = data_urb_regid, data_i4_2d_out2 = rbuff)
 
 #ifndef USE_LCZ
+               !??? 作用？
                where (ibuff < 1 .or. ibuff > 3)
                   ibuff = 3
                END where
 #else
+               !??? 作用？
                where (ibuff > 10)
                   ibuff = 9
                END where
@@ -150,12 +154,15 @@ CONTAINS
                allocate (order (ipxstt:ipxend))
                order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
+               !???may have bugs below
                CALL quicksort (npxl, types, order)
                CALL quicksort (npxl, regid, order)
 
+               !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
                mesh(ie)%ilat(ipxstt:ipxend) = mesh(ie)%ilat(order)
 
+               !???
                DO ipxl = ipxstt, ipxend
                   IF (ipxl /= ipxstt) THEN
                      IF (types(ipxl) /= types(ipxl-1)) THEN
@@ -175,6 +182,7 @@ CONTAINS
                   urbclass(iurban) = types(ipxl)
                   urbregid(iurban) = regid(ipxl)
                ENDDO
+               !???
                ipxend_(jpatch) = ipxend
 
                deallocate (types)
@@ -235,7 +243,7 @@ CONTAINS
             landurban%ielm   = pack(landpatch%ielm  , landpatch%settyp == 13)
 
             landurban%settyp = urbclass(1:numurban)
-            urban_reg        = urbregid(1:numurban)
+            urban_reg(:)     = urbregid(1:numurban)
          ENDIF
 
          landurban%nset = numurban

@@ -78,7 +78,6 @@ PROGRAM mksrfdata
 
    CHARACTER(LEN=256) :: dir_rawdata
    CHARACTER(LEN=256) :: dir_landdata
-   CHARACTER(LEN=256) :: srf_diag_dir = '/tera06/yuanhua/srf_diag/output_v1'
    REAL(r8) :: edgen  ! northern edge of grid (degrees)
    REAL(r8) :: edgee  ! eastern edge of grid (degrees)
    REAL(r8) :: edges  ! southern edge of grid (degrees)
@@ -343,26 +342,26 @@ PROGRAM mksrfdata
 #endif
 #endif
 
-   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
 #ifdef USE_DEPTH_TO_BEDROCK
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   !CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
-   CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+   !CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
 #ifdef URBAN_MODEL
-   CALL aggregation_urban (dir_rawdata, srf_diag_dir, 2005, &
+   CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &
                            grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
 #endif
 
