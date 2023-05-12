@@ -158,7 +158,7 @@ CONTAINS
                !???may have bugs below
                CALL quicksort (npxl, types, order)
                ! CALL quicksort (npxl, regid, order)
-               regid(:) = regid(order)
+               (ipxstt:ipxend) = regid(order)
 
                !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
@@ -239,6 +239,7 @@ CONTAINS
             allocate (landurban%ipxstt (numurban))
             allocate (landurban%ipxend (numurban))
             allocate (landurban%ielm   (numurban))
+            allocate (urban_reg        (numurban))
 
             landurban%eindex = pack(landpatch%eindex, landpatch%settyp == 13)
             landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == 13)

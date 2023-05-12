@@ -26,7 +26,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    USE mod_landurban
    USE GlobalVars, only: N_URB
 #ifdef USE_LCZ
-   USE UrbanLCZ_Const, only: rooffrac, roofhgt
+   USE UrbanLCZ_Const, only: wtroof_lcz, htroof_lcz
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -65,25 +65,18 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    TYPE(block_data_real8_2d) :: usai
 
    ! output variables
-   INTEGER , allocatable, dimension(:) :: LUCY_coun
-   REAL(r8), allocatable, dimension(:) :: LUCY_coun_
-   REAL(r8), allocatable, dimension(:) :: pop_den
-   REAL(r8), allocatable, dimension(:) :: pct_tree
-   REAL(r8), allocatable, dimension(:) :: htop_urb
-   REAL(r8), allocatable, dimension(:) :: pct_urbwt
-   REAL(r8), allocatable, dimension(:) :: wt_roof
-   REAL(r8), allocatable, dimension(:) :: ht_roof
-   REAL(r8), allocatable, dimension(:) :: lai_urb
-   REAL(r8), allocatable, dimension(:) :: sai_urb
+   INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: LUCY_coun_
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_den
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_urbwt
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: wt_roof
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: ht_roof
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: lai_urb
+   REAL(r8), ALLOCATABLE, DIMENSION(:) :: sai_urb
 
-   !TODO: check the below
-   REAL(r8), allocatable, dimension(:,:)   :: area
-   REAL(r8), allocatable, dimension(:,:,:) :: wgt_top
-   REAL(r8), allocatable, dimension(:,:,:) :: tc
-   REAL(r8), allocatable, dimension(:,:,:) :: urwt
-   REAL(r8), allocatable, dimension(:,:,:) :: htop
-
-
+   !TODO: check the blow
    INTEGER , allocatable, dimension(:) :: LUCY_reg_one
    REAL(r8), allocatable, dimension(:) :: area_one
    REAL(r8), allocatable, dimension(:) :: pop_one
@@ -94,7 +87,6 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    REAL(r8), allocatable, dimension(:) :: ht_roof_one
    REAL(r8), allocatable, dimension(:) :: ulai_one
    REAL(r8), allocatable, dimension(:) :: slai_one
-   INTEGER , allocatable, dimension(:) :: urrgid_one
 
 #ifndef USE_LCZ
    REAL(r8), allocatable, DIMENSION(:,:)  :: hwrcan, wtrd, emroof, emwall, ncar_wt
@@ -141,8 +133,8 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! local vars
    REAL(r8) :: sumarea
-   INTEGER  :: iurban, f_inx, f_uid
-   INTEGER  :: pop_i, imonth, inx, uxid
+   INTEGER  :: iurban, urb_typinx, urb_reginx
+   INTEGER  :: pop_i, imonth
    INTEGER  :: ipxstt, ipxend, ipxl, m
 #ifdef SrfdataDiag
    INTEGER  :: ityp
@@ -425,35 +417,34 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
    IF (p_is_worker) THEN
-
       allocate (wt_roof (numurban))
       allocate (ht_roof (numurban))
-
+      
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = wtrf, data_r8_2d_out1 = wt_roof_one, &
             data_r8_2d_in2 = htrf, data_r8_2d_out2 = ht_roof_one)
 
 #ifndef USE_LCZ
-         f_inx     = landurban%settyp(iurban)
-         f_uid     = urban_reg(iurban)
+         urb_typinx = landurban%settyp(iurban)
+         urb_reginx = urban_reg(iurban)
 
          where (wt_roof_one <= 0)
-            wt_roof_one = ncar_wt(f_inx,f_uid)
+            wt_roof_one = ncar_wt(urb_typinx,urb_reginx)
          END where
 
          where (ht_roof_one <= 0)
-            ht_roof_one = ncar_ht(f_inx,f_uid)
+            ht_roof_one = ncar_ht(urb_typinx,urb_reginx)
          END where
 #else
-         f_inx     = landurban%settyp(iurban)
+         urb_typinx     = landurban%settyp(iurban)
 
          where (wt_roof_one <= 0)
-            wt_roof_one = rooffrac(f_inx)
+            wt_roof_one = wtroof_lcz(urb_typinx)
          END where
 
          where (ht_roof_one <= 0)
-            ht_roof_one = roofhgt(f_inx)
+            ht_roof_one = htroof_lcz(urb_typinx)
          END where
 #endif
 
@@ -541,7 +532,6 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
                sai_urb(iurban) = sum(slai_one * gfcc_tc_one * area_one) / &
                                  sum(gfcc_tc_one * area_one)
             ENDIF
-
          ENDDO
 
 #ifdef USEMPI
@@ -661,8 +651,8 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one)
 
-         inx = landurban%settyp(iurban)
-         uxid= urban_reg(iurban)
+         urb_typinx = landurban%settyp(iurban)
+         urb_reginx = urban_reg(iurban)
 
          ipxstt = landurban%ipxstt(iurban)
          ipxend = landurban%ipxend(iurban)
@@ -671,38 +661,38 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
          DO ipxl = ipxstt, ipxend
 
-            area_urb(inx,iurban) = area_urb(inx,iurban) + area_one(ipxl)
-            hwr_can (iurban) = hwr_can (iurban) + hwrcan (inx,uxid) * area_one(ipxl)
-            wt_rd   (iurban) = wt_rd   (iurban) + wtrd   (inx,uxid) * area_one(ipxl)
-            em_roof (iurban) = em_roof (iurban) + emroof (inx,uxid) * area_one(ipxl)
-            em_wall (iurban) = em_wall (iurban) + emwall (inx,uxid) * area_one(ipxl)
-            em_imrd (iurban) = em_imrd (iurban) + emimrd (inx,uxid) * area_one(ipxl)
-            em_perd (iurban) = em_perd (iurban) + emperd (inx,uxid) * area_one(ipxl)
-            th_roof (iurban) = th_roof (iurban) + throof (inx,uxid) * area_one(ipxl)
-            th_wall (iurban) = th_wall (iurban) + thwall (inx,uxid) * area_one(ipxl)
-            tb_min  (iurban) = tb_min  (iurban) + tbmin  (inx,uxid) * area_one(ipxl)
-            tb_max  (iurban) = tb_max  (iurban) + tbmax  (inx,uxid) * area_one(ipxl)
+            area_urb(urb_typinx,iurban) = area_urb(urb_typinx,iurban) + area_one(ipxl)
+            hwr_can (iurban) = hwr_can (iurban) + hwrcan (urb_typinx,urb_reginx) * area_one(ipxl)
+            wt_rd   (iurban) = wt_rd   (iurban) + wtrd   (urb_typinx,urb_reginx) * area_one(ipxl)
+            em_roof (iurban) = em_roof (iurban) + emroof (urb_typinx,urb_reginx) * area_one(ipxl)
+            em_wall (iurban) = em_wall (iurban) + emwall (urb_typinx,urb_reginx) * area_one(ipxl)
+            em_imrd (iurban) = em_imrd (iurban) + emimrd (urb_typinx,urb_reginx) * area_one(ipxl)
+            em_perd (iurban) = em_perd (iurban) + emperd (urb_typinx,urb_reginx) * area_one(ipxl)
+            th_roof (iurban) = th_roof (iurban) + throof (urb_typinx,urb_reginx) * area_one(ipxl)
+            th_wall (iurban) = th_wall (iurban) + thwall (urb_typinx,urb_reginx) * area_one(ipxl)
+            tb_min  (iurban) = tb_min  (iurban) + tbmin  (urb_typinx,urb_reginx) * area_one(ipxl)
+            tb_max  (iurban) = tb_max  (iurban) + tbmax  (urb_typinx,urb_reginx) * area_one(ipxl)
 
             DO m = 1, 10
-               IF (tkimrd(inx,uxid,m) .ne. -999.) THEN
-                  tk_imrd(m,iurban) = tk_imrd(m,iurban) + tkimrd(inx,uxid,m) * area_one(ipxl)
+               IF (tkimrd(urb_typinx,urb_reginx,m) .ne. -999.) THEN
+                  tk_imrd(m,iurban) = tk_imrd(m,iurban) + tkimrd(urb_typinx,urb_reginx,m) * area_one(ipxl)
                   tk_wgt (m,iurban) = tk_wgt (m,iurban) + area_one(ipxl)
                ENDIF
-               IF (cvimrd(inx,uxid,m) .ne. -999.) THEN
-                  cv_imrd(m,iurban) = cv_imrd(m,iurban) + cvimrd(inx,uxid,m) * area_one(ipxl)
+               IF (cvimrd(urb_typinx,urb_reginx,m) .ne. -999.) THEN
+                  cv_imrd(m,iurban) = cv_imrd(m,iurban) + cvimrd(urb_typinx,urb_reginx,m) * area_one(ipxl)
                   cv_wgt (m,iurban) = cv_wgt (m,iurban) + area_one(ipxl)
                ENDIF
             ENDDO
 
-            cv_roof (:,iurban) = cv_roof (:,iurban) + cvroof (inx,uxid,:) * area_one(ipxl)
-            cv_wall (:,iurban) = cv_wall (:,iurban) + cvwall (inx,uxid,:) * area_one(ipxl)
-            tk_roof (:,iurban) = tk_roof (:,iurban) + tkroof (inx,uxid,:) * area_one(ipxl)
-            tk_wall (:,iurban) = tk_wall (:,iurban) + tkwall (inx,uxid,:) * area_one(ipxl)
+            cv_roof (:,iurban) = cv_roof (:,iurban) + cvroof (urb_typinx,urb_reginx,:) * area_one(ipxl)
+            cv_wall (:,iurban) = cv_wall (:,iurban) + cvwall (urb_typinx,urb_reginx,:) * area_one(ipxl)
+            tk_roof (:,iurban) = tk_roof (:,iurban) + tkroof (urb_typinx,urb_reginx,:) * area_one(ipxl)
+            tk_wall (:,iurban) = tk_wall (:,iurban) + tkwall (urb_typinx,urb_reginx,:) * area_one(ipxl)
 
-            alb_roof(:,:,iurban) = alb_roof(:,:,iurban) + albroof(inx,uxid,:,:) * area_one(ipxl)
-            alb_wall(:,:,iurban) = alb_wall(:,:,iurban) + albwall(inx,uxid,:,:) * area_one(ipxl)
-            alb_imrd(:,:,iurban) = alb_imrd(:,:,iurban) + albimrd(inx,uxid,:,:) * area_one(ipxl)
-            alb_perd(:,:,iurban) = alb_perd(:,:,iurban) + albperd(inx,uxid,:,:) * area_one(ipxl)
+            alb_roof(:,:,iurban) = alb_roof(:,:,iurban) + albroof(urb_typinx,urb_reginx,:,:) * area_one(ipxl)
+            alb_wall(:,:,iurban) = alb_wall(:,:,iurban) + albwall(urb_typinx,urb_reginx,:,:) * area_one(ipxl)
+            alb_imrd(:,:,iurban) = alb_imrd(:,:,iurban) + albimrd(urb_typinx,urb_reginx,:,:) * area_one(ipxl)
+            alb_perd(:,:,iurban) = alb_perd(:,:,iurban) + albperd(urb_typinx,urb_reginx,:,:) * area_one(ipxl)
 
          ENDDO
 
@@ -854,4 +844,3 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
 END SUBROUTINE aggregation_urban
 #endif
-
