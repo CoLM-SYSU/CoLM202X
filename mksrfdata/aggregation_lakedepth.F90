@@ -4,14 +4,12 @@ SUBROUTINE aggregation_lakedepth ( &
       gland, dir_rawdata, dir_model_landdata)
 
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
+   ! DESCRIPTION:
+   ! Aggregate lake depth of multiple pixels within a lake patch based on Global land cover types
+   ! (updated with the specific dataset)
    !
-   ! 2. Global Lake Coverage and Lake Depth
-   !   (http://nwpi.krc.karelia.run/flake/)      
-   !    Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global
-   !    gridded dataset of lake coverage and lake depth for USE in numerical
-   !    weather prediction and climate modelling. Tellus A, 64, 15640.
-   !
+   ! Global Lake Coverage and Lake Depth (1km resolution)
+   !   (http://nwpi.krc.karelia.run/flake/)
    !    Lake depth data legend
    !    Value   Description
    ! 0       no lake indicated in this pixel
@@ -19,6 +17,10 @@ SUBROUTINE aggregation_lakedepth ( &
    ! 2       no information about depth for this lake and set the default value of 10 m
    ! 3       have the information about lake depth in this pixel
    ! 4       this is the river pixel according to our map, set the default value of 3 m
+   !
+   ! REFERENCE:
+   ! Kourzeneva, E., H. Asensio, E. Martin, and S. Faroux, 2012: Global gridded dataset of lake coverage and lake depth
+   ! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
    !
    ! Created by Yongjiu Dai, 02/2014
    ! ----------------------------------------------------------------------
@@ -29,10 +31,10 @@ SUBROUTINE aggregation_lakedepth ( &
    USE mod_landpatch
    USE ncio_vector
    USE ncio_block
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
-   
+
    USE mod_aggregation
 
    USE mod_utils
@@ -84,7 +86,7 @@ SUBROUTINE aggregation_lakedepth ( &
    ! ................................................
    ! ... (2) global lake coverage and lake depth
    ! ................................................
-   lndname = trim(dir_rawdata)//'/lake_depth.nc' 
+   lndname = trim(dir_rawdata)//'/lake_depth.nc'
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, lakedepth)
@@ -103,7 +105,7 @@ SUBROUTINE aggregation_lakedepth ( &
    IF (p_is_worker) THEN
 
       allocate (lakedepth_patches (numpatch))
-   
+
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
 #ifdef USGS_CLASSIFICATION
@@ -125,7 +127,7 @@ SUBROUTINE aggregation_lakedepth ( &
             lakedepth_patches (ipatch) = -1.0e36_r8
          ENDIF
       ENDDO
-      
+
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif

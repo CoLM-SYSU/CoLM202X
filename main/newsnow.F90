@@ -1,18 +1,18 @@
 
- subroutine newsnow (patchtype,maxsnl,deltim,t_grnd,pg_rain,pg_snow,bifall,& 
+ subroutine newsnow (patchtype,maxsnl,deltim,t_grnd,pg_rain,pg_snow,bifall,&
                      t_precip,zi_soisno,z_soisno,dz_soisno,t_soisno,&
                      wliq_soisno,wice_soisno,fiold,snl,sag,scv,snowdp,fsno)
 
 !=======================================================================
-! add new snow nodes. 
+! add new snow nodes.
 ! Original author : Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
 !=======================================================================
 !
   use precision
   use PhysicalConstants, only : tfrz, cpliq, cpice
- 
+
   implicit none
- 
+
 ! ------------------------ Dummy Argument ------------------------------
 
   integer, INTENT(in) :: maxsnl     ! maximum number of snow layers
@@ -59,7 +59,7 @@
 
 ! when the snow accumulation exceeds 10 mm, initialize a snow layer
 
-      if(snl==0 .AND. pg_snow>0.0 .AND. snowdp>=0.01)then  
+      if(snl==0 .AND. pg_snow>0.0 .AND. snowdp>=0.01)then
          snl = -1
          newnode = 1
          dz_soisno(0)  = snowdp             ! meter
@@ -72,7 +72,6 @@
          wliq_soisno(0) = 0.                ! kg/m2
          fiold(0) = 1.
          fsno = min(1.,tanh(0.1*pg_snow*deltim))
-!**      write(6,*) 'snow layer is built'
       endif
 
       ! --------------------------------------------------
@@ -84,15 +83,6 @@
       if(snl<0 .AND. newnode==0)then
          lb = snl + 1
 
-!        comment by Nan, will consider t_precip in land surface energy budget
-!         t_soisno(lb) = tfrz &
-!            + ( (wice_soisno(lb)*cpice+wliq_soisno(lb)*cpliq)*(t_soisno(lb)-tfrz) &
-!            +   (pg_rain*cpliq + pg_snow*cpice)*deltim*(t_precip-tfrz) ) &
-!            / ( wice_soisno(lb)*cpice + wliq_soisno(lb)*cpliq &
-!            +   pg_rain*deltim*cpliq + pg_snow*deltim*cpice )
-
-         !print *, "new snow:", t_soisno(lb)    ! fordebug
-!         t_soisno(lb) = min(tfrz, t_soisno(lb))
          wice_soisno(lb) = wice_soisno(lb)+deltim*pg_snow
          dz_soisno(lb) = dz_soisno(lb)+dz_snowf*deltim
          z_soisno(lb) = zi_soisno(lb) - 0.5*dz_soisno(lb)

@@ -2,25 +2,26 @@
 
 SUBROUTINE aggregation_soil_parameters ( &
       gland, dir_rawdata, dir_model_landdata)
-   ! ----------------------------------------------------------------------
-   !DESCRIPTION:
-   !Create soil hydraulic and thermal parameters for the modeling reolustion
+
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! Create soil hydraulic and thermal parameters for the modeling reolustion
    !
-   !ORIGINAL: 
-   !Yongjiu Dai and Wei Shangguan, 02/2014
-   !
-   !REFERENCES:
+   ! REFERENCES:
    ! 1)Dai, Y., Q. Xin, N. Wei, Y. Zhang, W. Shangguan, H. Yuan, S. Zhang, S. Liu, X. Lu, 2019. A global high-resolution dataset of
    !          soil hydraulic and thermal properties for land surface modeling. Journal of Advances in Modeling Earth Systems,11, 2996-3023.
    ! 2)Dai, Y., N. Wei, H. Yuan, S. Zhang, W. Shangguan, S. Liu, and X. Lu, 2019. Evaluation of soil thermal conductivity schemes
    !          for use in land surface modelling, Journal of Advances in Modeling Earth Systems, 11, 3454-3473.
-   ! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters 
+   ! 3)Dai, Y., W. Shangguan, Q. Duan, B. Liu, S. Fu, and G. Niu, 2013. Development of a China dataset of soil hydraulic parameters
    !         using pedotransfer functions for land surface modeling. Journal of Hydrometeorology 14, 869–887
    !
-   !REVISIONS:
-   !Nan Wei, 06/2019, 02/2020: add three subroutines to  calculate the function/jacobian matrix
+   ! Original author: Yongjiu Dai and Wei Shangguan, 02/2014
    !
-   ! !USES:
+   ! REVISIONS:
+   ! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
+   ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
+   ! -----------------------------------------------------------------------
+
    USE precision
    USE GlobalVars
    USE mod_namelist
@@ -30,13 +31,10 @@ SUBROUTINE aggregation_soil_parameters ( &
    USE ncio_block
    USE ncio_vector
    USE mod_aggregation
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
    USE mod_utils
-#ifdef SOILPAR_UPS_FIT
-   USE par_fitting
-#endif
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
@@ -66,19 +64,19 @@ SUBROUTINE aggregation_soil_parameters ( &
    TYPE (block_data_real8_2d) :: OM_density_s_grid
    TYPE (block_data_real8_2d) :: BD_all_s_grid
    TYPE (block_data_real8_2d) :: theta_s_grid
-   TYPE (block_data_real8_2d) :: psi_s_grid  
-   TYPE (block_data_real8_2d) :: lambda_grid 
+   TYPE (block_data_real8_2d) :: psi_s_grid
+   TYPE (block_data_real8_2d) :: lambda_grid
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   TYPE (block_data_real8_2d) :: theta_r_grid 
-   TYPE (block_data_real8_2d) :: alpha_vgm_grid 
-   TYPE (block_data_real8_2d) :: L_vgm_grid 
-   TYPE (block_data_real8_2d) :: n_vgm_grid 
+   TYPE (block_data_real8_2d) :: theta_r_grid
+   TYPE (block_data_real8_2d) :: alpha_vgm_grid
+   TYPE (block_data_real8_2d) :: L_vgm_grid
+   TYPE (block_data_real8_2d) :: n_vgm_grid
 #endif
-   TYPE (block_data_real8_2d) :: k_s_grid    
-   TYPE (block_data_real8_2d) :: csol_grid   
+   TYPE (block_data_real8_2d) :: k_s_grid
+   TYPE (block_data_real8_2d) :: csol_grid
    TYPE (block_data_real8_2d) :: tksatu_grid
-   TYPE (block_data_real8_2d) :: tksatf_grid 
-   TYPE (block_data_real8_2d) :: tkdry_grid 
+   TYPE (block_data_real8_2d) :: tksatf_grid
+   TYPE (block_data_real8_2d) :: tkdry_grid
    TYPE (block_data_real8_2d) :: k_solids_grid
 
    REAL(r8), allocatable :: vf_quartz_mineral_s_patches (:)
@@ -89,20 +87,20 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: wf_sand_s_patches (:)
    REAL(r8), allocatable :: OM_density_s_patches (:)
    REAL(r8), allocatable :: BD_all_s_patches (:)
-   REAL(r8), allocatable :: theta_s_patches (:) 
-   REAL(r8), allocatable :: psi_s_patches   (:) 
-   REAL(r8), allocatable :: lambda_patches  (:) 
+   REAL(r8), allocatable :: theta_s_patches (:)
+   REAL(r8), allocatable :: psi_s_patches   (:)
+   REAL(r8), allocatable :: lambda_patches  (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: theta_r_patches (:) 
-   REAL(r8), allocatable :: alpha_vgm_patches  (:) 
-   REAL(r8), allocatable :: L_vgm_patches  (:) 
-   REAL(r8), allocatable :: n_vgm_patches  (:) 
+   REAL(r8), allocatable :: theta_r_patches (:)
+   REAL(r8), allocatable :: alpha_vgm_patches  (:)
+   REAL(r8), allocatable :: L_vgm_patches  (:)
+   REAL(r8), allocatable :: n_vgm_patches  (:)
 #endif
-   REAL(r8), allocatable :: k_s_patches     (:) 
-   REAL(r8), allocatable :: csol_patches    (:) 
+   REAL(r8), allocatable :: k_s_patches     (:)
+   REAL(r8), allocatable :: csol_patches    (:)
    REAL(r8), allocatable :: tksatu_patches  (:)
-   REAL(r8), allocatable :: tksatf_patches  (:) 
-   REAL(r8), allocatable :: tkdry_patches   (:) 
+   REAL(r8), allocatable :: tksatf_patches  (:)
+   REAL(r8), allocatable :: tkdry_patches   (:)
    REAL(r8), allocatable :: k_solids_patches  (:)
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
    REAL(r8), allocatable :: BA_alpha_patches  (:)
@@ -114,23 +112,23 @@ SUBROUTINE aggregation_soil_parameters ( &
    REAL(r8), allocatable :: vf_om_s_one (:)
    REAL(r8), allocatable :: vf_sand_s_one (:)
    REAL(r8), allocatable :: wf_gravels_s_one (:)
-   REAL(r8), allocatable :: wf_sand_s_one (:) 
+   REAL(r8), allocatable :: wf_sand_s_one (:)
    REAL(r8), allocatable :: OM_density_s_one (:)
    REAL(r8), allocatable :: BD_all_s_one (:)
-   REAL(r8), allocatable :: theta_s_one (:) 
-   REAL(r8), allocatable :: psi_s_one   (:) 
-   REAL(r8), allocatable :: lambda_one  (:) 
+   REAL(r8), allocatable :: theta_s_one (:)
+   REAL(r8), allocatable :: psi_s_one   (:)
+   REAL(r8), allocatable :: lambda_one  (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: theta_r_one  (:) 
-   REAL(r8), allocatable :: alpha_vgm_one  (:) 
-   REAL(r8), allocatable :: L_vgm_one  (:) 
-   REAL(r8), allocatable :: n_vgm_one  (:) 
+   REAL(r8), allocatable :: theta_r_one  (:)
+   REAL(r8), allocatable :: alpha_vgm_one  (:)
+   REAL(r8), allocatable :: L_vgm_one  (:)
+   REAL(r8), allocatable :: n_vgm_one  (:)
 #endif
-   REAL(r8), allocatable :: k_s_one     (:) 
-   REAL(r8), allocatable :: csol_one    (:) 
+   REAL(r8), allocatable :: k_s_one     (:)
+   REAL(r8), allocatable :: csol_one    (:)
    REAL(r8), allocatable :: tksatu_one  (:)
-   REAL(r8), allocatable :: tksatf_one  (:) 
-   REAL(r8), allocatable :: tkdry_one   (:) 
+   REAL(r8), allocatable :: tksatf_one  (:)
+   REAL(r8), allocatable :: tkdry_one   (:)
    REAL(r8), allocatable :: k_solids_one  (:)
    REAL(r8), allocatable :: area_one   (:)
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
@@ -141,7 +139,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SOILPAR_UPS_FIT
 ! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
 ! ---------------------------------------------------------------
-   integer, parameter   :: npointw  = 24      
+   integer, parameter   :: npointw  = 24
    integer, parameter   :: npointb  = 20
    real(r8),parameter   :: xdat(npointw) = (/1.,5.,10.,20.,30.,40.,50.,60.,70.,90.,110.,130.,150.,&
                                 170.,210.,300.,345.,690.,1020.,5100.,15300.,20000.,100000.,1000000./)
@@ -151,16 +149,16 @@ SUBROUTINE aggregation_soil_parameters ( &
                                              0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0/)
                            !  points of soil saturation levels (Sr) used for fitting Ke-Sr relationship
 
-   real(r8),allocatable :: ydatc(:,:)     ! the Campbell SW retentions at fine grids 
+   real(r8),allocatable :: ydatc(:,:)     ! the Campbell SW retentions at fine grids
    real(r8),allocatable :: ydatv(:,:)     ! the van Genuchten SW retentions at fine grids
    real(r8),allocatable :: ydatb(:,:)     ! the Balland and Arp (2005) Ke-Sr relationship at fine grids
 
    integer, parameter   :: nc = 2         ! the number of fitted parameters in Campbell SW retention curve (psi and lambda)
-   integer, parameter   :: nv = 3         ! the number of fitted parameters in van Genuchten SW retention curve 
+   integer, parameter   :: nv = 3         ! the number of fitted parameters in van Genuchten SW retention curve
                                           ! (theta_r, alpha and n)
    integer, parameter   :: nb = 2         ! the number of fitted parameters in Ke-Sr relationship (alpha and beta)
 
-! Variables needed for Levenberg–Marquardt algorithm in MINPACK library      
+! Variables needed for Levenberg–Marquardt algorithm in MINPACK library
    real(r8),parameter   :: factor = 0.1
    real(r8),parameter   :: ftol = 1.0e-5
    real(r8),parameter   :: xtol = 1.0e-4
@@ -179,7 +177,6 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
 #endif
-      
    landdir = trim(dir_model_landdata) // '/soil'
 
    ! ........................................
@@ -195,7 +192,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      
+
 #ifdef SinglePoint
    IF (USE_SITE_soilparameters) THEN
       RETURN
@@ -268,7 +265,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
       ! (1) volumetric fraction of quartz within mineral soil
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, vf_quartz_mineral_s_grid)
          lndname = trim(dir_rawdata)//'/soil/vf_quartz_mineral_s.nc'
          CALL ncio_read_block (lndname, 'vf_quartz_mineral_s_l'//trim(c), gland, vf_quartz_mineral_s_grid)
@@ -276,7 +273,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = vf_quartz_mineral_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -296,7 +293,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -314,7 +311,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'vf_quartz_mineral_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, vf_quartz_mineral_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -330,9 +327,9 @@ SUBROUTINE aggregation_soil_parameters ( &
       ! (2) volumetric fraction of gravels
       ! (3) volumetric fraction of sand
       ! (4) volumetric fraction of organic matter
-      ! with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model if defined THERMAL_CONDUCTIVITY_SCHEME_4 
+      ! with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model if defined THERMAL_CONDUCTIVITY_SCHEME_4
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, vf_gravels_s_grid)
          lndname = trim(dir_rawdata)//'/soil/vf_gravels_s.nc'
          CALL ncio_read_block (lndname, 'vf_gravels_s_l'//trim(c), gland, vf_gravels_s_grid)
@@ -350,7 +347,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             data_r8_2d_in2 = vf_sand_s_grid,  data_r8_2d_in3 = vf_om_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -395,19 +392,19 @@ SUBROUTINE aggregation_soil_parameters ( &
 !                  allocate ( ydatb  (ipxstt:ipxend,npointb) )
 !! the jacobian matrix required in Levenberg–Marquardt fitting method
 !                  allocate ( fjacb  (npointb,nb) )           ! calculated in Ke_Sr_dist
-!! the values of objective functions to be fitted 
-!                  allocate ( fvecb  (npointb)    )           ! calculated in Ke_Sr_dist 
+!! the values of objective functions to be fitted
+!                  allocate ( fvecb  (npointb)    )           ! calculated in Ke_Sr_dist
 
 !! Ke-Sr relationship at fine grids for each patch
 !                  do LL = ipxstt,ipxend
 !                     ydatb(LL,:) = xdatsr**(0.5*(1.0+vf_om_s_one(LL)-BA_alpha_one(LL)*vf_sand_s_one(LL) &
 !                                 - vf_gravels_s_one(LL))) * ((1.0/(1.0+exp(-BA_beta_one(LL)*xdatsr)))**3 &
 !                                 - ((1.0-xdatsr)/2.0)**3)**(1.0-vf_om_s_one(LL))
-!                  end do                  
-                  
-!! Fitting the parameters in the Balland and Arp (2005) Ke-Sr relationship            
+!                  end do
+
+!! Fitting the parameters in the Balland and Arp (2005) Ke-Sr relationship
 !                  ldfjac = npointb
-!                  xb(1) = BA_alpha_patches (ipatch)  
+!                  xb(1) = BA_alpha_patches (ipatch)
 !                  xb(2) = BA_beta_patches (ipatch)
 !                  maxfev = 100 * ( nb + 1 )
 !                  isiter = 1
@@ -430,7 +427,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 !                  deallocate(fjacb)
 !                  deallocate(fvecb)
 
-!               ENDIF 
+!               ENDIF
 #endif
                deallocate(BA_alpha_one)
                deallocate(BA_beta_one)
@@ -462,7 +459,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -486,7 +483,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/vf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'vf_gravels_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, vf_gravels_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -538,7 +535,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', 'patch',&
                               landpatch, BA_alpha_patches, 1)
 
 #ifdef SrfdataDiag
@@ -571,7 +568,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
       ! (5) gravimetric fraction of gravels
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, wf_gravels_s_grid)
          lndname = trim(dir_rawdata)//'/soil/wf_gravels_s.nc'
          CALL ncio_read_block (lndname, 'wf_gravels_s_l'//trim(c), gland, wf_gravels_s_grid)
@@ -579,7 +576,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_gravels_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -599,7 +596,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -617,7 +614,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/wf_gravels_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'wf_gravels_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, wf_gravels_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -633,7 +630,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
       ! (6) gravimetric fraction of sand
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, wf_sand_s_grid)
          lndname = trim(dir_rawdata)//'/soil/wf_sand_s.nc'
          CALL ncio_read_block (lndname, 'wf_sand_s_l'//trim(c), gland, wf_sand_s_grid)
@@ -641,7 +638,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_sand_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -661,7 +658,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -679,7 +676,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/wf_sand_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'wf_sand_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, wf_sand_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -693,10 +690,10 @@ SUBROUTINE aggregation_soil_parameters ( &
 #endif
 
 
-#ifdef vanGenuchten_Mualem_SOIL_MODEL                           
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
       ! (7) VGM's pore-connectivity parameter (L)
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, L_vgm_grid)
          lndname = trim(dir_rawdata)//'/soil/VGM_L.nc'
          CALL ncio_read_block (lndname, 'VGM_L_l'//trim(c), gland, L_vgm_grid)
@@ -704,7 +701,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = L_vgm_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -724,7 +721,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -761,7 +758,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       ! (11) saturated water content [cm3/cm3]
 
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, theta_r_grid)
          lndname = trim(dir_rawdata)//'/soil/VGM_theta_r.nc'
          CALL ncio_read_block (lndname, 'VGM_theta_r_l'//trim(c), gland, theta_r_grid)
@@ -784,7 +781,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             data_r8_2d_in3 = n_vgm_grid,   data_r8_2d_in4 = theta_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -798,7 +795,7 @@ SUBROUTINE aggregation_soil_parameters ( &
                       data_r8_2d_in4 = theta_s_grid,   data_r8_2d_out4 = theta_s_one)
                theta_r_patches (ipatch) = median (theta_r_one, size(theta_r_one), spval)
                alpha_vgm_patches (ipatch) = median (alpha_vgm_one, size(alpha_vgm_one), spval)
-               n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval) 
+               n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval)
                theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))
 
 #ifdef SOILPAR_UPS_FIT
@@ -810,19 +807,19 @@ SUBROUTINE aggregation_soil_parameters ( &
                   allocate ( ydatv  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                   allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
-! the values of objective functions to be fitted 
-                  allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist 
+! the values of objective functions to be fitted
+                  allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
 
 ! SW VG retentions at fine grids for each patch
                   do LL = ipxstt,ipxend
                      ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
                                  * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
-                  end do                  
-                  
-! Fitting the van Genuchten SW retention parameters             
+                  end do
+
+! Fitting the van Genuchten SW retention parameters
                   ldfjac = npointw
-                  xv(1) = theta_r_patches (ipatch)  
-                  xv(2) = alpha_vgm_patches (ipatch) 
+                  xv(1) = theta_r_patches (ipatch)
+                  xv(2) = alpha_vgm_patches (ipatch)
                   xv(3) = n_vgm_patches (ipatch)
                   maxfev = 100 * ( nv + 1 )
                   isiter = 1
@@ -842,7 +839,7 @@ SUBROUTINE aggregation_soil_parameters ( &
                   deallocate(fjacv)
                   deallocate(fvecv)
 
-               ENDIF 
+               ENDIF
 #endif
 
             ELSE
@@ -873,7 +870,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -921,7 +918,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 #else
       SITE_soil_alpha_vgm(nsl) = alpha_vgm_patches(1)
 #endif
-      
+
 #ifndef SinglePoint
       lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
@@ -953,12 +950,12 @@ SUBROUTINE aggregation_soil_parameters ( &
 #else
       SITE_soil_theta_s(nsl) = theta_s_patches(1)
 #endif
-      
+
 #endif
 
       ! (11) saturated water content [cm3/cm3]
       ! (12) matric potential at saturation (psi_s) [cm]
-      ! (13) pore size distribution index [dimensionless] 
+      ! (13) pore size distribution index [dimensionless]
 
       IF (p_is_io) THEN
 
@@ -979,7 +976,7 @@ SUBROUTINE aggregation_soil_parameters ( &
                             data_r8_2d_in2 = psi_s_grid, data_r8_2d_in3 = lambda_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1003,18 +1000,18 @@ SUBROUTINE aggregation_soil_parameters ( &
                   allocate ( ydatc  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                   allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
-! the values of objective functions to be fitted 
-                  allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist 
+! the values of objective functions to be fitted
+                  allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist
 
 ! SW CB retentions at fine grids for each patch
                   do LL = ipxstt,ipxend
                      ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
-                  end do                  
-                  
-! Fitting the Campbell SW retention parameters             
+                  end do
+
+! Fitting the Campbell SW retention parameters
                   ldfjac = npointw
-                  xc(1) = psi_s_patches (ipatch)  
-                  xc(2) = lambda_patches (ipatch) 
+                  xc(1) = psi_s_patches (ipatch)
+                  xc(2) = lambda_patches (ipatch)
                   maxfev = 100 * ( nc + 1 )
                   isiter = 1
 
@@ -1031,7 +1028,7 @@ SUBROUTINE aggregation_soil_parameters ( &
                   deallocate(fjacc)
                   deallocate(fvecc)
 
-               ENDIF 
+               ENDIF
 #endif
 
             ELSE
@@ -1056,7 +1053,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1131,7 +1128,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1151,7 +1148,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1190,7 +1187,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = csol_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1210,7 +1207,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1249,7 +1246,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatu_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1269,7 +1266,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1308,7 +1305,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatf_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1328,7 +1325,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1367,7 +1364,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tkdry_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1387,7 +1384,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1426,7 +1423,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_solids_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1446,7 +1443,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1478,7 +1475,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
       ! (20) OM_density [kg/m3]
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, OM_density_s_grid)
          lndname = trim(dir_rawdata)//'/soil/OM_density_s.nc'
          CALL ncio_read_block (lndname, 'OM_density_s_l'//trim(c), gland, OM_density_s_grid)
@@ -1486,7 +1483,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = OM_density_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1506,7 +1503,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1524,7 +1521,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'OM_density_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, OM_density_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -1539,7 +1536,7 @@ SUBROUTINE aggregation_soil_parameters ( &
 
       ! (21) bulk density of soil (GRAVELS + OM + Mineral Soils)
       IF (p_is_io) THEN
-        
+
          CALL allocate_block_data (gland, BD_all_s_grid)
          lndname = trim(dir_rawdata)//'/soil/BD_all_s.nc'
          CALL ncio_read_block (lndname, 'BD_all_s_l'//trim(c), gland, BD_all_s_grid)
@@ -1547,7 +1544,7 @@ SUBROUTINE aggregation_soil_parameters ( &
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = BD_all_s_grid)
 #endif
       ENDIF
-      
+
       IF (p_is_worker) THEN
 
          DO ipatch = 1, numpatch
@@ -1567,7 +1564,7 @@ SUBROUTINE aggregation_soil_parameters ( &
             ENDIF
 
          ENDDO
-      
+
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
@@ -1585,7 +1582,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       lndname = trim(landdir)//'/BD_all_s_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'patch',& 
+      CALL ncio_write_vector (lndname, 'BD_all_s_l'//trim(c)//'_patches', 'patch',&
                               landpatch, BD_all_s_patches, 1)
 
 #ifdef SrfdataDiag
@@ -1640,7 +1637,7 @@ SUBROUTINE aggregation_soil_parameters ( &
       IF (allocated(vf_om_s_one))             deallocate (vf_om_s_one)
       IF (allocated(vf_sand_s_one))           deallocate (vf_sand_s_one)
       IF (allocated(wf_gravels_s_one))        deallocate (wf_gravels_s_one)
-      IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one) 
+      IF (allocated(wf_sand_s_one))           deallocate (wf_sand_s_one)
       IF (allocated(OM_density_s_one))        deallocate (OM_density_s_one)
       IF (allocated(BD_all_s_one))            deallocate (BD_all_s_one)
       IF (allocated(theta_s_one))             deallocate (theta_s_one)
@@ -1674,8 +1671,8 @@ END SUBROUTINE aggregation_soil_parameters
 !                        vf_om_s, vf_sand_s, vf_gravels_s )
 
 !!=================================================================
-!! This is the subroutine for calculating the function/jacobian matrix 
-!! of the distance between the fitted and prescribed Ke-Sr relationship 
+!! This is the subroutine for calculating the function/jacobian matrix
+!! of the distance between the fitted and prescribed Ke-Sr relationship
 !! for the Balland V. and P. A. Arp (2005) model.
 !!
 !! Nan Wei, 02/2020
@@ -1730,11 +1727,12 @@ END SUBROUTINE aggregation_soil_parameters
 subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc, nptf, phi, isiter)
 
 !=================================================================
-! This is the subroutine for calculating the function/jacobian matrix 
-! of the distance between the fitted and prescribed SW retention curves 
+! DESCRIPTION:
+! This is the subroutine for calculating the function/jacobian matrix
+! of the distance between the fitted and prescribed SW retention curves
 ! for the Campbell model.
 !
-! Nan Wei, 06/2019
+! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
       use precision
@@ -1779,11 +1777,12 @@ end subroutine SW_CB_dist
 subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter )
 
 !=================================================================
-! This is the subroutine for calculating the function/jacobian matrix 
-! of the distance between the fitted and prescribed SW retention curves 
+! DESCRIPTION:
+! This is the subroutine for calculating the function/jacobian matrix
+! of the distance between the fitted and prescribed SW retention curves
 ! for the van Genuchten model.
 !
-! Nan Wei, 06/2019
+! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
       use precision
