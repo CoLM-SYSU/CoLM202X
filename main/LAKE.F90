@@ -919,7 +919,7 @@ MODULE LAKE
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                              BA_alpha(i),BA_beta(i),&
-#ENDIF
+#endif
                              t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
          cv_soisno(i) = hcap(i)*dz_soisno(i)
       enddo
