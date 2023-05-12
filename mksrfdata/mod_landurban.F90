@@ -236,6 +236,7 @@ CONTAINS
             allocate (landurban%ipxstt (numurban))
             allocate (landurban%ipxend (numurban))
             allocate (landurban%ielm   (numurban))
+            allocate (urban_reg        (numurban))
 
             landurban%eindex = pack(landpatch%eindex, landpatch%settyp == 13)
             landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == 13)
