@@ -145,15 +145,28 @@ CONTAINS
 
       ENDIF
 
+      IF (trim(gridname) == 'colm_5km') THEN
+
+         CALL this%define_by_ndims (8640,4320)
+
+      ENDIF
+
       IF (trim(gridname) == 'colm_1km') THEN
 
          CALL this%define_by_ndims (43200,21600)
 
       ENDIF
 
+
       IF (trim(gridname) == 'colm_500m') THEN
 
          CALL this%define_by_ndims (86400,43200)
+
+      ENDIF
+
+      IF (trim(gridname) == 'colm_100m') THEN
+
+         CALL this%define_by_ndims (432000,216000)
 
       ENDIF
 

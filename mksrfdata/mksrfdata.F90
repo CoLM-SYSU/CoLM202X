@@ -63,6 +63,9 @@ PROGRAM mksrfdata
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
 
 #ifdef SrfdataDiag
    USE mod_srfdata_diag, only : gdiag, srfdata_diag_init
@@ -81,6 +84,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m, grid_urban_1km
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -178,6 +182,27 @@ PROGRAM mksrfdata
    ! define grid for topography
    CALL gtopo%define_by_name ('colm_500m')
 
+   ! add by dong, only test for making urban data
+#ifdef URBAN_MODEL
+   CALL gurban%define_by_name          ('colm_500m')
+   CALL grid_urban_500m%define_by_name ('colm_500m')
+   CALL grid_urban_1km%define_by_name  ('colm_1km' )
+   CALL grid_urban_5km%define_by_name  ('colm_5km' )
+   CALL grid_urban_100m%define_by_name ('colm_100m')
+
+   CALL pixel%assimilate_grid (gurban         )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_1km )
+   CALL pixel%assimilate_grid (grid_urban_5km )
+   CALL pixel%assimilate_grid (grid_urban_100m)
+
+   CALL pixel%map_to_grid (gurban         )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_1km )
+   CALL pixel%map_to_grid (grid_urban_5km )
+   CALL pixel%map_to_grid (grid_urban_100m)
+#endif
+
    ! assimilate grids to build pixels
 #ifndef SinglePoint
    CALL pixel%assimilate_grid (gridmesh)
@@ -256,6 +281,10 @@ PROGRAM mksrfdata
    CALL landpc_build
 #endif
 
+#ifdef URBAN_MODEL
+   CALL landurban_build
+#endif
+
    ! ................................................................
    ! 2. SAVE land surface tessellation information
    ! ................................................................
@@ -272,6 +301,7 @@ PROGRAM mksrfdata
    CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
 #endif
 
+   print*, count(landpatch%settyp==13)
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -280,6 +310,10 @@ PROGRAM mksrfdata
 
 #ifdef PC_CLASSIFICATION
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+#endif
+
+#ifdef URBAN_MODEL
+   CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban)
 #endif
 
    ! ................................................................
@@ -325,6 +359,12 @@ PROGRAM mksrfdata
    CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
    CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+
+#ifdef URBAN_MODEL
+   CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &
+                           grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+#endif
+
 
    ! ................................................................
    ! 4. Free memories.
