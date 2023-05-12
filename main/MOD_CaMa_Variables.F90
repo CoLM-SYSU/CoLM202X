@@ -21,7 +21,7 @@ module MOD_CaMa_Variables
 !REVISION HISTORY
 !----------------
    !---2023.02.23  Zhongwang Wei @ SYSU
-   !---2021.12.12  Zhongwang Wei @ SYSU 
+   !---2021.12.12  Zhongwang Wei @ SYSU
    !---2020.10.21  Zhongwang Wei @ SYSU
 
 #if(defined CaMa_Flood)
@@ -40,8 +40,8 @@ module MOD_CaMa_Variables
 
    real(r8), allocatable         :: flddepth_cama (:)      ! on worker : flddepth [m]
    type(block_data_real8_2d)     :: f_flddepth_cama        ! on IO     : flddepth [m]
-   real(r8), allocatable         :: flddepth_tmp(:,:) 
- 
+   real(r8), allocatable         :: flddepth_tmp(:,:)
+
    real(r8), allocatable         :: fldfrc_cama (:)        ! on worker : flddepth [m]
    type(block_data_real8_2d)     :: f_fldfrc_cama          ! on IO     : flddepth [m]
    real(r8), allocatable         :: fldfrc_tmp (:,:)       ! on Master : total runoff [mm/s]
@@ -57,12 +57,12 @@ module MOD_CaMa_Variables
    type(block_data_real8_2d)     :: f_finfg_fld            ! on IO : total runoff [mm/s]
    real(r8), allocatable         :: finfg_2d (:,:)         ! on Master : total runoff [mm/s]
    TYPE(grid_type) :: gcama
-   
+
    TYPE (mapping_pset2grid_type) :: mp2g_cama               ! mapping pset to grid
    TYPE (mapping_grid2pset_type) :: mg2p_cama               ! mapping grid to pset
 
    TYPE (grid_concat_type)       :: cama_gather            ! gather grid
- 
+
    type(block_data_real8_2d)     :: IO_Effdepth            ! inundation to water depth [m]
    type(block_data_real8_2d)     :: IO_Effarea             ! inundation to water area [m2]
 
@@ -116,7 +116,7 @@ module MOD_CaMa_Variables
 
 contains
 
-   SUBROUTINE allocate_acc_cama_fluxes 
+   SUBROUTINE allocate_acc_cama_fluxes
       !DESCRIPTION
       !===========
       ! This subrountine is used for initilization Accumulation of cama-flood variables
@@ -133,7 +133,7 @@ contains
       USE mod_landpatch, ONLY : numpatch
 
       IMPLICIT NONE
-      
+
       !allocate cama-flood variables on worker
       if (p_is_worker) then
          if (numpatch > 0) then
@@ -156,7 +156,7 @@ contains
       !REVISION HISTORY
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
-      
+
       USE spmd_task
       USE mod_landpatch, ONLY : numpatch
 
@@ -185,7 +185,7 @@ contains
       ! 2020.10.21  Zhongwang Wei @ SYSU
       USE spmd_task
       USE mod_landpatch, ONLY : numpatch
-      USE GlobalVars,    ONLY : spval 
+      USE GlobalVars,    ONLY : spval
 
       IMPLICIT NONE
 
@@ -203,7 +203,7 @@ contains
 
    END SUBROUTINE FLUSH_acc_cama_fluxes
 
-   SUBROUTINE accumulate_cama_fluxes 
+   SUBROUTINE accumulate_cama_fluxes
       !DESCRIPTION
       !===========
       ! This subrountine is used for accumulating  cama-flood variables
@@ -215,7 +215,7 @@ contains
       !REVISION HISTORY
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
-      
+
       USE precision
       USE spmd_task
       USE MOD_1D_Fluxes, ONLY : rnof
@@ -226,9 +226,9 @@ contains
       if (p_is_worker) then
          if (numpatch > 0) then
             nacc = nacc + 1
-            call acc1d_cama (rnof, a_rnof_cama)  
-            call acc1d_cama (fevpg_fld, a_fevpg_fld)  
-            call acc1d_cama (finfg_fld, a_finfg_fld)  
+            call acc1d_cama (rnof, a_rnof_cama)
+            call acc1d_cama (fevpg_fld, a_fevpg_fld)
+            call acc1d_cama (finfg_fld, a_finfg_fld)
          end if
       end if
 
@@ -265,7 +265,7 @@ contains
             end if
          end if
       end do
-      
+
    END SUBROUTINE acc1d_cama
 
    SUBROUTINE allocate_2D_cama_Fluxes (grid)
@@ -283,7 +283,7 @@ contains
 
       USE spmd_task
       USE mod_grid
-      USE mod_data_type 
+      USE mod_data_type
 
       IMPLICIT NONE
 
@@ -296,7 +296,7 @@ contains
          !TODO: check the following variables
          call allocate_block_data (grid, f_fevpg_fld)      ! inundation evaporation [m/s]
          call allocate_block_data (grid, f_finfg_fld)      ! inundation re-infiltration [m/s]
-      end if 
+      end if
 
    END SUBROUTINE allocate_2D_cama_Fluxes
 
@@ -327,7 +327,7 @@ contains
       USE mod_2d_fluxes
 
       IMPLICIT NONE
-      
+
       character(LEN=*), intent(in) :: file_hist
       integer, intent(in) :: itime_in_file
 
@@ -357,7 +357,7 @@ contains
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%flddph, &
          real(D2FLDDPH), file_hist, 'flddph', itime_in_file,'floodplain depth','m')
 
-         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldfrc, & 
+         call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldfrc, &
          real(D2FLDFRC), file_hist, 'fldfrc', itime_in_file,'flooded fraction','0-1')
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%fldare, &
@@ -413,10 +413,10 @@ contains
 
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%daminf, &
          real(d2daminf_avg), file_hist, 'daminf', itime_in_file,'reservoir inflow','m3/s')
-	 
+
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%wevap, &
          real(D2WEVAPEX_AVG), file_hist, 'wevap', itime_in_file,'inundation water evaporation','m/s')
-         
+
          call flux_map_and_write_2d_cama(DEF_hist_cama_vars%winfilt, &
          real(D2WINFILTEX_AVG), file_hist, 'winfilt', itime_in_file,'inundation water infiltration','m/s')
 
@@ -428,7 +428,7 @@ contains
          !*** reset variable
          CALL CMF_DIAG_RESET
 
-   END SUBROUTINE hist_out_cama 
+   END SUBROUTINE hist_out_cama
 
    SUBROUTINE hist_write_cama_time (filename, dataname, time, itime)
       !DESCRIPTION
@@ -479,7 +479,7 @@ contains
 
    SUBROUTINE flux_map_and_write_2d_cama (is_hist, &
          var_in, file_hist, varname, itime_in_file,longname,units)
-      
+
       !DESCRIPTION
       !===========
       ! This subrountine is used for mapping cama-flood output using netcdf format.
@@ -503,7 +503,7 @@ contains
 
       IMPLICIT NONE
       logical, intent(in) :: is_hist
-      real(r8), INTENT(in) ::  var_in (NSEQALL, 1) 
+      real(r8), INTENT(in) ::  var_in (NSEQALL, 1)
       character(len=*), intent(in) :: file_hist
       character(len=*), intent(in) :: varname
       integer, intent(in) :: itime_in_file
@@ -517,7 +517,7 @@ contains
       if (.not. is_hist) return
 
       CALL vecP2mapR(var_in,R2OUT)
-      compress = DEF_HIST_COMPRESS_LEVEL 
+      compress = DEF_HIST_COMPRESS_LEVEL
       call ncio_write_serial_time (file_hist, varname,  &
          itime_in_file, real(R2OUT), 'lon_cama', 'lat_cama', 'time',compress)
       IF (itime_in_file == 1) THEN
@@ -555,26 +555,26 @@ contains
 
       IMPLICIT NONE
 
-      real(r8),                  intent(inout) :: WorkerVar(:)    !varialbe on worker processer   
-      TYPE(block_data_real8_2d), intent(inout) :: IOVar           !varialbe on IO processer   
+      real(r8),                  intent(inout) :: WorkerVar(:)    !varialbe on worker processer
+      TYPE(block_data_real8_2d), intent(inout) :: IOVar           !varialbe on IO processer
       real(r8),                  INTENT(inout) :: MasterVar(:,:)  !varialbe on master processer
 
       type(block_data_real8_2d) :: sumwt                          !sum of weight
       real(r8), allocatable     :: vectmp(:)                      !temporary vector
       logical,  allocatable     :: filter(:)                      !filter for patchtype
       !----------------------- Dummy argument --------------------------------
-      integer :: xblk, yblk, xloc, yloc 
+      integer :: xblk, yblk, xloc, yloc
       integer :: iblk, jblk, idata, ixseg, iyseg
       integer :: rmesg(3), smesg(3), isrc
       real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
       integer :: xdsp, ydsp, xcnt, ycnt
 
-      if(p_is_master)then 
+      if(p_is_master)then
          MasterVar(:,:) = spval
-      endif 
+      endif
 
       IF (p_is_worker) THEN
-         where (WorkerVar /= spval) 
+         where (WorkerVar /= spval)
             WorkerVar = WorkerVar / nacc
          endwhere
 
@@ -590,7 +590,7 @@ contains
          end if
       ENDIF
 
-      CALL mp2g_cama%map (WorkerVar, IOVar, spv = spval, msk = filter) 
+      CALL mp2g_cama%map (WorkerVar, IOVar, spv = spval, msk = filter)
 
       if (p_is_io) then
          call allocate_block_data (gcama, sumwt)
@@ -602,8 +602,8 @@ contains
          do yblk = 1, gblock%nyblk
             do xblk = 1, gblock%nxblk
                if (gblock%pio(xblk,yblk) == p_iam_glb) then
-                  do yloc = 1, gcama%ycnt(yblk) 
-                     do xloc = 1, gcama%xcnt(xblk) 
+                  do yloc = 1, gcama%ycnt(yblk)
+                     do xloc = 1, gcama%xcnt(xblk)
 
                         if (sumwt%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
                            IF (IOVar%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
@@ -660,7 +660,7 @@ contains
 
                   smesg = (/p_iam_glb, ixseg, iyseg/)
                   call mpi_send (smesg, 3, MPI_INTEGER, &
-                     p_root, 10011, p_comm_glb, p_err) 
+                     p_root, 10011, p_comm_glb, p_err)
                   call mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
                      p_root, 10011, p_comm_glb, p_err)
 
@@ -677,7 +677,7 @@ contains
    END SUBROUTINE colm2cama_real8
 
    SUBROUTINE cama2colm_real8 (MasterVar, IOVar, WorkerVar)
-      
+
       !DESCRIPTION
       !===========
       ! This subrountine is used for mapping cama-flood output to colm input
@@ -731,7 +731,7 @@ contains
                   sbuf = MasterVar (xdsp+1:xdsp+xcnt, ydsp+1:ydsp+ycnt)
                   smesg = (/ixseg, iyseg/)
                   call mpi_send (smesg, 2, MPI_INTEGER, &
-                     gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err) 
+                     gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err)
                   call mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
                      gblock%pio(iblk,jblk), 10000, p_comm_glb, p_err)
                   deallocate (sbuf)

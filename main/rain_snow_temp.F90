@@ -11,9 +11,9 @@
 !
   use precision
   use PhysicalConstants, only : tfrz
- 
+
   IMPLICIT NONE
- 
+
 ! ------------------------ Dummy Argument ------------------------------
   integer, INTENT(in) :: itypwat     ! land water type (3=glaciers)
 
@@ -45,7 +45,7 @@
 ! wet-bulb temperature
       call wetbulb(forc_t,forc_psrf,forc_q,t_precip)
 
-#IF(DEFINED option_precip_phase_discrimination_I)
+#if(defined option_precip_phase_discrimination_I)
 ! Wang, Y.H., Broxton, P., Fang, Y., Behrangi, A., Barlage, M., Zeng, X., & Niu, G.Y. (2019).
 ! A Wet-Bulb Temperature Based Rain-Snow Partitioning Scheme Improves Snowpack Prediction
 ! Over the Drier Western United States. Geophysical Research Letters, 46, 13,825-13,835.
@@ -66,8 +66,8 @@
          bifall = 50.0
       endif
 
-#ELIF(DEFINED option_precip_phase_discrimination_II)
-! CLM5.0 
+#elif(defined option_precip_phase_discrimination_II)
+! CLM5.0
       glaciers = .false.
       if (itypwat == 3) glaciers = .true.
 
@@ -88,7 +88,7 @@
       flfall = min(1.0_r8, max(0.0_r8,(forc_t - all_snow_t)*frac_rain_slope))
       bifall = min(169.0_r8, 50. + 1.7*(max(0.0, forc_t-tfrz+15.))**1.5)
 
-#ELSE
+#else
 ! the upper limit of air temperature is set for snowfall, this cut-off
 ! was selected based on Fig. 1, Plate 3-1, of Snow Hydrology (1956).
 ! the percentage of liquid water by mass, which is arbitrarily set to
@@ -102,12 +102,12 @@
          bifall = 50. + 1.7*(max(0.0, forc_t-tfrz+15.))**1.5
       end if
 
-#ENDIF
+#endif
 
       prc_rain = forc_prc*flfall        ! convective rainfall (mm/s)
       prl_rain = forc_prl*flfall        ! large scale rainfall (mm/s)
-      prc_snow = forc_prc*(1.-flfall)   ! convective snowfall (mm/s)            
-      prl_snow = forc_prl*(1.-flfall)   ! large scale snowfall (mm/s)              
+      prc_snow = forc_prc*(1.-flfall)   ! convective snowfall (mm/s)
+      prl_snow = forc_prl*(1.-flfall)   ! large scale snowfall (mm/s)
 
 ! -------------------------------------------------------------
 ! temperature of rainfall or snowfall
