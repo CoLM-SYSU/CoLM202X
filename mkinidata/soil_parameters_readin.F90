@@ -1,20 +1,26 @@
 #include <define.h>
 
 SUBROUTINE soil_parameters_readin (dir_landdata)
-   ! ======================================================================
-   ! Read in soil parameters in (patches,lon_points,lat_points) and
-   ! => 1d vector [numpatch]
-   !
-   ! Created by Yongjiu Dai, 03/2014
-   !             
-   ! ======================================================================
+
+!------------------------------------------------------------------------------------------
+! DESCRIPTION:
+! Read in soil parameters; make unit conversion for soil physical process modeling;
+! soil parameters 8 layers => 10 layers
+!
+! Original author: Yongjiu Dai, 03/2014
+!
+! Revisions:
+! Nan Wei, 01/2019: read more parameters from mksrfdata results
+! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
+!------------------------------------------------------------------------------------------
+
    use precision
    USE GlobalVars, only : nl_soil
    use spmd_task
    use ncio_vector
    use mod_landpatch
    use MOD_TimeInvariants
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    use mod_colm_debug
 #endif
 #ifdef SinglePoint
@@ -24,7 +30,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    IMPLICIT NONE
 
    ! ----------------------------------------------------------------------
-   
+
    character(LEN=*), INTENT(in) :: dir_landdata
 
    ! Local Variables
@@ -42,9 +48,9 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    real(r8), allocatable :: soil_lambda_l              (:) ! pore size distribution index (dimensionless)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    real(r8), allocatable :: soil_theta_r_l   (:)  ! residual water content (cm3/cm3)
-   real(r8), allocatable :: soil_alpha_vgm_l (:)  
-   real(r8), allocatable :: soil_L_vgm_l     (:)  
-   real(r8), allocatable :: soil_n_vgm_l     (:)  
+   real(r8), allocatable :: soil_alpha_vgm_l (:)
+   real(r8), allocatable :: soil_L_vgm_l     (:)
+   real(r8), allocatable :: soil_n_vgm_l     (:)
 #endif
    real(r8), allocatable :: soil_k_s_l     (:)  ! saturated hydraulic conductivity (cm/day)
    real(r8), allocatable :: soil_csol_l    (:)  ! heat capacity of soil solids [J/(m3 K)]
@@ -84,10 +90,10 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
          allocate ( soil_psi_s_l               (numpatch) )
          allocate ( soil_lambda_l              (numpatch) )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-         allocate ( soil_theta_r_l   (numpatch) )  
-         allocate ( soil_alpha_vgm_l (numpatch) )  
-         allocate ( soil_L_vgm_l     (numpatch) )  
-         allocate ( soil_n_vgm_l     (numpatch) )  
+         allocate ( soil_theta_r_l   (numpatch) )
+         allocate ( soil_alpha_vgm_l (numpatch) )
+         allocate ( soil_L_vgm_l     (numpatch) )
+         allocate ( soil_n_vgm_l     (numpatch) )
 #endif
          allocate ( soil_k_s_l     (numpatch) )
          allocate ( soil_csol_l    (numpatch) )
@@ -110,24 +116,24 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    DO nsl = 1, 8
 
 #ifdef SinglePoint
-      soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl) 
+      soil_vf_quartz_mineral_s_l (:) = SITE_soil_vf_quartz_mineral (nsl)
       soil_vf_gravels_s_l        (:) = SITE_soil_vf_gravels        (nsl)
       soil_vf_om_s_l             (:) = SITE_soil_vf_om             (nsl)
-      soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)  
+      soil_vf_sand_s_l           (:) = SITE_soil_vf_sand           (nsl)
       soil_wf_gravels_s_l        (:) = SITE_soil_wf_gravels        (nsl)
       soil_wf_sand_s_l           (:) = SITE_soil_wf_sand           (nsl)
       soil_OM_density_s_l        (:) = SITE_soil_OM_density        (nsl)
       soil_BD_all_s_l            (:) = SITE_soil_BD_all            (nsl)
       soil_theta_s_l             (:) = SITE_soil_theta_s           (nsl)
-      soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl) 
-      soil_lambda_l              (:) = SITE_soil_lambda            (nsl) 
+      soil_psi_s_l               (:) = SITE_soil_psi_s             (nsl)
+      soil_lambda_l              (:) = SITE_soil_lambda            (nsl)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)   
+      soil_theta_r_l   (:) = SITE_soil_theta_r  (nsl)
       soil_alpha_vgm_l (:) = SITE_soil_alpha_vgm(nsl)
       soil_L_vgm_l     (:) = SITE_soil_L_vgm    (nsl)
       soil_n_vgm_l     (:) = SITE_soil_n_vgm    (nsl)
 #endif
-      soil_k_s_l     (:) = SITE_soil_k_s      (nsl) 
+      soil_k_s_l     (:) = SITE_soil_k_s      (nsl)
       soil_csol_l    (:) = SITE_soil_csol     (nsl)
       soil_k_solids_l(:) = SITE_soil_k_solids (nsl)
       soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
@@ -137,9 +143,9 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
       soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
 #endif
-      
+
 #else
-      write(c,'(i1)') nsl 
+      write(c,'(i1)') nsl
 
       ! (1) read in the volumetric fraction of quartz within mineral soil
       lndname = trim(landdir)//'/vf_quartz_mineral_s_l'//trim(c)//'_patches.nc'
@@ -181,15 +187,15 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       ! (10) read in residual water content [cm3/cm3]
       lndname = trim(landdir)//'/theta_r_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'theta_r_l'//trim(c)//'_patches', landpatch, soil_theta_r_l)
-      
+
       ! (11) read in alpha in VGM model
       lndname = trim(landdir)//'/alpha_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'alpha_vgm_l'//trim(c)//'_patches', landpatch, soil_alpha_vgm_l)
-      
+
       ! (12) read in L in VGM model
       lndname = trim(landdir)//'/L_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'L_vgm_l'//trim(c)//'_patches', landpatch, soil_L_vgm_l)
-      
+
       ! (13) read in n in VGM model
       lndname = trim(landdir)//'/n_vgm_l'//trim(c)//'_patches.nc'
       call ncio_read_vector (lndname, 'n_vgm_l'//trim(c)//'_patches', landpatch, soil_n_vgm_l)
@@ -311,7 +317,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
       end if
 
    ENDDO
-         
+
    if (p_is_worker) then
 
       if (numpatch > 0) then
@@ -347,7 +353,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    end if
 
    ! The parameters of the top NINTH soil layers were given by datasets
-   ! [0-0.045 (LAYER 1-2), 0.045-0.091, 0.091-0.166, 0.166-0.289, 
+   ! [0-0.045 (LAYER 1-2), 0.045-0.091, 0.091-0.166, 0.166-0.289,
    !  0.289-0.493, 0.493-0.829, 0.829-1.383 and 1.383-2.296 m].
    ! The NINTH layer's soil parameters will assigned to the bottom soil layer (2.296 - 3.8019m).
 
