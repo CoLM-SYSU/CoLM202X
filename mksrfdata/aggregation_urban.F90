@@ -133,9 +133,11 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! local vars
    REAL(r8) :: sumarea
-   INTEGER  :: iurban, urb_typinx, urb_reginx
-   INTEGER  :: pop_i, imonth
-   INTEGER  :: ipxstt, ipxend, ipxl, m
+
+   INTEGER  :: iurban, f_inx, f_uid
+   INTEGER  :: pop_i, imonth, inx, uxid
+   INTEGER  :: ipxstt, ipxend, ipxl, il
+
 #ifdef SrfdataDiag
    INTEGER  :: ityp
    INTEGER  :: typindex(N_URB)
@@ -673,14 +675,15 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
             tb_min  (iurban) = tb_min  (iurban) + tbmin  (urb_typinx,urb_reginx) * area_one(ipxl)
             tb_max  (iurban) = tb_max  (iurban) + tbmax  (urb_typinx,urb_reginx) * area_one(ipxl)
 
-            DO m = 1, 10
-               IF (tkimrd(urb_typinx,urb_reginx,m) .ne. -999.) THEN
-                  tk_imrd(m,iurban) = tk_imrd(m,iurban) + tkimrd(urb_typinx,urb_reginx,m) * area_one(ipxl)
-                  tk_wgt (m,iurban) = tk_wgt (m,iurban) + area_one(ipxl)
+            DO il = 1, 10
+               IF (tkimrd(inx,uxid,il) .ne. -999.) THEN
+                  tk_imrd(il,iurban) = tk_imrd(il,iurban) + tkimrd(inx,uxid,il) * area_one(ipxl)
+                  tk_wgt (il,iurban) = tk_wgt (il,iurban) + area_one(ipxl)
                ENDIF
-               IF (cvimrd(urb_typinx,urb_reginx,m) .ne. -999.) THEN
-                  cv_imrd(m,iurban) = cv_imrd(m,iurban) + cvimrd(urb_typinx,urb_reginx,m) * area_one(ipxl)
-                  cv_wgt (m,iurban) = cv_wgt (m,iurban) + area_one(ipxl)
+               IF (cvimrd(inx,uxid,il) .ne. -999.) THEN
+                  cv_imrd(il,iurban) = cv_imrd(il,iurban) + cvimrd(inx,uxid,il) * area_one(ipxl)
+                  cv_wgt (il,iurban) = cv_wgt (il,iurban) + area_one(ipxl)
+
                ENDIF
             ENDDO
 
@@ -715,9 +718,13 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          tk_roof(:,iurban) = tk_roof (:,iurban) / sumarea
          tk_wall(:,iurban) = tk_wall (:,iurban) / sumarea
 
-         DO m = 1, 10
-            tk_imrd(m,iurban) = tk_imrd(m,iurban) / tk_wgt(m,iurban)
-            cv_imrd(m,iurban) = cv_imrd(m,iurban) / cv_wgt(m,iurban)
+         DO il = 1, 10
+            IF (tk_wgt(il,iurban) > 0.) THEN
+               tk_imrd(il,iurban) = tk_imrd(il,iurban) / tk_wgt(il,iurban)
+            ENDIF
+            IF (cv_wgt(il,iurban) > 0.) THEN
+               cv_imrd(il,iurban) = cv_imrd(il,iurban) / cv_wgt(il,iurban)
+            ENDIF
          ENDDO
 
          alb_roof(:,:,iurban) = alb_roof(:,:,iurban) / sumarea
