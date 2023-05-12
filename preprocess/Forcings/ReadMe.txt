@@ -15,7 +15,7 @@ GDAS:
 Wind: systematical change
 
 V7:
-wind 1918：abnormal值
+wind 1918：abnormal
 PRECT 2000-:large change 
 
 V4:
@@ -30,3 +30,5 @@ wind 2016 :spike exsit
 SHU 2016 2018:spike exsit
 PRS 2016:spike exsit
 PRE 2020.6:spike exsit
+
+Please check Potential_spikes.pdf
