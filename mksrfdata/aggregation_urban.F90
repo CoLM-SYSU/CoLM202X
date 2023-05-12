@@ -136,7 +136,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    INTEGER  :: iurban, urb_typinx, urb_reginx
    INTEGER  :: pop_i, imonth
-   INTEGER  :: ipxstt, ipxend, ipxl, m
+   INTEGER  :: ipxstt, ipxend, ipxl, il
 
 #ifdef SrfdataDiag
    INTEGER  :: ityp
