@@ -566,6 +566,19 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! ..............................................................................
    ! 2.5 initialize time-varying variables, as subgrid vectors of length [numpatch]
    ! ..............................................................................
+   ! ------------------------------------------
+   ! PLEASE
+   ! PLEASE UPDATE
+   ! PLEASE UPDATE when have the observed lake status
+   if (p_is_worker) then
+
+      t_lake      (:,:) = 285.
+      lake_icefrac(:,:) = 0.
+      savedtke1   (:)   = tkwat
+
+   end if
+   ! ------------------------------------------
+
    if (p_is_worker) then
 
       allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) )
@@ -716,7 +729,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
                rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
                fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
                scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
-               sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lakesno(1,u),&
+               sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
                fwsun(u),dfwsun(u),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
                swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
 
@@ -734,18 +747,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
          dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
       end do
-
-   end if
-
-   ! ------------------------------------------
-   ! PLEASE
-   ! PLEASE UPDATE
-   ! PLEASE UPDATE when have the observed lake status
-   if (p_is_worker) then
-
-      t_lake      (:,:) = 285.
-      lake_icefrac(:,:) = 0.
-      savedtke1   (:)   = tkwat
 
    end if
    ! ------------------------------------------

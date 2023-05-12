@@ -7,7 +7,7 @@ INCLUDE_DIR = -I../include -I../share -I${NETCDF_INC}
 VPATH = ../share
 
 # name of executable
-EXECUTABLE = mksrfdata_laiv2.x
+EXECUTABLE = mksrfdata.x
 
 ####################################################################
 .DEFAULT :
