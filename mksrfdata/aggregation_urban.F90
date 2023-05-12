@@ -134,9 +134,9 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    ! local vars
    REAL(r8) :: sumarea
 
-   INTEGER  :: iurban, f_inx, f_uid
-   INTEGER  :: pop_i, imonth, inx, uxid
-   INTEGER  :: ipxstt, ipxend, ipxl, il
+   INTEGER  :: iurban, urb_typinx, urb_reginx
+   INTEGER  :: pop_i, imonth
+   INTEGER  :: ipxstt, ipxend, ipxl, m
 
 #ifdef SrfdataDiag
    INTEGER  :: ityp
@@ -676,12 +676,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
             tb_max  (iurban) = tb_max  (iurban) + tbmax  (urb_typinx,urb_reginx) * area_one(ipxl)
 
             DO il = 1, 10
-               IF (tkimrd(inx,uxid,il) .ne. -999.) THEN
-                  tk_imrd(il,iurban) = tk_imrd(il,iurban) + tkimrd(inx,uxid,il) * area_one(ipxl)
+               IF (tkimrd(urb_typinx,,urb_reginx,il) .ne. -999.) THEN
+                  tk_imrd(il,iurban) = tk_imrd(il,iurban) + tkimrd(urb_typinx,,urb_reginx,il) * area_one(ipxl)
                   tk_wgt (il,iurban) = tk_wgt (il,iurban) + area_one(ipxl)
                ENDIF
-               IF (cvimrd(inx,uxid,il) .ne. -999.) THEN
-                  cv_imrd(il,iurban) = cv_imrd(il,iurban) + cvimrd(inx,uxid,il) * area_one(ipxl)
+               IF (cvimrd(urb_typinx,,urb_reginx,il) .ne. -999.) THEN
+                  cv_imrd(il,iurban) = cv_imrd(il,iurban) + cvimrd(urb_typinx,,urb_reginx,il) * area_one(ipxl)
                   cv_wgt (il,iurban) = cv_wgt (il,iurban) + area_one(ipxl)
 
                ENDIF
