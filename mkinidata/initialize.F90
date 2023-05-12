@@ -69,13 +69,13 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    real(r8) :: rlon, rlat
 
    LOGICAL  :: use_wtd
-   
+
    CHARACTER(len=256) :: fwtd
    type(grid_type)    :: gwtd
    type(block_data_real8_2d)    :: wtd_xy  ! [m]
    type(mapping_grid2pset_type) :: m_wtd2p
 
-   REAL(r8) :: zwtmm 
+   REAL(r8) :: zwtmm
    real(r8) :: zc_soimm(1:nl_soil)
    real(r8) :: zi_soimm(0:nl_soil)
    real(r8) :: vliq_r  (1:nl_soil)
@@ -462,12 +462,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       CALL julian2monthday (idate(1), idate(2), month, mday)
       call gwtd%define_from_file (fwtd)
-   
+
       if (p_is_io) then
          call allocate_block_data (gwtd, wtd_xy)
-         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)  
+         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
       ENDIF
-   
+
       call m_wtd2p%build (gwtd, landpatch)
       call m_wtd2p%map_aweighted (wtd_xy, zwt)
 
@@ -519,6 +519,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef URBAN_MODEL
    CALL UrbanLAI_readin_nc (year, month, dir_landdata)
 #endif
+
 #ifdef CLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
    CALL check_vector_data ('SAI ', tsai)
@@ -590,7 +591,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vliq_r(:) = theta_r(i,:) 
+            vliq_r(:) = theta_r(i,:)
             prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
             prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
             prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
@@ -751,8 +752,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! -----
 #ifdef LATERAL_FLOW
-      
-#if (defined CROP) 
+
+#if (defined CROP)
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
 #else
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
@@ -765,7 +766,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       IF (numhru > 0) THEN
          veloc_hru(:) = 0
-            
+
          DO i = 1, numhru
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)

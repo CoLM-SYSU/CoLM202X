@@ -520,7 +520,7 @@
            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
 #ifdef supercool_water
            ENDIF
-#ENDIF
+#endif
         endif
 
         xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim

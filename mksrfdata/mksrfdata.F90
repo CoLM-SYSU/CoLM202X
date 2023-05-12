@@ -342,23 +342,29 @@ PROGRAM mksrfdata
 #endif
 #endif
 
-   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
+   !CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
 #ifdef USE_DEPTH_TO_BEDROCK
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   !CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
-   CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
+   !CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+   !CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+
+#ifdef URBAN_MODEL
+   CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &
+                           grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+#endif
+
 
 #ifdef URBAN_MODEL
    CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &

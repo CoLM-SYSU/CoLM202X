@@ -50,7 +50,6 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 
       ! define variables for reading in
       ! -------------------------------------------
-      ! 城市形态结构参数
 #ifdef USE_POINT_DATA
 #ifdef USE_OBS_PARA
       REAL(r8) :: rfwt, rfht, tpct, wpct, hw_point, htop_point, prwt
@@ -76,7 +75,6 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       REAL(r8), allocatable :: urbanwaterpct (:)  ! urban water fraction [-]
       REAL(r8), allocatable :: urbantreepct  (:)  ! urban tree fraction [-]
       REAL(r8), allocatable :: urbantreetop  (:)  ! urban tree height [m]
-      
 
       ! albedo
       REAL(r8), allocatable :: albroof   (:,:,:)  ! albedo of roof [-]
@@ -108,8 +106,8 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
       REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
 
-
 #ifndef USE_LCZ
+
       ! READ in urban data
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/urban.nc'
@@ -139,6 +137,8 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall)
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp)
 #endif      
+
+!TODO: add point case
 !#ifdef USE_POINT_DATA
 !#ifdef USE_OBS_PARA
 
@@ -167,7 +167,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       ! wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
       ! urbantreepct (1,1,:) = tpct*100
       ! urbanwaterpct(1,1,:) = wpct*100
-      ! wtroof  (1,1,:) = rfwt
+      ! wtroof       (1,1,:) = rfwt
       ! htroof       (1,1,:) = rfht
       ! urbantreetop (1,1,:) = htop_point
       ! canyonhwr    (1,1,:) = hw_point
@@ -236,50 +236,49 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 
                   thick_roof      = thickroof     (u) !thickness of roof [m]
                   thick_wall      = thickwall     (u) !thickness of wall [m]
-
 #else
-            ! LCZ!!!!!!!!!!!
-                  hwr  (u)        = h2w    (landurban%settyp(u)) !average building height to their distance
-                  fgper(u)        = perfrac(landurban%settyp(u)) !pervious fraction to ground area
+                  ! read in LCZ constants
+                  hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
+                  fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
 
                   DO ns = 1,2
                       DO nr = 1,2
-                         alb_roof(ns,nr,u) = roofalb   (landurban%settyp(u)) !albedo of roof
-                         alb_wall(ns,nr,u) = wallalb   (landurban%settyp(u)) !albedo of walls
-                         alb_gimp(ns,nr,u) = roadalb   (landurban%settyp(u)) !albedo of impervious
-                         alb_gper(ns,nr,u) = peralb    (landurban%settyp(u)) !albedo of pervious road
+                         alb_roof(ns,nr,u) = albroof_lcz   (landurban%settyp(u)) !albedo of roof
+                         alb_wall(ns,nr,u) = albwall_lcz   (landurban%settyp(u)) !albedo of walls
+                         alb_gimp(ns,nr,u) = albimproad_lcz(landurban%settyp(u)) !albedo of impervious
+                         alb_gper(ns,nr,u) = albperroad_lcz(landurban%settyp(u)) !albedo of pervious road
                       ENDDO
                   ENDDO
 
-                  em_roof(u)      = roofem     (landurban%settyp(u)) !emissivity of roof
-                  em_wall(u)      = wallem     (landurban%settyp(u)) !emissiviry of wall
-                  em_gimp(u)      = roadem     (landurban%settyp(u)) !emissivity of impervious
-                  em_gper(u)      = perem      (landurban%settyp(u)) !emissivity of pervious
+                  em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
+                  em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissiviry of wall
+                  em_gimp(u) = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
+                  em_gper(u) = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
 
                   DO ulev = 1, nl_roof
-                     cv_roof(:,u)    = roofcv      (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
-                     tk_roof(:,u)    = rooftk      (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
+                     cv_roof(:,u) = cvroof_lcz (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
+                     tk_roof(:,u) = tkroof_lcz (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
                   ENDDO
 
                   DO ulev = 1, nl_wall
-                     cv_wall(:,u)    = wallcv      (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
-                     tk_wall(:,u)    = walltk      (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
+                     cv_wall(:,u) = cvwall_lcz (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
+                     tk_wall(:,u) = tkwall_lcz (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
                   ENDDO
 
                   DO ulev = 1, nl_soil
-                     cv_gimp(:,u)    = roadcv   (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
-                     tk_gimp(:,u)    = roadtk   (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
+                     cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
+                     tk_gimp(:,u) = tkperroad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
                   ENDDO
 
-                  thick_roof      = roofth     (landurban%settyp(u)) !thickness of roof [m]
-                  thick_wall      = wallth     (landurban%settyp(u)) !thickness of wall [m]
+                  thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
+                  thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
 
 #ifdef URBAN_BEM
-                  t_roommax(u)    = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
-                  t_roommin(u)    = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
+                  t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
+                  t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
 #else
-                  t_roommax(u)    = 373.16                !maximum temperature of inner room [K]
-                  t_roommin(u)    = 180.00                !minimum temperature of inner room [K]
+                  t_roommax(u) = 373.16                !maximum temperature of inner room [K]
+                  t_roommin(u) = 180.00                !minimum temperature of inner room [K]
 #endif
 #endif
 
@@ -298,7 +297,9 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                   ELSE
                      fveg_urb(u) = 0.
                   ENDIF
-                  ! 假设树的覆盖比例小于等于地面比例(屋顶没有树)
+                  
+                  ! Assuming that the tree coverage is less than or equal
+                  ! to the ground cover (assume no trees on the roof)
                   fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
                   fveg    (i) = fveg_urb(u)
 #else
@@ -337,6 +338,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                   dz_wall(nl_wall,u) = z_wall(nl_wall,u)-z_wall(nl_wall-1,u)
 
                   ! lake depth and layer depth
+                  !NOTE: USE global lake depth right now, the below set to 1m
                   !lakedepth(npatch) = 1.
                   !dz_lake(:,npatch) = lakedepth(npatch) / nl_lake
             ENDIF

@@ -65,23 +65,24 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    TYPE(block_data_real8_2d) :: usai
 
    ! output variables
-   INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: LUCY_coun_
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_den
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_urbwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: wt_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: ht_roof
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: lai_urb
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: sai_urb
+   INTEGER , allocatable, dimension(:) :: LUCY_coun
+   REAL(r8), allocatable, dimension(:) :: LUCY_coun_
+   REAL(r8), allocatable, dimension(:) :: pop_den
+   REAL(r8), allocatable, dimension(:) :: pct_tree
+   REAL(r8), allocatable, dimension(:) :: htop_urb
+   REAL(r8), allocatable, dimension(:) :: pct_urbwt
+   REAL(r8), allocatable, dimension(:) :: wt_roof
+   REAL(r8), allocatable, dimension(:) :: ht_roof
+   REAL(r8), allocatable, dimension(:) :: lai_urb
+   REAL(r8), allocatable, dimension(:) :: sai_urb
 
-   !TODO: check the blow
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: area
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tc
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: urbwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop
+   !TODO: check the below
+   REAL(r8), allocatable, dimension(:,:)   :: area
+   REAL(r8), allocatable, dimension(:,:,:) :: wgt_top
+   REAL(r8), allocatable, dimension(:,:,:) :: tc
+   REAL(r8), allocatable, dimension(:,:,:) :: urwt
+   REAL(r8), allocatable, dimension(:,:,:) :: htop
+
 
    INTEGER , allocatable, dimension(:) :: LUCY_reg_one
    REAL(r8), allocatable, dimension(:) :: area_one
@@ -540,6 +541,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
                sai_urb(iurban) = sum(slai_one * gfcc_tc_one * area_one) / &
                                  sum(gfcc_tc_one * area_one)
             ENDIF
+
          ENDDO
 
 #ifdef USEMPI
@@ -851,3 +853,5 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE aggregation_urban
+#endif
+

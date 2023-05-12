@@ -346,7 +346,8 @@ CONTAINS
       CALL ncio_write_vector (filename, 'ipxstt', trim(psetname), pixelset, pixelset%ipxstt, rcompress)
       CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, rcompress)
       CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, rcompress)
-      
+     
+      print*, 'urban patch',count(pixelset%settyp==13) 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -506,6 +507,8 @@ CONTAINS
       CALL ncio_read_vector (filename, 'ipxend', pixelset, pixelset%ipxend)
       CALL ncio_read_vector (filename, 'settyp', pixelset, pixelset%settyp)
 
+      print*, filename
+      print*,'urban patch',count(pixelset%settyp==13)
       IF (p_is_worker) THEN
          IF (pixelset%nset > 0) THEN
 

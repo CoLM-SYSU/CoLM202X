@@ -160,9 +160,11 @@ CONTAINS
                ! CALL quicksort (npxl, regid, order)
                regid(:) = regid(order)
 
+               !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
                mesh(ie)%ilat(ipxstt:ipxend) = mesh(ie)%ilat(order)
 
+               !???
                DO ipxl = ipxstt, ipxend
                   IF (ipxl /= ipxstt) THEN
                      IF (types(ipxl) /= types(ipxl-1)) THEN

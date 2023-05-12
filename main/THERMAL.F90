@@ -883,7 +883,7 @@ IF (patchtype == 0) THEN
             rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
          ENDDO
       ENDIF
-#ENDIF
+#endif
 
       rstfacsun_out         = sum( rstfacsun_p         (ps:pe) * pftfrac(ps:pe) )
       rstfacsha_out         = sum( rstfacsha_p         (ps:pe) * pftfrac(ps:pe) )
