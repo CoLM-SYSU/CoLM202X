@@ -158,7 +158,7 @@ CONTAINS
                !???may have bugs below
                CALL quicksort (npxl, types, order)
                ! CALL quicksort (npxl, regid, order)
-               (ipxstt:ipxend) = regid(order)
+               regid(ipxstt:ipxend) = regid(order)
 
                !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
