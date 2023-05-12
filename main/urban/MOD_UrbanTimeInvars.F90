@@ -67,8 +67,8 @@ MODULE MOD_UrbanTimeInvars
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_UrbanTimeInvars
    PUBLIC :: deallocate_UrbanTimeInvars
-   PUBLIC :: READ_UbanTimeInvars
-   PUBLIC :: WRITE_UbanTimeInvars
+   PUBLIC :: READ_UrbanTimeInvars
+   PUBLIC :: WRITE_UrbanTimeInvars
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -124,7 +124,7 @@ CONTAINS
 
             allocate (t_roommax            (numurban))
             allocate (t_roommin            (numurban))
-            allocate (popcell              (numurban))
+            allocate (pop_den              (numurban))
             
             allocate (vehicle          (3  ,numurban))
             allocate (week_holiday     (7  ,numurban)) 
@@ -156,7 +156,7 @@ CONTAINS
      CALL ncio_read_vector (file_restart, 'PCT_Water'     , landurban, flake    )
 
      ! LUCY paras
-     CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, popcell     )
+     CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, pop_den     )
      CALL ncio_read_vector (file_restart, 'VEHC_NUM'    , 3  , landurban, vehicle     )
      CALL ncio_read_vector (file_restart, 'week_holiday', 7  , landurban, week_holiday)
      CALL ncio_read_vector (file_restart, 'weekendhour' , 24 , landurban, weh_prof    )
@@ -237,7 +237,7 @@ CONTAINS
      CALL ncio_write_vector (file_restart, 'PCT_Water'     , 'urban', landurban, flake   , DEF_REST_COMPRESS_LEVEL)
 
      ! LUCY paras
-     CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban', landurban, popcell     , DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban', landurban, pop_den     , DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'VEHC_NUM'    , 'ityp' , ityp , 'urban', landurban, vehicle     , DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'week_holiday', 'iweek', iweek, 'urban', landurban, week_holiday, DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'weekendhour' , 'ihour', ihour, 'urban', landurban, weh_prof    , DEF_REST_COMPRESS_LEVEL)
@@ -318,7 +318,7 @@ CONTAINS
             deallocate (t_roommax )
             deallocate (t_roommin )
 
-            deallocate (popcell      )
+            deallocate (pop_den      )
             deallocate (vehicle      )
             deallocate (week_holiday )
             deallocate (weh_prof     )

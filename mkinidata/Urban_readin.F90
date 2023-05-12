@@ -290,7 +290,6 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 
 #ifdef URBAN_TREE
                   ! set tree fractional cover (<= 1.-froof)
-                  ! 植被覆盖占非水体面积部分的比例
                   fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
                   IF (flake(u) < 1.) THEN
                      fveg_urb(u) = fveg_urb(u)/(1.-flake(u))

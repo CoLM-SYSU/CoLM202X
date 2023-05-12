@@ -437,7 +437,7 @@ CONTAINS
       call ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress) !
       call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) 
 
-   END SUBROUTINE WRITE_URBTimeVars
+   END SUBROUTINE WRITE_UrbanTimeVars
 
    SUBROUTINE deallocate_UrbanTimeVars
 
