@@ -19,10 +19,10 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_TimeVariables
  use MOD_1D_Forcing
  use MOD_1D_Fluxes
- USE mod_landpatch, only : numpatch
- USE mod_landurban, only : patch2urban
- USE mod_namelist, only : DEF_forcing
- USE mod_forcing, only : forcmask
+ USE mod_landpatch, only: numpatch
+ USE mod_landurban, only: patch2urban
+ USE mod_namelist, only: DEF_forcing
+ USE mod_forcing, only: forcmask
  use omp_lib
 #ifdef CaMa_Flood
  !get flood variables: inundation depth[mm], inundation fraction [0-1], inundation evaporation [mm/s], inundation re-infiltration[mm/s]
@@ -39,13 +39,13 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
   real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
-  integer :: i, m
+  integer :: i, m, u
   logical :: run_urban
 
 ! ======================================================================
 
 #ifdef URBAN_MODEL
-  run_urban = True
+  run_urban = .True.
 #endif
 
 #ifdef OPENMP
@@ -174,7 +174,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
 #ifdef URBAN_MODEL
          if(run_urban .and. m==URBAN) THEN
-           u = path2urban(i)
+           u = patch2urban(i)
            print*, hroof(U)
            !CALL URBAN_CLMAIN()
          endif

@@ -40,6 +40,9 @@ PROGRAM CLM
    USE mod_landhru
 #endif
    use mod_landpatch
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
