@@ -212,7 +212,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! read global tree top height from nc file
    CALL HTOP_readin (dir_landdata)
 #ifdef URBAN_MODEL
-   CALL Urban_readin (dir_landdata, lc_year)
+   CALL Urban_readin (dir_landdata, 2005)
 #endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
