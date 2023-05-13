@@ -570,6 +570,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
+
    if (p_is_worker) then
 
       t_lake      (:,:) = 285.
@@ -581,6 +582,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    if (p_is_worker) then
 
+      !TODO: can be removed as CLMDRIVER.F90 yuan@
       allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) )
       allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) )
 
@@ -671,8 +673,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 #ifdef URBAN_MODEL
          IF (m == URBAN) THEN
-            u = patch2urban(i)
 
+            u = patch2urban(i)
             print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
             print*, hroof(u), hwr(u), alb_roof(:,:,u)
             lwsun         (u) = 0.   !net longwave radiation of sunlit wall
@@ -697,10 +699,10 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             wliq_gpersno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
             wliq_lakesno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
 
-            wliq_soisno (: ,i) = 0.
-            wliq_soisno (:1,i) = wliq_roofsno(:1,u)*froof(u)
-            wliq_soisno (: ,i) = wliq_soisno(: ,i) + wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
-            wliq_soisno (:1,i) = wliq_soisno(:1,i) + wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+            wliq_soisno(: ,i) = 0.
+            wliq_soisno(:1,i) = wliq_roofsno(:1,u)*froof(u)
+            wliq_soisno(: ,i) = wliq_soisno(: ,i) + wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
+            wliq_soisno(:1,i) = wliq_soisno(:1,i) + wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
 
             snowdp_roof   (u) = 0.   !snow depth [m]
             snowdp_gimp   (u) = 0.   !snow depth [m]
@@ -737,7 +739,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          ENDIF
 #endif
          print*,'after IniTimeVar',i
-      enddo
+      ENDDO
 
       ! for urban debug
       ! print*, patch2urb

@@ -35,12 +35,14 @@ SUBROUTINE UrbanLAI_readin_nc (year, time, dir_landdata)!(year, month, dir_srfda
 ! READ in Leaf area index and stem area index
       write(ctime,'(i2.2)') time
 
+      !TODO: parameter input for time year
       lndname = trim(dir_landdata)//'/urban/2005/urban_LAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_LAI',  landurban, urb_lai)
 
       lndname = trim(dir_landdata)//'/urban/2005/urban_SAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 
+      !TODO: usage?
       IF (p_is_worker) THEN
          DO u = 1, numurban
             ! urb_lai  (u) = urbantreelai(u) !leaf area index

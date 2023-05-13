@@ -82,6 +82,7 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: snowdp_lake    (:) !urban lake snow depth [m]
 
    REAL(r8), allocatable :: t_room         (:) !temperature of inner building [K]
+   !TODO: rename the below variables
    REAL(r8), allocatable :: tafu           (:) !temperature of outer building [K]
    REAL(r8), allocatable :: Fhac           (:) !sensible flux from heat or cool AC [W/m2]
    REAL(r8), allocatable :: Fwst           (:) !waste heat flux from heat or cool AC [W/m2]
@@ -90,7 +91,7 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: Fhah           (:) !sensible heat flux from heating [W/m2]
    REAL(r8), allocatable :: vehc           (:) !flux from vehicle [W/m2]
    REAL(r8), allocatable :: meta           (:) !flux from metabolism [W/m2]
-   
+
    REAL(r8), allocatable :: fsen_roof      (:) !sensible heat flux from roof [W/m2]
    REAL(r8), allocatable :: fsen_wsun      (:) !sensible heat flux from sunlit wall [W/m2]
    REAL(r8), allocatable :: fsen_wsha      (:) !sensible heat flux from shaded wall [W/m2]
@@ -106,9 +107,9 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: troof          (:) !temperature of roof [K]
    REAL(r8), allocatable :: twall          (:) !temperature of wall [K]
 
-   REAL(r8), allocatable :: urb_green      (:)
-   REAL(r8), allocatable :: urb_lai        (:)
-   REAL(r8), allocatable :: urb_sai        (:)
+   REAL(r8), allocatable :: urb_green      (:) !TODO: need note
+   REAL(r8), allocatable :: urb_lai        (:) !
+   REAL(r8), allocatable :: urb_sai        (:) !
 
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -245,12 +246,12 @@ CONTAINS
       call ncio_read_vector (file_restart, 'fwsun' , landurban, fwsun ) !
       call ncio_read_vector (file_restart, 'dfwsun', landurban, dfwsun) !
 
-      call ncio_read_vector (file_restart, 'sroof', 2,2, landurban, sroof) !
-      call ncio_read_vector (file_restart, 'swsun', 2,2, landurban, swsun) !
-      call ncio_read_vector (file_restart, 'swsha', 2,2, landurban, swsha) !
-      call ncio_read_vector (file_restart, 'sgimp', 2,2, landurban, sgimp) !
-      call ncio_read_vector (file_restart, 'sgper', 2,2, landurban, sgper) !
-      call ncio_read_vector (file_restart, 'slake', 2,2, landurban, slake) !
+      call ncio_read_vector (file_restart, 'sroof', 2, 2, landurban, sroof) !
+      call ncio_read_vector (file_restart, 'swsun', 2, 2, landurban, swsun) !
+      call ncio_read_vector (file_restart, 'swsha', 2, 2, landurban, swsha) !
+      call ncio_read_vector (file_restart, 'sgimp', 2, 2, landurban, sgimp) !
+      call ncio_read_vector (file_restart, 'sgper', 2, 2, landurban, sgper) !
+      call ncio_read_vector (file_restart, 'slake', 2, 2, landurban, slake) !
 
       call ncio_read_vector (file_restart, 'lwsun', landurban, lwsun) !
       call ncio_read_vector (file_restart, 'lwsha', landurban, lwsha) !
@@ -259,7 +260,7 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'z_sno_roof' , -maxsnl, landurban, z_sno_roof ) !
       call ncio_read_vector (file_restart, 'z_sno_gimp' , -maxsnl, landurban, z_sno_gimp ) !
-      call ncio_read_vector (file_restart, 'z_sno_gper' , -maxsnl, landurban, z_sno_gper ) ! 
+      call ncio_read_vector (file_restart, 'z_sno_gper' , -maxsnl, landurban, z_sno_gper ) !
       call ncio_read_vector (file_restart, 'z_sno_lake' , -maxsnl, landurban, z_sno_lake ) !
 
       call ncio_read_vector (file_restart, 'dz_sno_roof', -maxsnl, landurban, dz_sno_roof) !
@@ -321,39 +322,39 @@ CONTAINS
       call ncio_read_vector (file_restart, 'twall'      , landurban, twall      ) !
       call ncio_read_vector (file_restart, 'urb_green'  , landurban, urb_green  ) !
       call ncio_read_vector (file_restart, 'tree_lai'   , landurban, urb_lai    ) !
-      call ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    ) 
+      call ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    ) !
 
    END SUBROUTINE READ_UrbanTimeVars
 
    SUBROUTINE WRITE_UrbanTimeVars (file_restart)
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE mod_landurban
-     use ncio_vector
-     USE GlobalVars
-     IMPLICIT NONE
+      USE mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+      USE mod_landurban
+      USE ncio_vector
+      USE GlobalVars
+      IMPLICIT NONE
 
-     character(LEN=*), intent(in) :: file_restart
+      character(LEN=*), intent(in) :: file_restart
 
-     ! Local variables
-     integer :: compress
+      ! Local variables
+      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_COMPRESS_LEVEL
 
-     call ncio_create_file_vector (file_restart, landurban)
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
+      call ncio_create_file_vector (file_restart, landurban)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'urban')
 
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'snow'    , -maxsnl       )
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'soil'    , nl_soil       )
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'roof'    , nl_roof       )
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'wall'    , nl_wall       )
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'soilsnow', nl_soil-maxsnl)
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'roofsnow', nl_roof-maxsnl)
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'wallsnow', nl_wall-maxsnl)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'snow'    , -maxsnl       )
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'soil'    , nl_soil       )
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'roof'    , nl_roof       )
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'wall'    , nl_wall       )
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'soilsnow', nl_soil-maxsnl)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'roofsnow', nl_roof-maxsnl)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'wallsnow', nl_wall-maxsnl)
 
 
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'band', 2)
-     CALL ncio_define_dimension_vector (file_restart, landurban, 'rtyp', 2)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'band', 2)
+      CALL ncio_define_dimension_vector (file_restart, landurban, 'rtyp', 2)
 
 
       call ncio_write_vector (file_restart, 'fwsun' , 'urban', landurban, fwsun , compress) !
@@ -373,9 +374,9 @@ CONTAINS
 
       call ncio_write_vector (file_restart, 'z_sno_roof' , 'snow', -maxsnl, 'urban', landurban, z_sno_roof , compress) !
       call ncio_write_vector (file_restart, 'z_sno_gimp' , 'snow', -maxsnl, 'urban', landurban, z_sno_gimp , compress) !
-      call ncio_write_vector (file_restart, 'z_sno_gper' , 'snow', -maxsnl, 'urban', landurban, z_sno_gper , compress) ! 
+      call ncio_write_vector (file_restart, 'z_sno_gper' , 'snow', -maxsnl, 'urban', landurban, z_sno_gper , compress) !
       call ncio_write_vector (file_restart, 'z_sno_lake' , 'snow', -maxsnl, 'urban', landurban, z_sno_lake , compress) !
-      
+
       call ncio_write_vector (file_restart, 'dz_sno_roof', 'snow', -maxsnl, 'urban', landurban, dz_sno_roof, compress) !
       call ncio_write_vector (file_restart, 'dz_sno_gimp', 'snow', -maxsnl, 'urban', landurban, dz_sno_gimp, compress) !
       call ncio_write_vector (file_restart, 'dz_sno_gper', 'snow', -maxsnl, 'urban', landurban, dz_sno_gper, compress) !
@@ -432,10 +433,10 @@ CONTAINS
       call ncio_write_vector (file_restart, 'lfevp_gper' , 'urban', landurban, lfevp_gper , compress) !
       call ncio_write_vector (file_restart, 'lfevp_urbl' , 'urban', landurban, lfevp_urbl , compress) !
       call ncio_write_vector (file_restart, 'troof'      , 'urban', landurban, troof      , compress) !
-      call ncio_write_vector (file_restart, 'twall'      , 'urban', landurban, twall      , compress)
+      call ncio_write_vector (file_restart, 'twall'      , 'urban', landurban, twall      , compress) !
       call ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress) !
       call ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress) !
-      call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) 
+      call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) !
 
    END SUBROUTINE WRITE_UrbanTimeVars
 

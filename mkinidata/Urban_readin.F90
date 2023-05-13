@@ -39,7 +39,8 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
 #endif
 #endif
       ! parameters for LUCY
-      INTEGER , allocatable :: urbanlucy(:)       ! LUCY region id
+      INTEGER , allocatable :: lucyid(:)          ! LUCY region id
+      REAL(r8), allocatable :: popden(:)          ! population density [person/km2]
 
       INTEGER , allocatable :: lweek_holiday(:,:) ! week holidays
       REAL(r8), allocatable :: lwdh_prof    (:,:) ! Diurnal traffic flow profile [-]
@@ -48,7 +49,16 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       REAL(r8), allocatable :: lfix_holiday (:,:) ! Fixed public holidays, holiday(0) or workday(1)
       REAL(r8), allocatable :: lvehicle     (:,:) ! vehicle numbers per thousand people
 
+      ! thickness of roof and wall
+      REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
+      REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
+
+      allocate (lucyid    (numurban))
+
 #ifndef USE_LCZ
+
+      allocate (thickroof (numurban))
+      allocate (thickwall (numurban))
 
       ! READ in urban data
       write(cyear,'(i4.4)') lc_year
@@ -103,7 +113,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/LUCY_country_id.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, urbanlucy  )
+      CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, lucyid  )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/WT_ROOF.nc'
       print*, lndname
@@ -116,15 +126,15 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Water.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake)
-      
+
       lndname = trim(dir_landdata)//'/urban/2005/PCT_Tree.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
-      
-      lndname = trim(dir_landdata)//'/urban/2005/htop_ur.nc'
+
+      lndname = trim(dir_landdata)//'/urban/2005/htop_urb.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
-      
+
       lndname = trim("/stu01/dongwz/data/CLMrawdata/urban_5x5/LUCY_rawdata.nc")
       print*, lndname
       CALL ncio_read_bcast_serial (lndname,  "vehicle"    , lvehicle     )
@@ -135,131 +145,132 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       CALL ncio_read_bcast_serial (lndname,  "holiday"    , lfix_holiday )
 
       IF (p_is_worker) THEN
-         DO i = 1, numpatch
-            m = patchclass(i)
-            IF (m == URBAN) THEN
-                  u = patch2urban(i)
-                  
-                  lucy_id = urbanlucy     (u)
-                  IF (lucy_id > 0) THEN
-                     vehicle(:,u)      = lvehicle(lucy_id,:)
-                     week_holiday(:,u) = lweek_holiday(lucy_id,:)
-                     weh_prof(:,u)     = lweh_prof(lucy_id,:)
-                     wdh_prof(:,u)     = lwdh_prof(lucy_id,:)
-                     hum_prof(:,u)     = lhum_prof(lucy_id,:)
-                     fix_holiday(:,u)  = lfix_holiday(lucy_id,:)
-                  ENDIF
+
+         DO u = 1, numurban
+
+            i       = urban2patch (u)
+            lucy_id = lucyid      (u)
+
+            IF (lucy_id > 0) THEN
+               vehicle      (:,u) = lvehicle      (lucy_id,:)
+               week_holiday (:,u) = lweek_holiday (lucy_id,:)
+               weh_prof     (:,u) = lweh_prof     (lucy_id,:)
+               wdh_prof     (:,u) = lwdh_prof     (lucy_id,:)
+               hum_prof     (:,u) = lhum_prof     (lucy_id,:)
+               fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
+            ENDIF
+
 #ifndef USE_LCZ
-                  thick_roof      = thickroof     (u) !thickness of roof [m]
-                  thick_wall      = thickwall     (u) !thickness of wall [m]
+            thick_roof = thickroof (u) !thickness of roof [m]
+            thick_wall = thickwall (u) !thickness of wall [m]
 #else
-                  ! read in LCZ constants
-                  hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
-                  fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
+            ! read in LCZ constants
+            hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
+            fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
 
-                  DO ns = 1,2
-                      DO nr = 1,2
-                         alb_roof(ns,nr,u) = albroof_lcz   (landurban%settyp(u)) !albedo of roof
-                         alb_wall(ns,nr,u) = albwall_lcz   (landurban%settyp(u)) !albedo of walls
-                         alb_gimp(ns,nr,u) = albimproad_lcz(landurban%settyp(u)) !albedo of impervious
-                         alb_gper(ns,nr,u) = albperroad_lcz(landurban%settyp(u)) !albedo of pervious road
-                      ENDDO
-                  ENDDO
+            DO ns = 1,2
+                DO nr = 1,2
+                   alb_roof(ns,nr,u) = albroof_lcz    (landurban%settyp(u)) !albedo of roof
+                   alb_wall(ns,nr,u) = albwall_lcz    (landurban%settyp(u)) !albedo of walls
+                   alb_gimp(ns,nr,u) = albimproad_lcz (landurban%settyp(u)) !albedo of impervious
+                   alb_gper(ns,nr,u) = albperroad_lcz (landurban%settyp(u)) !albedo of pervious road
+                ENDDO
+            ENDDO
 
-                  em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
-                  em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissiviry of wall
-                  em_gimp(u) = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
-                  em_gper(u) = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
+            em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
+            em_wall(u) = emwall_lcz    (landurban%settyp(u)) !emissiviry of wall
+            em_gimp(u) = emimproad_lcz (landurban%settyp(u)) !emissivity of impervious
+            em_gper(u) = emperroad_lcz (landurban%settyp(u)) !emissivity of pervious
 
-                  DO ulev = 1, nl_roof
-                     cv_roof(:,u) = cvroof_lcz (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
-                     tk_roof(:,u) = tkroof_lcz (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
-                  ENDDO
+            DO ulev = 1, nl_roof
+               cv_roof(:,u) = cvroof_lcz (landurban%settyp(u)) !heat capacity of roof [J/(m2 K)]
+               tk_roof(:,u) = tkroof_lcz (landurban%settyp(u)) !thermal conductivity of roof [W/m-K]
+            ENDDO
 
-                  DO ulev = 1, nl_wall
-                     cv_wall(:,u) = cvwall_lcz (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
-                     tk_wall(:,u) = tkwall_lcz (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
-                  ENDDO
+            DO ulev = 1, nl_wall
+               cv_wall(:,u) = cvwall_lcz (landurban%settyp(u)) !heat capacity of wall [J/(m2 K)]
+               tk_wall(:,u) = tkwall_lcz (landurban%settyp(u)) !thermal conductivity of wall [W/m-K]
+            ENDDO
 
-                  DO ulev = 1, nl_soil
-                     cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
-                     tk_gimp(:,u) = tkperroad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
-                  ENDDO
+            DO ulev = 1, nl_soil
+               cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
+               tk_gimp(:,u) = tkperroad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
+            ENDDO
 
-                  thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
-                  thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
+            thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
+            thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
 
 #ifdef URBAN_BEM
-                  t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
-                  t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
+            t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
+            t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
 #else
-                  t_roommax(u) = 373.16                !maximum temperature of inner room [K]
-                  t_roommin(u) = 180.00                !minimum temperature of inner room [K]
+            t_roommax(u) = 373.16                !maximum temperature of inner room [K]
+            t_roommin(u) = 180.00                !minimum temperature of inner room [K]
 #endif
 #endif
 
 #ifdef URBAN_WATER
-                  flake(u) = flake(u)/100. !urban water fractional cover
+            flake(u) = flake(u)/100. !urban water fractional cover
 #else
-                  flake(u) = 0.
+            flake(u) = 0.
 #endif
 
 #ifdef URBAN_TREE
-                  ! set tree fractional cover (<= 1.-froof)
-                  fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
-                  IF (flake(u) < 1.) THEN
-                     fveg_urb(u) = fveg_urb(u)/(1.-flake(u))
-                  ELSE
-                     fveg_urb(u) = 0.
-                  ENDIF
-                  
-                  ! Assuming that the tree coverage is less than or equal
-                  ! to the ground cover (assume no trees on the roof)
-                  fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
-                  fveg    (i) = fveg_urb(u)
+
+            ! set tree fractional cover (<= 1.-froof)
+            fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
+            IF (flake(u) < 1.) THEN
+               fveg_urb(u) = fveg_urb(u)/(1.-flake(u))
+            ELSE
+               fveg_urb(u) = 0.
+            ENDIF
+
+            ! Assuming that the tree coverage is less than or equal
+            ! to the ground cover (assume no trees on the roof)
+            fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
+            fveg    (i) = fveg_urb(u)
 #else
-                  fveg_urb(u) = 0.
+            fveg_urb(u) = 0.
 #endif
 
-                  ! set urban tree crown top and bottom [m]
-                  htop_urb(u) = min(hroof(u), htop_urb(u))
-                  htop_urb(u) = max(2., htop_urb(u))
+            ! set urban tree crown top and bottom [m]
+            htop_urb(u) = min(hroof(u), htop_urb(u))
+            htop_urb(u) = max(2., htop_urb(u))
 
-                  hbot_urb(u) = htop_urb(u)*hbot0(m)/htop0(m)
-                  hbot_urb(u) = max(1., hbot_urb(u))
+            hbot_urb(u) = htop_urb(u)*hbot0(URBAN)/htop0(URBAN)
+            hbot_urb(u) = max(1., hbot_urb(u))
 
-                  htop    (i) = htop_urb (u)
-                  hbot    (i) = hbot_urb (u)
+            htop    (i) = htop_urb (u)
+            hbot    (i) = hbot_urb (u)
 
-                  ! roof and wall layer depth [m]
-                  DO l=1, nl_roof
-                     z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
-                  ENDDO
+            ! roof and wall layer depth
+            DO l=1, nl_roof
+               z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
+            ENDDO
 
-                  DO l=1, nl_wall
-                     z_wall(l,u) = (l-0.5)*(thick_wall/nl_wall)
-                  ENDDO
+            DO l=1, nl_wall
+               z_wall(l,u) = (l-0.5)*(thick_wall/nl_wall)
+            ENDDO
 
-                  dz_roof(1,u) = 0.5*(z_roof(1,u)+z_roof(2,u))
-                  DO l = 2, nl_roof-1
-                     dz_roof(l,u) = 0.5*(z_roof(l+1,u)-z_roof(l-1,u))
-                  ENDDO
-                  dz_roof(nl_roof,u) = z_roof(nl_roof,u)-z_roof(nl_roof-1,u)
+            dz_roof(1,u) = 0.5*(z_roof(1,u)+z_roof(2,u))
+            DO l = 2, nl_roof-1
+               dz_roof(l,u) = 0.5*(z_roof(l+1,u)-z_roof(l-1,u))
+            ENDDO
+            dz_roof(nl_roof,u) = z_roof(nl_roof,u)-z_roof(nl_roof-1,u)
 
-                  dz_wall(1,u) = 0.5*(z_wall(1,u)+z_wall(2,u))
-                  DO l = 2, nl_wall-1
-                     dz_wall(l,u) = 0.5*(z_wall(l+1,u)-z_wall(l-1,u))
-                  ENDDO
-                  dz_wall(nl_wall,u) = z_wall(nl_wall,u)-z_wall(nl_wall-1,u)
+            dz_wall(1,u) = 0.5*(z_wall(1,u)+z_wall(2,u))
+            DO l = 2, nl_wall-1
+               dz_wall(l,u) = 0.5*(z_wall(l+1,u)-z_wall(l-1,u))
+            ENDDO
+            dz_wall(nl_wall,u) = z_wall(nl_wall,u)-z_wall(nl_wall-1,u)
 
-                  ! lake depth and layer depth
-                  !NOTE: USE global lake depth right now, the below set to 1m
-                  !lakedepth(npatch) = 1.
-                  !dz_lake(:,npatch) = lakedepth(npatch) / nl_lake
-            ENDIF
+            ! lake depth and layer depth
+            !NOTE: USE global lake depth right now, the below set to 1m
+            !lakedepth(npatch) = 1.
+            !dz_lake(:,npatch) = lakedepth(npatch) / nl_lake
          ENDDO
       ENDIF
-      
+
       IF (p_is_worker) THEN
          IF (allocated(lvehicle     )) deallocate ( lvehicle      )
          IF (allocated(lwdh_prof    )) deallocate ( lwdh_prof     )
@@ -267,5 +278,9 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
          IF (allocated(lhum_prof    )) deallocate ( lhum_prof     )
          IF (allocated(lweek_holiday)) deallocate ( lweek_holiday )
          IF (allocated(lfix_holiday )) deallocate ( lfix_holiday  )
+         IF (allocated(thickroof    )) deallocate ( thickroof     )
+         IF (allocated(thickwall    )) deallocate ( thickwall     )
+         IF (allocated(lucyid       )) deallocate ( lucyid        )
       ENDIF
+
 END SUBROUTINE Urban_readin
