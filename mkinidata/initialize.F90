@@ -570,6 +570,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
+
    if (p_is_worker) then
 
       t_lake      (:,:) = 285.

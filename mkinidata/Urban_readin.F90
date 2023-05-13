@@ -291,6 +291,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 #endif
 
 #ifdef URBAN_TREE
+
             ! set tree fractional cover (<= 1.-froof)
             fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
             IF (flake(u) < 1.) THEN
