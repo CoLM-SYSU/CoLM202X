@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
+SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 
 ! ===========================================================
 ! Read in the Urban dataset
@@ -23,33 +23,16 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
 
       IMPLICIT NONE
 
-      ! INTEGER, intent(in) :: lc_year    ! which year of land cover data used
-      ! CHARACTER(LEN=256), intent(in) :: dir_srfdata
-      ! CHARACTER(LEN=256), intent(in) :: nam_urbdata
-      ! CHARACTER(LEN=256), intent(in) :: dir_atmdata
-      ! CHARACTER(LEN=256), intent(in) :: nam_atmdata
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
       CHARACTER(LEN=256), intent(in) :: dir_landdata
 
       CHARACTER(LEN=256) :: lndname
       CHARACTER(len=256) :: cyear
 
-      INTEGER :: ncid
-      INTEGER :: wtroof_vid, htroof_vid, canyonhwr_vid, wtperroad_vid, wtimproad_vid
-      INTEGER :: urbanwaterpct_vid, urbantreepct_vid, urbantreetop_vid
-      INTEGER :: albroof_vid, albwall_vid, albimproad_vid, albperroad_vid
-      INTEGER :: emroof_vid, emwall_vid, emimproad_vid, emperroad_vid
-      INTEGER :: cvroof_vid, cvwall_vid, cvimproad_vid
-      INTEGER :: tkroof_vid, tkwall_vid, tkimproad_vid
-      INTEGER :: tbuildingmax_vid, tbuildingmin_vid
-      INTEGER :: thickroof_vid, thickwall_vid
-      INTEGER :: reg_vid, pop_vid, veh_vid, wed_vid, weh_vid, wdh_vid, met_vid, hol_vid
-      INTEGER :: urbanpop_vid, urbanlucy_vid
-      INTEGER :: i, j, u, t, l, m, npatch, k, lucy_id, ns, nr, ulev, patch2urb
+      INTEGER :: i, u, m, l, lucy_id, ns, nr, ulev
 
       REAL(r8) :: thick_roof, thick_wall
 
-      ! define variables for reading in
-      ! -------------------------------------------
 #ifdef USE_POINT_DATA
 #ifdef USE_OBS_PARA
       REAL(r8) :: rfwt, rfht, tpct, wpct, hw_point, htop_point, prwt
@@ -58,8 +41,6 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       ! parameters for LUCY
       INTEGER , allocatable :: urbanlucy(:)       ! LUCY region id
 
-      REAL(r8), allocatable :: popden(:)          ! population density [person/km2]
-
       INTEGER , allocatable :: lweek_holiday(:,:) ! week holidays
       REAL(r8), allocatable :: lwdh_prof    (:,:) ! Diurnal traffic flow profile [-]
       REAL(r8), allocatable :: lweh_prof    (:,:) ! Diurnal traffic flow profile [-]
@@ -67,113 +48,51 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
       REAL(r8), allocatable :: lfix_holiday (:,:) ! Fixed public holidays, holiday(0) or workday(1)
       REAL(r8), allocatable :: lvehicle     (:,:) ! vehicle numbers per thousand people
 
-      ! morphological parameter
-      REAL(r8), allocatable :: wtroof        (:)  ! roof fraction [-]
-      REAL(r8), allocatable :: htroof        (:)  ! height of roof [m]
-      REAL(r8), allocatable :: canyonhwr     (:)  ! height/width ratio [-]
-      REAL(r8), allocatable :: wtperroad     (:)  ! pervious road fraction [-]
-      REAL(r8), allocatable :: urbanwaterpct (:)  ! urban water fraction [-]
-      REAL(r8), allocatable :: urbantreepct  (:)  ! urban tree fraction [-]
-      REAL(r8), allocatable :: urbantreetop  (:)  ! urban tree height [m]
-
-      ! albedo
-      REAL(r8), allocatable :: albroof   (:,:,:)  ! albedo of roof [-]
-      REAL(r8), allocatable :: albwall   (:,:,:)  ! albedo of wall[-]
-      REAL(r8), allocatable :: albimproad(:,:,:)  ! albedo of impervious road [-]
-      REAL(r8), allocatable :: albperroad(:,:,:)  ! albedo of pervious road [-]
-
-      ! emissivity
-      REAL(r8), allocatable :: emroof        (:)  ! emissivity of roof [-]
-      REAL(r8), allocatable :: emwall        (:)  ! emissivity of wall [-]
-      REAL(r8), allocatable :: emimproad     (:)  ! emissivity of impervious road [-]
-      REAL(r8), allocatable :: emperroad     (:)  ! emissivity of pervious road [-]
-
-      ! thermal pars of roof, wall, impervious
-      REAL(r8), allocatable :: cvroof      (:,:)  ! volumetric heat capacity of roof [J/m3*K]
-      REAL(r8), allocatable :: cvwall      (:,:)  ! volumetric heat capacity of wall [J/m3*K]
-      REAL(r8), allocatable :: cvimproad   (:,:)  ! volumetric heat capacity of impervious road [J/m3*K]
-
-      ! thermal pars of roof, wall, impervious
-      REAL(r8), allocatable :: tkroof      (:,:)  ! thermal conductivity of roof [W/m*K]
-      REAL(r8), allocatable :: tkwall      (:,:)  ! thermal conductivity of wall [W/m*K]
-      REAL(r8), allocatable :: tkimproad   (:,:)  ! thermal conductivity of impervious road [W/m*K]
-
-      ! room maximum and minimum temperature
-      REAL(r8), allocatable :: tbuildingmax  (:)  ! maximum interior building temperature [K]
-      REAL(r8), allocatable :: tbuildingmin  (:)  ! minimum interior building temperature [K]
-
-      ! thickness of roof and wall
-      REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
-      REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
-
 #ifndef USE_LCZ
 
       ! READ in urban data
-      ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/urban.nc'
+      write(cyear,'(i4.4)') lc_year
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
-      CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr  )
-      CALL ncio_read_vector (lndname, 'WTROAD_PERV'   , landurban, fgper)
-
-      CALL ncio_read_vector (lndname, 'EM_ROOF'       , landurban, em_roof)
-      CALL ncio_read_vector (lndname, 'EM_WALL'       , landurban, em_wall)
-      CALL ncio_read_vector (lndname, 'EM_IMPROAD'    , landurban, em_gimp)
-      CALL ncio_read_vector (lndname, 'EM_PERROAD'    , landurban, em_gper)
+      CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
+      CALL ncio_read_vector (lndname, 'WTROAD_PERV'   , landurban, fgper  ) ! pervious fraction to ground area
+      CALL ncio_read_vector (lndname, 'EM_ROOF'       , landurban, em_roof) ! emissivity of roof
+      CALL ncio_read_vector (lndname, 'EM_WALL'       , landurban, em_wall) ! emissivity of wall
+      CALL ncio_read_vector (lndname, 'EM_IMPROAD'    , landurban, em_gimp) ! emissivity of impervious road
+      CALL ncio_read_vector (lndname, 'EM_PERROAD'    , landurban, em_gper) ! emissivity of pervious road
      
-      CALL ncio_read_vector (lndname, 'T_BUILDING_MAX', landurban, t_roommax)
-      CALL ncio_read_vector (lndname, 'T_BUILDING_MIN', landurban, t_roommin)
-      CALL ncio_read_vector (lndname, 'THICK_ROOF'    , landurban, thickroof)
-      CALL ncio_read_vector (lndname, 'THICK_WALL'    , landurban, thickwall)
+      CALL ncio_read_vector (lndname, 'T_BUILDING_MAX', landurban, t_roommax) ! maximum temperature of inner room [K]
+      CALL ncio_read_vector (lndname, 'T_BUILDING_MIN', landurban, t_roommin) ! minimum temperature of inner room [K]
+      CALL ncio_read_vector (lndname, 'THICK_ROOF'    , landurban, thickroof) ! thickness of roof [m]
+      CALL ncio_read_vector (lndname, 'THICK_WALL'    , landurban, thickwall) ! thickness of wall [m]
 
-      CALL ncio_read_vector (lndname, 'ALB_ROOF'      , 2, 2, landurban, alb_roof)
-      CALL ncio_read_vector (lndname, 'ALB_WALL'      , 2, 2, landurban, alb_wall)
-      CALL ncio_read_vector (lndname, 'ALB_IMPROAD'   , 2, 2, landurban, alb_gimp)
-      CALL ncio_read_vector (lndname, 'ALB_PERROAD'   , 2, 2, landurban, alb_gper)
+      CALL ncio_read_vector (lndname, 'ALB_ROOF'      , 2, 2, landurban, alb_roof) ! albedo of roof
+      CALL ncio_read_vector (lndname, 'ALB_WALL'      , 2, 2, landurban, alb_wall) ! albedo of wall
+      CALL ncio_read_vector (lndname, 'ALB_IMPROAD'   , 2, 2, landurban, alb_gimp) ! albedo of impervious
+      CALL ncio_read_vector (lndname, 'ALB_PERROAD'   , 2, 2, landurban, alb_gper) ! albedo of pervious road
 
-      CALL ncio_read_vector (lndname, 'CV_ROOF'       , nl_roof, landurban, cv_roof)
-      CALL ncio_read_vector (lndname, 'CV_WALL'       , nl_wall, landurban, cv_wall)
-      CALL ncio_read_vector (lndname, 'CV_IMPROAD'    , nl_soil, landurban, cv_gimp)
-      CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof)
-      CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall)
-      CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp)
+      CALL ncio_read_vector (lndname, 'CV_ROOF'       , nl_roof, landurban, cv_roof) ! heat capacity of roof [J/(m2 K)]
+      CALL ncio_read_vector (lndname, 'CV_WALL'       , nl_wall, landurban, cv_wall) ! heat capacity of wall [J/(m2 K)]
+      CALL ncio_read_vector (lndname, 'CV_IMPROAD'    , nl_soil, landurban, cv_gimp) ! heat capacity of impervious road [J/(m2 K)]
+      CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof) ! thermal conductivity of roof [W/m-K]
+      CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
+      CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
 #endif      
 
 !TODO: add point case
-!#ifdef USE_POINT_DATA
-!#ifdef USE_OBS_PARA
-
-      ! lndname = trim(dir_atmdata)//'/'//trim(nam_atmdata)
-      ! print*, lndname
-      ! CALL nccheck( nf90_open(lndname, nf90_nowrite, ncid) )
-
-      ! CALL nccheck( nf90_inq_varid(ncid, "impervious_area_fraction" , wtimproad_vid    ) ) ! imperivous area fraciton
-      ! CALL nccheck( nf90_inq_varid(ncid, "tree_area_fraction"       , urbantreepct_vid ) ) ! tree area fraction
-      ! CALL nccheck( nf90_inq_varid(ncid, "water_area_fraction"      , urbanwaterpct_vid) ) ! water area fraction
-      ! CALL nccheck( nf90_inq_varid(ncid, "roof_area_fraction"       , wtroof_vid       ) ) ! roof area fraction
-      ! CALL nccheck( nf90_inq_varid(ncid, "building_mean_height"     , htroof_vid       ) ) ! building mean height
-      ! CALL nccheck( nf90_inq_varid(ncid, "tree_mean_height"         , urbantreetop_vid ) ) ! tree mean height
-      ! CALL nccheck( nf90_inq_varid(ncid, "canyon_height_width_ratio", canyonhwr_vid    ) ) ! H2W
-
-      ! CALL nccheck( nf90_get_var(ncid, wtimproad_vid,     prwt      ) )
-      ! CALL nccheck( nf90_get_var(ncid, urbantreepct_vid,  tpct      ) )
-      ! CALL nccheck( nf90_get_var(ncid, urbanwaterpct_vid, wpct      ) )
-      ! CALL nccheck( nf90_get_var(ncid, wtroof_vid,        rfwt      ) )
-      ! CALL nccheck( nf90_get_var(ncid, htroof_vid,        rfht      ) )
-      ! CALL nccheck( nf90_get_var(ncid, urbantreetop_vid,  htop_point) )
-      ! CALL nccheck( nf90_get_var(ncid, canyonhwr_vid,     hw_point  ) )
-
-      ! CALL nccheck( nf90_close(ncid) )
-
-      ! wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
-      ! urbantreepct (1,1,:) = tpct*100
-      ! urbanwaterpct(1,1,:) = wpct*100
-      ! wtroof       (1,1,:) = rfwt
-      ! htroof       (1,1,:) = rfht
-      ! urbantreetop (1,1,:) = htop_point
-      ! canyonhwr    (1,1,:) = hw_point
-      !albroof(:,:,:,:,:) = 0.4
-!#endif
-!#endif
+#ifdef SinglePoint
+      lndname = trim(dir_atmdata)//'/'//trim(nam_atmdata)
+      print*, lndname
+      CALL ncio_read_bcast_serial (landname, "impervious_area_fraction" , prwt    ) ! imperivous area fraciton to total surface
+      CALL ncio_read_bcast_serial (landname, "tree_area_fraction"       , fveg_urb) ! urban tree percentage
+      CALL ncio_read_bcast_serial (landname, "water_area_fraction"      , flake   ) ! urban lake precentage
+      CALL ncio_read_bcast_serial (landname, "roof_area_fraction"       , froof   ) ! roof fractional cover
+      CALL ncio_read_bcast_serial (landname, "building_mean_height"     , hroof   ) ! average building height
+      CALL ncio_read_bcast_serial (landname, "tree_mean_height"         , htop_urb) ! urban tree crown top
+      CALL ncio_read_bcast_serial (landname, "canyon_height_width_ratio", hwr     ) ! average building height to their distance
+      
+      wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
+#endif
 
       !TODO: duplication, delete
       !TODO: Variables distinguish between time-varying and time-invariant variables
@@ -230,10 +149,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                      hum_prof(:,u)     = lhum_prof(lucy_id,:)
                      fix_holiday(:,u)  = lfix_holiday(lucy_id,:)
                   ENDIF
-               
-
 #ifndef USE_LCZ
-
                   thick_roof      = thickroof     (u) !thickness of roof [m]
                   thick_wall      = thickwall     (u) !thickness of wall [m]
 #else
@@ -315,7 +231,7 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
                   htop    (i) = htop_urb (u)
                   hbot    (i) = hbot_urb (u)
 
-                  ! roof and wall layer depth
+                  ! roof and wall layer depth [m]
                   DO l=1, nl_roof
                      z_roof(l,u) = (l-0.5)*(thick_roof/nl_roof)
                   ENDDO
@@ -351,27 +267,5 @@ SUBROUTINE Urban_readin (dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_
          IF (allocated(lhum_prof    )) deallocate ( lhum_prof     )
          IF (allocated(lweek_holiday)) deallocate ( lweek_holiday )
          IF (allocated(lfix_holiday )) deallocate ( lfix_holiday  )
-         ! IF (allocated(wtroof       )) deallocate ( wtroof        )
-         ! IF (allocated(htroof       )) deallocate ( htroof        )
-         ! IF (allocated(canyonhwr    )) deallocate ( canyonhwr     )
-         ! IF (allocated(wtroadperv   )) deallocate ( wtroadperv    )
-         ! IF (allocated(urbanwaterpct)) deallocate ( urbanwaterpct )
-         ! IF (allocated(urbantreetop )) deallocate ( urbantreetop  )
-         ! IF (allocated(albroof      )) deallocate ( albroof       )
-         ! IF (allocated(albwall      )) deallocate ( albwall       )
-         ! IF (allocated(albimproad   )) deallocate ( albimproad    )
-         ! IF (allocated(albperroad   )) deallocate ( albperroad    )
-         ! IF (allocated(emroof       )) deallocate ( emroof        )
-         ! IF (allocated(emwall       )) deallocate ( emwall        )
-         ! IF (allocated(emimproad    )) deallocate ( emimproad     )
-         ! IF (allocated(emperroad    )) deallocate ( emperroad     )
-         ! IF (allocated(cvroof       )) deallocate ( cvroof        )
-         ! IF (allocated(cvwall       )) deallocate ( cvwall        )
-         ! IF (allocated(cvimproad    )) deallocate ( cvimproad     )
-         ! IF (allocated(tkroof       )) deallocate ( tkroof        )
-         ! IF (allocated(tkwall       )) deallocate ( tkwall        )
-         ! IF (allocated(tkimproad    )) deallocate ( tkimproad     )
-         ! IF (allocated(tbuildingmax )) deallocate ( tbuildingmax  )
-         ! IF (allocated(tbuildingmin )) deallocate ( tbuildingmin  )
       ENDIF
 END SUBROUTINE Urban_readin
