@@ -65,13 +65,13 @@ CONTAINS
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'
       CALL srfdata_map_and_write (elm_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_elm', compress = 0, write_mode = 'one')
+         -1.0e36_r8, landname, 'patchfrac_elm', compress = 1, write_mode = 'one')
 
 #ifdef CATCHMENT
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_hru.nc'
       CALL srfdata_map_and_write (hru_patch%subfrc, landpatch%settyp, typindex, m_patch2diag, &
-         -1.0e36_r8, landname, 'patchfrac_hru', compress = 0, write_mode = 'one')
+         -1.0e36_r8, landname, 'patchfrac_hru', compress = 1, write_mode = 'one')
 #endif
 
    END SUBROUTINE srfdata_diag_init

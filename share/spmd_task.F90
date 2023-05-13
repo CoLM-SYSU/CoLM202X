@@ -221,10 +221,10 @@ CONTAINS
    !-----------------------------------------
    SUBROUTINE spmd_exit
 
-      deallocate (p_itis_io)
-      deallocate (p_address_io)
-      deallocate (p_itis_worker)
-      deallocate (p_address_worker)
+      IF (allocated(p_itis_io       )) deallocate (p_itis_io       )
+      IF (allocated(p_address_io    )) deallocate (p_address_io    )
+      IF (allocated(p_itis_worker   )) deallocate (p_itis_worker   )
+      IF (allocated(p_address_worker)) deallocate (p_address_worker)
 
       CALL mpi_barrier (p_comm_glb, p_err)
 

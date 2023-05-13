@@ -120,7 +120,7 @@ SUBROUTINE HTOP_readin (dir_landdata)
                   IF ( n>0 .and. n<9 .and. htoppft(p)>2.) THEN
                      htop_p(p) = htoppft(p)
                      hbot_p(p) = htoppft(p)*hbot0_p(n)/htop0_p(n)
-                     hbot_p(p) = max(1., hbot_p(p)) !weinan
+                     hbot_p(p) = max(1., hbot_p(p))
                   ENDIF
                ENDDO
 

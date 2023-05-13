@@ -6,7 +6,7 @@ MODULE mod_pixelsetshadow
 
 CONTAINS
 
-   SUBROUTINE pixelsetshadow_build (pixelset, gshadow, datashadow, nshadow, ntypshadow, filter, &
+   SUBROUTINE pixelsetshadow_build (pixelset, gshadow, datashadow, nmaxshadow, typfilter, &
          fracout, shadowclass, fracin)
 
       USE spmd_task
@@ -22,8 +22,8 @@ CONTAINS
       TYPE(pixelset_type),       intent(inout) :: pixelset
       TYPE(grid_type),           intent(in)    :: gshadow
       TYPE(block_data_real8_3d), intent(in)    :: datashadow
-      INTEGER, intent(in) :: nshadow, ntypshadow
-      INTEGER, intent(in) :: filter(ntypshadow)
+      INTEGER, intent(in) :: nmaxshadow
+      INTEGER, intent(in) :: typfilter(:)
 
       REAL(r8), intent(out), allocatable :: fracout(:)
       INTEGER,  intent(out), allocatable :: shadowclass(:)
@@ -42,7 +42,7 @@ CONTAINS
          
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL aggregation_data_daemon (gshadow, data_r8_3d_in1 = datashadow, n1_r8_3d_in1 = nshadow)
+         CALL aggregation_data_daemon (gshadow, data_r8_3d_in1 = datashadow, n1_r8_3d_in1 = nmaxshadow)
       ENDIF
 #endif
          
@@ -50,19 +50,19 @@ CONTAINS
 
          nsetshadow = 0
 
-         allocate (pctshadow(nshadow,pixelset%nset))
+         allocate (pctshadow(nmaxshadow,pixelset%nset))
 
          DO ipset = 1, pixelset%nset
-            IF (any(filter(:) == pixelset%settyp(ipset))) THEN
+            IF (any(typfilter(:) == pixelset%settyp(ipset))) THEN
 
                ie     = pixelset%ielm  (ipset)
                ipxstt = pixelset%ipxstt(ipset)
                ipxend = pixelset%ipxend(ipset)
       
-               allocate (datashadow1d (nshadow, ipxstt:ipxend))
+               allocate (datashadow1d (nmaxshadow, ipxstt:ipxend))
 
                CALL aggregation_request_data (pixelset, ipset, gshadow, &
-                  data_r8_3d_in1 = datashadow, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nshadow)
+                  data_r8_3d_in1 = datashadow, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nmaxshadow)
 
                datashadow1d = rbuff
 
@@ -73,7 +73,7 @@ CONTAINS
                      pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
                ENDDO
 
-               DO ishadow = 1, nshadow
+               DO ishadow = 1, nmaxshadow
                   pctshadow(ishadow,ipset) = sum(datashadow1d(ishadow,:) * areapixel)
                ENDDO
 
@@ -130,9 +130,9 @@ CONTAINS
 
             jpset = 0
             DO ipset = 1, pixelset%nset
-               IF (any(filter(:) == settyp1(ipset))) THEN
+               IF (any(typfilter(:) == settyp1(ipset))) THEN
                   IF (any(pctshadow(:,ipset) > 0.)) THEN
-                     DO ishadow = 1, nshadow
+                     DO ishadow = 1, nmaxshadow
                         IF (pctshadow(ishadow,ipset) > 0.) THEN
                            jpset = jpset + 1
                            pixelset%eindex(jpset) = eindex1(ipset)

@@ -14,10 +14,8 @@
                    dz)
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, /09/1999/, /03/2014/
-!
+! DESCRIPTION:
 ! calculation of the phase change within snow and soil layers:
-!
 ! (1) check the conditions which the phase change may take place,
 !     i.e., the layer temperature is great than the freezing point
 !     and the ice mass is not equal to zero (i.e., melting),
@@ -26,7 +24,11 @@
 ! (2) assess the rate of phase change from the energy excess (or deficit)
 !     after setting the layer temperature to freezing point;
 ! (3) re-adjust the ice and liquid mass, and the layer temperature
-! (4) supercooled soil water is included IF supercool is defined, Nan Wei 2023/04/20.
+!
+! Original author : Yongjiu Dai, /09/1999/, /03/2014/
+!
+! Revisions:
+! Nan Wei, 04/2023: supercooled soil water is included IF supercool is defined.
 !-----------------------------------------------------------------------
 
   use precision
@@ -280,10 +282,8 @@
                    dz)
 
 !-----------------------------------------------------------------------
-! Original author : Yongjiu Dai, /09/1999/, /03/2014/
-!
+! DESCRIPTION:
 ! calculation of the phase change within snow and soil layers:
-!
 ! (1) check the conditions which the phase change may take place,
 !     i.e., the layer temperature is great than the freezing point
 !     and the ice mass is not equal to zero (i.e., melting),
@@ -292,10 +292,12 @@
 ! (2) assess the rate of phase change from the energy excess (or deficit)
 !     after setting the layer temperature to freezing point;
 ! (3) re-adjust the ice and liquid mass, and the layer temperature
-! (4) supercooled soil water is included IF supercool is defined, Nan Wei 2023/04/20.
 !
-! REVISIONS:
+! Original author : Yongjiu Dai, /09/1999/, /03/2014/
+!
+! Revisions:
 ! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
+! Nan Wei , 04/2023: supercooled soil water is included IF supercool is defined.
 !-----------------------------------------------------------------------
 
   use precision
@@ -520,7 +522,7 @@
            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
 #ifdef supercool_water
            ENDIF
-#ENDIF
+#endif
         endif
 
         xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim
