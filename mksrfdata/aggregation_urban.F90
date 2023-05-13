@@ -676,10 +676,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
             tb_max  (iurban) = tb_max  (iurban) + tbmax  (urb_typidx,urb_regidx) * area_one(ipxl)
 
             DO il = 1, 10
+
                IF (tkimrd(urb_typidx,urb_regidx,il) .ne. -999.) THEN
                   tk_imrd(il,iurban) = tk_imrd(il,iurban) + tkimrd(urb_typidx,urb_regidx,il) * area_one(ipxl)
                   tk_wgt (il,iurban) = tk_wgt (il,iurban) + area_one(ipxl)
                ENDIF
+
                IF (cvimrd(urb_typidx,urb_regidx,il) .ne. -999.) THEN
                   cv_imrd(il,iurban) = cv_imrd(il,iurban) + cvimrd(urb_typidx,urb_regidx,il) * area_one(ipxl)
                   cv_wgt (il,iurban) = cv_wgt (il,iurban) + area_one(ipxl)

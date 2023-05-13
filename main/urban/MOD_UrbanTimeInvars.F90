@@ -10,34 +10,34 @@ MODULE MOD_UrbanTimeInvars
    IMPLICIT NONE
    SAVE
 
-   ! INTEGER , allocatable :: urbclass    (:)  !urban TYPE
-   ! INTEGER , allocatable :: patch2urb   (:)  !projection from patch to Urban
-   ! INTEGER , allocatable :: urb2patch   (:)  !projection from Urban to patch
+   !INTEGER , allocatable :: urbclass    (:)  !urban TYPE
+   !INTEGER , allocatable :: patch2urb   (:)  !projection from patch to Urban
+   !INTEGER , allocatable :: urb2patch   (:)  !projection from Urban to patch
 
-   REAL(r8), allocatable :: pop_den(:)       !pop density
-   REAL(r8), allocatable :: vehicle(:,:)     !vehicle numbers per thousand people
-   REAL(r8), allocatable :: week_holiday(:,:)!week holidays
-   REAL(r8), allocatable :: weh_prof(:,:)    !Diurnal traffic flow profile of weekend
-   REAL(r8), allocatable :: wdh_prof(:,:)    !Diurnal traffic flow profile of weekday
-   REAL(r8), allocatable :: hum_prof(:,:)    !Diurnal metabolic heat profile
-   REAL(r8), allocatable :: fix_holiday(:,:) !Fixed public holidays, holiday(0) or workday(1)
+   REAL(r8), allocatable :: pop_den     (:)   !pop density
+   REAL(r8), allocatable :: vehicle     (:,:) !vehicle numbers per thousand people
+   REAL(r8), allocatable :: week_holiday(:,:) !week holidays
+   REAL(r8), allocatable :: weh_prof    (:,:) !Diurnal traffic flow profile of weekend
+   REAL(r8), allocatable :: wdh_prof    (:,:) !Diurnal traffic flow profile of weekday
+   REAL(r8), allocatable :: hum_prof    (:,:) !Diurnal metabolic heat profile
+   REAL(r8), allocatable :: fix_holiday (:,:) !Fixed public holidays, holiday (0) or workday(1)
 
    ! Vegetations
-   REAL(r8), allocatable :: fveg_urb    (:)
+   REAL(r8), allocatable :: fveg_urb    (:)  !TODO: need note
    REAL(r8), allocatable :: htop_urb    (:)
    REAL(r8), allocatable :: hbot_urb    (:)
 
-   ! 城市形态结构参数
+   ! Urban morphology
    REAL(r8), allocatable :: froof       (:)  !roof fractional cover [-]
    REAL(r8), allocatable :: fgper       (:)  !impervious fraction to ground area [-]
    REAL(r8), allocatable :: flake       (:)  !lake fraction to ground area [-]
    REAL(r8), allocatable :: hroof       (:)  !average building height [m]
    REAL(r8), allocatable :: hwr         (:)  !average building height to their distance [-]
 
-   REAL(r8), allocatable :: z_roof    (:,:)  !thickness of roof [m]
-   REAL(r8), allocatable :: z_wall    (:,:)  !thickness of wall [m]
-   REAL(r8), allocatable :: dz_roof   (:,:)  !thickness of each layer [m]
-   REAL(r8), allocatable :: dz_wall   (:,:)  !thickness of each layer [m]
+   REAL(r8), allocatable :: z_roof    (:,:)  !depth of each roof layer [m]
+   REAL(r8), allocatable :: z_wall    (:,:)  !depth of each wall layer [m]
+   REAL(r8), allocatable :: dz_roof   (:,:)  !thickness of each roof layer [m]
+   REAL(r8), allocatable :: dz_wall   (:,:)  !thickness of each wall layer [m]
 
    ! albedo
    REAL(r8), allocatable :: alb_roof(:,:,:)  !albedo of roof [-]
@@ -67,8 +67,8 @@ MODULE MOD_UrbanTimeInvars
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_UrbanTimeInvars
    PUBLIC :: deallocate_UrbanTimeInvars
-   PUBLIC :: READ_UbanTimeInvars
-   PUBLIC :: WRITE_UbanTimeInvars
+   PUBLIC :: READ_UrbanTimeInvars
+   PUBLIC :: WRITE_UrbanTimeInvars
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -88,7 +88,7 @@ CONTAINS
       USE GlobalVars
       IMPLICIT NONE
 
-      ! allocate (urbclass             (numurban))
+      !allocate (urbclass             (numurban))
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN
             allocate (fveg_urb             (numurban))
@@ -124,11 +124,11 @@ CONTAINS
 
             allocate (t_roommax            (numurban))
             allocate (t_roommin            (numurban))
-            allocate (popcell              (numurban))
-            
+            allocate (pop_den              (numurban))
+
             allocate (vehicle          (3  ,numurban))
-            allocate (week_holiday     (7  ,numurban)) 
-            allocate (weh_prof         (24 ,numurban)) 
+            allocate (week_holiday     (7  ,numurban))
+            allocate (weh_prof         (24 ,numurban))
             allocate (wdh_prof         (24 ,numurban))
             allocate (hum_prof         (24 ,numurban))
             allocate (fix_holiday      (365,numurban))
@@ -144,7 +144,7 @@ CONTAINS
 
      IMPLICIT NONE
 
-     INTEGER, parameter :: ns = 2 
+     INTEGER, parameter :: ns = 2
      INTEGER, parameter :: nr = 2
      INTEGER, parameter :: ulev = 10
      character(LEN=*), intent(in) :: file_restart
@@ -155,8 +155,8 @@ CONTAINS
      CALL ncio_read_vector (file_restart, 'URBAN_TREE_BOT', landurban, hbot_urb )
      CALL ncio_read_vector (file_restart, 'PCT_Water'     , landurban, flake    )
 
-     ! LUCY paras
-     CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, popcell     )
+     ! LUCY paras !TODO: 变量命名可以进行优化
+     CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, pop_den     )
      CALL ncio_read_vector (file_restart, 'VEHC_NUM'    , 3  , landurban, vehicle     )
      CALL ncio_read_vector (file_restart, 'week_holiday', 7  , landurban, week_holiday)
      CALL ncio_read_vector (file_restart, 'weekendhour' , 24 , landurban, weh_prof    )
@@ -176,12 +176,12 @@ CONTAINS
      CALL ncio_read_vector (file_restart, 'T_BUILDING_MIN', landurban, t_roommin)
      CALL ncio_read_vector (file_restart, 'T_BUILDING_MAX', landurban, t_roommax)
 
-     CALL ncio_read_vector (file_restart, 'ROOF_DEPTH'    , ulev, landurban, z_roof   )
-     CALL ncio_read_vector (file_restart, 'ROOF_INTER'    , ulev, landurban, dz_roof  )
-     CALL ncio_read_vector (file_restart, 'WALL_DEPTH'    , ulev, landurban, z_wall   )
-     CALL ncio_read_vector (file_restart, 'WALL_INTER'    , ulev, landurban, dz_wall  )
+     CALL ncio_read_vector (file_restart, 'ROOF_DEPTH_L'  , ulev, landurban, z_roof   )
+     CALL ncio_read_vector (file_restart, 'ROOF_THICK_L'  , ulev, landurban, dz_roof  )
+     CALL ncio_read_vector (file_restart, 'WALL_DEPTH_L'  , ulev, landurban, z_wall   )
+     CALL ncio_read_vector (file_restart, 'WALL_THICK_L'  , ulev, landurban, dz_wall  )
 
-     ! thermal paras     
+     ! thermal paras
      CALL ncio_read_vector (file_restart, 'CV_ROOF'   , ulev, landurban, cv_roof)
      CALL ncio_read_vector (file_restart, 'CV_WALL'   , ulev, landurban, cv_wall)
      CALL ncio_read_vector (file_restart, 'TK_ROOF'   , ulev, landurban, tk_roof)
@@ -205,9 +205,9 @@ CONTAINS
 
      IMPLICIT NONE
 
-     INTEGER, parameter :: ns = 2 
-     INTEGER, parameter :: nr = 2
-     INTEGER, parameter :: ulev = 10
+     INTEGER, parameter :: ns    = 2
+     INTEGER, parameter :: nr    = 2
+     INTEGER, parameter :: ulev  = 10
      INTEGER, parameter :: ityp  = 3
      INTEGER, parameter :: ihour = 24
      INTEGER, parameter :: iweek = 7
@@ -237,7 +237,7 @@ CONTAINS
      CALL ncio_write_vector (file_restart, 'PCT_Water'     , 'urban', landurban, flake   , DEF_REST_COMPRESS_LEVEL)
 
      ! LUCY paras
-     CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban', landurban, popcell     , DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'POP_DEN'     , 'urban',                 landurban, pop_den     , DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'VEHC_NUM'    , 'ityp' , ityp , 'urban', landurban, vehicle     , DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'week_holiday', 'iweek', iweek, 'urban', landurban, week_holiday, DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'weekendhour' , 'ihour', ihour, 'urban', landurban, weh_prof    , DEF_REST_COMPRESS_LEVEL)
@@ -257,10 +257,10 @@ CONTAINS
      CALL ncio_write_vector (file_restart, 'T_BUILDING_MIN', 'urban', landurban, t_roommin, DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'T_BUILDING_MAX', 'urban', landurban, t_roommax, DEF_REST_COMPRESS_LEVEL)
 
-     CALL ncio_write_vector (file_restart, 'ROOF_DEPTH', 'ulev', ulev, 'urban', landurban, z_roof , DEF_REST_COMPRESS_LEVEL)
-     CALL ncio_write_vector (file_restart, 'ROOF_INTER', 'ulev', ulev, 'urban', landurban, dz_roof, DEF_REST_COMPRESS_LEVEL)
-     CALL ncio_write_vector (file_restart, 'WALL_DEPTH', 'ulev', ulev, 'urban', landurban, z_wall , DEF_REST_COMPRESS_LEVEL)
-     CALL ncio_write_vector (file_restart, 'WALL_INTER', 'ulev', ulev, 'urban', landurban, dz_wall, DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'ROOF_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_roof , DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'ROOF_THICK_L', 'ulev', ulev, 'urban', landurban, dz_roof, DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'WALL_DEPTH_L', 'ulev', ulev, 'urban', landurban, z_wall , DEF_REST_COMPRESS_LEVEL)
+     CALL ncio_write_vector (file_restart, 'WALL_THICK_L', 'ulev', ulev, 'urban', landurban, dz_wall, DEF_REST_COMPRESS_LEVEL)
      ! thermal paras
      CALL ncio_write_vector (file_restart, 'CV_ROOF'   , 'ulev', ulev, 'urban', landurban, cv_roof, DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'CV_WALL'   , 'ulev', ulev, 'urban', landurban, cv_wall, DEF_REST_COMPRESS_LEVEL)
@@ -318,7 +318,7 @@ CONTAINS
             deallocate (t_roommax )
             deallocate (t_roommin )
 
-            deallocate (popcell      )
+            deallocate (pop_den      )
             deallocate (vehicle      )
             deallocate (week_holiday )
             deallocate (weh_prof     )
