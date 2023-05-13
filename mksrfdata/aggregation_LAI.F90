@@ -81,8 +81,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    REAL(r8) :: sumarea
 
 #ifdef SrfdataDiag
-   INTEGER :: ityp
-   INTEGER :: typpatch(N_land_classification+1)
+   INTEGER :: typpatch(N_land_classification+1), ityp
 #ifndef CROP
    INTEGER :: typpft  (N_PFT)
 #else
@@ -230,7 +229,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             varname = 'LAI_' // trim(cyear) // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
-            -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+            -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 #else
          IF (DEF_LAI_CLIM) THEN
@@ -316,7 +315,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             varname = 'SAI_' // trim(cyear) // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
-            -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+            -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 #else
          SITE_SAI_clim(itime) = SAI_patches(1)
@@ -426,7 +425,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       lndname  = trim(dir_model_landdata) // '/diag/LAI_patch.nc'
       varname  = 'LAI_' // trim(c2)
       CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 
       lndname = trim(landdir)//'/LAI_pfts'//trim(c2)//'.nc'
@@ -441,9 +440,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       typpft  = (/(ityp, ityp = 0, N_PFT+N_CFT-1)/)
 #endif
       lndname = trim(dir_model_landdata) // '/diag/LAI_pft.nc'
-      varname = 'LAI_pft_' // trim(c2)
+      varname = 'LAI_' // trim(c2)
       CALL srfdata_map_and_write (LAI_pfts, landpft%settyp, typpft, m_pft2diag, &
-         -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 #else
       SITE_LAI_pfts_clim(:,month) = LAI_pfts(:)
@@ -548,7 +547,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       lndname  = trim(dir_model_landdata) // '/diag/SAI_patch.nc'
       varname  = 'SAI_' // trim(c2)
       CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
-         -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 
       lndname = trim(landdir)//'/SAI_pfts'//trim(c2)//'.nc'
@@ -563,9 +562,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       typpft  = (/(ityp, ityp = 0, N_PFT+N_CFT-1)/)
 #endif
       lndname = trim(dir_model_landdata) // '/diag/SAI_pft.nc'
-      varname = 'SAI_pft_' // trim(c2)
+      varname = 'SAI_' // trim(c2)
       CALL srfdata_map_and_write (SAI_pfts, landpft%settyp, typpft, m_pft2diag, &
-         -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
 #endif
 #else
       SITE_SAI_pfts_clim(:,month) = SAI_pfts(:)
@@ -675,6 +674,14 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/LAI_patch.nc'
+      varname  = 'LAI_' // trim(c2)
+      CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
+
       lndname = trim(landdir)//'/LAI_pcs'//trim(c2)//'.nc'
       CALL ncio_create_file_vector (lndname, landpc)
       CALL ncio_define_dimension_vector (lndname, landpc, 'pc')
@@ -771,6 +778,14 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/SAI_patch.nc'
+      varname  = 'SAI_' // trim(c2)
+      CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
 
       lndname = trim(landdir)//'/SAI_pcs'//trim(c2)//'.nc'
       CALL ncio_create_file_vector (lndname, landpc)

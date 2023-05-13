@@ -83,7 +83,8 @@
 ! REVISIONS:
 ! Hua Yuan, 12/2019: added initial codes for PFT and Plant Community (PC)
 !                    vegetation classification processes
-!
+! Nan Wei,  01/2021: added variables passing of plant hydraulics and precipitation sensible heat
+!                    with canopy and ground for PFT and Plant Community (PC)
 !=======================================================================
 
   USE precision
@@ -890,7 +891,7 @@ IF (patchtype == 0) THEN
             rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
          ENDDO
       ENDIF
-#ENDIF
+#endif
 
       rstfacsun_out         = sum( rstfacsun_p         (ps:pe) * pftfrac(ps:pe) )
       rstfacsha_out         = sum( rstfacsha_p         (ps:pe) * pftfrac(ps:pe) )

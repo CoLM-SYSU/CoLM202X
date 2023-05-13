@@ -41,8 +41,8 @@
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2018
 !
 ! REVISIONS:
-! Modified by Nan Wei, 07/21/2017, interaction btw prec and land surface
-!
+! Nan Wei,  07/2017: interaction btw prec and land surface
+! Nan Wei,  01/2019: use the new version of soil thermal parameters to calculate soil temperature
 ! Hua Yuan, 01/2023: modified ground heat flux, temperature and meltf
 !                    calculation for SNICAR model
 !=======================================================================

@@ -80,6 +80,8 @@ CONTAINS
 ! Hua Yuan, 10/2019: change leaf tempertature from two-leaf to one-leaf
 !                    (due to large differences may exist btween sunlit/shaded
 !                    leaf temperature.
+! Xingjie Lu and Nan Wei, 01/2021: added plant hydraulic process interface
+! Nan Wei,  01/2021: added interaction btw prec and canopy
 ! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
 !                        surface turbulence scheme (LZD2022);
 !                        make a proper update of um.

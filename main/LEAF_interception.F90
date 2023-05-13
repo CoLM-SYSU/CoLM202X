@@ -19,7 +19,7 @@ MODULE MOD_CLEAF_interception
 !REVISION HISTORY
 !----------------
    ! 2023.02.23  Zhongwang Wei @ SYSU
-   ! 2021.12.12  Zhongwang Wei @ SYSU 
+   ! 2021.12.12  Zhongwang Wei @ SYSU
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
    USE precision
@@ -31,7 +31,7 @@ MODULE MOD_CLEAF_interception
    REAL(r8), parameter ::  bp          = 20.
    REAL(r8), parameter ::  HFUS        = 0.3336E06 !latent heat of fusion (j/kg)
    REAL(r8), parameter ::  CWAT        = 4.188E06  !specific heat capacity of water (j/m3/k)
-   REAL(r8), parameter ::  pcoefs(2,2) = [20.0_r8, 0.206e-8_r8, 0.0001_r8, 0.9999_r8]
+   REAL(r8), parameter ::  pcoefs(2,2) = reshape((/20.0_r8, 0.206e-8_r8, 0.0001_r8, 0.9999_r8/), (/2,2/))
 
    !----------------------- Dummy argument --------------------------------
    REAL(r8) :: satcap                     ! maximum allowed water on canopy [mm]
@@ -53,7 +53,7 @@ MODULE MOD_CLEAF_interception
    REAL(r8) :: tex_rain                   ! canopy rain drainage in time step [mm]
    REAL(r8) :: tex_snow                   ! canopy snow drainage in time step [mm]
    REAL(r8) :: vegt                       ! sigf*lsai
-   REAL(r8) :: xs                         ! proportion of the grid area where the intercepted rainfall 
+   REAL(r8) :: xs                         ! proportion of the grid area where the intercepted rainfall
                                           ! plus the preexisting canopy water storage
    REAL(r8)  :: unl_snow_temp,U10,unl_snow_wind,unl_snow
    REAL(r8)  :: ap, cp, aa1, bb1, exrain, arg, w
@@ -61,10 +61,10 @@ MODULE MOD_CLEAF_interception
    REAL(r8)  :: xsc_rain, xsc_snow
 
    REAL(r8)  :: fvegc           !vegetation fraction
-   REAL(r8)  :: FT             !The temperature factor for snow unloading 
-   REAL(r8)  :: FV             !The wind factor for snow unloading 
+   REAL(r8)  :: FT             !The temperature factor for snow unloading
+   REAL(r8)  :: FV             !The wind factor for snow unloading
    REAL(r8)  :: ICEDRIP        ! snow unloading
-    
+
    REAL(r8)  :: ldew_smelt
    REAL(r8)  :: ldew_frzc
    REAL(r8)  :: FP
@@ -81,30 +81,30 @@ contains
       ! Calculation of  interception and drainage of precipitation
       ! the treatment are based on Sellers et al. (1996)
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !canopy interception scheme modified by Yongjiu Dai based on Sellers et al. (1996)
 
    !References:
    !-------------------
-      !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S., 
-      !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003. 
+      !---Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., BosiloVICh, M.G., Denning, A.S.,
+      !   Dirmeyer, P.A., Houser, P.R., Niu, G. and Oleson, K.W., 2003.
       !   The common land model. Bulletin of the American Meteorological Society, 84(8), pp.1013-1024.
 
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007. 
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation, 
+      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
       !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
       !---Oleson, K., Dai, Y., Bonan, B., BosiloVIChm, M., Dickinson, R., Dirmeyer, P., Hoffman,
-      !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004. 
+      !   F., Houser, P., Levis, S., Niu, G.Y. and Thornton, P., 2004.
       !   Technical description of the community land model (CLM).
-               
-      !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C., 
+
+      !---Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, D.A., Zhang, C.,
       !   Collelo, G.D. and Bounoua, L., 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs.
       !   Part I: Model formulation. Journal of climate, 9(4), pp.676-705.
 
       !---Sellers, P.J., Tucker, C.J., Collatz, G.J., Los, S.O., Justice, C.O., Dazlich, D.A. and Randall, D.A., 1996.
-      !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: 
+      !   A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II:
       !   The generation of global fields of terrestrial biophysical parameters from satellite data.
       !   Journal of climate, 9(4), pp.706-737.
 
@@ -115,9 +115,9 @@ contains
    !REVISION HISTORY
    !----------------
       !---2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
-      !---2021.12.08  Zhongwang Wei @ SYSU                     
+      !---2021.12.08  Zhongwang Wei @ SYSU
       !---2014.04     Yongjiu Dai
-      !---2002.08.31  Yongjiu Dai  
+      !---2002.08.31  Yongjiu Dai
    !=======================================================================
 
       IMPLICIT NONE
@@ -252,7 +252,7 @@ contains
 #endif
 
       ELSE
-         ldew = 0. 
+         ldew = 0.
          pg_rain = prc_rain + prl_rain
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
@@ -271,7 +271,7 @@ contains
       ! Calculation of interception and drainage of precipitation (under development)
       ! the scheme developed by Zhongwang wei @ SYSU (not finished yet)
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---Zhongwang Wei @ SYSU
 
@@ -280,7 +280,7 @@ contains
       !---Zhong, F., Jiang, S., van Dijk, A.I., Ren, L., Schellekens, J. and Miralles, D.G., 2022.
       !   Revisiting large-scale interception patterns constrained by a synthesis of global experimental
       !   data. Hydrology and Earth System Sciences, 26(21), pp.5647-5667.
-      !--- 
+      !---
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
@@ -300,7 +300,7 @@ contains
       REAL(r8), INTENT(in) :: prc_rain       ! convective ranfall [mm/s]
       REAL(r8), INTENT(in) :: prc_snow       ! convective snowfall [mm/s]
       REAL(r8), INTENT(in) :: prl_rain       ! large-scale rainfall [mm/s]
-      REAL(r8), INTENT(in) :: prl_snow       ! large-scale snowfall [mm/s] 
+      REAL(r8), INTENT(in) :: prl_snow       ! large-scale snowfall [mm/s]
       REAL(r8), INTENT(in) :: sigf           ! fraction of veg cover, excluding snow-covered veg [-]
       REAL(r8), INTENT(in) :: lai            ! leaf area index [-]
       REAL(r8), INTENT(in) :: sai            ! stem area index [-]
@@ -440,14 +440,14 @@ contains
       ! Interception and drainage of precipitation
       ! the treatment are modified from CLM4.5
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !Lawrence, D.M.
 
    !References:
    !-------------------
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007. 
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation, 
+      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
       !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
@@ -456,9 +456,9 @@ contains
    !REVISION HISTORY
    !----------------
       ! 2023.02.21  Zhongwang Wei @ SYSU : Snow and rain interception
-      ! 2021.12.08  Zhongwang Wei @ SYSU                     
+      ! 2021.12.08  Zhongwang Wei @ SYSU
       ! 2014.04     Yongjiu Dai
-      ! 2002.08.31  Yongjiu Dai  
+      ! 2002.08.31  Yongjiu Dai
    !=======================================================================
 
       IMPLICIT NONE
@@ -616,22 +616,22 @@ contains
       ! Interception and drainage of precipitation
       ! the treatment are modified from CLM5.0
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---Lawrence, D.M.
 
    !References:
    !-------------------
-      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007. 
-      !   The partitioning of evapotranspiration into transpiration, soil evaporation, 
+      !---Lawrence, D.M., Thornton, P.E., Oleson, K.W. and Bonan, G.B., 2007.
+      !   The partitioning of evapotranspiration into transpiration, soil evaporation,
       !   and canopy evaporation in a GCM: Impacts on land–atmosphere interaction. Journal of Hydrometeorology, 8(4), pp.862-880.
       !---Lawrence, D.M., Fisher, R.A., Koven, C.D., Oleson, K.W., Swenson, S.C., Bonan, G., Collier, N., Ghimire, B.,
-      !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5: 
+      !   van Kampenhout, L., Kennedy, D. and Kluzek, E., 2019. The Community Land Model version 5:
       !   Description of new features, benchmarking, and impact of forcing uncertainty.
       !   Journal of Advances in Modeling Earth Systems, 11(12), pp.4245-4287.
       !---Fan, Y., Meijide, A., Lawrence, D.M., Roupsard, O., Carlson, K.M., Chen, H.Y.,
-      !   Röll, A., Niu, F. and Knohl, A., 2019. Reconciling canopy interception parameterization 
-      !   and rainfall forcing frequency in the Community Land Model for simulating evapotranspiration 
+      !   Röll, A., Niu, F. and Knohl, A., 2019. Reconciling canopy interception parameterization
+      !   and rainfall forcing frequency in the Community Land Model for simulating evapotranspiration
       !   of rainforests and oil palm plantations in Indonesia. Journal of Advances in Modeling Earth Systems, 11(3), pp.732-751.
 
 
@@ -640,8 +640,8 @@ contains
 
    !REVISION HISTORY
    !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU 
-      ! 2021.12.08  Zhongwang Wei @ SYSU         
+      ! 2023.02.21  Zhongwang Wei @ SYSU
+      ! 2021.12.08  Zhongwang Wei @ SYSU
    !=======================================================================
 
       IMPLICIT NONE
@@ -703,7 +703,7 @@ contains
          IF(p0 > 1.e-8) THEN
             alpha_rain = 1.0
             alpha_snow = 1.0
-            fpi_rain   = alpha_rain * tanh(lsai)  
+            fpi_rain   = alpha_rain * tanh(lsai)
             fpi_snow   = alpha_snow * ( 1.-exp(-0.5*lsai) )
             tti_rain   = (prc_rain+prl_rain)*deltim * ( 1.-fpi_rain )
             tti_snow   = (prc_snow+prl_snow)*deltim * ( 1.-fpi_snow )
@@ -767,14 +767,14 @@ contains
    END SUBROUTINE LEAF_interception_CLM5
 
    SUBROUTINE LEAF_interception_NOAHMP(deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&         
+                                       prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
    !DESCRIPTION
    !===========
       ! Interception and drainage of precipitation
       ! the treatment are modified from Noah-MP 5.0
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---Guo-Yue Niu
 
@@ -783,21 +783,21 @@ contains
       !---Yang, M., Zuo, R., Li, X. and Wang, L., 2019. Improvement test for the canopy interception parameterization scheme
       !   in the community land model. Sola, 15, pp.166-171.
       !---Niu, G.Y., Yang, Z.L., Mitchell, K.E., Chen, F., Ek, M.B., Barlage, M., Kumar, A.,
-      !   Manning, K., Niyogi, D., Rosero, E. and Tewari, M., 2011. The community Noah land 
-      !   surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation 
+      !   Manning, K., Niyogi, D., Rosero, E. and Tewari, M., 2011. The community Noah land
+      !   surface model with multiparameterization options (Noah‐MP): 1. Model description and evaluation
       !   with local‐scale measurements. Journal of Geophysical Research: Atmospheres, 116(D12).
       !---He, C., Valayamkunnath, P., Barlage, M., Chen, F., Gochis, D., Cabell, R., Schneider, T.,
       !   Rasmussen, R., Niu, G.Y., Yang, Z.L. and Niyogi, D., 2023. Modernizing the open-source
       !   community Noah-MP land surface model (version 5.0) with enhanced modularity,
       !   interoperability, and applicability. EGUsphere, 2023, pp.1-31.
-      
+
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
 
    !REVISION HISTORY
    !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU 
-      ! 2021.12.08  Zhongwang Wei @ SYSU         
+      ! 2023.02.21  Zhongwang Wei @ SYSU
+      ! 2021.12.08  Zhongwang Wei @ SYSU
    !=======================================================================
 
       IMPLICIT NONE
@@ -828,7 +828,7 @@ contains
       REAL(r8), INTENT(out)   :: qintr    !interception [kg/(m2 s)]
       REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
-   
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -837,7 +837,7 @@ contains
          fvegc=max(0.05,1.0-exp(-0.52*lsai))
 
          !snow unloading
-         IF (ldew_snow>1.e-8) THEN 
+         IF (ldew_snow>1.e-8) THEN
             FT = MAX(0.0,(tair - 270.15) / 1.87E5)
             FV = SQRT(forc_us*forc_us + forc_vs*forc_vs) / 1.56E5
             ICEDRIP = MAX(0.,ldew_snow) * (FV+FT)    !MB: removed /DT
@@ -863,7 +863,7 @@ contains
             xsc_snow   = ICEDRIP+max(0., ldew_snow-satcap_snow)
             !tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ENDIF
-      
+
          IF (p0 > 1.e-8) THEN
             p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
             ppc = (prc_rain+prc_snow)*deltim
@@ -905,16 +905,16 @@ contains
          thru_snow = tti_snow + tex_snow
          pinf = p0 - (thru_rain + thru_snow)
          ldew = ldew + pinf
-   
+
          pg_rain = (xsc_rain + thru_rain) / deltim
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
-   
-   
+
+
          qintr_rain = prc_rain + prl_rain - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-   
-   
+
+
 #if(defined CLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
@@ -923,7 +923,7 @@ contains
             CALL abort
          ENDIF
 #endif
-   
+
       ELSE
          ldew = 0.
          pg_rain = prc_rain + prl_rain
@@ -932,12 +932,12 @@ contains
          qintr_rain = 0.
          qintr_snow = 0.
       ENDIF
-      
+
    END SUBROUTINE LEAF_interception_NOAHMP
 
 
    SUBROUTINE LEAF_interception_MATSIRO (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                         prc_rain,prc_snow,prl_rain,prl_snow,&         
+                                         prc_rain,prc_snow,prl_rain,prl_snow,&
                                          ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,&
                                          qintr_rain,qintr_snow)
    !DESCRIPTION
@@ -945,18 +945,18 @@ contains
       ! Interception and drainage of precipitation
       ! the treatment are modified from MATSIRO 6 (under development)
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---MATSIRO6 document writing team∗
 
    !References:
    !-------------------
       !---Tatebe, H., Ogura, T., Nitta, T., Komuro, Y., Ogochi, K., Takemura, T., Sudo, K., Sekiguchi, M.,
-      !   Abe, M., Saito, F. and Chikira, M., 2019. Description and basic evaluation of simulated mean state, 
+      !   Abe, M., Saito, F. and Chikira, M., 2019. Description and basic evaluation of simulated mean state,
       !   internal variability, and climate sensitivity in MIROC6. Geoscientific Model Development, 12(7), pp.2727-2765. 116(D12).
       !---Takata, K., Emori, S. and Watanabe, T., 2003. Development of the minimal advanced treatments of surface interaction and
       !   runoff. Global and planetary Change, 38(1-2), pp.209-222.
-      !---Guo, Q., Kino, K., Li, S., Nitta, T., Takeshima, A., Suzuki, K.T., Yoshida, N. and Yoshimura, K., 2021. 
+      !---Guo, Q., Kino, K., Li, S., Nitta, T., Takeshima, A., Suzuki, K.T., Yoshida, N. and Yoshimura, K., 2021.
       !   Description of MATSIRO6.
 
    !ANCILLARY FUNCTIONS AND SUBROUTINES
@@ -964,8 +964,8 @@ contains
 
    !REVISION HISTORY
    !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU 
-      ! 2021.12.08  Zhongwang Wei @ SYSU         
+      ! 2023.02.21  Zhongwang Wei @ SYSU
+      ! 2021.12.08  Zhongwang Wei @ SYSU
    !=======================================================================
 
       IMPLICIT NONE
@@ -1040,7 +1040,7 @@ contains
             tex_rain=max(ldew_rain+(prc_rain+prl_rain)*deltim-tti_rain-satcap_rain,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_rain+(prc_rain+prl_rain)*deltim-tti_rain,satcap_rain)/deltim))*deltim
             tex_snow=max(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow-satcap_snow,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow,satcap_snow)/deltim))*deltim
 
-      
+
 #if(defined CLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
@@ -1060,13 +1060,13 @@ contains
          !----------------------------------------------------------------------
          !   total throughfall (thru) and store augmentation
          !----------------------------------------------------------------------
-   
+
          thru_rain = tti_rain + tex_rain
          thru_snow = tti_snow + tex_snow
          pinf = p0 - (thru_rain + thru_snow)
          ldew = ldew + pinf
-         ldew_rain= ldew_rain+(prc_rain+prl_rain)*deltim- thru_rain 
-         ldew_snow= ldew_snow+(prc_snow+prl_snow)*deltim- thru_snow 
+         ldew_rain= ldew_rain+(prc_rain+prl_rain)*deltim- thru_rain
+         ldew_snow= ldew_snow+(prc_snow+prl_snow)*deltim- thru_snow
 
          pg_rain = (xsc_rain + thru_rain) / deltim
          pg_snow = (xsc_snow + thru_snow) / deltim
@@ -1082,7 +1082,7 @@ contains
             CALL abort
          ENDIF
 #endif
-   
+
       ELSE
          ldew = 0.
          ldew_rain = 0.
@@ -1096,7 +1096,7 @@ contains
    END SUBROUTINE LEAF_interception_MATSIRO
 
    SUBROUTINE LEAF_interception_VIC (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
-                                       prc_rain,prc_snow,prl_rain,prl_snow,&         
+                                       prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                        pg_snow,qintr,qintr_rain,qintr_snow)
 
@@ -1105,28 +1105,28 @@ contains
       ! Calculation of  interception and drainage of precipitation
       ! the treatment are based on VIC 5.0 (under development)
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---Hamman, J.J. AND Liang X.
 
    !References:
    !-------------------
-      !---Hamman, J.J., Nijssen, B., Bohn, T.J., Gergel, D.R. and Mao, Y., 2018. 
+      !---Hamman, J.J., Nijssen, B., Bohn, T.J., Gergel, D.R. and Mao, Y., 2018.
       !   The Variable Infiltration Capacity model version 5 (VIC-5): Infrastructure
       !   improvements for new applications and reproducibility. Geoscientific Model Development,
       !   11(8), pp.3481-3496.
-      !---Liang, X., Lettenmaier, D.P., Wood, E.F. and Burges, S.J., 1994. 
-      !   A simple hydrologically based model of land surface water and energy fluxes 
+      !---Liang, X., Lettenmaier, D.P., Wood, E.F. and Burges, S.J., 1994.
+      !   A simple hydrologically based model of land surface water and energy fluxes
       !   for general circulation models. Journal of Geophysical Research: Atmospheres, 99(D7),
       !   pp.14415-14428.
-      
+
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
 
    !REVISION HISTORY
    !----------------
-      ! 2023.02.21  Zhongwang Wei @ SYSU 
-      ! 2021.12.08  Zhongwang Wei @ SYSU         
+      ! 2023.02.21  Zhongwang Wei @ SYSU
+      ! 2021.12.08  Zhongwang Wei @ SYSU
    !=======================================================================
 
 
@@ -1173,9 +1173,9 @@ contains
          !the maximum bearing  capacity of the tree regardless of air temp (Imax1)
          Imax1=4.0*lsai*0.0005 *1000.0 ! in mm
 
-         if (tair>-272.15) THEN 
+         if (tair>-272.15) THEN
             Lr=4.0
-         ELSE IF (tair<=-272.15 .and. tair>=-270.15) THEN 
+         ELSE IF (tair<=-272.15 .and. tair>=-270.15) THEN
             Lr=1.5*(tair-273.15)+5.5
          else
             Lr=1.0
@@ -1183,7 +1183,7 @@ contains
 
          ldew_max_snow=0.0005 *Lr *lsai * 1000.0  ! in mm !!!
          Snow=(prc_snow+prl_snow)*deltim
-         if (ldew_max_snow>0.0) THEN 
+         if (ldew_max_snow>0.0) THEN
             DeltaSnowInt=(1.0-ldew_snow/ldew_max_snow)*Snow
             if ((DeltaSnowInt+ldew_snow)>ldew_max_snow) THEN
                DeltaSnowInt=ldew_max_snow-ldew_snow
@@ -1193,7 +1193,7 @@ contains
             endif
          else
             DeltaSnowInt=0.0
-         endif 
+         endif
 
          !* Reduce the amount of intercepted snow if windy and cold.
          !Ringyo Shikenjo Tokyo, #54, 1952.
@@ -1208,14 +1208,14 @@ contains
          Wind= SQRT(forc_us*forc_us + forc_vs*forc_vs)
          if (tleaf<-3.0 .and. DeltaSnowInt>0.0 .and. Wind> 1.0) THEN
             BlownSnow=(0.2*Wind -0.2)*DeltaSnowInt
-            if (BlownSnow>=DeltaSnowInt) THEN 
+            if (BlownSnow>=DeltaSnowInt) THEN
                BlownSnow = DeltaSnowInt
             endif
             DeltaSnowInt=DeltaSnowInt-BlownSnow
          endif
-   
+
          ! now update snowfall and total accumulated intercepted snow amounts */
-         if ((DeltaSnowInt+ldew_snow)>Imax1) THEN 
+         if ((DeltaSnowInt+ldew_snow)>Imax1) THEN
             DeltaSnowInt = 0.0
          endif
 
@@ -1227,7 +1227,7 @@ contains
          if (Snow == 0.0  .and. ldew_snow < 0.0010*1000.0) THEN
             SnowThroughFall  = ldew_snow+SnowThroughFall
             DeltaSnowInt =DeltaSnowInt-ldew_snow;
-         ENDIF 
+         ENDIF
 
          !/* physical depth */
          ldew_snow = ldew_snow+ DeltaSnowInt;
@@ -1241,7 +1241,7 @@ contains
          MaxWaterInt =0.035 * (ldew_snow) + MaxInt
 
          Rain=(prc_rain+prl_rain)*deltim
-         if (ldew_rain+Rain <=MaxWaterInt) THEN 
+         if (ldew_rain+Rain <=MaxWaterInt) THEN
                !/* physical depth */
                ldew_rain=ldew_rain+Rain
                ! /* pixel depth */
@@ -1283,7 +1283,7 @@ contains
 
 
 
-         !here is diff from original VIC 
+         !here is diff from original VIC
          ! phase change and excess !
          IF (tleaf > tfrz) THEN
             ldew_smelt = MIN(ldew_snow,(tleaf-tfrz)*CICE*ldew_snow/DENICE/(HFUS))
@@ -1296,7 +1296,7 @@ contains
             ldew_snow  = ldew_snow+ldew_frzc
             ldew_rain  = ldew_rain-ldew_frzc
          ENDIF
-   
+
          !/* Update maximum water interception storage */
          MaxInt=exp(-4.0)*lsai !need check the unit!!  maximum interception capacity!!1
          MaxWaterInt =0.035 * (ldew_snow) + MaxInt
@@ -1310,7 +1310,7 @@ contains
          pg_snow=SnowThroughFall
          qintr_snow=-0.0
          qintr_rain=-0.0
-      ELSE 
+      ELSE
          ldew = 0.
          pg_rain = prc_rain + prl_rain
          pg_snow = prc_snow + prl_snow
@@ -1333,9 +1333,9 @@ contains
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
 
-   !Original Author: 
+   !Original Author:
    !-------------------
-      !---Shupeng Zhang 
+      !---Shupeng Zhang
 
    !References:
 
@@ -1343,7 +1343,7 @@ contains
    !REVISION HISTORY
    !----------------
       ! 2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
-                              
+
       USE precision
       USE PhysicalConstants, only: tfrz
       USE mod_landpft
@@ -1382,9 +1382,9 @@ contains
       pg_rain_tmp = 0.
       pg_snow_tmp = 0.
 
-      ps = patch_pft_s(ipatch)      
+      ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
-      
+
       if (DEF_Interception_scheme==1) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1393,7 +1393,7 @@ contains
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==2) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1402,7 +1402,7 @@ contains
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==3) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1411,7 +1411,7 @@ contains
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==4) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1420,7 +1420,7 @@ contains
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==5) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1429,7 +1429,7 @@ contains
                                              ldew_p(i),ldew_p(i),ldew_p(i),z0m_p(i),hu,pg_rain,pg_snow,qintr_p(i),qintr_rain_p(i),qintr_snow_p(i))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pftfrac(i)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pftfrac(i)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==6) THEN
          DO i = ps, pe
             p = pftclass(i)
@@ -1458,7 +1458,7 @@ contains
      qintr_snow = sum(qintr_snow_p(ps:pe) * pftfrac(ps:pe))
    END SUBROUTINE LEAF_interception_pftwrap
 #endif
- 
+
 #ifdef PC_CLASSIFICATION
    SUBROUTINE LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,chil,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
@@ -1471,7 +1471,7 @@ contains
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
 
-   !Original Author: 
+   !Original Author:
    !-------------------
       !---Shupeng Zhang
 
@@ -1514,14 +1514,14 @@ contains
       REAL(r8), INTENT(out) :: qintr         !interception [kg/(m2 s)]
       REAL(r8), INTENT(out) :: qintr_rain    !rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow    !snowfall interception (mm h2o/s)
-     
+
       INTEGER p, pc
       REAL(r8) pg_rain_tmp, pg_snow_tmp
 
       pg_rain_tmp = 0.
       pg_snow_tmp = 0.
 
-      pc = patch2pc(ipatch)      
+      pc = patch2pc(ipatch)
 
       IF (DEF_Interception_scheme==1) THEN
          DO p = 0, N_PFT-1
@@ -1530,10 +1530,10 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
       ELSE IF (DEF_Interception_scheme==2) THEN
          DO p = 0, N_PFT-1
             CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,&
@@ -1541,10 +1541,10 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
       ELSE IF (DEF_Interception_scheme==3) THEN
@@ -1554,10 +1554,10 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
       ELSE IF (DEF_Interception_scheme==4) THEN
@@ -1567,10 +1567,10 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
       ELSE IF (DEF_Interception_scheme==5) THEN
@@ -1580,10 +1580,10 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
       ELSE IF  (DEF_Interception_scheme==6) THEN
@@ -1593,13 +1593,13 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-      
+
       ELSE IF  (DEF_Interception_scheme==7) THEN
          DO p = 0, N_PFT-1
             CALL LEAF_interception_CoLM202x (deltim,dewmx,forc_us,forc_vs,&
@@ -1607,14 +1607,14 @@ contains
                                        prc_rain,prc_snow,prl_rain,prl_snow,&
                                        ldew_c(p,pc),ldew_rain_c(p,pc),ldew_snow_c(p,pc),&
                                        z0m_c(p,pc),hu,pg_rain,pg_snow,&
-                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc)) 
+                                       qintr_c(p,pc),qintr_rain_c(p,pc),qintr_snow_c(p,pc))
             pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
             pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
-         ENDDO 
+         ENDDO
          pg_rain_tmp = pg_rain_tmp + pg_rain*pcfrac(p,pc)
          pg_snow_tmp = pg_snow_tmp + pg_snow*pcfrac(p,pc)
       END IF
-      
+
      pg_rain = pg_rain_tmp
      pg_snow = pg_snow_tmp
      ldew  = sum( ldew_c(:,pc) * pcfrac(:,pc))

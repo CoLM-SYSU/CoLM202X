@@ -7,10 +7,6 @@
    DEF_domain%edgew = 100.0   
    DEF_domain%edgee = 115.0      
    
-   DEF_nx_blocks = 30
-   DEF_ny_blocks = 30
-   DEF_PIO_groupsize = 6
-   
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2000
    DEF_simulation_time%start_month  = 1
@@ -28,12 +24,12 @@
    
    DEF_simulation_time%spinup_repeat = 2
    
-   DEF_dir_rawdata  = '/tera05/zhangsp/data/CLMrawdata_igbp/'
+   DEF_dir_rawdata  = '/tera07/CLMrawdata/'
    DEF_dir_output   = '/tera05/zhangsp/cases'
    
    ! for GRIDBASED
    DEF_file_mesh = '/tera05/zhangsp/data/landdata/mask/landmask_igbp_10km.nc'
-   DEF_file_mesh_filter = '/tera05/zhangsp/data/landdata/filter/pearl_mesh_filter.nc'
+   ! DEF_file_mesh_filter = '/tera05/zhangsp/data/landdata/filter/pearl_mesh_filter.nc'
 
    ! LAI setting
    DEF_LAI_CLIM = .true.

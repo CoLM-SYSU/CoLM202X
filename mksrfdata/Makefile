@@ -47,7 +47,6 @@ OBJS = \
 		 mod_landurban.o \
 		 mod_landpft.o \
 		 mod_landpc.o \
-		 par_fitting.o \
 		 mod_mesh_filter.o \
 		 mod_srfdata_diag.o \
 		 aggregation_percentages.o \
@@ -62,6 +61,7 @@ OBJS = \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
 		 aggregation_topography.o \
+		 mod_region_clip.o \
 		 mksrfdata.o
 
 ####################################################################

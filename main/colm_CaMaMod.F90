@@ -1,6 +1,6 @@
 #include <define.h>
 MODULE COLM_CAMAMOD
-#IF(defined CaMa_Flood)
+#if(defined CaMa_Flood)
 !DESCRIPTION
 !===========
 ! This MODULE is the coupler for the colm and CaMa-Flood model.
@@ -12,11 +12,11 @@ MODULE COLM_CAMAMOD
 !* :SUBROUTINE:"colm_CaMa_exit" :  Finalization of the coupler
 !* :SUBROUTINE:"get_fldinfo"    :  Get floodplain information from CaMa-Flood model
 !* :SUBROUTINE:"get_fldevp"     :  calculate floodplain evaporation
-   
+
 !REVISION HISTORY
 !----------------
 ! 2023.02.21  Zhongwang Wei @ SYSU
-! 2021.12.02  Zhongwang Wei @ SYSU 
+! 2021.12.02  Zhongwang Wei @ SYSU
 ! 2020.10.01  Zhongwang Wei @ SYSU
 
 use mod_namelist
@@ -30,7 +30,7 @@ USE YOS_CMF_INPUT,             ONLY: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,
 USE precision,                 ONLY: r8,r4
 USE YOS_CMF_INPUT ,            ONLY: LROSPLIT,LWEVAP,LWINFILT
 USE spmd_task
-USE CMF_CTRL_TIME_MOD    
+USE CMF_CTRL_TIME_MOD
 USE GlobalVars,                ONLY : spval
 USE MOD_1D_Fluxes
 
@@ -65,30 +65,30 @@ SUBROUTINE colm_CaMa_init
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   IF(p_is_master)THEN  
+   IF(p_is_master)THEN
       !Namelist handling
       CALL CMF_DRV_INPUT
       !get the time information from colm namelist
       DT       = IFRQ_INP*3600                                              ! time step of model simulation [sec]
       DTIN     = IFRQ_INP*3600                                              ! time step of input data [sec]
-      SYEAR    = DEF_simulation_time%start_year                             ! start year   
-      SMON     = DEF_simulation_time%start_month                            ! start month       
-      SDAY     = DEF_simulation_time%start_day                              ! start day        
-      SHOUR    = DEF_simulation_time%start_sec/3600                         ! start hour       
-      EYEAR    = DEF_simulation_time%end_year                               ! end year    
-      EMON     = DEF_simulation_time%end_month                              ! end month       
-      EDAY     = DEF_simulation_time%end_day                                ! end day         
-      EHOUR    = DEF_simulation_time%end_sec/3600                           ! end hour 
+      SYEAR    = DEF_simulation_time%start_year                             ! start year
+      SMON     = DEF_simulation_time%start_month                            ! start month
+      SDAY     = DEF_simulation_time%start_day                              ! start day
+      SHOUR    = DEF_simulation_time%start_sec/3600                         ! start hour
+      EYEAR    = DEF_simulation_time%end_year                               ! end year
+      EMON     = DEF_simulation_time%end_month                              ! end month
+      EDAY     = DEF_simulation_time%end_day                                ! end day
+      EHOUR    = DEF_simulation_time%end_sec/3600                           ! end hour
       LLEAPYR  = DEF_forcing%leapyear                                       ! leap year flag
-      
+
       !----------------------- Dummy argument --------------------------------
-      YYYY0    = SYEAR                                              
+      YYYY0    = SYEAR
       RMIS     = spval
       DMIS     = spval
 
       CALL CMF_DRV_INIT       !INITIALIZATION
 
-      !Initialize varialbes to be outputed from variable list 
+      !Initialize varialbes to be outputed from variable list
       DO JF=1,NVARSOUT
          SELECT CASE (VAROUT(JF)%CVNAME)
          CASE ('rivout') ! river discharge [m3/s]
@@ -140,25 +140,25 @@ SUBROUTINE colm_CaMa_init
          CASE ('gdwrtn') ! Ground water return flow [m3/s]
             DEF_hist_cama_vars%gdwrtn=.true.
          CASE ('runoff') ! total runoff [m3/s]                !!  compatibility for previous file name
-            DEF_hist_cama_vars%runoff=.true. 
+            DEF_hist_cama_vars%runoff=.true.
          CASE ('runoffsub') ! subsurface runoff [m3/s]        !!  compatibility for previous file name
-            DEF_hist_cama_vars%runoffsub=.true. 
+            DEF_hist_cama_vars%runoffsub=.true.
          CASE ('rofsfc') ! surface runoff [m3/s]              !!  compatibility for previous file name
-            DEF_hist_cama_vars%rofsfc=.true. 
+            DEF_hist_cama_vars%rofsfc=.true.
          CASE ('rofsub')  ! input sub-surface runoff [m3/s]
-            DEF_hist_cama_vars%rofsub=.true. 
+            DEF_hist_cama_vars%rofsub=.true.
          CASE ('damsto')   ! reservoir storage [m3]
-            DEF_hist_cama_vars%damsto=.true. 
+            DEF_hist_cama_vars%damsto=.true.
          CASE ('daminf')   ! reservoir inflow [m3/s]
-               DEF_hist_cama_vars%daminf=.true. 
+               DEF_hist_cama_vars%daminf=.true.
          CASE ('levsto')   !flood storage in protected side (storage betwen river & levee) [m3]
-               DEF_hist_cama_vars%levsto=.true. 
+               DEF_hist_cama_vars%levsto=.true.
          CASE ('levdph')   !flood depth in protected side [m]
-               DEF_hist_cama_vars%levdph=.true. 
+               DEF_hist_cama_vars%levdph=.true.
          CASE ('wevap')    ! input inundation Evaporation [m]
-               DEF_hist_cama_vars%wevap=.true. 
+               DEF_hist_cama_vars%wevap=.true.
          CASE ('winfilt')  ! input inundation re-infiltrition [m]
-               DEF_hist_cama_vars%winfilt=.true.             
+               DEF_hist_cama_vars%winfilt=.true.
          CASE DEFAULT
             stop
          END SELECT
@@ -170,21 +170,21 @@ SUBROUTINE colm_CaMa_init
       CALL mpi_bcast (IFRQ_INP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
       CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
       CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
-      
+
       !Allocate the data structure for cama
       CALL gcama%define_by_ndims (NX, NY)  !define the data structure for cama
       CALL mp2g_cama%build (landpatch, gcama) !build the mapping between cama and mpi
-      CALL mg2p_cama%build (gcama, landpatch) 
+      CALL mg2p_cama%build (gcama, landpatch)
 
       CALL cama_gather%set (gcama)
-      
+
       !Allocate the cama-flood related variable for accumulation
       CALL allocate_2D_cama_Fluxes  (gcama) !allocate the 2D variables
       CALL allocate_acc_cama_Fluxes () !allocate the accumulation variables
       CALL FLUSH_acc_cama_fluxes    () !initialize the accumulation variables
-      
+
       !Only master processor allocate the 2D variables
-      IF (p_is_master) THEN 
+      IF (p_is_master) THEN
          ALLOCATE (runoff_2d (NX,NY))
          ALLOCATE (fevpg_2d  (NX,NY))
          ALLOCATE (finfg_2d  (NX,NY))
@@ -210,7 +210,7 @@ SUBROUTINE colm_CaMa_init
          fldfrc_cama(:)       =  0.0D0
          fevpg_fld(:)         =  0.0D0
          finfg_fld(:)         =  0.0D0
-end IF  
+end IF
 end SUBROUTINE colm_CaMa_init
 
 !####################################################################
@@ -228,7 +228,7 @@ SUBROUTINE colm_cama_drv(idate_sec)
       CALL colm2cama_real8 (a_rnof_cama, f_rnof_cama, runoff_2d)
 
       ! Prepare sending the accumulated inundation evaporation flux to cama model (master processor to worker processors)
-      ! only if the inundation evaporation is turned on 
+      ! only if the inundation evaporation is turned on
       IF (LWEVAP) THEN
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -236,7 +236,7 @@ SUBROUTINE colm_cama_drv(idate_sec)
          CALL colm2cama_real8 (a_fevpg_fld, f_fevpg_fld, fevpg_2d)
       ENDIF
       ! Prepare sending the accumulated inundation re-infiltrition flux to cama model (master processor to worker processors)
-      ! only if the inundation re-infiltrition is turned on 
+      ! only if the inundation re-infiltrition is turned on
       IF (LWINFILT) THEN
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -265,18 +265,18 @@ SUBROUTINE colm_cama_drv(idate_sec)
                ENDIF
                IF (LWINFILT) THEN
                   ZBUFF(i,j,4)=finfg_2d(i,j)/1000.0D0  !mm/s -->m/s
-               ELSE                  
+               ELSE
                   ZBUFF(i,j,4)=0.0D0
                ENDIF
             ENDDO
          ENDDO
-   
+
          ! Simulating the hydrodynamics in continental-scale rivers
          ! ----------------------------------------------------------------------
-         
+
          ! Get the time step of cama-flood simulation
          ISTEPADV=INT(DTIN/DT,JPIM)
-         ! Interporlate variables & send to CaMa-Flood 
+         ! Interporlate variables & send to CaMa-Flood
          CALL CMF_FORCING_PUT(ZBUFF)
          ! Advance CaMa-Flood model for ISTEPADV
          CALL CMF_DRV_ADVANCE(ISTEPADV)
@@ -289,15 +289,15 @@ SUBROUTINE colm_cama_drv(idate_sec)
       IF (LWINFILT .or. LWEVAP) THEN
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
-#endif   
+#endif
          CALL cama2colm_real8 (flddepth_tmp, f_flddepth_cama, flddepth_cama)! unit [m]
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
-#endif         
+#endif
          CALL cama2colm_real8 (fldfrc_tmp,   f_fldfrc_cama,   fldfrc_cama  ) ! unit [%]
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
-#endif               
+#endif
          flddepth_cama=flddepth_cama*1000.D0 !m --> mm
          fldfrc_cama=fldfrc_cama/100.D0     !% --> [0-1]
       ENDIF
@@ -309,10 +309,10 @@ SUBROUTINE colm_cama_exit
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-   ! finalize CaMa-Flood 
+   ! finalize CaMa-Flood
    CALL deallocate_acc_cama_Fluxes ()
    IF(p_is_master)THEN
-      ! finalize CaMa-Flood 
+      ! finalize CaMa-Flood
       DEALLOCATE(ZBUFF)
       DEALLOCATE (runoff_2d)
       DEALLOCATE (fevpg_2d)
@@ -330,8 +330,8 @@ END SUBROUTINE colm_cama_exit
 SUBROUTINE get_fldinfo()
    !DESCRIPTION
    !===========
-   ! This subrountine prepare cama output variables for inundation evaporation and re-infiltration 
-   
+   ! This subrountine prepare cama output variables for inundation evaporation and re-infiltration
+
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
    !* :SUBROUTINE:"vecD2mapD" : convert 1D vector data -> 2D map data (REAL*8), see CAMA/CMF_UTILS_MOD.F90
@@ -346,20 +346,20 @@ SUBROUTINE get_fldinfo()
    USE CMF_UTILS_MOD,      ONLY:  vecD2mapD          !convert 1D vector data -> 2D map data (REAL*8)
 
    IMPLICIT NONE
-      
+
    !----------------------- Dummy argument --------------------------------
    INTEGER i,j
 
    !================================================
    !! convert 1Dvector to 2Dmap
-   CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP 
-   CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP 
+   CALL vecD2mapD(D2FLDFRC,flddepth_tmp)             !! MPI node data is gathered by VEC2MAP
+   CALL vecD2mapD(D2FLDDPH,fldfrc_tmp)               !! MPI node data is gathered by VEC2MAP
 
    do i    = 1, NX
       do j = 1, NY
          IF (flddepth_tmp(i,j) .LT.    0.0)        flddepth_tmp(i,j) = 0.0
          IF (fldfrc_tmp(i,j)   .LT.    0.0)        fldfrc_tmp(i,j)   = 0.0
-         IF (fldfrc_tmp(i,j)   .GT.    100.0)      fldfrc_tmp(i,j)   = 100.0    !!If fraction is larger than 100%, it is set to 100%. 
+         IF (fldfrc_tmp(i,j)   .GT.    100.0)      fldfrc_tmp(i,j)   = 100.0    !!If fraction is larger than 100%, it is set to 100%.
       ENDDO
    ENDDO
 END SUBROUTINE get_fldinfo
@@ -372,12 +372,12 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    ! This subrountine compute surface fluxes, derviatives, and exchange coefficiants
    ! This is the main SUBROUTINE to execute the calculation of thermal processes
    ! and surface fluxes
-   
+
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
    !* :SUBROUTINE:"qsadv"         :     !  computes saturation mixing ratio and change in saturation
    !* :SUBROUTINE:" moninobukini" :     !  initialzation of Monin-Obukhov length, see FRICTION_VELOCITY.F90
-   !* :SUBROUTINE:" moninobuk"    :     !  calculation of friction velocity, relation for potential temperature 
+   !* :SUBROUTINE:" moninobuk"    :     !  calculation of friction velocity, relation for potential temperature
                                         !  and humidity profiles of surface boundary layer,see FRICTION_VELOCITY.F90
    !REVISION HISTORY
    !----------------
@@ -418,13 +418,13 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    REAL(r8), INTENT(out) :: fm      ! integral of profile function for momentum
    REAL(r8), INTENT(out) :: fh      ! integral of profile function for heat
    REAL(r8), INTENT(out) :: fq      ! integral of profile function for moisture
-   
+
    !----------------------- Dummy argument --------------------------------
    INTEGER i
    INTEGER niters            ! maximum number of iterations for surface temperature
    INTEGER iter              ! iteration index
    INTEGER nmozsgn           ! number of times moz changes sign
-   
+
    REAL(r8) :: beta          ! coefficient of conective velocity [-]
    REAL(r8) :: displax       ! zero-displacement height [m]
    REAL(r8) :: dth           ! diff of virtual temp. between ref. height and surface
@@ -460,16 +460,16 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    REAL(r8) :: z0mg          ! roughness length over ground, momentum [m]
    REAL(r8) :: z0hg          ! roughness length over ground, sensible heat [m]
    REAL(r8) :: z0qg          ! roughness length over ground, latent heat [m]
-   
+
    REAL, parameter :: zsice = 0.04  ! sea ice aerodynamic roughness length [m]
-   
+
    !-----------------------------------------------------------------------
    ! Potential temperatur at the reference height
    beta = 1.      ! -  (in computing W_*)
    zii  = 1000.    ! m  (pbl height)
-   
+
    !-----------------------------------------------------------------------
-   ! Compute sensible and latent fluxes and their derivatives with respect 
+   ! Compute sensible and latent fluxes and their derivatives with respect
    ! to surface temperature using surface temperatures from previous time step.
    !-----------------------------------------------------------------------
    ! Initialization variables
@@ -477,29 +477,29 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    obuold  = 0.
    ! Calculate saturation mixing ratio and change in saturation
    CALL qsadv(tssea,psrf,eg,degdT,qsatg,qsatgdT)
-   
+
    ! Potential temperatur at the reference height
    thm = tm + 0.0098*ht                   ! intermediate variable equivalent to
                                           ! tm*(pgcm/psrf)**(rgas/cpair)
    th = tm*(100000./psrf)**(rgas/cpair)   ! potential T
    thv = th*(1.+0.61*qm)                  ! virtual potential T
    ur = max(0.1,sqrt(us*us+vs*vs))        ! limit set to 0.1
-   
+
    dth   = thm-tssea                      ! diff of potential temp. between ref. height and surface
    dqh   = qm-qsatg                       ! diff of humidity between ref. height and surface
    dthv  = dth*(1.+0.61*qm)+0.61*th*dqh   ! diff of vir. poten. temp. between ref. height and surface
    !TODO: check if this is correct, inundation may occur over vegetated surface
    zldis = hu-0.                          ! reference height "minus" zero displacement heght
-   
+
    ! Kinematic viscosity of dry air (m2/s)- Andreas (1989) CRREL Rep. 89-11
    visa=1.326e-5*(1.+6.542e-3*tm + 8.301e-6*tm**2 - 4.84e-9*tm**3)
-   
+
    ! Loop to obtain initial and good ustar and zo
    ustar=0.06    ! initial value of ustar
    wc=0.5        ! initial value of wc
    !initial value of um
    IF(dthv.ge.0.) THEN
-   um=max(ur,0.1) 
+   um=max(ur,0.1)
    else
    um=sqrt(ur*ur+wc*wc)
    ENDIF
@@ -510,11 +510,11 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    ENDDO
    !
    CALL moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
-   
+
    ! Evaluated stability-dependent variables using moz from prior iteration
    niters  = 10
    displax = 0.
-   
+
    !----------------------------------------------------------------
    ITERATION : do iter = 1, niters         ! begin stability iteration
    !----------------------------------------------------------------
@@ -535,7 +535,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    !get qstar and tstar 
    tstar = vonkar/fh*dth
    qstar = vonkar/fq*dqh
-   
+
    thvstar=tstar+0.61*th*qstar
    zol=zldis*vonkar*grav*thvstar/(ustar**2*thv) !z/L
    IF(zol >= 0.) THEN       ! stable
@@ -544,7 +544,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    zol = max(-100.,min(zol,-1.e-6))
    ENDIF
    obu = zldis/zol
-   
+
    IF(zol >= 0.)THEN
    um = max(ur,0.1) !wind speed at reference height
    else
@@ -555,38 +555,38 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
       um = max(ur,0.5)
    endif
    ENDIF
-   
+
    IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
    IF(nmozsgn >= 4) EXIT
-   
+
    obuold = obu
-   
+
    !----------------------------------------------------------------
    ENDDO ITERATION                         ! end stability iteration
    !----------------------------------------------------------------
 
    ! Get derivative of fluxes with repect to ground temperature
    ram    = 1./(ustar*ustar/um)
-   rah    = 1./(vonkar/fh*ustar) 
-   raw    = 1./(vonkar/fq*ustar) 
-   
+   rah    = 1./(vonkar/fh*ustar)
+   raw    = 1./(vonkar/fq*ustar)
+
    raih   = rhoair*cpair/rah
-   raiw   = rhoair/raw          
+   raiw   = rhoair/raw
    !cgrnds = raih
    !cgrndl = raiw*qsatgdT
-   
+
    rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
-   
-   ! Surface fluxes of momentum, sensible and latent 
+
+   ! Surface fluxes of momentum, sensible and latent
    ! using ground temperatures from previous time step
-   taux   = -rhoair*us/ram        
+   taux   = -rhoair*us/ram
    tauy   = -rhoair*vs/ram
-   
+
    fseng  = -raih*dth
-   fevpg  = -raiw*dqh 
+   fevpg  = -raiw*dqh
    !fsena  = fseng
    !fevpa  = fevpg
-   
+
    ! 2 m height air temperature
    tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
    qref   = qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
