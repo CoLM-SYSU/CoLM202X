@@ -330,14 +330,24 @@ PROGRAM CLM
       IF (DEF_LAI_CLIM) then
          ! yuan, 08/03/2019: read global LAI/SAI data
          CALL julian2monthday (idate(1), idate(2), month, mday)
-         IF (month /= month_p) THEN 
-            CALL LAI_readin (idate(1), month, dir_landdata)
+         IF (month /= month_p) THEN
+            IF (DEF_LAICHANGE) THEN
+               CALL LAI_readin (idate(1), month, dir_landdata)
+            ELSE
+               CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
          END IF
       ELSE
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
+      ENDIF
+
+#ifdef URBAN_MODEL
+      IF (DEF_LAICHANGE) THEN
+         CALL UrbanLAI_read_innc(idate(1), month, dir_landdata)
+      ELSE
+         CALL UrbanLAI_read_innc(DEF_LC_YEAR, month, dir_landdata)
       ENDIF
 #endif
 

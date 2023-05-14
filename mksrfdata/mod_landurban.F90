@@ -64,7 +64,7 @@ CONTAINS
       INTEGER :: numurban_
       INTEGER, allocatable :: urbclass (:)
 
-      CHARACTER(len=256) :: suffix
+      CHARACTER(len=256) :: suffix, cyear
 
       IF (p_is_master) THEN
          write(*,'(A)') 'Making urban type tiles :'
@@ -84,7 +84,8 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         suffix = 'URB2005'
+         write(cyear,'(i4.4)') DEF_LC_YEAR
+         suffix = 'URB'//trim(cyear)
 #ifdef USE_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
 #else

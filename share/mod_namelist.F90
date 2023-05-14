@@ -63,6 +63,15 @@ MODULE mod_namelist
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
 
+   ! ----- simulation LULCC type -----
+   TYPE nl_LULCC_type
+      LOGICAL :: use_lulcc     = .FALSE.
+      INTEGER :: lc_year_start = 2005
+      INTEGER :: lc_year_end   = 2005
+   END TYPE nl_LULCC_type
+
+   TYPE (nl_LULCC_type) :: DEF_LULCC
+
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data' 
@@ -83,6 +92,10 @@ MODULE mod_namelist
 
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
+   ! ------LAI change ----------
+   ! add by Dong, use for updating LAI with simulation year
+   LOGICAL :: DEF_LAICHANGE = .TRUE.
+   INTEGER :: DEF_LC_YEAR   = 2005
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23 
    !To allow read satellite observed LAI        
@@ -546,6 +559,8 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
          DEF_file_water_table_depth,      &
+         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
@@ -691,6 +706,10 @@ CONTAINS
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
+      ! add by Dong
+      CALL mpi_bcast (DEF_LAICHANGE ,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR   ,        1, mpi_integer, p_root, p_comm_glb, p_err)
+      
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes

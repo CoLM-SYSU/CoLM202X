@@ -84,7 +84,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
-   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m, grid_urban_1km
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
 
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
@@ -187,7 +187,6 @@ PROGRAM mksrfdata
 #ifdef URBAN_MODEL
    CALL gurban%define_by_name          ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
-   CALL grid_urban_1km%define_by_name  ('colm_1km' )
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
    CALL grid_urban_100m%define_by_name ('colm_100m')
 
@@ -353,15 +352,15 @@ PROGRAM mksrfdata
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   !CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
    !CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
    !CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
 #ifdef URBAN_MODEL
-   CALL aggregation_urban (dir_rawdata, dir_landdata, 2005, &
-                           grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+   CALL aggregation_urban (dir_rawdata, dir_landdata, DEF_LC_YEAR, &
+                           grid_urban_5km, grid_urban_100m, grid_urban_500m)
 #endif
 
 

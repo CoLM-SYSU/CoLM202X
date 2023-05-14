@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE UrbanLAI_readin_nc (lc_year, time, dir_landdata)
+SUBROUTINE UrbanLAI_readin_nc (year, time, dir_landdata)
 
 ! ===========================================================
 ! Read in urban LAI, SAI and urban tree cover data
@@ -19,7 +19,7 @@ SUBROUTINE UrbanLAI_readin_nc (lc_year, time, dir_landdata)
 
       IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
+      INTEGER, intent(in) :: year
       INTEGER, intent(in) :: time
       CHARACTER(LEN=256), intent(in) :: dir_landdata
 
@@ -29,21 +29,21 @@ SUBROUTINE UrbanLAI_readin_nc (lc_year, time, dir_landdata)
 
       ! READ in Leaf area index and stem area index
       write(ctime,'(i2.2)') time
-      write(cyear,'(i4.4)') lc_year
+      write(cyear,'(i4.4)') year
 
       !TODO: parameter input for time year
       ! done 
-      lndname = trim(dir_landdata)//'/urban/'//trim(lc_year)//'/urban_LAI_'//trim(ctime)//'.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban_LAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_LAI',  landurban, urb_lai)
 
-      lndname = trim(dir_landdata)//'/urban/'//trim(lc_year)//'/urban_SAI_'//trim(ctime)//'.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban_SAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 
       !TODO: usage?
       ! loop for urban atch to assign fraction of green leaf
       IF (p_is_worker) THEN
          DO u = 1, numurban
-            npatch = ur2patch(u)
+            npatch = urban2patch(u)
             urb_green(u) = 1.              !fraction of green leaf
             green(npatch)= 1.              !fraction of green leaf
          ENDDO

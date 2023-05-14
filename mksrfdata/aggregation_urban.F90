@@ -8,7 +8,7 @@
 ! ======================================================
 
 SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
-      grid_urban_1km, grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
 
    USE precision
    USE mod_namelist
@@ -165,7 +165,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   write(c5year, '(i4.4)') (lc_year/5)*5
+   write(c5year, '(i4.4)') int(lc_year/5)*5
 
    ! ******* LUCY_id *******
    ! allocate and read the LUCY id
