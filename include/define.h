@@ -8,17 +8,18 @@
 ! 2. Land TYPE classification : 
 !    Select one of the following options.
 #undef USGS_CLASSIFICATION       
-#undef IGBP_CLASSIFICATION       
-#define PFT_CLASSIFICATION       
+#define IGBP_CLASSIFICATION       
+#undef PFT_CLASSIFICATION       
 #undef PC_CLASSIFICATION       
-
+#define URBAN_MODEL
+#undef USE_LCZ
 ! 3. If defined, debug information is output.
-#define CLMDEBUG                  
+#undef CLMDEBUG                  
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
 #define SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
-#define  USEMPI
+#undef  USEMPI
 !    Conflict: not used when defined SingPoint.
 #if (defined SinglePoint)
 #undef USEMPI

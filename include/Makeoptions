@@ -2,10 +2,11 @@
 # mpif90 - ifort 
 # 
 
+
  FF = /opt/mpich-3.4.2-intel/bin/mpif90
 
- NETCDF_LIB = /opt/netcdf/lib
- NETCDF_INC = /opt/netcdf/include
+ NETCDF_LIB = /home/zhwei/software/NETCDF/c-4.7.3-f4.5.2/lib
+ NETCDF_INC = /home/zhwei/software/NETCDF/c-4.7.3-f4.5.2/include
 
 MOD_CMD = -module 
 
@@ -19,9 +20,9 @@ MOD_CMD = -module
 #LDFLAGS = -L${NETCDF_LIB} -lnetcdff
 
 
- FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
+ FOPTS = -g -qopenmp -traceback -r8 -free #-check uninit -check bounds
 
- LDFLAGS = -L${NETCDF_LIB} -lnetcdff
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff -llapack -lblas
 
 # =======================================================
 # mpif90 - gfortran 

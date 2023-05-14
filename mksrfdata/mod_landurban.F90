@@ -15,7 +15,7 @@ MODULE mod_landurban
    INTEGER :: numurban
    TYPE(pixelset_type) :: landurban
 
-   INTEGER , allocatable :: urban_reg   (:)
+   INTEGER , allocatable :: urban_reg   (:)  !region index of a urban
    INTEGER , allocatable :: urban2patch (:)  !patch index of a urban
    INTEGER , allocatable :: patch2urban (:)  !urban index of a patch
 
@@ -43,14 +43,17 @@ CONTAINS
 
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
-      TYPE (block_data_int32_2d) :: data_urb_class
-      TYPE (block_data_int32_2d) :: data_urb_regid
-      INTEGER, allocatable :: ibuff(:), rbuff(:), types(:), order(:), regid(:)
+      TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
+      
+      ! local vars
+      INTEGER, allocatable :: ibuff(:), types(:), order(:)
 
+      ! index
       INTEGER :: ipatch, jpatch, iurban
       INTEGER :: ie, ipxstt, ipxend, npxl, ipxl
       INTEGER :: nurb_glb
 
+      ! local vars for landpath and landurban
       INTEGER :: numpatch_
       INTEGER, allocatable :: eindex_(:)
       INTEGER, allocatable :: ipxstt_(:)
@@ -60,7 +63,6 @@ CONTAINS
 
       INTEGER :: numurban_
       INTEGER, allocatable :: urbclass (:)
-      INTEGER, allocatable :: urbregid (:)
 
       CHARACTER(len=256) :: suffix
 
@@ -72,6 +74,8 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
+      ! allocate and read the grided LCZ/NCAR urban type
+      ! TODO: use dominant type of LCZ
       if (p_is_io) then
 
          dir_urban = trim(DEF_dir_rawdata) // '/urban'
@@ -80,25 +84,23 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         CALL allocate_block_data (gurban, data_urb_regid)
-         CALL flush_block_data (data_urb_regid, 0)
-
          suffix = 'URB2005'
 #ifdef USE_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
 #else
+         ! NOTE!!! 
+         ! region id is assigned in aggreagation_urban.F90 now
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'REGION_ID'          , data_urb_regid)
 #endif
 
 #ifdef USEMPI
-         CALL aggregation_data_daemon (gurban, &
-               data_i4_2d_in1 = data_urb_class, data_i4_2d_in2 = data_urb_regid)
+         CALL aggregation_data_daemon (gurban, data_i4_2d_in1 = data_urb_class)
 #endif
       end if
 
       if (p_is_worker) then
 
+         ! a temporary numpatch with max urban patch
          numpatch_ = numpatch + count(landpatch%settyp == 13) * (N_URB-1)
 
          allocate (eindex_(numpatch_))
@@ -107,15 +109,16 @@ CONTAINS
          allocate (settyp_(numpatch_))
          allocate (ielm_  (numpatch_))
 
+         ! max urban patch number
          numurban_ = count(landpatch%settyp == 13) * N_URB
          IF (numurban_ > 0) THEN
             allocate (urbclass(numurban_))
-            allocate (urbregid(numurban_))
          ENDIF
 
          jpatch = 0
          iurban = 0
 
+         ! loop for temporary numpatch to filter duplicate urban patch
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 13) THEN
 
@@ -125,8 +128,7 @@ CONTAINS
                ipxend = landpatch%ipxend(ipatch)
 
                CALL aggregation_request_data (landpatch, ipatch, gurban, &
-                  data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff, &
-                  data_i4_2d_in2 = data_urb_regid, data_i4_2d_out2 = rbuff)
+                  data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
 #ifndef USE_LCZ
                ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
@@ -135,7 +137,7 @@ CONTAINS
                   ibuff = 3
                END where
 #else
-               ! Same for NCAR, fill the gap LCZ class of urban path if LCZ is non-urban
+               ! Same for NCAR, fill the gap LCZ class of urban patch if LCZ data is non-urban
                where (ibuff > 10)
                   ibuff = 9
                END where
@@ -144,21 +146,20 @@ CONTAINS
                npxl = ipxend - ipxstt + 1
 
                allocate (types (ipxstt:ipxend))
-               allocate (regid (ipxstt:ipxend))
 
                types(:) = ibuff
-               regid(:) = rbuff
 
                deallocate (ibuff)
-               deallocate (rbuff)
 
                allocate (order (ipxstt:ipxend))
                order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
                !???may have bugs below
+               ! change order vars, types->regid, why?
+               ! add region information, because urban type may be same,
+               ! but from different region in this urban patch
+               ! relative code is changed
                CALL quicksort (npxl, types, order)
-               ! CALL quicksort (npxl, regid, order)
-               regid(ipxstt:ipxend) = regid(order)
 
                !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
@@ -182,14 +183,11 @@ CONTAINS
 
                   iurban = iurban + 1
                   urbclass(iurban) = types(ipxl)
-                  urbregid(iurban) = regid(ipxl)
                ENDDO
-               !???
-               !mod_landhru.F90
+               ! correct, should be ipxend
                ipxend_(jpatch) = ipxend
 
                deallocate (types)
-               deallocate (regid)
                deallocate (order)
 
             ELSE
@@ -208,6 +206,8 @@ CONTAINS
 
          numpatch = jpatch
 
+         ! update landpath with new patch number
+         ! all urban type patch are included
          IF (allocated (landpatch%eindex)) deallocate (landpatch%eindex)
          IF (allocated (landpatch%ipxstt)) deallocate (landpatch%ipxstt)
          IF (allocated (landpatch%ipxend)) deallocate (landpatch%ipxend)
@@ -220,15 +220,16 @@ CONTAINS
          allocate (landpatch%settyp (numpatch))
          allocate (landpatch%ielm   (numpatch))
 
+         ! update all information of landpatch
          landpatch%eindex = eindex_(1:jpatch)
          landpatch%ipxstt = ipxstt_(1:jpatch)
          landpatch%ipxend = ipxend_(1:jpatch)
          landpatch%settyp = settyp_(1:jpatch)
          landpatch%ielm   = ielm_  (1:jpatch)
 
+         ! update urban patch number
          IF (numpatch > 0) THEN
             numurban = count(landpatch%settyp == 13)
-            print*, numurban
          ELSE
             numurban = 0
          ENDIF
@@ -239,17 +240,19 @@ CONTAINS
             allocate (landurban%ipxstt (numurban))
             allocate (landurban%ipxend (numurban))
             allocate (landurban%ielm   (numurban))
-            allocate (urban_reg        (numurban))
 
+            ! copy urban path information from landpatch for landurban 
             landurban%eindex = pack(landpatch%eindex, landpatch%settyp == 13)
             landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == 13)
             landurban%ipxend = pack(landpatch%ipxend, landpatch%settyp == 13)
             landurban%ielm   = pack(landpatch%ielm  , landpatch%settyp == 13)
 
+            ! assign urban region id and type for each urban patch
             landurban%settyp = urbclass(1:numurban)
-            urban_reg(:)     = urbregid(1:numurban)
          ENDIF
 
+         ! update land patch with urban type patch
+         ! set numurban
          landurban%nset = numurban
          landpatch%nset = numpatch
       ENDIF
@@ -273,9 +276,7 @@ CONTAINS
 #endif
 
       IF (allocated(ibuff)) deallocate (ibuff)
-      IF (allocated(rbuff)) deallocate (rbuff)
       IF (allocated(types)) deallocate (types)
-      IF (allocated(regid)) deallocate (regid)
       IF (allocated(order)) deallocate (order)
 
       IF (allocated(eindex_)) deallocate (eindex_)
@@ -285,7 +286,6 @@ CONTAINS
       IF (allocated(ielm_  )) deallocate (ielm_  )
 
       IF (allocated(urbclass)) deallocate (urbclass)
-      IF (allocated(urbregid)) deallocate (urbregid)
 
    END SUBROUTINE landurban_build
 

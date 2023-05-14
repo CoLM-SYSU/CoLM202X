@@ -193,13 +193,11 @@ PROGRAM mksrfdata
 
    CALL pixel%assimilate_grid (gurban         )
    CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_1km )
    CALL pixel%assimilate_grid (grid_urban_5km )
    CALL pixel%assimilate_grid (grid_urban_100m)
 
    CALL pixel%map_to_grid (gurban         )
    CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_1km )
    CALL pixel%map_to_grid (grid_urban_5km )
    CALL pixel%map_to_grid (grid_urban_100m)
 #endif

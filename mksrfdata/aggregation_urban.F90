@@ -42,7 +42,6 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    INTEGER , intent(in) :: lc_year
 
-   TYPE(grid_type), intent(in) :: grid_urban_1km
    TYPE(grid_type), intent(in) :: grid_urban_5km
    TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
@@ -63,6 +62,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    TYPE(block_data_real8_2d) :: htrf
    TYPE(block_data_real8_2d) :: ulai
    TYPE(block_data_real8_2d) :: usai
+   TYPE(block_data_int32_2d) :: reg_typid
 
    ! output variables
    INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
@@ -78,6 +78,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    !TODO: check the blow
    ! delete variables not used
+   INTEGER , allocatable, dimension(:) :: reg_typid_one
    INTEGER , allocatable, dimension(:) :: LUCY_reg_one
    REAL(r8), allocatable, dimension(:) :: area_one
    REAL(r8), allocatable, dimension(:) :: pop_one
@@ -434,9 +435,13 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! allocate and read grided building hegight and cover raw data
    IF (p_is_io) THEN
-
+      CALL allocate_block_data (grid_urban_500m, reg_typid)
       CALL allocate_block_data (grid_urban_500m, wtrf)
       CALL allocate_block_data (grid_urban_500m, htrf)
+
+      landdir = TRIM(dir_rawdata)//'urban/'
+      suffix  = 'URB'//trim(c5year)
+      CALL read_5x5_data (landdir, suffix, grid_urban_500m, "REGION_ID", reg_typid)
 
       landdir = TRIM(dir_rawdata)//'/urban/'
       suffix  = 'URB'//trim(c5year)
@@ -447,7 +452,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF", htrf)
 
 #ifdef USEMPI
-      CALL aggregation_data_daemon (grid_urban_500m, &
+      CALL aggregation_data_daemon (grid_urban_500m, data_i4_2d_in1 = reg_typid, &
          data_r8_2d_in1 = wtrf, data_r8_2d_in2 = htrf)
 #endif
    ENDIF
@@ -459,6 +464,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       ! loop for urban patch to aggregate building height and fraction data with area-weighted average  
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+            data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one, &
             data_r8_2d_in1 = wtrf, data_r8_2d_out1 = wt_roof_one, &
             data_r8_2d_in2 = htrf, data_r8_2d_out2 = ht_roof_one)
 
@@ -466,14 +472,13 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ! when urban patch has no data, use table data to fill gap
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
-         urb_regidx = urban_reg(iurban)
-         
+
          where (wt_roof_one <= 0)
-            wt_roof_one = ncar_wt(urb_typidx,urb_regidx)
+            wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
 
          where (ht_roof_one <= 0)
-            ht_roof_one = ncar_ht(urb_typidx,urb_regidx)
+            ht_roof_one = ncar_ht(urb_typidx,reg_typid_one)
          END where
 #else
          ! same for above, but for LCZ case
@@ -630,7 +635,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    IF (p_is_io) THEN
 
 #ifdef USEMPI
-      CALL aggregation_data_daemon (grid_urban_500m)
+      CALL aggregation_data_daemon (grid_urban_500m, data_i4_2d_in1 = reg_typid)
 #endif
    ENDIF
 
@@ -693,11 +698,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 
       ! loop for each urban patch to aggregate NCAR urban morphological and thermal paras with area-weighted average
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one)
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+                                        data_i4_2d_in2 = reg_typid, data_i4_2d_out2 = reg_typid_one)
 
          ! urban region and type id for look-up-table
          urb_typidx = landurban%settyp(iurban)
-         urb_regidx = urban_reg(iurban)
+         !urb_regidx = urban_reg(iurban)
 
          ipxstt = landurban%ipxstt(iurban)
          ipxend = landurban%ipxend(iurban)
@@ -707,6 +713,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ! loop for each finer grid to aggregate data
          DO ipxl = ipxstt, ipxend
 
+            urb_regidx = reg_typid_one(ipxl)
             area_urb(urb_typidx,iurban) = area_urb(urb_typidx,iurban) + area_one(ipxl)
             hwr_can (iurban) = hwr_can (iurban) + hwrcan (urb_typidx,urb_regidx) * area_one(ipxl)
             wt_rd   (iurban) = wt_rd   (iurban) + wtrd   (urb_typidx,urb_regidx) * area_one(ipxl)
@@ -860,6 +867,8 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       IF (allocated(lai_urb  )) deallocate (lai_urb  )
       IF (allocated(sai_urb  )) deallocate (sai_urb  )
 #ifndef USE_LCZ
+      IF (allocated(ncar_ht  )) deallocate (ncar_ht  )
+      IF (allocated(ncar_wt  )) deallocate (ncar_wt  )
       IF (allocated(area_urb )) deallocate (area_urb )
       IF (allocated(hwr_can  )) deallocate (hwr_can  )
       IF (allocated(wt_rd    )) deallocate (wt_rd    )
