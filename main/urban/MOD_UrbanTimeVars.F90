@@ -107,9 +107,9 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: troof          (:) !temperature of roof [K]
    REAL(r8), allocatable :: twall          (:) !temperature of wall [K]
 
-   REAL(r8), allocatable :: urb_green      (:) !TODO: need note
-   REAL(r8), allocatable :: urb_lai        (:) !
-   REAL(r8), allocatable :: urb_sai        (:) !
+   REAL(r8), allocatable :: urb_green      (:) !fractional of green leaf in urban patch [-]
+   REAL(r8), allocatable :: urb_lai        (:) !urban tree LAI [m2/m2]
+   REAL(r8), allocatable :: urb_sai        (:) !urban tree SAI [m2/m2]
 
 
 ! PUBLIC MEMBER FUNCTIONS:
