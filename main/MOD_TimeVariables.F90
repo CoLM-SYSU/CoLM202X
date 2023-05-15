@@ -627,7 +627,7 @@ SAVE
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urb_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
      CALL WRITE_UrbanTimeVars (file_restart)
 #endif
   end subroutine WRITE_TimeVariables
@@ -766,7 +766,7 @@ SAVE
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urb_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
      CALL READ_UrbanTimeVars (file_restart)
 #endif
 
