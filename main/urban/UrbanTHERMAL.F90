@@ -23,9 +23,21 @@
         froof          ,flake          ,hroof          ,hwr            ,&
         fgper          ,pondmx         ,eroof          ,ewall          ,&
         egimp          ,egper          ,trsmx0         ,zlnd           ,&
-        zsno           ,capr           ,cnfac          ,csol           ,&
-        porsl          ,psi0           ,bsw            ,dkdry          ,&
-        dksatu         ,cv_roof        ,cv_wall        ,cv_gimp        ,&
+        zsno           ,capr           ,cnfac          ,vf_quartz      ,&
+        vf_gravels     ,vf_om          ,vf_sand        ,wf_gravels     ,&
+        wf_sand        ,csol           ,porsl          ,psi0           ,&
+#ifdef Campbell_SOIL_MODEL
+        bsw            ,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r        ,alpha_vgm      ,n_vgm          ,L_vgm          ,&
+        sc_vgm         ,fc_vgm         ,&
+#endif
+        k_solids       ,dksatu         ,dksatf         ,dkdry          ,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+        BA_alpha       ,BA_beta        ,&
+#endif
+        cv_roof        ,cv_wall        ,cv_gimp        ,&
         tk_roof        ,tk_wall        ,tk_gimp        ,dz_roofsno     ,&
         dz_gimpsno     ,dz_gpersno     ,dz_lakesno     ,dz_wall        ,&
         z_roofsno      ,z_gimpsno      ,z_gpersno      ,z_lakesno      ,&
@@ -47,9 +59,9 @@
         t_gimpsno      ,t_gpersno      ,t_lakesno      ,wliq_roofsno   ,&
         wliq_gimpsno   ,wliq_gpersno   ,wliq_lakesno   ,wice_roofsno   ,&
         wice_gimpsno   ,wice_gpersno   ,wice_lakesno   ,t_lake         ,&
-        lake_icefrac   ,lveg           ,tleaf          ,ldew           ,&
-        troom          ,troof_inner    ,twsun_inner    ,twsha_inner    ,&
-        troommax       ,troommin       ,tafu                           ,&
+        lake_icefrac   ,savedtke1      ,lveg           ,tleaf          ,&
+        ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
+        twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
@@ -161,12 +173,35 @@
         cnfac      ,&! Crank Nicholson factor between 0 and 1
 
         ! soil physical parameters
-        csol   (1:nl_soil) ,&! heat capacity of soil solids [J/(m3 K)]
-        porsl  (1:nl_soil) ,&! soil porosity [-]
-        psi0   (1:nl_soil) ,&! soil water suction, negative potential [m]
+        vf_quartz (1:nl_soil), &! volumetric fraction of quartz within mineral soil
+        vf_gravels(1:nl_soil), &! volumetric fraction of gravels
+        vf_om     (1:nl_soil), &! volumetric fraction of organic matter
+        vf_sand   (1:nl_soil), &! volumetric fraction of sand
+        wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
+        wf_sand   (1:nl_soil), &! gravimetric fraction of sand
+        csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
+        porsl     (1:nl_soil), &! soil porosity [-]
+        psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
+#ifdef Campbell_SOIL_MODEL
         bsw    (1:nl_soil) ,&! clapp and hornbereger "b" parameter [-]
-        dkdry  (1:nl_soil) ,&! thermal conductivity of dry soil [W/m-K]
-        dksatu (1:nl_soil) ,&! thermal conductivity of saturated soil [W/m-K]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r   (1:nl_soil), &!
+        alpha_vgm (1:nl_soil), &!
+        n_vgm     (1:nl_soil), &!
+        L_vgm     (1:nl_soil), &!
+        sc_vgm    (1:nl_soil), &!
+        fc_vgm    (1:nl_soil), &!
+#endif
+        k_solids  (1:nl_soil), &! thermal conductivity of minerals soil [W/m-K]
+        dkdry     (1:nl_soil), &! thermal conductivity of dry soil [W/m-K]
+        dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
+        dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
+
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+        BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
+        BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
         cv_roof(1:nl_roof) ,&! heat capacity of roof [J/(m2 K)]
         cv_wall(1:nl_wall) ,&! heat capacity of wall [J/(m2 K)]
         cv_gimp(1:nl_soil) ,&! heat capacity of impervious [J/(m2 K)]
@@ -246,6 +281,7 @@
         t_lakesno   (maxsnl+1:nl_soil) ,&! temperatures of roof layers
         wliq_lakesno(maxsnl+1:nl_soil) ,&! liqui water [kg/m2]
         wice_lakesno(maxsnl+1:nl_soil) ,&! ice lens [kg/m2]
+        savedtke1  ,&! top level eddy conductivity (W/m K)
         scv_roof   ,&! snow cover, water equivalent [mm, kg/m2]
         scv_gimp   ,&! snow cover, water equivalent [mm, kg/m2]
         scv_gper   ,&! snow cover, water equivalent [mm, kg/m2]
@@ -597,7 +633,14 @@
             fac = max( fac, 0.001 )
          ENDIF
 
+#ifdef Campbell_SOIL_MODEL
          psit = psi0(1) * fac ** (- bsw(1) )   !psit = max(smpmin, psit)
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         psit = soil_psi_from_vliq ( fac*(porsl(1)-theta_r(1)) + theta_r(1), &
+            porsl(1), theta_r(1), psi0(1), &
+            5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+#endif
          psit = max( -1.e8, psit )
          hr   = exp(psit/roverg/tgper)
          qred = (1.-fsno_gper)*hr + fsno_gper
@@ -743,8 +786,14 @@
       IF ( doveg ) THEN
 
          ! soil water strees factor on stomatal resistance
-         CALL eroot (nl_soil,trsmx0,porsl,bsw,psi0,rootfr, &
-                     dz_gpersno,t_gpersno,wliq_gpersno,rootr,etrc,rstfac)
+         CALL eroot (nl_soil,trsmx0,porsl,&
+#ifdef Campbell_SOIL_MODEL
+            bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+            psi0,rootfr,dz_gpersno,t_gpersno,wliq_gpersno,rootr,etrc,rstfac)
 
          nurb = 3
 
@@ -852,8 +901,7 @@
       IF (fcover(3) >0. ) clgimp = clgimp / fcover(3) * fg !/ fgimp
       IF (fcover(4) >0. ) clgper = clgper / fcover(4) * fg !/ fsoil
 
-      ! 计算各个组分的温度：屋顶、墙面、地面
-      !TODO: 添加墙壁厚度信息
+      ! Calculate the temperature of each component: roof, wall, floor
       CALL UrbanRoofTem (lbr,deltim,capr,cnfac,&
            cv_roof,tk_roof,dz_roofsno,z_roofsno,zi_roofsno,&
            t_roofsno,wice_roofsno,wliq_roofsno,scv_roof,snowdp_roof,&
@@ -876,7 +924,14 @@
            imelt_gimp,sm_gimp,xmf,facti)
 
       CALL UrbanPerviousTem (patchtype,lbp,deltim,&
-           capr,cnfac,csol,porsl,dkdry,dksatu,&
+           capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+#ifdef Campbell_SOIL_MODEL
+           bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           theta_r,alpha_vgm,n_vgm,L_vgm,&
+           sc_vgm,fc_vgm,&
+#endif
            dz_gpersno,z_gpersno,zi_gpersno,&
            t_gpersno,wice_gpersno,wliq_gpersno,scv_gper,snowdp_gper,&
            lgper,clgper,sabgper,fsengper,fevpgper,cgper,htvp_gper,&
@@ -889,7 +944,8 @@
       tgimp = t_gimpsno(lbi)
       tgper = t_gpersno(lbp)
       twall = twsun*fwsun + twsha*fwsha
-      ! 计算湖泊温度及感热潜热
+
+      ! calculate lake temperture and sensible/latent heat fluxes
       CALL laketem ( &
            ! "in" laketem arguments
            ! ---------------------------
@@ -899,15 +955,24 @@
            forc_q       ,forc_rhoair  ,forc_psrf       ,forc_sols       ,&
            forc_soll    ,forc_solsd   ,forc_solld      ,sablake         ,&
            forc_frl     ,dz_lakesno   ,z_lakesno       ,zi_lakesno      ,&
-           dz_lake      ,lakedepth    ,csol            ,porsl           ,&
-           dkdry        ,dksatu                                         ,&
+           dz_lake      ,lakedepth    ,vf_quartz       ,vf_gravels      ,&
+           vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
+           porsl        ,csol         ,k_solids        , &
+           dksatu       ,dksatf       ,dkdry           , &
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha     ,BA_beta, &
+#endif
 
            ! "inout" laketem arguments
            ! ---------------------------
            tlake        ,scv_lake     ,snowdp_lake     ,t_lakesno       ,&
            wliq_lakesno ,wice_lakesno ,imelt_lake      ,t_lake          ,&
-           lake_icefrac                                                 ,&
+           lake_icefrac ,savedtke1                                      ,&
 
+#ifdef SNICAR
+           ! SNICAR
+           snofrz       ,sabg_lyr     ,&
+#endif
            ! "out" laketem arguments
            ! ---------------------------
            taux_lake    ,tauy_lake    ,fsena_lake                       ,&
@@ -924,7 +989,7 @@
 ! [7] Correct fluxes for temperature change
 !=======================================================================
 
-      ! 计算温度变化
+      ! calculate temperature change
       dT(0) = troof - troof_bef
       dT(1) = twsun - twsun_bef
       dT(2) = twsha - twsha_bef
@@ -932,7 +997,7 @@
       dT(4) = tgper - tgper_bef
       IF ( doveg ) dT(5) = 0.
 
-      ! 计算温度变化带来的通量变化
+      ! flux change due to temperture change
       fsenroof = fsenroof + dT(0)*croofs
       fsenwsun = fsenwsun + dT(1)*cwalls
       fsenwsha = fsenwsha + dT(2)*cwalls

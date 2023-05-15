@@ -13,12 +13,24 @@ SUBROUTINE UrbanCLMMAIN ( &
            tk_roof      ,tk_wall      ,tk_gimp      ,z_roof       ,&
            z_wall       ,dz_roof      ,dz_wall                    ,&
            lakedepth    ,dz_lake                                  ,&
+
          ! LUCY model input parameters
            fix_holiday  ,week_holiday ,hum_prof     ,popcell      ,&
-           vehicle      ,weh_prof     ,wdh_prof                   ,&
+           vehicle      ,weh_prof     ,wdh_prof     ,&
+
          ! soil ground and wall information
-           porsl        ,psi0         ,bsw          ,hksati       ,&
-           csol         ,dksatu       ,dkdry        ,rootfr       ,&
+           vf_quartz    ,vf_gravels   ,vf_om        ,vf_sand      ,&
+           wf_gravels   ,wf_sand      ,porsl        ,psi0         ,&
+           bsw          ,&
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+           theta_r      ,alpha_vgm    ,n_vgm        ,L_vgm        ,&
+           sc_vgm       ,fc_vgm       ,&
+#endif
+           hksati       ,csol         ,k_solids     ,dksatu       ,&
+           dksatf       ,dkdry        ,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+           BA_alpha     ,BA_beta      ,&
+#endif
            alb_roof     ,alb_wall     ,alb_gimp     ,alb_gper     ,&
 
          ! vegetation information
@@ -26,7 +38,7 @@ SUBROUTINE UrbanCLMMAIN ( &
            effcon       ,vmax25       ,slti         ,hlti         ,&
            shti         ,hhti         ,trda         ,trdm         ,&
            trop         ,gradm        ,binter       ,extkd        ,&
-           rho          ,tau                                      ,&
+           rho          ,tau          ,rootfr                     ,&
 
          ! atmospheric forcing
            forc_pco2m   ,forc_po2m    ,forc_us      ,forc_vs      ,&
@@ -44,7 +56,8 @@ SUBROUTINE UrbanCLMMAIN ( &
            wliq_roofsno ,wliq_gimpsno ,wliq_gpersno ,wliq_lakesno ,&
            wice_roofsno ,wice_gimpsno ,wice_gpersno ,wice_lakesno ,&
            z_sno        ,dz_sno       ,wliq_soisno  ,wice_soisno  ,&
-           t_soisno     ,t_wallsun    ,t_wallsha                  ,&
+           t_soisno     ,smp          ,hk           ,t_wallsun    ,&
+           t_wallsha    ,&
 
            lai          ,sai          ,fveg         ,sigf         ,&
            green        ,tleaf        ,ldew         ,t_grnd       ,&
@@ -62,7 +75,7 @@ SUBROUTINE UrbanCLMMAIN ( &
            t_roommax    ,t_roommin    ,tafu                       ,&
 
            zwt          ,wa                                       ,&
-           t_lake       ,lake_icefrac                             ,&
+           t_lake       ,lake_icefrac ,savedtke1                  ,&
 
          ! additional diagnostic variables for output
            laisun       ,laisha                                   ,&
@@ -75,7 +88,7 @@ SUBROUTINE UrbanCLMMAIN ( &
            fsen_roof    ,fsen_wsun    ,fsen_wsha    ,fsen_gimp    ,&
            fsen_gper    ,fsen_urbl    ,troof        ,twall        ,&
            lfevp_roof   ,lfevp_gimp   ,lfevp_gper   ,lfevp_urbl   ,&
-           trad         ,tref         ,tmax         ,tmin         ,&
+           trad         ,tref         ,&!tmax       ,tmin         ,&
            qref         ,rsur         ,rnof         ,qintr        ,&
            qinfl        ,qdrip        ,rst          ,assim        ,&
            respc        ,sabvsun      ,sabvsha      ,sabg         ,&
@@ -100,8 +113,8 @@ SUBROUTINE UrbanCLMMAIN ( &
   USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
   USE MOD_TimeVariables, only: tlai, tsai
-  USE MOD_TimeInvariants, only: gridlond
   USE SNOW_Layers_CombineDivide
+  USE MOD_CLEAF_interception
   USE UrbanALBEDO
   USE LAKE
   USE timemanager
@@ -159,15 +172,35 @@ SUBROUTINE UrbanCLMMAIN ( &
 
   REAL(r8), intent(in) :: &
         ! soil physical parameters and lake info
-        porsl (nl_soil)    ,&! fraction of soil that is voids [-]
-        psi0  (nl_soil)    ,&! minimum soil suction [mm]
-        bsw   (nl_soil)    ,&! clapp and hornbereger "b" parameter [-]
-        hksati(nl_soil)    ,&! hydraulic conductivity at saturation [mm h2o/s]
-        csol  (nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
-        dksatu(nl_soil)    ,&! thermal conductivity of saturated soil [W/m-K]
-        dkdry (nl_soil)    ,&! thermal conductivity for dry soil  [J/(K s m)]
-        rootfr(nl_soil)    ,&! fraction of roots in each soil layer
+        vf_quartz (nl_soil),&! volumetric fraction of quartz within mineral soil
+        vf_gravels(nl_soil),&! volumetric fraction of gravels
+        vf_om     (nl_soil),&! volumetric fraction of organic matter
+        vf_sand   (nl_soil),&! volumetric fraction of sand
+        wf_gravels(nl_soil),&! gravimetric fraction of gravels
+        wf_sand   (nl_soil),&! gravimetric fraction of sand
+        porsl     (nl_soil),&! fraction of soil that is voids [-]
+        psi0      (nl_soil),&! minimum soil suction [mm]
+        bsw       (nl_soil),&! clapp and hornbereger "b" parameter [-]
 
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r  (1:nl_soil),&
+        alpha_vgm(1:nl_soil),&
+        n_vgm    (1:nl_soil),&
+        L_vgm    (1:nl_soil),&
+        sc_vgm   (1:nl_soil),&
+        fc_vgm   (1:nl_soil),&
+#endif
+        hksati    (nl_soil),&! hydraulic conductivity at saturation [mm h2o/s]
+        csol      (nl_soil),&! heat capacity of soil solids [J/(m3 K)]
+        k_solids  (nl_soil),&! thermal conductivity of minerals soil [W/m-K]
+        dksatu    (nl_soil),&! thermal conductivity of saturated unfrozen soil [W/m-K]
+        dksatf    (nl_soil),&! thermal conductivity of saturated frozen soil [W/m-K]
+        dkdry     (nl_soil),&! thermal conductivity for dry soil  [J/(K s m)]
+
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+        BA_alpha  (nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
+        BA_beta   (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
+#endif
         alb_roof(2,2)      ,&! albedo of roof [-]
         alb_wall(2,2)      ,&! albedo of walls [-]
         alb_gimp(2,2)      ,&! albedo of impervious [-]
@@ -190,6 +223,8 @@ SUBROUTINE UrbanCLMMAIN ( &
         extkd      ,&! diffuse and scattered diffuse PAR extinction coefficient
         rho(2,2)   ,&! leaf reflectance (iw=iband, il=life and dead)
         tau(2,2)   ,&! leaf transmittance (iw=iband, il=life and dead)
+
+        rootfr    (nl_soil),&! fraction of roots in each soil layer
 
         ! tunable parameters
         zlnd       ,&! roughness length for soil [m]
@@ -250,6 +285,8 @@ SUBROUTINE UrbanCLMMAIN ( &
         wice_gimpsno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
         wice_gpersno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
         wice_lakesno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
+        smp         (       1:nl_soil) ,&! soil matrix potential [mm]
+        hk          (       1:nl_soil) ,&! hydraulic conductivity [mm h2o/s]
 
         z_sno       (maxsnl+1:0)       ,&! node depth [m]
         dz_sno      (maxsnl+1:0)       ,&! interface depth [m]
@@ -270,11 +307,12 @@ SUBROUTINE UrbanCLMMAIN ( &
         dz_lake     (nl_lake) ,&! lake layer thickness (m)
         t_lake      (nl_lake) ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
+        savedtke1             ,&! top level eddy conductivity (W/m K)
 
         t_grnd     ,&! ground surface temperature [k]
         tleaf      ,&! sunlit leaf temperature [K]
-        tmax       ,&! Diurnal Max 2 m height air temperature [kelvin]
-        tmin       ,&! Diurnal Min 2 m height air temperature [kelvin]
+        !tmax       ,&! Diurnal Max 2 m height air temperature [kelvin]
+        !tmin       ,&! Diurnal Min 2 m height air temperature [kelvin]
         ldew       ,&! depth of water on foliage [kg/m2/s]
         sag        ,&! non dimensional snow age [-]
         sag_roof   ,&! non dimensional snow age [-]
@@ -507,11 +545,14 @@ SUBROUTINE UrbanCLMMAIN ( &
         t_precip   ,&! snowfall/rainfall temperature [kelvin]
         bifall     ,&! bulk density of newly fallen dry snow [kg/m3]
         pg_rain    ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
-        pgper_rain ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
         pg_snow    ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        pgper_rain ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
         pgper_snow ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
         etrgper    ,&! etr for pervious ground
         fracveg      ! fraction of fveg/fgper
+
+   REAL(r8) :: &
+        errw_rsub    ! the possible subsurface runoff deficit after PHS is included
 
    REAL(r8) :: &
         ei,         &! vapor pressure on leaf surface [pa]
@@ -692,9 +733,9 @@ SUBROUTINE UrbanCLMMAIN ( &
 !----------------------------------------------------------------------
 
       ! with vegetation canopy
-      CALL LEAF_interception (deltim,dewmx,chil,sigf,lai,sai,tleaf,&
+      CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,pgper_rain,pgper_snow,qintr)
+                              ldew,ldew,ldew,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr,qintr)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)
@@ -762,10 +803,10 @@ SUBROUTINE UrbanCLMMAIN ( &
 
       ! Thermal process
       CALL UrbanTHERMAL ( &
-         ! 模型运行信息
+         ! model running information
          ipatch               ,patchtype            ,lbr                  ,lbi                  ,&
          lbp                  ,lbl                  ,deltim               ,patchlatr            ,&
-         ! 外强迫
+         ! forcing
          forc_hgt_u           ,forc_hgt_t           ,forc_hgt_q           ,forc_us              ,&
          forc_vs              ,forc_t               ,forc_q               ,forc_psrf            ,&
          forc_rhoair          ,forc_frl             ,forc_po2m            ,forc_pco2m           ,&
@@ -782,9 +823,21 @@ SUBROUTINE UrbanCLMMAIN ( &
          froof                ,flake                ,hroof                ,hwr                  ,&
          fgper                ,pondmx               ,em_roof              ,em_wall              ,&
          em_gimp              ,em_gper              ,trsmx0               ,zlnd                 ,&
-         zsno                 ,capr                 ,cnfac                ,csol                 ,&
-         porsl                ,psi0                 ,bsw                  ,dkdry                ,&
-         dksatu               ,cv_roof              ,cv_wall              ,cv_gimp              ,&
+         zsno                 ,capr                 ,cnfac                ,vf_quartz            ,&
+         vf_gravels           ,vf_om                ,vf_sand              ,wf_gravels           ,&
+         wf_sand              ,csol                 ,porsl                ,psi0                 ,&
+#ifdef Campbell_SOIL_MODEL
+         bsw                  ,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+         theta_r              ,alpha_vgm            ,n_vgm                ,L_vgm                ,&
+         sc_vgm               ,fc_vgm               ,&
+#endif
+         k_solids             ,dksatu               ,dksatf               ,dkdry                ,&
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
+         BA_alpha             ,BA_beta              ,&
+#endif
+         cv_roof              ,cv_wall              ,cv_gimp              ,&
          tk_roof              ,tk_wall              ,tk_gimp              ,dz_roofsno(lbr:)     ,&
          dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,dz_wall(:)           ,&
          z_roofsno(lbr:)      ,z_gimpsno(lbi:)      ,z_gpersno(lbp:)      ,z_lakesno(:)         ,&
@@ -794,7 +847,7 @@ SUBROUTINE UrbanCLMMAIN ( &
          vmax25               ,slti                 ,hlti                 ,shti                 ,&
          hhti                 ,trda                 ,trdm                 ,trop                 ,&
          gradm                ,binter                                                           ,&
-         ! 地面状态变量
+         ! surface status
          fsno_roof            ,fsno_gimp            ,fsno_gper            ,scv_roof             ,&
          scv_gimp             ,scv_gper             ,scv_lake             ,snowdp_roof          ,&
          snowdp_gimp          ,snowdp_gper          ,snowdp_lake          ,fwsun                ,&
@@ -805,10 +858,10 @@ SUBROUTINE UrbanCLMMAIN ( &
          t_gimpsno(lbi:)      ,t_gpersno(lbp:)      ,t_lakesno(:)         ,wliq_roofsno(lbr:)   ,&
          wliq_gimpsno(lbi:)   ,wliq_gpersno(lbp:)   ,wliq_lakesno(:)      ,wice_roofsno(lbr:)   ,&
          wice_gimpsno(lbi:)   ,wice_gpersno(lbp:)   ,wice_lakesno(:)      ,t_lake(:)            ,&
-         lake_icefrac(:)      ,lveg                 ,tleaf                ,ldew                 ,&
-         t_room               ,troof_inner          ,twsun_inner          ,twsha_inner          ,&
-         t_roommax            ,t_roommin            ,tafu                                       ,&
-         ! 输出变量
+         lake_icefrac(:)      ,savedtke1            ,lveg                 ,tleaf                ,&
+         ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
+         twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
+         ! output
          taux                 ,tauy                 ,fsena                ,fevpa                ,&
          lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
          fseng                ,fevpg                ,olrg                 ,fgrnd                ,&
@@ -846,12 +899,12 @@ SUBROUTINE UrbanCLMMAIN ( &
       ENDIF
 
       CALL UrbanHydrology ( &
-        ! 模型运行信息
+        ! model running information
         ipatch               ,patchtype            ,lbr                  ,lbi                  ,&
         lbp                  ,lbl                  ,snll                 ,deltim               ,&
-        ! 外强迫
+        ! forcing
         pg_rain              ,pgper_rain           ,pg_snow                                    ,&
-        ! 地表参数及状态变量
+        ! surface parameters and status
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
@@ -868,9 +921,10 @@ SUBROUTINE UrbanCLMMAIN ( &
         sm_roof              ,sm_gimp              ,sm_gper              ,sm_lake              ,&
         lake_icefrac         ,scv_lake             ,snowdp_lake          ,imeltl               ,&
         fioldl               ,w_old                                                            ,&
-        ! 输出
+        ! output
         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
-        wa                   ,qcharge                                                           )
+        wa                   ,qcharge              ,smp                  ,hk                   ,&
+        errw_rsub            )
 
       ! roof
       !============================================================
@@ -1025,7 +1079,7 @@ SUBROUTINE UrbanCLMMAIN ( &
 
       endwb  = sum(wice_soisno(1:)+wliq_soisno(1:))
       endwb  = endwb + scv + ldew*fveg + wa*(1-froof)*fgper
-      errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa-rnof)*deltim
+      errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       xerr   = errorw/deltim
 
 #if(defined CLMDEBUG)
@@ -1033,6 +1087,10 @@ SUBROUTINE UrbanCLMMAIN ( &
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !stop
       ENDIF
+
+      if(abs(errw_rsub*deltim)>1.e-3) then
+         write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
+      end if
 #endif
 
 !======================================================================
@@ -1044,7 +1102,7 @@ SUBROUTINE UrbanCLMMAIN ( &
 !======================================================================
 
       ! cosine of solar zenith angle
-      calday = calendarday(idate, gridlond(1))
+      calday = calendarday(idate)
       coszen = orb_coszen(calday,patchlonr,patchlatr)
 
       ! fraction of snow cover.
@@ -1112,8 +1170,8 @@ SUBROUTINE UrbanCLMMAIN ( &
       dz_sno(:) = dz_sno(:)*(1-flake) + dz_sno_lake(:)*flake
 
 ! diagnostic diurnal temperature
-      IF (tref > tmax) tmax = tref
-      IF (tref < tmin) tmin = tref
+      !IF (tref > tmax) tmax = tref
+      !IF (tref < tmin) tmin = tref
 
 ! 06/05/2022, yuan: RH for output to compare
       CALL qsadv(tref,forc_psrf,ei,deiDT,qsatl,qsatlDT)

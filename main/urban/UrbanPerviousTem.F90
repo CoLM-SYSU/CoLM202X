@@ -1,6 +1,13 @@
 
  SUBROUTINE UrbanPerviousTem (patchtype,lb,deltim, &
-                              capr,cnfac,csol,porsl,dkdry,dksatu,&
+                              capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+#ifdef Campbell_SOIL_MODEL
+                              bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                              theta_r,alpha_vgm,n_vgm,L_vgm,&
+                              sc_vgm,fc_vgm,&
+#endif
                               dz_gpersno,z_gpersno,zi_gpersno,&
                               t_gpersno,wice_gpersno,wliq_gpersno,scv_gper,snowdp_gper,&
                               lgper,clgper,sabgper,fsengper,fevpgper,cgper,htvp,&
@@ -44,9 +51,22 @@
 
   REAL(r8), intent(in) :: csol  (1:nl_soil) !heat capacity of soil solids [J/(m3 K)]
   REAL(r8), intent(in) :: porsl (1:nl_soil) !soil porosity [-]
+  REAL(r8), intent(in) :: psi0  (1:nl_soil) !soil water suction, negative potential [mm]
 
   REAL(r8), intent(in) :: dkdry (1:nl_soil) !thermal conductivity of dry soil [W/m-K]
   REAL(r8), intent(in) :: dksatu(1:nl_soil) !thermal conductivity of saturated soil [W/m-K]
+
+#ifdef Campbell_SOIL_MODEL
+  real(r8), INTENT(in) :: bsw   (1:nl_soil) ! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8), INTENT(in) :: theta_r  (1:nl_soil), &
+                          alpha_vgm(1:nl_soil), &
+                          n_vgm    (1:nl_soil), &
+                          L_vgm    (1:nl_soil), &
+                          sc_vgm   (1:nl_soil), &
+                          fc_vgm   (1:nl_soil)
+#endif
 
   REAL(r8), intent(in) :: dz_gpersno(lb:nl_soil)   !layer thickiness [m]
   REAL(r8), intent(in) :: z_gpersno (lb:nl_soil)   !node depth [m]
@@ -165,10 +185,18 @@
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-      CALL meltf (lb,nl_soil,deltim, &
+      call meltf (URBAN,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_gpersno_bef(lb:),t_gpersno(lb:),wliq_gpersno(lb:),wice_gpersno(lb:),imelt(lb:), &
-                  scv_gper,snowdp_gper,sm,xmf)
+                  scv_gper,snowdp_gper,sm,xmf,porsl,psi0,&
+#ifdef Campbell_SOIL_MODEL
+                  bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                  theta_r,alpha_vgm,n_vgm,L_vgm,&
+                  sc_vgm,fc_vgm,&
+#endif
+                  dz_soi(1:nl_soil))
 
  END SUBROUTINE UrbanPerviousTem
 ! ---------- EOP ------------

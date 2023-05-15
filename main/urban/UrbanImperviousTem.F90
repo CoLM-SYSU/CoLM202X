@@ -1,6 +1,13 @@
 
  SUBROUTINE UrbanImperviousTem (patchtype,lb,deltim, &
                                 capr,cnfac,csol,porsl,dkdry,dksatu,&
+#ifdef Campbell_SOIL_MODEL
+                                bsw,&
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                                theta_r,alpha_vgm,n_vgm,L_vgm,&
+                                sc_vgm,fc_vgm,&
+#endif
                                 cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
                                 t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
                                 lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp,&
@@ -47,6 +54,18 @@
 
   REAL(r8), intent(in) :: dkdry (1:nl_soil) !thermal conductivity of dry soil [W/m-K]
   REAL(r8), intent(in) :: dksatu(1:nl_soil) !thermal conductivity of saturated soil [W/m-K]
+
+#ifdef Campbell_SOIL_MODEL
+  real(r8), INTENT(in) :: bsw   (1:nl_soil) ! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  real(r8), INTENT(in) :: theta_r  (1:nl_soil), &
+                          alpha_vgm(1:nl_soil), &
+                          n_vgm    (1:nl_soil), &
+                          L_vgm    (1:nl_soil), &
+                          sc_vgm   (1:nl_soil), &
+                          fc_vgm   (1:nl_soil)
+#endif
 
   REAL(r8), intent(in) :: cv_gimp(1:nl_soil)       !heat capacity of urban impervious [J/m3/K]
   REAL(r8), intent(in) :: tk_gimp(1:nl_soil)       !thermal conductivity of urban impervious [W/m/K]

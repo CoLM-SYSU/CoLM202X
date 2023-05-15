@@ -212,7 +212,7 @@
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-      CALL meltf (lb,1,deltim, &
+      CALL meltf_urban (lb,1,deltim, &
                   fact(lb:1),brr(lb:1),hs,dhsdT, &
                   t_roofsno_bef(lb:1),t_roofsno(lb:1),wliq_roofsno(lb:1),wice_roofsno(lb:1),imelt_roof(lb:1), &
                   scv_roof,snowdp_roof,sm_roof,xmf_roof)

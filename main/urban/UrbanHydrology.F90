@@ -25,7 +25,8 @@
         fioldl         ,w_old                                          ,&
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
-        wa             ,qcharge                                         )
+        wa             ,qcharge        ,smp            ,hk             ,&
+        errw_rsub      )
 
 !=======================================================================
 ! this is the main SUBROUTINE to execute the calculation of URBAN
@@ -137,6 +138,11 @@
         rnof             ,&! total runoff (mm h2o/s)
         qinfl            ,&! infiltration rate (mm h2o/s)
         qcharge            ! groundwater recharge (positive to aquifer) [mm/s]
+
+  REAL(r8), intent(out) :: &
+        smp(1:nl_soil)   ,&! soil matrix potential [mm]
+        hk (1:nl_soil)   ,&! hydraulic conductivity [mm h2o/m]
+        errw_rsub          ! the possible subsurface runoff deficit after PHS is included
 !
 !-----------------------Local Variables------------------------------
 !
@@ -167,11 +173,11 @@
       CALL WATER ( ipatch,patchtype   ,lbp         ,nl_soil   ,deltim    ,&
              z_gpersno   ,dz_gpersno  ,zi_gpersno  ,&
              bsw         ,porsl       ,psi0        ,hksati    ,rootr     ,&
-             t_gpersno   ,wliq_gpersno,wice_gpersno,pgper_rain,sm_gper   ,&
+             t_gpersno   ,wliq_gpersno,wice_gpersno,smp,hk,pgper_rain,sm_gper,&
              etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
              rsur_gper   ,rnof_gper   ,qinfl       ,wtfact    ,pondmx    ,&
              ssi         ,wimp        ,smpmin      ,zwt       ,wa        ,&
-             qcharge                                                      )
+             qcharge     ,errw_rsub   )
 
 !=======================================================================
 ! [2] for roof and impervious road
