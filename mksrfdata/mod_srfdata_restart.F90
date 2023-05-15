@@ -2,6 +2,7 @@
 
 MODULE mod_srfdata_restart
 
+   USE mod_namelist, only: DEF_LC_YEAR
    IMPLICIT NONE
 
    INTEGER, parameter, PRIVATE :: rcompress = 1
@@ -28,7 +29,7 @@ CONTAINS
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: ie, je, nelm, elen, iblk, jblk, iworker, i
       INTEGER, allocatable :: nelm_worker(:), ndsp_worker(:)
       INTEGER, allocatable :: elmindx(:)
@@ -36,18 +37,20 @@ CONTAINS
       INTEGER, allocatable :: elmpixels(:,:,:)
       REAL(r8),allocatable :: lon(:), lat(:)
 
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') DEF_LC_YEAR
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
       IF (p_is_master) THEN
          write(*,*) 'Saving land elements ...'
-         CALL system('mkdir -p ' // trim(dir_landdata) // '/mesh')
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/mesh/' // trim(cyear))
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
 
-      filename = trim(dir_landdata) // '/mesh/mesh.nc'
+      filename = trim(dir_landdata) // '/mesh/' //trim(cyear) // '/mesh.nc'
 
       DO jblk = 1, gblock%nyblk
          DO iblk = 1, gblock%nxblk
@@ -234,7 +237,7 @@ CONTAINS
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: iblkme, iblk, jblk, ie, nelm, ndsp
       INTEGER, allocatable :: elmindx(:), npxl(:), pixels(:,:,:)
 
@@ -246,7 +249,11 @@ CONTAINS
          write(*,*) 'Loading land elements ...'
       ENDIF
          
-      filename = trim(dir_landdata) // '/mesh/mesh.nc'
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') DEF_LC_YEAR
+      print*, cyear
+      filename = trim(dir_landdata) // '/mesh/' // trim(cyear) // '/mesh.nc'
+      print*, filename
       CALL ncio_read_bcast_serial (filename, 'nelm_blk', nelm_blk)
 
       IF (p_is_io) THEN
@@ -324,20 +331,21 @@ CONTAINS
       TYPE(pixelset_type), intent(in) :: pixelset
 
       ! Local variables
-      CHARACTER(len=256)   :: filename
+      CHARACTER(len=256)   :: filename, cyear
 
+      write(cyear,'(i4.4)') DEF_LC_YEAR
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       IF (p_is_master) THEN
          write(*,*) 'Saving Pixel Sets ' // trim(psetname) // ' ...'
-         CALL system('mkdir -p ' // trim(dir_landdata) // '/' // trim(psetname))
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear))
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear) // '/' // trim(psetname) // '.nc'
 
       CALL ncio_create_file_vector (filename, pixelset)
       CALL ncio_define_dimension_vector (filename, pixelset, trim(psetname))
@@ -347,7 +355,6 @@ CONTAINS
       CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, rcompress)
       CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, rcompress)
      
-      print*, 'urban patch',count(pixelset%settyp==13) 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -374,13 +381,14 @@ CONTAINS
       INTEGER, intent(out) :: numset
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
       INTEGER :: nsend, nrecv
       INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL :: fexists
-      
+     
+      write(cyear,'(i4.4)') DEF_LC_YEAR 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -389,7 +397,7 @@ CONTAINS
          write(*,*) 'Loading Pixel Sets ' // trim(psetname) // ' ...'
       ENDIF
       
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear) // '/' // trim(psetname) // '.nc'
 
       IF (p_is_io) THEN
 
@@ -507,8 +515,6 @@ CONTAINS
       CALL ncio_read_vector (filename, 'ipxend', pixelset, pixelset%ipxend)
       CALL ncio_read_vector (filename, 'settyp', pixelset, pixelset%settyp)
 
-      print*, filename
-      print*,'urban patch',count(pixelset%settyp==13)
       IF (p_is_worker) THEN
          IF (pixelset%nset > 0) THEN
 

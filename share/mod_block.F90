@@ -417,14 +417,16 @@ CONTAINS
       CHARACTER(len=*),  intent(in) :: dir_landdata
 
       ! Local Variables
-      CHARACTER(len=256) :: filename
+      CHARACTER(len=256) :: filename, cyear
       INTEGER, allocatable :: nelm_io(:), nelmblk(:,:)
       INTEGER  :: iblk_south, iblk_north, iblk_west, iblk_east
       INTEGER  :: numblocks, iblk, jblk, iproc, jproc
       INTEGER  :: iblkme
       
       IF (p_is_master) THEN
-         filename = trim(dir_landdata) // '/mesh/mesh.nc'
+         ! Whether it varies by year???
+         write(cyear,'(i4.4)') DEF_LC_YEAR
+         filename = trim(dir_landdata) // '/mesh/' // trim(cyear) // '/mesh.nc'
          CALL ncio_read_serial (filename, 'nelm_blk', nelmblk)
          numblocks = count(nelmblk > 0)
       ENDIF 

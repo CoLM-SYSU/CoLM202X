@@ -23,9 +23,9 @@ MODULE MOD_UrbanTimeInvars
    REAL(r8), allocatable :: fix_holiday (:,:) !Fixed public holidays, holiday (0) or workday(1)
 
    ! Vegetations
-   REAL(r8), allocatable :: fveg_urb    (:)  !TODO: need note
-   REAL(r8), allocatable :: htop_urb    (:)
-   REAL(r8), allocatable :: hbot_urb    (:)
+   REAL(r8), allocatable :: fveg_urb    (:)  !tree coverage of urban patch [-]
+   REAL(r8), allocatable :: htop_urb    (:)  !tree crown top height of urban patch [m]
+   REAL(r8), allocatable :: hbot_urb    (:)  !tree crown bottom height of urban patch [m]
 
    ! Urban morphology
    REAL(r8), allocatable :: froof       (:)  !roof fractional cover [-]
@@ -88,7 +88,6 @@ CONTAINS
       USE GlobalVars
       IMPLICIT NONE
 
-      !allocate (urbclass             (numurban))
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN
             allocate (fveg_urb             (numurban))

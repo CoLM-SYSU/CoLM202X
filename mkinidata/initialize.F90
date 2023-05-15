@@ -212,7 +212,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! read global tree top height from nc file
    CALL HTOP_readin (dir_landdata)
 #ifdef URBAN_MODEL
-   CALL Urban_readin (dir_landdata)
+   CALL Urban_readin (dir_landdata, 2005)
 #endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
@@ -676,7 +676,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
             u = patch2urban(i)
             print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
-
+            print*, hroof(u), hwr(u), alb_roof(:,:,u)
             lwsun         (u) = 0.   !net longwave radiation of sunlit wall
             lwsha         (u) = 0.   !net longwave radiation of shaded wall
             lgimp         (u) = 0.   !net longwave radiation of impervious road
