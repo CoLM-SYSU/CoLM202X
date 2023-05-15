@@ -1,7 +1,16 @@
 #include <define.h>
 
 MODULE UrbanALBEDO
-
+!-----------------------------------------------------------------------
+! !DESCRIPTION:
+! Calculate urban albedo,
+!
+! Created by Hua Yuan, 09/2021
+!
+!
+! REVISIONS:
+!
+!
 !-----------------------------------------------------------------------
  USE precision
  IMPLICIT NONE
@@ -35,8 +44,8 @@ MODULE UrbanALBEDO
 ! (2) lake and wetland albedos: as in BATS, which depend on cosine solar zenith angle,
 !     based on data in Henderson-Sellers (1986). The frozen lake and wetland albedos
 !     are set to constants (0.6 for visible beam, 0.4 for near-infrared)
-! (3) over the snow covered tile, the surface albedo is estimated by a linear
-!     combination of albedos for snow, canopy and bare soil (or lake, wetland, glacier).
+! (3) over the snow covered surface, the surface albedo is estimated by a linear
+!     combination of albedos for snow, roof, impervious and pervious ground
 !
 !=======================================================================
 
@@ -290,7 +299,7 @@ MODULE UrbanALBEDO
 
       theta = acos(czen)
 
-      ! 区分无植被和包含植被情况
+      ! Distinguish between no-vegetation and vegetation-included cases
       IF (lai+sai>1.e-6 .and. fveg>0.) THEN
 
          CALL UrbanVegShortwave ( &
