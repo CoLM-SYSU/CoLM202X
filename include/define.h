@@ -9,17 +9,16 @@
 !    Select one of the following options.
 #undef USGS_CLASSIFICATION       
 #undef IGBP_CLASSIFICATION       
-#undef PFT_CLASSIFICATION       
-#define PC_CLASSIFICATION       
-#define URBAN_MODEL
-#undef USE_LCZ
+#define PFT_CLASSIFICATION       
+#undef PC_CLASSIFICATION       
+
 ! 3. If defined, debug information is output.
-#undef CLMDEBUG                  
+#define CLMDEBUG                  
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
-#undef SrfdataDiag
+#define SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
-#undef  USEMPI
+#define  USEMPI
 !    Conflict: not used when defined SingPoint.
 #if (defined SinglePoint)
 #undef USEMPI
@@ -69,7 +68,7 @@
 #define CaMa_Flood
 
 ! 12. If defined, BGC model is used.
-#undef BGC
+#define BGC
 !    Conflicts :  only used when PFT_CLASSIFICATION is defined.
 #ifndef PFT_CLASSIFICATION
 #undef BGC
@@ -81,7 +80,7 @@
 #undef LAIfdbk
 #endif
 ! 12.2 If defined, CROP model is used
-#undef CROP
+#define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
