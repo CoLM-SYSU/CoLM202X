@@ -1,6 +1,17 @@
 #include <define.h>
 
+!-----------------------------------------------------------------------
 module mod_forcing
+
+! DESCRIPTION:
+! read in the atmospheric forcing using user defined interpolation method
+! or downscaling forcing
+!
+! REVISIONS:
+! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
+!                                    GETMET.F90 and rd_forcing.F90
+!
+! TODO...(need complement)
 
    use precision
    USE mod_namelist
@@ -38,15 +49,15 @@ module mod_forcing
 
    type(block_data_real8_2d) :: avgcos   ! time-average of cos(zenith)
    type(block_data_real8_2d) :: metdata  ! forcing data
-   
-   type(block_data_real8_2d), allocatable :: forcn    (:)  ! forcing data 
+
+   type(block_data_real8_2d), allocatable :: forcn    (:)  ! forcing data
    type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower bondary
-   type(block_data_real8_2d), allocatable :: forcn_UB (:)  ! forcing data at upper bondary   
+   type(block_data_real8_2d), allocatable :: forcn_UB (:)  ! forcing data at upper bondary
 
    public :: forcing_init
    public :: read_forcing
 
-   ! external functions  
+   ! external functions
    real(r8), external :: orb_coszen           ! cosine of solar zenith angle
 
 contains
@@ -75,7 +86,7 @@ contains
 
       ! Local variables
       CHARACTER(len=256) :: filename, lndname
-      type(timestamp)    :: mtstamp 
+      type(timestamp)    :: mtstamp
       integer            :: ivar, year, month, day, time_i
       REAL(r8)           :: missing_value
       INTEGER            :: ielm, istt, iend
@@ -88,7 +99,7 @@ contains
       ! get value of fmetdat and deltim
       deltim_int  = int(deltatime)
       deltim_real = deltatime
-      
+
       ! set initial values
       allocate (tstamp_LB(NVAR))
       allocate (tstamp_UB(NVAR))
@@ -102,7 +113,7 @@ contains
          allocate (forcn    (NVAR))
          allocate (forcn_LB (NVAR))
          allocate (forcn_UB (NVAR))
-         
+
          do ivar = 1, NVAR
             call allocate_block_data (gforc, forcn   (ivar))
             call allocate_block_data (gforc, forcn_LB(ivar))
@@ -125,7 +136,7 @@ contains
          call setstampLB(mtstamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
-         
+
          IF (p_is_worker) THEN
             IF (numpatch > 0) THEN
                allocate (forcmask(numpatch))
@@ -139,7 +150,7 @@ contains
 #endif
          ENDIF
 
-         IF (p_is_master) THEN 
+         IF (p_is_master) THEN
             CALL ncio_get_attr (filename, vname(1), 'missing_value', missing_value)
          ENDIF
 #ifdef USEMPI
@@ -155,10 +166,10 @@ contains
 
 #ifdef Forcing_Downscaling
       lndname = trim(DEF_dir_landdata) // '/topography/topography_patches.nc'
-      call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo) 
+      call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
 
       IF (p_is_worker) THEN
-#if (defined CROP) 
+#if (defined CROP)
          CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
 #else
          CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
@@ -169,7 +180,7 @@ contains
             iend = elm_patch%subend(ielm)
             forc_topo_elm(ielm) = sum(forc_topo(istt:iend) * elm_patch%subfrc(istt:iend))
          ENDDO
-            
+
          IF (numpatch > 0) THEN
             allocate (glaciers(numpatch))
             glaciers(:) = patchtype(:) == 3
@@ -188,7 +199,7 @@ contains
    SUBROUTINE forcing_reset ()
 
       IMPLICIT NONE
-      
+
       tstamp_LB(:) = timestamp(-1, -1, -1)
       tstamp_UB(:) = timestamp(-1, -1, -1)
 
@@ -224,10 +235,10 @@ contains
       integer  :: iblkme, ib, jb, i, j, ilon, ilat, np, ne
       real(r8) :: calday  ! Julian cal day (1.xx to 365.xx)
       real(r8) :: sunang, cloud, difrat, vnrat
-      real(r8) :: a, hsolar, ratio_rvrf 
+      real(r8) :: a, hsolar, ratio_rvrf
       type(block_data_real8_2d) :: forc_xy_solarin
 
-      type(timestamp) :: mtstamp 
+      type(timestamp) :: mtstamp
       integer  :: id(3)
       integer  :: dtLB, dtUB
       real(r8) :: cosz
@@ -237,7 +248,7 @@ contains
       real(r8) :: pco2m
 
       if (p_is_io) then
-      
+
          !------------------------------------------------------------
          ! READ IN THE ATMOSPHERIC FORCING
 
@@ -254,7 +265,7 @@ contains
 
             if (tintalgo(ivar) == 'NULL') cycle
 
-            ! to make sure the forcing data calculated is in the range of time 
+            ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
             if ( .NOT. (tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar)) ) then
                write(6, *) "the data required is out of range! stop!"; stop
@@ -268,7 +279,7 @@ contains
             if (tintalgo(ivar) == 'nearest') then
                if (dtLB <= dtUB) then
                   call block_data_copy (forcn_LB(ivar), forcn(ivar))
-               else                             
+               else
                   call block_data_copy (forcn_UB(ivar), forcn(ivar))
                end if
             end if
@@ -287,7 +298,7 @@ contains
 
             ! coszen method, for SW
             if (tintalgo(ivar) == 'coszen') then
-               DO iblkme = 1, gblock%nblkme 
+               DO iblkme = 1, gblock%nblkme
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
@@ -315,42 +326,42 @@ contains
          CALL metpreprocess (gforc, forcn)
 
          call allocate_block_data (gforc, forc_xy_solarin)
-         
-         call block_data_copy (forcn(1), forc_xy_t      ) 
+
+         call block_data_copy (forcn(1), forc_xy_t      )
          call block_data_copy (forcn(2), forc_xy_q      )
          call block_data_copy (forcn(3), forc_xy_psrf   )
          call block_data_copy (forcn(3), forc_xy_pbot   )
          call block_data_copy (forcn(7), forc_xy_solarin)
          call block_data_copy (forcn(8), forc_xy_frl    )
 
-         if (trim(dataset) == 'POINT') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+         if (trim(DEF_forcing%dataset) == 'POINT') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'ERA5LAND') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)  
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)  
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'ERA5') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+         ELSEif (trim(DEF_forcing%dataset) == 'ERA5LAND') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'CRUJRA') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+         ELSEif (trim(DEF_forcing%dataset) == 'ERA5') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'JRA55') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+         ELSEif (trim(DEF_forcing%dataset) == 'CRUJRA') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )         
+            call block_data_copy (forcn(6), forc_xy_vs )
+         ELSEif (trim(DEF_forcing%dataset) == 'JRA55') then
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
+            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+            call block_data_copy (forcn(5), forc_xy_us )
+            call block_data_copy (forcn(6), forc_xy_vs )
 
          ELSE
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8) 
+            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
@@ -362,14 +373,14 @@ contains
 
          if (solarin_all_band) then
 
-            if (trim(dataset) == 'QIAN') then
+            if (trim(DEF_forcing%dataset) == 'QIAN') then
                !---------------------------------------------------------------
-               ! NOTE: codes from CLM4.5-CESM1.2.0
+               ! 04/2014, yuan: NOTE! codes from CLM4.5-CESM1.2.0
                ! relationship between incoming NIR or VIS radiation and ratio of
                ! direct to diffuse radiation calculated based on one year's worth of
                ! hourly CAM output from CAM version cam3_5_55
                !---------------------------------------------------------------
-               DO iblkme = 1, gblock%nblkme 
+               DO iblkme = 1, gblock%nblkme
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
@@ -401,7 +412,7 @@ contains
                ! (visible, near-infrad, dirct, diffuse)
                ! Julian calday (1.xx to 365.xx)
                !---------------------------------------------------------------
-               DO iblkme = 1, gblock%nblkme 
+               DO iblkme = 1, gblock%nblkme
                   ib = gblock%xblkme(iblkme)
                   jb = gblock%yblkme(iblkme)
 
@@ -443,14 +454,14 @@ contains
          year  = idate(1)
          CALL julian2monthday (idate(1), idate(2), month, mday)
          pco2m = get_monthly_co2_mlo(year, month)*1.e-6
-         call block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = pco2m        ) 
-         call block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     ) 
+         call block_data_copy (forc_xy_pbot, forc_xy_pco2m, sca = pco2m        )
+         call block_data_copy (forc_xy_pbot, forc_xy_po2m , sca = 0.209_r8     )
 
       end if
 
       ! Mapping the 2d atmospheric fields [lon_points]x[lat_points]
       !     -> the 1d vector of subgrid points [numpatch]
-      call mg2p_forc%map_aweighted (forc_xy_pco2m,  forc_pco2m) 
+      call mg2p_forc%map_aweighted (forc_xy_pco2m,  forc_pco2m)
       call mg2p_forc%map_aweighted (forc_xy_po2m ,  forc_po2m )
       call mg2p_forc%map_aweighted (forc_xy_us   ,  forc_us   )
       call mg2p_forc%map_aweighted (forc_xy_vs   ,  forc_vs   )
@@ -480,21 +491,21 @@ contains
             IF (DEF_forcing%has_missing_value) THEN
                IF (.not. forcmask(np)) cycle
             ENDIF
-         
+
             ! The standard measuring conditions for temperature are two meters above the ground
-            ! Scientists have measured the most frigid temperature ever 
+            ! Scientists have measured the most frigid temperature ever
             ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
             if(forc_t(np) < 180.) forc_t(np) = 180.
-            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31; 
+            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
             ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
             if(forc_t(np) > 326.) forc_t(np) = 326.
 
             forc_rhoair(np) = (forc_pbot(np) &
                - 0.378*forc_q(np)*forc_pbot(np)/(0.622+0.378*forc_q(np)))&
-               / (rgas*forc_t(np))  
+               / (rgas*forc_t(np))
 
          end do
-      
+
       end if
 #else
       call mg2p_forc_elm%map_aweighted (forc_xy_t    ,  forc_t_elm    )
@@ -511,18 +522,18 @@ contains
             IF (DEF_forcing%has_missing_value) THEN
                IF (.not. forcmask_elm(ne)) cycle
             ENDIF
-         
+
             ! The standard measuring conditions for temperature are two meters above the ground
-            ! Scientists have measured the most frigid temperature ever 
+            ! Scientists have measured the most frigid temperature ever
             ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
             if(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
-            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31; 
+            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
             ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
             if(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
 
             forc_rho_elm(ne) = (forc_pbot_elm(ne) &
                - 0.378*forc_q_elm(ne)*forc_pbot_elm(ne)/(0.622+0.378*forc_q_elm(ne)))&
-               / (rgas*forc_t_elm(ne))  
+               / (rgas*forc_t_elm(ne))
 
             forc_th_elm(ne) = forc_t_elm(ne) * (1.e5/forc_pbot_elm(ne)) ** (rair/cpair)
 
@@ -536,7 +547,7 @@ contains
             ! forcing in patches
             forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
             forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
-         
+
       end if
 #endif
 
@@ -545,7 +556,7 @@ contains
       call mpi_barrier (p_comm_glb, p_err)
 #endif
       if (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
-         
+
       call check_vector_data ('Forcing t     ', forc_t    )
       call check_vector_data ('Forcing q     ', forc_q    )
       call check_vector_data ('Forcing prc   ', forc_prc  )
@@ -556,7 +567,7 @@ contains
       call check_vector_data ('Forcing solsd ', forc_solsd)
       call check_vector_data ('Forcing solld ', forc_solld)
       call check_vector_data ('Forcing frl   ', forc_frl  )
-         
+
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -565,16 +576,14 @@ contains
    END SUBROUTINE read_forcing
 
 
-
    ! ------------------------------------------------------------
-   ! FUNCTION:
-   !    metreadLBUB
-   ! 
-   ! PURPOSE:
-   !    read lower and upper boundary forcing data
    !
-   ! NOTE:
-   !    major interface of this module
+   ! !DESCRIPTION:
+   !    read lower and upper boundary forcing data, a major interface of this
+   !    module
+   !
+   ! REVISIONS:
+   ! Hua Yuan, 04/2014: initial code
    ! ------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
@@ -590,7 +599,7 @@ contains
 
       ! Local variables
       integer         :: ivar, year, month, day, time_i
-      type(timestamp) :: mtstamp 
+      type(timestamp) :: mtstamp
       character(len=256) :: filename
 
       mtstamp = idate
@@ -645,7 +654,6 @@ contains
                call calavgcos()
             end if
          end if
-         
 
       end do
 
@@ -667,16 +675,16 @@ contains
       ! Local variables
       character(len=256) :: filename
       integer         :: year, month, day, time_i
-      type(timestamp) :: mtstamp 
+      type(timestamp) :: mtstamp
       real(r8), allocatable :: latxy (:,:)    ! latitude values in 2d
       real(r8), allocatable :: lonxy (:,:)    ! longitude values in 2d
-      real(r8), allocatable :: lon_in(:) 
+      real(r8), allocatable :: lon_in(:)
       real(r8), allocatable :: lat_in(:)
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          CALL gforc%define_by_ndims (360, 180)
       ELSE
-      
+
          mtstamp = idate
 
          call setstampLB(mtstamp, 1, year, month, day, time_i)
@@ -776,21 +784,20 @@ contains
    END SUBROUTINE metread_time
 
    ! ------------------------------------------------------------
-   ! FUNCTION: 
-   !    setstampLB
-   !  
-   ! PURPOSE: 
-   !    set the lower boundary time stamp and record information
-   ! 
-   ! NOTE:
-   !    KEY function of this module
-   !  
+   !
+   ! !DESCRIPTION:
+   !    set the lower boundary time stamp and record information,
+   !    a KEY function of this module
+   !
    ! - for time stamp, set it regularly as the model time step.
    ! - for record information, account for:
    !    o year alternation
    !    o month alternation
-   !    o leap year 
+   !    o leap year
    !    o required dada just beyond the first record
+   !
+   ! REVISIONS:
+   ! Hua Yuan, 04/2014: initial code
    ! ------------------------------------------------------------
    SUBROUTINE setstampLB(mtstamp, var_i, year, month, mday, time_i)
 
@@ -837,7 +844,7 @@ contains
          ! calculate the intitial second
          sec    = 86400*(day-1) + sec
          time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
-         sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1) 
+         sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(day-1)
          tstamp_LB(var_i)%sec = sec
 
          ! set time stamp (ststamp_LB)
@@ -857,7 +864,7 @@ contains
          ! set record info (year, time_i)
          if ( sec<0 .OR. (sec==0 .AND. offset(var_i).NE.0) ) then
 
-            ! if the required dada just behind the first record 
+            ! if the required dada just behind the first record
             ! -> set to the first record
             if ( year==startyr .AND. month==startmo .AND. day==1 ) then
                sec = offset(var_i)
@@ -903,7 +910,7 @@ contains
          ! calculate initial second value
          sec    = 86400*(mday-1) + sec
          time_i = floor( (sec-offset(var_i)-0.01) *1. / dtime(var_i) ) + 1
-         sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1) 
+         sec    = (time_i-1)*dtime(var_i) + offset(var_i) - 86400*(mday-1)
          tstamp_LB(var_i)%sec  = sec
 
          ! set time stamp (ststamp_LB)
@@ -1006,19 +1013,18 @@ contains
             write(6, *) "got the wrong time record of forcing! stop!"; stop
          end if
 
-         return 
+         return
 
       END SUBROUTINE setstampLB
 
       ! ------------------------------------------------------------
-      ! FUNCTION: 
-      !    setstampUB
-      !  
-      ! PURPOSE: 
-      !    set the upper boundary time stamp and record information
-      ! 
-      ! NOTE:
-      !    KEY function of this module
+      !
+      ! !DESCRIPTION:
+      !    set the upper boundary time stamp and record information,
+      !    a KEY function of this module
+      !
+      ! REVISIONS:
+      ! Hua Yuan, 04/2014: initial code
       ! ------------------------------------------------------------
       SUBROUTINE setstampUB(var_i, year, month, mday, time_i)
 
@@ -1026,7 +1032,7 @@ contains
          integer,         intent(in)  :: var_i
          integer,         intent(out) :: year
          integer,         intent(out) :: month
-         integer,         intent(out) :: mday 
+         integer,         intent(out) :: mday
          integer,         intent(out) :: time_i
 
          integer :: day, sec
@@ -1049,7 +1055,7 @@ contains
       ! calculate the time stamp
       if ( tstamp_UB(var_i) == 'NULL' ) then
          tstamp_UB(var_i) = tstamp_LB(var_i) + dtime(var_i)
-      else 
+      else
          tstamp_LB(var_i) = tstamp_UB(var_i)
          tstamp_UB(var_i) = tstamp_UB(var_i) + dtime(var_i)
       end if
@@ -1107,7 +1113,7 @@ contains
                   if (month == 12) then
                      month = 1
                      year = year + 1
-                  else 
+                  else
                      month = month + 1
                   end if
                end if
@@ -1147,7 +1153,7 @@ contains
                   if (month == 12) then
                      month = 1
                      year = year + 1
-                  else 
+                  else
                      month = month + 1
                   end if
                end if
@@ -1167,11 +1173,16 @@ contains
             write(6, *) "got the wrong time record of forcing! stop!"; stop
          end if
 
-         return 
+         return
 
       END SUBROUTINE setstampUB
 
+      ! ------------------------------------------------------------
+      ! !DESCRIPTION:
       ! calculate time average coszen value bwteeen [LB, UB]
+      !
+      ! REVISIONS:
+      ! 04/2014, yuan: this method is adapted from CLM
       ! ------------------------------------------------------------
       SUBROUTINE calavgcos()
 
@@ -1190,7 +1201,7 @@ contains
 
             tstamp = tstamp + deltim_int
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                ib = gblock%xblkme(iblkme)
                jb = gblock%yblkme(iblkme)
                do j = 1, gforc%ycnt(jb)

@@ -2,6 +2,13 @@
 
 SUBROUTINE lakedepth_readin (dir_landdata)
 
+!------------------------------------------------------------------------------------------
+! DESCRIPTION:
+! Read in lakedepth and assign lake thickness of each layer.
+!
+! Original author: Yongjiu Dai, 03/2018
+!------------------------------------------------------------------------------------------
+
    use precision
    USE GlobalVars, only : nl_lake
    use spmd_task
@@ -54,7 +61,7 @@ SUBROUTINE lakedepth_readin (dir_landdata)
    lakedepth(:) = SITE_lakedepth
 #else
    lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
-   call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth) 
+   call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth)
 #endif
 
    ! Define lake levels
@@ -62,9 +69,6 @@ SUBROUTINE lakedepth_readin (dir_landdata)
 
       do ipatch = 1, numpatch
 
-         ! testing 04/07/2014
-         ! if(lakedepth(ipatch) > 50.) lakedepth(ipatch) = 50.
-         
          ! testing 14/05/2021, Zhang
          if(lakedepth(ipatch) < 0.1) lakedepth(ipatch) = 0.1
 
@@ -75,7 +79,7 @@ SUBROUTINE lakedepth_readin (dir_landdata)
             dz_lake(nl_lake,ipatch) = dzlak(nl_lake)*depthratio - (dz_lake(1,ipatch) - dzlak(1)*depthratio)
          else if(lakedepth(ipatch) > 0. .and. lakedepth(ipatch) <= 1.)then
             dz_lake(:,ipatch) = lakedepth(ipatch) / nl_lake
-         else   ! non land water bodies or missing value of the lake depth 
+         else   ! non land water bodies or missing value of the lake depth
             lakedepth(ipatch) = sum(dzlak(1:nl_lake))
             dz_lake(1:nl_lake,ipatch) = dzlak(1:nl_lake)
          end if

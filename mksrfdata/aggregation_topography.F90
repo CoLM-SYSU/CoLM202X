@@ -16,8 +16,12 @@ SUBROUTINE aggregation_topography ( &
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+   USE mod_aggregation
    USE mod_utils
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
 
    IMPLICIT NONE
    ! arguments:
@@ -34,6 +38,9 @@ SUBROUTINE aggregation_topography ( &
    TYPE (block_data_real8_2d) :: topography
    REAL(r8), allocatable :: topography_patches(:)
    REAL(r8), allocatable :: topography_one(:), area_one(:)
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+#endif
 
    landdir = trim(dir_model_landdata) // '/topography/'
 
@@ -59,7 +66,7 @@ SUBROUTINE aggregation_topography ( &
       CALL ncio_read_block (lndname, 'elevation', gtopo, topography)
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gtopo, topography)
+      CALL aggregation_data_daemon (gtopo, data_r8_2d_in1 = topography)
 #endif
    ENDIF
 
@@ -72,12 +79,19 @@ SUBROUTINE aggregation_topography ( &
       allocate (topography_patches (numpatch))
    
       DO ipatch = 1, numpatch
-         CALL aggregation_lc_request_data (ipatch, gtopo, topography, topography_one, area_one)
-         topography_patches (ipatch) = sum(topography_one * area_one) / sum(area_one)
+         CALL aggregation_request_data (landpatch, ipatch, gtopo, area = area_one, &
+            data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
+         IF (any(topography_one /= -9999.0)) THEN
+            topography_patches (ipatch) = &
+               sum(topography_one * area_one, mask = topography_one /= -9999.0) &
+               / sum(area_one, mask = topography_one /= -9999.0)
+         ELSE
+            topography_patches (ipatch) = -1.0e36
+         ENDIF
       ENDDO
       
 #ifdef USEMPI
-      CALL aggregation_lc_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -93,6 +107,13 @@ SUBROUTINE aggregation_topography ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'topography_patches', 'patch', landpatch, topography_patches, 1)
+
+#ifdef SrfdataDiag
+   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+   lndname  = trim(dir_model_landdata) // '/diag/topo.nc'
+   CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
+      -1.0e36_r8, lndname, 'topography', compress = 0, write_mode = 'one')
+#endif
 
    IF (p_is_worker) THEN
       deallocate ( topography_patches )

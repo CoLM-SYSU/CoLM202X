@@ -44,8 +44,9 @@ CONTAINS
       USE spmd_task
       USE ncio_block
       USE mod_data_type
+      USE mod_landelm
       USE mod_mesh
-      USE mod_aggregation_generic
+      USE mod_aggregation
       USE mod_block
       IMPLICIT NONE
    
@@ -68,7 +69,7 @@ CONTAINS
          CALL ncio_read_block (DEF_file_mesh_filter, 'mesh_filter', grid_filter, datafilter)
    
 #ifdef USEMPI
-         CALL aggregation_gen_data_daemon (grid_filter, data_i4 = datafilter)
+         CALL aggregation_data_daemon (grid_filter, data_i4_2d_in1 = datafilter)
 #endif
       ENDIF
    
@@ -76,9 +77,9 @@ CONTAINS
    
          jelm = 0
          DO ielm = 1, numelm
-            CALL aggregation_gen_request_data (grid_filter, &
-               mesh(ielm)%ilon, mesh(ielm)%ilat, &
-               data_i4 = datafilter, out_i4 = ifilter)
+            CALL aggregation_request_data (landelm, ielm, grid_filter, &
+               data_i4_2d_in1 = datafilter, data_i4_2d_out1 = ifilter, &
+               filledvalue_i4 = -1)
    
             allocate (filter (mesh(ielm)%npxl))
             filter = ifilter > 0
@@ -120,9 +121,19 @@ CONTAINS
          numelm = jelm
    
 #ifdef USEMPI
-         CALL aggregation_gen_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
+
+      IF (p_is_worker) THEN
+         IF (allocated(landelm%eindex))   deallocate (landelm%eindex)
+         IF (allocated(landelm%ipxstt))   deallocate (landelm%ipxstt)
+         IF (allocated(landelm%ipxend))   deallocate (landelm%ipxend)
+         IF (allocated(landelm%settyp))   deallocate (landelm%settyp)
+         IF (allocated(landelm%ielm  ))   deallocate (landelm%ielm  )
+      ENDIF
+
+      CALL landelm_build ()
       
 #ifdef USEMPI
       IF (p_is_worker) THEN

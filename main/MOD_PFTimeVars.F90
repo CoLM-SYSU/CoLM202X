@@ -1,11 +1,14 @@
-#include <define.h> 
+#include <define.h>
 
 #if (defined PFT_CLASSIFICATION)
 
 MODULE MOD_PFTimeVars
-! -------------------------------
+! -----------------------------------------------------------------
+! !DESCRIPTION:
+! Define PFT time variables
+!
 ! Created by Hua Yuan, 08/2019
-! -------------------------------
+! -----------------------------------------------------------------
 
   USE precision
   USE timemanager
@@ -21,15 +24,15 @@ MODULE MOD_PFTimeVars
   ! for PFT_CLASSIFICATION
   REAL(r8), allocatable :: tleaf_p   (:) !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p    (:) !depth of water on foliage [mm]
-  real(r8), allocatable :: ldew_p_rain     (:)     ! depth of rain on foliage [mm]
-  real(r8), allocatable :: ldew_p_snow     (:)     ! depth of snow on foliage [mm]
+  real(r8), allocatable :: ldew_p_rain(:)!depth of rain on foliage [mm]
+  real(r8), allocatable :: ldew_p_snow(:)!depth of snow on foliage [mm]
   REAL(r8), allocatable :: sigf_p    (:) !fraction of veg cover, excluding snow-covered veg [-]
   REAL(r8), allocatable :: tlai_p    (:) !leaf area index
   REAL(r8), allocatable :: lai_p     (:) !leaf area index
   REAL(r8), allocatable :: laisun_p  (:) !sunlit leaf area index
   REAL(r8), allocatable :: laisha_p  (:) !shaded leaf area index
   REAL(r8), allocatable :: tsai_p    (:) !stem area index
-  REAL(r8), allocatable :: sai_p     (:) !stem area index                                      
+  REAL(r8), allocatable :: sai_p     (:) !stem area index
   REAL(r8), allocatable :: ssun_p(:,:,:) !sunlit canopy absorption for solar radiation (0-1)
   REAL(r8), allocatable :: ssha_p(:,:,:) !shaded canopy absorption for solar radiation (0-1)
   REAL(r8), allocatable :: thermk_p  (:) !canopy gap fraction for tir radiation
@@ -45,13 +48,13 @@ MODULE MOD_PFTimeVars
   real(r8), allocatable :: gs0sha_p  (:) ! working copy of shalit stomata conductance
 #endif
 #ifdef OzoneStress
-  real(r8), allocatable :: o3coefv_sun_p(:) ! Ozone stress factor for photosynthesis on sunlit leaf
-  real(r8), allocatable :: o3coefv_sha_p(:) ! Ozone stress factor for photosynthesis on shaded leaf
-  real(r8), allocatable :: o3coefg_sun_p(:) ! Ozone stress factor for stomata on sunlit leaf
-  real(r8), allocatable :: o3coefg_sha_p(:) ! Ozone stress factor for stomata on shaded leaf
-  real(r8), allocatable :: lai_old_p    (:) ! lai in last time step
-  real(r8), allocatable :: o3uptakesun_p(:) ! Ozone does, sunlit leaf (mmol O3/m^2)
-  real(r8), allocatable :: o3uptakesha_p(:) ! Ozone does, shaded leaf (mmol O3/m^2)
+  real(r8), allocatable :: o3coefv_sun_p(:) !Ozone stress factor for photosynthesis on sunlit leaf
+  real(r8), allocatable :: o3coefv_sha_p(:) !Ozone stress factor for photosynthesis on shaded leaf
+  real(r8), allocatable :: o3coefg_sun_p(:) !Ozone stress factor for stomata on sunlit leaf
+  real(r8), allocatable :: o3coefg_sha_p(:) !Ozone stress factor for stomata on shaded leaf
+  real(r8), allocatable :: lai_old_p    (:) !lai in last time step
+  real(r8), allocatable :: o3uptakesun_p(:) !Ozone does, sunlit leaf (mmol O3/m^2)
+  real(r8), allocatable :: o3uptakesha_p(:) !Ozone does, shaded leaf (mmol O3/m^2)
 #endif
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -109,23 +112,23 @@ CONTAINS
             allocate (gs0sha_p     (numpft))
 #endif
 #ifdef OzoneStress
-            allocate (o3coefv_sun_p(numpft)) ! Ozone stress factor for photosynthesis on sunlit leaf
-            allocate (o3coefv_sha_p(numpft)) ! Ozone stress factor for photosynthesis on shaded leaf
-            allocate (o3coefg_sun_p(numpft)) ! Ozone stress factor for stomata on sunlit leaf
-            allocate (o3coefg_sha_p(numpft)) ! Ozone stress factor for stomata on shaded leaf
-            allocate (lai_old_p    (numpft)) ! lai in last time step
-            allocate (o3uptakesun_p(numpft)) ! Ozone does, sunlit leaf (mmol O3/m^2)
-            allocate (o3uptakesha_p(numpft)) ! Ozone does, shaded leaf (mmol O3/m^2)
+            allocate (o3coefv_sun_p(numpft)) !Ozone stress factor for photosynthesis on sunlit leaf
+            allocate (o3coefv_sha_p(numpft)) !Ozone stress factor for photosynthesis on shaded leaf
+            allocate (o3coefg_sun_p(numpft)) !Ozone stress factor for stomata on sunlit leaf
+            allocate (o3coefg_sha_p(numpft)) !Ozone stress factor for stomata on shaded leaf
+            allocate (lai_old_p    (numpft)) !lai in last time step
+            allocate (o3uptakesun_p(numpft)) !Ozone does, sunlit leaf (mmol O3/m^2)
+            allocate (o3uptakesha_p(numpft)) !Ozone does, shaded leaf (mmol O3/m^2)
 #endif
          ENDIF
-      ENDIF 
+      ENDIF
 
 #ifdef BGC
       CALL allocate_BGCPFTimeVars
 #endif
 
    END SUBROUTINE allocate_PFTimeVars
-  
+
    SUBROUTINE READ_PFTimeVars (file_restart)
 
       use ncio_vector
@@ -136,29 +139,29 @@ CONTAINS
 
       character(LEN=*), intent(in) :: file_restart
 
-      call ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !  
-      call ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !  
-      call ncio_read_vector (file_restart, 'ldew_p_rain   ', landpft, ldew_p_rain     ) !  
-      call ncio_read_vector (file_restart, 'ldew_p_snow   ', landpft, ldew_p_snow     ) !  
-      call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !  
-      call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !  
-      call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !  
-      call ncio_read_vector (file_restart, 'laisun_p ', landpft, laisun_p   ) !  
-      call ncio_read_vector (file_restart, 'laisha_p ', landpft, laisha_p   ) !  
-      call ncio_read_vector (file_restart, 'tsai_p   ', landpft, tsai_p     ) !  
-      call ncio_read_vector (file_restart, 'sai_p    ', landpft, sai_p      ) !  
-      call ncio_read_vector (file_restart, 'ssun_p   ', 2,2, landpft, ssun_p) !  
-      call ncio_read_vector (file_restart, 'ssha_p   ', 2,2, landpft, ssha_p) !  
-      call ncio_read_vector (file_restart, 'thermk_p ', landpft, thermk_p   ) !  
-      call ncio_read_vector (file_restart, 'extkb_p  ', landpft, extkb_p    ) !  
-      call ncio_read_vector (file_restart, 'extkd_p  ', landpft, extkd_p    ) !  
-      call ncio_read_vector (file_restart, 'tref_p   ', landpft, tref_p     ) !  
-      call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !  
-      call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !  
-      call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !  
+      call ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
+      call ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
+      call ncio_read_vector (file_restart, 'ldew_p_rain', landpft, ldew_p_rain) !depth of rain on foliage [mm]
+      call ncio_read_vector (file_restart, 'ldew_p_snow', landpft, ldew_p_snow) !depth of snow on foliage [mm]
+      call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
+      call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
+      call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
+      call ncio_read_vector (file_restart, 'laisun_p ', landpft, laisun_p   ) !
+      call ncio_read_vector (file_restart, 'laisha_p ', landpft, laisha_p   ) !
+      call ncio_read_vector (file_restart, 'tsai_p   ', landpft, tsai_p     ) !
+      call ncio_read_vector (file_restart, 'sai_p    ', landpft, sai_p      ) !
+      call ncio_read_vector (file_restart, 'ssun_p   ', 2,2, landpft, ssun_p) !
+      call ncio_read_vector (file_restart, 'ssha_p   ', 2,2, landpft, ssha_p) !
+      call ncio_read_vector (file_restart, 'thermk_p ', landpft, thermk_p   ) !
+      call ncio_read_vector (file_restart, 'extkb_p  ', landpft, extkb_p    ) !
+      call ncio_read_vector (file_restart, 'extkd_p  ', landpft, extkd_p    ) !
+      call ncio_read_vector (file_restart, 'tref_p   ', landpft, tref_p     ) !
+      call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !
+      call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !
+      call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !
 #ifdef PLANT_HYDRAULIC_STRESS
       call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
-      call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) ! 
+      call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
       call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
 #endif
 #ifdef OzoneStress
@@ -171,22 +174,22 @@ CONTAINS
       CALL read_BGCPFTimeVars (file_restart)
 #endif
 
-   END SUBROUTINE READ_PFTimeVars 
-   
+   END SUBROUTINE READ_PFTimeVars
+
    SUBROUTINE WRITE_PFTimeVars (file_restart)
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpft
      use ncio_vector
      USE GlobalVars
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
-     
+
      ! Local variables
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
      call ncio_create_file_vector (file_restart, landpft)
      CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
@@ -196,30 +199,30 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
 #endif
 
-     call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !  
-     call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !  
-     call ncio_write_vector (file_restart, 'ldew_p_rain   ', 'pft', landpft, ldew_p_rain   , compress) !  
-     call ncio_write_vector (file_restart, 'ldew_p_snow   ', 'pft', landpft, ldew_p_snow   , compress) !  
-     call ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !  
-     call ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !  
-     call ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !  
-     call ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !  
-     call ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !  
-     call ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress) !  
-     call ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress) !  
-     call ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !  
-     call ncio_write_vector (file_restart, 'ssha_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress) !  
-     call ncio_write_vector (file_restart, 'thermk_p ', 'pft', landpft, thermk_p , compress) !  
-     call ncio_write_vector (file_restart, 'extkb_p  ', 'pft', landpft, extkb_p  , compress) !  
-     call ncio_write_vector (file_restart, 'extkd_p  ', 'pft', landpft, extkd_p  , compress) !  
-     call ncio_write_vector (file_restart, 'tref_p   ', 'pft', landpft, tref_p   , compress) !  
-     call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !  
-     call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !  
-     call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !  
+     call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
+     call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
+     call ncio_write_vector (file_restart, 'ldew_p_rain', 'pft', landpft, ldew_p_rain, compress) !depth of rain on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_p_snow', 'pft', landpft, ldew_p_snow, compress) !depth of snow on foliage [mm]
+     call ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
+     call ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
+     call ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
+     call ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !
+     call ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !
+     call ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress) !
+     call ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress) !
+     call ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !
+     call ncio_write_vector (file_restart, 'ssha_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssha_p, compress) !
+     call ncio_write_vector (file_restart, 'thermk_p ', 'pft', landpft, thermk_p , compress) !
+     call ncio_write_vector (file_restart, 'extkb_p  ', 'pft', landpft, extkb_p  , compress) !
+     call ncio_write_vector (file_restart, 'extkd_p  ', 'pft', landpft, extkd_p  , compress) !
+     call ncio_write_vector (file_restart, 'tref_p   ', 'pft', landpft, tref_p   , compress) !
+     call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
+     call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
+     call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
 #ifdef PLANT_HYDRAULIC_STRESS
-     call ncio_write_vector (file_restart, 'vegwp_p  ', 'vegnodes', nvegwcs, 'pft', landpft, vegwp_p, compress)
-     call ncio_write_vector (file_restart, 'gs0sun_p ', 'pft', landpft, gs0sun_p , compress) !
-     call ncio_write_vector (file_restart, 'gs0sha_p ', 'pft', landpft, gs0sha_p , compress) !
+     call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
+     call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
+     call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
 #endif
 #ifdef OzoneStress
      call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
@@ -233,7 +236,7 @@ CONTAINS
 
    END SUBROUTINE WRITE_PFTimeVars
 
-  
+
    SUBROUTINE deallocate_PFTimeVars
 ! --------------------------------------------------
 ! Deallocates memory for CLM 1d [numpft/numpc] variables
@@ -251,7 +254,7 @@ CONTAINS
             deallocate (laisun_p ) !leaf area index
             deallocate (laisha_p ) !leaf area index
             deallocate (tsai_p   ) !stem area index
-            deallocate (sai_p    ) !stem area index                                   
+            deallocate (sai_p    ) !stem area index
             deallocate (ssun_p   ) !sunlit canopy absorption for solar radiation (0-1)
             deallocate (ssha_p   ) !shaded canopy absorption for solar radiation (0-1)
             deallocate (thermk_p ) !canopy gap fraction for tir radiation
@@ -261,25 +264,25 @@ CONTAINS
             deallocate (qref_p   ) !2 m height air specific humidity
             deallocate (rst_p    ) !canopy stomatal resistance (s/m)
             deallocate (z0m_p    ) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS 
-            deallocate (vegwp_p  ) ! vegetation water potential [mm] 
-            deallocate (gs0sun_p ) ! working copy of sunlit stomata conductance
-            deallocate (gs0sha_p ) ! working copy of shalit stomata conductance
+#ifdef PLANT_HYDRAULIC_STRESS
+            deallocate (vegwp_p  ) !vegetation water potential [mm]
+            deallocate (gs0sun_p ) !working copy of sunlit stomata conductance
+            deallocate (gs0sha_p ) !working copy of shalit stomata conductance
 #endif
 #ifdef OzoneStress
-            deallocate (o3coefv_sun_p ) ! Ozone stress factor for photosynthesis on sunlit leaf
-            deallocate (o3coefv_sha_p ) ! Ozone stress factor for photosynthesis on shaded leaf
-            deallocate (o3coefg_sun_p ) ! Ozone stress factor for stomata on sunlit leaf
-            deallocate (o3coefg_sha_p ) ! Ozone stress factor for stomata on shaded leaf
-            deallocate (lai_old_p     ) ! lai in last time step
-            deallocate (o3uptakesun_p ) ! Ozone does, sunlit leaf (mmol O3/m^2)
-            deallocate (o3uptakesha_p ) ! Ozone does, shaded leaf (mmol O3/m^2)
+            deallocate (o3coefv_sun_p ) !Ozone stress factor for photosynthesis on sunlit leaf
+            deallocate (o3coefv_sha_p ) !Ozone stress factor for photosynthesis on shaded leaf
+            deallocate (o3coefg_sun_p ) !Ozone stress factor for stomata on sunlit leaf
+            deallocate (o3coefg_sha_p ) !Ozone stress factor for stomata on shaded leaf
+            deallocate (lai_old_p     ) !lai in last time step
+            deallocate (o3uptakesun_p ) !Ozone does, sunlit leaf (mmol O3/m^2)
+            deallocate (o3uptakesha_p ) !Ozone does, shaded leaf (mmol O3/m^2)
 #endif
          ENDIF
-      ENDIF 
+      ENDIF
 
 #ifdef BGC
-      CALL deallocate_BGCPFTimeVars 
+      CALL deallocate_BGCPFTimeVars
 #endif
 
    END SUBROUTINE deallocate_PFTimeVars
@@ -290,28 +293,28 @@ CONTAINS
       use mod_colm_debug
       IMPLICIT NONE
 
-      call check_vector_data ('tleaf_p  ', tleaf_p  )      !  
-      call check_vector_data ('ldew_p   ', ldew_p   )      !  
-      call check_vector_data ('ldew_p_rain   ', ldew_p_rain   )      !  
-      call check_vector_data ('ldew_p_snow   ', ldew_p_snow   )      !  
-      call check_vector_data ('sigf_p   ', sigf_p   )      !  
-      call check_vector_data ('tlai_p   ', tlai_p   )      !  
-      call check_vector_data ('lai_p    ', lai_p    )      !  
-      call check_vector_data ('laisun_p ', lai_p    )      !  
-      call check_vector_data ('laisha_p ', lai_p    )      !  
-      call check_vector_data ('tsai_p   ', tsai_p   )      !  
-      call check_vector_data ('sai_p    ', sai_p    )      !  
-      call check_vector_data ('ssun_p   ', ssun_p   )      !  
-      call check_vector_data ('ssha_p   ', ssha_p   )      !  
-      call check_vector_data ('thermk_p ', thermk_p )      !  
-      call check_vector_data ('extkb_p  ', extkb_p  )      !  
-      call check_vector_data ('extkd_p  ', extkd_p  )      !  
-      call check_vector_data ('tref_p   ', tref_p   )      !  
-      call check_vector_data ('qref_p   ', qref_p   )      !  
-      call check_vector_data ('rst_p    ', rst_p    )      !  
-      call check_vector_data ('z0m_p    ', z0m_p    )      !  
+      call check_vector_data ('tleaf_p  ', tleaf_p  )      !
+      call check_vector_data ('ldew_p   ', ldew_p   )      !
+      call check_vector_data ('ldew_p_rain', ldew_p_rain ) !depth of rain on foliage [mm]
+      call check_vector_data ('ldew_p_snow', ldew_p_snow ) !depth of snow on foliage [mm]
+      call check_vector_data ('sigf_p   ', sigf_p   )      !
+      call check_vector_data ('tlai_p   ', tlai_p   )      !
+      call check_vector_data ('lai_p    ', lai_p    )      !
+      call check_vector_data ('laisun_p ', lai_p    )      !
+      call check_vector_data ('laisha_p ', lai_p    )      !
+      call check_vector_data ('tsai_p   ', tsai_p   )      !
+      call check_vector_data ('sai_p    ', sai_p    )      !
+      call check_vector_data ('ssun_p   ', ssun_p   )      !
+      call check_vector_data ('ssha_p   ', ssha_p   )      !
+      call check_vector_data ('thermk_p ', thermk_p )      !
+      call check_vector_data ('extkb_p  ', extkb_p  )      !
+      call check_vector_data ('extkd_p  ', extkd_p  )      !
+      call check_vector_data ('tref_p   ', tref_p   )      !
+      call check_vector_data ('qref_p   ', qref_p   )      !
+      call check_vector_data ('rst_p    ', rst_p    )      !
+      call check_vector_data ('z0m_p    ', z0m_p    )      !
 #ifdef PLANT_HYDRAULIC_STRESS
-      call check_vector_data ('vegwp_p  ', vegwp_p  )      !  
+      call check_vector_data ('vegwp_p  ', vegwp_p  )      !
       call check_vector_data ('gs0sun_p ', gs0sun_p )      !
       call check_vector_data ('gs0sha_p ', gs0sha_p )      !
 #endif
@@ -326,7 +329,7 @@ CONTAINS
 #endif
 
 #ifdef BGC
-      CALL check_BGCPFTimeVars 
+      CALL check_BGCPFTimeVars
 #endif
 
    END SUBROUTINE check_PFTimeVars

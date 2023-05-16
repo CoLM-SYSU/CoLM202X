@@ -6,27 +6,27 @@ MODULE mod_namelist
    IMPLICIT NONE
    SAVE
 
-   CHARACTER(len=256) :: DEF_CASE_NAME = 'CASENAME'         
+   CHARACTER(len=256) :: DEF_CASE_NAME = 'CASENAME'
 
    ! ----- domain TYPE -----
    TYPE nl_domain_type
-      REAL(r8) :: edges = -90.0      
-      REAL(r8) :: edgen = 90.0      
-      REAL(r8) :: edgew = -180.0   
-      REAL(r8) :: edgee = 180.0      
+      REAL(r8) :: edges = -90.0
+      REAL(r8) :: edgen = 90.0
+      REAL(r8) :: edgew = -180.0
+      REAL(r8) :: edgee = 180.0
    END TYPE nl_domain_type
 
    TYPE (nl_domain_type) :: DEF_domain
 
-   INTEGER :: DEF_nx_blocks = 1
-   INTEGER :: DEF_ny_blocks = 1
-   INTEGER :: DEF_PIO_groupsize = 6
+   INTEGER :: DEF_nx_blocks = 72
+   INTEGER :: DEF_ny_blocks = 36
+   INTEGER :: DEF_PIO_groupsize = 12
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
    REAL(r8) :: SITE_lon_location = 0.
    REAL(r8) :: SITE_lat_location = 0.
-   
+
    INTEGER  :: SITE_landtype = 1
    CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
@@ -48,10 +48,10 @@ MODULE mod_namelist
       INTEGER  :: start_year  = 2000
       INTEGER  :: start_month = 1
       INTEGER  :: start_day   = 1
-      INTEGER  :: start_sec   = 0   
+      INTEGER  :: start_sec   = 0
       INTEGER  :: end_year    = 2003
-      INTEGER  :: end_month   = 1 
-      INTEGER  :: end_day     = 1 
+      INTEGER  :: end_month   = 1
+      INTEGER  :: end_day     = 1
       INTEGER  :: end_sec     = 0
       INTEGER  :: spinup_year = 2000
       INTEGER  :: spinup_month= 1
@@ -65,8 +65,8 @@ MODULE mod_namelist
 
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
-   CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data' 
-   CHARACTER(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data' 
+   CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
+   CHARACTER(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
 
    CHARACTER(len=256) :: DEF_dir_landdata = 'path/to/landdata'
    CHARACTER(len=256) :: DEF_dir_restart  = 'path/to/restart'
@@ -77,16 +77,26 @@ MODULE mod_namelist
 #ifdef CATCHMENT
    LOGICAL :: Catchment_data_in_ONE_file = .false.
    CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/catchment/data'
-#endif 
+#endif
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
 
+   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
+
+   ! ----- Use surface data from existing dataset -----
+   CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
+   ! case 1: from a larger region 
+   LOGICAL :: USE_srfdata_from_larger_region   = .false.
+   ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
+   !         only available for USGS/IGBP/PFT CLASSIFICATION
+   LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
+
    ! ----- Leaf Area Index -----
-   !add by zhongwang wei @ sysu 2021/12/23 
-   !To allow read satellite observed LAI        
-   logical :: DEF_LAI_CLIM = .FALSE.      
+   !add by zhongwang wei @ sysu 2021/12/23
+   !To allow read satellite observed LAI
+   logical :: DEF_LAI_CLIM = .FALSE.
    INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-                 
+
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
@@ -102,7 +112,7 @@ MODULE mod_namelist
 
    LOGICAL  :: DEF_hist_grid_as_forcing   = .false.
    REAL(r8) :: DEF_hist_lon_res = 0.5
-   REAL(r8) :: DEF_hist_lat_res = 0.5       
+   REAL(r8) :: DEF_hist_lat_res = 0.5
 
    CHARACTER(len=256) :: DEF_WRST_FREQ    = 'none'  ! write restart file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
    CHARACTER(len=256) :: DEF_HIST_FREQ    = 'none'  ! write history file frequency: TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY
@@ -119,9 +129,9 @@ MODULE mod_namelist
 
    TYPE nl_forcing_type
 
-      CHARACTER(len=256) :: dataset            = 'CRUNCEP' 
-      LOGICAL            :: solarin_all_band   = .true.  
-      REAL(r8)           :: HEIGHT_V           = 100.0    
+      CHARACTER(len=256) :: dataset            = 'CRUNCEP'
+      LOGICAL            :: solarin_all_band   = .true.
+      REAL(r8)           :: HEIGHT_V           = 100.0
       REAL(r8)           :: HEIGHT_T           = 50.
       REAL(r8)           :: HEIGHT_Q           = 50.
 
@@ -134,7 +144,7 @@ MODULE mod_namelist
       INTEGER            :: startmo            = 1              ! start month of forcing data
       INTEGER            :: endyr              = 2003           ! end year of forcing data
       INTEGER            :: endmo              = 12             ! end month of forcing data
-      INTEGER            :: dtime(8)           = (/21600,21600,21600,21600,0,21600,21600,21600/) 
+      INTEGER            :: dtime(8)           = (/21600,21600,21600,21600,0,21600,21600,21600/)
       INTEGER            :: offset(8)          = (/10800,10800,10800,10800,0,10800,0,10800/)
       INTEGER            :: nlands             = 1              ! land grid number in 1d
 
@@ -170,67 +180,68 @@ MODULE mod_namelist
 
    ! ----- history variables -----
    TYPE history_var_type
-      
-      LOGICAL :: xy_us        = .true.    
-      LOGICAL :: xy_vs        = .true. 
-      LOGICAL :: xy_t         = .true. 
-      LOGICAL :: xy_q         = .true. 
-      LOGICAL :: xy_prc       = .true. 
-      LOGICAL :: xy_prl       = .true. 
-      LOGICAL :: xy_pbot      = .true. 
-      LOGICAL :: xy_frl       = .true. 
-      LOGICAL :: xy_solarin   = .true. 
-      LOGICAL :: xy_rain      = .true. 
-      LOGICAL :: xy_snow      = .true. 
+
+      LOGICAL :: xy_us        = .true.
+      LOGICAL :: xy_vs        = .true.
+      LOGICAL :: xy_t         = .true.
+      LOGICAL :: xy_q         = .true.
+      LOGICAL :: xy_prc       = .true.
+      LOGICAL :: xy_prl       = .true.
+      LOGICAL :: xy_pbot      = .true.
+      LOGICAL :: xy_frl       = .true.
+      LOGICAL :: xy_solarin   = .true.
+      LOGICAL :: xy_rain      = .true.
+      LOGICAL :: xy_snow      = .true.
 #ifdef OzoneStress
       LOGICAL :: xy_ozone     = .true.
 #endif
-                                       
-      LOGICAL :: taux         = .true. 
-      LOGICAL :: tauy         = .true. 
-      LOGICAL :: fsena        = .true. 
-      LOGICAL :: lfevpa       = .true. 
-      LOGICAL :: fevpa        = .true. 
-      LOGICAL :: fsenl        = .true. 
-      LOGICAL :: fevpl        = .true. 
-      LOGICAL :: etr          = .true. 
-      LOGICAL :: fseng        = .true. 
-      LOGICAL :: fevpg        = .true. 
-      LOGICAL :: fgrnd        = .true. 
-      LOGICAL :: sabvsun      = .true. 
-      LOGICAL :: sabvsha      = .true. 
-      LOGICAL :: sabg         = .true. 
-      LOGICAL :: olrg         = .true. 
-      LOGICAL :: rnet         = .true. 
-      LOGICAL :: xerr         = .true. 
-      LOGICAL :: zerr         = .true. 
-      LOGICAL :: rsur         = .true. 
-      LOGICAL :: rnof         = .true. 
-      LOGICAL :: qintr        = .true. 
-      LOGICAL :: qinfl        = .true. 
-      LOGICAL :: qdrip        = .true. 
-      LOGICAL :: wat          = .true. 
-      LOGICAL :: assim        = .true. 
-      LOGICAL :: respc        = .true. 
-      LOGICAL :: qcharge      = .true. 
-      LOGICAL :: t_grnd       = .true. 
-      LOGICAL :: tleaf        = .true. 
-      LOGICAL :: ldew         = .true. 
-      LOGICAL :: scv          = .true. 
-      LOGICAL :: snowdp       = .true. 
-      LOGICAL :: fsno         = .true. 
-      LOGICAL :: sigf         = .true. 
-      LOGICAL :: green        = .true. 
-      LOGICAL :: lai          = .true. 
-      LOGICAL :: laisun       = .true. 
-      LOGICAL :: laisha       = .true. 
-      LOGICAL :: sai          = .true. 
-      LOGICAL :: alb          = .true. 
-      LOGICAL :: emis         = .true. 
-      LOGICAL :: z0m          = .true. 
-      LOGICAL :: trad         = .true. 
-      LOGICAL :: tref         = .true. 
-      LOGICAL :: qref         = .true. 
+
+      LOGICAL :: taux         = .true.
+      LOGICAL :: tauy         = .true.
+      LOGICAL :: fsena        = .true.
+      LOGICAL :: lfevpa       = .true.
+      LOGICAL :: fevpa        = .true.
+      LOGICAL :: fsenl        = .true.
+      LOGICAL :: fevpl        = .true.
+      LOGICAL :: etr          = .true.
+      LOGICAL :: fseng        = .true.
+      LOGICAL :: fevpg        = .true.
+      LOGICAL :: fgrnd        = .true.
+      LOGICAL :: sabvsun      = .true.
+      LOGICAL :: sabvsha      = .true.
+      LOGICAL :: sabg         = .true.
+      LOGICAL :: olrg         = .true.
+      LOGICAL :: rnet         = .true.
+      LOGICAL :: xerr         = .true.
+      LOGICAL :: zerr         = .true.
+      LOGICAL :: rsur         = .true.
+      LOGICAL :: rsub         = .true.
+      LOGICAL :: rnof         = .true.
+      LOGICAL :: qintr        = .true.
+      LOGICAL :: qinfl        = .true.
+      LOGICAL :: qdrip        = .true.
+      LOGICAL :: wat          = .true.
+      LOGICAL :: assim        = .true.
+      LOGICAL :: respc        = .true.
+      LOGICAL :: qcharge      = .true.
+      LOGICAL :: t_grnd       = .true.
+      LOGICAL :: tleaf        = .true.
+      LOGICAL :: ldew         = .true.
+      LOGICAL :: scv          = .true.
+      LOGICAL :: snowdp       = .true.
+      LOGICAL :: fsno         = .true.
+      LOGICAL :: sigf         = .true.
+      LOGICAL :: green        = .true.
+      LOGICAL :: lai          = .true.
+      LOGICAL :: laisun       = .true.
+      LOGICAL :: laisha       = .true.
+      LOGICAL :: sai          = .true.
+      LOGICAL :: alb          = .true.
+      LOGICAL :: emis         = .true.
+      LOGICAL :: z0m          = .true.
+      LOGICAL :: trad         = .true.
+      LOGICAL :: tref         = .true.
+      LOGICAL :: qref         = .true.
 #ifdef BGC
       LOGICAL :: leafc              = .true.
       LOGICAL :: leafc_storage      = .true.
@@ -416,11 +427,11 @@ MODULE mod_namelist
 #endif
 #endif
 
-      LOGICAL :: t_soisno     = .true. 
-      LOGICAL :: wliq_soisno  = .true. 
-      LOGICAL :: wice_soisno  = .true. 
-                                       
-      LOGICAL :: h2osoi       = .true. 
+      LOGICAL :: t_soisno     = .true.
+      LOGICAL :: wliq_soisno  = .true.
+      LOGICAL :: wice_soisno  = .true.
+
+      LOGICAL :: h2osoi       = .true.
       LOGICAL :: rstfacsun    = .true.
       LOGICAL :: rstfacsha    = .true.
       LOGICAL :: gssun        = .true.
@@ -430,12 +441,12 @@ MODULE mod_namelist
       LOGICAL :: BD_all       = .true.
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
-      LOGICAL :: dpond        = .true. 
-      LOGICAL :: zwt          = .true. 
-      LOGICAL :: wa           = .true. 
-                                       
-      LOGICAL :: t_lake       = .true. 
-      LOGICAL :: lake_icefrac = .true. 
+      LOGICAL :: dpond        = .true.
+      LOGICAL :: zwt          = .true.
+      LOGICAL :: wa           = .true.
+
+      LOGICAL :: t_lake       = .true.
+      LOGICAL :: lake_icefrac = .true.
 
 #ifdef BGC
       LOGICAL :: litr1c_vr    = .true.
@@ -454,39 +465,39 @@ MODULE mod_namelist
       LOGICAL :: cwdn_vr      = .true.
       LOGICAL :: sminn_vr     = .true.
 #endif
-   
-      LOGICAL :: ustar        = .true. 
-      LOGICAL :: tstar        = .true. 
-      LOGICAL :: qstar        = .true. 
-      LOGICAL :: zol          = .true. 
-      LOGICAL :: rib          = .true. 
-      LOGICAL :: fm           = .true. 
-      LOGICAL :: fh           = .true. 
-      LOGICAL :: fq           = .true. 
-      LOGICAL :: us10m        = .true. 
-      LOGICAL :: vs10m        = .true. 
-      LOGICAL :: fm10m        = .true. 
-      LOGICAL :: sr           = .true. 
-      LOGICAL :: solvd        = .true. 
-      LOGICAL :: solvi        = .true. 
-      LOGICAL :: solnd        = .true. 
-      LOGICAL :: solni        = .true. 
-      LOGICAL :: srvd         = .true. 
-      LOGICAL :: srvi         = .true. 
-      LOGICAL :: srnd         = .true. 
-      LOGICAL :: srni         = .true. 
-                                       
-      LOGICAL :: solvdln      = .true. 
-      LOGICAL :: solviln      = .true. 
-      LOGICAL :: solndln      = .true. 
-      LOGICAL :: solniln      = .true. 
-      LOGICAL :: srvdln       = .true. 
-      LOGICAL :: srviln       = .true. 
-      LOGICAL :: srndln       = .true. 
-      LOGICAL :: srniln       = .true. 
 
-      LOGICAL :: rsurf_bsn    = .true. 
-      LOGICAL :: rsubs_bsn    = .true.
+      LOGICAL :: ustar        = .true.
+      LOGICAL :: tstar        = .true.
+      LOGICAL :: qstar        = .true.
+      LOGICAL :: zol          = .true.
+      LOGICAL :: rib          = .true.
+      LOGICAL :: fm           = .true.
+      LOGICAL :: fh           = .true.
+      LOGICAL :: fq           = .true.
+      LOGICAL :: us10m        = .true.
+      LOGICAL :: vs10m        = .true.
+      LOGICAL :: fm10m        = .true.
+      LOGICAL :: sr           = .true.
+      LOGICAL :: solvd        = .true.
+      LOGICAL :: solvi        = .true.
+      LOGICAL :: solnd        = .true.
+      LOGICAL :: solni        = .true.
+      LOGICAL :: srvd         = .true.
+      LOGICAL :: srvi         = .true.
+      LOGICAL :: srnd         = .true.
+      LOGICAL :: srni         = .true.
+
+      LOGICAL :: solvdln      = .true.
+      LOGICAL :: solviln      = .true.
+      LOGICAL :: solndln      = .true.
+      LOGICAL :: solniln      = .true.
+      LOGICAL :: srvdln       = .true.
+      LOGICAL :: srviln       = .true.
+      LOGICAL :: srndln       = .true.
+      LOGICAL :: srniln       = .true.
+
+      LOGICAL :: rsurf_hru    = .true.
+      LOGICAL :: rsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
       LOGICAL :: dpond_hru    = .true.
@@ -534,14 +545,20 @@ CONTAINS
          DEF_ny_blocks,                   &
          DEF_PIO_groupsize,               &
          DEF_simulation_time,             &
-         DEF_dir_rawdata,                 &  
-         DEF_dir_output,                  &  
+         DEF_dir_rawdata,                 &
+         DEF_dir_output,                  &
          DEF_file_mesh,                   &
 #ifdef CATCHMENT
          Catchment_data_in_ONE_file,      &
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
+         DEF_file_water_table_depth,      &
+
+         DEF_dir_existing_srfdata,        &
+         USE_srfdata_from_larger_region,  &
+         USE_srfdata_from_3D_gridded_data,& 
+
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
@@ -563,11 +580,11 @@ CONTAINS
          DEF_WRST_FREQ,                   &
          DEF_HIST_FREQ,                   &
          DEF_HIST_groupby,                &
-         DEF_HIST_mode,                   &  
-         DEF_REST_COMPRESS_LEVEL,         & 
-         DEF_HIST_COMPRESS_LEVEL,         & 
+         DEF_HIST_mode,                   &
+         DEF_REST_COMPRESS_LEVEL,         &
+         DEF_HIST_COMPRESS_LEVEL,         &
          DEF_hist_vars_namelist,          &
-         DEF_hist_vars_turnon_all 
+         DEF_hist_vars_turnon_all
 
       namelist /nl_colm_forcing/ DEF_dir_forcing, DEF_forcing
       namelist /nl_colm_history/ DEF_hist_vars
@@ -595,7 +612,7 @@ CONTAINS
          close(10)
 #ifdef SinglePoint
          DEF_forcing%has_missing_value = .false.
-#endif 
+#endif
 
          DEF_dir_landdata = trim(DEF_dir_output) // '/' // trim(adjustl(DEF_CASE_NAME)) // '/landdata'
          DEF_dir_restart  = trim(DEF_dir_output) // '/' // trim(adjustl(DEF_CASE_NAME)) // '/restart'
@@ -614,7 +631,7 @@ CONTAINS
 
          DEF_nx_blocks = 360
          DEF_ny_blocks = 180
-         
+
          DEF_HIST_mode = 'one'
 #endif
 
@@ -642,23 +659,23 @@ CONTAINS
       CALL mpi_bcast (DEF_domain%edgen,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgew,   1, mpi_real8,     p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_domain%edgee,   1, mpi_real8,     p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_nx_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_ny_blocks,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_PIO_groupsize, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_simulation_time%greenwich,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_simulation_time%start_year,    1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%start_month,   1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%start_day,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%start_sec,     1, mpi_integer, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_simulation_time%end_year,      1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%end_month,     1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%end_day,       1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%end_sec,       1, mpi_integer, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_simulation_time%spinup_year,   1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%spinup_month,  1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%spinup_day,    1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -667,14 +684,14 @@ CONTAINS
 
       CALL mpi_bcast (DEF_simulation_time%timestep,     1, mpi_real8,   p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)  
-      CALL mpi_bcast (DEF_dir_output,   256, mpi_character, p_root, p_comm_glb, p_err)  
+      CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_output,   256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_forcing,  256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_dir_landdata, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_restart,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_history,  256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
 #if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
@@ -685,14 +702,19 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI 
+      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
       call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -703,7 +725,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err) 
+      CALL mpi_bcast (DEF_hist_lon_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_hist_lat_res,  1, mpi_real8, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_hist_grid_as_forcing, 1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -743,8 +765,6 @@ CONTAINS
          CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
       ENDDO
-      CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)
@@ -752,7 +772,7 @@ CONTAINS
       IF (p_is_master) THEN
 
          inquire (file=trim(DEF_hist_vars_namelist), exist=fexists)
-         IF (.not. fexists) THEN 
+         IF (.not. fexists) THEN
             write(*,*) 'History namelist file: ', trim(DEF_hist_vars_namelist), ' does not exist.'
          ELSE
             open(10, status='OLD', file=trim(DEF_hist_vars_namelist), form="FORMATTED")
@@ -761,7 +781,7 @@ CONTAINS
          ENDIF
 
       ENDIF
-         
+
       CALL sync_hist_vars (set_defaults = .false.)
 
    END SUBROUTINE read_namelist
@@ -784,7 +804,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xy_solarin  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xy_rain     ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%xy_snow     ,  set_defaults)
-      
+
       CALL sync_hist_vars_one (DEF_hist_vars%taux        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tauy        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fsena       ,  set_defaults)
@@ -804,6 +824,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%xerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zerr        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
@@ -991,11 +1012,11 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%lnfm                            , set_defaults)
 #endif
 #endif
-      
+
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wliq_soisno ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wice_soisno ,  set_defaults)
-      
+
       CALL sync_hist_vars_one (DEF_hist_vars%h2osoi      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsun   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rstfacsha   ,  set_defaults)
@@ -1009,10 +1030,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%dpond       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
-      
+
       CALL sync_hist_vars_one (DEF_hist_vars%t_lake      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%lake_icefrac,  set_defaults)
-      
+
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%litr1c_vr   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%litr2c_vr   ,  set_defaults)
@@ -1060,17 +1081,17 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srviln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
-      
-      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_bsn   ,  set_defaults)  
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults) 
-      CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults) 
-      CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults) 
-      CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults) 
-      CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults) 
-      CALL sync_hist_vars_one (DEF_hist_vars%zwt_hru     ,  set_defaults) 
+
+      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%zwt_hru     ,  set_defaults)
 
    END SUBROUTINE sync_hist_vars
-   
+
    SUBROUTINE sync_hist_vars_one (onoff, set_defaults)
 
       USE spmd_task

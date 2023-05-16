@@ -32,7 +32,7 @@ OBJS_SHARED = \
 				  ../share/mod_data_type.o      \
 				  ../share/ncio_block.o  \
 				  ../share/mod_catchment_data.o \
-				  ../share/mod_modis_data.o \
+				  ../share/mod_5x5_data.o \
 				  ../share/mod_mesh.o   \
 				  ../share/mod_pixelset.o          \
 				  ../share/ncio_vector.o \
@@ -41,22 +41,34 @@ OBJS_SHARED = \
 				  ../share/mod_mapping_pset2grid.o
 
 OBJS_MKSRFDATA = \
-				  ../mksrfdata/mod_aggregation_generic.o \
+				  ../mksrfdata/mod_aggregation.o \
 				  ../mksrfdata/mod_srfdata_restart.o \
 				  ../mksrfdata/mod_pixelsetshadow.o \
 				  ../mksrfdata/mod_landelm.o \
 				  ../mksrfdata/mod_landhru.o \
 				  ../mksrfdata/mod_landpatch.o \
-				  ../mksrfdata/mod_aggregation_PFT.o \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o  \
 				  ../mksrfdata/mod_single_srfdata.o \
 				  ../mksrfdata/mod_elm_vector.o \
 				  ../mksrfdata/mod_hru_vector.o
 
+BASIC_HYDRO = \
+				  hydro/mod_io_basin.o \
+				  hydro/MOD_HydroTimeVars.o \
+				  hydro/MOD_1D_HydroFluxes.o
+
 OBJS_HYDRO = \
 				  hydro/mod_soil_function.o \
-				  hydro/mod_soil_water.o
+				  hydro/mod_soil_water.o \
+				  hydro/mod_drainage_network.o \
+				  hydro/mod_river_network.o \
+				  hydro/mod_ssrf_network.o \
+				  hydro/mod_surface_runoff.o \
+				  hydro/mod_subsurface_runoff.o \
+				  hydro/mod_river_flow.o \
+				  hydro/mod_hist_basin.o \
+				  hydro/mod_lateral_flow.o
 
 OBJS_BGC = \
 			  bgc/MOD_BGC_CNCStateUpdate1.o    \
@@ -174,11 +186,11 @@ ifneq (${CaMa},\#define)
 
 ${EXECUTABLE} : ${HEADER} \
 	${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} 
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
 	-o $@ ${LDFLAGS}
 	@echo 'making CLM completed!'
@@ -189,7 +201,7 @@ $(OBJS) : %.o : %.F90 ${HEADER}
 else
 ####################################################################
 # The global river model CaMa-Flood (version 4.0.1)
-CaMa_DIR = ../CaMa_v407
+CaMa_DIR = ../CaMa
 
 # CaMa Flood Model modules directories
 CaMa_MODS = -I$(CaMa_DIR)/src
@@ -200,11 +212,11 @@ CaMa_LIBS = $(CaMa_DIR)/src/libcama.a
 
 ${EXECUTABLE} : ${HEADER} \
 	${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} mk_CaMa
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
 	${CaMa_LIBS} -o $@ ${LDFLAGS}
 	@echo 'making CLM with CaMa Flood Model completed!'
@@ -213,9 +225,12 @@ $(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
 mk_CaMa : 
-	cd ../CaMa_v407/src && make
+	cd ../CaMa/src && make
 
 endif
+
+$(BASIC_HYDRO) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}hydro
 
 $(OBJS_HYDRO) : %.o : %.F90 ${HEADER} ${BASIC}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}hydro
@@ -226,7 +241,7 @@ $(BASIC_BGC) : %.o : %.F90 ${HEADER}
 $(OBJS_BGC) : %.o : %.F90 ${HEADER} ${BASIC}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
 
-$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC}
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER}

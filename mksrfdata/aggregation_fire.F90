@@ -7,16 +7,11 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ! 2. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface 
+   !    Reprocessing the MODIS Leaf Area Index products for land surface
    !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering 
-   !               partial overlap between fine grid and model grid for a user
-   !               defined domain file.
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -27,20 +22,14 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
 
-   USE LC_Const
-   USE mod_modis_data
-#ifdef PFT_CLASSIFICATION
-   USE mod_landpft
-   USE mod_aggregation_pft
-#endif
-#ifdef PC_CLASSIFICATION
-   USE mod_landpc
-   USE mod_aggregation_pft
+   USE mod_aggregation
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
 #endif
 
    IMPLICIT NONE
@@ -63,18 +52,14 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    REAL(r8), allocatable :: hdm_patches(:), hdm_one(:)
    REAL(r8), allocatable :: peatf_patches(:), peatf_one(:)
    REAL(r8), allocatable :: gdp_patches(:), gdp_one(:)
-   INTEGER :: itime, ntime, Julian_day, ipatch
-   CHARACTER(LEN=4) :: c2, c3, cyear
-   integer :: start_year, end_year, YY   
+   INTEGER :: itime, ipatch
+   CHARACTER(LEN=4) :: c3, cyear
+   integer :: start_year, end_year, YY
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+   CHARACTER(len=256) :: varname
+#endif
 
-   ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
-   INTEGER :: month
-
-   ! for PFT
-   INTEGER :: p, ip
-
-   ! for PC
    landdir = trim(dir_model_landdata) // '/FIRE/'
 
 #ifdef USEMPI
@@ -108,7 +93,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL allocate_block_data (gfire, peatf)
       CALL allocate_block_data (gfire, gdp)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (abm_patches   (numpatch))
       allocate (hdm_patches   (numpatch))
@@ -125,7 +110,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
          ! read in hdm
          ! ---------------------------
       IF (p_is_master) THEN
-         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate Human population density (hdm):', YY,'(data in:',itime+1849,')' 
+         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate Human population density (hdm):', YY,'(data in:',itime+1849,')'
       endif
 
       IF (p_is_io) THEN
@@ -135,7 +120,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, hdm)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = hdm)
 #endif
 
          ! ---------------------------------------------------------------
@@ -144,12 +129,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, hdm, hdm_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = hdm, data_r8_2d_out1 = hdm_one)
             hdm_patches(ipatch) = sum(hdm_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -157,7 +143,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('hdm value ', hdm_patches)
 #endif
 
@@ -169,13 +155,21 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'hdm_patches', 'patch', landpatch, hdm_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/hdm_patch.nc'
+      varname  = 'hdm_' // trim(cyear)
+      CALL srfdata_map_and_write (hdm_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
    ENDDO
-   
+
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate abm' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate abm'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -184,7 +178,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, abm)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = abm)
 #endif
 
          ! ---------------------------------------------------------------
@@ -193,12 +187,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, abm, abm_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = abm, data_r8_2d_out1 = abm_one)
             abm_patches(ipatch) = sum(abm_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -206,7 +201,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('abm value ', abm_patches)
 #endif
 
@@ -219,12 +214,18 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'abm_patches', 'patch', landpatch, abm_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/abm_patch.nc'
+      CALL srfdata_map_and_write (abm_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'abm', compress = 1, write_mode = 'one')
+#endif
 
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate peatf' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate peatf'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -233,7 +234,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, peatf)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = peatf)
 #endif
 
          ! ---------------------------------------------------------------
@@ -242,12 +243,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, peatf, peatf_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = peatf, data_r8_2d_out1 = peatf_one)
             peatf_patches(ipatch) = sum(peatf_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -255,7 +257,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('peatf value ', peatf_patches)
 #endif
 
@@ -268,11 +270,18 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'peatf_patches', 'patch', landpatch, peatf_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/peatf_patch.nc'
+      CALL srfdata_map_and_write (peatf_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'peatf', compress = 1, write_mode = 'one')
+#endif
+
    IF (p_is_master) THEN
-      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp' 
+      write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp'
    endif
 
-   itime = 1 
+   itime = 1
 
    IF (p_is_io) THEN
           ! lndname = trim(dir_rawdata)//'/lai-true/'//trim(cyear)//'/NDEP_BNU_'//trim(cyear)//'_'//trim(c3)//'.h5'
@@ -281,7 +290,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ENDIF
 
 #ifdef USEMPI
-      CALL aggregation_lc_data_daemon (gfire, gdp)
+      CALL aggregation_data_daemon (gfire, data_r8_2d_in1 = gdp)
 #endif
 
          ! ---------------------------------------------------------------
@@ -290,12 +299,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gfire, gdp, gdp_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gfire, area = area_one, &
+               data_r8_2d_in1 = gdp, data_r8_2d_out1 = gdp_one)
             gdp_patches(ipatch) = sum(gdp_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -303,7 +313,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('gdp value ', gdp_patches)
 #endif
 
@@ -316,6 +326,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'gdp_patches', 'patch', landpatch, gdp_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/gdp_patch.nc'
+      CALL srfdata_map_and_write (gdp_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'gdp', compress = 1, write_mode = 'one')
+#endif
+
    IF (p_is_worker) THEN
       IF (allocated(hdm_patches)) deallocate(hdm_patches)
       IF (allocated(hdm_one    )) deallocate(hdm_one    )
@@ -327,5 +344,5 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       IF (allocated(gdp_one    )) deallocate(gdp_one    )
       IF (allocated(area_one   )) deallocate(area_one    )
    ENDIF
-   
+
 END SUBROUTINE aggregation_fire

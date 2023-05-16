@@ -67,7 +67,6 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables 
-      CHARACTER(len=256) :: varname
       TYPE(block_data_int32_2d) :: datamesh
 
       INTEGER  :: iworker
@@ -82,14 +81,13 @@ CONTAINS
       LOGICAL  :: is_new
       INTEGER  :: nsend, nrecv, irecv
       INTEGER  :: smesg(5), rmesg(5)
-      INTEGER  :: nave, nres
       
       INTEGER, allocatable :: nelm_worker(:)
       TYPE(pointer_int32_1d), allocatable :: elist_worker(:)
 
       INTEGER, allocatable :: elist(:), iaddr(:)
       INTEGER, allocatable :: elist2(:,:), xlist2(:,:), ylist2(:,:)
-      INTEGER, allocatable :: sbuf(:), ipt2(:,:), rbuf(:)
+      INTEGER, allocatable :: sbuf(:), ipt2(:,:)
       INTEGER, allocatable :: elist_recv(:), xlist_recv(:), ylist_recv(:)
       INTEGER, allocatable :: npxl_blk(:,:)
       LOGICAL, allocatable :: msk2(:,:), msk(:)
@@ -801,7 +799,7 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local variables
-      INTEGER :: iblk, jblk, nave, nres, iproc, ndsp, nsend, idest, isrc, ie
+      INTEGER :: iblk, jblk, nave, nres, iproc, ndsp, nsend, idest, ie
       INTEGER :: smesg(4), rmesg(4)
       INTEGER, allocatable :: nelm_worker(:)
       INTEGER :: iblkme

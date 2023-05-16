@@ -29,7 +29,7 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_data_type.o \
 					../share/ncio_block.o \
 					../share/mod_catchment_data.o \
-					../share/mod_modis_data.o \
+					../share/mod_5x5_data.o \
 					../share/mod_mesh.o \
 					../share/mod_pixelset.o \
 					../share/ncio_vector.o \
@@ -37,19 +37,18 @@ OBJS_SHARED =  ../share/precision.o \
 					../share/mod_mapping_pset2grid.o
 
 OBJS = \
-		 mod_aggregation_generic.o \
+		 mod_aggregation.o \
 		 mod_single_srfdata.o \
 		 mod_srfdata_restart.o \
 		 mod_pixelsetshadow.o \
 		 mod_landelm.o \
 		 mod_landhru.o \
 		 mod_landpatch.o \
-		 mod_aggregation_LC.o \
-		 mod_aggregation_PFT.o \
+		 mod_landurban.o \
 		 mod_landpft.o \
 		 mod_landpc.o \
-		 par_fitting.o \
 		 mod_mesh_filter.o \
+		 mod_srfdata_diag.o \
 		 aggregation_percentages.o \
 		 aggregation_LAI.o \
 		 aggregation_NDEP.o \
@@ -62,6 +61,7 @@ OBJS = \
 		 aggregation_soil_parameters.o \
 		 aggregation_dbedrock.o \
 		 aggregation_topography.o \
+		 mod_region_clip.o \
 		 mksrfdata.o
 
 ####################################################################

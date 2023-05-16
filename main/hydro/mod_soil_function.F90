@@ -103,7 +103,7 @@ contains
       if (vliq >= porsl) then
          soil_psi_from_vliq = psi_s
          return
-      ELSEIF (vliq <= vl_r) THEN
+      ELSEIF (vliq <= max(vl_r,1.0e-8)) THEN
          soil_psi_from_vliq = minsmp
          RETURN
       end if

@@ -1,19 +1,21 @@
-! 1. Spatial structure: 
+! 1. Spatial structure:
 !    Select one of the following options.
 #define GRIDBASED
-#undef CATCHMENT 
+#undef CATCHMENT
 #undef UNSTRUCTURED
 #undef SinglePoint
 
-! 2. Land TYPE classification : 
+! 2. Land TYPE classification :
 !    Select one of the following options.
-#undef USGS_CLASSIFICATION       
-#undef IGBP_CLASSIFICATION       
-#define PFT_CLASSIFICATION       
-#undef PC_CLASSIFICATION       
+#undef USGS_CLASSIFICATION
+#undef IGBP_CLASSIFICATION
+#define PFT_CLASSIFICATION
+#undef PC_CLASSIFICATION
 
 ! 3. If defined, debug information is output.
-#define CLMDEBUG                  
+#define CLMDEBUG
+! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
+#define SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
 #define  USEMPI
@@ -26,17 +28,23 @@
 #undef USE_DEPTH_TO_BEDROCK
 
 ! 6. Hydrological process options.
-! 6.1 Two soil hydraulic models can be used.   
+! 6.1 Two soil hydraulic models can be used.
 #define  Campbell_SOIL_MODEL
 #undef   vanGenuchten_Mualem_SOIL_MODEL
+! 6.2 If defined, lateral flow is modeled.
+#define  LATERAL_FLOW
+!    Conflicts :
+#ifndef CATCHMENT
+#undef LATERAL_FLOW
+#endif
 
 ! 7. If defined, soil temperature, wetness and snow depth
 !     are initialized by input data.
-#undef SOILINI                   
+#undef SOILINI
 
 ! 8. Soil reflectance can be predefined values or load from files.
-#undef SOIL_REFL_GUESSED         
-#define SOIL_REFL_READ            
+#undef SOIL_REFL_GUESSED
+#define SOIL_REFL_READ
 
 ! 9. Soil parameter options:
 ! 9.1 If defined, soil parameters are upscaled from rawdata (1 km grids) to model pixels through
@@ -50,6 +58,7 @@
 !      THERMAL_CONDUCTIVITY_SCHEME_5: Lu et al. (2007)
 !      THERMAL_CONDUCTIVITY_SCHEME_6: Tarnawski and Leong (2012)
 !      THERMAL_CONDUCTIVITY_SCHEME_7: De Vries (1963)
+!      THERMAL_CONDUCTIVITY_SCHEME_8: Yan Hengnian, He Hailong et al. (2019)
 #define THERMAL_CONDUCTIVITY_SCHEME_4
 
 ! 10. If defined, plant hydraulic scheme is used

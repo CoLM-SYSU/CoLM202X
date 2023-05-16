@@ -13,20 +13,22 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
+   USE mod_5x5_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
+#endif
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
 #endif
 
    IMPLICIT NONE
@@ -42,7 +44,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CHARACTER(len=256) :: landdir, lndname
 
    ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
+   CHARACTER(len=256) :: dir_5x5, suffix
    ! for PFT
    TYPE (block_data_real8_3d) :: pftPCT
    REAL(r8), allocatable :: pct_one(:), area_one(:)
@@ -56,6 +58,14 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
    INTEGER  :: ipatch, ipc, ipft, p
    REAL(r8) :: sumarea
+#ifdef SrfdataDiag
+#ifdef CROP
+   INTEGER :: typcrop(N_CFT), ityp
+   INTEGER :: typpft(0:N_PFT+N_CFT-1)   
+#else
+   INTEGER :: typpft(0:N_PFT-1)   
+#endif
+#endif
       
    landdir = trim(dir_model_landdata) // '/pctpft/'
 
@@ -79,13 +89,14 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   suffix  = 'MOD2005'
       
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+      CALL read_5x5_data_pft   (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
 #ifdef USEMPI
-      CALL aggregation_pft_data_daemon (gland, pftPCT)
+      CALL aggregation_data_daemon (gland, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = N_PFT_modis)
 #endif
    ENDIF
 
@@ -95,8 +106,8 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       
       DO ipatch = 1, numpatch
          IF (landpatch%settyp(ipatch) == 1) THEN
-            CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
-               area = area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
@@ -118,7 +129,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_pft_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 
@@ -136,6 +147,16 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpft, 'pft')
    CALL ncio_write_vector (lndname, 'pct_pfts', 'pft', landpft, pct_pfts, 1)
+#ifdef SrfdataDiag
+#ifdef CROP
+   typpft = (/(ipft, ipft = 0, N_PFT+N_CFT-1)/)
+#else
+   typpft = (/(ipft, ipft = 0, N_PFT-1)/)
+#endif
+   lndname = trim(dir_model_landdata)//'/diag/pct_pfts.nc'
+   CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
+      -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
+#endif
 #else
    allocate (SITE_pctpfts(numpft))
    SITE_pctpfts = pct_pfts
@@ -154,6 +175,13 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'pct_crops', 'patch', landpatch, pctcrop, 1)
+
+#ifdef SrfdataDiag
+   typcrop = (/(ityp, ityp = 1, N_CFT)/)
+   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch.nc'
+   CALL srfdata_map_and_write (pctcrop, cropclass, typcrop, m_patch2diag, &
+      -1.0e36_r8, lndname, 'pctcrop', compress = 1, write_mode = 'one')
+#endif
 #else
    allocate (SITE_croptyp(numpatch))
    allocate (SITE_pctcrop(numpatch))
@@ -172,13 +200,14 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_modis = trim(DEF_dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   suffix  = 'MOD2005'
       
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
-      CALL modis_read_data_pft (dir_modis, 'PCT_PFT', gland, pftPCT)
+      CALL read_5x5_data_pft   (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
 #ifdef USEMPI
-      CALL aggregation_pft_data_daemon (gland, pftPCT)
+      CALL aggregation_data_daemon (gland, data_r8_3d_in1 = pftPCT, n1_r8_3d_in1 = N_PFT_modis)
 #endif
    ENDIF
 
@@ -188,8 +217,8 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       DO ipatch = 1, numpatch
 
          IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
-            CALL aggregation_pft_request_data (ipatch, gland, pftPCT, pct_pft_one, &
-               area = area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_pft_one = max(pct_pft_one, 0.)
             
@@ -205,7 +234,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       ENDDO
 
 #ifdef USEMPI
-      CALL aggregation_pft_worker_done ()
+      CALL aggregation_worker_done ()
 #endif
    ENDIF
 

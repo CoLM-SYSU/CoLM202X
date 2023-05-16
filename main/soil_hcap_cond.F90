@@ -1,5 +1,5 @@
 #include <define.h>
-!====================================================================
+
 SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
                                     wf_gravels_s,wf_sand_s,k_solids,&
                                             csol,kdry,ksat_u,ksat_f,&
@@ -7,12 +7,22 @@ SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
                                                    BA_alpha,BA_beta,&
 #endif
                                temperature,vf_water,vf_ice,hcap,thk)
-!====================================================================
-! Reference: Dai et al.,2019:
-! Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling
+
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+! Calculate bulk soil heat capacity and soil thermal conductivity with 8 optional schemes
+! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
 !
-! Yongjiu Dai, 02/2018, 06/2018
-! -------------------------------------------------------------------
+! Reference:
+! Dai et al.,2019: Evaluation of Soil Thermal Conductivity Schemes for Use in Land Surface Modeling
+! J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001723
+!
+! Original author: Yongjiu Dai, 02/2018/
+!
+! Revisions:
+! Nan Wei, 06/2018: add to CoLM/main
+! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
+! -----------------------------------------------------------------------------------------
 use precision
 USE PhysicalConstants,only:tfrz
 
@@ -60,7 +70,7 @@ IMPLICIT NONE
       c_ice = 1.94153e6   ! J/(m3 K) = 2117.27[J/(kg K)]*917(kg/m3)
 
 
-      hcap = csol + vf_water*c_water + vf_ice*c_ice 
+      hcap = csol + vf_water*c_water + vf_ice*c_ice
 
 ! -----------------------------------------------------------------------------------------
 ! Setting
@@ -229,7 +239,7 @@ endif
 
 #if(defined THERMAL_CONDUCTIVITY_SCHEME_7)
 ! -----------------------------------------------------------------------------------------
-! [7] Thermal properties of soils, in Physics of Plant Environment, 
+! [7] Thermal properties of soils, in Physics of Plant Environment,
 !     ed. by W.R. van Wijk (North-Holland, Amsterdam, 1963), pp. 210-235
 ! -----------------------------------------------------------------------------------------
       if(sr*vf_pores_s <= 0.09)then
@@ -256,6 +266,30 @@ endif
          thk = (sr*vf_pores_s*k_ice + (1.-sr)*vf_pores_s*aa*k_air + (1.-vf_pores_s)*aaa*k_solids) &
                 / (sr*vf_pores_s + (1.-sr)*vf_pores_s*aa + (1.-vf_pores_s)*aaa)
       endif
+#endif
+
+#if(defined THERMAL_CONDUCTIVITY_SCHEME_8)
+! -----------------------------------------------------------------------------------------
+! [8] Yan & He et al., 2019: A generalized model for estimating effective soil thermal conductivity
+!     based on the Kasubuchi algorithm, Geoderma, Vol 353, 227-242
+! -----------------------------------------------------------------------------------------
+      beta = -0.303*ksat_u - 0.201*wf_sand_s + 1.532
+      IF(vf_water > 0.01)then
+         ke = (1+(vf_pores_s/beta)**(-1.0*beta))/(1+(vf_water/beta)**(-1.0*beta))
+      ELSE
+         ke = 0.0
+      ENDIF
+
+      ke = max(ke, 0.0)
+      ke = min(ke, 1.0)
+
+      ake = ke
+
+      if(temperature > tfrz)then ! Unfrozen soil
+         thk = (ksat_u-kdry)*ake + kdry
+      else                         ! Frozen or partially frozen soils
+         thk = (ksat_f-kdry)*ake + kdry
+      ENDIF
 #endif
 
 END SUBROUTINE soil_hcap_cond

@@ -43,8 +43,8 @@ CONTAINS
       iyear = idate(1)
       if(idate(1) .lt. 2013)iyear = 2013
       if(idate(1) .gt. 2021)iyear = 2021
-      write(syear,"(I4.4)"),iyear
-      write(smonth,"(I2.2)"),month
+      write(syear,"(I4.4)")  iyear
+      write(smonth,"(I2.2)") month
       file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
 
       CALL ncio_read_bcast_serial (file_ozone, 'latitude', lat)
@@ -102,8 +102,8 @@ CONTAINS
       if(time_next%year .lt. 2013)iyear=2013
       if(time_next%year .gt. 2021)iyear=2021
       if(imonth_next /= imonth)then
-         write(syear,"(I4.4)"),iyear
-         write(smonth,"(I2.2)"),month
+         write(syear,"(I4.4)")  iyear
+         write(smonth,"(I2.2)") month
          file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
       end if
 

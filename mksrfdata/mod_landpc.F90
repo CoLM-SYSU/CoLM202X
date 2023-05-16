@@ -15,7 +15,7 @@ MODULE mod_landpc
    INTEGER, allocatable :: pc2patch(:)    !projection from PC to patch
 
 CONTAINS
-   
+
    ! -------------------------------
    SUBROUTINE landpc_build ()
 
@@ -27,7 +27,7 @@ CONTAINS
 
       ! Local Variables
       INTEGER  :: ipatch, ipc, npc, m, npc_glb
-      
+
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant community tiles :'
       ENDIF
@@ -39,13 +39,13 @@ CONTAINS
          allocate (pc2patch (1))
          patch2pc(1) = 1
          pc2patch(1) = 1
-            
+
          allocate (landpc%eindex (numpc))
          allocate (landpc%settyp (numpc))
          allocate (landpc%ipxstt (numpc))
          allocate (landpc%ipxend (numpc))
          allocate (landpc%ielm   (numpc))
-                  
+
          landpc%eindex(1) = 1
          landpc%ipxstt(1) = 1
          landpc%ipxend(1) = 1
@@ -91,7 +91,7 @@ CONTAINS
                IF (patchtypes(m) == 0) THEN
 
                   npc = npc + 1
-                        
+
                   landpc%ielm  (npc) = landpatch%ielm  (ipatch)
                   landpc%eindex(npc) = landpatch%eindex(ipatch)
                   landpc%ipxstt(npc) = landpatch%ipxstt(ipatch)
@@ -116,7 +116,7 @@ CONTAINS
             write(*,'(A,I12,A)') 'Total: ', npc_glb, ' plant community tiles.'
          ENDIF
       ENDIF
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numpc, ' plant community tiles.'
@@ -137,10 +137,10 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF ((numpatch <= 0) .or. (numpc <= 0)) return
-         
+
          allocate (pc2patch (numpc   ))
          allocate (patch2pc (numpatch))
-      
+
          ipc = 0
          DO ipatch = 1, numpatch
             IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
@@ -151,7 +151,7 @@ CONTAINS
                patch2pc(ipatch) = -1
             ENDIF
          ENDDO
-         
+
       ENDIF
 
    END SUBROUTINE map_patch_to_pc

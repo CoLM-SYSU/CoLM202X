@@ -117,7 +117,6 @@ CONTAINS
       ! Local variables
       INTEGER  :: nlat, nlon, ilat, ilon
       REAL(r8) :: del_lat, del_lon
-      REAL(r8), allocatable :: lon(:), lat(:)
 
       IF (trim(gridname) == 'merit_90m') THEN 
 
@@ -394,7 +393,6 @@ CONTAINS
       
       ! Local variables
       INTEGER  :: ilat, ilon, iblk, jblk, ilon_e
-      INTEGER  :: ilat_north, ilat_south, ilon_east, ilon_west
       REAL(r8) :: edges, edgen, edgew, edgee 
    
       allocate (this%xcnt (gblock%nxblk))

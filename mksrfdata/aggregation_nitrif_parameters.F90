@@ -20,17 +20,19 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
 #ifdef CLMDEBUG 
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE mod_aggregation_pft
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE mod_aggregation_pft
+#endif
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
 #endif
 
    IMPLICIT NONE
@@ -53,6 +55,10 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
    CHARACTER(LEN=4) ::cx, c2, c3, cyear,c
    integer :: start_year, end_year, YY,nsl
 
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+   CHARACTER(len=256) :: varname
+#endif
 
    landdir = trim(dir_model_landdata) // '/nitrif/'
 
@@ -111,7 +117,7 @@ DO nsl = 1, 20
                CALL ncio_read_block_time (lndname, 'CONC_O2_UNSAT', gridnitrif, itime, CONC_O2_UNSAT)
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridnitrif, CONC_O2_UNSAT)
+            CALL aggregation_data_daemon (gridnitrif, data_r8_2d_in1 = CONC_O2_UNSAT)
 #endif
          ENDIF
 
@@ -122,12 +128,13 @@ DO nsl = 1, 20
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_lc_request_data (ipatch, gridnitrif, CONC_O2_UNSAT, CONC_O2_UNSAT_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridnitrIF, area = area_one, &
+                  data_r8_2d_in1 = CONC_O2_UNSAT, data_r8_2d_out1 = CONC_O2_UNSAT_one)
                CONC_O2_UNSAT_patches(ipatch) = sum(CONC_O2_UNSAT_one * area_one) / sum(area_one)
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 
@@ -148,6 +155,14 @@ DO nsl = 1, 20
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'CONC_O2_UNSAT_patches', 'patch', landpatch, CONC_O2_UNSAT_patches, 1)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/CONC_O2_UNSAT_patch.nc'
+         varname = 'CONC_O2_UNSAT_l' // trim(cx) // '_' // trim(c3)
+         CALL srfdata_map_and_write (CONC_O2_UNSAT_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
       ENDDO
    ENDDO
    
@@ -211,7 +226,7 @@ DO nsl = 1, 25
                CALL ncio_read_block_time (lndname, 'O2_DECOMP_DEPTH_UNSAT', gridnitrif, itime, O2_DECOMP_DEPTH_UNSAT)
 
 #ifdef USEMPI
-            CALL aggregation_lc_data_daemon (gridnitrif, O2_DECOMP_DEPTH_UNSAT)
+            CALL aggregation_data_daemon (gridnitrif, data_r8_2d_in1 = O2_DECOMP_DEPTH_UNSAT)
 #endif
          ENDIF
 
@@ -222,12 +237,13 @@ DO nsl = 1, 25
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_lc_request_data (ipatch, gridnitrif, O2_DECOMP_DEPTH_UNSAT, O2_DECOMP_DEPTH_UNSAT_one, area_one)
+               CALL aggregation_request_data (landpatch, ipatch, gridnitrIF, area = area_one, &
+                  data_r8_2d_in1 = O2_DECOMP_DEPTH_UNSAT, data_r8_2d_out1 = O2_DECOMP_DEPTH_UNSAT_one)
                O2_DECOMP_DEPTH_UNSAT_patches(ipatch) = sum(O2_DECOMP_DEPTH_UNSAT_one * area_one) / sum(area_one)
             ENDDO
 
 #ifdef USEMPI
-            CALL aggregation_lc_worker_done ()
+            CALL aggregation_worker_done ()
 #endif
          ENDIF
 
@@ -248,6 +264,14 @@ DO nsl = 1, 25
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
          CALL ncio_write_vector (lndname, 'O2_DECOMP_DEPTH_UNSAT_patches', 'patch', landpatch, O2_DECOMP_DEPTH_UNSAT_patches, 1)
+
+#ifdef SrfdataDiag
+         typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+         lndname  = trim(dir_model_landdata) // '/diag/O2_DECOMP_DEPTH_UNSAT_patch.nc'
+         varname = 'O2_DECOMP_DEPTH_UNSAT_l' // trim(cx) // '_' // trim(c3)
+         CALL srfdata_map_and_write (O2_DECOMP_DEPTH_UNSAT_patches, landpatch%settyp, typpatch, m_patch2diag, &
+            -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
       ENDDO
    ENDDO
    

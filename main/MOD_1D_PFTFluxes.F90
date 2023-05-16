@@ -3,9 +3,12 @@
 #ifdef PFT_CLASSIFICATION
 
 MODULE MOD_1D_PFTFluxes
-! -------------------------------
+! -----------------------------------------------------------------
+! !DESCRIPTION:
+! Define PFT flux variables
+!
 ! Created by Hua Yuan, 08/2019
-! -------------------------------
+! -----------------------------------------------------------------
 
   USE precision
 #ifdef BGC
@@ -59,22 +62,22 @@ MODULE MOD_1D_PFTFluxes
      IF (p_is_worker) THEN
         IF (numpft > 0) THEN
 
-           allocate (taux_p    (numpft))   !wind stress: E-W [kg/m/s2]
-           allocate (tauy_p    (numpft))   !wind stress: N-S [kg/m/s2]
-           allocate (fsenl_p   (numpft))   !sensible heat from leaves [W/m2]
-           allocate (fevpl_p   (numpft))   !evaporation+transpiration from leaves [mm/s]
-           allocate (etr_p     (numpft))   !transpiration rate [mm/s]
-           allocate (fseng_p   (numpft))   !sensible heat flux from ground [W/m2]
-           allocate (fevpg_p   (numpft))   !evaporation heat flux from ground [mm/s]
-           allocate (parsun_p  (numpft))   !solar absorbed by sunlit vegetation [W/m2]
-           allocate (parsha_p  (numpft))   !solar absorbed by shaded vegetation [W/m2]
-           allocate (sabvsun_p (numpft))   !solar absorbed by sunlit vegetation [W/m2]
-           allocate (sabvsha_p (numpft))   !solar absorbed by shaded vegetation [W/m2]
-           allocate (qintr_p   (numpft))   !interception (mm h2o/s)
-           allocate (qintr_rain_p (numpft))
-           allocate (qintr_snow_p (numpft))
-           allocate (assim_p   (numpft))   !canopy assimilation rate (mol m-2 s-1)
-           allocate (respc_p   (numpft))   !canopy respiration (mol m-2 s-1)
+           allocate (taux_p    (numpft))    !wind stress: E-W [kg/m/s2]
+           allocate (tauy_p    (numpft))    !wind stress: N-S [kg/m/s2]
+           allocate (fsenl_p   (numpft))    !sensible heat from leaves [W/m2]
+           allocate (fevpl_p   (numpft))    !evaporation+transpiration from leaves [mm/s]
+           allocate (etr_p     (numpft))    !transpiration rate [mm/s]
+           allocate (fseng_p   (numpft))    !sensible heat flux from ground [W/m2]
+           allocate (fevpg_p   (numpft))    !evaporation heat flux from ground [mm/s]
+           allocate (parsun_p  (numpft))    !solar absorbed by sunlit vegetation [W/m2]
+           allocate (parsha_p  (numpft))    !solar absorbed by shaded vegetation [W/m2]
+           allocate (sabvsun_p (numpft))    !solar absorbed by sunlit vegetation [W/m2]
+           allocate (sabvsha_p (numpft))    !solar absorbed by shaded vegetation [W/m2]
+           allocate (qintr_p   (numpft))    !interception (mm h2o/s)
+           allocate (qintr_rain_p (numpft)) !rainfall interception (mm h2o/s)
+           allocate (qintr_snow_p (numpft)) !snowfall interception (mm h2o/s)
+           allocate (assim_p   (numpft))    !canopy assimilation rate (mol m-2 s-1)
+           allocate (respc_p   (numpft))    !canopy respiration (mol m-2 s-1)
 
         ENDIF
      ENDIF

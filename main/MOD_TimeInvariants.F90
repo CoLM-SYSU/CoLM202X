@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_TimeInvariants 
+MODULE MOD_TimeInvariants
 ! -------------------------------
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
@@ -119,7 +119,7 @@ SAVE
 
         allocate (patchclass           (numpatch))
         allocate (patchtype            (numpatch))
-        
+
         allocate (patchlonr            (numpatch))
         allocate (patchlatr            (numpatch))
 
@@ -157,7 +157,7 @@ SAVE
         allocate (dksatu       (nl_soil,numpatch))
         allocate (dksatf       (nl_soil,numpatch))
         allocate (dkdry        (nl_soil,numpatch))
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         allocate (BA_alpha     (nl_soil,numpatch))
         allocate (BA_beta      (nl_soil,numpatch))
 #endif
@@ -197,7 +197,7 @@ SAVE
      use spmd_task
      use ncio_vector
      use ncio_serial
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
      USE mod_colm_debug
 #endif
      USE mod_landpatch
@@ -207,7 +207,7 @@ SAVE
 
      character(LEN=*), intent(in) :: casename
      character(LEN=*), intent(in) :: dir_restart
-  
+
      ! Local variables
      character(LEN=256) :: file_restart
 
@@ -215,13 +215,13 @@ SAVE
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass) !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype ) !
-     
+
      call ncio_read_vector (file_restart, 'patchlonr' ,   landpatch, patchlonr ) !
      call ncio_read_vector (file_restart, 'patchlatr' ,   landpatch, patchlatr ) !
-     
+
      call ncio_read_vector (file_restart, 'lakedepth',    landpatch, lakedepth) !
      call ncio_read_vector (file_restart, 'dz_lake' ,     nl_lake, landpatch, dz_lake) !
-     
+
      call ncio_read_vector (file_restart, 'soil_s_v_alb', landpatch, soil_s_v_alb) ! albedo of visible of the saturated soil
      call ncio_read_vector (file_restart, 'soil_d_v_alb', landpatch, soil_d_v_alb) ! albedo of visible of the dry soil
      call ncio_read_vector (file_restart, 'soil_s_n_alb', landpatch, soil_s_n_alb) ! albedo of near infrared of the saturated soil
@@ -240,20 +240,20 @@ SAVE
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
      call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) 
-     call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) 
-     call ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) 
-     call ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     ) 
-     call ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) 
-     call ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) 
-#endif                                                             
+     call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   )
+     call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm )
+     call ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     )
+     call ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     )
+     call ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    )
+     call ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    )
+#endif
      call ncio_read_vector (file_restart, 'hksati ' ,     nl_soil, landpatch, hksati ) ! hydraulic conductivity at saturation [mm h2o/s]
      call ncio_read_vector (file_restart, 'csol   ' ,     nl_soil, landpatch, csol   ) ! heat capacity of soil solids [J/(m3 K)]
-     call ncio_read_vector (file_restart, 'k_solids',     nl_soil, landpatch, k_solids)! thermal conductivity of soil solids [W/m-K] 
+     call ncio_read_vector (file_restart, 'k_solids',     nl_soil, landpatch, k_solids)! thermal conductivity of soil solids [W/m-K]
      call ncio_read_vector (file_restart, 'dksatu ' ,     nl_soil, landpatch, dksatu ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
      call ncio_read_vector (file_restart, 'dksatf ' ,     nl_soil, landpatch, dksatf ) ! thermal conductivity of frozen saturated soil [W/m-K]
      call ncio_read_vector (file_restart, 'dkdry  ' ,     nl_soil, landpatch, dkdry  ) ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
      call ncio_read_vector (file_restart, 'BA_alpha',     nl_soil, landpatch, BA_alpha)! alpha in Balland and Arp(2005) thermal conductivity scheme
      call ncio_read_vector (file_restart, 'BA_beta' ,     nl_soil, landpatch, BA_beta )! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
@@ -283,19 +283,19 @@ SAVE
 #if (defined PFT_CLASSIFICATION)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
      CALL READ_PFTimeInvars (file_restart)
-#endif 
+#endif
 
 #if (defined PC_CLASSIFICATION)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
      CALL READ_PCTimeInvars (file_restart)
-#endif 
+#endif
 
 #if (defined BGC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
      CALL READ_BGCTimeInvars (file_restart)
-#endif 
+#endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
      call check_TimeInvariants ()
 #endif
 
@@ -316,7 +316,7 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      use spmd_task
      use ncio_serial
      use ncio_vector
@@ -327,12 +327,12 @@ SAVE
 
      character(len=*), intent(in) :: casename
      character(len=*), intent(in) :: dir_restart
-     
+
      ! Local Variables
      character(len=256) :: file_restart
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const.nc'
 
@@ -343,16 +343,16 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake', nl_lake)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
-     
+
      call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass) !
      call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype ) !
-     
+
      call ncio_write_vector (file_restart, 'patchlonr' , 'patch', landpatch, patchlonr ) !
      call ncio_write_vector (file_restart, 'patchlatr' , 'patch', landpatch, patchlatr ) !
-     
+
      call ncio_write_vector (file_restart, 'lakedepth', 'patch', landpatch, lakedepth ,      compress) !
      call ncio_write_vector (file_restart, 'dz_lake' ,  'lake', nl_lake, 'patch', landpatch, dz_lake, compress) !
-     
+
      call ncio_write_vector (file_restart, 'soil_s_v_alb', 'patch', landpatch, soil_s_v_alb, compress) ! albedo of visible of the saturated soil
      call ncio_write_vector (file_restart, 'soil_d_v_alb', 'patch', landpatch, soil_d_v_alb, compress) ! albedo of visible of the dry soil
      call ncio_write_vector (file_restart, 'soil_s_n_alb', 'patch', landpatch, soil_s_n_alb, compress) ! albedo of near infrared of the saturated soil
@@ -372,12 +372,12 @@ SAVE
      call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) 
-     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) 
-     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress) 
-     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress) 
-     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress) 
-     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) 
+     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress)
+     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress)
+     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress)
+     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress)
+     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress)
+     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress)
 #endif
      call ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'patch', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
      call ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'patch', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
@@ -385,7 +385,7 @@ SAVE
      call ncio_write_vector (file_restart, 'dksatu   ' , 'soil', nl_soil, 'patch', landpatch, dksatu    , compress) ! thermal conductivity of saturated soil [W/m-K]
      call ncio_write_vector (file_restart, 'dksatf   ' , 'soil', nl_soil, 'patch', landpatch, dksatf    , compress) ! thermal conductivity of saturated soil [W/m-K]
      call ncio_write_vector (file_restart, 'dkdry    ' , 'soil', nl_soil, 'patch', landpatch, dkdry     , compress) ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4     
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
      call ncio_write_vector (file_restart, 'BA_alpha ' , 'soil', nl_soil, 'patch', landpatch, BA_alpha  , compress) ! alpha in Balland and Arp(2005) thermal conductivity scheme
      call ncio_write_vector (file_restart, 'BA_beta  ' , 'soil', nl_soil, 'patch', landpatch, BA_beta   , compress) ! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
@@ -422,19 +422,19 @@ SAVE
 #if (defined PFT_CLASSIFICATION)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
      CALL WRITE_PFTimeInvars (file_restart)
-#endif 
+#endif
 
 #if (defined PC_CLASSIFICATION)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
      CALL WRITE_PCTimeInvars (file_restart)
-#endif 
+#endif
 
 #if (defined BGC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
      CALL WRITE_BGCTimeInvars (file_restart)
-#endif 
+#endif
 
-   end subroutine WRITE_TimeInvariants 
+   end subroutine WRITE_TimeInvariants
 
   SUBROUTINE deallocate_TimeInvariants ()
 
@@ -452,7 +452,7 @@ SAVE
 
            deallocate (patchclass)
            deallocate (patchtype )
-           
+
            deallocate (patchlonr )
            deallocate (patchlatr )
 
@@ -497,7 +497,7 @@ SAVE
 
            deallocate (htop)
            deallocate (hbot)
-          
+
 #ifdef USE_DEPTH_TO_BEDROCK
            deallocate (dbedrock)
            deallocate (ibedrock)
@@ -514,7 +514,7 @@ SAVE
      CALL deallocate_PCTimeInvars
 #endif
 
-#ifdef BGC 
+#ifdef BGC
      CALL deallocate_BGCTimeInvars
 #endif
 
@@ -528,7 +528,7 @@ SAVE
       use mod_colm_debug
 
       IMPLICIT NONE
-      
+
       if (p_is_master) then
          write(*,'(/,A29)') 'Checking Time Invariants ...'
       end if
@@ -539,7 +539,7 @@ SAVE
 
       call check_vector_data ('lakedepth   ', lakedepth   ) !
       call check_vector_data ('dz_lake     ', dz_lake     ) ! new lake scheme
-      
+
       call check_vector_data ('soil_s_v_alb', soil_s_v_alb) ! albedo of visible of the saturated soil
       call check_vector_data ('soil_d_v_alb', soil_d_v_alb) ! albedo of visible of the dry soil
       call check_vector_data ('soil_s_n_alb', soil_s_n_alb) ! albedo of near infrared of the saturated soil
@@ -557,12 +557,12 @@ SAVE
       call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
       call check_vector_data ('bsw         ', bsw         ) ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      call check_vector_data ('theta_r     ', theta_r     ) 
-      call check_vector_data ('alpha_vgm   ', alpha_vgm   ) 
-      call check_vector_data ('L_vgm       ', L_vgm       ) 
-      call check_vector_data ('n_vgm       ', n_vgm       ) 
-      call check_vector_data ('sc_vgm      ', sc_vgm      ) 
-      call check_vector_data ('fc_vgm      ', fc_vgm      ) 
+      call check_vector_data ('theta_r     ', theta_r     )
+      call check_vector_data ('alpha_vgm   ', alpha_vgm   )
+      call check_vector_data ('L_vgm       ', L_vgm       )
+      call check_vector_data ('n_vgm       ', n_vgm       )
+      call check_vector_data ('sc_vgm      ', sc_vgm      )
+      call check_vector_data ('fc_vgm      ', fc_vgm      )
 #endif
       call check_vector_data ('hksati      ', hksati      ) ! hydraulic conductivity at saturation [mm h2o/s]
       call check_vector_data ('csol        ', csol        ) ! heat capacity of soil solids [J/(m3 K)]
@@ -575,8 +575,8 @@ SAVE
       call check_vector_data ('BA_beta     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
 
-      call check_vector_data ('htop        ', htop        ) 
-      call check_vector_data ('hbot        ', hbot        ) 
+      call check_vector_data ('htop        ', htop        )
+      call check_vector_data ('hbot        ', hbot        )
 
 #ifdef USE_DEPTH_TO_BEDROCK
       call check_vector_data ('dbedrock    ', dbedrock    ) !
@@ -585,7 +585,7 @@ SAVE
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)
 #endif
-     
+
       if (p_is_master) then
          write(*,'(A7,E20.10)') 'zlnd  ', zlnd   ! roughness length for soil [m]
          write(*,'(A7,E20.10)') 'zsno  ', zsno   ! roughness length for snow [m]
@@ -615,7 +615,7 @@ SAVE
      CALL check_BGCTimeInvars
 #endif
 
-   end subroutine check_TimeInvariants 
+   end subroutine check_TimeInvariants
 #endif
 
 END MODULE MOD_TimeInvariants

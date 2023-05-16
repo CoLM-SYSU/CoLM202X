@@ -4,8 +4,16 @@
 
 !-----------------------------------------------------------------------
 ! Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
-! 
+!
 ! Original author: Yongjiu Dai, /05/2014/
+!
+! REVISIONS:
+! Hua Yuan, 01/2023: added GLACIER_WATER_snicar() to account for SNICAR
+!                    model effects on snow water [see snowwater_snicar()],
+!                    snow layers combine [see snowlayerscombine_snicar()],
+!                    snow layers divide  [see snowlayersdivide_snicar()]
+!
+! Hua Yuan, 01/2023: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
  use precision
  IMPLICIT NONE
@@ -47,19 +55,19 @@
                     pg_snow     ,t_precip   ,snofrz      ,sabg_lyr     )
 
 !=======================================================================
-! this is the main subroutine to execute the calculation 
+! this is the main subroutine to execute the calculation
 ! of thermal processes and surface fluxes of the land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
 ! Modified by Nan Wei, 07/2017/  interaction btw prec and land ice
 ! FLOW DIAGRAM FOR GLACIER_TEMP.F90
-! 
+!
 ! GLACIER_TEMP ===> qsadv
 !                   groundfluxes | --------->  |moninobukini
 !                                |             |moninobuk
 !
 !                   groundTem    | --------->  |meltf
-!                               
+!
 !=======================================================================
 
   use precision
@@ -67,12 +75,12 @@
   use FRICTION_VELOCITY
 
   IMPLICIT NONE
- 
+
 !---------------------Argument------------------------------------------
 
   integer, INTENT(in) :: &
         patchtype,&   ! land water type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
-        lb,          &! lower bound of array 
+        lb,          &! lower bound of array
         nl_ice        ! upper bound of array
 
   real(r8), INTENT(in) :: &
@@ -121,9 +129,9 @@
   REAL(r8), intent(inout) :: &
         snofrz (lb:0)    ! snow freezing rate (lyr) [kg m-2 s-1]
 
-  integer, INTENT(out) :: & 
+  integer, INTENT(out) :: &
        imelt(lb:nl_ice)  ! flag for melting or freezing [-]
- 
+
         ! Output fluxes
   real(r8), INTENT(out) :: &
         taux,        &! wind stress: E-W [kg/m/s**2]
@@ -169,7 +177,7 @@
        eg,           &! water vapor pressure at temperature T [pa]
        egsmax,       &! max. evaporation which ice can provide at one time step
        egidif,       &! the excess of evaporation over "egsmax"
-       emg,          &! ground emissivity (0.96) 
+       emg,          &! ground emissivity (0.96)
        errore,       &! energy balnce error [w/m2]
        fact(lb:nl_ice), &! used in computing tridiagonal matrix
        htvp,         &! latent heat of vapor of water (or sublimation) [j/kg]
@@ -215,11 +223,11 @@
       qred = 1.
       call qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
-      qg = qred*qsatg  
+      qg = qred*qsatg
       dqgdT = qred*qsatgdT
 
 !=======================================================================
-! [3] Compute sensible and latent fluxes and their derivatives with respect 
+! [3] Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
 !=======================================================================
 
@@ -246,10 +254,10 @@
 
       t_grnd = t_icesno(lb)
       tinc = t_icesno(lb) - t_icesno_bef(lb)
-      fseng = fseng + tinc*cgrnds 
+      fseng = fseng + tinc*cgrnds
       fevpg = fevpg + tinc*cgrndl
 
-! calculation of evaporative potential; flux in kg m-2 s-1.  
+! calculation of evaporative potential; flux in kg m-2 s-1.
 ! egidif holds the excess energy if all water is evaporated
 ! during the timestep. this energy is later added to the sensible heat flux.
 
@@ -263,16 +271,16 @@
       fsena = fseng
       fevpa = fevpg
       lfevpa= htvp*fevpg   ! W/m^2 (accouting for sublimation)
-      
+
       qseva = 0.
       qsubl = 0.
       qfros = 0.
       qsdew = 0.
 
-      if(fevpg >= 0)then 
+      if(fevpg >= 0)then
          qseva = min(wliq_icesno(lb)/deltim, fevpg)
          qsubl = fevpg - qseva
-      else 
+      else
         if(t_grnd < tfrz)then
            qfros = abs(fevpg)
         else
@@ -291,7 +299,7 @@
 ! for conservation we put the increase of ground longwave to outgoing
            + 4.*emg*stefnc*t_icesno_bef(lb)**3*tinc
 
-! averaged bulk surface emissivity 
+! averaged bulk surface emissivity
       emis = emg
 
 ! radiative temperature
@@ -309,7 +317,7 @@
       enddo
 
 #if (defined CLMDEBUG)
-     if(abs(errore)>.2)then 
+     if(abs(errore)>.2)then
         write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
      endif
@@ -323,7 +331,7 @@
  subroutine groundfluxes_glacier (zlnd,zsno,hu,ht,hq,&
                                   us,vs,tm,qm,rhoair,psrf,&
                                   ur,thm,th,thv,t_grnd,qg,dqgdT,htvp,&
-                                  fsno,cgrnd,cgrndl,cgrnds,& 
+                                  fsno,cgrnd,cgrndl,cgrnds,&
                                   taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
                                   z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
 
@@ -338,7 +346,7 @@
   use PhysicalConstants, only : cpair,vonkar,grav
   use FRICTION_VELOCITY
   implicit none
- 
+
 !----------------------- Dummy argument --------------------------------
   real(r8), INTENT(in) :: &
         zlnd,     &! roughness length for ice [m]
@@ -442,7 +450,7 @@
       z0m = z0mg
 
 !-----------------------------------------------------------------------
-!     Compute sensible and latent fluxes and their derivatives with respect 
+!     Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
 !-----------------------------------------------------------------------
 ! Initialization variables
@@ -455,7 +463,7 @@
       zldis = hu-0.
 
       call moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0mg,um,obu)
- 
+
 ! Evaluated stability-dependent variables using moz from prior iteration
       niters=6
 
@@ -500,11 +508,11 @@
 
 ! Get derivative of fluxes with repect to ground temperature
       ram    = 1./(ustar*ustar/um)
-      rah    = 1./(vonkar/fh*ustar) 
-      raw    = 1./(vonkar/fq*ustar) 
+      rah    = 1./(vonkar/fh*ustar)
+      raw    = 1./(vonkar/fq*ustar)
 
       raih   = rhoair*cpair/rah
-      raiw   = rhoair/raw          
+      raiw   = rhoair/raw
       cgrnds = raih
       cgrndl = raiw*dqgdT
       cgrnd  = cgrnds + htvp*cgrndl
@@ -512,12 +520,12 @@
       zol = zeta
       rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
-! surface fluxes of momentum, sensible and latent 
+! surface fluxes of momentum, sensible and latent
 ! using ground temperatures from previous time step
-      taux   = -rhoair*us/ram        
+      taux   = -rhoair*us/ram
       tauy   = -rhoair*vs/ram
       fseng  = -raih*dth
-      fevpg  = -raiw*dqh 
+      fevpg  = -raiw*dqh
 
       fsena  = fseng
       fevpa  = fevpg
@@ -553,8 +561,12 @@
 !   method and resulted in a tridiagonal system equation.
 !
 ! Phase change (see meltf.F90)
-! 
+!
 ! Original author : Yongjiu Dai, /05/2014/
+!
+! REVISIONS:
+! Hua Yuan, 01/2023: account for snow layer absorptioin (SNICAR) in ground heat
+!                    flux, temperature and melt calculation.
 !=======================================================================
 
   use precision
@@ -639,7 +651,7 @@
 #endif
 
 !=======================================================================
-! SNOW and LAND ICE heat capacity 
+! SNOW and LAND ICE heat capacity
       cv(1:) = wice_icesno(1:)*cpice + wliq_icesno(1:)*cpliq
       if(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
 
@@ -682,7 +694,7 @@
 ! Because when the distance of bottom snow node to the interfacee
 ! is larger than that of interface to top ice node,
 ! the snow thermal conductivity will be dominant, and the result is that
-! lees heat tranfer between snow and ice 
+! lees heat tranfer between snow and ice
          if((j==0) .and. (z_icesno(j+1)-zi_icesno(j)<zi_icesno(j)-z_icesno(j)))then
             tk(j) = 2.*thk(j)*thk(j+1)/(thk(j)+thk(j+1))
             tk(j) = max(0.5*thk(j+1),tk(j))
@@ -692,7 +704,6 @@
          endif
       enddo
       tk(nl_ice) = 0.
-
 
 
 ! net ground heat flux into the surface and its temperature derivative
@@ -728,7 +739,7 @@
       ct(j) =  -(1.-cnfac)*fact(j)*tk(j)/dzp
       rt(j) = t_icesno(j) + fact(j)*( hs - dhsdT*t_icesno(j) + cnfac*fn(j) )
 
-! Yuan Hua, January 12, 2023
+! Hua Yuan, January 12, 2023
       if (lb <= 0) then
           do j = lb + 1, 1
              dzm   = (z_icesno(j)-z_icesno(j-1))
@@ -760,10 +771,10 @@
 
 ! solve for t_icesno
       i = size(at)
-      call tridia (i ,at ,bt ,ct ,rt ,t_icesno) 
+      call tridia (i ,at ,bt ,ct ,rt ,t_icesno)
 
 !=======================================================================
-! melting or freezing 
+! melting or freezing
 !=======================================================================
 
       do j = lb, nl_ice - 1
@@ -830,7 +841,7 @@
                     fiold       ,snl         ,qseva     ,qsdew   ,&
                     qsubl       ,qfros       ,rsur      ,rnof    ,&
                     ssi         ,wimp    )
-	           
+
 !=======================================================================
   use precision
   use PhysicalConstants, only : denice, denh2o, tfrz
@@ -838,7 +849,7 @@
   use SOIL_SNOW_hydrology
 
   IMPLICIT NONE
-    
+
 !-----------------------Argument---------- ------------------------------
   integer, INTENT(in) :: nl_ice  ! upper bound of array
   integer, INTENT(in) :: maxsnl  ! maximum number of snow layers
@@ -872,9 +883,9 @@
   real(r8), INTENT(out) :: &
        rsur      , &! surface runoff (mm h2o/s)
        rnof         ! total runoff (mm h2o/s)
-!                    
+!
 !-----------------------Local Variables------------------------------
-!                   
+!
   integer lb, j
 
   real(r8) :: gwat   ! net water input from top (mm/s)
@@ -890,7 +901,7 @@
 ! In warm parts of the ice sheet, the meltwater does not refreeze, but stays in place indefinitely.
 !=======================================================================
 
-      lb = snl + 1 
+      lb = snl + 1
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else

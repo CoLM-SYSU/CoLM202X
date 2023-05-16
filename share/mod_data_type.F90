@@ -2,6 +2,26 @@
 
 MODULE mod_data_type
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Definations of data types used in CoLM.
+   !
+   !    Most frequently used data types in CoLM defined in this module 
+   !    are "blocked" data types, including,
+   !    1. Blocked 2D data of 4-byte integer type;
+   !    2. Blocked 2D data of 8-byte float type;
+   !    3. Blocked 3D data of 8-byte float type;
+   !    4. Blocked 4D data of 8-byte float type;
+   !    
+   !    Subroutines are used to 
+   !    1. allocate memory;
+   !    2. flush data values;
+   !    3. copy data;
+   !    4. do linear transformation and interpolations.
+   !   
+   ! Created by Shupeng Zhang, May 2023
+
    USE precision
 
    ! ---- data types ----
@@ -18,13 +38,6 @@ MODULE mod_data_type
    CONTAINS 
       final :: pointer_int32_1d_free_mem
    END TYPE pointer_int32_1d
-
-   !-------
-   TYPE :: pointer_int64_1d
-      INTEGER*8, allocatable :: val(:)
-   CONTAINS 
-      final :: pointer_int64_1d_free_mem
-   END TYPE pointer_int64_1d
 
    !-------
    TYPE :: pointer_int32_2d
@@ -129,19 +142,6 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE pointer_int32_1d_free_mem 
-
-   !------------------
-   SUBROUTINE pointer_int64_1d_free_mem (this)
-
-      IMPLICIT NONE
-
-      TYPE(pointer_int64_1d) :: this
-
-      IF (allocated(this%val)) THEN
-         deallocate(this%val)
-      ENDIF
-
-   END SUBROUTINE pointer_int64_1d_free_mem 
 
    !------------------
    SUBROUTINE pointer_int32_2d_free_mem (this)

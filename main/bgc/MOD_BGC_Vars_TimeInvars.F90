@@ -496,7 +496,7 @@ SAVE
       call check_vector_data ('gdp_lf         ',  gdp_lf         )
       call check_vector_data ('abm_lf         ',  abm_lf         )
       call check_vector_data ('peatf_lf       ',  peatf_lf       )
-      call check_vector_data ('rice2pdt       ',  float(rice2pdt))
+      call check_vector_data ('rice2pdt       ',  rice2pdt       )
      
    end subroutine check_BGCTimeInvars 
 #endif

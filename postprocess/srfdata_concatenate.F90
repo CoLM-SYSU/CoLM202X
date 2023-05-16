@@ -42,7 +42,7 @@ program srfdata_concatenate
       write(*,*)  ' <Arg 2> : dir_var'
       write(*,*)  ' <Arg 3> : prefix'
       write(*,*)  ' <Arg 4> : varname'
-      write(*,*)  ' <Arg 5> : patch|pft'
+      write(*,*)  ' <Arg 5> : patch | pft | urban'
       write(*,*)  ' <Arg 6> : typefilter'
       write(*,*)  ' <Arg 7> : output'
       write(*,*)  ' <Arg 8> : reshape or not (optional, value T/F, reshape from 1D to 2D)'
@@ -105,6 +105,8 @@ program srfdata_concatenate
          levfile = trim(dirlanddata) // '/landpatch/landpatch_' //  trim(blockinfo) // '.nc'
       elseif (trim(level) == 'pft') THEN
          levfile = trim(dirlanddata) // '/landpft/landpft_' //  trim(blockinfo) // '.nc'
+      elseif (trim(level) == 'urban') THEN
+         levfile = trim(dirlanddata) // '/landurban/landurban_' //  trim(blockinfo) // '.nc'
       ENDIF
          
       CALL ncio_read_serial (levfile, 'eindex', eindex)

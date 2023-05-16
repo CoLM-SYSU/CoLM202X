@@ -7,16 +7,11 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    ! 2. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface 
+   !    Reprocessing the MODIS Leaf Area Index products for land surface
    !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   ! ________________
-   ! REVISION HISTORY:
-   !   /07/2014, Siguang Zhu & Xiangxiang Zhang: weight average considering 
-   !               partial overlap between fine grid and model grid for a user
-   !               defined domain file.
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -27,20 +22,16 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
    USE mod_colm_debug
 #endif
-   USE mod_aggregation_lc
+
+   USE mod_aggregation
 
    USE LC_Const
-   USE mod_modis_data
-#ifdef PFT_CLASSIFICATION
-   USE mod_landpft
-   USE mod_aggregation_pft
-#endif
-#ifdef PC_CLASSIFICATION
-   USE mod_landpc
-   USE mod_aggregation_pft
+
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
 #endif
 
    IMPLICIT NONE
@@ -57,18 +48,15 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
    TYPE (block_data_real8_2d) :: NDEP          ! nitrogen deposition (gN/m2/s)
    REAL(r8), allocatable :: NDEP_patches(:), ndep_one(:), area_one(:)
-   INTEGER :: itime, ntime, Julian_day, ipatch
-   CHARACTER(LEN=4) :: c2, c3, cyear
-   integer :: start_year, end_year, YY   
+   INTEGER :: itime, ipatch
+   CHARACTER(LEN=4) :: cyear
+   integer :: start_year, end_year, YY
 
-   ! for IGBP data
-   CHARACTER(len=256) :: dir_modis
-   INTEGER :: month
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+   CHARACTER(len=256) :: varname
+#endif
 
-   ! for PFT
-   INTEGER :: p, ip
-
-   ! for PC
    landdir = trim(dir_model_landdata) // '/NDEP/'
 
 #ifdef USEMPI
@@ -99,7 +87,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    IF (p_is_io) THEN
       CALL allocate_block_data (gridndep, NDEP)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (NDEP_patches (numpatch))
    ENDIF
@@ -113,7 +101,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
          ! read in nitrofen deposition
          ! ---------------------------
       IF (p_is_master) THEN
-         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate NDEP:', YY,'(data in:',itime+1848,')' 
+         write(*,'(A,I4,A9,I4.4,A1,I3)') 'Aggregate NDEP:', YY,'(data in:',itime+1848,')'
       endif
 
       IF (p_is_io) THEN
@@ -122,7 +110,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       ENDIF
 
 #ifdef USEMPI
-         CALL aggregation_lc_data_daemon (gridndep, NDEP)
+         CALL aggregation_data_daemon (gridndep, data_r8_2d_in1 = NDEP)
 #endif
 
          ! ---------------------------------------------------------------
@@ -131,12 +119,13 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
       IF (p_is_worker) THEN
          DO ipatch = 1, numpatch
-            CALL aggregation_lc_request_data (ipatch, gridndep, NDEP, ndep_one, area_one)
+            CALL aggregation_request_data (landpatch, ipatch, gridndep, area = area_one, &
+               data_r8_2d_in1 = NDEP, data_r8_2d_out1 = ndep_one)
             NDEP_patches(ipatch) = sum(ndep_one * area_one) / sum(area_one)
          ENDDO
 
 #ifdef USEMPI
-         CALL aggregation_lc_worker_done ()
+         CALL aggregation_worker_done ()
 #endif
       ENDIF
 
@@ -144,7 +133,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CLMDEBUG
       CALL check_vector_data ('NDEP value ', NDEP_patches)
 #endif
 
@@ -156,13 +145,21 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'NDEP_patches', 'patch', landpatch, NDEP_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/NDEP_patch.nc'
+      varname = 'NDEP_' // trim(cyear)
+      CALL srfdata_map_and_write (NDEP_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
    ENDDO
-   
+
 
    IF (p_is_worker) THEN
       IF (allocated(NDEP_patches)) deallocate(NDEP_patches)
       IF (allocated(ndep_one    )) deallocate(ndep_one    )
       IF (allocated(area_one    )) deallocate(area_one    )
    ENDIF
-   
+
 END SUBROUTINE aggregation_NDEP

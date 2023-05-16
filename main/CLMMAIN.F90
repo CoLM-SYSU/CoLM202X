@@ -1,17 +1,15 @@
 #include <define.h>
-
 SUBROUTINE CLMMAIN ( &
-   
-         ! 模型运行信息
+
+         ! model running information
            ipatch,       idate,        coszen,       deltim,        &
            patchlonr,    patchlatr,    patchclass,   patchtype,     &
            doalb,        dolai,        dosst,        oro,           &
 
-
          ! soil information and lake depth
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
-           wf_gravels,   wf_sand,      porsl,        psi0,          & 
+           wf_gravels,   wf_sand,      porsl,        psi0,          &
            bsw,                                                     &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
@@ -24,7 +22,8 @@ SUBROUTINE CLMMAIN ( &
 #endif
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             & !flddepth is in mm
+         !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
+         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
 #endif
 
          ! vegetation information
@@ -49,7 +48,7 @@ SUBROUTINE CLMMAIN ( &
            forc_rhoair,                                             &
 
          ! land surface variables required for restart
-           z_soisno,     dz_soisno,    t_soisno,     wliq_soisno,   &
+           z_sno,        dz_sno,       t_soisno,     wliq_soisno,   &
            wice_soisno,  smp,          hk,                          &
            t_grnd,       tleaf,        ldew,     ldew_rain,      ldew_snow,             &
            sag,          scv,          snowdp,       fveg,          &
@@ -64,7 +63,7 @@ SUBROUTINE CLMMAIN ( &
 #endif
            zwt,          dpond,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
-         
+
          ! SNICAR snow model related
            snw_rds,      ssno,                                     &
            mss_bcpho,    mss_bcphi,   mss_ocpho,     mss_ocphi,    &
@@ -74,8 +73,8 @@ SUBROUTINE CLMMAIN ( &
            laisun,       laisha,       rootr,                       &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
 #ifdef WUEdiag
-           assimsun_out, etrsun_out,   assim_RuBP_sun_out,          & 
-           assim_Rubisco_sun_out,      cisun_out,    Dsun_out,      & 
+           assimsun_out, etrsun_out,   assim_RuBP_sun_out,          &
+           assim_Rubisco_sun_out,      cisun_out,    Dsun_out,      &
            gammasun_out,lambdasun_out,                              &
            assimsha_out, etrsha_out,   assim_RuBP_sha_out,          &
            assim_Rubisco_sha_out,      cisha_out,    Dsha_out,      &
@@ -101,9 +100,9 @@ SUBROUTINE CLMMAIN ( &
            zlnd,         zsno,         csoilc,       dewmx,         &
            wtfact,       capr,         cnfac,        ssi,           &
            wimp,         pondmx,       smpmax,       smpmin,        &
-           trsmx0,       tcrit,                                     & 
+           trsmx0,       tcrit,                                     &
 
-         ! additional variables required by coupling with WRF model 
+         ! additional variables required by coupling with WRF model
            emis,         z0m,          zol,          rib,           &
            ustar,        qstar,        tstar,        fm,            &
            fh,           fq                                         )
@@ -119,25 +118,25 @@ SUBROUTINE CLMMAIN ( &
 !    CLMMAIN ===> netsolar                 |> all surface
 !                 rain_snow_temp           !> all surface
 !
-!                 LEAF_interception        |]  
+!                 LEAF_interception        |]
 !                 newsnow                  |] patchtype = 0 (soil ground)
 !                 THERMAL                  |]           = 1 (urban & built-up)
 !                 WATER                    |]           = 2 (wetland)
 !                 snowcompaction           |]           = 3 (land ice)
 !                 snowlayerscombine        |]           = 4 (lake)
 !                 snowlayersdivide         |]
-!                 snowage                  |]  
+!                 snowage                  |]
 !
 !                 newsnow_lake             |]
 !                 laketem                  |] lake scheme
 !                 snowwater_lake           |]
 !
 !                 SOCEAN                   |> ocean and sea ice
-!                
+!
 !                 orb_coszen               |> all surface
-!                 EcoModel (LAI_empirical) |> land 
+!                 EcoModel (LAI_empirical) |> land
 !                 snowfraction             |> land
-!                 albland                  |> land 
+!                 albland                  |> land
 !                 albocean                 |> ocean & sea ice
 !
 !=======================================================================
@@ -163,34 +162,37 @@ SUBROUTINE CLMMAIN ( &
   USE SIMPLE_OCEAN
   USE ALBEDO
   USE timemanager
+#ifndef LATERAL_FLOW
+  USE MOD_1D_Fluxes, only : rsub
+#else
+  USE MOD_1D_Fluxes, only : rsubs_pch, rsub
+#endif
   USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+  USE MOD_CLEAF_interception
 #if(defined CaMa_Flood)
-   USE colm_CaMaMod,only:fldfluxes
+   !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
+   USE colm_CaMaMod,only:get_fldevp
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
 
-  ! SNICAR
-  USE AerosolMod,    only : AerosolFluxes, AerosolMasses
-  USE SnowSnicarMod, only : SnowAge_grain
-
   IMPLICIT NONE
- 
+
 ! ------------------------ Dummy Argument ------------------------------
   REAL(r8),intent(in) :: deltim  !seconds in a time step [second]
   LOGICAL, intent(in) :: doalb   !true if time for surface albedo calculation
   LOGICAL, intent(in) :: dolai   !true if time for leaf area index calculation
   LOGICAL, intent(in) :: dosst   !true to update sst/ice/snow before calculation
 
-  INTEGER, intent(in) :: & 
+  INTEGER, intent(in) :: &
         ipatch        ! patch index
 
   REAL(r8), intent(in) :: &
         patchlonr   ,&! logitude in radians
         patchlatr     ! latitude in radians
 
-  INTEGER, intent(in) :: & 
+  INTEGER, intent(in) :: &
         patchclass  ,&! land cover type of USGS classification or others
-        patchtype     ! land water type (0=soil, 1=urban and built-up, 
+        patchtype     ! land water type (0=soil, 1=urban and built-up,
                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 ! Parameters
 ! ----------------------
@@ -204,20 +206,20 @@ SUBROUTINE CLMMAIN ( &
         soil_s_n_alb     ,&! albedo of near infrared of the saturated soil
         soil_d_n_alb     ,&! albedo of near infrared of the dry soil
 
-        vf_quartz (nl_soil), & ! volumetric fraction of quartz within mineral soil
-        vf_gravels(nl_soil), &! volumetric fraction of gravels
-        vf_om     (nl_soil), &! volumetric fraction of organic matter
-        vf_sand   (nl_soil), &! volumetric fraction of sand
-        wf_gravels(nl_soil), &! gravimetric fraction of gravels
-        wf_sand   (nl_soil), &! gravimetric fraction of sand
-        porsl(nl_soil)   ,&! fraction of soil that is voids [-]
-        psi0(nl_soil)    ,&! minimum soil suction [mm]
-        bsw(nl_soil)     ,&! clapp and hornbereger "b" parameter [-]
+        vf_quartz (nl_soil),  & ! volumetric fraction of quartz within mineral soil
+        vf_gravels(nl_soil),  & ! volumetric fraction of gravels
+        vf_om     (nl_soil),  & ! volumetric fraction of organic matter
+        vf_sand   (nl_soil),  & ! volumetric fraction of sand
+        wf_gravels(nl_soil),  & ! gravimetric fraction of gravels
+        wf_sand   (nl_soil),  & ! gravimetric fraction of sand
+        porsl(nl_soil)     ,  & ! fraction of soil that is voids [-]
+        psi0(nl_soil)      ,  & ! minimum soil suction [mm]
+        bsw(nl_soil)       ,  & ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil), &
-        alpha_vgm(1:nl_soil), &
-        n_vgm    (1:nl_soil), &
-        L_vgm    (1:nl_soil), &
+        theta_r  (1:nl_soil), & ! residual water content (cm3/cm3) in vanGenuchten_Mualem_SOIL_MODEL
+        alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
+        n_vgm    (1:nl_soil), & ! a shape parameter
+        L_vgm    (1:nl_soil), & ! pore-connectivity parameter
         sc_vgm   (1:nl_soil), &
         fc_vgm   (1:nl_soil), &
 #endif
@@ -227,7 +229,7 @@ SUBROUTINE CLMMAIN ( &
         dksatu(nl_soil)  ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf(nl_soil)  ,&! thermal conductivity of saturated frozen soil [W/m-K]
         dkdry(nl_soil)   ,&! thermal conductivity for dry soil  [J/(K s m)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4 
+#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha(nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
@@ -250,13 +252,13 @@ SUBROUTINE CLMMAIN ( &
         psi50_root  ,&! water potential at 50% loss of root tissue conductance (mmH2O)
         ck          ,&! shape-fitting parameter for vulnerability curve (-)
 #endif
-        slti        ,&! slope of low temperature inhibition function      [s3] 
+        slti        ,&! slope of low temperature inhibition function      [s3]
         hlti        ,&! 1/2 point of low temperature inhibition function  [s4]
         shti        ,&! slope of high temperature inhibition function     [s1]
         hhti        ,&! 1/2 point of high temperature inhibition function [s2]
         trda        ,&! temperature coefficient in gs-a model             [s5]
         trdm        ,&! temperature coefficient in gs-a model             [s6]
-        trop        ,&! temperature coefficient in gs-a model          
+        trop        ,&! temperature coefficient in gs-a model
         gradm       ,&! conductance-photosynthesis slope parameter
         binter      ,&! conductance-photosynthesis intercep
         extkn       ,&! coefficient of leaf nitrogen allocation
@@ -303,10 +305,10 @@ SUBROUTINE CLMMAIN ( &
         forc_hgt_q  ,&! observational height of humidity [m]
         forc_rhoair   ! density air [kg/m3]
 #if(defined CaMa_Flood)
-   real(r8), intent(in)    :: fldfrc    !effective inundation depth:treat as precipitation--> allow re-evaporation and infiltrition![mm/s]
-   real(r8), intent(inout) :: flddepth
-   real(r8), intent(out)   :: fevpg_fld
-   real(r8), intent(out)   :: qinfl_fld
+   REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
+   REAL(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+   REAL(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
+   REAL(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
 #endif
 ! Variables required for restart run
 ! ----------------------------------------------------------------------
@@ -315,9 +317,9 @@ SUBROUTINE CLMMAIN ( &
 
   REAL(r8), intent(inout) :: oro  ! ocean(0)/seaice(2)/ flag
   REAL(r8), intent(inout) :: &
-        z_soisno(maxsnl+1:nl_soil)    ,&! layer depth (m)
-        dz_soisno(maxsnl+1:nl_soil)   ,&! layer thickness (m)
-        t_soisno(maxsnl+1:nl_soil)    ,&! soil + snow layer temperature [K]
+        z_sno      (maxsnl+1:0)       ,&! layer depth (m)
+        dz_sno     (maxsnl+1:0)       ,&! layer thickness (m)
+        t_soisno   (maxsnl+1:nl_soil) ,&! soil + snow layer temperature [K]
         wliq_soisno(maxsnl+1:nl_soil) ,&! liquid water (kg/m2)
         wice_soisno(maxsnl+1:nl_soil) ,&! ice lens (kg/m2)
         hk(1:nl_soil)                 ,&! hydraulic conductivity [mm h2o/s]
@@ -326,7 +328,7 @@ SUBROUTINE CLMMAIN ( &
         t_lake(nl_lake)       ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
         savedtke1             ,&! top level eddy conductivity (W/m K)
-#ifdef PLANT_HYDRAULIC_STRESS 
+#ifdef PLANT_HYDRAULIC_STRESS
         vegwp(nvegwcs)        ,&! ground surface temperature [k]
         gs0sun                ,&! working copy of sunlit stomata conductance
         gs0sha                ,&! working copy of shalit stomata conductance
@@ -340,8 +342,8 @@ SUBROUTINE CLMMAIN ( &
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
-        ldew_rain   ,&
-        ldew_snow   ,&
+        ldew_rain   ,&! depth of rain on foliage[kg/m2/s]
+        ldew_snow   ,&! depth of snow on foliage[kg/m2/s]
         sag         ,&! non dimensional snow age [-]
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
@@ -366,7 +368,7 @@ SUBROUTINE CLMMAIN ( &
         green       ,&! greenness
         lai         ,&! leaf area index
         sai         ,&! stem area index
- 
+
         coszen      ,&! cosine of solar zenith angle
         alb(2,2)    ,&! averaged albedo [-]
         ssun(2,2)   ,&! sunlit canopy absorption for solar radiation
@@ -374,8 +376,8 @@ SUBROUTINE CLMMAIN ( &
         thermk      ,&! canopy gap fraction for tir radiation
         extkb       ,&! (k, g(mu)/mu) direct solar extinction coefficient
         extkd         ! diffuse and scattered diffuse PAR extinction coefficient
-        
-     
+
+
 ! additional diagnostic variables for output
   REAL(r8), intent(out) :: &
         laisun      ,&! sunlit leaf area index
@@ -390,23 +392,23 @@ SUBROUTINE CLMMAIN ( &
 
 #ifdef WUEdiag
   REAL(r8), intent(out) :: &
-       assimsun_out           ,&
-       etrsun_out             ,&
-       assim_RuBP_sun_out     ,&
-       assim_Rubisco_sun_out  ,&
-       cisun_out              ,&
-       Dsun_out               ,&
-       gammasun_out           ,&
-       lambdasun_out          ,&
-       assimsha_out           ,&
-       etrsha_out             ,&
-       assim_RuBP_sha_out     ,&
-       assim_Rubisco_sha_out  ,&
-       cisha_out              ,&
-       Dsha_out               ,&
-       gammasha_out           ,&
-       lambdasha_out          ,&
-       lambda_out             
+        assimsun_out           ,&
+        etrsun_out             ,&
+        assim_RuBP_sun_out     ,&
+        assim_Rubisco_sun_out  ,&
+        cisun_out              ,&
+        Dsun_out               ,&
+        gammasun_out           ,&
+        lambdasun_out          ,&
+        assimsha_out           ,&
+        etrsha_out             ,&
+        assim_RuBP_sha_out     ,&
+        assim_Rubisco_sha_out  ,&
+        cisha_out              ,&
+        Dsha_out               ,&
+        gammasha_out           ,&
+        lambdasha_out          ,&
+        lambda_out
 #endif
 ! Fluxes
 ! ----------------------------------------------------------------------
@@ -435,8 +437,8 @@ SUBROUTINE CLMMAIN ( &
         qinfl       ,&! inflitration (mm h2o/s)
         qdrip       ,&! throughfall (mm h2o/s)
         qcharge     ,&! groundwater recharge [mm/s]
-       
-        rst         ,&! canopy stomatal resistance 
+
+        rst         ,&! canopy stomatal resistance
         assim       ,&! canopy assimilation
         respc       ,&! canopy respiration
 
@@ -484,7 +486,6 @@ SUBROUTINE CLMMAIN ( &
         fiold(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old       ,&! liquid water mass of the column at the previous time step (mm)
         orb_coszen  ,&! cosine of the solar zenith angle
-        ! sabvg       ,&! solar absorbed by ground + vegetation [W/m2]
         parsun      ,&! PAR by sunlit leaves [W/m2]
         parsha      ,&! PAR by shaded leaves [W/m2]
         qseva       ,&! ground surface evaporation rate (mm h2o/s)
@@ -498,7 +499,9 @@ SUBROUTINE CLMMAIN ( &
         tssea       ,&! sea surface temperature [K]
         totwb       ,&! water mass at the begining of time step
         wt          ,&! fraction of vegetation buried (covered) by snow [-]
-        zi_soisno(maxsnl:nl_soil) ! interface level below a "z" level (m)
+        z_soisno (maxsnl+1:nl_soil), &! layer depth (m)
+        dz_soisno(maxsnl+1:nl_soil), &! layer thickness (m)
+        zi_soisno(maxsnl  :nl_soil)   ! interface level below a "z" level (m)
 
    REAL(r8) :: &
         prc_rain    ,&! convective rainfall [kg/(m2 s)]
@@ -520,61 +523,55 @@ SUBROUTINE CLMMAIN ( &
 
       ! For SNICAR snow model
       !----------------------------------------------------------------------
-      LOGICAL  do_capsnow              !true => do snow capping
       INTEGER  snl_bef                 !number of snow layers
-      REAL(r8) snwcp_ice               !excess precipitation due to snow capping [kg m-2 s-1]
       REAL(r8) forc_aer        ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
       REAL(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
       REAL(r8) t_soisno_ (maxsnl+1:1)  !soil + snow layer temperature [K]
       REAL(r8) dz_soisno_(maxsnl+1:1)  !layer thickness (m)
       REAL(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
 
-      REAL(r8) mss_cnc_bcphi ( maxsnl+1:0 )     !mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_bcpho ( maxsnl+1:0 )     !mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_ocphi ( maxsnl+1:0 )     !mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_ocpho ( maxsnl+1:0 )     !mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_dst1  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_dst2  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_dst3  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-      REAL(r8) mss_cnc_dst4  ( maxsnl+1:0 )     !mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
       !----------------------------------------------------------------------
 
-     REAL(r8) :: a, aa 
-     INTEGER ps, pe, pc
-      
+      REAL(r8) :: a, aa
+      INTEGER ps, pe, pc
+
 !======================================================================
 #if(defined CaMa_Flood)
-      real(r8) :: &
-      kk, &
-      taux_fld,     &! wind stress: E-W [kg/m/s**2]
-      tauy_fld,     &! wind stress: N-S [kg/m/s**2]
-      fsena_fld,    &! sensible heat from agcm reference height to atmosphere [W/m2]
-      fevpa_fld,    &! evaporation from agcm reference height to atmosphere [mm/s]
-      fseng_fld,    &! sensible heat flux from ground [W/m2]
-      tref_fld,     &! 2 m height air temperature [kelvin]
-      qref_fld,     &! 2 m height air humidity
-      z0m_fld,      &! effective roughness [m]
-      zol_fld,      &! dimensionless height (z/L) used in Monin-Obukhov theory
-      rib_fld,      &! bulk Richardson number in surface layer
-      ustar_fld,    &! friction velocity [m/s]
-      tstar_fld,    &! temperature scaling parameter
-      qstar_fld,    &! moisture scaling parameter
-      fm_fld,       &! integral of profile function for momentum
-      fh_fld,       &! integral of profile function for heat
-      fq_fld !,       &        !,       & !,       &! integral of profile function for moisture
+      !zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+      REAL(r8) :: kk
+      REAL(r8) :: taux_fld       ! wind stress: E-W [kg/m/s**2]
+      REAL(r8) :: tauy_fld       ! wind stress: N-S [kg/m/s**2]
+      REAL(r8) :: fsena_fld      ! sensible heat from agcm reference height to atmosphere [W/m2]
+      REAL(r8) :: fevpa_fld      ! evaporation from agcm reference height to atmosphere [mm/s]
+      REAL(r8) :: fseng_fld      ! sensible heat flux from ground [W/m2]
+      REAL(r8) :: tref_fld       ! 2 m height air temperature [kelvin]
+      REAL(r8) :: qref_fld       ! 2 m height air humidity
+      REAL(r8) :: z0m_fld        ! effective roughness [m]
+      REAL(r8) :: zol_fld        ! dimensionless height (z/L) used in Monin-Obukhov theory
+      REAL(r8) :: rib_fld        ! bulk Richardson number in surface layer
+      REAL(r8) :: ustar_fld      ! friction velocity [m/s]
+      REAL(r8) :: tstar_fld      ! temperature scaling parameter
+      REAL(r8) :: qstar_fld      ! moisture scaling parameter
+      REAL(r8) :: fm_fld         ! integral of profile function for momentum
+      REAL(r8) :: fh_fld         ! integral of profile function for heat
+      REAL(r8) :: fq_fld         ! integral of profile function for moisture
 #endif
+
+      ! 09/2022, yuan: move from CLMDRIVER to SAVE memory
+      z_soisno (maxsnl+1:0) = z_sno (maxsnl+1:0)
+      z_soisno (1:nl_soil ) = z_soi (1:nl_soil )
+      dz_soisno(maxsnl+1:0) = dz_sno(maxsnl+1:0)
+      dz_soisno(1:nl_soil ) = dz_soi(1:nl_soil )
 
 !======================================================================
 !  [1] Solar absorbed by vegetation and ground
 !      and precipitation information (rain/snow fall and precip temperature
 !======================================================================
 
-     ! SNICAR
-     do_capsnow  = .false.   !true => DO snow capping
-     snwcp_ice   = 0.0       !excess precipitation due to snow capping [kg m-2 s-1]
-     snofrz(:)   = 0.        !snow freezing rate (col,lyr) [kg m-2 s-1]
-     forc_aer(:) = 4.2E-7    !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-     !forc_aer(:) = 0.        !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+      ! SNICAR
+      snofrz(:)   = 0.        !snow freezing rate (col,lyr) [kg m-2 s-1]
+      forc_aer(:) = 4.2E-7    !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+      !forc_aer(:) = 0.        !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&
@@ -617,7 +614,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
       ENDDO
 
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
-      
+
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          totwb = totwb + dpond
       ENDIF
@@ -634,30 +631,34 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+!zhongwang wei, 20221220: add option for canopy interception calculation.
 if (DEF_Interception_scheme==1) then
-   CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-                              
+
 ELSEIF (DEF_Interception_scheme==2) then
-   CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF (DEF_Interception_scheme==3) then
-   CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_CLM5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF (DEF_Interception_scheme==4) then
-   CALL LEAF_interception_noahmp (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+   CALL LEAF_interception_NoahMP (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ELSEIF  (DEF_Interception_scheme==5) then
    CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-
 ELSEIF  (DEF_Interception_scheme==6) then
    CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                              prc_rain,prc_snow,prl_rain,prl_snow,&
+                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+ELSEIF  (DEF_Interception_scheme==7) then
+   CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 endif
@@ -668,7 +669,7 @@ endif
       CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-                            
+
 #endif
 
 #ifdef PC_CLASSIFICATION
@@ -679,10 +680,10 @@ endif
 
 ELSE
    if (DEF_Interception_scheme==1) then
-      CALL LEAF_interception_colm (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      CALL LEAF_interception_colm2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                  ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-                                 
+
    ELSEIF (DEF_Interception_scheme==2) then
       CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
@@ -699,18 +700,19 @@ ELSE
       CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                  ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   
+
    ELSEIF  (DEF_Interception_scheme==6) then
       CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                  ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   endif   
+   ELSEIF (DEF_Interception_scheme==7) then
+      CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+                                 prc_rain,prc_snow,prl_rain,prl_snow,&
+                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+   endif
 
-   !   CALL LEAF_interception (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tleaf,&
-   !                           prc_rain,prc_snow,prl_rain,prl_snow,&
-   !                           ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ENDIF
-      
+
       qdrip = pg_rain + pg_snow
 
 !----------------------------------------------------------------------
@@ -730,9 +732,9 @@ ENDIF
       ENDIF
 
 !----------------------------------------------------------------------
-! [4] Energy and Water balance 
+! [4] Energy and Water balance
 !----------------------------------------------------------------------
-      lb  = snl + 1           !lower bound of array 
+      lb  = snl + 1           !lower bound of array
       lbsn = min(lb,0)
 
       CALL THERMAL (ipatch   ,patchtype         ,lb                ,deltim            ,&
@@ -756,18 +758,18 @@ ENDIF
            rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
            gssun_out         ,gssha_out         ,&
 #ifdef WUEdiag
-           assimsun_out      ,etrsun_out        ,assim_RuBP_sun_out                   ,& 
-           assim_Rubisco_sun_out                ,cisun_out         ,Dsun_out          ,& 
+           assimsun_out      ,etrsun_out        ,assim_RuBP_sun_out                   ,&
+           assim_Rubisco_sun_out                ,cisun_out         ,Dsun_out          ,&
            gammasun_out      ,lambdasun_out     ,&
            assimsha_out      ,etrsha_out        ,assim_RuBP_sha_out,&
            assim_Rubisco_sha_out                ,cisha_out         ,Dsha_out          ,&
-           gammasha_out      ,lambdasha_out     ,lambda_out        ,& 
+           gammasha_out      ,lambdasha_out     ,lambda_out        ,&
 #endif
            effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
 #ifdef PLANT_HYDRAULIC_STRESS
-           kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&  
-           psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&  
+           kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
+           psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&
            ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
 #endif
 #ifdef OzoneStress
@@ -809,6 +811,7 @@ ENDIF
               wa                ,qcharge           ,errw_rsub &
 
 #if(defined CaMa_Flood)
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
             ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -833,10 +836,11 @@ ENDIF
               pg_rain           ,sm                ,etr               ,qseva             ,&
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
-              pondmx,                                                                     & 
+              pondmx,                                                                     &
               wimp              ,zwt               ,dpond             ,wa                ,&
               qcharge           ,errw_rsub &
 #if(defined CaMa_Flood)
+            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -849,10 +853,10 @@ ENDIF
       ENDIF
 
       IF (snl < 0) THEN
-         ! Compaction rate for snow 
+         ! Compaction rate for snow
          ! Natural compaction and metamorphosis. The compaction rate
          ! is recalculated for every new timestep
-         lb  = snl + 1   !lower bound of array 
+         lb  = snl + 1   !lower bound of array
          CALL snowcompaction (lb,deltim,&
                          imelt(lb:0),fiold(lb:0),t_soisno(lb:0),&
                          wliq_soisno(lb:0),wice_soisno(lb:0),dz_soisno(lb:0))
@@ -885,7 +889,7 @@ ENDIF
                          wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0))
 #endif
       ENDIF
-      
+
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
          wice_soisno(maxsnl+1:snl) = 0.
@@ -896,9 +900,7 @@ ENDIF
       ENDIF
 
       lb = snl + 1
-      !TODO: double check
       t_grnd = t_soisno(lb)
-      !t_grnd = fsno*t_soisno(lb) + (1.0-fsno)*t_soisno(1)
 
       ! ----------------------------------------
       ! energy balance
@@ -918,16 +920,21 @@ ENDIF
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
          endwb = endwb + dpond
       ENDIF
-
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
-      IF(patchtype==2) errorw=0.    !wetland
 #if(defined CaMa_Flood)
-if (LWINFILT) then 
-   if (patchtype == 0) then
-      errorw=(endwb-totwb)-(forc_prc+forc_prl+qinfl_fld-fevpa-rnof-errw_rsub)*deltim
+   if (LWINFILT) then
+       if (patchtype == 0) then
+            endwb=endwb - qinfl_fld*deltim
+       ENDIF
    ENDIF
-ENDIF
 #endif
+
+#ifndef LATERAL_FLOW
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
+#else
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+#endif
+      IF(patchtype==2) errorw=0.    !wetland
+
       xerr=errorw/deltim
 
 #if(defined CLMDEBUG)
@@ -942,7 +949,7 @@ ENDIF
 
 !======================================================================
 
-ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype = 3) 
+ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype = 3)
 
 !======================================================================
                             !initial set
@@ -989,9 +996,9 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       ENDIF
 
       !----------------------------------------------------------------
-      ! Energy and Water balance 
+      ! Energy and Water balance
       !----------------------------------------------------------------
-      lb  = snl + 1            !lower bound of array 
+      lb  = snl + 1            !lower bound of array
       lbsn = min(lb,0)
 
       CALL GLACIER_TEMP (patchtype,   lb    ,nl_soil     ,deltim     ,&
@@ -1050,7 +1057,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 
 !======================================================================
 
-ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and river) (patchtype = 4) 
+ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and river) (patchtype = 4)
 
 !======================================================================
 
@@ -1145,7 +1152,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            z_soisno     ,dz_soisno    ,zi_soisno       ,t_soisno        ,&
            wice_soisno  ,wliq_soisno  ,t_lake          ,lake_icefrac    ,&
            fseng        ,fgrnd        ,snl             ,scv             ,&
-           snowdp       ,sm            & 
+           snowdp       ,sm            &
 
 #ifdef SNICAR
            ! SNICAR
@@ -1155,13 +1162,19 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 #endif
            )
 
-      ! We assume the land water bodies have zero extra liquid water capacity 
+      ! We assume the land water bodies have zero extra liquid water capacity
       ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
       ! this unreasonable assumption should be updated in the future version
       a = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+scv-w_old-scvold)/deltim
       aa = qseva+qsubl-qsdew-qfros
+#ifndef LATERAL_FLOW
       rsur = max(0., pg_rain + pg_snow - aa - a)
+      rsub(ipatch) = 0.
       rnof = rsur
+#else
+      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      rnof = rsur + rsub(ipatch)
+#endif
 
       ! Set zero to the empty node
       IF (snl > maxsnl) THEN
@@ -1174,19 +1187,19 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 
 !======================================================================
 
-ELSE                     ! <=== is OCEAN (patchtype >= 99) 
+ELSE                     ! <=== is OCEAN (patchtype >= 99)
 
 !======================================================================
 ! simple ocean-sea ice model
 
     tssea = t_grnd
-    tssub (1:7) = t_soisno (1:7) 
+    tssub (1:7) = t_soisno (1:7)
     CALL SOCEAN (dosst,deltim,oro,forc_hgt_u,forc_hgt_t,forc_hgt_q,&
                  forc_us,forc_vs,forc_t,forc_t,forc_rhoair,forc_psrf,&
                  sabg,forc_frl,tssea,tssub(1:7),scv,&
                  taux,tauy,fsena,fevpa,lfevpa,fseng,fevpg,tref,qref,&
                  z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq,emis,olrg)
-                 
+
                ! null data for sea component
                  z_soisno   (:) = 0.0
                  dz_soisno  (:) = 0.0
@@ -1195,7 +1208,7 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
                  wliq_soisno(:) = 0.0
                  wice_soisno(:) = 0.0
                  t_grnd  = tssea
-                 snowdp  = scv/1000.*20. 
+                 snowdp  = scv/1000.*20.
 
                  trad    = tssea
                  fgrnd   = 0.0
@@ -1206,13 +1219,9 @@ ELSE                     ! <=== is OCEAN (patchtype >= 99)
 
 ENDIF
 #if(defined CaMa_Flood)
-if (LWINFILT) then 
-   if (qinfl_fld<0.0) fevpg_fld=0.0d0
-   flddepth        =  flddepth- qinfl_fld*deltim !mm
-endif
-if (LWEVAP) then 
+if (LWEVAP) then
    if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0)then
-         call fldfluxes (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
+         call get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
             forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
             taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
             z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
@@ -1223,6 +1232,7 @@ if (LWEVAP) then
          !tauy= tauy_fld*fldfrc+(1.0-fldfrc)*tauy
          fseng= fseng_fld*fldfrc+(1.0-fldfrc)*fseng
          fevpg= fevpg_fld*fldfrc+(1.0-fldfrc)*fevpg
+         fevpg_fld=fevpg_fld*fldfrc
          !tref=tref_fld*fldfrc+(1.0-fldfrc)*tref! 2 m height air temperature [kelvin]
          !qref=qref_fld*fldfrc+(1.0-fldfrc)*qref! 2 m height air humidity
          !z0m=z0m_fld*fldfrc+(1.0-fldfrc)*z0m! effective roughness [m]
@@ -1239,7 +1249,7 @@ if (LWEVAP) then
       endif
    else
       fevpg_fld=0.0d0
-   endif 
+   endif
 else
    fevpg_fld=0.0d0
 endif
@@ -1250,12 +1260,12 @@ endif
 !======================================================================
 ! Preparation for the next time step
 ! 1) time-varying parameters for vegatation
-! 2) fraction of snow cover 
+! 2) fraction of snow cover
 ! 3) solar zenith angle and
-! 4) albedos 
+! 4) albedos
 !======================================================================
 
-    ! cosine of solar zenith angle 
+    ! cosine of solar zenith angle
     calday = calendarday(idate)
     coszen = orb_coszen(calday,patchlonr,patchlatr)
 
@@ -1278,7 +1288,7 @@ IF (patchtype == 0) THEN
 #endif
 
 #ifdef PFT_CLASSIFICATION
-       ps = patch_pft_s(ipatch)      
+       ps = patch_pft_s(ipatch)
        pe = patch_pft_e(ipatch)
        CALL snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
        lai_p(ps:pe) = tlai_p(ps:pe)
@@ -1302,9 +1312,10 @@ ELSE
        sai = tsai(ipatch) * sigf
 ENDIF
 
-       ! update the snow age 
-       IF (snl == 0) sag=0.
-       CALL snowage (deltim,t_grnd,scv,scvold,sag)
+       ! 05/02/2023, Dai: move to ALBEDO.F90
+       ! update the snow age
+       !IF (snl == 0) sag=0.
+       !CALL snowage (deltim,t_grnd,scv,scvold,sag)
 
        ! water volumetric content of soil surface layer [m3/m3]
        ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
@@ -1317,14 +1328,15 @@ ENDIF
 !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
 !  can be zero snow layers but an active column in filter)
 
-       CALL AerosolMasses( snl ,do_capsnow ,&
-            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
-
-            mss_bcpho     ,mss_bcphi       ,mss_ocpho      ,mss_ocphi     ,&
-            mss_dst1      ,mss_dst2        ,mss_dst3       ,mss_dst4      ,&
-
-            mss_cnc_bcphi ,mss_cnc_bcpho   ,mss_cnc_ocphi  ,mss_cnc_ocpho ,&
-            mss_cnc_dst1  ,mss_cnc_dst2    ,mss_cnc_dst3   ,mss_cnc_dst4  )
+       !NOTE: put the below inside ALBEDO.F90
+!       CALL AerosolMasses( snl ,do_capsnow ,&
+!            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
+!
+!            mss_bcpho     ,mss_bcphi       ,mss_ocpho      ,mss_ocphi     ,&
+!            mss_dst1      ,mss_dst2        ,mss_dst3       ,mss_dst4      ,&
+!
+!            mss_cnc_bcphi ,mss_cnc_bcpho   ,mss_cnc_ocphi  ,mss_cnc_ocpho ,&
+!            mss_cnc_dst1  ,mss_cnc_dst2    ,mss_cnc_dst3   ,mss_cnc_dst4  )
 
 ! ============================================================================
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
@@ -1339,25 +1351,27 @@ ENDIF
           t_soisno_ (1) = t_lake (1)
        ENDIF
 
-       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno_(:1) ,&
-            pg_snow         ,snwcp_ice      ,snofrz         ,&
-
-            do_capsnow      ,fsno           ,scv            ,&
-            wliq_soisno (:0),wice_soisno(:0),&
-            t_soisno_   (:1),t_grnd         ,&
-            snw_rds         )
+       !NOTE: put the below inside ALBEDO.F90
+!       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno_(:1) ,&
+!            pg_snow         ,snwcp_ice      ,snofrz         ,&
+!
+!            do_capsnow      ,fsno           ,scv            ,&
+!            wliq_soisno (:0),wice_soisno(:0),&
+!            t_soisno_   (:1),t_grnd         ,&
+!            snw_rds         )
 
 ! ============================================================================
-       ! albedos 
-       ! we supposed CALL it every time-step, because 
+       ! albedos
+       ! we supposed CALL it every time-step, because
        ! other vegeation related parameters are needed to create
        IF (doalb) THEN
-            CALL albland (ipatch, patchtype,&
+            CALL albland (ipatch, patchtype,deltim,&
                  soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                 chil,rho,tau,fveg,green,lai,sai,coszen,wt,fsno,scv,sag,ssw,t_grnd,&
-                 snl,wliq_soisno,wice_soisno,snw_rds,&
-                 mss_cnc_bcpho,mss_cnc_bcphi,mss_cnc_ocpho,mss_cnc_ocphi,&
-                 mss_cnc_dst1,mss_cnc_dst2,mss_cnc_dst3,mss_cnc_dst4,&
+                 chil,rho,tau,fveg,green,lai,sai,coszen,&
+                 wt,fsno,scv,scvold,sag,ssw,pg_snow,t_grnd,t_soisno_,dz_soisno_,&
+                 snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
+                 mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
+                 mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
                  alb,ssun,ssha,ssno,thermk,extkb,extkd)
        ENDIF
     ELSE                   !OCEAN
@@ -1383,23 +1397,23 @@ ENDIF
        extkb = 0.0
        extkd = 0.0
 
-      tleaf = forc_t
-      ldew_rain  = 0.0
-      ldew_snow  = 0.0
-      ldew  = 0.0
-      fsenl = 0.0
-      fevpl = 0.0
-      etr   = 0.0
-      assim = 0.0
-      respc = 0.0
+       tleaf = forc_t
+       ldew_rain  = 0.0
+       ldew_snow  = 0.0
+       ldew  = 0.0
+       fsenl = 0.0
+       fevpl = 0.0
+       etr   = 0.0
+       assim = 0.0
+       respc = 0.0
 
-      zerr=0.
-      xerr=0.
+       zerr=0.
+       xerr=0.
 
        qinfl = 0.
        qdrip = forc_rain + forc_snow
        qintr = 0.
-       h2osoi = 0. 
+       h2osoi = 0.
        rstfacsun_out = 0.
        rstfacsha_out = 0.
        gssun_out = 0.
@@ -1425,7 +1439,7 @@ ENDIF
 #endif
        rootr = 0.
        zwt = 0.
-      
+
        IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
           wa = 0.
        ELSE
@@ -1437,14 +1451,19 @@ ENDIF
        vegwp = -2.5e4
 #endif
     ENDIF
-      
+
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)
-      
+
     IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
        wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv
     ELSE
        wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
     ENDIF
+
+    ! 09/2022, yuan: move from CLMDRIVER to SAVE memory
+    z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
+    dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
+
 !----------------------------------------------------------------------
 
 END SUBROUTINE CLMMAIN

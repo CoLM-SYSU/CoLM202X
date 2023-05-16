@@ -99,7 +99,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: j,l   ! indices
     real(r8):: f
-    real(r8):: ivt, m, mort
+    real(r8):: mort
+    integer :: ivt, m
 
     integer, parameter :: lit_fp = 1   ! Pool for liter
     integer, parameter :: cwd_fp = 2   ! Pool for CWD Course woody debris

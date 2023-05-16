@@ -15,6 +15,9 @@ MODULE MOD_1D_Fluxes
 #ifdef BGC
   USE MOD_BGC_Vars_1DFluxes
 #endif
+#ifdef LATERAL_FLOW
+  USE MOD_1D_HydroFluxes
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -58,6 +61,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
 
   REAL(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
+  REAL(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
   REAL(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
   REAL(r8), allocatable :: qintr  (:) !interception (mm h2o/s)
   REAL(r8), allocatable :: qinfl  (:) !inflitration (mm h2o/s)
@@ -66,7 +70,7 @@ MODULE MOD_1D_Fluxes
   REAL(r8), allocatable :: respc  (:) !canopy respiration (mol m-2 s-1)
 
   REAL(r8), allocatable :: qcharge(:) !groundwater recharge [mm/s]
-  
+
   INTEGER,  allocatable :: oroflag(:) !groundwater recharge [mm/s]
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -132,6 +136,7 @@ MODULE MOD_1D_Fluxes
             allocate ( zerr   (numpatch) )  ! the error of energy balance [W/m2]
 
             allocate ( rsur   (numpatch) )  ! surface runoff (mm h2o/s)
+            allocate ( rsub   (numpatch) )  ! subsurface runoff (mm h2o/s)
             allocate ( rnof   (numpatch) )  ! total runoff (mm h2o/s)
             allocate ( qintr  (numpatch) )  ! interception (mm h2o/s)
             allocate ( qinfl  (numpatch) )  ! inflitration (mm h2o/s)
@@ -140,8 +145,8 @@ MODULE MOD_1D_Fluxes
             allocate ( respc  (numpatch) )  ! canopy respiration (mol m-2 s-1)
 
             allocate ( qcharge(numpatch) )  ! groundwater recharge [mm/s]
-            
-            allocate ( oroflag(numpatch) )  ! 
+
+            allocate ( oroflag(numpatch) )  !
 
          end if
       end if
@@ -154,8 +159,12 @@ MODULE MOD_1D_Fluxes
       CALL allocate_1D_PCFluxes
 #endif
 
-#ifdef BGC 
+#ifdef BGC
       CALL allocate_1D_BGCFluxes
+#endif
+
+#ifdef LATERAL_FLOW
+      CALL allocate_1D_HydroFluxes
 #endif
 
    END SUBROUTINE allocate_1D_Fluxes
@@ -168,7 +177,7 @@ MODULE MOD_1D_Fluxes
      USE mod_landpatch
 
      if (p_is_worker) then
-        
+
         if (numpatch > 0) then
 
            deallocate ( taux    )  ! wind stress: E-W [kg/m/s2]
@@ -208,6 +217,7 @@ MODULE MOD_1D_Fluxes
            deallocate ( zerr    )  ! the error of energy balance [W/m2]
 
            deallocate ( rsur    )  ! surface runoff (mm h2o/s)
+           deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
            deallocate ( rnof    )  ! total runoff (mm h2o/s)
            deallocate ( qintr   )  ! interception (mm h2o/s)
            deallocate ( qinfl   )  ! inflitration (mm h2o/s)
@@ -216,8 +226,8 @@ MODULE MOD_1D_Fluxes
            deallocate ( respc   )  ! canopy respiration (mol m-2 s-1)
 
            deallocate ( qcharge )  ! groundwater recharge [mm/s]
-           
-           deallocate ( oroflag )  ! 
+
+           deallocate ( oroflag )  !
 
         end if
      end if
@@ -230,8 +240,12 @@ MODULE MOD_1D_Fluxes
      CALL deallocate_1D_PCFluxes
 #endif
 
-#ifdef BGC 
+#ifdef BGC
      CALL deallocate_1D_BGCFluxes
+#endif
+
+#ifdef LATERAL_FLOW
+     CALL deallocate_1D_HydroFluxes
 #endif
 
    END SUBROUTINE deallocate_1D_Fluxes

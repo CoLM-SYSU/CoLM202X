@@ -55,7 +55,7 @@ MODULE FRICTION_VELOCITY
   real(r8), INTENT(out) :: fq2m    ! relation for specific humidity at 2m
   real(r8), INTENT(out) :: fm10m   ! integral of profile function for momentum at 10m
   real(r8), INTENT(out) :: fm      ! integral of profile function for momentum
-  real(r8), INTENT(out) :: fh      ! integral of profile function for heat 
+  real(r8), INTENT(out) :: fh      ! integral of profile function for heat
   real(r8), INTENT(out) :: fq      ! integral of profile function for moisture
 
 !------------------------ local variables ------------------------------
@@ -75,32 +75,32 @@ MODULE FRICTION_VELOCITY
         zetam=1.574
         if(zeta < -zetam)then           ! zeta < -1
           fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333) 
-          ustar = vonkar*um / fm 
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+          ustar = vonkar*um / fm
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu) 
+          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
           ustar = vonkar*um / fm
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu 
+          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
           ustar = vonkar*um / fm
         else                            !  1 < zeta, phi=5+zeta
-          fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.) 
+          fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
           ustar = vonkar*um / fm
         endif
-        
+
         ! for 10 meter wind-velocity
         zldis=10.+z0m
         zeta=zldis/obu
         zetam=1.574
         if(zeta < -zetam)then           ! zeta < -1
           fm10m  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333) 
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu) 
+          fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu 
+          fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
         else                            !  1 < zeta, phi=5+zeta
-          fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.) 
+          fm10m  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
         endif
 
 ! temperature profile
@@ -109,13 +109,13 @@ MODULE FRICTION_VELOCITY
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu) 
+          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu 
+          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
         else                            !  1 < zeta, phi=5+zeta
-          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.) 
+          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
         endif
 
         ! for 2 meter screen temperature
@@ -139,13 +139,13 @@ MODULE FRICTION_VELOCITY
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
-                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu) 
+          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu 
+          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
         else                            !  1 < zeta, phi=5+zeta
-          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.) 
+          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
         endif
 
       ! for 2 meter screen humidity
@@ -165,11 +165,15 @@ MODULE FRICTION_VELOCITY
 
  end subroutine moninobuk
 
- 
+
  subroutine moninobukm(hu,ht,hq,displa,z0m,z0h,z0q,obu,um,displat,z0mt,&
                        ustar,fh2m,fq2m,htop,fmtop,fm,fh,fq,fht,fqt,phih)
 
 ! ======================================================================
+!
+! !DESCRIPTION:
+!
+!
 ! Original author : Yongjiu Dai, September 15, 1999
 !
 ! calculation of friction velocity, relation for potential temperatur
@@ -177,6 +181,10 @@ MODULE FRICTION_VELOCITY
 ! the scheme is based on the work of Zeng et al. (1998):
 ! Intercomparison of bulk aerodynamic algorithms for the computation
 ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
+!
+! REVISIONS:
+! Hua Yuan, 09/2017: adapted from moninobuk FUNCTION to calculate canopy top
+!                    fm, fq and phih for roughness sublayer u/k profile calculation
 ! ======================================================================
 
   use precision
@@ -203,11 +211,11 @@ MODULE FRICTION_VELOCITY
   real(r8), INTENT(out) :: fq2m    ! relation for specific humidity at 2m
   real(r8), INTENT(out) :: fmtop   ! integral of profile function for momentum at 10m
   real(r8), INTENT(out) :: fm      ! integral of profile function for momentum
-  real(r8), INTENT(out) :: fh      ! integral of profile function for heat 
+  real(r8), INTENT(out) :: fh      ! integral of profile function for heat
   real(r8), INTENT(out) :: fq      ! integral of profile function for moisture
   real(r8), INTENT(out) :: fht     ! integral of profile function for heat at the top layer
   real(r8), INTENT(out) :: fqt     ! integral of profile function for moisture at the top layer
-  real(r8), INTENT(out) :: phih    ! phi(h), similarity function for sensible heat 
+  real(r8), INTENT(out) :: phih    ! phi(h), similarity function for sensible heat
 
 !------------------------ local variables ------------------------------
 
@@ -226,34 +234,33 @@ MODULE FRICTION_VELOCITY
         zetam=1.574
         if(zeta < -zetam)then           ! zeta < -1
           fm    = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333) 
-          ustar = vonkar*um / fm 
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
+          ustar = vonkar*um / fm
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu) 
+          fm    = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
           ustar = vonkar*um / fm
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu 
+          fm    = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
           ustar = vonkar*um / fm
         else                            !  1 < zeta, phi=5+zeta
-          fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.) 
+          fm    = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
           ustar = vonkar*um / fm
         endif
-        
+
         ! for canopy top wind-velocity
-        ! !!NOTE: changed for canopy top wind-velocity (no wake assumed)
-        !zldis=10.+z0m
+        !NOTE: changed for canopy top wind-velocity (no wake assumed)
         zldis=htop-displa
         zeta=zldis/obu
         zetam=1.574
         if(zeta < -zetam)then           ! zeta < -1
           fmtop  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333) 
+                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu) 
+          fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu 
+          fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
         else                            !  1 < zeta, phi=5+zeta
-          fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.) 
+          fmtop  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.)
         endif
 
 ! temperature profile
@@ -262,13 +269,13 @@ MODULE FRICTION_VELOCITY
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fh    = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu) 
+          fh    = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu 
+          fh    = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
         else                            !  1 < zeta, phi=5+zeta
-          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.) 
+          fh    = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
         endif
 
         ! for 2 meter screen temperature
@@ -322,16 +329,16 @@ MODULE FRICTION_VELOCITY
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fq    = log(-zetat*obu/z0q) - psi(2,-zetat) &
-                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0q/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu) 
+          fq    = log(zldis/z0q) - psi(2,zeta) + psi(2,z0q/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu 
+          fq    = log(zldis/z0q) + 5.*zeta - 5.*z0q/obu
         else                            !  1 < zeta, phi=5+zeta
-          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.) 
+          fq    = log(obu/z0q) + 5. - 5.*z0q/obu + (5.*log(zeta)+zeta-1.)
         endif
 
-      ! for 2 meter screen humidity
+        ! for 2 meter screen humidity
         zldis=2.+z0h
         zeta=zldis/obu
         zetat=0.465
@@ -363,54 +370,14 @@ MODULE FRICTION_VELOCITY
 
  end subroutine moninobukm
 
- real(r8) function umoninobuk(displa,z0m,obu,ustar,z)
-
-  use precision
-  use PhysicalConstants, only : vonkar
-  implicit none
-
-! ---------------------- dummy argument --------------------------------
-
-  real(r8), INTENT(in) :: displa   ! displacement height [m]
-  real(r8), INTENT(in) :: z0m      ! roughness length, momentum [m]
-  real(r8), INTENT(in) :: obu      ! monin-obukhov length (m)
-  real(r8), INTENT(in) :: ustar    ! friction velocity [m/s]
-  real(r8), INTENT(in) :: z        ! height of windspeed [m]
-
-!------------------------ local variables ------------------------------
-
-  real(r8) zldis  ! reference height "minus" zero displacement heght [m]
-  real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
-  real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
-  real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-  real(r8) fm     ! integral of profile function for momentum
-
-        if ( z .le. displa+z0m ) then
-           umoninobuk = 0.
-           return
-        end if
-
-        ! for canopy top wind-velocity
-        zldis=z-displa
-        zeta=zldis/obu
-        zetam=1.574
-        if(zeta < -zetam)then           ! zeta < -1
-          fm  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-              + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333) 
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fm  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu) 
-        else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fm  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu 
-        else                            !  1 < zeta, phi=5+zeta
-          fm  = log(obu/z0m) + 5. - 5.*z0m/obu + (5.*log(zeta)+zeta-1.) 
-        endif
-
-        umoninobuk = ustar/vonkar*fm
-
- end function umoninobuk
-
+!-----------------------------------------------------------------------
  real(r8) function kmoninobuk(displa,obu,ustar,z)
-
+!
+! !DESCRIPTION:
+! k profile calculation for bare ground case
+!
+! Created by Hua Yuan, 09/2017
+!
   use precision
   use PhysicalConstants, only : vonkar
   implicit none
@@ -428,7 +395,7 @@ MODULE FRICTION_VELOCITY
   real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-  real(r8) phih   ! phi(h), similarity function for sensible heat 
+  real(r8) phih   ! phi(h), similarity function for sensible heat
 
         if ( z .le. displa ) then
            kmoninobuk = 0.
@@ -453,7 +420,14 @@ MODULE FRICTION_VELOCITY
 
  end function kmoninobuk
 
+!-----------------------------------------------------------------------
  real(r8) function kintmoninobuk(displa,z0h,obu,ustar,ztop,zbot)
+!
+! !DESCRIPTION:
+! k profile integration for bare ground case
+!
+! Created by Hua Yuan, 09/2017
+!
 
   use precision
   use PhysicalConstants, only : vonkar
@@ -474,42 +448,42 @@ MODULE FRICTION_VELOCITY
   real(r8) zetam  ! transition point of flux-gradient relation (wind profile)
   real(r8) zetat  ! transition point of flux-gradient relation (temp. profile)
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
-  
-  REAL(r8) :: fh_top, fh_bot         ! integral of profile function for heat 
+
+  REAL(r8) :: fh_top, fh_bot         ! integral of profile function for heat
 
         zldis=ztop-displa
         zeta=zldis/obu
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fh_top = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu) 
+          fh_top = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu 
+          fh_top = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
         else                            !  1 < zeta, phi=5+zeta
-          fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.) 
+          fh_top = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
         endif
- 
+
         zldis=zbot-displa
         zeta=zldis/obu
         zetat=0.465
         if(zeta < -zetat)then           ! zeta < -1
           fh_bot = log(-zetat*obu/z0h)-psi(2,-zetat) &
-                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333)) 
+                + psi(2,z0h/obu) + 0.8*((zetat)**(-0.333)-(-zeta)**(-0.333))
         else if(zeta < 0.)then          ! -1 <= zeta < 0
-          fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu) 
+          fh_bot = log(zldis/z0h) - psi(2,zeta) + psi(2,z0h/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
-          fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu 
+          fh_bot = log(zldis/z0h) + 5.*zeta - 5.*z0h/obu
         else                            !  1 < zeta, phi=5+zeta
-          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.) 
+          fh_bot = log(obu/z0h) + 5. - 5.*z0h/obu + (5.*log(zeta)+zeta-1.)
         endif
-         
-        kintmoninobuk = 1./(vonkar/(fh_top-fh_bot)*ustar) 
 
- END FUNCTION kintmoninobuk 
- 
- 
+        kintmoninobuk = 1./(vonkar/(fh_top-fh_bot)*ustar)
+
+ END FUNCTION kintmoninobuk
+
+
  subroutine moninobukini(ur,th,thm,thv,dth,dqh,dthv,zldis,z0m,um,obu)
 
 ! ======================================================================
@@ -539,7 +513,7 @@ MODULE FRICTION_VELOCITY
   real(r8), INTENT(out) :: um   ! wind speed including the stablity effect [m/s]
   real(r8), INTENT(out) :: obu  ! monin-obukhov length (m)
 
-! Local       
+! Local
   real(r8) wc     ! convective velocity [m/s]
   real(r8) rib    ! bulk Richardson number
   real(r8) zeta   ! dimensionless height used in Monin-Obukhov theory
@@ -576,10 +550,10 @@ MODULE FRICTION_VELOCITY
 
   use precision
   implicit none
-      
-  integer k    
+
+  integer k
   real(r8) zeta  ! dimensionless height used in Monin-Obukhov theory
-  real(r8) chik  ! 
+  real(r8) chik  !
 
       chik = (1.-16.*zeta)**0.25
       if(k == 1)then

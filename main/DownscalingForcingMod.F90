@@ -3,12 +3,16 @@
 
 module DownscalingForcingMod
   !-----------------------------------------------------------------------
-  ! !DESCRIPTION:
+  ! DESCRIPTION:
   ! Downscaling of gridcell-level meteorological forcings into column-level forcings
   ! (not included wind and solar radiation)
   !
-  ! Original codes: CLM5.0
+  ! INITIAL:
+  ! The Community Land Model version 5.0 (CLM5.0)
+  !
+  ! REVISIONS:
   ! Updated by Yongjiu Dai, January 16, 2023
+  !
   !
   IMPLICIT NONE
 

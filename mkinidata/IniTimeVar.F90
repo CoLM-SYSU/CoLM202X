@@ -7,10 +7,10 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #ifdef PLANT_HYDRAULIC_STRESS
                      ,vegwp,gs0sun,gs0sha&
 #endif
-                     ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&   
+                     ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
-                     ,snw_rds,mss_cnc_bcpho,mss_cnc_bcphi,mss_cnc_ocpho,mss_cnc_ocphi&
-                     ,mss_cnc_dst1,mss_cnc_dst2,mss_cnc_dst3,mss_cnc_dst4&
+                     ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
+                     ,mss_dst1,mss_dst2,mss_dst3,mss_dst4&
                      ,alb,ssun,ssha,ssno,thermk,extkb,extkd&
                      ,trad,tref,qref,rst,emis,zol,rib&
                      ,ustar,qstar,tstar,fm,fh,fq&
@@ -45,10 +45,9 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 !------------------------------------------------------------
 #endif
 #if(defined SOILINI)
-                     ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d)
-#else
-                     )
+                     ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d
 #endif
+                     ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 !=======================================================================
 ! Created by Yongjiu Dai, 09/15/1999
@@ -76,10 +75,11 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE GlobalVars
   USE ALBEDO
   USE mod_namelist
+  USE mod_soil_water
 
-  IMPLICIT NONE 
+  IMPLICIT NONE
 
-  INTEGER, intent(in) ::        &! 
+  INTEGER, intent(in) ::        &!
         ipatch,                 &! patch index
         patchtype                ! index for land cover TYPE [-]
 
@@ -92,7 +92,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         soil_s_n_alb,           &! albedo of near infrared of the saturated soil
         soil_d_n_alb,           &! albedo of near infrared of the dry soil
         z0m,                    &! aerodynamic roughness length [m]
-        zlnd,                   &! aerodynamic roughness length over soil surface [m] 
+        zlnd,                   &! aerodynamic roughness length over soil surface [m]
         chil,                   &! leaf angle distribution factor
         rho(2,2),               &! leaf reflectance (iw=iband, il=life and dead)
         tau(2,2),               &! leaf transmittance (iw=iband, il=life and dead)
@@ -108,6 +108,14 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         soil_w(nl_soil_ini),    &! soil wetness from initial file (-)
         snow_d                   ! snow depth (m)
 #endif
+
+  LOGICAL,  intent(in) :: use_wtd
+  REAL(r8), intent(in) :: zwtmm
+  REAL(r8), intent(in) :: zc_soimm(1:nl_soil)
+  REAL(r8), intent(in) :: zi_soimm(1:nl_soil)
+  REAL(r8), INTENT(in) :: vliq_r  (1:nl_soil)
+  INTEGER,  intent(in) :: nprms
+  REAL(r8), intent(in) :: prms(nprms, 1:nl_soil)
 
   REAL(r8), intent(inout) ::    &!
         z_soisno (maxsnl+1:nl_soil),   &! node depth [m]
@@ -128,7 +136,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         tleaf,                  &! sunlit leaf temperature [K]
 !#ifdef CLM5_INTERCEPTION
        ldew_rain,               &! depth of rain on foliage [mm]
-       ldew_snow,               &! depth of snow on foliage [mm]   
+       ldew_snow,               &! depth of snow on foliage [mm]
 !#endif
         ldew,                   &! depth of water on foliage [mm]
         sag,                    &! non dimensional snow age [-]
@@ -148,18 +156,18 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         wa,                     &! water storage in aquifer [mm]
         zwt,                    &! the depth to water table [m]
 
-        snw_rds      ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
-        mss_cnc_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
-        mss_cnc_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
-        mss_cnc_ocphi( maxsnl+1:0 ), &! mass concentration of hydrophilic OC (col,lyr) [kg/kg]
-        mss_cnc_ocpho( maxsnl+1:0 ), &! mass concentration of hydrophobic OC (col,lyr) [kg/kg]
-        mss_cnc_dst1 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
-        mss_cnc_dst2 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
-        mss_cnc_dst3 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
-        mss_cnc_dst4 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
-        ssno      (2,2,maxsnl+1:1 ), &! snow absorption [-]
+        snw_rds  ( maxsnl+1:0 ), &! effective grain radius (col,lyr) [microns, m-6]
+        mss_bcphi( maxsnl+1:0 ), &! mass concentration of hydrophilic BC (col,lyr) [kg/kg]
+        mss_bcpho( maxsnl+1:0 ), &! mass concentration of hydrophobic BC (col,lyr) [kg/kg]
+        mss_ocphi( maxsnl+1:0 ), &! mass concentration of hydrophilic OC (col,lyr) [kg/kg]
+        mss_ocpho( maxsnl+1:0 ), &! mass concentration of hydrophobic OC (col,lyr) [kg/kg]
+        mss_dst1 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 1 (col,lyr) [kg/kg]
+        mss_dst2 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 2 (col,lyr) [kg/kg]
+        mss_dst3 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 3 (col,lyr) [kg/kg]
+        mss_dst4 ( maxsnl+1:0 ), &! mass concentration of dust aerosol species 4 (col,lyr) [kg/kg]
+        ssno     (2,2,maxsnl+1:1 ), &! snow absorption [-]
 
-                    ! Additional variables required by reginal model (WRF & RSM) 
+                    ! Additional variables required by reginal model (WRF & RSM)
                     ! ---------------------------------------------------------
         trad,                   &! radiative temperature of surface [K]
         tref,                   &! 2 m height air temperature [kelvin]
@@ -204,18 +212,18 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         decomp_cpools_vr          (nl_soil_full,ndecomp_pools), &
         decomp_cpools             (ndecomp_pools)             , &
         ctrunc_vr                 (nl_soil_full)              , &
-        ctrunc_veg            , &    
-        ctrunc_soil           , &    
+        ctrunc_veg            , &
+        ctrunc_soil           , &
         altmax                                                , &
         altmax_lastyear       , &
-        lag_npp        
-   INTEGER, intent(out) :: altmax_lastyear_indx     
+        lag_npp
+   INTEGER, intent(out) :: altmax_lastyear_indx
    REAL(r8),intent(out) ::      &
         decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
         decomp_npools             (ndecomp_pools)             , &
         ntrunc_vr                 (nl_soil_full)              , &
-        ntrunc_veg            , &    
-        ntrunc_soil           , &    
+        ntrunc_veg            , &
+        ntrunc_soil           , &
         sminn_vr                  (nl_soil)                   , &
         sminn                 , &
         smin_no3_vr               (nl_soil)                   , &
@@ -227,8 +235,8 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         prec_daily                                            , &
         tsoi17                                                , &
         rh30                                                  , &
-        accumnstep                                            
-    
+        accumnstep
+
 #ifdef SASU
  !---------------SASU variables-----------------------
    REAL(r8),intent(out) ::      &
@@ -284,7 +292,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         lowerVX_c_vr_acc           (nl_soil,ndecomp_pools)  , &
         diagVX_n_vr_acc            (nl_soil,ndecomp_pools)  , &
         upperVX_n_vr_acc           (nl_soil,ndecomp_pools)  , &
-        lowerVX_n_vr_acc           (nl_soil,ndecomp_pools)  
+        lowerVX_n_vr_acc           (nl_soil,ndecomp_pools)
 
 #endif
  !----------------------------------------------------
@@ -292,12 +300,16 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
         skip_balance_check
 
 #endif
-        
-        INTEGER j, snl, m, ivt                      
+
+        INTEGER j, snl, m, ivt
         REAL(r8) wet(nl_soil), wt, ssw, oro, rhosno_ini, a
         real(r8) alpha       (1:nl_soil) ! used in calculating hk
         real(r8) zmm         (1:nl_soil) ! z in mm
         real(r8) den         (1:nl_soil) !
+
+        ! SNICAR
+        REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        REAL(r8) snofrz     (maxsnl+1:0) ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
         INTEGER ps, pe, pc
 !-----------------------------------------------------------------------
@@ -333,7 +345,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
      sag    = 0.
      scv    = snowdp*rhosno_ini
 
-! yuan, 08/02/2019: TODO: need to be changed in future
+! 08/02/2019, yuan: NOTE! need to be changed in future
 ! for PFT_CLASSIFICATION or PC_CLASSIFICATION
 ! have done but not for SOILINI right now
      CALL snowfraction (lai,sai,z0m,zlnd,scv,snowdp,wt,sigf,fsno)
@@ -371,7 +383,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #else
 ! soil temperature, water content and matrix potential
      DO j = 1, nl_soil
-        IF(patchtype==3)THEN !land ice 
+        IF(patchtype==3)THEN !land ice
            t_soisno(j) = 253.
            wliq_soisno(j) = 0.
            wice_soisno(j) = dz_soisno(j)*1000.
@@ -387,7 +399,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 ! soil hydraulic conductivity
      zmm(1:) = z_soisno(1:)*1000.
      DO j = 1, nl_soil
-        IF(patchtype==3)THEN !land ice 
+        IF(patchtype==3)THEN !land ice
            hk(j) = 0.
         ELSE
            if(j<nl_soil)then
@@ -399,7 +411,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
            if(alpha(j) <= 0.)then
               hk(j) = hksati(j)
            else
-              hk(j) = hksati(j+1) 
+              hk(j) = hksati(j+1)
            end if
         ENDIF
      ENDDO
@@ -407,14 +419,22 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
 !                    is below the model bottom zi(nl_soil)
 
-     wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-     zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+     IF (.not. use_wtd) THEN
+        wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+        zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
 
-     IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-        wa = 0.
-        zwt = zi_soi(nl_soil)
-        dpond = 0.
+        IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+           wa = -1.0e5
+           zwt = zi_soi(nl_soil)
+        ENDIF
+     ELSE
+        IF (patchtype /= 3) THEN
+           CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
+              zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms) 
+        ENDIF
      ENDIF
+           
+     dpond = 0.
 
 ! snow temperature and water content
      t_soisno(maxsnl+1:0) = -999.
@@ -441,7 +461,7 @@ IF (patchtype == 0) THEN
 #endif
 
 #ifdef PFT_CLASSIFICATION
-     ps = patch_pft_s(ipatch)      
+     ps = patch_pft_s(ipatch)
      pe = patch_pft_e(ipatch)
      sigf_p(ps:pe)   = 1.
 !#ifdef CLM5_INTERCEPTION
@@ -478,7 +498,7 @@ IF (patchtype == 0) THEN
      pc = patch2pc(ipatch)
      sigf_c(:,pc)   = 1.
      ldew_rain_c(:,pc)  = 0.
-     ldew_snow_c(:,pc)  = 0. 
+     ldew_snow_c(:,pc)  = 0.
      ldew_c(:,pc)   = 0.
      tleaf_c(:,pc)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -506,7 +526,7 @@ IF (patchtype == 0) THEN
 ELSE
      sigf   = fveg
      ldew_rain  = 0.
-     ldew_snow  = 0. 
+     ldew_snow  = 0.
      ldew  = 0.
      tleaf  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -517,7 +537,7 @@ ELSE
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
 ENDIF
-     
+
      fsno   = 0.
      scv    = 0.
      sag    = 0.
@@ -526,26 +546,29 @@ ENDIF
 
      ! SNICAR
      snw_rds   (:) = 54.526_r8
-     mss_cnc_bcpho (:) = 0.
-     mss_cnc_bcphi (:) = 0.
-     mss_cnc_ocpho (:) = 0.
-     mss_cnc_ocphi (:) = 0.
-     mss_cnc_dst1  (:) = 0.
-     mss_cnc_dst2  (:) = 0.
-     mss_cnc_dst3  (:) = 0.
-     mss_cnc_dst4  (:) = 0.
+     mss_bcpho (:) = 0.
+     mss_bcphi (:) = 0.
+     mss_ocpho (:) = 0.
+     mss_ocphi (:) = 0.
+     mss_dst1  (:) = 0.
+     mss_dst2  (:) = 0.
+     mss_dst3  (:) = 0.
+     mss_dst4  (:) = 0.
 
      wt     = 0.
      t_grnd = t_soisno(1)
 #endif
 
 ! surface albedo
+     pg_snow = 0.
+     snofrz (:) = 0.
      ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
-     CALL albland (ipatch,patchtype,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                   chil,rho,tau,fveg,green,lai,sai,coszen,wt,fsno,scv,sag,ssw,t_grnd,&
-                   snl,wliq_soisno,wice_soisno,snw_rds,&
-                   mss_cnc_bcpho,mss_cnc_bcphi,mss_cnc_ocpho,mss_cnc_ocphi,&
-                   mss_cnc_dst1,mss_cnc_dst2,mss_cnc_dst3,mss_cnc_dst4,&
+     CALL albland (ipatch,patchtype,1800.,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
+                   chil,rho,tau,fveg,green,lai,sai,coszen,&
+                   wt,fsno,scv,scv,sag,ssw,pg_snow,t_grnd,t_soisno(:1),dz_soisno(:1),&
+                   snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
+                   mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
+                   mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
                    alb,ssun,ssha,ssno,thermk,extkb,extkd)
 
   ELSE                 !ocean grid
@@ -582,19 +605,19 @@ ENDIF
 
 ! Additional variables required by reginal model (WRF & RSM)
 ! totally arbitrarily assigned here
-  trad  = t_grnd      
-  tref  = t_grnd      
-  qref  = 0.3     
-  rst   = 1.e36   
-  emis  = 1.0     
-  zol   = -1.0    
-  rib   = -0.1    
-  ustar = 0.25    
-  qstar = 0.001   
-  tstar = -1.5    
-  fm    = alog(30.)  
-  fh    = alog(30.)  
-  fq    = alog(30.)  
+  trad  = t_grnd
+  tref  = t_grnd
+  qref  = 0.3
+  rst   = 1.e36
+  emis  = 1.0
+  zol   = -1.0
+  rib   = -0.1
+  ustar = 0.25
+  qstar = 0.001
+  tstar = -1.5
+  fm    = alog(30.)
+  fh    = alog(30.)
+  fq    = alog(30.)
 
 #ifdef BGC
     totlitc                         = 0.0
@@ -791,9 +814,9 @@ ENDIF
        grainn_xfer_p            (ps:pe) = 0.0
        cropseedn_deficit_p      (ps:pe) = 0.0
        retransn_p               (ps:pe) = 0.0
-       
+
        harvdate_p               (ps:pe) = 99999999
-   
+
        tempsum_potential_gpp_p  (ps:pe) = 0.0
        tempmax_retransn_p       (ps:pe) = 0.0
        tempavg_tref_p           (ps:pe) = 0.0
@@ -804,7 +827,7 @@ ENDIF
        annavg_tref_p            (ps:pe) = 280.0
        annsum_npp_p             (ps:pe) = 0.0
        annsum_litfall_p         (ps:pe) = 0.0
-       
+
        bglfr_p                  (ps:pe) = 0.0
        bgtr_p                   (ps:pe) = 0.0
        lgsf_p                   (ps:pe) = 0.0
@@ -815,7 +838,7 @@ ENDIF
        gdd820_p                 (ps:pe) = 0.0
        gdd1020_p                (ps:pe) = 0.0
        nyrs_crop_active_p       (ps:pe) = 0
-       
+
        offset_flag_p            (ps:pe) = 0.0
        offset_counter_p         (ps:pe) = 0.0
        onset_flag_p             (ps:pe) = 0.0
@@ -830,7 +853,7 @@ ENDIF
        prev_leafc_to_litter_p   (ps:pe) = 0.0
        prev_frootc_to_litter_p  (ps:pe) = 0.0
        days_active_p            (ps:pe) = 0.0
-    
+
        burndate_p               (ps:pe) = 10000
        grain_flag_p             (ps:pe) = 0.0
 
@@ -946,7 +969,7 @@ ENDIF
        AKX_grainc_xf_to_grainc_p_acc               (ps:pe) = 0._r8
        AKX_livestemc_to_deadstemc_p_acc            (ps:pe) = 0._r8
        AKX_livecrootc_to_deadcrootc_p_acc          (ps:pe) = 0._r8
-      
+
        AKX_leafc_st_to_leafc_xf_p_acc              (ps:pe) = 0._r8
        AKX_frootc_st_to_frootc_xf_p_acc            (ps:pe) = 0._r8
        AKX_livestemc_st_to_livestemc_xf_p_acc      (ps:pe) = 0._r8
@@ -978,8 +1001,8 @@ ENDIF
        AKX_livecrootc_xf_exit_p_acc                (ps:pe) = 0._r8
        AKX_deadcrootc_xf_exit_p_acc                (ps:pe) = 0._r8
        AKX_grainc_xf_exit_p_acc                    (ps:pe) = 0._r8
-      
-       AKX_leafn_xf_to_leafn_p_acc                 (ps:pe) = 0._r8        
+
+       AKX_leafn_xf_to_leafn_p_acc                 (ps:pe) = 0._r8
        AKX_frootn_xf_to_frootn_p_acc               (ps:pe) = 0._r8
        AKX_livestemn_xf_to_livestemn_p_acc         (ps:pe) = 0._r8
        AKX_deadstemn_xf_to_deadstemn_p_acc         (ps:pe) = 0._r8
@@ -1043,7 +1066,7 @@ ENDIF
        AKX_deadcrootn_xf_exit_p_acc                (ps:pe) = 0._r8
        AKX_grainn_xf_exit_p_acc                    (ps:pe) = 0._r8
 #endif
-       
+
     end if
 #endif
 #endif
