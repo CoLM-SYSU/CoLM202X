@@ -103,9 +103,21 @@ PROGRAM mksrfdata
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
 #endif
 
-   IF (DEF_srfdata_region_clip) THEN
+   IF (USE_srfdata_from_larger_region) THEN
       
-      CALL srfdata_region_clip (DEF_dir_landdata_in, DEF_dir_landdata)
+      CALL srfdata_region_clip (DEF_dir_existing_srfdata, DEF_dir_landdata)
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      CALL spmd_exit
+#endif
+      CALL exit()
+   ENDIF
+
+   IF (USE_srfdata_from_3D_gridded_data) THEN
+      
+      ! TODO
+      ! CALL srfdata_retrieve_from_3D_data (DEF_dir_existing_srfdata, DEF_dir_landdata)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -125,6 +137,7 @@ PROGRAM mksrfdata
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
    ! CALL gblock%set_by_file (DEF_file_block)
 
+   CALL Init_GlovalVars
    CAll Init_LC_Const
 
    ! ...........................................................................

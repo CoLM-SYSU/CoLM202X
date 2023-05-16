@@ -25,6 +25,7 @@ MODULE mod_colm_debug
       MODULE procedure check_vector_data_real8_2d
       MODULE procedure check_vector_data_real8_3d
       MODULE procedure check_vector_data_real8_4d
+      MODULE procedure check_vector_data_int32_1d
    END interface check_vector_data
 
 CONTAINS
@@ -484,6 +485,79 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE check_vector_data_real8_4d
+
+   ! ----------
+   SUBROUTINE check_vector_data_int32_1d (varname, vdata, spv_in)
+
+      USE precision
+      USE spmd_task
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in)  :: varname
+      INTEGER, intent(in)           :: vdata(:)
+      INTEGER, intent(in), optional :: spv_in
+
+      ! Local variables
+      INTEGER :: vmin, vmax
+      INTEGER, allocatable :: vmin_all(:), vmax_all(:)
+
+      IF (p_is_worker) THEN
+
+         IF (present(spv_in)) THEN
+            IF (any(vdata /= spv_in)) THEN
+               vmin = minval(vdata, mask = vdata /= spv_in)
+               vmax = maxval(vdata, mask = vdata /= spv_in)
+            ELSE
+               vmin = spv_in
+               vmax = spv_in
+            ENDIF
+         ELSE
+            vmin = minval(vdata)
+            vmax = maxval(vdata)
+         ENDIF
+         
+#ifdef USEMPI
+         IF (p_iam_worker == p_root) THEN
+            allocate (vmin_all (0:p_np_worker-1))
+            allocate (vmax_all (0:p_np_worker-1))
+            CALL mpi_gather (vmin, 1, MPI_INTEGER, vmin_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_INTEGER, vmax_all, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+         ELSE
+            CALL mpi_gather (vmin, 1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+            CALL mpi_gather (vmax, 1, MPI_INTEGER, MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_worker, p_err)
+         ENDIF
+
+         IF (p_iam_worker == p_root) THEN
+            IF (present(spv_in)) THEN
+               IF (any(vmin_all /= spv_in)) THEN
+                  vmin = minval(vmin_all, mask = (vmin_all /= spv_in)) 
+               ELSE
+                  vmin = spv_in
+               ENDIF
+
+               IF (any(vmax_all /= spv_in)) THEN
+                  vmax = maxval(vmax_all, mask = (vmax_all /= spv_in)) 
+               ELSE
+                  vmax = spv_in
+               ENDIF
+            ELSE
+               vmin = minval(vmin_all) 
+               vmax = maxval(vmax_all) 
+            ENDIF
+
+            deallocate (vmin_all)
+            deallocate (vmax_all)
+         ENDIF
+#endif 
+
+         IF (p_iam_worker == p_root) THEN
+            write(*,104) varname, vmin, vmax
+            104 format('Check vector data:', A25, ' is in (', I12, ',', I12, ')')
+         ENDIF
+
+      ENDIF
+
+   END SUBROUTINE check_vector_data_int32_1d
 
 #endif
 

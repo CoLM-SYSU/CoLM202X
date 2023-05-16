@@ -579,7 +579,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vliq_r(:) = theta_r(i,:) 
+            vliq_r(:) = theta_r(1:nl_soil,i) 
             prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
             prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
             prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)

@@ -73,7 +73,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 
    landdir = trim(dir_landdata) // '/soil'
 
-   write(*,*),'soil parameter readin',landdir
+   write(*,*) 'soil parameter readin',landdir
    if (p_is_worker) then
 
       if (numpatch > 0) then

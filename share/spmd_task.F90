@@ -15,6 +15,7 @@ MODULE spmd_task
    LOGICAL, parameter :: p_is_io     = .true.
    LOGICAL, parameter :: p_is_worker = .true.
 
+   INTEGER, parameter :: p_np_glb    = 1    
    INTEGER, parameter :: p_np_worker = 1
    INTEGER, parameter :: p_np_io     = 1
 
@@ -105,7 +106,7 @@ CONTAINS
       INTEGER :: iproc
       INTEGER, allocatable :: p_igroup_all (:)
 
-      INTEGER :: nave, nres, ngrp, igrp
+      INTEGER :: nave, nres, ngrp, igrp, key
       CHARACTER(len=512) :: info
       CHARACTER(len=5)   :: cnum
 
@@ -139,7 +140,8 @@ CONTAINS
 
       ! 3. Construct IO communicator and address book.
       IF (p_is_io) THEN
-         CALL mpi_comm_split (p_comm_glb, 1, p_iam_glb, p_comm_io, p_err)
+         key = 1
+         CALL mpi_comm_split (p_comm_glb, key, p_iam_glb, p_comm_io, p_err)
          CALL mpi_comm_rank  (p_comm_io, p_iam_io, p_err)  
       ELSE
          CALL mpi_comm_split (p_comm_glb, MPI_UNDEFINED, p_iam_glb, p_comm_io, p_err)
@@ -160,7 +162,8 @@ CONTAINS
 
       ! 4. Construct worker communicator and address book.
       IF (p_is_worker) THEN
-         CALL mpi_comm_split (p_comm_glb, 1, p_iam_glb, p_comm_worker, p_err)
+         key = 1
+         CALL mpi_comm_split (p_comm_glb, key, p_iam_glb, p_comm_worker, p_err)
          CALL mpi_comm_rank  (p_comm_worker, p_iam_worker, p_err)  
       ELSE
          CALL mpi_comm_split (p_comm_glb, MPI_UNDEFINED, p_iam_glb, p_comm_worker, p_err)

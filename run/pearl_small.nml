@@ -7,8 +7,8 @@
    DEF_domain%edgew = 108.0   
    DEF_domain%edgee = 112.0      
    
-   DEF_srfdata_region_clip = .true.
-   DEF_dir_landdata_in = '/tera05/zhangsp/cases/gridbased_pearl/landdata'
+   DEF_dir_existing_srfdata = '/tera05/zhangsp/cases/gridbased_pearl/landdata'
+   USE_srfdata_from_larger_region = .true.
    
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2000
