@@ -53,12 +53,12 @@ BASIC_HYDRO = \
 				  ../main/hydro/mod_soil_function.o
 
 BASIC_BGC = \
-			  ../main/bgc/MOD_1D_BGCFluxes.o  \
-			  ../main/bgc/MOD_1D_BGCPFTFluxes.o  \
-			  ../main/bgc/MOD_2D_BGCFluxes.o  \
-			  ../main/bgc/MOD_BGCPFTimeVars.o  \
-			  ../main/bgc/MOD_BGCTimeInvars.o  \
-			  ../main/bgc/MOD_BGCTimeVars.o 
+			  ../main/bgc/MOD_BGC_Vars_1DFluxes.o  \
+			  ../main/bgc/MOD_BGC_Vars_1DPFTFluxes.o  \
+			  ../main/bgc/MOD_BGC_Vars_2DFluxes.o  \
+			  ../main/bgc/MOD_BGC_Vars_PFTimeVars.o  \
+			  ../main/bgc/MOD_BGC_Vars_TimeInvars.o  \
+			  ../main/bgc/MOD_BGC_Vars_TimeVars.o 
 
 BASIC =  \
 		  ../main/PFT_Const.o \

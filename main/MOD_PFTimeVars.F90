@@ -10,7 +10,7 @@ MODULE MOD_PFTimeVars
   USE precision
   USE timemanager
 #ifdef BGC
-  USE MOD_BGCPFTimeVars
+  USE MOD_BGC_Vars_PFTimeVars
 #endif
 
   IMPLICIT NONE

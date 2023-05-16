@@ -14,7 +14,7 @@ USE MOD_PFTimeVars
 USE MOD_PCTimeVars
 #endif
 #ifdef BGC
-USE MOD_BGCTimeVars
+USE MOD_BGC_Vars_TimeVars
 #endif
 IMPLICIT NONE
 SAVE

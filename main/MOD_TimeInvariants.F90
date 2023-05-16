@@ -13,7 +13,7 @@ USE MOD_PFTimeInvars
 USE MOD_PCTimeInvars
 #endif
 #ifdef BGC 
-USE MOD_BGCTimeInvars
+USE MOD_BGC_Vars_TimeInvars
 #endif
 IMPLICIT NONE
 SAVE

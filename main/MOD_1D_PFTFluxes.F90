@@ -9,7 +9,7 @@ MODULE MOD_1D_PFTFluxes
 
   USE precision
 #ifdef BGC
-  USE MOD_1D_BGCPFTFluxes
+  USE MOD_BGC_Vars_1DPFTFluxes
 #endif
   IMPLICIT NONE
   SAVE
