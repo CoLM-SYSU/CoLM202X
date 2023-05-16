@@ -107,7 +107,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       DO ipatch = 1, numpatch
          IF (landpatch%settyp(ipatch) == 1) THEN
             CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
-               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis)
+               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
@@ -218,7 +218,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 
          IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
             CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
-               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis)
+               data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_pft_one = max(pct_pft_one, 0.)
             

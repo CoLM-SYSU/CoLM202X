@@ -550,7 +550,7 @@ er(i) = ar(i) + decomp_hr(i)
 #ifdef CROP
 if(patchclass(i) .eq. 12)then
    if(ps .ne. pe)then
-      write(*,*),'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
+      write(*,*) 'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
       call abort
    else
       cropprod1c_loss     (i) = cropprod1c_loss_p(ps)  
@@ -610,7 +610,7 @@ integer, intent(in) :: pe
 #ifdef CROP
 if(patchclass(i) .eq. 12)then
    if(ps .ne. pe)then
-      write(*,*),'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
+      write(*,*) 'Error: crop patch contains multiple pfts:',p_iam_glb,'i=',i,'ps',ps,'does not equal to pe',pe
       call abort
    else
       grainn_to_cropprodn (i) = grainn_to_food_p (ps)

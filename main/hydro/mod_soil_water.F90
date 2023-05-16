@@ -863,6 +863,10 @@ contains
 
             end if
 
+            DO ilev = lb-1, ub+1
+               vact(ilev) = vact(ilev) .and. (abs(dr_dv(ilev,ilev)) > tol_q)
+            ENDDO
+
             call solve_least_squares_problem (ub-lb+3, dr_dv, vact, blc, dv)
 
             if (vact(lb-1)) then

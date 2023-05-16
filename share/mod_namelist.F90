@@ -83,9 +83,13 @@ MODULE mod_namelist
 
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
-   ! ----- use surface data from a large region -----
-   LOGICAL :: DEF_srfdata_region_clip = .false.
-   CHARACTER(len=256) :: DEF_dir_landdata_in = 'path/to/landdata'
+   ! ----- Use surface data from existing dataset -----
+   CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
+   ! case 1: from a larger region 
+   LOGICAL :: USE_srfdata_from_larger_region   = .false.
+   ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
+   !         only available for USGS/IGBP/PFT CLASSIFICATION
+   LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -551,8 +555,9 @@ CONTAINS
          DEF_file_mesh_filter,            &
          DEF_file_water_table_depth,      &
 
-         DEF_srfdata_region_clip,         &
-         DEF_dir_landdata_in,             &
+         DEF_dir_existing_srfdata,        &
+         USE_srfdata_from_larger_region,  &
+         USE_srfdata_from_3D_gridded_data,& 
 
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
@@ -699,8 +704,9 @@ CONTAINS
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
       
-      call mpi_bcast (DEF_srfdata_region_clip , 1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_dir_landdata_in, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
