@@ -554,7 +554,7 @@ MODULE MOD_LuLccTimeVars
 
             grid_patch_s(landpatch%eindex(i)) = i
          ENDDO
-         grid_patch_e(landpatch%eindex(i-1)) = i - 1
+         grid_patch_e(landpatch%eindex(i-1)) = numpatch
 
          ! same as above, loop for numpatch of previous year, patches at the beginning and end of the element were recorded
          DO i=1, numpatch_
@@ -569,7 +569,7 @@ MODULE MOD_LuLccTimeVars
 
             grid_patch_s_(landpatch_%eindex(i)) = i
          ENDDO
-         grid_patch_e_(landpatch_%eindex(i-1)) = i - 1
+         grid_patch_e_(landpatch_%eindex(i-1)) = numpatch_
 
          ! loop for element
          DO i=minelm, maxelm
