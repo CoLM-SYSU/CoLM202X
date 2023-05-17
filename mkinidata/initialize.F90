@@ -517,7 +517,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ENDIF
 
 #ifdef URBAN_MODEL
-   CALL UrbanLAI_readin_nc (year, month, dir_landdata)
+   CALL UrbanLAI_readin (year, month, dir_landdata)
 #endif
 
 #ifdef CLMDEBUG

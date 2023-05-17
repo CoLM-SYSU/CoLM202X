@@ -76,7 +76,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
       write(cyear,'(i4.4)') year
       write(ctime,'(i2.2)') time
 
-      lndname = trim(landdir)//'/'//trim(year)//'/LAI_patches'//trim(ctime)//'.nc'
+      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
       lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'

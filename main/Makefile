@@ -110,7 +110,7 @@ OBJS_URBAN =                                               \
 	  urban/UrbanLongwave.o                            \
 	  urban/UrbanALBEDO.o                              \
 	  urban/Urbannetsolar.o                            \
-	  urban/UrbanLAI_readin_nc.o                       \
+	  urban/UrbanLAI_readin.o                          \
 	  urban/UrbanFlux.o                                \
 	  urban/UrbanGroundFlux.o                          \
 	  urban/UrbanRoofFlux.o                            \

@@ -299,7 +299,7 @@ PROGRAM mksrfdata
    CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
 #endif
 
-   print*, count(landpatch%settyp==13)
+   !print*, count(landpatch%settyp==13)
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
