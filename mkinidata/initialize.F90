@@ -249,7 +249,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       if(numpatch > 0)then
          do j=1,nl_soil
             do i = 1, numpatch
-!         t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - wf_sand(j))
                t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - 50._r8)
                f_s1s2 (j) = 1._r8 - .004_r8 / (1._r8 - t)
                f_s1s3 (j) = .004_r8 / (1._r8 - t)
@@ -265,10 +264,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
-
-!   gdp_lf (:)    = 0._r8
-!   abm_lf (:)    = 0._r8
-!   peatf_lf (:)  = 0._r8
    cmb_cmplt_fact = (/0.5_r8,0.25_r8/)
 
    nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
