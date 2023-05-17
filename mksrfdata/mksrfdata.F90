@@ -63,12 +63,13 @@ PROGRAM mksrfdata
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
-
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
+   USE mod_region_clip
 #ifdef SrfdataDiag
    USE mod_srfdata_diag, only : gdiag, srfdata_diag_init
 #endif
-   
-   USE mod_region_clip
 
 
    IMPLICIT NONE
@@ -83,7 +84,9 @@ PROGRAM mksrfdata
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
 
+   INTEGER   :: lc_year
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
 
@@ -104,7 +107,7 @@ PROGRAM mksrfdata
 #endif
 
    IF (USE_srfdata_from_larger_region) THEN
-      
+
       CALL srfdata_region_clip (DEF_dir_existing_srfdata, DEF_dir_landdata)
 
 #ifdef USEMPI
@@ -115,7 +118,7 @@ PROGRAM mksrfdata
    ENDIF
 
    IF (USE_srfdata_from_3D_gridded_data) THEN
-      
+
       ! TODO
       ! CALL srfdata_retrieve_from_3D_data (DEF_dir_existing_srfdata, DEF_dir_landdata)
 
@@ -132,6 +135,7 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+   lc_year = DEF_LC_YEAR
 
    ! define blocks
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
@@ -204,6 +208,24 @@ PROGRAM mksrfdata
    ! define grid for topography
    CALL gtopo%define_by_name ('colm_500m')
 
+   ! add by dong, only test for making urban data
+#ifdef URBAN_MODEL
+   CALL gurban%define_by_name          ('colm_500m')
+   CALL grid_urban_500m%define_by_name ('colm_500m')
+   CALL grid_urban_5km%define_by_name  ('colm_5km' )
+   CALL grid_urban_100m%define_by_name ('colm_100m')
+
+   CALL pixel%assimilate_grid (gurban         )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+   CALL pixel%assimilate_grid (grid_urban_100m)
+
+   CALL pixel%map_to_grid (gurban         )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+   CALL pixel%map_to_grid (grid_urban_100m)
+#endif
+
    ! assimilate grids to build pixels
 #ifndef SinglePoint
    CALL pixel%assimilate_grid (gridmesh)
@@ -272,14 +294,18 @@ PROGRAM mksrfdata
 #endif
 
    ! build land patches
-   CALL landpatch_build
+   CALL landpatch_build(lc_year)
 
 #ifdef PFT_CLASSIFICATION
-   CALL landpft_build
+   CALL landpft_build(lc_year)
 #endif
 
 #ifdef PC_CLASSIFICATION
-   CALL landpc_build
+   CALL landpc_build(lc_year)
+#endif
+
+#ifdef URBAN_MODEL
+   CALL landurban_build(lc_year)
 #endif
 
    ! ................................................................
@@ -290,22 +316,27 @@ PROGRAM mksrfdata
 
    CALL pixel%save_to_file     (dir_landdata)
 
-   CALL mesh_save_to_file      (dir_landdata)
+   CALL mesh_save_to_file      (lc_year, dir_landdata)
 
-   CALL pixelset_save_to_file  (dir_landdata, 'landelm', landelm)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landelm', landelm)
 
 #ifdef CATCHMENT
-   CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landhru', landhru)
 #endif
 
-   CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
+   print*, count(landpatch%settyp==13)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  )
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpft'  , landpft)
 #endif
 
 #ifdef PC_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpc')
+#endif
+
+#ifdef URBAN_MODEL
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landurban', landurban)
 #endif
 
    ! ................................................................
@@ -338,7 +369,7 @@ PROGRAM mksrfdata
 
    CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
 
-   CALL aggregation_soil_parameters (gpatch, dir_rawdata, dir_landdata)
+   CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
 
    CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
@@ -346,11 +377,17 @@ PROGRAM mksrfdata
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
 
    CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
    CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+
+#ifdef URBAN_MODEL
+   CALL aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
+                           grid_urban_5km, grid_urban_100m, grid_urban_500m)
+#endif
+
 
    ! ................................................................
    ! 4. Free memories.

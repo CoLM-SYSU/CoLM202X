@@ -2,13 +2,6 @@
 
 SUBROUTINE lakedepth_readin (dir_landdata)
 
-!------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Read in lakedepth and assign lake thickness of each layer.
-!
-! Original author: Yongjiu Dai, 03/2018
-!------------------------------------------------------------------------------------------
-
    use precision
    USE GlobalVars, only : nl_lake
    use spmd_task
@@ -68,6 +61,9 @@ SUBROUTINE lakedepth_readin (dir_landdata)
    if (p_is_worker) then
 
       do ipatch = 1, numpatch
+
+         ! testing 04/07/2014
+         ! if(lakedepth(ipatch) > 50.) lakedepth(ipatch) = 50.
 
          ! testing 14/05/2021, Zhang
          if(lakedepth(ipatch) < 0.1) lakedepth(ipatch) = 0.1

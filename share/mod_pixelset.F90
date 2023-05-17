@@ -8,7 +8,7 @@ MODULE mod_pixelset
 
    ! ---- data types ----
    TYPE :: vec_gather_scatter_type
-      
+
       ! for worker and io
       INTEGER, allocatable :: vlen(:,:)
 
@@ -27,7 +27,7 @@ MODULE mod_pixelset
 
    ! ---- data types ----
    TYPE :: pixelset_type
-     
+
       INTEGER :: nset
 
       INTEGER, allocatable :: eindex(:)
@@ -38,23 +38,23 @@ MODULE mod_pixelset
       INTEGER, allocatable :: ielm(:)
 
       INTEGER :: nblkgrp
-      INTEGER, allocatable :: xblkgrp (:) 
-      INTEGER, allocatable :: yblkgrp (:) 
+      INTEGER, allocatable :: xblkgrp (:)
+      INTEGER, allocatable :: yblkgrp (:)
 
       TYPE(vec_gather_scatter_type) :: vecgs
 
-   CONTAINS 
+   CONTAINS
       procedure, PUBLIC :: set_vecgs         => vec_gather_scatter_set
       procedure, PUBLIC :: get_lonlat_radian => pixelset_get_lonlat_radian
       procedure, PUBLIC :: pset_pack         => pixelset_pack
-
+      procedure, PUBLIC :: forc_free_mem     => pixelset_forc_free_mem
       final :: pixelset_free_mem
 
    END TYPE pixelset_type
-   
+
    ! ---- data types ----
    TYPE :: subset_type
-      
+
       INTEGER,  allocatable :: substt(:)
       INTEGER,  allocatable :: subend(:)
       REAL(r8), allocatable :: subfrc(:)
@@ -67,7 +67,7 @@ MODULE mod_pixelset
 
    ! ---- data types ----
    TYPE :: superset_type
-      
+
       INTEGER,  allocatable :: sup(:)
 
    CONTAINS
@@ -77,7 +77,7 @@ MODULE mod_pixelset
    END TYPE superset_type
 
 CONTAINS
-   
+
    ! --------------------------------
    SUBROUTINE pixelset_get_lonlat_radian (this, rlon, rlat)
 
@@ -103,7 +103,7 @@ CONTAINS
          ipxend = this%ipxend (iset)
 
          allocate (area (ipxstt:ipxend))
-         DO ipxl = ipxstt, ipxend 
+         DO ipxl = ipxstt, ipxend
             area(ipxl) = areaquad (&
                pixel%lat_s(mesh(ie)%ilat(ipxl)), &
                pixel%lat_n(mesh(ie)%ilat(ipxl)), &
@@ -121,7 +121,7 @@ CONTAINS
 
       ENDDO
 
-   END SUBROUTINE pixelset_get_lonlat_radian 
+   END SUBROUTINE pixelset_get_lonlat_radian
 
    ! --------------------------------
    FUNCTION get_pixelset_rlat (npxl, ilat, area) result(rlat)
@@ -130,7 +130,7 @@ CONTAINS
       USE MathConstants, only : pi
       USE mod_pixel
       IMPLICIT NONE
-      
+
       REAL(r8) :: rlat
 
       INTEGER,  intent(in) :: npxl
@@ -172,11 +172,11 @@ CONTAINS
       DO ipxl = 1, npxl
 
          IF (pixel%lon_w(ilon(ipxl)) > pixel%lon_e(ilon(ipxl))) THEN
-            lon0 = (pixel%lon_w(ilon(ipxl)) + pixel%lon_e(ilon(ipxl)) + 360.0) * 0.5 
+            lon0 = (pixel%lon_w(ilon(ipxl)) + pixel%lon_e(ilon(ipxl)) + 360.0) * 0.5
          ELSE
             lon0 = (pixel%lon_w(ilon(ipxl)) + pixel%lon_e(ilon(ipxl))) * 0.5
          ENDIF
-          
+
          CALL normalize_longitude (lon0)
 
          IF (lon - lon0 > 180._r8) THEN
@@ -191,7 +191,7 @@ CONTAINS
          lon = lon / area_done
 
          CALL normalize_longitude(lon)
-            
+
       ENDDO
 
       rlon = lon * pi/180.0
@@ -200,7 +200,7 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE pixelset_free_mem (this)
-      
+
       IMPLICIT NONE
       TYPE (pixelset_type) :: this
 
@@ -208,14 +208,50 @@ CONTAINS
       IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
       IF (allocated(this%ipxend)) deallocate(this%ipxend)
       IF (allocated(this%settyp)) deallocate(this%settyp)
-      
+
       IF (allocated(this%ielm  )) deallocate(this%ielm  )
-      
+
       IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
       IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
 
    END SUBROUTINE pixelset_free_mem
-   
+
+   ! --------------------------------
+   SUBROUTINE pixelset_forc_free_mem (this)
+
+      IMPLICIT NONE
+
+      class(pixelset_type) :: this
+
+      IF (allocated(this%eindex)) deallocate(this%eindex)
+      IF (allocated(this%ipxstt)) deallocate(this%ipxstt)
+      IF (allocated(this%ipxend)) deallocate(this%ipxend)
+      IF (allocated(this%settyp)) deallocate(this%settyp)
+
+      IF (allocated(this%ielm  )) deallocate(this%ielm  )
+
+      IF (allocated(this%xblkgrp)) deallocate(this%xblkgrp)
+      IF (allocated(this%yblkgrp)) deallocate(this%yblkgrp)
+
+   END SUBROUTINE pixelset_forc_free_mem
+   ! --------------------------------
+   SUBROUTINE copy_pixelset(pixel_from, pixel_to)
+      IMPLICIT NONE
+
+      TYPE(pixelset_type), intent(in)  :: pixel_from
+      TYPE(pixelset_type), intent(out) :: pixel_to
+
+      pixel_to%eindex = pixel_from%eindex
+      pixel_to%ipxstt = pixel_from%ipxstt
+      pixel_to%ipxend = pixel_from%ipxend
+      pixel_to%ielm   = pixel_from%ielm
+
+      pixel_to%nset   = pixel_from%nset
+      pixel_to%nblkgrp= pixel_from%nblkgrp
+      pixel_to%xblkgrp= pixel_from%xblkgrp
+      pixel_to%yblkgrp= pixel_from%yblkgrp
+
+   END SUBROUTINE
    ! --------------------------------
    SUBROUTINE vec_gather_scatter_set (this)
 
@@ -230,11 +266,11 @@ CONTAINS
       INTEGER :: iproc
       INTEGER :: iset, ie, xblk, yblk, iblk, jblk, scnt, iblkgrp
       LOGICAL, allocatable :: nonzero(:,:)
-      
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-         
+
       IF (.not. allocated (this%vecgs%vlen)) THEN
          allocate (this%vecgs%vlen (gblock%nxblk, gblock%nyblk))
          this%vecgs%vlen(:,:) = 0
@@ -253,10 +289,10 @@ CONTAINS
          ie = 1
          xblk = 0
          yblk = 0
-         DO iset = 1, this%nset 
+         DO iset = 1, this%nset
             DO WHILE (this%eindex(iset) /= mesh(ie)%indx)
                ie = ie + 1
-            ENDDO 
+            ENDDO
 
             IF ((mesh(ie)%xblk /= xblk) .or. (mesh(ie)%yblk /= yblk)) THEN
                xblk = mesh(ie)%xblk
@@ -286,12 +322,12 @@ CONTAINS
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-      
+
          IF (.not. allocated(this%vecgs%vcnt)) THEN
             allocate (this%vecgs%vcnt (0:p_np_group-1,gblock%nxblk,gblock%nyblk))
             allocate (this%vecgs%vdsp (0:p_np_group-1,gblock%nxblk,gblock%nyblk))
          ENDIF
-      
+
          this%vecgs%vcnt(:,:,:) = 0
          DO jblk = 1, gblock%nyblk
             DO iblk = 1, gblock%nxblk
@@ -345,8 +381,8 @@ CONTAINS
          deallocate(nonzero)
       ENDIF
 
-   END SUBROUTINE vec_gather_scatter_set 
-   
+   END SUBROUTINE vec_gather_scatter_set
+
    ! --------------------------------
    SUBROUTINE pixelset_pack (this, mask, nset_packed)
 
@@ -362,8 +398,8 @@ CONTAINS
       INTEGER, allocatable :: settyp1(:)
       INTEGER, allocatable :: ielm1  (:)
 
-      IF (p_is_worker) THEN 
-      
+      IF (p_is_worker) THEN
+
          IF (count(mask) < this%nset) THEN
 
             allocate (eindex1(this%nset))
@@ -409,9 +445,9 @@ CONTAINS
             deallocate (ielm1  )
 
          ENDIF
-      
+
       ENDIF
-         
+
       CALL this%set_vecgs
 
       nset_packed = this%nset
@@ -420,7 +456,7 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE vec_gather_scatter_free_mem (this)
-      
+
       IMPLICIT NONE
       TYPE (vec_gather_scatter_type) :: this
 
@@ -429,19 +465,19 @@ CONTAINS
       IF (allocated(this%vend))  deallocate (this%vend)
       IF (allocated(this%vcnt))  deallocate (this%vcnt)
       IF (allocated(this%vdsp))  deallocate (this%vdsp)
-   
+
    END SUBROUTINE vec_gather_scatter_free_mem
 
    ! --------------------------------
    SUBROUTINE subset_build (this, superset, subset, use_frac, shadowfrac)
-      
+
       USE mod_mesh
       USE mod_pixel
       USE mod_utils
       IMPLICIT NONE
-      
+
       CLASS(subset_type) :: this
-      
+
       TYPE (pixelset_type), intent(in) :: superset
       TYPE (pixelset_type), intent(in) :: subset
       LOGICAL, intent(in) :: use_frac
@@ -485,14 +521,14 @@ CONTAINS
          IF (allocated(this%subfrc)) deallocate(this%subfrc)
 
          IF (subset%nset <= 0) RETURN
-         
+
          allocate (this%subfrc (subset%nset))
 
          DO isubset = 1, subset%nset
             ielm = subset%ielm(isubset)
             this%subfrc(isubset) = 0
-            DO ipxl = subset%ipxstt(isubset), subset%ipxend(isubset) 
-               this%subfrc(isubset) = this%subfrc(isubset) & 
+            DO ipxl = subset%ipxstt(isubset), subset%ipxend(isubset)
+               this%subfrc(isubset) = this%subfrc(isubset) &
                   + areaquad (&
                   pixel%lat_s(mesh(ielm)%ilat(ipxl)), &
                   pixel%lat_n(mesh(ielm)%ilat(ipxl)), &
@@ -518,23 +554,23 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE subset_free_mem (this)
-      
+
       IMPLICIT NONE
       TYPE (subset_type) :: this
 
       IF (allocated(this%substt))  deallocate (this%substt)
       IF (allocated(this%subend))  deallocate (this%subend)
       IF (allocated(this%subfrc))  deallocate (this%subfrc)
-   
+
    END SUBROUTINE subset_free_mem
 
    ! --------------------------------
    SUBROUTINE superset_build (this, superset, subset)
-      
+
       IMPLICIT NONE
-      
+
       CLASS(superset_type) :: this
-      
+
       TYPE (pixelset_type), intent(in) :: superset
       TYPE (pixelset_type), intent(in) :: subset
 
@@ -566,12 +602,12 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE superset_free_mem (this)
-      
+
       IMPLICIT NONE
       TYPE (superset_type) :: this
 
       IF (allocated(this%sup))  deallocate (this%sup)
-   
+
    END SUBROUTINE superset_free_mem
 
 END MODULE mod_pixelset

@@ -35,7 +35,7 @@ MODULE mod_landpatch
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpatch_build ()
+   SUBROUTINE landpatch_build (lc_year)
 
       USE precision
       USE spmd_task
@@ -56,8 +56,10 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: file_patch
+      CHARACTER(len=255) :: cyear
       TYPE (block_data_int32_2d) :: patchdata
       INTEGER :: iloc, npxl, ipxl, numset
       INTEGER :: ie, iset, ipxstt, ipxend
@@ -72,6 +74,7 @@ CONTAINS
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)
 
+      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land patches :'
       ENDIF
@@ -115,7 +118,13 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
+         !TODO: add parameter input for time year
+!#ifdef IGBP_CLASSIFICATION
+         file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
+!#endif
+#ifdef USGS_CLASSIFICATION
          file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
+#endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
 #ifdef USEMPI
@@ -331,28 +340,31 @@ CONTAINS
 #endif
 #endif
 
-      CALL write_patchfrac (DEF_dir_landdata)
+      CALL write_patchfrac (DEF_dir_landdata, lc_year)
 
    END SUBROUTINE landpatch_build
 
    ! -----
-   SUBROUTINE write_patchfrac (dir_landdata)
+   SUBROUTINE write_patchfrac (dir_landdata, lc_year)
 
+      USE mod_namelist
       USE ncio_vector
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       CHARACTER(LEN=*), intent(in) :: dir_landdata
-      CHARACTER(len=256) :: lndname
+      CHARACTER(len=256) :: lndname, cyear
 
-      CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch')
+      write(cyear,'(i4.4)') lc_year
+      CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch/' // trim(cyear))
 
-      lndname = trim(dir_landdata)//'/landpatch/patchfrac_elm.nc'
+      lndname = trim(dir_landdata)//'/landpatch/'//trim(cyear)//'/patchfrac_elm.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'patchfrac_elm', 'patch', landpatch, elm_patch%subfrc, 1)
 
 #ifdef CATCHMENT
-      lndname = trim(dir_landdata)//'/landpatch/patchfrac_hru.nc'
+      lndname = trim(dir_landdata)//'/landpatch/'//trim(cyear)//'patchfrac_hru.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'patchfrac_hru', 'patch', landpatch, hru_patch%subfrc, 1)

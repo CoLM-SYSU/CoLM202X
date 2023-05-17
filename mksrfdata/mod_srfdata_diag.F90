@@ -1,19 +1,22 @@
-#include <define.h>  
+#include <define.h>
 
 #ifdef SrfdataDiag
 MODULE mod_srfdata_diag
 
    USE mod_grid
    USE mod_mapping_pset2grid
-   
+
    IMPLICIT NONE
-      
+
    ! PUBLIC variables and subroutines
    type(grid_type) :: gdiag
 
    TYPE(mapping_pset2grid_type) :: m_patch2diag
 #ifdef PFT_CLASSIFICATION
    TYPE(mapping_pset2grid_type) :: m_pft2diag
+#endif
+#ifdef URBAN_MODEL
+   TYPE(mapping_pset2grid_type) :: m_urb2diag
 #endif
 
    PUBLIC :: srfdata_diag_init
@@ -32,6 +35,9 @@ CONTAINS
       USE mod_landpatch
 #ifdef PFT_CLASSIFICATION
       USE mod_landpft
+#endif
+#ifdef URBAN_MODEL
+      USE mod_landurban
 #endif
 
       IMPLICIT NONE
@@ -58,6 +64,10 @@ CONTAINS
 
 #ifdef PFT_CLASSIFICATION
       CALL m_pft2diag%build (landpft, gdiag)
+#endif
+
+#ifdef URBAN_MODEL
+      CALL m_urb2diag%build (landurban, gdiag)
 #endif
 
       srf_data_id = 666
@@ -96,7 +106,7 @@ CONTAINS
       TYPE(mapping_pset2grid_type), intent(in) :: m_srf
 
       REAL(r8), intent(in) :: spv
-      
+
       character (len=*), intent(in) :: filename
       character (len=*), intent(in) :: dataname
       integer, intent(in) :: compress
@@ -104,12 +114,12 @@ CONTAINS
       character (len=*), intent(in), optional :: write_mode
 
       ! Local variables
-      type(block_data_real8_3d) :: wdata, sumwt 
+      type(block_data_real8_3d) :: wdata, sumwt
       REAL(r8), allocatable :: vecone (:)
 
       CHARACTER(len=10) :: wmode
       integer :: iblkme, ib, jb, iblk, jblk, idata, ixseg, iyseg
-      integer :: ntyps, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp 
+      integer :: ntyps, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
       integer :: rmesg(3), smesg(3), isrc
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
@@ -134,12 +144,12 @@ CONTAINS
             vecone(:) = 1.0
          ENDIF
       ENDIF
-   
+
       CALL m_srf%map_split (vecone  , settyp, typindex, sumwt, spv)
       CALL m_srf%map_split (vsrfdata, settyp, typindex, wdata, spv)
 
       IF (p_is_io) THEN
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
@@ -154,20 +164,20 @@ CONTAINS
       if (trim(wmode) == 'one') then
 
          if (p_is_master) then
-            
+
             allocate (vdata (ntyps, srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
             vdata(:,:,:) = spv
-            
+
 #ifdef USEMPI
             do idata = 1, srf_concat%ndatablk
-            
+
                call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, &
                   srf_data_id, p_comm_glb, p_stat, p_err)
 
                isrc  = rmesg(1)
                ixseg = rmesg(2)
                iyseg = rmesg(3)
-               
+
                xgdsp = srf_concat%xsegs(ixseg)%gdsp
                ygdsp = srf_concat%ysegs(iyseg)%gdsp
                xcnt  = srf_concat%xsegs(ixseg)%cnt
@@ -206,7 +216,7 @@ CONTAINS
             IF (.not. fexists) THEN
                CALL ncio_create_file (filename)
 
-               call ncio_define_dimension (filename, 'TypeIndex', ntyps) 
+               call ncio_define_dimension (filename, 'TypeIndex', ntyps)
                call ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
                call ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
 
@@ -238,7 +248,7 @@ CONTAINS
             ENDIF
 
             call ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
-               
+
             CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
 
             deallocate (vdata)
@@ -266,7 +276,7 @@ CONTAINS
 
                      smesg = (/p_iam_glb, ixseg, iyseg/)
                      call mpi_send (smesg, 3, MPI_INTEGER, &
-                        p_root, srf_data_id, p_comm_glb, p_err) 
+                        p_root, srf_data_id, p_comm_glb, p_err)
                      call mpi_send (sbuf, ntyps*xcnt*ycnt, MPI_DOUBLE, &
                         p_root, srf_data_id, p_comm_glb, p_err)
 
@@ -283,7 +293,7 @@ CONTAINS
 
          if (p_is_io) then
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
@@ -300,7 +310,7 @@ CONTAINS
 
                call ncio_write_serial (fileblock, dataname, &
                   wdata%blk(iblk,jblk)%val, 'TypeIndex', 'lon', 'lat', compress)
-               
+
                CALL ncio_put_attr (fileblock, dataname, 'missing_value', spv)
 
             end do
@@ -347,7 +357,7 @@ CONTAINS
          lon_e(1:nx) = grid%lon_e(xl:xu)
 
          xl = 1
-         xu = grid%xcnt(iblk) - nx 
+         xu = grid%xcnt(iblk) - nx
          lon_w(nx+1:grid%xcnt(iblk)) = grid%lon_w(xl:xu)
          lon_e(nx+1:grid%xcnt(iblk)) = grid%lon_e(xl:xu)
       else

@@ -4,6 +4,7 @@
 
 MODULE mod_landpft
 
+   USE mod_namelist
    USE mod_pixelset
    USE LC_const
    USE GlobalVars
@@ -23,7 +24,7 @@ MODULE mod_landpft
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpft_build ()
+   SUBROUTINE landpft_build (lc_year)
 
       USE precision
       USE spmd_task
@@ -37,8 +38,9 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
-      CHARACTER(len=256) :: dir_5x5, suffix
+      CHARACTER(len=256) :: dir_5x5, suffix, cyear
       TYPE (block_data_real8_3d) :: pctpft
       REAL(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
       REAL(r8), allocatable :: area_one(:)
@@ -47,7 +49,8 @@ CONTAINS
       LOGICAL, allocatable :: patchmask (:)
       INTEGER  :: npft_glb
 
-
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
@@ -120,7 +123,7 @@ CONTAINS
          CALL flush_block_data (pctpft, 1.0)
 
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim'
-         suffix  = 'MOD2005'
+         suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data_pft (dir_5x5, suffix, gpatch, 'PCT_PFT', pctpft)
 
 #ifdef USEMPI
@@ -275,6 +278,10 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF ((numpatch <= 0) .or. (numpft <= 0)) return
+
+         IF (allocated(patch_pft_s)) deallocate(patch_pft_s)
+         IF (allocated(patch_pft_e)) deallocate(patch_pft_e)
+         IF (allocated(pft2patch  )) deallocate(pft2patch  )
 
          allocate (patch_pft_s (numpatch))
          allocate (patch_pft_e (numpatch))

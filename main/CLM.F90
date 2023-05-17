@@ -40,6 +40,9 @@ PROGRAM CLM
    USE mod_landhru
 #endif
    use mod_landpatch
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
@@ -165,24 +168,29 @@ PROGRAM CLM
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
 
-   call mesh_load_from_file (dir_landdata)
+   call mesh_load_from_file (DEF_LC_YEAR, dir_landdata)
 
-   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landelm', landelm, numelm)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landhru', landhru, numhru)
 #endif
 
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpft', landpft, numpft)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpc', landpc, numpc)
    CALL map_patch_to_pc
+#endif
+
+#ifdef URBAN_MODEL
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landurban', landurban, numurban)
+   CALL map_patch_to_urban
 #endif
 
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -209,7 +217,7 @@ PROGRAM CLM
    ! ----------------------------------------------------------------------
    ! Read in the model time invariant constant data
    CALL allocate_TimeInvariants ()
-   CALL READ_TimeInvariants (casename, dir_restart)
+   CALL READ_TimeInvariants (DEF_LC_YEAR, casename, dir_restart)
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
@@ -237,6 +245,12 @@ PROGRAM CLM
 
 #if(defined CaMa_Flood)
    call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
+#endif
+#if (defined UNSTRUCTURED || defined CATCHMENT)
+   CALL elm_vector_init ()
+#ifdef CATCHMENT
+   CALL hru_vector_init ()
+#endif
 #endif
 #ifdef OzoneData
    CALL init_Ozone_data(itstamp,sdate)
@@ -317,7 +331,11 @@ PROGRAM CLM
          ! yuan, 08/03/2019: read global LAI/SAI data
          CALL julian2monthday (idate(1), idate(2), month, mday)
          IF (month /= month_p) THEN
-            CALL LAI_readin (idate(1), month, dir_landdata)
+            IF (DEF_LAICHANGE) THEN
+               CALL LAI_readin (idate(1), month, dir_landdata)
+            ELSE
+               CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+            ENDIF
          END IF
       ELSE
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
@@ -325,6 +343,14 @@ PROGRAM CLM
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
       ENDIF
+
+#ifdef URBAN_MODEL
+      IF (DEF_LAICHANGE) THEN
+         CALL UrbanLAI_readin(idate(1), month, dir_landdata)
+      ELSE
+         CALL UrbanLAI_readin(DEF_LC_YEAR, month, dir_landdata)
+      ENDIF
+#endif
 #endif
 
 #ifdef BGC
@@ -356,13 +382,13 @@ PROGRAM CLM
       call hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
 
 #ifdef LULCC
-         ! DO land use and land cover change simulation
+      ! DO land use and land cover change simulation
       IF ( isendofyear(idate, deltim) ) THEN
          CALL deallocate_1D_Forcing
          CALL deallocate_1D_Fluxes
 
-         CALL LuLccDRIVER (casename,dir_srfdata,dir_restart,&
-                           nam_srfdata,nam_urbdata,idate,greenwich)
+         CALL LuLccDRIVER (casename,dir_landdata,dir_restart,&
+                           idate,greenwich)
 
          CALL allocate_1D_Forcing
          CALL allocate_1D_Fluxes
@@ -370,12 +396,8 @@ PROGRAM CLM
 #endif
 
       if (save_to_restart (idate, deltim, itstamp, ptstamp)) then
-#ifdef LULCC
          call WRITE_TimeVariables (idate, casename, dir_restart)
-#else
-         call WRITE_TimeVariables (idate, casename, dir_restart)
-#endif
-      endif
+      end if
 
 #ifdef CLMDEBUG
       call check_TimeVariables ()

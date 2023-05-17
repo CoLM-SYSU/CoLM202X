@@ -7,14 +7,16 @@ MODULE MOD_LuLccTimeInvars
 
   USE precision
   USE GlobalVars
+  USE mod_pixelset
   IMPLICIT NONE
   SAVE
 ! -----------------------------------------------------------------
   ! for patch time invariant information
+  TYPE(pixelset_type)  :: landpatch_
+  INTEGER              :: numpatch_
+  INTEGER              :: numelm_
   INTEGER, allocatable :: patchclass_    (:)  !index of land cover type
   INTEGER, allocatable :: patchtype_     (:)  !land water type
-  INTEGER, allocatable :: grid_patch_s_(:,:)  !start patch number of grid
-  INTEGER, allocatable :: grid_patch_e_(:,:)  !end patch number of grid
 
   ! for PFT_CLASSIFICATION
   INTEGER, allocatable :: pftclass_      (:)  !PFT type
@@ -26,7 +28,7 @@ MODULE MOD_LuLccTimeInvars
 
   ! for Urban model
   INTEGER, allocatable :: urbclass_      (:)  !urban TYPE
-  INTEGER, allocatable :: patch2urb_     (:)  !projection from patch to Urban
+  INTEGER, allocatable :: patch2urban_   (:)  !projection from patch to Urban
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_LuLccTimeInvars
@@ -48,12 +50,35 @@ MODULE MOD_LuLccTimeInvars
 
      USE precision
      USE GlobalVars
+     USE mod_landpatch
+#ifdef PFT_CLASSIFICATION
+     USE MOD_PFTimeInvars
+     USE MOD_PFTimeVars
+     USE mod_landpft
+#endif
+#ifdef PC_CLASSIFICATION
+     USE MOD_PCTimeInvars
+     USE MOD_PCTimeVars
+     USE mod_landpc
+#endif
+#ifdef URBAN_MODEL
+     USE MOD_UrbanTimeInvars
+     USE MOD_UrbanTimeVars
+     USE mod_landurban
+#endif
      IMPLICIT NONE
+
+     
+     allocate (landpatch_%eindex          (numpatch))
+     allocate (landpatch_%ipxstt          (numpatch))
+     allocate (landpatch_%ipxend          (numpatch))
+     allocate (landpatch_%settyp          (numpatch))
+     allocate (landpatch_%ielm            (numpatch))
+     allocate (landpatch_%xblkgrp         (numpatch))
+     allocate (landpatch_%yblkgrp         (numpatch))
 
      allocate (patchclass_                (numpatch))
      allocate (patchtype_                 (numpatch))
-     allocate (grid_patch_s_ (lon_points,lat_points))
-     allocate (grid_patch_e_ (lon_points,lat_points))
 
 #ifdef PFT_CLASSIFICATION
      allocate (pftclass_                    (numpft))
@@ -67,7 +92,7 @@ MODULE MOD_LuLccTimeInvars
 
 #ifdef URBAN_MODEL
      allocate (urbclass_                  (numurban))
-     allocate (patch2urb_                 (numpatch))
+     allocate (patch2urban_               (numpatch))
 #endif
 
   END SUBROUTINE allocate_LuLccTimeInvars
@@ -77,16 +102,32 @@ MODULE MOD_LuLccTimeInvars
 
      USE precision
      USE GlobalVars
+     USE mod_pixelset
      USE MOD_TimeInvariants
+     USE mod_mesh
+#ifdef PFT_CLASSIFICATION
      USE MOD_PFTimeInvars
+     USE MOD_PFTimeVars
+     USE mod_landpft
+#endif
+#ifdef PC_CLASSIFICATION
      USE MOD_PCTimeInvars
+     USE MOD_PCTimeVars
+     USE mod_landpc
+#endif
+#ifdef URBAN_MODEL
      USE MOD_UrbanTimeInvars
+     USE MOD_UrbanTimeVars
+     USE mod_landurban
+#endif
+     USE mod_landpatch
      IMPLICIT NONE
 
+     CALL copy_pixelset(landpatch, landpatch_)
+     numpatch_          = numpatch
+     numelm_            = numelm
      patchclass_    (:) = patchclass    (:)
      patchtype_     (:) = patchtype     (:)
-     grid_patch_s_(:,:) = grid_patch_s(:,:)
-     grid_patch_e_(:,:) = grid_patch_e(:,:)
 
 #ifdef PFT_CLASSIFICATION
      pftclass_      (:) = pftclass      (:)
@@ -99,22 +140,22 @@ MODULE MOD_LuLccTimeInvars
 #endif
 
 #ifdef URBAN_MODEL
-     urbclass_      (:) = urbclass      (:)
-     patch2urb_     (:) = patch2urb     (:)
+     urbclass_      (:) = landurban%settyp (:)
+     patch2urban_   (:) = patch2urban      (:)
 #endif
 
   END SUBROUTINE SAVE_LuLccTimeInvars
 
 
   SUBROUTINE deallocate_LuLccTimeInvars
+      USE mod_pixelset
 ! --------------------------------------------------
 ! Deallocates memory for LuLcc time invariant variables
 ! --------------------------------------------------
 
+     CALL landpatch_%forc_free_mem
      deallocate (patchclass_   )
      deallocate (patchtype_    )
-     deallocate (grid_patch_s_ )
-     deallocate (grid_patch_e_ )
 
 #ifdef PFT_CLASSIFICATION
      deallocate (pftclass_     )
@@ -128,7 +169,7 @@ MODULE MOD_LuLccTimeInvars
 
 #ifdef URBAN_MODEL
      deallocate (urbclass_     )
-     deallocate (patch2urb_    )
+     deallocate (patch2urban_  )
 #endif
 
   END SUBROUTINE deallocate_LuLccTimeInvars

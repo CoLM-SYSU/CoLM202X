@@ -49,8 +49,10 @@ MODULE ncio_serial
       MODULE procedure ncio_read_bcast_serial_int32_2d 
       MODULE procedure ncio_read_bcast_serial_real8_1d 
       MODULE procedure ncio_read_bcast_serial_real8_2d 
-      MODULE procedure ncio_read_bcast_serial_real8_3d 
-      MODULE procedure ncio_read_bcast_serial_logical_1d 
+      MODULE procedure ncio_read_bcast_serial_real8_3d
+      MODULE procedure ncio_read_bcast_serial_real8_4d
+      MODULE procedure ncio_read_bcast_serial_real8_5d
+      MODULE procedure ncio_read_bcast_serial_logical_1d
    END INTERFACE ncio_read_bcast_serial
 
    interface ncio_read_part_serial
@@ -859,6 +861,58 @@ CONTAINS
 #endif 
 
    END SUBROUTINE ncio_read_bcast_serial_real8_3d
+
+   !---------------------------------------------------------
+   SUBROUTINE ncio_read_bcast_serial_real8_4d (filename, dataname, rdata)
+
+      USE netcdf
+      USE spmd_task
+      USE precision
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:)
+      INTEGER :: vsize(4)
+
+      IF (p_is_master) THEN
+         CALL ncio_read_serial_real8_4d(filename, dataname, rdata)
+         vsize = shape(rdata)
+      ENDIF
+      
+#ifdef USEMPI
+      CALL mpi_bcast (vsize, 4, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4)))
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4), MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif 
+
+   END SUBROUTINE ncio_read_bcast_serial_real8_4d
+
+      !---------------------------------------------------------
+   SUBROUTINE ncio_read_bcast_serial_real8_5d (filename, dataname, rdata)
+
+      USE netcdf
+      USE spmd_task
+      USE precision
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      REAL(r8), allocatable, intent(out) :: rdata (:,:,:,:,:)
+      INTEGER :: vsize(5)
+
+      IF (p_is_master) THEN
+         CALL ncio_read_serial_real8_5d(filename, dataname, rdata)
+         vsize = shape(rdata)
+      ENDIF
+      
+#ifdef USEMPI
+      CALL mpi_bcast (vsize, 5, MPI_INTEGER, p_root, p_comm_glb, p_err)
+      IF (.not. p_is_master)  allocate (rdata (vsize(1),vsize(2),vsize(3),vsize(4),vsize(5)))
+      CALL mpi_bcast (rdata, vsize(1)*vsize(2)*vsize(3)*vsize(4)*vsize(5), MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif 
+
+   END SUBROUTINE ncio_read_bcast_serial_real8_5d
    
    ! -------------------------------
    SUBROUTINE ncio_read_bcast_serial_logical_1d (filename, dataname, rdata)
@@ -1175,6 +1229,7 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid, dimid, status
 
+      write(*,*) trim(dataname), trim(dimname)
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
       IF (status /= NF90_NOERR) THEN

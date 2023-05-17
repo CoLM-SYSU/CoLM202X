@@ -3,8 +3,8 @@
 include ../include/Makeoptions
  
 INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main \
-				  -I../main/hydro -I../main/bgc -I${NETCDF_INC}
-VPATH = ../share : ../mksrfdata : ../main : ../main/hydro : ../main/bgc
+				  -I../main/hydro -I../main/bgc -I../main/urban -I${NETCDF_INC}
+VPATH = ../share : ../mksrfdata : ../main : ../main/hydro : ../main/bgc : ../main/urban
 HEADER = ../include/define.h
 
 # name of executable
@@ -47,7 +47,8 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landpc.o \
 				  ../mksrfdata/mod_single_srfdata.o \
 				  ../mksrfdata/mod_elm_vector.o \
-				  ../mksrfdata/mod_hru_vector.o
+				  ../mksrfdata/mod_hru_vector.o \
+				  ../mksrfdata/mod_landurban.o
 
 BASIC_HYDRO = \
 				  ../main/hydro/mod_io_basin.o \
@@ -63,6 +64,12 @@ BASIC_BGC = \
 			  ../main/bgc/MOD_BGC_Vars_PFTimeVars.o  \
 			  ../main/bgc/MOD_BGC_Vars_TimeInvars.o  \
 			  ../main/bgc/MOD_BGC_Vars_TimeVars.o 
+
+BASIC_URBAN =                                 \
+	  ../main/urban/MOD_UrbanTimeVars.o   \
+	  ../main/urban/MOD_UrbanTimeInvars.o \
+	  ../main/urban/UrbanShortwave.o      \
+	  ../main/urban/UrbanALBEDO.o
 
 BASIC =  \
 		  ../main/PFT_Const.o \
@@ -80,6 +87,7 @@ BASIC =  \
 OBJS_MAIN = \
 				  ../main/LAI_empirical.o  \
 				  ../main/LAI_readin.o \
+				  ../main/urban/UrbanLAI_readin.o \
 				  ../main/orb_coszen.o \
 				  ../main/ThreeDCanopy.o \
 				  ../main/SnowSnicarMod.o \
@@ -100,6 +108,8 @@ OBJS = \
 		 NITRIF_readin.o \
 	         NDEP_readin.o   \
 		 Fire_readin.o   \
+		 Urban_readin.o  \
+		 UrbanIniTimeVar.o \
 		 IniTimeVar.o             \
 		 initialize.o             \
 		 CLMINI.o 
@@ -109,10 +119,10 @@ OBJS = \
 all: ${EXECUTABLE}
 
 ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${OBJS_MAIN} ${OBJS} 
+	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${OBJS_MAIN} ${OBJS} 
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${OBJS_MAIN} ${OBJS} -o $@ ${LDFLAGS}
+	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${OBJS_MAIN} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM initial data completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
@@ -130,7 +140,10 @@ $(BASIC_BGC) : %.o : %.F90 ${HEADER}
 $(BASIC_HYDRO) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/hydro
 
-$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO}
+$(BASIC_URBAN) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main/urban
+
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../main
 
 $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
