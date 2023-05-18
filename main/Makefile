@@ -168,7 +168,6 @@ OBJS =                                                     \
 	  LEAF_temperature.o                               \
 	  LEAF_temperature_PC.o                            \
 	  soil_hcap_cond.o                                 \
-	  SOIL_thermal_parameters.o                        \
 	  SOIL_SNOW_hydrology.o                            \
 	  SNOW_Layers_CombineDivide.o                      \
 	  GLACIER.o                                        \
