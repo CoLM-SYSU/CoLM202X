@@ -73,12 +73,13 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
    ENDIF
 #else
    IF (DEF_LAI_CLIM) THEN
+      write(cyear,'(i4.4)') year
       write(ctime,'(i2.2)') time
 
-      lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
-      lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+      lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
    ELSE
       write(cyear,'(i4.4)') year
@@ -124,6 +125,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
 #ifdef PFT_CLASSIFICATION
 
 #ifdef SinglePoint
+   !TODO: how to add time parameter in single point case
    IF (DEF_LAI_CLIM) THEN
       tlai_p(:) = pack(SITE_LAI_pfts_clim(:,time), SITE_pctpfts > 0.)
       tsai_p(:) = pack(SITE_SAI_pfts_clim(:,time), SITE_pctpfts > 0.)
@@ -132,18 +134,19 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
    ENDIF
 #else
 
+   write(cyear,'(i4.4)') year
    write(ctime,'(i2.2)') time
 #ifndef LAIfdbk
-   lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
 #endif
-   lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 #ifndef LAIfdbk
-   lndname = trim(landdir)//'/LAI_pfts'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pfts'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
 #endif
-   lndname = trim(landdir)//'/SAI_pfts'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_pfts'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
 
 #endif
@@ -173,17 +176,18 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
    ENDIF
 #else
 
+   write(cyear,'(i4.4)') year
    write(ctime,'(i2.2)') time
-   lndname = trim(landdir)//'/LAI_patches'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
 
-   lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
 
-   lndname = trim(landdir)//'/LAI_pcs'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pcs'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'LAI_pcs', N_PFT, landpc, tlai_c )
 
-   lndname = trim(landdir)//'/SAI_pcs'//trim(ctime)//'.nc'
+   lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_pcs'//trim(ctime)//'.nc'
    call ncio_read_vector (lndname, 'SAI_pcs', N_PFT, landpc, tsai_c )
 
 #endif

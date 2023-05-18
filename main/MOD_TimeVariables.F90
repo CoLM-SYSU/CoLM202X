@@ -19,6 +19,10 @@ USE MOD_BGC_Vars_TimeVars
 #ifdef LATERAL_FLOW
 USE MOD_HydroTimeVars
 #endif
+#ifdef URBAN_MODEL
+USE MOD_UrbanTimeVars
+#endif
+
 IMPLICIT NONE
 SAVE
 ! -----------------------------------------------------------------
@@ -294,6 +298,10 @@ SAVE
      CALL allocate_HydroTimeVars
 #endif
 
+#ifdef URBAN_MODEL
+     CALL allocate_UrbanTimeVars
+#endif
+
   END SUBROUTINE allocate_TimeVariables
 
 
@@ -438,6 +446,10 @@ SAVE
 
 #ifdef LATERAL_FLOW
      CALL deallocate_HydroTimeVars
+#endif
+
+#if (defined URBAN_MODEL)
+     CALL deallocate_UrbanTimeVars
 #endif
 
   END SUBROUTINE deallocate_TimeVariables
@@ -616,6 +628,10 @@ SAVE
      CALL WRITE_HydroTimeVars (file_restart)
 #endif
 
+#if (defined URBAN_MODEL)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
+     CALL WRITE_UrbanTimeVars (file_restart)
+#endif
   end subroutine WRITE_TimeVariables
 
   !---------------------------------------
@@ -749,6 +765,11 @@ SAVE
 #if (defined LATERAL_FLOW)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
      CALL READ_HydroTimeVars (file_restart)
+#endif
+
+#if (defined URBAN_MODEL)
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
+     CALL READ_UrbanTimeVars (file_restart)
 #endif
 
 #ifdef CLMDEBUG

@@ -1,18 +1,13 @@
 #include <define.h>
 
 SUBROUTINE soil_parameters_readin (dir_landdata)
-
-!------------------------------------------------------------------------------------------
-! DESCRIPTION:
-! Read in soil parameters; make unit conversion for soil physical process modeling;
-! soil parameters 8 layers => 10 layers
-!
-! Original author: Yongjiu Dai, 03/2014
-!
-! Revisions:
-! Nan Wei, 01/2019: read more parameters from mksrfdata results
-! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
-!------------------------------------------------------------------------------------------
+   ! ======================================================================
+   ! Read in soil parameters in (patches,lon_points,lat_points) and
+   ! => 1d vector [numpatch]
+   !
+   ! Created by Yongjiu Dai, 03/2014
+   !
+   ! ======================================================================
 
    use precision
    USE GlobalVars, only : nl_soil

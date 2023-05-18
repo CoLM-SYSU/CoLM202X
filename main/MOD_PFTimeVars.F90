@@ -248,6 +248,8 @@ CONTAINS
          IF (numpft > 0) THEN
             deallocate (tleaf_p  ) !leaf temperature [K]
             deallocate (ldew_p   ) !depth of water on foliage [mm]
+            deallocate (ldew_p_rain)
+            deallocate (ldew_p_snow)
             deallocate (sigf_p   ) !fraction of veg cover, excluding snow-covered veg [-]
             deallocate (tlai_p   ) !leaf area index
             deallocate (lai_p    ) !leaf area index

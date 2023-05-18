@@ -1,7 +1,7 @@
 #include <define.h>
 
-SUBROUTINE LuLccDRIVER (casename,dir_srfdata,dir_restart,&
-                        nam_srfdata,nam_urbdata,idate,greenwich)
+SUBROUTINE LuLccDRIVER (casename,dir_landdata,dir_restart,&
+                        idate,greenwich)
 
 !=======================================================================
 ! PURPOSE:
@@ -11,17 +11,17 @@ SUBROUTINE LuLccDRIVER (casename,dir_srfdata,dir_restart,&
 !=======================================================================
 
    USE precision
+   USE spmd_task
    USE MOD_LuLccTimeInvars
    USE MOD_LuLccTimeVars
-   USE MOD_LuLccTMatrix
+   USE MOD_TimeVariables
+   ! USE MOD_LuLccTMatrix
 
    IMPLICIT NONE
 
    CHARACTER(LEN=256), intent(in) :: casename      !casename name
-   CHARACTER(LEN=256), intent(in) :: dir_srfdata   !surface data directory
+   CHARACTER(LEN=256), intent(in) :: dir_landdata  !surface data directory
    CHARACTER(LEN=256), intent(in) :: dir_restart   !case restart data directory
-   CHARACTER(LEN=256), intent(in) :: nam_srfdata   !surface data filename
-   CHARACTER(LEN=256), intent(in) :: nam_urbdata   !urban data filename
 
    LOGICAL, intent(in)    :: greenwich   !true: greenwich time, false: local time
    INTEGER, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
@@ -35,16 +35,21 @@ SUBROUTINE LuLccDRIVER (casename,dir_srfdata,dir_restart,&
    CALL SAVE_LuLccTimeVars
 
    ! cold start for LuLcc
-   print *, ">>> LULCC: initializing..."
-   CALL LuLccInitialize (casename,dir_srfdata,dir_restart,&
-                         nam_srfdata,nam_urbdata,idate,greenwich)
+   IF (p_is_master) THEN
+      print *, ">>> LULCC: initializing..."
+   ENDIF
+
+   CALL LuLccInitialize (casename,dir_landdata,dir_restart,&
+                         idate,greenwich)
 
    ! simple method for variable recovery
-   print *, ">>> LULCC: simple method for variable recovery..."
+   IF (p_is_master) THEN
+      print *, ">>> LULCC: simple method for variable recovery..."
+   ENDIF
    CALL REST_LuLccTimeVars
 
    ! conserved method for variable revocery
-   print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+   !print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
    !CALL READ_LuLccTMatrix()
    !CALL LuLccEnergyConserve()
    !CALL LuLccWaterConserve()
@@ -53,4 +58,6 @@ SUBROUTINE LuLccDRIVER (casename,dir_srfdata,dir_restart,&
    CALL deallocate_LuLccTimeInvars()
    CALL deallocate_LuLccTimeVars()
 
+   ! write out state variables
+   CALL WRITE_TimeVariables (idate, casename, dir_restart)
 END SUBROUTINE LuLccDRIVER

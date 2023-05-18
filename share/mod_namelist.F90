@@ -85,13 +85,17 @@ MODULE mod_namelist
 
    ! ----- Use surface data from existing dataset -----
    CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
-   ! case 1: from a larger region 
+   ! case 1: from a larger region
    LOGICAL :: USE_srfdata_from_larger_region   = .false.
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
 
    ! ----- Leaf Area Index -----
+   ! ------LAI change ----------
+   ! add by Dong, use for updating LAI with simulation year
+   LOGICAL :: DEF_LAICHANGE = .TRUE.
+   INTEGER :: DEF_LC_YEAR   = 2005
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
    logical :: DEF_LAI_CLIM = .FALSE.
@@ -557,11 +561,14 @@ CONTAINS
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
-         USE_srfdata_from_3D_gridded_data,& 
+         USE_srfdata_from_3D_gridded_data,&
 
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
-         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
-         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
+         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
@@ -703,10 +710,14 @@ CONTAINS
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      ! add by Dong
+      CALL mpi_bcast (DEF_LAICHANGE ,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR   ,        1, mpi_integer, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)

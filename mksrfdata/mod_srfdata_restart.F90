@@ -16,7 +16,7 @@ MODULE mod_srfdata_restart
 CONTAINS
    
    ! -----------------------
-   SUBROUTINE mesh_save_to_file (dir_landdata)
+   SUBROUTINE mesh_save_to_file (lc_year, dir_landdata)
 
       USE spmd_task
       USE ncio_serial
@@ -25,10 +25,11 @@ CONTAINS
       USE mod_utils
       IMPLICIT NONE
 
+      INTEGER         , intent(in) :: lc_year
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: ie, je, nelm, elen, iblk, jblk, iworker, i
       INTEGER, allocatable :: nelm_worker(:), ndsp_worker(:)
       INTEGER, allocatable :: elmindx(:)
@@ -36,18 +37,20 @@ CONTAINS
       INTEGER, allocatable :: elmpixels(:,:,:)
       REAL(r8),allocatable :: lon(:), lat(:)
 
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
       IF (p_is_master) THEN
          write(*,*) 'Saving land elements ...'
-         CALL system('mkdir -p ' // trim(dir_landdata) // '/mesh')
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/mesh/' // trim(cyear))
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
 
-      filename = trim(dir_landdata) // '/mesh/mesh.nc'
+      filename = trim(dir_landdata) // '/mesh/' //trim(cyear) // '/mesh.nc'
 
       DO jblk = 1, gblock%nyblk
          DO iblk = 1, gblock%nxblk
@@ -159,9 +162,9 @@ CONTAINS
                      CALL ncio_define_dimension (fileblock, 'np_max', elen)
                      CALL ncio_define_dimension (fileblock, 'ncoor',  2   )
 
-                     CALL ncio_write_serial (fileblock, 'elmindex',  elmindx, 'element')
-                     CALL ncio_write_serial (fileblock, 'elmnpxl',   npxlall, 'element')
-                     CALL ncio_write_serial (fileblock, 'elmpixels', elmpixels, &
+                     CALL ncio_write_serial (fileblock, 'elmindex', elmindx, 'element')
+                     CALL ncio_write_serial (fileblock, 'npxl',     npxlall, 'element')
+                     CALL ncio_write_serial (fileblock, 'pixel',    elmpixels, &
                         'ncoor', 'np_max', 'element', compress = 1)
                   ENDIF
                ENDIF
@@ -222,7 +225,7 @@ CONTAINS
    END SUBROUTINE mesh_save_to_file
 
    !------------------------------------
-   SUBROUTINE mesh_load_from_file (dir_landdata)
+   SUBROUTINE mesh_load_from_file (lc_year, dir_landdata)
 
       USE spmd_task
       USE mod_namelist
@@ -231,28 +234,32 @@ CONTAINS
       USE mod_mesh
       IMPLICIT NONE
 
+      INTEGER         , intent(in) :: lc_year
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: iblkme, iblk, jblk, ie, nelm, ndsp
       INTEGER, allocatable :: elmindx(:), npxl(:), pixels(:,:,:)
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif 
-      
+       
       IF (p_is_master) THEN
          write(*,*) 'Loading land elements ...'
       ENDIF
          
-      filename = trim(dir_landdata) // '/mesh/mesh.nc'
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') lc_year
+      filename = trim(dir_landdata) // '/mesh/' // trim(cyear) // '/mesh.nc'
       CALL ncio_read_bcast_serial (filename, 'nelm_blk', nelm_blk)
 
       IF (p_is_io) THEN
 
          numelm = sum(nelm_blk, mask = gblock%pio == p_iam_glb)
 
+         print*, numelm
          IF (numelm > 0) THEN
 
             allocate (mesh (numelm))
@@ -267,9 +274,9 @@ CONTAINS
                IF (nelm > 0) THEN
 
                   CALL get_filename_block (filename, iblk, jblk, fileblock)
-                  CALL ncio_read_serial (fileblock, 'elmindex',  elmindx)
-                  CALL ncio_read_serial (fileblock, 'elmnpxl',   npxl   )
-                  CALL ncio_read_serial (fileblock, 'elmpixels', pixels )
+                  CALL ncio_read_serial (fileblock, 'elmindex', elmindx)
+                  CALL ncio_read_serial (fileblock, 'npxl',  npxl  )
+                  CALL ncio_read_serial (fileblock, 'pixel', pixels)
 
                   DO ie = 1, nelm
                      mesh(ie+ndsp)%indx = elmindx(ie)
@@ -311,7 +318,7 @@ CONTAINS
    END SUBROUTINE mesh_load_from_file 
 
    !------------------------------------------------
-   SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset)
+   SUBROUTINE pixelset_save_to_file (lc_year, dir_landdata, psetname, pixelset)
 
       USE spmd_task
       USE mod_block
@@ -319,25 +326,27 @@ CONTAINS
       USE mod_pixelset
       IMPLICIT NONE
 
+      INTEGER         ,    intent(in) :: lc_year
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(in) :: pixelset
 
       ! Local variables
-      CHARACTER(len=256)   :: filename
+      CHARACTER(len=256)   :: filename, cyear
 
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       IF (p_is_master) THEN
          write(*,*) 'Saving Pixel Sets ' // trim(psetname) // ' ...'
-         CALL system('mkdir -p ' // trim(dir_landdata) // '/' // trim(psetname))
+         CALL system('mkdir -p ' // trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear))
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear) // '/' // trim(psetname) // '.nc'
 
       CALL ncio_create_file_vector (filename, pixelset)
       CALL ncio_define_dimension_vector (filename, pixelset, trim(psetname))
@@ -346,7 +355,7 @@ CONTAINS
       CALL ncio_write_vector (filename, 'ipxstt', trim(psetname), pixelset, pixelset%ipxstt, rcompress)
       CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, rcompress)
       CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, rcompress)
-      
+     
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -357,7 +366,7 @@ CONTAINS
 
 
    !---------------------------
-   SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset)
+   SUBROUTINE pixelset_load_from_file (lc_year, dir_landdata, psetname, pixelset, numset)
 
       USE spmd_task
       USE mod_block
@@ -367,19 +376,21 @@ CONTAINS
       USE mod_pixelset
       IMPLICIT NONE
 
+      INTEGER         ,    intent(in) :: lc_year
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(inout) :: pixelset
       INTEGER, intent(out) :: numset
 
       ! Local variables
-      CHARACTER(len=256) :: filename, fileblock
+      CHARACTER(len=256) :: filename, fileblock, cyear
       INTEGER :: iset, nset, ndsp, iblkme, iblk, jblk, ie, je, nave, nres, left, iproc
       INTEGER :: nsend, nrecv
       INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL :: fexists
-      
+     
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -388,7 +399,7 @@ CONTAINS
          write(*,*) 'Loading Pixel Sets ' // trim(psetname) // ' ...'
       ENDIF
       
-      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(psetname) // '.nc'
+      filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear) // '/' // trim(psetname) // '.nc'
 
       IF (p_is_io) THEN
 
