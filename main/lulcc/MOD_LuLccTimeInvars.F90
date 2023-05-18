@@ -14,7 +14,9 @@ MODULE MOD_LuLccTimeInvars
 ! -----------------------------------------------------------------
   ! for patch time invariant information
   TYPE(pixelset_type)  :: landpatch_
+  TYPE(pixelset_type)  :: landelm_
   INTEGER              :: numpatch_
+  INTEGER              :: numelm_
   INTEGER              :: numpft_
   INTEGER              :: numpc_
   INTEGER              :: numurban_
@@ -55,6 +57,7 @@ MODULE MOD_LuLccTimeInvars
      USE spmd_task
      USE GlobalVars
      USE mod_landpatch
+     USE mod_mesh
 #ifdef PFT_CLASSIFICATION
      USE mod_landpft
 #endif
@@ -76,6 +79,11 @@ MODULE MOD_LuLccTimeInvars
            allocate (landpatch_%ielm            (numpatch))
            allocate (landpatch_%xblkgrp         (numpatch))
            allocate (landpatch_%yblkgrp         (numpatch))
+
+           allocate (landelm_%eindex          (numelm))
+           allocate (landelm_%ipxstt          (numelm))
+           allocate (landelm_%ipxend          (numelm))
+           allocate (landelm_%settyp          (numelm))
 
            allocate (patchclass_                (numpatch))
            allocate (patchtype_                 (numpatch))
@@ -113,6 +121,8 @@ MODULE MOD_LuLccTimeInvars
      USE mod_pixelset
      USE MOD_TimeInvariants
      USE mod_landpatch
+     USE mod_landelm
+     USE mod_mesh
 #ifdef PFT_CLASSIFICATION
      USE MOD_PFTimeInvars
      USE mod_landpft
@@ -129,7 +139,9 @@ MODULE MOD_LuLccTimeInvars
      IF (p_is_worker) THEN
         IF (numpatch > 0) THEN
            CALL copy_pixelset(landpatch, landpatch_)
+           CALL copy_pixelset(landelm  , landelm_  )
            numpatch_          = numpatch
+           numelm_            = numelm
            patchclass_    (:) = patchclass    (:)
            patchtype_     (:) = patchtype     (:)
 
@@ -170,6 +182,7 @@ MODULE MOD_LuLccTimeInvars
      IF (p_is_worker) THEN
         IF (numpatch_ > 0) THEN
            CALL landpatch_%forc_free_mem
+           CALL landelm_%forc_free_mem
            deallocate (patchclass_   )
            deallocate (patchtype_    )
 
