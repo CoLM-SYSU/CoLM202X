@@ -48,7 +48,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !$OMP SCHEDULE(STATIC, 1)
 #endif
       DO i = 1, numpatch
-         cycle
+
          IF (DEF_forcing%has_missing_value) THEN
             IF (.not. forcmask(i)) cycle
          ENDIF
