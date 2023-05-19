@@ -150,11 +150,13 @@ PROGRAM mksrfdata
 
    ! define grid coordinates of mesh
 #ifdef GRIDBASED
-   CALL gridmesh%define_from_file (DEF_file_mesh)
+   CALL init_gridbased_mesh_grid ()
 #endif
+
 #ifdef CATCHMENT
    CALL gridmesh%define_by_name ('merit_90m')
 #endif
+
 #ifdef UNSTRUCTURED
    CALL gridmesh%define_from_file (DEF_file_mesh)
 #endif
@@ -262,9 +264,15 @@ PROGRAM mksrfdata
    CALL mesh_build ()
    CALL landelm_build
 
+#ifdef GRIDBASED
+   IF (.not. read_mesh_from_file) THEN
+      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype') 
+   ENDIF
+#endif
+
    ! Filtering pixels
    IF (has_mesh_filter) THEN
-      CALL mesh_filter ()
+      CALL mesh_filter (grid_filter, DEF_file_mesh_filter, 'mesh_filter')
    ENDIF
 
 #ifdef CATCHMENT
