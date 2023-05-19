@@ -108,7 +108,7 @@ CONTAINS
       USE spmd_task
       IMPLICIT NONE
 
-      CHARACTER(len=256), INTENT(IN) :: filename
+      CHARACTER(len=*), INTENT(IN) :: filename
       ! Local Variables
       LOGICAL :: fexists
 

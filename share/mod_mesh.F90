@@ -25,8 +25,35 @@ MODULE mod_mesh
    TYPE (irregular_elm_type), allocatable :: mesh (:)
 
    INTEGER, allocatable :: nelm_blk(:,:)
+
+#ifdef GRIDBASED 
+   LOGICAL :: read_mesh_from_file = .true.
+#endif
    
 CONTAINS
+
+   ! ------
+#ifdef GRIDBASED
+   SUBROUTINE init_gridbased_mesh_grid ()
+
+      USE spmd_task
+      USE mod_namelist
+      IMPLICIT NONE
+
+      IF (p_is_master) THEN
+         inquire (file=trim(DEF_file_mesh), exist=read_mesh_from_file)
+      ENDIF
+#ifdef USEMPI
+      call mpi_bcast (read_mesh_from_file, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+#endif
+      IF (read_mesh_from_file) THEN
+         CALL gridmesh%define_from_file (DEF_file_mesh)
+      ELSE
+         CALL gridmesh%define_by_res (DEF_GRIDBASED_lon_res, DEF_GRIDBASED_lat_res)
+      ENDIF
+
+   END SUBROUTINE init_gridbased_mesh_grid 
+#endif
 
    ! -------
    SUBROUTINE copy_elm (elm_from, elm_to)
@@ -130,12 +157,18 @@ CONTAINS
       ENDIF
 
 #ifdef GRIDBASED 
-      CALL ncio_read_block (DEF_file_mesh, 'landmask', gridmesh, datamesh)
+      IF (read_mesh_from_file) THEN
+         CALL ncio_read_block (DEF_file_mesh, 'landmask', gridmesh, datamesh)
+      ELSE
+         CALL flush_block_data (datamesh, 1)
+      ENDIF
 #endif
+
 #ifdef CATCHMENT
       CALL catchment_data_read (DEF_path_Catchment_data, 'icatchment2d', gridmesh, datamesh, &
          catchment_data_in_one_file, spv = -1)
 #endif
+
 #ifdef UNSTRUCTURED
       CALL ncio_read_block (DEF_file_mesh, 'elmindex', gridmesh, datamesh)
 #endif

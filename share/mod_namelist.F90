@@ -80,6 +80,8 @@ MODULE mod_namelist
 #endif
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
+   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
+   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
@@ -553,6 +555,8 @@ CONTAINS
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
+         DEF_GRIDBASED_lon_res,           &
+         DEF_GRIDBASED_lat_res,           &
          DEF_file_water_table_depth,      &
 
          DEF_dir_existing_srfdata,        &
@@ -702,6 +706,9 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
       
       CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)

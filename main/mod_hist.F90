@@ -49,9 +49,6 @@ contains
       REAL(r8), intent(in) :: lon_res
       REAL(r8), intent(in) :: lat_res
 
-      ! Local Variables
-      INTEGER :: lon_points, lat_points
-      
       call allocate_acc_fluxes ()
       call FLUSH_acc_fluxes ()
 
@@ -68,9 +65,7 @@ contains
       IF (DEF_hist_grid_as_forcing) then
          CALL ghist%define_by_copy (gforc)
       ELSE
-         lon_points = nint(360.0/lon_res)
-         lat_points = nint(180.0/lat_res)
-         call ghist%define_by_ndims (lon_points, lat_points)
+         call ghist%define_by_res (lon_res, lat_res)
       ENDIF
 
 #ifndef CROP
