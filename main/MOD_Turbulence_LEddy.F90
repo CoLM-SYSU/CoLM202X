@@ -95,7 +95,7 @@ MODULE MOD_Turbulence_LEddy
         endif
 
 		Bm     = 0.0047 * (-zetazi) + 0.1854
-		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
+		zetam  = 0.5*Bm**4 * ( -16. - sqrt(256. + 4./Bm**4) )
 		Bm2    = max(Bm, 0.2722)
 		zetam2 = min(zetam, -0.13)
 
@@ -285,7 +285,7 @@ MODULE MOD_Turbulence_LEddy
         endif
 
 		Bm     = 0.0047 * (-zetazi) + 0.1854
-		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
+		zetam  = 0.5*Bm**4 * ( -16. - sqrt(256. + 4./Bm**4) )
 		Bm2    = max(Bm, 0.2722)
 		zetam2 = min(zetam, -0.13)
 
