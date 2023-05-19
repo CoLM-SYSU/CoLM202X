@@ -872,7 +872,7 @@ MODULE UrbanFlux
         sqrtdi      ,effcon      ,vmax25      ,slti        ,&
         hlti        ,shti        ,hhti        ,trda        ,&
         trdm        ,trop        ,gradm       ,binter      ,&
-        extkd       ,dewmx       ,etrc                     ,&
+        extkn       ,extkd       ,dewmx       ,etrc        ,&
         ! Status of surface
         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
@@ -978,6 +978,7 @@ MODULE UrbanFlux
         gradm,    &! conductance-photosynthesis slope parameter
         binter,   &! conductance-photosynthesis intercept
 
+        extkn,    &! coefficient of leaf nitrogen allocation
         extkd,    &! diffuse and scattered diffuse PAR extinction coefficient
         dewmx,    &! maximum dew
         etrc       ! maximum possible transpiration rate (mm/s)
@@ -1680,7 +1681,7 @@ MODULE UrbanFlux
               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
               gradm   ,binter  ,thm    ,psrf   ,po2m   ,&
               pco2m   ,pco2a   ,eah    ,ei(3)  ,tu(3)  ,&
-              par     ,rb(3)/lai,raw    ,rstfac ,cint(:),&
+              par     ,rb(3)/lai,raw   ,rstfac ,cint(:),&
               assim   ,respc   ,rs     )
         ELSE
            rs = 2.e4; assim = 0.; respc = 0.
@@ -1716,7 +1717,7 @@ MODULE UrbanFlux
                  (1.-fwet)*delta* ( lai/(rb(i)+rs) )
            ELSE
               cfh(i) = 1 / rb(i)
-              
+
               IF (i == 0) THEN !roof
                  ! account for fwet
                  cfw(i) = fwet_roof / rb(i)

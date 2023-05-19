@@ -1,4 +1,3 @@
-
 #include <define.h>
 
  SUBROUTINE UrbanTHERMAL ( &
@@ -46,7 +45,7 @@
         dewmx          ,sqrtdi         ,rootfr         ,effcon         ,&
         vmax25         ,slti           ,hlti           ,shti           ,&
         hhti           ,trda           ,trdm           ,trop           ,&
-        gradm          ,binter                                         ,&
+        gradm          ,binter         ,extkn                          ,&
 
         ! surface status
         fsno_roof      ,fsno_gimp      ,fsno_gper      ,scv_roof       ,&
@@ -243,7 +242,8 @@
         trdm       ,&! temperature coefficient in gs-a model             [s6]
         trop       ,&! temperature coefficient in gs-a model
         gradm      ,&! conductance-photosynthesis slope parameter
-        binter       ! conductance-photosynthesis intercept
+        binter     ,&! conductance-photosynthesis intercept
+        extkn        ! coefficient of leaf nitrogen allocation
 
   REAL(r8), intent(in) :: &
         fsno_roof  ,&! fraction of ground covered by snow
@@ -256,7 +256,7 @@
         hbot       ,&! canopy crown bottom height [m]
         fveg       ,&! fraction of veg cover
         sigf       ,&! fraction of veg cover, excluding snow-covered veg [-]
-        extkd        ! coefficient of leaf nitrogen allocation
+        extkd        ! diffuse and scattered diffuse PAR extinction coefficient
 
   REAL(r8), intent(inout) :: &
         fwsun      ,&! fraction of sunlit wall [-]
@@ -799,24 +799,24 @@
 
          CALL UrbanVegFlux ( &
 
-            ! 模型运行信息
+            ! model running information
             ipatch      ,deltim      ,lbr         ,lbi         ,&
-            ! 外强迫
+            ! forcing
             forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
             forc_vs     ,thm         ,th          ,thv         ,&
             forc_q      ,forc_psrf   ,forc_rhoair ,forc_frl    ,&
             forc_po2m   ,forc_pco2m  ,par         ,sabv        ,&
             rstfac      ,Fhac        ,Fwst        ,Fach        ,&
             vehc        ,meta                                  ,&
-            ! 城市和植被参数
+            ! urban and vegetation parameters
             hroof       ,hwr         ,nurb        ,fcover      ,&
             ewall       ,egimp       ,egper       ,ev          ,&
             htop        ,hbot        ,lai         ,sai         ,&
             sqrtdi      ,effcon      ,vmax25      ,slti        ,&
             hlti        ,shti        ,hhti        ,trda        ,&
             trdm        ,trop        ,gradm       ,binter      ,&
-            extkd       ,dewmx       ,etrc                     ,&
-            ! 地面状态
+            extkn       ,extkd       ,dewmx       ,etrc        ,&
+            ! surface status
             z0h_g       ,obu_g       ,ustar_g     ,zlnd        ,&
             zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
             wliq_roofsno(1),wliq_gimpsno(1),wice_roofsno(1),wice_gimpsno(1),&
@@ -825,10 +825,10 @@
             qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
             dqgimpdT    ,dqgperdT    ,sigf        ,tleaf       ,&
             ldew        ,rsr                                   ,&
-            ! 长波辐射
+            ! longwave related
             Ainv        ,B           ,B1          ,dBdT        ,&
             SkyVF       ,VegVF                                 ,&
-            ! 输出
+            ! output
             taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
             fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
             fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
@@ -846,16 +846,16 @@
 
          ! CALL urban flux
          CALL  UrbanOnlyFlux ( &
-            ! 模型运行信息
+            ! model running information
             ipatch      ,deltim      ,lbr         ,lbi         ,&
-            ! 外强迫
+            ! forcing
             forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
             forc_vs     ,thm         ,th          ,thv         ,&
             forc_q      ,forc_psrf   ,forc_rhoair ,Fhac        ,&
             Fwst        ,Fach        ,vehc        ,meta        ,&
-            ! 地面参数
+            ! surface parameters
             hroof       ,hwr         ,nurb        ,fcover      ,&
-            ! 地面状态变量
+            ! surface status
             z0h_g       ,obu_g       ,ustar_g     ,zlnd        ,&
             zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
             wliq_roofsno(1),wliq_gimpsno(1),wice_roofsno(1),wice_gimpsno(1),&
@@ -863,7 +863,7 @@
             twsun       ,twsha       ,tgimp       ,tgper       ,&
             qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
             dqgimpdT    ,dqgperdT    ,rsr                      ,&
-            ! 输出
+            ! output
             taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
             fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
             fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&

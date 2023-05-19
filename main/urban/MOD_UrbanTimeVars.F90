@@ -164,16 +164,16 @@ CONTAINS
             allocate (dz_sno_gper        (maxsnl+1:0,numurban))
             allocate (dz_sno_lake        (maxsnl+1:0,numurban))
 
+            allocate (troof_inner                   (numurban))
+            allocate (twsun_inner                   (numurban))
+            allocate (twsha_inner                   (numurban))
+
             allocate (t_roofsno    (maxsnl+1:nl_roof,numurban))
             allocate (t_wallsun    (maxsnl+1:nl_wall,numurban))
             allocate (t_wallsha    (maxsnl+1:nl_wall,numurban))
             allocate (t_gimpsno    (maxsnl+1:nl_soil,numurban))
             allocate (t_gpersno    (maxsnl+1:nl_soil,numurban))
             allocate (t_lakesno    (maxsnl+1:nl_soil,numurban))
-
-            allocate (troof_inner                   (numurban))
-            allocate (twsun_inner                   (numurban))
-            allocate (twsha_inner                   (numurban))
 
             allocate (wliq_roofsno (maxsnl+1:nl_roof,numurban))
             allocate (wice_roofsno (maxsnl+1:nl_roof,numurban))
@@ -268,6 +268,10 @@ CONTAINS
       call ncio_read_vector (file_restart, 'dz_sno_gper', -maxsnl, landurban, dz_sno_gper) !
       call ncio_read_vector (file_restart, 'dz_sno_lake', -maxsnl, landurban, dz_sno_lake) !
 
+      call ncio_read_vector (file_restart, 'troof_inner', landurban, troof_inner) !
+      call ncio_read_vector (file_restart, 'twsun_inner', landurban, twsun_inner) !
+      call ncio_read_vector (file_restart, 'twsha_inner', landurban, twsha_inner) !
+
       call ncio_read_vector (file_restart, 't_roofsno', nl_roof-maxsnl, landurban, t_roofsno) !
       call ncio_read_vector (file_restart, 't_wallsun', nl_wall-maxsnl, landurban, t_wallsun) !
       call ncio_read_vector (file_restart, 't_wallsha', nl_wall-maxsnl, landurban, t_wallsha) !
@@ -352,10 +356,8 @@ CONTAINS
       CALL ncio_define_dimension_vector (file_restart, landurban, 'roofsnow', nl_roof-maxsnl)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'wallsnow', nl_wall-maxsnl)
 
-
       CALL ncio_define_dimension_vector (file_restart, landurban, 'band', 2)
       CALL ncio_define_dimension_vector (file_restart, landurban, 'rtyp', 2)
-
 
       call ncio_write_vector (file_restart, 'fwsun' , 'urban', landurban, fwsun , compress) !
       call ncio_write_vector (file_restart, 'dfwsun', 'urban', landurban, dfwsun, compress) !
@@ -381,6 +383,10 @@ CONTAINS
       call ncio_write_vector (file_restart, 'dz_sno_gimp', 'snow', -maxsnl, 'urban', landurban, dz_sno_gimp, compress) !
       call ncio_write_vector (file_restart, 'dz_sno_gper', 'snow', -maxsnl, 'urban', landurban, dz_sno_gper, compress) !
       call ncio_write_vector (file_restart, 'dz_sno_lake', 'snow', -maxsnl, 'urban', landurban, dz_sno_lake, compress) !
+
+      call ncio_write_vector (file_restart, 'troof_inner', 'urban', landurban, troof_inner, compress) !
+      call ncio_write_vector (file_restart, 'twsun_inner', 'urban', landurban, twsun_inner, compress) !
+      call ncio_write_vector (file_restart, 'twsha_inner', 'urban', landurban, twsha_inner, compress) !
 
       call ncio_write_vector (file_restart, 't_roofsno', 'roofsnow', nl_roof-maxsnl, 'urban', landurban, t_roofsno, compress) !
       call ncio_write_vector (file_restart, 't_wallsun', 'wallsnow', nl_wall-maxsnl, 'urban', landurban, t_wallsun, compress) !
@@ -516,6 +522,9 @@ CONTAINS
             deallocate (Fwst         )
             deallocate (Fach         )
             deallocate (Fahe         )
+            deallocate (Fhah         )
+            deallocate (vehc         )
+            deallocate (meta         )
 
             deallocate (fsen_roof    )
             deallocate (fsen_wsun    )

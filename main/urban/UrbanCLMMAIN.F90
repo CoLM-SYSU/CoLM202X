@@ -37,7 +37,7 @@ SUBROUTINE UrbanCLMMAIN ( &
            htop         ,hbot         ,sqrtdi       ,chil         ,&
            effcon       ,vmax25       ,slti         ,hlti         ,&
            shti         ,hhti         ,trda         ,trdm         ,&
-           trop         ,gradm        ,binter       ,extkd        ,&
+           trop         ,gradm        ,binter       ,extkn        ,&
            rho          ,tau          ,rootfr                     ,&
 
          ! atmospheric forcing
@@ -67,12 +67,12 @@ SUBROUTINE UrbanCLMMAIN ( &
            snowdp_roof  ,snowdp_gimp  ,snowdp_gper  ,snowdp_lake  ,&
            fsno_roof    ,fsno_gimp    ,fsno_gper    ,fsno_lake    ,&
            sag          ,scv          ,snowdp       ,fsno         ,&
-           alb          ,ssun         ,ssha         ,sroof        ,&
-           swsun        ,swsha        ,sgimp        ,sgper        ,&
-           slake        ,lwsun        ,lwsha        ,lgimp        ,&
-           lgper        ,lveg         ,fwsun        ,dfwsun       ,&
-           t_room       ,troof_inner  ,twsun_inner  ,twsha_inner  ,&
-           t_roommax    ,t_roommin    ,tafu                       ,&
+           extkd        ,alb          ,ssun         ,ssha         ,&
+           sroof        ,swsun        ,swsha        ,sgimp        ,&
+           sgper        ,slake        ,lwsun        ,lwsha        ,&
+           lgimp        ,lgper        ,lveg         ,fwsun        ,&
+           dfwsun       ,t_room       ,troof_inner  ,twsun_inner  ,&
+           twsha_inner  ,t_roommax    ,t_roommin    ,tafu         ,&
 
            zwt          ,wa                                       ,&
            t_lake       ,lake_icefrac ,savedtke1                  ,&
@@ -220,7 +220,7 @@ SUBROUTINE UrbanCLMMAIN ( &
         trop       ,&! temperature coefficient in gs-a model
         gradm      ,&! conductance-photosynthesis slope parameter
         binter     ,&! conductance-photosynthesis intercep
-        extkd      ,&! diffuse and scattered diffuse PAR extinction coefficient
+        extkn      ,&! coefficient of leaf nitrogen allocation
         rho(2,2)   ,&! leaf reflectance (iw=iband, il=life and dead)
         tau(2,2)   ,&! leaf transmittance (iw=iband, il=life and dead)
 
@@ -367,6 +367,7 @@ SUBROUTINE UrbanCLMMAIN ( &
         vehc       ,&! flux from vehicle [W/m2]
         meta       ,&! flux from metabolism [W/m2]
 
+        extkd      ,&! diffuse and scattered diffuse PAR extinction coefficient
         alb  (2,2) ,&! averaged albedo [-]
         ssun (2,2) ,&! sunlit canopy absorption for solar radiation
         ssha (2,2) ,&! shaded canopy absorption for solar radiation
@@ -590,7 +591,7 @@ SUBROUTINE UrbanCLMMAIN ( &
                            solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                            solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
-      CALL rain_snow_temp (forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
+      CALL rain_snow_temp (patchtype,forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
       forc_rain = prc_rain + prl_rain
@@ -846,7 +847,7 @@ SUBROUTINE UrbanCLMMAIN ( &
          dewmx                ,sqrtdi               ,rootfr(:)            ,effcon               ,&
          vmax25               ,slti                 ,hlti                 ,shti                 ,&
          hhti                 ,trda                 ,trdm                 ,trop                 ,&
-         gradm                ,binter                                                           ,&
+         gradm                ,binter               ,extkn                                      ,&
          ! surface status
          fsno_roof            ,fsno_gimp            ,fsno_gper            ,scv_roof             ,&
          scv_gimp             ,scv_gper             ,scv_lake             ,snowdp_roof          ,&
@@ -1114,6 +1115,7 @@ SUBROUTINE UrbanCLMMAIN ( &
       sai = tsai(ipatch) * sigf
 
       ! update the snow age
+      !TODO: can be moved to UrbanALBEDO.F90
       IF (snlr == 0) sag_roof = 0.
       CALL snowage (deltim,troof,scv_roof,scvold_roof,sag_roof)
       IF (snli == 0) sag_gimp = 0.
@@ -1138,7 +1140,7 @@ SUBROUTINE UrbanCLMMAIN ( &
                      fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                      scv_roof,scv_gimp,scv_gper,scv_lake,&
                      sag_roof,sag_gimp,sag_gper,sag_lake,&
-                     dfwsun,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
+                     dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
       ! zero-filling set for glacier/ice-sheet/land water bodies/ocean components
       laisun = lai

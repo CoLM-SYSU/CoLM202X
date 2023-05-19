@@ -122,7 +122,6 @@ OBJS_URBAN =                                               \
 	  urban/UrbanBEM.o                                 \
 	  urban/UrbanLUCY.o                                \
 	  urban/UrbanTHERMAL.o                             \
-	  urban/UrbanIniTimeVar.o                          \
 	  urban/UrbanCLMMAIN.o
 
 BASIC =                                                    \

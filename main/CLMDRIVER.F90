@@ -64,7 +64,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
      IF (.not.run_urban_model .or. m.ne.URBAN) THEN
 
-        IF (run_urban_model) CYCLE  !for test only
+        IF (run_urban_model) CYCLE  !fortest only
 
         ! For non urban patches or slab urban
         CALL CLMMAIN (i, idate,           coszen(i),       deltim,          &
@@ -205,7 +205,6 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         vehicle(u,:)    ,weh_prof(u,:)   ,wdh_prof(u,:)                    ,&
 
       ! SOIL INFORMATION AND LAKE DEPTH
-        porsl(1:,i)     ,psi0(1:,i)      ,bsw(1:,i)       ,hksati(1:,i)    ,&
         vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&
         wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
         bsw(1:,i)       ,&
@@ -225,7 +224,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         effcon(m)       ,vmax25(m)       ,slti(m)         ,hlti(m)         ,&
         shti(m)         ,hhti(m)         ,trda(m)         ,trdm(m)         ,&
         trop(m)         ,gradm(m)        ,binter(m)       ,extkn(m)        ,&
-        rho(1:,1:,m)    ,tau(1:,1:,m)                                      ,&
+        rho(1:,1:,m)    ,tau(1:,1:,m)    ,rootfr(1:,m)                     ,&
 
       ! ATMOSPHERIC FORCING
         forc_pco2m(i)   ,forc_po2m(i)    ,forc_us(i)      ,forc_vs(i)      ,&
@@ -260,15 +259,14 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         snowdp_roof(u)  ,snowdp_gimp(u)  ,snowdp_gper(u)  ,snowdp_lake(u)  ,&
         fsno_roof(u)    ,fsno_gimp(u)    ,fsno_gper(u)    ,fsno_lake(u)    ,&
         sag(i)          ,scv(i)          ,snowdp(i)       ,fsno(i)         ,&
-        alb(1:,1:,i)    ,ssun(1:,1:,i)   ,ssha(1:,1:,i)   ,sroof(1:,1:,u)  ,&
-        swsun(1:,1:,u)  ,swsha(1:,1:,u)  ,sgimp(1:,1:,u)  ,sgper(1:,1:,u)  ,&
-        slake(1:,1:,u)  ,lwsun(u)        ,lwsha(u)        ,lgimp(u)        ,&
-        lgper(u)        ,lveg(u)         ,fwsun(u)        ,dfwsun(u)       ,&
-        t_room(u)       ,troof_inner(u)  ,twsun_inner(u)  ,twsha_inner(u)  ,&
-        t_roommax(u)    ,t_roommin(u)    ,tafu(u)                          ,&
+        extkd(i)        ,alb(1:,1:,i)    ,ssun(1:,1:,i)   ,ssha(1:,1:,i)   ,&
+        sroof(1:,1:,u)  ,swsun(1:,1:,u)  ,swsha(1:,1:,u)  ,sgimp(1:,1:,u)  ,&
+        sgper(1:,1:,u)  ,slake(1:,1:,u)  ,lwsun(u)        ,lwsha(u)        ,&
+        lgimp(u)        ,lgper(u)        ,lveg(u)         ,fwsun(u)        ,&
+        dfwsun(u)       ,t_room(u)       ,troof_inner(u)  ,twsun_inner(u)  ,&
+        twsha_inner(u)  ,t_roommax(u)    ,t_roommin(u)    ,tafu(u)         ,&
 
         zwt(i)          ,wa(i)                                             ,&
-        t_lake(1:,i)    ,lake_icefrac(1:,i)                                ,&
         t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
 
       ! additional diagnostic variables for output

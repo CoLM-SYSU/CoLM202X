@@ -38,12 +38,13 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban_SAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 
-      !TODO: usage?
       ! loop for urban atch to assign fraction of green leaf
       IF (p_is_worker) THEN
          DO u = 1, numurban
             npatch = urban2patch(u)
-            urb_green(u) = 1.              !fraction of green leaf
+            tlai(npatch) = urb_lai(u)
+            tsai(npatch) = urb_sai(u)
+            urb_green(u) = 1.              !TODO: usage? fraction of green leaf
             green(npatch)= 1.              !fraction of green leaf
          ENDDO
       ENDIF

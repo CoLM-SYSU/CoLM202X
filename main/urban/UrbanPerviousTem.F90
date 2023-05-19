@@ -1,3 +1,4 @@
+#include <define.h>
 
  SUBROUTINE UrbanPerviousTem (patchtype,lb,deltim, &
                               capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
@@ -185,7 +186,7 @@
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       ENDDO
 
-      call meltf (URBAN,lb,nl_soil,deltim, &
+      call meltf (patchtype,lb,nl_soil,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT, &
                   t_gpersno_bef(lb:),t_gpersno(lb:),wliq_gpersno(lb:),wice_gpersno(lb:),imelt(lb:), &
                   scv_gper,snowdp_gper,sm,xmf,porsl,psi0,&

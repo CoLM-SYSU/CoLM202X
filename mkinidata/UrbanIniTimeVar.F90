@@ -7,7 +7,7 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                     scv_roof,scv_gimp,scv_gper,scv_lake,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,tlake,fwsun,dfwsun,&
-                    alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
+                    extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
 !=======================================================================
 ! Created by Hua Yuan, 09/16/2021
@@ -63,6 +63,7 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
   REAL(r8), intent(out) :: &
         fwsun,         &! sunlit wall fraction [-]
         dfwsun,        &! change of fwsun
+        extkd,         &! diffuse and scattered diffuse PAR extinction coefficient
         alb (2,2),     &! averaged albedo [-]
         ssun(2,2),     &! sunlit canopy absorption for solar radiation
         ssha(2,2),     &! shaded canopy absorption for solar radiation
@@ -94,14 +95,14 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
 
      hveg        = min(hroof, (htop+hbot)/2.)
 
-! urban surface albedo
+     ! urban surface albedo
      CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
                     rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                     scv_roof,scv_gimp,scv_gper,scv_lake,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,&
-                    dfwsun,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
+                    dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
 END SUBROUTINE UrbanIniTimeVar
 !-----------------------------------------------------------------------

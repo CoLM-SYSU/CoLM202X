@@ -333,8 +333,14 @@ PROGRAM CLM
          IF (month /= month_p) THEN
             IF (DEF_LAICHANGE) THEN
                CALL LAI_readin (idate(1), month, dir_landdata)
+#ifdef URBAN_MODEL
+               CALL UrbanLAI_readin(idate(1), month, dir_landdata)
+#endif
             ELSE
                CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#ifdef URBAN_MODEL
+               CALL UrbanLAI_readin(DEF_LC_YEAR, month, dir_landdata)
+#endif
             ENDIF
          ENDIF
       ELSE
@@ -342,14 +348,6 @@ PROGRAM CLM
          if(Julian_8day /= Julian_8day_p)then
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
-      ENDIF
-#endif
-
-#ifdef URBAN_MODEL
-      IF (DEF_LAICHANGE) THEN
-         CALL UrbanLAI_readin(idate(1), month, dir_landdata)
-      ELSE
-         CALL UrbanLAI_readin(DEF_LC_YEAR, month, dir_landdata)
       ENDIF
 #endif
 

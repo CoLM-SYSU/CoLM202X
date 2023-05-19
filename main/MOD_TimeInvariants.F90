@@ -303,7 +303,7 @@ SAVE
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
      CALL READ_UrbanTimeInvars (file_restart)
 #endif
 
@@ -452,7 +452,7 @@ SAVE
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
      CALL WRITE_UrbanTimeInvars (file_restart)
 #endif
 

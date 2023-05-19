@@ -1,3 +1,4 @@
+#include <define.h>
 
  SUBROUTINE UrbanRoofFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
                            ur, thm, th, thv, zsno, fsno_roof, hroof, htvp_roof, &

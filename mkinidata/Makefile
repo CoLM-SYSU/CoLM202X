@@ -3,7 +3,7 @@
 include ../include/Makeoptions
 
 INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main \
-				  -I../main/hydro -I../main/bgc -I../main/urban -I${NETCDF_INC}
+	  -I../main/hydro -I../main/bgc -I../main/urban -I${NETCDF_INC}
 VPATH = ../share : ../mksrfdata : ../main : ../main/hydro : ../main/bgc : ../main/urban
 HEADER = ../include/define.h
 
@@ -69,9 +69,6 @@ BASIC_BGC =                                   \
 BASIC_URBAN =                                 \
 	  ../main/urban/MOD_UrbanTimeVars.o   \
 	  ../main/urban/MOD_UrbanTimeInvars.o \
-	  ../main/urban/UrbanLAI_readin.o     \
-	  ../main/urban/UrbanShortwave.o      \
-	  ../main/urban/UrbanALBEDO.o
 
 BASIC =                                       \
 	  ../main/PFT_Const.o                 \
@@ -96,7 +93,10 @@ OBJS_MAIN =                                   \
 	  ../main/SnowAlbedo.o                \
 	  ../main/AerosolMod.o                \
 	  ../main/ALBEDO.o                    \
-	  ../main/snowfraction.o
+	  ../main/snowfraction.o              \
+	  ../main/urban/UrbanLAI_readin.o     \
+	  ../main/urban/UrbanShortwave.o      \
+	  ../main/urban/UrbanALBEDO.o
 
 OBJS =                                        \
 	  pct_readin.o                        \

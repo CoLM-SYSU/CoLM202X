@@ -31,7 +31,7 @@ MODULE UrbanALBEDO
                        fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                        scv_roof,scv_gimp,scv_gper,scv_lake,&
                        sag_roof,sag_gimp,sag_gper,sag_lake,&
-                       dfwsun,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
+                       dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
 !=======================================================================
 ! Calculates fragmented albedos (direct and diffuse) in
@@ -100,6 +100,7 @@ MODULE UrbanALBEDO
 
  REAL(r8), intent(out) :: &
       dfwsun,    &! change of fwsun
+      extkd,     &! diffuse and scattered diffuse PAR extinction coefficient
       alb(2,2),  &! averaged albedo [-]
       ssun(2,2), &! sunlit canopy absorption for solar radiation
       ssha(2,2), &! shaded canopy absorption for solar radiation,
@@ -161,6 +162,7 @@ MODULE UrbanALBEDO
       slake(:,:) = 0.
 
       dfwsun = 0.
+      extkd  = 0.718
 
       IF(coszen<=0.) THEN
          !print *, "coszen < 0, ipatch and coszen: ", ipatch, coszen
