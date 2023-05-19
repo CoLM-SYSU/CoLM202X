@@ -484,7 +484,7 @@ MODULE MOD_LuLccTimeVars
      USE MOD_TimeVariables
      USE MOD_LuLccTimeInvars
 #ifdef PFT_CLASSIFICATION
-     USE MOD_PFTimeInvariants
+     USE MOD_PFTimeInvars
      USE MOD_PFTimeVars
      USE mod_landpft
 #endif
@@ -496,7 +496,7 @@ MODULE MOD_LuLccTimeVars
      USE MOD_UrbanTimeVars
      USE mod_landurban
 #endif
-     
+
      IMPLICIT NONE
 
      REAL(r8), allocatable, dimension(:) :: grid_patch_s , grid_patch_e
@@ -524,11 +524,11 @@ MODULE MOD_LuLccTimeVars
         DO i=1, numelm
            ! how many i elements in this worker
            numpxl = count(landpatch%eindex==landelm%eindex(i))
-           
+
            IF (allocated(locpxl)) deallocate(locpxl)
            allocate(locpxl(numpxl))
-           
-           ! get all patches' index that eindex is equal the i element 
+
+           ! get all patches' index that eindex is equal the i element
            locpxl = pack([(ipxl, ipxl=1, numpatch)], &
                          landpatch%eindex==landelm%eindex(i))
            ! the min index is the start of patch's index
@@ -536,18 +536,15 @@ MODULE MOD_LuLccTimeVars
            ! the max index is the end of patch's index
            grid_patch_e(i) = maxval(locpxl)
         ENDDO
-        print*, 'start'
-        print*, grid_patch_s
-        print*, 'end'
-        print*, grid_patch_e
+
         ! same as above, loop for numelm of previous year
         ! patches at the beginning and end of the element were recorded
         DO i=1, numelm_
            numpxl = count(landpatch_%eindex==landelm_%eindex(i))
-           
+
            IF (allocated(locpxl)) deallocate(locpxl)
            allocate(locpxl(numpxl))
-           
+
            locpxl = pack([(ipxl, ipxl=1, numpatch_)], &
                          landpatch_%eindex==landelm_%eindex(i))
 
@@ -778,7 +775,7 @@ MODULE MOD_LuLccTimeVars
               ELSE
                  continue
               ENDIF
-           ENDDO 
+           ENDDO
         ENDDO
      ENDIF
 
