@@ -71,37 +71,37 @@ OBJS_HYDRO = \
 				  hydro/mod_lateral_flow.o
 
 OBJS_BGC = \
-			  bgc/bgc_CNCStateUpdate1Mod.o    \
-			  bgc/bgc_CNCStateUpdate2Mod.o    \
-			  bgc/bgc_CNCStateUpdate3Mod.o    \
-			  bgc/bgc_CNNStateUpdate1Mod.o    \
-			  bgc/bgc_CNNStateUpdate2Mod.o    \
-			  bgc/bgc_CNNStateUpdate3Mod.o    \
-			  bgc/bgc_SoilBiogeochemNStateUpdate1Mod.o \
-			  bgc/bgc_soil_SoilBiogeochemNitrifDenitrifMod.o \
-			  bgc/bgc_soil_SoilBiogeochemCompetitionMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemDecompCascadeBGCMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemDecompMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemLittVertTranspMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemNLeachingMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemPotentialMod.o  \
-			  bgc/bgc_soil_SoilBiogeochemVerticalProfileMod.o  \
-			  bgc/bgc_veg_CNGapMortalityMod.o  \
-			  bgc/bgc_veg_CNGRespMod.o  \
-			  bgc/bgc_veg_CNMRespMod.o  \
-			  bgc/bgc_DaylengthMod.o \
-			  bgc/bgc_veg_CNPhenologyMod.o  \
-			  bgc/bgc_veg_NutrientCompetitionMod.o  \
-			  bgc/bgc_veg_CNVegStructUpdateMod.o \
-			  bgc/bgc_CNSummaryMod.o  \
-			  bgc/bgc_CNAnnualUpdateMod.o \
-			  bgc/bgc_CNZeroFluxesMod.o \
-			  bgc/bgc_CNBalanceCheckMod.o \
-			  bgc/bgc_CNSASUMod.o \
-			  bgc/bgc_veg_CNNDynamicsMod.o \
-			  bgc/bgc_veg_CNFireBaseMod.o \
-                          bgc/bgc_veg_CNFireLi2016Mod.o \
-			  bgc/bgc_driver.o
+			  bgc/MOD_BGC_CNCStateUpdate1.o    \
+			  bgc/MOD_BGC_CNCStateUpdate2.o    \
+			  bgc/MOD_BGC_CNCStateUpdate3.o    \
+			  bgc/MOD_BGC_CNNStateUpdate1.o    \
+			  bgc/MOD_BGC_CNNStateUpdate2.o    \
+			  bgc/MOD_BGC_CNNStateUpdate3.o    \
+			  bgc/MOD_BGC_Soil_BiogeochemNStateUpdate1.o \
+			  bgc/MOD_BGC_Soil_BiogeochemNitrifDenitrif.o \
+			  bgc/MOD_BGC_Soil_BiogeochemCompetition.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemDecompCascadeBGC.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemDecomp.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemLittVertTransp.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemNLeaching.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemPotential.o  \
+			  bgc/MOD_BGC_Soil_BiogeochemVerticalProfile.o  \
+			  bgc/MOD_BGC_Veg_CNGapMortality.o  \
+			  bgc/MOD_BGC_Veg_CNGResp.o  \
+			  bgc/MOD_BGC_Veg_CNMResp.o  \
+			  bgc/MOD_BGC_Daylength.o \
+			  bgc/MOD_BGC_Veg_CNPhenology.o  \
+			  bgc/MOD_BGC_Veg_NutrientCompetition.o  \
+			  bgc/MOD_BGC_Veg_CNVegStructUpdate.o \
+			  bgc/MOD_BGC_CNSummary.o  \
+			  bgc/MOD_BGC_CNAnnualUpdate.o \
+			  bgc/MOD_BGC_CNZeroFluxes.o \
+			  bgc/MOD_BGC_CNBalanceCheck.o \
+			  bgc/MOD_BGC_CNSASU.o \
+			  bgc/MOD_BGC_Veg_CNNDynamics.o \
+			  bgc/MOD_BGC_Veg_CNFireBase.o \
+                          bgc/MOD_BGC_Veg_CNFireLi2016.o \
+			  bgc/MOD_BGC_driver.o
 
 BASIC =  \
 		  PFT_Const.o \
@@ -118,12 +118,12 @@ BASIC =  \
 		  monthly_in_situ_co2_mlo.o
 
 BASIC_BGC = \
-			  bgc/MOD_1D_BGCFluxes.o  \
-			  bgc/MOD_1D_BGCPFTFluxes.o  \
-			  bgc/MOD_2D_BGCFluxes.o  \
-			  bgc/MOD_BGCPFTimeVars.o  \
-			  bgc/MOD_BGCTimeInvars.o  \
-			  bgc/MOD_BGCTimeVars.o 
+			  bgc/MOD_BGC_Vars_1DFluxes.o  \
+			  bgc/MOD_BGC_Vars_1DPFTFluxes.o  \
+			  bgc/MOD_BGC_Vars_2DFluxes.o  \
+			  bgc/MOD_BGC_Vars_PFTimeVars.o  \
+			  bgc/MOD_BGC_Vars_TimeInvars.o  \
+			  bgc/MOD_BGC_Vars_TimeVars.o 
 
 OBJS =  \
 		  MOD_2D_Fluxes.o             \

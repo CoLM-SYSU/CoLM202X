@@ -218,6 +218,22 @@ CONTAINS
                CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
                CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
 
+               call ncio_write_serial (filename, 'lat_s', srf_concat%ginfo%lat_s, 'lat')
+               CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lat_n', srf_concat%ginfo%lat_n, 'lat')
+               CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lon_w', srf_concat%ginfo%lon_w, 'lon')
+               CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
+
+               call ncio_write_serial (filename, 'lon_e', srf_concat%ginfo%lon_e, 'lon')
+               CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
+
                call ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
             ENDIF
 

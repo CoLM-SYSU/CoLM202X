@@ -252,7 +252,7 @@ SUBROUTINE aggregation_forest_height ( &
 
          CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
             data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
-            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16)
+            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 
@@ -358,7 +358,7 @@ SUBROUTINE aggregation_forest_height ( &
 
          CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
             data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
-            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16)
+            data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
 
          htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
 

@@ -240,10 +240,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
                      IF(sum(area_one) .ne. 0)THEN
                         plantdate_pfts(ipft) = sum(plantdate_one * area_one) / sum(area_one)
                      ELSE
-                        write(*,*),'cft:'//trim(c4)//' crop distribution mismatch between model surface data and fertilization data,ipatch:'&
-                                                   ,ipatch,'ipft',ipft,'p_iam_glb',p_iam_glb
-                        write(*,*),'pct_cft_one',pct_cft_one
-                        write(*,*),'plantdate_one',plantdate_one
+                        write(*,*) 'cft:'//trim(c4)//' crop distribution mismatch between model surface data and fertilization data,ipatch:'&
+                                                  ,ipatch,'ipft',ipft,'p_iam_glb',p_iam_glb
+                        write(*,*) 'pct_cft_one',pct_cft_one
+                        write(*,*) 'plantdate_one',plantdate_one
                         call abort
                      END IF
                   ENDIF
@@ -374,10 +374,10 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
                      IF(sum(area_one) .ne. 0)THEN
                         fertnitro_pfts(ipft) = sum(fertnitro_one * area_one) / sum(area_one)
                      ELSE
-                        write(*,*),'cft:'//trim(c4)//' crop distribution mismatch between model surface data and fertilization data,ipatch:'&
+                        write(*,*) 'cft:'//trim(c4)//' crop distribution mismatch between model surface data and fertilization data,ipatch:'&
                                                    ,ipatch,'ipft',ipft,'p_iam_glb',p_iam_glb
-                        write(*,*),'pct_cft_one',pct_cft_one
-                        write(*,*),'fertnitro_one',fertnitro_one
+                        write(*,*) 'pct_cft_one',pct_cft_one
+                        write(*,*) 'fertnitro_one',fertnitro_one
                         call abort
                      END IF
                   ENDIF

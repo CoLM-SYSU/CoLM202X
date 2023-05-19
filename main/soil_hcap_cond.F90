@@ -290,6 +290,6 @@ endif
       else                         ! Frozen or partially frozen soils
          thk = (ksat_f-kdry)*ake + kdry
       ENDIF
-#ENDIF
+#endif
 
 END SUBROUTINE soil_hcap_cond
