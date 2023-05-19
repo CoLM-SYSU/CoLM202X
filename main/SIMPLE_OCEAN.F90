@@ -374,9 +374,6 @@ MODULE SIMPLE_OCEAN
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
-		   if (DEF_USE_CBL_HEIGHT) then
-            um = max(ur,0.5)
-		   endif
          endif
 
          if (obuold*obu < 0.) nmozsgn = nmozsgn+1

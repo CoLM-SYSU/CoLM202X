@@ -842,12 +842,12 @@ MODULE LAKE
          if(zeta >= 0.)then
            um = max(ur,0.1)
          else
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*forc_hgt_u,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta1*beta1*(wc*wc)
            um = sqrt(ur*ur+wc2)
-		   if (DEF_USE_CBL_HEIGHT) then
-            um = max(ur,0.5)
-		   endif
          endif
 
          call roughness_lake (snl,t_grnd,t_lake(1),lake_icefrac(1),forc_psrf,&

@@ -87,14 +87,14 @@ MODULE MOD_Turbulence_LEddy
 !
 ! Begin: Shaofeng Liu, 2023.05.05
 !
-        zetazi = min(5.e3, max(5.*hu, hpbl))/obu
+		zetazi = max(5.*hu, hpbl)/obu
         if(zetazi >= 0.) then     !stable
            zetazi = min(200.,max(zetazi,1.e-5))
         else                    !unstable
            zetazi = max(-1.e4,min(zetazi,-1.e-5))
         endif
 
-		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
+		Bm     = 0.0047 * (-zetazi) + 0.1854
 		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
 		Bm2    = max(Bm, 0.2722)
 		zetam2 = min(zetam, -0.13)
@@ -120,11 +120,16 @@ MODULE MOD_Turbulence_LEddy
         ! for 10 meter wind-velocity
         zldis=10.+z0m
         zeta=zldis/obu
-        zetam=1.574
-        if(zeta < -zetam)then           ! zeta < -1
-          fm10m  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
+!
+! Begin: Shaofeng Liu, 2023.05.18
+!
+        if(zeta < zetam2)then           ! zeta < zetam2
+          fm10m  = log(zetam2*obu/z0m) - psi(1,zetam2) &
+                 + psi(1,z0m/obu) - 2.*Bm2 * ( (-zeta)**(-0.5)-(-zetam2)**(-0.5) )
+!
+! End: Shaofeng Liu, 2023.05.18
+!
+        else if(zeta < 0.)then          ! zetam2 <= zeta < 0
           fm10m  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
           fm10m  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu
@@ -271,14 +276,15 @@ MODULE MOD_Turbulence_LEddy
 !
 ! Begin: Shaofeng Liu, 2023.05.05
 !
-        zetazi = min(5.e3, max(5.*hu, hpbl))/obu
+!        zetazi = hpbl/obu
+		zetazi = max(5.*hu, hpbl)/obu
         if(zetazi >= 0.) then     !stable
            zetazi = min(200.,max(zetazi,1.e-5))
         else                    !unstable
            zetazi = max(-1.e4,min(zetazi,-1.e-5))
         endif
 
-		Bm     = 0.0047 * (-hpbl/obu) + 0.1854
+		Bm     = 0.0047 * (-zetazi) + 0.1854
 		zetam  = 0.5*Bm**4 * ( -16. - (256. + 4.*Bm**(-4)**0.5) )
 		Bm2    = max(Bm, 0.2722)
 		zetam2 = min(zetam, -0.13)
@@ -305,11 +311,17 @@ MODULE MOD_Turbulence_LEddy
         !NOTE: changed for canopy top wind-velocity (no wake assumed)
         zldis=htop-displa
         zeta=zldis/obu
-        zetam=1.574
-        if(zeta < -zetam)then           ! zeta < -1
-          fmtop  = log(-zetam*obu/z0m) - psi(1,-zetam) &
-                + psi(1,z0m/obu) + 1.14*((-zeta)**0.333-(zetam)**0.333)
-        else if(zeta < 0.)then          ! -1 <= zeta < 0
+!
+! Begin: Shaofeng Liu, 2023.05.18
+!
+!        zetam=1.574
+        if(zeta < zetam2)then           ! zeta < zetam2
+          fmtop  = log(zetam2*obu/z0m) - psi(1,zetam2) &
+                 + psi(1,z0m/obu) - 2.*Bm2 * ( (-zeta)**(-0.5)-(-zetam2)**(-0.5) )
+!
+! End: Shaofeng Liu, 2023.05.18
+!
+        else if(zeta < 0.)then          ! zetam2 <= zeta < 0
           fmtop  = log(zldis/z0m) - psi(1,zeta) + psi(1,z0m/obu)
         else if(zeta <= 1.)then         !  0 <= ztea <= 1
           fmtop  = log(zldis/z0m) + 5.*zeta - 5.*z0m/obu

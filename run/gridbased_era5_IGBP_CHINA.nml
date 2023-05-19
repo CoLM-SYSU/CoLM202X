@@ -1,6 +1,6 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'gridbased_era5_IGBP_LEddy_CHINA'          
+   DEF_CASE_NAME = 'gridbased_era5_IGBP_CHINA'          
    DEF_domain%edges = 10.0      
    DEF_domain%edgen = 60.0      
    DEF_domain%edgew = 70.0   
@@ -38,7 +38,7 @@
    DEF_LAI_CLIM = .true.
 
    ! whether use CBL height
-   DEF_USE_CBL_HEIGHT = .true.
+   DEF_USE_CBL_HEIGHT = .false.
 
    ! Model settings
    DEF_LANDONLY = .true.

@@ -173,12 +173,12 @@
          if(zeta >= 0.)then
            um = max(ur,0.1)
          else
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*hu,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
-		   if (DEF_USE_CBL_HEIGHT) then
-		     um = max(ur,0.5)
-		   endif
          endif
 
          if (obuold*obu < 0.) nmozsgn = nmozsgn+1

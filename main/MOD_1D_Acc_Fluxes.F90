@@ -1661,12 +1661,13 @@ contains
                if(r_zol(i) >= 0.)then
                   um = max(ur,0.1)
                else
+                 if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                  hpbl = forc_hpbl(i)
+                  zii = max(5.*hgt_u,hpbl)
+                 endif !//TODO: Shaofeng, 2023.05.18
                   wc = (-grav*r_ustar(i)*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
-                  if (DEF_USE_CBL_HEIGHT) then
-                    um = max(ur,0.5)
-				  endif
                endif
 
                obu = zldis/r_zol(i)

@@ -495,15 +495,10 @@ MODULE FRICTION_VELOCITY
 ! the scheme is based on the work of Zeng et al. (1998):
 ! Intercomparison of bulk aerodynamic algorithms for the computation
 ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
-!
-! REVISIONS:
-! Shaofeng Liu, 05/2023: make a different initialization of um for the
-!	                     LargeEddy surface turbulence scheme (LZD2022)
 ! ======================================================================
 
    use precision
    use PhysicalConstants, only : grav, vonkar
-   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
    implicit none
 
 ! Dummy argument
@@ -533,9 +528,6 @@ MODULE FRICTION_VELOCITY
           um=max(ur,0.1)
         else
           um=sqrt(ur*ur+wc*wc)
-		  if (DEF_USE_CBL_HEIGHT) then
-           um=max(ur,0.5)
-		  endif
         endif
 
         rib=grav*zldis*dthv/(thv*um*um)

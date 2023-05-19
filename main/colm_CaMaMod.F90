@@ -548,12 +548,12 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    IF(zol >= 0.)THEN
    um = max(ur,0.1) !wind speed at reference height
    else
+   if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+     zii = max(5.*hu,hpbl)
+   endif !//TODO: Shaofeng, 2023.05.18
    wc = (-grav*ustar*thvstar*zii/thv)**(1./3.) !convective velocity scale
    wc2 = beta*beta*(wc*wc)                     !convective velocity scale squared
    um = sqrt(ur*ur+wc2)                        !wind speed with convective velocity scale
-   if (DEF_USE_CBL_HEIGHT) then
-      um = max(ur,0.5)
-   endif
    ENDIF
 
    IF (obuold*obu < 0.) nmozsgn = nmozsgn+1
