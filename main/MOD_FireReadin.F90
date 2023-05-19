@@ -2,12 +2,14 @@
 #ifdef BGC
 
 SUBROUTINE Fire_readin (year, dir_landdata)
-   ! ===========================================================
-   ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-   ! http://globalchange.bnu.edu.cn
+   ! ======================================================================================================
    !
-   ! Created by Yongjiu Dai, March, 2014
-   ! ===========================================================
+   ! !DESCRIPTION:
+   ! Read in the Fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
+   ! and population density
+   !
+   ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
+   ! ======================================================================================================
 
    use precision
    use mod_namelist

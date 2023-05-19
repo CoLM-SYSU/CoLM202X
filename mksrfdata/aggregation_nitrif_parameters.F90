@@ -2,9 +2,8 @@
 
 SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
-   !
-   ! 2. Global nitrification data from CLM5 simulation
+   ! !DESCRIPTION:
+   ! Global nitrification data (climatological data of soil O2) from CLM5 simulation
    !
    ! Created by Zhongwang Wei and modified by Xingjie Lu, 09/2022
    !

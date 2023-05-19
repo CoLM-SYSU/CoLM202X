@@ -3,10 +3,15 @@
 
 SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
 ! ===========================================================
-! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-! http://globalchange.bnu.edu.cn
 !
-! Created by Yongjiu Dai, March, 2014
+! !DESCRIPTION:
+! Read in the Nitrogen deposition data from CLM5.
+!
+! !REFERENCE:
+! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+!
+! !ORIGINAL:
+! Created by Xingjie Lu and Shupeng Zhang, 2022
 ! ===========================================================
 
       use precision

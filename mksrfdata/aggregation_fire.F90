@@ -2,16 +2,11 @@
 
 SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
+   ! !DESCRIPTION:
+   ! Aggregate fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
+   ! and population density
    !
-   ! 2. Global Plant Leaf Area Index
-   !    (http://globalchange.bnu.edu.cn)
-   !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface
-   !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
+   ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
    !
    ! ----------------------------------------------------------------------
    USE precision

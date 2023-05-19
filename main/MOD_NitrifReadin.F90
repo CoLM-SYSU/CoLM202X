@@ -1,12 +1,13 @@
 #include <define.h>
 
 SUBROUTINE NITRIF_readin (time, dir_landdata)
-   ! ===========================================================
-   ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-   ! http://globalchange.bnu.edu.cn
+   ! ==========================================================================================================
+   ! !DESCRIPTION: 
+   ! Read in the O2 data for nitrification module. The climatological data of soil O2 was from CLM5 simulation
    !
-   ! Created by Yongjiu Dai, March, 2014
-   ! ===========================================================
+   ! !ORIGINAL:
+   ! Created by Xingjie Lu and Shupeng Zhang, 2022
+   ! ==========================================================================================================
 
    use precision
    use mod_namelist
