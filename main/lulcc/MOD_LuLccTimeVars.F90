@@ -555,60 +555,92 @@ MODULE MOD_LuLccTimeVars
            grid_patch_e_(i) = maxval(locpxl)
         ENDDO
 
-        ! loop for element
-        ! print*, 'minelm is', minelm, 'maxelm is', maxelm
-        DO i=1, numelm
-           DO j=1,numelm_
-              IF (landelm%eindex(i) == landelm_%eindex(j)) THEN
-                 np = grid_patch_s (i)
-                 np_= grid_patch_s_(j)
+     IF (p_is_worker) THEN
+         ! loop for numpatch of next year, patches at the beginning and end of the element were recorded
+         ! landpatch%eindex is arranged in order, and the not land element is skipped
+         ! so, if element is missing, the recorder is -1.
+         print*, e_index, e_index_
+         DO i=1, numpatch
+            IF (i/=1) THEN
+               IF (landpatch%eindex(i) /= landpatch%eindex(i-1)) THEN
+                  grid_patch_e(landpatch%eindex(i-1)) = i - 1
+                  grid_patch_s(landpatch%eindex(i)  ) = i
+               ELSE
+                   cycle
+               ENDIF
+            ENDIF
 
-                 IF (np.le.0 .or. np_.le.0) CYCLE
-                 ! if element is still present, loop for patches in same element
-                 DO WHILE (np.le.grid_patch_e(i) .and. np_.le.grid_patch_e_(j))
-                    ! if a patch is missing, CYCLE
-                    IF (patchclass(np) > patchclass_(np_)) THEN
-                       np_= np_+ 1
-                       CYCLE
-                    ENDIF
+            grid_patch_s(landpatch%eindex(i)) = i
+         ENDDO
+         grid_patch_e(landpatch%eindex(i-1)) = numpatch
 
-                    ! if a patch is added, CYCLE
-                    IF (patchclass(np) < patchclass_(np_)) THEN
-                       np = np + 1
-                       CYCLE
-                    ENDIF
+         ! same as above, loop for numpatch of previous year, patches at the beginning and end of the element were recorded
+         DO i=1, numpatch_
+            IF (i/=1) THEN
+               IF (landpatch_%eindex(i) /= landpatch_%eindex(i-1)) THEN
+                  grid_patch_e_(landpatch_%eindex(i-1)) = i - 1
+                  grid_patch_s_(landpatch_%eindex(i))   = i
+               ELSE
+                   cycle
+               ENDIF
+            ENDIF
 
-                    ! otherwise, set patch value
-                    ! only for the same patch TYPE
-                    z_sno       (:,np) = z_sno_       (:,np_)
-                    dz_sno      (:,np) = dz_sno_      (:,np_)
-                    t_soisno    (:,np) = t_soisno_    (:,np_)
-                    wliq_soisno (:,np) = wliq_soisno_ (:,np_)
-                    wice_soisno (:,np) = wice_soisno_ (:,np_)
-                    t_grnd        (np) = t_grnd_        (np_)
-                    tleaf         (np) = tleaf_         (np_)
-                    ldew          (np) = ldew_          (np_)
-                    sag           (np) = sag_           (np_)
-                    scv           (np) = scv_           (np_)
-                    snowdp        (np) = snowdp_        (np_)
-                    fveg          (np) = fveg_          (np_)
-                    fsno          (np) = fsno_          (np_)
-                    sigf          (np) = sigf_          (np_)
-                    green         (np) = green_         (np_)
-                    lai           (np) = lai_           (np_)
-                    sai           (np) = sai_           (np_)
-                    coszen        (np) = coszen_        (np_)
-                    alb       (:,:,np) = alb_       (:,:,np_)
-                    ssun      (:,:,np) = ssun_      (:,:,np_)
-                    ssha      (:,:,np) = ssha_      (:,:,np_)
-                    thermk        (np) = thermk_        (np_)
-                    extkb         (np) = extkb_         (np_)
-                    extkd         (np) = extkd_         (np_)
-                    zwt           (np) = zwt_           (np_)
-                    wa            (np) = wa_            (np_)
+            grid_patch_s_(landpatch_%eindex(i)) = i
+         ENDDO
+         grid_patch_e_(landpatch_%eindex(i-1)) = numpatch_
 
-                    t_lake      (:,np) = t_lake_      (:,np_)
-                    lake_icefrac(:,np) = lake_icefrac_(:,np_)
+         ! loop for element
+         DO i=minelm, maxelm
+            np = grid_patch_s (i)
+            np_= grid_patch_s_(i)
+
+            ! if element is missing or added->cold restart
+            IF (np.le.0 .or. np_.le.0) CYCLE
+            ! if element is still present, loop for patches in same element
+            DO WHILE (np.le.grid_patch_e(i) .and. np_.le.grid_patch_e_(i))
+               ! if a patch is missing, CYCLE
+               IF (patchclass(np) > patchclass_(np_)) THEN
+                  np_= np_+ 1
+                  CYCLE
+               ENDIF
+
+                ! if a patch is added, CYCLE
+                IF (patchclass(np) < patchclass_(np_)) THEN
+                   np = np + 1
+                   CYCLE
+                ENDIF
+
+                ! otherwise, set patch value
+                ! only for the same patch TYPE
+                z_sno       (:,np) = z_sno_       (:,np_)
+                dz_sno      (:,np) = dz_sno_      (:,np_)
+                t_soisno    (:,np) = t_soisno_    (:,np_)
+                wliq_soisno (:,np) = wliq_soisno_ (:,np_)
+                wice_soisno (:,np) = wice_soisno_ (:,np_)
+                t_grnd        (np) = t_grnd_        (np_)
+                tleaf         (np) = tleaf_         (np_)
+                ldew          (np) = ldew_          (np_)
+                sag           (np) = sag_           (np_)
+                scv           (np) = scv_           (np_)
+                snowdp        (np) = snowdp_        (np_)
+                fveg          (np) = fveg_          (np_)
+                fsno          (np) = fsno_          (np_)
+                sigf          (np) = sigf_          (np_)
+                green         (np) = green_         (np_)
+                lai           (np) = lai_           (np_)
+                sai           (np) = sai_           (np_)
+                coszen        (np) = coszen_        (np_)
+                alb       (:,:,np) = alb_       (:,:,np_)
+                ssun      (:,:,np) = ssun_      (:,:,np_)
+                ssha      (:,:,np) = ssha_      (:,:,np_)
+                thermk        (np) = thermk_        (np_)
+                extkb         (np) = extkb_         (np_)
+                extkd         (np) = extkd_         (np_)
+                zwt           (np) = zwt_           (np_)
+                wa            (np) = wa_            (np_)
+
+                t_lake      (:,np) = t_lake_      (:,np_)
+                lake_icefrac(:,np) = lake_icefrac_(:,np_)
 
 #ifdef PFT_CLASSIFICATION
                     IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
