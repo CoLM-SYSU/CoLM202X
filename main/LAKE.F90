@@ -281,9 +281,10 @@ MODULE LAKE
            wliq_soisno  , wice_soisno , imelt_soisno , t_lake    ,&
            lake_icefrac , savedtke1, &
 
+#ifdef SNICAR
            ! SNICAR
-           snofrz       , sabg_lyr    , &
-
+           snofrz       ,sabg_lyr     ,&
+#endif
            ! "out" arguments
            ! -------------------
            taux         , tauy        , fsena                    ,&
@@ -375,7 +376,6 @@ MODULE LAKE
   real(r8), INTENT(in) :: forc_solld  ! atm nir diffuse solar rad onto srf [W/m2]
   real(r8), INTENT(in) :: forc_frl    ! atmospheric infrared (longwave) radiation [W/m2]
   real(r8), INTENT(in) :: sabg        ! solar radiation absorbed by ground [W/m2]
-  real(r8), INTENT(in) :: sabg_lyr (maxsnl+1:1)       ! solar radiation absorbed by ground [W/m2]
 
   real(r8), INTENT(in) :: dz_soisno(maxsnl+1:nl_soil) ! soil/snow layer thickness (m)
   real(r8), INTENT(in) :: z_soisno(maxsnl+1:nl_soil)  ! soil/snow node depth [m]
@@ -415,7 +415,10 @@ MODULE LAKE
   real(r8), INTENT(inout) :: lake_icefrac(nl_lake) ! lake mass fraction of lake layer that is frozen
   real(r8), INTENT(inout) :: savedtke1             ! top level eddy conductivity (W/m K)
 
-  REAL(r8), intent(out) :: snofrz (maxsnl+1:0)     ! snow freezing rate (col,lyr) [kg m-2 s-1]
+#ifdef SNICAR
+  REAL(r8), intent(out) :: snofrz   (maxsnl+1:0)   ! snow freezing rate (col,lyr) [kg m-2 s-1]
+  REAL(r8), intent(in)  :: sabg_lyr (maxsnl+1:1)   ! solar radiation absorbed by ground [W/m2]
+#endif
 
   real(r8), INTENT(out) :: taux   ! wind stress: E-W [kg/m/s**2]
   real(r8), INTENT(out) :: tauy   ! wind stress: N-S [kg/m/s**2]
@@ -1353,8 +1356,6 @@ MODULE LAKE
             snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
          ENDIF
       ENDDO
-#else
-      snofrz(:) = 0.
 #endif
 #if (defined CLMDEBUG)
       ! second energy check and water check. now check energy balance before and after phase

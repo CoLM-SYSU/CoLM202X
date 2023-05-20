@@ -37,6 +37,9 @@ PROGRAM CLMINI
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
@@ -85,6 +88,7 @@ PROGRAM CLMINI
    s_day        = DEF_simulation_time%start_day
    s_seconds    = DEF_simulation_time%start_sec
 
+   print*, dir_landdata
 #ifdef SinglePoint
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
@@ -119,7 +123,10 @@ PROGRAM CLMINI
    call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
    CALL map_patch_to_pc
 #endif
-
+#ifdef URBAN_MODEL
+   CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   CALL map_patch_to_urban
+#endif
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
    CALL elm_vector_init ()
 #ifdef CATCHMENT
