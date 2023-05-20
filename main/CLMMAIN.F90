@@ -22,8 +22,8 @@ SUBROUTINE CLMMAIN ( &
 #endif
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-         !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
-         flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
+           !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
+           flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
 #endif
 
          ! vegetation information
@@ -61,7 +61,7 @@ SUBROUTINE CLMMAIN ( &
            vegwp,        gs0sun,       gs0sha,                      &
 #endif
 #ifdef OzoneStress
-           lai_old,      o3uptakesun,  o3uptakesha       ,forc_ozone        , &
+           lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
 #endif
            zwt,          dpond,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
@@ -1133,9 +1133,10 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            wliq_soisno  ,wice_soisno  ,imelt           ,t_lake          ,&
            lake_icefrac ,savedtke1, &
 
+#ifdef SNICAR
            ! SNICAR
            snofrz       ,sabg_lyr     ,&
-
+#endif
            ! "out" laketem arguments
            ! ---------------------------
            taux         ,tauy         ,fsena                            ,&

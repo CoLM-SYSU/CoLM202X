@@ -4,6 +4,7 @@
 
 MODULE mod_landpft
 
+   USE mod_namelist
    USE mod_pixelset
    USE LC_const
    USE GlobalVars
@@ -38,7 +39,7 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      CHARACTER(len=256) :: dir_5x5, suffix
+      CHARACTER(len=256) :: dir_5x5, suffix, cyear
       TYPE (block_data_real8_3d) :: pctpft
       REAL(r8), allocatable :: pctpft_patch(:,:), pctpft_one(:,:)
       REAL(r8), allocatable :: area_one(:)
@@ -47,7 +48,8 @@ CONTAINS
       LOGICAL, allocatable :: patchmask (:)
       INTEGER  :: npft_glb
 
-
+      ! add parameter input for time year
+      write(cyear,'(i4.4)') DEF_LC_YEAR
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
@@ -120,7 +122,7 @@ CONTAINS
          CALL flush_block_data (pctpft, 1.0)
 
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim'
-         suffix  = 'MOD2005'
+         suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data_pft (dir_5x5, suffix, gpatch, 'PCT_PFT', pctpft)
 
 #ifdef USEMPI

@@ -63,6 +63,15 @@ MODULE mod_namelist
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
 
+   ! ----- simulation LULCC type -----
+   TYPE nl_LULCC_type
+      LOGICAL :: use_lulcc     = .FALSE.
+      INTEGER :: lc_year_start = 2005
+      INTEGER :: lc_year_end   = 2005
+   END TYPE nl_LULCC_type
+
+   TYPE (nl_LULCC_type) :: DEF_LULCC
+
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
@@ -87,7 +96,7 @@ MODULE mod_namelist
 
    ! ----- Use surface data from existing dataset -----
    CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
-   ! case 1: from a larger region 
+   ! case 1: from a larger region
    LOGICAL :: USE_srfdata_from_larger_region   = .false.
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
    !         only available for USGS/IGBP/PFT CLASSIFICATION
@@ -98,6 +107,18 @@ MODULE mod_namelist
    !To allow read satellite observed LAI
    logical :: DEF_LAI_CLIM = .FALSE.
    INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+
+   ! ------LAI change and Land cover year setting ----------
+   ! 05/2023, add by Dong: use for updating LAI with simulation year
+   LOGICAL :: DEF_LAICHANGE = .FALSE.
+
+   ! ------ LULCC -------
+   INTEGER :: DEF_LC_YEAR   = 2005
+
+   ! ------ URBAN -------
+   LOGICAL :: DEF_Urban_BEM    = .true.
+   LOGICAL :: DEF_Urban_TREE   = .true.
+   LOGICAL :: DEF_Urban_WATER  = .true.
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
@@ -569,13 +590,25 @@ CONTAINS
          DEF_GRIDBASED_lat_res,           &
          DEF_file_water_table_depth,      &
 
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
+
+         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+
+         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+
+         DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
+         DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
+         DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
+
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
-         USE_srfdata_from_3D_gridded_data,& 
+         USE_srfdata_from_3D_gridded_data,&
 
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23        
-         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23    
-         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07   
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
 
@@ -723,10 +756,19 @@ CONTAINS
       CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      ! 05/2023, added by Dong
+      CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
