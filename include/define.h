@@ -8,8 +8,8 @@
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef USGS_CLASSIFICATION
-#define IGBP_CLASSIFICATION
-#undef PFT_CLASSIFICATION
+#undef IGBP_CLASSIFICATION
+#define PFT_CLASSIFICATION
 #undef PC_CLASSIFICATION
 
 ! 2.1 Urban model setting (put it temporarily here):
@@ -66,11 +66,11 @@
 #define THERMAL_CONDUCTIVITY_SCHEME_4
 
 ! 10. If defined, plant hydraulic scheme is used
-#undef PLANT_HYDRAULIC_STRESS
+#define PLANT_HYDRAULIC_STRESS
 
 
 ! 11. If defined, CaMa-Flood model will be used.
-#undef CaMa_Flood
+#define CaMa_Flood
 
 ! 12. If defined, BGC model is used.
 #define BGC
