@@ -82,7 +82,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    INTEGER :: ipc, ipft
    REAL(r8) :: sumarea
 
-#ifdef SrfdataDiag 
+#ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
 #ifndef CROP
    INTEGER :: typpft  (N_PFT)
@@ -228,7 +228,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          IF (DEF_LAI_CLIM) THEN
             lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
          ELSE
-            !TODO: rename filename of 8-days LAI
+            !TODO: rename filename of 8-day LAI
             lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
          ENDIF
 
@@ -242,7 +242,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          IF (DEF_LAI_CLIM) THEN
             varname = 'LAI_' // trim(c3)
          ELSE
-            !TODO: rename file name of 8-days LAI
+            !TODO: rename file name of 8-day LAI
             varname = 'LAI_8-days' // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
@@ -526,7 +526,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
                   data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                   data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-               
+
                IF (allocated(sai_one)) deallocate(sai_one)
                allocate(sai_one(size(area_one)))
 
@@ -778,7 +778,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
                   data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
+                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
                IF (allocated(sai_one)) deallocate(sai_one)
                allocate(sai_one(size(area_one)))

@@ -118,12 +118,12 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-         !TODO: add parameter input for time year
-!#ifdef IGBP_CLASSIFICATION
+         !TODO-done: add parameter input for time year
+#ifndef USGS_CLASSIFICATION
          file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
-!#endif
-#ifdef USGS_CLASSIFICATION
-         file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
+#else
+         !TODO: need usgs land cover TYPE data
+         !file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
