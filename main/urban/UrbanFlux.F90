@@ -872,7 +872,7 @@ MODULE UrbanFlux
         sqrtdi      ,effcon      ,vmax25      ,slti        ,&
         hlti        ,shti        ,hhti        ,trda        ,&
         trdm        ,trop        ,gradm       ,binter      ,&
-        extkd       ,dewmx       ,etrc                     ,&
+        extkn       ,extkd       ,dewmx       ,etrc        ,&
         ! Status of surface
         z0h_g       ,obug        ,ustarg      ,zlnd        ,&
         zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
@@ -978,6 +978,7 @@ MODULE UrbanFlux
         gradm,    &! conductance-photosynthesis slope parameter
         binter,   &! conductance-photosynthesis intercept
 
+        extkn,    &! coefficient of leaf nitrogen allocation
         extkd,    &! diffuse and scattered diffuse PAR extinction coefficient
         dewmx,    &! maximum dew
         etrc       ! maximum possible transpiration rate (mm/s)
@@ -1360,7 +1361,7 @@ MODULE UrbanFlux
         fwet_gimp = fwet_gimp_
      ENDIF
 
-     ! 加权后的qg
+     ! weighted qg
      ! NOTE: IF fwet_gimp=1, same as previous
      fwetfac = fgimp*fwet_gimp + fgper
      qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
@@ -1386,7 +1387,6 @@ MODULE UrbanFlux
 ! calculate z0m and displa for layers
 !-----------------------------------------------------------------------
 
-     ! 计算自身和整个面积的z0和displa (不考虑建筑物的存在)
      ! Calculate z0 and displa for vegetation only and the whole area
      CALL cal_z0_displa(lsai, htop, 1., z0mv, displav)
      CALL cal_z0_displa(lsai, htop, fc(3), z0mv_lay, displav_lay)
@@ -1680,7 +1680,7 @@ MODULE UrbanFlux
               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
               gradm   ,binter  ,thm    ,psrf   ,po2m   ,&
               pco2m   ,pco2a   ,eah    ,ei(3)  ,tu(3)  ,&
-              par     ,rb(3)/lai,raw    ,rstfac ,cint(:),&
+              par     ,rb(3)/lai,raw   ,rstfac ,cint(:),&
               assim   ,respc   ,rs     )
         ELSE
            rs = 2.e4; assim = 0.; respc = 0.
@@ -1716,7 +1716,7 @@ MODULE UrbanFlux
                  (1.-fwet)*delta* ( lai/(rb(i)+rs) )
            ELSE
               cfh(i) = 1 / rb(i)
-              
+
               IF (i == 0) THEN !roof
                  ! account for fwet
                  cfw(i) = fwet_roof / rb(i)

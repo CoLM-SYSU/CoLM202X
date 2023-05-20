@@ -1,3 +1,4 @@
+#include <define.h>
 
  SUBROUTINE UrbanRoofTem (lb,deltim,capr,cnfac,&
                           cv_roof,tk_roof,dz_roofsno,z_roofsno,zi_roofsno,&

@@ -64,6 +64,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
 
 #if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
 
+!TODO: need to consider single point for urban model
 #ifdef SinglePoint
    IF (DEF_LAI_CLIM) THEN
       tlai(:) = SITE_LAI_clim(time)
@@ -76,7 +77,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
       write(cyear,'(i4.4)') year
       write(ctime,'(i2.2)') time
 
-      lndname = trim(landdir)//'/'//trim(year)//'/LAI_patches'//trim(ctime)//'.nc'
+      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
       lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
@@ -84,7 +85,7 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
    ELSE
       write(cyear,'(i4.4)') year
       write(ctime,'(i3.3)') time
-      lndname = trim(landdir)// '/' // trim(cyear) //'/LAI_patches'//trim(ctime)//'.nc'
+      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
    ENDIF
 #endif
@@ -94,6 +95,9 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
 
          do npatch = 1, numpatch
             m = patchclass(npatch)
+#ifdef URBAN_MODEL
+            IF (m == URBAN) CYCLE
+#endif
             if( m == 0 )then
                fveg(npatch)  = 0.
                tlai(npatch)  = 0.
@@ -156,6 +160,9 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
          do npatch = 1, numpatch
             m = patchclass(npatch)
 
+#ifdef URBAN_MODEL
+            IF (m == URBAN) CYCLE
+#endif
             green(npatch) = 1.
             fveg (npatch)  = fveg0(m)
 
@@ -196,6 +203,10 @@ SUBROUTINE LAI_readin (year, time, dir_landdata)
       if (numpatch > 0) then
          do npatch = 1, numpatch
             m = patchclass(npatch)
+
+#ifdef URBAN_MODEL
+            IF (m == URBAN) CYCLE
+#endif
             fveg (npatch)  = fveg0(m)
             green(npatch) = 1.
          end do

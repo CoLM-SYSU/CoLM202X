@@ -1,4 +1,3 @@
-
 #include <define.h>
 
  SUBROUTINE UrbanTHERMAL ( &
@@ -46,7 +45,7 @@
         dewmx          ,sqrtdi         ,rootfr         ,effcon         ,&
         vmax25         ,slti           ,hlti           ,shti           ,&
         hhti           ,trda           ,trdm           ,trop           ,&
-        gradm          ,binter                                         ,&
+        gradm          ,binter         ,extkn                          ,&
 
         ! surface status
         fsno_roof      ,fsno_gimp      ,fsno_gper      ,scv_roof       ,&
@@ -243,7 +242,8 @@
         trdm       ,&! temperature coefficient in gs-a model             [s6]
         trop       ,&! temperature coefficient in gs-a model
         gradm      ,&! conductance-photosynthesis slope parameter
-        binter       ! conductance-photosynthesis intercept
+        binter     ,&! conductance-photosynthesis intercept
+        extkn        ! coefficient of leaf nitrogen allocation
 
   REAL(r8), intent(in) :: &
         fsno_roof  ,&! fraction of ground covered by snow
@@ -256,7 +256,7 @@
         hbot       ,&! canopy crown bottom height [m]
         fveg       ,&! fraction of veg cover
         sigf       ,&! fraction of veg cover, excluding snow-covered veg [-]
-        extkd        ! coefficient of leaf nitrogen allocation
+        extkd        ! diffuse and scattered diffuse PAR extinction coefficient
 
   REAL(r8), intent(inout) :: &
         fwsun      ,&! fraction of sunlit wall [-]
@@ -515,7 +515,7 @@
   REAL(r8) :: z0m_g,z0h_g,zol_g,obu_g,ustar_g,qstar_g,tstar_g
   REAL(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu,eb
 
-  ! 城市相关变量的定义
+  ! defination for urban related
   REAL(r8), allocatable :: Ainv(:,:)  !Inverse of Radiation transfer matrix
   REAL(r8), allocatable :: X(:)       !solution
   REAL(r8), allocatable :: dX(:)      !solution
@@ -556,7 +556,7 @@
       thv = th*(1.+0.61*forc_q)                            !virtual potential T
       ur  = max(0.1,sqrt(forc_us*forc_us+forc_vs*forc_vs)) !limit set to 0.1
 
-      ! 调整墙面温度，根据fwsun, dfwsun进行加权平均
+      ! Adjust wall temperature, weighted average according to fwsun, dfwsun
       !-------------------------------------------
       fwsha = 1. - fwsun
 
@@ -586,21 +586,21 @@
       twsun_nl_bef = t_wallsun(nl_wall)
       twsha_nl_bef = t_wallsha(nl_wall)
 
-      !TODO: ???如何计算tlake
+      !TODO: ???how to calculate tlake
       IF (lbl < 1) THEN
          tlake = t_lakesno(lbl)
       ELSE
          tlake = t_lake(1)
       ENDIF
 
-      ! 保留温度
+      ! SAVE temperature
       troof_bef = troof
       twsun_bef = twsun
       twsha_bef = twsha
       tgimp_bef = tgimp
       tgper_bef = tgper
 
-      ! 保留上次长波辐射
+      ! SAVE longwave for the last time
       lwsun_bef = lwsun
       lwsha_bef = lwsha
       lgimp_bef = lgimp
@@ -677,7 +677,7 @@
       dqroofdT = qsatgdT
 
 !=======================================================================
-! [3] 计算长波辐射
+! [3] caluclate longwave radiation
 !=======================================================================
 
       IF ( doveg ) THEN
@@ -693,7 +693,7 @@
          allocate ( fcover(0:5) )
          allocate ( dT(0:5)     )
 
-         !调用长波辐射计算程序
+         ! call longwave function (vegetation)
          CALL UrbanVegLongwave ( &
                                 theta, hwr, froof, fgper, hroof, forc_frl, &
                                 twsun, twsha, tgimp, tgper, ewall, egimp, &
@@ -711,19 +711,18 @@
          allocate ( fcover(0:4) )
          allocate ( dT(0:4)     )
 
-         !调用长波辐射计算程序，计算Ainv, B, B1, dBdT
+         ! call longwave function，calculate Ainv, B, B1, dBdT
          CALL UrbanOnlyLongwave ( &
                                  theta, hwr, froof, fgper, hroof, forc_frl, &
                                  twsun, twsha, tgimp, tgper, ewall, egimp, egper, &
                                  Ainv, B, B1, dBdT, SkyVF, fcover)
 
-         !计算净长波辐射, for UrbanOnlyLongwave
+         ! calculate longwave radiation abs, for UrbanOnlyLongwave
          !-------------------------------------------
          X = matmul(Ainv, B)
 
-         ! 根据辐射传播矩阵，计算各组分的长波净辐射
-         ! LW radiation absorption by each surface
-         ! 计算总的吸收
+         ! using the longwave radiation transfer matrix to calculate
+         ! LW radiation absorption by each surface and total absorption.
          lwsun = ( ewall*X(1) - B1(1) ) / (1-ewall)
          lwsha = ( ewall*X(2) - B1(2) ) / (1-ewall)
          lgimp = ( egimp*X(3) - B1(3) ) / (1-egimp)
@@ -739,23 +738,23 @@
             print *, "Urban Only Longwave - Energy Balance Check error!", eb-forc_frl
          ENDIF
 
-         ! 计算单位面积
+         ! fur per unit surface
          IF (fcover(1) >0.) lwsun = lwsun / fcover(1) * fg !/ (4*fwsun*HL*fb/fg)
          IF (fcover(2) >0.) lwsha = lwsha / fcover(2) * fg !/ (4*fwsha*HL*fb/fg)
          IF (fcover(3) >0.) lgimp = lgimp / fcover(3) * fg !/ fgimp
          IF (fcover(4) >0.) lgper = lgper / fcover(4) * fg !/ fsoil
 
-         ! 加上上次余量
+         ! added last time value
          lwsun = lwsun + lwsun_bef
          lwsha = lwsha + lwsha_bef
          lgimp = lgimp + lgimp_bef
          lgper = lgper + lgper_bef
       ENDIF
 
-      ! roof的净辐射
+      ! roof net longwave
       lroof = eroof*forc_frl - eroof*stefnc*troof**4
 
-      !TEST: run roof separately
+      !TEST: run roof separately, can be removed.
       !CALL UrbanRoofFlux (forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_us, &
       !                    forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
       !                    ur,thm,th,thv,zsno,fsno_roof,hroof,htvp_roof, &
@@ -799,24 +798,24 @@
 
          CALL UrbanVegFlux ( &
 
-            ! 模型运行信息
+            ! model running information
             ipatch      ,deltim      ,lbr         ,lbi         ,&
-            ! 外强迫
+            ! forcing
             forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
             forc_vs     ,thm         ,th          ,thv         ,&
             forc_q      ,forc_psrf   ,forc_rhoair ,forc_frl    ,&
             forc_po2m   ,forc_pco2m  ,par         ,sabv        ,&
             rstfac      ,Fhac        ,Fwst        ,Fach        ,&
             vehc        ,meta                                  ,&
-            ! 城市和植被参数
+            ! urban and vegetation parameters
             hroof       ,hwr         ,nurb        ,fcover      ,&
             ewall       ,egimp       ,egper       ,ev          ,&
             htop        ,hbot        ,lai         ,sai         ,&
             sqrtdi      ,effcon      ,vmax25      ,slti        ,&
             hlti        ,shti        ,hhti        ,trda        ,&
             trdm        ,trop        ,gradm       ,binter      ,&
-            extkd       ,dewmx       ,etrc                     ,&
-            ! 地面状态
+            extkn       ,extkd       ,dewmx       ,etrc        ,&
+            ! surface status
             z0h_g       ,obu_g       ,ustar_g     ,zlnd        ,&
             zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
             wliq_roofsno(1),wliq_gimpsno(1),wice_roofsno(1),wice_gimpsno(1),&
@@ -825,10 +824,10 @@
             qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
             dqgimpdT    ,dqgperdT    ,sigf        ,tleaf       ,&
             ldew        ,rsr                                   ,&
-            ! 长波辐射
+            ! longwave related
             Ainv        ,B           ,B1          ,dBdT        ,&
             SkyVF       ,VegVF                                 ,&
-            ! 输出
+            ! output
             taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
             fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
             fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
@@ -846,16 +845,16 @@
 
          ! CALL urban flux
          CALL  UrbanOnlyFlux ( &
-            ! 模型运行信息
+            ! model running information
             ipatch      ,deltim      ,lbr         ,lbi         ,&
-            ! 外强迫
+            ! forcing
             forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q  ,forc_us     ,&
             forc_vs     ,thm         ,th          ,thv         ,&
             forc_q      ,forc_psrf   ,forc_rhoair ,Fhac        ,&
             Fwst        ,Fach        ,vehc        ,meta        ,&
-            ! 地面参数
+            ! surface parameters
             hroof       ,hwr         ,nurb        ,fcover      ,&
-            ! 地面状态变量
+            ! surface status
             z0h_g       ,obu_g       ,ustar_g     ,zlnd        ,&
             zsno        ,fsno_roof   ,fsno_gimp   ,fsno_gper   ,&
             wliq_roofsno(1),wliq_gimpsno(1),wice_roofsno(1),wice_gimpsno(1),&
@@ -863,7 +862,7 @@
             twsun       ,twsha       ,tgimp       ,tgper       ,&
             qroof       ,qgimp       ,qgper       ,dqroofdT    ,&
             dqgimpdT    ,dqgperdT    ,rsr                      ,&
-            ! 输出
+            ! output
             taux        ,tauy        ,fsenroof    ,fsenwsun    ,&
             fsenwsha    ,fsengimp    ,fsengper    ,fevproof    ,&
             fevpgimp    ,fevpgper    ,croofs      ,cwalls      ,&
@@ -889,7 +888,8 @@
 ! [6] roof/wall/ground temperature
 !=======================================================================
 
-      ! 计算单位温度变化带来的长波辐射变化率
+      ! Calculate the change rate of long-wave radiation
+      ! caused by temperature change
       clroof = - 4.*eroof*stefnc*troof**3
       clwsun = ( ewall*Ainv(1,1) - 1. ) / (1-ewall) * dBdT(1)
       clwsha = ( ewall*Ainv(2,2) - 1. ) / (1-ewall) * dBdT(2)
@@ -1064,11 +1064,11 @@
       lnet  = lroof   *fcover(0) + lwsun   *fcover(1) + lwsha   *fcover(2) + &
               lgimp   *fcover(3) + lgper   *fcover(4)
 
-      ! 03/30/2022, wenzong: bug find, sabgwsha->sabgwsun
+      ! 03/30/2022, Wenzong Dong: bug find, sabgwsha->sabgwsun
       sabg  = sabroof *fcover(0) + sabwsun *fcover(1) + sabwsha *fcover(2) + &
               sabgimp *fcover(3) + sabgper *fcover(4)
 
-      ! 03/30/2022, wenzong: bug find, fsenwsha->fsenwsun
+      ! 03/30/2022, Wenzong Dong: bug find, fsenwsha->fsenwsun
       fseng = fsenroof*fcover(0) + fsenwsun*fcover(1) + fsenwsha*fcover(2) + &
               fsengimp*fcover(3) + fsengper*fcover(4)
 
@@ -1125,8 +1125,9 @@
       fm     = fm    *(1-flake) + fm_lake    *flake
       fh     = fh    *(1-flake) + fh_lake    *flake
       fq     = fq    *(1-flake) + fq_lake    *flake
-      ! 10/01/2021, yuan: exclude lake fevpa
-      ! 因为湖泊的水不平衡
+
+      ! 10/01/2021, yuan: exclude lake fevpa.
+      ! because we don't consider water balance for lake currently.
       !fevpa  = fevpa *(1-flake) + fevpa_lake *flake
 
       fsenl  = fsenl *(1-flake)
@@ -1144,7 +1145,7 @@
       ENDIF
 
       ! effective ground temperature, simple average
-      ! 12/01/2021, yuan: TODO Bugs. 温度不能这样加权
+      ! 12/01/2021, yuan: !TODO Bugs. temperature cannot be weighted like below.
       !t_grnd = troof*fcover(0) + twsun*fcover(1) + twsha*fcover(2) + &
       t_grnd = tgper*fgper + tgimp*(1-fgper)
 
@@ -1203,7 +1204,7 @@
       ENDIF
 
 !=======================================================================
-! [9] 计算温度变化带来的长波辐射变化
+! [9] Calculate the change rate of long-wave radiation caused by temperature change
 !=======================================================================
 
       dX = matmul(Ainv, dBdT*dT(1:))
@@ -1227,14 +1228,15 @@
          print *, "Urban Vegetation Longwave - Energy Balance Check error!", eb
       ENDIF
 
-      ! 计算单位面积
+      ! for per unit surface
       IF (fcover(1) > 0.) lwsun = lwsun / fcover(1) * fg !/ (4*fwsun*HL*fb/fg)
       IF (fcover(2) > 0.) lwsha = lwsha / fcover(2) * fg !/ (4*fwsha*HL*fb/fg)
       IF (fcover(3) > 0.) lgimp = lgimp / fcover(3) * fg !/ fgimp
       IF (fcover(4) > 0.) lgper = lgper / fcover(4) * fg !/ fgper
       IF ( doveg        ) lveg  = lveg  / fcover(5) * fg !/ fv/fg
 
-      ! 加上之前的lout和roof的变化
+      ! calculate out going longwave by added the before value
+      ! of lout and condsidered troof change
       lout = lout + dlout
       rout = (1-eroof)*forc_frl + eroof*stefnc*troof_bef**4 &
            + 4.*eroof*stefnc*troof_bef**3*dT(0)
@@ -1251,8 +1253,8 @@
       trad = (olrg/stefnc)**0.25
 
 ! averaged bulk surface emissivity
-!TODO: 城市怎么计算
-! 03/10/2020, yuan:
+!TODO: how to calculate for urban case?
+! 03/10/2020, yuan: removed below.
       !olrb = stefnc*t_soisno_bef(lb)**3*(4.*tinc)
       !olrb = stefnc*t_grnd_bef**3*(4.*tinc)
       !olru = ulrad + emg*olrb
@@ -1294,11 +1296,12 @@
       ! diagnostic sabg only for pervious and impervious ground
       sabg = sabgper*fgper + sabgimp*(1-fgper)
 
+
 !=======================================================================
-! [11] a simple building energy model
+! [11] Anthropogenic heat
 !=======================================================================
 
-      ! Building energy model
+      ! A simple Building energy model
       CALL SimpleBEM ( deltim, forc_rhoair, fcover(0:2), hroof, troommax, troommin, &
                        troof_nl_bef, twsun_nl_bef, twsha_nl_bef, &
                        t_roofsno(nl_roof), t_wallsun(nl_wall), t_wallsha(nl_wall), &

@@ -60,7 +60,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    REAL(r8), allocatable :: LAI_patches(:), lai_one(:), area_one(:)
    INTEGER :: itime, ntime, Julian_day, ipatch
    CHARACTER(LEN=4) :: c2, c3, cyear
-   integer :: start_year, end_year, YY
+   integer :: start_year, end_year, iy
 
    ! for IGBP data
    CHARACTER(len=256) :: dir_5x5, suffix
@@ -151,17 +151,17 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       allocate (SITE_LAI_clim (12))
    ELSE
       allocate (SITE_LAI_year (start_year:end_year))
-      SITE_LAI_year = (/(YY, YY = start_year, end_year)/)
+      SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
 
       allocate (SITE_LAI_modis (46,start_year:end_year))
    ENDIF
 #endif
 
-   DO YY = start_year, end_year
+   DO iy = start_year, end_year
 
       !IF (.not. DEF_LAI_CLIM) THEN
       ! lai data of each year -> case/landdata/year
-      write(cyear,'(i4.4)') YY
+      write(cyear,'(i4.4)') iy
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       !ENDIF
 
@@ -178,7 +178,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          ENDIF
 
          IF (p_is_master) THEN
-            write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate LAI :', YY, ':', itime, '/', ntime
+            write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate LAI :', iy, ':', itime, '/', ntime
          endif
 
          IF (p_is_io) THEN
@@ -249,11 +249,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
 #else
          ! single point cases
-         !TODO: parameter input for time year 
+         !TODO: parameter input for time year
          IF (DEF_LAI_CLIM) THEN
             SITE_LAI_clim(itime) = LAI_patches(1)
          ELSE
-            SITE_LAI_modis(itime,YY) = LAI_patches(1)
+            SITE_LAI_modis(itime,iy) = LAI_patches(1)
          ENDIF
 #endif
       ENDDO
@@ -275,8 +275,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
 
       dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-      DO YY = start_year, end_year
-         write(cyear,'(i4.4)') YY
+      DO iy = start_year, end_year
+         write(cyear,'(i4.4)') iy
          suffix  = 'MOD'//trim(cyear)
 
          DO itime = 1, 12
@@ -384,8 +384,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   DO YY = start_year, end_year
-      write(cyear,'(i4.4)') YY
+   DO iy = start_year, end_year
+      write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN
@@ -661,8 +661,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   DO YY = start_year, end_year
-      write(cyear,'(i4.4)') YY
+   DO iy = start_year, end_year
+      write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN

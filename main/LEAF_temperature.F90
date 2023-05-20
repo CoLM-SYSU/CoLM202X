@@ -723,10 +723,11 @@ USE PhysicalConstants, only: tfrz
          etr = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-         etrsun = rhoair * (1.-fwet) * delta &
-             * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-         etrsha = rhoair * (1.-fwet) * delta &
-             * ( laisha/(rb+rssha) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+          !NOTE, yuan: need some revision below. if undef PHS and WUEdiag, there may be problem.
+!         etrsun = rhoair * (1.-fwet) * delta &
+!             * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+!         etrsha = rhoair * (1.-fwet) * delta &
+!             * ( laisha/(rb+rssha) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
 #endif
          etr_dtl = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &

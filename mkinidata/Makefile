@@ -1,9 +1,9 @@
 # Makefile for CLM initial data processing
 
 include ../include/Makeoptions
- 
+
 INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../main \
-				  -I../main/hydro -I../main/bgc -I../main/urban -I${NETCDF_INC}
+	  -I../main/hydro -I../main/bgc -I../main/urban -I${NETCDF_INC}
 VPATH = ../share : ../mksrfdata : ../main : ../main/hydro : ../main/bgc : ../main/urban
 HEADER = ../include/define.h
 
@@ -67,10 +67,9 @@ BASIC_BGC =                                   \
 	  ../main/bgc/MOD_BGCTimeVars.o
 
 BASIC_URBAN =                                 \
+	  ../main/urban/MOD_1D_UrbanFluxes.o  \
 	  ../main/urban/MOD_UrbanTimeVars.o   \
 	  ../main/urban/MOD_UrbanTimeInvars.o \
-	  ../main/urban/UrbanShortwave.o      \
-	  ../main/urban/UrbanALBEDO.o
 
 BASIC =                                       \
 	  ../main/PFT_Const.o                 \
@@ -88,7 +87,6 @@ BASIC =                                       \
 OBJS_MAIN =                                   \
 	  ../main/LAI_empirical.o             \
 	  ../main/LAI_readin.o                \
-	  ../main/UrbanLAI_readin_nc.o        \
 	  ../main/orb_coszen.o                \
 	  ../main/ThreeDCanopy.o              \
 	  ../main/SnowSnicarMod.o             \
@@ -96,7 +94,10 @@ OBJS_MAIN =                                   \
 	  ../main/SnowAlbedo.o                \
 	  ../main/AerosolMod.o                \
 	  ../main/ALBEDO.o                    \
-	  ../main/snowfraction.o
+	  ../main/snowfraction.o              \
+	  ../main/urban/UrbanLAI_readin.o     \
+	  ../main/urban/UrbanShortwave.o      \
+	  ../main/urban/UrbanALBEDO.o
 
 OBJS =                                        \
 	  pct_readin.o                        \
@@ -106,10 +107,10 @@ OBJS =                                        \
 	  soil_parameters_readin.o            \
 	  HTOP_readin.o                       \
 	  Urban_readin.o                      \
-	  CROP_readin.o                       \
-	  NITRIF_readin.o                     \
-	  NDEP_readin.o                       \
-	  Fire_readin.o                       \
+	  ../main/CROP_readin.o               \
+	  ../main/NITRIF_readin.o             \
+	  ../main/NDEP_readin.o               \
+	  ../main/Fire_readin.o               \
 	  IniTimeVar.o                        \
 	  UrbanIniTimeVar.o                   \
 	  initialize.o                        \
@@ -120,19 +121,19 @@ OBJS =                                        \
 all: ${EXECUTABLE}
 
 ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${OBJS_MAIN} ${OBJS} 
+	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${OBJS_MAIN} ${OBJS}
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
 	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${OBJS_MAIN} ${OBJS} -o $@ ${LDFLAGS}
 	@echo 'making CLM initial data completed!'
 
-$(OBJS) : %.o : %.F90 ${HEADER} 
-	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 
+$(OBJS) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
-$(OBJS_SHARED) : %.o : %.F90 ${HEADER} 
+$(OBJS_SHARED) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../share
 
-$(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} 
+$(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}../mksrfdata
 
 $(BASIC_BGC) : %.o : %.F90 ${HEADER}

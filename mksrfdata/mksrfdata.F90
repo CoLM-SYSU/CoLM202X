@@ -299,7 +299,7 @@ PROGRAM mksrfdata
    CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
 #endif
 
-   print*, count(landpatch%settyp==13)
+   !print*, count(landpatch%settyp==13)
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -336,17 +336,17 @@ PROGRAM mksrfdata
    call aggregation_fire            (gfire, dir_rawdata, dir_landdata)
 #endif
 #if (defined NITRIF)
-   call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)
+  call aggregation_nitrif_parameters (gnitrif, dir_rawdata, dir_landdata)
 #endif
 #endif
 
-   !CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
+   CALL aggregation_percentages     (gpatch,  dir_rawdata, dir_landdata)
 
-   !CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
+   CALL aggregation_lakedepth       (gpatch,  dir_rawdata, dir_landdata)
 
-   !CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
+   CALL aggregation_soil_parameters (gpatch,  dir_rawdata, dir_landdata)
 
-   !CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
+   CALL aggregation_soil_brightness (gpatch,  dir_rawdata, dir_landdata)
 
 #ifdef USE_DEPTH_TO_BEDROCK
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
@@ -354,9 +354,9 @@ PROGRAM mksrfdata
 
    CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
 
-   !CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
+   CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
-   !CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
+   CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
 #ifdef URBAN_MODEL
    CALL aggregation_urban (dir_rawdata, dir_landdata, DEF_LC_YEAR, &

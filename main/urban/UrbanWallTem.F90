@@ -1,3 +1,4 @@
+#include <define.h>
 
  SUBROUTINE UrbanWallTem (deltim,capr,cnfac,&
                           cv_wall,tk_wall,t_wall,dz_wall,z_wall,zi_wall,&

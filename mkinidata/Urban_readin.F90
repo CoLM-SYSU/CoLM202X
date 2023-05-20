@@ -70,7 +70,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       CALL ncio_read_vector (lndname, 'EM_WALL'       , landurban, em_wall) ! emissivity of wall
       CALL ncio_read_vector (lndname, 'EM_IMPROAD'    , landurban, em_gimp) ! emissivity of impervious road
       CALL ncio_read_vector (lndname, 'EM_PERROAD'    , landurban, em_gper) ! emissivity of pervious road
-     
+
       CALL ncio_read_vector (lndname, 'T_BUILDING_MAX', landurban, t_roommax) ! maximum temperature of inner room [K]
       CALL ncio_read_vector (lndname, 'T_BUILDING_MIN', landurban, t_roommin) ! minimum temperature of inner room [K]
       CALL ncio_read_vector (lndname, 'THICK_ROOF'    , landurban, thickroof) ! thickness of roof [m]
@@ -87,7 +87,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof) ! thermal conductivity of roof [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
-#endif      
+#endif
 
 !TODO: add point case
 #ifdef SinglePoint
@@ -100,12 +100,12 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       CALL ncio_read_bcast_serial (landname, "building_mean_height"     , hroof   ) ! average building height
       CALL ncio_read_bcast_serial (landname, "tree_mean_height"         , htop_urb) ! urban tree crown top
       CALL ncio_read_bcast_serial (landname, "canyon_height_width_ratio", hwr     ) ! average building height to their distance
-      
+
       wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
 #endif
 
-      !TODO: duplication, delete
       !TODO: Variables distinguish between time-varying and time-invariant variables
+      !TODO: 2005 -> lc_year
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/2005/POP.nc'
       print*, lndname
@@ -216,7 +216,6 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
 #endif
 
 #ifdef URBAN_TREE
-
             ! set tree fractional cover (<= 1.-froof)
             fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
             IF (flake(u) < 1.) THEN
@@ -231,6 +230,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
             fveg    (i) = fveg_urb(u)
 #else
             fveg_urb(u) = 0.
+            fveg    (i) = fveg_urb(u)
 #endif
 
             ! set urban tree crown top and bottom [m]

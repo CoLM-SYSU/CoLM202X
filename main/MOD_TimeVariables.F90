@@ -197,7 +197,6 @@ SAVE
         allocate (rstfacsha_out        (numpatch))
         allocate (gssun_out            (numpatch))
         allocate (gssha_out            (numpatch))
-        allocate (t_grnd               (numpatch))
 #ifdef WUEdiag
 #ifdef PFT_CLASSIFICATION
             allocate ( assim_RuBP_sun_out        (numpatch) )
@@ -219,6 +218,7 @@ SAVE
             allocate ( lambda_out                   (numpatch) )
 #endif
 #endif
+        allocate (t_grnd               (numpatch))
         allocate (tleaf                (numpatch))
         allocate (ldew                 (numpatch))
         allocate (ldew_rain            (numpatch))
@@ -329,6 +329,20 @@ SAVE
            deallocate (hk  )
            deallocate (h2osoi )
            deallocate (rootr  )
+#ifdef PLANT_HYDRAULIC_STRESS
+           deallocate (vegwp  )
+           deallocate (gs0sun )
+           deallocate (gs0sha )
+#endif
+#ifdef OzoneStress
+           deallocate (o3coefv_sun) ! Ozone stress factor for photosynthesis on sunlit leaf
+           deallocate (o3coefv_sha) ! Ozone stress factor for photosynthesis on shaded leaf
+           deallocate (o3coefg_sun) ! Ozone stress factor for stomata on sunlit leaf
+           deallocate (o3coefg_sha) ! Ozone stress factor for stomata on shaded leaf
+           deallocate (lai_old    ) ! lai in last time step
+           deallocate (o3uptakesun) ! Ozone does, sunlit leaf (mmol O3/m^2)
+           deallocate (o3uptakesha) ! Ozone does, shaded leaf (mmol O3/m^2)
+#endif
            deallocate (rstfacsun_out )
            deallocate (rstfacsha_out )
            deallocate (gssun_out )
@@ -353,20 +367,6 @@ SAVE
            deallocate ( lambdasha_out        )
            deallocate ( lambda_out                   )
 #endif
-#endif
-#ifdef PLANT_HYDRAULIC_STRESS
-           deallocate (vegwp  )
-           deallocate (gs0sun )
-           deallocate (gs0sha )
-#endif
-#ifdef OzoneStress
-           deallocate (o3coefv_sun) ! Ozone stress factor for photosynthesis on sunlit leaf
-           deallocate (o3coefv_sha) ! Ozone stress factor for photosynthesis on shaded leaf
-           deallocate (o3coefg_sun) ! Ozone stress factor for stomata on sunlit leaf
-           deallocate (o3coefg_sha) ! Ozone stress factor for stomata on shaded leaf
-           deallocate (lai_old    ) ! lai in last time step
-           deallocate (o3uptakesun) ! Ozone does, sunlit leaf (mmol O3/m^2)
-           deallocate (o3uptakesha) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
            deallocate (t_grnd )
            deallocate (tleaf  )

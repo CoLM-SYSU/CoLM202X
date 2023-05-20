@@ -140,7 +140,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    CALL allocate_TimeInvariants
    CALL allocate_TimeVariables
-   print*, count(landpatch%settyp==13)
+   !print*, count(landpatch%settyp==13)
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
@@ -508,17 +508,24 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    jday = idate0(2)
 
    IF (DEF_LAI_CLIM) then
-      ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
-      CALL LAI_readin (year, month, dir_landdata)
+      IF (DEF_LAICHANGE) THEN
+         ! 08/03/2019, yuan: read global LAI/SAI data
+         CALL LAI_readin (year, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (year, month, dir_landdata)
+#endif
+      ELSE
+         CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#endif
+      ENDIF
    ELSE
       Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
 
-#ifdef URBAN_MODEL
-   CALL UrbanLAI_readin_nc (year, month, dir_landdata)
-#endif
 
 #ifdef CLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
@@ -733,7 +740,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
                fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
                scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
                sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
-               fwsun(u),dfwsun(u),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
+               fwsun(u),dfwsun(u),extkd(i),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
                swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
 
          ENDIF
