@@ -162,9 +162,9 @@ CONTAINS
                      CALL ncio_define_dimension (fileblock, 'np_max', elen)
                      CALL ncio_define_dimension (fileblock, 'ncoor',  2   )
 
-                     CALL ncio_write_serial (fileblock, 'elmindex', elmindx, 'element')
-                     CALL ncio_write_serial (fileblock, 'elmnpxl',  npxlall, 'element')
-                     CALL ncio_write_serial (fileblock, 'elmpixel', elmpixels, &
+                     CALL ncio_write_serial (fileblock, 'elmindex',  elmindx, 'element')
+                     CALL ncio_write_serial (fileblock, 'elmnpxl',   npxlall, 'element')
+                     CALL ncio_write_serial (fileblock, 'elmpixels', elmpixels, &
                         'ncoor', 'np_max', 'element', compress = 1)
                   ENDIF
                ENDIF
@@ -273,9 +273,9 @@ CONTAINS
                IF (nelm > 0) THEN
 
                   CALL get_filename_block (filename, iblk, jblk, fileblock)
-                  CALL ncio_read_serial (fileblock, 'elmindex', elmindx)
-                  CALL ncio_read_serial (fileblock, 'elmnpxl',  npxl   )
-                  CALL ncio_read_serial (fileblock, 'elmpixel', pixels )
+                  CALL ncio_read_serial (fileblock, 'elmindex',  elmindx)
+                  CALL ncio_read_serial (fileblock, 'elmnpxl',   npxl   )
+                  CALL ncio_read_serial (fileblock, 'elmpixels', pixels )
 
                   DO ie = 1, nelm
                      mesh(ie+ndsp)%indx = elmindx(ie)
