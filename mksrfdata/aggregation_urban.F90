@@ -25,7 +25,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    USE mod_utils, only: num_max_frequency
    USE mod_landurban
    USE GlobalVars, only: N_URB
-#ifdef USE_LCZ
+#ifdef URBAN_LCZ
    USE UrbanLCZ_Const, only: wtroof_lcz, htroof_lcz
 #endif
 #ifdef SinglePoint
@@ -90,7 +90,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    REAL(r8), allocatable, dimension(:) :: ulai_one
    REAL(r8), allocatable, dimension(:) :: slai_one
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
    ! urban morphological and thermal paras of NCAR data
    ! input variables, look-up-table data
    REAL(r8), allocatable, DIMENSION(:,:)  :: hwrcan, wtrd, emroof, emwall, ncar_wt
@@ -268,7 +268,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
-   ! output 
+   ! output
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/POP.nc'
    CALL ncio_create_file_vector (landname, landurban)
    CALL ncio_define_dimension_vector (landname, landurban, 'urban')
@@ -370,7 +370,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
 
    ! ******* PCT_Water *******
-   ! allocate and read grided water cover raw data 
+   ! allocate and read grided water cover raw data
    IF (p_is_io) THEN
 
       CALL allocate_block_data (grid_urban_500m, gl30_wt)
@@ -425,7 +425,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    ! ******* Building : Weight, HTOP_Roof *******
    ! if building data is missing, how to look-up-table?
    ! a new arry with region id was used for look-up-table (urban_reg)
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
    ! only used when urban patch have nan data of building height and fraction
    landname = TRIM(dir_rawdata)//'urban/urban_properties.nc'
 
@@ -460,15 +460,15 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    IF (p_is_worker) THEN
       allocate (wt_roof (numurban))
       allocate (ht_roof (numurban))
-   
-      ! loop for urban patch to aggregate building height and fraction data with area-weighted average  
+
+      ! loop for urban patch to aggregate building height and fraction data with area-weighted average
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one, &
             data_r8_2d_in1 = wtrf, data_r8_2d_out1 = wt_roof_one, &
             data_r8_2d_in2 = htrf, data_r8_2d_out2 = ht_roof_one)
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
          ! when urban patch has no data, use table data to fill gap
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
@@ -551,7 +551,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       sai_urb(:) = 0.
    ENDIF
 
-   ! loop for month 
+   ! loop for month
    DO imonth = 1, 12
 
       write(cmonth, '(i2.2)') imonth
@@ -607,7 +607,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDDO
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
    ! look up table of NCAR urban properties (using look-up tables)
    landname = TRIM(dir_rawdata)//'urban/urban_properties.nc'
 
@@ -866,7 +866,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       IF (allocated(ht_roof  )) deallocate (ht_roof  )
       IF (allocated(lai_urb  )) deallocate (lai_urb  )
       IF (allocated(sai_urb  )) deallocate (sai_urb  )
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
       IF (allocated(ncar_ht  )) deallocate (ncar_ht  )
       IF (allocated(ncar_wt  )) deallocate (ncar_wt  )
       IF (allocated(area_urb )) deallocate (area_urb )

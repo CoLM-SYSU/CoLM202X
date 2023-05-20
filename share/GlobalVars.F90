@@ -41,7 +41,7 @@ MODULE GlobalVars
    INTEGER, parameter :: N_CFT    = 64
 #endif
 
-#ifdef USE_LCZ
+#ifdef URBAN_LCZ
    INTEGER, parameter :: N_URB    = 10
 #else
    INTEGER, parameter :: N_URB    = 3
