@@ -44,7 +44,7 @@ CONTAINS
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
       TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
-      
+
       ! local vars
       INTEGER, allocatable :: ibuff(:), types(:), order(:)
 
@@ -86,10 +86,10 @@ CONTAINS
 
          write(cyear,'(i4.4)') DEF_LC_YEAR
          suffix = 'URB'//trim(cyear)
-#ifdef USE_LCZ
+#ifdef URBAN_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
 #else
-         ! NOTE!!! 
+         ! NOTE!!!
          ! region id is assigned in aggreagation_urban.F90 now
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
 #endif
@@ -131,7 +131,7 @@ CONTAINS
                CALL aggregation_request_data (landpatch, ipatch, gurban, &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
                ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
                ! so the these points are assigned by the 3(medium density), or can define by ueser
                where (ibuff < 1 .or. ibuff > 3)
@@ -242,7 +242,7 @@ CONTAINS
             allocate (landurban%ipxend (numurban))
             allocate (landurban%ielm   (numurban))
 
-            ! copy urban path information from landpatch for landurban 
+            ! copy urban path information from landpatch for landurban
             landurban%eindex = pack(landpatch%eindex, landpatch%settyp == 13)
             landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == 13)
             landurban%ipxend = pack(landpatch%ipxend, landpatch%settyp == 13)

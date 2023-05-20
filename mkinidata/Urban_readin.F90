@@ -10,6 +10,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       USE precision
       USE spmd_task
       USE GlobalVars
+      USE mod_namelist
       USE LC_Const
       USE MOD_TimeVariables
       USE MOD_TimeInvariants
@@ -18,7 +19,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       USE ncio_serial
       USE mod_landpatch
       USE mod_landurban
-#ifdef USE_LCZ
+#ifdef URBAN_LCZ
       USE UrbanLCZ_Const
 #endif
 
@@ -56,7 +57,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
 
       allocate (lucyid    (numurban))
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
 
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
@@ -162,7 +163,7 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
                fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
             ENDIF
 
-#ifndef USE_LCZ
+#ifndef URBAN_LCZ
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
 #else
@@ -202,22 +203,22 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
 
-#ifdef URBAN_BEM
+IF (DEF_URBAN_BEM) THEN
             t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
             t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
-#else
+ELSE
             t_roommax(u) = 373.16                !maximum temperature of inner room [K]
             t_roommin(u) = 180.00                !minimum temperature of inner room [K]
-#endif
+ENDIF
 #endif
 
-#ifdef URBAN_WATER
+IF (DEF_URBAN_WATER) THEN
             flake(u) = flake(u)/100. !urban water fractional cover
-#else
+ELSE
             flake(u) = 0.
-#endif
+ENDIF
 
-#ifdef URBAN_TREE
+IF (DEF_URBAN_TREE) THEN
             ! set tree fractional cover (<= 1.-froof)
             fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
             IF (flake(u) < 1.) THEN
@@ -230,10 +231,10 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
             ! to the ground cover (assume no trees on the roof)
             fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
             fveg    (i) = fveg_urb(u)
-#else
+ELSE
             fveg_urb(u) = 0.
             fveg    (i) = fveg_urb(u)
-#endif
+ENDIF
 
             ! set urban tree crown top and bottom [m]
             htop_urb(u) = min(hroof(u), htop_urb(u))

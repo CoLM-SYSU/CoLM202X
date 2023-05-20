@@ -8,14 +8,18 @@
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef USGS_CLASSIFICATION
-#undef IGBP_CLASSIFICATION
-#define PFT_CLASSIFICATION
+#define IGBP_CLASSIFICATION
+#undef PFT_CLASSIFICATION
 #undef PC_CLASSIFICATION
 
+! 2.1 Urban model setting (put it temporarily here):
+#define URBAN_MODEL
+#undef URBAN_LCZ
+
 ! 3. If defined, debug information is output.
-#define CLMDEBUG
+#undef CLMDEBUG
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
-#define SrfdataDiag
+#undef SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
 #define  USEMPI
@@ -62,11 +66,11 @@
 #define THERMAL_CONDUCTIVITY_SCHEME_4
 
 ! 10. If defined, plant hydraulic scheme is used
-#define PLANT_HYDRAULIC_STRESS
+#undef PLANT_HYDRAULIC_STRESS
 
 
 ! 11. If defined, CaMa-Flood model will be used.
-#define CaMa_Flood
+#undef CaMa_Flood
 
 ! 12. If defined, BGC model is used.
 #define BGC

@@ -1,5 +1,5 @@
 #include <define.h>
-#ifdef USE_LCZ
+#ifdef URBAN_LCZ
 MODULE UrbanLCZ_Const
 
   ! -----------------------------------------------------------------------
