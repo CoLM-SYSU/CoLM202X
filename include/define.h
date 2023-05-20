@@ -8,8 +8,8 @@
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef USGS_CLASSIFICATION
-#undef IGBP_CLASSIFICATION
-#define PFT_CLASSIFICATION
+#define IGBP_CLASSIFICATION
+#undef PFT_CLASSIFICATION
 #undef PC_CLASSIFICATION
 
 ! 2.1 Urban model setting (put it temporarily here):
@@ -70,7 +70,7 @@
 
 
 ! 11. If defined, CaMa-Flood model will be used.
-#define CaMa_Flood
+#undef CaMa_Flood
 
 ! 12. If defined, BGC model is used.
 #define BGC

@@ -75,7 +75,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    type(block_data_real8_2d)    :: wtd_xy  ! [m]
    type(mapping_grid2pset_type) :: m_wtd2p
 
-   REAL(r8) :: zwtmm
+   real(r8) :: zwtmm
    real(r8) :: zc_soimm(1:nl_soil)
    real(r8) :: zi_soimm(0:nl_soil)
    real(r8) :: vliq_r  (1:nl_soil)
@@ -140,7 +140,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    CALL allocate_TimeInvariants
    CALL allocate_TimeVariables
-
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
@@ -212,7 +211,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! read global tree top height from nc file
    CALL HTOP_readin (dir_landdata)
 #ifdef URBAN_MODEL
-   CALL Urban_readin (dir_landdata, 2005)
+   CALL Urban_readin (DEF_LC_YEAR, dir_landdata)
 #endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
@@ -270,6 +269,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
+
    cmb_cmplt_fact = (/0.5_r8,0.25_r8/)
 
    nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
@@ -361,7 +361,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    call check_TimeInvariants ()
 #endif
 
-   CALL WRITE_TimeInvariants (casename, dir_restart)
+   CALL WRITE_TimeInvariants (DEF_LC_YEAR, casename, dir_restart)
 
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
@@ -503,24 +503,17 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    jday = idate0(2)
 
    IF (DEF_LAI_CLIM) then
+      ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
-      IF (DEF_LAICHANGE) THEN
-         ! 08/03/2019, yuan: read global LAI/SAI data
-         CALL LAI_readin (year, month, dir_landdata)
-#ifdef URBAN_MODEL
-         CALL UrbanLAI_readin (year, month, dir_landdata)
-#endif
-      ELSE
-         CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
-#ifdef URBAN_MODEL
-         CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
-#endif
-      ENDIF
+      CALL LAI_readin (year, month, dir_landdata)
    ELSE
       Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
 
+#ifdef URBAN_MODEL
+   CALL UrbanLAI_readin (year, month, dir_landdata)
+#endif
 
 #ifdef CLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
@@ -572,6 +565,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
+
    if (p_is_worker) then
 
       t_lake      (:,:) = 285.

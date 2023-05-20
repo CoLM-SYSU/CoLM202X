@@ -26,7 +26,7 @@ MODULE mod_landurban
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landurban_build ()
+   SUBROUTINE landurban_build (lc_year)
 
       USE precision
       USE spmd_task
@@ -41,6 +41,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
       TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
@@ -84,7 +85,7 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         write(cyear,'(i4.4)') DEF_LC_YEAR
+         write(cyear,'(i4.4)') lc_year
          suffix = 'URB'//trim(cyear)
 #ifdef URBAN_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
@@ -303,6 +304,8 @@ CONTAINS
 
          IF ((numpatch <= 0) .or. (numurban <= 0)) return
 
+         IF (allocated(patch2urban)) deallocate(patch2urban)
+         IF (allocated(urban2patch)) deallocate(urban2patch)
          allocate (patch2urban (numpatch))
          allocate (urban2patch (numurban))
 

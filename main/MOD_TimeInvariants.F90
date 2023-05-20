@@ -12,7 +12,7 @@ USE MOD_PFTimeInvars
 #ifdef PC_CLASSIFICATION
 USE MOD_PCTimeInvars
 #endif
-#ifdef BGC 
+#ifdef BGC
 USE MOD_BGC_Vars_TimeInvars
 #endif
 #ifdef URBAN_MODEL
@@ -194,7 +194,7 @@ SAVE
   END SUBROUTINE allocate_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE READ_TimeInvariants (casename, dir_restart)
+  SUBROUTINE READ_TimeInvariants (year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -212,13 +212,15 @@ SAVE
 
      IMPLICIT NONE
 
+     INTEGER         , intent(in) :: year
      character(LEN=*), intent(in) :: casename
      character(LEN=*), intent(in) :: dir_restart
 
      ! Local variables
-     character(LEN=256) :: file_restart
+     character(LEN=256) :: file_restart, cyear
 
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const.nc'
+     write(cyear,'(i4.4)') year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // trim(cyear) // '.nc'
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass) !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype ) !
@@ -288,22 +290,22 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // trim(cyear) // '.nc'
      CALL READ_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // trim(cyear) // '.nc'
      CALL READ_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const' // trim(cyear) // '.nc'
      CALL READ_UrbanTimeInvars (file_restart)
 #endif
 
@@ -322,7 +324,7 @@ SAVE
   end subroutine READ_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE WRITE_TimeInvariants (casename, dir_restart)
+  SUBROUTINE WRITE_TimeInvariants (year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -337,16 +339,18 @@ SAVE
 
      IMPLICIT NONE
 
+     INTEGER         , intent(in) :: year
      character(len=*), intent(in) :: casename
      character(len=*), intent(in) :: dir_restart
 
      ! Local Variables
-     character(len=256) :: file_restart
+     character(len=256) :: file_restart, cyear
      integer :: compress
 
      compress = DEF_REST_COMPRESS_LEVEL
 
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const.nc'
+     write(cyear,'(i4.4)') year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // trim(cyear) // '.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
 
@@ -355,11 +359,6 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake', nl_lake)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snowp1',   -maxsnl+1     )
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
      call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass) !
      call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype ) !
@@ -437,22 +436,22 @@ SAVE
      end if
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // trim(cyear) // '.nc'
      CALL WRITE_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // trim(cyear) // '.nc'
      CALL WRITE_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const' // trim(cyear) // '.nc'
      CALL WRITE_UrbanTimeInvars (file_restart)
 #endif
 

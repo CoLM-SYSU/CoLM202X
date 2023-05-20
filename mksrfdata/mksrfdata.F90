@@ -88,6 +88,7 @@ PROGRAM mksrfdata
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
    TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
 
+   INTEGER   :: lc_year
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
 
@@ -136,6 +137,7 @@ PROGRAM mksrfdata
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+   lc_year = DEF_LC_YEAR
 
    ! define blocks
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
@@ -302,18 +304,18 @@ PROGRAM mksrfdata
 #endif
 
    ! build land patches
-   CALL landpatch_build
+   CALL landpatch_build(lc_year)
 
 #ifdef PFT_CLASSIFICATION
-   CALL landpft_build
+   CALL landpft_build(lc_year)
 #endif
 
 #ifdef PC_CLASSIFICATION
-   CALL landpc_build
+   CALL landpc_build(lc_year)
 #endif
 
 #ifdef URBAN_MODEL
-   CALL landurban_build
+   CALL landurban_build(lc_year)
 #endif
 
    ! ................................................................
@@ -324,27 +326,27 @@ PROGRAM mksrfdata
 
    CALL pixel%save_to_file     (dir_landdata)
 
-   CALL mesh_save_to_file      (dir_landdata)
+   CALL mesh_save_to_file      (lc_year, dir_landdata)
 
-   CALL pixelset_save_to_file  (dir_landdata, 'landelm', landelm)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landelm', landelm)
 
 #ifdef CATCHMENT
-   CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landhru', landhru)
 #endif
 
    !print*, count(landpatch%settyp==13)
-   CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  )
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpft'  , landpft  )
 #endif
 
 #ifdef PC_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpc'   , landpc   )
 #endif
 
 #ifdef URBAN_MODEL
-   CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban)
+   CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landurban', landurban)
 #endif
 
    ! ................................................................
@@ -385,14 +387,14 @@ PROGRAM mksrfdata
    CALL aggregation_dbedrock        (gpatch,  dir_rawdata, dir_landdata)
 #endif
 
-   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   CALL aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
 
    CALL aggregation_forest_height   (gpatch,  dir_rawdata, dir_landdata)
 
    CALL aggregation_topography      (gtopo,   dir_rawdata, dir_landdata)
 
 #ifdef URBAN_MODEL
-   CALL aggregation_urban (dir_rawdata, dir_landdata, DEF_LC_YEAR, &
+   CALL aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
                            grid_urban_5km, grid_urban_100m, grid_urban_500m)
 #endif
 

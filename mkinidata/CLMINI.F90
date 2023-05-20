@@ -43,7 +43,7 @@ PROGRAM CLMINI
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    USE mod_elm_vector
 #endif
 #ifdef CATCHMENT
@@ -70,7 +70,7 @@ PROGRAM CLMINI
 #ifdef USEMPI
    call spmd_init ()
 #endif
-      
+
    if (p_is_master) then
       call system_clock (start_time)
    end if
@@ -79,16 +79,15 @@ PROGRAM CLMINI
    call getarg (1, nlfile)
    call read_namelist (nlfile)
 
-   casename     = DEF_CASE_NAME        
-   dir_landdata = DEF_dir_landdata 
-   dir_restart  = DEF_dir_restart  
-   greenwich    = DEF_simulation_time%greenwich    
-   s_year       = DEF_simulation_time%start_year 
+   casename     = DEF_CASE_NAME
+   dir_landdata = DEF_dir_landdata
+   dir_restart  = DEF_dir_restart
+   greenwich    = DEF_simulation_time%greenwich
+   s_year       = DEF_simulation_time%start_year
    s_month      = DEF_simulation_time%start_month
    s_day        = DEF_simulation_time%start_day
    s_seconds    = DEF_simulation_time%start_sec
 
-   print*, dir_landdata
 #ifdef SinglePoint
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
@@ -104,30 +103,30 @@ PROGRAM CLMINI
 
    call pixel%load_from_file  (dir_landdata)
    call gblock%load_from_file (dir_landdata)
-   call mesh_load_from_file   (dir_landdata)
+   call mesh_load_from_file   (DEF_LC_YEAR, dir_landdata)
 
-   CALL pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
+   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landelm', landelm, numelm)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landhru', landhru, numhru)
 #endif
-  
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
+
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpft', landpft, numpft)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpc', landpc, numpc)
    CALL map_patch_to_pc
 #endif
 #ifdef URBAN_MODEL
-   CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landurban', landurban, numurban)
    CALL map_patch_to_urban
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
    CALL hru_vector_init ()
@@ -153,18 +152,18 @@ PROGRAM CLMINI
       elseif (time_used >= 60) then
          write(*,102) time_used/60, mod(time_used,60)
          102 format (/,'Overall system time used:', I3, ' minutes', I3, ' seconds.')
-      else 
+      else
          write(*,103) time_used
          103 format (/,'Overall system time used:', I3, ' seconds.')
       end if
 
       write(*,*) 'CLM Initialization Execution Completed'
    end if
-   
+
 #ifdef USEMPI
    call spmd_exit
 #endif
-   
+
 END PROGRAM CLMINI
 ! ----------------------------------------------------------------------
 ! EOP
