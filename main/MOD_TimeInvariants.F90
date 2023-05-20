@@ -12,8 +12,8 @@ USE MOD_PFTimeInvars
 #ifdef PC_CLASSIFICATION
 USE MOD_PCTimeInvars
 #endif
-#ifdef BGC
-USE MOD_BGCTimeInvars
+#ifdef BGC 
+USE MOD_BGC_Vars_TimeInvars
 #endif
 #ifdef URBAN_MODEL
 USE MOD_UrbanTimeInvars

@@ -206,20 +206,20 @@ SUBROUTINE CLMMAIN ( &
         soil_s_n_alb     ,&! albedo of near infrared of the saturated soil
         soil_d_n_alb     ,&! albedo of near infrared of the dry soil
 
-        vf_quartz (nl_soil), &! volumetric fraction of quartz within mineral soil
-        vf_gravels(nl_soil), &! volumetric fraction of gravels
-        vf_om     (nl_soil), &! volumetric fraction of organic matter
-        vf_sand   (nl_soil), &! volumetric fraction of sand
-        wf_gravels(nl_soil), &! gravimetric fraction of gravels
-        wf_sand   (nl_soil), &! gravimetric fraction of sand
-        porsl(nl_soil)   ,&! fraction of soil that is voids [-]
-        psi0(nl_soil)    ,&! minimum soil suction [mm]
-        bsw(nl_soil)     ,&! clapp and hornbereger "b" parameter [-]
+        vf_quartz (nl_soil),  & ! volumetric fraction of quartz within mineral soil
+        vf_gravels(nl_soil),  & ! volumetric fraction of gravels
+        vf_om     (nl_soil),  & ! volumetric fraction of organic matter
+        vf_sand   (nl_soil),  & ! volumetric fraction of sand
+        wf_gravels(nl_soil),  & ! gravimetric fraction of gravels
+        wf_sand   (nl_soil),  & ! gravimetric fraction of sand
+        porsl(nl_soil)     ,  & ! fraction of soil that is voids [-]
+        psi0(nl_soil)      ,  & ! minimum soil suction [mm]
+        bsw(nl_soil)       ,  & ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil), &
-        alpha_vgm(1:nl_soil), &
-        n_vgm    (1:nl_soil), &
-        L_vgm    (1:nl_soil), &
+        theta_r  (1:nl_soil), & ! residual water content (cm3/cm3) in vanGenuchten_Mualem_SOIL_MODEL
+        alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
+        n_vgm    (1:nl_soil), & ! a shape parameter
+        L_vgm    (1:nl_soil), & ! pore-connectivity parameter
         sc_vgm   (1:nl_soil), &
         fc_vgm   (1:nl_soil), &
 #endif

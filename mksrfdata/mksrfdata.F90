@@ -71,6 +71,8 @@ PROGRAM mksrfdata
    USE mod_srfdata_diag, only : gdiag, srfdata_diag_init
 #endif
 
+   USE mod_region_clip
+
 
    IMPLICIT NONE
 
@@ -105,6 +107,29 @@ PROGRAM mksrfdata
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
 #endif
 
+   IF (USE_srfdata_from_larger_region) THEN
+
+      CALL srfdata_region_clip (DEF_dir_existing_srfdata, DEF_dir_landdata)
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      CALL spmd_exit
+#endif
+      CALL exit()
+   ENDIF
+
+   IF (USE_srfdata_from_3D_gridded_data) THEN
+
+      ! TODO
+      ! CALL srfdata_retrieve_from_3D_data (DEF_dir_existing_srfdata, DEF_dir_landdata)
+
+#ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      CALL spmd_exit
+#endif
+      CALL exit()
+   ENDIF
+
    dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
    edges = DEF_domain%edges
@@ -129,11 +154,13 @@ PROGRAM mksrfdata
 
    ! define grid coordinates of mesh
 #ifdef GRIDBASED
-   CALL gridmesh%define_from_file (DEF_file_mesh)
+   CALL init_gridbased_mesh_grid ()
 #endif
+
 #ifdef CATCHMENT
    CALL gridmesh%define_by_name ('merit_90m')
 #endif
+
 #ifdef UNSTRUCTURED
    CALL gridmesh%define_from_file (DEF_file_mesh)
 #endif
@@ -259,9 +286,15 @@ PROGRAM mksrfdata
    CALL mesh_build ()
    CALL landelm_build
 
+#ifdef GRIDBASED
+   IF (.not. read_mesh_from_file) THEN
+      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
+   ENDIF
+#endif
+
    ! Filtering pixels
    IF (has_mesh_filter) THEN
-      CALL mesh_filter ()
+      CALL mesh_filter (grid_filter, DEF_file_mesh_filter, 'mesh_filter')
    ENDIF
 
 #ifdef CATCHMENT

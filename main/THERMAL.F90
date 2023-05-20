@@ -82,7 +82,8 @@
 ! REVISIONS:
 ! Hua Yuan, 12/2019: added initial codes for PFT and Plant Community (PC)
 !                    vegetation classification processes
-!
+! Nan Wei,  01/2021: added variables passing of plant hydraulics and precipitation sensible heat
+!                    with canopy and ground for PFT and Plant Community (PC)
 !=======================================================================
 
   USE precision

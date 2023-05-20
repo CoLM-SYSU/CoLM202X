@@ -306,7 +306,7 @@ CONTAINS
 
       cropfilter = (/ CROPLAND /)
 
-      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, 1, cropfilter, &
+      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
          pctcrop, cropclass)
 
       numpatch = landpatch%nset

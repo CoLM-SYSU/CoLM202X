@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef URBAN_MODEL
 SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
 
 ! ===========================================================
@@ -49,5 +50,5 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
          ENDDO
       ENDIF
 
-
 END SUBROUTINE UrbanLAI_readin
+#endif

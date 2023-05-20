@@ -37,7 +37,7 @@ CONTAINS
    END FUNCTION inquire_mesh_filter
 
    ! -------------
-   SUBROUTINE mesh_filter ()
+   SUBROUTINE mesh_filter (gridf, ffilter, fvname)
    
       USE precision
       USE mod_namelist
@@ -49,6 +49,10 @@ CONTAINS
       USE mod_aggregation
       USE mod_block
       IMPLICIT NONE
+
+      TYPE(grid_type),  intent(in) :: gridf
+      CHARACTER(len=*), intent(in) :: ffilter
+      CHARACTER(len=*), intent(in) :: fvname
    
       ! local variables:
       ! ---------------------------------------------------------------
@@ -56,7 +60,7 @@ CONTAINS
       INTEGER, allocatable :: ifilter(:), xtemp(:), ytemp(:)
       LOGICAL, allocatable :: filter(:)
       INTEGER :: ielm, jelm, npxl, nelm_glb
-   
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -65,11 +69,11 @@ CONTAINS
       ENDIF
    
       IF (p_is_io) THEN
-         CALL allocate_block_data (grid_filter, datafilter)
-         CALL ncio_read_block (DEF_file_mesh_filter, 'mesh_filter', grid_filter, datafilter)
+         CALL allocate_block_data (gridf, datafilter)
+         CALL ncio_read_block (trim(ffilter), trim(fvname), gridf, datafilter)
    
 #ifdef USEMPI
-         CALL aggregation_data_daemon (grid_filter, data_i4_2d_in1 = datafilter)
+         CALL aggregation_data_daemon (gridf, data_i4_2d_in1 = datafilter)
 #endif
       ENDIF
    
@@ -77,7 +81,7 @@ CONTAINS
    
          jelm = 0
          DO ielm = 1, numelm
-            CALL aggregation_request_data (landelm, ielm, grid_filter, &
+            CALL aggregation_request_data (landelm, ielm, gridf, &
                data_i4_2d_in1 = datafilter, data_i4_2d_out1 = ifilter, &
                filledvalue_i4 = -1)
    

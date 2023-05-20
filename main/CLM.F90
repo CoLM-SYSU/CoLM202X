@@ -246,12 +246,6 @@ PROGRAM CLM
 #if(defined CaMa_Flood)
    call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT)
-   CALL elm_vector_init ()
-#ifdef CATCHMENT
-   CALL hru_vector_init ()
-#endif
-#endif
 #ifdef OzoneData
    CALL init_Ozone_data(itstamp,sdate)
 #endif

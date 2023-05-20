@@ -20,7 +20,7 @@ MODULE mod_namelist
 
    INTEGER :: DEF_nx_blocks = 72
    INTEGER :: DEF_ny_blocks = 36
-   INTEGER :: DEF_PIO_groupsize = 6
+   INTEGER :: DEF_PIO_groupsize = 12
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
@@ -89,13 +89,24 @@ MODULE mod_namelist
 #endif
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
+   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
+   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
-   ! ------LAI change ----------
+   ! ------LAI change and Land cover year setting ----------
    ! 05/2023, add by Dong: use for updating LAI with simulation year
    LOGICAL :: DEF_LAICHANGE = .FALSE.
    INTEGER :: DEF_LC_YEAR   = 2005
+
+   ! ----- Use surface data from existing dataset -----
+   CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
+   ! case 1: from a larger region
+   LOGICAL :: USE_srfdata_from_larger_region   = .false.
+   ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
+   !         only available for USGS/IGBP/PFT CLASSIFICATION
+   LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
+
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
@@ -105,7 +116,7 @@ MODULE mod_namelist
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
-   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .false.
+   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
    ! ----- Initialization -----
    CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
@@ -558,9 +569,21 @@ CONTAINS
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
+         DEF_GRIDBASED_lon_res,           &
+         DEF_GRIDBASED_lat_res,           &
          DEF_file_water_table_depth,      &
+
          DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+
+         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
+         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
+
+         DEF_dir_existing_srfdata,        &
+         USE_srfdata_from_larger_region,  &
+         USE_srfdata_from_3D_gridded_data,&
+
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
@@ -704,11 +727,18 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
+      CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
+
       ! add by Dong
-      CALL mpi_bcast (DEF_LAICHANGE ,        1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_LC_YEAR   ,        1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAICHANGE ,      1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR   ,      1, mpi_integer, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -767,8 +797,6 @@ CONTAINS
          CALL mpi_bcast (DEF_forcing%vname(ivar),    256, mpi_character, p_root, p_comm_glb, p_err)
          CALL mpi_bcast (DEF_forcing%tintalgo(ivar), 256, mpi_character, p_root, p_comm_glb, p_err)
       ENDDO
-      CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL sync_hist_vars (set_defaults = .true.)

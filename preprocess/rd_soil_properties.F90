@@ -1,39 +1,47 @@
 #include <define.h>
 SUBROUTINE rd_soil_properties(dir_rawdata)
-! ----------------------------------------------------------------------
-! => Read in soil characteristic dataset from original "raw" data files -
-!     data with 30 arc seconds resolution
-! => Fill the missing data 
-! => Estimate the soil hydraulic and thermal parameters at the resolution of 30 arc seconds
+
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+! Read in soil characteristic dataset GSDE with 30 arc seconds resolution,
+! fill the missing data, and estimate soil porosity and
+! soil hydraulic and thermal parameters at the resolution of 30 arc seconds.
+! The data format are binary.
 !
-! 6. Global Soil Characteristics 
-!    (http://globalchange.bnu.edu.cn)
-! 6.1 percentage of gravel (% volume)
-! 6.2 percentage of sand   (% weight)
-! 6.3 percentage of clay   (% weight)
-! 6.4 organic Carbon (SOC) (% weight)
-! 6.5 bulk density (BD)    (g/cm3)
-! 6.6 ...
+! The Global Soil Characteristics dataset GSDE
+!    (http://globalchange.bnu.edu.cn/research/soilw)
+! 1 percentage of gravel (fine earth and rock fragments) (% volume)
+! 2 percentage of sand   (mineral soil)                  (% weight)
+! 3 percentage of clay   (mineral soil)                  (% weight)
+! 4 organic Carbon (SOC) (fine earth)                    (% weight)
+! 5 bulk density (BD)    (fine earth)                    (g/cm3)
+! 6 ...
+
+! The calling sequence is:
+! -> soil_solids_fractions:     soil porosity and soil fractions which are needed to estimate
+!                               soil hydraulic and thermal parameters
+! -> soil_thermal_parameters:   soil solid heat capacity and (dry and saturated) soil thermal conductivity
+! -> soil_hydraulic_parameters: soil water retension curves and saturated hydraulic conductivity
 !
-! Reference: 
-! (1) http://globalchange.bnu.edu.cn
-! (2) Shangguan et al., 2014: 
-!     A global soil data set for earth system modeling. 
+! Reference:
+! (1) Shangguan et al., 2014: A global soil data set for earth system modeling.
 !     J. of Advances in Modeling Earth Systems, DOI: 10.1002/2013MS000293
-! (3) Dai et al.,2014: Implementation of a New Global Soil Dataset in the Common Land Model.
+! (2) Dai et al.,2019: A Global High-Resolution Data Set of Soil Hydraulic and Thermal Properties
+!     for Land Surface Modeling. J. of Advances in Modeling Earth Systems, DOI: 10.1029/2019MS001784
 !
-! Created by Yongjiu Dai, 12/2013
+! Original author: Yongjiu Dai, 12/2013/
+!
+! Rivisions:
+! Hua Yuan, 06/2016: add OPENMP parallel function.
+! Yongjiu Dai and Nan Wei,
+!           06/2018: update a new version of soil hydraulic and thermal parameters
+! Nan Wei,  12/2022: output more parameters for BGC parts
 ! ----------------------------------------------------------------------
 use precision
-use spmd_TM
-#if (defined usempi)
-use spmd_io
-#endif
-
 IMPLICIT NONE
 
 ! arguments:
-      character(len=256), intent(in) :: dir_rawdata 
+      character(len=256), intent(in) :: dir_rawdata
 
 ! local variables:
       integer, parameter :: nlat=21600    ! 180*(60*2)
@@ -41,152 +49,153 @@ IMPLICIT NONE
 
       character(len=256) lndname
 
-#if (defined usempi)
-      character, allocatable :: land_chr1(:,:)
-      integer(kind=1), allocatable ::  land_int1(:,:)
-      integer(kind=2), allocatable ::  land_int2(:,:)
-#else
       character(len=1) land_chr1(nlon)
       character(len=2) land_chr2(nlon)
       integer(kind=1)  land_int1(nlon)
       integer(kind=2)  land_int2(nlon)
-#endif
 
       ! (1) global land cover characteristics
       ! ---------------------------------
-      integer, allocatable :: landtypes(:,:)  ! GLCC USGS/MODIS IGBP land cover types 
+      integer, allocatable :: landtypes(:,:)  ! GLCC USGS/MODIS IGBP land cover types
 
-      ! (6) global soil characteristcs
+      ! (2) global soil characteristcs
       ! --------------------------
-!     integer, allocatable :: nonsoil (:,:)   !
 
-      integer(kind=1), allocatable :: int_soil_grav_l (:,:) ! gravel content   (% of volume)
-      integer(kind=1), allocatable :: int_soil_sand_l (:,:) ! sand percentage  (% of weight)
-      integer(kind=1), allocatable :: int_soil_clay_l (:,:) ! clay percentage  (% of weight)
-      integer(kind=2), allocatable :: int_soil_oc_l   (:,:) ! organic carbon percentage (% of weight)
-      integer(kind=2), allocatable :: int_soil_bd_l   (:,:) ! bulk density     (g/cm3)
+      integer(kind=1), allocatable :: int_soil_grav_l (:,:) ! Coarse fragments volumetric in %
+      integer(kind=1), allocatable :: int_soil_sand_l (:,:) ! Sand content (50-2000 micro meter) mass fraction in %
+      integer(kind=1), allocatable :: int_soil_clay_l (:,:) ! Clay content (0-2 micro meter) mass fraction in %
+      integer(kind=2), allocatable :: int_soil_oc_l   (:,:) ! Soil organic carbon content (% of weight)
+      integer(kind=2), allocatable :: int_soil_bd_l   (:,:) ! Bulk density of fine earth (g/cm3)
 
 !   ---------------------------------------------------------------
       integer i, j
       integer nrow, ncol
-      integer iunit    
-      integer length
+      integer iunit
+      integer(i8) length
       integer nsl, MODEL_SOIL_LAYER
 
 ! soil hydraulic parameters
-      real(r8), allocatable :: theta_s_l   (:,:) ! saturated water content (cm3/cm3)
-      real(r8), allocatable :: psi_s_l     (:,:) ! matric potential at saturation (cm)
-      real(r8), allocatable :: lambda_l    (:,:) ! pore size distribution index (dimensionless)
-      real(r8), allocatable :: k_s_l       (:,:) ! saturated hydraulic conductivity (cm/day)
+      real(r8), allocatable :: vf_quartz_mineral_s_l (:,:) ! volumetric fraction of quartz within mineral soil
+      real(r8), allocatable :: vf_gravels_s_l        (:,:) ! volumetric fraction of gravels within soil solids
+      real(r8), allocatable :: vf_om_s_l             (:,:) ! volumetric fraction of organic matter within soil solids
+      real(r8), allocatable :: vf_sand_s_l           (:,:) ! volumetric fraction of sand within soil solids
+      real(r8), allocatable :: wf_gravels_s_l        (:,:) ! gravimetric fraction of gravels
+      real(r8), allocatable :: wf_sand_s_l           (:,:) ! gravimetric fraction of sand
+
+      real(r8), allocatable :: theta_s_l    (:,:) ! volumetric pore space of the soil(cm3/cm3)
+      real(r8), allocatable :: psi_s_l      (:,:) ! matric potential at saturation (cm)
+      real(r8), allocatable :: lambda_l     (:,:) ! pore size distribution index (dimensionless)
+      real(r8), allocatable :: k_s_l        (:,:) ! saturated hydraulic conductivity (cm/day)
+
+      real(r8), allocatable :: VGM_theta_r_l(:,:) ! residual moisture content
+      real(r8), allocatable :: VGM_alpha_l  (:,:) ! a parameter corresponding approximately to the inverse of the air-entry value
+      real(r8), allocatable :: VGM_n_l      (:,:) ! a shape parameter
+      real(r8), allocatable :: VGM_L_l      (:,:) ! pore-connectivity parameter
+
+! soil hydraulic parameters from Rosetta3-H3w
+      real(r8), allocatable :: VGM_theta_r_Rose (:,:) ! residual moisture content
+      real(r8), allocatable :: VGM_alpha_Rose   (:,:) ! a parameter corresponding approximately to the inverse of the air-entry value
+      real(r8), allocatable :: VGM_n_Rose       (:,:) ! a shape parameter
+      real(r8), allocatable :: k_s_Rose         (:,:) ! saturated hydraulic conductivity (cm/day)
 
 ! soil thermal parameters
       real(r8), allocatable :: csol_l      (:,:) ! heat capacity of soil solids [J/(m3 K)]
-      real(r8), allocatable :: tksatu_l    (:,:) ! thermal conductivity of saturated soil [W/m-K]
+      real(r8), allocatable :: k_solids_l  (:,:) ! thermal conductivity of soil solids [W/m/K]
+      real(r8), allocatable :: tksatu_l    (:,:) ! thermal conductivity of unfrozen saturated soil [W/m-K]
+      real(r8), allocatable :: tksatf_l    (:,:) ! thermal conductivity of frozen saturated soil [W/m-K]
       real(r8), allocatable :: tkdry_l     (:,:) ! thermal conductivity for dry soil  [W/(m-K)]
 
+      real(r8), allocatable :: OM_density_l(:,:) ! OM_density(kg/m3)
+      REAL(r8), allocatable :: BD_all_l(:,:)     ! Bulk density of soil (GRAVELS + MINERALS + ORGANIC MATTER)(kg/m3)
+
 ! CLM soil layer thickiness and depths
-      integer nl_soil 
+      integer nl_soil
       real(r8), allocatable ::  zsoi(:)  ! soil layer depth [m]
       real(r8), allocatable ::  dzsoi(:) ! soil node thickness [m]
       real(r8), allocatable ::  zsoih(:) ! interface level below a zsoi level [m]
 
-! soil hydraulic and thermal parameters
+! intermediate variables for soil hydraulic and thermal parameters
       real(r8) soil_grav_l  ! gravel content   (% of volume)
       real(r8) soil_sand_l  ! sand percentage  (% of weight)
       real(r8) soil_clay_l  ! clay percentage  (% of weight)
       real(r8) soil_oc_l    ! organic carbon percentage (% of weight)
       real(r8) soil_bd_l    ! bulk density     (g/cm3)
 
+      real(r8) vf_quartz_mineral_s ! volumetric fraction of quartz within mineral soil
+      real(r8) wf_gravels_s ! weight fraction of gravel
+      real(r8) wf_om_s      ! weight fraction of organic matter
+      real(r8) wf_sand_s    ! weight fraction of sand
+      real(r8) wf_clay_s    ! weight fraction of clay
+
+      real(r8) vf_gravels_s ! volumetric fraction of gravels
+      real(r8) vf_om_s      ! volumetric fraction of organic matter
+      real(r8) vf_sand_s    ! volumetric fraction of sand
+      real(r8) vf_clay_s    ! volumetric fraction of clay
+      real(r8) vf_silt_s    ! volumetric fraction of silt
+      real(r8) vf_pores_s   ! volumetric pore space of the soil
+
+      real(r8) BD_mineral_s ! bulk density of mineral soil (g/cm^3)
+
       real(r8) theta_s      ! saturated water content (cm3/cm3)
       real(r8) psi_s        ! matric potential at saturation (cm)
       real(r8) lambda       ! pore size distribution index (dimensionless)
       real(r8) k_s          ! saturated hydraulic conductivity (cm/day)
+
+      real(r8) VGM_theta_r  ! residual moisture content
+      real(r8) VGM_alpha    ! a parameter corresponding approximately to the inverse of the air-entry value
+      real(r8) VGM_n        ! a shape parameter
+      real(r8) VGM_L        ! pore-connectivity parameter
+
       real(r8) csol         ! heat capacity of soil solids [J/(m3 K)]
-      real(r8) tksatu       ! thermal conductivity of saturated soil [W/m-K]
+      real(r8) k_solids     ! thermal conductivity of soil solids [W/m/K]
+      real(r8) tksatu       ! thermal conductivity of unfrozen saturated soil [W/m-K]
+      real(r8) tksatf       ! thermal conductivity of frozen saturated soil [W/m-K]
       real(r8) tkdry        ! thermal conductivity for dry soil  [W/(m-K)]
+      REAL(r8) OM_density   ! soil organic carbon density
+      REAL(r8) BD_all       ! bulk density of soil
 
       character c
-      real(r8) a
+      real(r8) a,SOM
       real(r8) soildepth
       integer ii, iii, iiii, jj, jjj, jjjj
 
-#if(defined FAO_STATSGO_SOILMAP)
-! ----------------------------------------------------------------------
-! Creates land model surface dataset from original "raw" data files -
-!     USGS data with 30 arc seconds resolution:
-!  -  soil texture (FAO+STATSGO)
-! ----------------------------------------------------------------------
-      character(LEN=1), allocatable :: landsola_chr(:,:) ! soil texture type in upper 30cm
-      character(LEN=1), allocatable :: landsolb_chr(:,:) ! soil texture type in 30-100cm
-
-    ! relative amounts of sand (s), and clay (c) in the < 2 mm fraction of
-    ! the component layer was then estimated using table:
-      real(r8), dimension(17) ::  s_ = (/92.,82.,58.,17.,10.,43.,58.,10.,32.,52.,&
-                                          6.,22., 0., 0., 0., 0., 0./)
-      real(r8), dimension(17) ::  c_ = (/ 3., 6.,10.,13., 5.,18.,27.,34.,34.,42.,&
-                                         47.,58., 0., 0., 0., 0., 0./)
-      !integer ia
-      real(r8) :: a_
-      integer  :: L1, L2
-#endif
-
-      real(r8) r8_min,   r8_max
-      real(r8) r8_min_g, r8_max_g
-
-      integer  :: nrow_start
-      integer  :: nrow_end
-
-#if (defined usempi)
-      integer(kind=MPI_OFFSET_KIND) :: fdisp
-#endif
-
-! Initialize MPI tasks
-#if (defined usempi)
-      nrow_start = fine_lat_map%bdisp(1) + 1
-      nrow_end   = fine_lat_map%bdisp(1) + fine_lat_map%bstrd(1) 
-#else
-      nrow_start = 1
-      nrow_end   = nlat
-#endif
-
 ! ........................................
-! ... (1) gloabl land cover characteristics  
+! ... (1) gloabl land cover characteristics
 ! ........................................
-      allocate (landtypes(nlon,nrow_start:nrow_end))
+      iunit = 100
+      inquire(iolength=length) land_chr1
+      allocate ( landtypes(nlon,nlat) )
+
 #if(defined USGS_CLASSIFICATION)
      ! GLCC USGS classification
+     ! -------------------
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_usgs_update.bin'
-#endif
-#if(defined IGBP_CLASSIFICATION)
-     ! MODIS IGBP classification
-      lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
-#endif
+      print*,lndname
 
-      if (p_master) print*,trim(lndname)
-
-#if (defined usempi)
-      allocate (land_chr1(nlon,nrow_start:nrow_end))
-      fdisp = 0
-      call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, land_chr1)
-      landtypes(:,:) = ichar(land_chr1(:,:))
-      deallocate (land_chr1)
-#else
-      inquire(iolength=length) land_chr1
-      iunit = 100
       open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
       do nrow = 1, nlat
          read(iunit,rec=nrow,err=100) land_chr1
-! modifiedy by yuan, 06/02/2016
-         !do ncol = 1, nlon
-         !   landtypes(ncol,nrow) = ichar(land_chr1(ncol))
-         !enddo
          landtypes(:,nrow) = ichar(land_chr1(:))
       enddo
       close (iunit)
-#endif 
+#endif
+
+#if(defined IGBP_CLASSIFICATION)
+     ! MODIS IGBP classification
+     ! -------------------
+      lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
+      print*,lndname
+
+      open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+      do nrow = 1, nlat
+         read(iunit,rec=nrow,err=100) land_chr1
+         landtypes(:,nrow) = ichar(land_chr1(:))
+      enddo
+      close (iunit)
+#endif
 
 ! .................................
-! ... (6) global soil charateristics
+! ... (2) global soil charateristics
 ! .................................
       nl_soil = 10
       allocate ( zsoi(1:nl_soil), dzsoi(1:nl_soil), zsoih(0:nl_soil) )
@@ -210,337 +219,192 @@ IMPLICIT NONE
          zsoih(nsl) = 0.5*(zsoi(nsl)+zsoi(nsl+1))    ! interface depths
       enddo
 
-! -----------------------
-! non-soil classification
-!     NONSOIL
-!     ----------------------
-!     CODE   VALUE
-!     -19    Inland water
-!     -18    Urban
-!     -17    Salt flats
-!     -16    Rock debris
-!     -15    No data
-!     -14    Island
-!     -13    Humanly disturbed
-!     -12    Glaciers & permanent snow
-!     -11    Fishponds
-!     -10    Dunes & shifting sands
-!      1     Soil
-!     ----------------------
-!
-!     iunit = 100
-!     inquire(iolength=length) land_int1
-!     lndname = trim(dir_rawdata)//'soil/NONSOIL'
-!     print*,lndname
-!
-!     allocate ( nonsoil(nlon,nlat) )
-!
-!     ii = 0
-!     iii = 0
-!     iiii = 0
-!
-!     open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-!     do nrow = 1, nlat
-!        read(iunit,rec=nrow,err=100) land_int1
-!        do ncol = 1, nlon
-!           nonsoil(ncol,nrow) = land_int1(ncol)
-!           if(nonsoil(ncol,nrow) == -16)then
-!              ii = ii + 1
-!           endif
-!           if(nonsoil(ncol,nrow) == -14)then
-!              iii = iii + 1
-!           endif
-!           if(nonsoil(ncol,nrow) == -18)then
-!              iiii = iiii + 1
-!           endif
-!        enddo
-!     enddo
-!     print*, minval(nonsoil), maxval(nonsoil)
-!     print*,'Rock debris =', ii, 'island = ', iii, 'Urban =', iiii
-!     close (iunit)
-! -----------------------
+      allocate ( int_soil_grav_l       (nlon,nlat) ,&
+                 int_soil_sand_l       (nlon,nlat) ,&
+                 int_soil_clay_l       (nlon,nlat) ,&
+                 int_soil_oc_l         (nlon,nlat) ,&
+                 int_soil_bd_l         (nlon,nlat)  )
 
-#if(defined FAO_STATSGO_SOILMAP)
-! -----------------FAO/+STATSGO soil map-----------------------------------------
-! .. (1) soil 0 - 30 cm;
-! .. (2) soil 30 - 100 cm;
+      allocate ( vf_quartz_mineral_s_l (nlon,nlat) ,&
+                 vf_gravels_s_l        (nlon,nlat) ,&
+                 vf_om_s_l             (nlon,nlat) ,&
+                 vf_sand_s_l           (nlon,nlat) ,&
+                 wf_gravels_s_l        (nlon,nlat) ,&
+                 wf_sand_s_l           (nlon,nlat) ,&
+                 theta_s_l             (nlon,nlat) ,&
+                 psi_s_l               (nlon,nlat) ,&
+                 lambda_l              (nlon,nlat) ,&
+                 k_s_l                 (nlon,nlat)  )
 
-      allocate ( landsola_chr (nlon,nrow_start:nrow_end) )
-      allocate ( landsolb_chr (nlon,nrow_start:nrow_end) )
+      allocate ( VGM_theta_r_l         (nlon,nlat) ,&
+                 VGM_alpha_l           (nlon,nlat) ,&
+                 VGM_n_l               (nlon,nlat) ,&
+                 VGM_L_l               (nlon,nlat)   )
 
-      lndname = trim(dir_rawdata)//'USGS_soil/soilcat.30s'
-      if (p_master) print*,trim(lndname)
-#if (defined usempi)
-      fdisp = 0
-      call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, landsola_chr)
-#else
-      inquire(iolength=length) landsola_chr1
+      allocate ( VGM_theta_r_Rose      (nlon,nlat) ,&
+                 VGM_alpha_Rose        (nlon,nlat) ,&
+                 VGM_n_Rose            (nlon,nlat) ,&
+                 k_s_Rose              (nlon,nlat)  )
+
+      allocate ( csol_l                (nlon,nlat) ,&
+                 k_solids_l            (nlon,nlat) ,&
+                 tksatu_l              (nlon,nlat) ,&
+                 tksatf_l              (nlon,nlat) ,&
+                 tkdry_l               (nlon,nlat)  )
+      allocate ( OM_density_l          (nlon,nlat) ,&
+                 BD_all_l              (nlon,nlat)  )
+
+! -----------------------------------------------------------------
+! Soil physical properties at the model soil vertical layers
+! The parameters of the top NINTH soil layers were given by datasets
+! [0-0.0175, 0.0175-0.045(the top two layers share the same data), 0.045-0.091, 0.091-0.166, 0.166-0.289,
+!  0.289-0.493, 0.493-0.829, 0.829-1.383 and 1.383-2.296 m].
+! The NINTH layer's soil parameters will assigned to the bottom soil layer (2.296 - 3.8019m).
+! -----------------------------------------------------------------
       iunit = 100
-      open(iunit, file=lndname,access='direct',recl=length,&
-                    form='unformatted',status='old')
-      do nrow = 1, nlat
-         read(iunit,rec=nrow,err=100) landsola_chr(1:nlon,nrow)
-      enddo
-      close(iunit)
-#endif
-
-      lndname = trim(dir_rawdata)//'USGS_soil/soilcatb.30s'
-      if (p_master) print*,trim(lndname)
-#if (defined usempi)
-      fdisp = 0
-      call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, landsolb_chr)
-#else
-      inquire(iolength=length) landsolb_chr1
-      iunit = 100
-      open(iunit, file=lndname,access='direct',recl=length,&
-                    form='unformatted',status='old')
-      do nrow = 1, nlat
-         read(iunit,rec=nrow,err=100) landsolb_chr(1:nlon,nrow)
-      enddo
-      close(iunit)
-
-#endif
-#endif
-
-! modifiedy by yuan, 06/02/2016
-#if (!defined FAO_STATSGO_SOILMAP)
-      allocate ( int_soil_grav_l (nlon,nrow_start:nrow_end) ,&
-                 int_soil_sand_l (nlon,nrow_start:nrow_end) ,&
-                 int_soil_clay_l (nlon,nrow_start:nrow_end) ,&
-                 int_soil_oc_l   (nlon,nrow_start:nrow_end) ,&
-                 int_soil_bd_l   (nlon,nrow_start:nrow_end)  )
-#endif
-
-      allocate ( theta_s_l       (nlon,nrow_start:nrow_end) ,&
-                 psi_s_l         (nlon,nrow_start:nrow_end) ,&
-                 lambda_l        (nlon,nrow_start:nrow_end) ,&
-                 k_s_l           (nlon,nrow_start:nrow_end)  )
-
-      allocate ( csol_l          (nlon,nrow_start:nrow_end) ,&
-                 tksatu_l        (nlon,nrow_start:nrow_end) ,&
-                 tkdry_l         (nlon,nrow_start:nrow_end)  )
-
       DO nsl = 1, 8
          MODEL_SOIL_LAYER = nsl
-         write(c,'(i1)') MODEL_SOIL_LAYER 
+         write(c,'(i1)') MODEL_SOIL_LAYER
 
-! modifiedy by yuan, 06/02/2016
-         !allocate ( int_soil_grav_l (nlon,nlat) ,&
-         !           int_soil_sand_l (nlon,nlat) ,&
-         !           int_soil_clay_l (nlon,nlat) ,&
-         !           int_soil_oc_l   (nlon,nlat) ,&
-         !           int_soil_bd_l   (nlon,nlat)  )
-
-         !allocate ( theta_s_l       (nlon,nlat) ,&
-         !           psi_s_l         (nlon,nlat) ,&
-         !           lambda_l        (nlon,nlat) ,&
-         !           k_s_l           (nlon,nlat)  )
-
-         !allocate ( csol_l          (nlon,nlat) ,&
-         !           tksatu_l        (nlon,nlat) ,&
-         !           tkdry_l         (nlon,nlat)  )
-
-#if (!defined FAO_STATSGO_SOILMAP)
          ! ------------------------------------
          ! (6.1) precentage of gravel (% volume)
          ! ------------------------------------
-#if (defined SoilGrid_Rock_Fragments)
-         lndname = trim(dir_rawdata)//'SoilGrids_Gravel/GRAV_L'//trim(c)
-#else
-         lndname = trim(dir_rawdata)//'soil/GRAV_L'//trim(c)
-#endif
-         if (p_master) print*,trim(lndname)
-         
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, int_soil_grav_l)
-#else
          inquire(iolength=length) land_int1
-         iunit = 100
+         lndname = trim(dir_rawdata)//'soil/GRAV_L'//trim(c)
+         print*,lndname
+
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
          do nrow = 1, nlat
             read(iunit,rec=nrow,err=100) land_int1
-! modifiedy by yuan, 06/02/2016
-            !do ncol = 1, nlon
-            !   int_soil_grav_l(ncol,nrow) = land_int1(ncol)
-            !enddo
             int_soil_grav_l(:,nrow) = land_int1(:)
          enddo
          close (iunit)
-#endif
 
          ! ----------------------------------
          ! (6.2) percentage of sand (% weight)
          ! ----------------------------------
-         lndname = trim(dir_rawdata)//'soil/SAND_L'//trim(c)
-         if (p_master) print*,trim(lndname)
-
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, int_soil_sand_l)
-#else
          inquire(iolength=length) land_int1
-         iunit = 100
+         lndname = trim(dir_rawdata)//'soil/SAND_L'//trim(c)
+         print*,lndname
+
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
          do nrow = 1, nlat
             read(iunit,rec=nrow,err=100) land_int1
-! modifiedy by yuan, 06/02/2016
-            !do ncol = 1, nlon
-            !   int_soil_sand_l(ncol,nrow) = land_int1(ncol)
-            !enddo
             int_soil_sand_l(:,nrow) = land_int1(:)
          enddo
          close (iunit)
-#endif
 
          ! ----------------------------------
          ! (6.3) percentage of clay (% weight)
          ! ----------------------------------
-         lndname = trim(dir_rawdata)//'soil/CLAY_L'//trim(c)
-         if (p_master) print*,trim(lndname)
-
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, int_soil_clay_l)
-#else
          inquire(iolength=length) land_int1
-         iunit = 100
+         lndname = trim(dir_rawdata)//'soil/CLAY_L'//trim(c)
+         print*,lndname
+
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = 1, nlat 
+         do nrow = 1, nlat
             read(iunit,rec=nrow,err=100) land_int1
-! modifiedy by yuan, 06/02/2016
-            !do ncol = 1, nlon
-            !   int_soil_clay_l(ncol,nrow) = land_int1(ncol)
-            !enddo
             int_soil_clay_l(:,nrow) = land_int1(:)
          enddo
          close (iunit)
-#endif
 
          ! -------------------------------------
          ! (6.4) percentage of organic carbon (%)
          ! -------------------------------------
-         lndname = trim(dir_rawdata)//'soil/OC_L'//trim(c)
-         if (p_master) print*,trim(lndname)
-
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, int_soil_oc_l)
-#else
          inquire(iolength=length) land_int2
-         iunit = 100
+         lndname = trim(dir_rawdata)//'soil/OC_L'//trim(c)
+         print*,lndname
+
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
-         do nrow = 1, nlat 
+         do nrow = 1, nlat
             read(iunit,rec=nrow,err=100) land_int2
-! modifiedy by yuan, 06/02/2016
-            !do ncol = 1, nlon
-            !   int_soil_oc_l(ncol,nrow) = land_int2(ncol)
-            !enddo
             int_soil_oc_l(:,nrow) = land_int2(:)
          enddo
          close (iunit)
-#endif
 
          ! -------------------------
          ! (6.5) bulk density (g/cm3)
          ! -------------------------
-         lndname = trim(dir_rawdata)//'soil/BD_L'//trim(c)
-         if (p_master) print*,trim(lndname)
-
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'read', fdisp, fine_lat_map, nlon, int_soil_bd_l)
-#else
          inquire(iolength=length) land_int2
-         iunit = 100
-         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old') 
-         do nrow = 1, nlat 
-            read(iunit,rec=nrow,err=100) land_int2 
-! modifiedy by yuan, 06/02/2016
-            !do ncol = 1, nlon 
-            !   int_soil_bd_l(ncol,nrow) = land_int2(ncol)
-            !enddo 
+         lndname = trim(dir_rawdata)//'soil/BD_L'//trim(c)
+         print*,lndname
+
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+         do nrow = 1, nlat
+            read(iunit,rec=nrow,err=100) land_int2
             int_soil_bd_l(:,nrow) = land_int2(:)
          enddo
          close (iunit)
-#endif
 
-         ! ---------
-         ! (6.6) ...
-         ! ---------
-#endif
+         ! -------------------------
+         ! (6.6) Rosetta parameters generated by yonggen Zhang
+         ! -------------------------
+         inquire(iolength=length) VGM_theta_r_Rose(:,1)
+         lndname = '/work/ygzhang/data/CLMrawdata_2021/Rosetta_VGM/SSCBD_L'//trim(c)//'_VGM_merged_thr_binary'
+         print*,lndname
 
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+         do nrow = 1, nlat
+            read(iunit,rec=nrow,err=100) VGM_theta_r_Rose(:,nrow)
+         end do
+         close(iunit)
+
+         inquire(iolength=length) VGM_alpha_Rose(:,1)
+         lndname = '/work/ygzhang/data/CLMrawdata_2021/Rosetta_VGM/SSCBD_L'//trim(c)//'_VGM_merged_alpha_binary'
+         print*,lndname
+
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+         do nrow = 1, nlat
+            read(iunit,rec=nrow,err=100) VGM_alpha_Rose(:,nrow)
+         end do
+         close(iunit)
+
+         inquire(iolength=length) VGM_n_Rose(:,1)
+         lndname = '/work/ygzhang/data/CLMrawdata_2021/Rosetta_VGM/SSCBD_L'//trim(c)//'_VGM_merged_n_binary'
+         print*,lndname
+
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+         do nrow = 1, nlat
+            read(iunit,rec=nrow,err=100) VGM_n_Rose(:,nrow)
+         end do
+         close(iunit)
+
+         inquire(iolength=length) k_s_Rose(:,1)
+         lndname = '/work/ygzhang/data/CLMrawdata_2021/Rosetta_VGM/SSCBD_L'//trim(c)//'_VGM_merged_Ks_binary'
+         print*,lndname
+
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='old')
+         do nrow = 1, nlat
+            read(iunit,rec=nrow,err=100) k_s_Rose(:,nrow)
+         end do
+         close(iunit)
 
 
          ! ---------------------------------------
-         ! calculate the soil hydraulic parameters
+         ! calculate soil parameters
          ! ---------------------------------------
-         do j = nrow_start, nrow_end
+
+#ifdef OPENMP
+print *, 'OPENMP enabled, threads num = ', OPENMP, "soil parameters..."
+!$OMP PARALLEL DO NUM_THREADS(OPENMP) SCHEDULE(DYNAMIC,1) &
+!$OMP PRIVATE(soil_grav_l,soil_sand_l,soil_clay_l,soil_oc_l,soil_bd_l) &
+!$OMP PRIVATE(vf_quartz_mineral_s,wf_gravels_s,wf_om_s,wf_sand_s,wf_clay_s) &
+!$OMP PRIVATE(vf_gravels_s,vf_om_s,vf_sand_s,vf_clay_s,vf_silt_s,vf_pores_s) &
+!$OMP PRIVATE(BD_mineral_s,theta_s,psi_s,lambda,k_s,csol,k_solids,tksatu,tksatf,tkdry,OM_density,BD_all) &
+!$OMP PRIVATE(VGM_theta_r,VGM_alpha,VGM_n,VGM_L) &
+!$OMP PRIVATE(soildepth,a,SOM,i)
+#endif
+
+         do j = 1, nlat
             do i = 1, nlon
 
-#if(defined FAO_STATSGO_SOILMAP)
-! -----------------FAO/+STATSGO soil map-----------------------------------------
-            L1 = ichar(landsola_chr(i,j))
-            L2 = ichar(landsolb_chr(i,j))
+               soil_grav_l = int_soil_grav_l(i,j) ! Volumetric in %
+               soil_sand_l = int_soil_sand_l(i,j) ! Gravimetric fraction in %
+               soil_clay_l = int_soil_clay_l(i,j) ! Gravimetric fraction in %
+               soil_oc_l   = int_soil_oc_l  (i,j)*0.01 ! Gravimetric fraction (fine earth) in %
+               soil_bd_l   = int_soil_bd_l  (i,j)*0.01 ! (fine earth) in g/cm3
 
-            soil_grav_l = 0.0
-            soil_sand_l = 0.0
-            soil_clay_l = 0.0
-            soil_oc_l = 0.0
-            soil_bd_l = 0.0
-
-            if(zsoih(nsl+1) .lt. 0.3)then
-               if(L1.ge.1 .and. L1.le.17) then
-                  soil_grav_l = 0.0
-                  soil_sand_l = s_(L1)
-                  soil_clay_l = c_(L1)
-                  soil_oc_l = 0.0
-                                   a_ = 0.489 - 0.00126*s_(L1)
-                  soil_bd_l = (1.- a_)*2.7
-               endif
-            else
-               if(L2.ge.1 .and. L2.le.17) then
-                  soil_grav_l = 0.0
-                  soil_sand_l = s_(L2)
-                  soil_clay_l = c_(L2)
-                  soil_oc_l = 0.0
-                                   a_ = 0.489 - 0.00126*s_(L2)
-                  soil_bd_l = (1.- a_)*2.7
-               endif
-            endif
-#if(defined USGS_CLASSIFICATION)
-             if(landtypes(i,j)/=0 .and. landtypes(i,j)/=16 .and. & ! NOT OCEAN(0) / LAND WATER BODIES(16)
-                 landtypes(i,j)/=24) then ! NOT SNOW or ICE (24)
-#endif
-#if(defined IGBP_CLASSIFICATION)
-             if(landtypes(i,j)/=0 .and. & !NOT OCEAN(0)
-                landtypes(i,j)/=17 .and. landtypes(i,j)/=15)then !NOT LAND WATER BODIES(17)/ SNOW OR ICE(15)
-#endif
-                if (soil_sand_l*soil_clay_l < 0.01) then
-                   soil_sand_l = 43.
-                   soil_clay_l = 18.
-                end if
-
-             end if
-! -----------------FAO/+STATSGO soil map-----------------------------------------
-#else
-               soil_grav_l = int_soil_grav_l(i,j)
-               soil_sand_l = int_soil_sand_l(i,j)
-               soil_clay_l = int_soil_clay_l(i,j)
-               soil_oc_l   = int_soil_oc_l  (i,j) * 0.01
-               soil_bd_l   = int_soil_bd_l  (i,j) * 0.01
-
-               if(soil_grav_l < 0.0) soil_grav_l = 0.0  ! missing value = -100
-#endif
-
-!#if(defined USGS_CLASSIFICATION)
-!              if(landtypes(i,j)/=0 .and. & !NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
-!                 landtypes(i,j)/=16 .and. landtypes(i,j)/=24)then
-!#endif
-!#if(defined IGBP_CLASSIFICATION)
-!              if(landtypes(i,j)/=0 .and. & !NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
-!                 landtypes(i,j)/=17 .and. landtypes(i,j)/=15)then
-!#endif
+               if(soil_grav_l < 0.0) soil_grav_l = 0.0  ! missing value = -1
 
 #if(defined USGS_CLASSIFICATION)
                if(landtypes(i,j)==16)then   !WATER BODIES(16)
@@ -568,16 +432,20 @@ IMPLICIT NONE
                   soil_bd_l   = 2.0
                endif
 
+#if(defined Gravels0)
+                  soil_grav_l = 0.0
+#endif
+
                if(landtypes(i,j)/=0)then    !NOT OCEAN(0)
                   ! checking the soil physical properties
                   ! ------------------------------------
                   if( soil_sand_l < 0.0 ) soil_sand_l = 43.   ! missing value = -100
                   if( soil_clay_l < 0.0 ) soil_clay_l = 18.   ! missing value = -100
-                  if( soil_oc_l   < 0.0 ) soil_oc_l = 1.0     ! missing value = -999
-                  if( soil_bd_l   < 0.0 ) soil_bd_l = 1.2     ! missing value = -999
+                  if( soil_oc_l   < 0.0   ) soil_oc_l = 1.0     ! missing value = -999
+                  if( soil_bd_l   < 0.0   ) soil_bd_l = 1.2     ! missing value = -999
 
-                  if( soil_sand_l < 1.0 ) soil_sand_l = 1.
-                  if( soil_clay_l < 1.0 ) soil_clay_l = 1.
+                  if( soil_sand_l < 1.0   ) soil_sand_l = 1.
+                  if( soil_clay_l < 1.0   ) soil_clay_l = 1.
 
                   a = soil_sand_l + soil_clay_l
                   if( a >= 96. ) then
@@ -586,210 +454,387 @@ IMPLICIT NONE
                   endif
                   if( soil_oc_l < 0.01 ) soil_oc_l = 0.01
                   if( soil_oc_l > 58.0 ) soil_oc_l = 58.0
-                  if( soil_bd_l < 0.1  ) soil_bd_l = 0.1 
+                  if( soil_bd_l < 0.1  ) soil_bd_l = 0.1
 
-                  soildepth = zsoih(MODEL_SOIL_LAYER)*100.0 
+                  soildepth = zsoih(MODEL_SOIL_LAYER + 1)*100.0
+                  if (soil_bd_l < 0.111 .or. soil_bd_l > 2.0 .or. soil_oc_l > 10.0) then
+                     SOM=1.724*soil_oc_l
+                     soil_bd_l = 0.111*2.0/(2.0*SOM/100.+0.111*(100.-SOM)/100.)
+                  end if
 
-                 ! estimating soil hydraulic properties
-                 ! ------------------------------------
-                  CALL soil_hydraulic_parameters( soil_sand_l,soil_clay_l, &
-                       soil_oc_l,soil_bd_l,soildepth, &
-                       theta_s,psi_s,lambda,k_s )
+                 ! --------------------------------------------------
+                 ! The weight and volumetric fractions of soil solids
+                 ! --------------------------------------------------
+                  CALL soil_solids_fractions(&
+                       soil_bd_l,soil_grav_l,soil_oc_l,soil_sand_l,soil_clay_l,&
+                       wf_gravels_s,wf_om_s,wf_sand_s,wf_clay_s,&
+                       vf_gravels_s,vf_om_s,vf_sand_s,vf_clay_s,vf_silt_s,vf_pores_s,&
+                       vf_quartz_mineral_s,BD_mineral_s,OM_density,BD_all)
 
-                 ! estimating soil thermal properties
-                 ! ----------------------------------
-                  CALL soil_thermal_parameters(soil_grav_l,soil_sand_l,soil_clay_l, &
-                       soil_oc_l,soil_bd_l,theta_s,soildepth,&
-                       csol,tksatu,tkdry)
+                       theta_s = vf_pores_s
 
-                 ! updating the hydraulic properties of soil-gravel mixtures
-                 ! -------------------------------------------------------
-                  theta_s = theta_s * (1.-soil_grav_l/100.)
-                  k_s = k_s * (1.-soil_grav_l/100.)
-                 ! k_s = k_s * 2.0*(1.-soil_grav_l/100.)/(2.0+soil_grav_l/100.)  ! (Peck and Waston (1979)
-                 ! k_s = k_s * (1.-soil_grav_mass_fraction/100.)  ! (Brakensiek et al., 1986; Bagarello and Iovino, 2007)
+                 ! ---------------------------------------------------------------------
+                 ! The volumetric heat capacity and thermal conductivity of soil solids
+                 ! ---------------------------------------------------------------------
+                  CALL soil_thermal_parameters(&
+                       wf_gravels_s,wf_sand_s,wf_clay_s,&
+                       vf_gravels_s,vf_om_s,vf_sand_s,vf_clay_s,vf_silt_s,vf_pores_s,&
+                       vf_quartz_mineral_s,BD_mineral_s,k_solids,&
+                       csol,tkdry,tksatu,tksatf)
+                 ! -----------------------------
+                 ! The soil hydraulic properties
+                 ! -----------------------------
+                 CALL soil_hydraulic_parameters(soil_bd_l,soil_sand_l,soil_clay_l,soil_oc_l,soildepth,&
+                       soil_grav_l,theta_s,psi_s,lambda,k_s,&
+                       VGM_theta_r,VGM_alpha,VGM_n,VGM_L,&
+                       VGM_theta_r_Rose(i,j),VGM_alpha_Rose(i,j),VGM_n_Rose(i,j),k_s_Rose(i,j))
+
+                 vf_gravels_s = vf_gravels_s/(1 - vf_pores_s)
+                 vf_om_s      = vf_om_s     /(1 - vf_pores_s)
+                 vf_sand_s    = vf_sand_s   /(1 - vf_pores_s)
+                 wf_sand_s    = soil_sand_l / 100.0
+                 BD_all       = BD_all * 1000.0
 
                else                         !OCEAN
-                  theta_s = -1.0e36
-                  psi_s   = -1.0e36
-                  lambda  = -1.0e36
-                  k_s     = -1.0e36
+                  vf_quartz_mineral_s = -1.0e36
+                  vf_gravels_s        = -1.0e36
+                  vf_om_s             = -1.0e36
+                  vf_sand_s           = -1.0e36
+                  wf_gravels_s        = -1.0e36
+                  wf_sand_s           = -1.0e36
+                  theta_s             = -1.0e36
 
-                  csol    = -1.0e36
-                  tksatu  = -1.0e36
-                  tkdry   = -1.0e36
+                  psi_s               = -1.0e36
+                  lambda              = -1.0e36
+                  k_s                 = -1.0e36
+
+                  VGM_theta_r         = -1.0e36
+                  VGM_alpha           = -1.0e36
+                  VGM_n               = -1.0e36
+                  VGM_L               = -1.0e36
+
+                  csol                = -1.0e36
+                  k_solids            = -1.0e36
+                  tksatu              = -1.0e36
+                  tksatf              = -1.0e36
+                  tkdry               = -1.0e36
+                  OM_density          = -1.0e36
+                  BD_all              = -1.0e36
                endif
 
-               theta_s_l(i,j) = theta_s
-               psi_s_l  (i,j) = psi_s
-               lambda_l (i,j) = lambda
-               k_s_l    (i,j) = k_s
+               vf_quartz_mineral_s_l (i,j) = vf_quartz_mineral_s
+               vf_gravels_s_l        (i,j) = vf_gravels_s
+               vf_om_s_l             (i,j) = vf_om_s
+               vf_sand_s_l           (i,j) = vf_sand_s
+               wf_gravels_s_l        (i,j) = wf_gravels_s
+               wf_sand_s_l           (i,j) = wf_sand_s
+               theta_s_l             (i,j) = theta_s
 
-               csol_l   (i,j) = csol
-               tksatu_l (i,j) = tksatu
-               tkdry_l  (i,j) = tkdry
+               psi_s_l               (i,j) = psi_s
+               lambda_l              (i,j) = lambda
+               k_s_l                 (i,j) = k_s
 
-            enddo 
+               VGM_theta_r_l         (i,j) = VGM_theta_r
+               VGM_alpha_l           (i,j) = VGM_alpha
+               VGM_n_l               (i,j) = VGM_n
+               VGM_L_l               (i,j) = VGM_L
+
+               csol_l                (i,j) = csol
+               k_solids_l            (i,j) = k_solids
+               tksatu_l              (i,j) = tksatu
+               tksatf_l              (i,j) = tksatf
+               tkdry_l               (i,j) = tkdry
+
+               OM_density_l          (i,j) = OM_density
+               BD_all_l              (i,j) = BD_all
+            enddo
          enddo
+#ifdef OPENMP
+!$OMP END PARALLEL DO
+#endif
 
-         call print_minmax ('theta  =', theta_s_l, theta_s_l .gt. -1.0e30)
-         call print_minmax ('psi    =', psi_s_l  , psi_s_l   .gt. -1.0e30)
-         call print_minmax ('lambda =', lambda_l , lambda_l  .gt. -1.0e30)
-         call print_minmax ('Ks     =', k_s_l    , k_s_l     .gt. -1.0e30)
-         call print_minmax ('csol   =', csol_l   , csol_l    .gt. -1.0e30)
-         call print_minmax ('tksatu =', tksatu_l , tksatu_l  .gt. -1.0e30)
-         call print_minmax ('tkdry  =', tkdry_l  , tkdry_l   .gt. -1.0e30)
+         print*,'vf_quartz_mineral_s =', minval(vf_quartz_mineral_s_l, mask = vf_quartz_mineral_s_l .gt. -1.0e30), &
+                                         maxval(vf_quartz_mineral_s_l, mask = vf_quartz_mineral_s_l .gt. -1.0e30)
+         print*,'vf_gravels_s        =', minval(vf_gravels_s_l,        mask = vf_gravels_s_l        .gt. -1.0e30), &
+                                         maxval(vf_gravels_s_l,        mask = vf_gravels_s_l        .gt. -1.0e30)
+         print*,'vf_om_s             =', minval(vf_om_s_l,             mask = vf_om_s_l             .gt. -1.0e30), &
+                                         maxval(vf_om_s_l,             mask = vf_om_s_l             .gt. -1.0e30)
+         print*,'vf_sand_s           =', minval(vf_sand_s_l,           mask = vf_sand_s_l           .gt. -1.0e30), &
+                                         maxval(vf_sand_s_l,           mask = vf_sand_s_l           .gt. -1.0e30)
+         print*,'wf_gravels_s        =', minval(wf_gravels_s_l,        mask = wf_gravels_s_l        .gt. -1.0e30), &
+                                         maxval(wf_gravels_s_l,        mask = wf_gravels_s_l        .gt. -1.0e30)
+         print*,'wf_sand_s           =', minval(wf_sand_s_l,           mask = wf_sand_s_l           .gt. -1.0e30), &
+                                         maxval(wf_sand_s_l,           mask = wf_sand_s_l           .gt. -1.0e30)
 
-! (1) Write out the saturated water content [cm3/cm3]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/theta_s_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, theta_s_l)
-#else
+         print*,'theta  =', minval(theta_s_l, mask = theta_s_l .gt. -1.0e30), maxval(theta_s_l, mask = theta_s_l .gt. -1.0e30)
+         print*,'psi    =', minval(psi_s_l,   mask = psi_s_l   .gt. -1.0e30), maxval(psi_s_l,   mask = psi_s_l   .gt. -1.0e30)
+         print*,'lambda =', minval(lambda_l,  mask = lambda_l  .gt. -1.0e30), maxval(lambda_l,  mask = lambda_l  .gt. -1.0e30)
+         print*,'ks     =', minval(k_s_l,     mask = k_s_l     .gt. -1.0e30), maxval(k_s_l,     mask = k_s_l     .gt. -1.0e30)
+         print*,'csol   =', minval(csol_l,    mask = csol_l    .gt. -1.0e30), maxval(csol_l,    mask = csol_l    .gt. -1.0e30)
+         print*,'k_solids    =', minval(k_solids_l,    mask = k_solids_l    .gt. -1.0e30), &
+                                 maxval(k_solids_l,    mask = k_solids_l    .gt. -1.0e30)
+         print*,'tksatu =', minval(tksatu_l,  mask = tksatu_l  .gt. -1.0e30), maxval(tksatu_l,  mask = tksatu_l  .gt. -1.0e30)
+         print*,'tksatf =', minval(tksatf_l,  mask = tksatf_l  .gt. -1.0e30), maxval(tksatf_l,  mask = tksatf_l  .gt. -1.0e30)
+         print*,'tkdry  =', minval(tkdry_l,   mask = tkdry_l   .gt. -1.0e30), maxval(tkdry_l,   mask = tkdry_l   .gt. -1.0e30)
+         print*,'OM_density =', minval(OM_density_l,   mask = OM_density_l   .gt. -1.0e30), &
+                                maxval(OM_density_l,   mask = OM_density_l   .gt. -1.0e30)
+         print*,'BD_all =', minval(BD_all_l,  mask = BD_all_l  .gt. -1.0e30), maxval(BD_all_l,  mask = BD_all_l  .gt. -1.0e30)
+
+         print*,'VGM_theta_r =', minval(VGM_theta_r_l, mask = VGM_theta_r_l .gt. -1.0e30), &
+                                 maxval(VGM_theta_r_l, mask = VGM_theta_r_l .gt. -1.0e30)
+         print*,'VGM_alpha   =', minval(VGM_alpha_l,   mask = VGM_alpha_l   .gt. -1.0e30), &
+                                 maxval(VGM_alpha_l,   mask = VGM_alpha_l   .gt. -1.0e30)
+         print*,'VGM_n       =', minval(VGM_n_l,       mask = VGM_n_l       .gt. -1.0e30), &
+                                 maxval(VGM_n_l,       mask = VGM_n_l       .gt. -1.0e30)
+         print*,'VGM_L       =', minval(VGM_L_l,       mask = VGM_L_l       .gt. -1.0e30), &
+                                 maxval(VGM_L_l,       mask = VGM_L_l       .gt. -1.0e30)
+
+! (1) Write out the volumetric fraction of quartz within mineral soil
+         inquire(iolength=length) vf_quartz_mineral_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/vf_quartz_mineral_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) vf_quartz_mineral_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (2) Write out the volumetric fraction of gravels within soil solids
+         inquire(iolength=length) vf_gravels_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/vf_gravels_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) vf_gravels_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (3) Write out the volumetric fraction of organic matter within soil solids
+         inquire(iolength=length) vf_om_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/vf_om_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) vf_om_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (4) Write out the volumetric fraction of sand within soil solids
+         inquire(iolength=length) vf_sand_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/vf_sand_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) vf_sand_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (5) Write out the gravimetric fraction of gravels
+         inquire(iolength=length) wf_gravels_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/wf_gravels_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) wf_gravels_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (6) Write out the gravimetric fraction of sand
+         inquire(iolength=length) wf_sand_s_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/wf_sand_s_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) wf_sand_s_l(:,j)
+         enddo
+         close(iunit)
+
+! (7) Write out the saturated water content [cm3/cm3]
          inquire(iolength=length) theta_s_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/theta_s_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) theta_s_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (2) Write out the matric potential at saturation [cm]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/psi_s_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, psi_s_l)
-#else
+! (8) Write out the matric potential at saturation [cm]
          inquire(iolength=length) psi_s_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/psi_s_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) psi_s_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (3) Write out the pore size distribution index [dimensionless]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/lambda_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, lambda_l)
-#else
+! (9) Write out the pore size distribution index [dimensionless]
          inquire(iolength=length) lambda_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/lambda_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) lambda_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (4) Write out the saturated hydraulic conductivity [cm/day]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/k_s_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, k_s_l)
-#else
+! (10) Write out the saturated hydraulic conductivity [cm/day]
          inquire(iolength=length) k_s_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/k_s_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) k_s_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (5) Write out the heat capacity of soil solids [J/(m3 K)]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/csol_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, csol_l)
-#else
+! (11) Write out the heat capacity of soil solids [J/(m3 K)]
          inquire(iolength=length) csol_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/csol_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) csol_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (6) Write out the thermal conductivity of saturated soil [W/m-K]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/tksatu_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, tksatu_l)
-#else
+! (12) Write out the thermal conductivity of mineral soil [W/m/K]
+         inquire(iolength=length) k_solids_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/k_solids_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) k_solids_l(:,j)
+         enddo
+         close(iunit)
+
+! (13) Write out the thermal conductivity of unfrozen saturated soil [W/m-K]
          inquire(iolength=length) tksatu_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/tksatu_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) tksatu_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! (7) Write out the thermal conductivity for dry soil [W/(m-K)]
-         lndname = trim(dir_rawdata)//'RAW_DATA_updated/tkdry_l'//trim(c)
-         if (p_master) print*,trim(lndname)
-#if (defined usempi)
-         fdisp = 0
-         call mpi_rdwr_data (lndname, 'write', fdisp, fine_lat_map, nlon, tkdry_l)
-#else
+! (14) Write out the thermal conductivity of frozen saturated soil [W/m-K]
+         inquire(iolength=length) tksatf_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/tksatf_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) tksatf_l(:,j)
+         enddo
+         close(iunit)
+
+! (15) Write out the thermal conductivity for dry soil [W/(m-K)]
          inquire(iolength=length) tkdry_l(:,1)
-         iunit = 100
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/tkdry_l'//trim(c)
+         print*,lndname
          open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
          do j = 1, nlat
             write(iunit,rec=j,err=101) tkdry_l(:,j)
          enddo
          close(iunit)
-#endif
 
-! modifiedy by yuan, 06/02/2016
-         !deallocate ( int_soil_grav_l ,&
-         !             int_soil_sand_l ,&
-         !             int_soil_clay_l ,&
-         !             int_soil_oc_l   ,&
-         !             int_soil_bd_l    )
+! (16) Write out the VGM's residual moisture content
+         inquire(iolength=length) VGM_theta_r_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/VGM_theta_r_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) VGM_theta_r_l(:,j)
+         enddo
+         close(iunit)
 
-         !deallocate ( theta_s_l       ,&
-         !             psi_s_l         ,&
-         !             lambda_l        ,&
-         !             k_s_l            )
+! (17) Write out the VGM's parameter corresponding approximately to the inverse of the air-entry value
+         inquire(iolength=length) VGM_alpha_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/VGM_alpha_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) VGM_alpha_l(:,j)
+         enddo
+         close(iunit)
 
-         !deallocate ( csol_l          ,&
-         !             tksatu_l        ,&
-         !             tkdry_l          )
+! (18) Write out the VGM's shape parameter
+         inquire(iolength=length) VGM_n_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/VGM_n_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) VGM_n_l(:,j)
+         enddo
+         close(iunit)
+
+! (19) Write out the VGM's pore-connectivity parameter
+         inquire(iolength=length) VGM_L_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/VGM_L_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) VGM_L_l(:,j)
+         enddo
+         close(iunit)
+
+! (20) Write out the soil organic matter density (kg/m3)
+         inquire(iolength=length) OM_density_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/OM_density_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) OM_density_l(:,j)
+         enddo
+         close(iunit)
+
+! (21) Write out the bulk density of soil (GRAVELS + MINERALS + ORGANIC MATTER) (kg/m3)
+         inquire(iolength=length) BD_all_l(:,1)
+         lndname = trim(dir_rawdata)//'RAW_DATA_updated/BD_all_l'//trim(c)
+         print*,lndname
+         open(iunit,file=trim(lndname),access='direct',recl=length,form='unformatted',status='unknown')
+         do j = 1, nlat
+            write(iunit,rec=j,err=101) BD_all_l(:,j)
+         enddo
+         close(iunit)
 
       ENDDO
-         
-! modifiedy by yuan, 06/02/2016
-#if(defined FAO_STATSGO_SOILMAP)
-      deallocate ( landsola_chr, &
-                   landsolb_chr     )
-#else
-      deallocate ( int_soil_grav_l ,&
-                   int_soil_sand_l ,&
-                   int_soil_clay_l ,&
-                   int_soil_oc_l   ,&
-                   int_soil_bd_l    )
-#endif
 
-      deallocate ( theta_s_l       ,&
-                   psi_s_l         ,&
-                   lambda_l        ,&
-                   k_s_l            )
+      deallocate ( int_soil_grav_l       ,&
+                   int_soil_sand_l       ,&
+                   int_soil_clay_l       ,&
+                   int_soil_oc_l         ,&
+                   int_soil_bd_l          )
 
-      deallocate ( csol_l          ,&
-                   tksatu_l        ,&
-                   tkdry_l          )
+      deallocate ( vf_quartz_mineral_s_l ,&
+                   vf_gravels_s_l        ,&
+                   vf_om_s_l             ,&
+                   vf_sand_s_l           ,&
+                   wf_gravels_s_l        ,&
+                   wf_sand_s_l           ,&
+                   theta_s_l             ,&
+                   psi_s_l               ,&
+                   lambda_l              ,&
+                   k_s_l                  )
+
+      deallocate ( VGM_theta_r_l         ,&
+                   VGM_alpha_l           ,&
+                   VGM_n_l               ,&
+                   VGM_L_l                 )
+
+      deallocate ( VGM_theta_r_Rose      ,&
+                   VGM_alpha_Rose        ,&
+                   VGM_n_Rose            ,&
+                   k_s_Rose                )
+
+      deallocate ( csol_l                ,&
+                   k_solids_l            ,&
+                   tksatu_l              ,&
+                   tksatf_l              ,&
+                   tkdry_l               ,&
+                   OM_density_l          ,&
+                   BD_all_l)
 
 
       deallocate ( landtypes )
@@ -801,63 +846,6 @@ IMPLICIT NONE
 102   format(' record =',i8,',  error occured on file: ',a50)
 1000  continue
 
-if (p_master) print*,'------ END rd_soil_properties ------'
+print*,'------ END rd_soil_properties ------'
 
 END SUBROUTINE rd_soil_properties
-
-
-
-!#if(defined FAO_STATSGO_SOILMAP)
-!  integer function ia(chr,n,ispval)
-!
-!!  purpose: to convert a n-bytes character (chr) to integer ia.
-!!        ** the integer data file is saved as a n-byte character
-!!           data file. this function is used to recover the
-!!           character data to the integer data.
-!!
-!!  n      --- the number of bytes in chr
-!!  ispval --- default value for the negative integer.
-!
-!      character*(*) chr
-!      integer bit_1, bit_2
-!
-!      bit_1 = '200'O     ! BINARY '10000000'
-!      bit_2 = '377'O     ! BINARY '11111111'
-!      ia    = 0
-!
-!      ii1 = ichar(chr(1:1))
-!! .. get the sign -- isn=0 positive, isn=1 negative:
-!      jj  = iand(ii1,bit_1)
-!      isn = ishft(jj,-7)
-!
-!! .. for negative number:
-!!    because the negative integers are represented by the supplementary
-!!    binary code inside machine.
-!
-!        if (isn.eq.1) then
-!          do m = n+1,4
-!             nbit = (m-1)*8
-!             jj = ishft(bit_2,nbit)
-!             ia = ieor(jj,ia)
-!          end do
-!        endif
-!
-!!   .. get the byte from chr:
-!         do m = 1,n
-!           ii2 = ichar(chr(m:m))
-!! new IBM xlf 8.1 compiler fix: thanks to Jim Edwards
-!           if (ii2.lt.0) ii2 = ii2 + 256
-!           mshft = (n-m)*8
-!           ia2   = ishft(ii2,mshft)
-!!   .. the abs(integer):
-!           ia = ieor(ia,ia2)
-!         end do
-!
-!      if (ia.lt.0) ia = ispval
-!
-!      return
-!  end function ia
-!
-!!-----------------------------------------------------------------------
-!!EOP
-!#endif

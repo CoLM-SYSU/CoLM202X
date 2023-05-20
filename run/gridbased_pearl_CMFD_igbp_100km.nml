@@ -7,10 +7,6 @@
    DEF_domain%edgew = 100.0   
    DEF_domain%edgee = 115.0      
    
-   DEF_nx_blocks = 30
-   DEF_ny_blocks = 30
-   DEF_PIO_groupsize = 6
-   
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2000
    DEF_simulation_time%start_month  = 1
@@ -28,12 +24,15 @@
    
    DEF_simulation_time%spinup_repeat = 2
    
-   DEF_dir_rawdata  = '/tera05/zhangsp/data/CLMrawdata_igbp/'
+   DEF_dir_rawdata  = '/tera07/CLMrawdata/'
    DEF_dir_output   = '/tera05/zhangsp/cases'
    
    ! for GRIDBASED
-   DEF_file_mesh = '/tera05/zhangsp/data/landdata/mask/landmask_igbp_10km.nc'
-   DEF_file_mesh_filter = '/tera05/zhangsp/data/landdata/filter/pearl_mesh_filter.nc'
+   DEF_file_mesh = 'NONE' !'/tera05/zhangsp/data/landdata/mask/landmask_igbp_10km.nc'
+   ! When DEF_file_mesh is unavailable, resolutions can be used to define grid.
+   DEF_GRIDBASED_lon_res = 0.1
+   DEF_GRIDBASED_lat_res = 0.1
+   ! DEF_file_mesh_filter = '/tera05/zhangsp/data/landdata/filter/pearl_mesh_filter.nc'
 
    ! LAI setting
    DEF_LAI_CLIM = .true.
@@ -45,6 +44,8 @@
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+
+   DEF_file_water_table_depth = '/tera05/zhangsp/data/wtd_fan/wtd_fan2020_3600x1800.nc'
    
    ! ----- forcing -----
    DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/current/run/forcing/CMFD.nml'

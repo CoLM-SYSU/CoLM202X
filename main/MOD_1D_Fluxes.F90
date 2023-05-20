@@ -13,7 +13,7 @@ MODULE MOD_1D_Fluxes
   USE MOD_1D_PCFluxes
 #endif
 #ifdef BGC
-  USE MOD_1D_BGCFluxes
+  USE MOD_BGC_Vars_1DFluxes
 #endif
 #ifdef LATERAL_FLOW
   USE MOD_1D_HydroFluxes

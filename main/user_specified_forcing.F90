@@ -753,7 +753,9 @@ CONTAINS
 
                   case ('TPMFD') ! TPMFD forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600./1000. ! convert to m/s
+                     forcn(3)%blk(ib,jb)%val(i,j)=forcn(3)%blk(ib,jb)%val(i,j)*100. ! convert to pa
+
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
                         es,esdT,qsat_tmp,dqsat_tmpdT)
                      if (qsat_tmp < forcn(2)%blk(ib,jb)%val(i,j)) then

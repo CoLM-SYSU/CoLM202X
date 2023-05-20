@@ -14,7 +14,7 @@ USE MOD_PFTimeVars
 USE MOD_PCTimeVars
 #endif
 #ifdef BGC
-USE MOD_BGCTimeVars
+USE MOD_BGC_Vars_TimeVars
 #endif
 #ifdef LATERAL_FLOW
 USE MOD_HydroTimeVars
@@ -469,7 +469,7 @@ SAVE
 
 
      ! added by yuan, 08/31/2014
-     select case (trim(DEF_WRST_FREQ))
+     select case (trim(adjustl(DEF_WRST_FREQ)))
      case ('TIMESTEP')
         rwrite = .true.
      case ('HOURLY')
@@ -480,6 +480,8 @@ SAVE
         rwrite = isendofmonth(idate, deltim)
      case ('YEARLY')
         rwrite = isendofyear(idate, deltim)
+     case default
+        write(*,*) 'Warning: Please use one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for restart frequency.'
      end select
 
      if (rwrite) then

@@ -267,8 +267,8 @@ CONTAINS
          data_r8_2d_in4, data_r8_2d_out4, &
          data_r8_2d_in5, data_r8_2d_out5, &
          data_r8_2d_in6, data_r8_2d_out6, &
-         data_r8_3d_in1, data_r8_3d_out1, n1_r8_3d_in1, &
-         data_r8_3d_in2, data_r8_3d_out2, n1_r8_3d_in2, &
+         data_r8_3d_in1, data_r8_3d_out1, n1_r8_3d_in1, lb1_r8_3d_in1, &
+         data_r8_3d_in2, data_r8_3d_out2, n1_r8_3d_in2, lb1_r8_3d_in2, &
          data_i4_2d_in1, data_i4_2d_out1, &
          data_i4_2d_in2, data_i4_2d_out2, &
          filledvalue_i4)
@@ -310,11 +310,11 @@ CONTAINS
       TYPE (block_data_real8_2d), intent(in),  optional :: data_r8_2d_in6
       REAL(r8), allocatable,      intent(out), optional :: data_r8_2d_out6 (:)
 
-      INTEGER, intent(in), optional :: n1_r8_3d_in1
+      INTEGER, intent(in), optional :: n1_r8_3d_in1, lb1_r8_3d_in1
       TYPE (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in1
       REAL(r8), allocatable,      intent(out), optional :: data_r8_3d_out1 (:,:)
 
-      INTEGER, intent(in), optional :: n1_r8_3d_in2
+      INTEGER, intent(in), optional :: n1_r8_3d_in2, lb1_r8_3d_in2
       TYPE (block_data_real8_3d), intent(in),  optional :: data_r8_3d_in2
       REAL(r8), allocatable,      intent(out), optional :: data_r8_3d_out2 (:,:)
       
@@ -376,12 +376,20 @@ CONTAINS
       ENDIF
 
       IF (present(data_r8_3d_in1) .and. present(data_r8_3d_out1) .and. present(n1_r8_3d_in1)) THEN
-         lb1 = data_r8_3d_in1%lb1
+         IF (present(lb1_r8_3d_in1)) THEN
+            lb1 = lb1_r8_3d_in1
+         ELSE
+            lb1 = 1
+         ENDIF
          allocate (data_r8_3d_out1 (lb1:lb1-1+n1_r8_3d_in1,ipxstt:ipxend))
       ENDIF
 
       IF (present(data_r8_3d_in2) .and. present(data_r8_3d_out2) .and. present(n1_r8_3d_in2)) THEN
-         lb1 = data_r8_3d_in2%lb1
+         IF (present(lb1_r8_3d_in2)) THEN
+            lb1 = lb1_r8_3d_in2
+         ELSE
+            lb1 = 1
+         ENDIF
          allocate (data_r8_3d_out2 (lb1:lb1-1+n1_r8_3d_in2,ipxstt:ipxend))
       ENDIF
 
