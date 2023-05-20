@@ -1239,6 +1239,7 @@ contains
       real(r8), allocatable :: r_trad  (:)
 
       real(r8), allocatable :: r_ustar (:)
+      real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
       real(r8), allocatable :: r_qstar (:)
       real(r8), allocatable :: r_zol   (:)
@@ -1605,6 +1606,7 @@ contains
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
+            allocate (r_ustar2 (numpatch)) !Shaofeng, 2023.05.20
             allocate (r_tstar (numpatch))
             allocate (r_qstar (numpatch))
             allocate (r_zol   (numpatch))
@@ -1674,10 +1676,10 @@ contains
                if (DEF_USE_CBL_HEIGHT) then
 			     hpbl = forc_hpbl(i)
                  call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                    obu,um, hpbl, r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+                    obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
 		       else
                  call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                    obu,um,r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+                    obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
 		       endif
 
                ! bug found by chen qiying 2013/07/01 
@@ -1703,6 +1705,7 @@ contains
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
+            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )
