@@ -41,7 +41,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
   real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
   integer :: i, m, u
-  logical :: run_urban_model
+  logical :: run_urban_model = .false.
 
 ! ======================================================================
 
@@ -278,7 +278,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         lfevpa(i)       ,fsenl(i)        ,fevpl(i)        ,etr(i)          ,&
         fseng(i)        ,fevpg(i)        ,olrg(i)         ,fgrnd(i)        ,&
         fsen_roof(u)    ,fsen_wsun(u)    ,fsen_wsha(u)    ,fsen_gimp(u)    ,&
-        fsen_gper(u)    ,fsen_urbl(u)    ,troof(u)        ,twall(u)        ,&
+        fsen_gper(u)    ,fsen_urbl(u)    ,t_roof(u)       ,t_wall(u)       ,&
         lfevp_roof(u)   ,lfevp_gimp(u)   ,lfevp_gper(u)   ,lfevp_urbl(u)   ,&
         trad(i)         ,tref(i)         ,&!tmax(i)       ,tmin(i)         ,&
         qref(i)         ,rsur(i)         ,rnof(i)         ,qintr(i)        ,&

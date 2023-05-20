@@ -18,6 +18,9 @@ MODULE MOD_1D_Fluxes
 #ifdef LATERAL_FLOW
   USE MOD_1D_HydroFluxes
 #endif
+#ifdef URBAN_MODEL
+  USE MOD_1D_UrbanFluxes
+#endif
   IMPLICIT NONE
   SAVE
 
@@ -167,6 +170,10 @@ MODULE MOD_1D_Fluxes
       CALL allocate_1D_HydroFluxes
 #endif
 
+#ifdef URBAN_MODEL
+      CALL allocate_1D_UrbanFluxes
+#endif
+
    END SUBROUTINE allocate_1D_Fluxes
 
    SUBROUTINE deallocate_1D_Fluxes ()
@@ -246,6 +253,10 @@ MODULE MOD_1D_Fluxes
 
 #ifdef LATERAL_FLOW
      CALL deallocate_1D_HydroFluxes
+#endif
+
+#ifdef URBAN_MODEL
+     CALL deallocate_1D_UrbanFluxes
 #endif
 
    END SUBROUTINE deallocate_1D_Fluxes

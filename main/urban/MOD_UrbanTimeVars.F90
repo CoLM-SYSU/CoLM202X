@@ -81,9 +81,7 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: snowdp_gper    (:) !pervious ground snow depth [m]
    REAL(r8), allocatable :: snowdp_lake    (:) !urban lake snow depth [m]
 
-   REAL(r8), allocatable :: t_room         (:) !temperature of inner building [K]
    !TODO: rename the below variables
-   REAL(r8), allocatable :: tafu           (:) !temperature of outer building [K]
    REAL(r8), allocatable :: Fhac           (:) !sensible flux from heat or cool AC [W/m2]
    REAL(r8), allocatable :: Fwst           (:) !waste heat flux from heat or cool AC [W/m2]
    REAL(r8), allocatable :: Fach           (:) !flux from inner and outter air exchange [W/m2]
@@ -92,20 +90,10 @@ MODULE MOD_UrbanTimeVars
    REAL(r8), allocatable :: vehc           (:) !flux from vehicle [W/m2]
    REAL(r8), allocatable :: meta           (:) !flux from metabolism [W/m2]
 
-   REAL(r8), allocatable :: fsen_roof      (:) !sensible heat flux from roof [W/m2]
-   REAL(r8), allocatable :: fsen_wsun      (:) !sensible heat flux from sunlit wall [W/m2]
-   REAL(r8), allocatable :: fsen_wsha      (:) !sensible heat flux from shaded wall [W/m2]
-   REAL(r8), allocatable :: fsen_gimp      (:) !sensible heat flux from impervious road [W/m2]
-   REAL(r8), allocatable :: fsen_gper      (:) !sensible heat flux from pervious road [W/m2]
-   REAL(r8), allocatable :: fsen_urbl      (:) !sensible heat flux from urban vegetation [W/m2]
-
-   REAL(r8), allocatable :: lfevp_roof     (:) !latent heat flux from roof [W/m2]
-   REAL(r8), allocatable :: lfevp_gimp     (:) !latent heat flux from impervious road [W/m2]
-   REAL(r8), allocatable :: lfevp_gper     (:) !latent heat flux from pervious road [W/m2]
-   REAL(r8), allocatable :: lfevp_urbl     (:) !latent heat flux from urban vegetation [W/m2]
-
-   REAL(r8), allocatable :: troof          (:) !temperature of roof [K]
-   REAL(r8), allocatable :: twall          (:) !temperature of wall [K]
+   REAL(r8), allocatable :: t_room         (:) !temperature of inner building [K]
+   REAL(r8), allocatable :: t_roof         (:) !temperature of roof [K]
+   REAL(r8), allocatable :: t_wall         (:) !temperature of wall [K]
+   REAL(r8), allocatable :: tafu           (:) !temperature of outer building [K]
 
    REAL(r8), allocatable :: urb_green      (:) !fractional of green leaf in urban patch [-]
    REAL(r8), allocatable :: urb_lai        (:) !urban tree LAI [m2/m2]
@@ -201,8 +189,6 @@ CONTAINS
             allocate (snowdp_gper                   (numurban))
             allocate (snowdp_lake                   (numurban))
 
-            allocate (t_room                        (numurban))
-            allocate (tafu                          (numurban))
             allocate (Fhac                          (numurban))
             allocate (Fwst                          (numurban))
             allocate (Fach                          (numurban))
@@ -211,20 +197,10 @@ CONTAINS
             allocate (vehc                          (numurban))
             allocate (meta                          (numurban))
 
-            allocate (fsen_roof                     (numurban))
-            allocate (fsen_wsun                     (numurban))
-            allocate (fsen_wsha                     (numurban))
-            allocate (fsen_gimp                     (numurban))
-            allocate (fsen_gper                     (numurban))
-            allocate (fsen_urbl                     (numurban))
-
-            allocate (lfevp_roof                    (numurban))
-            allocate (lfevp_gimp                    (numurban))
-            allocate (lfevp_gper                    (numurban))
-            allocate (lfevp_urbl                    (numurban))
-
-            allocate (troof                         (numurban))
-            allocate (twall                         (numurban))
+            allocate (t_room                        (numurban))
+            allocate (t_roof                        (numurban))
+            allocate (t_wall                        (numurban))
+            allocate (tafu                          (numurban))
 
             allocate (urb_green                     (numurban))
             allocate (urb_lai                       (numurban))
@@ -303,8 +279,6 @@ CONTAINS
       call ncio_read_vector (file_restart, 'snowdp_gimp', landurban, snowdp_gimp) !
       call ncio_read_vector (file_restart, 'snowdp_gper', landurban, snowdp_gper) !
       call ncio_read_vector (file_restart, 'snowdp_lake', landurban, snowdp_lake) !
-      call ncio_read_vector (file_restart, 't_room '    , landurban, t_room     ) !
-      call ncio_read_vector (file_restart, 'tafu'       , landurban, tafu       ) !
       call ncio_read_vector (file_restart, 'Fhac'       , landurban, Fhac       ) !
       call ncio_read_vector (file_restart, 'Fwst'       , landurban, Fwst       ) !
       call ncio_read_vector (file_restart, 'Fach'       , landurban, Fach       ) !
@@ -312,18 +286,10 @@ CONTAINS
       call ncio_read_vector (file_restart, 'Fhah'       , landurban, Fhah       ) !
       call ncio_read_vector (file_restart, 'vehc'       , landurban, vehc       ) !
       call ncio_read_vector (file_restart, 'meta'       , landurban, meta       ) !
-      call ncio_read_vector (file_restart, 'fsen_roof'  , landurban, fsen_roof  ) !
-      call ncio_read_vector (file_restart, 'fsen_wsun'  , landurban, fsen_wsun  ) !
-      call ncio_read_vector (file_restart, 'fsen_wsha'  , landurban, fsen_wsha  ) !
-      call ncio_read_vector (file_restart, 'fsen_gimp'  , landurban, fsen_gimp  ) !
-      call ncio_read_vector (file_restart, 'fsen_gper'  , landurban, fsen_gper  ) !
-      call ncio_read_vector (file_restart, 'fsen_urbl'  , landurban, fsen_urbl  ) !
-      call ncio_read_vector (file_restart, 'lfevp_roof' , landurban, lfevp_roof ) !
-      call ncio_read_vector (file_restart, 'lfevp_gimp' , landurban, lfevp_gimp ) !
-      call ncio_read_vector (file_restart, 'lfevp_gper' , landurban, lfevp_gper ) !
-      call ncio_read_vector (file_restart, 'lfevp_urbl' , landurban, lfevp_urbl ) !
-      call ncio_read_vector (file_restart, 'troof'      , landurban, troof      ) !
-      call ncio_read_vector (file_restart, 'twall'      , landurban, twall      ) !
+      call ncio_read_vector (file_restart, 't_room '    , landurban, t_room     ) !
+      call ncio_read_vector (file_restart, 't_roof'     , landurban, t_roof     ) !
+      call ncio_read_vector (file_restart, 't_wall'     , landurban, t_wall     ) !
+      call ncio_read_vector (file_restart, 'tafu'       , landurban, tafu       ) !
       call ncio_read_vector (file_restart, 'urb_green'  , landurban, urb_green  ) !
       call ncio_read_vector (file_restart, 'tree_lai'   , landurban, urb_lai    ) !
       call ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    ) !
@@ -428,21 +394,6 @@ CONTAINS
       call ncio_write_vector (file_restart, 'Fhah'       , 'urban', landurban, Fhah       , compress) !
       call ncio_write_vector (file_restart, 'vehc'       , 'urban', landurban, vehc       , compress) !
       call ncio_write_vector (file_restart, 'meta'       , 'urban', landurban, meta       , compress) !
-      call ncio_write_vector (file_restart, 'fsen_roof'  , 'urban', landurban, fsen_roof  , compress) !
-      call ncio_write_vector (file_restart, 'fsen_wsun'  , 'urban', landurban, fsen_wsun  , compress) !
-      call ncio_write_vector (file_restart, 'fsen_wsha'  , 'urban', landurban, fsen_wsha  , compress) !
-      call ncio_write_vector (file_restart, 'fsen_gimp'  , 'urban', landurban, fsen_gimp  , compress) !
-      call ncio_write_vector (file_restart, 'fsen_gper'  , 'urban', landurban, fsen_gper  , compress) !
-      call ncio_write_vector (file_restart, 'fsen_urbl'  , 'urban', landurban, fsen_urbl  , compress) !
-      call ncio_write_vector (file_restart, 'lfevp_roof' , 'urban', landurban, lfevp_roof , compress) !
-      call ncio_write_vector (file_restart, 'lfevp_gimp' , 'urban', landurban, lfevp_gimp , compress) !
-      call ncio_write_vector (file_restart, 'lfevp_gper' , 'urban', landurban, lfevp_gper , compress) !
-      call ncio_write_vector (file_restart, 'lfevp_urbl' , 'urban', landurban, lfevp_urbl , compress) !
-      call ncio_write_vector (file_restart, 'troof'      , 'urban', landurban, troof      , compress) !
-      call ncio_write_vector (file_restart, 'twall'      , 'urban', landurban, twall      , compress) !
-      call ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress) !
-      call ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress) !
-      call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) !
 
    END SUBROUTINE WRITE_UrbanTimeVars
 
@@ -516,8 +467,6 @@ CONTAINS
             deallocate (snowdp_gper  )
             deallocate (snowdp_lake  )
 
-            deallocate (t_room       )
-            deallocate (tafu         )
             deallocate (Fhac         )
             deallocate (Fwst         )
             deallocate (Fach         )
@@ -526,20 +475,10 @@ CONTAINS
             deallocate (vehc         )
             deallocate (meta         )
 
-            deallocate (fsen_roof    )
-            deallocate (fsen_wsun    )
-            deallocate (fsen_wsha    )
-            deallocate (fsen_gimp    )
-            deallocate (fsen_gper    )
-            deallocate (fsen_urbl    )
-
-            deallocate (lfevp_roof   )
-            deallocate (lfevp_gimp   )
-            deallocate (lfevp_gper   )
-            deallocate (lfevp_urbl   )
-
-            deallocate (troof        )
-            deallocate (twall        )
+            deallocate (t_room       )
+            deallocate (t_roof       )
+            deallocate (t_wall       )
+            deallocate (tafu         )
 
             deallocate (urb_green    )
             deallocate (urb_lai      )

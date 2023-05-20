@@ -67,6 +67,7 @@ BASIC_BGC =                                   \
 	  ../main/bgc/MOD_BGCTimeVars.o
 
 BASIC_URBAN =                                 \
+	  ../main/urban/MOD_1D_UrbanFluxes.o  \
 	  ../main/urban/MOD_UrbanTimeVars.o   \
 	  ../main/urban/MOD_UrbanTimeInvars.o \
 
@@ -106,10 +107,10 @@ OBJS =                                        \
 	  soil_parameters_readin.o            \
 	  HTOP_readin.o                       \
 	  Urban_readin.o                      \
-	  CROP_readin.o                       \
-	  NITRIF_readin.o                     \
-	  NDEP_readin.o                       \
-	  Fire_readin.o                       \
+	  ../main/CROP_readin.o               \
+	  ../main/NITRIF_readin.o             \
+	  ../main/NDEP_readin.o               \
+	  ../main/Fire_readin.o               \
 	  IniTimeVar.o                        \
 	  UrbanIniTimeVar.o                   \
 	  initialize.o                        \

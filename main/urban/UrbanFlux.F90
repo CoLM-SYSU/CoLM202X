@@ -1361,7 +1361,7 @@ MODULE UrbanFlux
         fwet_gimp = fwet_gimp_
      ENDIF
 
-     ! 加权后的qg
+     ! weighted qg
      ! NOTE: IF fwet_gimp=1, same as previous
      fwetfac = fgimp*fwet_gimp + fgper
      qg = (qgimp*fgimp*fwet_gimp + qgper*fgper) / fwetfac
@@ -1387,7 +1387,6 @@ MODULE UrbanFlux
 ! calculate z0m and displa for layers
 !-----------------------------------------------------------------------
 
-     ! 计算自身和整个面积的z0和displa (不考虑建筑物的存在)
      ! Calculate z0 and displa for vegetation only and the whole area
      CALL cal_z0_displa(lsai, htop, 1., z0mv, displav)
      CALL cal_z0_displa(lsai, htop, fc(3), z0mv_lay, displav_lay)
