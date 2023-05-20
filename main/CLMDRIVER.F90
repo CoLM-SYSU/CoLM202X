@@ -185,7 +185,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
      IF (run_urban_model .and. m.eq.URBAN) THEN
 
         u = patch2urban(i)
-        print *, "patch:", i, "urban:", u
+        !print *, "patch:", i, "urban:", u  !fortest only
 
         CALL UrbanCLMMAIN ( &
       ! MODEL RUNNING PARAMETERS

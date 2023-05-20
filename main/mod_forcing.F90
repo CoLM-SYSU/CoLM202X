@@ -334,27 +334,27 @@ contains
          call block_data_copy (forcn(7), forc_xy_solarin)
          call block_data_copy (forcn(8), forc_xy_frl    )
 
-         if (trim(dataset) == 'POINT') then
+         if (trim(DEF_forcing%dataset) == 'POINT') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'ERA5LAND') then
+         ELSEif (trim(DEF_forcing%dataset) == 'ERA5LAND') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'ERA5') then
+         ELSEif (trim(DEF_forcing%dataset) == 'ERA5') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'CRUJRA') then
+         ELSEif (trim(DEF_forcing%dataset) == 'CRUJRA') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(dataset) == 'JRA55') then
+         ELSEif (trim(DEF_forcing%dataset) == 'JRA55') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
             call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
             call block_data_copy (forcn(5), forc_xy_us )
@@ -373,7 +373,7 @@ contains
 
          if (solarin_all_band) then
 
-            if (trim(dataset) == 'QIAN') then
+            if (trim(DEF_forcing%dataset) == 'QIAN') then
                !---------------------------------------------------------------
                ! 04/2014, yuan: NOTE! codes from CLM4.5-CESM1.2.0
                ! relationship between incoming NIR or VIS radiation and ratio of

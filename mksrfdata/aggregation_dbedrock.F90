@@ -37,6 +37,10 @@ SUBROUTINE aggregation_dbedrock ( &
    REAL(r8), allocatable :: dbedrock_one(:), area_one(:)
    INTEGER :: ipatch
 
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+#endif
+
    landdir = trim(dir_model_landdata) // '/dbedrock/'
 
 #ifdef USEMPI
@@ -105,6 +109,14 @@ SUBROUTINE aggregation_dbedrock ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'dbedrock_patches', 'patch', landpatch, dbedrock_patches, 1)
+
+#ifdef SrfdataDiag
+   typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+   lndname  = trim(dir_model_landdata) // '/diag/dbedrock_patch.nc'
+   CALL srfdata_map_and_write (dbedrock_patches, landpatch%settyp, typpatch, m_patch2diag, &
+      -1.0e36_r8, lndname, 'dbedrock', compress = 1, write_mode = 'one')
+#endif
+
 #else
    SITE_dbedrock = dbedrock_patches(1)
 #endif

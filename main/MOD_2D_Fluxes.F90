@@ -11,7 +11,7 @@ MODULE MOD_2D_Fluxes
    use mod_data_type
    USE GlobalVars
 #ifdef BGC
-   USE MOD_2D_BGCFluxes
+   USE MOD_BGC_Vars_2DFluxes
 #endif
 
    IMPLICIT NONE

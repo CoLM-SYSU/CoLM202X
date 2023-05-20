@@ -36,6 +36,7 @@ MODULE mod_grid
    CONTAINS
       procedure, PUBLIC :: define_by_name   => grid_define_by_name  
       procedure, PUBLIC :: define_by_ndims  => grid_define_by_ndims  
+      procedure, PUBLIC :: define_by_res    => grid_define_by_res
       procedure, PUBLIC :: define_by_center => grid_define_by_center
       procedure, PUBLIC :: define_from_file => grid_define_from_file
       procedure, PUBLIC :: define_by_copy   => grid_define_by_copy
@@ -212,6 +213,24 @@ CONTAINS
       CALL this%set_blocks ()
 
    END SUBROUTINE grid_define_by_ndims
+   
+   !-----------------------------------------------------
+   SUBROUTINE grid_define_by_res (this, lon_res, lat_res)
+
+      IMPLICIT NONE
+      class (grid_type) :: this
+
+      REAL(r8), intent(in) :: lon_res, lat_res
+
+      ! Local variables
+      INTEGER  :: lon_points, lat_points
+
+      lon_points = nint(360.0/lon_res)
+      lat_points = nint(180.0/lat_res)
+
+      CALL this%define_by_ndims (lon_points, lat_points)
+
+   END SUBROUTINE grid_define_by_res
 
    !---------------------------------------------
    SUBROUTINE grid_define_by_center (this, lat_in, lon_in, &

@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef URBAN_MODEL
 SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 
 ! ===========================================================
@@ -135,7 +136,8 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 
-      lndname = trim("/stu01/dongwz/data/CLMrawdata/urban_5x5/LUCY_rawdata.nc")
+      !TODO-yuan: change to a defined patch/file
+      lndname = trim("/stu01/dongwz/data/CLMrawdata/urban/LUCY_rawdata.nc")
       print*, lndname
       CALL ncio_read_bcast_serial (lndname,  "vehicle"    , lvehicle     )
       CALL ncio_read_bcast_serial (lndname,  "weekendday" , lweek_holiday)
@@ -284,3 +286,4 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       ENDIF
 
 END SUBROUTINE Urban_readin
+#endif

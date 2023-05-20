@@ -1,0 +1,14 @@
+# =======================================================
+# mpif90 - ifort 
+# 
+
+ FF = /opt/mpich-3.4.2-intel/bin/mpif90
+
+ NETCDF_LIB = /opt/netcdf/lib
+ NETCDF_INC = /opt/netcdf/include
+
+ MOD_CMD = -module 
+
+ FOPTS = -qopenmp -O2 -traceback -r8 -free -check uninit -check bounds
+
+ LDFLAGS = -L${NETCDF_LIB} -lnetcdff

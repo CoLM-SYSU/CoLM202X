@@ -140,7 +140,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    CALL allocate_TimeInvariants
    CALL allocate_TimeVariables
-   !print*, count(landpatch%settyp==13)
+
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
@@ -255,7 +255,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       if(numpatch > 0)then
          do j=1,nl_soil
             do i = 1, numpatch
-!         t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - wf_sand(j))
                t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - 50._r8)
                f_s1s2 (j) = 1._r8 - .004_r8 / (1._r8 - t)
                f_s1s3 (j) = .004_r8 / (1._r8 - t)
@@ -271,10 +270,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
-
-!   gdp_lf (:)    = 0._r8
-!   abm_lf (:)    = 0._r8
-!   peatf_lf (:)  = 0._r8
    cmb_cmplt_fact = (/0.5_r8,0.25_r8/)
 
    nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
@@ -577,7 +572,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
-
    if (p_is_worker) then
 
       t_lake      (:,:) = 285.
@@ -600,8 +594,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       do i = 1, numpatch
          m = patchclass(i)
-         ! print*,'before IniTimeVar',i
-         ! print*, 'patch class is ',m
+         print*,'before IniTimeVar',i
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
@@ -613,7 +606,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vliq_r(:) = theta_r(i,:)
+            vliq_r(:) = theta_r(1:nl_soil,i)
             prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
             prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
             prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
@@ -682,8 +675,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          IF (m == URBAN) THEN
 
             u = patch2urban(i)
-            print *, "patch:", i, "urban:", u, "coszen:", coszen(i)
-            print*, hroof(u), hwr(u), alb_roof(:,:,u)
             lwsun         (u) = 0.   !net longwave radiation of sunlit wall
             lwsha         (u) = 0.   !net longwave radiation of shaded wall
             lgimp         (u) = 0.   !net longwave radiation of impervious road
@@ -747,11 +738,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #endif
          print*,'after IniTimeVar',i
       ENDDO
-
-      ! for urban debug
-      ! print*, patch2urb
-      ! print*, numurban
-      ! print*, count(landpatch%settyp==13)
 
       do i = 1, numpatch
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)

@@ -3,6 +3,21 @@
 MODULE LAKE
 
 !-----------------------------------------------------------------------
+! DESCRIPTION:
+! Simulating energy balance processes of land water body
+!
+! REFERENCE:
+! Dai et al, 2018, The lake scheme of the common land model and its performance evaluation.
+! Chinese Science Bulletin, 63(28-29), 3002–3021, https://doi.org/10.1360/N972018-00609
+!
+! Original author: Yongjiu Dai 04/2014/
+!
+! Revisions:
+! Nan Wei,  01/2018: interaction btw prec and lake surface including phase change of prec and water body
+! Nan Wei,  06/2018: update heat conductivity of water body and soil below and snow hydrology
+! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
+!-----------------------------------------------------------------------
+
  use precision
  IMPLICIT NONE
  SAVE
@@ -39,12 +54,16 @@ MODULE LAKE
             fiold     , snl       , sag         , scv         ,&
             snowdp    , lake_icefrac )
 
-!=======================================================================
-! Add new snow nodes.        ! Created by Yongjiu Dai, December, 2012
-!                            April, 2014
-! Revised by Nan Wei,          May, 2014
-!=======================================================================
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+! Add new snow nodes and interaction btw prec and lake surface including phase change of prec and water body
 !
+! Original author : Yongjiu Dai, 04/2014
+!
+! Revisions:
+! Nan Wei,  01/2018: update interaction btw prec and lake surface
+!-----------------------------------------------------------------------
+
   use precision
   use PhysicalConstants, only : tfrz, denh2o, cpliq, cpice, hfus
   implicit none
@@ -281,7 +300,7 @@ MODULE LAKE
 ! initial  Yongjiu Dai, 2000
 !          Zack Subin, 2009
 !          Yongjiu Dai, /12/2012/, /04/2014/, 06/2018
-!          Nan Wei, /05/2014/
+!          Nan Wei, /06/2018/
 !
 ! ------------------------ notes ----------------------------------
 ! Lakes have variable depth, possible snow layers above, freezing & thawing of lake water,
@@ -1506,6 +1525,7 @@ MODULE LAKE
 ! Initial: Yongjiu Dai, December, 2012
 !                          April, 2014
 ! REVISIONS:
+! Nan Wei, 06/2018: update snow hydrology above lake
 ! Yongjiu Dai, 01/2023: added for SNICAR model effects for snowwater,
 ! combinesnowlayers, dividesnowlayers processes by calling snowwater_snicar(),
 ! SnowLayersCombine_snicar, SnowLayersDivide_snicar()
@@ -1764,6 +1784,18 @@ MODULE LAKE
 
   subroutine roughness_lake (snl,t_grnd,t_lake,lake_icefrac,forc_psrf,&
                              cur,ustar,z0mg,z0hg,z0qg)
+
+!-----------------------------------------------------------------------
+! DESCRIPTION:
+! Calculate lake surface roughness
+!
+! Original:
+! The Community Land Model version 4.5 (CLM4.5)
+!
+! Revisions:
+! Yongjiu Dai, Nan Wei, 01/2018
+!-----------------------------------------------------------------------
+
   use precision
   use PhysicalConstants, only : tfrz,vonkar,grav
 

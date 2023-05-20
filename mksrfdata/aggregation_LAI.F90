@@ -81,8 +81,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    REAL(r8) :: sumarea
 
 #ifdef SrfdataDiag
-   INTEGER :: ityp
-   INTEGER :: typpatch(N_land_classification+1)
+   INTEGER :: typpatch(N_land_classification+1), ityp
 #ifndef CROP
    INTEGER :: typpft  (N_PFT)
 #else
@@ -130,7 +129,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          end_year   = DEF_LC_YEAR
          ntime      = 12
       ENDIF
-   ! 8-days LAI
+   ! 8-day LAI
    ELSE
       start_year = DEF_simulation_time%start_year
       end_year   = DEF_simulation_time%end_year
@@ -227,7 +226,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          IF (DEF_LAI_CLIM) THEN
             lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
          ELSE
-            !TODO: rename filename of 8-days LAI
+            !TODO: rename filename of 8-day LAI
             lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
          ENDIF
 
@@ -241,8 +240,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          IF (DEF_LAI_CLIM) THEN
             varname = 'LAI_' // trim(c3)
          ELSE
-            !TODO: rename file name of 8-days LAI
-            varname = 'LAI_8-days' // '_' // trim(c3)
+            !TODO: rename file name of 8-day LAI
+            varname = 'LAI_8-day_' // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
@@ -335,7 +334,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
                varname = 'SAI_' // trim(c3)
             ELSE
                !TODO: rename varname
-               varname = 'SAI_8-days' // '_' // trim(c3)
+               varname = 'SAI_8-day_' // '_' // trim(c3)
             ENDIF
             CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
                -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
@@ -392,7 +391,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
       ENDIF
 
-      DO month = 1, 1
+      DO month = 1, 12
          IF (p_is_io) THEN
             CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_LAI', month, pftLSAI)
 #ifdef USEMPI
@@ -408,10 +407,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16)
+                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
+                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
                IF (allocated(lai_one)) deallocate(lai_one)
                allocate(lai_one(size(area_one)))
@@ -506,7 +504,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       !    IF (allocated(area_one   )) deallocate(area_one   )
       ! ENDIF
 
-      DO month = 1, 1
+      DO month = 1, 12
          IF (p_is_io) THEN
             CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_SAI', month, pftLSAI)
 #ifdef USEMPI
@@ -524,8 +522,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             DO ipatch = 1, numpatch
 
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16)
+                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
+                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
                IF (allocated(sai_one)) deallocate(sai_one)
                allocate(sai_one(size(area_one)))
@@ -669,7 +667,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
       ENDIF
 
-      DO month = 1, 1
+      DO month = 1, 12
          IF (p_is_io) THEN
             ! change var name to MONTHLY_PFT_LAI
             CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_LAI', month, pftLSAI)
@@ -686,10 +684,9 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16)
+                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
+                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
                IF (allocated(lai_one)) deallocate(lai_one)
                allocate(lai_one(size(area_one)))
@@ -759,7 +756,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       !    IF (allocated(area_one   )) deallocate(area_one   )
       ! ENDIF
 
-      DO month = 1, 1
+      DO month = 1, 12
          IF (p_is_io) THEN
             ! change var name to MONTHLY_PFT_SAI
             CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_SAI', month, pftLSAI)
@@ -778,8 +775,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             DO ipatch = 1, numpatch
 
                CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16)
+                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
+                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
                IF (allocated(sai_one)) deallocate(sai_one)
                allocate(sai_one(size(area_one)))

@@ -13,8 +13,8 @@ SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
       use spmd_task
       use ncio_vector
       use mod_landpatch
-      use MOD_BGCTimeVars,  only: ndep
-      use MOD_1D_BGCFluxes, only: ndep_to_sminn
+      use MOD_BGC_Vars_TimeVars,  only: ndep
+      use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
       use MOD_TimeInvariants
 
       IMPLICIT NONE

@@ -28,6 +28,10 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
 
    USE mod_aggregation
 
+#ifdef SrfdataDiag
+   USE mod_srfdata_diag
+#endif
+
    IMPLICIT NONE
 
    ! arguments:
@@ -51,6 +55,10 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    INTEGER :: itime, ipatch
    CHARACTER(LEN=4) :: c3, cyear
    integer :: start_year, end_year, YY
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+   CHARACTER(len=256) :: varname
+#endif
 
    landdir = trim(dir_model_landdata) // '/FIRE/'
 
@@ -147,6 +155,14 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'hdm_patches', 'patch', landpatch, hdm_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/hdm_patch.nc'
+      varname  = 'hdm_' // trim(cyear)
+      CALL srfdata_map_and_write (hdm_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, trim(varname), compress = 1, write_mode = 'one')
+#endif
    ENDDO
 
    IF (p_is_master) THEN
@@ -198,6 +214,12 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'abm_patches', 'patch', landpatch, abm_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/abm_patch.nc'
+      CALL srfdata_map_and_write (abm_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'abm', compress = 1, write_mode = 'one')
+#endif
 
    IF (p_is_master) THEN
       write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate peatf'
@@ -248,6 +270,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'peatf_patches', 'patch', landpatch, peatf_patches, 1)
 
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/peatf_patch.nc'
+      CALL srfdata_map_and_write (peatf_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'peatf', compress = 1, write_mode = 'one')
+#endif
+
    IF (p_is_master) THEN
       write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate gdp'
    endif
@@ -296,6 +325,13 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL ncio_create_file_vector (lndname, landpatch)
       CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
       CALL ncio_write_vector (lndname, 'gdp_patches', 'patch', landpatch, gdp_patches, 1)
+
+#ifdef SrfdataDiag
+      typpatch = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_model_landdata) // '/diag/gdp_patch.nc'
+      CALL srfdata_map_and_write (gdp_patches, landpatch%settyp, typpatch, m_patch2diag, &
+         -1.0e36_r8, lndname, 'gdp', compress = 1, write_mode = 'one')
+#endif
 
    IF (p_is_worker) THEN
       IF (allocated(hdm_patches)) deallocate(hdm_patches)
