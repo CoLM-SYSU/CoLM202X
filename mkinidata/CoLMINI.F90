@@ -1,6 +1,6 @@
 #include <define.h>
 
-PROGRAM CLMINI
+PROGRAM CoLMINI
    ! ======================================================================
    ! Initialization of Land Characteristic Parameters and Initial State Variables
    !
@@ -29,7 +29,7 @@ PROGRAM CLMINI
    use mod_srfdata_restart
    USE GlobalVars
    USE LC_Const
-   USE PFT_Const
+   USE MOD_Vars_PFTConst
    USE timemanager
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
@@ -40,7 +40,7 @@ PROGRAM CLMINI
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    USE mod_elm_vector
 #endif
 #ifdef CATCHMENT
@@ -67,7 +67,7 @@ PROGRAM CLMINI
 #ifdef USEMPI
    call spmd_init ()
 #endif
-      
+
    if (p_is_master) then
       call system_clock (start_time)
    end if
@@ -76,11 +76,11 @@ PROGRAM CLMINI
    call getarg (1, nlfile)
    call read_namelist (nlfile)
 
-   casename     = DEF_CASE_NAME        
-   dir_landdata = DEF_dir_landdata 
-   dir_restart  = DEF_dir_restart  
-   greenwich    = DEF_simulation_time%greenwich    
-   s_year       = DEF_simulation_time%start_year 
+   casename     = DEF_CASE_NAME
+   dir_landdata = DEF_dir_landdata
+   dir_restart  = DEF_dir_restart
+   greenwich    = DEF_simulation_time%greenwich
+   s_year       = DEF_simulation_time%start_year
    s_month      = DEF_simulation_time%start_month
    s_day        = DEF_simulation_time%start_day
    s_seconds    = DEF_simulation_time%start_sec
@@ -107,7 +107,7 @@ PROGRAM CLMINI
 #ifdef CATCHMENT
    CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
 #endif
-  
+
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -120,7 +120,7 @@ PROGRAM CLMINI
    CALL map_patch_to_pc
 #endif
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
    CALL hru_vector_init ()
@@ -146,18 +146,18 @@ PROGRAM CLMINI
       elseif (time_used >= 60) then
          write(*,102) time_used/60, mod(time_used,60)
          102 format (/,'Overall system time used:', I3, ' minutes', I3, ' seconds.')
-      else 
+      else
          write(*,103) time_used
          103 format (/,'Overall system time used:', I3, ' seconds.')
       end if
 
-      write(*,*) 'CLM Initialization Execution Completed'
+      write(*,*) 'CoLM Initialization Execution Completed'
    end if
-   
+
 #ifdef USEMPI
    call spmd_exit
 #endif
-   
-END PROGRAM CLMINI
+
+END PROGRAM CoLMINI
 ! ----------------------------------------------------------------------
 ! EOP

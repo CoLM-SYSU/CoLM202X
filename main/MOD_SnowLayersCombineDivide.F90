@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE SNOW_Layers_CombineDivide
+MODULE MOD_SnowLayersCombineDivide
 
 !-----------------------------------------------------------------------
  use precision
@@ -615,8 +615,6 @@ MODULE SNOW_Layers_CombineDivide
 
   IMPLICIT NONE
 
-  integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
-
 !-------------------------- Dummy argument -----------------------------
   integer, INTENT(in) :: lb               ! lower bound of array
 
@@ -882,8 +880,6 @@ MODULE SNOW_Layers_CombineDivide
 !=======================================================================
 
   IMPLICIT NONE
-
-  integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
 
 !-------------------------- Dummy argument -----------------------------
 
@@ -1192,4 +1188,4 @@ MODULE SNOW_Layers_CombineDivide
 
 
 
-END MODULE SNOW_Layers_CombineDivide
+END MODULE MOD_SnowLayersCombineDivide

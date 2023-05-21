@@ -1,7 +1,25 @@
 #include <define.h>
 #ifdef BGC
 
-SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
+MODULE MOD_NdepReadin
+
+!-----------------------------------------------------------------------
+   USE precision
+   IMPLICIT NONE
+   SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: NDEP_readin
+
+
+!-----------------------------------------------------------------------
+
+   CONTAINS
+
+!-----------------------------------------------------------------------
+
+
+   SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
 ! ===========================================================
 !
 ! !DESCRIPTION:
@@ -20,7 +38,7 @@ SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
       use mod_landpatch
       use MOD_BGC_Vars_TimeVars,  only: ndep
       use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
-      use MOD_TimeInvariants
+      use MOD_Vars_TimeInvariants
 
       IMPLICIT NONE
 
@@ -49,12 +67,14 @@ SUBROUTINE NDEP_readin (year, dir_landdata, isread, iswrite)
                if(m == 0)then
                   ndep_to_sminn(npatch) = 0.
                else
-                  ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24. 
+                  ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24.
                end if
             end do
 
          ENDIF
-      ENDIF 
+      ENDIF
 
-END SUBROUTINE NDEP_readin
+   END SUBROUTINE NDEP_readin
+
+END MODULE MOD_NdepReadin
 #endif

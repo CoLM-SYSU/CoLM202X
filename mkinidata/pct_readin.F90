@@ -7,16 +7,16 @@ SUBROUTINE pct_readin (dir_landdata)
    use spmd_task
    use ncio_vector
    USE mod_landpatch
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    USE mod_colm_debug
 #endif
 #ifdef PFT_CLASSIFICATION
    use mod_landpft
-   use MOD_PFTimeInvars, only : pftfrac
+   use MOD_Vars_PFTimeInvars, only : pftfrac
 #endif
 #ifdef PC_CLASSIFICATION
    use mod_landpc
-   use MOD_PCTimeInvars, only : pcfrac
+   use MOD_Vars_PCTimeInvars, only : pcfrac
 #endif
    IMPLICIT NONE
 
@@ -44,7 +44,7 @@ SUBROUTINE pct_readin (dir_landdata)
 #endif
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    IF (p_is_worker) THEN 
       npatch = count(landpatch%settyp == 1)
       allocate (sumpct (npatch))
@@ -75,7 +75,7 @@ SUBROUTINE pct_readin (dir_landdata)
    pcfrac(:,1) = SITE_pctpfts 
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    IF (p_is_worker) THEN 
       allocate (sumpct (numpc))
       sumpct = sum(pcfrac,dim=1)

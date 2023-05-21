@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE SIMPLE_OCEAN
+MODULE MOD_SimpleOcean
 
 !-----------------------------------------------------------------------
  use precision
@@ -165,7 +165,7 @@ MODULE SIMPLE_OCEAN
 
    ! diffusion calculation for temperature
      call srftsb(isrfty,deltim,fnt,dfntdt,snowh,tsbsf)
- 
+
      do j=1,plsice
         tsbsf(j) = min(tsbsf(j),tfrz)
         tssub(j) = tsbsf(j)
@@ -175,7 +175,7 @@ MODULE SIMPLE_OCEAN
      olrg = stefnc*emisi*tssea**4 + (1.-emisi)*frl
      emis = emisi
 
-  endif 
+  endif
 
  end subroutine socean
 
@@ -195,9 +195,10 @@ MODULE SIMPLE_OCEAN
 
   use precision
   use PhysicalConstants, only : cpair,rgas,vonkar,grav
-  use FRICTION_VELOCITY
+  use MOD_FrictionVelocity
+  USE MOD_Qsadv
   implicit none
- 
+
 !----------------------- Dummy argument --------------------------------
 
   real(r8), INTENT(in) :: &
@@ -209,7 +210,7 @@ MODULE SIMPLE_OCEAN
         hq,       &! agcm reference height of humidity [m]
         us,       &! wind component in eastward direction [m/s]
         vs,       &! wind component in northward direction [m/s]
-        tm,       &! temperature at agcm reference height [kelvin] 
+        tm,       &! temperature at agcm reference height [kelvin]
         qm,       &! specific humidity at agcm reference height [kg/kg]
         rhoair,   &! density air [kg/m3]
         psrf,     &! atmosphere pressure at the surface [pa] [not used]
@@ -289,7 +290,7 @@ MODULE SIMPLE_OCEAN
       zii = 1000.    ! m  (pbl height)
 
 !-----------------------------------------------------------------------
-!     Compute sensible and latent fluxes and their derivatives with respect 
+!     Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
 !-----------------------------------------------------------------------
 ! Initialization variables
@@ -386,23 +387,23 @@ MODULE SIMPLE_OCEAN
 
 ! Get derivative of fluxes with repect to ground temperature
       ram    = 1./(ustar*ustar/um)
-      rah    = 1./(vonkar/fh*ustar) 
-      raw    = 1./(vonkar/fq*ustar) 
+      rah    = 1./(vonkar/fh*ustar)
+      raw    = 1./(vonkar/fq*ustar)
 
       raih   = rhoair*cpair/rah
-      raiw   = rhoair/raw          
+      raiw   = rhoair/raw
       cgrnds = raih
       cgrndl = raiw*qsatgdT
 
       rib = min(5.,zol*ustar**2/(vonkar**2/fh*um**2))
 
-! surface fluxes of momentum, sensible and latent 
+! surface fluxes of momentum, sensible and latent
 ! using ground temperatures from previous time step
-      taux   = -rhoair*us/ram        
+      taux   = -rhoair*us/ram
       tauy   = -rhoair*vs/ram
 
       fseng  = -raih*dth
-      fevpg  = -raiw*dqh 
+      fevpg  = -raiw*dqh
       fsena  = fseng
       fevpa  = fevpg
 
@@ -425,7 +426,7 @@ MODULE SIMPLE_OCEAN
 ! determined from a backward/implicit diffusion calculation using
 ! linearized sensible/latent heat fluxes. The bottom ocean temperature
 ! is fixed at -2C, allowing heat flux exchange with underlying ocean.
-! 
+!
 ! Sub-surface layers are indexed 1 at the surface, increasing downwards
 ! to plsice.  Layers have mid-points and interfaces between layers.
 !
@@ -436,6 +437,7 @@ MODULE SIMPLE_OCEAN
 
    use precision
    use PhysicalConstants, only: tkice, tkair
+   USE mod_utils
    implicit none
 
 !------------------------------Arguments--------------------------------
@@ -454,7 +456,7 @@ MODULE SIMPLE_OCEAN
 !---------------------------Local variables-----------------------------
 
    integer :: j, jndx        ! sub-surface layer index
- 
+
    real(r8) cmass (1:plsice) ! specific heat of soil (J/kg/K)
    real(r8) rho   (1:plsice) ! mass densty of sub-sfc mat (kg/m3)
    real(r8) tk    (1:plsice) ! thermal conductivity (watts/m/K)
@@ -503,7 +505,7 @@ MODULE SIMPLE_OCEAN
 
    real, parameter :: cmair  = 1.00e3 ! mass specific heat of air [J/kg/K]
    real, parameter :: cmice  = 2.07e3 ! mass specific heat of ice [J/kg/K]
-   real, parameter :: frcair = 0.90   ! fraction of air assumed in mix of ice 
+   real, parameter :: frcair = 0.90   ! fraction of air assumed in mix of ice
    real, parameter :: rhair  = 1.25   ! mass density of surface air [kg/m3]
    real, parameter :: rhice  = 9.20e2 ! mass density of ice [kg/m3]
    real, parameter :: snwedp = 10.0   ! snow:water equivalent depth factor [-]
@@ -569,7 +571,7 @@ MODULE SIMPLE_OCEAN
       tk(1)    = tkty
 
 ! modify layer 1 fields for snow cover if present
-! snow equivlnt depth times snow liquid water depth gives the physical 
+! snow equivlnt depth times snow liquid water depth gives the physical
 ! depth of snow for thermal conduction computation; snow is mixed
 ! uniformly by mass with the top surface layer
       if(scvr) then
@@ -608,16 +610,16 @@ MODULE SIMPLE_OCEAN
 ! set up linear equations
       sbdiag(1)      = 0.
       spdiag(plsice) = 0.
-      
-! single layer 
-      if (plsice.eq.1) then       
+
+! single layer
+      if (plsice.eq.1) then
          rztop = 1./(z(1) - z(0))
          crt = (cmass(1)*rho(1)*rdtime)
          diag(1) = crt - dfntdt*rztop
          rhs(1) = diag(1)*tin(1) + fnt*rztop - fbt*rztop + htsrc(1)
 
 ! more than one layer: top layer first
-      else if (plsice.gt.1) then  
+      else if (plsice.gt.1) then
 
          crt       = cmass(1)*rho(1)*rdtime
          ztop      = z(1) - z(0)
@@ -675,4 +677,4 @@ MODULE SIMPLE_OCEAN
  end subroutine srftsb
 
 
-END MODULE SIMPLE_OCEAN
+END MODULE MOD_SimpleOcean

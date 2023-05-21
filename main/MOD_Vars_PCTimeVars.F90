@@ -2,7 +2,7 @@
 
 #if (defined PC_CLASSIFICATION)
 
-MODULE MOD_PCTimeVars
+MODULE MOD_Vars_PCTimeVars
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
 ! Define Plant Community time variables
@@ -48,7 +48,7 @@ MODULE MOD_PCTimeVars
   PUBLIC :: deallocate_PCTimeVars
   PUBLIC :: READ_PCTimeVars
   PUBLIC :: WRITE_PCTimeVars
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   PUBLIC :: check_PCTimeVars
 #endif
 
@@ -62,7 +62,7 @@ CONTAINS
 
    SUBROUTINE allocate_PCTimeVars ()
 ! ------------------------------------------------------
-! Allocates memory for CLM Plant Community (PC) 1D [numpc] variables
+! Allocates memory for CoLM Plant Community (PC) 1D [numpc] variables
 ! ------------------------------------------------------
       USE precision
       USE GlobalVars
@@ -187,7 +187,7 @@ CONTAINS
 
    SUBROUTINE deallocate_PCTimeVars
 ! --------------------------------------------------
-! Deallocates memory for CLM Plant Community (PC) 1D [numpc] variables
+! Deallocates memory for CoLM Plant Community (PC) 1D [numpc] variables
 ! --------------------------------------------------
 
       USE spmd_task
@@ -222,7 +222,7 @@ CONTAINS
 
    END SUBROUTINE deallocate_PCTimeVars
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    SUBROUTINE check_PCTimeVars
 
       use mod_colm_debug
@@ -255,7 +255,7 @@ CONTAINS
 #endif
 
 
-END MODULE MOD_PCTimeVars
+END MODULE MOD_Vars_PCTimeVars
 
 #endif
 ! ---------- EOP ------------

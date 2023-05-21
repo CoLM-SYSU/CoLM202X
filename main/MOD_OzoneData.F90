@@ -1,11 +1,11 @@
 #include <define.h>
 
-MODULE mod_ozone_data
+MODULE MOD_OzoneData
 
    USE mod_grid
    USE mod_data_type
    USE mod_mapping_grid2pset
-   use MOD_1D_Forcing, only: forc_ozone
+   use MOD_Vars_1DForcing, only: forc_ozone
    IMPLICIT NONE
 
    CHARACTER(len=256) :: file_ozone
@@ -59,7 +59,7 @@ CONTAINS
       itime = mday
 
       CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, itime, f_ozone)
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_block_data ('Ozone', f_ozone)
 #endif
 
@@ -109,17 +109,17 @@ CONTAINS
 
       IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
          CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
          CALL check_block_data ('Ozone', f_ozone)
 #endif         
       
          call mg2p_ozone%map_aweighted (f_ozone, forc_ozone) 
          forc_ozone = forc_ozone * 1.e-9 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
          call check_vector_data ('Ozone', forc_ozone)
 #endif         
       ENDIF
 
    END SUBROUTINE update_ozone_data 
 
-END MODULE mod_ozone_data
+END MODULE MOD_OzoneData

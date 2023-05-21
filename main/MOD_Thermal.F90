@@ -1,64 +1,82 @@
 #include <define.h>
 
- SUBROUTINE THERMAL (ipatch      ,patchtype   ,lb          ,deltim     ,&
-                     trsmx0      ,zlnd        ,zsno        ,csoilc     ,&
-                     dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
-                     vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
-                     wf_sand     ,csol        ,porsl       ,psi0       ,&
+MODULE MOD_Thermal
+
+!-----------------------------------------------------------------------
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+  PUBLIC :: THERMAL
+
+
+!-----------------------------------------------------------------------
+
+  CONTAINS
+
+!-----------------------------------------------------------------------
+
+
+  SUBROUTINE THERMAL (ipatch      ,patchtype   ,lb          ,deltim     ,&
+                      trsmx0      ,zlnd        ,zsno        ,csoilc     ,&
+                      dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
+                      vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
+                      wf_sand     ,csol        ,porsl       ,psi0       ,&
 #ifdef Campbell_SOIL_MODEL
-                     bsw         ,                                      &
+                      bsw         ,                                      &
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                     theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm      ,&
-                     sc_vgm      ,fc_vgm      ,                         &
+                      theta_r     ,alpha_vgm   ,n_vgm       ,L_vgm      ,&
+                      sc_vgm      ,fc_vgm      ,                         &
 #endif
-                     k_solids    ,dksatu      ,dksatf      ,dkdry      ,&
+                      k_solids    ,dksatu      ,dksatf      ,dkdry      ,&
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-                     BA_alpha    ,BA_beta                              ,&
+                      BA_alpha    ,BA_beta                              ,&
 #endif
-                     lai         ,laisun      ,laisha                  ,&
-                     sai         ,htop        ,hbot        ,sqrtdi     ,&
-                     rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
-                     gssun_out   ,gssha_out   ,&
+                      lai         ,laisun      ,laisha                  ,&
+                      sai         ,htop        ,hbot        ,sqrtdi     ,&
+                      rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                      gssun_out   ,gssha_out   ,&
 #ifdef WUEdiag
-                     assimsun_out,etrsun_out  ,assim_RuBP_sun_out      ,&
-                     assim_Rubisco_sun_out    ,cisun_out   ,Dsun_out   ,&
-                     gammasun_out             ,lambdasun_out           ,&
-                     assimsha_out,etrsha_out  ,assim_RuBP_sha_out      ,&
-                     assim_Rubisco_sha_out    ,cisha_out   ,Dsha_out   ,&
-                     gammasha_out,lambdasha_out            ,lambda_out ,&
+                      assimsun_out,etrsun_out  ,assim_RuBP_sun_out      ,&
+                      assim_Rubisco_sun_out    ,cisun_out   ,Dsun_out   ,&
+                      gammasun_out             ,lambdasun_out           ,&
+                      assimsha_out,etrsha_out  ,assim_RuBP_sha_out      ,&
+                      assim_Rubisco_sha_out    ,cisha_out   ,Dsha_out   ,&
+                      gammasha_out,lambdasha_out            ,lambda_out ,&
 #endif
-                     effcon      ,vmax25      ,hksati      ,smp        ,hk,&
+                      effcon      ,vmax25      ,hksati      ,smp        ,hk,&
 #ifdef PLANT_HYDRAULIC_STRESS
-                     kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
-                     psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
-                     ck          ,vegwp       ,gs0sun      ,gs0sha     ,&
+                      kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
+                      psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
+                      ck          ,vegwp       ,gs0sun      ,gs0sha     ,&
 #endif
 #ifdef OzoneStress
-                     lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
+                      lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 #endif
-                     slti        ,hlti        ,shti        ,hhti       ,&
-                     trda        ,trdm        ,trop        ,gradm      ,&
-                     binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
-                     forc_hgt_q  ,forc_us     ,forc_vs     ,forc_t     ,&
-                     forc_q      ,forc_rhoair ,forc_psrf   ,forc_pco2m ,&
-                     forc_po2m   ,coszen      ,parsun      ,parsha     ,&
-                     sabvsun     ,sabvsha     ,sabg        ,frl        ,&
-                     extkb       ,extkd       ,thermk      ,fsno       ,&
-                     sigf        ,dz_soisno   ,z_soisno    ,zi_soisno  ,&
-                     tleaf       ,t_soisno    ,wice_soisno ,wliq_soisno,&
-                     ldew, ldew_rain, ldew_snow,    scv         ,snowdp      ,imelt      ,&
-                     taux        ,tauy        ,fsena       ,fevpa      ,&
-                     lfevpa      ,fsenl       ,fevpl       ,etr        ,&
-                     fseng       ,fevpg       ,olrg        ,fgrnd      ,&
-                     rootr       ,qseva       ,qsdew       ,qsubl      ,&
-                     qfros       ,sm          ,tref        ,qref       ,&
-                     trad        ,rst         ,assim       ,respc      ,&
-                     errore      ,emis        ,z0m         ,zol        ,&
-                     rib         ,ustar       ,qstar       ,tstar      ,&
-                     fm          ,fh          ,fq          ,pg_rain    ,&
-                     pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow ,&
-                     snofrz      ,sabg_lyr                              )
+                      slti        ,hlti        ,shti        ,hhti       ,&
+                      trda        ,trdm        ,trop        ,gradm      ,&
+                      binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
+                      forc_hgt_q  ,forc_us     ,forc_vs     ,forc_t     ,&
+                      forc_q      ,forc_rhoair ,forc_psrf   ,forc_pco2m ,&
+                      forc_po2m   ,coszen      ,parsun      ,parsha     ,&
+                      sabvsun     ,sabvsha     ,sabg        ,frl        ,&
+                      extkb       ,extkd       ,thermk      ,fsno       ,&
+                      sigf        ,dz_soisno   ,z_soisno    ,zi_soisno  ,&
+                      tleaf       ,t_soisno    ,wice_soisno ,wliq_soisno,&
+                      ldew, ldew_rain, ldew_snow,    scv         ,snowdp      ,imelt      ,&
+                      taux        ,tauy        ,fsena       ,fevpa      ,&
+                      lfevpa      ,fsenl       ,fevpl       ,etr        ,&
+                      fseng       ,fevpg       ,olrg        ,fgrnd      ,&
+                      rootr       ,qseva       ,qsdew       ,qsubl      ,&
+                      qfros       ,sm          ,tref        ,qref       ,&
+                      trad        ,rst         ,assim       ,respc      ,&
+                      errore      ,emis        ,z0m         ,zol        ,&
+                      rib         ,ustar       ,qstar       ,tstar      ,&
+                      fm          ,fh          ,fq          ,pg_rain    ,&
+                      pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow ,&
+                      snofrz      ,sabg_lyr                              )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -74,7 +92,7 @@
 !              LeafTemp   |               |qsadv
 !              LeafTempPC |  ---------->  |moninobukini
 !                                         |moninobuk
-!                                         |ASSIM_STOMATA_conductance
+!                                         |MOD_AssimStomataConductance
 !
 !              groundTem     ---------->   meltf
 !
@@ -88,23 +106,27 @@
 
   USE precision
   USE GlobalVars
-  USE PFT_Const
+  USE MOD_Vars_PFTConst
   USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav,cpliq,cpice
-  USE FRICTION_VELOCITY
-  USE LEAF_temperature
+  USE MOD_FrictionVelocity
+  USE MOD_Eroot
+  USE MOD_GroundFluxes
+  USE MOD_LeafTemperature
+  USE MOD_GroundTem
+  USE MOD_Qsadv
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only : patch_pft_s, patch_pft_e
-  USE MOD_PFTimeInvars
-  USE MOD_PFTimeVars
-  USE MOD_1D_PFTFluxes
+  USE MOD_Vars_PFTimeInvars
+  USE MOD_Vars_PFTimeVars
+  USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef PC_CLASSIFICATION
   USE mod_landpc
-  USE MOD_PCTimeInvars
-  USE MOD_PCTimeVars
-  USE MOD_1D_PCFluxes
-  USE LEAF_temperature_PC
+  USE MOD_Vars_PCTimeInvars
+  USE MOD_Vars_PCTimeVars
+  USE MOD_Vars_1DPCFluxes
+  USE MOD_LeafTemperaturePC
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE mod_soil_function, only : soil_psi_from_vliq
@@ -1352,7 +1374,7 @@ ENDIF
          errore = errore - (t_soisno(j)-t_soisno_bef(j))/fact(j)
       ENDDO
 
-#if (defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       IF (abs(errore) > .5) THEN
       write(6,*) 'THERMAL.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
@@ -1361,4 +1383,6 @@ ENDIF
 100   format(10(f15.3))
 #endif
 
- END SUBROUTINE THERMAL
+  END SUBROUTINE THERMAL
+
+END MODULE MOD_Thermal

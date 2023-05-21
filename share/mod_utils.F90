@@ -37,6 +37,8 @@ MODULE mod_utils
 
    PUBLIC :: lmder
 
+   PUBLIC :: tridia
+
    interface unpack_inplace
       MODULE procedure unpack_inplace_int32
       MODULE procedure unpack_inplace_real8
@@ -2314,7 +2316,7 @@ CONTAINS
    end FUNCTION enorm
 
    SUBROUTINE tridia (n, a, b, c, r, u)
-      
+
       USE precision
       IMPLICIT NONE
       INTEGER,  intent(in) :: n       !length of diagonal element vector

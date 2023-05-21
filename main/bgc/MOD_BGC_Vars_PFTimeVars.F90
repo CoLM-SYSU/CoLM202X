@@ -1,4 +1,4 @@
-#include <define.h> 
+#include <define.h>
 
 #if (defined PFT_CLASSIFICATION)
 
@@ -85,8 +85,8 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: totvegn_p                (:)     ! total vegetation N, including available N (gN m-2)
 
   REAL(r8), allocatable :: tempsum_potential_gpp_p  (:)     ! temporary annual sum of potential GPP (gC m-2)
-  REAL(r8), allocatable :: tempmax_retransn_p       (:)     ! temporary annual max of retranslocated N (gN m-2) 
-  REAL(r8), allocatable :: tempavg_tref_p           (:)     ! temporary annual average 2m air temperature (degree C) 
+  REAL(r8), allocatable :: tempmax_retransn_p       (:)     ! temporary annual max of retranslocated N (gN m-2)
+  REAL(r8), allocatable :: tempavg_tref_p           (:)     ! temporary annual average 2m air temperature (degree C)
   REAL(r8), allocatable :: tempsum_npp_p            (:)     ! temporary annual sum NPP (gC m-2)
   REAL(r8), allocatable :: tempsum_litfall_p        (:)     ! temporary annual sum litterfall (gC m-2)
   REAL(r8), allocatable :: annsum_potential_gpp_p   (:)     ! annual sum of potential GPP (gC m-2)
@@ -95,8 +95,8 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: annsum_npp_p             (:)     ! annual sum NPP (gC m-2)
   REAL(r8), allocatable :: annsum_litfall_p         (:)     ! annual sum litterfall (gC m-2)
 
-  REAL(r8), allocatable :: bglfr_p                  (:)     ! background litterfall rate (1/s)  
-  REAL(r8), allocatable :: bgtr_p                   (:)     ! background transfer rate (1/s) 
+  REAL(r8), allocatable :: bglfr_p                  (:)     ! background litterfall rate (1/s)
+  REAL(r8), allocatable :: bgtr_p                   (:)     ! background transfer rate (1/s)
   REAL(r8), allocatable :: lgsf_p                   (:)     ! long growing season factor (0-1)
   REAL(r8), allocatable :: gdd0_p                   (:)     ! GDD based on 0 degree C
   REAL(r8), allocatable :: gdd8_p                   (:)     ! GDD based on 8 degree C
@@ -105,16 +105,16 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: gdd820_p                 (:)     ! 20-year mean of GDD based on 8 degree C
   REAL(r8), allocatable :: gdd1020_p                (:)     ! 20-year mean of GDD based on 10 degree C
 
-  REAL(r8), allocatable :: offset_flag_p            (:)     ! flag, 1 if offset 
+  REAL(r8), allocatable :: offset_flag_p            (:)     ! flag, 1 if offset
   REAL(r8), allocatable :: offset_counter_p         (:)     ! time left for offset (s)
-  REAL(r8), allocatable :: onset_flag_p             (:)     ! flag, 1 if onset 
+  REAL(r8), allocatable :: onset_flag_p             (:)     ! flag, 1 if onset
   REAL(r8), allocatable :: onset_counter_p          (:)     ! time left for onset (s)
   REAL(r8), allocatable :: onset_gddflag_p          (:)     ! flag, 1 if begin to accumulate GDD for onset
   REAL(r8), allocatable :: onset_gdd_p              (:)     ! onset GDD
   REAL(r8), allocatable :: onset_fdd_p              (:)     ! onset freezing degree days counter
   REAL(r8), allocatable :: onset_swi_p              (:)     ! onset soil water index
   REAL(r8), allocatable :: offset_fdd_p             (:)     ! offset freezing degree days counter
-  REAL(r8), allocatable :: offset_swi_p             (:)     ! offset soil water index 
+  REAL(r8), allocatable :: offset_swi_p             (:)     ! offset soil water index
   REAL(r8), allocatable :: dormant_flag_p           (:)     ! flag, 1 if dormancy, 0 if not
   REAL(r8), allocatable :: prev_leafc_to_litter_p   (:)     ! previous timestep leaf display C to litter C (gN m-2 s-1)
   REAL(r8), allocatable :: prev_frootc_to_litter_p  (:)     ! previous timestep fine root display C to litter C (gN m-2 s-1)
@@ -248,14 +248,14 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: AKX_grainc_xf_to_grainc_p_acc               (:) ! SASU spinup diagnostics: accumulated flux from grain transfer C to display C (gC m-2)
   REAL(r8), allocatable :: AKX_livestemc_to_deadstemc_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from live stem display C to dead stem display C (gC m-2)
   REAL(r8), allocatable :: AKX_livecrootc_to_deadcrootc_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from live coarse root display C to dead coarse root display C (gC m-2)
-           
-  REAL(r8), allocatable :: AKX_leafc_st_to_leafc_xf_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from leaf storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_frootc_st_to_frootc_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from fine root storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_livestemc_st_to_livestemc_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from live stem storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_deadstemc_st_to_deadstemc_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from dead stem storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_livecrootc_st_to_livecrootc_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from live coarse root storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_deadcrootc_st_to_deadcrootc_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from dead coarse root storage C to transfer C (gC m-2) 
-  REAL(r8), allocatable :: AKX_grainc_st_to_grainc_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from grain storage C to transfer C (gC m-2) 
+
+  REAL(r8), allocatable :: AKX_leafc_st_to_leafc_xf_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from leaf storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_frootc_st_to_frootc_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from fine root storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_livestemc_st_to_livestemc_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from live stem storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_deadstemc_st_to_deadstemc_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from dead stem storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_livecrootc_st_to_livecrootc_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from live coarse root storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_deadcrootc_st_to_deadcrootc_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from dead coarse root storage C to transfer C (gC m-2)
+  REAL(r8), allocatable :: AKX_grainc_st_to_grainc_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from grain storage C to transfer C (gC m-2)
 
   REAL(r8), allocatable :: AKX_leafc_exit_p_acc                        (:) ! SASU spinup diagnostics: accumulated flux exiting from leaf display C (gC m-2)
   REAL(r8), allocatable :: AKX_frootc_exit_p_acc                       (:) ! SASU spinup diagnostics: accumulated flux exiting from fine root display C (gC m-2)
@@ -280,7 +280,7 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: AKX_livecrootc_xf_exit_p_acc                (:) ! SASU spinup diagnostics: accumulated flux exiting from live coarse root transfer C (gC m-2)
   REAL(r8), allocatable :: AKX_deadcrootc_xf_exit_p_acc                (:) ! SASU spinup diagnostics: accumulated flux exiting from dead coarse root transfer C (gC m-2)
   REAL(r8), allocatable :: AKX_grainc_xf_exit_p_acc                    (:) ! SASU spinup diagnostics: accumulated flux exiting from grain transfer C (gC m-2)
-           
+
   REAL(r8), allocatable :: AKX_leafn_xf_to_leafn_p_acc                 (:) ! SASU spinup diagnostics: accumulated flux from leaf transfer N to display N (gN m-2)
   REAL(r8), allocatable :: AKX_frootn_xf_to_frootn_p_acc               (:) ! SASU spinup diagnostics: accumulated flux from fine root transfer N to display N (gN m-2)
   REAL(r8), allocatable :: AKX_livestemn_xf_to_livestemn_p_acc         (:) ! SASU spinup diagnostics: accumulated flux from live stem transfer N to display N (gN m-2)
@@ -291,34 +291,34 @@ MODULE MOD_BGC_Vars_PFTimeVars
   REAL(r8), allocatable :: AKX_livestemn_to_deadstemn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from live stem display N to dead stem display N (gN m-2)
   REAL(r8), allocatable :: AKX_livecrootn_to_deadcrootn_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from live coarse root display N to dead coarse root display N (gN m-2)
 
-  REAL(r8), allocatable :: AKX_leafn_st_to_leafn_xf_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from leaf storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_frootn_st_to_frootn_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from fine root storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_livestemn_st_to_livestemn_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from live stem storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_deadstemn_st_to_deadstemn_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from dead stem storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_livecrootn_st_to_livecrootn_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from live coarse root storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_deadcrootn_st_to_deadcrootn_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from dead coarse root storage N to transfer N (gN m-2) 
-  REAL(r8), allocatable :: AKX_grainn_st_to_grainn_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from grain storage N to transfer N (gN m-2) 
+  REAL(r8), allocatable :: AKX_leafn_st_to_leafn_xf_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from leaf storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_frootn_st_to_frootn_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from fine root storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_livestemn_st_to_livestemn_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from live stem storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_deadstemn_st_to_deadstemn_xf_p_acc      (:) ! SASU spinup diagnostics: accumulated flux from dead stem storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_livecrootn_st_to_livecrootn_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from live coarse root storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_deadcrootn_st_to_deadcrootn_xf_p_acc    (:) ! SASU spinup diagnostics: accumulated flux from dead coarse root storage N to transfer N (gN m-2)
+  REAL(r8), allocatable :: AKX_grainn_st_to_grainn_xf_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from grain storage N to transfer N (gN m-2)
 
-  REAL(r8), allocatable :: AKX_leafn_to_retransn_p_acc                 (:) ! SASU spinup diagnostics: accumulated flux from leaf display N to retranslocated N (gN m-2) 
-  REAL(r8), allocatable :: AKX_frootn_to_retransn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from fine root display N to retranslocated N (gN m-2) 
-  REAL(r8), allocatable :: AKX_livestemn_to_retransn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from live stem display N to retranslocated N (gN m-2) 
-  REAL(r8), allocatable :: AKX_livecrootn_to_retransn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from live coarse root display N to retranslocated N (gN m-2) 
+  REAL(r8), allocatable :: AKX_leafn_to_retransn_p_acc                 (:) ! SASU spinup diagnostics: accumulated flux from leaf display N to retranslocated N (gN m-2)
+  REAL(r8), allocatable :: AKX_frootn_to_retransn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from fine root display N to retranslocated N (gN m-2)
+  REAL(r8), allocatable :: AKX_livestemn_to_retransn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from live stem display N to retranslocated N (gN m-2)
+  REAL(r8), allocatable :: AKX_livecrootn_to_retransn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from live coarse root display N to retranslocated N (gN m-2)
 
-  REAL(r8), allocatable :: AKX_retransn_to_leafn_p_acc                 (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to leaf display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_frootn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to fine root display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_livestemn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live stem display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_deadstemn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead stem display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_livecrootn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live coarse root display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_deadcrootn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead coarse root display N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_grainn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to grain display N (gN m-2) 
+  REAL(r8), allocatable :: AKX_retransn_to_leafn_p_acc                 (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to leaf display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_frootn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to fine root display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_livestemn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live stem display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_deadstemn_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead stem display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_livecrootn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live coarse root display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_deadcrootn_p_acc            (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead coarse root display N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_grainn_p_acc                (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to grain display N (gN m-2)
 
-  REAL(r8), allocatable :: AKX_retransn_to_leafn_st_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to leaf storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_frootn_st_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to fine root storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_livestemn_st_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live stem storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_deadstemn_st_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead stem storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_livecrootn_st_p_acc         (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live coarse root storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_deadcrootn_st_p_acc         (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead coarse root storage N (gN m-2) 
-  REAL(r8), allocatable :: AKX_retransn_to_grainn_st_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to grain storage N (gN m-2) 
+  REAL(r8), allocatable :: AKX_retransn_to_leafn_st_p_acc              (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to leaf storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_frootn_st_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to fine root storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_livestemn_st_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live stem storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_deadstemn_st_p_acc          (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead stem storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_livecrootn_st_p_acc         (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to live coarse root storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_deadcrootn_st_p_acc         (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to dead coarse root storage N (gN m-2)
+  REAL(r8), allocatable :: AKX_retransn_to_grainn_st_p_acc             (:) ! SASU spinup diagnostics: accumulated flux from retranslocated N to grain storage N (gN m-2)
 
   REAL(r8), allocatable :: AKX_leafn_exit_p_acc                        (:) ! SASU spinup diagnostics: accumulated flux exiting from leaf display N (gN m-2)
   REAL(r8), allocatable :: AKX_frootn_exit_p_acc                       (:) ! SASU spinup diagnostics: accumulated flux exiting from fine root display N (gN m-2)
@@ -351,7 +351,7 @@ MODULE MOD_BGC_Vars_PFTimeVars
   PUBLIC :: deallocate_BGCPFTimeVars
   PUBLIC :: READ_BGCPFTimeVars
   PUBLIC :: WRITE_BGCPFTimeVars
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   PUBLIC :: check_BGCPFTimeVars
 #endif
 
@@ -365,7 +365,7 @@ CONTAINS
 
    SUBROUTINE allocate_BGCPFTimeVars ()
 ! ------------------------------------------------------
-! Allocates memory for CLM 1d [numpft] variables
+! Allocates memory for CoLM 1d [numpft] variables
 ! ------------------------------------------------------
       USE precision
       USE spmd_task
@@ -487,7 +487,7 @@ CONTAINS
             allocate (npool_p                  (numpft))
 
 #ifdef CROP
-! crop variables 
+! crop variables
             allocate (croplive_p               (numpft))
             allocate (hui_p                    (numpft))
             allocate (gddplant_p               (numpft))
@@ -603,7 +603,7 @@ CONTAINS
             allocate (AKX_grainc_xf_to_grainc_p_acc               (numpft))
             allocate (AKX_livestemc_to_deadstemc_p_acc            (numpft))
             allocate (AKX_livecrootc_to_deadcrootc_p_acc          (numpft))
-                 
+
             allocate (AKX_leafc_st_to_leafc_xf_p_acc              (numpft))
             allocate (AKX_frootc_st_to_frootc_xf_p_acc            (numpft))
             allocate (AKX_livestemc_st_to_livestemc_xf_p_acc      (numpft))
@@ -627,7 +627,7 @@ CONTAINS
             allocate (AKX_livecrootc_st_exit_p_acc                (numpft))
             allocate (AKX_deadcrootc_st_exit_p_acc                (numpft))
             allocate (AKX_grainc_st_exit_p_acc                    (numpft))
-      
+
             allocate (AKX_leafc_xf_exit_p_acc                     (numpft))
             allocate (AKX_frootc_xf_exit_p_acc                    (numpft))
             allocate (AKX_livestemc_xf_exit_p_acc                 (numpft))
@@ -635,7 +635,7 @@ CONTAINS
             allocate (AKX_livecrootc_xf_exit_p_acc                (numpft))
             allocate (AKX_deadcrootc_xf_exit_p_acc                (numpft))
             allocate (AKX_grainc_xf_exit_p_acc                    (numpft))
-           
+
             allocate (AKX_leafn_xf_to_leafn_p_acc                 (numpft))
             allocate (AKX_frootn_xf_to_frootn_p_acc               (numpft))
             allocate (AKX_livestemn_xf_to_livestemn_p_acc         (numpft))
@@ -701,10 +701,10 @@ CONTAINS
             allocate (AKX_grainn_xf_exit_p_acc                    (numpft))
 #endif
          ENDIF
-      ENDIF 
+      ENDIF
 
    END SUBROUTINE allocate_BGCPFTimeVars
-  
+
    SUBROUTINE READ_BGCPFTimeVars (file_restart)
 
       use ncio_vector
@@ -816,7 +816,7 @@ CONTAINS
      call ncio_read_vector (file_restart, 'npool_p                ', landpft, npool_p               )
 
 #ifdef CROP
-! crop variables 
+! crop variables
      call ncio_read_vector (file_restart, 'croplive_p             ', landpft, croplive_p            )
      call ncio_read_vector (file_restart, 'hui_p                  ', landpft, hui_p                 )
      call ncio_read_vector (file_restart, 'gddplant_p             ', landpft, gddplant_p            )
@@ -942,7 +942,7 @@ CONTAINS
      call ncio_read_vector (file_restart, 'AKX_livecrootc_to_deadcrootc_p_acc        ', landpft, &
      AKX_livecrootc_to_deadcrootc_p_acc       , defval = 0._r8)
 
-           
+
      call ncio_read_vector (file_restart, 'AKX_leafc_st_to_leafc_xf_p_acc            ', landpft, &
      AKX_leafc_st_to_leafc_xf_p_acc           , defval = 0._r8)
      call ncio_read_vector (file_restart, 'AKX_frootc_st_to_frootc_xf_p_acc          ', landpft, &
@@ -1002,7 +1002,7 @@ CONTAINS
      AKX_deadcrootc_xf_exit_p_acc             , defval = 0._r8)
      call ncio_read_vector (file_restart, 'AKX_grainc_xf_exit_p_acc                  ', landpft, &
      AKX_grainc_xf_exit_p_acc                 , defval = 0._r8)
-           
+
      call ncio_read_vector (file_restart, 'AKX_leafn_xf_to_leafn_p_acc               ', landpft, &
      AKX_leafn_xf_to_leafn_p_acc              , defval = 0._r8)
      call ncio_read_vector (file_restart, 'AKX_frootn_xf_to_frootn_p_acc             ', landpft, &
@@ -1123,22 +1123,22 @@ CONTAINS
      call ncio_read_vector (file_restart, 'AKX_grainn_xf_exit_p_acc                  ', landpft, &
      AKX_grainn_xf_exit_p_acc                 , defval = 0._r8)
 #endif
-   END SUBROUTINE READ_BGCPFTimeVars 
-   
+   END SUBROUTINE READ_BGCPFTimeVars
+
    SUBROUTINE WRITE_BGCPFTimeVars (file_restart)
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpft
      use ncio_vector
      USE GlobalVars
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
-     
+
      ! Local variables
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
 ! bgc variables
      call ncio_write_vector (file_restart, 'leafc_p                ', 'pft', landpft, &
@@ -1333,7 +1333,7 @@ CONTAINS
      npool_p               , compress)
 
 #ifdef CROP
-! crop variables 
+! crop variables
      call ncio_write_vector (file_restart, 'croplive_p             ', 'pft', landpft, &
      croplive_p            , compress)
      call ncio_write_vector (file_restart, 'hui_p                   ', 'pft', landpft, &
@@ -1557,7 +1557,7 @@ CONTAINS
      call ncio_write_vector (file_restart, 'AKX_livecrootc_to_deadcrootc_p_acc        ', 'pft', landpft, &
      AKX_livecrootc_to_deadcrootc_p_acc       , compress)
 
-           
+
      call ncio_write_vector (file_restart, 'AKX_leafc_st_to_leafc_xf_p_acc            ', 'pft', landpft, &
      AKX_leafc_st_to_leafc_xf_p_acc           , compress)
      call ncio_write_vector (file_restart, 'AKX_frootc_st_to_frootc_xf_p_acc          ', 'pft', landpft, &
@@ -1617,7 +1617,7 @@ CONTAINS
      AKX_deadcrootc_xf_exit_p_acc             , compress)
      call ncio_write_vector (file_restart, 'AKX_grainc_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainc_xf_exit_p_acc                 , compress)
-           
+
      call ncio_write_vector (file_restart, 'AKX_leafn_xf_to_leafn_p_acc               ', 'pft', landpft, &
      AKX_leafn_xf_to_leafn_p_acc              , compress)
      call ncio_write_vector (file_restart, 'AKX_frootn_xf_to_frootn_p_acc             ', 'pft', landpft, &
@@ -1740,10 +1740,10 @@ CONTAINS
 #endif
    END SUBROUTINE WRITE_BGCPFTimeVars
 
-  
+
    SUBROUTINE deallocate_BGCPFTimeVars ()
 ! --------------------------------------------------
-! Deallocates memory for CLM 1d [numpft/numpc] variables
+! Deallocates memory for CoLM 1d [numpft/numpc] variables
 ! --------------------------------------------------
       USE spmd_task
       USE mod_landpft
@@ -1862,7 +1862,7 @@ CONTAINS
             deallocate (npool_p                  )
 
 #ifdef CROP
-! crop variables 
+! crop variables
             deallocate (croplive_p               )
             deallocate (hui_p                    )
             deallocate (gddplant_p               )
@@ -1978,7 +1978,7 @@ CONTAINS
             deallocate (AKX_grainc_xf_to_grainc_p_acc               )
             deallocate (AKX_livestemc_to_deadstemc_p_acc            )
             deallocate (AKX_livecrootc_to_deadcrootc_p_acc          )
-           
+
             deallocate (AKX_leafc_st_to_leafc_xf_p_acc              )
             deallocate (AKX_frootc_st_to_frootc_xf_p_acc            )
             deallocate (AKX_livestemc_st_to_livestemc_xf_p_acc      )
@@ -2010,7 +2010,7 @@ CONTAINS
             deallocate (AKX_livecrootc_xf_exit_p_acc                )
             deallocate (AKX_deadcrootc_xf_exit_p_acc                )
             deallocate (AKX_grainc_xf_exit_p_acc                    )
-           
+
             deallocate (AKX_leafn_xf_to_leafn_p_acc                 )
             deallocate (AKX_frootn_xf_to_frootn_p_acc               )
             deallocate (AKX_livestemn_xf_to_livestemn_p_acc         )
@@ -2076,11 +2076,11 @@ CONTAINS
             deallocate (AKX_grainn_xf_exit_p_acc                    )
 #endif
          ENDIF
-      ENDIF 
+      ENDIF
 
    END SUBROUTINE deallocate_BGCPFTimeVars
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    SUBROUTINE check_BGCPFTimeVars
 
       use mod_colm_debug
@@ -2088,50 +2088,50 @@ CONTAINS
       IMPLICIT NONE
 
 ! bgc variables
-      call check_vector_data ('leafc_p                ', leafc_p                ) 
-      call check_vector_data ('leafc_storage_p        ', leafc_storage_p        ) 
-      call check_vector_data ('leafc_xfer_p           ', leafc_xfer_p           ) 
-      call check_vector_data ('frootc_p               ', frootc_p               ) 
-      call check_vector_data ('frootc_storage_p       ', frootc_storage_p       ) 
-      call check_vector_data ('frootc_xfer_p          ', frootc_xfer_p          ) 
-      call check_vector_data ('livestemc_p            ', livestemc_p            ) 
-      call check_vector_data ('livestemc_storage_p    ', livestemc_storage_p    ) 
-      call check_vector_data ('livestemc_xfer_p       ', livestemc_xfer_p       ) 
-      call check_vector_data ('deadstemc_p            ', deadstemc_p            ) 
-      call check_vector_data ('deadstemc_storage_p    ', deadstemc_storage_p    ) 
-      call check_vector_data ('deadstemc_xfer_p       ', deadstemc_xfer_p       ) 
-      call check_vector_data ('livecrootc_p           ', livecrootc_p           ) 
-      call check_vector_data ('livecrootc_storage_p   ', livecrootc_storage_p   ) 
-      call check_vector_data ('livecrootc_xfer_p      ', livecrootc_xfer_p      ) 
-      call check_vector_data ('deadcrootc_p           ', deadcrootc_p           ) 
-      call check_vector_data ('deadcrootc_storage_p   ', deadcrootc_storage_p   ) 
-      call check_vector_data ('deadcrootc_xfer_p      ', deadcrootc_xfer_p      ) 
-      call check_vector_data ('grainc_p               ', grainc_p               ) 
-      call check_vector_data ('grainc_storage_p       ', grainc_storage_p       ) 
-      call check_vector_data ('grainc_xfer_p          ', grainc_xfer_p          ) 
-      call check_vector_data ('cropseedc_deficit_p    ', cropseedc_deficit_p    ) 
-      call check_vector_data ('xsmrpool_p             ', xsmrpool_p             ) 
-      call check_vector_data ('gresp_storage_p        ', gresp_storage_p        ) 
-      call check_vector_data ('gresp_xfer_p           ', gresp_xfer_p           ) 
-      call check_vector_data ('cpool_p                ', cpool_p                ) 
-      call check_vector_data ('totvegc_p              ', totvegc_p              ) 
-      call check_vector_data ('cropprod1c_p           ', cropprod1c_p           ) 
+      call check_vector_data ('leafc_p                ', leafc_p                )
+      call check_vector_data ('leafc_storage_p        ', leafc_storage_p        )
+      call check_vector_data ('leafc_xfer_p           ', leafc_xfer_p           )
+      call check_vector_data ('frootc_p               ', frootc_p               )
+      call check_vector_data ('frootc_storage_p       ', frootc_storage_p       )
+      call check_vector_data ('frootc_xfer_p          ', frootc_xfer_p          )
+      call check_vector_data ('livestemc_p            ', livestemc_p            )
+      call check_vector_data ('livestemc_storage_p    ', livestemc_storage_p    )
+      call check_vector_data ('livestemc_xfer_p       ', livestemc_xfer_p       )
+      call check_vector_data ('deadstemc_p            ', deadstemc_p            )
+      call check_vector_data ('deadstemc_storage_p    ', deadstemc_storage_p    )
+      call check_vector_data ('deadstemc_xfer_p       ', deadstemc_xfer_p       )
+      call check_vector_data ('livecrootc_p           ', livecrootc_p           )
+      call check_vector_data ('livecrootc_storage_p   ', livecrootc_storage_p   )
+      call check_vector_data ('livecrootc_xfer_p      ', livecrootc_xfer_p      )
+      call check_vector_data ('deadcrootc_p           ', deadcrootc_p           )
+      call check_vector_data ('deadcrootc_storage_p   ', deadcrootc_storage_p   )
+      call check_vector_data ('deadcrootc_xfer_p      ', deadcrootc_xfer_p      )
+      call check_vector_data ('grainc_p               ', grainc_p               )
+      call check_vector_data ('grainc_storage_p       ', grainc_storage_p       )
+      call check_vector_data ('grainc_xfer_p          ', grainc_xfer_p          )
+      call check_vector_data ('cropseedc_deficit_p    ', cropseedc_deficit_p    )
+      call check_vector_data ('xsmrpool_p             ', xsmrpool_p             )
+      call check_vector_data ('gresp_storage_p        ', gresp_storage_p        )
+      call check_vector_data ('gresp_xfer_p           ', gresp_xfer_p           )
+      call check_vector_data ('cpool_p                ', cpool_p                )
+      call check_vector_data ('totvegc_p              ', totvegc_p              )
+      call check_vector_data ('cropprod1c_p           ', cropprod1c_p           )
 
-      call check_vector_data ('leaf_prof_p            ', leaf_prof_p            ) 
-      call check_vector_data ('froot_prof_p           ', froot_prof_p           ) 
-      call check_vector_data ('croot_prof_p           ', croot_prof_p           ) 
-      call check_vector_data ('stem_prof_p            ', stem_prof_p            ) 
-      call check_vector_data ('cinput_rootfr_p        ', cinput_rootfr_p        ) 
+      call check_vector_data ('leaf_prof_p            ', leaf_prof_p            )
+      call check_vector_data ('froot_prof_p           ', froot_prof_p           )
+      call check_vector_data ('croot_prof_p           ', croot_prof_p           )
+      call check_vector_data ('stem_prof_p            ', stem_prof_p            )
+      call check_vector_data ('cinput_rootfr_p        ', cinput_rootfr_p        )
 
-      call check_vector_data ('leafn_p                ', leafn_p                ) 
-      call check_vector_data ('leafn_storage_p        ', leafn_storage_p        ) 
-      call check_vector_data ('leafn_xfer_p           ', leafn_xfer_p           ) 
-      call check_vector_data ('frootn_p               ', frootn_p               ) 
-      call check_vector_data ('frootn_storage_p       ', frootn_storage_p       ) 
-      call check_vector_data ('frootn_xfer_p          ', frootn_xfer_p          ) 
-      call check_vector_data ('livestemn_p            ', livestemn_p            ) 
-      call check_vector_data ('livestemn_storage_p    ', livestemn_storage_p    ) 
-      call check_vector_data ('livestemn_xfer_p       ', livestemn_xfer_p       ) 
+      call check_vector_data ('leafn_p                ', leafn_p                )
+      call check_vector_data ('leafn_storage_p        ', leafn_storage_p        )
+      call check_vector_data ('leafn_xfer_p           ', leafn_xfer_p           )
+      call check_vector_data ('frootn_p               ', frootn_p               )
+      call check_vector_data ('frootn_storage_p       ', frootn_storage_p       )
+      call check_vector_data ('frootn_xfer_p          ', frootn_xfer_p          )
+      call check_vector_data ('livestemn_p            ', livestemn_p            )
+      call check_vector_data ('livestemn_storage_p    ', livestemn_storage_p    )
+      call check_vector_data ('livestemn_xfer_p       ', livestemn_xfer_p       )
       call check_vector_data ('deadstemn_p            ', deadstemn_p            )
       call check_vector_data ('deadstemn_storage_p    ', deadstemn_storage_p    )
       call check_vector_data ('deadstemn_xfer_p       ', deadstemn_xfer_p       )
@@ -2198,7 +2198,7 @@ CONTAINS
       call check_vector_data ('npool_p                ', npool_p                )
 
 #ifdef CROP
-! crop variables 
+! crop variables
       call check_vector_data ('hui_p                  ', hui_p                  )
       call check_vector_data ('gddplant_p             ', gddplant_p             )
       call check_vector_data ('aroot_p                ', aroot_p                )
@@ -2340,7 +2340,7 @@ CONTAINS
       call check_vector_data ('AKX_livecrootc_xf_exit_p_acc              ', AKX_livecrootc_xf_exit_p_acc              )
       call check_vector_data ('AKX_deadcrootc_xf_exit_p_acc              ', AKX_deadcrootc_xf_exit_p_acc              )
       call check_vector_data ('AKX_grainc_xf_exit_p_acc                  ', AKX_grainc_xf_exit_p_acc                  )
-           
+
       call check_vector_data ('AKX_leafn_xf_to_leafn_p_acc               ', AKX_leafn_xf_to_leafn_p_acc               )
       call check_vector_data ('AKX_frootn_xf_to_frootn_p_acc             ', AKX_frootn_xf_to_frootn_p_acc             )
       call check_vector_data ('AKX_livestemn_xf_to_livestemn_p_acc       ', AKX_livestemn_xf_to_livestemn_p_acc       )

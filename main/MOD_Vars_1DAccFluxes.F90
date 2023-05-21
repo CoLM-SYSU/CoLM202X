@@ -1,6 +1,6 @@
 #include <define.h>
 
-module MOD_1D_Acc_Fluxes
+module MOD_Vars_1DAccFluxes
 
    use precision
 
@@ -1215,11 +1215,11 @@ contains
       use spmd_task
       use mod_landpatch,     only : numpatch
       use PhysicalConstants, only : vonkar, stefnc, cpair, rgas, grav
-      use MOD_TimeInvariants
-      use MOD_TimeVariables
-      use MOD_1D_Forcing
-      use MOD_1D_Fluxes
-      use FRICTION_VELOCITY
+      use MOD_Vars_TimeInvariants
+      use MOD_Vars_TimeVariables
+      use MOD_Vars_1DForcing
+      use MOD_Vars_1DFluxes
+      use MOD_FrictionVelocity
       use mod_colm_debug
       use GlobalVars
 #ifdef LATERAL_FLOW
@@ -1810,5 +1810,5 @@ contains
 
    END SUBROUTINE acc3d
 
-end module MOD_1D_Acc_Fluxes
+end module MOD_Vars_1DAccFluxes
 ! ----- EOP ---------

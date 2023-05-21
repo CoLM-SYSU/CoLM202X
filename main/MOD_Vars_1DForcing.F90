@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_1D_Forcing
+MODULE MOD_Vars_1DForcing
 ! -------------------------------
 ! Meteorogical Forcing
 !
@@ -62,9 +62,9 @@ SAVE
   CONTAINS
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_1D_Forcing 
+  SUBROUTINE allocate_1D_Forcing
 ! ------------------------------------------------
-! Allocates memory for CLM 1d [numpatch] variables
+! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------
   USE spmd_task
   USE mod_mesh
@@ -124,14 +124,14 @@ SAVE
 
 
   SUBROUTINE deallocate_1D_Forcing ()
-     
+
      USE spmd_task
      USE mod_mesh
      USE mod_landpatch
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
-        
+
         IF (numpatch > 0) THEN
 
            deallocate ( forc_pco2m  ) ! CO2 concentration in atmos. (pascals)
@@ -181,5 +181,5 @@ SAVE
 
   END SUBROUTINE deallocate_1D_Forcing
 
-END MODULE MOD_1D_Forcing
+END MODULE MOD_Vars_1DForcing
 ! ------ EOP --------

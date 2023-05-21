@@ -2,7 +2,7 @@
 
 #ifdef PFT_CLASSIFICATION
 
-MODULE MOD_1D_PFTFluxes
+MODULE MOD_Vars_1DPFTFluxes
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
 ! Define PFT flux variables
@@ -51,7 +51,7 @@ MODULE MOD_1D_PFTFluxes
 
   SUBROUTINE allocate_1D_PFTFluxes
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM PFT 1d [numpft] variables
+  ! Allocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
 
      USE precision
@@ -90,7 +90,7 @@ MODULE MOD_1D_PFTFluxes
 
   SUBROUTINE deallocate_1D_PFTFluxes
   ! --------------------------------------------------------------------
-  ! deallocates memory for CLM PFT 1d [numpft] variables
+  ! deallocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
      USE spmd_task
      USE mod_landpft
@@ -124,7 +124,7 @@ MODULE MOD_1D_PFTFluxes
 
   END SUBROUTINE deallocate_1D_PFTFluxes
 
-END MODULE MOD_1D_PFTFluxes
+END MODULE MOD_Vars_1DPFTFluxes
 
 #endif
 ! ---------- EOP ------------

@@ -1,4 +1,4 @@
-# Makefile for CLM surface data processing
+# Makefile for CoLM surface data processing
 
 include ../../include/Makeoptions
  
@@ -42,19 +42,19 @@ OBJS_MKSRFDATA = \
 				  ../../mksrfdata/mod_landpft.o
 
 OBJS_MAIN =  \
-		  ../PFT_Const.o \
-		  ../MOD_PFTimeVars.o \
-		  ../MOD_PFTimeInvars.o \
-		  ../MOD_PCTimeVars.o \
-		  ../MOD_PCTimeInvars.o \
-		  ../MOD_TimeInvariants.o        \
-		  ../MOD_TimeVariables.o         \
-		  ../MOD_1D_PFTFluxes.o          \
-		  ../MOD_1D_PCFluxes.o           \
-		  ../MOD_1D_Fluxes.o             \
-		  ../MOD_1D_Forcing.o            \
-		  ../MOD_2D_Fluxes.o             \
-		  ../MOD_2D_Forcing.o           
+		  ../MOD_Vars_PFTConst.o \
+		  ../MOD_Vars_PFTimeVars.o \
+		  ../MOD_Vars_PFTimeInvars.o \
+		  ../MOD_Vars_PCTimeVars.o \
+		  ../MOD_Vars_PCTimeInvars.o \
+		  ../MOD_Vars_TimeInvariants.o        \
+		  ../MOD_Vars_TimeVariables.o         \
+		  ../MOD_Vars_1DPFTFluxes.o          \
+		  ../MOD_Vars_1DPCFluxes.o           \
+		  ../MOD_Vars_1DFluxes.o             \
+		  ../MOD_Vars_1DForcing.o            \
+		  ../MOD_Vars_2DFluxes.o             \
+		  ../MOD_Vars_2DForcing.o
 
 OBJS = \
 		 MOD_1D_BGCFluxes.o  \

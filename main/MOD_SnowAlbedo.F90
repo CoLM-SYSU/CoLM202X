@@ -1,51 +1,65 @@
+MODULE MOD_SnowAlbedo
 
-  !-----------------------------------------------------------------------
-  subroutine SnowAlbedo( use_snicar_frc,use_snicar_ad ,coszen_col    ,&
-                         albsod        ,albsoi        ,snl           ,frac_sno      ,&
-                         h2osno        ,h2osno_liq    ,h2osno_ice    ,snw_rds       ,&
+!-----------------------------------------------------------------------
+   USE precision
+   IMPLICIT NONE
+   SAVE
 
-                         mss_cnc_bcphi ,mss_cnc_bcpho ,mss_cnc_ocphi ,mss_cnc_ocpho ,&
-                         mss_cnc_dst1  ,mss_cnc_dst2  ,mss_cnc_dst3  ,mss_cnc_dst4  ,&
+! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: SnowAlbedo
 
-                         albgrd        ,albgri        ,albgrd_pur    ,albgri_pur    ,&
-                         albgrd_bc     ,albgri_bc     ,albgrd_oc     ,albgri_oc     ,&
-                         albgrd_dst    ,albgri_dst    ,flx_absdv     ,flx_absdn     ,&
-                         flx_absiv     ,flx_absin      )
 
-  ! !DESCRIPTION:
-  ! The calling sequence is:
-  ! -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
-  !    or
-  !    SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
-  ! -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
-  !    or
-  !    SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
-  !
-  ! ORIGINAL:
-  ! 1) The Community Land Model version5.0 (CLM5.0)
-  ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
-  !
-  ! REFERENCES:
-  ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
-  ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
-  ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
-  ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
-  ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
-  !
-  ! REVISIONS:
-  ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+!-----------------------------------------------------------------------
 
-  !-----------------------------------------------------------------------
-  ! !USES:
-    use SnowSnicarMod , only : SNICAR_RT, SNICAR_AD_RT
+   CONTAINS
 
-  ! and the evolution of snow effective radius
-  !
-! DAI, Dec. 28, 2022
+!-----------------------------------------------------------------------
+
+
+   subroutine SnowAlbedo( use_snicar_frc,use_snicar_ad ,coszen_col    ,&
+                          albsod        ,albsoi        ,snl           ,frac_sno      ,&
+                          h2osno        ,h2osno_liq    ,h2osno_ice    ,snw_rds       ,&
+
+                          mss_cnc_bcphi ,mss_cnc_bcpho ,mss_cnc_ocphi ,mss_cnc_ocpho ,&
+                          mss_cnc_dst1  ,mss_cnc_dst2  ,mss_cnc_dst3  ,mss_cnc_dst4  ,&
+
+                          albgrd        ,albgri        ,albgrd_pur    ,albgri_pur    ,&
+                          albgrd_bc     ,albgri_bc     ,albgrd_oc     ,albgri_oc     ,&
+                          albgrd_dst    ,albgri_dst    ,flx_absdv     ,flx_absdn     ,&
+                          flx_absiv     ,flx_absin      )
+
+   ! !DESCRIPTION:
+   ! The calling sequence is:
+   ! -> SNICAR_RT:   snow albedos: direct beam (SNICAR)
+   !    or
+   !    SNICAR_AD_RT: snow albedos: direct beam (SNICAR-AD)
+   ! -> SNICAR_RT:   snow albedos: diffuse (SNICAR)
+   !    or
+   !    SNICAR_AD_RT:   snow albedos: diffuse (SNICAR-AD)
+   !
+   ! ORIGINAL:
+   ! 1) The Community Land Model version5.0 (CLM5.0)
+   ! 2) Energy Exascale Earth System Model version 2.0 (E3SM v2.0) Land Model (ELM v2.0)
+   !
+   ! REFERENCES:
+   ! 1) Flanner et al, 2021, SNICAR-ADv3: a community tool for modeling spectral snow albedo.
+   ! Geosci. Model Dev., 14, 7673–7704, https://doi.org/10.5194/gmd-14-7673-2021
+   ! 2) Hao et al., 2023, Improving snow albedo modeling in the E3SM land model (version 2.0)
+   ! and assessing its impacts on snow and surface fluxes over the Tibetan Plateau.
+   ! Geosci. Model Dev., 16, 75–94, https://doi.org/10.5194/gmd-16-75-2023
+   !
+   ! REVISIONS:
+   ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
+
+   !-----------------------------------------------------------------------
+   ! !USES:
+     use MOD_SnowSnicar , only : SNICAR_RT, SNICAR_AD_RT
+
+   ! and the evolution of snow effective radius
+   !
+   ! DAI, Dec. 28, 2022
 
     IMPLICIT NONE
-
-    integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
 
 !-------------------------------------------------------------------------
 ! temporay setting
@@ -611,4 +625,6 @@
        endif
     enddo
 
-  end subroutine SnowAlbedo
+    end subroutine SnowAlbedo
+
+END MODULE MOD_SnowAlbedo

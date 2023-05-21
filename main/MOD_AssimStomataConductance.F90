@@ -1,6 +1,6 @@
 #include<define.h>
 
-MODULE ASSIM_STOMATA_conductance
+MODULE MOD_AssimStomataConductance
 
 !-----------------------------------------------------------------------
   use precision
@@ -501,5 +501,5 @@ MODULE ASSIM_STOMATA_conductance
 
 
 
-END MODULE ASSIM_STOMATA_conductance
+END MODULE MOD_AssimStomataConductance
 ! -------------- EOP ---------------

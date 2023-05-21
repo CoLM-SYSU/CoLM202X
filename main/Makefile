@@ -1,4 +1,4 @@
-# Makefile for CLM main program
+# Makefile for CoLM main program
 
 include ../include/Makeoptions
 INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
@@ -10,7 +10,7 @@ DEF  = $(shell grep -i cama_flood ../include/define.h)
 CaMa = $(word 1, ${DEF})
 
 # Name of executable
-EXECUTABLE = clm.x
+EXECUTABLE = colm.x
 
 ####################################################################
 .DEFAULT :
@@ -38,7 +38,9 @@ OBJS_SHARED = \
 				  ../share/ncio_vector.o \
 				  ../share/mod_colm_debug.o \
 				  ../share/mod_mapping_grid2pset.o \
-				  ../share/mod_mapping_pset2grid.o
+				  ../share/mod_mapping_pset2grid.o \
+				  MOD_Eroot.o                      \
+				  MOD_Qsadv.o
 
 OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_aggregation.o \
@@ -100,22 +102,22 @@ OBJS_BGC = \
 			  bgc/MOD_BGC_CNSASU.o \
 			  bgc/MOD_BGC_Veg_CNNDynamics.o \
 			  bgc/MOD_BGC_Veg_CNFireBase.o \
-                          bgc/MOD_BGC_Veg_CNFireLi2016.o \
+           bgc/MOD_BGC_Veg_CNFireLi2016.o \
 			  bgc/MOD_BGC_driver.o
 
 BASIC =  \
-		  PFT_Const.o \
-		  MOD_PFTimeVars.o \
-		  MOD_PFTimeInvars.o \
-		  MOD_PCTimeVars.o \
-		  MOD_PCTimeInvars.o \
-		  MOD_TimeInvariants.o        \
-		  MOD_TimeVariables.o    \
-		  MOD_1D_PFTFluxes.o          \
-		  MOD_1D_PCFluxes.o           \
-		  MOD_1D_Fluxes.o \
-		  MOD_1D_Forcing.o \
-		  monthly_in_situ_co2_mlo.o
+		  MOD_Vars_PFTConst.o \
+		  MOD_Vars_PFTimeVars.o \
+		  MOD_Vars_PFTimeInvars.o \
+		  MOD_Vars_PCTimeVars.o \
+		  MOD_Vars_PCTimeInvars.o \
+		  MOD_Vars_TimeInvariants.o        \
+		  MOD_Vars_TimeVariables.o    \
+		  MOD_Vars_1DPFTFluxes.o          \
+		  MOD_Vars_1DPCFluxes.o           \
+		  MOD_Vars_1DFluxes.o \
+		  MOD_Vars_1DForcing.o \
+		  MOD_MonthlyinSituCO2mlo.o
 
 BASIC_BGC = \
 			  bgc/MOD_BGC_Vars_1DFluxes.o  \
@@ -126,59 +128,56 @@ BASIC_BGC = \
 			  bgc/MOD_BGC_Vars_TimeVars.o 
 
 OBJS =  \
-		  MOD_2D_Fluxes.o             \
-		  MOD_2D_Forcing.o            \
-		  user_specified_forcing.o    \
-		  DownscalingForcingMod.o     \
-		  mod_forcing.o               \
-		  ThreeDCanopy.o              \
-		  AerosolMod.o                \
-		  SnowSnicarMod.o             \
-		  SnowAlbedo.o                \
-		  ALBEDO.o                    \
-		  ASSIM_STOMATA_conductance.o \
-		  PlantHydraulic.o            \
-		  FRICTION_VELOCITY.o         \
-		  OzoneMod.o                  \
-		  LEAF_temperature.o          \
-		  LEAF_temperature_PC.o       \
-		  soil_hcap_cond.o            \
-		  SOIL_SNOW_hydrology.o       \
-		  SNOW_Layers_CombineDivide.o \
-		  GLACIER.o                   \
-		  LAKE.o                      \
-		  SIMPLE_OCEAN.o              \
-		  eroot.o                     \
-		  groundfluxes.o              \
-		  groundtem.o                 \
-		  LAI_empirical.o             \
-		  LAI_readin.o                \
-		  CROP_readin.o               \
-		  NITRIF_readin.o             \
-		  NDEP_readin.o               \
-		  Fire_readin.o               \
-		  LEAF_interception.o         \
-		  meltf.o                     \
-		  netsolar.o                  \
-		  rain_snow_temp.o            \
-		  newsnow.o                   \
-		  orb_coszen.o                \
-		  qsadv.o                     \
-		  snowage.o                   \
-		  snowfraction.o              \
-		  THERMAL.o                   \
-		  tridia.o                    \
-		  wetbulb.o                   \
-		  MOD_1D_Acc_Fluxes.o         \
-		  MOD_CaMa_Variables.o        \
-		  mod_hist_vector.o           \
-		  mod_hist.o                  \
-		  mod_lightning_data.o        \
-		  mod_ozone_data.o            \
-		  colm_CaMaMod.o              \
-		  CLMDRIVER.o                 \
-		  CLMMAIN.o                   \
-		  CLM.o                       
+		  MOD_Vars_2DFluxes.o             \
+		  MOD_Vars_2DForcing.o            \
+		  MOD_UserSpecifiedForcing.o    \
+		  MOD_DownscalingForcing.o     \
+		  MOD_Forcing.o               \
+		  MOD_ThreeDCanopy.o              \
+		  MOD_Aerosol.o                \
+		  MOD_SnowSnicar.o             \
+		  MOD_SnowAlbedo.o                \
+		  MOD_Albedo.o                    \
+		  MOD_AssimStomataConductance.o \
+		  MOD_PlantHydraulic.o            \
+		  MOD_FrictionVelocity.o         \
+		  MOD_Ozone.o                  \
+		  MOD_LeafTemperature.o          \
+		  MOD_LeafTemperaturePC.o       \
+		  MOD_SoilHcapCond.o            \
+		  MOD_SoilSnowHydrology.o       \
+		  MOD_SnowLayersCombineDivide.o \
+		  MOD_Meltf.o                     \
+		  MOD_Glacier.o                   \
+		  MOD_Lake.o                      \
+		  MOD_SimpleOcean.o              \
+		  MOD_GroundFluxes.o              \
+		  MOD_GroundTem.o                 \
+		  MOD_LAIEmpirical.o             \
+		  MOD_LAIReadin.o                \
+		  MOD_CropReadin.o            \
+		  MOD_NitrifReadin.o             \
+		  MOD_NdepReadin.o               \
+		  MOD_FireReadin.o               \
+		  MOD_LeafInterception.o         \
+		  MOD_NetSolar.o                  \
+		  MOD_WetBulb.o                   \
+		  MOD_RainSnowTemp.o            \
+		  MOD_NewSnow.o                   \
+		  MOD_OrbCoszen.o                \
+		  MOD_SnowAge.o                   \
+		  MOD_SnowFraction.o              \
+		  MOD_Thermal.o                   \
+		  MOD_Vars_1DAccFluxes.o         \
+		  ../CaMa/src/MOD_CaMa_Vars.o    \
+		  MOD_HistVector.o           \
+		  MOD_Hist.o                  \
+		  MOD_LightningData.o        \
+		  MOD_OzoneData.o            \
+		  ../CaMa/src/MOD_CaMa_colmCaMa.o  \
+		  CoLMDRIVER.o                 \
+		  CoLMMAIN.o                   \
+		  CoLM.o                       
 
 ####################################################################
 ifneq (${CaMa},\#define)
@@ -193,7 +192,7 @@ ${EXECUTABLE} : ${HEADER} \
 	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
 	-o $@ ${LDFLAGS}
-	@echo 'making CLM completed!'
+	@echo 'making CoLM completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
@@ -219,7 +218,7 @@ ${EXECUTABLE} : ${HEADER} \
 	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
 	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
 	${CaMa_LIBS} -o $@ ${LDFLAGS}
-	@echo 'making CLM with CaMa Flood Model completed!'
+	@echo 'making CoLM with CaMa Flood Model completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}

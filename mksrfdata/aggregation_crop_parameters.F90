@@ -17,7 +17,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -145,7 +145,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('plant date value for rice2 '//trim(c3), plantdate_rice2_patches)
 #endif
 
@@ -284,7 +284,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('plantdate_pfts value '//trim(c4), plantdate_pfts)
    endif
@@ -418,7 +418,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('fert nitro value '//trim(c4), fertnitro_pfts)
    endif

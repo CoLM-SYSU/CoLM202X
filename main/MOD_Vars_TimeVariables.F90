@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_TimeVariables
+MODULE MOD_Vars_TimeVariables
 ! -------------------------------
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
@@ -8,10 +8,10 @@ MODULE MOD_TimeVariables
 use precision
 use timemanager
 #ifdef PFT_CLASSIFICATION
-USE MOD_PFTimeVars
+USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-USE MOD_PCTimeVars
+USE MOD_Vars_PCTimeVars
 #endif
 #ifdef BGC
 USE MOD_BGC_Vars_TimeVars
@@ -139,7 +139,7 @@ SAVE
       public :: deallocate_TimeVariables
       public :: READ_TimeVariables
       public :: WRITE_TimeVariables
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       public :: check_TimeVariables
 #endif
 
@@ -152,7 +152,7 @@ SAVE
 
   SUBROUTINE allocate_TimeVariables
 ! --------------------------------------------------------------------
-! Allocates memory for CLM 1d [numpatch] variables
+! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------------
 
   use precision
@@ -305,7 +305,7 @@ SAVE
      implicit none
 
      ! --------------------------------------------------
-     ! Deallocates memory for CLM 1d [numpatch] variables
+     ! Deallocates memory for CoLM 1d [numpatch] variables
      ! --------------------------------------------------
 
      if (p_is_worker) then
@@ -628,7 +628,7 @@ SAVE
      use mod_namelist
      use spmd_task
      use ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
      USE mod_colm_debug
 #endif
      USE mod_landpatch
@@ -751,7 +751,7 @@ SAVE
      CALL READ_HydroTimeVars (file_restart)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
      call check_TimeVariables
 #endif
 
@@ -762,7 +762,7 @@ SAVE
   end subroutine READ_TimeVariables
 
   !---------------------------------------
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   SUBROUTINE check_TimeVariables ()
 
      use spmd_task
@@ -849,5 +849,5 @@ SAVE
 #endif
 
 
-END MODULE MOD_TimeVariables
+END MODULE MOD_Vars_TimeVariables
 ! ------ EOP --------------

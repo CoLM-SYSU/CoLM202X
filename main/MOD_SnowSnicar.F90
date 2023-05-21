@@ -1,7 +1,7 @@
 #include <define.h>
 
 !-------------------------------------------------------------------------
-MODULE SnowSnicarMod
+MODULE MOD_SnowSnicar
 
   !-----------------------------------------------------------------------
   ! DESCRIPTION:
@@ -2961,4 +2961,4 @@ contains
   end subroutine SnowAge_init
   !-----------------------------------------------------------------------
 
-END MODULE SnowSnicarMod
+END MODULE MOD_SnowSnicar

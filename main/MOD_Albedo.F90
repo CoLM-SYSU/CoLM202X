@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE ALBEDO
+MODULE MOD_Albedo
 
 !-----------------------------------------------------------------------
  USE precision
@@ -78,17 +78,22 @@ MODULE ALBEDO
   USE PhysicalConstants, only: tfrz
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only: patch_pft_s, patch_pft_e
-  USE MOD_PFTimeInvars
-  USE MOD_PFTimeVars
+  USE MOD_Vars_PFTimeInvars
+  USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
   USE mod_landpc
-  USE MOD_PCTimeInvars
-  USE MOD_PCTimeVars
+  USE MOD_Vars_PCTimeInvars
+  USE MOD_Vars_PCTimeVars
 #endif
   ! SNICAR
-  USE AerosolMod,    only: AerosolMasses
-  USE SnowSnicarMod, only: SnowAge_grain
+  USE MOD_Aerosol,    only: AerosolMasses
+  USE MOD_SnowSnicar,  only: SnowAge_grain
+  USE MOD_SnowAge,    only: snowage
+  USE MOD_SnowAlbedo, only: SnowAlbedo
+#ifdef PC_CLASSIFICATION
+  USE MOD_ThreeDCanopy, only: ThreeDCanopy_wrap
+#endif
 
   IMPLICIT NONE
 
@@ -349,7 +354,7 @@ ENDIF
          conn = 0.5
          sl  = 2.0           !sl helps control albedo zenith dependence
 
-         ! 05/02/2023, Dai: move from CLMMAIN.F90
+         ! 05/02/2023, Dai: move from CoLMMAIN.F90
          ! update the snow age
          IF (snl == 0) sag=0.
          CALL snowage (deltim,t_grnd,scv,scvold,sag)
@@ -395,6 +400,7 @@ ENDIF
          IF (snl == 0) THEN
             ssno(:,:,1) = ssno(:,:,1) + ssno(:,:,0)
             ssno(:,:,0) = 0.
+         END IF
 #endif
       ENDIF
 
@@ -1129,9 +1135,9 @@ ENDIF
 !-----------------------------------------------------------------------
       USE precision
       USE mod_landpft
-      USE PFT_Const
-      USE MOD_PFTimeInvars
-      USE MOD_PFTimeVars
+      USE MOD_Vars_PFTConst
+      USE MOD_Vars_PFTimeInvars
+      USE MOD_Vars_PFTimeVars
       IMPLICIT NONE
 
       ! parameters
@@ -1313,5 +1319,5 @@ ENDIF
 
   END SUBROUTINE albocean
 
-END MODULE ALBEDO
+END MODULE MOD_Albedo
 ! --------- EOP ----------

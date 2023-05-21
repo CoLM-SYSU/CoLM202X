@@ -1,25 +1,25 @@
 #include <define.h>
 
-MODULE mod_lightning_data
+MODULE MOD_LightningData
 #ifdef Fire
    USE mod_grid
    USE mod_data_type
    USE mod_mapping_grid2pset
-   use MOD_BGCTimeVars, only: lnfm
+   use MOD_BGC_Vars_TimeVars, only: lnfm
    IMPLICIT NONE
 
    CHARACTER(len=256) :: file_lightning
    TYPE(grid_type) :: grid_lightning
 
    TYPE(block_data_real8_2d) :: f_lnfm
-   
+
    type (mapping_grid2pset_type) :: mg2p_lnfm
 
 CONTAINS
 
    ! ----------
    SUBROUTINE init_lightning_data (time, idate)
-      
+
       USE spmd_task
       USE mod_namelist
       USE timemanager
@@ -29,7 +29,7 @@ CONTAINS
       USE mod_landpatch
       USE mod_colm_debug
       IMPLICIT NONE
-      
+
       type(timestamp), intent(in) :: time
       integer,         intent(in) :: idate(3)
 
@@ -43,15 +43,15 @@ CONTAINS
       CALL ncio_read_bcast_serial (file_lightning, 'lon', lon)
 
       CALL grid_lightning%define_by_center (lat, lon)
-      
-      CALL allocate_block_data (grid_lightning, f_lnfm)  
-      
+
+      CALL allocate_block_data (grid_lightning, f_lnfm)
+
       call mg2p_lnfm%build (grid_lightning, landpatch)
 
       itime = (idate(2)-1)*8 + min(idate(3)/10800+1,8)
 
       CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime, f_lnfm)
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_block_data ('lightning', f_lnfm)
 #endif
 
@@ -61,16 +61,16 @@ CONTAINS
 !         ENDIF
 !      ENDIF
 
-   END SUBROUTINE init_lightning_data 
+   END SUBROUTINE init_lightning_data
 
    ! ----------
    SUBROUTINE update_lightning_data (time, deltim)
-      
+
       USE timemanager
       USE ncio_block
       USE mod_colm_debug
       IMPLICIT NONE
-      
+
       type(timestamp), intent(in) :: time
       REAL(r8), intent(in) :: deltim
 
@@ -87,17 +87,17 @@ CONTAINS
       IF (itime_next /= itime) THEN
          itime_next = min(itime_next,2920)
          CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime_next, f_lnfm)
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
          CALL check_block_data ('lightning', f_lnfm)
 #endif
-      
-         call mg2p_lnfm%map_aweighted (f_lnfm, lnfm) 
-#ifdef CLMDEBUG
+
+         call mg2p_lnfm%map_aweighted (f_lnfm, lnfm)
+#ifdef CoLMDEBUG
          call check_vector_data ('lightning', lnfm)
 #endif
       ENDIF
 
-   END SUBROUTINE update_lightning_data 
+   END SUBROUTINE update_lightning_data
 
 #endif
-END MODULE mod_lightning_data
+END MODULE MOD_LightningData

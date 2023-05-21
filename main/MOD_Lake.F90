@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE LAKE
+MODULE MOD_Lake
 
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
@@ -349,7 +349,10 @@ MODULE LAKE
   use precision
   use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
-  use FRICTION_VELOCITY
+  use MOD_FrictionVelocity
+  USE MOD_Qsadv
+  USE MOD_SoilHcapCond
+  USE mod_utils
 
   IMPLICIT NONE
 ! ------------------------ input/output variables -----------------
@@ -1245,7 +1248,7 @@ MODULE LAKE
       end if
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       ! sum energy content and total energy into lake for energy check. any errors will be from the
       !     tridiagonal solution.
       esum1 = 0.0
@@ -1356,7 +1359,7 @@ MODULE LAKE
 #else
       snofrz(:) = 0.
 #endif
-#if (defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       ! second energy check and water check. now check energy balance before and after phase
       ! change, considering the possibility of changed heat capacity during phase change, by
       ! using initial heat capacity in the first step, final heat capacity in the second step,
@@ -1532,8 +1535,8 @@ MODULE LAKE
 
   use precision
   use PhysicalConstants, only : denh2o, denice, hfus, tfrz, cpliq, cpice
-  use SOIL_SNOW_hydrology
-  use SNOW_Layers_CombineDivide
+  use MOD_SoilSnowHydrology
+  use MOD_SnowLayersCombineDivide
 
   implicit none
 
@@ -1955,4 +1958,4 @@ MODULE LAKE
   end subroutine hConductivity_lake
 
 
-END MODULE LAKE
+END MODULE MOD_Lake

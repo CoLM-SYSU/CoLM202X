@@ -17,7 +17,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -138,7 +138,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('hdm value ', hdm_patches)
 #endif
 
@@ -196,7 +196,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('abm value ', abm_patches)
 #endif
 
@@ -252,7 +252,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('peatf value ', peatf_patches)
 #endif
 
@@ -308,7 +308,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('gdp value ', gdp_patches)
 #endif
 

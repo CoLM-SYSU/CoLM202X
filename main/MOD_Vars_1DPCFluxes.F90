@@ -2,7 +2,7 @@
 
 #ifdef PC_CLASSIFICATION
 
-MODULE MOD_1D_PCFluxes
+MODULE MOD_Vars_1DPCFluxes
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
 ! Define Plant Community flux variables
@@ -46,7 +46,7 @@ MODULE MOD_1D_PCFluxes
 
   SUBROUTINE allocate_1D_PCFluxes
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpc] variables
+  ! Allocates memory for CoLM 1d [numpc] variables
   ! --------------------------------------------------------------------
 
      USE spmd_task
@@ -80,7 +80,7 @@ MODULE MOD_1D_PCFluxes
 
   SUBROUTINE deallocate_1D_PCFluxes
   ! --------------------------------------------------------------------
-  ! deallocates memory for CLM 1d [numpc] variables
+  ! deallocates memory for CoLM 1d [numpc] variables
   ! --------------------------------------------------------------------
      USE spmd_task
      USE mod_landpc
@@ -108,7 +108,7 @@ MODULE MOD_1D_PCFluxes
 
   END SUBROUTINE deallocate_1D_PCFluxes
 
-END MODULE MOD_1D_PCFluxes
+END MODULE MOD_Vars_1DPCFluxes
 
 #endif
 ! ---------- EOP ------------

@@ -1,11 +1,11 @@
 #include <define.h>
 
-SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
+SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
 
 !=======================================================================
 !
-! CLM MODEL DRIVER
+! CoLM MODEL DRIVER
 !
 ! Original author : Yongjiu Dai, 09/30/1999; 08/30/2002, 03/2014
 !
@@ -15,17 +15,17 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use PhysicalConstants, only: tfrz, rgas, vonkar
  USE GlobalVars
  USE LC_Const
- use MOD_TimeInvariants
- use MOD_TimeVariables
- use MOD_1D_Forcing
- use MOD_1D_Fluxes
+ use MOD_Vars_TimeInvariants
+ use MOD_Vars_TimeVariables
+ use MOD_Vars_1DForcing
+ use MOD_Vars_1DFluxes
  USE mod_landpatch, only : numpatch
  USE mod_namelist, only : DEF_forcing
- USE mod_forcing, only : forcmask
+ USE MOD_Forcing, only : forcmask
  use omp_lib
 #ifdef CaMa_Flood
  !get flood variables: inundation depth[mm], inundation fraction [0-1], inundation evaporation [mm/s], inundation re-infiltration[mm/s]
- use MOD_CaMa_Variables, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
+ use MOD_CaMa_Vars, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
 #endif
  IMPLICIT NONE
 
@@ -52,10 +52,10 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          IF (DEF_forcing%has_missing_value) THEN
             IF (.not. forcmask(i)) cycle
          ENDIF
-         
+
          m = patchclass(i)
 
-         CALL CLMMAIN (i, idate,           coszen(i),       deltim,          &
+         CALL CoLMMAIN (i, idate,           coszen(i),       deltim,          &
          patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i),    &
          doalb,           dolai,           dosst,           oro(i),          &
 
@@ -73,7 +73,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          BA_alpha(1:,i),  BA_beta(1:,i),                                     &
 #endif
-         rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &  
+         rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &
 #if(defined CaMa_Flood)
          flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &! flood variables [mm, m2/m2, mm/s, mm/s]
 #endif
@@ -115,7 +115,7 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
 #endif
          zwt(i),          dpond(i),        wa(i),                            &
-         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    & 
+         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
        ! SNICAR snow model related
          snw_rds(:,i),    ssno(:,:,:,i),                                     &
@@ -126,8 +126,8 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          laisun(i),       laisha(i),       rootr(1:,i),                      &
          rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
 #ifdef WUEdiag
-         assimsun_out(i), etrsun_out(i),   assim_RuBP_sun_out(i)          ,& 
-         assim_Rubisco_sun_out(i)      ,   cisun_out(i)    ,Dsun_out(i)   ,& 
+         assimsun_out(i), etrsun_out(i),   assim_RuBP_sun_out(i)          ,&
+         assim_Rubisco_sun_out(i)      ,   cisun_out(i)    ,Dsun_out(i)   ,&
          gammasun_out(i)               ,   lambdasun_out(i)               ,&
          assimsha_out(i), etrsha_out(i),   assim_RuBP_sha_out(i)          ,&
          assim_Rubisco_sha_out(i)      ,   cisha_out(i)    ,Dsha_out(i)   ,&
@@ -171,5 +171,5 @@ SUBROUTINE CLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
 
 
-END SUBROUTINE CLMDRIVER
+END SUBROUTINE CoLMDRIVER
 ! ---------- EOP ------------

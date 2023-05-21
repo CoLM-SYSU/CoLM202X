@@ -18,20 +18,20 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    use mod_pixel
    use mod_landpatch
    use PhysicalConstants
-   use MOD_TimeInvariants
-   use MOD_TimeVariables
+   use MOD_Vars_TimeInvariants
+   use MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
-   USE MOD_PFTimeInvars
-   USE MOD_PFTimeVars
+   USE MOD_Vars_PFTimeInvars
+   USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
-   USE MOD_PCTimeInvars
-   USE MOD_PCTimeVars
+   USE MOD_Vars_PCTimeInvars
+   USE MOD_Vars_PCTimeVars
 #endif
    USE LC_Const
-   USE PFT_Const
+   USE MOD_Vars_PFTConst
    use timemanager
 
    use mod_grid
@@ -39,7 +39,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 !   use mod_mapping_grid2pset
    use ncio_serial
    use ncio_block
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    use mod_colm_debug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
@@ -51,6 +51,15 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    USE mod_landhru
    USE mod_landpatch
 #endif
+   USE MOD_CropReadin
+   USE MOD_LAIEmpirical
+   USE MOD_LAIReadin
+   USE MOD_NitrifReadin
+#ifdef BGC
+   USE MOD_NdepReadin
+   USE MOD_FireReadin
+#endif
+   USE MOD_OrbCoszen
 
    IMPLICIT NONE
 
@@ -65,13 +74,13 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    real(r8) :: rlon, rlat
 
    LOGICAL  :: use_wtd
-   
+
    CHARACTER(len=256) :: fwtd
    type(grid_type)    :: gwtd
    type(block_data_real8_2d)    :: wtd_xy  ! [m]
    type(mapping_grid2pset_type) :: m_wtd2p
 
-   REAL(r8) :: zwtmm 
+   REAL(r8) :: zwtmm
    real(r8) :: zc_soimm(1:nl_soil)
    real(r8) :: zi_soimm(0:nl_soil)
    real(r8) :: vliq_r  (1:nl_soil)
@@ -102,7 +111,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    real(r8), allocatable :: soil_w(:,:)
 #endif
 
-   ! CLM soil layer thickiness and depths
+   ! CoLM soil layer thickiness and depths
    real(r8), allocatable :: z_soisno (:,:)
    real(r8), allocatable :: dz_soisno(:,:)
 
@@ -117,8 +126,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    integer :: Julian_8day
    integer :: ltyp
 
-   real(r8), external :: orb_coszen     ! cosine of the solar zenith angle
-
 #ifdef BGC
    real(r8) f_s1s2 (1:nl_soil)
    real(r8) f_s1s3 (1:nl_soil)
@@ -131,7 +138,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 
    ! --------------------------------------------------------------------
-   ! Allocates memory for CLM 1d [numpatch] variables
+   ! Allocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------------------------
 
    CALL allocate_TimeInvariants
@@ -351,7 +358,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! 1.6 Write out as a restart file [histTimeConst]
    ! ...............................................
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    call check_TimeInvariants ()
 #endif
 
@@ -451,12 +458,12 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       CALL julian2monthday (idate(1), idate(2), month, mday)
       call gwtd%define_from_file (fwtd)
-   
+
       if (p_is_io) then
          call allocate_block_data (gwtd, wtd_xy)
-         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)  
+         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
       ENDIF
-   
+
       call m_wtd2p%build (gwtd, landpatch)
       call m_wtd2p%map_aweighted (wtd_xy, zwt)
 
@@ -504,7 +511,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
    CALL check_vector_data ('SAI ', tsai)
 #endif
@@ -574,7 +581,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
             prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vliq_r(:) = theta_r(1:nl_soil,i) 
+            vliq_r(:) = theta_r(1:nl_soil,i)
             prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
             prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
             prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
@@ -664,8 +671,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! -----
 #ifdef LATERAL_FLOW
-      
-#if (defined CROP) 
+
+#if (defined CROP)
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
 #else
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
@@ -679,7 +686,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
       IF (numhru > 0) THEN
          veloc_hru(:) = 0
-            
+
          DO i = 1, numhru
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
@@ -694,7 +701,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! 2.6 Write out the model variables for restart run [histTimeVar]
    ! ...............................................................
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    call check_TimeVariables ()
 #endif
 
@@ -708,7 +715,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
 
    ! --------------------------------------------------
-   ! Deallocates memory for CLM 1d [numpatch] variables
+   ! Deallocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------
 
    CALL deallocate_TimeInvariants

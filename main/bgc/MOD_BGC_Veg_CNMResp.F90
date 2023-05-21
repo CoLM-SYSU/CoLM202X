@@ -19,18 +19,18 @@ module MOD_BGC_Veg_CNMResp
   use precision
   use MOD_BGC_Vars_TimeInvars, only: &
       Q10,br, br_root
-  use MOD_PFTimeInvars, only: pftclass
-  use MOD_TimeVariables, only: &
+  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_TimeVariables, only: &
       t_soisno, tref
-  use MOD_PFTimeVars, only: &
+  use MOD_Vars_PFTimeVars, only: &
       laisun_p, laisha_p, sigf_p
   use MOD_BGC_Vars_PFTimeVars, only: &
       frootn_p, livestemn_p, livecrootn_p, grainn_p
-  use MOD_1D_PFTFluxes, only: &
+  use MOD_Vars_1DPFTFluxes, only: &
       respc_p
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       leaf_mr_p, froot_mr_p, livestem_mr_p, livecroot_mr_p, grain_mr_p
-  use PFT_Const, only: &
+  use MOD_Vars_PFTConst, only: &
       woody, rootfr_p
 
   implicit none

@@ -2,7 +2,7 @@
 
 #ifdef PFT_CLASSIFICATION
 
-MODULE MOD_PFTimeInvars
+MODULE MOD_Vars_PFTimeInvars
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
 ! Define PFT time invariables
@@ -29,7 +29,7 @@ MODULE MOD_PFTimeInvars
   PUBLIC :: READ_PFTimeInvars
   PUBLIC :: WRITE_PFTimeInvars
   PUBLIC :: deallocate_PFTimeInvars
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   PUBLIC :: check_PFTimeInvars
 #endif
 
@@ -43,7 +43,7 @@ MODULE MOD_PFTimeInvars
 
   SUBROUTINE allocate_PFTimeInvars
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM PFT 1d [numpft] variables
+  ! Allocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
 
      USE spmd_task
@@ -103,7 +103,7 @@ MODULE MOD_PFTimeInvars
 
   SUBROUTINE deallocate_PFTimeInvars
 ! --------------------------------------------------
-! Deallocates memory for CLM PFT 1d [numpft] variables
+! Deallocates memory for CoLM PFT 1d [numpft] variables
 ! --------------------------------------------------
      USE spmd_task
      USE mod_landpft
@@ -119,7 +119,7 @@ MODULE MOD_PFTimeInvars
 
   END SUBROUTINE deallocate_PFTimeInvars
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   SUBROUTINE check_PFTimeInvars ()
 
      use mod_colm_debug
@@ -132,7 +132,7 @@ MODULE MOD_PFTimeInvars
   end subroutine check_PFTimeInvars
 #endif
 
-END MODULE MOD_PFTimeInvars
+END MODULE MOD_Vars_PFTimeInvars
 
 #endif
 ! ---------- EOP ------------

@@ -1,5 +1,5 @@
 
-MODULE PlantHydraulic
+MODULE MOD_PlantHydraulic
 
 !-----------------------------------------------------------------------
   use precision
@@ -32,18 +32,18 @@ MODULE PlantHydraulic
                          kmax_root ,psi50_sun ,psi50_sha  ,psi50_xyl  ,psi50_root ,htop       ,&
                          ck        ,smp       ,hk         ,hksati     ,vegwp      ,etr        ,&
                          rootr     ,sigf      ,qg         ,qm         ,gs0        ,k_soil_root,&
-                         k_ax_root)  
+                         k_ax_root)
 
-!=======================================================================        
-!                                                                               
+!=======================================================================
+!
 !     calculation of plant hydraulic stress
 !
 !     Author: Xingjie Lu, 16/01/2019, modified from CLM5 plant_hydraulic_stress module
 !
-!----------------------------------------------------------------------         
+!----------------------------------------------------------------------
 
  use precision
- IMPLICIT NONE                                                                        
+ IMPLICIT NONE
 
  integer ,intent(in) :: nl_soil ! upper bound of array
  integer ,intent(in) :: nvegwcs ! upper bound of array
@@ -70,7 +70,7 @@ MODULE PlantHydraulic
       rd,           &! aerodynamical resistance between ground and canopy air
       ra             ! aerodynamic resistance from cas to refence height (s m-1)
  real(r8),intent(inout) :: &
-      rstfac         ! canopy resistance stress factors to soil moisture 
+      rstfac         ! canopy resistance stress factors to soil moisture
 
  real(r8),intent(inout) :: &
       lai,          &! leaf area index, one-sided
@@ -94,26 +94,26 @@ MODULE PlantHydraulic
  real(r8),intent(in), dimension(nl_soil) :: &
       smp,      &    ! precipitation sensible heat from canopy
       rootfr,   &    ! root fraction
-      hksati,   &    ! hydraulic conductivity at saturation [mm h2o/s] 
+      hksati,   &    ! hydraulic conductivity at saturation [mm h2o/s]
       hk             ! soil hydraulic conducatance [mm h2o/s]
-      
+
 
  real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
       etr            ! transpiration (mm/s)
- 
+
  real(r8),intent(out),dimension(nl_soil) :: &
       rootr          ! root water uptake from different layers
 
  real(r8),intent(inout),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
  real(r8),intent(inout),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 
-!-------------------- local --------------------------------------------       
+!-------------------- local --------------------------------------------
 
  integer, parameter :: iterationtotal = 6
-                                                                               
+
  real(r8) c3,       &! c3 vegetation : 1; 0 for c4
 
-      tprcor,       &! coefficient for unit transfer 
+      tprcor,       &! coefficient for unit transfer
       gbh2o,        &! one side leaf boundary layer conductance of sunlit leaf (canopy scale:mol m-2 s-1)
       gb_mol         ! one side leaf boundary layer conductance of sunlit leaf (leaf scale:umol H2O m-2 s-1)
 
@@ -123,9 +123,9 @@ MODULE PlantHydraulic
       rai    ! soil-root interface conductance [mm/s]
 
  real(r8)                :: soilflux     ! soil-root interface conductance [mm/s]
- real(r8)                :: soil_conductance ! soil conductance      
- real(r8)                :: root_conductance ! root conductance      
- real(r8)                :: r_soil ! root spacing [m]      
+ real(r8)                :: soil_conductance ! soil conductance
+ real(r8)                :: root_conductance ! root conductance
+ real(r8)                :: r_soil ! root spacing [m]
  real(r8)                :: root_biomass_density    ! root biomass density [g/m3]
  real(r8)                :: root_cross_sec_area     ! root cross sectional area [m2]
  real(r8)                :: root_length_density     ! root length density [m/m3]
@@ -140,7 +140,7 @@ MODULE PlantHydraulic
  real(r8), parameter :: K_axs                = 2.0e-1
 
 ! temporary input
- real(r8), parameter :: froot_carbon = 288.392056287006_r8 
+ real(r8), parameter :: froot_carbon = 288.392056287006_r8
  real(r8), parameter :: root_radius  = 2.9e-4_r8
  real(r8), parameter :: root_density = 310000._r8
  real(r8), parameter :: froot_leaf   = 1.5_r8
@@ -194,12 +194,12 @@ do j = 1,nl_soil
    end if
    k_ax_root(j) = (rootfr(j)/(dz_soi(j)*1000))*K_axs*0.6
 end do
-!=======================================================================        
+!=======================================================================
 
       tprcor = 44.6*273.16*psrf/1.013e5
 
 ! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
-! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for 
+! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
 ! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tl "
       gbh2o   = 1./rb * tprcor/tl                    ! mol m-2 s-1
 
@@ -226,18 +226,18 @@ end do
                          psi50_sun ,psi50_sha ,psi50_xyl  ,psi50_root ,htop       ,&
                          ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
                          etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&
-                         qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )  
+                         qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
 
-!=======================================================================        
-!                                                                               
+!=======================================================================
+!
 !     calculation of plant hydraulic stress
 !
 !     Author: Xingjie Lu, 16/01/2019, modified from CLM5 plant_hydraulic_stress module
 !
-!----------------------------------------------------------------------         
+!----------------------------------------------------------------------
 
  use precision
- IMPLICIT NONE                                                                        
+ IMPLICIT NONE
 
  integer ,intent(in) :: nl_soil ! upper bound of array
  integer ,intent(in) :: nvegwcs ! upper bound of array
@@ -268,8 +268,8 @@ end do
       rd,           &! aerodynamical resistance between ground and canopy air
       ra             ! aerodynamic resistance from cas to refence height (s m-1)
  real(r8),intent(inout) :: &
-      rstfacsun,    &! canopy resistance stress factors to soil moisture for sunlit leaf                        
-      rstfacsha      ! canopy resistance stress factors to soil moisture for shaded leaf                        
+      rstfacsun,    &! canopy resistance stress factors to soil moisture for sunlit leaf
+      rstfacsha      ! canopy resistance stress factors to soil moisture for shaded leaf
 
  real(r8),intent(in) :: &
       laisun,       &! sunlit leaf area index, one-sided
@@ -295,14 +295,14 @@ end do
  real(r8),intent(in), dimension(nl_soil) :: &
       smp,      &    ! precipitation sensible heat from canopy
       rootfr,   &    ! root fraction
-      hksati,   &    ! hydraulic conductivity at saturation [mm h2o/s] 
+      hksati,   &    ! hydraulic conductivity at saturation [mm h2o/s]
       hk             ! soil hydraulic conducatance [mm h2o/s]
-      
+
 
  real(r8),intent(out) :: &! ATTENTION : all for canopy not leaf
       etrsun,       &! transpiration from sunlit leaf (mm/s)
       etrsha         ! transpiration from shaded leaf (mm/s)
- 
+
  real(r8),intent(out),dimension(nl_soil) :: &
       rootr          ! root water uptake from different layers
 
@@ -310,13 +310,13 @@ end do
  real(r8),intent(inout),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 
 
-!-------------------- local --------------------------------------------       
+!-------------------- local --------------------------------------------
 
  integer, parameter :: iterationtotal = 6
-                                                                               
+
  real(r8) c3,       &! c3 vegetation : 1; 0 for c4
 
-      tprcor,       &! coefficient for unit transfer 
+      tprcor,       &! coefficient for unit transfer
       gbh2osun,     &! one side leaf boundary layer conductance of sunlit leaf (canopy scale:mol m-2 s-1)
       gbh2osha,     &! one side leaf boundary layer conductance of shaded leaf (canopy scale:mol m-2 s-1)
       gb_mol_sun,   &! one side leaf boundary layer conductance of sunlit leaf (leaf scale:umol H2O m-2 s-1)
@@ -328,9 +328,9 @@ end do
       rai    ! soil-root interface conductance [mm/s]
 
  real(r8)                :: soilflux     ! soil-root interface conductance [mm/s]
- real(r8)                :: soil_conductance ! soil conductance      
- real(r8)                :: root_conductance ! root conductance      
- real(r8)                :: r_soil ! root spacing [m]      
+ real(r8)                :: soil_conductance ! soil conductance
+ real(r8)                :: root_conductance ! root conductance
+ real(r8)                :: r_soil ! root spacing [m]
  real(r8)                :: root_biomass_density    ! root biomass density [g/m3]
  real(r8)                :: root_cross_sec_area     ! root cross sectional area [m2]
  real(r8)                :: root_length_density     ! root length density [m/m3]
@@ -345,7 +345,7 @@ end do
  real(r8), parameter :: K_axs                = 2.0e-1
 
 ! temporary input
- real(r8), parameter :: froot_carbon = 288.392056287006_r8 
+ real(r8), parameter :: froot_carbon = 288.392056287006_r8
  real(r8), parameter :: root_radius  = 2.9e-4_r8
  real(r8), parameter :: root_density = 310000._r8
  real(r8), parameter :: froot_leaf   = 1.5_r8
@@ -399,12 +399,12 @@ do j = 1,nl_soil
    end if
    k_ax_root(j) = (rootfr(j)/(dz_soi(j)*1000))*K_axs*0.6
 end do
-!=======================================================================        
+!=======================================================================
 
       tprcor = 44.6*273.16*psrf/1.013e5
 
 ! one side leaf boundary layer conductance for water vapor [=1/(2*rb)]
-! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for 
+! ATTENTION: rb in CLM is for one side leaf, but for SiB2 rb for
 ! 2-side leaf, so the gbh2o shold be " 0.5/rb * tprcor/tl "
       gbh2osun   = 1./rbsun * tprcor/tlsun                    ! mol m-2 s-1
       gbh2osha   = 1./rbsha * tprcor/tlsha                    ! mol m-2 s-1
@@ -413,7 +413,7 @@ end do
       gb_mol_sha = gbh2osha / cintsha(3) * 1.e6
 
 ! rb is for single leaf, but here the flux is for canopy, thus
-!      gbh2osun  = gbh2osun * cintsun(3)    ! Commented by Xingjie Lu, 
+!      gbh2osun  = gbh2osun * cintsun(3)    ! Commented by Xingjie Lu,
 !      gbh2osha  = gbh2osha * cintsha(3)
 
       x = vegwp(1:nvegwcs)
@@ -423,7 +423,7 @@ end do
            psrf, fwet, laisun, laisha, sai, htop, tlsun, tlsha, kmax_sun, &
            kmax_sha, kmax_xyl, kmax_root, psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, &
            nl_soil, z_soi, ra, rd, smp, k_soil_root, k_ax_root, sigf)
-   
+
 
       vegwp(1:nvegwcs) = x
 
@@ -432,7 +432,7 @@ end do
   subroutine calcstress_oneleaf(x,nvegwcs, rstfac, etr, rootr,&
              gb_mol, gs0, qsatl, qaf, qg, qm,rhoair, &
              psrf, fwet, lai, sai, htop, tl, kmax_sun, &
-             kmax_sha, kmax_xyl, kmax_root, psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, & 
+             kmax_sha, kmax_xyl, kmax_root, psi50_sun, psi50_sha, psi50_xyl, psi50_root, ck, &
              nl_soil, z_soi, raw, rd, smp, k_soil_root, k_ax_root, sigf)
     !
     ! DESCRIPTIONS
@@ -460,7 +460,7 @@ end do
     real(r8)               , intent(in)     :: rd                  ! aerodynamical resistance between ground and canopy air
     real(r8)               , intent(in)     :: lai                 ! leaf area index
     real(r8)               , intent(in)     :: sai                 ! stem area index
-    real(r8)               , intent(in)     :: htop                ! canopy top [m] 
+    real(r8)               , intent(in)     :: htop                ! canopy top [m]
     real(r8)               , intent(in)     :: tl                  ! leaf temperature
     real(r8)               , intent(in)     :: kmax_sun
     real(r8)               , intent(in)     :: kmax_sha
@@ -470,7 +470,7 @@ end do
     real(r8)               , intent(in)     :: psi50_sha              ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
     real(r8)               , intent(in)     :: psi50_xyl              ! water potential at 50% loss of xylem tissue conductance (mmH2O)
     real(r8)               , intent(in)     :: psi50_root             ! water potential at 50% loss of root tissue conductance (mmH2O)
-    real(r8)               , intent(in)     :: ck                     ! 
+    real(r8)               , intent(in)     :: ck                     !
     real(r8)               , intent(in)     :: smp(nl_soil)           ! soil matrix potential
     real(r8)               , intent(in)     :: k_soil_root(nl_soil)   ! soil-root interface conductance [mm/s]
     real(r8)               , intent(in)     :: k_ax_root(nl_soil)     ! root axial-direction conductance [mm/s]
@@ -494,20 +494,20 @@ end do
 !    real(r8),parameter :: tolf         = 1.e-6_r8
 !    real(r8),parameter :: tolf_leafxyl = 1.e-16_r8
 !    real(r8),parameter :: tolf_root    = 1.e-14_r8 !tolerances for a satisfactory solution
-!   logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs 
+!   logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs
 !   logical  :: haroot                ! signals direction of calculation x_root_top->qeroot or qeroot->x_root_top
-    real(r8) :: soilflux              ! total soil column transpiration [mm/s] 
+    real(r8) :: soilflux              ! total soil column transpiration [mm/s]
     real(r8) :: x_root_top
     real(r8) :: maxscale
-!    real(r8), parameter :: tol_lai=1.e-7_r8 ! minimum lai where transpiration is calc'd 
+!    real(r8), parameter :: tol_lai=1.e-7_r8 ! minimum lai where transpiration is calc'd
     integer, parameter :: leafsun=1
     integer, parameter :: leafsha=2
     integer, parameter :: xyl=3
     integer, parameter :: root=4
     !------------------------------------------------------------------------------
-    
 
-    !temporary flag for night time vegwp(sun)>0  
+
+    !temporary flag for night time vegwp(sun)>0
 
     gs=gs0
     call getqflx_gs2qflx_oneleaf(gb_mol,gs,qflx,qsatl,qaf,rhoair,psrf,lai,sai,fwet,tl,sigf,raw,rd,qg,qm)
@@ -523,7 +523,7 @@ end do
           maxscale = min(maxval(abs(dx)),maxval(abs(x))) / 2
           dx = maxscale * dx / maxval(abs(dx))! * log(maxval(abs(dx))/maxscale) !rescale step to max of 50000
        end if
-    
+
        x=x+dx
 
     ! this is a catch to force spac gradient to atmosphere
@@ -533,10 +533,10 @@ end do
 
     ! compute attenuated flux
        etr=qflx*plc(x(leafsha),psi50_sha,ck)
-    
+
     ! retrieve stressed stomatal conductance
        call getqflx_qflx2gs_oneleaf(gb_mol,gs,etr,qsatl,qaf,rhoair,psrf,lai,sai,fwet,tl,sigf,raw,rd,qg,qm)
-    
+
     ! compute water stress
     ! .. generally -> B= gs_stressed / gs_unstressed
     ! .. when gs=0 -> B= plc( x )
@@ -599,7 +599,7 @@ end do
     real(r8)               , intent(in)     :: laisun                 ! Sunlit leaf area index
     real(r8)               , intent(in)     :: laisha                 ! Shaded leaf area index
     real(r8)               , intent(in)     :: sai                    ! stem area index
-    real(r8)               , intent(in)     :: htop                   ! canopy top [m] 
+    real(r8)               , intent(in)     :: htop                   ! canopy top [m]
     real(r8)               , intent(in)     :: tlsun                ! sunlit leaf temperature
     real(r8)               , intent(in)     :: tlsha                ! shaded leaf temperature
     real(r8)               , intent(in)     :: kmax_sun
@@ -610,13 +610,13 @@ end do
     real(r8)               , intent(in)     :: psi50_sha              ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
     real(r8)               , intent(in)     :: psi50_xyl              ! water potential at 50% loss of xylem tissue conductance (mmH2O)
     real(r8)               , intent(in)     :: psi50_root             ! water potential at 50% loss of root tissue conductance (mmH2O)
-    real(r8)               , intent(in)     :: ck                     ! 
+    real(r8)               , intent(in)     :: ck                     !
     real(r8)               , intent(in)     :: smp(nl_soil)           ! soil matrix potential
     real(r8)               , intent(in)     :: k_soil_root(nl_soil)   ! soil-root interface conductance [mm/s]
     real(r8)               , intent(in)     :: k_ax_root(nl_soil)     ! root axial-direction conductance [mm/s]
     real(r8)               , intent(in)     :: sigf                   ! fraction of veg cover, excluding snow-covered veg [-]
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
-    real(r8) :: A(nvegwcs,nvegwcs)    ! matrix relating d(vegwp) and f: d(vegwp)=A*f 
+    real(r8) :: A(nvegwcs,nvegwcs)    ! matrix relating d(vegwp) and f: d(vegwp)=A*f
     real(r8) :: f(nvegwcs)            ! flux divergence (mm/s)
     real(r8) :: dx(nvegwcs)           ! change in vegwp from one iter to the next [mm]
     real(r8) :: efpot                 ! potential latent energy flux [kg/m2/s]
@@ -637,24 +637,24 @@ end do
     real(r8),parameter :: tolf         = 1.e-6_r8
     real(r8),parameter :: tolf_leafxyl = 1.e-16_r8
     real(r8),parameter :: tolf_root    = 1.e-14_r8 !tolerances for a satisfactory solution
-    logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs 
+    logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs
     logical  :: haroot                ! signals direction of calculation x_root_top->qeroot or qeroot->x_root_top
-    real(r8) :: soilflux              ! total soil column transpiration [mm/s] 
+    real(r8) :: soilflux              ! total soil column transpiration [mm/s]
     real(r8) :: x_root_top
     real(r8) :: x_root_top1
     real(r8) :: x_root_top2
     real(r8) :: dxsoiltop
     real(r8) :: maxscale
-    real(r8), parameter :: tol_lai=1.e-7_r8 ! minimum lai where transpiration is calc'd 
+    real(r8), parameter :: tol_lai=1.e-7_r8 ! minimum lai where transpiration is calc'd
     integer, parameter :: leafsun=1
     integer, parameter :: leafsha=2
     integer, parameter :: xyl=3
     integer, parameter :: root=4
     real(r8) fsto1,fsto2,fx,fr,grav1
     !------------------------------------------------------------------------------
-    
 
-    !temporary flag for night time vegwp(sun)>0  
+
+    !temporary flag for night time vegwp(sun)>0
 
     gssun=gs0sun
     gssha=gs0sha
@@ -684,11 +684,11 @@ end do
     ! compute attenuated flux; the actual transpiration
        etrsun=qflx_sun*plc(x(leafsun),psi50_sun,ck)
        etrsha=qflx_sha*plc(x(leafsha),psi50_sha,ck)
-    
+
     ! retrieve stressed stomatal conductance
        call getqflx_qflx2gs_twoleaf(gb_mol_sun,gb_mol_sha,gssun,gssha,etrsun,etrsha,qsatlsun,qsatlsha,qaf, &
                                     rhoair,psrf,laisun,laisha,sai,fwet,tlsun,tlsha,sigf,raw,rd,qg,qm)
-    
+
     ! compute water stress
     ! .. generally -> B= gs_stressed / gs_unstressed
     ! .. when gs=0 -> B= plc( x )
@@ -716,9 +716,9 @@ end do
     soilflux = sum(rootr(:))
 
   end subroutine calcstress_twoleaf
-   
+
    !------------------------------------------------------------------------------
-   
+
   subroutine spacAF_oneleaf(x,nvegwcs,dx,nl_soil,qflx,lai,sai,htop,&
                    qeroot,dqeroot,kmax_sun,kmax_sha,kmax_xyl,kmax_root,&
                    psi50_sun,psi50_sha,psi50_xyl,psi50_root,ck)
@@ -735,7 +735,7 @@ end do
     !
     ! !ARGUMENTS:
     integer                , intent(in)  :: nvegwcs
-    real(r8)               , intent(in)  :: x(nvegwcs)      ! working copy of veg water potential for patch p [mm H2O] 
+    real(r8)               , intent(in)  :: x(nvegwcs)      ! working copy of veg water potential for patch p [mm H2O]
     real(r8)               , intent(out) :: dx(nvegwcs)   ! matrix relating d(vegwp) and f: d(vegwp)=invA*f
     integer                , intent(in)  :: nl_soil
     real(r8)               , intent(in)  :: qflx            ! leaf transpiration [kg/m2/s]
@@ -756,9 +756,9 @@ end do
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
-    real(r8) :: fsto                  ! transpiration reduction function [-] 
-    real(r8) :: fx                    ! fraction of maximum conductance, xylem-to-leaf [-] 
-    real(r8) :: fr                    ! fraction of maximum conductance, root-to-xylem [-] 
+    real(r8) :: fsto                  ! transpiration reduction function [-]
+    real(r8) :: fx                    ! fraction of maximum conductance, xylem-to-leaf [-]
+    real(r8) :: fr                    ! fraction of maximum conductance, root-to-xylem [-]
     real(r8) :: dfsto                 ! 1st derivative of fsto w.r.t. change in vegwp
     real(r8) :: dfx                   ! 1st derivative of fx w.r.t. change in vegwp
     real(r8) :: dfr                   ! 1st derivative of fr w.r.t. change in vegwp
@@ -774,14 +774,14 @@ end do
     integer, parameter :: root=4
     integer  :: j                     ! index
     !------------------------------------------------------------------------------
-    
+
     grav1 = htop*1000._r8
 
     !compute conductance attentuation for each segment
     fsto=   plc(x(leafsha),psi50_sha,ck)
     fx=     plc(x(xyl),psi50_xyl,ck)
     fr=     plc(x(root),psi50_root,ck)
-    
+
     !compute 1st deriv of conductance attenuation for each segment
     dfsto=   d1plc(x(leafsha),psi50_sha,ck)
     dfx=     d1plc(x(xyl),psi50_xyl,ck)
@@ -818,7 +818,7 @@ end do
     end if
 
   end subroutine spacAF_oneleaf
-  
+
   !------------------------------------------------------------------------------
   subroutine spacAF_twoleaf(x,nvegwcs,dx,nl_soil,qflx_sun,qflx_sha,laisun,laisha,sai,htop,&
                    qeroot,dqeroot,kmax_sun,kmax_sha,kmax_xyl,kmax_root,&
@@ -836,10 +836,10 @@ end do
     !
     ! !ARGUMENTS:
     integer                , intent(in)  :: nvegwcs
-    real(r8)               , intent(in)  :: x(nvegwcs)      ! working copy of veg water potential for patch p [mm H2O] 
+    real(r8)               , intent(in)  :: x(nvegwcs)      ! working copy of veg water potential for patch p [mm H2O]
     real(r8)               , intent(out) :: dx(nvegwcs)   ! matrix relating d(vegwp) and f: d(vegwp)=invA*f
     integer                , intent(in)  :: nl_soil
-    real(r8)               , intent(in)  :: qflx_sun        ! Sunlit leaf transpiration [kg/m2/s] 
+    real(r8)               , intent(in)  :: qflx_sun        ! Sunlit leaf transpiration [kg/m2/s]
     real(r8)               , intent(in)  :: qflx_sha        ! Shaded leaf transpiration [kg/m2/s]
     real(r8)               , intent(in)  :: laisun                 ! Sunlit leaf area index
     real(r8)               , intent(in)  :: laisha                 ! Shaded leaf area index
@@ -860,9 +860,9 @@ end do
     ! !LOCAL VARIABLES:
     real(r8) :: wtl                   ! heat conductance for leaf [m/s]
     real(r8) :: fsto1                 ! sunlit transpiration reduction function [-]
-    real(r8) :: fsto2                 ! shaded transpiration reduction function [-] 
-    real(r8) :: fx                    ! fraction of maximum conductance, xylem-to-leaf [-] 
-    real(r8) :: fr                    ! fraction of maximum conductance, root-to-xylem [-] 
+    real(r8) :: fsto2                 ! shaded transpiration reduction function [-]
+    real(r8) :: fx                    ! fraction of maximum conductance, xylem-to-leaf [-]
+    real(r8) :: fr                    ! fraction of maximum conductance, root-to-xylem [-]
     real(r8) :: dfsto1                ! 1st derivative of fsto1 w.r.t. change in vegwp
     real(r8) :: dfsto2                ! 1st derivative of fsto2 w.r.t. change in vegwp
     real(r8) :: dfx                   ! 1st derivative of fx w.r.t. change in vegwp
@@ -871,7 +871,7 @@ end do
     real(r8) :: leading               ! inverse of determiniant
     real(r8) :: determ                ! determinant of matrix
     real(r8) :: grav1                 ! gravitational potential surface to canopy top (mm H2O)
-    real(r8) :: invfactor             ! 
+    real(r8) :: invfactor             !
     real(r8) :: f(nvegwcs)
     real(r8), parameter :: tol_lai=1.e-7_r8 ! minimum lai where transpiration is calc'd
     integer, parameter :: leafsun=1
@@ -880,22 +880,22 @@ end do
     integer, parameter :: root=4
     integer  :: j                     ! index
     !------------------------------------------------------------------------------
-    
+
     grav1 = htop*1000._r8
-    
+
     !compute conductance attentuation for each segment
     fsto1=  plc(x(leafsun),psi50_sun,ck)
     fsto2=  plc(x(leafsha),psi50_sha,ck)
     fx=     plc(x(xyl),psi50_xyl,ck)
     fr=     plc(x(root),psi50_root,ck)
-    
+
     !compute 1st deriv of conductance attenuation for each segment
     dfsto1=  d1plc(x(leafsun),psi50_sun,ck)
     dfsto2=  d1plc(x(leafsha),psi50_sha,ck)
     dfx=     d1plc(x(xyl),psi50_xyl,ck)
     dfr=     d1plc(x(root),psi50_root,ck)
 
-    
+
     A11= - laisun * kmax_sun * fx&
             - qflx_sun * dfsto1
     A13= laisun * kmax_sun * dfx * (x(xyl)-x(leafsun))&
@@ -953,11 +953,11 @@ end do
           dx = 0._r8
        end if
     end if
-     
+
   end subroutine spacAF_twoleaf
-  
+
   !--------------------------------------------------------------------------------
-  
+
   !--------------------------------------------------------------------------------
   subroutine getvegwp_oneleaf(x, nvegwcs, nl_soil, z_soi, gb_mol, gs_mol, &
              qsatl, qaf,qg,qm,rhoair, psrf, fwet, lai, htop, sai, tl, sigf,&
@@ -986,7 +986,7 @@ end do
     real(r8)      , intent(in)     :: psrf                   ! atmospheric pressure [Pa]
     real(r8)      , intent(in)     :: fwet                   ! fraction of foliage that is green and dry [-]
     real(r8)      , intent(in)     :: lai                 ! Shaded leaf area index
-    real(r8)      , intent(in)     :: htop                   ! canopy top [m] 
+    real(r8)      , intent(in)     :: htop                   ! canopy top [m]
     real(r8)      , intent(in)     :: sai                    ! stem area index
     real(r8)      , intent(in)     :: tl                ! shaded leaf temperature
     real(r8)      , intent(in)     :: sigf                   ! fraction of veg cover, excluding snow-covered veg [-]
@@ -996,7 +996,7 @@ end do
     real(r8)      , intent(in)     :: psi50_sha              ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
     real(r8)      , intent(in)     :: psi50_xyl              ! water potential at 50% loss of xylem tissue conductance (mmH2O)
     real(r8)      , intent(in)     :: psi50_root             ! water potential at 50% loss of root tissue conductance (mmH2O)
-    real(r8)      , intent(in)     :: ck                     ! 
+    real(r8)      , intent(in)     :: ck                     !
     real(r8)      , intent(in)     :: raw        ! moisture resistance [s/m]
     real(r8)      , intent(in)     :: rd         ! aerodynamical resistance between ground and canopy air
     real(r8)      , intent(in)     :: smp(nl_soil)           ! soil matrix potential
@@ -1009,14 +1009,14 @@ end do
     ! !LOCAL VARIABLES:
     real(r8) :: qeroot
     real(r8) :: dummy
-    real(r8) :: fx                       ! fraction of maximum conductance, xylem-to-leaf [-]  
-    real(r8) :: fr                       ! fraction of maximum conductance, root-to-xylem [-]  
+    real(r8) :: fx                       ! fraction of maximum conductance, xylem-to-leaf [-]
+    real(r8) :: fr                       ! fraction of maximum conductance, root-to-xylem [-]
     real(r8) :: x_root_top
     real(r8) :: xroot(nl_soil)
     real(r8) :: grav1                    ! gravitational potential surface to canopy top (mm H2O)
-    real(r8) :: grav2(nl_soil)           ! soil layer gravitational potential relative to surface (mm H2O) 
+    real(r8) :: grav2(nl_soil)           ! soil layer gravitational potential relative to surface (mm H2O)
     integer  :: j                        ! index
-    logical  :: havegs                   ! signals direction of calculation gs->qflx or qflx->gs 
+    logical  :: havegs                   ! signals direction of calculation gs->qflx or qflx->gs
     logical  :: haroot                   ! signals direction of calculation x_root_top->qeroot or qeroot->x_root_top
     integer, parameter :: leafsun=1
     integer, parameter :: leafsha=2
@@ -1025,7 +1025,7 @@ end do
     !----------------------------------------------------------------------
     grav1 = 1000._r8 * htop
     grav2(1:nl_soil) = 1000._r8 * z_soi(1:nl_soil)
-    
+
     !compute transpiration demand
     havegs=.true.
     call getqflx_gs2qflx_oneleaf(gb_mol,gs_mol,etr,qsatl,qaf, &
@@ -1037,7 +1037,7 @@ end do
     !calculate xylem water potential
     fr = plc(x(root),psi50_root,ck)
     x(xyl) = x(root) - grav1 - etr/(fr*kmax_root/htop*sai)
-    
+
     !calculate sun/sha leaf water potential
     fx = plc(x(xyl),psi50_xyl,ck)
     x(leafsha) = x(xyl) - etr/(fx*kmax_xyl*lai)
@@ -1050,7 +1050,7 @@ end do
     soilflux = sum(rootr(:))
 
   end subroutine getvegwp_oneleaf
-  
+
   !--------------------------------------------------------------------------------
   subroutine getvegwp_twoleaf(x, nvegwcs, nl_soil, z_soi, gb_mol_sun, gb_mol_sha, gs_mol_sun, gs_mol_sha, &
              qsatlsun, qsatlsha, qaf,qg,qm,rhoair, psrf, fwet, laisun, laisha, htop, sai, tlsun, tlsha, sigf,&
@@ -1083,7 +1083,7 @@ end do
     real(r8)      , intent(in)     :: fwet                   ! fraction of foliage that is green and dry [-]
     real(r8)      , intent(in)     :: laisun                 ! Sunlit leaf area index
     real(r8)      , intent(in)     :: laisha                 ! Shaded leaf area index
-    real(r8)      , intent(in)     :: htop                   ! canopy top [m] 
+    real(r8)      , intent(in)     :: htop                   ! canopy top [m]
     real(r8)      , intent(in)     :: sai                    ! stem area index
     real(r8)      , intent(in)     :: tlsun                ! sunlit leaf temperature
     real(r8)      , intent(in)     :: tlsha                ! shaded leaf temperature
@@ -1094,7 +1094,7 @@ end do
     real(r8)      , intent(in)     :: psi50_sha              ! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
     real(r8)      , intent(in)     :: psi50_xyl              ! water potential at 50% loss of xylem tissue conductance (mmH2O)
     real(r8)      , intent(in)     :: psi50_root             ! water potential at 50% loss of root tissue conductance (mmH2O)
-    real(r8)      , intent(in)     :: ck                     ! 
+    real(r8)      , intent(in)     :: ck                     !
     real(r8)      , intent(in)     :: raw        ! moisture resistance [s/m]
     real(r8)      , intent(in)     :: rd         ! aerodynamical resistance between ground and canopy air
     real(r8)      , intent(in)     :: smp(nl_soil)           ! soil matrix potential
@@ -1107,17 +1107,17 @@ end do
     !
     ! !LOCAL VARIABLES:
 !    real(r8) :: qflx_sun                 ! Sunlit leaf transpiration [kg/m2/s]
-!    real(r8) :: qflx_sha                 ! Shaded leaf transpiration [kg/m2/s] 
+!    real(r8) :: qflx_sha                 ! Shaded leaf transpiration [kg/m2/s]
     real(r8) :: qeroot
     real(r8) :: dummy
-    real(r8) :: fx                       ! fraction of maximum conductance, xylem-to-leaf [-]  
-    real(r8) :: fr                       ! fraction of maximum conductance, root-to-xylem [-]  
+    real(r8) :: fx                       ! fraction of maximum conductance, xylem-to-leaf [-]
+    real(r8) :: fr                       ! fraction of maximum conductance, root-to-xylem [-]
     real(r8) :: x_root_top
     real(r8) :: xroot(nl_soil)
     real(r8) :: grav1                    ! gravitational potential surface to canopy top (mm H2O)
-    real(r8) :: grav2(nl_soil)           ! soil layer gravitational potential relative to surface (mm H2O) 
+    real(r8) :: grav2(nl_soil)           ! soil layer gravitational potential relative to surface (mm H2O)
     integer  :: j                        ! index
-    logical  :: havegs                   ! signals direction of calculation gs->qflx or qflx->gs 
+    logical  :: havegs                   ! signals direction of calculation gs->qflx or qflx->gs
     logical  :: haroot                   ! signals direction of calculation x_root_top->qeroot or qeroot->x_root_top
     integer, parameter :: leafsun=1
     integer, parameter :: leafsha=2
@@ -1126,12 +1126,12 @@ end do
     !----------------------------------------------------------------------
     grav1 = 1000._r8 * htop
     grav2(1:nl_soil) = 1000._r8 * z_soi(1:nl_soil)
-    
+
     !compute transpiration demand
     havegs=.true.
     call getqflx_gs2qflx_twoleaf(gb_mol_sun,gb_mol_sha,gs_mol_sun,gs_mol_sha,etrsun,etrsha,qsatlsun,qsatlsha,qaf, &
                  rhoair,psrf,laisun,laisha,sai,fwet,tlsun,tlsha,sigf,raw,rd,qg,qm)
-    
+
     !calculate root water potential
     qeroot = etrsun + etrsha
 
@@ -1140,7 +1140,7 @@ end do
     !calculate xylem water potential
     fr = plc(x(root),psi50_root,ck)
     x(xyl) = x(root) - grav1 - (etrsun+etrsha)/(fr*kmax_root/htop*sai)
-    
+
     !calculate sun/sha leaf water potential
     fx = plc(x(xyl),psi50_xyl,ck)
        x(leafsha) = x(xyl) - (etrsha/(fx*kmax_xyl*laisha))
@@ -1153,7 +1153,7 @@ end do
     soilflux = sum(rootr(:))
 
   end subroutine getvegwp_twoleaf
-  
+
   !--------------------------------------------------------------------------------
   subroutine getqflx_gs2qflx_oneleaf(gb_mol,gs_mol,qflx,qsatl,qaf, &
                              rhoair,psrf,lai,sai,fwet,tl,sigf,raw,rd,qg,qm)
@@ -1194,7 +1194,7 @@ end do
     real(r8) :: wtlq0                 ! normalized latent heat cond. for air and shaded leaf [-]
     real(r8) :: wtsqi                    ! latent heat resistance for air, grd and leaf [-]
 
-    real(r8) :: delta             
+    real(r8) :: delta
     real(r8) :: caw                      ! latent heat conductance for air [m/s]
     real(r8) :: cgw                      ! latent heat conductance for ground [m/s]
     real(r8) :: cfw                     ! latent heat conductance for sunlit leaf [m/s]
@@ -1279,8 +1279,8 @@ end do
     real(r8) :: wtlshaq0                 ! normalized latent heat cond. for air and shaded leaf [-]
     real(r8) :: wtsqi                    ! latent heat resistance for air, grd and leaf [-]
 
-    real(r8) :: delta1             
-    real(r8) :: delta2             
+    real(r8) :: delta1
+    real(r8) :: delta2
     real(r8) :: caw                      ! latent heat conductance for air [m/s]
     real(r8) :: cgw                      ! latent heat conductance for ground [m/s]
     real(r8) :: cfsunw                   ! latent heat conductance for sunlit leaf [m/s]
@@ -1369,7 +1369,7 @@ end do
     real(r8) :: wtlq0                 ! normalized latent heat cond. for air and shaded leaf [-]
     real(r8) :: cqi_wet                  ! latent heat conductance for air, grd and wet leaf [-]
 
-    real(r8) :: delta             
+    real(r8) :: delta
     real(r8) :: caw                      ! latent heat conductance for air [m/s]
     real(r8) :: cgw                      ! latent heat conductance for ground [m/s]
     real(r8) :: cfw_dry                  ! latent heat conductance for dry leaf [m/s]
@@ -1386,13 +1386,13 @@ end do
 
     caw = sigf / raw
     cgw = sigf / rd
-    cfw_wet = sigf * (1.-delta*(1.-fwet)) * (lai+sai) * gb_mol /cf 
-    cqi_wet = caw + cgw + cfw_wet 
+    cfw_wet = sigf * (1.-delta*(1.-fwet)) * (lai+sai) * gb_mol /cf
+    cqi_wet = caw + cgw + cfw_wet
 
     cfw_dry = qflx/rhoair*cqi_wet / (caw*(qsatl-qm)+cgw*(qsatl-qg)-qflx/rhoair)
-    gs_mol = 1._r8 / (sigf * (1. - fwet) * delta * lai / cfw_dry / cf - 1._r8 / gb_mol) 
+    gs_mol = 1._r8 / (sigf * (1. - fwet) * delta * lai / cfw_dry / cf - 1._r8 / gb_mol)
     endif
-    
+
   end subroutine getqflx_qflx2gs_oneleaf
 
   subroutine getqflx_qflx2gs_twoleaf(gb_mol_sun,gb_mol_sha,gs_mol_sun,gs_mol_sha,qflx_sun,qflx_sha,qsatlsun,qsatlsha,qaf, &
@@ -1444,8 +1444,8 @@ end do
     real(r8) :: wtlsunq0                 ! normalized latent heat cond. for air and sunlit leaf [-]
     real(r8) :: wtlshaq0                 ! normalized latent heat cond. for air and shaded leaf [-]
 
-    real(r8) :: delta1             
-    real(r8) :: delta2             
+    real(r8) :: delta1
+    real(r8) :: delta2
     real(r8) :: caw                      ! latent heat conductance for air [m/s]
     real(r8) :: cgw                      ! latent heat conductance for ground [m/s]
     real(r8) :: cfsunw_dry               ! latent heat conductance for sunlit dry leaf [m/s]
@@ -1453,7 +1453,7 @@ end do
     real(r8) :: cfshaw_dry               ! latent heat conductance for shaded dry leaf [m/s]
     real(r8) :: cfshaw_wet               ! latent heat conductance for shaded wet leaf [m/s]
     real(r8) :: cqi_wet                  ! latent heat conductance for air, grd and wet leaf [-]
-    real(r8) :: Delta,deltaq,          & ! temporary variables to solve cfsunw_dry and cfshaw_dry 
+    real(r8) :: Delta,deltaq,          & ! temporary variables to solve cfsunw_dry and cfshaw_dry
                 A1,B1,C1,A2,B2,C2        ! in binary quadratic equations
 
     !----------------------------------------------------------------------
@@ -1494,22 +1494,23 @@ end do
        cfshaw_dry = (C1*deltaq+C2*deltaq+sqrt(Delta)-A1*A2+B1*B2)/(2*(A2+B1)*deltaq)
     else ! solve equations A1*cfsunw_dry+B1*cfshaw_dry-C1 = 0
          !              && A2*cfshaw_dry+B2*cfsunw_dry-C2 = 0
-       cfsunw_dry = (A2*C1-B1*C2)/(A1*A2-B1*B2) 
+       cfsunw_dry = (A2*C1-B1*C2)/(A1*A2-B1*B2)
        cfshaw_dry = (A1*C2-B2*C1)/(A1*A2-B1*B2)
     end if
 
        if (qflx_sun > 0._r8) then
-          gs_mol_sun = 1._r8 / (sigf * (1. - fwet) * delta1 * laisun / cfsunw_dry / cfsun - 1._r8 / gb_mol_sun) 
+          gs_mol_sun = 1._r8 / (sigf * (1. - fwet) * delta1 * laisun / cfsunw_dry / cfsun - 1._r8 / gb_mol_sun)
        endif
        if (qflx_sha > 0._r8) then
           gs_mol_sha = 1._r8 / (sigf * (1. - fwet) * delta2 * laisha / cfshaw_dry / cfsha - 1._r8 / gb_mol_sha)
        endif
     end if
-    
+
   end subroutine getqflx_qflx2gs_twoleaf
 
   subroutine getrootqflx_x2qe(nl_soil,smp,x_root_top,z_soisno,krad,kax,qeroot,dqeroot)
 
+  USE mod_utils
   ! DESCRIPTION
   ! Return root water potential at top soil node. Return soil-root water flux.
   !
@@ -1592,7 +1593,7 @@ end do
   den2   = zmm(j+1) - zmm(j)
   qeroot = krad(j) * (smp(1) - xroot(1)) + (xroot(2) - xroot(1)) * kax(j)/den2 - kax(j)
 
-  ! calculate the dqeroot/dx_root_top; 
+  ! calculate the dqeroot/dx_root_top;
   dqeroot = - krad(j) + (dxroot2 - 1) * kax(j)/den2
   do j = 1,nl_soil
      qeroot_nl(j) = krad(j)*(smp(j) - xroot(j))
@@ -1602,6 +1603,7 @@ end do
 
   subroutine getrootqflx_qe2x(nl_soil,smp,z_soisno,krad,kax,qeroot,xroot,x_root_top)
 
+  USE mod_utils
   ! DESCRIPTION
   ! Return root water potential at top soil node. Return soil-root water flux.
   !
@@ -1632,12 +1634,12 @@ end do
      zmm(j)  = z_soisno(j)*1000.
   end do
 
-  j           = 1 
+  j           = 1
   den2        = zmm(j+1) - zmm(j)
   amx_hr(j)   = 0
   bmx_hr(j) = kax(j)/den2 + krad(j)
   cmx_hr(j) = -kax(j)/den2
-  rmx_hr(j) = krad(j)*smp(j) - qeroot - kax(j) 
+  rmx_hr(j) = krad(j)*smp(j) - qeroot - kax(j)
 
   ! For the middile soil layers
   do j = 2, nl_soil - 1
@@ -1672,7 +1674,7 @@ end do
     !
     ! !ARGUMENTS
     real(r8) , intent(in)  :: x             ! water potential input
-!    integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs) 
+!    integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs)
 !    integer  , intent(in)  :: plc_method    !
     real(r8) , intent(in)  :: psi50     ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
 !    real(r8) , intent(in)  :: psi50_sun     ! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
@@ -1693,7 +1695,7 @@ end do
     !real(r8) psi50,tmp
     real(r8) tmp
     integer i
-    
+
     !------------------------------------------------------------------------------
 !    select case(level)
 !    case (leafsun)
@@ -1724,7 +1726,7 @@ end do
 
   end function plc
   !--------------------------------------------------------------------------------
-  
+
   !--------------------------------------------------------------------------------
   function d1plc(x,psi50,ck)
     ! !DESCRIPTION
@@ -1779,8 +1781,8 @@ end do
 !       write(*,*),'must choose plc method'
 !    end select
 
-  end function d1plc  
-  
+  end function d1plc
 
-END MODULE PlantHydraulic
+
+END MODULE MOD_PlantHydraulic
 ! -------------- EOP ---------------

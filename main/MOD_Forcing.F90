@@ -1,7 +1,7 @@
 #include <define.h>
 
 !-----------------------------------------------------------------------
-module mod_forcing
+module MOD_Forcing
 
 ! DESCRIPTION:
 ! read in the atmospheric forcing using user defined interpolation method
@@ -17,11 +17,12 @@ module mod_forcing
    USE mod_namelist
    use mod_grid
    use mod_mapping_grid2pset
-   use user_specified_forcing
+   use MOD_UserSpecifiedForcing
    use timemanager
    use spmd_task
-   USE co2_mlo
+   USE MOD_MonthlyinSituCO2mlo
    USE MathConstants, only : pi
+   USE MOD_OrbCoszen
 
    implicit none
 
@@ -33,7 +34,7 @@ module mod_forcing
 #ifdef Forcing_Downscaling
    type (mapping_grid2pset_type) :: mg2p_forc_elm
    LOGICAL, allocatable :: forcmask_elm (:)
-   LOGICAL, allocatable :: glaciers     (:)
+   LOGICAL, allocatable :: glacierss    (:)
 #endif
 
    ! local variables
@@ -57,9 +58,6 @@ module mod_forcing
    public :: forcing_init
    public :: read_forcing
 
-   ! external functions
-   real(r8), external :: orb_coszen           ! cosine of solar zenith angle
-
 contains
 
    !--------------------------------
@@ -72,12 +70,12 @@ contains
       USE mod_landelm
       USE mod_landpatch
       use mod_mapping_grid2pset
-      use user_specified_forcing
+      use MOD_UserSpecifiedForcing
       USE ncio_serial
       USE ncio_vector
       USE ncio_block
-      USE MOD_TimeInvariants
-      USE MOD_1D_Forcing
+      USE MOD_Vars_TimeInvariants
+      USE MOD_Vars_1DForcing
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
@@ -182,8 +180,8 @@ contains
          ENDDO
 
          IF (numpatch > 0) THEN
-            allocate (glaciers(numpatch))
-            glaciers(:) = patchtype(:) == 3
+            allocate (glacierss(numpatch))
+            glacierss(:) = patchtype(:) == 3
          ENDIF
       ENDIF
 #endif
@@ -211,9 +209,9 @@ contains
       use precision
       use mod_namelist
       use PhysicalConstants, only: rgas, grav
-      use MOD_TimeInvariants
-      use MOD_1D_Forcing
-      use MOD_2D_Forcing
+      use MOD_Vars_TimeInvariants
+      use MOD_Vars_1DForcing
+      use MOD_Vars_2DForcing
       use mod_block
       use spmd_task
       use mod_data_type
@@ -221,9 +219,9 @@ contains
       use mod_landpatch
       use mod_mapping_grid2pset
       use mod_colm_debug
-      use user_specified_forcing
+      use MOD_UserSpecifiedForcing
 #ifdef Forcing_Downscaling
-      USE DownscalingForcingMod, only : rair, cpair, downscale_forcings
+      USE MOD_DownscalingForcing, only : rair, cpair, downscale_forcings
 #endif
 
       IMPLICIT NONE
@@ -540,7 +538,7 @@ contains
          end do
 
          CALL downscale_forcings ( &
-            numelm, numpatch, elm_patch%substt, elm_patch%subend, glaciers, elm_patch%subfrc,   &
+            numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
             ! forcing in gridcells
             forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
             forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
@@ -551,7 +549,7 @@ contains
       end if
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -587,7 +585,7 @@ contains
    ! ------------------------------------------------------------
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
-      use user_specified_forcing
+      use MOD_UserSpecifiedForcing
       USE mod_namelist
       use mod_data_type
       use ncio_block
@@ -665,7 +663,7 @@ contains
 
       use spmd_task
       use ncio_serial
-      use user_specified_forcing
+      use MOD_UserSpecifiedForcing
       USE mod_namelist
       implicit none
 
@@ -729,7 +727,7 @@ contains
 
       use spmd_task
       use ncio_serial
-      use user_specified_forcing
+      use MOD_UserSpecifiedForcing
       USE mod_namelist
       implicit none
 
@@ -1224,4 +1222,4 @@ contains
 
       END SUBROUTINE calavgcos
 
-   end module mod_forcing
+   end module MOD_Forcing

@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE SOIL_SNOW_hydrology
+MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use precision
@@ -297,7 +297,7 @@ MODULE SOIL_SNOW_hydrology
 #endif
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
      if(abs(err_solver) > 1.e-3)then
         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
      endif
@@ -391,9 +391,9 @@ MODULE SOIL_SNOW_hydrology
   USE mod_soil_water
 
 #ifndef LATERAL_FLOW
-  USE MOD_1D_Fluxes, only : rsub
+  USE MOD_Vars_1DFluxes, only : rsub
 #else
-  USE MOD_1D_Fluxes, only : rsub, rsubs_pch
+  USE MOD_Vars_1DFluxes, only : rsub, rsubs_pch
 #endif
 
   implicit none
@@ -760,7 +760,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
    ENDIF
 #endif
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
      if(abs(err_solver) > 1.e-3)then
         write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
      endif
@@ -950,7 +950,6 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
   IMPLICIT NONE
 
-  integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
   real(r8), parameter :: denice = 917.0_r8  ! density of ice [kg/m3]
   real(r8), parameter :: denh2o = 1000.0_r8 ! density of liquid water [kg/m3]
 
@@ -1493,6 +1492,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !-----------------------------------------------------------------------
     use precision
     use PhysicalConstants , only : grav,hfus,tfrz,denh2o,denice
+    USE mod_utils
 
     IMPLICIT NONE
 
@@ -1738,7 +1738,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     call tridia (nl_soil, amx, bmx, cmx, rmx, dwat )
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 ! The mass balance error (mm) for this time step is
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
@@ -2059,5 +2059,5 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   end subroutine subsurfacerunoff
 
 
-END MODULE SOIL_SNOW_hydrology
+END MODULE MOD_SoilSnowHydrology
 ! --------- EOP ----------

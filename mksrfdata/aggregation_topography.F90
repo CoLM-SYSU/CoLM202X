@@ -13,7 +13,7 @@ SUBROUTINE aggregation_topography ( &
    USE mod_landpatch
    USE ncio_vector
    USE ncio_block
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    USE mod_colm_debug
 #endif
    USE mod_aggregation
@@ -99,7 +99,7 @@ SUBROUTINE aggregation_topography ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('topography_patches ', topography_patches)
 #endif
 
