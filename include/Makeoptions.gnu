@@ -2,7 +2,7 @@
 # mpif90 - gfortran 
 # 
 
-  FF = /usr/bin/mpif90 
+  FF = mpif90 -fopenmp
    
   NETCDF_LIB = /usr/lib/x86_64-linux-gnu
   NETCDF_INC = /usr/include
@@ -15,4 +15,4 @@
            -ffree-line-length-0
   
   INCLUDE_DIR = -I../include -I../share -I../mksrfdata -I../mkinidata -I../main -I$(NETCDF_INC)
-  LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf
+  LDFLAGS = -L$(NETCDF_LIB) -lnetcdff -lnetcdf -llapack -lblas

@@ -80,32 +80,32 @@ MODULE MOD_LuLccTimeInvars
            allocate (landpatch_%xblkgrp         (numpatch))
            allocate (landpatch_%yblkgrp         (numpatch))
 
-           allocate (landelm_%eindex          (numelm))
-           allocate (landelm_%ipxstt          (numelm))
-           allocate (landelm_%ipxend          (numelm))
-           allocate (landelm_%settyp          (numelm))
+           allocate (landelm_%eindex              (numelm))
+           allocate (landelm_%ipxstt              (numelm))
+           allocate (landelm_%ipxend              (numelm))
+           allocate (landelm_%settyp              (numelm))
 
            allocate (patchclass_                (numpatch))
            allocate (patchtype_                 (numpatch))
 
 #ifdef PFT_CLASSIFICATION
            IF (numpft > 0) THEN
-              allocate (pftclass_                    (numpft))
-              allocate (patch_pft_s_               (numpatch))
-              allocate (patch_pft_e_               (numpatch))
+              allocate (pftclass_                 (numpft))
+              allocate (patch_pft_s_            (numpatch))
+              allocate (patch_pft_e_            (numpatch))
            ENDIF
 #endif
 
 #ifdef PC_CLASSIFICATION
            IF (numpc > 0) THEN
-              allocate (patch2pc_                  (numpatch))
+              allocate (patch2pc_               (numpatch))
            ENDIF
 #endif
 
 #ifdef URBAN_MODEL
            IF (numurban > 0) THEN
-               allocate (urbclass_                  (numurban))
-               allocate (patch2urban_               (numpatch))
+               allocate (urbclass_              (numurban))
+               allocate (patch2urban_           (numpatch))
            ENDIF
 #endif
         ENDIF
@@ -133,31 +133,31 @@ MODULE MOD_LuLccTimeInvars
 #ifdef URBAN_MODEL
      USE mod_landurban
 #endif
-     
+
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
         IF (numpatch > 0) THEN
            CALL copy_pixelset(landpatch, landpatch_)
            CALL copy_pixelset(landelm  , landelm_  )
-           numpatch_          = numpatch
-           numelm_            = numelm
-           patchclass_    (:) = patchclass    (:)
-           patchtype_     (:) = patchtype     (:)
+           numpatch_             = numpatch
+           numelm_               = numelm
+           patchclass_       (:) = patchclass       (:)
+           patchtype_        (:) = patchtype        (:)
 
 #ifdef PFT_CLASSIFICATION
            IF (numpft > 0) THEN
               numpft_            = numpft
-              pftclass_      (:) = pftclass      (:)
-              patch_pft_s_   (:) = patch_pft_s   (:)
-              patch_pft_e_   (:) = patch_pft_e   (:)
+              pftclass_      (:) = pftclass         (:)
+              patch_pft_s_   (:) = patch_pft_s      (:)
+              patch_pft_e_   (:) = patch_pft_e      (:)
            ENDIF
 #endif
 
 #ifdef PC_CLASSIFICATION
            IF (numpc > 0) THEN
               numpc_             = numpc
-              patch2pc_      (:) = patch2pc      (:)
+              patch2pc_      (:) = patch2pc         (:)
            ENDIF
 #endif
 
@@ -183,8 +183,8 @@ MODULE MOD_LuLccTimeInvars
         IF (numpatch_ > 0) THEN
            CALL landpatch_%forc_free_mem
            CALL landelm_%forc_free_mem
-           deallocate (patchclass_   )
-           deallocate (patchtype_    )
+           deallocate    (patchclass_   )
+           deallocate    (patchtype_    )
 
 #ifdef PFT_CLASSIFICATION
            IF (numpft_ > 0) THEN
