@@ -1,19 +1,19 @@
 #include <define.h>
 
 #ifdef OzoneStress
-Module OzoneMod
+Module MOD_Ozone
 
   use precision
-!  use MOD_1D_Forcing, only: forc_ozone, forc_psrf
+!  use MOD_Vars_1DForcing, only: forc_ozone, forc_psrf
   USE PhysicalConstants, only: rgas
-  use PFT_const, only: isevg, leaf_long, woody
+  use MOD_Vars_PFTConst, only: isevg, leaf_long, woody
   IMPLICIT NONE
   SAVE
 
   public :: CalcOzoneStress
 
   CONTAINS
-  
+
   subroutine CalcOzoneStress (o3coefv,o3coefg, forc_ozone, forc_psrf, th, ram, &
                               rs, rb, lai, lai_old, ivt, o3uptake, deltim)
      ! convert o3 from mol/mol to nmol m^-3
@@ -44,13 +44,13 @@ Module OzoneMod
      real(r8) :: condSlope      ! slope for conductance
 
      real(r8), parameter :: ko3 = 1.51_r8  !F. Li
- 
+
     ! LAI threshold for LAIs that asymptote and don't reach 0
      real(r8), parameter :: lai_thresh = 0.5_r8
-  
+
      ! threshold below which o3flux is set to 0 (nmol m^-2 s^-1)
      real(r8), parameter :: o3_flux_threshold = 0.5_r8  !F. Li
-  
+
      ! o3 intercepts and slopes for photosynthesis
      real(r8), parameter :: needleleafPhotoInt   = 0.8390_r8  ! units = unitless
      real(r8), parameter :: needleleafPhotoSlope = 0._r8      ! units = per mmol m^-2
@@ -58,7 +58,7 @@ Module OzoneMod
      real(r8), parameter :: broadleafPhotoSlope  = 0._r8      ! units = per mmol m^-2
      real(r8), parameter :: nonwoodyPhotoInt     = 0.8021_r8  ! units = unitless
      real(r8), parameter :: nonwoodyPhotoSlope   = -0.0009_r8 ! units = per mmol m^-2
-  
+
      ! o3 intercepts and slopes for conductance
      real(r8), parameter :: needleleafCondInt    = 0.7823_r8  ! units = unitless
      real(r8), parameter :: needleleafCondSlope  = 0.0048_r8  ! units = per mmol m^-2
@@ -67,7 +67,7 @@ Module OzoneMod
      real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
      real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
 
-#ifndef OzoneData     
+#ifndef OzoneData
      forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
 #endif
 
@@ -121,7 +121,7 @@ Module OzoneMod
        ! add GPAM ozone impact on crop and change logic by F. Li
        if (ivt>16)then
           o3coefv = max(0._r8, min(1._r8, 0.883_r8 - 0.058 * log10(o3uptake)))
-          o3coefg = max(0._r8, min(1._r8, 0.951_r8 - 0.109 * tanh(o3uptake)))  
+          o3coefg = max(0._r8, min(1._r8, 0.951_r8 - 0.109 * tanh(o3uptake)))
        else
          if (ivt>3) then
            if (woody(ivt)==0) then
@@ -149,5 +149,5 @@ Module OzoneMod
     end if
 
   end subroutine CalcOzoneStress
-  end module OzoneMod
+  end module MOD_Ozone
 #endif

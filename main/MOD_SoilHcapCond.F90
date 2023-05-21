@@ -1,12 +1,30 @@
 #include <define.h>
 
-SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
-                                    wf_gravels_s,wf_sand_s,k_solids,&
-                                            csol,kdry,ksat_u,ksat_f,&
+MODULE MOD_SoilHcapCond
+
+!-----------------------------------------------------------------------
+   USE precision
+   IMPLICIT NONE
+   SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: soil_hcap_cond
+
+
+!-----------------------------------------------------------------------
+
+   CONTAINS
+
+!-----------------------------------------------------------------------
+
+
+   SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
+                                       wf_gravels_s,wf_sand_s,k_solids,&
+                                               csol,kdry,ksat_u,ksat_f,&
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-                                                   BA_alpha,BA_beta,&
+                                                      BA_alpha,BA_beta,&
 #endif
-                               temperature,vf_water,vf_ice,hcap,thk)
+                                  temperature,vf_water,vf_ice,hcap,thk)
 
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
@@ -23,10 +41,10 @@ SUBROUTINE soil_hcap_cond(vf_gravels_s,vf_om_s,vf_sand_s,vf_pores_s,&
 ! Nan Wei, 06/2018: add to CoLM/main
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
-use precision
-USE PhysicalConstants,only:tfrz
+   use precision
+   USE PhysicalConstants,only:tfrz
 
-IMPLICIT NONE
+   IMPLICIT NONE
       real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within the soil solids
       real(r8), intent(in) :: vf_om_s      ! volumetric fraction of organic matter within the soil solids
       real(r8), intent(in) :: vf_sand_s    ! volumetric fraction of sand within soil soilds
@@ -84,7 +102,8 @@ IMPLICIT NONE
       sr = (vf_water+vf_ice)/vf_pores_s
 !      sr = max(1.0e-6, sr)
       sr = min(1.0, sr)
-if(sr >= 1.0e-10) then
+
+   if(sr >= 1.0e-10) then
 #if(defined THERMAL_CONDUCTIVITY_SCHEME_1)
 ! -----------------------------------------------------------------------------------------
 ! [1] Oleson et al., 2013: Technical Description of version 4.5 of the Community Land Model
@@ -191,9 +210,9 @@ if(sr >= 1.0e-10) then
          ke = sr
       endif
 #endif
-else
+   else
       ke = 0.0
-endif
+   endif
 #if(defined THERMAL_CONDUCTIVITY_SCHEME_1 || defined THERMAL_CONDUCTIVITY_SCHEME_2 || defined THERMAL_CONDUCTIVITY_SCHEME_3 || defined THERMAL_CONDUCTIVITY_SCHEME_4 || defined THERMAL_CONDUCTIVITY_SCHEME_5)
       ke = max(ke, 0.0)
       ke = min(ke, 1.0)
@@ -292,4 +311,6 @@ endif
       ENDIF
 #endif
 
-END SUBROUTINE soil_hcap_cond
+   END SUBROUTINE soil_hcap_cond
+
+END MODULE MOD_SoilHcapCond

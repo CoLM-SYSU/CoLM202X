@@ -1,6 +1,6 @@
-#include <define.h> 
+#include <define.h>
 
-MODULE MOD_2D_Forcing
+MODULE MOD_Vars_2DForcing
    ! -------------------------------
    ! Meteorogical Forcing
    !
@@ -41,7 +41,7 @@ CONTAINS
 
    SUBROUTINE allocate_2D_Forcing (grid)
       ! ------------------------------------------------
-      ! Allocates memory for CLM 2d [lon_points,lat_points] variables
+      ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! ------------------------------------------------
       use spmd_task
       use mod_grid
@@ -76,5 +76,5 @@ CONTAINS
 
    END SUBROUTINE allocate_2D_Forcing
 
-END MODULE MOD_2D_Forcing
+END MODULE MOD_Vars_2DForcing
 ! ------ EOP --------

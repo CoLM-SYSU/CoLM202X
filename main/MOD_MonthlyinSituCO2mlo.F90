@@ -38,7 +38,7 @@
 !"                                                                                           "
 !"-------------------------------------------------------------------------------------------"
 
-MODULE co2_mlo
+MODULE MOD_MonthlyinSituCO2mlo
 ! -------------------------------
 !
 ! !DESCRIPTION:
@@ -737,5 +737,5 @@ MODULE co2_mlo
 
    END FUNCTION get_monthly_co2_mlo
 
-END MODULE co2_mlo
+END MODULE MOD_MonthlyinSituCO2mlo
 ! ---------- EOP ------------

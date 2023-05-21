@@ -1,5 +1,5 @@
 #include <define.h>
-MODULE COLM_CAMAMOD
+MODULE MOD_CaMa_colmCaMa
 #if(defined CaMa_Flood)
 !DESCRIPTION
 !===========
@@ -20,7 +20,7 @@ MODULE COLM_CAMAMOD
 ! 2020.10.01  Zhongwang Wei @ SYSU
 
 use mod_namelist
-USE MOD_CaMa_Variables
+USE MOD_CaMa_Vars
 USE PARKIND1,                  ONLY: JPRB, JPRM, JPIM
 USE CMF_DRV_CONTROL_MOD,       ONLY: CMF_DRV_INPUT,   CMF_DRV_INIT,    CMF_DRV_END
 USE CMF_DRV_ADVANCE_MOD,       ONLY: CMF_DRV_ADVANCE
@@ -32,7 +32,8 @@ USE YOS_CMF_INPUT ,            ONLY: LROSPLIT,LWEVAP,LWINFILT
 USE spmd_task
 USE CMF_CTRL_TIME_MOD
 USE GlobalVars,                ONLY : spval
-USE MOD_1D_Fluxes
+USE MOD_Vars_1DFluxes
+USE MOD_Qsadv
 
 IMPLICIT NONE
 !----------------------- Dummy argument --------------------------------
@@ -375,9 +376,9 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    !ANCILLARY FUNCTIONS AND SUBROUTINES
    !-------------------
    !* :SUBROUTINE:"qsadv"         :     !  computes saturation mixing ratio and change in saturation
-   !* :SUBROUTINE:" moninobukini" :     !  initialzation of Monin-Obukhov length, see FRICTION_VELOCITY.F90
+   !* :SUBROUTINE:" moninobukini" :     !  initialzation of Monin-Obukhov length, see MOD_FrictionVelocity.F90
    !* :SUBROUTINE:" moninobuk"    :     !  calculation of friction velocity, relation for potential temperature
-                                        !  and humidity profiles of surface boundary layer,see FRICTION_VELOCITY.F90
+                                        !  and humidity profiles of surface boundary layer,see MOD_FrictionVelocity.F90
    !REVISION HISTORY
    !----------------
    ! 2020.10.01  Zhongwang Wei @ SYSU
@@ -385,7 +386,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    ! 1999.09.15  Yongjiu Dai   @ BNU
    USE precision
    USE PhysicalConstants, ONLY : cpair,rgas,vonkar,grav
-   USE FRICTION_VELOCITY
+   USE MOD_FrictionVelocity
    IMPLICIT NONE
    REAL(r8), INTENT(in)  :: hu      ! agcm reference height of wind [m]
    REAL(r8), INTENT(in)  :: ht      ! agcm reference height of temperature [m]
@@ -580,4 +581,4 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    end SUBROUTINE get_fldevp
 
 #endif
-end MODULE colm_camaMod
+end MODULE MOD_CaMa_colmCaMa

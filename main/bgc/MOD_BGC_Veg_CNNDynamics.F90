@@ -27,9 +27,9 @@ module MOD_BGC_Veg_CNNDynamics
 
   use precision
 
-  use MOD_PFTimeInvars, only: pftclass, pftfrac
-  use MOD_TimeInvariants, only: porsl, psi0, bsw
-  use MOD_TimeVariables, only: h2osoi
+  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_TimeInvariants, only: porsl, psi0, bsw
+  use MOD_Vars_TimeVariables, only: h2osoi
 
   use MOD_BGC_Vars_1DPFTFluxes, only: fert_p  ! intent(in)
  

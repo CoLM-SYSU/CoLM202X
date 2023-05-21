@@ -1,5 +1,5 @@
 #include <define.h>
-MODULE MOD_CLEAF_interception
+MODULE MOD_LeafInterception
 !DESCRIPTION
 !===========
 ! This MODULE is the coupler for the colm and CaMa-Flood model.
@@ -212,7 +212,7 @@ contains
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -242,7 +242,7 @@ contains
          qintr_rain = prc_rain + prl_rain - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -380,7 +380,7 @@ contains
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -411,7 +411,7 @@ contains
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -555,7 +555,7 @@ contains
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -585,7 +585,7 @@ contains
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -712,7 +712,7 @@ contains
             tex_rain   = max( tex_rain, 0. )
             tex_snow   = max( tex_snow, 0. )
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -744,7 +744,7 @@ contains
          qintr_rain = prc_rain + prl_rain - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -882,7 +882,7 @@ contains
 
             tex_rain = (prc_rain+prl_rain)*deltim * ( 1. - int_rain )
             tex_snow = (prc_snow+prl_snow)*deltim * ( 1. - int_snow )
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -915,7 +915,7 @@ contains
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1041,7 +1041,7 @@ contains
             tex_snow=max(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow-satcap_snow,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow,satcap_snow)/deltim))*deltim
 
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
                write(6,*) 'tex_ + tti_ > p0 in interception code : '
             ENDIF
@@ -1074,7 +1074,7 @@ contains
 
          qintr_rain = prc_rain + prl_rain - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
          IF (abs(w) > 1.e-6) THEN
             write(6,*) 'something wrong in interception code : '
@@ -1347,10 +1347,10 @@ contains
       USE precision
       USE PhysicalConstants, only: tfrz
       USE mod_landpft
-      USE MOD_PFTimeInvars
-      USE MOD_PFTimeVars
-      USE MOD_1D_PFTFluxes
-      USE PFT_Const
+      USE MOD_Vars_PFTimeInvars
+      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_1DPFTFluxes
+      USE MOD_Vars_PFTConst
 
       IMPLICIT NONE
 
@@ -1485,10 +1485,10 @@ contains
       USE precision
       USE GlobalVars
       USE PhysicalConstants, only: tfrz
-      USE MOD_PCTimeInvars
-      USE MOD_PCTimeVars
-      USE MOD_1D_PCFluxes
-      USE PFT_Const
+      USE MOD_Vars_PCTimeInvars
+      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_1DPCFluxes
+      USE MOD_Vars_PFTConst
       USE mod_landpc
 
       IMPLICIT NONE
@@ -1626,6 +1626,6 @@ contains
 #endif
 
 
-END MODULE MOD_CLEAF_interception
+END MODULE MOD_LeafInterception
 
 

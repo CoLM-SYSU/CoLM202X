@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE LEAF_temperature
+MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
 USE precision
@@ -87,17 +87,18 @@ CONTAINS
   USE precision
   USE GlobalVars
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
-  USE FRICTION_VELOCITY
-  USE ASSIM_STOMATA_conductance
-  USE MOD_TimeInvariants, only: patchclass
+  USE MOD_FrictionVelocity
+  USE MOD_AssimStomataConductance
+  USE MOD_Vars_TimeInvariants, only: patchclass
   USE LC_Const, only: z0mr, displar
 #ifdef PLANT_HYDRAULIC_STRESS
-  use PlantHydraulic, only : PlantHydraulicStress_twoleaf
+  use MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
 USE PhysicalConstants, only: tfrz
 #ifdef OzoneStress
-  use OzoneMod, only: CalcOzoneStress
+  use MOD_Ozone, only: CalcOzoneStress
 #endif
+  USE MOD_Qsadv
 
   IMPLICIT NONE
 
@@ -995,7 +996,7 @@ USE PhysicalConstants, only: tfrz
 
        err = sabv + irab + dirab_dtl*dtl(it-1) - fsenl - hvap*fevpl + hprl
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
        IF(abs(err) .gt. .2) &
        write(6,*) 'energy imbalance in leaftem.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
 #endif
@@ -1190,7 +1191,7 @@ USE PhysicalConstants, only: tfrz
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1218,7 +1219,7 @@ USE PhysicalConstants, only: tfrz
                     displah, htop, hbot, obu, ustar, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), parameter :: com1 = 0.4
@@ -1578,7 +1579,7 @@ USE PhysicalConstants, only: tfrz
         z0h, obu, ustar, fac, alpha, bee, fc)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, ztop, zbot
@@ -1691,7 +1692,7 @@ USE PhysicalConstants, only: tfrz
         obu, ustar, fac, alpha)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, ktop, htop, hbot
@@ -1775,4 +1776,4 @@ USE PhysicalConstants, only: tfrz
 
   END SUBROUTINE cal_z0_displa
 
-END MODULE LEAF_temperature
+END MODULE MOD_LeafTemperature

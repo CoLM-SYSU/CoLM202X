@@ -1,7 +1,7 @@
 #include <define.h>
 
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
-module mod_hist_vector
+module MOD_HistVector
 
    use precision
    USE spmd_task
@@ -31,12 +31,12 @@ contains
       use mod_namelist
       use timemanager
       use spmd_task
-      use MOD_1D_Acc_Fluxes
+      use MOD_Vars_1DAccFluxes
       use mod_landpatch
       use mod_colm_debug
       use GlobalVars, only : spval
-      USE MOD_TimeInvariants, only : patchtype
-      USE mod_forcing, only : forcmask
+      USE MOD_Vars_TimeInvariants, only : patchtype
+      USE MOD_Forcing, only : forcmask
       IMPLICIT NONE
 
       character(LEN=*), intent(in) :: file_hist
@@ -1007,7 +1007,7 @@ contains
       use spmd_task
       use mod_namelist
       USE mod_landpatch
-      use MOD_1D_Acc_Fluxes,  only: nac
+      use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
 
@@ -1165,7 +1165,7 @@ contains
       use spmd_task
       use mod_namelist
       USE mod_landpatch
-      use MOD_1D_Acc_Fluxes,  only: nac
+      use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
 
@@ -1345,7 +1345,7 @@ contains
       use spmd_task
       use mod_namelist
       USE mod_landpatch
-      use MOD_1D_Acc_Fluxes,  only: nac
+      use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
 
@@ -1534,7 +1534,7 @@ contains
       use spmd_task
       use mod_namelist
       USE mod_landpatch
-      use MOD_1D_Acc_Fluxes,  only: nac_ln
+      use MOD_Vars_1DAccFluxes,  only: nac_ln
       use GlobalVars, only: spval
       implicit none
 
@@ -1682,5 +1682,5 @@ contains
 
    end subroutine aggregate_to_vector_and_write_ln
 
-end module mod_hist_vector
+end module MOD_HistVector
 #endif

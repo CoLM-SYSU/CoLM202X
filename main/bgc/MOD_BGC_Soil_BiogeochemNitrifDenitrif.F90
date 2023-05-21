@@ -21,8 +21,8 @@ module MOD_BGC_Soil_BiogeochemNitrifDenitrif
 
   use precision
   use PhysicalConstants, only : denice, denh2o, tfrz
-  use MOD_TimeVariables, only : t_soisno, wliq_soisno, wice_soisno, t_scalar, w_scalar, smp
-  use MOD_TimeInvariants, only: &
+  use MOD_Vars_TimeVariables, only : t_soisno, wliq_soisno, wice_soisno, t_scalar, w_scalar, smp
+  use MOD_Vars_TimeInvariants, only: &
       porsl, wfc, bsw, BD_all, OM_density
     
   use MOD_BGC_Vars_TimeInvars, only: &

@@ -1,16 +1,16 @@
 #include <define.h>
 
-MODULE MOD_1D_Fluxes
+MODULE MOD_Vars_1DFluxes
 ! -------------------------------
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
   USE precision
 #ifdef PFT_CLASSIFICATION
-  USE MOD_1D_PFTFluxes
+  USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef PC_CLASSIFICATION
-  USE MOD_1D_PCFluxes
+  USE MOD_Vars_1DPCFluxes
 #endif
 #ifdef BGC
   USE MOD_BGC_Vars_1DFluxes
@@ -87,7 +87,7 @@ MODULE MOD_1D_Fluxes
 
   SUBROUTINE allocate_1D_Fluxes
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpatch] variables
+  ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE precision
      USE GlobalVars
@@ -171,7 +171,7 @@ MODULE MOD_1D_Fluxes
 
    SUBROUTINE deallocate_1D_Fluxes ()
   ! --------------------------------------------------------------------
-  ! deallocates memory for CLM 1d [numpatch] variables
+  ! deallocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE spmd_task
      USE mod_landpatch
@@ -250,6 +250,6 @@ MODULE MOD_1D_Fluxes
 
    END SUBROUTINE deallocate_1D_Fluxes
 
-END MODULE MOD_1D_Fluxes
+END MODULE MOD_Vars_1DFluxes
 ! ---------- EOP ------------
 

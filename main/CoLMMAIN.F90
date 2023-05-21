@@ -1,5 +1,5 @@
 #include <define.h>
-SUBROUTINE CLMMAIN ( &
+SUBROUTINE CoLMMAIN ( &
 
          ! model running information
            ipatch,       idate,        coszen,       deltim,        &
@@ -113,9 +113,9 @@ SUBROUTINE CLMMAIN ( &
 !
 ! Original author : Yongjiu Dai, 09/30/1999; 08/30/2002, 12/2012, 02/2014
 !
-!    FLOW DIAGRAM FOR CLMMAIN
+!    FLOW DIAGRAM FOR CoLMMAIN
 !
-!    CLMMAIN ===> netsolar                 |> all surface
+!    CoLMMAIN ===> netsolar                 |> all surface
 !                 rain_snow_temp           !> all surface
 !
 !                 LEAF_interception        |]
@@ -144,34 +144,41 @@ SUBROUTINE CLMMAIN ( &
   USE precision
   USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
-  USE MOD_TimeVariables, only: tlai, tsai
+  USE MOD_Vars_TimeVariables, only: tlai, tsai
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only : patch_pft_s, patch_pft_e
-  USE MOD_PFTimeInvars
-  USE MOD_PFTimeVars
+  USE MOD_Vars_PFTimeInvars
+  USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
   USE mod_landpc
-  USE MOD_PCTimeInvars
-  USE MOD_PCTimeVars
+  USE MOD_Vars_PCTimeInvars
+  USE MOD_Vars_PCTimeVars
 #endif
-  USE SOIL_SNOW_hydrology
-  USE SNOW_Layers_CombineDivide
-  USE GLACIER
-  USE LAKE
-  USE SIMPLE_OCEAN
-  USE ALBEDO
+  USE MOD_RainSnowTemp
+  USE MOD_NetSolar
+  USE MOD_OrbCoszen
+  USE MOD_NewSnow
+  USE MOD_Thermal
+  USE MOD_SoilSnowHydrology
+  USE MOD_SnowFraction
+  USE MOD_SnowLayersCombineDivide
+  USE MOD_Glacier
+  USE MOD_Lake
+  USE MOD_SimpleOcean
+  USE MOD_Albedo
+  USE MOD_LAIEmpirical
   USE timemanager
 #ifndef LATERAL_FLOW
-  USE MOD_1D_Fluxes, only : rsub
+  USE MOD_Vars_1DFluxes, only : rsub
 #else
-  USE MOD_1D_Fluxes, only : rsubs_pch, rsub
+  USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
 #endif
   USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
-  USE MOD_CLEAF_interception
+  USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
-   USE colm_CaMaMod,only:get_fldevp
+   USE MOD_CaMa_colmCaMa,only:get_fldevp
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
 
@@ -485,7 +492,6 @@ SUBROUTINE CLMMAIN ( &
         errorw      ,&! water balnce errore (mm)
         fiold(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old       ,&! liquid water mass of the column at the previous time step (mm)
-        orb_coszen  ,&! cosine of the solar zenith angle
         parsun      ,&! PAR by sunlit leaves [W/m2]
         parsha      ,&! PAR by shaded leaves [W/m2]
         qseva       ,&! ground surface evaporation rate (mm h2o/s)
@@ -557,7 +563,7 @@ SUBROUTINE CLMMAIN ( &
       REAL(r8) :: fq_fld         ! integral of profile function for moisture
 #endif
 
-      ! 09/2022, yuan: move from CLMDRIVER to SAVE memory
+      ! 09/2022, yuan: move from CoLMDRIVER to SAVE memory
       z_soisno (maxsnl+1:0) = z_sno (maxsnl+1:0)
       z_soisno (1:nl_soil ) = z_soi (1:nl_soil )
       dz_soisno(maxsnl+1:0) = dz_sno(maxsnl+1:0)
@@ -906,7 +912,7 @@ ENDIF
       ! energy balance
       ! ----------------------------------------
       zerr=errore
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF (abs(errore) > .5) THEN
          write(6,*) 'Warning: energy balance violation ',errore,patchclass
       ENDIF
@@ -937,7 +943,7 @@ ENDIF
 
       xerr=errorw/deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw,patchclass
          !stop
@@ -1312,7 +1318,7 @@ ELSE
        sai = tsai(ipatch) * sigf
 ENDIF
 
-       ! 05/02/2023, Dai: move to ALBEDO.F90
+       ! 05/02/2023, Dai: move to MOD_Albedo.F90
        ! update the snow age
        !IF (snl == 0) sag=0.
        !CALL snowage (deltim,t_grnd,scv,scvold,sag)
@@ -1328,7 +1334,7 @@ ENDIF
 !  NEEDS TO BE AFTER SnowFiler is rebuilt, otherwise there
 !  can be zero snow layers but an active column in filter)
 
-       !NOTE: put the below inside ALBEDO.F90
+       !NOTE: put the below inside MOD_Albedo.F90
 !       CALL AerosolMasses( snl ,do_capsnow ,&
 !            wice_soisno(:0),wliq_soisno(:0),snwcp_ice      ,snw_rds       ,&
 !
@@ -1351,7 +1357,7 @@ ENDIF
           t_soisno_ (1) = t_lake (1)
        ENDIF
 
-       !NOTE: put the below inside ALBEDO.F90
+       !NOTE: put the below inside MOD_Albedo.F90
 !       CALL SnowAge_grain(   deltim ,snl    ,dz_soisno_(:1) ,&
 !            pg_snow         ,snwcp_ice      ,snofrz         ,&
 !
@@ -1460,10 +1466,10 @@ ENDIF
        wat = sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
     ENDIF
 
-    ! 09/2022, yuan: move from CLMDRIVER to SAVE memory
+    ! 09/2022, yuan: move from CoLMDRIVER to SAVE memory
     z_sno (maxsnl+1:0) = z_soisno (maxsnl+1:0)
     dz_sno(maxsnl+1:0) = dz_soisno(maxsnl+1:0)
 
 !----------------------------------------------------------------------
 
-END SUBROUTINE CLMMAIN
+END SUBROUTINE CoLMMAIN

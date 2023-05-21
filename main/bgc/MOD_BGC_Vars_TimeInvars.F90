@@ -24,9 +24,9 @@ SAVE
   REAL(r8), allocatable  :: initial_cn_ratio (:)      ! initial c:n ratio of each litter and soil pool
   REAL(r8), allocatable  :: rf_decomp        (:,:,:)  ! respiratory fraction of the ith transfer hr(i) / (hr(i) + ctransfer(i))
   REAL(r8), allocatable  :: pathfrac_decomp  (:,:,:)  ! pathway fraction of each transfer from the same donor pool &
-                                                      ! (hr(i)+ctransfer(i))/sum(hr(donor_pool(:)==donor_pool(i))+ctransfer(donor_pool(:)==donor_pool(i))) 
+                                                      ! (hr(i)+ctransfer(i))/sum(hr(donor_pool(:)==donor_pool(i))+ctransfer(donor_pool(:)==donor_pool(i)))
 
-  INTEGER  :: i_met_lit    ! index of metabolic litter pool             
+  INTEGER  :: i_met_lit    ! index of metabolic litter pool
   INTEGER  :: i_cel_lit    ! index of cellulose litter pool
   INTEGER  :: i_lig_lit    ! index of lignin litter pool
   INTEGER  :: i_cwd        ! index of coarse woody debris pool
@@ -39,7 +39,7 @@ SAVE
   LOGICAL , allocatable :: is_litter (:)  ! (1:ndecomp_pools) ! True => is a litter pool
   LOGICAL , allocatable :: is_soil   (:)  ! (1:ndecomp_pools) ! True => is a soil pool
 
-  REAL(r8), allocatable :: gdp_lf    (:)     ! gdp data 
+  REAL(r8), allocatable :: gdp_lf    (:)     ! gdp data
   REAL(r8), allocatable :: abm_lf    (:)     ! prescribed crop fire time
   REAL(r8), allocatable :: peatf_lf  (:)     ! peatland fraction data
   REAL(r8), allocatable :: cmb_cmplt_fact(:) ! combustion completion factor
@@ -74,9 +74,9 @@ SAVE
   REAL(r8) :: k_nitr_max                     ! maximum N nitrification rate (day-1)
   REAL(r8) :: Q10                            ! respiration rate increments when temperature rising 10 degree C
   REAL(r8) :: froz_q10                       ! respiration rate increments when temperature rising 10 degree C for frozen soil
-  REAL(r8) :: tau_l1                         ! baseline turnover rate of metabolic litter from Century (year-1)  
-  REAL(r8) :: tau_l2_l3                      ! baseline turnover rate of cellulose litter and lignin litter from Century (year-1)     
-  REAL(r8) :: tau_s1                         ! baseline turnover rate of active soil organic matter from Century (year-1)    
+  REAL(r8) :: tau_l1                         ! baseline turnover rate of metabolic litter from Century (year-1)
+  REAL(r8) :: tau_l2_l3                      ! baseline turnover rate of cellulose litter and lignin litter from Century (year-1)
+  REAL(r8) :: tau_s1                         ! baseline turnover rate of active soil organic matter from Century (year-1)
   REAL(r8) :: tau_s2                         ! baseline turnover rate of slow soil organic matter from Century (year-1)
   REAL(r8) :: tau_s3                         ! baseline turnover rate of passive soil organic matter from Century (year-1)
   REAL(r8) :: tau_cwd                        ! baseline turnover rate of CWD (year-1)
@@ -91,7 +91,7 @@ SAVE
   REAL(r8) :: br                             ! basal maintenance respiration rate for aboveground biomass (gC gN-1 s-1)
   REAL(r8) :: br_root                        ! basal maintenance respiration rate for belowground biomass (gC gN-1 s-1)
   REAL(r8) :: fstor2tran                     ! fraction of storage to transfer pool at each onset event
-  REAL(r8) :: ndays_on                       ! number of days to complete leaf onset 
+  REAL(r8) :: ndays_on                       ! number of days to complete leaf onset
   REAL(r8) :: ndays_off                      ! number of days to complete leaf offset
   REAL(r8) :: crit_dayl                      ! critical day length for senescence (s)
   REAL(r8) :: crit_onset_fdd                 ! critical number of freezing days to begin gdd accumulation
@@ -121,7 +121,7 @@ SAVE
 
 !----------------------------------- end BGC constants -----------------
 
-          
+
 ! PUBLIC MEMBER FUNCTIONS:
   public :: allocate_BGCTimeInvars
   public :: deallocate_BGCTimeInvars
@@ -138,7 +138,7 @@ SAVE
 
   SUBROUTINE allocate_BGCTimeInvars ()
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpatch] variables
+  ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
 
      use precision
@@ -183,7 +183,7 @@ SAVE
      use spmd_task
      use ncio_vector
      use ncio_serial
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG
      USE mod_colm_debug
 #endif
      USE mod_landpatch
@@ -192,12 +192,12 @@ SAVE
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
-  
+
 ! bgc constants
      call ncio_read_bcast_serial (file_restart, 'donor_pool     ', donor_pool     )
      call ncio_read_bcast_serial (file_restart, 'receiver_pool  ', receiver_pool  )
      call ncio_read_bcast_serial (file_restart, 'floating_cn_ratio', floating_cn_ratio)
-     call ncio_read_bcast_serial (file_restart, 'initial_cn_ratio' , initial_cn_ratio) 
+     call ncio_read_bcast_serial (file_restart, 'initial_cn_ratio' , initial_cn_ratio)
      call ncio_read_vector       (file_restart, 'rf_decomp       ', nl_soil,ndecomp_transitions,landpatch, rf_decomp      )
      call ncio_read_vector       (file_restart, 'pathfrac_decomp ', nl_soil,ndecomp_transitions,landpatch,pathfrac_decomp )
 
@@ -294,7 +294,7 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'sf', sf)
      call ncio_read_bcast_serial (file_restart, 'sf_no3', sf_no3)
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG
      call check_BGCTimeInvars ()
 #endif
 
@@ -311,7 +311,7 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      use spmd_task
      use ncio_serial
      use ncio_vector
@@ -321,18 +321,18 @@ SAVE
      IMPLICIT NONE
 
      character(len=*), intent(in) :: file_restart
-     
+
      ! Local Variables
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
      call ncio_create_file_vector (file_restart, landpatch)
 
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil', nl_soil)
      call ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_transitions',ndecomp_transitions)
-     
+
      call ncio_write_vector       (file_restart, 'rf_decomp      ', 'soil'   , nl_soil  , &
                           'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, rf_decomp      , compress)
      call ncio_write_vector       (file_restart, 'pathfrac_decomp', 'soil'   , nl_soil  , &
@@ -353,7 +353,7 @@ SAVE
         call ncio_write_serial (file_restart, 'donor_pool     '  , donor_pool       , 'ndecomp_transitions')
         call ncio_write_serial (file_restart, 'receiver_pool  '  , receiver_pool    , 'ndecomp_transitions')
         call ncio_write_serial (file_restart, 'floating_cn_ratio', floating_cn_ratio, 'ndecomp_pools')
-        call ncio_write_serial (file_restart, 'initial_cn_ratio' , initial_cn_ratio , 'ndecomp_pools') 
+        call ncio_write_serial (file_restart, 'initial_cn_ratio' , initial_cn_ratio , 'ndecomp_pools')
         call ncio_write_serial (file_restart, 'is_cwd         '  , is_cwd           , 'ndecomp_pools')
         call ncio_write_serial (file_restart, 'is_litter      '  , is_litter        , 'ndecomp_pools')
         call ncio_write_serial (file_restart, 'is_soil        '  , is_soil          , 'ndecomp_pools')
@@ -405,7 +405,7 @@ SAVE
         call ncio_write_serial (file_restart, 'tau_s3              ', tau_s3              )!
         call ncio_write_serial (file_restart, 'tau_cwd             ', tau_cwd             )
         call ncio_write_serial (file_restart, 'lwtop               ', lwtop               )
-   
+
         call ncio_write_serial (file_restart, 'som_adv_flux        ', som_adv_flux        )
         call ncio_write_serial (file_restart, 'som_diffus          ', som_diffus          )
         call ncio_write_serial (file_restart, 'cryoturb_diffusion_k', cryoturb_diffusion_k)
@@ -446,7 +446,7 @@ SAVE
 
      end if
 
-   end subroutine WRITE_BGCTimeInvars 
+   end subroutine WRITE_BGCTimeInvars
 
   SUBROUTINE deallocate_BGCTimeInvars ()
 
@@ -455,7 +455,7 @@ SAVE
      implicit none
 
      ! --------------------------------------------------
-     ! Deallocates memory for CLM 1d [numpatch] variables
+     ! Deallocates memory for CoLM 1d [numpatch] variables
      ! --------------------------------------------------
 
      if (p_is_worker) then
@@ -482,7 +482,7 @@ SAVE
 
   END SUBROUTINE deallocate_BGCTimeInvars
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    !---------------------------------------
    SUBROUTINE check_BGCTimeInvars ()
 
@@ -490,15 +490,15 @@ SAVE
       use mod_colm_debug
 
       IMPLICIT NONE
-      
+
       call check_vector_data ('rf_decomp      ',  rf_decomp      )
       call check_vector_data ('pathfrac_decomp',  pathfrac_decomp)
       call check_vector_data ('gdp_lf         ',  gdp_lf         )
       call check_vector_data ('abm_lf         ',  abm_lf         )
       call check_vector_data ('peatf_lf       ',  peatf_lf       )
       call check_vector_data ('rice2pdt       ',  rice2pdt       )
-     
-   end subroutine check_BGCTimeInvars 
+
+   end subroutine check_BGCTimeInvars
 #endif
 
 #endif

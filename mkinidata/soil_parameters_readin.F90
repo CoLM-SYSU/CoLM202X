@@ -19,8 +19,8 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
    use spmd_task
    use ncio_vector
    use mod_landpatch
-   use MOD_TimeInvariants
-#ifdef CLMDEBUG
+   use MOD_Vars_TimeInvariants
+#ifdef CoLMDEBUG
    use mod_colm_debug
 #endif
 #ifdef SinglePoint

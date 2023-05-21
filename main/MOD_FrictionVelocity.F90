@@ -1,4 +1,4 @@
-MODULE FRICTION_VELOCITY
+MODULE MOD_FrictionVelocity
 
 !-----------------------------------------------------------------------
  use precision
@@ -565,6 +565,6 @@ MODULE FRICTION_VELOCITY
  end function psi
 
 
-END MODULE FRICTION_VELOCITY
+END MODULE MOD_FrictionVelocity
 ! --------- EOP ------------
 

@@ -1,9 +1,9 @@
 #include <define.h>
 
-MODULE AerosolMod
+MODULE MOD_Aerosol
 
   !-----------------------------------------------------------------------
-  !
+  use precision
   IMPLICIT NONE
   SAVE
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -12,8 +12,6 @@ MODULE AerosolMod
   !
   ! !PUBLIC DATA MEMBERS:
   !-----------------------------------------------------------------------
-    integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
-
     !integer, parameter :: begc = 1      !  beginning column index
     !integer, parameter :: endc = 1      !  beginning and ending column index
     real(r8) :: dtime = 1800.0_r8       !  land model time step (sec)
@@ -285,5 +283,5 @@ contains
   end subroutine AerosolFluxes
 
 
-END MODULE AerosolMod
+END MODULE MOD_Aerosol
 

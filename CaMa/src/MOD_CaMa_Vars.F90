@@ -1,6 +1,6 @@
 #include <define.h>
 
-module MOD_CaMa_Variables
+module MOD_CaMa_Vars
 !DESCRIPTION
 !===========
    !---This MODULE is the coupler for the colm and CaMa-Flood model.
@@ -218,7 +218,7 @@ contains
 
       USE precision
       USE spmd_task
-      USE MOD_1D_Fluxes, ONLY : rnof
+      USE MOD_Vars_1DFluxes, ONLY : rnof
       USE mod_landpatch, ONLY : numpatch
 
       IMPLICIT NONE
@@ -324,7 +324,7 @@ contains
          D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,               &
          D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX, &
          d2daminf_avg,D2WEVAPEX_AVG,D2WINFILTEX_AVG,D2LEVDPH !!! added
-      USE mod_2d_fluxes
+      USE MOD_Vars_2DFluxes
 
       IMPLICIT NONE
 
@@ -550,8 +550,8 @@ contains
       USE mod_landpatch
       USE mod_mapping_pset2grid
       USE mod_colm_debug
-      USE MOD_TimeInvariants, ONLY : patchtype
-      USE mod_forcing, ONLY : forcmask
+      USE MOD_Vars_TimeInvariants, ONLY : patchtype
+      USE MOD_Forcing, ONLY : forcmask
 
       IMPLICIT NONE
 
@@ -700,7 +700,7 @@ contains
       USE mod_landpatch
       USE mod_mapping_pset2grid
       USE mod_colm_debug
-      USE MOD_TimeInvariants, ONLY : patchtype
+      USE MOD_Vars_TimeInvariants, ONLY : patchtype
       USE mod_grid
 
       IMPLICIT NONE
@@ -774,5 +774,5 @@ contains
 
 #endif
 
-END module MOD_CaMa_Variables
+END module MOD_CaMa_Vars
 ! ----- EOP ---------

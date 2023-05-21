@@ -19,7 +19,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -130,7 +130,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('NDEP value ', NDEP_patches)
 #endif
 

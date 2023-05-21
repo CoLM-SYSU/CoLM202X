@@ -1,4 +1,4 @@
-# Makefile for CLM main program
+# Makefile for CoLM main program
 
 ####################################################################
 

@@ -1,6 +1,6 @@
 #include <define.h>
 
- MODULE GLACIER
+ MODULE MOD_Glacier
 
 !-----------------------------------------------------------------------
 ! Energy and Mass Balance Model of LAND ICE (GLACIER / ICE SHEET)
@@ -72,7 +72,8 @@
 
   use precision
   use PhysicalConstants, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
-  use FRICTION_VELOCITY
+  use MOD_FrictionVelocity
+  USE MOD_Qsadv
 
   IMPLICIT NONE
 
@@ -316,7 +317,7 @@
          errore = errore - (t_icesno(j)-t_icesno_bef(j))/fact(j)
       enddo
 
-#if (defined CLMDEBUG)
+#if (defined CoLMDEBUG)
      if(abs(errore)>.2)then
         write(6,*) 'GLACIER_TEMP.F90 : energy  balance violation'
         write(6,100) errore,sabg,forc_frl,olrg,fsena,lfevpa,xmf,t_precip,t_icesno(lb)
@@ -344,7 +345,7 @@
 
   use precision
   use PhysicalConstants, only : cpair,vonkar,grav
-  use FRICTION_VELOCITY
+  use MOD_FrictionVelocity
   implicit none
 
 !----------------------- Dummy argument --------------------------------
@@ -571,6 +572,8 @@
 
   use precision
   use PhysicalConstants, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
+  USE MOD_Meltf
+  USE mod_utils
 
   IMPLICIT NONE
 
@@ -845,8 +848,8 @@
 !=======================================================================
   use precision
   use PhysicalConstants, only : denice, denh2o, tfrz
-  use SNOW_Layers_CombineDivide
-  use SOIL_SNOW_hydrology
+  use MOD_SnowLayersCombineDivide
+  use MOD_SoilSnowHydrology
 
   IMPLICIT NONE
 
@@ -967,8 +970,8 @@
 !=======================================================================
   use precision
   use PhysicalConstants, only : denice, denh2o, tfrz
-  use SNOW_Layers_CombineDivide
-  use SOIL_SNOW_hydrology
+  use MOD_SnowLayersCombineDivide
+  use MOD_SoilSnowHydrology
 
   IMPLICIT NONE
 
@@ -1097,4 +1100,4 @@
 
 
 
- END MODULE GLACIER
+ END MODULE MOD_Glacier

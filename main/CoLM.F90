@@ -1,9 +1,9 @@
 #include <define.h>
 
-PROGRAM CLM
+PROGRAM CoLM
    ! ======================================================================
-   ! Reference: 
-   !     [1] Dai et al., 2003: The Common Land Model (CoLM). 
+   ! Reference:
+   !     [1] Dai et al., 2003: The Common Land Model (CoLM).
    !         Bull. of Amer. Meter. Soc., 84: 1013-1023
    !     [2] Dai et al., 2004: A two-big-leaf model for canopy temperature,
    !         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
@@ -19,16 +19,16 @@ PROGRAM CLM
    use mod_namelist
    USE GlobalVars
    USE LC_Const
-   USE PFT_Const
+   USE MOD_Vars_PFTConst
    use PhysicalConstants
-   use MOD_TimeInvariants
-   use MOD_TimeVariables
-   use MOD_1D_Forcing
-   use MOD_2D_Forcing
-   use MOD_1D_Fluxes
-   use MOD_2D_Fluxes
-   use mod_forcing
-   use mod_hist
+   use MOD_Vars_TimeInvariants
+   use MOD_Vars_TimeVariables
+   use MOD_Vars_1DForcing
+   use MOD_Vars_2DForcing
+   use MOD_Vars_1DFluxes
+   use MOD_Vars_2DFluxes
+   use MOD_Forcing
+   use MOD_Hist
    use timemanager
    use mod_colm_debug
 
@@ -46,14 +46,14 @@ PROGRAM CLM
 #ifdef PC_CLASSIFICATION
    USE mod_landpc
 #endif
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    USE mod_elm_vector
 #endif
 #ifdef CATCHMENT
    USE mod_hru_vector
 #endif
 #if(defined CaMa_Flood)
-   use colm_CaMaMod ! whether cama-flood is used
+   use MOD_CaMa_colmCaMa ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata
@@ -64,21 +64,28 @@ PROGRAM CLM
 #endif
 
 #ifdef Fire
-   USE mod_lightning_data, only: init_lightning_data, update_lightning_data
+   USE MOD_LightningData, only: init_lightning_data, update_lightning_data
+   USE MOD_FireReadin, only: Fire_readin
 #endif
 
 #ifdef OzoneData
-   USE mod_ozone_data, only: init_ozone_data, update_ozone_data
+   USE MOD_OzoneData, only: init_ozone_data, update_ozone_data
 #endif
    use mod_srfdata_restart
-      
+   USE MOD_LAIReadin
+   USE MOD_NitrifReadin
+
+#ifdef BGC
+   USE MOD_NdepReadin
+#endif
+
    ! SNICAR
-   USE SnowSnicarMod , only:SnowAge_init, SnowOptics_init
+   USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
 
    IMPLICIT NONE
 
    character(LEN=256) :: nlfile
-   character(LEN=256) :: casename   
+   character(LEN=256) :: casename
    character(len=256) :: dir_landdata
    character(len=256) :: dir_forcing
    character(len=256) :: dir_hist
@@ -91,13 +98,13 @@ PROGRAM CLM
    integer  :: edate(3)     ! calendar (year, julian day, seconds)
    integer  :: pdate(3)     ! calendar (year, julian day, seconds)
    logical  :: greenwich    ! greenwich time
-   
+
    logical :: doalb         ! true => start up the surface albedo calculation
    logical :: dolai         ! true => start up the time-varying vegetation paramter
    logical :: dosst         ! true => update sst/ice/snow
 
-   integer :: Julian_1day_p, Julian_1day 
-   integer :: Julian_8day_p, Julian_8day 
+   integer :: Julian_1day_p, Julian_1day
+   integer :: Julian_8day_p, Julian_8day
    integer :: s_year, s_month, s_day, s_seconds, s_julian
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
@@ -105,7 +112,7 @@ PROGRAM CLM
    INTEGER :: spinup_repeat
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
-   
+
    integer*8 :: start_time, end_time, c_per_sec, time_used
    logical isread
 
@@ -134,20 +141,20 @@ PROGRAM CLM
 
    deltim    = DEF_simulation_time%timestep
    greenwich = DEF_simulation_time%greenwich
-   s_year    = DEF_simulation_time%start_year    
-   s_month   = DEF_simulation_time%start_month    
+   s_year    = DEF_simulation_time%start_year
+   s_month   = DEF_simulation_time%start_month
    s_day     = DEF_simulation_time%start_day
-   s_seconds = DEF_simulation_time%start_sec   
-   e_year    = DEF_simulation_time%end_year      
+   s_seconds = DEF_simulation_time%start_sec
+   e_year    = DEF_simulation_time%end_year
    e_month   = DEF_simulation_time%end_month
-   e_day     = DEF_simulation_time%end_day       
-   e_seconds = DEF_simulation_time%end_sec       
-   p_year    = DEF_simulation_time%spinup_year   
+   e_day     = DEF_simulation_time%end_day
+   e_seconds = DEF_simulation_time%end_sec
+   p_year    = DEF_simulation_time%spinup_year
    p_month   = DEF_simulation_time%spinup_month
-   p_day     = DEF_simulation_time%spinup_day    
-   p_seconds = DEF_simulation_time%spinup_sec  
-   
-   spinup_repeat = DEF_simulation_time%spinup_repeat 
+   p_day     = DEF_simulation_time%spinup_day
+   p_seconds = DEF_simulation_time%spinup_sec
+
+   spinup_repeat = DEF_simulation_time%spinup_repeat
 
    call initimetype(greenwich)
    call monthday2julian(s_year,s_month,s_day,s_julian)
@@ -157,7 +164,7 @@ PROGRAM CLM
    sdate(1) = s_year; sdate(2) = s_julian; sdate(3) = s_seconds
    edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
    pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
-   
+
    CALL Init_GlovalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
@@ -168,11 +175,11 @@ PROGRAM CLM
    call mesh_load_from_file (dir_landdata)
 
    call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
-   
+
 #ifdef CATCHMENT
    CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
 #endif
-  
+
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -185,7 +192,7 @@ PROGRAM CLM
    CALL map_patch_to_pc
 #endif
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
    CALL hru_vector_init ()
@@ -257,7 +264,7 @@ PROGRAM CLM
    itstamp = ststamp
 
    TIMELOOP : DO while (itstamp < etstamp)
-      
+
       CALL julian2monthday (idate(1), idate(2), month_p, mday_p)
 
       if (p_is_master) then
@@ -267,7 +274,7 @@ PROGRAM CLM
             write(*,100) idate(1), month_p, mday_p, idate(3)
          ENDIF
       end if
-   
+
 
       Julian_1day_p = int(calendarday(idate)-1)/1*1 + 1
       Julian_8day_p = int(calendarday(idate)-1)/8*8 + 1
@@ -292,11 +299,11 @@ PROGRAM CLM
 #if (defined LATERAL_FLOW)
       CALL lateral_flow (deltim)
 #endif
-   
-      ! Call clm driver
+
+      ! Call colm driver
       ! ----------------------------------------------------------------------
       IF (p_is_worker) THEN
-         CALL CLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
+         CALL CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oroflag)
       ENDIF
 
       ! Get leaf area index
@@ -310,13 +317,13 @@ PROGRAM CLM
       endif
 #else
       ! READ in Leaf area index and stem area index
-      ! Update every 8 days (time interval of the MODIS LAI data) 
+      ! Update every 8 days (time interval of the MODIS LAI data)
       ! ----------------------------------------------------------------------
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI            
+      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       IF (DEF_LAI_CLIM) then
          ! yuan, 08/03/2019: read global LAI/SAI data
          CALL julian2monthday (idate(1), idate(2), month, mday)
-         IF (month /= month_p) THEN 
+         IF (month /= month_p) THEN
             CALL LAI_readin (idate(1), month, dir_landdata)
          END IF
       ELSE
@@ -359,7 +366,7 @@ PROGRAM CLM
          call WRITE_TimeVariables (idate, casename, dir_restart)
       end if
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       call check_TimeVariables ()
 #endif
 
@@ -374,7 +381,7 @@ PROGRAM CLM
             write(*,101) time_used/3600, mod(time_used,3600)/60, mod(time_used,60)
          elseif (time_used >= 60) then
             write(*,102) time_used/60, mod(time_used,60)
-         else 
+         else
             write(*,103) time_used
          end if
       end if
@@ -388,7 +395,7 @@ PROGRAM CLM
 
    END DO TIMELOOP
 
-   call deallocate_TimeInvariants ()  
+   call deallocate_TimeInvariants ()
    call deallocate_TimeVariables  ()
    call deallocate_1D_Forcing     ()
    call deallocate_1D_Fluxes      ()
@@ -407,17 +414,17 @@ PROGRAM CLM
    call mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#if(defined CaMa_Flood) 
+#if(defined CaMa_Flood)
    call colm_cama_exit !zhongwang wei, 20210927: finalize CaMa-Flood
 #endif
 
    if (p_is_master) then
-      write(*,'(/,A25)') 'CLM Execution Completed.'
+      write(*,'(/,A25)') 'CoLM Execution Completed.'
    end if
 
    99  format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I3, ' repeat left)')
    100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
-   101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.') 
+   101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.')
    102 format (/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
    103 format (/, 'Time elapsed : ', I3, ' seconds.')
 
@@ -425,6 +432,6 @@ PROGRAM CLM
    CALL spmd_exit
 #endif
 
-END PROGRAM CLM
+END PROGRAM CoLM
 ! ----------------------------------------------------------------------
 ! EOP

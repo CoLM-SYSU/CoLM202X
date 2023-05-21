@@ -1,8 +1,8 @@
 #include <define.h>
 
-MODULE MOD_2D_Fluxes
+MODULE MOD_Vars_2DFluxes
 ! ----------------------------------------------------------------------
-! perfrom the grid average mapping: average a subgrid input 1d vector 
+! perfrom the grid average mapping: average a subgrid input 1d vector
 ! of length numpatch to a output 2d array of length [lon_points,lat_points]
 !
 ! Created by Yongjiu Dai, 03/2014
@@ -62,26 +62,26 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_2d) :: f_respc   ! respiration (plant+soil) [mol m-2 s-1]
 #ifdef WUEdiag
 #ifdef PFT_CLASSIFICATION
-   type(block_data_real8_2d) :: f_assim_RuBP_sun        
-   type(block_data_real8_2d) :: f_assim_RuBP_sha        
-   type(block_data_real8_2d) :: f_assim_Rubisco_sun        
-   type(block_data_real8_2d) :: f_assim_Rubisco_sha        
-   type(block_data_real8_2d) :: f_assimsun        
-   type(block_data_real8_2d) :: f_assimsha        
-   type(block_data_real8_2d) :: f_etrsun        
-   type(block_data_real8_2d) :: f_etrsha        
-   type(block_data_real8_2d) :: f_cisun        
-   type(block_data_real8_2d) :: f_cisha        
-   type(block_data_real8_2d) :: f_Dsun        
-   type(block_data_real8_2d) :: f_Dsha        
-   type(block_data_real8_2d) :: f_gammasun        
-   type(block_data_real8_2d) :: f_gammasha        
-   type(block_data_real8_2d) :: f_lambdasun      
-   type(block_data_real8_2d) :: f_lambdasha      
-   type(block_data_real8_2d) :: f_lambda                 
+   type(block_data_real8_2d) :: f_assim_RuBP_sun
+   type(block_data_real8_2d) :: f_assim_RuBP_sha
+   type(block_data_real8_2d) :: f_assim_Rubisco_sun
+   type(block_data_real8_2d) :: f_assim_Rubisco_sha
+   type(block_data_real8_2d) :: f_assimsun
+   type(block_data_real8_2d) :: f_assimsha
+   type(block_data_real8_2d) :: f_etrsun
+   type(block_data_real8_2d) :: f_etrsha
+   type(block_data_real8_2d) :: f_cisun
+   type(block_data_real8_2d) :: f_cisha
+   type(block_data_real8_2d) :: f_Dsun
+   type(block_data_real8_2d) :: f_Dsha
+   type(block_data_real8_2d) :: f_gammasun
+   type(block_data_real8_2d) :: f_gammasha
+   type(block_data_real8_2d) :: f_lambdasun
+   type(block_data_real8_2d) :: f_lambdasha
+   type(block_data_real8_2d) :: f_lambda
 #endif
 #endif
-   type(block_data_real8_2d) :: f_qcharge ! groundwater recharge rate [mm/s] 
+   type(block_data_real8_2d) :: f_qcharge ! groundwater recharge rate [mm/s]
 
    !---------------------------------------------------------------------
    type(block_data_real8_2d) :: f_t_grnd   ! ground surface temperature [K]
@@ -157,7 +157,7 @@ MODULE MOD_2D_Fluxes
    type(block_data_real8_2d) :: f_xy_rain    ! rain [mm/s]
    type(block_data_real8_2d) :: f_xy_snow    ! snow [mm/s]
    type(block_data_real8_2d) :: f_xy_ozone   ! ozone concentration [mol/mol]
-   
+
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Fluxes
 
@@ -165,7 +165,7 @@ CONTAINS
 
    SUBROUTINE allocate_2D_Fluxes (grid)
       ! --------------------------------------------------------------------
-      ! Allocates memory for CLM 2d [lon_points,lat_points] variables
+      ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! --------------------------------------------------------------------
 
       use spmd_task
@@ -176,14 +176,14 @@ CONTAINS
 
       type(grid_type), intent(in) :: grid
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
       IF (DEF_HISTORY_IN_VECTOR) THEN
          RETURN
-      ENDIF 
+      ENDIF
 #endif
 
       if (p_is_io) then
-         
+
          call allocate_block_data (grid, f_taux   )  ! wind stress: E-W [kg/m/s2]
          call allocate_block_data (grid, f_tauy   )  ! wind stress: N-S [kg/m/s2]
          call allocate_block_data (grid, f_fsena  )  ! sensible heat from canopy height to atmosphere [W/m2]
@@ -248,7 +248,7 @@ CONTAINS
          call allocate_block_data (grid, f_lambda                   )
 #endif
 #endif
-         call allocate_block_data (grid, f_qcharge)  ! groundwater recharge rate [mm/s] 
+         call allocate_block_data (grid, f_qcharge)  ! groundwater recharge rate [mm/s]
 
          !---------------------------------------------------------------------
          call allocate_block_data (grid, f_t_grnd  )  ! ground surface temperature [K]
@@ -333,4 +333,4 @@ CONTAINS
 
    END SUBROUTINE allocate_2D_Fluxes
 
-END MODULE MOD_2D_Fluxes
+END MODULE MOD_Vars_2DFluxes

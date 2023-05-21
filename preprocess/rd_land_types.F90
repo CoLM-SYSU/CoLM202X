@@ -664,7 +664,7 @@ IMPLICIT NONE
       if (p_master) print*,'URBAN'
       if (p_master) print*,'Urban and Built-up Land Points =', ii
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 #if(defined USGS_CLASSIFICATION)
       ii = 0
       iii = 0
@@ -835,7 +835,7 @@ IMPLICIT NONE
 !      if (p_master) print*, 'MODIS IGBP WATER BODIES','iii=',iii
 !#endif
 !
-!#if(defined CLMDEBUG)
+!#if(defined CoLMDEBUG)
 !#if(defined USGS_CLASSIFICATION)
 !      iiii = 0
 !
@@ -952,7 +952,7 @@ IMPLICIT NONE
 !      if (p_master) print*, 'MODIS IGBP WETLAND','iii=',iii
 !#endif
 !
-!#if(defined CLMDEBUG)
+!#if(defined CoLMDEBUG)
 !#if(defined USGS_CLASSIFICATION)
 !      iiii = 0
 !
@@ -1070,7 +1070,7 @@ IMPLICIT NONE
       if (p_master) print*, 'MODIS IGBP GLACIER/ICESHEET','iii=',iii
 #endif
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 #if(defined USGS_CLASSIFICATION)
       iiii = 0
 
@@ -1189,7 +1189,7 @@ IMPLICIT NONE
       if (p_master) print*, 'MODIS IGBP URBAN and BUILT-UP LAND','iii=',iii
 #endif
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 #if(defined USGS_CLASSIFICATION)
       iiii = 0
 
@@ -1235,7 +1235,7 @@ IMPLICIT NONE
 #endif
 
       !--------------------------------------------------------------------
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 #if(defined USGS_CLASSIFICATION)
       ii = 0
       iii = 0

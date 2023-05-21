@@ -16,12 +16,12 @@ module MOD_BGC_Soil_BiogeochemVerticalProfile
 
 
   use precision
-  use PFT_Const, only: rootfr_p
+  use MOD_Vars_PFTConst, only: rootfr_p
   use MOD_BGC_Vars_TimeVars, only: &
       nfixation_prof, ndep_prof, altmax_lastyear_indx
   use MOD_BGC_Vars_PFTimeVars, only: &
       leaf_prof_p, froot_prof_p, croot_prof_p, stem_prof_p, cinput_rootfr_p
-  use MOD_PFTimeInvars, only: &
+  use MOD_Vars_PFTimeInvars, only: &
       pftclass, pftfrac
   implicit none
 

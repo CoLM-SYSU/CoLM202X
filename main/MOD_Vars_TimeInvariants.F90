@@ -1,18 +1,18 @@
 #include <define.h>
 
-MODULE MOD_TimeInvariants
+MODULE MOD_Vars_TimeInvariants
 ! -------------------------------
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
 use precision
 #ifdef PFT_CLASSIFICATION
-USE MOD_PFTimeInvars
+USE MOD_Vars_PFTimeInvars
 #endif
 #ifdef PC_CLASSIFICATION
-USE MOD_PCTimeInvars
+USE MOD_Vars_PCTimeInvars
 #endif
-#ifdef BGC 
+#ifdef BGC
 USE MOD_BGC_Vars_TimeInvars
 #endif
 IMPLICIT NONE
@@ -104,7 +104,7 @@ SAVE
 
   SUBROUTINE allocate_TimeInvariants ()
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpatch] variables
+  ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
 
      use precision
@@ -197,7 +197,7 @@ SAVE
      use spmd_task
      use ncio_vector
      use ncio_serial
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
      USE mod_colm_debug
 #endif
      USE mod_landpatch
@@ -295,7 +295,7 @@ SAVE
      CALL READ_BGCTimeInvars (file_restart)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
      call check_TimeInvariants ()
 #endif
 
@@ -443,7 +443,7 @@ SAVE
      implicit none
 
      ! --------------------------------------------------
-     ! Deallocates memory for CLM 1d [numpatch] variables
+     ! Deallocates memory for CoLM 1d [numpatch] variables
      ! --------------------------------------------------
 
      if (p_is_worker) then
@@ -520,7 +520,7 @@ SAVE
 
   END SUBROUTINE deallocate_TimeInvariants
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
@@ -618,4 +618,4 @@ SAVE
    end subroutine check_TimeInvariants
 #endif
 
-END MODULE MOD_TimeInvariants
+END MODULE MOD_Vars_TimeInvariants

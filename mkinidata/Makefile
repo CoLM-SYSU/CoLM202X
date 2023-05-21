@@ -1,4 +1,4 @@
-# Makefile for CLM initial data processing
+# Makefile for CoLM initial data processing
 
 include ../include/Makeoptions
  
@@ -65,29 +65,29 @@ BASIC_BGC = \
 			  ../main/bgc/MOD_BGC_Vars_TimeVars.o 
 
 BASIC =  \
-		  ../main/PFT_Const.o \
-		  ../main/MOD_PFTimeVars.o \
-		  ../main/MOD_PFTimeInvars.o \
-		  ../main/MOD_PCTimeVars.o \
-		  ../main/MOD_PCTimeInvars.o \
-		  ../main/MOD_TimeInvariants.o        \
-		  ../main/MOD_TimeVariables.o    \
-		  ../main/MOD_1D_PFTFluxes.o          \
-		  ../main/MOD_1D_PCFluxes.o           \
-		  ../main/MOD_1D_Fluxes.o \
-		  ../main/MOD_1D_Forcing.o 
+		  ../main/MOD_Vars_PFTConst.o \
+		  ../main/MOD_Vars_PFTimeVars.o \
+		  ../main/MOD_Vars_PFTimeInvars.o \
+		  ../main/MOD_Vars_PCTimeVars.o \
+		  ../main/MOD_Vars_PCTimeInvars.o \
+		  ../main/MOD_Vars_TimeInvariants.o        \
+		  ../main/MOD_Vars_TimeVariables.o    \
+		  ../main/MOD_Vars_1DPFTFluxes.o          \
+		  ../main/MOD_Vars_1DPCFluxes.o           \
+		  ../main/MOD_Vars_1DFluxes.o \
+		  ../main/MOD_Vars_1DForcing.o 
 
 OBJS_MAIN = \
-				  ../main/LAI_empirical.o  \
-				  ../main/LAI_readin.o \
-				  ../main/orb_coszen.o \
-				  ../main/ThreeDCanopy.o \
-				  ../main/SnowSnicarMod.o \
-				  ../main/snowage.o \
-				  ../main/SnowAlbedo.o \
-				  ../main/AerosolMod.o    \
-				  ../main/ALBEDO.o    \
-				  ../main/snowfraction.o
+				  ../main/MOD_LAIEmpirical.o  \
+				  ../main/MOD_LAIReadin.o \
+				  ../main/MOD_OrbCoszen.o \
+				  ../main/MOD_ThreeDCanopy.o \
+				  ../main/MOD_SnowSnicar.o \
+				  ../main/MOD_SnowAge.o \
+				  ../main/MOD_SnowAlbedo.o \
+				  ../main/MOD_Aerosol.o    \
+				  ../main/MOD_Albedo.o    \
+				  ../main/MOD_SnowFraction.o
 
 OBJS = \
 		 pct_readin.o       \
@@ -96,13 +96,13 @@ OBJS = \
 		 soil_color_refl.o        \
 		 soil_parameters_readin.o \
 		 HTOP_readin.o \
-		 CROP_readin.o \
-		 NITRIF_readin.o \
-	         NDEP_readin.o   \
-		 Fire_readin.o   \
+		 MOD_CropReadin.o \
+		 MOD_NitrifReadin.o \
+	    MOD_NdepReadin.o   \
+		 MOD_FireReadin.o   \
 		 IniTimeVar.o             \
 		 initialize.o             \
-		 CLMINI.o 
+		 CoLMINI.o 
 
 ####################################################################
 
@@ -113,7 +113,7 @@ ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
 	${BASIC} ${BASIC_BGC} ${BASIC_HYDRO} ${OBJS_MAIN} ${OBJS} -o $@ ${LDFLAGS}
-	@echo 'making CLM initial data completed!'
+	@echo 'making CoLM initial data completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< 

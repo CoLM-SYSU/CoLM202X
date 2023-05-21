@@ -1,13 +1,32 @@
- subroutine wetbulb(t,p,q,twc)
+MODULE MOD_WetBulb
+
+!-----------------------------------------------------------------------
+   USE precision
+   IMPLICIT NONE
+   SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: wetbulb
+
+
+!-----------------------------------------------------------------------
+
+   CONTAINS
+
+!-----------------------------------------------------------------------
+
+
+   subroutine wetbulb(t,p,q,twc)
 
 !=======================================================================
 ! Wet-bulb temperature
-!    
+!
 ! Yongjiu Dai, 07/2013
 !=======================================================================
 
       use precision
       use PhysicalConstants, only : tfrz, hvap, cpair
+      USE MOD_Qsadv
 
       implicit none
       real(r8), intent(in) :: t     ! air temperature [K]
@@ -61,12 +80,12 @@
 
 ! ----------------------------------------------------------
 ! the defining equation for the wetbulb temp Twb is
-!     f(Twb) = Twb-T - Lv/Cp [r-rs(Twb)] = 0, 
-! where 
-!     T = the dry-bulb temp (K), 
-!     Lv = the latent heat of vaporization (J/kg/K), 
+!     f(Twb) = Twb-T - Lv/Cp [r-rs(Twb)] = 0,
+! where
+!     T = the dry-bulb temp (K),
+!     Lv = the latent heat of vaporization (J/kg/K),
 !     Cp = the specific heat of air at constant pressure,
-!     r = the water vapor mixing ratio [q/(1-q)], 
+!     r = the water vapor mixing ratio [q/(1-q)],
 !     rs(Twb) = the saturation mixing ratio at wetbulb temp.
 ! http://www.asp.ucar.edu/colloquium/1992/notes/paet1/node81.html
 ! ----------------------------------------------------------
@@ -82,7 +101,7 @@
 
 !*----------------------------------------------------------
 !*wetbulb temp as air temp and relative humidity at standard sea level pressure.
-!*valid for RH% (5%-99%), T (-20C-50C). R. Stull, 2011: Wet-bulb temperature form 
+!*valid for RH% (5%-99%), T (-20C-50C). R. Stull, 2011: Wet-bulb temperature form
 !*relative humidity and air temperature. J. Appl. Meteor. and Climatol., vol 50, 2267-2269.
 !*----------------------------------------------------------
 !*    tcair = t - tfrz
@@ -94,4 +113,6 @@
 !*    twc = twc + tfrz
 !*----------------------------------------------------------
 
- end subroutine wetbulb
+   end subroutine wetbulb
+
+END MODULE MOD_WetBulb

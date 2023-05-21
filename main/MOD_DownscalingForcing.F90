@@ -1,7 +1,6 @@
-
 #include <define.h>
 
-module DownscalingForcingMod
+module MOD_DownscalingForcing
   !-----------------------------------------------------------------------
   ! DESCRIPTION:
   ! Downscaling of gridcell-level meteorological forcings into column-level forcings
@@ -13,10 +12,10 @@ module DownscalingForcingMod
   ! REVISIONS:
   ! Updated by Yongjiu Dai, January 16, 2023
   !
-  !
-  IMPLICIT NONE
 
-  integer,  parameter :: r8 = selected_real_kind(12)        ! 8 byte real
+  USE precision
+  use MOD_Qsadv
+  IMPLICIT NONE
 
   real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8       ! molecular weight dry air [kg/kmole]
   real(r8), parameter :: SHR_CONST_MWWV   = 18.016_r8       ! molecular weight water vapor
@@ -33,15 +32,15 @@ module DownscalingForcingMod
   real(r8) :: rair = SHR_CONST_RDAIR  ! Dry air gas constant [J/K/kg]
   real(r8) :: tfrz = SHR_CONST_TKFRZ  ! freezing T of fresh water [K]
 
-  ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1), 
+  ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1),
   ! substantially smaller than the often-assumed 6.5 (deg km-1).
   ! The data sets show similar seasonal and diurnal variability, with lapse rates smallest
   ! (2.5-3.5 deg km-1) in late-summer minimum temperatures, and largest (6.5-7.5 deg km-1)
   ! in spring maximum temperatures. Geographic (windward versus lee side) differences in
-  ! lapse rates are substantial. [Minder et al., 2010, Surface temperature lapse rates over complex terrain: 
+  ! lapse rates are substantial. [Minder et al., 2010, Surface temperature lapse rates over complex terrain:
   ! Lessons from the Cascade Mountains. JGR, 115, doi:10.1029/2009JD013493]
-  ! 
-  ! Kunkel, K. E., 1989: Simple procedures for extrapolation of humidity variables in the mountainous western United States. 
+  !
+  ! Kunkel, K. E., 1989: Simple procedures for extrapolation of humidity variables in the mountainous western United States.
   ! J. Climate, 2, 656-669. lapse_rate = /Jan - Dec/4.4,5.9,7.1,7.8,8.1,8.2,8.1,8.1,7.7,6.8,5.5,4.7/ (deg km-1)
 
   real(r8), parameter :: lapse_rate = 0.006_r8 ! surface temperature lapse rate (deg m-1)
@@ -53,7 +52,6 @@ module DownscalingForcingMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: rhos                ! calculate atmospheric density
-  private :: qsadv               ! calculate saturated water vapor and specific humidity
   private :: downscale_longwave  ! Downscale longwave radiation from gridcell to column
 
   !-----------------------------------------------------------------------
@@ -86,7 +84,7 @@ contains
 
     ! !ARGUMENTS:
     integer,  INTENT(in) :: num_gridcells  ! number of gridcell
-    integer,  INTENT(in) :: num_columns    ! number of column 
+    integer,  INTENT(in) :: num_columns    ! number of column
     integer,  INTENT(in) :: begc (1:num_gridcells) ! beginning column index
     integer,  INTENT(in) :: endc (1:num_gridcells) ! ending column index
     logical,  INTENT(in) :: glaciers (1:num_columns) ! true: glacier column (itypwat = 3)
@@ -161,7 +159,7 @@ contains
        max_elev_c = maxval(forc_topo_c(begc(g):endc(g))) ! maximum column level elevation value within the grid
 
        do c = begc(g), endc(g)
-          ! This is a simple downscaling procedure 
+          ! This is a simple downscaling procedure
           ! Note that forc_hgt, forc_u, forc_v and solar radiation are not downscaled.
 
           hsurf_c = forc_topo_c(c)                        ! column sfc elevation
@@ -214,7 +212,7 @@ contains
 #elif(defined option_precipitation_adjust_II)
           ! Liston, G. E. and Elder, K.: A meteorological distribution system
           ! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
-          ! Equation (33) and Table 1: chi range from January to December: 
+          ! Equation (33) and Table 1: chi range from January to December:
           ! [0.35,0.35,0.35,0.30,0.25,0.20,0.20,0.20,0.20,0.25,0.30,0.35] (1/m)
 
           delta_prc_c = forc_prc_g(g) * 2.0*0.27e-3*(forc_topo_c(c) - forc_topo_g(g)) &
@@ -230,11 +228,11 @@ contains
 
           IF (forc_prl_c(c) < 0) THEN
              write(*,*) 'negative prl', forc_prl_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
-          ENDIF 
+          ENDIF
 
           IF (forc_prc_c(c) < 0) THEN
              write(*,*) 'negative prc', forc_prc_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
-          ENDIF 
+          ENDIF
 
           forc_prc_c(c) = max(forc_prc_c(c), 0.)
           forc_prl_c(c) = max(forc_prl_c(c), 0.)
@@ -268,87 +266,12 @@ contains
     real(r8) :: wv_to_dair_weight_ratio  ! ratio of molecular weight of water vapor to that of dry air [-]
 
     !-----------------------------------------------------------------------
-    wv_to_dair_weight_ratio = SHR_CONST_MWWV/SHR_CONST_MWDAIR 
+    wv_to_dair_weight_ratio = SHR_CONST_MWWV/SHR_CONST_MWDAIR
 
     egcm = qbot*pbot / (wv_to_dair_weight_ratio + (1._r8 - wv_to_dair_weight_ratio)*qbot)
     rhos = (pbot - (1._r8 - wv_to_dair_weight_ratio)*egcm) / (rair*tbot)
-    
+
   end function rhos
-
-
-  subroutine qsadv(T,p,es,esdT,qs,qsdT)
-!-----------------------------------------------------------------------
-  IMPLICIT NONE
-
-! dummy arguments
-  real(r8), INTENT(in)  :: T        ! temperature (K)
-  real(r8), INTENT(in)  :: p        ! surface atmospheric pressure (pa)
-
-  real(r8), INTENT(out) :: es       ! vapor pressure (pa)
-  real(r8), INTENT(out) :: esdT     ! d(es)/d(T)
-  real(r8), INTENT(out) :: qs       ! humidity (kg/kg)
-  real(r8), INTENT(out) :: qsdT     ! d(qs)/d(T)
-
-! local
-  real(r8) td,vp,vp1,vp2
-  real(r8) a0,a1,a2,a3,a4,a5,a6,a7,a8
-  real(r8) b0,b1,b2,b3,b4,b5,b6,b7,b8
-
-  real(r8) c0,c1,c2,c3,c4,c5,c6,c7,c8
-  real(r8) d0,d1,d2,d3,d4,d5,d6,d7,d8
-
-! for water vapor (temperature range 0C-100C)
-  data a0/6.11213476   /,a1/ 0.444007856    /,a2/0.143064234e-01/  &
-    ,a3/0.264461437e-03/,a4/ 0.305903558e-05/,a5/0.196237241e-07/  &
-    ,a6/0.892344772e-10/,a7/-0.373208410e-12/,a8/0.209339997e-15/
-
-! for derivative:water vapor
-  data b0/0.444017302  /,b1/ 0.286064092e-01/,b2/ 0.794683137e-03/ &
-   ,b3/ 0.121211669e-04/,b4/ 0.103354611e-06/,b5/ 0.404125005e-09/ &
-   ,b6/-0.788037859e-12/,b7/-0.114596802e-13/,b8/ 0.381294516e-16/
-
-! for ice (temperature range -75C-0C) 
-  data c0/6.11123516     /,c1/0.503109514    /,c2/0.188369801e-01/ &
-      ,c3/0.420547422e-03/,c4/0.614396778e-05/,c5/0.602780717e-07/ &
-      ,c6/0.387940929e-09/,c7/0.149436277e-11/,c8/0.262655803e-14/
-
-! for derivative:ice  
-  data d0/0.503277922    /,d1/0.377289173e-01/,d2/0.126801703e-02/ &
-      ,d3/0.249468427e-04/,d4/0.313703411e-06/,d5/0.257180651e-08/ &
-      ,d6/0.133268878e-10/,d7/0.394116744e-13/,d8/0.498070196e-16/
-
-!-----------------------------------------------------------------------
-      td = T-273.16
-      if(td < -75.0 .or. td > 100.0) then
-      !* print *, "qsadv: abnormal temperature", T
-      end if
-
-      if(td < -75.0) td = -75.0
-      if(td > 100.0) td = 100.0
-
-      if(td >= 0.0)then
-        es   = a0 + td*(a1 + td*(a2 + td*(a3 + td*(a4 &
-                  + td*(a5 + td*(a6 + td*(a7 + td*a8)))))))
-        esdT = b0 + td*(b1 + td*(b2 + td*(b3 + td*(b4 &
-                  + td*(b5 + td*(b6 + td*(b7 + td*b8)))))))
-      else
-        es   = c0 + td*(c1 + td*(c2 + td*(c3 + td*(c4 &
-                  + td*(c5 + td*(c6 + td*(c7 + td*c8)))))))
-        esdT = d0 + td*(d1 + td*(d2 + td*(d3 + td*(d4 &
-                  + td*(d5 + td*(d6 + td*(d7 + td*d8)))))))
-      end if
-
-      es    = es    * 100.            ! pa
-      esdT  = esdT  * 100.            ! pa/K
-
-      vp    = 1.0   / (p - 0.378*es)
-      vp1   = 0.622 * vp
-      vp2   = vp1   * vp
-
-      qs    = es    * vp1             ! kg/kg
-      qsdT  = esdT  * vp2 * p         ! 1 / K
-
-  end subroutine qsadv
 
 
   ! -----------------------------------------------------------------------
@@ -359,15 +282,15 @@ contains
     ! !DESCRIPTION:
     ! Downscale longwave radiation from gridcell to column
     ! Must be done AFTER temperature downscaling
-    
+
     IMPLICIT NONE
-    
+
     ! !ARGUMENTS:
     integer,  INTENT(in) :: num_gridcells  ! number of gridcell
-    integer,  INTENT(in) :: num_columns    ! number of column 
+    integer,  INTENT(in) :: num_columns    ! number of column
     integer,  INTENT(in) :: begc (1:num_gridcells) ! beginning column index
     integer,  INTENT(in) :: endc (1:num_gridcells) ! ending column index
-    logical,  INTENT(in) :: glaciers  (1:num_columns) ! true: glacier column 
+    logical,  INTENT(in) :: glaciers  (1:num_columns) ! true: glacier column
     real(r8), INTENT(in) :: wt_column (1:num_columns) ! weight of the column relative to the grid cell
 
     real(r8), INTENT(in) :: forc_topo_g  (1:num_gridcells)  ! atmospheric surface height (m)
@@ -381,7 +304,7 @@ contains
     real(r8), INTENT(in) :: forc_pbot_c  (1:num_columns) ! atmospheric pressure [Pa]
     real(r8), INTENT(out) :: forc_lwrad_c(1:num_columns) ! downward longwave (W/m**2)
 
-    
+
     ! !LOCAL VARIABLES:
     integer  :: c,g      ! indices
     real(r8) :: hsurf_c  ! column-level elevation (m)
@@ -431,21 +354,21 @@ contains
           ! complex terrain. Geosci. Model Dev., 7, 387-405. doi:10.5194/gmd-7-387-2014.
           ! Equation (1) (2) (3); here, the empirical parameters x1 and x2 are different from
           ! Konzelmann et al. (1994) where x1 = 0.443 and x2 = 8 (optimal for measurements on the Greenland ice sheet)
- 
+
           call Qsadv(forc_t_g(g)  ,forc_pbot_g(g)  ,es_g,dum1,dum2,dum3)
           call Qsadv(forc_t_c(c),forc_pbot_c(c),es_c,dum1,dum2,dum3)
           pv_g = forc_q_g(g)  *es_g/100._r8  ! (hPa)
           pv_c = forc_q_c(c)*es_c/100._r8  ! (hPa)
- 
+
           emissivity_clearsky_g = 0.23_r8 + 0.43_r8*(pv_g/forc_t_g(g))**(1._r8/5.7_r8)
           emissivity_clearsky_c = 0.23_r8 + 0.43_r8*(pv_c/forc_t_c(c))**(1._r8/5.7_r8)
           emissivity_allsky_g = forc_lwrad_g(g) / (5.67e-8_r8*forc_t_g(g)**4)
- 
+
           forc_lwrad_c(c) = (emissivity_clearsky_c + (emissivity_allsky_g - emissivity_clearsky_g)) &
                             * 5.67e-8_r8*forc_t_c(c)**4
 #else
-          ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation 
-          ! with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the gridcell mean value, 
+          ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation
+          ! with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the gridcell mean value,
           ! then normalized to conserve gridcell total energy) (Van Tricht et al., 2016, TC) Figure 6,
           ! doi:10.5194/tc-10-2379-2016
 
@@ -515,4 +438,4 @@ contains
 
 
 !-----------------------------------------------------------------------
-end module DownscalingForcingMod
+end module MOD_DownscalingForcing

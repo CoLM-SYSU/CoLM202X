@@ -4,16 +4,16 @@ module MOD_BGC_Soil_BiogeochemLittVertTransp
 
   !----------------------------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Simulate the soil and litter CN veritical mixing (diffusion and advection) processes. Solve the dynamics 
+  ! Simulate the soil and litter CN veritical mixing (diffusion and advection) processes. Solve the dynamics
   ! of soil and litter vertical profile with a tridiagonal matrix.
   !
   ! !REFERENCE:
-  ! Koven, C.D., Riley, W.J., Subin, Z.M., Tang, J.Y., Torn, M.S., Collins, W.D., Bonan, G.B., Lawrence, 
-  ! D.M. and Swenson, S.C., 2013. The effect of vertically resolved soil biogeochemistry and alternate 
+  ! Koven, C.D., Riley, W.J., Subin, Z.M., Tang, J.Y., Torn, M.S., Collins, W.D., Bonan, G.B., Lawrence,
+  ! D.M. and Swenson, S.C., 2013. The effect of vertically resolved soil biogeochemistry and alternate
   ! soil C and N models on C dynamics of CLM4. Biogeosciences, 10(11), 7109-7131.
-  ! Thornton, P.E., Law, B.E., Gholz, H.L., Clark, K.L., Falge, E., Ellsworth, D.S., Goldstein, A.H., Monson, 
-  ! R.K., Hollinger, D., Falk, M. and Chen, J., 2002. Modeling and measuring the effects of disturbance 
-  ! history and climate on carbon and water budgets in evergreen needleleaf forests. 
+  ! Thornton, P.E., Law, B.E., Gholz, H.L., Clark, K.L., Falge, E., Ellsworth, D.S., Goldstein, A.H., Monson,
+  ! R.K., Hollinger, D., Falk, M. and Chen, J., 2002. Modeling and measuring the effects of disturbance
+  ! history and climate on carbon and water budgets in evergreen needleleaf forests.
   ! Agricultural and forest meteorology, 113(1-4), 185-222.
   !
   ! !ORIGINAL:
@@ -34,6 +34,7 @@ module MOD_BGC_Soil_BiogeochemLittVertTransp
   use MOD_BGC_Vars_1DFluxes, only: &
       decomp_cpools_sourcesink, decomp_npools_sourcesink, &
       decomp_cpools_transport_tendency, decomp_npools_transport_tendency
+  USE mod_utils, only: tridia
 
   implicit none
 
@@ -158,7 +159,7 @@ contains
 
              ! dz_tracer below is the difference between gridcell edges  (dz_soi)
              ! dz_node_tracer is difference between cell centers
- 
+
              ! Calculate the D and F terms in the Patankar algorithm
              if (j == 1) then
                 d_m1_zm1(j) = 0._r8
@@ -212,11 +213,11 @@ contains
 
           ! Calculate the tridiagonal coefficients
           do j = 0,nl_soil +1
- 
+
              if (j > 0 .and. j < nl_soil+1) then
                 a_p_0 =  dz_soi(j) / deltim
              endif
- 
+
              if (j == 0) then ! top layer (atmosphere)
                 a_tri(j)   = 0._r8
                 b_tri(j)   = 1._r8
@@ -236,13 +237,13 @@ contains
                 diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! exit flux
 #endif
              elseif (j < nl_soil+1) then
-                
+
                 a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
                 c_tri(j) = -(d_p1_zp1(j) * aaa(pe_p1(j)) + max(-f_p1(j), 0._r8))
                 b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                 r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_c(j)
                 r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_n(j)
-               
+
 #ifdef SASU
                 if(j .le. nbedrock)then
                    lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)

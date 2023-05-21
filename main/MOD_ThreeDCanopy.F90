@@ -1,9 +1,30 @@
 #include <define.h>
 
+MODULE MOD_ThreeDCanopy
+
+!-----------------------------------------------------------------------
+   USE precision
+   IMPLICIT NONE
+   SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+#ifdef PC_CLASSIFICATION
+   PUBLIC :: ThreeDCanopy_wrap
+#endif
+   PUBLIC :: ThreeDCanopy
+
+
+!-----------------------------------------------------------------------
+
+   CONTAINS
+
+!-----------------------------------------------------------------------
+
+
 #ifdef PC_CLASSIFICATION
 
 !-----------------------------------------------------------------------
-SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
+   SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
 
 !
 ! !DESCRIPTION:
@@ -23,10 +44,10 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
 
    USE precision
    USE GlobalVars
-   USE PFT_Const
+   USE MOD_Vars_PFTConst
    USE mod_landpc
-   USE MOD_PCTimeInvars
-   USE MOD_PCTimeVars
+   USE MOD_Vars_PCTimeInvars
+   USE MOD_Vars_PCTimeVars
 
    IMPLICIT NONE
 
@@ -138,14 +159,14 @@ SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
    ssha(1,2) = sum( ssha_c(1,2,:,pc) * pcfrac(:,pc) )
    ssha(2,2) = sum( ssha_c(2,2,:,pc) * pcfrac(:,pc) )
 
-END SUBROUTINE ThreeDCanopy_wrap
+   END SUBROUTINE ThreeDCanopy_wrap
 #endif
 
 
-SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
-                        lsai, rho, tau, albgrd, albgri, albd, albi, &
-                        fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
-                        thermk, fshade)
+   SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
+                           lsai, rho, tau, albgrd, albgri, albd, albi, &
+                           fabd, fabi, ftdd, ftid, ftii, fadd, psun, &
+                           thermk, fshade)
 
 !
 ! !DESCRIPTION:
@@ -166,7 +187,6 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
 ! !ARGUMENTS:
    IMPLICIT NONE
 
-   INTEGER, parameter :: r8 = selected_real_kind(12)
    INTEGER, parameter :: numrad = 2
 
 ! !ARGUMENTS:
@@ -196,12 +216,7 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    REAL(r8), intent(out) :: thermk(lbp:ubp)           !direct transmittance of diffuse radiation
    REAL(r8), intent(out) :: fshade(lbp:ubp)           !shadow in diffuse case of vegetation
 
-! !LOCAL VARIABLES:
-   REAL(selected_real_kind(12)), external::OverlapArea
-   REAL(selected_real_kind(12)), external::tee
-
 ! !OTHER LOCAL VARIABLES:
-   INTEGER,  parameter :: r16 = selected_real_kind(24) !16 byte REAL
    REAL(r8), parameter :: mpe = 1.0e-06_r8 !prevents overflow for division by zero
    INTEGER , parameter :: nlay=3           !number of canopy layers
    REAL(r8), parameter :: D0=0.0_r8        !double accuracy REAL number
@@ -843,17 +858,15 @@ SUBROUTINE ThreeDCanopy(lbp, ubp, canlev, pwtcol, csiz, chgt, chil, coszen, &
    fshade(:) = shadow_pi(:)
    thermk(:) = ftdi(:,1)
 
-END SUBROUTINE ThreeDCanopy
+   END SUBROUTINE ThreeDCanopy
 
 !=====================
 ! FUNCTION tee
 !=====================
 
-REAL(selected_real_kind(12)) FUNCTION tee(tau)
+   REAL(selected_real_kind(12)) FUNCTION tee(tau)
 
    IMPLICIT NONE
-   INTEGER,  parameter :: r8  = selected_real_kind(12) !64 bit REAL
-   INTEGER,  parameter :: r16 = selected_real_kind(24) !128 bit REAL
 
    REAL(r16),parameter :: DDH = 0.50_r16 !128-bit accuracy REAL
    REAL(r16),parameter :: DD1 = 1.0_r16  !128-bit accuracy REAL
@@ -862,17 +875,15 @@ REAL(selected_real_kind(12)) FUNCTION tee(tau)
 
    tee = DDH*(DD1/tau/tau-(DD1/tau/tau+DD2/tau)*exp(-DD2*tau))
 
-END FUNCTION tee
+   END FUNCTION tee
 
 !===========================================
 ! FUNCTION overlapArea
 !===========================================
 
-REAL(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
+   REAL(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
 
    IMPLICIT NONE
-   INTEGER, parameter :: r8  = selected_real_kind(12)
-   INTEGER, parameter :: r16 = selected_real_kind(24)
 
    REAL(r8),parameter :: rpi = 3.14159265358979323846_R8  !pi
    REAL(r8),parameter :: D0  = 0.0_r8  !128-bit accuracy REAL
@@ -896,20 +907,17 @@ REAL(selected_real_kind(12)) FUNCTION OverlapArea(radius, hgt, zenith)
    theta = acos(cost)
    OverlapArea = (theta-cost*sin(theta))*(D1+D1/cos(zenith))/rpi
    RETURN
-END FUNCTION OverlapArea
+   END FUNCTION OverlapArea
 
 !=========================================================
 ! FUNCTION to calculate scattering, absorption, reflection and
 ! transmittance for unit input radiation
 !=========================================================
 
-SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
+   SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
       shadow_d, shadow_i, fc, omg, lsai, tau_p,  rho_p, &
       ftid, ftii, frid, frii, faid, faii)
    IMPLICIT NONE
-
-   INTEGER,parameter::r8 = selected_real_kind(12) ! 8 byte REAL
-   INTEGER,parameter::r16 = selected_real_kind(24) ! 8 byte REAL
 
    ! input variables
    REAL(r8)::cosz      !0.001 <= coszen <= 1.000
@@ -966,7 +974,6 @@ SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
    REAL(r16),parameter::DD1 = 1.0_r16  !128-bit REAL number
 
    REAL(r8),parameter :: pi = 3.14159265358979323846_R8  !pi
-   REAL(selected_real_kind(12)), external::tee
 
    tau = D3/D4*gee*lsai
 
@@ -1046,14 +1053,11 @@ SUBROUTINE CanopyRad(tau_d, tau_i, ftdd, ftdi, cosz,cosd, &
       faii = D0
    ENDIF
 
-END SUBROUTINE CanopyRad
+   END SUBROUTINE CanopyRad
 
-SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
+   SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
 
    IMPLICIT NONE
-
-   INTEGER,parameter::r8  = selected_real_kind(12) ! 8 byte REAL
-   INTEGER,parameter::r16 = selected_real_kind(24) ! 8 byte REAL
 
    ! input variables
    LOGICAL::runmode
@@ -1090,8 +1094,6 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
    REAL(r16),parameter::DD9 = 9.0_r16  !128-bit REAL number
    REAL(r16),parameter::DD10= 10.0_r16 !128-bit REAL number
    REAL(r16),parameter::DDH = 0.5_r16  !128-bit REAL number
-
-   REAL(selected_real_kind(12)), external::tee
 
 !----------------------------------------------------------------------
 ! single scattering terms for sphere with overlap corrections to path
@@ -1164,13 +1166,11 @@ SUBROUTINE phi(runmode, tau, omg, tau_p, rho_p, phi_tot, phi_dif, pa2)
    phi_tot = phi_tf + phi_tb
    phi_dif = phi_tf - phi_tb
 
-END SUBROUTINE phi
+   END SUBROUTINE phi
 
-SUBROUTINE mGauss(A, B, X)
+   SUBROUTINE mGauss(A, B, X)
 
    IMPLICIT NONE
-
-   INTEGER,parameter :: r8  = selected_real_kind(12)
 
    REAL(r8), intent(inout)  :: A(6,6)
    REAL(r8), intent(inout)  :: B(6,2)
@@ -1201,4 +1201,6 @@ SUBROUTINE mGauss(A, B, X)
       X(i,2) = (B(i,2) - sum(A(i,i+1:6)*X(i+1:6,2))) / A(i,i)
    ENDDO
 
-END SUBROUTINE mGauss
+   END SUBROUTINE mGauss
+
+END MODULE MOD_ThreeDCanopy

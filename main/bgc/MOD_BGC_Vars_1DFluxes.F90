@@ -22,7 +22,7 @@ MODULE MOD_BGC_Vars_1DFluxes
   REAL(r8), allocatable :: gpp_dnfboreal              (:) ! gross primary productivity for needleleaf deciduous boreal tree (gC m-2 s-1)
   REAL(r8), allocatable :: gpp_ebftrop                (:) ! gross primary productivity for broadleaf evergreen tropical tree (gC m-2 s-1)
   REAL(r8), allocatable :: gpp_ebftemp                (:) ! gross primary productivity for broadleaf evergreen temperate tree (gC m-2 s-1)
-  REAL(r8), allocatable :: gpp_dbftrop                (:) ! gross primary productivity for broadleaf deciduous tropical tree (gC m-2 s-1) 
+  REAL(r8), allocatable :: gpp_dbftrop                (:) ! gross primary productivity for broadleaf deciduous tropical tree (gC m-2 s-1)
   REAL(r8), allocatable :: gpp_dbftemp                (:) ! gross primary productivity for broadleaf deciduous temperate tree (gC m-2 s-1)
   REAL(r8), allocatable :: gpp_dbfboreal              (:) ! gross primary productivity for broadleaf deciduous boreal tree (gC m-2 s-1)
   REAL(r8), allocatable :: gpp_ebstemp                (:) ! gross primary productivity for broadleaf evergreen temperate shrub (gC m-2 s-1)
@@ -55,8 +55,8 @@ MODULE MOD_BGC_Vars_1DFluxes
   REAL(r8), allocatable :: hrv_xsmrpool_to_atm        (:) ! maintenance respiration storage C to atmosphere due to harvest (gC m-2 s-1)
   REAL(r8), allocatable :: wood_harvestc              (:) ! harvested wood C (gC m-2 s-1)
   REAL(r8), allocatable :: wood_harvestn              (:) ! harvested wood N (gN m-2 s-1)
-  REAL(r8), allocatable :: grainc_to_cropprodc        (:) ! grain to crop production carbon (gC m-2 s-1) 
-  REAL(r8), allocatable :: grainc_to_seed             (:) ! grain to crop seed carbon (gC m-2 s-1) 
+  REAL(r8), allocatable :: grainc_to_cropprodc        (:) ! grain to crop production carbon (gC m-2 s-1)
+  REAL(r8), allocatable :: grainc_to_seed             (:) ! grain to crop seed carbon (gC m-2 s-1)
   REAL(r8), allocatable :: grainn_to_cropprodn        (:) ! grain to crop production nitrogen (gN m-2 s-1)
   REAL(r8), allocatable :: cropprod1c_loss            (:) ! loss rate of 1-yr crop production carbon (gC m-2 s-1)
 
@@ -87,7 +87,7 @@ MODULE MOD_BGC_Vars_1DFluxes
   REAL(r8), allocatable :: decomp_npools_sourcesink   (:,:,:)       ! vertical resolved: the the input of litter & soil nitrogen pools (donor or receiver) (gN m-3 timestep)
   REAL(r8), allocatable :: decomp_ntransfer_vr        (:,:,:)       ! vertical resolved: the nitrogen flux transfer from one litter & soil nitrogen pool to another (gN m-3 s-1)
   REAL(r8), allocatable :: decomp_sminn_flux_vr       (:,:,:)       ! vertical resolved: the nitrogen mineralization flux from each nitrogen transfer between litter & soil pools (gN m-3 s-1)
-  REAL(r8), allocatable :: sminn_to_denit_decomp_vr   (:,:,:)       ! vertical resolved: the nitrogen denitrification flux from each nitrogen transfer between litter & soil pools (gN m-3 s-1) 
+  REAL(r8), allocatable :: sminn_to_denit_decomp_vr   (:,:,:)       ! vertical resolved: the nitrogen denitrification flux from each nitrogen transfer between litter & soil pools (gN m-3 s-1)
   REAL(r8), allocatable :: m_decomp_npools_to_fire_vr (:,:,:)       ! vertical resolved: the litter & soil nitrogen loss associated to the fire (gN m-3 s-1)
   REAL(r8), allocatable :: decomp_npools_transport_tendency(:,:,:)  ! vertical resolved: the nitrogen tendency due to vertical transport in decomposition nitrogen pools (gN m-3 s-1)
   REAL(r8), allocatable :: som_n_leached              (:)           ! total soil organic matter N loss from vertical transport (gN m-2 s-1)
@@ -108,11 +108,11 @@ MODULE MOD_BGC_Vars_1DFluxes
   REAL(r8), allocatable :: sminn_leached_vr         (:,:)   ! vertical resolved: soil mineral N loss due to leaching (gN m-3 s-1)
   REAL(r8), allocatable :: smin_no3_leached_vr      (:,:)   ! vertical resolved: soil mineral NO3 loss due to leaching (gN m-3 s-1)
   REAL(r8), allocatable :: smin_no3_runoff_vr       (:,:)   ! vertical resolved: soil mineral NO3 loss due to runoff (gN m-3 s-1)
-  REAL(r8), allocatable :: net_nmin_vr              (:,:)   ! vertical resolved: net N mineralization (gN m-3 s-1) 
-  REAL(r8), allocatable :: gross_nmin_vr            (:,:)   ! vertical resolved: total N mineralization (gN m-3 s-1) 
-  REAL(r8), allocatable :: net_nmin                 (:)     ! net N mineralization (gN m-2 s-1) 
-  REAL(r8), allocatable :: gross_nmin               (:)     ! total N mineralization (gN m-2 s-1) 
-  REAL(r8), allocatable :: plant_ndemand            (:)     ! potential plant N uptake (gN m-2 s-1) 
+  REAL(r8), allocatable :: net_nmin_vr              (:,:)   ! vertical resolved: net N mineralization (gN m-3 s-1)
+  REAL(r8), allocatable :: gross_nmin_vr            (:,:)   ! vertical resolved: total N mineralization (gN m-3 s-1)
+  REAL(r8), allocatable :: net_nmin                 (:)     ! net N mineralization (gN m-2 s-1)
+  REAL(r8), allocatable :: gross_nmin               (:)     ! total N mineralization (gN m-2 s-1)
+  REAL(r8), allocatable :: plant_ndemand            (:)     ! potential plant N uptake (gN m-2 s-1)
   REAL(r8), allocatable :: actual_immob_vr          (:,:)   ! vertical resolved: actual N immobilization (gN m-3 s-1)
   REAL(r8), allocatable :: actual_immob_nh4_vr      (:,:)   ! vertical resolved: actual NH4 immobilization (gN m-3 s-1)
   REAL(r8), allocatable :: actual_immob_no3_vr      (:,:)   ! vertical resolved: actual NO3 immobilization (gN m-3 s-1)
@@ -163,7 +163,7 @@ MODULE MOD_BGC_Vars_1DFluxes
 
   SUBROUTINE allocate_1D_BGCFluxes
   ! --------------------------------------------------------------------
-  ! Allocates memory for CLM 1d [numpatch] variables 
+  ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE precision
      USE GlobalVars
@@ -244,7 +244,7 @@ MODULE MOD_BGC_Vars_1DFluxes
             allocate (fire_mortality_to_met_c  (nl_soil,numpatch))
             allocate (fire_mortality_to_cel_c  (nl_soil,numpatch))
             allocate (fire_mortality_to_lig_c  (nl_soil,numpatch))
-            allocate (fire_mortality_to_cwdc   (nl_soil,numpatch))  
+            allocate (fire_mortality_to_cwdc   (nl_soil,numpatch))
 
 ! decomposition nitrogen fluxes
             allocate (decomp_npools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
@@ -318,13 +318,13 @@ MODULE MOD_BGC_Vars_1DFluxes
 
    SUBROUTINE deallocate_1D_BGCFluxes ()
   ! --------------------------------------------------------------------
-  ! deallocates memory for CLM 1d [numpatch] variables
+  ! deallocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE spmd_task
      USE mod_landpatch
 
      if (p_is_worker) then
-        
+
         if (numpatch > 0) then
 
 ! bgc variables
@@ -372,8 +372,8 @@ MODULE MOD_BGC_Vars_1DFluxes
            deallocate (grainc_to_seed             )
            deallocate (grainn_to_cropprodn        )
            deallocate (cropprod1c_loss            )
-      
-      
+
+
 ! decomposition carbon fluxes
            deallocate (decomp_cpools_sourcesink   )
            deallocate (decomp_ctransfer_vr        )
@@ -383,7 +383,7 @@ MODULE MOD_BGC_Vars_1DFluxes
            deallocate (m_decomp_cpools_to_fire_vr )
            deallocate (decomp_cpools_transport_tendency)
            deallocate (som_c_leached              )
-      
+
 ! vegetation to decomposition carbon fluxes
            deallocate (phenology_to_met_c       )
            deallocate (phenology_to_cel_c       )

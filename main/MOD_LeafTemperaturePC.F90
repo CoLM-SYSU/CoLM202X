@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE LEAF_temperature_PC
+MODULE MOD_LeafTemperaturePC
 
 !-----------------------------------------------------------------------
  USE precision
@@ -83,13 +83,14 @@ MODULE LEAF_temperature_PC
   USE precision
   USE GlobalVars
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
-  USE FRICTION_VELOCITY
-  USE ASSIM_STOMATA_conductance
+  USE MOD_FrictionVelocity
+  USE MOD_Qsadv
+  USE MOD_AssimStomataConductance
 #ifdef PLANT_HYDRAULIC_STRESS
-  USE PlantHydraulic, only : PlantHydraulicStress_twoleaf
+  USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
 #ifdef OzoneStress
-  use OzoneMod, only: CalcOzoneStress
+  use MOD_Ozone, only: CalcOzoneStress
 #endif
   IMPLICIT NONE
 
@@ -1667,7 +1668,7 @@ MODULE LEAF_temperature_PC
              err = sabv(i) + irab(i) + dirab_dtl(i)*dtl(it-1,i) &
                  - fsenl(i) - hvap*fevpl(i) + hprl(i)
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
              IF(abs(err) .gt. .2) &
                 write(6,*) 'energy imbalance in LeafTempPC.F90', &
                            i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i)
@@ -1777,7 +1778,7 @@ MODULE LEAF_temperature_PC
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1805,7 +1806,7 @@ MODULE LEAF_temperature_PC
                     displah, htop, hbot, obu, ustar, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), parameter :: com1 = 0.4
@@ -2165,7 +2166,7 @@ MODULE LEAF_temperature_PC
         z0h, obu, ustar, fac, alpha, bee, fc)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, ztop, zbot
@@ -2278,7 +2279,7 @@ MODULE LEAF_temperature_PC
         obu, ustar, fac, alpha)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, ktop, htop, hbot
@@ -2362,4 +2363,4 @@ MODULE LEAF_temperature_PC
 
   END SUBROUTINE cal_z0_displa
 
-END MODULE LEAF_temperature_PC
+END MODULE MOD_LeafTemperaturePC
