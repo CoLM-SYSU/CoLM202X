@@ -14,7 +14,7 @@
 
   USE precision
   USE PhysicalConstants, only: cpair,vonkar,grav
-  USE FRICTION_VELOCITY
+  USE MOD_FrictionVelocity
   IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------

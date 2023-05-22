@@ -19,7 +19,7 @@ CONTAINS
       USE mod_mesh
       USE mod_landhru
       USE mod_landpatch
-      USE MOD_TimeVariables
+      USE MOD_Vars_TimeVariables
       USE MOD_1D_HydroFluxes
       USE PhysicalConstants, only : grav
       USE mod_colm_debug

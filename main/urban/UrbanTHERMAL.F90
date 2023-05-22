@@ -94,9 +94,10 @@
   USE UrbanShortwave
   USE UrbanLongwave
   USE UrbanFlux
-  USE LAKE
+  USE MOD_Lake
   USE UrbanBEM
   USE UrbanAnthropogenic, only: LUCY
+  USE MOD_Eroot, only: eroot
 
   IMPLICIT NONE
 

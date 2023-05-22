@@ -56,7 +56,7 @@ module MOD_BGC_CNNStateUpdate2
            m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
            m_retransn_to_litter_p
 
-  use MOD_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftfrac
   implicit none
 
   public NStateUpdate2

@@ -21,10 +21,10 @@ module MOD_BGC_Veg_CNFireBase
 
 
   use precision
-  use PFT_Const, only: &
+  use MOD_Vars_PFTConst, only: &
       cc_leaf   , cc_lstem   , cc_dstem , cc_other, fm_leaf, fm_lstem, fm_lroot, fm_root, fm_droot, fm_other, &
       fr_fcel   , fr_flig    , fr_flab  , lf_fcel , lf_flig, lf_flab
-  use MOD_TimeInvariants, only: &
+  use MOD_Vars_TimeInvariants, only: &
       cmb_cmplt_fact, patchlatr, borealat, is_cwd, is_litter
 
   use MOD_BGC_Vars_TimeVars, only: &
@@ -79,7 +79,7 @@ module MOD_BGC_Veg_CNFireBase
       m_livecrootn_to_litter_fire_p, m_livecrootn_storage_to_litter_fire_p, m_livecrootn_xfer_to_litter_fire_p, &
       m_deadcrootn_to_litter_fire_p, m_deadcrootn_storage_to_litter_fire_p, m_deadcrootn_xfer_to_litter_fire_p
    
-  use MOD_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftfrac
 
   implicit none
 

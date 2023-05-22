@@ -5,6 +5,7 @@ MODULE UrbanFlux
 !-----------------------------------------------------------------------
   USE precision
   USE GlobalVars
+  USE MOD_Qsadv, only: qsadv
   IMPLICIT NONE
   SAVE
 
@@ -59,7 +60,7 @@ MODULE UrbanFlux
 !=======================================================================
      USE precision
      USE PhysicalConstants, only: cpair,vonkar,grav
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
 !----------------------- Dummy argument --------------------------------
@@ -902,8 +903,8 @@ MODULE UrbanFlux
 
      USE precision
      USE PhysicalConstants, only: vonkar,grav,hvap,cpair,stefnc
-     USE FRICTION_VELOCITY
-     USE ASSIM_STOMATA_conductance
+     USE MOD_FrictionVelocity
+     USE MOD_AssimStomataConductance
      IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
@@ -2498,7 +2499,7 @@ MODULE UrbanFlux
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -2524,7 +2525,7 @@ MODULE UrbanFlux
                     displah, htop, hbot, obu, ustar, z)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), parameter :: com1 = 0.4
@@ -2912,7 +2913,7 @@ MODULE UrbanFlux
         z0h, obu, ustar, fac, alpha, bee, fc)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, ztop, zbot
@@ -3025,7 +3026,7 @@ MODULE UrbanFlux
         obu, ustar, fac, alpha)
 
      USE precision
-     USE FRICTION_VELOCITY
+     USE MOD_FrictionVelocity
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, ktop, htop, hbot

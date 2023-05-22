@@ -112,12 +112,18 @@ SUBROUTINE UrbanCLMMAIN ( &
   USE precision
   USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
-  USE MOD_TimeVariables, only: tlai, tsai
-  USE SNOW_Layers_CombineDivide
-  USE MOD_CLEAF_interception
+  USE MOD_Vars_TimeVariables, only: tlai, tsai
+  USE MOD_SnowLayersCombineDivide
+  USE MOD_LeafInterception
   USE UrbanALBEDO
-  USE LAKE
+  USE MOD_Lake
   USE timemanager
+  USE MOD_RainSnowTemp, only: rain_snow_temp
+  USE MOD_NewSnow, only: newsnow
+  USE MOD_OrbCoszen, only: orb_coszen
+  USE MOD_SnowFraction, only: snowfraction
+  USE MOD_SnowAge, only: snowage
+  USE MOD_Qsadv, only: qsadv
 #ifdef USE_LUCY
   USE UrbanAnthropogenic
 #endif
@@ -480,7 +486,7 @@ SUBROUTINE UrbanCLMMAIN ( &
         fioldl(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old      ,&! liquid water mass of the column at the previous time step (mm)
         theta      ,&! sun zenith angle
-        orb_coszen ,&! cosine of the solar zenith angle
+!        orb_coszen ,&! cosine of the solar zenith angle
         sabv       ,&! solar absorbed by vegetation [W/m2]
         sabroof    ,&! solar absorbed by vegetation [W/m2]
         sabwsun    ,&! solar absorbed by vegetation [W/m2]

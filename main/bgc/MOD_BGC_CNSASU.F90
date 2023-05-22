@@ -51,7 +51,7 @@ module MOD_BGC_CNSASU
       diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           , skip_balance_check         , &
       cn_decomp_pools 
 
-  use MOD_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvars, only: pftclass
   use MOD_BGC_Vars_PFTimeVars, only: &
       leafc_p           , leafc_storage_p      , leafc_xfer_p      , leafc0_p             , leafc0_storage_p     , leafc0_xfer_p     , &
       frootc_p          , frootc_storage_p     , frootc_xfer_p     , frootc0_p            , frootc0_storage_p    , frootc0_xfer_p    , &

@@ -5,6 +5,7 @@ MODULE UrbanShortwave
   USE precision
   USE GlobalVars
   USE mod_landurban
+  USE MOD_ThreeDCanopy, only: tee, phi
 
   IMPLICIT NONE
   SAVE
@@ -18,7 +19,7 @@ MODULE UrbanShortwave
   PUBLIC :: ShadowWall_dif          !Shadow of wall for diffuse radiation
   PUBLIC :: ShadowTree              !Shadow of trees
 
-  REAL(r8), external :: tee         !Direct transmittance of vegetation for spheric crowns
+!  REAL(r8), external :: tee         !Direct transmittance of vegetation for spheric crowns
 
 CONTAINS
 

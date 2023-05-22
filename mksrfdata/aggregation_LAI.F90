@@ -22,7 +22,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -212,7 +212,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
          ENDIF
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
          CALL check_vector_data ('LAI value '//trim(c3), LAI_patches)
 #endif
 
@@ -311,8 +311,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
             ENDIF
 
-#ifdef CLMDEBUG
-            CALL check_vector_data ('SAI value '//trim(c3), SAI_patches)
+#ifdef CoLMDEBUG
+         CALL check_vector_data ('SAI value '//trim(c3), SAI_patches)
 #endif
 
 #ifdef USEMPI
@@ -446,10 +446,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
          ENDIF
 
-         write(c2,'(i2.2)') month
-#ifdef CLMDEBUG
-         CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
-         CALL check_vector_data ('LAI_pfts    ' // trim(c2), LAI_pfts   )
+      write(c2,'(i2.2)') month
+#ifdef CoLMDEBUG
+      CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
+      CALL check_vector_data ('LAI_pfts    ' // trim(c2), LAI_pfts   )
 #endif
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -560,10 +560,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
          ENDIF
 
-         write(c2,'(i2.2)') month
-#ifdef CLMDEBUG
-         CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
-         CALL check_vector_data ('SAI_pfts    ' // trim(c2), SAI_pfts   )
+      write(c2,'(i2.2)') month
+#ifdef CoLMDEBUG
+      CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
+      CALL check_vector_data ('SAI_pfts    ' // trim(c2), SAI_pfts   )
 #endif
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -718,10 +718,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
          ENDIF
 
-         write(c2,'(i2.2)') month
-#ifdef CLMDEBUG
-         CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
-         CALL check_vector_data ('LAI_pcs     ' // trim(c2), LAI_pcs   )
+      write(c2,'(i2.2)') month
+#ifdef CoLMDEBUG
+      CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
+      CALL check_vector_data ('LAI_pcs     ' // trim(c2), LAI_pcs   )
 #endif
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -808,10 +808,10 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 #endif
          ENDIF
 
-         write(c2,'(i2.2)') month
-#ifdef CLMDEBUG
-         CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
-         CALL check_vector_data ('SAI_pcs     ' // trim(c2), SAI_pcs   )
+      write(c2,'(i2.2)') month
+#ifdef CoLMDEBUG
+      CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
+      CALL check_vector_data ('SAI_pcs     ' // trim(c2), SAI_pcs   )
 #endif
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)

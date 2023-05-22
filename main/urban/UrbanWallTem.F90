@@ -27,6 +27,7 @@
   USE precision
   USE GlobalVars
   USE PhysicalConstants
+  USE mod_utils, only: tridia
 
   IMPLICIT NONE
 

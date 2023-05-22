@@ -10,7 +10,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    USE mod_colm_debug
 #endif
    USE mod_aggregation
@@ -138,7 +138,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
 
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
@@ -245,7 +245,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ! ---------------------------------------------------
    ! write out the plant leaf area index of grid patches
    ! ---------------------------------------------------
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif
 

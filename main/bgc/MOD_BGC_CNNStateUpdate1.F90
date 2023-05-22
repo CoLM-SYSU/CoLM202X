@@ -18,8 +18,8 @@ module MOD_BGC_CNNStateUpdate1
   !                   3) Record the accumulated decomposition-associated N transfer for soil N semi-analytic spinup
 
   use precision
-  use MOD_PFTimeInvars, only: pftclass
-  use PFT_Const, only: woody
+  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTConst, only: woody
   use MOD_BGC_Vars_TimeInvars, only: &
   ! bgc constants
            donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
@@ -114,7 +114,7 @@ module MOD_BGC_CNNStateUpdate1
            npool_to_deadcrootn_p, npool_to_deadcrootn_storage_p, &
            npool_to_grainn_p    , npool_to_grainn_storage_p    , plant_nalloc_p 
 
-  use MOD_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftfrac
   implicit none
 
   public NStateUpdate1
