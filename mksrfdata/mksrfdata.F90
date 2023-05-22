@@ -86,7 +86,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
-   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_500m!, grid_urban_100m
 
    INTEGER   :: lc_year
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
@@ -217,17 +217,17 @@ PROGRAM mksrfdata
    CALL gurban%define_by_name          ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
-   CALL grid_urban_100m%define_by_name ('colm_100m')
+   ! CALL grid_urban_100m%define_by_name ('colm_100m')
 
    CALL pixel%assimilate_grid (gurban         )
    CALL pixel%assimilate_grid (grid_urban_500m)
    CALL pixel%assimilate_grid (grid_urban_5km )
-   CALL pixel%assimilate_grid (grid_urban_100m)
+   ! CALL pixel%assimilate_grid (grid_urban_100m)
 
    CALL pixel%map_to_grid (gurban         )
    CALL pixel%map_to_grid (grid_urban_500m)
    CALL pixel%map_to_grid (grid_urban_5km )
-   CALL pixel%map_to_grid (grid_urban_100m)
+   ! CALL pixel%map_to_grid (grid_urban_100m)
 #endif
 
    ! assimilate grids to build pixels
@@ -396,7 +396,7 @@ print*, numpatch
 
 #ifdef URBAN_MODEL
    CALL aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
-                           grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                           grid_urban_5km,  grid_urban_500m)
 #endif
 
 

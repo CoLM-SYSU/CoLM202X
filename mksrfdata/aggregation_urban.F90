@@ -8,7 +8,7 @@
 ! ======================================================
 
 SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
-                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_500m)
 
    USE precision
    USE mod_namelist
@@ -43,7 +43,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER , intent(in) :: lc_year
 
    TYPE(grid_type), intent(in) :: grid_urban_5km
-   TYPE(grid_type), intent(in) :: grid_urban_100m
+   ! TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
