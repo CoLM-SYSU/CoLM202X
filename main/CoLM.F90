@@ -40,6 +40,9 @@ PROGRAM CoLM
    USE mod_landhru
 #endif
    use mod_landpatch
+#ifdef URBAN_MODEL
+   USE mod_landurban
+#endif
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
@@ -192,6 +195,11 @@ PROGRAM CoLM
    CALL map_patch_to_pc
 #endif
 
+#ifdef URBAN_MODEL
+   call pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   CALL map_patch_to_urban
+#endif
+
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
@@ -324,8 +332,18 @@ PROGRAM CoLM
          ! yuan, 08/03/2019: read global LAI/SAI data
          CALL julian2monthday (idate(1), idate(2), month, mday)
          IF (month /= month_p) THEN
-            CALL LAI_readin (idate(1), month, dir_landdata)
-         END IF
+            IF (DEF_LAICHANGE) THEN
+               CALL LAI_readin (idate(1), month, dir_landdata)
+#ifdef URBAN_MODEL
+               CALL UrbanLAI_readin(idate(1), month, dir_landdata)
+#endif
+            ELSE
+               CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#ifdef URBAN_MODEL
+               CALL UrbanLAI_readin(DEF_LC_YEAR, month, dir_landdata)
+#endif
+            ENDIF
+         ENDIF
       ELSE
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
@@ -364,7 +382,7 @@ PROGRAM CoLM
 
       if (save_to_restart (idate, deltim, itstamp, ptstamp)) then
          call WRITE_TimeVariables (idate, casename, dir_restart)
-      end if
+      endif
 
 #ifdef CoLMDEBUG
       call check_TimeVariables ()

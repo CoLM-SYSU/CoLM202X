@@ -388,11 +388,11 @@ USE PhysicalConstants, only: tfrz
    REAL(r8) :: utop, ueff, ktop
    REAL(r8) :: phih, z0qg, z0hg
    REAL(r8) :: hsink, displasink
-#ifdef PLANT_HYDRAULIC_STRESS
-   real(r8) gb_mol_sun,gb_mol_sha
 #ifndef WUEdiag
    real(r8) etrsun,etrsha
 #endif
+#ifdef PLANT_HYDRAULIC_STRESS
+   real(r8) gb_mol_sun,gb_mol_sha
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 #endif
@@ -727,6 +727,7 @@ USE PhysicalConstants, only: tfrz
          etr = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
+          !NOTE, yuan: need some revision below. if undef PHS and WUEdiag, there may be problem.
          etrsun = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
          etrsha = rhoair * (1.-fwet) * delta &

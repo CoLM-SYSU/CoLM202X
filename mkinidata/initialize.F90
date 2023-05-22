@@ -17,6 +17,10 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    use spmd_task
    use mod_pixel
    use mod_landpatch
+#ifdef URBAN_MODEL
+   use mod_landurban
+   USE UrbanALBEDO
+#endif
    use PhysicalConstants
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
@@ -120,7 +124,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    integer  :: year, jday                ! Julian day and seconds
    INTEGER  :: month, mday
 
-   integer  :: i,j,ipatch,nsl,ps,pe,ivt,m  ! indices
+   integer  :: i,j,ipatch,nsl,ps,pe,ivt,m, u  ! indices
    INTEGER  :: hs, he
 
    integer :: Julian_8day
@@ -214,7 +218,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
    ! read global tree top height from nc file
    CALL HTOP_readin (dir_landdata)
-
+#ifdef URBAN_MODEL
+   CALL Urban_readin (dir_landdata, 2005)
+#endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
    ! ................................
@@ -504,9 +510,19 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    jday = idate0(2)
 
    IF (DEF_LAI_CLIM) then
-      ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
-      CALL LAI_readin (year, month, dir_landdata)
+      IF (DEF_LAICHANGE) THEN
+         ! 08/03/2019, yuan: read global LAI/SAI data
+         CALL LAI_readin (year, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (year, month, dir_landdata)
+#endif
+      ELSE
+         CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#endif
+      ENDIF
    ELSE
       Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
@@ -557,8 +573,22 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! ..............................................................................
    ! 2.5 initialize time-varying variables, as subgrid vectors of length [numpatch]
    ! ..............................................................................
+   ! ------------------------------------------
+   ! PLEASE
+   ! PLEASE UPDATE
+   ! PLEASE UPDATE when have the observed lake status
    if (p_is_worker) then
 
+      t_lake      (:,:) = 285.
+      lake_icefrac(:,:) = 0.
+      savedtke1   (:)   = tkwat
+
+   end if
+   ! ------------------------------------------
+
+   if (p_is_worker) then
+
+      !TODO: can be removed as CLMDRIVER.F90 yuan@
       allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) )
       allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) )
 
@@ -646,25 +676,78 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
+#ifdef URBAN_MODEL
+         IF (m == URBAN) THEN
+
+            u = patch2urban(i)
+            lwsun         (u) = 0.   !net longwave radiation of sunlit wall
+            lwsha         (u) = 0.   !net longwave radiation of shaded wall
+            lgimp         (u) = 0.   !net longwave radiation of impervious road
+            lgper         (u) = 0.   !net longwave radiation of pervious road
+            lveg          (u) = 0.   !net longwave radiation of vegetation [W/m2]
+
+            t_roofsno   (:,u) = 283. !temperatures of roof layers
+            t_wallsun   (:,u) = 283. !temperatures of sunlit wall layers
+            t_wallsha   (:,u) = 283. !temperatures of shaded wall layers
+            t_gimpsno   (:,u) = 283. !temperatures of impervious road layers
+            t_gpersno   (:,u) = 283. !soil temperature [K]
+            t_lakesno   (:,u) = 283. !lake soil temperature [K]
+
+            wice_roofsno(:,u) = 0.   !ice lens [kg/m2]
+            wice_gimpsno(:,u) = 0.   !ice lens [kg/m2]
+            wice_gpersno(:,u) = 0.   !ice lens [kg/m2]
+            wice_lakesno(:,u) = 0.   !ice lens [kg/m2]
+            wliq_roofsno(:,u) = 0.   !liqui water [kg/m2]
+            wliq_gimpsno(:,u) = 0.   !liqui water [kg/m2]
+            wliq_gpersno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
+            wliq_lakesno(:,u) = wliq_soisno(:,i) !liqui water [kg/m2]
+
+            wliq_soisno(: ,i) = 0.
+            wliq_soisno(:1,i) = wliq_roofsno(:1,u)*froof(u)
+            wliq_soisno(: ,i) = wliq_soisno(: ,i) + wliq_gpersno(: ,u)*(1-froof(u))*fgper(u)
+            wliq_soisno(:1,i) = wliq_soisno(:1,i) + wliq_gimpsno(:1,u)*(1-froof(u))*(1-fgper(u))
+
+            snowdp_roof   (u) = 0.   !snow depth [m]
+            snowdp_gimp   (u) = 0.   !snow depth [m]
+            snowdp_gper   (u) = 0.   !snow depth [m]
+            snowdp_lake   (u) = 0.   !snow depth [m]
+
+            z_sno_roof  (:,u) = 0.   !node depth of roof [m]
+            z_sno_gimp  (:,u) = 0.   !node depth of impervious [m]
+            z_sno_gper  (:,u) = 0.   !node depth pervious [m]
+            z_sno_lake  (:,u) = 0.   !node depth lake [m]
+
+            dz_sno_roof (:,u) = 0.   !interface depth of roof [m]
+            dz_sno_gimp (:,u) = 0.   !interface depth of impervious [m]
+            dz_sno_gper (:,u) = 0.   !interface depth pervious [m]
+            dz_sno_lake (:,u) = 0.   !interface depth lake [m]
+
+            t_room        (u) = 283. !temperature of inner building [K]
+            troof_inner   (u) = 283. !temperature of inner roof [K]
+            twsun_inner   (u) = 283. !temperature of inner sunlit wall [K]
+            twsha_inner   (u) = 283. !temperature of inner shaded wall [K]
+            Fhac          (u) = 0.   !sensible flux from heat or cool AC [W/m2]
+            Fwst          (u) = 0.   !waste heat flux from heat or cool AC [W/m2]
+            Fach          (u) = 0.   !flux from inner and outter air exchange [W/m2]
+
+            CALL UrbanIniTimeVar(i,froof(u),fgper(u),flake(u),hwr(u),hroof(u),&
+               alb_roof(:,:,u),alb_wall(:,:,u),alb_gimp(:,:,u),alb_gper(:,:,u),&
+               rho(:,:,m),tau(:,:,m),fveg(i),htop(i),hbot(i),lai(i),sai(i),coszen(i),&
+               fsno_roof(u),fsno_gimp(u),fsno_gper(u),fsno_lake(u),&
+               scv_roof(u),scv_gimp(u),scv_gper(u),scv_lake(u),&
+               sag_roof(u),sag_gimp(u),sag_gper(u),sag_lake(u),t_lake(1,i),&
+               fwsun(u),dfwsun(u),extkd(i),alb(:,:,i),ssun(:,:,i),ssha(:,:,i),sroof(:,:,u),&
+               swsun(:,:,u),swsha(:,:,u),sgimp(:,:,u),sgper(:,:,u),slake(:,:,u))
+
+         ENDIF
+#endif
          print*,'after IniTimeVar',i
-      enddo
+      ENDDO
 
       do i = 1, numpatch
          z_sno (maxsnl+1:0,i) = z_soisno (maxsnl+1:0,i)
          dz_sno(maxsnl+1:0,i) = dz_soisno(maxsnl+1:0,i)
       end do
-
-   end if
-
-   ! ------------------------------------------
-   ! PLEASE
-   ! PLEASE UPDATE
-   ! PLEASE UPDATE when have the observed lake status
-   if (p_is_worker) then
-
-      t_lake      (:,:) = 285.
-      lake_icefrac(:,:) = 0.
-      savedtke1   (:)   = tkwat
 
    end if
    ! ------------------------------------------
@@ -677,7 +760,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #else
    IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
 #endif
-
    IF (p_is_worker) THEN
       IF (numelm > 0) THEN
          riverheight(:) = 0
@@ -696,7 +778,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
       ENDIF
    ENDIF
 #endif
-
    ! ...............................................................
    ! 2.6 Write out the model variables for restart run [histTimeVar]
    ! ...............................................................
@@ -704,9 +785,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
 #ifdef CoLMDEBUG
    call check_TimeVariables ()
 #endif
-
    CALL WRITE_TimeVariables (idate, casename, dir_restart)
-
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -717,7 +796,6 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    ! --------------------------------------------------
    ! Deallocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------
-
    CALL deallocate_TimeInvariants
    CALL deallocate_TimeVariables
 

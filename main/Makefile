@@ -2,8 +2,8 @@
 
 include ../include/Makeoptions
 INCLUDE_DIR = -I../include -I../share -I../mksrfdata \
-               -I../mkinidata -I./hydro -I./bgc -I${NETCDF_INC}
-VPATH = ../share : ../mksrfdata : ../main : hydro : bgc
+               -I../mkinidata -I./hydro -I./bgc -I./urban -I${NETCDF_INC}
+VPATH = ../share : ../mksrfdata : ../main : hydro : bgc : urban
 HEADER = ../include/define.h
 
 DEF  = $(shell grep -i cama_flood ../include/define.h)
@@ -19,6 +19,7 @@ OBJS_SHARED = \
 				  ../share/precision.o \
 				  ../share/GlobalVars.o \
 				  ../share/LC_Const.o \
+				  ../share/UrbanLCZ_Const.o                     \
 				  ../share/spmd_task.o          \
 				  ../share/mod_namelist.o \
 				  ../share/PhysicalConstants.o  \
@@ -51,6 +52,7 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landpatch.o \
 				  ../mksrfdata/mod_landpft.o \
 				  ../mksrfdata/mod_landpc.o  \
+				  ../mksrfdata/mod_landurban.o                  \
 				  ../mksrfdata/mod_single_srfdata.o \
 				  ../mksrfdata/mod_elm_vector.o \
 				  ../mksrfdata/mod_hru_vector.o
@@ -105,6 +107,25 @@ OBJS_BGC = \
            bgc/MOD_BGC_Veg_CNFireLi2016.o \
 			  bgc/MOD_BGC_driver.o
 
+OBJS_URBAN =                                            \
+	  urban/UrbanShortwave.o                        \
+	  urban/UrbanLongwave.o                         \
+	  urban/UrbanALBEDO.o                           \
+	  urban/Urbannetsolar.o                         \
+	  urban/UrbanLAI_readin.o                       \
+	  urban/UrbanFlux.o                             \
+	  urban/UrbanGroundFlux.o                       \
+	  urban/UrbanRoofFlux.o                         \
+	  urban/UrbanRoofTem.o                          \
+	  urban/UrbanWallTem.o                          \
+	  urban/UrbanPerviousTem.o                      \
+	  urban/UrbanImperviousTem.o                    \
+	  urban/UrbanHydrology.o                        \
+	  urban/UrbanBEM.o                              \
+	  urban/UrbanLUCY.o                             \
+	  urban/UrbanTHERMAL.o                          \
+	  urban/UrbanCLMMAIN.o
+
 BASIC =  \
 		  MOD_Vars_PFTConst.o \
 		  MOD_Vars_PFTimeVars.o \
@@ -127,6 +148,12 @@ BASIC_BGC = \
 			  bgc/MOD_BGC_Vars_TimeInvars.o  \
 			  bgc/MOD_BGC_Vars_TimeVars.o 
 
+BASIC_URBAN =                                           \
+	  urban/MOD_1D_UrbanFluxes.o                    \
+	  urban/MOD_UrbanTimeInvars.o                   \
+	  urban/MOD_UrbanTimeVars.o
+
+
 OBJS =  \
 		  MOD_Vars_2DFluxes.o             \
 		  MOD_Vars_2DForcing.o            \
@@ -145,6 +172,7 @@ OBJS =  \
 		  MOD_LeafTemperature.o          \
 		  MOD_LeafTemperaturePC.o       \
 		  MOD_SoilHcapCond.o            \
+		  MOD_SoilThermalParameters.o   \
 		  MOD_SoilSnowHydrology.o       \
 		  MOD_SnowLayersCombineDivide.o \
 		  MOD_Meltf.o                     \
@@ -185,12 +213,12 @@ ifneq (${CaMa},\#define)
 
 ${EXECUTABLE} : ${HEADER} \
 	${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
-	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} 
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${BASIC} \
+	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS_URBAN} ${OBJS}
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
-	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${BASIC} \
+	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS_URBAN} ${OBJS} \
 	-o $@ ${LDFLAGS}
 	@echo 'making CoLM completed!'
 
@@ -211,19 +239,19 @@ CaMa_LIBS = $(CaMa_DIR)/src/libcama.a
 
 ${EXECUTABLE} : ${HEADER} \
 	${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
-	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} mk_CaMa
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${BASIC} \
+	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS_URBAN} ${OBJS} mk_CaMa
 	\
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS_MKSRFDATA} \
-	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC} \
-	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS} \
+	${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN} ${BASIC} \
+	${OBJS_HYDRO} ${OBJS_BGC} ${OBJS_URBAN} ${OBJS} \
 	${CaMa_LIBS} -o $@ ${LDFLAGS}
 	@echo 'making CoLM with CaMa Flood Model completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} mk_CaMa
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${CaMa_MODS}
 
-mk_CaMa : 
+mk_CaMa :
 	cd ../CaMa/src && make
 
 endif
@@ -240,7 +268,13 @@ $(BASIC_BGC) : %.o : %.F90 ${HEADER}
 $(OBJS_BGC) : %.o : %.F90 ${HEADER} ${BASIC}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}bgc
 
-$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO}
+$(BASIC_URBAN) : %.o : %.F90 ${HEADER}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}urban
+
+$(OBJS_URBAN) : %.o : %.F90 ${HEADER} ${BASIC} ${OBJS}
+	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $< ${MOD_CMD}urban
+
+$(BASIC) : %.o : %.F90 ${HEADER} ${BASIC_BGC} ${BASIC_HYDRO} ${BASIC_URBAN}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<
 
 $(OBJS_SHARED) : %.o : %.F90 ${HEADER}
@@ -253,4 +287,5 @@ $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER}
 clean :
 	${RM} -f *.o *.mod ${EXECUTABLE}
 	cd hydro && ${RM} -f *.o *.mod
+	cd urban && ${RM} -f *.o *.mod
 	cd bgc   && make clean
