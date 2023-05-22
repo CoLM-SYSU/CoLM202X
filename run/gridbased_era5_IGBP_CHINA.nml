@@ -37,7 +37,7 @@
    ! LAI setting
    DEF_LAI_CLIM = .true.
 
-   ! whether use CBL height
+   ! whether use CBL height (hpbl) and turn on the large-eddy turbulence scheme (LZD2022)
    DEF_USE_CBL_HEIGHT = .false.
 
    ! Model settings
