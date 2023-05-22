@@ -306,16 +306,17 @@ PROGRAM mksrfdata
    ! build land patches
    CALL landpatch_build(lc_year)
 
+   ! build land urban patches
+#ifdef URBAN_MODEL
+   CALL landurban_build(lc_year)
+#endif
+
 #ifdef PFT_CLASSIFICATION
    CALL landpft_build(lc_year)
 #endif
 
 #ifdef PC_CLASSIFICATION
    CALL landpc_build(lc_year)
-#endif
-
-#ifdef URBAN_MODEL
-   CALL landurban_build(lc_year)
 #endif
 
    ! ................................................................
@@ -348,7 +349,7 @@ PROGRAM mksrfdata
 #ifdef URBAN_MODEL
    CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landurban', landurban)
 #endif
-
+print*, numpatch
    ! ................................................................
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................

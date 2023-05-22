@@ -297,6 +297,9 @@ CONTAINS
          IF (allocated(msk)) deallocate(msk)
       ENDIF
 
+#ifdef URBAN_MODEL
+      continue
+#else
 #if (defined CROP)
       IF (p_is_io) THEN
 !         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
@@ -341,7 +344,7 @@ CONTAINS
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
-
+#endif
    END SUBROUTINE landpatch_build
 
    ! -----
