@@ -35,6 +35,7 @@ CONTAINS
       USE mod_namelist
       USE mod_5x5_data
       USE mod_mesh
+      USE mod_landelm
       USE mod_landpatch
       USE mod_aggregation
       USE mod_utils
@@ -277,6 +278,11 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numurban, ' urban tiles.'
 #endif
 
+#if (defined CROP)
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
       IF (allocated(ibuff)) deallocate (ibuff)
       IF (allocated(types)) deallocate (types)
       IF (allocated(order)) deallocate (order)

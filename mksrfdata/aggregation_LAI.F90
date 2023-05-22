@@ -387,6 +387,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN
@@ -663,6 +664,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN
