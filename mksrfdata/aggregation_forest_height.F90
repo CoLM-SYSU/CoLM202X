@@ -21,7 +21,7 @@ SUBROUTINE aggregation_forest_height ( &
    use mod_landpatch
    use ncio_vector
    use ncio_block
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    use mod_colm_debug
 #endif
    use mod_aggregation
@@ -133,7 +133,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    call check_vector_data ('htop_patches ', tree_height_patches)
 #endif 
 
@@ -197,7 +197,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
 #endif
 
@@ -283,7 +283,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
@@ -384,7 +384,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pcs     ', htop_pcs    )
 #endif

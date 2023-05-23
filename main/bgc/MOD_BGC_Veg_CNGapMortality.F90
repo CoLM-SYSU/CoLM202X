@@ -14,11 +14,11 @@ module MOD_BGC_Veg_CNGapMortality
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
   use precision
-  use PFT_Const, only: lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig
+  use MOD_Vars_PFTConst, only: lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig
   use MOD_BGC_Vars_TimeInvars, only: &
     ! bgc constants
       am
-  use MOD_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
 
   use MOD_BGC_Vars_1DFluxes, only: &
       ! decomposition carbon flux varables (in)

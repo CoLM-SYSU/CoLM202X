@@ -2,16 +2,11 @@
 
 SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
+   ! !DESCRIPTION:
+   ! Aggregate fire data from CLM5 dataset (month when crop fire peak (abm), GDP, peatland fraction (peatf),
+   ! and population density
    !
-   ! 2. Global Plant Leaf Area Index
-   !    (http://globalchange.bnu.edu.cn)
-   !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface
-   !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
+   ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
    !
    ! ----------------------------------------------------------------------
    USE precision
@@ -22,7 +17,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -143,7 +138,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('hdm value ', hdm_patches)
 #endif
 
@@ -201,7 +196,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('abm value ', abm_patches)
 #endif
 
@@ -257,7 +252,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('peatf value ', peatf_patches)
 #endif
 
@@ -313,7 +308,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('gdp value ', gdp_patches)
 #endif
 

@@ -36,7 +36,7 @@ module MOD_BGC_CNBalanceCheck
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       grainc_to_food_p
   use spmd_task
-  use MOD_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvars, only: pftclass
   
   implicit none
   

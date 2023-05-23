@@ -2,9 +2,8 @@
 
 SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
-   !
-   ! 2. Global nitrification data from CLM5 simulation
+   ! !DESCRIPTION:
+   ! Global nitrification data (climatological data of soil O2) from CLM5 simulation
    !
    ! Created by Zhongwang Wei and modified by Xingjie Lu, 09/2022
    !
@@ -17,7 +16,7 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    USE mod_colm_debug
 #endif
 
@@ -142,7 +141,7 @@ DO nsl = 1, 20
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
          CALL check_vector_data ('CONC_O2_UNSAT value '//trim(c3), CONC_O2_UNSAT_patches)
 #endif
 
@@ -251,7 +250,7 @@ DO nsl = 1, 25
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
          CALL check_vector_data ('O2_DECOMP_DEPTH_UNSAT value '//trim(c3), O2_DECOMP_DEPTH_UNSAT_patches)
 #endif
 

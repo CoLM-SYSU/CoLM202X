@@ -12,8 +12,8 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
       USE GlobalVars
       USE mod_namelist
       USE LC_Const
-      USE MOD_TimeVariables
-      USE MOD_TimeInvariants
+      USE MOD_Vars_TimeVariables
+      USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars
       USE ncio_vector
       USE ncio_serial

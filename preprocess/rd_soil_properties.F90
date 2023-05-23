@@ -108,7 +108,7 @@ IMPLICIT NONE
       real(r8), allocatable :: OM_density_l(:,:) ! OM_density(kg/m3)
       REAL(r8), allocatable :: BD_all_l(:,:)     ! Bulk density of soil (GRAVELS + MINERALS + ORGANIC MATTER)(kg/m3)
 
-! CLM soil layer thickiness and depths
+! CoLM soil layer thickiness and depths
       integer nl_soil
       real(r8), allocatable ::  zsoi(:)  ! soil layer depth [m]
       real(r8), allocatable ::  dzsoi(:) ! soil node thickness [m]

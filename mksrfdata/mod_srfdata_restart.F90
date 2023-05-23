@@ -302,7 +302,7 @@ CONTAINS
             
       ENDIF
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
       IF (p_is_io) write(*,'(I10,A,I4)') numelm, ' elements on group ', p_iam_io
 #endif
 
@@ -532,7 +532,7 @@ CONTAINS
 
       numset = pixelset%nset
 
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
       IF (p_is_io)  write(*,*) numset, trim(psetname), ' on group', p_iam_io
 #endif
 

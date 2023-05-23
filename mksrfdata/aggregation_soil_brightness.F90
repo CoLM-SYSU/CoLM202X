@@ -16,7 +16,7 @@ SUBROUTINE aggregation_soil_brightness ( &
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG 
    USE mod_colm_debug
 #endif
    USE mod_aggregation
@@ -288,7 +288,7 @@ SUBROUTINE aggregation_soil_brightness ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('s_v_alb ', soil_s_v_alb, -1.e36_r8)
    CALL check_vector_data ('d_v_alb ', soil_d_v_alb, -1.e36_r8)
    CALL check_vector_data ('s_n_alb ', soil_s_n_alb, -1.e36_r8)

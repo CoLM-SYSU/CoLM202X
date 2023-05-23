@@ -99,7 +99,7 @@ SUBROUTINE aggregation_dbedrock ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('dbedrock_patches ', dbedrock_patches, -9999.0)
 #endif
 

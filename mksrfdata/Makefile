@@ -1,4 +1,4 @@
-# Makefile for CLM surface data processing
+# Makefile for CoLM surface data processing
 
 include ../include/Makeoptions
 
@@ -71,7 +71,7 @@ OBJS =                                   \
 
 ${EXECUTABLE} : ${HEADER} ${OBJS_SHARED} ${OBJS}
 	${FF} ${FOPTS} ${OBJS_SHARED} ${OBJS} -o $@ ${LDFLAGS}
-	@echo 'making CLM surface data completed!'
+	@echo 'making CoLM surface data completed!'
 
 $(OBJS) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o $@ $<

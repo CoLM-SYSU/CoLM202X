@@ -2,17 +2,14 @@
 
 SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
+   ! !DESCRIPTION:
+   ! Aggregate the atmospheric nitrogen deposition data from CLM5.
    !
-   ! 2. Global Plant Leaf Area Index
-   !    (http://globalchange.bnu.edu.cn)
-   !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface
-   !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
+   ! !REFERENCE:
+   ! Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
    !
-   ! Created by Yongjiu Dai, 02/2014
-   !
-   !
+   ! !ORIGINAL:
+   ! Xingjie Lu and Shupeng Zhang, 2022
    ! ----------------------------------------------------------------------
    USE precision
    USE GlobalVars
@@ -22,7 +19,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -133,7 +130,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('NDEP value ', NDEP_patches)
 #endif
 

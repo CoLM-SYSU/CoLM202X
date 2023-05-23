@@ -39,7 +39,9 @@
   USE precision
   USE GlobalVars
   USE PhysicalConstants
-  USE SOIL_thermal_parameters
+  USE MOD_SoilThermalParameters
+  USE mod_utils, only: tridia
+  USE MOD_Meltf, only: meltf
 
   IMPLICIT NONE
 

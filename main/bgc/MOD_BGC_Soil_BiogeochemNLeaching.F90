@@ -16,9 +16,9 @@ module MOD_BGC_Soil_BiogeochemNLeaching
 
   use precision
   use MOD_BGC_Vars_TimeInvars, only: sf, sf_no3
-  use MOD_TimeVariables, only: wliq_soisno
+  use MOD_Vars_TimeVariables, only: wliq_soisno
   use MOD_BGC_Vars_TimeVars,   only: sminn_vr, smin_no3_vr
-  use MOD_1D_Fluxes,     only: rnof, rsur
+  use MOD_Vars_1DFluxes,     only: rnof, rsur
   use MOD_BGC_Vars_1DFluxes, only: &
       sminn_leached_vr, smin_no3_leached_vr, smin_no3_runoff_vr
 

@@ -13,8 +13,8 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
       USE GlobalVars
       USE LC_Const
       USE mod_landurban
-      USE MOD_TimeVariables
-      USE MOD_TimeInvariants
+      USE MOD_Vars_TimeVariables
+      USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars
       USE ncio_vector
 

@@ -16,7 +16,7 @@ module MOD_BGC_CNSummary
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
   use precision
-  use MOD_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvars, only: pftclass
   use MOD_BGC_Vars_TimeVars, only: &
       totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
       totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
@@ -57,7 +57,7 @@ module MOD_BGC_CNSummary
       leafn_xfer_p, frootn_xfer_p, livestemn_xfer_p, &
       deadstemn_xfer_p, livecrootn_xfer_p, deadcrootn_xfer_p, retransn_p, npool_p, &
       ntrunc_p, totvegn_p, downreg_p
-  use MOD_PFTimeInvars,  only: pftfrac
+  use MOD_Vars_PFTimeInvars,  only: pftfrac
   use MOD_BGC_Vars_1DFluxes, only: &
       gpp_enftemp, gpp_enfboreal, gpp_dnfboreal, gpp_ebftrop, gpp_ebftemp, gpp_dbftrop, gpp_dbftemp, &
       gpp_dbfboreal, gpp_ebstemp, gpp_dbstemp, gpp_dbsboreal, gpp_c3arcgrass, gpp_c3grass, gpp_c4grass, &
@@ -93,7 +93,7 @@ module MOD_BGC_CNSummary
       m_livecrootc_to_fire_p, m_livecrootc_storage_to_fire_p, m_livecrootc_xfer_to_fire_p, &
       m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
       m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
-  use MOD_TimeInvariants, only : patchclass
+  use MOD_Vars_TimeInvariants, only : patchclass
   use GlobalVars, only : spval
   use spmd_task
     
