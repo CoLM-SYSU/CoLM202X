@@ -42,7 +42,7 @@ MODULE MOD_TurbulenceLEddy
 ! ======================================================================
 
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -225,7 +225,7 @@ MODULE MOD_TurbulenceLEddy
 ! ======================================================================
 
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
