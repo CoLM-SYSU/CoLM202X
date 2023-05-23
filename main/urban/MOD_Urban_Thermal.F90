@@ -94,7 +94,8 @@ CONTAINS
         qref           ,trad           ,rst            ,assim          ,&
         respc          ,errore         ,emis           ,z0m            ,&
         zol            ,rib            ,ustar          ,qstar          ,&
-        tstar          ,fm             ,fh             ,fq              )
+        tstar          ,fm             ,fh             ,fq             ,&
+        hpbl                                                            )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -278,6 +279,8 @@ CONTAINS
         fveg       ,&! fraction of veg cover
         sigf       ,&! fraction of veg cover, excluding snow-covered veg [-]
         extkd        ! diffuse and scattered diffuse PAR extinction coefficient
+
+  real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
 
   REAL(r8), intent(inout) :: &
         fwsun      ,&! fraction of sunlit wall [-]
@@ -988,6 +991,7 @@ CONTAINS
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     ,BA_beta, &
 #endif
+                   hpbl, &
 
            ! "inout" laketem arguments
            ! ---------------------------
