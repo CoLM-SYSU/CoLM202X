@@ -42,7 +42,7 @@ MODULE MOD_GroundFluxes
     use PhysicalConstants, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
     USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-    USE MOD_Turbulence_LEddy
+    USE MOD_TurbulenceLEddy
     implicit none
 
 !----------------------- Dummy argument --------------------------------

@@ -356,7 +356,7 @@ MODULE MOD_Lake
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
   use MOD_FrictionVelocity
   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-  USE MOD_Turbulence_LEddy
+  USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_SoilHcapCond
   USE mod_utils

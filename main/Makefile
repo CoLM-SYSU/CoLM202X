@@ -168,7 +168,7 @@ OBJS =  \
 		  MOD_AssimStomataConductance.o \
 		  MOD_PlantHydraulic.o            \
 		  MOD_FrictionVelocity.o         \
-		  MOD_Turbulence_LEddy.o      \
+		  MOD_TurbulenceLEddy.o      \
 		  MOD_Ozone.o                  \
 		  MOD_LeafTemperature.o          \
 		  MOD_LeafTemperaturePC.o       \

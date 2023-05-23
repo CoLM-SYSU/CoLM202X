@@ -92,7 +92,7 @@ CONTAINS
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-  USE MOD_Turbulence_LEddy
+  USE MOD_TurbulenceLEddy
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
   USE LC_Const, only: z0mr, displar

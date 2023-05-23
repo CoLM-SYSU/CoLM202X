@@ -89,7 +89,7 @@ MODULE MOD_LeafTemperaturePC
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-  USE MOD_Turbulence_LEddy
+  USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
 #ifdef PLANT_HYDRAULIC_STRESS

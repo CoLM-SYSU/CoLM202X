@@ -391,7 +391,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    USE precision
    USE PhysicalConstants, ONLY : cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
-   USE MOD_Turbulence_LEddy
+   USE MOD_TurbulenceLEddy
    IMPLICIT NONE
    REAL(r8), INTENT(in)  :: hu      ! agcm reference height of wind [m]
    REAL(r8), INTENT(in)  :: ht      ! agcm reference height of temperature [m]

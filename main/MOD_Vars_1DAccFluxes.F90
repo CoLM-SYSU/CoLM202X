@@ -1225,7 +1225,7 @@ contains
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
       USE mod_namelist, only: DEF_USE_CBL_HEIGHT
-      USE MOD_Turbulence_LEddy
+      USE MOD_TurbulenceLEddy
       use mod_colm_debug
       use GlobalVars
 #ifdef LATERAL_FLOW

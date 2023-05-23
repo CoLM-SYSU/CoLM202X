@@ -1,4 +1,4 @@
-MODULE MOD_Turbulence_LEddy
+MODULE MOD_TurbulenceLEddy
 
 !-----------------------------------------------------------------------
  use precision
@@ -460,6 +460,6 @@ MODULE MOD_Turbulence_LEddy
  end function psi
 
 
-END MODULE MOD_Turbulence_LEddy
+END MODULE MOD_TurbulenceLEddy
 ! --------- EOP ------------
 
