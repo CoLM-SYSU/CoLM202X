@@ -513,12 +513,19 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    jday = idate0(2)
 
    IF (DEF_LAI_CLIM) then
-      ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
-      CALL LAI_readin (year, month, dir_landdata)
-   ELSE
-      Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
-      CALL LAI_readin (year, Julian_8day, dir_landdata)
+      IF (DEF_LAICHANGE) THEN
+         ! 08/03/2019, yuan: read global LAI/SAI data
+         CALL LAI_readin (year, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (year, month, dir_landdata)
+#endif
+      ELSE
+         CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#ifdef URBAN_MODEL
+         CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
+#endif
+      ENDIF
    ENDIF
 #ifdef CoLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
