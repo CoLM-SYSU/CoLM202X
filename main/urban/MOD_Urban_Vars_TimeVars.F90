@@ -385,7 +385,9 @@ CONTAINS
       call ncio_write_vector (file_restart, 'snowdp_gimp', 'urban', landurban, snowdp_gimp, compress) !
       call ncio_write_vector (file_restart, 'snowdp_gper', 'urban', landurban, snowdp_gper, compress) !
       call ncio_write_vector (file_restart, 'snowdp_lake', 'urban', landurban, snowdp_lake, compress) !
-      call ncio_write_vector (file_restart, 't_room '    , 'urban', landurban, t_room     , compress) !
+      call ncio_write_vector (file_restart, 't_room'     , 'urban', landurban, t_room     , compress) !
+      call ncio_write_vector (file_restart, 't_roof'     , 'urban', landurban, t_roof     , compress) !
+      call ncio_write_vector (file_restart, 't_wall'     , 'urban', landurban, t_wall     , compress) !
       call ncio_write_vector (file_restart, 'tafu'       , 'urban', landurban, tafu       , compress) !
       call ncio_write_vector (file_restart, 'Fhac'       , 'urban', landurban, Fhac       , compress) !
       call ncio_write_vector (file_restart, 'Fwst'       , 'urban', landurban, Fwst       , compress) !
@@ -394,6 +396,9 @@ CONTAINS
       call ncio_write_vector (file_restart, 'Fhah'       , 'urban', landurban, Fhah       , compress) !
       call ncio_write_vector (file_restart, 'vehc'       , 'urban', landurban, vehc       , compress) !
       call ncio_write_vector (file_restart, 'meta'       , 'urban', landurban, meta       , compress) !
+      call ncio_write_vector (file_restart, 'tree_lai'   , 'urban', landurban, urb_lai    , compress) !
+      call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) !
+      call ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress) !
 
    END SUBROUTINE WRITE_UrbanTimeVars
 

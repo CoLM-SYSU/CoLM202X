@@ -30,6 +30,7 @@ CONTAINS
 
       USE precision
       USE spmd_task
+      USE ncio_block
       USE mod_grid
       USE mod_data_type
       USE mod_namelist
@@ -52,10 +53,11 @@ CONTAINS
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
       TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
-      
+
 #if (defined CROP)
       TYPE(block_data_real8_3d) :: cropdata
-      INTEGER :: cropfilter(1)
+      INTEGER            :: cropfilter(1)
+      CHARACTER(len=256) :: file_patch
 #endif
       ! local vars
       INTEGER, allocatable :: ibuff(:), types(:), order(:)
