@@ -45,7 +45,7 @@ CONTAINS
       USE mod_namelist
       USE ncio_serial
       USE mod_mesh
-      USE mod_landelm
+      USE MOD_LandElm
       USE mod_colm_debug
       USE mod_drainage_network
       USE mod_utils

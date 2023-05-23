@@ -26,7 +26,7 @@ CONTAINS
       USE mod_grid
       USE ncio_serial
       USE ncio_block
-      USE mod_landpatch
+      USE MOD_LandPatch
       USE mod_colm_debug
       IMPLICIT NONE
 

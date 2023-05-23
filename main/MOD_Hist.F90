@@ -8,7 +8,7 @@ module MOD_Hist
    USE mod_namelist
 #ifdef PFT_CLASSIFICATION
    USE MOD_Vars_PFTimeInvars, only: pftclass
-   USE mod_landpft, only : patch_pft_s
+   USE MOD_LandPFT, only : patch_pft_s
 #endif
    USE MOD_Vars_Global, only : spval
    USE ncio_serial
@@ -36,7 +36,7 @@ contains
       USE MOD_Vars_Global
       use spmd_task
       use mod_grid
-      USE mod_landpatch
+      USE MOD_LandPatch
       use mod_mapping_pset2grid
       use MOD_Vars_1DAccFluxes
 #ifdef LATERAL_FLOW
@@ -122,7 +122,7 @@ contains
       use MOD_Vars_1DAccFluxes
       use mod_block
       use mod_data_type
-      use mod_landpatch
+      use MOD_LandPatch
       use mod_mapping_pset2grid
       use MOD_Vars_2DFluxes
       use mod_colm_debug

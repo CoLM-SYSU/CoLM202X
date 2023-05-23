@@ -120,7 +120,7 @@ CONTAINS
 ! ------------------------------------------------------
       USE precision
       USE spmd_task
-      USE mod_landurban
+      USE MOD_LandUrban
       USE MOD_Vars_Global
       IMPLICIT NONE
 
@@ -212,7 +212,7 @@ CONTAINS
    SUBROUTINE READ_UrbanTimeVars (file_restart)
 
       USE ncio_vector
-      USE mod_landurban
+      USE MOD_LandUrban
       USE MOD_Vars_Global
 
       IMPLICIT NONE
@@ -299,7 +299,7 @@ CONTAINS
    SUBROUTINE WRITE_UrbanTimeVars (file_restart)
 
       USE mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-      USE mod_landurban
+      USE MOD_LandUrban
       USE ncio_vector
       USE MOD_Vars_Global
       IMPLICIT NONE
@@ -400,7 +400,7 @@ CONTAINS
    SUBROUTINE deallocate_UrbanTimeVars
 
       USE spmd_task
-      USE mod_landurban
+      USE MOD_LandUrban
 
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN

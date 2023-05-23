@@ -51,7 +51,7 @@ CONTAINS
 
      USE precision
      USE spmd_task
-     USE mod_landurban
+     USE MOD_LandUrban
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -82,7 +82,7 @@ CONTAINS
   ! deallocates memory for CLM 1d [numurban] variables
   ! --------------------------------------------------------------------
       USE spmd_task
-      USE mod_landurban
+      USE MOD_LandUrban
 
       IF (p_is_worker) THEN
          IF (numurban > 0) THEN

@@ -36,10 +36,9 @@ OBJS_SHARED = \
 OBJS_MKSRFDATA = \
 				  ../../mksrfdata/mod_modis_data.o \
 				  ../../mksrfdata/mod_hydrounit.o \
-				  ../../mksrfdata/mod_landpatch.o \
-				  ../../mksrfdata/mod_aggregation_PFT.o \
-				  ../../mksrfdata/mod_landpft.o \
-				  ../../mksrfdata/mod_landpc.o
+				  ../../mksrfdata/MOD_LandPatch.o \
+				  ../../mksrfdata/MOD_LandPFT.o \
+				  ../../mksrfdata/MOD_LandPC.o
 
 BASIC =  \
 			../mod_unstructured_mesh.o \

@@ -17,8 +17,8 @@ CONTAINS
 
       USE spmd_task
       USE mod_mesh
-      USE mod_landhru
-      USE mod_landpatch
+      USE MOD_LandHRU
+      USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_1D_HydroFluxes
       USE MOD_Const_Physical, only : grav

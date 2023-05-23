@@ -67,8 +67,8 @@ contains
       USE mod_namelist
       use mod_data_type
       USE mod_mesh
-      USE mod_landelm
-      USE mod_landpatch
+      USE MOD_LandElm
+      USE MOD_LandPatch
       use mod_mapping_grid2pset
       use MOD_UserSpecifiedForcing
       USE ncio_serial
@@ -216,7 +216,7 @@ contains
       use spmd_task
       use mod_data_type
       use mod_mesh
-      use mod_landpatch
+      use MOD_LandPatch
       use mod_mapping_grid2pset
       use mod_colm_debug
       use MOD_UserSpecifiedForcing

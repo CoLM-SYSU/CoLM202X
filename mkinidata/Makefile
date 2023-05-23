@@ -37,18 +37,18 @@ OBJS_SHARED =                                       \
 	  ../share/mod_mapping_grid2pset.o
 
 OBJS_MKSRFDATA =                                    \
-	  ../mksrfdata/mod_aggregation.o            \
-	  ../mksrfdata/mod_srfdata_restart.o        \
-	  ../mksrfdata/mod_landelm.o                \
-	  ../mksrfdata/mod_landhru.o                \
-	  ../mksrfdata/mod_pixelsetshadow.o         \
-	  ../mksrfdata/mod_landpatch.o              \
-	  ../mksrfdata/mod_landpft.o                \
-	  ../mksrfdata/mod_landpc.o                 \
-	  ../mksrfdata/mod_single_srfdata.o         \
-	  ../mksrfdata/mod_elm_vector.o             \
-	  ../mksrfdata/mod_hru_vector.o             \
-	  ../mksrfdata/mod_landurban.o
+	  ../mksrfdata/MOD_AggregationRequestData.o \
+	  ../mksrfdata/MOD_SrfdataRestart.o         \
+	  ../mksrfdata/MOD_LandElm.o                \
+	  ../mksrfdata/MOD_LandHRU.o                \
+	  ../mksrfdata/MOD_PixelsetShadow.o         \
+	  ../mksrfdata/MOD_LandPatch.o              \
+	  ../mksrfdata/MOD_LandPFT.o                \
+	  ../mksrfdata/MOD_LandPC.o                 \
+	  ../mksrfdata/MOD_SingleSrfdata.o          \
+	  ../mksrfdata/MOD_ElmVector.o              \
+	  ../mksrfdata/MOD_HRUVector.o              \
+	  ../mksrfdata/MOD_LandUrban.o
 
 BASIC_HYDRO =                                       \
 	  ../main/hydro/mod_io_basin.o              \
@@ -66,13 +66,13 @@ BASIC_BGC =                                         \
 	  ../main/bgc/MOD_BGC_Vars_TimeVars.o
 
 BASIC_URBAN =                                       \
-	  ../main/urban/MOD_Urban_Const_LCZ.o   \
+	  ../main/urban/MOD_Urban_Const_LCZ.o       \
 	  ../main/urban/MOD_Urban_Vars_1DFluxes.o   \
 	  ../main/urban/MOD_Urban_Vars_TimeVars.o   \
 	  ../main/urban/MOD_Urban_Vars_TimeInvars.o
 
 BASIC =                                             \
-	  ../main/MOD_Const_PFT.o               \
+	  ../main/MOD_Const_PFT.o                   \
 	  ../main/MOD_Vars_PFTimeVars.o             \
 	  ../main/MOD_Vars_PFTimeInvars.o           \
 	  ../main/MOD_Vars_PCTimeVars.o             \
@@ -98,20 +98,20 @@ OBJS_MAIN =                                         \
 	  ../main/urban/MOD_Urban_Albedo.o
 
 OBJS =                                              \
-	  pct_readin.o                              \
-	  lakedepth_readin.o                        \
-	  dbedrock_readin.o                         \
-	  soil_color_refl.o                         \
-	  soil_parameters_readin.o                  \
-	  HTOP_readin.o                             \
-	  MOD_Urban_Readin.o                        \
+	  MOD_PercentagesPFTReadin.o                \
+	  MOD_LakeDepthReadin.o                     \
+	  MOD_DBedrockReadin.o                      \
+	  MOD_SoilColorRefl.o                       \
+	  MOD_SoilParametersReadin.o                \
+	  MOD_HtopReadin.o                          \
+	  MOD_UrbanReadin.o                         \
 	  ../main/MOD_CropReadin.o                  \
 	  ../main/MOD_NitrifReadin.o                \
 	  ../main/MOD_NdepReadin.o                  \
 	  ../main/MOD_FireReadin.o                  \
-	  IniTimeVar.o                              \
-	  MOD_Urban_IniTimeVar.o                    \
-	  initialize.o                              \
+	  MOD_IniTimeVar.o                          \
+	  MOD_UrbanIniTimeVar.o                     \
+	  MOD_Initialize.o                          \
 	  CoLMINI.o
 
 ####################################################################

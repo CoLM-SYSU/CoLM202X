@@ -31,7 +31,7 @@ MODULE MOD_NitrifReadin
       use mod_namelist
       use spmd_task
       use ncio_vector
-      use mod_landpatch
+      use MOD_LandPatch
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
 #ifdef CoLMDEBUG
@@ -41,15 +41,15 @@ MODULE MOD_NitrifReadin
       USE MOD_Vars_Global
       USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
-      USE mod_landpft
+      USE MOD_LandPFT
       USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-      USE mod_landpc
+      USE MOD_LandPC
       USE MOD_Vars_PCTimeVars
 #endif
 #ifdef SinglePoint
-      USE mod_single_srfdata
+      USE MOD_SingleSrfdata
 #endif
 
       IMPLICIT NONE

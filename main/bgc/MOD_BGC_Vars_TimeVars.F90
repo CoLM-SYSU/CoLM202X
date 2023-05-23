@@ -278,7 +278,7 @@ SAVE
   use precision
   USE MOD_Vars_Global
   use spmd_task
-  use mod_landpatch, only : numpatch
+  use MOD_LandPatch, only : numpatch
   IMPLICIT NONE
 
 
@@ -533,7 +533,7 @@ SAVE
   SUBROUTINE deallocate_BGCTimeVars ()
 
      use spmd_task
-     use mod_landpatch, only : numpatch
+     use MOD_LandPatch, only : numpatch
      implicit none
 
      ! --------------------------------------------------
@@ -794,7 +794,7 @@ SAVE
      !=======================================================================
 
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE mod_landpatch
+     USE MOD_LandPatch
      use ncio_vector
      USE MOD_Vars_Global
      IMPLICIT NONE
@@ -958,7 +958,7 @@ SAVE
 #ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
-     USE mod_landpatch
+     USE MOD_LandPatch
      USE MOD_Vars_Global
 
      IMPLICIT NONE

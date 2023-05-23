@@ -148,12 +148,12 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Const_Physical, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
 #ifdef PFT_CLASSIFICATION
-  USE mod_landpft, only : patch_pft_s, patch_pft_e
+  USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-  USE mod_landpc
+  USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
 #endif
