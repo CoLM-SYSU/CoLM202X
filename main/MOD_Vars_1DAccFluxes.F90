@@ -302,7 +302,7 @@ contains
 
       use spmd_task
       USE GlobalVars
-      use mod_landpatch, only : numpatch
+      use MOD_LandPatch, only : numpatch
       implicit none
 
       if (p_is_worker) then
@@ -603,7 +603,7 @@ contains
    subroutine deallocate_acc_fluxes ()
 
       use spmd_task
-      use mod_landpatch, only : numpatch
+      use MOD_LandPatch, only : numpatch
       implicit none
 
       if (p_is_worker) then
@@ -903,7 +903,7 @@ contains
    SUBROUTINE FLUSH_acc_fluxes ()
 
       use spmd_task
-      use mod_landpatch, only : numpatch
+      use MOD_LandPatch, only : numpatch
       use GlobalVars,    only : spval 
       implicit none
 
@@ -1213,7 +1213,7 @@ contains
 
       use precision
       use spmd_task
-      use mod_landpatch,     only : numpatch
+      use MOD_LandPatch,     only : numpatch
       use PhysicalConstants, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables

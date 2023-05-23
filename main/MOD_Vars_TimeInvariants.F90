@@ -113,7 +113,7 @@ SAVE
      use precision
      USE GlobalVars
      use spmd_task
-     use mod_landpatch, only : numpatch
+     use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
 
   if (p_is_worker) then
@@ -207,7 +207,7 @@ SAVE
 #ifdef CoLMDEBUG
      USE mod_colm_debug
 #endif
-     USE mod_landpatch
+     USE MOD_LandPatch
      USE GlobalVars
 
      IMPLICIT NONE
@@ -332,7 +332,7 @@ SAVE
      use spmd_task
      use ncio_serial
      use ncio_vector
-     use mod_landpatch
+     use MOD_LandPatch
      USE GlobalVars
 
      IMPLICIT NONE
@@ -461,7 +461,7 @@ SAVE
   SUBROUTINE deallocate_TimeInvariants ()
 
      use spmd_task
-     use mod_landpatch, only : numpatch
+     use MOD_LandPatch, only : numpatch
      implicit none
 
      ! --------------------------------------------------

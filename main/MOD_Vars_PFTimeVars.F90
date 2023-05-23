@@ -80,7 +80,7 @@ CONTAINS
 ! ------------------------------------------------------
       USE precision
       USE spmd_task
-      USE mod_landpft
+      USE MOD_LandPFT
       USE GlobalVars
       IMPLICIT NONE
 
@@ -132,7 +132,7 @@ CONTAINS
    SUBROUTINE READ_PFTimeVars (file_restart)
 
       use ncio_vector
-      USE mod_landpft
+      USE MOD_LandPFT
       USE GlobalVars
 
       IMPLICIT NONE
@@ -179,7 +179,7 @@ CONTAINS
    SUBROUTINE WRITE_PFTimeVars (file_restart)
 
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE mod_landpft
+     USE MOD_LandPFT
      use ncio_vector
      USE GlobalVars
      IMPLICIT NONE
@@ -242,7 +242,7 @@ CONTAINS
 ! Deallocates memory for CoLM 1d [numpft/numpc] variables
 ! --------------------------------------------------
       USE spmd_task
-      USE mod_landpft
+      USE MOD_LandPFT
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN

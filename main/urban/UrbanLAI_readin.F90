@@ -12,7 +12,7 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
       USE spmd_task
       USE GlobalVars
       USE LC_Const
-      USE mod_landurban
+      USE MOD_LandUrban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars

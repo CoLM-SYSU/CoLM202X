@@ -56,7 +56,7 @@ END INTERFACE
 CONTAINS
 
 SUBROUTINE colm_CaMa_init
-   USE mod_landpatch
+   USE MOD_LandPatch
    USE YOS_CMF_TIME,          ONLY: YYYY0
    IMPLICIT NONE
    !** local variables

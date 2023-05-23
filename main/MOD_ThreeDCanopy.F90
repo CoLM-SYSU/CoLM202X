@@ -45,7 +45,7 @@ MODULE MOD_ThreeDCanopy
    USE precision
    USE GlobalVars
    USE MOD_Vars_PFTConst
-   USE mod_landpc
+   USE MOD_LandPC
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
 

@@ -68,7 +68,7 @@ SAVE
 ! ------------------------------------------------
   USE spmd_task
   USE mod_mesh
-  USE mod_landpatch
+  USE MOD_LandPatch
   IMPLICIT NONE
 
   IF (p_is_worker) THEN
@@ -127,7 +127,7 @@ SAVE
 
      USE spmd_task
      USE mod_mesh
-     USE mod_landpatch
+     USE MOD_LandPatch
      IMPLICIT NONE
 
      IF (p_is_worker) THEN

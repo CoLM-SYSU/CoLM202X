@@ -1346,7 +1346,7 @@ contains
 
       USE precision
       USE PhysicalConstants, only: tfrz
-      USE mod_landpft
+      USE MOD_LandPFT
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
       USE MOD_Vars_1DPFTFluxes
@@ -1489,7 +1489,7 @@ contains
       USE MOD_Vars_PCTimeVars
       USE MOD_Vars_1DPCFluxes
       USE MOD_Vars_PFTConst
-      USE mod_landpc
+      USE MOD_LandPC
 
       IMPLICIT NONE
 

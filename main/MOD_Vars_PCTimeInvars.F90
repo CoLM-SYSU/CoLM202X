@@ -44,7 +44,7 @@ MODULE MOD_Vars_PCTimeInvars
 
      USE precision
      USE spmd_task
-     USE mod_landpc
+     USE MOD_LandPC
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -61,7 +61,7 @@ MODULE MOD_Vars_PCTimeInvars
   SUBROUTINE READ_PCTimeInvars (file_restart)
 
      use ncio_vector
-     USE mod_landpc
+     USE MOD_LandPC
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -75,7 +75,7 @@ MODULE MOD_Vars_PCTimeInvars
   SUBROUTINE WRITE_PCTimeInvars (file_restart)
 
      use ncio_vector
-     use mod_landpc
+     use MOD_LandPC
      USE mod_namelist
      USE GlobalVars
      IMPLICIT NONE
@@ -102,7 +102,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! --------------------------------------------------
 
      USE spmd_task
-     USE mod_landpc
+     USE MOD_LandPC
 
      IF (p_is_worker) THEN
         IF (numpc > 0) THEN

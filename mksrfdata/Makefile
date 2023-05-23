@@ -39,33 +39,33 @@ OBJS_SHARED =                            \
 	../share/mod_mapping_pset2grid.o
 
 OBJS =                                   \
-	 mod_aggregation.o               \
-	 mod_single_srfdata.o            \
-	 mod_srfdata_restart.o           \
-	 mod_pixelsetshadow.o            \
-	 mod_landelm.o                   \
-	 mod_landhru.o                   \
-	 mod_landpatch.o                 \
-	 mod_landurban.o                 \
-	 mod_landpft.o                   \
-	 mod_landpc.o                    \
-	 mod_mesh_filter.o               \
-	 mod_srfdata_diag.o              \
-	 aggregation_percentages.o       \
-	 aggregation_LAI.o               \
-	 aggregation_NDEP.o              \
-	 aggregation_fire.o              \
-	 aggregation_crop_parameters.o   \
-	 aggregation_nitrif_parameters.o \
-	 aggregation_soil_brightness.o   \
-	 aggregation_lakedepth.o         \
-	 aggregation_forest_height.o     \
-	 aggregation_soil_parameters.o   \
-	 aggregation_dbedrock.o          \
-	 aggregation_topography.o        \
-	 aggregation_urban.o             \
-	 mod_region_clip.o               \
-	 mksrfdata.o
+	 MOD_AggregationRequestData.o               \
+	 MOD_SingleSrfdata.o            \
+	 MOD_SrfdataRestart.o           \
+	 MOD_PixelsetShadow.o            \
+	 MOD_LandElm.o                   \
+	 MOD_LandHRU.o                   \
+	 MOD_LandPatch.o                 \
+	 MOD_LandUrban.o                 \
+	 MOD_LandPFT.o                   \
+	 MOD_LandPC.o                    \
+	 MOD_MeshFilter.o               \
+	 MOD_SrfdataDiag.o              \
+	 Aggregation_PercentagesPFT.o       \
+	 Aggregation_LAI.o               \
+	 Aggregation_NDeposition.o              \
+	 Aggregation_Fire.o              \
+	 Aggregation_CropParameters.o   \
+	 Aggregation_NitrifParameters.o \
+	 Aggregation_SoilBrightness.o   \
+	 Aggregation_LakeDepth.o         \
+	 Aggregation_ForestHeight.o     \
+	 Aggregation_SoilParameters.o   \
+	 Aggregation_DBedrock.o          \
+	 Aggregation_Topography.o        \
+	 Aggregation_Urban.o             \
+	 MOD_RegionClip.o               \
+	 MKSRFDATA.o
 
 ####################################################################
 

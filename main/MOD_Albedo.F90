@@ -77,12 +77,12 @@ MODULE MOD_Albedo
   USE GlobalVars
   USE PhysicalConstants, only: tfrz
 #ifdef PFT_CLASSIFICATION
-  USE mod_landpft, only: patch_pft_s, patch_pft_e
+  USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-  USE mod_landpc
+  USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
 #endif
@@ -1134,7 +1134,7 @@ ENDIF
 !
 !-----------------------------------------------------------------------
       USE precision
-      USE mod_landpft
+      USE MOD_LandPFT
       USE MOD_Vars_PFTConst
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars

@@ -31,7 +31,7 @@ CONTAINS
       USE mod_namelist
       USE ncio_serial
       USE mod_mesh
-      USE mod_landhru
+      USE MOD_LandHRU
       USE mod_colm_debug
       IMPLICIT NONE
 

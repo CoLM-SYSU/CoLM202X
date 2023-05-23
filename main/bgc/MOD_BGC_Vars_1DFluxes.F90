@@ -168,7 +168,7 @@ MODULE MOD_BGC_Vars_1DFluxes
      USE precision
      USE GlobalVars
      USE spmd_task
-     USE mod_landpatch
+     USE MOD_LandPatch
      IMPLICIT NONE
 
 
@@ -321,7 +321,7 @@ MODULE MOD_BGC_Vars_1DFluxes
   ! deallocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE spmd_task
-     USE mod_landpatch
+     USE MOD_LandPatch
 
      if (p_is_worker) then
 

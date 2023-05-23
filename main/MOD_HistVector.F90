@@ -8,16 +8,16 @@ module MOD_HistVector
    USE mod_namelist
    USE GlobalVars, only : spval
    USE mod_mesh
-   USE mod_landelm
+   USE MOD_LandElm
 #ifdef CATCHMENT
-   USE mod_landhru
+   USE MOD_LandHRU
 #endif
    USE mod_pixelset
    USE ncio_serial
 #ifdef CATCHMENT
-   USE mod_hru_vector
+   USE MOD_HRUVector
 #else
-   USE mod_elm_vector
+   USE MOD_ElmVector
 #endif
 
    public :: hist_vector_out
@@ -32,7 +32,7 @@ contains
       use timemanager
       use spmd_task
       use MOD_Vars_1DAccFluxes
-      use mod_landpatch
+      use MOD_LandPatch
       use mod_colm_debug
       use GlobalVars, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype
@@ -1006,7 +1006,7 @@ contains
       use precision
       use spmd_task
       use mod_namelist
-      USE mod_landpatch
+      USE MOD_LandPatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
@@ -1164,7 +1164,7 @@ contains
       use precision
       use spmd_task
       use mod_namelist
-      USE mod_landpatch
+      USE MOD_LandPatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
@@ -1344,7 +1344,7 @@ contains
       use precision
       use spmd_task
       use mod_namelist
-      USE mod_landpatch
+      USE MOD_LandPatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
       implicit none
@@ -1533,7 +1533,7 @@ contains
       use precision
       use spmd_task
       use mod_namelist
-      USE mod_landpatch
+      USE MOD_LandPatch
       use MOD_Vars_1DAccFluxes,  only: nac_ln
       use GlobalVars, only: spval
       implicit none

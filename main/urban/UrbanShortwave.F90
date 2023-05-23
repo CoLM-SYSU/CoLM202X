@@ -4,7 +4,7 @@ MODULE UrbanShortwave
 
   USE precision
   USE GlobalVars
-  USE mod_landurban
+  USE MOD_LandUrban
   USE MOD_ThreeDCanopy, only: tee, phi
 
   IMPLICIT NONE

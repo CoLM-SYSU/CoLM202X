@@ -16,8 +16,8 @@ CONTAINS
       
       USE spmd_task
       USE mod_mesh
-      USE mod_landelm
-      USE mod_landpatch
+      USE MOD_LandElm
+      USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DFluxes

@@ -32,8 +32,8 @@ CONTAINS
    SUBROUTINE lateral_flow (deltime)
 
       USE mod_mesh,      only : numelm
-      USE mod_landhru,   only : numhru
-      USE mod_landpatch, only : numpatch
+      USE MOD_LandHRU,   only : numhru
+      USE MOD_LandPatch, only : numpatch
       USE MOD_Vars_1DFluxes
       USE MOD_1D_HydroFluxes
       USE MOD_HydroTimeVars
@@ -137,7 +137,7 @@ CONTAINS
    SUBROUTINE check_catchment_water_inout ()
       
       USE mod_mesh
-      USE mod_landpatch
+      USE MOD_LandPatch
       USE GlobalVars, only : nl_soil
       USE MOD_Vars_1DForcing,    only : forc_prc,    forc_prl
       USE MOD_Vars_1DFluxes,     only : fevpa,       rnof,        rsur

@@ -8,7 +8,7 @@ module mod_hist_basin
    USE ncio_serial
    USE GlobalVars,  only : spval
    USE mod_mesh,    only : numelm
-   USE mod_landhru, only : numhru
+   USE MOD_LandHRU, only : numhru
    USE MOD_HydroTimeVars
    USE MOD_1D_HydroFluxes
    USE mod_io_basin
@@ -86,8 +86,8 @@ CONTAINS
       use precision
       use mod_namelist
       use spmd_task
-      USE mod_elm_vector
-      USE mod_hru_vector
+      USE MOD_ElmVector
+      USE MOD_HRUVector
       IMPLICIT NONE
 
       character(LEN=*), intent(in) :: file_hist
@@ -198,7 +198,7 @@ CONTAINS
 
       use spmd_task
       USE mod_mesh,    only : numelm
-      use mod_landhru, only : numhru
+      use MOD_LandHRU, only : numhru
       use GlobalVars,  only : spval 
       implicit none
 

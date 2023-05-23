@@ -44,18 +44,18 @@ OBJS_SHARED = \
 				  MOD_Qsadv.o
 
 OBJS_MKSRFDATA = \
-				  ../mksrfdata/mod_aggregation.o \
-				  ../mksrfdata/mod_srfdata_restart.o \
-				  ../mksrfdata/mod_pixelsetshadow.o \
-				  ../mksrfdata/mod_landelm.o \
-				  ../mksrfdata/mod_landhru.o \
-				  ../mksrfdata/mod_landpatch.o \
-				  ../mksrfdata/mod_landpft.o \
-				  ../mksrfdata/mod_landpc.o  \
-				  ../mksrfdata/mod_landurban.o                  \
-				  ../mksrfdata/mod_single_srfdata.o \
-				  ../mksrfdata/mod_elm_vector.o \
-				  ../mksrfdata/mod_hru_vector.o
+				  ../mksrfdata/MOD_AggregationRequestData.o \
+				  ../mksrfdata/MOD_SrfdataRestart.o \
+				  ../mksrfdata/MOD_PixelsetShadow.o \
+				  ../mksrfdata/MOD_LandElm.o \
+				  ../mksrfdata/MOD_LandHRU.o \
+				  ../mksrfdata/MOD_LandPatch.o \
+				  ../mksrfdata/MOD_LandPFT.o \
+				  ../mksrfdata/MOD_LandPC.o  \
+				  ../mksrfdata/MOD_LandUrban.o                  \
+				  ../mksrfdata/MOD_SingleSrfdata.o \
+				  ../mksrfdata/MOD_ElmVector.o \
+				  ../mksrfdata/MOD_HRUVector.o
 
 BASIC_HYDRO = \
 				  hydro/mod_io_basin.o \

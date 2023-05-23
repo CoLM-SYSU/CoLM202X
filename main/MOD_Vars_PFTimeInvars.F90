@@ -47,7 +47,7 @@ MODULE MOD_Vars_PFTimeInvars
   ! --------------------------------------------------------------------
 
      USE spmd_task
-     USE mod_landpft,   only : numpft
+     USE MOD_LandPFT,   only : numpft
      USE precision
      IMPLICIT NONE
 
@@ -65,7 +65,7 @@ MODULE MOD_Vars_PFTimeInvars
   SUBROUTINE READ_PFTimeInvars (file_restart)
 
      use ncio_vector
-     USE mod_landpft
+     USE MOD_LandPFT
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -80,7 +80,7 @@ MODULE MOD_Vars_PFTimeInvars
   SUBROUTINE WRITE_PFTimeInvars (file_restart)
 
      use ncio_vector
-     use mod_landpft
+     use MOD_LandPFT
      USE mod_namelist
      USE GlobalVars
      IMPLICIT NONE
@@ -106,7 +106,7 @@ MODULE MOD_Vars_PFTimeInvars
 ! Deallocates memory for CoLM PFT 1d [numpft] variables
 ! --------------------------------------------------
      USE spmd_task
-     USE mod_landpft
+     USE MOD_LandPFT
 
      IF (p_is_worker) THEN
         IF (numpft > 0) THEN

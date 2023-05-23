@@ -30,8 +30,8 @@ CONTAINS
 
      USE spmd_task
      USE mod_mesh,      only : numelm
-     USE mod_landhru,   only : numhru
-     USE mod_landpatch, only : numpatch
+     USE MOD_LandHRU,   only : numhru
+     USE MOD_LandPatch, only : numpatch
      IMPLICIT NONE
 
      INTEGER :: numbasin
