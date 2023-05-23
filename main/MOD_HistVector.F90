@@ -1,12 +1,12 @@
 #include <define.h>
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
 module MOD_HistVector
 
    use precision
    USE spmd_task
    USE mod_namelist
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    USE mod_mesh
    USE mod_landelm
 #ifdef CATCHMENT
@@ -34,7 +34,7 @@ contains
       use MOD_Vars_1DAccFluxes
       use mod_landpatch
       use mod_colm_debug
-      use GlobalVars, only : spval
+      use MOD_Vars_Global, only: spval
       USE MOD_Vars_TimeInvariants, only : patchtype
       USE MOD_Forcing, only : forcmask
       IMPLICIT NONE
@@ -75,7 +75,7 @@ contains
          call ncio_write_time (file_hist, 'time', idate, itime_in_file)
 
       ENDIF
-      
+
       ! ---------------------------------------------------
       ! Meteorological forcing
       ! ---------------------------------------------------
@@ -129,7 +129,7 @@ contains
          a_frl, file_hist, 'f_xy_frl', itime_in_file, filter, &
          'atmospheric infrared (longwave) radiation','W/m2')
 
-      ! downward solar radiation at surface [W/m2]       
+      ! downward solar radiation at surface [W/m2]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%xy_solarin, &
          a_solarin, file_hist, 'f_xy_solarin', itime_in_file, filter, &
          'downward solar radiation at surface','W/m2')
@@ -145,10 +145,10 @@ contains
          'snow','mm/s')
 
       ! ------------------------------------------------------------------------------------------
-      ! Mapping the fluxes and state variables at patch [numpatch] to grid 
+      ! Mapping the fluxes and state variables at patch [numpatch] to grid
       ! ------------------------------------------------------------------------------------------
 
-      ! wind stress: E-W [kg/m/s2]                                   
+      ! wind stress: E-W [kg/m/s2]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%taux, &
          a_taux, file_hist, 'f_taux', itime_in_file, filter, &
          'wind stress: E-W','kg/m/s2')
@@ -283,12 +283,12 @@ contains
          a_respc, file_hist, 'f_respc', itime_in_file, filter, &
          'respiration (plant+soil)','mol m-2 s-1')
 
-      ! groundwater recharge rate [mm/s]                            
+      ! groundwater recharge rate [mm/s]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%qcharge, &
          a_qcharge, file_hist, 'f_qcharge', itime_in_file, filter, &
          'groundwater recharge rate','mm/s')
 
-      ! ground surface temperature [K]                        
+      ! ground surface temperature [K]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%t_grnd, &
          a_t_grnd, file_hist, 'f_t_grnd', itime_in_file, filter, &
          'ground surface temperature','K')
@@ -348,7 +348,7 @@ contains
          a_sai, file_hist, 'f_sai', itime_in_file, filter, &
          'stem area index','m2/m2')
 
-      ! averaged albedo [visible, direct; direct, diffuse] 
+      ! averaged albedo [visible, direct; direct, diffuse]
       call aggregate_to_vector_and_write_4d ( DEF_hist_vars%alb, &
          a_alb, file_hist, 'f_alb', itime_in_file, filter, &
          'band', 2, 'rtyp', 2, &
@@ -371,7 +371,7 @@ contains
 
       ! 2 m height air temperature [kelvin]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%tref, &
-         a_tref, file_hist, 'f_tref', itime_in_file, filter, & 
+         a_tref, file_hist, 'f_tref', itime_in_file, filter, &
          '2 m height air temperature','kelvin')
 
       ! 2 m height air specific humidity [kg/kg]
@@ -648,7 +648,7 @@ contains
 
       ! litter 1 carbon density in soil layers
       call aggregate_to_vector_and_write_3d ( DEF_hist_vars%litr1c_vr, &
-         a_litr1c_vr, file_hist, 'f_litr1c_vr', itime_in_file, filter, & 
+         a_litr1c_vr, file_hist, 'f_litr1c_vr', itime_in_file, filter, &
          'soil', nl_soil, 'litter 1 carbon density in soil layers','gC/m3')
 
       ! litter 2 carbon density in soil layers
@@ -722,7 +722,7 @@ contains
          'soil', nl_soil, 'mineral nitrogen density in soil layers','gN/m3')
 
 #endif
-         
+
       ! --------------------------------------------------------------------
       ! Temperature and water (excluding land water bodies and ocean patches)
       ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; land water bodies => 4; ocean => 99]
@@ -942,7 +942,7 @@ contains
          a_srni, file_hist, 'f_srni', itime_in_file, filter, &
          'reflected diffuse beam nir solar radiation (W/m2)','W/m2')
 
-      ! local noon fluxes 
+      ! local noon fluxes
       if (p_is_worker) then
          if (numpatch > 0) then
             filter(:) = nac_ln > 0
@@ -997,7 +997,7 @@ contains
       call FLUSH_acc_fluxes ()
 
    END SUBROUTINE hist_vector_out
-   
+
    ! -------
    subroutine aggregate_to_vector_and_write_2d ( is_hist, &
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
@@ -1008,7 +1008,7 @@ contains
       use mod_namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -1021,7 +1021,7 @@ contains
 
       character(len=*), intent(in) :: longname
       character(len=*), intent(in) :: units
-      
+
       ! Local variables
       INTEGER :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
       LOGICAL,  allocatable :: mask(:)
@@ -1055,7 +1055,7 @@ contains
                istt = elm_patch%substt(iset)
                iend = elm_patch%subend(iset)
 #endif
-               
+
                IF ((istt > 0) .and. (iend >= istt)) THEN
                   allocate (mask(istt:iend))
                   allocate (frac(istt:iend))
@@ -1075,19 +1075,19 @@ contains
                ENDIF
             ENDDO
          end if
-         
+
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             call mpi_send (acc_vec, numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_root, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
-         
+
 #ifdef CATCHMENT
          totalnumset = totalnumhru
 #else
@@ -1109,7 +1109,7 @@ contains
                allocate(rcache (ndata))
                call mpi_recv (rcache, ndata, MPI_REAL8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
 #ifdef CATCHMENT
                acc_vec(hru_data_address(p_itis_worker(isrc))%val) = rcache
 #else
@@ -1127,10 +1127,10 @@ contains
 #endif
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
 
-         compress = DEF_HIST_COMPRESS_LEVEL 
+         compress = DEF_HIST_COMPRESS_LEVEL
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'hydrounit', 'time', compress)
@@ -1146,7 +1146,7 @@ contains
          ENDIF
 
       ENDIF
-         
+
       IF (allocated(acc_vec)) deallocate (acc_vec)
 
 #ifdef USEMPI
@@ -1166,7 +1166,7 @@ contains
       use mod_namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -1176,13 +1176,13 @@ contains
       character(len=*), intent(in) :: varname
       integer,          intent(in) :: itime_in_file
       logical, intent(in) :: filter(:)
-      
+
       character(len=*), intent(in) :: dim1name
       integer,          intent(in) :: ndim1
 
       character(len=*), intent(in) :: longname
       character(len=*), intent(in) :: units
-      
+
       ! Local variables
       INTEGER :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
       INTEGER :: lb1, ub1, i1
@@ -1213,7 +1213,7 @@ contains
                lb1 = 1
                ub1 = ndim1
             ENDIF
-               
+
             allocate (acc_vec (lb1:ub1,numset))
 
             acc_vec(:,:) = spval
@@ -1226,7 +1226,7 @@ contains
                istt = elm_patch%substt(iset)
                iend = elm_patch%subend(iset)
 #endif
-               
+
                IF ((istt > 0) .and. (iend >= istt)) THEN
                   allocate (mask(istt:iend))
                   allocate (frac(istt:iend))
@@ -1248,17 +1248,17 @@ contains
                ENDIF
             ENDDO
          end if
-         
+
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             call mpi_send (acc_vec, ndim1 * numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_root, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
 
 #ifdef CATCHMENT
@@ -1266,7 +1266,7 @@ contains
 #else
          totalnumset = totalnumelm
 #endif
-         
+
          IF (.not. allocated(acc_vec)) THEN
             allocate (acc_vec (ndim1,totalnumset))
          ENDIF
@@ -1282,7 +1282,7 @@ contains
                allocate(rcache (ndim1,ndata))
                call mpi_recv (rcache, ndim1*ndata, MPI_REAL8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
                DO i1 = 1, ndim1
 #ifdef CATCHMENT
                   acc_vec(i1,hru_data_address(p_itis_worker(isrc))%val) = rcache(i1,:)
@@ -1305,12 +1305,12 @@ contains
          ENDDO
 #endif
       ENDIF
-      
-      IF (p_is_master) THEN
-            
-         call ncio_define_dimension (file_hist, dim1name, ndim1) 
 
-         compress = DEF_HIST_COMPRESS_LEVEL 
+      IF (p_is_master) THEN
+
+         call ncio_define_dimension (file_hist, dim1name, ndim1)
+
+         compress = DEF_HIST_COMPRESS_LEVEL
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, 'hydrounit', 'time', compress)
@@ -1326,7 +1326,7 @@ contains
          ENDIF
 
       ENDIF
-         
+
       IF (allocated(acc_vec)) deallocate (acc_vec)
 
 #ifdef USEMPI
@@ -1346,7 +1346,7 @@ contains
       use mod_namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -1356,13 +1356,13 @@ contains
       character(len=*), intent(in) :: varname
       integer,          intent(in) :: itime_in_file
       logical, intent(in) :: filter(:)
-      
+
       character(len=*), intent(in) :: dim1name, dim2name
       integer,          intent(in) :: ndim1, ndim2
 
       character(len=*), intent(in) :: longname
       character(len=*), intent(in) :: units
-      
+
       ! Local variables
       INTEGER :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
       INTEGER :: lb1, ub1, i1, lb2, ub2, i2
@@ -1397,7 +1397,7 @@ contains
                lb2 = 1
                ub2 = ndim2
             ENDIF
-               
+
             allocate (acc_vec (lb1:ub1,lb2:ub2,numset))
 
             acc_vec(:,:,:) = spval
@@ -1410,7 +1410,7 @@ contains
                istt = elm_patch%substt(iset)
                iend = elm_patch%subend(iset)
 #endif
-               
+
                IF ((istt > 0) .and. (iend >= istt)) THEN
                   allocate (mask(istt:iend))
                   allocate (frac(istt:iend))
@@ -1434,19 +1434,19 @@ contains
                ENDIF
             ENDDO
          end if
-         
+
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             call mpi_send (acc_vec, ndim1 * ndim2 * numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_root, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
-         
+
 #ifdef CATCHMENT
          totalnumset = totalnumhru
 #else
@@ -1468,7 +1468,7 @@ contains
                allocate(rcache (ndim1,ndim2,ndata))
                call mpi_recv (rcache, ndim1 * ndim2 * ndata, MPI_REAL8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
                DO i1 = 1, ndim1
                   DO i2 = 1, ndim2
 #ifdef CATCHMENT
@@ -1494,13 +1494,13 @@ contains
          ENDDO
 #endif
       ENDIF
-      
-      IF (p_is_master) THEN
-            
-         call ncio_define_dimension (file_hist, dim1name, ndim1) 
-         call ncio_define_dimension (file_hist, dim2name, ndim2) 
 
-         compress = DEF_HIST_COMPRESS_LEVEL 
+      IF (p_is_master) THEN
+
+         call ncio_define_dimension (file_hist, dim1name, ndim1)
+         call ncio_define_dimension (file_hist, dim2name, ndim2)
+
+         compress = DEF_HIST_COMPRESS_LEVEL
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, dim2name, 'hydrounit', 'time', compress)
@@ -1516,7 +1516,7 @@ contains
          ENDIF
 
       ENDIF
-         
+
       IF (allocated(acc_vec)) deallocate (acc_vec)
 
 #ifdef USEMPI
@@ -1535,7 +1535,7 @@ contains
       use mod_namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac_ln
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -1548,7 +1548,7 @@ contains
 
       character(len=*), intent(in) :: longname
       character(len=*), intent(in) :: units
-      
+
       ! Local variables
       INTEGER :: numset, totalnumset, iset, istt, iend, iwork, mesg(2), isrc, ndata, compress
       LOGICAL,  allocatable :: mask(:)
@@ -1582,7 +1582,7 @@ contains
                istt = elm_patch%substt(iset)
                iend = elm_patch%subend(iset)
 #endif
-               
+
                IF ((istt > 0) .and. (iend >= istt)) THEN
                   allocate (mask(istt:iend))
                   allocate (frac(istt:iend))
@@ -1602,19 +1602,19 @@ contains
                ENDIF
             ENDDO
          end if
-         
+
 #ifdef USEMPI
          mesg = (/p_iam_glb, numset/)
-         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         call mpi_send (mesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
          IF (numset > 0) THEN
             call mpi_send (acc_vec, numset, MPI_REAL8, &
-               p_root, mpi_tag_data, p_comm_glb, p_err) 
+               p_root, mpi_tag_data, p_comm_glb, p_err)
          ENDIF
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
-         
+
 #ifdef CATCHMENT
          totalnumset = totalnumhru
 #else
@@ -1636,7 +1636,7 @@ contains
                allocate(rcache (ndata))
                call mpi_recv (rcache, ndata, MPI_REAL8, isrc, &
                   mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
 #ifdef CATCHMENT
                acc_vec(hru_data_address(p_itis_worker(isrc))%val) = rcache
 #else
@@ -1654,10 +1654,10 @@ contains
 #endif
 #endif
       ENDIF
-      
+
       IF (p_is_master) THEN
 
-         compress = DEF_HIST_COMPRESS_LEVEL 
+         compress = DEF_HIST_COMPRESS_LEVEL
 #ifdef CATCHMENT
          call ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'hydrounit', 'time', compress)
@@ -1673,7 +1673,7 @@ contains
          ENDIF
 
       ENDIF
-         
+
       IF (allocated(acc_vec)) deallocate (acc_vec)
 
 #ifdef USEMPI

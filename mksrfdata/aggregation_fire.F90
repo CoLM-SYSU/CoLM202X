@@ -10,7 +10,7 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    !
    ! ----------------------------------------------------------------------
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid

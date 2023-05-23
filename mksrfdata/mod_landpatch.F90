@@ -5,8 +5,8 @@ MODULE mod_landpatch
    USE precision
    USE mod_grid
    USE mod_pixelset
-   USE GlobalVars
-   USE LC_Const
+   USE MOD_Vars_Global
+   USE MOD_Const_LC
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif

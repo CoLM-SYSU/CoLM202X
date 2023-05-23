@@ -72,7 +72,7 @@
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
+  use MOD_Const_Physical, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
   use MOD_FrictionVelocity
   USE MOD_Qsadv
 
@@ -353,7 +353,7 @@
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : cpair,vonkar,grav
+  use MOD_Const_Physical, only : cpair,vonkar,grav
   use MOD_FrictionVelocity
   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
   USE MOD_TurbulenceLEddy
@@ -593,7 +593,7 @@
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
+  use MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
   USE MOD_Meltf
   USE mod_utils
 
@@ -869,7 +869,7 @@
 
 !=======================================================================
   use precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology
 
@@ -991,7 +991,7 @@
 
 !=======================================================================
   use precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology
 

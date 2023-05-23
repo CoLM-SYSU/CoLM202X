@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE UrbanAnthropogenic
+MODULE MOD_Urban_LUCY
   ! -----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Anthropogenic model to calculate anthropogenic heat flux for the rest
@@ -11,8 +11,8 @@ MODULE UrbanAnthropogenic
   ! -----------------------------------------------------------------------
   ! !USE
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical
   USE timemanager, only: julian2monthday, isleapyear
   IMPLICIT NONE
   SAVE
@@ -288,4 +288,4 @@ CONTAINS
 
   END SUBROUTINE timeweek
 
-END MODULE UrbanAnthropogenic
+END MODULE MOD_Urban_LUCY

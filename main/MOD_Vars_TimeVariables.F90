@@ -20,7 +20,7 @@ USE MOD_BGC_Vars_TimeVars
 USE MOD_HydroTimeVars
 #endif
 #ifdef URBAN_MODEL
-USE MOD_UrbanTimeVars
+USE MOD_Urban_Vars_TimeVars
 #endif
 
 IMPLICIT NONE
@@ -160,7 +160,7 @@ SAVE
 ! ------------------------------------------------------
 
   use precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   use spmd_task
   use mod_landpatch, only : numpatch
   IMPLICIT NONE
@@ -500,7 +500,7 @@ SAVE
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpatch
      use ncio_vector
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      integer, INTENT(in) :: idate(3)
@@ -648,7 +648,7 @@ SAVE
      USE mod_colm_debug
 #endif
      USE mod_landpatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 

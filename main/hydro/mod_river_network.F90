@@ -4,7 +4,7 @@
 MODULE mod_river_network
 
    USE precision
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
    
    ! -- river parameters --

@@ -1,7 +1,17 @@
 #include <define.h>
 
 #ifdef URBAN_MODEL
-SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
+MODULE MOD_Urban_IniTimeVar
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanIniTimeVar
+
+CONTAINS
+
+ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
                     rho,tau,fveg,htop,hbot,lai,sai,coszen,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
@@ -14,8 +24,8 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
 !
 !=======================================================================
   USE precision
-  USE GlobalVars
-  USE UrbanALBEDO
+  USE MOD_Vars_Global
+  USE MOD_Urban_Albedo
 
   IMPLICIT NONE
 
@@ -104,7 +114,9 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,&
                     dfwsun,extkd,alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake)
 
-END SUBROUTINE UrbanIniTimeVar
+ END SUBROUTINE UrbanIniTimeVar
+
+END MODULE MOD_Urban_IniTimeVar
 !-----------------------------------------------------------------------
 ! EOP
 #endif
