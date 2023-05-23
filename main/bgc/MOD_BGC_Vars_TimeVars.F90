@@ -137,7 +137,7 @@ SAVE
       REAL(r8), allocatable :: fpg                      (:)      ! actual plant uptake N : plant potential need N
 
       REAL(r8), allocatable :: cropf                    (:)      !
-      REAL(r8), allocatable :: lfwt                     (:)      !      
+      REAL(r8), allocatable :: lfwt                     (:)      !
       REAL(r8), allocatable :: fuelc                    (:)      !
       REAL(r8), allocatable :: fuelc_crop               (:)      !
       REAL(r8), allocatable :: fsr                      (:)      !
@@ -257,7 +257,7 @@ SAVE
       public :: deallocate_BGCTimeVars
       public :: READ_BGCTimeVars
       public :: WRITE_BGCTimeVars
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       public :: check_BGCTimeVars
 #endif
 
@@ -270,13 +270,13 @@ SAVE
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_BGCTimeVars 
+  SUBROUTINE allocate_BGCTimeVars
 ! --------------------------------------------------------------------
-! Allocates memory for CLM 1d [numpatch] variables
+! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------------
 
   use precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   use spmd_task
   use mod_landpatch, only : numpatch
   IMPLICIT NONE
@@ -293,7 +293,7 @@ SAVE
         allocate (ctrunc_veg                   (numpatch))
         allocate (ctrunc_soil                  (numpatch))
         allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch))
-   
+
         allocate (t_scalar                     (nl_soil,numpatch))
         allocate (w_scalar                     (nl_soil,numpatch))
         allocate (o_scalar                     (nl_soil,numpatch))
@@ -391,7 +391,7 @@ SAVE
         allocate (smin_nh4_vr                  (nl_soil,numpatch))
         allocate (sminn                        (numpatch))
         allocate (ndep                         (numpatch))
-   
+
 #ifdef NITRIF
         allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))
         allocate (tconc_o2_unsat               (nl_soil,numpatch))
@@ -504,7 +504,7 @@ SAVE
         allocate (gddplant              (numpatch))
         allocate (hui                   (numpatch))
         allocate (huiswheat             (numpatch))
-        allocate (pdcorn                (numpatch))  
+        allocate (pdcorn                (numpatch))
         allocate (pdswheat              (numpatch))
         allocate (pdwwheat              (numpatch))
         allocate (pdsoybean             (numpatch))
@@ -512,15 +512,15 @@ SAVE
         allocate (pdrice1               (numpatch))
         allocate (pdrice2               (numpatch))
         allocate (plantdate             (numpatch))
-        allocate (pdsugarcane           (numpatch))  
-        allocate (fertnitro_corn        (numpatch))  
+        allocate (pdsugarcane           (numpatch))
+        allocate (fertnitro_corn        (numpatch))
         allocate (fertnitro_swheat      (numpatch))
         allocate (fertnitro_wwheat      (numpatch))
         allocate (fertnitro_soybean     (numpatch))
         allocate (fertnitro_cotton      (numpatch))
         allocate (fertnitro_rice1       (numpatch))
         allocate (fertnitro_rice2       (numpatch))
-        allocate (fertnitro_sugarcane   (numpatch))  
+        allocate (fertnitro_sugarcane   (numpatch))
 #endif
         allocate (lag_npp               (numpatch))
      end if
@@ -537,11 +537,11 @@ SAVE
      implicit none
 
      ! --------------------------------------------------
-     ! Deallocates memory for CLM 1d [numpatch] variables
+     ! Deallocates memory for CoLM 1d [numpatch] variables
      ! --------------------------------------------------
 
      if (p_is_worker) then
-        
+
         if (numpatch > 0) then
 
 ! bgc variables
@@ -551,7 +551,7 @@ SAVE
            deallocate (ctrunc_veg                   )
            deallocate (ctrunc_soil                  )
            deallocate (decomp_k                     )
-   
+
            deallocate (t_scalar                     )
            deallocate (w_scalar                     )
            deallocate (o_scalar                     )
@@ -649,7 +649,7 @@ SAVE
            deallocate (smin_nh4_vr                  )
            deallocate (sminn                        )
            deallocate (ndep                         )
-   
+
 #ifdef NITRIF
            deallocate (to2_decomp_depth_unsat       )
            deallocate (tconc_o2_unsat               )
@@ -793,22 +793,22 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL 
+     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpatch
      use ncio_vector
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
-     
+
      ! Local variables
      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL 
+     compress = DEF_REST_COMPRESS_LEVEL
 
      call ncio_create_file_vector (file_restart, landpatch)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
-     
+
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_pools', ndecomp_pools)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'doy' , 365)
@@ -824,7 +824,7 @@ SAVE
      call ncio_write_vector (file_restart, 'totsomn              ', 'patch', landpatch, totsomn              )
      call ncio_write_vector (file_restart, 'totcwdn              ', 'patch', landpatch, totcwdn              )
      call ncio_write_vector (file_restart, 'totcoln              ', 'patch', landpatch, totcoln              )
-       
+
      call ncio_write_vector (file_restart, 'sminn                ', 'patch', landpatch, sminn                )
      call ncio_write_vector (file_restart, 'ndep                 ', 'patch', landpatch, ndep                 )
 
@@ -955,11 +955,11 @@ SAVE
      use mod_namelist
      use spmd_task
      use ncio_vector
-#ifdef CLMDEBUG 
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
      USE mod_landpatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 
@@ -976,7 +976,7 @@ SAVE
      call ncio_read_vector (file_restart, 'totsomn              ', landpatch, totsomn              )
      call ncio_read_vector (file_restart, 'totcwdn              ', landpatch, totcwdn              )
      call ncio_read_vector (file_restart, 'totcoln              ', landpatch, totcoln              )
-       
+
      call ncio_read_vector (file_restart, 'sminn                ', landpatch, sminn                )
      call ncio_read_vector (file_restart, 'ndep                 ', landpatch, ndep                 )
 
@@ -1084,14 +1084,14 @@ SAVE
      call ncio_read_vector (file_restart, 'fertnitro_sugarcane' , landpatch, fertnitro_sugarcane)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
      call check_BGCTimeVars
 #endif
-     
+
   end subroutine READ_BGCTimeVars
 
   !---------------------------------------
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
   SUBROUTINE check_BGCTimeVars ()
 
      use spmd_task
@@ -1100,220 +1100,220 @@ SAVE
      IMPLICIT NONE
 
 ! bgc variables
-     call check_vector_data ('decomp_cpools_vr  ', decomp_cpools_vr  ) 
-     call check_vector_data ('decomp_cpools     ', decomp_cpools     ) 
-     call check_vector_data ('decomp_k          ', decomp_k          ) 
-     call check_vector_data ('ctrunc_vr         ', ctrunc_vr         ) 
-     call check_vector_data ('ctrunc_veg        ', ctrunc_veg        ) 
-     call check_vector_data ('ctrunc_soil       ', ctrunc_soil       ) 
+     call check_vector_data ('decomp_cpools_vr  ', decomp_cpools_vr  )
+     call check_vector_data ('decomp_cpools     ', decomp_cpools     )
+     call check_vector_data ('decomp_k          ', decomp_k          )
+     call check_vector_data ('ctrunc_vr         ', ctrunc_vr         )
+     call check_vector_data ('ctrunc_veg        ', ctrunc_veg        )
+     call check_vector_data ('ctrunc_soil       ', ctrunc_soil       )
 
-     call check_vector_data ('t_scalar          ', t_scalar          ) 
-     call check_vector_data ('w_scalar          ', w_scalar          ) 
-     call check_vector_data ('o_scalar          ', o_scalar          ) 
-     call check_vector_data ('depth_scalar      ', depth_scalar      ) 
+     call check_vector_data ('t_scalar          ', t_scalar          )
+     call check_vector_data ('w_scalar          ', w_scalar          )
+     call check_vector_data ('o_scalar          ', o_scalar          )
+     call check_vector_data ('depth_scalar      ', depth_scalar      )
 
 ! Soil CN diffusion and advection
-     call check_vector_data ('som_adv_coef             ', som_adv_coef             ) 
-     call check_vector_data ('som_diffus_coef          ', som_diffus_coef          ) 
+     call check_vector_data ('som_adv_coef             ', som_adv_coef             )
+     call check_vector_data ('som_diffus_coef          ', som_diffus_coef          )
 
 ! Active Layer
-     call check_vector_data ('altmax                   ', altmax                   ) 
-     call check_vector_data ('altmax_lastyear          ', altmax_lastyear          ) 
-     !call check_vector_data ('altmax_lastyear_indx     ', altmax_lastyear_indx     ) 
+     call check_vector_data ('altmax                   ', altmax                   )
+     call check_vector_data ('altmax_lastyear          ', altmax_lastyear          )
+     !call check_vector_data ('altmax_lastyear_indx     ', altmax_lastyear_indx     )
 
-     call check_vector_data ('totlitc                  ', totlitc                  ) 
-     call check_vector_data ('totvegc                  ', totvegc                  ) 
-     call check_vector_data ('totsomc                  ', totsomc                  ) 
-     call check_vector_data ('totcwdc                  ', totcwdc                  ) 
-     call check_vector_data ('totcolc                  ', totcolc                  ) 
-     call check_vector_data ('col_begcb                ', col_begcb                ) 
-     call check_vector_data ('col_endcb                ', col_endcb                ) 
-     call check_vector_data ('col_vegbegcb             ', col_vegbegcb             ) 
-     call check_vector_data ('col_vegendcb             ', col_vegendcb             ) 
-     call check_vector_data ('col_soilbegcb            ', col_soilbegcb            ) 
-     call check_vector_data ('col_soilendcb            ', col_soilendcb            ) 
+     call check_vector_data ('totlitc                  ', totlitc                  )
+     call check_vector_data ('totvegc                  ', totvegc                  )
+     call check_vector_data ('totsomc                  ', totsomc                  )
+     call check_vector_data ('totcwdc                  ', totcwdc                  )
+     call check_vector_data ('totcolc                  ', totcolc                  )
+     call check_vector_data ('col_begcb                ', col_begcb                )
+     call check_vector_data ('col_endcb                ', col_endcb                )
+     call check_vector_data ('col_vegbegcb             ', col_vegbegcb             )
+     call check_vector_data ('col_vegendcb             ', col_vegendcb             )
+     call check_vector_data ('col_soilbegcb            ', col_soilbegcb            )
+     call check_vector_data ('col_soilendcb            ', col_soilendcb            )
 
-     call check_vector_data ('totlitn                  ', totlitn                  ) 
-     call check_vector_data ('totvegn                  ', totvegn                  ) 
-     call check_vector_data ('totsomn                  ', totsomn                  ) 
-     call check_vector_data ('totcwdn                  ', totcwdn                  ) 
-     call check_vector_data ('totcoln                  ', totcoln                  ) 
-     call check_vector_data ('col_begnb                ', col_begnb                ) 
-     call check_vector_data ('col_endnb                ', col_endnb                ) 
-     call check_vector_data ('col_vegbegnb             ', col_vegbegnb             ) 
-     call check_vector_data ('col_vegendnb             ', col_vegendnb             ) 
-     call check_vector_data ('col_soilbegnb            ', col_soilbegnb            ) 
-     call check_vector_data ('col_soilendnb            ', col_soilendnb            ) 
-     call check_vector_data ('col_sminnbegnb           ', col_sminnbegnb           ) 
-     call check_vector_data ('col_sminnendnb           ', col_sminnendnb           ) 
+     call check_vector_data ('totlitn                  ', totlitn                  )
+     call check_vector_data ('totvegn                  ', totvegn                  )
+     call check_vector_data ('totsomn                  ', totsomn                  )
+     call check_vector_data ('totcwdn                  ', totcwdn                  )
+     call check_vector_data ('totcoln                  ', totcoln                  )
+     call check_vector_data ('col_begnb                ', col_begnb                )
+     call check_vector_data ('col_endnb                ', col_endnb                )
+     call check_vector_data ('col_vegbegnb             ', col_vegbegnb             )
+     call check_vector_data ('col_vegendnb             ', col_vegendnb             )
+     call check_vector_data ('col_soilbegnb            ', col_soilbegnb            )
+     call check_vector_data ('col_soilendnb            ', col_soilendnb            )
+     call check_vector_data ('col_sminnbegnb           ', col_sminnbegnb           )
+     call check_vector_data ('col_sminnendnb           ', col_sminnendnb           )
 
-     call check_vector_data ('leafc                    ', leafc                    ) 
-     call check_vector_data ('leafc_storage            ', leafc_storage            ) 
-     call check_vector_data ('leafc_xfer               ', leafc_xfer               ) 
-     call check_vector_data ('frootc                   ', frootc                   ) 
-     call check_vector_data ('frootc_storage           ', frootc_storage           ) 
-     call check_vector_data ('frootc_xfer              ', frootc_xfer              ) 
-     call check_vector_data ('livestemc                ', livestemc                ) 
-     call check_vector_data ('livestemc_storage        ', livestemc_storage        ) 
-     call check_vector_data ('livestemc_xfer           ', livestemc_xfer           ) 
-     call check_vector_data ('deadstemc                ', deadstemc                ) 
-     call check_vector_data ('deadstemc_storage        ', deadstemc_storage        ) 
-     call check_vector_data ('deadstemc_xfer           ', deadstemc_xfer           ) 
-     call check_vector_data ('livecrootc               ', livecrootc               ) 
-     call check_vector_data ('livecrootc_storage       ', livecrootc_storage       ) 
-     call check_vector_data ('livecrootc_xfer          ', livecrootc_xfer          ) 
-     call check_vector_data ('deadcrootc               ', deadcrootc               ) 
-     call check_vector_data ('deadcrootc_storage       ', deadcrootc_storage       ) 
-     call check_vector_data ('deadcrootc_xfer          ', deadcrootc_xfer          ) 
-     call check_vector_data ('grainc                   ', grainc                   ) 
-     call check_vector_data ('grainc_storage           ', grainc_storage           ) 
-     call check_vector_data ('grainc_xfer              ', grainc_xfer              ) 
-     call check_vector_data ('xsmrpool                 ', xsmrpool                 ) 
-     call check_vector_data ('downreg                  ', downreg                  ) 
-     call check_vector_data ('cropprod1c               ', cropprod1c               ) 
-     call check_vector_data ('cropseedc_deficit        ', cropseedc_deficit        ) 
+     call check_vector_data ('leafc                    ', leafc                    )
+     call check_vector_data ('leafc_storage            ', leafc_storage            )
+     call check_vector_data ('leafc_xfer               ', leafc_xfer               )
+     call check_vector_data ('frootc                   ', frootc                   )
+     call check_vector_data ('frootc_storage           ', frootc_storage           )
+     call check_vector_data ('frootc_xfer              ', frootc_xfer              )
+     call check_vector_data ('livestemc                ', livestemc                )
+     call check_vector_data ('livestemc_storage        ', livestemc_storage        )
+     call check_vector_data ('livestemc_xfer           ', livestemc_xfer           )
+     call check_vector_data ('deadstemc                ', deadstemc                )
+     call check_vector_data ('deadstemc_storage        ', deadstemc_storage        )
+     call check_vector_data ('deadstemc_xfer           ', deadstemc_xfer           )
+     call check_vector_data ('livecrootc               ', livecrootc               )
+     call check_vector_data ('livecrootc_storage       ', livecrootc_storage       )
+     call check_vector_data ('livecrootc_xfer          ', livecrootc_xfer          )
+     call check_vector_data ('deadcrootc               ', deadcrootc               )
+     call check_vector_data ('deadcrootc_storage       ', deadcrootc_storage       )
+     call check_vector_data ('deadcrootc_xfer          ', deadcrootc_xfer          )
+     call check_vector_data ('grainc                   ', grainc                   )
+     call check_vector_data ('grainc_storage           ', grainc_storage           )
+     call check_vector_data ('grainc_xfer              ', grainc_xfer              )
+     call check_vector_data ('xsmrpool                 ', xsmrpool                 )
+     call check_vector_data ('downreg                  ', downreg                  )
+     call check_vector_data ('cropprod1c               ', cropprod1c               )
+     call check_vector_data ('cropseedc_deficit        ', cropseedc_deficit        )
 
-     call check_vector_data ('leafn                    ', leafn                    ) 
-     call check_vector_data ('leafn_storage            ', leafn_storage            ) 
-     call check_vector_data ('leafn_xfer               ', leafn_xfer               ) 
-     call check_vector_data ('frootn                   ', frootn                   ) 
-     call check_vector_data ('frootn_storage           ', frootn_storage           ) 
-     call check_vector_data ('frootn_xfer              ', frootn_xfer              ) 
-     call check_vector_data ('livestemn                ', livestemn                ) 
-     call check_vector_data ('livestemn_storage        ', livestemn_storage        ) 
-     call check_vector_data ('livestemn_xfer           ', livestemn_xfer           ) 
-     call check_vector_data ('deadstemn                ', deadstemn                ) 
-     call check_vector_data ('deadstemn_storage        ', deadstemn_storage        ) 
-     call check_vector_data ('deadstemn_xfer           ', deadstemn_xfer           ) 
-     call check_vector_data ('livecrootn               ', livecrootn               ) 
-     call check_vector_data ('livecrootn_storage       ', livecrootn_storage       ) 
-     call check_vector_data ('livecrootn_xfer          ', livecrootn_xfer          ) 
-     call check_vector_data ('deadcrootn               ', deadcrootn               ) 
-     call check_vector_data ('deadcrootn_storage       ', deadcrootn_storage       ) 
-     call check_vector_data ('deadcrootn_xfer          ', deadcrootn_xfer          ) 
-     call check_vector_data ('grainn                   ', grainn                   ) 
-     call check_vector_data ('grainn_storage           ', grainn_storage           ) 
-     call check_vector_data ('grainn_xfer              ', grainn_xfer              ) 
-     call check_vector_data ('retransn                 ', retransn                 ) 
+     call check_vector_data ('leafn                    ', leafn                    )
+     call check_vector_data ('leafn_storage            ', leafn_storage            )
+     call check_vector_data ('leafn_xfer               ', leafn_xfer               )
+     call check_vector_data ('frootn                   ', frootn                   )
+     call check_vector_data ('frootn_storage           ', frootn_storage           )
+     call check_vector_data ('frootn_xfer              ', frootn_xfer              )
+     call check_vector_data ('livestemn                ', livestemn                )
+     call check_vector_data ('livestemn_storage        ', livestemn_storage        )
+     call check_vector_data ('livestemn_xfer           ', livestemn_xfer           )
+     call check_vector_data ('deadstemn                ', deadstemn                )
+     call check_vector_data ('deadstemn_storage        ', deadstemn_storage        )
+     call check_vector_data ('deadstemn_xfer           ', deadstemn_xfer           )
+     call check_vector_data ('livecrootn               ', livecrootn               )
+     call check_vector_data ('livecrootn_storage       ', livecrootn_storage       )
+     call check_vector_data ('livecrootn_xfer          ', livecrootn_xfer          )
+     call check_vector_data ('deadcrootn               ', deadcrootn               )
+     call check_vector_data ('deadcrootn_storage       ', deadcrootn_storage       )
+     call check_vector_data ('deadcrootn_xfer          ', deadcrootn_xfer          )
+     call check_vector_data ('grainn                   ', grainn                   )
+     call check_vector_data ('grainn_storage           ', grainn_storage           )
+     call check_vector_data ('grainn_xfer              ', grainn_xfer              )
+     call check_vector_data ('retransn                 ', retransn                 )
 
-     call check_vector_data ('decomp_npools_vr         ', decomp_npools_vr         ) 
-     call check_vector_data ('decomp_npools            ', decomp_npools            ) 
-     call check_vector_data ('ntrunc_vr                ', ntrunc_vr                ) 
-     call check_vector_data ('ntrunc_veg               ', ntrunc_veg               ) 
-     call check_vector_data ('ntrunc_soil              ', ntrunc_soil              ) 
+     call check_vector_data ('decomp_npools_vr         ', decomp_npools_vr         )
+     call check_vector_data ('decomp_npools            ', decomp_npools            )
+     call check_vector_data ('ntrunc_vr                ', ntrunc_vr                )
+     call check_vector_data ('ntrunc_veg               ', ntrunc_veg               )
+     call check_vector_data ('ntrunc_soil              ', ntrunc_soil              )
 
-     call check_vector_data ('sminn_vr                 ', sminn_vr                 ) 
-     call check_vector_data ('smin_no3_vr              ', smin_no3_vr              ) 
-     call check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              ) 
+     call check_vector_data ('sminn_vr                 ', sminn_vr                 )
+     call check_vector_data ('smin_no3_vr              ', smin_no3_vr              )
+     call check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              )
 
 #ifdef NITRIF
      call check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
      call check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
 #endif
 
-     call check_vector_data ('sminn                    ', sminn                    ) 
-     call check_vector_data ('ndep                     ', ndep                     ) 
+     call check_vector_data ('sminn                    ', sminn                    )
+     call check_vector_data ('ndep                     ', ndep                     )
 
-     call check_vector_data ('ndep_prof                ', ndep_prof                ) 
-     call check_vector_data ('nfixation_prof           ', nfixation_prof           ) 
+     call check_vector_data ('ndep_prof                ', ndep_prof                )
+     call check_vector_data ('nfixation_prof           ', nfixation_prof           )
 
-     call check_vector_data ('cn_decomp_pools          ', cn_decomp_pools          ) 
-     call check_vector_data ('fpi_vr                   ', fpi_vr                   ) 
-     call check_vector_data ('fpi                      ', fpi                      ) 
-     call check_vector_data ('fpg                      ', fpg                      ) 
+     call check_vector_data ('cn_decomp_pools          ', cn_decomp_pools          )
+     call check_vector_data ('fpi_vr                   ', fpi_vr                   )
+     call check_vector_data ('fpi                      ', fpi                      )
+     call check_vector_data ('fpg                      ', fpg                      )
 
-     call check_vector_data ('cropf                    ', cropf                    ) 
-     call check_vector_data ('lfwt                     ', lfwt                     ) 
-     call check_vector_data ('fuelc                    ', fuelc                    ) 
-     call check_vector_data ('fuelc_crop               ', fuelc_crop               ) 
-     call check_vector_data ('fsr                      ', fsr                      ) 
-     call check_vector_data ('fd                       ', fd                       ) 
-     call check_vector_data ('rootc                    ', rootc                    ) 
-     call check_vector_data ('lgdp                     ', lgdp                     ) 
-     call check_vector_data ('lgdp1                    ', lgdp1                    ) 
-     call check_vector_data ('lpop                     ', lpop                     ) 
-     call check_vector_data ('wtlf                     ', wtlf                     ) 
-     call check_vector_data ('trotr1                   ', trotr1                   ) 
-     call check_vector_data ('trotr2                   ', trotr2                   ) 
-     call check_vector_data ('hdm_lf                   ', hdm_lf                   ) 
-     call check_vector_data ('lnfm                     ', lnfm                     ) 
-     call check_vector_data ('baf_crop                 ', baf_crop                 ) 
-     call check_vector_data ('baf_peatf                ', baf_peatf                ) 
-     call check_vector_data ('farea_burned             ', farea_burned             ) 
-     call check_vector_data ('nfire                    ', nfire                    ) 
-     call check_vector_data ('fsat                     ', fsat                     ) 
-     call check_vector_data ('prec10                   ', prec10                   ) 
-     call check_vector_data ('prec60                   ', prec60                   ) 
-     call check_vector_data ('prec365                  ', prec365                  ) 
-     call check_vector_data ('prec_today               ', prec_today               ) 
-     call check_vector_data ('prec_daily               ', prec_daily               ) 
-     call check_vector_data ('wf2                      ', wf2                      ) 
-     call check_vector_data ('tsoi17                   ', tsoi17                   ) 
-     call check_vector_data ('rh30                     ', rh30                     ) 
-     call check_vector_data ('accumnstep               ', accumnstep               ) 
+     call check_vector_data ('cropf                    ', cropf                    )
+     call check_vector_data ('lfwt                     ', lfwt                     )
+     call check_vector_data ('fuelc                    ', fuelc                    )
+     call check_vector_data ('fuelc_crop               ', fuelc_crop               )
+     call check_vector_data ('fsr                      ', fsr                      )
+     call check_vector_data ('fd                       ', fd                       )
+     call check_vector_data ('rootc                    ', rootc                    )
+     call check_vector_data ('lgdp                     ', lgdp                     )
+     call check_vector_data ('lgdp1                    ', lgdp1                    )
+     call check_vector_data ('lpop                     ', lpop                     )
+     call check_vector_data ('wtlf                     ', wtlf                     )
+     call check_vector_data ('trotr1                   ', trotr1                   )
+     call check_vector_data ('trotr2                   ', trotr2                   )
+     call check_vector_data ('hdm_lf                   ', hdm_lf                   )
+     call check_vector_data ('lnfm                     ', lnfm                     )
+     call check_vector_data ('baf_crop                 ', baf_crop                 )
+     call check_vector_data ('baf_peatf                ', baf_peatf                )
+     call check_vector_data ('farea_burned             ', farea_burned             )
+     call check_vector_data ('nfire                    ', nfire                    )
+     call check_vector_data ('fsat                     ', fsat                     )
+     call check_vector_data ('prec10                   ', prec10                   )
+     call check_vector_data ('prec60                   ', prec60                   )
+     call check_vector_data ('prec365                  ', prec365                  )
+     call check_vector_data ('prec_today               ', prec_today               )
+     call check_vector_data ('prec_daily               ', prec_daily               )
+     call check_vector_data ('wf2                      ', wf2                      )
+     call check_vector_data ('tsoi17                   ', tsoi17                   )
+     call check_vector_data ('rh30                     ', rh30                     )
+     call check_vector_data ('accumnstep               ', accumnstep               )
 
-     call check_vector_data ('dayl                     ', dayl                     ) 
-     call check_vector_data ('prev_dayl                ', prev_dayl                ) 
+     call check_vector_data ('dayl                     ', dayl                     )
+     call check_vector_data ('prev_dayl                ', prev_dayl                )
 
 #ifdef SASU
 !--------------SASU variables---------------------------
-     call check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           ) 
-     call check_vector_data ('I_met_c_vr_acc              ', I_met_c_vr_acc              ) 
-     call check_vector_data ('I_cel_c_vr_acc              ', I_cel_c_vr_acc              ) 
-     call check_vector_data ('I_lig_c_vr_acc              ', I_lig_c_vr_acc              ) 
-     call check_vector_data ('I_cwd_c_vr_acc              ', I_cwd_c_vr_acc              ) 
-     call check_vector_data ('AKX_met_to_soil1_c_vr_acc   ', AKX_met_to_soil1_c_vr_acc   ) 
-     call check_vector_data ('AKX_cel_to_soil1_c_vr_acc   ', AKX_cel_to_soil1_c_vr_acc   ) 
-     call check_vector_data ('AKX_lig_to_soil2_c_vr_acc   ', AKX_lig_to_soil2_c_vr_acc   ) 
-     call check_vector_data ('AKX_soil1_to_soil2_c_vr_acc ', AKX_soil1_to_soil2_c_vr_acc ) 
-     call check_vector_data ('AKX_cwd_to_cel_c_vr_acc     ', AKX_cwd_to_cel_c_vr_acc     ) 
-     call check_vector_data ('AKX_cwd_to_lig_c_vr_acc     ', AKX_cwd_to_lig_c_vr_acc     ) 
-     call check_vector_data ('AKX_soil1_to_soil3_c_vr_acc ', AKX_soil1_to_soil3_c_vr_acc ) 
-     call check_vector_data ('AKX_soil2_to_soil1_c_vr_acc ', AKX_soil2_to_soil1_c_vr_acc ) 
-     call check_vector_data ('AKX_soil2_to_soil3_c_vr_acc ', AKX_soil2_to_soil3_c_vr_acc ) 
-     call check_vector_data ('AKX_soil3_to_soil1_c_vr_acc ', AKX_soil3_to_soil1_c_vr_acc ) 
-     call check_vector_data ('AKX_met_exit_c_vr_acc       ', AKX_met_exit_c_vr_acc       ) 
-     call check_vector_data ('AKX_cel_exit_c_vr_acc       ', AKX_cel_exit_c_vr_acc       ) 
-     call check_vector_data ('AKX_lig_exit_c_vr_acc       ', AKX_lig_exit_c_vr_acc       ) 
-     call check_vector_data ('AKX_cwd_exit_c_vr_acc       ', AKX_cwd_exit_c_vr_acc       ) 
-     call check_vector_data ('AKX_soil1_exit_c_vr_acc     ', AKX_soil1_exit_c_vr_acc     ) 
-     call check_vector_data ('AKX_soil2_exit_c_vr_acc     ', AKX_soil2_exit_c_vr_acc     ) 
-     call check_vector_data ('AKX_soil3_exit_c_vr_acc     ', AKX_soil3_exit_c_vr_acc     ) 
+     call check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           )
+     call check_vector_data ('I_met_c_vr_acc              ', I_met_c_vr_acc              )
+     call check_vector_data ('I_cel_c_vr_acc              ', I_cel_c_vr_acc              )
+     call check_vector_data ('I_lig_c_vr_acc              ', I_lig_c_vr_acc              )
+     call check_vector_data ('I_cwd_c_vr_acc              ', I_cwd_c_vr_acc              )
+     call check_vector_data ('AKX_met_to_soil1_c_vr_acc   ', AKX_met_to_soil1_c_vr_acc   )
+     call check_vector_data ('AKX_cel_to_soil1_c_vr_acc   ', AKX_cel_to_soil1_c_vr_acc   )
+     call check_vector_data ('AKX_lig_to_soil2_c_vr_acc   ', AKX_lig_to_soil2_c_vr_acc   )
+     call check_vector_data ('AKX_soil1_to_soil2_c_vr_acc ', AKX_soil1_to_soil2_c_vr_acc )
+     call check_vector_data ('AKX_cwd_to_cel_c_vr_acc     ', AKX_cwd_to_cel_c_vr_acc     )
+     call check_vector_data ('AKX_cwd_to_lig_c_vr_acc     ', AKX_cwd_to_lig_c_vr_acc     )
+     call check_vector_data ('AKX_soil1_to_soil3_c_vr_acc ', AKX_soil1_to_soil3_c_vr_acc )
+     call check_vector_data ('AKX_soil2_to_soil1_c_vr_acc ', AKX_soil2_to_soil1_c_vr_acc )
+     call check_vector_data ('AKX_soil2_to_soil3_c_vr_acc ', AKX_soil2_to_soil3_c_vr_acc )
+     call check_vector_data ('AKX_soil3_to_soil1_c_vr_acc ', AKX_soil3_to_soil1_c_vr_acc )
+     call check_vector_data ('AKX_met_exit_c_vr_acc       ', AKX_met_exit_c_vr_acc       )
+     call check_vector_data ('AKX_cel_exit_c_vr_acc       ', AKX_cel_exit_c_vr_acc       )
+     call check_vector_data ('AKX_lig_exit_c_vr_acc       ', AKX_lig_exit_c_vr_acc       )
+     call check_vector_data ('AKX_cwd_exit_c_vr_acc       ', AKX_cwd_exit_c_vr_acc       )
+     call check_vector_data ('AKX_soil1_exit_c_vr_acc     ', AKX_soil1_exit_c_vr_acc     )
+     call check_vector_data ('AKX_soil2_exit_c_vr_acc     ', AKX_soil2_exit_c_vr_acc     )
+     call check_vector_data ('AKX_soil3_exit_c_vr_acc     ', AKX_soil3_exit_c_vr_acc     )
 
-     call check_vector_data ('decomp0_npools_vr           ', decomp0_npools_vr           ) 
-     call check_vector_data ('I_met_n_vr_acc              ', I_met_n_vr_acc              ) 
-     call check_vector_data ('I_cel_n_vr_acc              ', I_cel_n_vr_acc              ) 
-     call check_vector_data ('I_lig_n_vr_acc              ', I_lig_n_vr_acc              ) 
-     call check_vector_data ('I_cwd_n_vr_acc              ', I_cwd_n_vr_acc              ) 
-     call check_vector_data ('AKX_met_to_soil1_n_vr_acc   ', AKX_met_to_soil1_n_vr_acc   ) 
-     call check_vector_data ('AKX_cel_to_soil1_n_vr_acc   ', AKX_cel_to_soil1_n_vr_acc   ) 
-     call check_vector_data ('AKX_lig_to_soil2_n_vr_acc   ', AKX_lig_to_soil2_n_vr_acc   ) 
-     call check_vector_data ('AKX_soil1_to_soil2_n_vr_acc ', AKX_soil1_to_soil2_n_vr_acc ) 
-     call check_vector_data ('AKX_cwd_to_cel_n_vr_acc     ', AKX_cwd_to_cel_n_vr_acc     ) 
-     call check_vector_data ('AKX_cwd_to_lig_n_vr_acc     ', AKX_cwd_to_lig_n_vr_acc     ) 
-     call check_vector_data ('AKX_soil1_to_soil3_n_vr_acc ', AKX_soil1_to_soil3_n_vr_acc ) 
-     call check_vector_data ('AKX_soil2_to_soil1_n_vr_acc ', AKX_soil2_to_soil1_n_vr_acc ) 
-     call check_vector_data ('AKX_soil2_to_soil3_n_vr_acc ', AKX_soil2_to_soil3_n_vr_acc ) 
-     call check_vector_data ('AKX_soil3_to_soil1_n_vr_acc ', AKX_soil3_to_soil1_n_vr_acc ) 
-     call check_vector_data ('AKX_met_exit_n_vr_acc       ', AKX_met_exit_n_vr_acc       ) 
-     call check_vector_data ('AKX_cel_exit_n_vr_acc       ', AKX_cel_exit_n_vr_acc       ) 
-     call check_vector_data ('AKX_lig_exit_n_vr_acc       ', AKX_lig_exit_n_vr_acc       ) 
-     call check_vector_data ('AKX_cwd_exit_n_vr_acc       ', AKX_cwd_exit_n_vr_acc       ) 
-     call check_vector_data ('AKX_soil1_exit_n_vr_acc     ', AKX_soil1_exit_n_vr_acc     ) 
-     call check_vector_data ('AKX_soil2_exit_n_vr_acc     ', AKX_soil2_exit_n_vr_acc     ) 
-     call check_vector_data ('AKX_soil3_exit_n_vr_acc     ', AKX_soil3_exit_n_vr_acc     ) 
+     call check_vector_data ('decomp0_npools_vr           ', decomp0_npools_vr           )
+     call check_vector_data ('I_met_n_vr_acc              ', I_met_n_vr_acc              )
+     call check_vector_data ('I_cel_n_vr_acc              ', I_cel_n_vr_acc              )
+     call check_vector_data ('I_lig_n_vr_acc              ', I_lig_n_vr_acc              )
+     call check_vector_data ('I_cwd_n_vr_acc              ', I_cwd_n_vr_acc              )
+     call check_vector_data ('AKX_met_to_soil1_n_vr_acc   ', AKX_met_to_soil1_n_vr_acc   )
+     call check_vector_data ('AKX_cel_to_soil1_n_vr_acc   ', AKX_cel_to_soil1_n_vr_acc   )
+     call check_vector_data ('AKX_lig_to_soil2_n_vr_acc   ', AKX_lig_to_soil2_n_vr_acc   )
+     call check_vector_data ('AKX_soil1_to_soil2_n_vr_acc ', AKX_soil1_to_soil2_n_vr_acc )
+     call check_vector_data ('AKX_cwd_to_cel_n_vr_acc     ', AKX_cwd_to_cel_n_vr_acc     )
+     call check_vector_data ('AKX_cwd_to_lig_n_vr_acc     ', AKX_cwd_to_lig_n_vr_acc     )
+     call check_vector_data ('AKX_soil1_to_soil3_n_vr_acc ', AKX_soil1_to_soil3_n_vr_acc )
+     call check_vector_data ('AKX_soil2_to_soil1_n_vr_acc ', AKX_soil2_to_soil1_n_vr_acc )
+     call check_vector_data ('AKX_soil2_to_soil3_n_vr_acc ', AKX_soil2_to_soil3_n_vr_acc )
+     call check_vector_data ('AKX_soil3_to_soil1_n_vr_acc ', AKX_soil3_to_soil1_n_vr_acc )
+     call check_vector_data ('AKX_met_exit_n_vr_acc       ', AKX_met_exit_n_vr_acc       )
+     call check_vector_data ('AKX_cel_exit_n_vr_acc       ', AKX_cel_exit_n_vr_acc       )
+     call check_vector_data ('AKX_lig_exit_n_vr_acc       ', AKX_lig_exit_n_vr_acc       )
+     call check_vector_data ('AKX_cwd_exit_n_vr_acc       ', AKX_cwd_exit_n_vr_acc       )
+     call check_vector_data ('AKX_soil1_exit_n_vr_acc     ', AKX_soil1_exit_n_vr_acc     )
+     call check_vector_data ('AKX_soil2_exit_n_vr_acc     ', AKX_soil2_exit_n_vr_acc     )
+     call check_vector_data ('AKX_soil3_exit_n_vr_acc     ', AKX_soil3_exit_n_vr_acc     )
 
-     call check_vector_data ('diagVX_c_vr_acc             ', diagVX_c_vr_acc             ) 
-     call check_vector_data ('upperVX_c_vr_acc            ', upperVX_c_vr_acc            ) 
-     call check_vector_data ('lowerVX_c_vr_acc            ', lowerVX_c_vr_acc            ) 
-     call check_vector_data ('diagVX_n_vr_acc             ', diagVX_n_vr_acc             ) 
-     call check_vector_data ('upperVX_n_vr_acc            ', upperVX_n_vr_acc            ) 
-     call check_vector_data ('lowerVX_n_vr_acc            ', lowerVX_n_vr_acc            ) 
-!     call check_vector_data ('skip_balance_check          ', skip_balance_check          ) 
+     call check_vector_data ('diagVX_c_vr_acc             ', diagVX_c_vr_acc             )
+     call check_vector_data ('upperVX_c_vr_acc            ', upperVX_c_vr_acc            )
+     call check_vector_data ('lowerVX_c_vr_acc            ', lowerVX_c_vr_acc            )
+     call check_vector_data ('diagVX_n_vr_acc             ', diagVX_n_vr_acc             )
+     call check_vector_data ('upperVX_n_vr_acc            ', upperVX_n_vr_acc            )
+     call check_vector_data ('lowerVX_n_vr_acc            ', lowerVX_n_vr_acc            )
+!     call check_vector_data ('skip_balance_check          ', skip_balance_check          )
 !------------------------------------------------------
 #endif
 #ifdef CROP
-     call check_vector_data ('cphase     ' , cphase     ) 
+     call check_vector_data ('cphase     ' , cphase     )
      call check_vector_data ('vf         ' , vf         )
      call check_vector_data ('hui        ' , hui        )
      call check_vector_data ('huiswheat  ' , huiswheat  )

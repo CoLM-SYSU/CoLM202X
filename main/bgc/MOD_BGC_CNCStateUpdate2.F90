@@ -17,9 +17,9 @@ module MOD_BGC_CNCStateUpdate2
   !                   2) Record the accumulated gap-mortality-associated C transfers for veg and soil C semi-analytic spinup
 
   use precision
-  use MOD_TimeInvariants, only: &
+  use MOD_Vars_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
-  use MOD_TimeVariables, only: &
+  use MOD_Vars_TimeVariables, only: &
     ! decomposition pools & fluxes variables (inout)
            decomp_cpools_vr, &
            I_met_c_vr_acc, I_cel_c_vr_acc, I_lig_c_vr_acc, I_cwd_c_vr_acc

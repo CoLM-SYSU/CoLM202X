@@ -3,7 +3,7 @@
 MODULE MOD_BGC_Vars_2DFluxes
 ! ----------------------------------------------------------------------
 ! !DESCRIPTION:
-! perfrom the grid average mapping: average a subgrid input 1d vector 
+! perfrom the grid average mapping: average a subgrid input 1d vector
 ! of length numpatch to a output 2d array of length [lon_points,lat_points] for biogeochemical flux variables
 !
 ! !ORIGINAL:
@@ -12,7 +12,7 @@ MODULE MOD_BGC_Vars_2DFluxes
 #ifdef BGC
 
    use mod_data_type
-   USE GlobalVars
+   USE MOD_Vars_Global
 
    IMPLICIT NONE
    SAVE
@@ -91,7 +91,7 @@ MODULE MOD_BGC_Vars_2DFluxes
    type(block_data_real8_2d) :: f_gpp_dnfboreal      ! 2D grid: gross primary productivity for needleleaf deciduous boreal tree (gC m-2 s-1)
    type(block_data_real8_2d) :: f_gpp_ebftrop        ! 2D grid: gross primary productivity for broadleaf evergreen tropical tree (gC m-2 s-1)
    type(block_data_real8_2d) :: f_gpp_ebftemp        ! 2D grid: gross primary productivity for broadleaf evergreen temperate tree (gC m-2 s-1)
-   type(block_data_real8_2d) :: f_gpp_dbftrop        ! 2D grid: gross primary productivity for broadleaf deciduous tropical tree (gC m-2 s-1) 
+   type(block_data_real8_2d) :: f_gpp_dbftrop        ! 2D grid: gross primary productivity for broadleaf deciduous tropical tree (gC m-2 s-1)
    type(block_data_real8_2d) :: f_gpp_dbftemp        ! 2D grid: gross primary productivity for broadleaf deciduous temperate tree (gC m-2 s-1)
    type(block_data_real8_2d) :: f_gpp_dbfboreal      ! 2D grid: gross primary productivity for broadleaf deciduous boreal tree (gC m-2 s-1)
    type(block_data_real8_2d) :: f_gpp_ebstemp        ! 2D grid: gross primary productivity for broadleaf evergreen temperate shrub (gC m-2 s-1)
@@ -173,7 +173,7 @@ CONTAINS
 
    SUBROUTINE allocate_2D_BGCFluxes (grid)
       ! --------------------------------------------------------------------
-      ! Allocates memory for CLM 2d [lon_points,lat_points] variables
+      ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! --------------------------------------------------------------------
 
       use spmd_task
@@ -184,7 +184,7 @@ CONTAINS
       type(grid_type), intent(in) :: grid
 
       if (p_is_io) then
-         
+
          call allocate_block_data (grid, f_leafc              ) ! leaf carbon display pool  (gC/m2)
          call allocate_block_data (grid, f_leafc_storage      ) ! leaf carbon storage pool  (gC/m2)
          call allocate_block_data (grid, f_leafc_xfer         ) ! leaf carbon transfer pool (gC/m2)
@@ -306,8 +306,8 @@ CONTAINS
 #ifdef CROP
          call allocate_block_data (grid, f_hui                 )
          call allocate_block_data (grid, f_vf                  )
-         call allocate_block_data (grid, f_gddmaturity         ) 
-         call allocate_block_data (grid, f_gddplant            )   
+         call allocate_block_data (grid, f_gddmaturity         )
+         call allocate_block_data (grid, f_gddplant            )
          call allocate_block_data (grid, f_pdcorn              )
          call allocate_block_data (grid, f_pdswheat            )
          call allocate_block_data (grid, f_pdwwheat            )

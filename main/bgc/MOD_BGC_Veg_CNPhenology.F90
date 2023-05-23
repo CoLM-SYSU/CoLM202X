@@ -1,11 +1,11 @@
 #include <define.h>
 #ifdef BGC
 module MOD_BGC_Veg_CNPhenology
-  
+
   !--------------------
   ! !DESCRIPTION:
   ! This module holds all phenology related subroutines for natural vegetation and crop in the C and N cycle.
-  ! CoLM Phenology controls the gain and loss of leaf carbon. LAI is then updated from leaf carbon. 
+  ! CoLM Phenology controls the gain and loss of leaf carbon. LAI is then updated from leaf carbon.
   ! So, the seasonal variation in LAI can be simulated for different phenology types.
   !
   ! !ORIGINAL:
@@ -16,7 +16,7 @@ module MOD_BGC_Veg_CNPhenology
   ! Fang Li, 2022, implemented GPAM crop model in this module.
   !
   ! !USES:
-  use PFT_Const, only: &
+  use MOD_Vars_PFTConst, only: &
       isevg  , issed  , isstd  , leaf_long, woody  , leafcn , frootcn, livewdcn, deadwdcn, &
       lflitcn, lf_flab, lf_fcel, lf_flig  , fr_flab, fr_fcel, fr_flig, &
 
@@ -27,7 +27,7 @@ module MOD_BGC_Veg_CNPhenology
       ndays_on        , ndays_off      , fstor2tran, crit_dayl  , crit_onset_fdd, crit_onset_swi, &
       crit_offset_fdd , crit_offset_swi, soilpsi_on, soilpsi_off, lwtop, rice2pdt
 
-  use GlobalVars, only: &
+  use MOD_Vars_Global, only: &
  !crop variables
       nswheat         , nirrig_swheat     , nsugarcane  , nirrig_sugarcane  , &
       nwwheat         , nirrig_wwheat     , ntmp_corn   , nirrig_tmp_corn   , &
@@ -36,16 +36,16 @@ module MOD_BGC_Veg_CNPhenology
       nrice           , nirrig_rice       , ntmp_soybean, nirrig_tmp_soybean, &
       ntrp_soybean    , nirrig_trp_soybean, &
       spval
-  USE PhysicalConstants, only: tfrz
+  USE MOD_Vars_PhysicalConst, only: tfrz
 
-  use MOD_TimeVariables, only: &
+  use MOD_Vars_TimeVariables, only: &
       t_soisno, smp
-  
+
   use MOD_BGC_Vars_TimeVars, only: &
       dayl, prev_dayl, prec10, prec60, prec365, prec_today, prec_daily, accumnstep
-  
-  use MOD_PFTimeVars, only: &
-      tref_p       ,tlai_p          
+
+  use MOD_Vars_PFTimeVars, only: &
+      tref_p       ,tlai_p
 
   use MOD_BGC_Vars_PFTimeVars, only: &
       tempavg_tref_p , annavg_tref_p  , gdd0_p        , gdd8_p            , &
@@ -59,7 +59,7 @@ module MOD_BGC_Veg_CNPhenology
       leafc_p            , frootc_p            , livestemc_p         , &
       livestemn_p        , livecrootc_p        , grainc_p, grainn_p  , &
 
-      leafc_storage_p    , frootc_storage_p    , livestemc_storage_p , & 
+      leafc_storage_p    , frootc_storage_p    , livestemc_storage_p , &
       deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, &
       leafn_storage_p    , frootn_storage_p    , livestemn_storage_p , &
       deadstemn_storage_p, livecrootn_storage_p, deadcrootn_storage_p, &
@@ -81,7 +81,7 @@ module MOD_BGC_Veg_CNPhenology
 #endif
 
       leaf_prof_p        , froot_prof_p        , &
-      cropseedc_deficit_p, cropseedn_deficit_p 
+      cropseedc_deficit_p, cropseedn_deficit_p
 
 
   use MOD_BGC_Vars_1DPFTFluxes, only: &
@@ -91,7 +91,7 @@ module MOD_BGC_Veg_CNPhenology
       livestemc_storage_to_xfer_p    , deadstemc_storage_to_xfer_p  , &
       livecrootc_storage_to_xfer_p   , deadcrootc_storage_to_xfer_p , &
       gresp_storage_to_xfer_p        , &
-      
+
       leafc_xfer_to_leafc_p          , frootc_xfer_to_frootc_p        , &
       livestemc_xfer_to_livestemc_p  , deadstemc_xfer_to_deadstemc_p  , &
       livecrootc_xfer_to_livecrootc_p, deadcrootc_xfer_to_deadcrootc_p, &
@@ -102,7 +102,7 @@ module MOD_BGC_Veg_CNPhenology
       leafn_storage_to_xfer_p        , frootn_storage_to_xfer_p       , &
       livestemn_storage_to_xfer_p    , deadstemn_storage_to_xfer_p    , &
       livecrootn_storage_to_xfer_p   , deadcrootn_storage_to_xfer_p   , &
-      
+
       leafn_xfer_to_leafn_p          , frootn_xfer_to_frootn_p        , &
       livestemn_xfer_to_livestemn_p  , deadstemn_xfer_to_deadstemn_p  , &
       livecrootn_xfer_to_livecrootn_p, deadcrootn_xfer_to_deadcrootn_p, &
@@ -116,16 +116,16 @@ module MOD_BGC_Veg_CNPhenology
       grainc_to_food_p               , grainn_to_food_p               , &
       cpool_to_grainc_p              , npool_to_grainn_p              , &
       livestemc_to_litter_p          , livestemn_to_litter_p          , &
-      cpool_to_livestemc_p           , fert_p     
+      cpool_to_livestemc_p           , fert_p
 
-  use MOD_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
 
   use MOD_BGC_Vars_1DFluxes, only: &
       phenology_to_met_c , phenology_to_cel_c , phenology_to_lig_c, &
       phenology_to_met_n , phenology_to_cel_n , phenology_to_lig_n, &
       grainc_to_cropprodc, grainn_to_cropprodn
 
-  use MOD_1D_forcing, only: forc_prc, forc_prl
+  use MOD_Vars_1DForcing, only: forc_prc, forc_prl
 
   use timemanager
   use precision
@@ -142,13 +142,13 @@ module MOD_BGC_Veg_CNPhenology
 contains
 
   subroutine CNPhenology(i,ps,pe,nl_soil,idate,dz_soi,deltim,dlat,npcropmin,phase)
-    
+
     ! !DESCRIPTION:
     ! The main driver of phenology model. Two phases are included:
     ! 1) phase==1: Calculates the phenology-related carbon and nitroge pool size changes,
-    !              especially when specific phenology trigure is on (eg. leaf onset and offset). 
+    !              especially when specific phenology trigure is on (eg. leaf onset and offset).
     !              The pool size change rates is calculated from phase 2.
-    ! 2) phase==2: Calculates phenology climatic diagnostics for onset and offset trigures 
+    ! 2) phase==2: Calculates phenology climatic diagnostics for onset and offset trigures
     !              Calculates the pool size change rates of all phenology processes.
     !
     ! !
@@ -219,9 +219,9 @@ contains
   subroutine CNPhenologyClimate (i,ps,pe,idate,deltim,dayspyr,npcropmin,nl_soil,dz_soi,dlat)
 
     ! !DESCRIPTION:
-    ! This subroutine summaries climate statistics, such as annual averaged temperature, 
+    ! This subroutine summaries climate statistics, such as annual averaged temperature,
     ! maximum and minimum temperature, averaged precipitation over recent 10 days, 60 days and 365 days,
-    ! growing degree days above 0, 8, and 10 degrees celsius. These climate statistics will be 
+    ! growing degree days above 0, 8, and 10 degrees celsius. These climate statistics will be
     ! used in following phenology simulations.
     !
     ! ORIGINAL:
@@ -231,7 +231,7 @@ contains
     ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
     !
-    integer ,intent(in) :: i        ! patch index                  
+    integer ,intent(in) :: i        ! patch index
     integer ,intent(in) :: ps       ! start pft index
     integer ,intent(in) :: pe       ! end pft index
     integer ,intent(in) :: idate(3) ! current date (year, days of the year, seconds of the day)
@@ -306,14 +306,14 @@ contains
           else
              gddplant_p(m) = gddplant_p(m) + max(0._r8, &
                                tref_p(m) - (273.15 + baset(ivt))) * deltim / 86400._r8
-          end if 
+          end if
        else
           gddplant_p(m) = 0._r8
        end if
 #endif
     end do
 
-    !calculate gdd020,gdd820,gdd1020 for gddmaturity in GPAM crop phenology F. Li 
+    !calculate gdd020,gdd820,gdd1020 for gddmaturity in GPAM crop phenology F. Li
     do m = ps , pe
        ivt = pftclass(m)
        if (idate(2) == 1 .and. idate(3) ==1800)then
@@ -338,7 +338,7 @@ contains
        end if
        if (isendofyear(idate,deltim)) then        ! <-- END of EVERY YR:
           nyrs_crop_active_p(m) = nyrs_crop_active_p(m) + 1
-       end if     
+       end if
     end do
 
   end subroutine CNPhenologyClimate
@@ -347,13 +347,13 @@ contains
   subroutine CNEvergreenPhenology (i,ps,pe,deltim,dayspyr)
     !
     ! !DESCRIPTION:
-    ! Evergreen phenology assumes CN stock from vegetation storage pool go to transfer 
-    ! pool steadily with a constant rate 0.0002. All CN stock from transfer pool go to 
+    ! Evergreen phenology assumes CN stock from vegetation storage pool go to transfer
+    ! pool steadily with a constant rate 0.0002. All CN stock from transfer pool go to
     ! display pool immediately when it receives CN flow from storage pool. In recent version,
-    ! Evergreen types only allocate NPP or N uptake to display pools. Storage and transfer 
-    ! pool stay 0 over whole simulation periods. Leaf litter fall simulation depends on a 
-    ! background turnover, which a constant parameter leaf_long was assigned (from PFT_const.F90)
-    ! to indicate the background turnover rates. 
+    ! Evergreen types only allocate NPP or N uptake to display pools. Storage and transfer
+    ! pool stay 0 over whole simulation periods. Leaf litter fall simulation depends on a
+    ! background turnover, which a constant parameter leaf_long was assigned (from MOD_Vars_PFTConst.F90)
+    ! to indicate the background turnover rates.
     !
     ! Allocation NPP -> DISPLAY pool -> litter
     !
@@ -442,12 +442,12 @@ contains
 
     !
     ! !DESCRIPTION:
-    ! This routine handles the seasonal deciduous phenology code (temperate deciduous 
-    ! vegetation that has only one growing season per year). Seasonal deciduous phenology 
-    ! assumes 0 background turnover rates. NPP or N uptake only allocated to storage pool. 
-    ! Display pool size changes occur only in onset and offset period. All CN stock from 
-    ! transfer pool go to display pool immediately when it receives CN flow from storage 
-    ! pool. 
+    ! This routine handles the seasonal deciduous phenology code (temperate deciduous
+    ! vegetation that has only one growing season per year). Seasonal deciduous phenology
+    ! assumes 0 background turnover rates. NPP or N uptake only allocated to storage pool.
+    ! Display pool size changes occur only in onset and offset period. All CN stock from
+    ! transfer pool go to display pool immediately when it receives CN flow from storage
+    ! pool.
     !
     ! Onset period:
     ! Allocation NPP -> STORAGE pool -> XFER pool -> DISPLAY pool
@@ -601,7 +601,7 @@ contains
              if (onset_gddflag_p(m) == 1.0_r8 .and. soilt > 273.15_r8) then
                 onset_gdd_p(m) = onset_gdd_p(m) + (soilt-273.15_r8)*(deltim/86400._r8)
              end if
-   
+
             ! set onset_flag if critical growing degree-day sum is exceeded
              if (onset_gdd_p(m) > crit_onset_gdd) then
                 onset_flag_p(m) = 1.0_r8
@@ -651,15 +651,15 @@ contains
 
        end if ! end if seasonal deciduous
     end do
-   
+
   end subroutine CNSeasonDecidPhenology
-   
+
   subroutine CNStressDecidPhenology(i,ps,pe,deltim,dayspyr)
 
     !
     ! !DESCRIPTION:
-    ! This routine handles the stress deciduous phenology code (deciduous vegetation with 
-    ! one or more growing season per year). NPP or N uptake only allocated to storage pool. 
+    ! This routine handles the stress deciduous phenology code (deciduous vegetation with
+    ! one or more growing season per year). NPP or N uptake only allocated to storage pool.
     !
     ! Onset period:
     ! Allocation NPP -> STORAGE pool -> XFER pool -> DISPLAY pool
@@ -787,7 +787,7 @@ contains
                 onset_fdd_p(m) = 0._r8
                 onset_swi_p(m) = 0._r8
              end if
-   
+
          ! if the freeze flag is set, and if the soil is above freezing
          ! then accumulate growing degree days for onset trigger
 
@@ -854,7 +854,7 @@ contains
                    deadcrootc_storage_to_xfer_p(m) = fstor2tran * deadcrootc_storage_p(m)/deltim
                    gresp_storage_to_xfer_p(m)      = fstor2tran * gresp_storage_p(m)/deltim
                 end if
-   
+
             ! set nitrogen fluxes for shifting storage pools to transfer pools
                 leafn_storage_to_xfer_p(m)  = fstor2tran * leafn_storage_p(m)/deltim
                 frootn_storage_to_xfer_p(m) = fstor2tran * frootn_storage_p(m)/deltim
@@ -865,7 +865,7 @@ contains
                    deadcrootn_storage_to_xfer_p(m) = fstor2tran * deadcrootn_storage_p(m)/deltim
                 end if
              end if
-   
+
          ! test for switching from growth period to offset period
           else if (offset_flag_p(m) == 0._r8) then
 
@@ -986,7 +986,7 @@ contains
 
   end subroutine CNStressDecidPhenology
 
-#ifdef CROP 
+#ifdef CROP
   subroutine CropPhenology(i,ps,pe,idate,h,deltim,dayspyr,npcropmin)
 
     ! !DESCRIPTION:
@@ -996,7 +996,7 @@ contains
     ! ORIGINAL: The Community Land Model version 5.0 (CLM5.0)
     !
     ! REVISION: F. Li, 2022, implemented GPAM in CoLM.
-    
+
     integer, intent(in) :: i         ! patch index
     integer ,intent(in) :: ps        ! start pft index
     integer ,intent(in) :: pe        ! end pft index
@@ -1010,7 +1010,7 @@ contains
     integer kyr       ! current year
     integer kmo       ! month of year  (1, ..., 12)
     integer kda       ! day of month   (1, ..., 31)
-    integer mcsec 
+    integer mcsec
     integer jday
     integer fp,m      ! patch indices
     integer c         ! column indices
@@ -1040,8 +1040,8 @@ contains
           bgtr_p(m)  = 0._r8
           lgsf_p(m)  = 0._r8
 
-          
-         !  plantdate is read in 
+
+         !  plantdate is read in
          !  determine if the cft is planted in this time step
           if ( (.not. croplive_p(m)) .and. (.not. cropplant_p(m)) ) then
              if (jday == int(plantdate_p(m))) then
@@ -1061,7 +1061,7 @@ contains
           if(croplive_p(m))then
              if (ivt == nwwheat .or. ivt == nirrig_wwheat)then
                 gddmaturity_p(m) = 0.42_r8 * gdd1020_p(m) + 440._r8
-             end if           
+             end if
              if ( ivt == ntmp_soybean .or. ivt == nirrig_tmp_soybean .or. &
                   ivt == ntrp_soybean .or. ivt == nirrig_trp_soybean) then
                 gddmaturity_p(m) = 0.30_r8 * gdd1020_p(m) + 710._r8
@@ -1076,13 +1076,13 @@ contains
              if (ivt == nswheat .or. ivt == nirrig_swheat .or. &
                  ivt == ncotton .or. ivt == nirrig_cotton)then
                 gddmaturity_p(m) = 0.24_r8 * gdd020_p(m) + 1349._r8
-             end if 
+             end if
              if (ivt == nrice   .or. ivt == nirrig_rice) then
                 gddmaturity_p(m) = 0.35_r8 * gdd020_p(m) + 587._r8
              end if
-             hui_p(m)=gddplant_p(m)/gddmaturity_p(m) 
-          end if 
-         
+             hui_p(m)=gddplant_p(m)/gddmaturity_p(m)
+          end if
+
          ! all of the phenology changes are based on hui
 
          ! Phase 1: Planting to leaf emergence
@@ -1095,7 +1095,7 @@ contains
 
           onset_flag_p(m)  = 0._r8 ! CN terminology to trigger certain
           offset_flag_p(m) = 0._r8 ! carbon and nitrogen transfers
- 
+
           if (croplive_p(m)) then
              cphase_p(m) = 1._r8
             ! days past planting may determine harvest
@@ -1124,11 +1124,11 @@ contains
             ! vernalization factor is not 1;
             ! vf affects the calculation of gddplant
                 if ( vf_p(m) /= 1._r8 .and. (ivt == nwwheat .or. ivt == nirrig_wwheat) .and. hui_p(m) < 0.8_r8 * grnfill(ivt)) then
-                   call vernalization(i,m,deltim)  
+                   call vernalization(i,m,deltim)
                 end if
-          
+
            !fertilization
-               
+
                 if (abs(onset_counter_p(m)) > 1.e-6_r8) then
                    onset_flag_p(m)    = 1._r8
                    onset_counter_p(m) = deltim
@@ -1222,7 +1222,7 @@ contains
     ! !DESCRIPTION:
     ! Calculates flux from transfer CN to display CN during onset period.
     ! Transfer CN -> DISPLAY CN
-    
+
     ! ORIGINAL:
     ! The Community Land Model version 5.0 (CLM5)
     !
@@ -1233,7 +1233,7 @@ contains
     integer, intent(in) :: ps     ! start pft index
     integer, intent(in) :: pe     ! end pft index
     real(r8),intent(in) :: deltim ! time step in seconds
- 
+
    ! !LOCAL VARIABLES:
     real(r8):: t1           ! temporary variable
     integer :: ivt, m
@@ -1266,7 +1266,7 @@ contains
              livecrootn_xfer_to_livecrootn_p(m) = t1 * livecrootn_xfer_p(m)
              deadcrootn_xfer_to_deadcrootn_p(m) = t1 * deadcrootn_xfer_p(m)
           end if
-   
+
        end if ! end if onset period
 
    ! calculate the background rate of transfer growth (used for stress
@@ -1297,7 +1297,7 @@ contains
     ! !DESCRIPTION:
     ! Calculates flux from display CN to litter CN during offset period.
     ! DISPLAY CN -> litter CN
-    
+
     ! ORIGINAL:
     ! The Community Land Model version 5.0 (CLM5)
     !
@@ -1388,8 +1388,8 @@ contains
 
     ! !LOCAL VARIABLES:
     real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
-    real(r8) :: ntovr_leaf  
-    real(r8) :: denom       
+    real(r8) :: ntovr_leaf
+    real(r8) :: denom
     integer  :: ivt, m
     !-----------------------------------------------------------------------
 
@@ -1430,7 +1430,7 @@ contains
     real(r8):: ntovr        ! temporary variable for nitrogen turnover
     integer :: ivt, m
     !-----------------------------------------------------------------------
-  
+
     do m = ps, pe
        ! only calculate these fluxes for woody types
        ivt = pftclass(m)
@@ -1452,7 +1452,7 @@ contains
           ntovr = ctovr / livewdcn(ivt)
           livecrootc_to_deadcrootc_p(m) = ctovr
           livecrootn_to_deadcrootn_p(m) = ctovr / deadwdcn(ivt)
-            
+
           livecrootn_to_retransn_p(m)  = ntovr - livecrootn_to_deadcrootn_p(m)
        end if
     end do ! end pft loop
@@ -1471,7 +1471,7 @@ contains
     integer ,intent(in) :: i  ! patch index
     integer ,intent(in) :: ps ! start pft index
     integer ,intent(in) :: pe ! end pft index
-   
+
     integer m
     real(r8) wtcol
 
@@ -1484,7 +1484,7 @@ contains
   end subroutine CNGrainToProductPools
 
   subroutine CNLitterToColumn(i,ps,pe,nl_soil,npcropmin)
-    
+
     ! !DESCRIPTION:
     ! Calculate column level litterfall flux from pft level litterfall.
 
@@ -1503,7 +1503,7 @@ contains
     integer j
     integer ivt,m
     real(r8):: wtcol
-  
+
     do j = 1, nl_soil
        do m = ps,pe
           ivt   = pftclass(m)
@@ -1583,7 +1583,7 @@ contains
     real(r8) tc                         ! t_ref2m in degree C
     real(r8) dt          ! convert dtime from sec to hour
 
-   
+
        ! for all equations - temperatures must be in degrees (C)
        ! calculate temperature of crown of crop (e.g., 3 cm soil temperature)
        ! snow depth in centimeters
@@ -1604,6 +1604,6 @@ contains
 
   end subroutine vernalization
 #endif
-  
+
 end module MOD_BGC_Veg_CNPhenology
 #endif

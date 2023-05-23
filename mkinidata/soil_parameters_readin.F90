@@ -15,12 +15,12 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 !------------------------------------------------------------------------------------------
 
    use precision
-   USE GlobalVars, only : nl_soil
+   USE MOD_Vars_Global, only : nl_soil
    use spmd_task
    use ncio_vector
    use mod_landpatch
-   use MOD_TimeInvariants
-#ifdef CLMDEBUG
+   use MOD_Vars_TimeInvariants
+#ifdef CoLMDEBUG
    use mod_colm_debug
 #endif
 #ifdef SinglePoint

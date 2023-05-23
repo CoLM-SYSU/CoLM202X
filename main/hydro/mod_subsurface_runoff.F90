@@ -18,14 +18,14 @@ CONTAINS
       USE mod_mesh
       USE mod_landelm
       USE mod_landpatch
-      USE MOD_TimeVariables
-      USE MOD_TimeInvariants
-      USE MOD_1D_Fluxes
+      USE MOD_Vars_TimeVariables
+      USE MOD_Vars_TimeInvariants
+      USE MOD_Vars_1DFluxes
       USE mod_drainage_network
       USE mod_river_network
       USE mod_ssrf_network
-      USE PhysicalConstants, only : denice, denh2o
-      USE GlobalVars, only : pi
+      USE MOD_Vars_PhysicalConst, only : denice, denh2o
+      USE MOD_Vars_Global, only : pi
 
       IMPLICIT NONE
       

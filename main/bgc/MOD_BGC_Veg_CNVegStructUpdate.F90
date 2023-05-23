@@ -15,18 +15,18 @@ module MOD_BGC_Veg_CNVegStructUpdate
   !
 
   use precision
-  use GlobalVars, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
+  use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                                 nswitchgrass, nirrig_switchgrass, noveg
 
-  use MOD_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
+  use MOD_Vars_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
 #ifdef CROP
   use MOD_BGC_Vars_PFTimeVars, only: peaklai_p
 #endif
-  use MOD_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvars, only: pftclass
   use MOD_BGC_Vars_TimeVars, only: farea_burned
-  use PFT_Const, only : dsladlai, slatop, laimx, woody
+  use MOD_Vars_PFTConst, only : dsladlai, slatop, laimx, woody
   !CLM5
   public :: CNVegStructUpdate
   !-----------------------------------------------------------------------

@@ -21,27 +21,29 @@ module MOD_BGC_Veg_CNFireLi2016
 
   use precision
   use timemanager
-  use PhysicalConstants, only: tfrz
-  use MOD_1D_Forcing, only: &
+  use MOD_Vars_PhysicalConst, only: tfrz
+  use MOD_Vars_1DForcing, only: &
       forc_q, forc_t, forc_psrf, forc_us, forc_vs
-  use PFT_const, only: isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, fd_pft, fsr_pft, rootfr_p
-  use MOD_TimeInvariants, only: &
+  use MOD_Vars_PFTConst, only: isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, fd_pft, fsr_pft, rootfr_p
+  use MOD_Vars_TimeInvariants, only: &
       i_cwd, occur_hi_gdp_tree, gdp_lf, abm_lf, peatf_lf, &
       lfuel, ufuel, cropfire_a1, borealat, troplat, non_boreal_peatfire_c, boreal_peatfire_c, rh_low, rh_hgh, &
       bt_min, bt_max, pot_hmn_ign_counts_alpha, g0, psi0, porsl, bsw
-  use MOD_TimeVariables, only: &
+  use MOD_Vars_TimeVariables, only: &
       decomp_cpools_vr , totlitc    , totvegc   ,  cropf      , lfwt     , fuelc     , fuelc_crop , fsr     , &
       fd               , rootc      , lgdp      , lgdp1       , lpop     , wtlf      , &
       trotr1           , trotr2     , hdm_lf    , lnfm        , baf_crop , baf_peatf , &
       farea_burned     , nfire      , fsat      , prec60      , wf2      , &
-      tsoi17           , rh30       , t_soisno  , wliq_soisno     
+      tsoi17           , rh30       , t_soisno  , wliq_soisno
   use MOD_BGC_Vars_PFTimeVars, only: &
       burndate_p
-  use MOD_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
   use MOD_BGC_Vars_PFTimeVars, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p     , &
                                       frootc_p    , frootc_storage_p    , frootc_xfer_p    , &
                                       deadcrootc_p, deadcrootc_storage_p, deadcrootc_xfer_p, &
                                       livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p
+  USE MOD_Eroot, only: eroot
+  USE MOD_Qsadv
 
   implicit none
 
@@ -106,11 +108,11 @@ contains
        btran2 = sum(btran2_p(ps:pe) * pftfrac(m))
     end do
     !
-    ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil 
+    ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil
     ! vegetation (lfwt) in vegetated column
     !
-    cropf(i) = 0._r8 
-    lfwt (i) = 0._r8   
+    cropf(i) = 0._r8
+    lfwt (i) = 0._r8
 
     ! For crop veg types
     do m = ps, pe
@@ -123,8 +125,8 @@ contains
        end if
     end do
 
-    ! 
-    ! Calculate crop fuel   
+    !
+    ! Calculate crop fuel
     !
     fuelc_crop(i)=0._r8
 
@@ -138,7 +140,7 @@ contains
                        + totlitc(i)*leafc_p(m)/sum(leafc_p(ps:pe)*pftfrac(ps:pe))*pftfrac(m)/cropf(i)
        end if
     end do
-    !   
+    !
     ! Calculate noncrop column variables
     !
     fsr   (i) = 0._r8
@@ -174,7 +176,7 @@ contains
 
        ! all these constants are in Li et al. BG (2012a,b;2013)
 
-       if( hdm_lf(i)  >  0.1_r8 )then           
+       if( hdm_lf(i)  >  0.1_r8 )then
           ! For NOT bare-soil
           if(.not. isbare(ivt) )then
              ! For shrub and grass (crop already excluded above)
@@ -212,7 +214,7 @@ contains
           lpop(i)  = lpop(i)  + 1._r8/(1._r8-cropf(i))
        end if
 
-       fd(i) = fd_pft(ivt) * secsphr / (1.0_r8-cropf(i))         
+       fd(i) = fd_pft(ivt) * secsphr / (1.0_r8-cropf(i))
     end if
     !
     ! calculate burned area fraction in cropland
@@ -264,7 +266,7 @@ contains
     ! calculate other fires
     !
 
-    call qsadv(forc_t,forc_psrf,eq,deqdT,qsatq,qsatqdT)
+    call qsadv(forc_t(i),forc_psrf(i),eq,deqdT,qsatq,qsatqdT)
     forc_rh = forc_q(i) / eq
 
     if( cropf(i)  <  1._r8 )then
@@ -274,7 +276,7 @@ contains
        end do
        fuelc(i) = fuelc(i)/(1._r8-cropf(i))
        fb       = max(0.0_r8,min(1.0_r8,(fuelc(i)-lfuel)/(ufuel-lfuel)))
-       if (trotr1(i)+trotr2(i)<=0.6_r8) then  
+       if (trotr1(i)+trotr2(i)<=0.6_r8) then
           afuel  =min(1._r8,max(0._r8,(fuelc(i)-2500._r8)/(5000._r8-2500._r8)))
           arh=1._r8-max(0._r8, min(1._r8,(forc_rh-rh_low)/(rh_hgh-rh_low)))
           arh30=1._r8-max(0.7_r8, min(1._r8,rh30(i)/90._r8))
