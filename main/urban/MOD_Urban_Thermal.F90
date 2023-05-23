@@ -74,6 +74,9 @@ CONTAINS
         ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
         twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
+#ifdef SNICAR
+        snofrz         ,sabg_lyr                                       ,&
+#endif
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
         lfevpa         ,fsenl          ,fevpl          ,etr            ,&
@@ -101,7 +104,7 @@ CONTAINS
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+  USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav
   USE MOD_Urban_Shortwave
   USE MOD_Urban_Longwave
@@ -406,6 +409,11 @@ CONTAINS
         fm         ,&! integral of profile function for momentum
         fh         ,&! integral of profile function for heat
         fq           ! integral of profile function for moisture
+
+#ifdef SNICAR
+  REAL(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
+  REAL(r8), intent(out) :: snofrz (lbp:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+#endif
 
 !---------------------Local Variables-----------------------------------
 

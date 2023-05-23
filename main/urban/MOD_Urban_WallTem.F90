@@ -37,7 +37,7 @@ CONTAINS
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
+  USE MOD_Const_Physical
   USE mod_utils, only: tridia
 
   IMPLICIT NONE

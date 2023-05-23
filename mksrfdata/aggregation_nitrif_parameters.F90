@@ -22,7 +22,7 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
 
    USE mod_aggregation
 
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif

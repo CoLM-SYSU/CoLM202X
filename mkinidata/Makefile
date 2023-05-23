@@ -15,8 +15,8 @@ EXECUTABLE = initial.x
 OBJS_SHARED =                                       \
 	  ../share/precision.o                      \
 	  ../main/MOD_Vars_Global.o                 \
-	  ../main/MOD_Vars_PhysicalConst.o          \
-	  ../main/MOD_Vars_LCConst.o                \
+	  ../main/MOD_Const_Physical.o              \
+	  ../main/MOD_Const_LC.o                    \
 	  ../share/spmd_task.o                      \
 	  ../share/mod_namelist.o                   \
 	  ../share/MathConstants.o                  \
@@ -66,13 +66,13 @@ BASIC_BGC =                                         \
 	  ../main/bgc/MOD_BGC_Vars_TimeVars.o
 
 BASIC_URBAN =                                       \
-	  ../main/urban/MOD_Urban_Vars_LCZConst.o   \
+	  ../main/urban/MOD_Urban_Const_LCZ.o   \
 	  ../main/urban/MOD_Urban_Vars_1DFluxes.o   \
 	  ../main/urban/MOD_Urban_Vars_TimeVars.o   \
 	  ../main/urban/MOD_Urban_Vars_TimeInvars.o
 
 BASIC =                                             \
-	  ../main/MOD_Vars_PFTConst.o               \
+	  ../main/MOD_Const_PFT.o               \
 	  ../main/MOD_Vars_PFTimeVars.o             \
 	  ../main/MOD_Vars_PFTimeInvars.o           \
 	  ../main/MOD_Vars_PCTimeVars.o             \

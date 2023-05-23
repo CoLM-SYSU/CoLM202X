@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE UrbanCLMMAIN ( &
+SUBROUTINE UrbanCoLMMAIN ( &
 
          ! model running information
            ipatch       ,idate        ,coszen       ,deltim       ,&
@@ -77,6 +77,16 @@ SUBROUTINE UrbanCLMMAIN ( &
            zwt          ,wa                                       ,&
            t_lake       ,lake_icefrac ,savedtke1                  ,&
 
+         ! SNICAR snow model related
+           snw_rds,      ssno,                                     &
+           mss_bcpho,    mss_bcphi,   mss_ocpho,     mss_ocphi,    &
+           mss_dst1,     mss_dst2,    mss_dst3,      mss_dst4,     &
+
+#if(defined CaMa_Flood)
+           ! flood depth [mm], flood fraction[0-1],
+           ! flood evaporation [mm/s], flood re-infiltration [mm/s]
+           flddepth,     fldfrc,      fevpg_fld,     qinfl_fld,    &
+#endif
          ! additional diagnostic variables for output
            laisun       ,laisha                                   ,&
            rstfac       ,h2osoi       ,wat                        ,&
@@ -111,7 +121,7 @@ SUBROUTINE UrbanCLMMAIN ( &
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst, only: tfrz, denh2o, denice
+  USE MOD_Const_Physical, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
   USE MOD_SnowLayersCombineDivide
   USE MOD_LeafInterception
@@ -274,6 +284,13 @@ SUBROUTINE UrbanCLMMAIN ( &
         forc_hgt_q ,&! observational height of humidity [m]
         forc_rhoair  ! density air [kg/m3]
 
+#if(defined CaMa_Flood)
+  REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
+  REAL(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
+  REAL(r8), intent(out)   :: fevpg_fld !effective evaporation from inundation [mm/s]
+  REAL(r8), intent(out)   :: qinfl_fld !effective re-infiltration from inundation [mm/s]
+#endif
+
 ! Variables required for restart run
 ! ----------------------------------------------------------------------
   REAL(r8), intent(inout) :: &
@@ -340,6 +357,17 @@ SUBROUTINE UrbanCLMMAIN ( &
         snowdp_lake,&! snow depth (m)
         zwt        ,&! the depth to water table [m]
         wa         ,&! water storage in aquifer [mm]
+
+        snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
+        mss_bcpho ( maxsnl+1:0 ) ,&! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi ( maxsnl+1:0 ) ,&! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho ( maxsnl+1:0 ) ,&! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi ( maxsnl+1:0 ) ,&! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  ( maxsnl+1:0 ) ,&! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  ( maxsnl+1:0 ) ,&! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  ( maxsnl+1:0 ) ,&! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  ( maxsnl+1:0 ) ,&! mass of dust species 4 in snow  (col,lyr) [kg]
+        ssno    (2,2,maxsnl+1:1) ,&! snow layer absorption [-]
 
         fveg       ,&! fraction of vegetation cover
         fsno       ,&! fractional snow cover
@@ -583,9 +611,17 @@ SUBROUTINE UrbanCLMMAIN ( &
         lbi        ,&! lower bound of arrays
         lbp        ,&! lower bound of arrays
         lbl        ,&! lower bound of arrays
+        lbsn       ,&! lower bound of arrays
         j            ! do looping index
 
+   ! For SNICAR snow model
+   !----------------------------------------------------------------------
+   REAL(r8) forc_aer        ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+   REAL(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+   REAL(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
+
       theta = acos(max(coszen,0.001))
+      forc_aer(:) = 0.        !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
 !======================================================================
 !  [1] Solar absorbed by vegetation and ground
@@ -810,6 +846,7 @@ SUBROUTINE UrbanCLMMAIN ( &
       lbi = snli + 1           !lower bound of array
       lbp = snlp + 1           !lower bound of array
       lbl = snll + 1           !lower bound of array
+      lbsn= min(lbp,0)
 
       ! Thermal process
       CALL UrbanTHERMAL ( &
@@ -871,6 +908,10 @@ SUBROUTINE UrbanCLMMAIN ( &
          lake_icefrac(:)      ,savedtke1            ,lveg                 ,tleaf                ,&
          ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
          twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
+
+#ifdef SNICAR
+         snofrz(lbsn:0)       ,sabg_lyr(lbp:1)                                                  ,&
+#endif
          ! output
          taux                 ,tauy                 ,fsena                ,fevpa                ,&
          lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
@@ -931,6 +972,15 @@ SUBROUTINE UrbanCLMMAIN ( &
         sm_roof              ,sm_gimp              ,sm_gper              ,sm_lake              ,&
         lake_icefrac         ,scv_lake             ,snowdp_lake          ,imeltl               ,&
         fioldl               ,w_old                                                            ,&
+#if(defined CaMa_Flood)
+        flddepth             ,fldfrc               ,qinfl_fld                                  ,&
+#endif
+
+#ifdef SNICAR
+        forc_aer             ,&
+        mss_bcpho(lbsn:0)    ,mss_bcphi(lbsn:0)    ,mss_ocpho(lbsn:0)    ,mss_ocphi(lbsn:0)    ,&
+        mss_dst1(lbsn:0)     ,mss_dst2(lbsn:0)     ,mss_dst3(lbsn:0)     ,mss_dst4(lbsn:0)     ,&
+#endif
         ! output
         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
         wa                   ,qcharge              ,smp                  ,hk                   ,&
@@ -1188,6 +1238,6 @@ SUBROUTINE UrbanCLMMAIN ( &
       CALL qsadv(tref,forc_psrf,ei,deiDT,qsatl,qsatlDT)
       qref = qref/qsatl
 
-END SUBROUTINE UrbanCLMMAIN
+END SUBROUTINE UrbanCoLMMAIN
 ! ----------------------------------------------------------------------
 ! EOP

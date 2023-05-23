@@ -28,8 +28,8 @@ PROGRAM CoLMINI
    use mod_landpatch
    use mod_srfdata_restart
    USE MOD_Vars_Global
-   USE MOD_Vars_LCConst
-   USE MOD_Vars_PFTConst
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
    USE timemanager
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft

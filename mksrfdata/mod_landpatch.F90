@@ -6,7 +6,7 @@ MODULE mod_landpatch
    USE mod_grid
    USE mod_pixelset
    USE MOD_Vars_Global
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif

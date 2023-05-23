@@ -1214,7 +1214,7 @@ contains
       use precision
       use spmd_task
       use mod_landpatch,     only : numpatch
-      use MOD_Vars_PhysicalConst, only : vonkar, stefnc, cpair, rgas, grav
+      use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
       use MOD_Vars_1DForcing

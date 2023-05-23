@@ -42,7 +42,7 @@ MODULE MOD_SoilThermalParameters
 !-----------------------------------------------------------------------
 
   use precision
-  use MOD_Vars_PhysicalConst, only : cpice,cpliq
+  use MOD_Const_Physical, only : cpice,cpliq
   implicit none
 
   integer, INTENT(in) :: lb       ! lower bound of array
@@ -100,7 +100,7 @@ MODULE MOD_SoilThermalParameters
 !-----------------------------------------------------------------------
 
   use precision
-  use MOD_Vars_PhysicalConst, only : denh2o,denice,tfrz,tkwat,tkice,tkair
+  use MOD_Const_Physical, only : denh2o,denice,tfrz,tkwat,tkice,tkair
   implicit none
 
   integer, INTENT(in) :: lb       ! lower bound of array

@@ -12,7 +12,7 @@ MODULE MOD_Urban_LUCY
   ! !USE
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
+  USE MOD_Const_Physical
   USE timemanager, only: julian2monthday, isleapyear
   IMPLICIT NONE
   SAVE

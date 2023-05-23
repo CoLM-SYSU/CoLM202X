@@ -16,7 +16,7 @@ module MOD_BGC_Veg_CNPhenology
   ! Fang Li, 2022, implemented GPAM crop model in this module.
   !
   ! !USES:
-  use MOD_Vars_PFTConst, only: &
+  use MOD_Const_PFT, only: &
       isevg  , issed  , isstd  , leaf_long, woody  , leafcn , frootcn, livewdcn, deadwdcn, &
       lflitcn, lf_flab, lf_fcel, lf_flig  , fr_flab, fr_fcel, fr_flig, &
 
@@ -36,7 +36,7 @@ module MOD_BGC_Veg_CNPhenology
       nrice           , nirrig_rice       , ntmp_soybean, nirrig_tmp_soybean, &
       ntrp_soybean    , nirrig_trp_soybean, &
       spval
-  USE MOD_Vars_PhysicalConst, only: tfrz
+  USE MOD_Const_Physical, only: tfrz
 
   use MOD_Vars_TimeVariables, only: &
       t_soisno, smp
@@ -352,7 +352,7 @@ contains
     ! display pool immediately when it receives CN flow from storage pool. In recent version,
     ! Evergreen types only allocate NPP or N uptake to display pools. Storage and transfer
     ! pool stay 0 over whole simulation periods. Leaf litter fall simulation depends on a
-    ! background turnover, which a constant parameter leaf_long was assigned (from MOD_Vars_PFTConst.F90)
+    ! background turnover, which a constant parameter leaf_long was assigned (from MOD_Const_PFT.F90)
     ! to indicate the background turnover rates.
     !
     ! Allocation NPP -> DISPLAY pool -> litter

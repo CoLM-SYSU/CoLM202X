@@ -48,7 +48,7 @@ CONTAINS
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
+  USE MOD_Const_Physical
   USE MOD_SoilThermalParameters
   USE mod_utils, only: tridia
   USE MOD_Meltf, only: meltf

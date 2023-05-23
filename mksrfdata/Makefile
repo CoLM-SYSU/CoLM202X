@@ -17,7 +17,7 @@ HEADER = ../include/define.h
 OBJS_SHARED =                              \
 	  ../share/precision.o             \
 	  ../main/MOD_Vars_Global.o        \
-	  ../main/MOD_Vars_LCConst.o       \
+	  ../main/MOD_Const_LC.o           \
 	  ../share/MathConstants.o         \
 	  ../share/spmd_task.o             \
 	  ../share/mod_namelist.o          \

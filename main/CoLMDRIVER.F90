@@ -12,9 +12,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !=======================================================================
 
  use precision
- use MOD_Vars_PhysicalConst, only: tfrz, rgas, vonkar
+ use MOD_Const_Physical, only: tfrz, rgas, vonkar
+ USE MOD_Const_LC
  USE MOD_Vars_Global
- USE MOd_Vars_LCConst
  use MOD_Vars_TimeInvariants
  use MOD_Vars_TimeVariables
  use MOD_Vars_1DForcing
@@ -187,7 +187,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         u = patch2urban(i)
         !print *, "patch:", i, "urban:", u  !fortest only
 
-        CALL UrbanCLMMAIN ( &
+        CALL UrbanCoLMMAIN ( &
       ! MODEL RUNNING PARAMETERS
         i               ,idate           ,coszen(i)       ,deltim          ,&
         patchlonr(i)    ,patchlatr(i)    ,patchclass(i)   ,patchtype(i)    ,&
@@ -268,6 +268,16 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
         zwt(i)          ,wa(i)                                             ,&
         t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
+
+      ! SNICAR snow model related
+        snw_rds(:,i),    ssno(:,:,:,i),                                     &
+        mss_bcpho(:,i),  mss_bcphi(:,i),  mss_ocpho(:,i),  mss_ocphi(:,i),  &
+        mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
+
+#if(defined CaMa_Flood)
+      ! flood variables [mm, m2/m2, mm/s, mm/s]
+        flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &
+#endif
 
       ! additional diagnostic variables for output
         laisun(i)       ,laisha(i)                                         ,&

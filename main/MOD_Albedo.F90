@@ -77,7 +77,7 @@ MODULE MOD_Albedo
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst, only: tfrz
+  USE MOD_Const_Physical, only: tfrz
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
@@ -1135,7 +1135,7 @@ ENDIF
 !-----------------------------------------------------------------------
       USE precision
       USE mod_landpft
-      USE MOD_Vars_PFTConst
+      USE MOD_Const_PFT
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
       IMPLICIT NONE
@@ -1938,7 +1938,7 @@ ENDIF
 !=======================================================================
 
    use precision
-   use MOD_Vars_PhysicalConst, only : tfrz
+   use MOD_Const_Physical, only : tfrz
    implicit none
 
 !-------------------------- Dummy Argument -----------------------------

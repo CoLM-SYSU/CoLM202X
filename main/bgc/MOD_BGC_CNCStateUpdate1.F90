@@ -20,7 +20,7 @@ module MOD_BGC_CNCStateUpdate1
 
   use precision
   use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
-  use MOD_Vars_PFTConst, only: woody
+  use MOD_Const_PFT, only: woody
   use MOD_BGC_Vars_TimeInvars, only: &
 ! bgc constants
            donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3

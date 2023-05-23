@@ -14,9 +14,9 @@ HEADER = ../../include/define.h
 OBJS_SHARED =                              \
 	  ../../share/precision.o          \
 	  ../../share/MathConstants.o      \
-	  ../MOD_Vars_PhysicalConst.o      \
+	  ../MOD_Const_Physical.o      \
 	  ../MOD_Vars_Global.o             \
-	  ../MOD_Vars_LCConst.o            \
+	  ../MOD_Const_LC.o            \
 	  ../../share/spmd_task.o          \
 	  ../../share/mod_utils.o          \
 	  ../../share/timemanager.o        \
@@ -40,7 +40,7 @@ BASIC =                                    \
 	  ../MOD_Vars_1DFluxes.o
 
 OBJS =                                     \
-	  MOD_Urban_Vars_LCZConst.o        \
+	  MOD_Urban_Const_LCZ.o        \
 	  MOD_Urban_Vars_1DFluxes.o        \
 	  MOD_Urban_Vars_TimeInvars.o      \
 	  MOD_Urban_Vars_TimeVars.o        \

@@ -26,7 +26,7 @@
 
 
     use precision
-    use MOD_Vars_PhysicalConst, only : tfrz, denh2o, denice
+    use MOD_Const_Physical, only : tfrz, denh2o, denice
     use MOD_Vars_PFTimeInvars, only: pftfrac
     use mod_landpft, only: patch_pft_s, patch_pft_e
     use MOD_BGC_Vars_1DFluxes, only: plant_ndemand, ndep_to_sminn

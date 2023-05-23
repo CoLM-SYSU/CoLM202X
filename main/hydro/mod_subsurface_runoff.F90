@@ -24,7 +24,7 @@ CONTAINS
       USE mod_drainage_network
       USE mod_river_network
       USE mod_ssrf_network
-      USE MOD_Vars_PhysicalConst, only : denice, denh2o
+      USE MOD_Const_Physical, only : denice, denh2o
       USE MOD_Vars_Global, only : pi
 
       IMPLICIT NONE

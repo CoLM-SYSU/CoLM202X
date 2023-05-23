@@ -50,7 +50,7 @@ MODULE MOD_Urban_Albedo
 !=======================================================================
 
   USE precision
-  USE MOD_Vars_PhysicalConst, only: tfrz
+  USE MOD_Const_Physical, only: tfrz
   USE MOD_Urban_Shortwave
 
   IMPLICIT NONE

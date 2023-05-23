@@ -160,7 +160,7 @@ contains
       ! soil water movement
       !=======================================================================
 
-      use MOD_Vars_PhysicalConst, only : tfrz
+      use MOD_Const_Physical, only : tfrz
 
       implicit none
 

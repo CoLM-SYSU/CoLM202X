@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Vars_LCConst
+MODULE MOD_Const_LC
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
@@ -766,5 +766,5 @@ CONTAINS
 
    END SUBROUTINE Init_LC_Const
 
-END MODULE MOD_Vars_LCConst
+END MODULE MOD_Const_LC
 ! ---------- EOP ------------

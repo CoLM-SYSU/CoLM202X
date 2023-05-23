@@ -5,7 +5,7 @@ MODULE mod_single_srfdata
 
    USE precision, only: r8
    USE MOD_Vars_Global
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
    USE mod_namelist
    IMPLICIT NONE
    SAVE

@@ -18,8 +18,8 @@ EXECUTABLE = colm.x
 OBJS_SHARED =                                           \
 	  ../share/precision.o                          \
 	  MOD_Vars_Global.o                             \
-	  MOD_Vars_LCConst.o                            \
-	  MOD_Vars_PhysicalConst.o                      \
+	  MOD_Const_LC.o                                \
+	  MOD_Const_Physical.o                          \
 	  ../share/spmd_task.o                          \
 	  ../share/mod_namelist.o                       \
 	  ../share/MathConstants.o                      \
@@ -125,7 +125,7 @@ OBJS_URBAN =                                            \
 	  urban/Urban_CoLMMAIN.o
 
 BASIC =                                                 \
-	  MOD_Vars_PFTConst.o                           \
+	  MOD_Const_PFT.o                           \
 	  MOD_Vars_PFTimeVars.o                         \
 	  MOD_Vars_PFTimeInvars.o                       \
 	  MOD_Vars_PCTimeVars.o                         \
@@ -147,7 +147,7 @@ BASIC_BGC =                                             \
 	  bgc/MOD_BGC_Vars_TimeVars.o
 
 BASIC_URBAN =                                           \
-	  urban/MOD_Urban_Vars_LCZConst.o               \
+	  urban/MOD_Urban_Const_LCZ.o               \
 	  urban/MOD_Urban_Vars_1DFluxes.o               \
 	  urban/MOD_Urban_Vars_TimeInvars.o             \
 	  urban/MOD_Urban_Vars_TimeVars.o

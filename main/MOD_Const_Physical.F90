@@ -1,4 +1,4 @@
-MODULE MOD_Vars_PhysicalConst
+MODULE MOD_Const_Physical
 
 !=======================================================================
 ! physical constants
@@ -27,4 +27,4 @@ MODULE MOD_Vars_PhysicalConst
   REAL(r8), parameter :: vonkar = 0.4       ! von Karman constant [-]
   REAL(r8), parameter :: stefnc = 5.67e-8   ! Stefan-Boltzmann constant  [W/m2/K4]
 
-END MODULE MOD_Vars_PhysicalConst
+END MODULE MOD_Const_Physical

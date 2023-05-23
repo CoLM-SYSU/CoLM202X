@@ -24,7 +24,7 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    USE MOD_Urban_IniTimeVar
    USE MOD_Urban_Albedo
 #endif
-   use MOD_Vars_PhysicalConst
+   use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
@@ -37,8 +37,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
 #endif
-   USE MOD_Vars_LCConst
-   USE MOD_Vars_PFTConst
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
    use timemanager
 
    use mod_grid

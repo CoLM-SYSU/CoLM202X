@@ -40,7 +40,7 @@ MODULE MOD_FireReadin
 #endif
 
       USE MOD_Vars_Global
-      USE MOD_Vars_LCConst
+      USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
       USE mod_landpft
       USE MOD_Vars_PFTimeVars

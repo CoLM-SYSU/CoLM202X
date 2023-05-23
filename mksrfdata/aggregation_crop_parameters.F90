@@ -23,7 +23,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
 
    USE mod_aggregation
 
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif

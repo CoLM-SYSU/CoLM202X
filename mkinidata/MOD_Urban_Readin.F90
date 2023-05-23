@@ -22,7 +22,7 @@ CONTAINS
       USE spmd_task
       USE MOD_Vars_Global
       USE mod_namelist
-      USE MOD_Vars_LCConst
+      USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Urban_Vars_TimeInvars

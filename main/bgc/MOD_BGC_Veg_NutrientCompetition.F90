@@ -17,7 +17,7 @@ module MOD_BGC_Veg_NutrientCompetition
 
   ! 
     use precision
-    use MOD_Vars_PFTConst, only: &
+    use MOD_Const_PFT, only: &
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2, &
 ! crop variables

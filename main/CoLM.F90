@@ -18,9 +18,9 @@ PROGRAM CoLM
    use spmd_task
    use mod_namelist
    USE MOD_Vars_Global
-   USE MOD_Vars_LCConst
-   USE MOD_Vars_PFTConst
-   use MOD_Vars_PhysicalConst
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
    use MOD_Vars_1DForcing

@@ -35,7 +35,7 @@ MODULE MOD_GroundFluxes
 !=======================================================================
 
     use precision
-    use MOD_Vars_PhysicalConst, only: cpair,vonkar,grav
+    use MOD_Const_Physical, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
     implicit none
 

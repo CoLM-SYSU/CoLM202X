@@ -27,7 +27,7 @@ SUBROUTINE aggregation_forest_height ( &
    use mod_aggregation
    USE mod_utils
 
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
    USE mod_5x5_data
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft

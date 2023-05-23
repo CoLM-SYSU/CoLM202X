@@ -21,7 +21,7 @@ CONTAINS
       USE mod_namelist
       USE spmd_task
       USE MOD_Vars_Global
-      USE MOD_Vars_LCConst
+      USE MOD_Const_LC
       USE mod_landurban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants

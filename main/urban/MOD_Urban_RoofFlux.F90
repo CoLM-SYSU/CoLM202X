@@ -24,7 +24,7 @@ CONTAINS
 !=======================================================================
 
   USE precision
-  USE MOD_Vars_PhysicalConst, only: cpair,vonkar,grav
+  USE MOD_Const_Physical, only: cpair,vonkar,grav
   USE MOD_FrictionVelocity
   IMPLICIT NONE
 

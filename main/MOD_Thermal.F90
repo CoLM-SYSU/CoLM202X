@@ -106,8 +106,8 @@ MODULE MOD_Thermal
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PFTConst
-  USE MOD_Vars_PhysicalConst, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+  USE MOD_Const_PFT
+  USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                   stefnc,denice,tfrz,vonkar,grav,cpliq,cpice
   USE MOD_FrictionVelocity
   USE MOD_Eroot

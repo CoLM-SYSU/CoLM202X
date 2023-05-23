@@ -31,7 +31,7 @@ USE precision,                 ONLY: r8,r4
 USE YOS_CMF_INPUT ,            ONLY: LROSPLIT,LWEVAP,LWINFILT
 USE spmd_task
 USE CMF_CTRL_TIME_MOD
-USE GlobalVars,                ONLY : spval
+USE MOD_Vars_Global,                ONLY : spval
 USE MOD_Vars_1DFluxes
 USE MOD_Qsadv
 
@@ -385,7 +385,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    ! 2002.08.30  Yongjiu Dai   @ BNU
    ! 1999.09.15  Yongjiu Dai   @ BNU
    USE precision
-   USE PhysicalConstants, ONLY : cpair,rgas,vonkar,grav
+   USE MOD_Const_Physical, ONLY : cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
    IMPLICIT NONE
    REAL(r8), INTENT(in)  :: hu      ! agcm reference height of wind [m]

@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Vars_PFTConst
+MODULE MOD_Const_PFT
 
 !-----------------------------------------------------------------------
 !
@@ -1643,4 +1643,4 @@ ENDIF
 
    END SUBROUTINE Init_PFT_Const
 
-END MODULE MOD_Vars_PFTConst
+END MODULE MOD_Const_PFT

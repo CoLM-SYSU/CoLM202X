@@ -4,7 +4,7 @@ MODULE MOD_Urban_Longwave
 
   USE precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst, only: stefnc
+  USE MOD_Const_Physical, only: stefnc
   USE MOD_Urban_Shortwave, only: MatrixInverse
   USE MOD_Urban_Shortwave, only: ShadowWall_dir
   USE MOD_Urban_Shortwave, only: ShadowWall_dif

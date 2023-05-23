@@ -64,7 +64,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use precision
-  use MOD_Vars_PhysicalConst, only : denice, denh2o, tfrz
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
 
   implicit none
 
@@ -122,7 +122,6 @@ MODULE MOD_SoilSnowHydrology
         qinfl            , &! infiltration rate (mm h2o/s)
         qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
-
 
 #ifdef SNICAR
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -387,7 +386,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use precision
-  use MOD_Vars_PhysicalConst, only : denice, denh2o, tfrz
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
   USE mod_soil_water
 
 #ifndef LATERAL_FLOW
@@ -829,7 +828,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !-----------------------------------------------------------------------
 
   use precision
-  use MOD_Vars_PhysicalConst, only : denice, denh2o  ! physical constant
+  use MOD_Const_Physical, only : denice, denh2o  ! physical constant
   implicit none
 
 !----------------------- dummy argument --------------------------------
@@ -1491,7 +1490,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !
 !-----------------------------------------------------------------------
     use precision
-    use MOD_Vars_PhysicalConst , only : grav,hfus,tfrz,denh2o,denice
+    use MOD_Const_Physical , only : grav,hfus,tfrz,denh2o,denice
     USE mod_utils
 
     IMPLICIT NONE
@@ -1771,7 +1770,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 
     use precision
-    use MOD_Vars_PhysicalConst, only : tfrz
+    use MOD_Const_Physical, only : tfrz
 !
 ! ARGUMENTS:
     IMPLICIT NONE

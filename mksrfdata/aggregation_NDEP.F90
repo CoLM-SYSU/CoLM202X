@@ -25,7 +25,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
    USE mod_aggregation
 
-   USE MOD_Vars_LCConst
+   USE MOD_Const_LC
 
 #ifdef SrfdataDiag
    USE mod_srfdata_diag
