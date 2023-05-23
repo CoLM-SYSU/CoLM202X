@@ -199,7 +199,6 @@ OBJS =                                                  \
 	  MOD_HistVector.o                              \
 	  MOD_Hist.o                                    \
 	  MOD_LightningData.o                           \
-	  MOD_OzoneData.o                               \
 	  ../CaMa/src/MOD_CaMa_colmCaMa.o               \
 	  CoLMDRIVER.o                                  \
 	  CoLMMAIN.o                                    \
