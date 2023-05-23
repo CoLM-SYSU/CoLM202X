@@ -41,7 +41,7 @@ MODULE MOD_SnowLayersCombineDivide
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Vars_PhysicalConst, only : denice, denh2o, tfrz
   implicit none
 !
 !-------------------------- Dummy argument -----------------------------
@@ -542,7 +542,7 @@ MODULE MOD_SnowLayersCombineDivide
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : cpice, cpliq, hfus, tfrz
+  use MOD_Vars_PhysicalConst, only : cpice, cpliq, hfus, tfrz
   implicit none
 
 !-------------------------- Dummy argument -----------------------------

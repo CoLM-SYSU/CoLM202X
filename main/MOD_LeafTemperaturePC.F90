@@ -81,8 +81,8 @@ MODULE MOD_LeafTemperaturePC
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
@@ -2300,7 +2300,7 @@ MODULE MOD_LeafTemperaturePC
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Vars_PhysicalConst, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai

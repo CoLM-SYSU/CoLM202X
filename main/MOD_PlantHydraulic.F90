@@ -968,7 +968,7 @@ end do
     !
     ! !USES:
     ! calls getqflx
-  use PhysicalConstants, only : tfrz
+  use MOD_Vars_PhysicalConst, only : tfrz
     implicit none
     !
     ! !ARGUMENTS:
@@ -1061,7 +1061,7 @@ end do
     !
     ! !USES:
     ! calls getqflx
-  use PhysicalConstants, only : tfrz
+  use MOD_Vars_PhysicalConst, only : tfrz
     implicit none
     !
     ! !ARGUMENTS:

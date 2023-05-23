@@ -26,7 +26,7 @@ MODULE MOD_NewSnow
 !=======================================================================
 !
    use precision
-   use PhysicalConstants, only : tfrz, cpliq, cpice
+   use MOD_Vars_PhysicalConst, only : tfrz, cpliq, cpice
 
    implicit none
 

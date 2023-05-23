@@ -64,7 +64,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Vars_PhysicalConst, only : denice, denh2o, tfrz
 
   implicit none
 
@@ -387,7 +387,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Vars_PhysicalConst, only : denice, denh2o, tfrz
   USE mod_soil_water
 
 #ifndef LATERAL_FLOW
@@ -829,7 +829,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : denice, denh2o  ! physical constant
+  use MOD_Vars_PhysicalConst, only : denice, denh2o  ! physical constant
   implicit none
 
 !----------------------- dummy argument --------------------------------
@@ -1491,7 +1491,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !
 !-----------------------------------------------------------------------
     use precision
-    use PhysicalConstants , only : grav,hfus,tfrz,denh2o,denice
+    use MOD_Vars_PhysicalConst , only : grav,hfus,tfrz,denh2o,denice
     USE mod_utils
 
     IMPLICIT NONE
@@ -1771,7 +1771,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 
     use precision
-    use PhysicalConstants, only : tfrz
+    use MOD_Vars_PhysicalConst, only : tfrz
 !
 ! ARGUMENTS:
     IMPLICIT NONE

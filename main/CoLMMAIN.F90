@@ -142,8 +142,8 @@ SUBROUTINE CoLMMAIN ( &
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: tfrz, denh2o, denice
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only : patch_pft_s, patch_pft_e

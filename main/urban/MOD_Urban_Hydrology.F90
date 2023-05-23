@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_Hydrology
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanHydrology
+
+CONTAINS
+
  SUBROUTINE UrbanHydrology ( &
         ! model running information
         ipatch         ,patchtype      ,lbr            ,lbi            ,&
@@ -35,8 +45,8 @@
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: denice, denh2o, tfrz
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst, only: denice, denh2o, tfrz
   USE MOD_SoilSnowHydrology
   USE MOD_Lake
 
@@ -293,4 +303,6 @@
       !rnof = rnof*(1.-flake) + rnof_lake*flake
 
  END SUBROUTINE UrbanHydrology
+
+END MODULE MOD_Urban_Hydrology
 ! ---------- EOP ------------

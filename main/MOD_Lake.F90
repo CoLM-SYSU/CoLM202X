@@ -65,7 +65,7 @@ MODULE MOD_Lake
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : tfrz, denh2o, cpliq, cpice, hfus
+  use MOD_Vars_PhysicalConst, only : tfrz, denh2o, cpliq, cpice, hfus
   implicit none
 ! ------------------------ Dummy Argument ------------------------------
   integer, INTENT(in) :: maxsnl    ! maximum number of snow layers
@@ -348,8 +348,8 @@ MODULE MOD_Lake
 !
 ! -----------------------------------------------------------------
   use precision
-  use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
-                                vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
+  use MOD_Vars_PhysicalConst, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
+                                  vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
   use MOD_FrictionVelocity
   USE MOD_Qsadv
   USE MOD_SoilHcapCond
@@ -1535,7 +1535,7 @@ MODULE MOD_Lake
 !-----------------------------------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : denh2o, denice, hfus, tfrz, cpliq, cpice
+  use MOD_Vars_PhysicalConst, only : denh2o, denice, hfus, tfrz, cpliq, cpice
   use MOD_SoilSnowHydrology
   use MOD_SnowLayersCombineDivide
 
@@ -1800,7 +1800,7 @@ MODULE MOD_Lake
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : tfrz,vonkar,grav
+  use MOD_Vars_PhysicalConst, only : tfrz,vonkar,grav
 
   IMPLICIT NONE
 
@@ -1857,7 +1857,7 @@ MODULE MOD_Lake
 ! -------------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : tfrz,tkwat,tkice,tkair,&
+  use MOD_Vars_PhysicalConst, only : tfrz,tkwat,tkice,tkair,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice
 
   IMPLICIT NONE

@@ -56,7 +56,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 !=======================================================================
 
   USE precision
-  USE PhysicalConstants, only: tfrz
+  USE MOD_Vars_PhysicalConst, only: tfrz
   USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
   USE MOD_Vars_PFTConst, only: isevg, woody, leafcn, deadwdcn
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -72,7 +72,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
 #endif
-  USE GlobalVars
+  USE MOD_Vars_Global
   USE MOD_Albedo
   USE mod_namelist
   USE mod_soil_water

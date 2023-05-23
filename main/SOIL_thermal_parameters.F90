@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_SoilThermalParameters
+MODULE SOIL_thermal_parameters
 
 !-----------------------------------------------------------------------
  use precision
@@ -225,5 +225,5 @@ MODULE MOD_SoilThermalParameters
 
   end subroutine hConductivity
 
-END MODULE MOD_SoilThermalParameters
+END MODULE SOIL_thermal_parameters
 ! ---------- EOP ------------

@@ -1,10 +1,10 @@
 #include <define.h>
 
-MODULE UrbanFlux
+MODULE MOD_Urban_Flux
 
 !-----------------------------------------------------------------------
   USE precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   USE MOD_Qsadv, only: qsadv
   IMPLICIT NONE
   SAVE
@@ -59,7 +59,7 @@ MODULE UrbanFlux
 
 !=======================================================================
      USE precision
-     USE PhysicalConstants, only: cpair,vonkar,grav
+     USE MOD_Vars_PhysicalConst, only: cpair,vonkar,grav
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -902,7 +902,7 @@ MODULE UrbanFlux
 !=======================================================================
 
      USE precision
-     USE PhysicalConstants, only: vonkar,grav,hvap,cpair,stefnc
+     USE MOD_Vars_PhysicalConst, only: vonkar,grav,hvap,cpair,stefnc
      USE MOD_FrictionVelocity
      USE MOD_AssimStomataConductance
      IMPLICIT NONE
@@ -3048,7 +3048,7 @@ MODULE UrbanFlux
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Vars_PhysicalConst, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai
@@ -3111,4 +3111,4 @@ MODULE UrbanFlux
 
   END SUBROUTINE cal_z0_displa
 
-END MODULE UrbanFlux
+END MODULE MOD_Urban_Flux

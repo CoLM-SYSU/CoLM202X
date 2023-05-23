@@ -23,7 +23,7 @@ MODULE MOD_LeafInterception
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
    USE precision
-   USE PhysicalConstants, only: tfrz, denh2o, denice
+   USE MOD_Vars_PhysicalConst, only: tfrz, denh2o, denice
    USE mod_namelist, only : DEF_Interception_scheme
    IMPLICIT NONE
 
@@ -1345,7 +1345,7 @@ contains
       ! 2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
       USE precision
-      USE PhysicalConstants, only: tfrz
+      USE MOD_Vars_PhysicalConst, only: tfrz
       USE mod_landpft
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
@@ -1483,8 +1483,8 @@ contains
       !---2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
       USE precision
-      USE GlobalVars
-      USE PhysicalConstants, only: tfrz
+      USE MOD_Vars_GlobalVars
+      USE MOD_Vars_PhysicalConst, only: tfrz
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
       USE MOD_Vars_1DPCFluxes

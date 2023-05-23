@@ -14,7 +14,7 @@ MODULE MOD_Vars_PFTConst
 !
 ! !USES:
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE timemanager, only: get_calday
 
    IMPLICIT NONE

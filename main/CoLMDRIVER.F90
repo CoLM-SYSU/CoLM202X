@@ -12,14 +12,14 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !=======================================================================
 
  use precision
- use PhysicalConstants, only: tfrz, rgas, vonkar
- USE GlobalVars
- USE LC_Const
+ use MOD_Vars_PhysicalConst, only: tfrz, rgas, vonkar
+ USE MOD_Vars_Global
+ USE MOd_Vars_LCConst
  use MOD_Vars_TimeInvariants
  use MOD_Vars_TimeVariables
  use MOD_Vars_1DForcing
  use MOD_Vars_1DFluxes
- USE mod_landpatch, only : numpatch
+ USE mod_landpatch, only: numpatch
  USE mod_landurban, only: patch2urban
  USE mod_namelist, only : DEF_forcing
  USE MOD_Forcing, only : forcmask

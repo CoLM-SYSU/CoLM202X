@@ -27,7 +27,7 @@ module MOD_BGC_Veg_CNPhenology
       ndays_on        , ndays_off      , fstor2tran, crit_dayl  , crit_onset_fdd, crit_onset_swi, &
       crit_offset_fdd , crit_offset_swi, soilpsi_on, soilpsi_off, lwtop, rice2pdt
 
-  use GlobalVars, only: &
+  use MOD_Vars_Global, only: &
  !crop variables
       nswheat         , nirrig_swheat     , nsugarcane  , nirrig_sugarcane  , &
       nwwheat         , nirrig_wwheat     , ntmp_corn   , nirrig_tmp_corn   , &
@@ -36,7 +36,7 @@ module MOD_BGC_Veg_CNPhenology
       nrice           , nirrig_rice       , ntmp_soybean, nirrig_tmp_soybean, &
       ntrp_soybean    , nirrig_trp_soybean, &
       spval
-  USE PhysicalConstants, only: tfrz
+  USE MOD_Vars_PhysicalConst, only: tfrz
 
   use MOD_Vars_TimeVariables, only: &
       t_soisno, smp

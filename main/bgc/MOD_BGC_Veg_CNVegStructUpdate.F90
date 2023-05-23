@@ -15,7 +15,7 @@ module MOD_BGC_Veg_CNVegStructUpdate
   !
 
   use precision
-  use GlobalVars, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
+  use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                                 nswitchgrass, nirrig_switchgrass, noveg

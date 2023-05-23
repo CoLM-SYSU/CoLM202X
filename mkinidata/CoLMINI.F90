@@ -27,8 +27,8 @@ PROGRAM CoLMINI
 #endif
    use mod_landpatch
    use mod_srfdata_restart
-   USE GlobalVars
-   USE LC_Const
+   USE MOD_Vars_Global
+   USE MOD_Vars_LCConst
    USE MOD_Vars_PFTConst
    USE timemanager
 #ifdef PFT_CLASSIFICATION

@@ -24,7 +24,7 @@ MODULE MOD_SnowAge
 !=======================================================================
 
    use precision
-   use PhysicalConstants, only : tfrz
+   use MOD_Vars_PhysicalConst, only : tfrz
    implicit none
 
 !-------------------------- Dummy Argument -----------------------------

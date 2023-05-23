@@ -208,7 +208,7 @@ contains
 
       use precision
       use mod_namelist
-      use PhysicalConstants, only: rgas, grav
+      use MOD_Vars_PhysicalConst, only: rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_1DForcing
       use MOD_Vars_2DForcing

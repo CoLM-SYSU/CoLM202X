@@ -6,8 +6,8 @@ MODULE mod_landpft
 
    USE mod_namelist
    USE mod_pixelset
-   USE LC_const
-   USE GlobalVars
+   USE MOD_Vars_LCconst
+   USE MOD_Vars_Global
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -34,7 +34,7 @@ CONTAINS
       USE mod_5x5_data
       USE mod_landpatch
       USE mod_aggregation
-      USE LC_const
+      USE MOD_Vars_LCconst
 
       IMPLICIT NONE
 

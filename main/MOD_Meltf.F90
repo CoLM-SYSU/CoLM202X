@@ -52,7 +52,7 @@ MODULE MOD_Meltf
 
    use precision
    USE mod_soil_function
-   use PhysicalConstants, only : tfrz, hfus,grav
+   use MOD_Vars_PhysicalConst, only : tfrz, hfus,grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -321,7 +321,7 @@ MODULE MOD_Meltf
 
    use precision
    USE mod_soil_function
-   use PhysicalConstants, only : tfrz, hfus, grav
+   use MOD_Vars_PhysicalConst, only : tfrz, hfus, grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -584,7 +584,7 @@ MODULE MOD_Meltf
 !-----------------------------------------------------------------------
 
      use precision
-     use PhysicalConstants, only : tfrz, hfus
+     use MOD_Vars_PhysicalConst, only : tfrz, hfus
      IMPLICIT NONE
 
 !-----------------------------------------------------------------------

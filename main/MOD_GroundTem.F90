@@ -66,7 +66,7 @@ MODULE MOD_GroundTem
 !=======================================================================
 
    use precision
-   use PhysicalConstants, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
+   use MOD_Vars_PhysicalConst, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
    USE MOD_Meltf
    USE MOD_SoilHcapCond
    USE mod_utils

@@ -26,7 +26,7 @@
 
 
     use precision
-    use PhysicalConstants, only : tfrz, denh2o, denice
+    use MOD_Vars_PhysicalConst, only : tfrz, denh2o, denice
     use MOD_Vars_PFTimeInvars, only: pftfrac
     use mod_landpft, only: patch_pft_s, patch_pft_e
     use MOD_BGC_Vars_1DFluxes, only: plant_ndemand, ndep_to_sminn
@@ -65,7 +65,7 @@
     use MOD_BGC_Veg_CNNDynamics, only: CNNFert, CNSoyfix
 #endif
     use timemanager
-    use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
+    use MOD_Vars_Global, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                         z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
     use MOD_BGC_Vars_TimeVars, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr

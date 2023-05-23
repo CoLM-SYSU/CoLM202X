@@ -110,22 +110,25 @@ SUBROUTINE UrbanCLMMAIN ( &
            fh           ,fq                                        )
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: tfrz, denh2o, denice
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
   USE MOD_SnowLayersCombineDivide
   USE MOD_LeafInterception
-  USE UrbanALBEDO
+  USE MOD_Urban_Albedo
+  USE MOD_Urban_NetSolar
+  USE MOD_Urban_Thermal
+  USE MOD_Urban_Hydrology
   USE MOD_Lake
   USE timemanager
   USE MOD_RainSnowTemp, only: rain_snow_temp
   USE MOD_NewSnow, only: newsnow
   USE MOD_OrbCoszen, only: orb_coszen
   USE MOD_SnowFraction, only: snowfraction
-  USE MOD_SnowAge, only: snowage
+  USE MOD_ALBEDO, only: snowage
   USE MOD_Qsadv, only: qsadv
 #ifdef USE_LUCY
-  USE UrbanAnthropogenic
+  USE MOD_Urban_LUCY
 #endif
 
   IMPLICIT NONE
@@ -149,13 +152,13 @@ SUBROUTINE UrbanCLMMAIN ( &
 ! Parameters
 ! ----------------------
   REAL(r8), intent(in) :: &
-       fix_holiday(365), &! Fixed public holidays, holiday(0) or workday(1)
-       week_holiday(7) , &! week holidays
-       hum_prof(24)    , &! Diurnal metabolic heat profile
-       weh_prof(24)    , &! Diurnal traffic flow profile of weekend
-       wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-       popcell         , &! population density
-       vehicle(3)         ! vehicle numbers per thousand people
+        fix_holiday(365), &! Fixed public holidays, holiday(0) or workday(1)
+        week_holiday(7) , &! week holidays
+        hum_prof(24)    , &! Diurnal metabolic heat profile
+        weh_prof(24)    , &! Diurnal traffic flow profile of weekend
+        wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
+        popcell         , &! population density
+        vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
         froof      ,&! roof fractional cover [-]

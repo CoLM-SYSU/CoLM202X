@@ -5,7 +5,7 @@ Module MOD_Ozone
 
   use precision
 !  use MOD_Vars_1DForcing, only: forc_ozone, forc_psrf
-  USE PhysicalConstants, only: rgas
+  USE MOD_Vars_PhysicalConst, only: rgas
   use MOD_Vars_PFTConst, only: isevg, leaf_long, woody
   IMPLICIT NONE
   SAVE

@@ -1,5 +1,16 @@
 #include <define.h>
 
+MODULE MOD_Urban_RoofTem
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanRoofTem
+
+CONTAINS
+
+
  SUBROUTINE UrbanRoofTem (lb,deltim,capr,cnfac,&
                           cv_roof,tk_roof,dz_roofsno,z_roofsno,zi_roofsno,&
                           t_roofsno,wice_roofsno,wliq_roofsno,scv_roof,snowdp_roof,&
@@ -32,8 +43,8 @@
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst
   USE mod_utils, only: tridia
   USE MOD_Meltf, only: meltf_urban
 
@@ -221,4 +232,6 @@
                   scv_roof,snowdp_roof,sm_roof,xmf_roof)
 
  END SUBROUTINE UrbanRoofTem
+
+END MODULE MOD_Urban_RoofTem
 ! ---------- EOP ------------

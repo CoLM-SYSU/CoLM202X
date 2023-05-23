@@ -105,10 +105,10 @@ MODULE MOD_Thermal
 !=======================================================================
 
   USE precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   USE MOD_Vars_PFTConst
-  USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
-                               stefnc,denice,tfrz,vonkar,grav,cpliq,cpice
+  USE MOD_Vars_PhysicalConst, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+                                  stefnc,denice,tfrz,vonkar,grav,cpliq,cpice
   USE MOD_FrictionVelocity
   USE MOD_Eroot
   USE MOD_GroundFluxes

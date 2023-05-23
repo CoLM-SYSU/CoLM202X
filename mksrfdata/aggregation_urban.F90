@@ -24,9 +24,9 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    USE mod_data_type
    USE mod_utils, only: num_max_frequency
    USE mod_landurban
-   USE GlobalVars, only: N_URB
+   USE MOD_Vars_Global, only: N_URB
 #ifdef URBAN_LCZ
-   USE UrbanLCZ_Const, only: wtroof_lcz, htroof_lcz
+   USE MOD_Urban_Vars_LCZConst, only: wtroof_lcz, htroof_lcz
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata

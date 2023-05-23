@@ -138,7 +138,7 @@ CONTAINS
       
       USE mod_mesh
       USE mod_landpatch
-      USE GlobalVars, only : nl_soil
+      USE MOD_Vars_Global, only : nl_soil
       USE MOD_Vars_1DForcing,    only : forc_prc,    forc_prl
       USE MOD_Vars_1DFluxes,     only : fevpa,       rnof,        rsur
       USE MOD_Vars_TimeVariables, only : wliq_soisno, wice_soisno, ldew, scv, wa 

@@ -1,7 +1,18 @@
 #include <define.h>
 
 #ifdef URBAN_MODEL
-SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
+MODULE MOD_Urban_Readin
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: Urban_readin
+
+CONTAINS
+
+
+ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 
 ! ===========================================================
 ! Read in the Urban dataset
@@ -9,12 +20,12 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
 
       USE precision
       USE spmd_task
-      USE GlobalVars
+      USE MOD_Vars_Global
       USE mod_namelist
-      USE LC_Const
+      USE MOD_Vars_LCConst
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
-      USE MOD_UrbanTimeInvars
+      USE MOD_Urban_Vars_TimeInvars
       USE ncio_vector
       USE ncio_serial
       USE mod_landpatch
@@ -286,5 +297,7 @@ ENDIF
          IF (allocated(lucyid       )) deallocate ( lucyid        )
       ENDIF
 
-END SUBROUTINE Urban_readin
+ END SUBROUTINE Urban_readin
+
+END MODULE MOD_Urban_Readin
 #endif

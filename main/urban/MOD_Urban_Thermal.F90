@@ -1,5 +1,17 @@
 #include <define.h>
 
+MODULE MOD_Urban_Thermal
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+  PRIVATE
+
+  PUBLIC :: UrbanTHERMAL
+
+CONTAINS
+
+
  SUBROUTINE UrbanTHERMAL ( &
 
         ! model running information
@@ -88,15 +100,20 @@
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+  USE MOD_Vars_Global
+  USE MOD_Vars_PhysicalConst, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav
-  USE UrbanShortwave
-  USE UrbanLongwave
-  USE UrbanFlux
+  USE MOD_Urban_Shortwave
+  USE MOD_Urban_Longwave
+  USE MOD_Urban_GroundFlux
+  USE MOD_Urban_Flux
+  USE MOD_Urban_RoofTem
+  USE MOD_Urban_WallTem
+  USE MOD_Urban_PerviousTem
+  USE MOD_Urban_ImperviousTem
   USE MOD_Lake
-  USE UrbanBEM
-  USE UrbanAnthropogenic, only: LUCY
+  USE MOD_Urban_BEM
+  USE MOD_Urban_LUCY, only: LUCY
   USE MOD_Eroot, only: eroot
 
   IMPLICIT NONE
@@ -1319,4 +1336,6 @@
       deallocate ( fcover )
 
  END SUBROUTINE UrbanTHERMAL
+
+END MODULE MOD_Urban_Thermal
 ! ---------- EOP ------------

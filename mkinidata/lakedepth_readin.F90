@@ -10,7 +10,7 @@ SUBROUTINE lakedepth_readin (dir_landdata)
 !------------------------------------------------------------------------------------------
 
    use precision
-   USE GlobalVars, only : nl_lake
+   USE MOD_Vars_Global, only : nl_lake
    use spmd_task
    use mod_landpatch
    use ncio_vector
