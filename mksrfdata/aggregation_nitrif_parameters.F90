@@ -9,20 +9,20 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
    !
    ! ----------------------------------------------------------------------
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
    USE mod_aggregation
 
-   USE LC_Const
+   USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
@@ -81,7 +81,7 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
 !   IF (DEF_LAI_CLIM) THEN
       start_year = 1
       end_year   = 1
-      ntime = 12 
+      ntime = 12
 !   ELSE
 !      start_year = DEF_simulation_time%start_year
 !      end_year   = DEF_simulation_time%end_year
@@ -92,14 +92,14 @@ SUBROUTINE aggregation_nitrif_parameters (gridnitrif, dir_rawdata, dir_model_lan
    IF (p_is_io) THEN
       CALL allocate_block_data (gridnitrif, CONC_O2_UNSAT)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (CONC_O2_UNSAT_patches (numpatch))
    ENDIF
-   
+
 DO nsl = 1, 20
    write(cx,'(i2.2)') nsl
-   
+
    DO YY = start_year, end_year
       DO itime = 1, ntime
          ! -----------------------
@@ -107,10 +107,10 @@ DO nsl = 1, 20
          ! -----------------------
          write(c3, '(i2.2)') itime
         ! IF (p_is_master) THEN
-        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime 
+        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime
         ! endif
 
-         IF (p_is_io) THEN   
+         IF (p_is_io) THEN
                lndname = trim(dir_rawdata)//'/nitrif/CONC_O2_UNSAT/CONC_O2_UNSAT_l'//trim(cx)//'.nc'
                print *, lndname
                CALL ncio_read_block_time (lndname, 'CONC_O2_UNSAT', gridnitrif, itime, CONC_O2_UNSAT)
@@ -141,7 +141,7 @@ DO nsl = 1, 20
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
          CALL check_vector_data ('CONC_O2_UNSAT value '//trim(c3), CONC_O2_UNSAT_patches)
 #endif
 
@@ -149,7 +149,7 @@ DO nsl = 1, 20
          ! write out the plant leaf area index of grid patches
          ! ---------------------------------------------------
          lndname = trim(landdir) // '/CONC_O2_UNSAT_patches_l' // trim(cx)//'_'// trim(c3) // '.nc'
-       
+
 
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -164,7 +164,7 @@ DO nsl = 1, 20
 #endif
       ENDDO
    ENDDO
-   
+
 
 enddo
 
@@ -190,7 +190,7 @@ enddo
 !   IF (DEF_LAI_CLIM) THEN
       start_year = 1
       end_year   = 1
-      ntime = 12 
+      ntime = 12
 !   ELSE
 !      start_year = DEF_simulation_time%start_year
 !      end_year   = DEF_simulation_time%end_year
@@ -201,14 +201,14 @@ enddo
    IF (p_is_io) THEN
       CALL allocate_block_data (gridnitrif, O2_DECOMP_DEPTH_UNSAT)
    ENDIF
-   
+
    IF (p_is_worker) THEN
       allocate (O2_DECOMP_DEPTH_UNSAT_patches (numpatch))
    ENDIF
-   
+
 DO nsl = 1, 25
    write(cx,'(i2.2)') nsl
-   
+
    DO YY = start_year, end_year
       DO itime = 1, ntime
          ! -----------------------
@@ -216,10 +216,10 @@ DO nsl = 1, 25
          ! -----------------------
          write(c3, '(i2.2)') itime
         ! IF (p_is_master) THEN
-        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime 
+        !    write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate CONC_O2_UNSAT Level:',cx, ':', YY, ':', itime, '/', ntime
         ! endif
 
-         IF (p_is_io) THEN   
+         IF (p_is_io) THEN
                lndname = trim(dir_rawdata)//'/nitrif/O2_DECOMP_DEPTH_UNSAT/O2_DECOMP_DEPTH_UNSAT_l'//trim(cx)//'.nc'
                print *, lndname
                CALL ncio_read_block_time (lndname, 'O2_DECOMP_DEPTH_UNSAT', gridnitrif, itime, O2_DECOMP_DEPTH_UNSAT)
@@ -250,7 +250,7 @@ DO nsl = 1, 25
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
          CALL check_vector_data ('O2_DECOMP_DEPTH_UNSAT value '//trim(c3), O2_DECOMP_DEPTH_UNSAT_patches)
 #endif
 
@@ -258,7 +258,7 @@ DO nsl = 1, 25
          ! write out the plant leaf area index of grid patches
          ! ---------------------------------------------------
          lndname = trim(landdir) // '/O2_DECOMP_DEPTH_UNSAT_patches_l' // trim(cx)//'_'// trim(c3) // '.nc'
-       
+
 
          CALL ncio_create_file_vector (lndname, landpatch)
          CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -273,7 +273,7 @@ DO nsl = 1, 25
 #endif
       ENDDO
    ENDDO
-   
+
 
 enddo
 

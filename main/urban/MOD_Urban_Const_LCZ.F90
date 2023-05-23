@@ -1,6 +1,6 @@
 #include <define.h>
 #ifdef URBAN_LCZ
-MODULE UrbanLCZ_Const
+MODULE MOD_Urban_Const_LCZ
 
   ! -----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -114,5 +114,5 @@ MODULE UrbanLCZ_Const
 
    !TODO:AHE coding
 
-END MODULE UrbanLCZ_Const
+END MODULE MOD_Urban_Const_LCZ
 #endif

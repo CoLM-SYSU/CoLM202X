@@ -81,7 +81,7 @@ CONTAINS
       USE precision
       USE spmd_task
       USE mod_landpft
-      USE GlobalVars
+      USE MOD_Vars_Global
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -133,7 +133,7 @@ CONTAINS
 
       use ncio_vector
       USE mod_landpft
-      USE GlobalVars
+      USE MOD_Vars_Global
 
       IMPLICIT NONE
 
@@ -181,7 +181,7 @@ CONTAINS
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpft
      use ncio_vector
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart

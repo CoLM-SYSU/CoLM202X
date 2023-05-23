@@ -142,8 +142,8 @@ SUBROUTINE CoLMMAIN ( &
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: tfrz, denh2o, denice
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
 #ifdef PFT_CLASSIFICATION
   USE mod_landpft, only : patch_pft_s, patch_pft_e
@@ -802,7 +802,7 @@ ENDIF
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
-           snofrz(lbsn:0), sabg_lyr(lb:1)                                        )
+           snofrz(lbsn:0)    ,sabg_lyr(lb:1)                                           )
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
 

@@ -28,7 +28,7 @@ MODULE MOD_RainSnowTemp
 !=======================================================================
 !
    use precision
-   use PhysicalConstants, only : tfrz
+   use MOD_Const_Physical, only : tfrz
    USE MOD_WetBulb
 
    IMPLICIT NONE

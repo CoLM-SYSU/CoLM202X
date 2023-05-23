@@ -42,7 +42,7 @@ MODULE MOD_SoilHcapCond
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
    use precision
-   USE PhysicalConstants,only:tfrz
+   USE MOD_Const_Physical,only:tfrz
 
    IMPLICIT NONE
       real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within the soil solids

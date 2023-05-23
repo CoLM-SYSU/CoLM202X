@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_GroundFlux
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanGroundFlux
+
+CONTAINS
+
  SUBROUTINE UrbanGroundFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
                              ur, thm, th, thv, zlnd, zsno, fsno_gimp, &
                              lbi, wliq_gimpsno,wice_gimpsno, &
@@ -13,7 +23,7 @@
 !=======================================================================
 
   USE precision
-  USE PhysicalConstants, only: cpair,vonkar,grav
+  USE MOD_Const_Physical, only: cpair,vonkar,grav
   USE MOD_FrictionVelocity
   IMPLICIT NONE
 
@@ -200,3 +210,5 @@
       qref   =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
 
  END SUBROUTINE UrbanGroundFlux
+
+END MODULE MOD_Urban_GroundFlux

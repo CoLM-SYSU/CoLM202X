@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE GlobalVars
+MODULE MOD_Vars_Global
 !-------------------------------------------------------------------------------
 !
 ! !DESCRIPTION:
@@ -141,5 +141,5 @@ CONTAINS
 
    END SUBROUTINE Init_GlovalVars
 
-END MODULE GlobalVars
+END MODULE MOD_Vars_Global
 ! ---------- EOP ------------

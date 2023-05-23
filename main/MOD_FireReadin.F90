@@ -39,8 +39,8 @@ MODULE MOD_FireReadin
       use mod_colm_debug
 #endif
 
-      USE GlobalVars
-      USE LC_Const
+      USE MOD_Vars_Global
+      USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
       USE mod_landpft
       USE MOD_Vars_PFTimeVars

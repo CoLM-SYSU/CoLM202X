@@ -1,14 +1,14 @@
 #include <define.h>
 
-MODULE UrbanLongwave
+MODULE MOD_Urban_Longwave
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: stefnc
-  USE UrbanShortwave, only: MatrixInverse
-  USE UrbanShortwave, only: ShadowWall_dir
-  USE UrbanShortwave, only: ShadowWall_dif
-  USE UrbanShortwave, only: ShadowTree
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: stefnc
+  USE MOD_Urban_Shortwave, only: MatrixInverse
+  USE MOD_Urban_Shortwave, only: ShadowWall_dir
+  USE MOD_Urban_Shortwave, only: ShadowWall_dif
+  USE MOD_Urban_Shortwave, only: ShadowTree
   USE MOD_ThreeDCanopy, only: tee, phi
 
   IMPLICIT NONE
@@ -17,8 +17,6 @@ MODULE UrbanLongwave
 
   PUBLIC :: UrbanOnlyLongwave       !Urban Longwave radiation transfer
   PUBLIC :: UrbanVegLongwave        !Urban Longwave radiation transfer with trees
-
- ! REAL(r8), external :: tee         !Direct transmittance of vegetation for spheric crowns
 
 CONTAINS
 
@@ -600,4 +598,4 @@ CONTAINS
 
   END SUBROUTINE UrbanVegLongwave
 
-END MODULE UrbanLongwave
+END MODULE MOD_Urban_Longwave

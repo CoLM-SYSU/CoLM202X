@@ -31,23 +31,23 @@ MODULE MOD_SoilThermalParameters
 ! calculation of heat capacities of snow / soil layers
 ! the volumetric heat capacity is calculated as a linear combination
 ! in terms of the volumetric fraction of the constituent phases.
-! 
+!
 ! ________________
 ! REVISION HISTORY:
 ! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of water
 !                          body.
-! 08/16/2014, Nan Wei: recalculate the heat capacity of soil layers 
+! 08/16/2014, Nan Wei: recalculate the heat capacity of soil layers
 !                      underneath the lake
 !
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : cpice,cpliq
+  use MOD_Const_Physical, only : cpice,cpliq
   implicit none
 
   integer, INTENT(in) :: lb       ! lower bound of array
   integer, INTENT(in) :: nl_soil  ! upper bound of array
-  integer, INTENT(in) :: patchtype! land water type (0=soil, 1=urban, 2=wetland, 
+  integer, INTENT(in) :: patchtype! land water type (0=soil, 1=urban, 2=wetland,
   real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil soilds [J/(m3 K)]
   real(r8), INTENT(in) :: porsl(1:nl_soil)  ! soil porosity
   real(r8), INTENT(in) :: wice_soisno(lb:nl_soil)  ! ice lens [kg/m2]
@@ -71,11 +71,11 @@ MODULE MOD_SoilThermalParameters
         cv(:0) = cpliq*wliq_soisno(:0) + cpice*wice_soisno(:0)
       endif
 
-  end subroutine hCapacity 
+  end subroutine hCapacity
 
 
 
-  subroutine hConductivity (patchtype,lb,nl_soil,& 
+  subroutine hConductivity (patchtype,lb,nl_soil,&
                             dkdry,dksatu,porsl,dz_soisno,z_soisno,zi_soisno,t_soisno,wice_soisno,wliq_soisno,tk,tktopsoil)
 
 !-----------------------------------------------------------------------
@@ -95,12 +95,12 @@ MODULE MOD_SoilThermalParameters
 ! REVISION HISTORY:
 ! 07/19/2014, Yongjiu Dai: treat the wetland as soil column instead of water
 !                          body.
-! 08/16/2014, Nan Wei: recalculate the heat conductivity of soil layers 
+! 08/16/2014, Nan Wei: recalculate the heat conductivity of soil layers
 !                      underneath the lake
 !-----------------------------------------------------------------------
 
   use precision
-  use PhysicalConstants, only : denh2o,denice,tfrz,tkwat,tkice,tkair
+  use MOD_Const_Physical, only : denh2o,denice,tfrz,tkwat,tkice,tkair
   implicit none
 
   integer, INTENT(in) :: lb       ! lower bound of array
@@ -141,8 +141,8 @@ MODULE MOD_SoilThermalParameters
             if(porsl(i)>1.e-05 .and. (wice_soisno(i)+wliq_soisno(i)) > 0.0)then
                satw = (wliq_soisno(i)/denh2o+wice_soisno(i)/denice)/(dz_soisno(i)*porsl(i))
                satw = min(1., satw)
-               if(satw>.1e-6)then  
-                  if (patchtype==4) satw = 1.        
+               if(satw>.1e-6)then
+                  if (patchtype==4) satw = 1.
                   fl = wliq_soisno(i)/(wice_soisno(i)+wliq_soisno(i))
                   if(t_soisno(i) >= tfrz) then  ! Unfrozen soil
                      dke = log10(satw) + 1.0
@@ -195,12 +195,12 @@ MODULE MOD_SoilThermalParameters
 ! Thermal conductivity at the layer interface
       do i = lb, nl_soil-1
 
-! the following consideration is try to avoid the snow conductivity 
-! to be dominant in the thermal conductivity of the interface. 
-! Because when the distance of bottom snow node to the interfacee 
+! the following consideration is try to avoid the snow conductivity
+! to be dominant in the thermal conductivity of the interface.
+! Because when the distance of bottom snow node to the interfacee
 ! is larger than that of interface to top soil node,
-! the snow thermal conductivity will be dominant, and the result is that 
-! lees heat tranfer between snow and soil 
+! the snow thermal conductivity will be dominant, and the result is that
+! lees heat tranfer between snow and soil
 
 ! modified by Nan Wei, 08/25/2014
             if (patchtype<=3) then                                       ! soil ground and wetland
@@ -212,7 +212,7 @@ MODULE MOD_SoilThermalParameters
                   /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
                endif
             else                                                          ! lake
-               if (i /= 0) then 
+               if (i /= 0) then
                   tk(i) = thk(i)*thk(i+1)*(z_soisno(i+1)-z_soisno(i)) &
                   /(thk(i)*(z_soisno(i+1)-zi_soisno(i))+thk(i+1)*(zi_soisno(i)-z_soisno(i)))
                else if (i == 0 .and. i>=lb) then

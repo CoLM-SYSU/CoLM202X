@@ -65,7 +65,7 @@ CONTAINS
 ! Allocates memory for CoLM Plant Community (PC) 1D [numpc] variables
 ! ------------------------------------------------------
       USE precision
-      USE GlobalVars
+      USE MOD_Vars_Global
       USE spmd_task
       USE mod_landpc
       IMPLICIT NONE
@@ -101,7 +101,7 @@ CONTAINS
 
    SUBROUTINE READ_PCTimeVars (file_restart)
 
-      USE GlobalVars
+      USE MOD_Vars_Global
       use mod_namelist
       use ncio_vector
       USE mod_landpc
@@ -136,7 +136,7 @@ CONTAINS
 
    SUBROUTINE WRITE_PCTimeVars (file_restart)
 
-     USE GlobalVars
+     USE MOD_Vars_Global
      use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpc
      use ncio_vector

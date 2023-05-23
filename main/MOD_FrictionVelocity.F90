@@ -35,7 +35,7 @@ MODULE MOD_FrictionVelocity
 ! ======================================================================
 
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -188,7 +188,7 @@ MODULE MOD_FrictionVelocity
 ! ======================================================================
 
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -379,7 +379,7 @@ MODULE MOD_FrictionVelocity
 ! Created by Hua Yuan, 09/2017
 !
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -430,7 +430,7 @@ MODULE MOD_FrictionVelocity
 !
 
   use precision
-  use PhysicalConstants, only : vonkar
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -496,7 +496,7 @@ MODULE MOD_FrictionVelocity
 ! ======================================================================
 
    use precision
-   use PhysicalConstants, only : grav, vonkar
+   use MOD_Const_Physical, only : grav, vonkar
    implicit none
 
 ! Dummy argument

@@ -9,7 +9,7 @@ MODULE MOD_Vars_2DFluxes
 !---------------------------------------------------------------------
 
    use mod_data_type
-   USE GlobalVars
+   USE MOD_Vars_Global
 #ifdef BGC
    USE MOD_BGC_Vars_2DFluxes
 #endif
