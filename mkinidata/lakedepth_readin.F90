@@ -10,11 +10,11 @@ SUBROUTINE lakedepth_readin (dir_landdata)
 !------------------------------------------------------------------------------------------
 
    use precision
-   USE GlobalVars, only : nl_lake
+   USE MOD_Vars_Global, only : nl_lake
    use spmd_task
    use mod_landpatch
    use ncio_vector
-   use MOD_TimeInvariants, only : lakedepth, dz_lake
+   use MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif

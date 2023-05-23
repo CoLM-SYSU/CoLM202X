@@ -34,7 +34,7 @@ CONTAINS
       USE mod_mesh,      only : numelm
       USE mod_landhru,   only : numhru
       USE mod_landpatch, only : numpatch
-      USE MOD_1D_Fluxes
+      USE MOD_Vars_1DFluxes
       USE MOD_1D_HydroFluxes
       USE MOD_HydroTimeVars
       USE mod_colm_debug
@@ -105,7 +105,7 @@ CONTAINS
 
       ENDIF
       
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       if (p_is_worker .and. (p_iam_worker == 0)) then
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
       end if
@@ -138,10 +138,10 @@ CONTAINS
       
       USE mod_mesh
       USE mod_landpatch
-      USE GlobalVars, only : nl_soil
-      USE MOD_1D_Forcing,    only : forc_prc,    forc_prl
-      USE MOD_1D_Fluxes,     only : fevpa,       rnof,        rsur
-      USE MOD_TimeVariables, only : wliq_soisno, wice_soisno, ldew, scv, wa 
+      USE MOD_Vars_Global, only : nl_soil
+      USE MOD_Vars_1DForcing,    only : forc_prc,    forc_prl
+      USE MOD_Vars_1DFluxes,     only : fevpa,       rnof,        rsur
+      USE MOD_Vars_TimeVariables, only : wliq_soisno, wice_soisno, ldew, scv, wa 
       IMPLICIT NONE
 
       INTEGER , pointer :: ihru_p  (:)

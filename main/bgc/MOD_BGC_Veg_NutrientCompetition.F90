@@ -17,14 +17,14 @@ module MOD_BGC_Veg_NutrientCompetition
 
   ! 
     use precision
-    use PFT_Const, only: &
+    use MOD_Vars_PFTConst, only: &
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2, &
 ! crop variables
         astemf, arooti, arootf, fleafi, bfact, declfact, allconss, allconsl, fleafcn, fstemcn, ffrootcn, &
         lfemerg, grnfill
     
-    use MOD_PFTimeInvars, only: pftclass, pftfrac
+    use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
 
     use MOD_BGC_Vars_PFTimeVars, only: &
         xsmrpool_p, retransn_p, &
@@ -36,12 +36,12 @@ module MOD_BGC_Veg_NutrientCompetition
 #endif
         c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
         leafc_p, livestemc_p, frootc_p
-    use GlobalVars, only: nwwheat, nirrig_wwheat 
+    use MOD_Vars_Global, only: nwwheat, nirrig_wwheat 
 
     use MOD_BGC_Vars_TimeVars, only: fpg 
-    use GlobalVars, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
+    use MOD_Vars_Global, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
 
-    use MOD_1D_PFTFluxes, only: assim_p
+    use MOD_Vars_1DPFTFluxes, only: assim_p
 
     use MOD_BGC_Vars_1DPFTFluxes, only: &
         leaf_xsmr_p, froot_xsmr_p, livestem_xsmr_p, livecroot_xsmr_p, grain_xsmr_p, cpool_to_xsmrpool_p, &

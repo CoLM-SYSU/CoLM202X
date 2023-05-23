@@ -13,7 +13,7 @@ MODULE mod_colm_debug
    ! 
    ! Created by Shupeng Zhang, May 2023
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    IMPLICIT NONE
 
    interface check_block_data

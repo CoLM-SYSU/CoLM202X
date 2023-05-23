@@ -31,7 +31,7 @@ SUBROUTINE aggregation_lakedepth ( &
    USE mod_landpatch
    USE ncio_vector
    USE ncio_block
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
@@ -137,7 +137,7 @@ SUBROUTINE aggregation_lakedepth ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 

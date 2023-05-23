@@ -22,17 +22,17 @@ EXECUTABLE = hist_concatenate.x srfdata_concatenate.x post_vector2grid.x
 .DEFAULT :
 
 
-OBJS_SHARED = \
-				  ../share/precision.o \
-				  ../share/MathConstants.o \
-				  ../share/spmd_task.o \
-				  ../share/mod_utils.o \
-				  ../share/timemanager.o \
-				  ../share/GlobalVars.o \
-				  ../share/mod_namelist.o \
-				  ../share/ncio_serial.o \
-				  ../share/mod_block.o \
-				  ../share/mod_grid.o 
+OBJS_SHARED =                       \
+	  ../share/precision.o      \
+	  ../share/MathConstants.o  \
+	  ../share/spmd_task.o      \
+	  ../share/mod_utils.o      \
+	  ../share/timemanager.o    \
+	  ../main/MOD_Vars_Global.o \
+	  ../share/mod_namelist.o   \
+	  ../share/ncio_serial.o    \
+	  ../share/mod_block.o      \
+	  ../share/mod_grid.o
 
 OBJS1 = mod_concatenate.o hist_concatenate.o
 OBJS2 = mod_vector2grid.o post_vector2grid.o

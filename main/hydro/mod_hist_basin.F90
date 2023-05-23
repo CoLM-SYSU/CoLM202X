@@ -6,7 +6,7 @@ module mod_hist_basin
    use precision
    USE spmd_task
    USE ncio_serial
-   USE GlobalVars,  only : spval
+   USE MOD_Vars_Global,  only : spval
    USE mod_mesh,    only : numelm
    USE mod_landhru, only : numhru
    USE MOD_HydroTimeVars
@@ -199,7 +199,7 @@ CONTAINS
       use spmd_task
       USE mod_mesh,    only : numelm
       use mod_landhru, only : numhru
-      use GlobalVars,  only : spval 
+      use MOD_Vars_Global,  only : spval 
       implicit none
 
       INTEGER :: numbasin
@@ -260,7 +260,7 @@ CONTAINS
    SUBROUTINE acc1d_basin (var, s)
       
       use precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 

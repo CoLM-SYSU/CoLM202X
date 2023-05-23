@@ -1,34 +1,29 @@
 #include <define.h>
 #ifdef CROP
 SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdata)
-   ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
+   ! -----------------------------------------------------------------------------------
+   ! !DESCRIPTION:
+   ! Aggregate crop data (a. planting date data, b. fertilization data) from CLM5 model
    !
-   ! 2. Global Plant Leaf Area Index
-   !    (http://globalchange.bnu.edu.cn)
-   !    Yuan H., et al., 2011:
-   !    Reprocessing the MODIS Leaf Area Index products for land surface
-   !    and climate modelling. Remote Sensing of Environment, 115: 1171-1187.
-   !
-   ! Created by Yongjiu Dai, 02/2014
-   !
+   ! !ORIGINAL:
+   ! Xingjie Lu and Shupeng Zhang, 2022
    !
    ! ----------------------------------------------------------------------
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid
    USE mod_landpatch
    USE ncio_block
    USE ncio_vector
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    USE mod_colm_debug
 #endif
 
    USE mod_aggregation
 
-   USE LC_Const
+   USE MOD_Vars_LCConst
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
@@ -150,7 +145,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
       CALL check_vector_data ('plant date value for rice2 '//trim(c3), plantdate_rice2_patches)
 #endif
 
@@ -289,7 +284,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('plantdate_pfts value '//trim(c4), plantdate_pfts)
    endif
@@ -423,7 +418,7 @@ SUBROUTINE aggregation_crop_parameters (gridcrop, dir_rawdata, dir_model_landdat
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    if(p_is_worker)then
       CALL check_vector_data ('fert nitro value '//trim(c4), fertnitro_pfts)
    endif

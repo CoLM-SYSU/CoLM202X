@@ -8,7 +8,7 @@
     !-----------------------------------------------------------------------------------------------------------
     ! !DESCRIPTION:
     ! The trunk subroutine of the CoLM biogeochemistry module. The bgc_driver link different bgc processes, and
-    ! sequentially run each process step by step. bgc_driver was called by CLMDRIVER includes vegetation
+    ! sequentially run each process step by step. bgc_driver was called by CoLMDRIVER includes vegetation
     ! and soil CN cycle processes.
     ! 
     !
@@ -26,8 +26,8 @@
 
 
     use precision
-    use PhysicalConstants, only : tfrz, denh2o, denice
-    use MOD_PFTimeInvars, only: pftfrac
+    use MOD_Vars_PhysicalConst, only : tfrz, denh2o, denice
+    use MOD_Vars_PFTimeInvars, only: pftfrac
     use mod_landpft, only: patch_pft_s, patch_pft_e
     use MOD_BGC_Vars_1DFluxes, only: plant_ndemand, ndep_to_sminn
     use MOD_BGC_Vars_1DPFTFluxes, only: plant_ndemand_p, cpool_to_leafc_p, crop_seedc_to_leaf_p
@@ -65,7 +65,7 @@
     use MOD_BGC_Veg_CNNDynamics, only: CNNFert, CNSoyfix
 #endif
     use timemanager
-    use GlobalVars, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
+    use MOD_Vars_Global, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                         z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
     use MOD_BGC_Vars_TimeVars, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr

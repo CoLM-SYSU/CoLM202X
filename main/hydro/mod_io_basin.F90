@@ -18,7 +18,7 @@ CONTAINS
       use mod_namelist
       USE mod_data_type
       USE ncio_serial
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       character(len=*), intent(in) :: file_basin

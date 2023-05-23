@@ -56,26 +56,27 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 !=======================================================================
 
   USE precision
-  USE PhysicalConstants, only: tfrz
-  USE MOD_TimeVariables, only: tlai, tsai, dpond
-  USE PFT_Const, only: isevg, woody, leafcn, deadwdcn
+  USE MOD_Vars_PhysicalConst, only: tfrz
+  USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
+  USE MOD_Vars_PFTConst, only: isevg, woody, leafcn, deadwdcn
 #ifdef USE_DEPTH_TO_BEDROCK
-  USE MOD_TimeInvariants, only : ibedrock, dbedrock
+  USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #endif
 #if(defined PFT_CLASSIFICATION)
   USE mod_landpft, only : patch_pft_s, patch_pft_e
-  USE MOD_PFTimeInvars
-  USE MOD_PFTimeVars
+  USE MOD_Vars_PFTimeInvars
+  USE MOD_Vars_PFTimeVars
 #endif
 #if(defined PC_CLASSIFICATION)
   USE mod_landpc
-  USE MOD_PCTimeInvars
-  USE MOD_PCTimeVars
+  USE MOD_Vars_PCTimeInvars
+  USE MOD_Vars_PCTimeVars
 #endif
-  USE GlobalVars
-  USE ALBEDO
+  USE MOD_Vars_Global
+  USE MOD_Albedo
   USE mod_namelist
   USE mod_soil_water
+  USE MOD_SnowFraction
 
   IMPLICIT NONE
 
@@ -430,10 +431,10 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
      ELSE
         IF (patchtype /= 3) THEN
            CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
-              zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms) 
+              zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
         ENDIF
      ENDIF
-           
+
      dpond = 0.
 
 ! snow temperature and water content
