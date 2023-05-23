@@ -12,14 +12,14 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !=======================================================================
 
  use precision
- use PhysicalConstants, only: tfrz, rgas, vonkar
- USE GlobalVars
- USE LC_Const
+ use MOD_Const_Physical, only: tfrz, rgas, vonkar
+ USE MOD_Const_LC
+ USE MOD_Vars_Global
  use MOD_Vars_TimeInvariants
  use MOD_Vars_TimeVariables
  use MOD_Vars_1DForcing
  use MOD_Vars_1DFluxes
- USE MOD_LandPatch, only : numpatch
+ USE MOD_LandPatch, only: numpatch
  USE MOD_LandUrban, only: patch2urban
  USE mod_namelist, only : DEF_forcing
  USE MOD_Forcing, only : forcmask
@@ -99,28 +99,30 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
         ck(m),                                                              &
 #endif
-        slti(m),         hlti(m),                                           &
-        shti(m),         hhti(m),         trda(m),         trdm(m),         &
-        trop(m),         gradm(m),        binter(m),       extkn(m),        &
-        chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
+         slti(m),         hlti(m),                                           &
+         shti(m),         hhti(m),         trda(m),         trdm(m),         &
+         trop(m),         gradm(m),        binter(m),       extkn(m),        &
+         chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
 
-      ! ATMOSPHERIC FORCING
-        forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
-        forc_t(i),       forc_q(i),       forc_prc(i),     forc_prl(i),     &
-        forc_rain(i),    forc_snow(i),    forc_psrf(i),    forc_pbot(i),    &
-        forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
-        forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
-        forc_rhoair(i),                                                     &
+       ! ATMOSPHERIC FORCING
+         forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
+         forc_t(i),       forc_q(i),       forc_prc(i),     forc_prl(i),     &
+         forc_rain(i), forc_snow(i), forc_psrf(i), forc_pbot(i), &
+         forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
+         forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
+         forc_rhoair(i),                                                     &
+       ! CBL height forcing
+         forc_hpbl(i),                                                       &
 
-      ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
-        z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
-        t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-        wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
-        t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
-        sag(i),          scv(i),          snowdp(i),       fveg(i),         &
-        fsno(i),         sigf(i),         green(i),        lai(i),          &
-        sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
-        thermk(i),       extkb(i),        extkd(i),                         &
+       ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
+         z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
+         t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
+         wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
+         t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
+         sag(i),          scv(i),          snowdp(i),       fveg(i),         &
+         fsno(i),         sigf(i),         green(i),        lai(i),          &
+         sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
+         thermk(i),       extkb(i),        extkd(i),                         &
 #ifdef PLANT_HYDRAULIC_STRESS
         vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
 #endif
@@ -187,7 +189,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         u = patch2urban(i)
         !print *, "patch:", i, "urban:", u  !fortest only
 
-        CALL UrbanCLMMAIN ( &
+        CALL UrbanCoLMMAIN ( &
       ! MODEL RUNNING PARAMETERS
         i               ,idate           ,coszen(i)       ,deltim          ,&
         patchlonr(i)    ,patchlatr(i)    ,patchclass(i)   ,patchtype(i)    ,&
@@ -268,6 +270,16 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
         zwt(i)          ,wa(i)                                             ,&
         t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
+
+      ! SNICAR snow model related
+        snw_rds(:,i),    ssno(:,:,:,i),                                     &
+        mss_bcpho(:,i),  mss_bcphi(:,i),  mss_ocpho(:,i),  mss_ocphi(:,i),  &
+        mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
+
+#if(defined CaMa_Flood)
+      ! flood variables [mm, m2/m2, mm/s, mm/s]
+        flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &
+#endif
 
       ! additional diagnostic variables for output
         laisun(i)       ,laisha(i)                                         ,&

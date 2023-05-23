@@ -1,7 +1,7 @@
 #include <define.h>
 
 #if (defined URBAN_MODEL)
-MODULE MOD_UrbanTimeVars
+MODULE MOD_Urban_Vars_TimeVars
 
 ! -------------------------------
 ! Created by Hua Yuan, 12/2020
@@ -121,7 +121,7 @@ CONTAINS
       USE precision
       USE spmd_task
       USE MOD_LandUrban
-      USE GlobalVars
+      USE MOD_Vars_Global
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -213,7 +213,7 @@ CONTAINS
 
       USE ncio_vector
       USE MOD_LandUrban
-      USE GlobalVars
+      USE MOD_Vars_Global
 
       IMPLICIT NONE
 
@@ -301,7 +301,7 @@ CONTAINS
       USE mod_namelist, only : DEF_REST_COMPRESS_LEVEL
       USE MOD_LandUrban
       USE ncio_vector
-      USE GlobalVars
+      USE MOD_Vars_Global
       IMPLICIT NONE
 
       character(LEN=*), intent(in) :: file_restart
@@ -488,6 +488,6 @@ CONTAINS
 
    END SUBROUTINE deallocate_UrbanTimeVars
 
-END MODULE MOD_UrbanTimeVars
+END MODULE MOD_Urban_Vars_TimeVars
 ! ---------- EOP ------------
 #endif

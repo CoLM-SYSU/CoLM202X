@@ -23,7 +23,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    ! -----------------------------------------------------------------------
 
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid

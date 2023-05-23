@@ -51,6 +51,7 @@ MODULE MOD_LeafTemperaturePC
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
+              hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
 
@@ -78,12 +79,17 @@ MODULE MOD_LeafTemperaturePC
 ! REVISIONS:
 ! Xingjie Lu and Nan Wei, 01/2021: added plant hydraulic process interface
 ! Nan Wei,  01/2021: added interaction btw prec and canopy
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -198,6 +204,8 @@ MODULE MOD_LeafTemperaturePC
         gs0sun(npft),           &!
         gs0sha(npft)
 #endif
+  REAL(r8), intent(in) :: &
+        hpbl        ! atmospheric boundary layer height [m]
 
   REAL(r8), dimension(npft), intent(inout) :: &
         tl,         &! leaf temperature [K]
@@ -844,10 +852,16 @@ MODULE MOD_LeafTemperaturePC
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
 
-          CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
-                          displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
-                          htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
-
+          if (DEF_USE_CBL_HEIGHT) then	
+             CALL moninobukm_leddy(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+                                  displa_lay(toplay),z0m_lay(toplay), hpbl, ustar,fh2m,fq2m, &
+                                  htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+          else
+             CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
+                            displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
+                            htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+          endif
+ 
 ! Aerodynamic resistance
           ! 09/16/2017:
           ! note that for ram, it is the resistance from Href to z0mv+displa
@@ -1531,6 +1545,9 @@ MODULE MOD_LeafTemperaturePC
           IF(zeta .ge. 0.)THEN
              um = max(ur,.1)
           ELSE
+             if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+               zii = max(5.*hu,hpbl)
+             endif !//TODO: Shaofeng, 2023.05.18
              wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
              wc2 = beta*beta*(wc*wc)
              um = sqrt(ur*ur+wc2)
@@ -2300,7 +2317,7 @@ MODULE MOD_LeafTemperaturePC
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Const_Physical, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai

@@ -9,7 +9,7 @@ MODULE MOD_Vars_2DFluxes
 !---------------------------------------------------------------------
 
    use mod_data_type
-   USE GlobalVars
+   USE MOD_Vars_Global
 #ifdef BGC
    USE MOD_BGC_Vars_2DFluxes
 #endif
@@ -157,7 +157,8 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_xy_rain    ! rain [mm/s]
    type(block_data_real8_2d) :: f_xy_snow    ! snow [mm/s]
    type(block_data_real8_2d) :: f_xy_ozone   ! ozone concentration [mol/mol]
-
+   type(block_data_real8_2d) :: f_xy_hpbl    ! height of planetary boundary layer [m]
+   
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Fluxes
 
@@ -324,6 +325,7 @@ CONTAINS
          call allocate_block_data (grid, f_xy_rain   )  ! rain [mm/s]
          call allocate_block_data (grid, f_xy_snow   )  ! snow [mm/s]
          call allocate_block_data (grid, f_xy_ozone  )  ! ozone concentration [mol/mol]
+		 call allocate_block_data (grid, f_xy_hpbl   )  ! height of planetary boundary layer [m]
 
       end if
 

@@ -30,16 +30,19 @@ MODULE MOD_Initialize
       !
       ! ======================================================================
       use precision
-      USE GlobalVars
+      USE MOD_Vars_Global
       use mod_namelist
       use spmd_task
       use mod_pixel
       use MOD_LandPatch
 #ifdef URBAN_MODEL
       use MOD_LandUrban
-      USE UrbanALBEDO
+      USE MOD_UrbanIniTimeVar
+      USE MOD_UrbanReadin
+      USE MOD_Urban_LAIReadin
+      USE MOD_Urban_Albedo
 #endif
-      use PhysicalConstants
+      use MOD_Const_Physical
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
@@ -52,8 +55,8 @@ MODULE MOD_Initialize
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
 #endif
-      USE LC_Const
-      USE MOD_Vars_PFTConst
+      USE MOD_Const_LC
+      USE MOD_Const_PFT
       use timemanager
 
       use mod_grid
@@ -87,10 +90,6 @@ MODULE MOD_Initialize
 #endif
       USE MOD_HtopReadin
       USE MOD_IniTimeVar
-#ifdef URBAN_MODEL
-      USE MOD_IniTimeVarUrban
-      USE MOD_UrbanReadin
-#endif
       USE MOD_LakeDepthReadin
       USE MOD_PercentagesPFTReadin
       USE MOD_SoilParametersReadin

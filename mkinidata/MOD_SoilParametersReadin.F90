@@ -33,7 +33,7 @@ MODULE MOD_SoilParametersReadin
    !------------------------------------------------------------------------------------------
 
       use precision
-      USE GlobalVars, only : nl_soil
+      USE MOD_Vars_Global, only : nl_soil
       use spmd_task
       use ncio_vector
       use MOD_LandPatch

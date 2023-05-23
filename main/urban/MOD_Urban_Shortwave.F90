@@ -1,10 +1,10 @@
 #include <define.h>
 
-MODULE UrbanShortwave
+MODULE MOD_Urban_Shortwave
 
   USE precision
-  USE GlobalVars
   USE MOD_LandUrban
+  USE MOD_Vars_Global
   USE MOD_ThreeDCanopy, only: tee, phi
 
   IMPLICIT NONE
@@ -18,8 +18,6 @@ MODULE UrbanShortwave
   PUBLIC :: ShadowWall_dir          !Shadow of wall for direct radiation
   PUBLIC :: ShadowWall_dif          !Shadow of wall for diffuse radiation
   PUBLIC :: ShadowTree              !Shadow of trees
-
-!  REAL(r8), external :: tee         !Direct transmittance of vegetation for spheric crowns
 
 CONTAINS
 
@@ -691,4 +689,4 @@ CONTAINS
      ENDIF
   END FUNCTION MatrixInverse
 
-END MODULE UrbanShortwave
+END MODULE MOD_Urban_Shortwave

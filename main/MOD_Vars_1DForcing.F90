@@ -52,6 +52,8 @@ SAVE
   REAL(r8), allocatable :: forc_hgt_elm   (:) ! atmospheric reference height [m]
 #endif
 
+  REAL(r8), allocatable :: forc_hpbl  (:) ! atmospheric boundary layer height [m]
+
   ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Forcing
   PUBLIC :: deallocate_1D_Forcing
@@ -101,6 +103,8 @@ SAVE
         allocate (forc_topo   (numpatch) ) ! topography [m]
         allocate (forc_th     (numpatch) ) ! potential temperature [K]
 #endif
+
+        allocate (forc_hpbl   (numpatch) ) ! atmospheric boundary layer height [m]
 
      ENDIF
 
@@ -161,6 +165,7 @@ SAVE
            deallocate ( forc_th     ) ! potential temperature [K]
 #endif
 
+           deallocate ( forc_hpbl   ) ! atmospheric boundary layer height [m]
         ENDIF
 
 #ifdef Forcing_Downscaling

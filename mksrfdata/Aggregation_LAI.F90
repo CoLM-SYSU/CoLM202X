@@ -15,7 +15,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    !
    ! ----------------------------------------------------------------------
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid
@@ -28,7 +28,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    USE MOD_AggregationRequestData
 
-   USE LC_Const
+   USE MOD_Const_LC
    USE mod_5x5_data
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT

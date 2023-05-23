@@ -21,7 +21,7 @@ module MOD_BGC_Veg_CNFireBase
 
 
   use precision
-  use MOD_Vars_PFTConst, only: &
+  use MOD_Const_PFT, only: &
       cc_leaf   , cc_lstem   , cc_dstem , cc_other, fm_leaf, fm_lstem, fm_lroot, fm_root, fm_droot, fm_other, &
       fr_fcel   , fr_flig    , fr_flab  , lf_fcel , lf_flig, lf_flab
   use MOD_Vars_TimeInvariants, only: &

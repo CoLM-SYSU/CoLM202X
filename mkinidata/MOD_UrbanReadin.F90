@@ -28,12 +28,12 @@ MODULE MOD_UrbanReadin
 
       USE precision
       USE spmd_task
-      USE GlobalVars
+      USE MOD_Vars_Global
       USE mod_namelist
-      USE LC_Const
+      USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
-      USE MOD_UrbanTimeInvars
+      USE MOD_Urban_Vars_TimeInvars
       USE ncio_vector
       USE ncio_serial
       USE MOD_LandPatch
@@ -308,4 +308,5 @@ MODULE MOD_UrbanReadin
    END SUBROUTINE Urban_readin
 
 END MODULE MOD_UrbanReadin
+
 #endif

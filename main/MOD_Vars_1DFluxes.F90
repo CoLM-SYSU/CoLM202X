@@ -19,7 +19,7 @@ MODULE MOD_Vars_1DFluxes
   USE MOD_1D_HydroFluxes
 #endif
 #ifdef URBAN_MODEL
-  USE MOD_1D_UrbanFluxes
+  USE MOD_Urban_Vars_1DFluxes
 #endif
   IMPLICIT NONE
   SAVE
@@ -93,7 +93,7 @@ MODULE MOD_Vars_1DFluxes
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE precision
-     USE GlobalVars
+     USE MOD_Vars_Global
      USE spmd_task
      USE MOD_LandPatch
      IMPLICIT NONE

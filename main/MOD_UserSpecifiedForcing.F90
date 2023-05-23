@@ -87,9 +87,13 @@ CONTAINS
       implicit none
 
       ! Local variables
-      integer :: ivar
+      integer :: ivar,NVAR_default
 
       NVAR = DEF_forcing%NVAR
+      NVAR_default=NVAR
+      if (DEF_USE_CBL_HEIGHT) then
+         NVAR=NVAR+1
+      endif
 
       allocate (dtime  (NVAR))
       allocate (offset (NVAR))
@@ -120,13 +124,19 @@ CONTAINS
 
       groupby          = DEF_forcing%groupby          ! file grouped by year/month
 
-      do ivar = 1, NVAR
+      do ivar = 1, NVAR_default
          fprefix (ivar) = DEF_forcing%fprefix(ivar)  ! file prefix
          vname   (ivar) = DEF_forcing%vname(ivar)    ! variable name
          tintalgo(ivar) = DEF_forcing%tintalgo(ivar) ! interpolation algorithm
       end do
-
-   end subroutine init_user_specified_forcing
+      if (DEF_USE_CBL_HEIGHT) then
+         fprefix (NVAR) = DEF_forcing%CBL_fprefix
+         vname   (NVAR) = DEF_forcing%CBL_vname
+         tintalgo(NVAR) = DEF_forcing%CBL_tintalgo
+         dtime(NVAR)    = DEF_forcing%CBL_dtime
+         offset(NVAR)   = DEF_forcing%CBL_offset
+      endif
+   end subroutine init_user_specified_forcing 
 
    ! ----------------
    FUNCTION metfilename(year, month, day, var_i)
@@ -547,14 +557,19 @@ CONTAINS
       case ('POINT')
          metfilename = '/'//trim(fprefix(1))
       end select
-
+   if (DEF_USE_CBL_HEIGHT) then 
+      select case (var_i)
+      case (9)
+         metfilename = '/'//trim(fprefix(9))//'_'//trim(yearstr)//'_'//trim(monthstr)//'_boundary_layer_height.nc4'
+      END select
+   endif
    END FUNCTION metfilename
 
  ! preprocess for forcing data [not applicable yet for PRINCETON]
  ! ------------------------------------------------------------
    SUBROUTINE metpreprocess(grid, forcn)
 
-      use PhysicalConstants
+      use MOD_Const_Physical
       use mod_namelist
       use spmd_task
       use mod_block

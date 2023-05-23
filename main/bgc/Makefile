@@ -41,7 +41,7 @@ OBJS_MKSRFDATA = \
 				  ../../mksrfdata/MOD_LandPFT.o
 
 OBJS_MAIN =  \
-		  ../MOD_Vars_PFTConst.o \
+		  ../MOD_Const_PFT.o \
 		  ../MOD_Vars_PFTimeVars.o \
 		  ../MOD_Vars_PFTimeInvars.o \
 		  ../MOD_Vars_PCTimeVars.o \

@@ -1,7 +1,7 @@
 #include <define.h>
 
 #if (defined URBAN_MODEL)
-MODULE MOD_1D_UrbanFluxes
+MODULE MOD_Urban_Vars_1DFluxes
 
 ! -------------------------------
 ! Created by Hua Yuan, 12/2020
@@ -109,6 +109,6 @@ CONTAINS
 
   END SUBROUTINE deallocate_1D_UrbanFluxes
 
-END MODULE MOD_1D_UrbanFluxes
+END MODULE MOD_Urban_Vars_1DFluxes
 #endif
 ! ---------- EOP ------------

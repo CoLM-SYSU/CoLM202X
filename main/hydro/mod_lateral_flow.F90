@@ -2,7 +2,7 @@
 
 #ifdef LATERAL_FLOW
 MODULE mod_lateral_flow
-   
+
    USE precision
    USE spmd_task
    USE mod_drainage_network
@@ -11,7 +11,7 @@ MODULE mod_lateral_flow
    USE mod_surface_runoff
    USE mod_subsurface_runoff
    USE mod_river_flow
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    INTEGER, parameter :: nsubstep = 20
 
@@ -44,12 +44,12 @@ CONTAINS
 
       ! Local Variables
       INTEGER :: nriver
-      INTEGER :: istep 
+      INTEGER :: istep
 
       IF (p_is_worker) THEN
-         
+
          nriver = numelm
-         
+
          IF (nriver > 0) THEN
             riverheight_ta(:) = 0
             rivermomtem_ta(:) = 0
@@ -72,12 +72,12 @@ CONTAINS
             CALL river_flow     (deltime/nsubstep)
 
          ENDDO
-         
+
          IF (nriver > 0) THEN
             riverheight_ta(:) = riverheight_ta(:) / deltime
             rivermomtem_ta(:) = rivermomtem_ta(:) / deltime
 
-            where (riverheight_ta > 0) 
+            where (riverheight_ta > 0)
                riverveloct_ta = rivermomtem_ta / riverheight_ta
             ELSE where
                riverveloct_ta = 0
@@ -95,7 +95,7 @@ CONTAINS
             END where
 
             rsurf_hru(:) = rsurf_hru(:) / deltime
-         ENDIF 
+         ENDIF
 
          IF (numpatch > 0) THEN
             rsur(:) = rsur(:) / deltime
@@ -104,7 +104,7 @@ CONTAINS
          CALL subsurface_runoff (deltime)
 
       ENDIF
-      
+
 #ifdef CoLMDEBUG
       if (p_is_worker .and. (p_iam_worker == 0)) then
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
@@ -114,8 +114,8 @@ CONTAINS
       CALL check_vector_data ('River Velocity        ', riverveloct)
       CALL check_vector_data ('Surface Water Depth   ', dpond_hru)
       CALL check_vector_data ('Surface Water Velocity', veloc_hru)
-      CALL check_vector_data ('Surface Runoff        ', rsur) 
-      CALL check_vector_data ('Depth to Water Table  ', zwt_hru) 
+      CALL check_vector_data ('Surface Runoff        ', rsur)
+      CALL check_vector_data ('Depth to Water Table  ', zwt_hru)
       CALL check_vector_data ('Subsurface runoff     ', rsubs_pch)
 
 #endif
@@ -135,13 +135,13 @@ CONTAINS
 
    ! ----------
    SUBROUTINE check_catchment_water_inout ()
-      
+
       USE mod_mesh
       USE MOD_LandPatch
-      USE GlobalVars, only : nl_soil
+      USE MOD_Vars_Global, only : nl_soil
       USE MOD_Vars_1DForcing,    only : forc_prc,    forc_prl
       USE MOD_Vars_1DFluxes,     only : fevpa,       rnof,        rsur
-      USE MOD_Vars_TimeVariables, only : wliq_soisno, wice_soisno, ldew, scv, wa 
+      USE MOD_Vars_TimeVariables, only : wliq_soisno, wice_soisno, ldew, scv, wa
       IMPLICIT NONE
 
       INTEGER , pointer :: ihru_p  (:)
@@ -162,7 +162,7 @@ CONTAINS
       INTEGER :: numbasin, nhru, ibasin, ih, istt, iend, ilev
 
       area_all  = 0.
-      precp_all = 0. 
+      precp_all = 0.
       ldew_all  = 0.
       scv_all   = 0.
       evpa_all  = 0.
@@ -170,7 +170,7 @@ CONTAINS
       rnof_all  = 0.
       wsoi_all  = 0.
       wa_all    = 0.
-      
+
       IF (p_is_worker) THEN
 
          numbasin = numelm
@@ -182,7 +182,7 @@ CONTAINS
             area_p => drainagenetwork(ibasin)%area
 
             area_cat  = 0.
-            precp_cat = 0. 
+            precp_cat = 0.
             ldew_cat  = 0.
             scv_cat   = 0.
             evpa_cat  = 0.
@@ -217,7 +217,7 @@ CONTAINS
 
          ENDDO
       ENDIF
-   
+
       100 format('CAT ', I8.8, ', Precp ', E12.4, ', Evpa ', E12.4, ', Rsurf ', E12.4, ', Rsub ', E12.4)
 
    END SUBROUTINE check_catchment_water_inout

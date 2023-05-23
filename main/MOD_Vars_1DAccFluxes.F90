@@ -7,7 +7,7 @@ module MOD_Vars_1DAccFluxes
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
 
-   real(r8), allocatable :: a_us     (:)  
+   real(r8), allocatable :: a_us     (:)
    real(r8), allocatable :: a_vs     (:)
    real(r8), allocatable :: a_t      (:)
    real(r8), allocatable :: a_q      (:)
@@ -16,6 +16,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_pbot   (:)
    real(r8), allocatable :: a_frl    (:)
    real(r8), allocatable :: a_solarin(:)
+   real(r8), allocatable :: a_hpbl   (:)
 
    real(r8), allocatable :: a_taux   (:)
    real(r8), allocatable :: a_tauy   (:)
@@ -28,8 +29,8 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fseng  (:)
    real(r8), allocatable :: a_fevpg  (:)
    real(r8), allocatable :: a_fgrnd  (:)
-   real(r8), allocatable :: a_sabvsun(:)  
-   real(r8), allocatable :: a_sabvsha(:) 
+   real(r8), allocatable :: a_sabvsun(:)
+   real(r8), allocatable :: a_sabvsha(:)
    real(r8), allocatable :: a_sabg   (:)
    real(r8), allocatable :: a_olrg   (:)
    real(r8), allocatable :: a_rnet   (:)
@@ -54,22 +55,22 @@ module MOD_Vars_1DAccFluxes
 
    real(r8), allocatable :: a_qcharge(:)
 
-   real(r8), allocatable :: a_t_grnd(:) 
-   real(r8), allocatable :: a_tleaf (:) 
-   real(r8), allocatable :: a_ldew  (:) 
-   real(r8), allocatable :: a_ldew_rain  (:) 
-   real(r8), allocatable :: a_ldew_snow  (:) 
-   real(r8), allocatable :: a_scv   (:) 
-   real(r8), allocatable :: a_snowdp(:) 
-   real(r8), allocatable :: a_fsno  (:) 
-   real(r8), allocatable :: a_sigf  (:) 
-   real(r8), allocatable :: a_green (:) 
-   real(r8), allocatable :: a_lai   (:) 
-   real(r8), allocatable :: a_laisun(:) 
-   real(r8), allocatable :: a_laisha(:) 
-   real(r8), allocatable :: a_sai   (:) 
+   real(r8), allocatable :: a_t_grnd(:)
+   real(r8), allocatable :: a_tleaf (:)
+   real(r8), allocatable :: a_ldew  (:)
+   real(r8), allocatable :: a_ldew_rain  (:)
+   real(r8), allocatable :: a_ldew_snow  (:)
+   real(r8), allocatable :: a_scv   (:)
+   real(r8), allocatable :: a_snowdp(:)
+   real(r8), allocatable :: a_fsno  (:)
+   real(r8), allocatable :: a_sigf  (:)
+   real(r8), allocatable :: a_green (:)
+   real(r8), allocatable :: a_lai   (:)
+   real(r8), allocatable :: a_laisun(:)
+   real(r8), allocatable :: a_laisha(:)
+   real(r8), allocatable :: a_sai   (:)
 
-   real(r8), allocatable :: a_alb(:,:,:)    
+   real(r8), allocatable :: a_alb(:,:,:)
 
    real(r8), allocatable :: a_emis (:)
    real(r8), allocatable :: a_z0m  (:)
@@ -77,7 +78,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_tref (:)
    real(r8), allocatable :: a_qref (:)
    real(r8), allocatable :: a_rain (:)
-   real(r8), allocatable :: a_snow (:)  
+   real(r8), allocatable :: a_snow (:)
 
 #ifdef BGC
    real(r8), allocatable :: a_leafc              (:)
@@ -227,7 +228,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_ozone              (:)
 #endif
 
-   real(r8), allocatable :: a_t_soisno    (:,:)    
+   real(r8), allocatable :: a_t_soisno    (:,:)
    real(r8), allocatable :: a_wliq_soisno (:,:)
    real(r8), allocatable :: a_wice_soisno (:,:)
    real(r8), allocatable :: a_h2osoi      (:,:)
@@ -238,8 +239,8 @@ module MOD_Vars_1DAccFluxes
 #ifdef PLANT_HYDRAULIC_STRESS
    real(r8), allocatable :: a_vegwp       (:,:)
 #endif
-   real(r8), allocatable :: a_t_lake      (:,:) 
-   real(r8), allocatable :: a_lake_icefrac(:,:) 
+   real(r8), allocatable :: a_t_lake      (:,:)
+   real(r8), allocatable :: a_lake_icefrac(:,:)
 
 #ifdef BGC
    real(r8), allocatable :: a_litr1c_vr   (:,:)
@@ -260,7 +261,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
 
-   real(r8), allocatable :: a_ustar(:) 
+   real(r8), allocatable :: a_ustar(:)
    real(r8), allocatable :: a_tstar(:)
    real(r8), allocatable :: a_qstar(:)
    real(r8), allocatable :: a_zol  (:)
@@ -269,9 +270,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fh   (:)
    real(r8), allocatable :: a_fq   (:)
 
-   real(r8), allocatable :: a_us10m(:) 
-   real(r8), allocatable :: a_vs10m(:) 
-   real(r8), allocatable :: a_fm10m(:) 
+   real(r8), allocatable :: a_us10m(:)
+   real(r8), allocatable :: a_vs10m(:)
+   real(r8), allocatable :: a_fm10m(:)
 
    real(r8), allocatable :: a_sr     (:)
    real(r8), allocatable :: a_solvd  (:)
@@ -298,17 +299,17 @@ module MOD_Vars_1DAccFluxes
 
 contains
 
-   subroutine allocate_acc_fluxes 
+   subroutine allocate_acc_fluxes
 
       use spmd_task
-      USE GlobalVars
       use MOD_LandPatch, only : numpatch
+      USE MOD_Vars_Global
       implicit none
 
       if (p_is_worker) then
          if (numpatch > 0) then
 
-            allocate (a_us     (numpatch))  
+            allocate (a_us     (numpatch))
             allocate (a_vs     (numpatch))
             allocate (a_t      (numpatch))
             allocate (a_q      (numpatch))
@@ -317,6 +318,7 @@ contains
             allocate (a_pbot   (numpatch))
             allocate (a_frl    (numpatch))
             allocate (a_solarin(numpatch))
+            allocate (a_hpbl   (numpatch))
 
             allocate (a_taux      (numpatch))
             allocate (a_tauy      (numpatch))
@@ -329,8 +331,8 @@ contains
             allocate (a_fseng     (numpatch))
             allocate (a_fevpg     (numpatch))
             allocate (a_fgrnd     (numpatch))
-            allocate (a_sabvsun   (numpatch))  
-            allocate (a_sabvsha   (numpatch)) 
+            allocate (a_sabvsun   (numpatch))
+            allocate (a_sabvsha   (numpatch))
             allocate (a_sabg      (numpatch))
             allocate (a_olrg      (numpatch))
             allocate (a_rnet      (numpatch))
@@ -373,27 +375,27 @@ contains
             allocate (a_lambdasun        (numpatch)) !1
             allocate (a_lambdasha        (numpatch)) !1
             allocate (a_lambda                   (numpatch)) !1
-#endif 
+#endif
 #endif
 
             allocate (a_qcharge   (numpatch))
 
-            allocate (a_t_grnd    (numpatch)) 
-            allocate (a_tleaf     (numpatch)) 
-            allocate (a_ldew_rain (numpatch)) 
-            allocate (a_ldew_snow (numpatch)) 
-            allocate (a_ldew      (numpatch)) 
-            allocate (a_scv       (numpatch)) 
-            allocate (a_snowdp    (numpatch)) 
-            allocate (a_fsno      (numpatch)) 
-            allocate (a_sigf      (numpatch)) 
-            allocate (a_green     (numpatch)) 
-            allocate (a_lai       (numpatch)) 
-            allocate (a_laisun    (numpatch)) 
-            allocate (a_laisha    (numpatch)) 
-            allocate (a_sai       (numpatch)) 
+            allocate (a_t_grnd    (numpatch))
+            allocate (a_tleaf     (numpatch))
+            allocate (a_ldew_rain (numpatch))
+            allocate (a_ldew_snow (numpatch))
+            allocate (a_ldew      (numpatch))
+            allocate (a_scv       (numpatch))
+            allocate (a_snowdp    (numpatch))
+            allocate (a_fsno      (numpatch))
+            allocate (a_sigf      (numpatch))
+            allocate (a_green     (numpatch))
+            allocate (a_lai       (numpatch))
+            allocate (a_laisun    (numpatch))
+            allocate (a_laisha    (numpatch))
+            allocate (a_sai       (numpatch))
 
-            allocate (a_alb   (2,2,numpatch))    
+            allocate (a_alb   (2,2,numpatch))
 
             allocate (a_emis      (numpatch))
             allocate (a_z0m       (numpatch))
@@ -401,7 +403,7 @@ contains
             allocate (a_tref      (numpatch))
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
-            allocate (a_snow      (numpatch))  
+            allocate (a_snow      (numpatch))
 
 #ifdef BGC
             allocate (a_leafc              (numpatch))
@@ -529,7 +531,7 @@ contains
 #ifdef OzoneStress
             allocate (a_ozone              (numpatch))
 #endif
-            allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))    
+            allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_h2osoi      (1:nl_soil,       numpatch))
@@ -540,8 +542,8 @@ contains
 #ifdef PLANT_HYDRAULIC_STRESS
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
 #endif
-            allocate (a_t_lake      (nl_lake,numpatch)) 
-            allocate (a_lake_icefrac(nl_lake,numpatch)) 
+            allocate (a_t_lake      (nl_lake,numpatch))
+            allocate (a_lake_icefrac(nl_lake,numpatch))
 
 #ifdef BGC
             allocate (a_litr1c_vr   (1:nl_soil,       numpatch))
@@ -562,7 +564,7 @@ contains
             allocate (decomp_vr_tmp (1:nl_soil,       numpatch))
 #endif
 
-            allocate (a_ustar     (numpatch)) 
+            allocate (a_ustar     (numpatch))
             allocate (a_tstar     (numpatch))
             allocate (a_qstar     (numpatch))
             allocate (a_zol       (numpatch))
@@ -571,9 +573,9 @@ contains
             allocate (a_fh        (numpatch))
             allocate (a_fq        (numpatch))
 
-            allocate (a_us10m     (numpatch)) 
-            allocate (a_vs10m     (numpatch)) 
-            allocate (a_fm10m     (numpatch)) 
+            allocate (a_us10m     (numpatch))
+            allocate (a_vs10m     (numpatch))
+            allocate (a_fm10m     (numpatch))
 
             allocate (a_sr        (numpatch))
             allocate (a_solvd     (numpatch))
@@ -609,7 +611,7 @@ contains
       if (p_is_worker) then
          if (numpatch > 0) then
 
-            deallocate (a_us     )  
+            deallocate (a_us     )
             deallocate (a_vs     )
             deallocate (a_t      )
             deallocate (a_q      )
@@ -618,6 +620,7 @@ contains
             deallocate (a_pbot   )
             deallocate (a_frl    )
             deallocate (a_solarin)
+            deallocate (a_hpbl   )
 
             deallocate (a_taux      )
             deallocate (a_tauy      )
@@ -630,8 +633,8 @@ contains
             deallocate (a_fseng     )
             deallocate (a_fevpg     )
             deallocate (a_fgrnd     )
-            deallocate (a_sabvsun   )  
-            deallocate (a_sabvsha   ) 
+            deallocate (a_sabvsun   )
+            deallocate (a_sabvsha   )
             deallocate (a_sabg      )
             deallocate (a_olrg      )
             deallocate (a_rnet      )
@@ -657,22 +660,22 @@ contains
 
             deallocate (a_qcharge   )
 
-            deallocate (a_t_grnd    ) 
+            deallocate (a_t_grnd    )
             deallocate (a_tleaf     )
-            deallocate (a_ldew_rain ) 
-            deallocate (a_ldew_snow ) 
-            deallocate (a_ldew      ) 
-            deallocate (a_scv       ) 
-            deallocate (a_snowdp    ) 
-            deallocate (a_fsno      ) 
-            deallocate (a_sigf      ) 
-            deallocate (a_green     ) 
-            deallocate (a_lai       ) 
-            deallocate (a_laisun    ) 
-            deallocate (a_laisha    ) 
-            deallocate (a_sai       ) 
+            deallocate (a_ldew_rain )
+            deallocate (a_ldew_snow )
+            deallocate (a_ldew      )
+            deallocate (a_scv       )
+            deallocate (a_snowdp    )
+            deallocate (a_fsno      )
+            deallocate (a_sigf      )
+            deallocate (a_green     )
+            deallocate (a_lai       )
+            deallocate (a_laisun    )
+            deallocate (a_laisha    )
+            deallocate (a_sai       )
 
-            deallocate (a_alb  ) 
+            deallocate (a_alb  )
 
             deallocate (a_emis      )
             deallocate (a_z0m       )
@@ -680,7 +683,7 @@ contains
             deallocate (a_tref      )
             deallocate (a_qref      )
             deallocate (a_rain      )
-            deallocate (a_snow      )  
+            deallocate (a_snow      )
 #ifdef BGC
             deallocate (a_leafc              )
             deallocate (a_leafc_storage      )
@@ -829,10 +832,10 @@ contains
             deallocate (a_ozone              )
 #endif
 
-            deallocate (a_t_soisno    )    
+            deallocate (a_t_soisno    )
             deallocate (a_wliq_soisno )
             deallocate (a_wice_soisno )
-            deallocate (a_h2osoi      ) 
+            deallocate (a_h2osoi      )
             deallocate (a_rootr       )
             deallocate (a_BD_all      )
             deallocate (a_wfc         )
@@ -840,8 +843,8 @@ contains
 #ifdef PLANT_HYDRAULIC_STRESS
             deallocate (a_vegwp       )
 #endif
-            deallocate (a_t_lake      ) 
-            deallocate (a_lake_icefrac) 
+            deallocate (a_t_lake      )
+            deallocate (a_lake_icefrac)
 #ifdef BGC
             deallocate (a_litr1c_vr   )
             deallocate (a_litr2c_vr   )
@@ -861,7 +864,7 @@ contains
             deallocate (decomp_vr_tmp )
 #endif
 
-            deallocate (a_ustar     ) 
+            deallocate (a_ustar     )
             deallocate (a_tstar     )
             deallocate (a_qstar     )
             deallocate (a_zol       )
@@ -870,9 +873,9 @@ contains
             deallocate (a_fh        )
             deallocate (a_fq        )
 
-            deallocate (a_us10m     ) 
-            deallocate (a_vs10m     ) 
-            deallocate (a_fm10m     ) 
+            deallocate (a_us10m     )
+            deallocate (a_vs10m     )
+            deallocate (a_fm10m     )
 
             deallocate (a_sr        )
             deallocate (a_solvd     )
@@ -904,7 +907,7 @@ contains
 
       use spmd_task
       use MOD_LandPatch, only : numpatch
-      use GlobalVars,    only : spval 
+      use MOD_Vars_Global,    only : spval
       implicit none
 
       if (p_is_worker) then
@@ -923,6 +926,7 @@ contains
             a_pbot   (:) = spval
             a_frl    (:) = spval
             a_solarin(:) = spval
+            a_hpbl   (:) = spval
 
             a_taux    (:) = spval
             a_tauy    (:) = spval
@@ -976,14 +980,14 @@ contains
             a_laisun  (:) = spval
             a_laisha  (:) = spval
             a_sai     (:) = spval
-            
+
             a_alb   (:,:,:) = spval
 
             a_emis      (:) = spval
             a_z0m       (:) = spval
             a_trad      (:) = spval
             a_tref      (:) = spval
-            a_qref      (:) = spval 
+            a_qref      (:) = spval
             a_rain      (:) = spval
             a_snow      (:) = spval
 #ifdef BGC
@@ -1128,13 +1132,13 @@ contains
             a_peatf              (:) = spval
             a_hdm                (:) = spval
             a_lnfm               (:) = spval
-#endif            
+#endif
 #endif
 #ifdef OzoneStress
             a_ozone              (:) = spval
 #endif
 
-            a_t_soisno     (:,:) = spval 
+            a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
             a_wice_soisno  (:,:) = spval
             a_h2osoi       (:,:) = spval
@@ -1165,7 +1169,7 @@ contains
             a_sminn_vr     (:,:) = spval
 #endif
 
-            a_ustar (:) = spval 
+            a_ustar (:) = spval
             a_tstar (:) = spval
             a_qstar (:) = spval
             a_zol   (:) = spval
@@ -1203,9 +1207,9 @@ contains
 
    END SUBROUTINE FLUSH_acc_fluxes
 
-   SUBROUTINE accumulate_fluxes 
+   SUBROUTINE accumulate_fluxes
       ! ----------------------------------------------------------------------
-      ! perfrom the grid average mapping: average a subgrid input 1d vector 
+      ! perfrom the grid average mapping: average a subgrid input 1d vector
       ! of length numpatch to a output 2d array of length [ghist%xcnt,ghist%ycnt]
       !
       ! Created by Yongjiu Dai, 03/2014
@@ -1214,14 +1218,16 @@ contains
       use precision
       use spmd_task
       use MOD_LandPatch,     only : numpatch
-      use PhysicalConstants, only : vonkar, stefnc, cpair, rgas, grav
+      use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
+      USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_TurbulenceLEddy
       use mod_colm_debug
-      use GlobalVars
+      use MOD_Vars_Global
 #ifdef LATERAL_FLOW
       USE mod_hist_basin, only : accumulate_fluxes_basin
 #endif
@@ -1233,6 +1239,7 @@ contains
       real(r8), allocatable :: r_trad  (:)
 
       real(r8), allocatable :: r_ustar (:)
+      real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
       real(r8), allocatable :: r_qstar (:)
       real(r8), allocatable :: r_zol   (:)
@@ -1248,6 +1255,7 @@ contains
       !---------------------------------------------------------------------
       integer  ib, jb, i, j
       real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
+	  real(r8) hpbl ! atmospheric boundary layer height [m]
       real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf
       real(r8) obu,fh2m,fq2m
       real(r8) um,thvstar,beta,zii,wc,wc2
@@ -1270,6 +1278,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
+			if (DEF_USE_CBL_HEIGHT) then
+              call acc1d (forc_hpbl , a_hpbl )
+		    endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1472,7 +1483,7 @@ contains
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
             call acc1d (gddmaturity        ,   a_gddmaturity        )
-            call acc1d (gddplant           ,   a_gddplant           )           
+            call acc1d (gddplant           ,   a_gddplant           )
             call acc1d (cropprod1c         ,   a_cropprod1c         )
             call acc1d (cropprod1c_loss    ,   a_cropprod1c_loss    )
             call acc1d (cropseedc_deficit  ,   a_cropseedc_deficit  )
@@ -1595,6 +1606,7 @@ contains
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
+            allocate (r_ustar2 (numpatch)) !Shaofeng, 2023.05.20
             allocate (r_tstar (numpatch))
             allocate (r_qstar (numpatch))
             allocate (r_zol   (numpatch))
@@ -1609,7 +1621,7 @@ contains
 
             do i = 1, numpatch
 
-               z0m_av = z0m(i) 
+               z0m_av = z0m(i)
                z0h_av = z0m(i)
                z0q_av = z0m(i)
 
@@ -1651,16 +1663,26 @@ contains
                if(r_zol(i) >= 0.)then
                   um = max(ur,0.1)
                else
+                 if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                  hpbl = forc_hpbl(i)
+                  zii = max(5.*hgt_u,hpbl)
+                 endif !//TODO: Shaofeng, 2023.05.18
                   wc = (-grav*r_ustar(i)*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
                endif
 
                obu = zldis/r_zol(i)
-               call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                  obu,um,r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+               if (DEF_USE_CBL_HEIGHT) then
+			     hpbl = forc_hpbl(i)
+                 call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+		       else
+                 call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+		       endif
 
-               ! bug found by chen qiying 2013/07/01 
+               ! bug found by chen qiying 2013/07/01
                r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)
                r_rib(i) = min(5.,r_rib(i))
 
@@ -1683,6 +1705,7 @@ contains
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
+            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )
@@ -1733,7 +1756,7 @@ contains
    SUBROUTINE acc1d (var, s)
 
       use precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 
@@ -1751,14 +1774,14 @@ contains
             end if
          end if
       end do
-      
+
    END SUBROUTINE acc1d
 
    !------
    SUBROUTINE acc2d (var, s)
 
       use precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 
@@ -1785,7 +1808,7 @@ contains
    SUBROUTINE acc3d (var, s)
 
       use precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 

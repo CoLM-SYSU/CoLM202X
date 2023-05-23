@@ -11,7 +11,7 @@ MODULE MOD_Vars_PFTimeInvars
 ! -----------------------------------------------------------------
 
   USE precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
 
@@ -82,7 +82,7 @@ MODULE MOD_Vars_PFTimeInvars
      use ncio_vector
      use MOD_LandPFT
      USE mod_namelist
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      ! Local variables

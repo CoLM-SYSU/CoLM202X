@@ -6,7 +6,7 @@ module mod_hist_basin
    use precision
    USE spmd_task
    USE ncio_serial
-   USE GlobalVars,  only : spval
+   USE MOD_Vars_Global,  only : spval
    USE mod_mesh,    only : numelm
    USE MOD_LandHRU, only : numhru
    USE MOD_HydroTimeVars
@@ -34,7 +34,7 @@ module mod_hist_basin
 !--------------------------------------------------------------------------
 CONTAINS
 
-   SUBROUTINE hist_basin_init 
+   SUBROUTINE hist_basin_init
 
       IMPLICIT NONE
 
@@ -56,23 +56,23 @@ CONTAINS
             allocate ( a_veloct_riv (numbasin))
          ENDIF
       ENDIF
-      
+
       call FLUSH_acc_fluxes_basin ()
 
-   END SUBROUTINE hist_basin_init 
+   END SUBROUTINE hist_basin_init
 
    !--------------------------------------
    subroutine hist_basin_final ()
 
       implicit none
 
-      IF (allocated(a_dpond_hru )) deallocate(a_dpond_hru )  
-      IF (allocated(a_veloc_hru )) deallocate(a_veloc_hru ) 
-      IF (allocated(a_zwt_hru   )) deallocate(a_zwt_hru   )  
-      IF (allocated(a_rsurf_hru )) deallocate(a_rsurf_hru ) 
-      IF (allocated(a_rsubs_hru )) deallocate(a_rsubs_hru ) 
-      IF (allocated(a_height_riv)) deallocate(a_height_riv) 
-      IF (allocated(a_veloct_riv)) deallocate(a_veloct_riv) 
+      IF (allocated(a_dpond_hru )) deallocate(a_dpond_hru )
+      IF (allocated(a_veloc_hru )) deallocate(a_veloc_hru )
+      IF (allocated(a_zwt_hru   )) deallocate(a_zwt_hru   )
+      IF (allocated(a_rsurf_hru )) deallocate(a_rsurf_hru )
+      IF (allocated(a_rsubs_hru )) deallocate(a_rsubs_hru )
+      IF (allocated(a_height_riv)) deallocate(a_height_riv)
+      IF (allocated(a_veloct_riv)) deallocate(a_veloct_riv)
 
    end subroutine hist_basin_final
 
@@ -102,7 +102,7 @@ CONTAINS
 
       if (p_is_master) then
 
-         i = len_trim (file_hist) 
+         i = len_trim (file_hist)
          DO while (file_hist(i:i) /= '_')
             i = i - 1
          ENDDO
@@ -117,7 +117,7 @@ CONTAINS
 
             CALL ncio_write_serial (file_hist_basin, 'basin', eindex_glb, 'basin')
             CALL ncio_put_attr (file_hist_basin, 'basin', 'long_name', 'basin index')
-            
+
             CALL ncio_write_serial (file_hist_basin, 'basin_hru', eindx_hru, 'hydrounit')
             CALL ncio_put_attr (file_hist_basin, 'basin_hru', 'long_name', &
                'basin index of hydrological units')
@@ -133,56 +133,56 @@ CONTAINS
 
       numbasin = numelm
 
-      where(a_height_riv /= spval) 
-         a_height_riv = a_height_riv / nac_basin      
+      where(a_height_riv /= spval)
+         a_height_riv = a_height_riv / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_height_riv, numbasin, totalnumelm, 'riverheight', 'basin', elm_data_address, &
          DEF_hist_vars%riv_height, itime_in_file, 'River Height', 'm')
 
-      where(a_veloct_riv /= spval) 
-         a_veloct_riv = a_veloct_riv / nac_basin      
+      where(a_veloct_riv /= spval)
+         a_veloct_riv = a_veloct_riv / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_veloct_riv, numbasin, totalnumelm, 'riverveloct', 'basin', elm_data_address, &
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
-      where(a_dpond_hru /= spval) 
-         a_dpond_hru = a_dpond_hru / nac_basin      
+      where(a_dpond_hru /= spval)
+         a_dpond_hru = a_dpond_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_dpond_hru, numhru, totalnumhru, 'dpond_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%dpond_hru, itime_in_file, 'Depth of Ponding Water in Hydro unit', 'm')
-       
-      where(a_veloc_hru /= spval) 
-         a_veloc_hru = a_veloc_hru / nac_basin      
+
+      where(a_veloc_hru /= spval)
+         a_veloc_hru = a_veloc_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
-      where(a_zwt_hru /= spval) 
-         a_zwt_hru = a_zwt_hru / nac_basin      
+      where(a_zwt_hru /= spval)
+         a_zwt_hru = a_zwt_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_zwt_hru, numhru, totalnumhru, 'zwt_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%zwt_hru, itime_in_file, 'Depth of Water Table in Hydro unit', 'm')
 
-      where(a_rsurf_hru /= spval) 
-         a_rsurf_hru = a_rsurf_hru / nac_basin      
+      where(a_rsurf_hru /= spval)
+         a_rsurf_hru = a_rsurf_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
          file_hist_basin, a_rsurf_hru, numhru, totalnumhru, 'rsurf_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%rsurf_hru, itime_in_file, 'Surface runoff in Hydro unit', 'm/s')
 
-      where(a_rsubs_hru /= spval) 
-         a_rsubs_hru = a_rsubs_hru / nac_basin      
+      where(a_rsubs_hru /= spval)
+         a_rsubs_hru = a_rsubs_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
@@ -199,7 +199,7 @@ CONTAINS
       use spmd_task
       USE mod_mesh,    only : numelm
       use MOD_LandHRU, only : numhru
-      use GlobalVars,  only : spval 
+      use MOD_Vars_Global,  only : spval
       implicit none
 
       INTEGER :: numbasin
@@ -224,11 +224,11 @@ CONTAINS
          ENDIF
 
       ENDIF
-      
-   END SUBROUTINE FLUSH_acc_fluxes_basin 
+
+   END SUBROUTINE FLUSH_acc_fluxes_basin
 
    ! -------
-   SUBROUTINE accumulate_fluxes_basin 
+   SUBROUTINE accumulate_fluxes_basin
 
       IMPLICIT NONE
 
@@ -254,13 +254,13 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE accumulate_fluxes_basin 
+   END SUBROUTINE accumulate_fluxes_basin
 
    ! -------
    SUBROUTINE acc1d_basin (var, s)
-      
+
       use precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 
@@ -278,9 +278,9 @@ CONTAINS
             end if
          end if
       end do
-      
+
    END SUBROUTINE acc1d_basin
-   
+
 
 end module mod_hist_basin
 #endif

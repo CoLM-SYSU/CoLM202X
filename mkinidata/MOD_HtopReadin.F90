@@ -26,9 +26,9 @@ MODULE MOD_HtopReadin
 
          USE precision
          USE spmd_task
-         USE GlobalVars
-         USE LC_Const
-         USE MOD_Vars_PFTConst
+         USE MOD_Vars_Global
+         USE MOD_Const_LC
+         USE MOD_Const_PFT
          USE MOD_Vars_TimeInvariants
          USE MOD_LandPatch
 #ifdef PFT_CLASSIFICATION

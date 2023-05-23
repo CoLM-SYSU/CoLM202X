@@ -6,11 +6,11 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! Aggregate crop data (a. planting date data, b. fertilization data) from CLM5 model
    !
    ! !ORIGINAL:
-   ! Xingjie Lu and Shupeng Zhang, 2022 
+   ! Xingjie Lu and Shupeng Zhang, 2022
    !
    ! ----------------------------------------------------------------------
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE mod_namelist
    USE spmd_task
    USE mod_grid
@@ -23,7 +23,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
 
    USE MOD_AggregationRequestData
 
-   USE LC_Const
+   USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT
 #endif

@@ -55,8 +55,8 @@ PROGRAM MKSRFDATA
    USE MOD_LandHRU
 #endif
    USE MOD_LandPatch
-   USE LC_Const
    USE MOD_SrfdataRestart
+   USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT
 #endif

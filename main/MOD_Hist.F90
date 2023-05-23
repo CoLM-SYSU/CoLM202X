@@ -10,7 +10,7 @@ module MOD_Hist
    USE MOD_Vars_PFTimeInvars, only: pftclass
    USE MOD_LandPFT, only : patch_pft_s
 #endif
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    USE ncio_serial
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_HistVector
@@ -33,7 +33,7 @@ contains
    !---------------------------------------
    subroutine hist_init (dir_hist, lon_res, lat_res)
 
-      USE GlobalVars
+      USE MOD_Vars_Global
       use spmd_task
       use mod_grid
       USE MOD_LandPatch
@@ -126,7 +126,7 @@ contains
       use mod_mapping_pset2grid
       use MOD_Vars_2DFluxes
       use mod_colm_debug
-      use GlobalVars, only : spval
+      use MOD_Vars_Global, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
@@ -309,6 +309,13 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%xy_snow, &
             a_snow, f_xy_snow, file_hist, 'f_xy_snow', itime_in_file, sumwt, filter, &
             'snow','mm/s')
+
+		 if (DEF_USE_CBL_HEIGHT) then
+         ! atmospheric boundary layer height [m]
+           call flux_map_and_write_2d ( DEF_hist_vars%xy_hpbl, &
+              a_hpbl, f_xy_hpbl, file_hist, 'f_xy_hpbl', itime_in_file, sumwt, filter, &
+              'boundary layer height','m')
+		 endif
 
          ! ------------------------------------------------------------------------------------------
          ! Mapping the fluxes and state variables at patch [numpatch] to grid
@@ -3110,7 +3117,7 @@ ENDIF
       use mod_block
       use mod_grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3186,7 +3193,7 @@ ENDIF
       use mod_block
       use mod_grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3266,7 +3273,7 @@ ENDIF
       use mod_block
       use mod_grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3348,7 +3355,7 @@ ENDIF
       use mod_block
       use mod_grid
       use MOD_Vars_1DAccFluxes,  only: nac_ln
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist

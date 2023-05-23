@@ -50,6 +50,7 @@ CONTAINS
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
+			  hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
 
@@ -79,22 +80,25 @@ CONTAINS
 ! Hua Yuan, 10/2019: change leaf tempertature from two-leaf to one-leaf
 !                    (due to large differences may exist btween sunlit/shaded
 !                    leaf temperature.
-
 ! Xingjie Lu and Nan Wei, 01/2021: added plant hydraulic process interface
 ! Nan Wei,  01/2021: added interaction btw prec and canopy
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
   USE precision
-  USE GlobalVars
-  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice, tfrz
   USE MOD_FrictionVelocity
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_TurbulenceLEddy
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
-  USE LC_Const, only: z0mr, displar
+  USE MOD_Const_LC, only: z0mr, displar
 #ifdef PLANT_HYDRAULIC_STRESS
   use MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
-USE PhysicalConstants, only: tfrz
 #ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
 #endif
@@ -193,6 +197,8 @@ USE PhysicalConstants, only: tfrz
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
+  REAL(r8), intent(in) :: &
+		hpbl        ! atmospheric boundary layer height [m]
 
   REAL(r8), intent(inout) :: &
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -529,16 +535,27 @@ USE PhysicalConstants, only: tfrz
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
          IF (rd_opt == 3) THEN
-           CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
-               displasink,z0mv,ustar,fh2m,fq2m, &
-               htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            if (DEF_USE_CBL_HEIGHT) then	
+              CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                                    displasink,z0mv, hpbl, ustar,fh2m,fq2m, &
+                                    htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            else
+              CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                              displasink,z0mv,ustar,fh2m,fq2m, &
+                              htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            endif
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
             rah = 1./(vonkar/(fh-fht)*ustar)
             raw = 1./(vonkar/(fq-fqt)*ustar)
          ELSE
-            CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
-               ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            if (DEF_USE_CBL_HEIGHT) then	
+               CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, hpbl, &
+                                    ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            else
+               CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
+                              ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            endif
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
             rah = 1./(vonkar/fh*ustar)
@@ -843,6 +860,9 @@ USE PhysicalConstants, only: tfrz
          IF(zeta .ge. 0.)THEN
            um = max(ur,.1)
          ELSE
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*hu,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
@@ -1714,7 +1734,7 @@ USE PhysicalConstants, only: tfrz
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Const_Physical, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai

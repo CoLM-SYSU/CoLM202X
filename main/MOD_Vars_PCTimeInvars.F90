@@ -11,7 +11,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! -----------------------------------------------------------------
 
   USE precision
-  USE GlobalVars
+  USE MOD_Vars_GlobalVars
   IMPLICIT NONE
   SAVE
 
@@ -77,7 +77,7 @@ MODULE MOD_Vars_PCTimeInvars
      use ncio_vector
      use MOD_LandPC
      USE mod_namelist
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      ! Local variables

@@ -16,7 +16,7 @@ USE MOD_Vars_PCTimeInvars
 USE MOD_BGC_Vars_TimeInvars
 #endif
 #ifdef URBAN_MODEL
-USE MOD_UrbanTimeInvars
+USE MOD_Urban_Vars_TimeInvars
 #endif
 IMPLICIT NONE
 SAVE
@@ -111,7 +111,7 @@ SAVE
   ! --------------------------------------------------------------------
 
      use precision
-     USE GlobalVars
+     USE MOD_Vars_Global
      use spmd_task
      use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
@@ -208,7 +208,7 @@ SAVE
      USE mod_colm_debug
 #endif
      USE MOD_LandPatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 
@@ -333,7 +333,7 @@ SAVE
      use ncio_serial
      use ncio_vector
      use MOD_LandPatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 

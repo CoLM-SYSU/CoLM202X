@@ -21,7 +21,7 @@ MODULE MOD_PercentagesPFTReadin
    SUBROUTINE pct_readin (dir_landdata)
 
       use precision
-      USE GlobalVars
+      USE MOD_Vars_Global
       use spmd_task
       use ncio_vector
       USE MOD_LandPatch

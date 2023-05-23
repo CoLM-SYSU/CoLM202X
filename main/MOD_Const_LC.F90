@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE LC_Const
+MODULE MOD_Const_LC
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
@@ -15,7 +15,7 @@ MODULE LC_Const
 !
 ! !USES:
    USE precision
-   USE GlobalVars
+   USE MOD_Vars_Global
 
    IMPLICIT NONE
    SAVE
@@ -766,5 +766,5 @@ CONTAINS
 
    END SUBROUTINE Init_LC_Const
 
-END MODULE LC_Const
+END MODULE MOD_Const_LC
 ! ---------- EOP ------------
