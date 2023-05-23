@@ -526,6 +526,9 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
 #endif
       ENDIF
+   ELSE
+      Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
+      CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
 #ifdef CoLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
