@@ -6,8 +6,8 @@ SUBROUTINE HTOP_readin (dir_landdata)
 ! Read in the canopy tree top height
 ! ===========================================================
 
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE GlobalVars
       USE LC_Const
       USE MOD_Vars_PFTConst
@@ -23,7 +23,7 @@ SUBROUTINE HTOP_readin (dir_landdata)
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
 #endif
-      USE ncio_vector
+      USE MOD_NetCDFVector
 #ifdef SinglePoint
       USE mod_single_srfdata
 #endif

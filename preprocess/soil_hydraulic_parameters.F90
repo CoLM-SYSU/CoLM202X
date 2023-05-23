@@ -24,7 +24,7 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
 ! Yongjiu Dai and Nan Wei,
 !          06/2019: consider the gravel effects on soil hydraulic parameters
 ! ----------------------------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
 
@@ -116,8 +116,8 @@ SUBROUTINE CampBC(BD,SAND,CLAY,SOM,SOC,phi,psi_s,lambda_s)
 !          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
-use precision
-use mod_utils
+use MOD_Precision
+use MOD_Utils
 
 IMPLICIT NONE
 real(r8), intent(in) :: BD   ! bulk density (g cm-3)
@@ -390,8 +390,8 @@ SUBROUTINE VGM(BD,sand,clay,SOM,SOC,TOPSOIL,phi,theta_r_l,alpha_l,n_l,L_l,&
 !          06/2018: add more highly cited or newly developped soil Pedotransfer functions.
 ! Nan Wei, 01/2019: add algorithms for fitting soil hydraulic parameters by multiple soil Pedotransfer functions.
 ! ----------------------------------------------------
-use precision
-use mod_utils
+use MOD_Precision
+use MOD_Utils
 
 IMPLICIT NONE
 
@@ -764,7 +764,7 @@ SUBROUTINE ksat(BD,SOM,SOC,SAND,CLAY,TOPSOIL,phi,psi,lambda,k_s,k_s_Rose)
 ! Rivisions:
 ! Yongjiu Dai, Nan Wei and Yonggen Zhang, 06/2018: add more highly cited or newly developped soil Pedotransfer functions.
 ! ----------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
 real(r8), intent(in) :: BD   ! bulk density (g cm-3)
@@ -1128,7 +1128,7 @@ END SUBROUTINE ksat
 !
 ! Yongjiu Dai, 12/2013, 06/2018
 ! ----------------------------------------------------
-!use precision
+!use MOD_Precision
 !
 !IMPLICIT NONE
 !
@@ -1461,7 +1461,7 @@ END SUBROUTINE ksat
 !======================
 SUBROUTINE debar(a,n,x)
 !======================
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
 integer n
@@ -1486,7 +1486,7 @@ real(r8), external :: median
 END SUBROUTINE debar
 
 SUBROUTINE GuLar(Clay,Silt,Sand,OC,BD,Theta)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,OC,BD
 real(r8) a(5,12),Theta(14)
@@ -1511,7 +1511,7 @@ real(r8) OM
 END SUBROUTINE GuLar
 
 SUBROUTINE Rajkai(Clay,Sand,BD,OC,Theta)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Sand,BD,OC
 real(r8) b(6,8), Theta(14)
@@ -1549,7 +1549,7 @@ real(r8) Silt,X1,X2
 END SUBROUTINE Rajkai
 
 SUBROUTINE Rawls82(Clay,Silt,Sand,OC,Theta)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,OC
 real(r8) a(5,10), Theta(14)
@@ -1570,7 +1570,7 @@ integer i
 END SUBROUTINE Rawls82
 
 SUBROUTINE Rawls83(Clay,Silt,Sand,BD,OC,Theta)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,Sand,BD,OC
 real(r8) a(5,9), Theta(14)
@@ -1590,7 +1590,7 @@ integer i
 END SUBROUTINE Rawls83
 
 SUBROUTINE Tomasella(Clay,Silt,OC,Theta)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 real(r8) Clay,Silt,OC
 real(r8) a(4,9),Theta(14)
@@ -1634,7 +1634,7 @@ END SUBROUTINE Tomasella
 !  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 SUBROUTINE VGpar(x,y,nob,b,np,mit)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 integer nob,np,mit
 real(r8) y(nob),x(nob),f(50),r(50),st(5),b(5),e(5),&
@@ -1755,7 +1755,7 @@ real(r8) sdev,ssq,sum,sum1,sum2,sum3,step,temp,tmp,an,angle
 END SUBROUTINE VGpar
 
 SUBROUTINE matinv(a,np,b)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 integer np
 real(r8) a(10,10),b(np)
@@ -1821,7 +1821,7 @@ END SUBROUTINE matinv
 
 
 SUBROUTINE model(b,np,y,nob,x)
-use precision
+use MOD_Precision
 IMPLICIT NONE
 integer, INTENT(in) :: np,nob
 real(r8), INTENT(inout) :: b(np),x(nob)
@@ -1848,7 +1848,7 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       implicit none
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
@@ -1898,7 +1898,7 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       implicit none
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint

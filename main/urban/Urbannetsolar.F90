@@ -11,9 +11,9 @@
 ! Net solar absorbed by urban surface
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
-  USE timemanager, only: isgreenwich
+  USE MOD_TimeManager, only: isgreenwich
   IMPLICIT NONE
 
 ! Dummy argument

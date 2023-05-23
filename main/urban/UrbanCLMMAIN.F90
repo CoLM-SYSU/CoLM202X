@@ -109,7 +109,7 @@ SUBROUTINE UrbanCLMMAIN ( &
            ustar        ,qstar        ,tstar        ,fm           ,&
            fh           ,fq                                        )
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
@@ -117,7 +117,7 @@ SUBROUTINE UrbanCLMMAIN ( &
   USE MOD_LeafInterception
   USE UrbanALBEDO
   USE MOD_Lake
-  USE timemanager
+  USE MOD_TimeManager
   USE MOD_RainSnowTemp, only: rain_snow_temp
   USE MOD_NewSnow, only: newsnow
   USE MOD_OrbCoszen, only: orb_coszen

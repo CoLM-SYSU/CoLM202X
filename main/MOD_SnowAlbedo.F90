@@ -1,7 +1,7 @@
 MODULE MOD_SnowAlbedo
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 

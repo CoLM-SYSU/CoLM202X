@@ -16,7 +16,7 @@ module MOD_BGC_CNCStateUpdate2
   ! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
   !                   2) Record the accumulated gap-mortality-associated C transfers for veg and soil C semi-analytic spinup
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
   use MOD_Vars_TimeVariables, only: &

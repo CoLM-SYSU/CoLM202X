@@ -2,7 +2,7 @@
 
 MODULE mod_srfdata_restart
 
-   USE mod_namelist, only: DEF_LC_YEAR
+   USE MOD_Namelist, only: DEF_LC_YEAR
    IMPLICIT NONE
 
    INTEGER, parameter, PRIVATE :: rcompress = 1
@@ -19,11 +19,11 @@ CONTAINS
    ! -----------------------
    SUBROUTINE mesh_save_to_file (dir_landdata)
 
-      USE spmd_task
-      USE ncio_serial
-      USE mod_mesh
-      USE mod_block
-      USE mod_utils
+      USE MOD_SPMD_Task
+      USE MOD_NetCDFSerial
+      USE MOD_Mesh
+      USE MOD_Block
+      USE MOD_Utils
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: dir_landdata
@@ -227,11 +227,11 @@ CONTAINS
    !------------------------------------
    SUBROUTINE mesh_load_from_file (dir_landdata)
 
-      USE spmd_task
-      USE mod_namelist
-      USE mod_block
-      USE ncio_serial
-      USE mod_mesh
+      USE MOD_SPMD_Task
+      USE MOD_Namelist
+      USE MOD_Block
+      USE MOD_NetCDFSerial
+      USE MOD_Mesh
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: dir_landdata
@@ -320,10 +320,10 @@ CONTAINS
    !------------------------------------------------
    SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset)
 
-      USE spmd_task
-      USE mod_block
-      USE ncio_vector
-      USE mod_pixelset
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_NetCDFVector
+      USE MOD_Pixelset
       IMPLICIT NONE
 
       CHARACTER(len=*),    intent(in) :: dir_landdata
@@ -367,12 +367,12 @@ CONTAINS
    !---------------------------
    SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset)
 
-      USE spmd_task
-      USE mod_block
-      USE ncio_serial
-      USE ncio_vector
-      USE mod_mesh
-      USE mod_pixelset
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_NetCDFSerial
+      USE MOD_NetCDFVector
+      USE MOD_Mesh
+      USE MOD_Pixelset
       IMPLICIT NONE
 
       CHARACTER(len=*),    intent(in) :: dir_landdata

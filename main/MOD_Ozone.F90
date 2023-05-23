@@ -3,7 +3,7 @@
 #ifdef OzoneStress
 Module MOD_Ozone
 
-  use precision
+  use MOD_Precision
 !  use MOD_Vars_1DForcing, only: forc_ozone, forc_psrf
   USE PhysicalConstants, only: rgas
   use MOD_Vars_PFTConst, only: isevg, leaf_long, woody

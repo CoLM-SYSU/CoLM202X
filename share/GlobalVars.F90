@@ -11,7 +11,7 @@ MODULE GlobalVars
 ! TODO ...
 !
 ! !USES:
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 

@@ -1,7 +1,7 @@
 MODULE MOD_GroundFluxes
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -34,7 +34,7 @@ MODULE MOD_GroundFluxes
 !                    fevpa, renamed z0ma to z0m
 !=======================================================================
 
-    use precision
+    use MOD_Precision
     use PhysicalConstants, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
     implicit none

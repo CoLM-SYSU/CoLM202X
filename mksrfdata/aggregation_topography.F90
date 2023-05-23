@@ -6,18 +6,18 @@ SUBROUTINE aggregation_topography ( &
    ! ----------------------------------------------------------------------
    ! 1. topography
    ! ----------------------------------------------------------------------
-   USE precision
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE mod_landpatch
-   USE ncio_vector
-   USE ncio_block
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
 #ifdef CoLMDEBUG 
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
    USE mod_aggregation
-   USE mod_utils
+   USE MOD_Utils
 
 #ifdef SrfdataDiag
    USE mod_srfdata_diag

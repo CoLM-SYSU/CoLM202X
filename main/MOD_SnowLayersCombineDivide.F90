@@ -3,7 +3,7 @@
 MODULE MOD_SnowLayersCombineDivide
 
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -40,7 +40,7 @@ MODULE MOD_SnowLayersCombineDivide
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : denice, denh2o, tfrz
   implicit none
 !
@@ -162,7 +162,7 @@ MODULE MOD_SnowLayersCombineDivide
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   implicit none
 
 !-------------------------- Dummy argument -----------------------------
@@ -336,7 +336,7 @@ MODULE MOD_SnowLayersCombineDivide
 ! subdivides snow layer when its thickness exceed the prescribed maximum
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   implicit none
 
 !-------------------------- Dummy argument -----------------------------
@@ -541,7 +541,7 @@ MODULE MOD_SnowLayersCombineDivide
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : cpice, cpliq, hfus, tfrz
   implicit none
 

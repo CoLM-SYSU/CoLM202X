@@ -2,7 +2,7 @@
 
 MODULE UrbanLongwave
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: stefnc
   USE UrbanShortwave, only: MatrixInverse

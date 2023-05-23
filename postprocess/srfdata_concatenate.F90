@@ -1,7 +1,7 @@
 program srfdata_concatenate
 
-   USE ncio_serial
-   USE mod_utils
+   USE MOD_NetCDFSerial
+   USE MOD_Utils
    implicit none
 
    ! Local variables 

@@ -2,10 +2,10 @@
 
 program post_vector2grid
 
-   use mod_namelist
+   use MOD_Namelist
    use mod_vector2grid
    USE netcdf
-   USE ncio_serial
+   USE MOD_NetCDFSerial
 
    implicit none
 

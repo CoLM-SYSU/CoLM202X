@@ -9,16 +9,16 @@ SUBROUTINE aggregation_fire (gfire, dir_rawdata, dir_model_landdata)
    ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
    !
    ! ----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    USE GlobalVars
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE mod_landpatch
-   USE ncio_block
-   USE ncio_vector
+   USE MOD_NetCDFBlock
+   USE MOD_NetCDFVector
 #ifdef CoLMDEBUG
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
 
    USE mod_aggregation

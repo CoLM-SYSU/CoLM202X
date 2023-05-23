@@ -5,14 +5,14 @@
 SUBROUTINE aggregation_dbedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
-   USE precision
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE mod_landpatch
-   USE ncio_vector
-   USE ncio_block
-   USE mod_colm_debug
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
+   USE MOD_CoLMDebug
    USE mod_aggregation
 #ifdef SinglePoint
    USE mod_single_srfdata

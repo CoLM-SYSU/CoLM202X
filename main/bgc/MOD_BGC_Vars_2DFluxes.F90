@@ -11,7 +11,7 @@ MODULE MOD_BGC_Vars_2DFluxes
 !---------------------------------------------------------------------
 #ifdef BGC
 
-   use mod_data_type
+   use MOD_DataType
    USE GlobalVars
 
    IMPLICIT NONE
@@ -176,9 +176,9 @@ CONTAINS
       ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! --------------------------------------------------------------------
 
-      use spmd_task
-      use mod_grid
-      use mod_data_type
+      use MOD_SPMD_Task
+      use MOD_Grid
+      use MOD_DataType
       implicit none
 
       type(grid_type), intent(in) :: grid

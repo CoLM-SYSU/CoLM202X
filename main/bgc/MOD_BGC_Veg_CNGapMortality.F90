@@ -13,7 +13,7 @@ module MOD_BGC_Veg_CNGapMortality
   ! !REVISION:
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_PFTConst, only: lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig
   use MOD_BGC_Vars_TimeInvars, only: &
     ! bgc constants

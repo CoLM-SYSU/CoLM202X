@@ -7,7 +7,7 @@ MODULE MOD_1D_UrbanFluxes
 ! Created by Hua Yuan, 12/2020
 ! -------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -49,8 +49,8 @@ CONTAINS
   ! Allocates memory for CLM 1d [numurban] variables
   ! --------------------------------------------------------------------
 
-     USE precision
-     USE spmd_task
+     USE MOD_Precision
+     USE MOD_SPMD_Task
      USE mod_landurban
      IMPLICIT NONE
 
@@ -81,7 +81,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! deallocates memory for CLM 1d [numurban] variables
   ! --------------------------------------------------------------------
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landurban
 
       IF (p_is_worker) THEN

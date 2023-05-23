@@ -15,7 +15,7 @@ module MOD_BGC_CNSummary
   ! !REVISION:
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_PFTimeInvars, only: pftclass
   use MOD_BGC_Vars_TimeVars, only: &
       totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
@@ -95,7 +95,7 @@ module MOD_BGC_CNSummary
       m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
   use MOD_Vars_TimeInvariants, only : patchclass
   use GlobalVars, only : spval
-  use spmd_task
+  use MOD_SPMD_Task
     
   implicit none
 

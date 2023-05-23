@@ -29,7 +29,7 @@ module MOD_BGC_CNSASU
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
   !                   use accumulated transfer fluxes to calculate the matrix.
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeInvars, only: &
       i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3, floating_cn_ratio
 

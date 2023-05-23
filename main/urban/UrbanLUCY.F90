@@ -10,10 +10,10 @@ MODULE UrbanAnthropogenic
   !
   ! -----------------------------------------------------------------------
   ! !USE
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants
-  USE timemanager, only: julian2monthday, isleapyear
+  USE MOD_TimeManager, only: julian2monthday, isleapyear
   IMPLICIT NONE
   SAVE
   PRIVATE :: timeweek, gmt2local

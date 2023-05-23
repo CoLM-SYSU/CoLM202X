@@ -2,7 +2,7 @@
 
 MODULE mod_mesh_filter
 
-   USE mod_grid
+   USE MOD_Grid
    IMPLICIT NONE
 
    LOGICAL :: has_mesh_filter
@@ -12,8 +12,8 @@ CONTAINS
 
    LOGICAL FUNCTION inquire_mesh_filter ()
 
-      USE spmd_task
-      USE mod_namelist
+      USE MOD_SPMD_Task
+      USE MOD_Namelist
       IMPLICIT NONE
       LOGICAL :: fexists
       
@@ -39,15 +39,15 @@ CONTAINS
    ! -------------
    SUBROUTINE mesh_filter (gridf, ffilter, fvname)
    
-      USE precision
-      USE mod_namelist
-      USE spmd_task
-      USE ncio_block
-      USE mod_data_type
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_SPMD_Task
+      USE MOD_NetCDFBlock
+      USE MOD_DataType
       USE mod_landelm
-      USE mod_mesh
+      USE MOD_Mesh
       USE mod_aggregation
-      USE mod_block
+      USE MOD_Block
       IMPLICIT NONE
 
       TYPE(grid_type),  intent(in) :: gridf

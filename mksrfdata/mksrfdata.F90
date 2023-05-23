@@ -42,14 +42,14 @@ PROGRAM mksrfdata
    !
    !
    ! ======================================================================
-   USE precision
-   USE spmd_task
-   USE mod_namelist
-   USE mod_block
-   USE mod_pixel
-   USE mod_grid
-   USE mod_mesh
-   USE mod_mesh_filter
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_Grid
+   USE MOD_Mesh
+   USE MOD_Mesh_filter
    USE mod_landelm
 #ifdef CATCHMENT
    USE mod_landhru

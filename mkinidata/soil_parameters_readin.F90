@@ -14,14 +14,14 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
 !------------------------------------------------------------------------------------------
 
-   use precision
+   use MOD_Precision
    USE GlobalVars, only : nl_soil
-   use spmd_task
-   use ncio_vector
+   use MOD_SPMD_Task
+   use MOD_NetCDFVector
    use mod_landpatch
    use MOD_Vars_TimeInvariants
 #ifdef CoLMDEBUG
-   use mod_colm_debug
+   use MOD_CoLMDebug
 #endif
 #ifdef SinglePoint
    USE mod_single_srfdata

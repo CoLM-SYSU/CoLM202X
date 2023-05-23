@@ -3,7 +3,7 @@
 MODULE MOD_Albedo
 
 !-----------------------------------------------------------------------
- USE precision
+ USE MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -73,7 +73,7 @@ MODULE MOD_Albedo
 !                    added SNICAR related variables
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: tfrz
 #ifdef PFT_CLASSIFICATION
@@ -459,7 +459,7 @@ ENDIF
 !
 !-----------------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
 ! parameters
@@ -771,7 +771,7 @@ ENDIF
 !
 !-----------------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
 ! parameters
@@ -1133,7 +1133,7 @@ ENDIF
 ! Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
-      USE precision
+      USE MOD_Precision
       USE mod_landpft
       USE MOD_Vars_PFTConst
       USE MOD_Vars_PFTimeInvars
@@ -1241,7 +1241,7 @@ ENDIF
 ! yongjiu dai and xin-zhong liang (08/01/2001)
 !-----------------------------------------------------------------------
 
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
 
 !------------------------------Arguments--------------------------------

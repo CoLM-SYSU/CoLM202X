@@ -6,7 +6,7 @@ MODULE MOD_UrbanTimeInvars
 ! Created by Hua Yuan, 12/2020
 ! -------------------------------
 
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -82,8 +82,8 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CLM 1d [numurban] variants
 ! ------------------------------------------------------
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE mod_landurban
       USE GlobalVars
       IMPLICIT NONE
@@ -138,7 +138,7 @@ CONTAINS
 
    SUBROUTINE READ_UrbanTimeInvars (file_restart)
 
-     USE ncio_vector
+     USE MOD_NetCDFVector
      USE mod_landurban
 
      IMPLICIT NONE
@@ -197,9 +197,9 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeInvars (file_restart)
 
-     use ncio_vector
+     use MOD_NetCDFVector
      use mod_landurban
-     USE mod_namelist
+     USE MOD_Namelist
      USE GlobalVars
 
      IMPLICIT NONE
@@ -277,7 +277,7 @@ CONTAINS
 
    SUBROUTINE deallocate_UrbanTimeInvars
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landurban
       ! deallocate (urbclass  )
 

@@ -14,8 +14,8 @@ MODULE MOD_BGC_Vars_PFTimeVars
 
 #ifdef BGC
 
-  USE precision
-  USE timemanager
+  USE MOD_Precision
+  USE MOD_TimeManager
 
   IMPLICIT NONE
   SAVE
@@ -367,8 +367,8 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpft] variables
 ! ------------------------------------------------------
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE mod_landpft
       USE GlobalVars
       IMPLICIT NONE
@@ -707,7 +707,7 @@ CONTAINS
 
    SUBROUTINE READ_BGCPFTimeVars (file_restart)
 
-      use ncio_vector
+      use MOD_NetCDFVector
       USE mod_landpft
       USE GlobalVars
 
@@ -1127,9 +1127,9 @@ CONTAINS
 
    SUBROUTINE WRITE_BGCPFTimeVars (file_restart)
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpft
-     use ncio_vector
+     use MOD_NetCDFVector
      USE GlobalVars
      IMPLICIT NONE
 
@@ -1745,7 +1745,7 @@ CONTAINS
 ! --------------------------------------------------
 ! Deallocates memory for CoLM 1d [numpft/numpc] variables
 ! --------------------------------------------------
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landpft
 
       IF (p_is_worker) THEN
@@ -2083,8 +2083,8 @@ CONTAINS
 #ifdef CoLMDEBUG
    SUBROUTINE check_BGCPFTimeVars
 
-      use mod_colm_debug
-      use spmd_task
+      use MOD_CoLMDebug
+      use MOD_SPMD_Task
       IMPLICIT NONE
 
 ! bgc variables

@@ -7,16 +7,16 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
 ! Read in urban LAI, SAI and urban tree cover data
 ! ===========================================================
 
-      USE precision
-      USE mod_namelist
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_SPMD_Task
       USE GlobalVars
       USE LC_Const
       USE mod_landurban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars
-      USE ncio_vector
+      USE MOD_NetCDFVector
 
       IMPLICIT NONE
 

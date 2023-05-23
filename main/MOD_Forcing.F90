@@ -13,13 +13,13 @@ module MOD_Forcing
 !
 ! TODO...(need complement)
 
-   use precision
-   USE mod_namelist
-   use mod_grid
-   use mod_mapping_grid2pset
+   use MOD_Precision
+   USE MOD_Namelist
+   use MOD_Grid
+   use MOD_Mapping_Grid2Pset
    use MOD_UserSpecifiedForcing
-   use timemanager
-   use spmd_task
+   use MOD_TimeManager
+   use MOD_SPMD_Task
    USE MOD_MonthlyinSituCO2mlo
    USE MathConstants, only : pi
    USE MOD_OrbCoszen
@@ -63,17 +63,17 @@ contains
    !--------------------------------
    subroutine forcing_init (dir_forcing, deltatime, idate)
 
-      use spmd_task
-      USE mod_namelist
-      use mod_data_type
-      USE mod_mesh
+      use MOD_SPMD_Task
+      USE MOD_Namelist
+      use MOD_DataType
+      USE MOD_Mesh
       USE mod_landelm
       USE mod_landpatch
-      use mod_mapping_grid2pset
+      use MOD_Mapping_Grid2Pset
       use MOD_UserSpecifiedForcing
-      USE ncio_serial
-      USE ncio_vector
-      USE ncio_block
+      USE MOD_NetCDFSerial
+      USE MOD_NetCDFVector
+      USE MOD_NetCDFBlock
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DForcing
       implicit none
@@ -206,19 +206,19 @@ contains
    !--------------------------------
    SUBROUTINE read_forcing (idate, dir_forcing)
 
-      use precision
-      use mod_namelist
+      use MOD_Precision
+      use MOD_Namelist
       use PhysicalConstants, only: rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_1DForcing
       use MOD_Vars_2DForcing
-      use mod_block
-      use spmd_task
-      use mod_data_type
-      use mod_mesh
+      use MOD_Block
+      use MOD_SPMD_Task
+      use MOD_DataType
+      use MOD_Mesh
       use mod_landpatch
-      use mod_mapping_grid2pset
-      use mod_colm_debug
+      use MOD_Mapping_Grid2Pset
+      use MOD_CoLMDebug
       use MOD_UserSpecifiedForcing
 #ifdef Forcing_Downscaling
       USE MOD_DownscalingForcing, only : rair, cpair, downscale_forcings
@@ -586,10 +586,10 @@ contains
    SUBROUTINE metreadLBUB (idate, dir_forcing)
 
       use MOD_UserSpecifiedForcing
-      USE mod_namelist
-      use mod_data_type
-      use ncio_block
-      use mod_colm_debug
+      USE MOD_Namelist
+      use MOD_DataType
+      use MOD_NetCDFBlock
+      use MOD_CoLMDebug
       implicit none
 
       integer, intent(in) :: idate(3)
@@ -661,10 +661,10 @@ contains
    !-------------------------------------------------
    SUBROUTINE metread_latlon (dir_forcing, idate)
 
-      use spmd_task
-      use ncio_serial
+      use MOD_SPMD_Task
+      use MOD_NetCDFSerial
       use MOD_UserSpecifiedForcing
-      USE mod_namelist
+      USE MOD_Namelist
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
@@ -725,10 +725,10 @@ contains
    !-------------------------------------------------
    SUBROUTINE metread_time (dir_forcing)
 
-      use spmd_task
-      use ncio_serial
+      use MOD_SPMD_Task
+      use MOD_NetCDFSerial
       use MOD_UserSpecifiedForcing
-      USE mod_namelist
+      USE MOD_Namelist
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
@@ -1184,8 +1184,8 @@ contains
       ! ------------------------------------------------------------
       SUBROUTINE calavgcos()
 
-         use mod_block
-         use mod_data_type
+         use MOD_Block
+         use MOD_DataType
          implicit none
 
          integer  :: iblkme, ib, jb, i, j, ilon, ilat

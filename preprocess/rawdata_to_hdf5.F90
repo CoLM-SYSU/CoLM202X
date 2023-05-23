@@ -1,6 +1,6 @@
 program bin_to_hdf5 
 
-   use precision
+   use MOD_Precision
    use colm_io_serial
    implicit none
 

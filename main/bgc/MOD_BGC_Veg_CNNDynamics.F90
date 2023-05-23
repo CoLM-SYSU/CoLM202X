@@ -25,7 +25,7 @@ module MOD_BGC_Veg_CNNDynamics
   ! !REVISION:
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
-  use precision
+  use MOD_Precision
 
   use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
   use MOD_Vars_TimeInvariants, only: porsl, psi0, bsw
@@ -43,7 +43,7 @@ module MOD_BGC_Veg_CNNDynamics
   use MOD_BGC_Vars_1DPFTFluxes, only: plant_ndemand_p, soyfixn_p
 
   use GlobalVars, only: z_soi, dz_soi, spval
-  use timemanager
+  use MOD_TimeManager
   implicit none
 
   public CNNFixation

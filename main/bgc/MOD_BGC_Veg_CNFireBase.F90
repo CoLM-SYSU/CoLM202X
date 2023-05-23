@@ -20,7 +20,7 @@ module MOD_BGC_Veg_CNFireBase
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_PFTConst, only: &
       cc_leaf   , cc_lstem   , cc_dstem , cc_other, fm_leaf, fm_lstem, fm_lroot, fm_root, fm_droot, fm_other, &
       fr_fcel   , fr_flig    , fr_flab  , lf_fcel , lf_flig, lf_flab

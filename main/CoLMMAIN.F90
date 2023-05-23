@@ -141,7 +141,7 @@ SUBROUTINE CoLMMAIN ( &
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
@@ -168,13 +168,13 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_SimpleOcean
   USE MOD_Albedo
   USE MOD_LAIEmpirical
-  USE timemanager
+  USE MOD_TimeManager
 #ifndef LATERAL_FLOW
   USE MOD_Vars_1DFluxes, only : rsub
 #else
   USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
 #endif
-  USE mod_namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]

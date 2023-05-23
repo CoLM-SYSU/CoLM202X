@@ -3,17 +3,17 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
 module MOD_HistVector
 
-   use precision
-   USE spmd_task
-   USE mod_namelist
+   use MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
    USE GlobalVars, only : spval
-   USE mod_mesh
+   USE MOD_Mesh
    USE mod_landelm
 #ifdef CATCHMENT
    USE mod_landhru
 #endif
-   USE mod_pixelset
-   USE ncio_serial
+   USE MOD_Pixelset
+   USE MOD_NetCDFSerial
 #ifdef CATCHMENT
    USE mod_hru_vector
 #else
@@ -27,13 +27,13 @@ contains
 
    SUBROUTINE hist_vector_out (file_hist, idate)
 
-      use precision
-      use mod_namelist
-      use timemanager
-      use spmd_task
+      use MOD_Precision
+      use MOD_Namelist
+      use MOD_TimeManager
+      use MOD_SPMD_Task
       use MOD_Vars_1DAccFluxes
       use mod_landpatch
-      use mod_colm_debug
+      use MOD_CoLMDebug
       use GlobalVars, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype
       USE MOD_Forcing, only : forcmask
@@ -1003,9 +1003,9 @@ contains
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
@@ -1161,9 +1161,9 @@ contains
          dim1name, ndim1, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
@@ -1341,9 +1341,9 @@ contains
          dim1name, ndim1, dim2name, ndim2, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac
       use GlobalVars, only: spval
@@ -1530,9 +1530,9 @@ contains
          acc_vec_patch, file_hist, varname, itime_in_file, filter, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
       USE mod_landpatch
       use MOD_Vars_1DAccFluxes,  only: nac_ln
       use GlobalVars, only: spval

@@ -3,8 +3,8 @@
 
 module mod_vector2grid
 
-   use precision
-   USE ncio_serial
+   use MOD_Precision
+   USE MOD_NetCDFSerial
    use netcdf
    USE GlobalVars, only : spval
    implicit none
@@ -19,7 +19,7 @@ contains
    ! -------
    SUBROUTINE hist_vector2grid_init (meshfile, input)
       
-      USE mod_utils
+      USE MOD_Utils
       IMPLICIT NONE
       CHARACTER(len=*), intent(in) :: meshfile, input
 
@@ -65,10 +65,10 @@ contains
 
 #ifdef CATCHMENT
             IF (cat(i1,i2) <= 0) cycle
-#ENDIF
+#endif
 #ifdef UNSTRUCTURED
             IF (polygon(i1,i2) <= 0) cycle
-#ENDIF
+#endif
 
             found = .false.
             DO i1n = max(i1-1,1), i1
@@ -76,10 +76,10 @@ contains
 
 #ifdef CATCHMENT
                   IF ((cat(i1n,i2n) == cat(i1,i2)) .and. (hru(i1n,i2n) == hru(i1,i2)) &
-#ENDIF
+#endif
 #ifdef UNSTRUCTURED
                   IF ((polygon(i1n,i2n) == polygon(i1,i2)) &
-#ENDIF
+#endif
                      .and. (addr2d_g(i1n,i2n) /= -1)) THEN
                      addr2d_g(i1,i2) = addr2d_g(i1n,i2n)
                      found = .true.
@@ -91,10 +91,10 @@ contains
             IF (.not. found) THEN
 #ifdef CATCHMENT
                iloc = find_in_sorted_list2 (hru(i1,i2),cat(i1,i2), ndim0, htype,elm)
-#ENDIF
+#endif
 #ifdef UNSTRUCTURED
                iloc = find_in_sorted_list1 (polygon(i1,i2), ndim0, elm)
-#ENDIF
+#endif
                IF (iloc > 0) addr2d_g(i1,i2) = iloc
             ENDIF
 
@@ -164,10 +164,10 @@ contains
       deallocate (cat)
       deallocate (hru)
       deallocate (htype)
-#ENDIF
+#endif
 #ifdef UNSTRUCTURED
       deallocate (polygon)
-#ENDIF
+#endif
       deallocate (elm)
 
       deallocate(lat, lon)

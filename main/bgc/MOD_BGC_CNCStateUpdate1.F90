@@ -18,7 +18,7 @@ module MOD_BGC_CNCStateUpdate1
   !                   2) Record the accumulated phenology-associated C transfer for veg and soil C semi-analytic spinup
   !                   3) Record the accumulated decomposition-associated C transfer for soil C semi-analytic spinup
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
   use MOD_Vars_PFTConst, only: woody
   use MOD_BGC_Vars_TimeInvars, only: &

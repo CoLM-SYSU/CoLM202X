@@ -55,7 +55,7 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 !                         03/2014
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE PhysicalConstants, only: tfrz
   USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
   USE MOD_Vars_PFTConst, only: isevg, woody, leafcn, deadwdcn
@@ -74,8 +74,8 @@ SUBROUTINE IniTimeVar(ipatch, patchtype&
 #endif
   USE GlobalVars
   USE MOD_Albedo
-  USE mod_namelist
-  USE mod_soil_water
+  USE MOD_Namelist
+  USE MOD_Hydro_SoilWater
   USE MOD_SnowFraction
 
   IMPLICIT NONE
@@ -1080,7 +1080,7 @@ SUBROUTINE snow_ini(patchtype,maxsnl,snowdp,snl,z_soisno,dz_soisno)
 
 ! Snow spatial discretization initially
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
   INTEGER,  intent(in) :: maxsnl    !maximum of snow layers
@@ -1171,7 +1171,7 @@ SUBROUTINE polint(xa,ya,n,x,y)
 ! P (xa(i)) = ya(i), i = 1, . . . , n, then the returned value
 ! (from: "Numerical Recipes")
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   INTEGER n,NMAX
   REAL(r8) dy,x,y,xa(n),ya(n)

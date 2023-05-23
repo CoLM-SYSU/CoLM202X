@@ -2,13 +2,13 @@
 
 SUBROUTINE pct_readin (dir_landdata)
 
-   use precision
+   use MOD_Precision
    USE GlobalVars
-   use spmd_task
-   use ncio_vector
+   use MOD_SPMD_Task
+   use MOD_NetCDFVector
    USE mod_landpatch
 #ifdef CoLMDEBUG 
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
 #ifdef PFT_CLASSIFICATION
    use mod_landpft

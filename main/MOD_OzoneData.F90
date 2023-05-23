@@ -2,9 +2,9 @@
 
 MODULE MOD_OzoneData
 
-   USE mod_grid
-   USE mod_data_type
-   USE mod_mapping_grid2pset
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mapping_Grid2Pset
    use MOD_Vars_1DForcing, only: forc_ozone
    IMPLICIT NONE
 
@@ -20,14 +20,14 @@ CONTAINS
    ! ----------
    SUBROUTINE init_ozone_data (time, idate)
       
-      USE spmd_task
-      USE mod_namelist
-      USE timemanager
-      USE mod_grid
-      USE ncio_serial
-      USE ncio_block
+      USE MOD_SPMD_Task
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_Grid
+      USE MOD_NetCDFSerial
+      USE MOD_NetCDFBlock
       USE mod_landpatch
-      USE mod_colm_debug
+      USE MOD_CoLMDebug
       IMPLICIT NONE
       
       type(timestamp), intent(in) :: time
@@ -74,10 +74,10 @@ CONTAINS
    ! ----------
    SUBROUTINE update_ozone_data (time, deltim)
       
-      USE timemanager
-      USE mod_namelist
-      USE ncio_block
-      USE mod_colm_debug
+      USE MOD_TimeManager
+      USE MOD_Namelist
+      USE MOD_NetCDFBlock
+      USE MOD_CoLMDebug
       IMPLICIT NONE
       
       type(timestamp), intent(in) :: time

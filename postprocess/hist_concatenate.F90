@@ -2,13 +2,13 @@
 
 program hist_concatenate
 
-   USE spmd_task
+   USE MOD_SPMD_Task
    USE GlobalVars
-   use mod_namelist
-   use mod_block
-   use mod_grid
+   use MOD_Namelist
+   use MOD_Block
+   use MOD_Grid
    use mod_concatenate
-   USE ncio_serial
+   USE MOD_NetCDFSerial
 
    implicit none
 

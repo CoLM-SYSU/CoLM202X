@@ -34,7 +34,7 @@
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: denice, denh2o, tfrz
   USE MOD_SoilSnowHydrology

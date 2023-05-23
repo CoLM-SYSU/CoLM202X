@@ -22,7 +22,7 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
 
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: BD_mineral_s ! bulk density of mineral soil (g/cm^3)

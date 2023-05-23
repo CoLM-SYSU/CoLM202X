@@ -10,7 +10,7 @@ MODULE MOD_Vars_1DPFTFluxes
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
 #ifdef BGC
   USE MOD_BGC_Vars_1DPFTFluxes
 #endif
@@ -54,8 +54,8 @@ MODULE MOD_Vars_1DPFTFluxes
   ! Allocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
 
-     USE precision
-     USE spmd_task
+     USE MOD_Precision
+     USE MOD_SPMD_Task
      USE mod_landpft
      IMPLICIT NONE
 
@@ -92,7 +92,7 @@ MODULE MOD_Vars_1DPFTFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE mod_landpft
 
      IF (p_is_worker) THEN

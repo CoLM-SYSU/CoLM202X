@@ -6,7 +6,7 @@ SUBROUTINE soil_color_refl(L,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb
 !
 ! Created by Yongjiu Dai, 03/2014
 ! ======================================================================
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
       integer, intent(in) :: L  ! land cover types (GLCC USGS/MODIS IGBP)

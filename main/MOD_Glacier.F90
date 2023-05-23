@@ -15,7 +15,7 @@
 !
 ! Hua Yuan, 01/2023: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -70,7 +70,7 @@
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
   use MOD_FrictionVelocity
   USE MOD_Qsadv
@@ -343,7 +343,7 @@
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : cpair,vonkar,grav
   use MOD_FrictionVelocity
   implicit none
@@ -570,10 +570,10 @@
 !                    flux, temperature and melt calculation.
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
   USE MOD_Meltf
-  USE mod_utils
+  USE MOD_Utils
 
   IMPLICIT NONE
 
@@ -846,7 +846,7 @@
                     ssi         ,wimp    )
 
 !=======================================================================
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology
@@ -968,7 +968,7 @@
                     mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4 )
 
 !=======================================================================
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology

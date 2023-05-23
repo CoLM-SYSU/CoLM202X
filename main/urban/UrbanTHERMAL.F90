@@ -87,7 +87,7 @@
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav

@@ -29,12 +29,12 @@
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants
   USE MOD_SoilThermalParameters
   USE MOD_Meltf, only: meltf_urban
-  USE mod_utils, only: tridia
+  USE MOD_Utils, only: tridia
 
   IMPLICIT NONE
 

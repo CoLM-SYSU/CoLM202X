@@ -11,7 +11,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !
 !=======================================================================
 
- use precision
+ use MOD_Precision
  use PhysicalConstants, only: tfrz, rgas, vonkar
  USE GlobalVars
  USE LC_Const
@@ -21,7 +21,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_Vars_1DFluxes
  USE mod_landpatch, only : numpatch
  USE mod_landurban, only: patch2urban
- USE mod_namelist, only : DEF_forcing
+ USE MOD_Namelist, only : DEF_forcing
  USE MOD_Forcing, only : forcmask
  use omp_lib
 #ifdef CaMa_Flood

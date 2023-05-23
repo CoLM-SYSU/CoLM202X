@@ -8,7 +8,7 @@ MODULE MOD_Vars_2DFluxes
 ! Created by Yongjiu Dai, 03/2014
 !---------------------------------------------------------------------
 
-   use mod_data_type
+   use MOD_DataType
    USE GlobalVars
 #ifdef BGC
    USE MOD_BGC_Vars_2DFluxes
@@ -168,10 +168,10 @@ CONTAINS
       ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! --------------------------------------------------------------------
 
-      use spmd_task
-      use mod_grid
-      use mod_data_type
-      USE mod_namelist
+      use MOD_SPMD_Task
+      use MOD_Grid
+      use MOD_DataType
+      USE MOD_Namelist
       implicit none
 
       type(grid_type), intent(in) :: grid

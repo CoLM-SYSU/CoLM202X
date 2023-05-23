@@ -1,7 +1,7 @@
 MODULE MOD_SnowAge
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -23,7 +23,7 @@ MODULE MOD_SnowAge
 ! Update snow cover and snow age, based on BATS code
 !=======================================================================
 
-   use precision
+   use MOD_Precision
    use PhysicalConstants, only : tfrz
    implicit none
 

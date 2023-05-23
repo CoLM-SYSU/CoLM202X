@@ -19,7 +19,7 @@ MODULE MOD_CaMa_colmCaMa
 ! 2021.12.02  Zhongwang Wei @ SYSU
 ! 2020.10.01  Zhongwang Wei @ SYSU
 
-use mod_namelist
+use MOD_Namelist
 USE MOD_CaMa_Vars
 USE PARKIND1,                  ONLY: JPRB, JPRM, JPIM
 USE CMF_DRV_CONTROL_MOD,       ONLY: CMF_DRV_INPUT,   CMF_DRV_INIT,    CMF_DRV_END
@@ -27,9 +27,9 @@ USE CMF_DRV_ADVANCE_MOD,       ONLY: CMF_DRV_ADVANCE
 USE CMF_CTRL_FORCING_MOD,      ONLY: CMF_FORCING_GET, CMF_FORCING_PUT
 USE CMF_CTRL_OUTPUT_MOD,       ONLY: CMF_OUTPUT_INIT,CMF_OUTPUT_END,NVARSOUT,VAROUT
 USE YOS_CMF_INPUT,             ONLY: NXIN, NYIN, DT,DTIN,IFRQ_INP,LLEAPYR,NX,NY,RMIS,DMIS
-USE precision,                 ONLY: r8,r4
+USE MOD_Precision,                 ONLY: r8,r4
 USE YOS_CMF_INPUT ,            ONLY: LROSPLIT,LWEVAP,LWINFILT
-USE spmd_task
+USE MOD_SPMD_Task
 USE CMF_CTRL_TIME_MOD
 USE GlobalVars,                ONLY : spval
 USE MOD_Vars_1DFluxes
@@ -384,7 +384,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    ! 2020.10.01  Zhongwang Wei @ SYSU
    ! 2002.08.30  Yongjiu Dai   @ BNU
    ! 1999.09.15  Yongjiu Dai   @ BNU
-   USE precision
+   USE MOD_Precision
    USE PhysicalConstants, ONLY : cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
    IMPLICIT NONE

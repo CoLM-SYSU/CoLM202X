@@ -4,8 +4,8 @@
 
 MODULE mod_landpft
 
-   USE mod_namelist
-   USE mod_pixelset
+   USE MOD_Namelist
+   USE MOD_Pixelset
    USE LC_const
    USE GlobalVars
    IMPLICIT NONE
@@ -26,12 +26,12 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landpft_build ()
 
-      USE precision
-      USE spmd_task
-      USE mod_grid
-      USE mod_data_type
-      USE mod_namelist
-      USE mod_5x5_data
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Namelist
+      USE MOD_5x5DataReadin
       USE mod_landpatch
       USE mod_aggregation
       USE LC_const
@@ -268,7 +268,7 @@ CONTAINS
    ! ----------------------
    SUBROUTINE map_patch_to_pft
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landpatch
       IMPLICIT NONE
 

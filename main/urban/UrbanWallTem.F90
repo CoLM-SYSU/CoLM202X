@@ -24,10 +24,10 @@
 ! Original author : Yongjiu Dai, 05/2020
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants
-  USE mod_utils, only: tridia
+  USE MOD_Utils, only: tridia
 
   IMPLICIT NONE
 

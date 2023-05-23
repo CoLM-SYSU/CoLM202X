@@ -10,8 +10,8 @@ MODULE MOD_Vars_PCTimeVars
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
-  USE timemanager
+  USE MOD_Precision
+  USE MOD_TimeManager
   IMPLICIT NONE
   SAVE
 ! -----------------------------------------------------------------
@@ -64,9 +64,9 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CoLM Plant Community (PC) 1D [numpc] variables
 ! ------------------------------------------------------
-      USE precision
+      USE MOD_Precision
       USE GlobalVars
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landpc
       IMPLICIT NONE
 
@@ -102,8 +102,8 @@ CONTAINS
    SUBROUTINE READ_PCTimeVars (file_restart)
 
       USE GlobalVars
-      use mod_namelist
-      use ncio_vector
+      use MOD_Namelist
+      use MOD_NetCDFVector
       USE mod_landpc
       IMPLICIT NONE
 
@@ -137,9 +137,9 @@ CONTAINS
    SUBROUTINE WRITE_PCTimeVars (file_restart)
 
      USE GlobalVars
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpc
-     use ncio_vector
+     use MOD_NetCDFVector
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -190,7 +190,7 @@ CONTAINS
 ! Deallocates memory for CoLM Plant Community (PC) 1D [numpc] variables
 ! --------------------------------------------------
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landpc
 
       IF (p_is_worker) THEN
@@ -225,7 +225,7 @@ CONTAINS
 #ifdef CoLMDEBUG
    SUBROUTINE check_PCTimeVars
 
-      use mod_colm_debug
+      use MOD_CoLMDebug
       IMPLICIT NONE
 
       call check_vector_data ('tleaf_c  ', tleaf_c  )      !

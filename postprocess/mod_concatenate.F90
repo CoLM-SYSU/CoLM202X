@@ -2,10 +2,10 @@
 
 module mod_concatenate
 
-   use precision
-   USE spmd_task
-   USE mod_block
-   USE ncio_serial
+   use MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_NetCDFSerial
    use netcdf
    USE GlobalVars, only : spval
    implicit none
@@ -51,9 +51,9 @@ contains
    ! ------
    subroutine set_hist_block_info (ghist, block_info)
 
-      use mod_grid
-      use mod_block
-      USE mod_utils
+      use MOD_Grid
+      use MOD_Block
+      USE MOD_Utils
       implicit none
 
       type(grid_type), intent(in) :: ghist
@@ -249,7 +249,7 @@ contains
    !------------------
    subroutine hist_concatenate_grid_info (filename)
       
-      use ncio_serial
+      use MOD_NetCDFSerial
       implicit none
 
       character(len=*), intent(in) :: filename

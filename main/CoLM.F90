@@ -14,9 +14,9 @@ PROGRAM CoLM
    !     Revised by Yongjiu Dai and Hua Yuan, April 2014
    ! ======================================================================
 
-   use precision
-   use spmd_task
-   use mod_namelist
+   use MOD_Precision
+   use MOD_SPMD_Task
+   use MOD_Namelist
    USE GlobalVars
    USE LC_Const
    USE MOD_Vars_PFTConst
@@ -29,12 +29,12 @@ PROGRAM CoLM
    use MOD_Vars_2DFluxes
    use MOD_Forcing
    use MOD_Hist
-   use timemanager
-   use mod_colm_debug
+   use MOD_TimeManager
+   use MOD_CoLMDebug
 
-   use mod_block
-   use mod_pixel
-   USE mod_mesh
+   use MOD_Block
+   use MOD_Pixel
+   USE MOD_Mesh
    use mod_landelm
 #ifdef CATCHMENT
    USE mod_landhru
@@ -63,7 +63,7 @@ PROGRAM CoLM
 #endif
 
 #if (defined LATERAL_FLOW)
-   USE mod_lateral_flow
+   USE MOD_Hydro_LateralFlow
 #endif
 
 #ifdef Fire

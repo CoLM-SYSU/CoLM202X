@@ -7,12 +7,12 @@ CONTAINS
    ! ----- region clip -----
    SUBROUTINE srfdata_region_clip (dir_landdata_in, dir_landdata_out)
 
-      USE spmd_task
-      USE mod_namelist
-      USE mod_utils
-      USE mod_pixel
-      USE mod_block
-      USE ncio_serial
+      USE MOD_SPMD_Task
+      USE MOD_Namelist
+      USE MOD_Utils
+      USE MOD_Pixel
+      USE MOD_Block
+      USE MOD_NetCDFSerial
 
       IMPLICIT NONE
 
@@ -642,8 +642,8 @@ CONTAINS
    ! ----- pixelset clip -----
    SUBROUTINE clip_pixelset (dir_landdata_in, psetname, iblk, jblk, elmmask, elmindex, psetmask)
 
-      USE ncio_serial
-      USE mod_block
+      USE MOD_NetCDFSerial
+      USE MOD_Block
 
       IMPLICIT NONE
 
@@ -693,8 +693,8 @@ CONTAINS
    SUBROUTINE clip_vector (file_in, file_out, iblk, jblk, varname, vecmask)
 
       USE netcdf
-      USE ncio_serial
-      USE mod_block
+      USE MOD_NetCDFSerial
+      USE MOD_Block
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: file_in, file_out

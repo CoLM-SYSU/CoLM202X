@@ -3,10 +3,10 @@
 #ifdef SinglePoint
 MODULE mod_single_srfdata
    
-   USE precision, only: r8
+   USE MOD_Precision, only: r8
    USE GlobalVars
    USE LC_Const
-   USE mod_namelist
+   USE MOD_Namelist
    IMPLICIT NONE
    SAVE
 
@@ -79,8 +79,8 @@ CONTAINS
    ! -----
    SUBROUTINE read_surface_data_single (fsrfdata, mksrfdata)
 
-      USE ncio_serial
-      USE mod_namelist
+      USE MOD_NetCDFSerial
+      USE MOD_Namelist
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: fsrfdata
@@ -195,8 +195,8 @@ CONTAINS
    ! -----
    SUBROUTINE write_surface_data_single (numpatch, numpft)
 
-      USE ncio_serial
-      USE mod_namelist
+      USE MOD_NetCDFSerial
+      USE MOD_Namelist
       USE LC_Const
       IMPLICIT NONE
       

@@ -4,11 +4,11 @@
 
 subroutine dbedrock_readin (dir_landdata)
 
-   use precision
-   use spmd_task
-   USE mod_namelist
+   use MOD_Precision
+   use MOD_SPMD_Task
+   USE MOD_Namelist
    use mod_landpatch
-   use ncio_vector
+   use MOD_NetCDFVector
    USE GlobalVars, only : nl_soil, dz_soi
    use MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
 #ifdef SinglePoint

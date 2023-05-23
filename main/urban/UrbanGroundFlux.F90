@@ -12,7 +12,7 @@
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE PhysicalConstants, only: cpair,vonkar,grav
   USE MOD_FrictionVelocity
   IMPLICIT NONE

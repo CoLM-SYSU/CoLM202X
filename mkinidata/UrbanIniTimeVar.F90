@@ -13,7 +13,7 @@ SUBROUTINE UrbanIniTimeVar(ipatch,froof,fgper,flake,hwr,hroof,&
 ! Created by Hua Yuan, 09/16/2021
 !
 !=======================================================================
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE UrbanALBEDO
 

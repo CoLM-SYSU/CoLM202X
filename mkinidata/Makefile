@@ -13,29 +13,29 @@ EXECUTABLE = initial.x
 ####################################################################
 
 OBJS_SHARED = \
-				  ../share/precision.o \
-				  ../share/spmd_task.o \
-				  ../share/mod_namelist.o \
-				  ../share/PhysicalConstants.o \
-				  ../share/MathConstants.o \
-				  ../share/timemanager.o \
-				  ../share/mod_utils.o \
-				  ../share/ncio_serial.o \
-				  ../share/mod_block.o \
-				  ../share/mod_grid.o \
-				  ../share/mod_pixel.o \
-				  ../share/mod_data_type.o \
-				  ../share/ncio_block.o \
-				  ../share/mod_catchment_data.o \
-				  ../share/mod_5x5_data.o \
-				  ../share/mod_mesh.o \
-				  ../share/mod_pixelset.o \
-				  ../share/ncio_vector.o \
-				  ../share/mod_colm_debug.o \
-				  ../share/GlobalVars.o \
-				  ../share/LC_Const.o \
-				  ../share/UrbanLCZ_Const.o              \
-				  ../share/mod_mapping_grid2pset.o
+				  ../share/MOD_Precision.o           \
+				  ../share/MOD_SPMD_Task.o           \
+				  ../share/MOD_Namelist.o            \
+				  ../share/PhysicalConstants.o       \
+				  ../share/MathConstants.o           \
+				  ../share/MOD_TimeManager.o         \
+				  ../share/MOD_Utils.o               \
+				  ../share/MOD_NetCDFSerial.o        \
+				  ../share/MOD_Block.o               \
+				  ../share/MOD_Grid.o                \
+				  ../share/MOD_Pixel.o               \
+				  ../share/MOD_DataType.o            \
+				  ../share/MOD_NetCDFBlock.o         \
+				  ../share/MOD_CatchmentDataReadin.o \
+				  ../share/MOD_5x5DataReadin.o       \
+				  ../share/MOD_Mesh.o                \
+				  ../share/MOD_Pixelset.o            \
+				  ../share/MOD_NetCDFVector.o        \
+				  ../share/MOD_CoLMDebug.o           \
+				  ../share/GlobalVars.o              \
+				  ../share/LC_Const.o                \
+				  ../share/UrbanLCZ_Const.o          \
+				  ../share/MOD_Mapping_Grid2Pset.o
 
 OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_aggregation.o \
@@ -52,11 +52,11 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_landurban.o
 
 BASIC_HYDRO = \
-				  ../main/hydro/mod_io_basin.o \
-				  ../main/hydro/MOD_HydroTimeVars.o \
-				  ../main/hydro/MOD_1D_HydroFluxes.o \
-				  ../main/hydro/mod_soil_function.o \
-				  ../main/hydro/mod_soil_water.o
+				  ../main/hydro/MOD_Hydro_IO.o \
+				  ../main/hydro/MOD_Hydro_Vars_Timevars.o \
+				  ../main/hydro/MOD_Hydro_Vars_1DFluxes.o \
+				  ../main/hydro/MOD_Hydro_SoilFunction.o \
+				  ../main/hydro/MOD_Hydro_SoilWater.o
 
 BASIC_BGC = \
 			  ../main/bgc/MOD_BGC_Vars_1DFluxes.o  \

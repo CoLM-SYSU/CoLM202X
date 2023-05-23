@@ -3,8 +3,8 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
 MODULE mod_elm_vector
 
-   USE precision
-   USE mod_data_type
+   USE MOD_Precision
+   USE MOD_DataType
    IMPLICIT NONE
    
    INTEGER :: totalnumelm
@@ -17,11 +17,11 @@ CONTAINS
    ! --------
    SUBROUTINE elm_vector_init 
 
-      USE spmd_task
-      USE mod_utils
-      USE mod_pixelset
-      USE mod_utils
-      USE mod_mesh
+      USE MOD_SPMD_Task
+      USE MOD_Utils
+      USE MOD_Pixelset
+      USE MOD_Utils
+      USE MOD_Mesh
       USE mod_landelm
       USE mod_landpatch
       IMPLICIT NONE

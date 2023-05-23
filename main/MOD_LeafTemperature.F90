@@ -3,9 +3,9 @@
 MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
-USE precision
-USE mod_namelist, ONLY: DEF_Interception_scheme
-USE spmd_task
+USE MOD_Precision
+USE MOD_Namelist, ONLY: DEF_Interception_scheme
+USE MOD_SPMD_Task
 
 IMPLICIT NONE
 
@@ -84,7 +84,7 @@ CONTAINS
 ! Nan Wei,  01/2021: added interaction btw prec and canopy
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
@@ -1093,7 +1093,7 @@ USE PhysicalConstants, only: tfrz
    !=======================================================================
 
 
-      USE precision
+      USE MOD_Precision
 
       IMPLICIT NONE
 
@@ -1191,7 +1191,7 @@ USE PhysicalConstants, only: tfrz
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1219,7 +1219,7 @@ USE PhysicalConstants, only: tfrz
   REAL(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
                     displah, htop, hbot, obu, ustar, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1254,7 +1254,7 @@ USE PhysicalConstants, only: tfrz
 
   REAL(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1301,7 +1301,7 @@ USE PhysicalConstants, only: tfrz
 
   REAL(r8) FUNCTION ueffect(utop, htop, hbot, &
                             z0mg, alpha, bee, fc)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1351,7 +1351,7 @@ USE PhysicalConstants, only: tfrz
   REAL(r8) FUNCTION fuint(utop, ztop, zbot, &
         htop, hbot, z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop, ztop, zbot
@@ -1384,7 +1384,7 @@ USE PhysicalConstants, only: tfrz
   RECURSIVE SUBROUTINE ufindroots(ztop,zbot,zmid, &
      utop, htop, hbot, z0mg, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -1454,7 +1454,7 @@ USE PhysicalConstants, only: tfrz
 
   REAL(r8) FUNCTION udif(z, utop, htop, hbot, z0mg, alpha)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, utop, htop, hbot
@@ -1473,7 +1473,7 @@ USE PhysicalConstants, only: tfrz
 
   REAL(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
                     displah, htop, hbot, obu, ustar, ztop, zbot)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop
@@ -1524,7 +1524,7 @@ USE PhysicalConstants, only: tfrz
         ztop, zbot, displah, z0h, obu, ustar, &
         z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, htop, hbot
@@ -1579,7 +1579,7 @@ USE PhysicalConstants, only: tfrz
   REAL(r8) FUNCTION fkint(ktop, ztop, zbot, htop, hbot, &
         z0h, obu, ustar, fac, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1620,7 +1620,7 @@ USE PhysicalConstants, only: tfrz
   RECURSIVE SUBROUTINE kfindroots(ztop,zbot,zmid, &
      ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -1692,7 +1692,7 @@ USE PhysicalConstants, only: tfrz
   REAL(r8) FUNCTION kdif(z, ktop, htop, hbot, &
         obu, ustar, fac, alpha)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 

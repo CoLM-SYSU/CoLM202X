@@ -13,9 +13,9 @@ MODULE MOD_Vars_PFTConst
 ! Xingjie Lu, TODO:10/2021?: added for crop PFTs
 !
 ! !USES:
-   USE precision
+   USE MOD_Precision
    USE GlobalVars
-   USE timemanager, only: get_calday
+   USE MOD_TimeManager, only: get_calday
 
    IMPLICIT NONE
    SAVE

@@ -3,7 +3,7 @@
 MODULE MOD_SoilHcapCond
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -41,7 +41,7 @@ MODULE MOD_SoilHcapCond
 ! Nan Wei, 06/2018: add to CoLM/main
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
-   use precision
+   use MOD_Precision
    USE PhysicalConstants,only:tfrz
 
    IMPLICIT NONE

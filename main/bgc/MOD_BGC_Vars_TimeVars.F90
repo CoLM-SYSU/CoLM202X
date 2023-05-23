@@ -10,8 +10,8 @@ MODULE MOD_BGC_Vars_TimeVars
   ! !ORIGINAL:
   ! Xingjie Lu, 2022, created the original version
 
-use precision
-use timemanager
+use MOD_Precision
+use MOD_TimeManager
 IMPLICIT NONE
 SAVE
 !------------------------- BGC variables -------------------------------
@@ -275,9 +275,9 @@ SAVE
 ! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   USE GlobalVars
-  use spmd_task
+  use MOD_SPMD_Task
   use mod_landpatch, only : numpatch
   IMPLICIT NONE
 
@@ -532,7 +532,7 @@ SAVE
 
   SUBROUTINE deallocate_BGCTimeVars ()
 
-     use spmd_task
+     use MOD_SPMD_Task
      use mod_landpatch, only : numpatch
      implicit none
 
@@ -793,9 +793,9 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpatch
-     use ncio_vector
+     use MOD_NetCDFVector
      USE GlobalVars
      IMPLICIT NONE
 
@@ -952,11 +952,11 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist
-     use spmd_task
-     use ncio_vector
+     use MOD_Namelist
+     use MOD_SPMD_Task
+     use MOD_NetCDFVector
 #ifdef CoLMDEBUG
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
      USE mod_landpatch
      USE GlobalVars
@@ -1094,8 +1094,8 @@ SAVE
 #ifdef CoLMDEBUG
   SUBROUTINE check_BGCTimeVars ()
 
-     use spmd_task
-     use mod_colm_debug
+     use MOD_SPMD_Task
+     use MOD_CoLMDebug
 
      IMPLICIT NONE
 

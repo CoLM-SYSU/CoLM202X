@@ -12,7 +12,7 @@ MODULE UrbanALBEDO
 !
 !
 !-----------------------------------------------------------------------
- USE precision
+ USE MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -49,7 +49,7 @@ MODULE UrbanALBEDO
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE PhysicalConstants, only: tfrz
   USE UrbanShortwave
 

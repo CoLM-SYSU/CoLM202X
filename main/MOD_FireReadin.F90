@@ -4,7 +4,7 @@
 MODULE MOD_FireReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -28,15 +28,15 @@ MODULE MOD_FireReadin
       ! !ORIGINAL: Xingjie Lu and Shupeng Zhang, 2022
       ! ======================================================================================================
 
-      use precision
-      use mod_namelist
-      use spmd_task
-      use ncio_vector
+      use MOD_Precision
+      use MOD_Namelist
+      use MOD_SPMD_Task
+      use MOD_NetCDFVector
       use mod_landpatch
       use MOD_Vars_TimeInvariants, only: abm_lf, gdp_lf, peatf_lf
       use MOD_Vars_TimeVariables,  only: hdm_lf
 #ifdef CoLMDEBUG
-      use mod_colm_debug
+      use MOD_CoLMDebug
 #endif
 
       USE GlobalVars

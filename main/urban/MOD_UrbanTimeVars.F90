@@ -7,7 +7,7 @@ MODULE MOD_UrbanTimeVars
 ! Created by Hua Yuan, 12/2020
 ! -------------------------------
 
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 ! -----------------------------------------------------------------
@@ -118,8 +118,8 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CLM 1d [numurban] variables
 ! ------------------------------------------------------
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE mod_landurban
       USE GlobalVars
       IMPLICIT NONE
@@ -211,7 +211,7 @@ CONTAINS
 
    SUBROUTINE READ_UrbanTimeVars (file_restart)
 
-      USE ncio_vector
+      USE MOD_NetCDFVector
       USE mod_landurban
       USE GlobalVars
 
@@ -298,9 +298,9 @@ CONTAINS
 
    SUBROUTINE WRITE_UrbanTimeVars (file_restart)
 
-      USE mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+      USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
       USE mod_landurban
-      USE ncio_vector
+      USE MOD_NetCDFVector
       USE GlobalVars
       IMPLICIT NONE
 
@@ -399,7 +399,7 @@ CONTAINS
 
    SUBROUTINE deallocate_UrbanTimeVars
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE mod_landurban
 
       IF (p_is_worker) THEN

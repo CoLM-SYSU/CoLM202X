@@ -14,7 +14,7 @@ MODULE LC_Const
 ! TODO...
 !
 ! !USES:
-   USE precision
+   USE MOD_Precision
    USE GlobalVars
 
    IMPLICIT NONE

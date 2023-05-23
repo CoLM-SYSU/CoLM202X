@@ -7,16 +7,16 @@ SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urb
 ! Read in the Urban dataset
 ! ===========================================================
 
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE GlobalVars
-      USE mod_namelist
+      USE MOD_Namelist
       USE LC_Const
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars
-      USE ncio_vector
-      USE ncio_serial
+      USE MOD_NetCDFVector
+      USE MOD_NetCDFSerial
       USE mod_landpatch
       USE mod_landurban
 #ifdef URBAN_LCZ

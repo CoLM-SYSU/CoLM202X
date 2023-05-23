@@ -2,7 +2,7 @@
 
 MODULE UrbanBEM
 
-  USE precision
+  USE MOD_Precision
   USE GlobalVars
   USE PhysicalConstants
   USE UrbanShortwave, only: MatrixInverse

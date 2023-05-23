@@ -18,7 +18,7 @@ MODULE MOD_Lake
 ! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
 !-----------------------------------------------------------------------
 
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -64,7 +64,7 @@ MODULE MOD_Lake
 ! Nan Wei,  01/2018: update interaction btw prec and lake surface
 !-----------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : tfrz, denh2o, cpliq, cpice, hfus
   implicit none
 ! ------------------------ Dummy Argument ------------------------------
@@ -347,13 +347,13 @@ MODULE MOD_Lake
 !                                    flux, temperature and freezing mass calculations
 !
 ! -----------------------------------------------------------------
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
   use MOD_FrictionVelocity
   USE MOD_Qsadv
   USE MOD_SoilHcapCond
-  USE mod_utils
+  USE MOD_Utils
 
   IMPLICIT NONE
 ! ------------------------ input/output variables -----------------
@@ -1534,7 +1534,7 @@ MODULE MOD_Lake
 ! SnowLayersCombine_snicar, SnowLayersDivide_snicar()
 !-----------------------------------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : denh2o, denice, hfus, tfrz, cpliq, cpice
   use MOD_SoilSnowHydrology
   use MOD_SnowLayersCombineDivide
@@ -1799,7 +1799,7 @@ MODULE MOD_Lake
 ! Yongjiu Dai, Nan Wei, 01/2018
 !-----------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : tfrz,vonkar,grav
 
   IMPLICIT NONE
@@ -1856,7 +1856,7 @@ MODULE MOD_Lake
 ! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
 ! -------------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use PhysicalConstants, only : tfrz,tkwat,tkice,tkair,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice
 

@@ -14,29 +14,29 @@ EXECUTABLE = mksrfdata.x
 
 HEADER = ../include/define.h
 
-OBJS_SHARED =                            \
-	../share/precision.o             \
-	../share/MathConstants.o         \
-	../share/spmd_task.o             \
-	../share/GlobalVars.o            \
-	../share/LC_Const.o              \
-	../share/UrbanLCZ_Const.o        \
-	../share/mod_namelist.o          \
-	../share/timemanager.o           \
-	../share/mod_utils.o             \
-	../share/ncio_serial.o           \
-	../share/mod_block.o             \
-	../share/mod_grid.o              \
-	../share/mod_pixel.o             \
-	../share/mod_data_type.o         \
-	../share/ncio_block.o            \
-	../share/mod_catchment_data.o    \
-	../share/mod_5x5_data.o          \
-	../share/mod_mesh.o              \
-	../share/mod_pixelset.o          \
-	../share/ncio_vector.o           \
-	../share/mod_colm_debug.o        \
-	../share/mod_mapping_pset2grid.o
+OBJS_SHARED =                         \
+	../share/MOD_Precision.o           \
+	../share/MathConstants.o           \
+	../share/MOD_SPMD_Task.o           \
+	../share/GlobalVars.o              \
+	../share/LC_Const.o                \
+	../share/UrbanLCZ_Const.o          \
+	../share/MOD_Namelist.o            \
+	../share/MOD_TimeManager.o         \
+	../share/MOD_Utils.o               \
+	../share/MOD_NetCDFSerial.o        \
+	../share/MOD_Block.o               \
+	../share/MOD_Grid.o                \
+	../share/MOD_Pixel.o               \
+	../share/MOD_DataType.o            \
+	../share/MOD_NetCDFBlock.o         \
+	../share/MOD_CatchmentDataReadin.o \
+	../share/MOD_5x5DataReadin.o       \
+	../share/MOD_Mesh.o                \
+	../share/MOD_Pixelset.o            \
+	../share/MOD_NetCDFVector.o        \
+	../share/MOD_CoLMDebug.o           \
+	../share/MOD_Mapping_Pset2Grid.o
 
 OBJS =                                   \
 	 mod_aggregation.o               \

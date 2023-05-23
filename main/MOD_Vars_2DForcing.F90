@@ -7,7 +7,7 @@ MODULE MOD_Vars_2DForcing
    ! Created by Yongjiu Dai, 03/2014
    ! -------------------------------
 
-   use mod_data_type
+   use MOD_DataType
    IMPLICIT NONE
    SAVE
 
@@ -43,9 +43,9 @@ CONTAINS
       ! ------------------------------------------------
       ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! ------------------------------------------------
-      use spmd_task
-      use mod_grid
-      use mod_data_type
+      use MOD_SPMD_Task
+      use MOD_Grid
+      use MOD_DataType
       IMPLICIT NONE
 
       type(grid_type), intent(in) :: grid

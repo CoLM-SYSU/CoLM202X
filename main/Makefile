@@ -16,31 +16,31 @@ EXECUTABLE = colm.x
 .DEFAULT :
 
 OBJS_SHARED = \
-				  ../share/precision.o \
-				  ../share/GlobalVars.o \
-				  ../share/LC_Const.o \
-				  ../share/UrbanLCZ_Const.o                     \
-				  ../share/spmd_task.o          \
-				  ../share/mod_namelist.o \
-				  ../share/PhysicalConstants.o  \
-				  ../share/MathConstants.o  \
-				  ../share/mod_utils.o          \
-				  ../share/timemanager.o        \
-				  ../share/ncio_serial.o \
-				  ../share/mod_block.o          \
-				  ../share/mod_grid.o           \
-				  ../share/mod_pixel.o          \
-				  ../share/mod_data_type.o      \
-				  ../share/ncio_block.o  \
-				  ../share/mod_catchment_data.o \
-				  ../share/mod_5x5_data.o \
-				  ../share/mod_mesh.o   \
-				  ../share/mod_pixelset.o          \
-				  ../share/ncio_vector.o \
-				  ../share/mod_colm_debug.o \
-				  ../share/mod_mapping_grid2pset.o \
-				  ../share/mod_mapping_pset2grid.o \
-				  MOD_Eroot.o                      \
+				  ../share/MOD_Precision.o           \
+				  ../share/GlobalVars.o              \
+				  ../share/LC_Const.o                \
+				  ../share/UrbanLCZ_Const.o          \
+				  ../share/MOD_SPMD_Task.o           \
+				  ../share/MOD_Namelist.o            \
+				  ../share/PhysicalConstants.o       \
+				  ../share/MathConstants.o           \
+				  ../share/MOD_Utils.o               \
+				  ../share/MOD_TimeManager.o         \
+				  ../share/MOD_NetCDFSerial.o        \
+				  ../share/MOD_Block.o               \
+				  ../share/MOD_Grid.o                \
+				  ../share/MOD_Pixel.o               \
+				  ../share/MOD_DataType.o            \
+				  ../share/MOD_NetCDFBlock.o         \
+				  ../share/MOD_CatchmentDataReadin.o \
+				  ../share/MOD_5x5DataReadin.o       \
+				  ../share/MOD_Mesh.o                \
+				  ../share/MOD_Pixelset.o            \
+				  ../share/MOD_NetCDFVector.o        \
+				  ../share/MOD_CoLMDebug.o           \
+				  ../share/MOD_Mapping_Grid2Pset.o   \
+				  ../share/MOD_Mapping_Pset2Grid.o   \
+				  MOD_Eroot.o                        \
 				  MOD_Qsadv.o
 
 OBJS_MKSRFDATA = \
@@ -58,21 +58,21 @@ OBJS_MKSRFDATA = \
 				  ../mksrfdata/mod_hru_vector.o
 
 BASIC_HYDRO = \
-				  hydro/mod_io_basin.o \
-				  hydro/MOD_HydroTimeVars.o \
-				  hydro/MOD_1D_HydroFluxes.o
+				  hydro/MOD_Hydro_IO.o \
+				  hydro/MOD_Hydro_Vars_Timevars.o \
+				  hydro/MOD_Hydro_Vars_1DFluxes.o
 
 OBJS_HYDRO = \
-				  hydro/mod_soil_function.o \
-				  hydro/mod_soil_water.o \
-				  hydro/mod_drainage_network.o \
-				  hydro/mod_river_network.o \
-				  hydro/mod_ssrf_network.o \
-				  hydro/mod_surface_runoff.o \
-				  hydro/mod_subsurface_runoff.o \
-				  hydro/mod_river_flow.o \
-				  hydro/mod_hist_basin.o \
-				  hydro/mod_lateral_flow.o
+				  hydro/MOD_Hydro_SoilFunction.o \
+				  hydro/MOD_Hydro_SoilWater.o \
+				  hydro/MOD_Hydro_DrainageNetwork.o \
+				  hydro/MOD_Hydro_RiverNetwork.o \
+				  hydro/MOD_Hydro_SubsurfaceNetwork.o \
+				  hydro/MOD_Hydro_SurfaceFlow.o \
+				  hydro/MOD_Hydro_SubsurfaceFlow.o \
+				  hydro/MOD_Hydro_RiverFlow.o \
+				  hydro/MOD_Hydro_Hist.o \
+				  hydro/MOD_Hydro_LateralFlow.o
 
 OBJS_BGC = \
 			  bgc/MOD_BGC_CNCStateUpdate1.o    \
