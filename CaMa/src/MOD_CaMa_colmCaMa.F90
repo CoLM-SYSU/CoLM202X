@@ -366,6 +366,7 @@ SUBROUTINE get_fldinfo()
 END SUBROUTINE get_fldinfo
 
 SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
+	hpbl, &
     taux,tauy,fseng,fevpg,tref,qref,z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
    !DESCRIPTION
    !===========
@@ -381,12 +382,16 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
                                         !  and humidity profiles of surface boundary layer,see MOD_FrictionVelocity.F90
    !REVISION HISTORY
    !----------------
+   ! 2023.05.05  Shaofeng Liu @ SYSU: 
+   !             add option to call moninobuk_leddy, the LargeEddy
+   !             surface turbulence scheme (LZD2022); make a proper update of um.
    ! 2020.10.01  Zhongwang Wei @ SYSU
    ! 2002.08.30  Yongjiu Dai   @ BNU
    ! 1999.09.15  Yongjiu Dai   @ BNU
    USE precision
    USE MOD_Const_Physical, ONLY : cpair,rgas,vonkar,grav
    USE MOD_FrictionVelocity
+   USE MOD_TurbulenceLEddy
    IMPLICIT NONE
    REAL(r8), INTENT(in)  :: hu      ! agcm reference height of wind [m]
    REAL(r8), INTENT(in)  :: ht      ! agcm reference height of temperature [m]
@@ -397,7 +402,8 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    REAL(r8), INTENT(in)  :: qm      ! specific humidity at agcm reference height [kg/kg]
    REAL(r8), INTENT(in)  :: rhoair  ! density air [kg/m3]
    REAL(r8), INTENT(in)  :: psrf    ! atmosphere pressure at the surface [pa] [not used]
-   REAL(r8), INTENT(in)  :: tssea   ! inundation surface temperature [K]-->set to tgrnd
+   REAL(r8), INTENT(in)  :: tssea   ! inundation surface temperature [K]-->set to tgrnd 
+   REAL(r8), INTENT(in)  :: hpbl    ! atmospheric boundary layer height [m]
    REAL(r8), INTENT(out) :: taux    ! wind stress: E-W [kg/m/s**2]
    REAL(r8), INTENT(out) :: tauy    ! wind stress: N-S [kg/m/s**2]
    REAL(r8), INTENT(out) :: fseng   ! sensible heat flux from ground [mm/s]
@@ -520,9 +526,14 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    z0qg=z0mg/exp(xq)
    z0hg=z0mg/exp(xt)
    !calculation of friction velocity, relation for potential temperature
-   CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
-       ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-   !get qstar and tstar
+   if (DEF_USE_CBL_HEIGHT) then
+      CALL moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+                           ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+   else
+      CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+                     ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+   endif
+   !get qstar and tstar 
    tstar = vonkar/fh*dth
    qstar = vonkar/fq*dqh
 
@@ -538,6 +549,9 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    IF(zol >= 0.)THEN
    um = max(ur,0.1) !wind speed at reference height
    else
+   if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+     zii = max(5.*hu,hpbl)
+   endif !//TODO: Shaofeng, 2023.05.18
    wc = (-grav*ustar*thvstar*zii/thv)**(1./3.) !convective velocity scale
    wc2 = beta*beta*(wc*wc)                     !convective velocity scale squared
    um = sqrt(ur*ur+wc2)                        !wind speed with convective velocity scale

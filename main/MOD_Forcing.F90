@@ -331,6 +331,9 @@ contains
          call block_data_copy (forcn(3), forc_xy_pbot   )
          call block_data_copy (forcn(7), forc_xy_solarin)
          call block_data_copy (forcn(8), forc_xy_frl    )
+         if (DEF_USE_CBL_HEIGHT) then
+            call block_data_copy (forcn(9), forc_xy_hpbl    )
+         endif
 
          if (trim(DEF_forcing%dataset) == 'POINT') then
             call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
@@ -474,6 +477,9 @@ contains
       call mg2p_forc%map_aweighted (forc_xy_hgt_t,  forc_hgt_t)
       call mg2p_forc%map_aweighted (forc_xy_hgt_u,  forc_hgt_u)
       call mg2p_forc%map_aweighted (forc_xy_hgt_q,  forc_hgt_q)
+      if (DEF_USE_CBL_HEIGHT) then
+	    call mg2p_forc%map_aweighted (forc_xy_hpbl,   forc_hpbl)
+      endif
 
 #ifndef Forcing_Downscaling
       call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
@@ -565,6 +571,9 @@ contains
       call check_vector_data ('Forcing solsd ', forc_solsd)
       call check_vector_data ('Forcing solld ', forc_solld)
       call check_vector_data ('Forcing frl   ', forc_frl  )
+      if (DEF_USE_CBL_HEIGHT) then
+        call check_vector_data ('Forcing hpbl  ', forc_hpbl )
+      endif         
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)

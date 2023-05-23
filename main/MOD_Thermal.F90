@@ -59,7 +59,8 @@ MODULE MOD_Thermal
                       trda        ,trdm        ,trop        ,gradm      ,&
                       binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
                       forc_hgt_q  ,forc_us     ,forc_vs     ,forc_t     ,&
-                      forc_q      ,forc_rhoair ,forc_psrf   ,forc_pco2m ,&
+                      forc_q, forc_rhoair, forc_psrf, forc_pco2m, &
+                      forc_hpbl                                         ,&
                       forc_po2m   ,coszen      ,parsun      ,parsha     ,&
                       sabvsun     ,sabvsha     ,sabg        ,frl        ,&
                       extkb       ,extkd       ,thermk      ,fsno       ,&
@@ -228,6 +229,7 @@ use spmd_task
         forc_psrf,   &! atmosphere pressure at the surface [pa]
         forc_pco2m,  &! CO2 concentration in atmos. (pascals)
         forc_po2m,   &! O2 concentration in atmos. (pascals)
+        forc_hpbl,   &! atmospheric boundary layer height [m]
         pg_rain,     &! rainfall onto ground including canopy runoff [kg/(m2 s)]
         pg_snow,     &! snowfall onto ground including canopy runoff [kg/(m2 s)]
         t_precip,    &! snowfall/rainfall temperature [kelvin]
@@ -582,6 +584,7 @@ IF (patchtype == 0) THEN
 !=======================================================================
 #if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
+                         forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -654,6 +657,7 @@ IF (patchtype == 0) THEN
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 #endif
+                 forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )
       ENDIF
@@ -726,6 +730,7 @@ IF (patchtype == 0) THEN
 
       ! always DO CALL groundfluxes
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
+                         forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -799,12 +804,14 @@ IF (patchtype == 0) THEN
                  o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i), &
                  lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone,  &
 #endif
+                 forc_hpbl                                                     ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
                  hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
 
          ELSE
 
             CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
+                               forc_hpbl, &
                                forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                                ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                                fsno,cgrnd_p(i),cgrndl_p(i),cgrnds_p(i), &
@@ -965,6 +972,7 @@ IF (patchtype == 0) THEN
 
       ! always DO CALL groundfluxes first
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
+                         forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -1070,6 +1078,7 @@ IF (patchtype == 0) THEN
            o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
            lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
 #endif
+           forc_hpbl                                                                  ,&
            qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp           ,&
            hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                )
       ELSE
@@ -1154,6 +1163,7 @@ IF (patchtype == 0) THEN
 ! For patchtype/=0, not a soil patch
 ELSE
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
+                         forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -1226,6 +1236,7 @@ ELSE
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 #endif
+                 forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )
       ENDIF

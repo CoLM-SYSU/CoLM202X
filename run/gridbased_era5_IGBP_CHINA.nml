@@ -1,26 +1,26 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'gridbased_era5_IGBP_cama_test_0428'          
-   DEF_domain%edges = -90.0      
-   DEF_domain%edgen = 90.0      
-   DEF_domain%edgew = -180.0   
-   DEF_domain%edgee = 180.0      
+   DEF_CASE_NAME = 'gridbased_era5_IGBP_CHINA'          
+   DEF_domain%edges = 10.0      
+   DEF_domain%edgen = 60.0      
+   DEF_domain%edgew = 70.0   
+   DEF_domain%edgee = 140.0      
    
    DEF_nx_blocks = 36
    DEF_ny_blocks = 36
-   DEF_PIO_groupsize = 6
+   DEF_PIO_groupsize = 9
    
    DEF_simulation_time%greenwich     = .TRUE.
-   DEF_simulation_time%start_year    = 1990
+   DEF_simulation_time%start_year    = 2001
    DEF_simulation_time%start_month   = 1
    DEF_simulation_time%start_day     = 1
    DEF_simulation_time%start_sec     = 0
-   DEF_simulation_time%end_year      = 1997
+   DEF_simulation_time%end_year      = 2003
    DEF_simulation_time%end_month     = 12
    DEF_simulation_time%end_day       = 31
    DEF_simulation_time%end_sec       = 86400
-   DEF_simulation_time%spinup_year   = 1989
-   DEF_simulation_time%spinup_month  = 1
+   DEF_simulation_time%spinup_year   = 2001
+   DEF_simulation_time%spinup_month  = 12
    DEF_simulation_time%spinup_day    = 31
    DEF_simulation_time%spinup_sec    = 86400
    DEF_simulation_time%spinup_repeat = 0
@@ -28,7 +28,7 @@
    DEF_simulation_time%timestep      = 3600.
    
    DEF_dir_rawdata  = '/tera07/CLMrawdata/'
-   DEF_dir_output   = '/tera04/zhwei/colm/cases'
+   DEF_dir_output   = '/tera05/liusf/cases_debuged-0515'
    
    ! ----- land units and land sets -----
    ! for GRIDBASED
@@ -37,8 +37,8 @@
    ! LAI setting
    DEF_LAI_CLIM = .true.
 
-   ! whether use CBL height
-   DEF_USE_CBL_HEIGHT = .true.
+   ! whether use CBL height (hpbl) and turn on the large-eddy turbulence scheme (LZD2022)
+   DEF_USE_CBL_HEIGHT = .false.
 
    ! Model settings
    DEF_LANDONLY = .true.
@@ -53,7 +53,7 @@
    ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
    ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT 
    ! CLDAS
-   DEF_forcing_namelist = '/tera04/zhwei/colm/CoLM202X/run/forcing/ERA5.nml'
+   DEF_forcing_namelist = '/tera04/liusf/CoLM202X_dev-leddy_20230511_debuged-0515/run/forcing/ERA5_LEddy.nml'
 
    ! ----- history -----
    DEF_hist_grid_as_forcing = .false.

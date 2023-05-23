@@ -46,6 +46,8 @@ SUBROUTINE CoLMMAIN ( &
            forc_sols,    forc_soll,    forc_solsd,   forc_solld,    &
            forc_frl,     forc_hgt_u,   forc_hgt_t,   forc_hgt_q,    &
            forc_rhoair,                                             &
+           ! cbl forcing
+           forc_hpbl,                                               &
 
          ! land surface variables required for restart
            z_sno,        dz_sno,       t_soisno,     wliq_soisno,   &
@@ -310,6 +312,7 @@ SUBROUTINE CoLMMAIN ( &
         forc_hgt_u  ,&! observational height of wind [m]
         forc_hgt_t  ,&! observational height of temperature [m]
         forc_hgt_q  ,&! observational height of humidity [m]
+        forc_hpbl   ,&! atmospheric boundary layer height [m]
         forc_rhoair   ! density air [kg/m3]
 #if(defined CaMa_Flood)
    REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
@@ -786,6 +789,7 @@ ENDIF
            binter            ,extkn             ,forc_hgt_u        ,forc_hgt_t        ,&
            forc_hgt_q        ,forc_us           ,forc_vs           ,forc_t            ,&
            forc_q            ,forc_rhoair       ,forc_psrf         ,forc_pco2m        ,&
+           forc_hpbl                                                                  ,&
            forc_po2m         ,coszen            ,parsun            ,parsha            ,&
            sabvsun           ,sabvsha           ,sabg              ,forc_frl          ,&
            extkb             ,extkd             ,thermk            ,fsno              ,&
@@ -1010,7 +1014,9 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       CALL GLACIER_TEMP (patchtype,   lb    ,nl_soil     ,deltim     ,&
                    zlnd        ,zsno        ,capr       ,cnfac       ,&
                    forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q ,forc_us     ,&
-                   forc_vs     ,forc_t      ,forc_q     ,forc_rhoair ,&
+                   forc_vs     ,forc_t      ,forc_q                  ,&
+                   forc_hpbl                                         ,&
+				   forc_rhoair                                       ,&
                    forc_psrf   ,coszen      ,sabg       ,forc_frl    ,&
                    fsno,dz_soisno(lb:),z_soisno(lb:),zi_soisno(lb-1:),&
                    t_soisno(lb:),wice_soisno(lb:),wliq_soisno(lb:)   ,&
@@ -1125,6 +1131,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     ,BA_beta, &
 #endif
+           forc_hpbl, &
 
            ! "inout" laketem arguments
            ! ---------------------------
@@ -1230,6 +1237,7 @@ if (LWEVAP) then
    if ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05).and.patchtype == 0)then
          call get_fldevp (forc_hgt_u,forc_hgt_t,forc_hgt_q,&
             forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf,t_grnd,&
+            forc_hpbl, &
             taux_fld,tauy_fld,fseng_fld,fevpg_fld,tref_fld,qref_fld,&
             z0m_fld,zol_fld,rib_fld,ustar_fld,qstar_fld,tstar_fld,fm_fld,fh_fld,fq_fld)
       if (fevpg_fld<0.0) fevpg_fld=0.0d0
