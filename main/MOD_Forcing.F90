@@ -21,7 +21,7 @@ module MOD_Forcing
    use MOD_TimeManager
    use MOD_SPMD_Task
    USE MOD_MonthlyinSituCO2mlo
-   USE MathConstants, only : pi
+   USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
 
    implicit none

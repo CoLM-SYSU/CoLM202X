@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_PerviousTem
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 

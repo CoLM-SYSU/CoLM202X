@@ -1,7 +1,7 @@
 MODULE MOD_TurbulenceLEddy
 
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -41,7 +41,7 @@ MODULE MOD_TurbulenceLEddy
 !
 ! ======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : vonkar
   implicit none
 
@@ -224,7 +224,7 @@ MODULE MOD_TurbulenceLEddy
 !                        boundary leyer height in the phim function. 
 ! ======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : vonkar
   implicit none
 
@@ -443,7 +443,7 @@ MODULE MOD_TurbulenceLEddy
 !=======================================================================
 ! stability function for unstable case (rib < 0)
 
-  use precision
+  use MOD_Precision
   implicit none
 
   integer k

@@ -3,7 +3,7 @@
 MODULE MOD_IniTimeVar
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 

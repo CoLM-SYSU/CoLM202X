@@ -7,7 +7,7 @@ program hist_concatenate
    use MOD_Namelist
    use MOD_Block
    use MOD_Grid
-   use mod_concatenate
+   use MOD_Concatenate
    USE MOD_NetCDFSerial
 
    implicit none

@@ -3,7 +3,7 @@
 MODULE MOD_HtopReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -24,8 +24,8 @@ MODULE MOD_HtopReadin
 ! Read in the canopy tree top height
 ! ===========================================================
 
-         USE precision
-         USE spmd_task
+         USE MOD_Precision
+         USE MOD_SPMD_Task
          USE MOD_Vars_Global
          USE MOD_Const_LC
          USE MOD_Const_PFT
@@ -41,7 +41,7 @@ MODULE MOD_HtopReadin
          USE MOD_Vars_PCTimeInvars
          USE MOD_Vars_PCTimeVars
 #endif
-         USE ncio_vector
+         USE MOD_NetCDFVector 
 #ifdef SinglePoint
          USE MOD_SingleSrfdata
 #endif

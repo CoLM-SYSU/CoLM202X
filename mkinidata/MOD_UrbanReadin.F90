@@ -5,7 +5,7 @@
 MODULE MOD_UrbanReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 

@@ -104,6 +104,7 @@ MODULE MOD_Vars_Global
 
    REAL(r8), parameter :: spval = -1.e36_r8  !missing value
    REAL(r8), parameter :: PI    = 4*atan(1.) !pi value
+   REAL(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlovalVars

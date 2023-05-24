@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_Thermal
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
   PRIVATE

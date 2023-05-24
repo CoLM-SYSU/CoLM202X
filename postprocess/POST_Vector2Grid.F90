@@ -3,7 +3,7 @@
 program post_vector2grid
 
    use MOD_Namelist
-   use mod_vector2grid
+   use MOD_Vector2Grid
    USE netcdf
    USE MOD_NetCDFSerial
 

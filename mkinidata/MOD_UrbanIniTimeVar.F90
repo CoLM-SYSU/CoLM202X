@@ -3,7 +3,7 @@
 #ifdef URBAN_MODEL
 MODULE MOD_UrbanIniTimeVar
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 

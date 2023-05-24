@@ -3,7 +3,7 @@
 MODULE MOD_SoilColorRefl
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -24,7 +24,7 @@ MODULE MOD_SoilColorRefl
    !
    ! Created by Yongjiu Dai, 03/2014
    ! ======================================================================
-   use precision
+   use MOD_Precision
 
    IMPLICIT NONE
          integer, intent(in) :: L  ! land cover types (GLCC USGS/MODIS IGBP)

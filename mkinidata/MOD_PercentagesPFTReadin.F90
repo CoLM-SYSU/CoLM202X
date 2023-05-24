@@ -3,7 +3,7 @@
 MODULE MOD_PercentagesPFTReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -20,13 +20,13 @@ MODULE MOD_PercentagesPFTReadin
 
    SUBROUTINE pct_readin (dir_landdata)
 
-      use precision
+      use MOD_Precision
       USE MOD_Vars_Global
-      use spmd_task
-      use ncio_vector
+      use MOD_SPMD_Task
+      USE MOD_NetCDFVector
       USE MOD_LandPatch
 #ifdef CoLMDEBUG
-      USE mod_colm_debug
+      USE MOD_CoLMDebug
 #endif
 #ifdef PFT_CLASSIFICATION
       use MOD_LandPFT

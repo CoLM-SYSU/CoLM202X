@@ -3,7 +3,7 @@
 #ifdef URBAN_MODEL
 MODULE MOD_Urban_LAIReadin
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -25,7 +25,7 @@ CONTAINS
       USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
-      USE MOD_UrbanTimeInvars
+      USE MOD_Urban_Vars_TimeInvars
       USE MOD_NetCDFVector
 
       IMPLICIT NONE

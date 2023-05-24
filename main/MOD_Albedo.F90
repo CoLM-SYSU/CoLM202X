@@ -1937,7 +1937,7 @@ ENDIF
 ! Update snow cover and snow age, based on BATS code
 !=======================================================================
 
-   use precision
+   use MOD_Precision
    use MOD_Const_Physical, only : tfrz
    implicit none
 

@@ -596,7 +596,7 @@ CONTAINS
 
       USE MOD_Precision
       USE MOD_Utils
-      USE MathConstants, only : pi
+      USE MOD_Vars_Global, only : pi
       IMPLICIT NONE
 
       class (grid_type) :: this
@@ -628,7 +628,7 @@ CONTAINS
 
       USE MOD_Precision
       USE MOD_Utils
-      USE MathConstants, only : pi
+      USE MOD_Vars_Global, only : pi
       IMPLICIT NONE
 
       class (grid_type) :: this
