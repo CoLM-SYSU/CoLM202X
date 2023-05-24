@@ -67,7 +67,7 @@ CONTAINS
       USE MOD_Precision
       USE MOD_Vars_Global
       USE MOD_SPMD_Task
-      USE mod_landpc
+      USE MOD_LandPC
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -104,7 +104,7 @@ CONTAINS
       USE MOD_Vars_Global
       use MOD_Namelist
       use MOD_NetCDFVector
-      USE mod_landpc
+      USE MOD_LandPC
       IMPLICIT NONE
 
       character(LEN=*), intent(in) :: file_restart
@@ -138,7 +138,7 @@ CONTAINS
 
      USE MOD_Vars_Global
      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE mod_landpc
+     USE MOD_LandPC
      use MOD_NetCDFVector
      IMPLICIT NONE
 
@@ -191,7 +191,7 @@ CONTAINS
 ! --------------------------------------------------
 
       USE MOD_SPMD_Task
-      USE mod_landpc
+      USE MOD_LandPC
 
       IF (p_is_worker) THEN
          IF (numpc > 0) THEN

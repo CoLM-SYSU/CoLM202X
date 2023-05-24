@@ -27,7 +27,7 @@ CONTAINS
 
      USE MOD_SPMD_Task
      USE MOD_Mesh
-     USE mod_landhru
+     USE MOD_LandHRU
      IMPLICIT NONE
 
      INTEGER :: numbasin
@@ -52,10 +52,10 @@ CONTAINS
   SUBROUTINE READ_HydroTimeVars (file_restart)
 
      USE MOD_Mesh
-     USE mod_landhru
+     USE MOD_LandHRU
      USE MOD_Hydro_IO
-     USE mod_elm_vector
-     USE mod_hru_vector
+     USE MOD_ElmVector
+     USE MOD_HRUVector
      IMPLICIT NONE
      
      INTEGER :: numbasin
@@ -77,10 +77,10 @@ CONTAINS
      USE MOD_SPMD_Task
      USE MOD_NetCDFSerial
      USE MOD_Mesh
-     USE mod_landhru
+     USE MOD_LandHRU
      USE MOD_Hydro_IO
-     USE mod_elm_vector
-     USE mod_hru_vector
+     USE MOD_ElmVector
+     USE MOD_HRUVector
      IMPLICIT NONE
 
      INTEGER :: numbasin, iwork

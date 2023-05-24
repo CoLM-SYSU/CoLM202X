@@ -84,7 +84,7 @@ CONTAINS
 ! ------------------------------------------------------
       USE MOD_Precision
       USE MOD_SPMD_Task
-      USE mod_landurban
+      USE MOD_LandUrban
       USE MOD_Vars_Global
       IMPLICIT NONE
 
@@ -139,7 +139,7 @@ CONTAINS
    SUBROUTINE READ_UrbanTimeInvars (file_restart)
 
      USE MOD_NetCDFVector
-     USE mod_landurban
+     USE MOD_LandUrban
 
      IMPLICIT NONE
 
@@ -198,7 +198,7 @@ CONTAINS
    SUBROUTINE WRITE_UrbanTimeInvars (file_restart)
 
      use MOD_NetCDFVector
-     use mod_landurban
+     use MOD_LandUrban
      USE MOD_Namelist
      USE MOD_Vars_Global
 
@@ -278,7 +278,7 @@ CONTAINS
    SUBROUTINE deallocate_UrbanTimeInvars
 
       USE MOD_SPMD_Task
-      USE mod_landurban
+      USE MOD_LandUrban
       ! deallocate (urbclass  )
 
       IF (p_is_worker) THEN

@@ -136,18 +136,18 @@ OBJS_SHARED =                                           \
 	  MOD_Qsadv.o
 
 OBJS_MKSRFDATA =                                        \
-	  ../mksrfdata/mod_aggregation.o                \
-	  ../mksrfdata/mod_srfdata_restart.o            \
-	  ../mksrfdata/mod_pixelsetshadow.o             \
-	  ../mksrfdata/mod_landelm.o                    \
-	  ../mksrfdata/mod_landhru.o                    \
-	  ../mksrfdata/mod_landpatch.o                  \
-	  ../mksrfdata/mod_landpft.o                    \
-	  ../mksrfdata/mod_landpc.o                     \
-	  ../mksrfdata/mod_landurban.o                  \
-	  ../mksrfdata/mod_single_srfdata.o             \
-	  ../mksrfdata/mod_elm_vector.o                 \
-	  ../mksrfdata/mod_hru_vector.o
+	  ../mksrfdata/MOD_AggregationRequestData.o     \
+	  ../mksrfdata/MOD_SrfdataRestart.o             \
+	  ../mksrfdata/MOD_PixelsetShadow.o             \
+	  ../mksrfdata/MOD_LandElm.o                    \
+	  ../mksrfdata/MOD_LandHRU.o                    \
+	  ../mksrfdata/MOD_LandPatch.o                  \
+	  ../mksrfdata/MOD_LandPFT.o                    \
+	  ../mksrfdata/MOD_LandPC.o                     \
+	  ../mksrfdata/MOD_LandUrban.o                  \
+	  ../mksrfdata/MOD_SingleSrfdata.o              \
+	  ../mksrfdata/MOD_ElmVector.o                  \
+	  ../mksrfdata/MOD_HRUVector.o
 
 BASIC_HYDRO =                                           \
 	  hydro/mod_io_basin.o                          \
@@ -219,7 +219,7 @@ OBJS_URBAN =                                            \
 	  urban/Urban_CoLMMAIN.o
 
 BASIC =                                                 \
-	  MOD_Const_PFT.o                           \
+	  MOD_Const_PFT.o                               \
 	  MOD_Vars_PFTimeVars.o                         \
 	  MOD_Vars_PFTimeInvars.o                       \
 	  MOD_Vars_PCTimeVars.o                         \
@@ -241,7 +241,7 @@ BASIC_BGC =                                             \
 	  bgc/MOD_BGC_Vars_TimeVars.o
 
 BASIC_URBAN =                                           \
-	  urban/MOD_Urban_Const_LCZ.o               \
+	  urban/MOD_Urban_Const_LCZ.o                   \
 	  urban/MOD_Urban_Vars_1DFluxes.o               \
 	  urban/MOD_Urban_Vars_TimeInvars.o             \
 	  urban/MOD_Urban_Vars_TimeVars.o
@@ -260,6 +260,7 @@ OBJS =                                                  \
 	  MOD_AssimStomataConductance.o                 \
 	  MOD_PlantHydraulic.o                          \
 	  MOD_FrictionVelocity.o                        \
+	  MOD_TurbulenceLEddy.o                         \
 	  MOD_Ozone.o                                   \
 	  MOD_LeafTemperature.o                         \
 	  MOD_LeafTemperaturePC.o                       \
@@ -292,7 +293,6 @@ OBJS =                                                  \
 	  MOD_HistVector.o                              \
 	  MOD_Hist.o                                    \
 	  MOD_LightningData.o                           \
-	  MOD_OzoneData.o                               \
 	  ../CaMa/src/MOD_CaMa_colmCaMa.o               \
 	  CoLMDRIVER.o                                  \
 	  CoLMMAIN.o                                    \

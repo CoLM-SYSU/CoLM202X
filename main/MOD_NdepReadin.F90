@@ -35,7 +35,7 @@ MODULE MOD_NdepReadin
       use MOD_Precision
       use MOD_SPMD_Task
       use MOD_NetCDFVector
-      use mod_landpatch
+      use MOD_LandPatch
       use MOD_BGC_Vars_TimeVars,  only: ndep
       use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
       use MOD_Vars_TimeInvariants

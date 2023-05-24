@@ -44,13 +44,13 @@ MODULE MOD_NetSolar
    USE MOD_Vars_Global
    USE MOD_TimeManager, only: isgreenwich
 #ifdef PFT_CLASSIFICATION
-   USE mod_landpft, only : patch_pft_s, patch_pft_e
+   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvars
    USE MOD_Vars_PFTimeVars
    USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef PC_CLASSIFICATION
-   USE mod_landpc
+   USE MOD_LandPC
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
    USE MOD_Vars_1DPCFluxes

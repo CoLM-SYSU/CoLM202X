@@ -31,7 +31,7 @@ CONTAINS
       USE MOD_Namelist
       USE MOD_NetCDFSerial
       USE MOD_Mesh
-      USE mod_landhru
+      USE MOD_LandHRU
       USE MOD_CoLMDebug
       IMPLICIT NONE
 

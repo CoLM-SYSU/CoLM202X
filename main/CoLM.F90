@@ -35,32 +35,32 @@ PROGRAM CoLM
    use MOD_Block
    use MOD_Pixel
    USE MOD_Mesh
-   use mod_landelm
+   use MOD_LandElm
 #ifdef CATCHMENT
-   USE mod_landhru
+   USE MOD_LandHRU
 #endif
-   use mod_landpatch
+   use MOD_LandPatch
 #ifdef URBAN_MODEL
-   USE mod_landurban
+   USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
 #ifdef PFT_CLASSIFICATION
-   USE mod_landpft
+   USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION
-   USE mod_landpc
+   USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
-   USE mod_elm_vector
+   USE MOD_ElmVector
 #endif
 #ifdef CATCHMENT
-   USE mod_hru_vector
+   USE MOD_HRUVector
 #endif
 #if(defined CaMa_Flood)
    use MOD_CaMa_colmCaMa ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
-   USE mod_single_srfdata
+   USE MOD_SingleSrfdata
 #endif
 
 #if (defined LATERAL_FLOW)
@@ -75,7 +75,7 @@ PROGRAM CoLM
 #ifdef OzoneData
    USE MOD_OzoneData, only: init_ozone_data, update_ozone_data
 #endif
-   use mod_srfdata_restart
+   use MOD_SrfdataRestart
    USE MOD_LAIReadin
    USE MOD_NitrifReadin
 

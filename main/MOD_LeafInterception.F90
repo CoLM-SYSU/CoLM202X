@@ -1345,8 +1345,8 @@ contains
       ! 2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
       USE MOD_Precision
+      USE MOD_LandPFT
       USE MOD_Const_Physical, only: tfrz
-      USE mod_landpft
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
       USE MOD_Vars_1DPFTFluxes
@@ -1488,8 +1488,8 @@ contains
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
       USE MOD_Vars_1DPCFluxes
+      USE MOD_LandPC
       USE MOD_Const_PFT
-      USE mod_landpc
 
       IMPLICIT NONE
 

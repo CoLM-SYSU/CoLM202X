@@ -144,7 +144,7 @@ SAVE
      use MOD_Precision
      use MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools
      use MOD_SPMD_Task
-     use mod_landpatch, only : numpatch
+     use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
 
   if (p_is_worker) then
@@ -186,7 +186,7 @@ SAVE
 #ifdef CoLMDEBUG
      USE MOD_CoLMDebug
 #endif
-     USE mod_landpatch
+     USE MOD_LandPatch
      USE MOD_Vars_Global
 
      IMPLICIT NONE
@@ -315,7 +315,7 @@ SAVE
      use MOD_SPMD_Task
      use MOD_NetCDFSerial
      use MOD_NetCDFVector
-     use mod_landpatch
+     use MOD_LandPatch
      USE MOD_Vars_Global
 
      IMPLICIT NONE
@@ -451,7 +451,7 @@ SAVE
   SUBROUTINE deallocate_BGCTimeInvars ()
 
      use MOD_SPMD_Task
-     use mod_landpatch, only : numpatch
+     use MOD_LandPatch, only : numpatch
      implicit none
 
      ! --------------------------------------------------

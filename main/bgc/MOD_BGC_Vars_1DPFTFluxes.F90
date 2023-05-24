@@ -340,7 +340,7 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
 
      USE MOD_Precision
      USE MOD_SPMD_Task
-     USE mod_landpft
+     USE MOD_LandPFT
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -664,7 +664,7 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
   ! deallocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
      USE MOD_SPMD_Task
-     USE mod_landpft
+     USE MOD_LandPFT
 
      IF (p_is_worker) THEN
         IF (numpft > 0) THEN

@@ -26,7 +26,7 @@ CONTAINS
       USE MOD_Grid
       USE MOD_NetCDFSerial
       USE MOD_NetCDFBlock
-      USE mod_landpatch
+      USE MOD_LandPatch
       USE MOD_CoLMDebug
       IMPLICIT NONE
 

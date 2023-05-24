@@ -8,7 +8,7 @@ module MOD_Hist
    USE MOD_Namelist
 #ifdef PFT_CLASSIFICATION
    USE MOD_Vars_PFTimeInvars, only: pftclass
-   USE mod_landpft, only : patch_pft_s
+   USE MOD_LandPFT, only : patch_pft_s
 #endif
    USE MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
@@ -36,7 +36,7 @@ contains
       USE MOD_Vars_Global
       use MOD_SPMD_Task
       use MOD_Grid
-      USE mod_landpatch
+      USE MOD_LandPatch
       use MOD_Mapping_Pset2Grid
       use MOD_Vars_1DAccFluxes
 #ifdef LATERAL_FLOW
@@ -122,7 +122,7 @@ contains
       use MOD_Vars_1DAccFluxes
       use MOD_Block
       use MOD_DataType
-      use mod_landpatch
+      use MOD_LandPatch
       use MOD_Mapping_Pset2Grid
       use MOD_Vars_2DFluxes
       use MOD_CoLMDebug
@@ -309,6 +309,13 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%xy_snow, &
             a_snow, f_xy_snow, file_hist, 'f_xy_snow', itime_in_file, sumwt, filter, &
             'snow','mm/s')
+
+		 if (DEF_USE_CBL_HEIGHT) then
+         ! atmospheric boundary layer height [m]
+           call flux_map_and_write_2d ( DEF_hist_vars%xy_hpbl, &
+              a_hpbl, f_xy_hpbl, file_hist, 'f_xy_hpbl', itime_in_file, sumwt, filter, &
+              'boundary layer height','m')
+		 endif
 
          ! ------------------------------------------------------------------------------------------
          ! Mapping the fluxes and state variables at patch [numpatch] to grid

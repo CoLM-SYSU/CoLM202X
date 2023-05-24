@@ -45,7 +45,7 @@ CONTAINS
       USE MOD_Namelist
       USE MOD_NetCDFSerial
       USE MOD_Mesh
-      USE mod_landelm
+      USE MOD_LandElm
       USE MOD_CoLMDebug
       USE MOD_Hydro_DrainageNetwork
       USE MOD_Utils

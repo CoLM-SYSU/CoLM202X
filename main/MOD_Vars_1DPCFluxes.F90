@@ -50,7 +50,7 @@ MODULE MOD_Vars_1DPCFluxes
   ! --------------------------------------------------------------------
 
      USE MOD_SPMD_Task
-     USE mod_landpc
+     USE MOD_LandPC
      USE MOD_Precision
      USE MOD_Vars_Global
      IMPLICIT NONE
@@ -83,7 +83,7 @@ MODULE MOD_Vars_1DPCFluxes
   ! deallocates memory for CoLM 1d [numpc] variables
   ! --------------------------------------------------------------------
      USE MOD_SPMD_Task
-     USE mod_landpc
+     USE MOD_LandPC
 
      IF (p_is_worker) THEN
         IF (numpc > 0) THEN

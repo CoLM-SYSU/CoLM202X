@@ -52,6 +52,8 @@ SAVE
   REAL(r8), allocatable :: forc_hgt_elm   (:) ! atmospheric reference height [m]
 #endif
 
+  REAL(r8), allocatable :: forc_hpbl  (:) ! atmospheric boundary layer height [m]
+
   ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Forcing
   PUBLIC :: deallocate_1D_Forcing
@@ -68,7 +70,7 @@ SAVE
 ! ------------------------------------------------
   USE MOD_SPMD_Task
   USE MOD_Mesh
-  USE mod_landpatch
+  USE MOD_LandPatch
   IMPLICIT NONE
 
   IF (p_is_worker) THEN
@@ -102,6 +104,8 @@ SAVE
         allocate (forc_th     (numpatch) ) ! potential temperature [K]
 #endif
 
+        allocate (forc_hpbl   (numpatch) ) ! atmospheric boundary layer height [m]
+
      ENDIF
 
 #ifdef Forcing_Downscaling
@@ -127,7 +131,7 @@ SAVE
 
      USE MOD_SPMD_Task
      USE MOD_Mesh
-     USE mod_landpatch
+     USE MOD_LandPatch
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -161,6 +165,7 @@ SAVE
            deallocate ( forc_th     ) ! potential temperature [K]
 #endif
 
+           deallocate ( forc_hpbl   ) ! atmospheric boundary layer height [m]
         ENDIF
 
 #ifdef Forcing_Downscaling

@@ -21,34 +21,35 @@ PROGRAM CoLMINI
    use MOD_Block
    use MOD_Pixel
    use MOD_Mesh
-   USE mod_landelm
+   USE MOD_LandElm
 #ifdef CATCHMENT
-   USE mod_landhru
+   USE MOD_LandHRU
 #endif
-   use mod_landpatch
-   use mod_srfdata_restart
+   use MOD_LandPatch
+   use MOD_SrfdataRestart
    USE MOD_Vars_Global
    USE MOD_Const_LC
    USE MOD_Const_PFT
    USE MOD_TimeManager
 #ifdef PFT_CLASSIFICATION
-   USE mod_landpft
+   USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION
-   USE mod_landpc
+   USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
-   USE mod_landurban
+   USE MOD_LandUrban
 #endif
 #ifdef SinglePoint
-   USE mod_single_srfdata
+   USE MOD_SingleSrfdata
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
-   USE mod_elm_vector
+   USE MOD_ElmVector
 #endif
 #ifdef CATCHMENT
-   USE mod_hru_vector
+   USE MOD_HRUVector
 #endif
+   USE MOD_Initialize
    implicit none
 
    ! ----------------local variables ---------------------------------

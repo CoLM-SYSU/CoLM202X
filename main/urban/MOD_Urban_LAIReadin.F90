@@ -20,9 +20,9 @@ CONTAINS
       USE MOD_Precision
       USE MOD_Namelist
       USE MOD_SPMD_Task
+      USE MOD_LandUrban
       USE MOD_Vars_Global
       USE MOD_Const_LC
-      USE mod_landurban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_UrbanTimeInvars

@@ -32,7 +32,7 @@ MODULE MOD_FireReadin
       use MOD_Namelist
       use MOD_SPMD_Task
       use MOD_NetCDFVector
-      use mod_landpatch
+      use MOD_LandPatch
       use MOD_Vars_TimeInvariants, only: abm_lf, gdp_lf, peatf_lf
       use MOD_Vars_TimeVariables,  only: hdm_lf
 #ifdef CoLMDEBUG
@@ -42,15 +42,15 @@ MODULE MOD_FireReadin
       USE MOD_Vars_Global
       USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
-      USE mod_landpft
+      USE MOD_LandPFT
       USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-      USE mod_landpc
+      USE MOD_LandPC
       USE MOD_Vars_PCTimeVars
 #endif
 #ifdef SinglePoint
-      USE mod_single_srfdata
+      USE MOD_SingleSrfdata
 #endif
 
       IMPLICIT NONE

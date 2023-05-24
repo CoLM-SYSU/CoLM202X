@@ -117,7 +117,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ! additional variables required by coupling with WRF model
            emis         ,z0m          ,zol          ,rib          ,&
            ustar        ,qstar        ,tstar        ,fm           ,&
-           fh           ,fq                                        )
+           fh           ,fq           ,hpbl                       )
 
   USE MOD_Precision
   USE MOD_Vars_Global
@@ -260,6 +260,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         smpmin     ,&! restriction for min of soil poten.  (mm)
         trsmx0     ,&! max transpiration for moist soil+100% veg.  [mm/s]
         tcrit        ! critical temp. to determine rain or snow
+
+  real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
 
 ! Forcing
 ! ----------------------
@@ -929,7 +931,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
          qref                 ,trad                 ,rst                  ,assim                ,&
          respc                ,errore               ,emis                 ,z0m                  ,&
          zol                  ,rib                  ,ustar                ,qstar                ,&
-         tstar                ,fm                   ,fh                   ,fq                    )
+         tstar                ,fm                   ,fh                   ,fq                   ,&
+         hpbl                                                                                    )
 
 
 ! 计算代谢热和交通热
