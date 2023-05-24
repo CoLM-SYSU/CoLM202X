@@ -24,7 +24,7 @@ MODULE mod_landpft
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpft_build ()
+   SUBROUTINE landpft_build (lc_year)
 
       USE precision
       USE spmd_task
@@ -38,6 +38,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: dir_5x5, suffix, cyear
       TYPE (block_data_real8_3d) :: pctpft
@@ -49,7 +50,7 @@ CONTAINS
       INTEGER  :: npft_glb
 
       ! add parameter input for time year
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
@@ -277,6 +278,10 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF ((numpatch <= 0) .or. (numpft <= 0)) return
+
+         IF (allocated(patch_pft_s)) deallocate(patch_pft_s)
+         IF (allocated(patch_pft_e)) deallocate(patch_pft_e)
+         IF (allocated(pft2patch  )) deallocate(pft2patch  )
 
          allocate (patch_pft_s (numpatch))
          allocate (patch_pft_e (numpatch))

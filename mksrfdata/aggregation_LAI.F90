@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
+SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
    ! 1. Global land cover types (updated with the specific dataset)
    !
@@ -51,6 +51,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    TYPE(grid_type),  intent(in) :: gridlai
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
+
+   INTEGER, intent(in) :: lc_year
 
    ! local variables:
    ! ----------------------------------------------------------------------
@@ -125,11 +127,11 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          end_year   = DEF_simulation_time%end_year
          ntime      = 12
       ELSE
-         start_year = DEF_LC_YEAR
-         end_year   = DEF_LC_YEAR
+         start_year = lc_year
+         end_year   = lc_year
          ntime      = 12
       ENDIF
-   ! 8-day LAI
+   ! 8-days LAI
    ELSE
       start_year = DEF_simulation_time%start_year
       end_year   = DEF_simulation_time%end_year
@@ -241,7 +243,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
             varname = 'LAI_' // trim(c3)
          ELSE
             !TODO: rename file name of 8-day LAI
-            varname = 'LAI_8-day_' // '_' // trim(c3)
+            varname = 'LAI_8-days' // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
@@ -334,7 +336,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
                varname = 'SAI_' // trim(c3)
             ELSE
                !TODO: rename varname
-               varname = 'SAI_8-day_' // '_' // trim(c3)
+               varname = 'SAI_8-days' // '_' // trim(c3)
             ENDIF
             CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
                -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
@@ -359,8 +361,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
    ELSE
-      start_year = DEF_LC_YEAR
-      end_year   = DEF_LC_YEAR
+      start_year = lc_year
+      end_year   = lc_year
       ntime      = 12
    ENDIF
 
@@ -385,6 +387,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN
@@ -635,8 +638,8 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
    ELSE
-      start_year = DEF_LC_YEAR
-      end_year   = DEF_LC_YEAR
+      start_year = lc_year
+      end_year   = lc_year
       ntime      = 12
    ENDIF
 
@@ -661,6 +664,7 @@ SUBROUTINE aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
 
       IF (p_is_io) THEN

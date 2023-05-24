@@ -1,5 +1,4 @@
 #include <define.h>
-
 #ifdef URBAN_MODEL
 MODULE MOD_Urban_Readin
 
@@ -12,8 +11,7 @@ MODULE MOD_Urban_Readin
 CONTAINS
 
 
- SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
-
+ SUBROUTINE Urban_readin (year, dir_landdata)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 ! ===========================================================
 ! Read in the Urban dataset
 ! ===========================================================
@@ -36,7 +34,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
+      INTEGER, intent(in) :: year    ! which year of land cover data used
       CHARACTER(LEN=256), intent(in) :: dir_landdata
 
       CHARACTER(LEN=256) :: lndname
@@ -74,7 +72,7 @@ CONTAINS
       allocate (thickwall (numurban))
 
       ! READ in urban data
-      write(cyear,'(i4.4)') lc_year
+      write(cyear,'(i4.4)') year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
       CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
@@ -117,38 +115,37 @@ CONTAINS
       wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
 #endif
 
+      !TODO: duplication, delete
       !TODO: Variables distinguish between time-varying and time-invariant variables
-      !TODO: 2005 -> lc_year
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/POP.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'POP_DEN'     , landurban, pop_den     )
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/LUCY_country_id.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_country_id.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, lucyid  )
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/WT_ROOF.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'WT_ROOF', landurban, froof)
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/HT_ROOF.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'HT_ROOF'     , landurban, hroof  )
 
-      lndname = trim(dir_landdata)//'/urban/2005/PCT_Water.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake)
 
-      lndname = trim(dir_landdata)//'/urban/2005/PCT_Tree.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
 
-      lndname = trim(dir_landdata)//'/urban/2005/htop_urb.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 
-      !TODO-yuan: change to a defined patch/file
       lndname = trim("/stu01/dongwz/data/CLMrawdata/urban/LUCY_rawdata.nc")
       print*, lndname
       CALL ncio_read_bcast_serial (lndname,  "vehicle"    , lvehicle     )

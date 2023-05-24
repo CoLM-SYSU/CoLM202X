@@ -781,7 +781,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew,ldew,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr,qintr)
+                              ldew,ldew,ldew,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr,qintr)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)

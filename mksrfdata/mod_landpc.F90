@@ -138,6 +138,9 @@ CONTAINS
 
          IF ((numpatch <= 0) .or. (numpc <= 0)) return
 
+         IF (allocated(pc2patch)) deallocate(pc2patch)
+         IF (allocated(patch2pc)) deallocate(patch2pc)
+
          allocate (pc2patch (numpc   ))
          allocate (patch2pc (numpatch))
 

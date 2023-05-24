@@ -35,7 +35,7 @@ MODULE mod_landpatch
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpatch_build ()
+   SUBROUTINE landpatch_build (lc_year)
 
       USE precision
       USE spmd_task
@@ -56,6 +56,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: file_patch
       CHARACTER(len=255) :: cyear
@@ -73,7 +74,7 @@ CONTAINS
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)
 
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land patches :'
       ENDIF
@@ -117,8 +118,8 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-#ifndef USGS_CLASSIFICATION
          !TODO-done: add parameter input for time year
+#ifndef USGS_CLASSIFICATION
          file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover TYPE data
@@ -296,6 +297,9 @@ CONTAINS
          IF (allocated(msk)) deallocate(msk)
       ENDIF
 
+#ifdef URBAN_MODEL
+      continue
+#else
 #if (defined CROP)
       IF (p_is_io) THEN
 !         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
@@ -339,21 +343,22 @@ CONTAINS
 #endif
 #endif
 
-      CALL write_patchfrac (DEF_dir_landdata)
-
+      CALL write_patchfrac (DEF_dir_landdata, lc_year)
+#endif
    END SUBROUTINE landpatch_build
 
    ! -----
-   SUBROUTINE write_patchfrac (dir_landdata)
+   SUBROUTINE write_patchfrac (dir_landdata, lc_year)
 
       USE mod_namelist
       USE ncio_vector
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       CHARACTER(LEN=*), intent(in) :: dir_landdata
       CHARACTER(len=256) :: lndname, cyear
 
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
       CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch/' // trim(cyear))
 
       lndname = trim(dir_landdata)//'/landpatch/'//trim(cyear)//'/patchfrac_elm.nc'

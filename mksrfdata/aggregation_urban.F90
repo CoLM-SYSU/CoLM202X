@@ -8,7 +8,7 @@
 ! ======================================================
 
 SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
-                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_500m)
 
    USE precision
    USE mod_namelist
@@ -43,7 +43,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER , intent(in) :: lc_year
 
    TYPE(grid_type), intent(in) :: grid_urban_5km
-   TYPE(grid_type), intent(in) :: grid_urban_100m
+   ! TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
@@ -473,6 +473,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
 
+         ! RG_-45_65_-50_70 of NCAR has no urban data,
+         ! all urban patches of this area are assigned to region 30
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
+
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
@@ -709,7 +715,10 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ipxend = landurban%ipxend(iurban)
 
          sumarea = sum(area_one)
-
+         ! same for above, assign reg id for RG_-45_65_-50_70
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
          ! loop for each finer grid to aggregate data
          DO ipxl = ipxstt, ipxend
 

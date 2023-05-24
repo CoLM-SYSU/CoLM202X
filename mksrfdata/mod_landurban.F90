@@ -26,32 +26,46 @@ MODULE mod_landurban
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landurban_build ()
+   SUBROUTINE landurban_build (lc_year)
 
       USE precision
       USE spmd_task
+      USE ncio_block
       USE mod_grid
       USE mod_data_type
       USE mod_namelist
       USE mod_5x5_data
       USE mod_mesh
+      USE mod_landelm
       USE mod_landpatch
+#ifdef CATCHMENT
+      USE mod_landhru
+#ENDIF
+#if (defined CROP)
+      USE mod_pixelsetshadow
+#ENDIF
       USE mod_aggregation
       USE mod_utils
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: dir_urban
       TYPE (block_data_int32_2d) :: data_urb_class ! urban type index
 
+#if (defined CROP)
+      TYPE(block_data_real8_3d) :: cropdata
+      INTEGER            :: cropfilter(1)
+      CHARACTER(len=256) :: file_patch
+#endif
       ! local vars
       INTEGER, allocatable :: ibuff(:), types(:), order(:)
 
       ! index
       INTEGER :: ipatch, jpatch, iurban
       INTEGER :: ie, ipxstt, ipxend, npxl, ipxl
-      INTEGER :: nurb_glb
+      INTEGER :: nurb_glb, npatch_glb
 
       ! local vars for landpath and landurban
       INTEGER :: numpatch_
@@ -84,7 +98,7 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         write(cyear,'(i4.4)') DEF_LC_YEAR
+         write(cyear,'(i4.4)') lc_year
          suffix = 'URB'//trim(cyear)
 #ifdef URBAN_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
@@ -276,6 +290,51 @@ CONTAINS
       write(*,'(A,I12,A)') 'Total: ', numurban, ' urban tiles.'
 #endif
 
+#if (defined CROP)
+      IF (p_is_io) THEN
+         !file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
+         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_lf-merged-20220930.nc'
+         CALL allocate_block_data (gcrop, cropdata, N_CFT)
+         CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
+      ENDIF
+
+      cropfilter = (/ CROPLAND /)
+
+      CALL pixelsetshadow_build (landpatch, gcrop, cropdata, N_CFT, cropfilter, &
+         pctcrop, cropclass)
+
+      numpatch = landpatch%nset
+#endif
+
+#ifdef USEMPI
+      IF (p_is_worker) THEN
+         CALL mpi_reduce (numpatch, npatch_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
+         IF (p_iam_worker == 0) THEN
+            write(*,'(A,I12,A)') 'Total: ', npatch_glb, ' patches.'
+         ENDIF
+      ENDIF
+
+      CALL mpi_barrier (p_comm_glb, p_err)
+#else
+      write(*,'(A,I12,A)') 'Total: ', numpatch, ' patches.'
+#endif
+
+#if (defined CROP)
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
+
+#ifdef CATCHMENT
+#if (defined CROP)
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+      CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
+#endif
+#endif
+
+      CALL write_patchfrac (DEF_dir_landdata, lc_year)
+
       IF (allocated(ibuff)) deallocate (ibuff)
       IF (allocated(types)) deallocate (types)
       IF (allocated(order)) deallocate (order)
@@ -303,6 +362,8 @@ CONTAINS
 
          IF ((numpatch <= 0) .or. (numurban <= 0)) return
 
+         IF (allocated(patch2urban)) deallocate(patch2urban)
+         IF (allocated(urban2patch)) deallocate(urban2patch)
          allocate (patch2urban (numpatch))
          allocate (urban2patch (numurban))
 

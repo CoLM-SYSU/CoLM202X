@@ -176,28 +176,28 @@ PROGRAM CoLM
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
 
-   call mesh_load_from_file (dir_landdata)
+   call mesh_load_from_file (DEF_LC_YEAR, dir_landdata)
 
-   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landelm', landelm, numelm)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landhru', landhru, numhru)
 #endif
 
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpft', landpft, numpft)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpc', landpc, numpc)
    CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL
-   call pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landurban', landurban, numurban)
    CALL map_patch_to_urban
 #endif
 
@@ -225,7 +225,7 @@ PROGRAM CoLM
    ! ----------------------------------------------------------------------
    ! Read in the model time invariant constant data
    CALL allocate_TimeInvariants ()
-   CALL READ_TimeInvariants (casename, dir_restart)
+   CALL READ_TimeInvariants (DEF_LC_YEAR, casename, dir_restart)
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
