@@ -85,16 +85,15 @@ CONTAINS
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice, tfrz
   USE MOD_FrictionVelocity
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
-  USE LC_Const, only: z0mr, displar
+  USE MOD_Const_LC, only: z0mr, displar
 #ifdef PLANT_HYDRAULIC_STRESS
   use MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #endif
-USE PhysicalConstants, only: tfrz
 #ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
 #endif
@@ -1714,7 +1713,7 @@ USE PhysicalConstants, only: tfrz
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Const_Physical, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai

@@ -12,7 +12,7 @@ MODULE MOD_BGC_Vars_2DFluxes
 #ifdef BGC
 
    use MOD_DataType
-   USE GlobalVars
+   USE MOD_Vars_Global
 
    IMPLICIT NONE
    SAVE

@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_NetSolar
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: netsolar_urban
+
+CONTAINS
+
  SUBROUTINE netsolar_urban (ipatch,idate,dlon,deltim,&
                             forc_sols,forc_soll,forc_solsd,forc_solld,lai,sai,rho,tau,&
                             alb,ssun,ssha,sroof,swsun,swsha,sgimp,sgper,slake,&
@@ -12,7 +22,7 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   USE MOD_TimeManager, only: isgreenwich
   IMPLICIT NONE
 
@@ -161,3 +171,5 @@
         ENDIF
 
  END SUBROUTINE netsolar_urban
+
+END MODULE MOD_Urban_NetSolar

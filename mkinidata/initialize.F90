@@ -12,16 +12,19 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    !
    ! ======================================================================
    use MOD_Precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    use MOD_Namelist
    use MOD_SPMD_Task
    use MOD_Pixel
    use mod_landpatch
 #ifdef URBAN_MODEL
    use mod_landurban
-   USE UrbanALBEDO
+   USE MOD_Urban_Readin
+   USE MOD_Urban_LAIReadin
+   USE MOD_Urban_IniTimeVar
+   USE MOD_Urban_Albedo
 #endif
-   use PhysicalConstants
+   use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
@@ -34,8 +37,8 @@ SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
 #endif
-   USE LC_Const
-   USE MOD_Vars_PFTConst
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
    use MOD_TimeManager
 
    use MOD_Grid

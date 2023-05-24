@@ -24,8 +24,8 @@ CONTAINS
       USE MOD_Hydro_DrainageNetwork
       USE MOD_Hydro_RiverNetwork
       USE MOD_Hydro_SubsurfaceNetwork
-      USE PhysicalConstants, only : denice, denh2o
-      USE GlobalVars, only : pi
+      USE MOD_Const_Physical, only : denice, denh2o
+      USE MOD_Vars_Global, only : pi
 
       IMPLICIT NONE
       

@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_PerviousTem
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanPerviousTem
+
+CONTAINS
+
  SUBROUTINE UrbanPerviousTem (patchtype,lb,deltim, &
                               capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
 #ifdef Campbell_SOIL_MODEL
@@ -37,8 +47,8 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical
   USE MOD_SoilThermalParameters
   USE MOD_Utils, only: tridia
   USE MOD_Meltf, only: meltf
@@ -202,4 +212,6 @@
                   dz_soi(1:nl_soil))
 
  END SUBROUTINE UrbanPerviousTem
+
+END MODULE MOD_Urban_PerviousTem
 ! ---------- EOP ------------

@@ -25,7 +25,7 @@ MODULE MOD_WetBulb
 !=======================================================================
 
       use MOD_Precision
-      use PhysicalConstants, only : tfrz, hvap, cpair
+      use MOD_Const_Physical, only : tfrz, hvap, cpair
       USE MOD_Qsadv
 
       implicit none

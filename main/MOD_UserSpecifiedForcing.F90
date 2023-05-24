@@ -554,7 +554,7 @@ CONTAINS
  ! ------------------------------------------------------------
    SUBROUTINE metpreprocess(grid, forcn)
 
-      use PhysicalConstants
+      use MOD_Const_Physical
       use MOD_Namelist
       use MOD_SPMD_Task
       use MOD_Block

@@ -41,7 +41,7 @@ MODULE MOD_NetSolar
 !
 ! !USES:
    USE MOD_Precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE MOD_TimeManager, only: isgreenwich
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft, only : patch_pft_s, patch_pft_e

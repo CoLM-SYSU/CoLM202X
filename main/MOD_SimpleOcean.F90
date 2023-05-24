@@ -36,7 +36,7 @@ MODULE MOD_SimpleOcean
 !-----------------------------------------------------------------------
 
   use MOD_Precision
-  use PhysicalConstants, only : tfrz, hvap, hsub, stefnc, vonkar
+  use MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
   implicit none
 
 !------------------------------Arguments--------------------------------
@@ -194,7 +194,7 @@ MODULE MOD_SimpleOcean
 !=======================================================================
 
   use MOD_Precision
-  use PhysicalConstants, only : cpair,rgas,vonkar,grav
+  use MOD_Const_Physical, only : cpair,rgas,vonkar,grav
   use MOD_FrictionVelocity
   USE MOD_Qsadv
   implicit none
@@ -436,7 +436,7 @@ MODULE MOD_SimpleOcean
 !-----------------------------------------------------------------------
 
    use MOD_Precision
-   use PhysicalConstants, only: tkice, tkair
+   use MOD_Const_Physical, only: tkice, tkair
    USE MOD_Utils
    implicit none
 

@@ -11,7 +11,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! -----------------------------------------------------------------
 
   USE MOD_Precision
-  USE GlobalVars
+  USE MOD_Vars_GlobalVars
   IMPLICIT NONE
   SAVE
 
@@ -77,7 +77,7 @@ MODULE MOD_Vars_PCTimeInvars
      use MOD_NetCDFVector
      use mod_landpc
      USE MOD_Namelist
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      ! Local variables

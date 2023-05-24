@@ -17,7 +17,7 @@ module MOD_BGC_Veg_NutrientCompetition
 
   ! 
     use MOD_Precision
-    use MOD_Vars_PFTConst, only: &
+    use MOD_Const_PFT, only: &
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2, &
 ! crop variables
@@ -36,10 +36,10 @@ module MOD_BGC_Veg_NutrientCompetition
 #endif
         c_allometry_p, n_allometry_p, downreg_p, grain_flag_p, annsum_npp_p, &
         leafc_p, livestemc_p, frootc_p
-    use GlobalVars, only: nwwheat, nirrig_wwheat 
+    use MOD_Vars_Global, only: nwwheat, nirrig_wwheat 
 
     use MOD_BGC_Vars_TimeVars, only: fpg 
-    use GlobalVars, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
+    use MOD_Vars_Global, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
 
     use MOD_Vars_1DPFTFluxes, only: assim_p
 

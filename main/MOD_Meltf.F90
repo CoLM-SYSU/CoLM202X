@@ -52,7 +52,7 @@ MODULE MOD_Meltf
 
    use MOD_Precision
    USE MOD_Hydro_SoilFunction
-   use PhysicalConstants, only : tfrz, hfus,grav
+   use MOD_Const_Physical, only : tfrz, hfus,grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -321,7 +321,7 @@ MODULE MOD_Meltf
 
    use MOD_Precision
    USE MOD_Hydro_SoilFunction
-   use PhysicalConstants, only : tfrz, hfus, grav
+   use MOD_Const_Physical, only : tfrz, hfus, grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -584,7 +584,7 @@ MODULE MOD_Meltf
 !-----------------------------------------------------------------------
 
      use MOD_Precision
-     use PhysicalConstants, only : tfrz, hfus
+     use MOD_Const_Physical, only : tfrz, hfus
      IMPLICIT NONE
 
 !-----------------------------------------------------------------------

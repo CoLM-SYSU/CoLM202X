@@ -4,8 +4,8 @@
 MODULE mod_single_srfdata
    
    USE MOD_Precision, only: r8
-   USE GlobalVars
-   USE LC_Const
+   USE MOD_Vars_Global
+   USE MOD_Const_LC
    USE MOD_Namelist
    IMPLICIT NONE
    SAVE
@@ -24,14 +24,14 @@ MODULE mod_single_srfdata
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
    REAL(r8), allocatable :: SITE_htop_pfts (:)
 #endif
-   
+
    REAL(r8), allocatable :: SITE_LAI_clim (:)
    REAL(r8), allocatable :: SITE_SAI_clim (:)
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-   REAL(r8), allocatable :: SITE_LAI_pfts_clim (:,:)  
+   REAL(r8), allocatable :: SITE_LAI_pfts_clim (:,:)
    REAL(r8), allocatable :: SITE_SAI_pfts_clim (:,:)
 #endif
-   
+
    INTEGER,  allocatable :: SITE_LAI_year  (:)
    REAL(r8), allocatable :: SITE_LAI_modis (:,:)
 
@@ -43,31 +43,31 @@ MODULE mod_single_srfdata
    REAL(r8) :: SITE_soil_d_n_alb
 
    REAL(r8), allocatable :: SITE_soil_vf_quartz_mineral (:)
-   REAL(r8), allocatable :: SITE_soil_vf_gravels        (:) 
-   REAL(r8), allocatable :: SITE_soil_vf_sand           (:) 
-   REAL(r8), allocatable :: SITE_soil_vf_om             (:) 
-   REAL(r8), allocatable :: SITE_soil_wf_gravels        (:) 
-   REAL(r8), allocatable :: SITE_soil_wf_sand           (:) 
-   REAL(r8), allocatable :: SITE_soil_OM_density        (:) 
-   REAL(r8), allocatable :: SITE_soil_BD_all            (:) 
-   REAL(r8), allocatable :: SITE_soil_theta_s           (:) 
-   REAL(r8), allocatable :: SITE_soil_k_s               (:) 
-   REAL(r8), allocatable :: SITE_soil_csol              (:) 
-   REAL(r8), allocatable :: SITE_soil_tksatu            (:) 
-   REAL(r8), allocatable :: SITE_soil_tksatf            (:) 
-   REAL(r8), allocatable :: SITE_soil_tkdry             (:) 
-   REAL(r8), allocatable :: SITE_soil_k_solids          (:) 
-   REAL(r8), allocatable :: SITE_soil_psi_s             (:) 
-   REAL(r8), allocatable :: SITE_soil_lambda            (:) 
+   REAL(r8), allocatable :: SITE_soil_vf_gravels        (:)
+   REAL(r8), allocatable :: SITE_soil_vf_sand           (:)
+   REAL(r8), allocatable :: SITE_soil_vf_om             (:)
+   REAL(r8), allocatable :: SITE_soil_wf_gravels        (:)
+   REAL(r8), allocatable :: SITE_soil_wf_sand           (:)
+   REAL(r8), allocatable :: SITE_soil_OM_density        (:)
+   REAL(r8), allocatable :: SITE_soil_BD_all            (:)
+   REAL(r8), allocatable :: SITE_soil_theta_s           (:)
+   REAL(r8), allocatable :: SITE_soil_k_s               (:)
+   REAL(r8), allocatable :: SITE_soil_csol              (:)
+   REAL(r8), allocatable :: SITE_soil_tksatu            (:)
+   REAL(r8), allocatable :: SITE_soil_tksatf            (:)
+   REAL(r8), allocatable :: SITE_soil_tkdry             (:)
+   REAL(r8), allocatable :: SITE_soil_k_solids          (:)
+   REAL(r8), allocatable :: SITE_soil_psi_s             (:)
+   REAL(r8), allocatable :: SITE_soil_lambda            (:)
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   REAL(r8), allocatable :: SITE_soil_theta_r           (:) 
-   REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:) 
-   REAL(r8), allocatable :: SITE_soil_L_vgm             (:) 
-   REAL(r8), allocatable :: SITE_soil_n_vgm             (:) 
+   REAL(r8), allocatable :: SITE_soil_theta_r           (:)
+   REAL(r8), allocatable :: SITE_soil_alpha_vgm         (:)
+   REAL(r8), allocatable :: SITE_soil_L_vgm             (:)
+   REAL(r8), allocatable :: SITE_soil_n_vgm             (:)
 #endif
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-   REAL(r8), allocatable :: SITE_soil_BA_alpha          (:) 
-   REAL(r8), allocatable :: SITE_soil_BA_beta           (:) 
+   REAL(r8), allocatable :: SITE_soil_BA_alpha          (:)
+   REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
 #endif
 
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -88,11 +88,11 @@ CONTAINS
 
       ! Local Variables
       INTEGER :: iyear, itime
-      
+
 #if (defined PFT_CLASSIFICATION)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
          CALL ncio_read_serial (fsrfdata, 'pfttyp ', SITE_pfttyp )
-         ! otherwise, retrieve from database by mod_landpft.F90 
+         ! otherwise, retrieve from database by mod_landpft.F90
       ENDIF
 #endif
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
@@ -143,7 +143,7 @@ CONTAINS
          ! otherwise, retrieve from database by aggregation_lakedepth.F90
          CALL ncio_read_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
       ENDIF
-      
+
       IF ((.not. mksrfdata) .or. USE_SITE_soilreflectance) THEN
          ! otherwise, retrieve from database by aggregation_soil_brightness.F90
          CALL ncio_read_serial (fsrfdata, 'soil_s_v_alb', SITE_soil_s_v_alb)
@@ -155,31 +155,31 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_soilparameters) THEN
          ! otherwise, retrieve from database by aggregation_soil_parameters.F90
          CALL ncio_read_serial (fsrfdata, 'soil_vf_quartz_mineral', SITE_soil_vf_quartz_mineral)
-         CALL ncio_read_serial (fsrfdata, 'soil_vf_gravels       ', SITE_soil_vf_gravels       ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_vf_sand          ', SITE_soil_vf_sand          ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_vf_om            ', SITE_soil_vf_om            ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels       ', SITE_soil_wf_gravels       ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_wf_sand          ', SITE_soil_wf_sand          ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_theta_s          ', SITE_soil_theta_s          ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_k_s              ', SITE_soil_k_s              ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_csol             ', SITE_soil_csol             ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_tksatu           ', SITE_soil_tksatu           ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_tksatf           ', SITE_soil_tksatf           ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_tkdry            ', SITE_soil_tkdry            ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_k_solids         ', SITE_soil_k_solids         ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_psi_s            ', SITE_soil_psi_s            ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_lambda           ', SITE_soil_lambda           ) 
+         CALL ncio_read_serial (fsrfdata, 'soil_vf_gravels       ', SITE_soil_vf_gravels       )
+         CALL ncio_read_serial (fsrfdata, 'soil_vf_sand          ', SITE_soil_vf_sand          )
+         CALL ncio_read_serial (fsrfdata, 'soil_vf_om            ', SITE_soil_vf_om            )
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_gravels       ', SITE_soil_wf_gravels       )
+         CALL ncio_read_serial (fsrfdata, 'soil_wf_sand          ', SITE_soil_wf_sand          )
+         CALL ncio_read_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       )
+         CALL ncio_read_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           )
+         CALL ncio_read_serial (fsrfdata, 'soil_theta_s          ', SITE_soil_theta_s          )
+         CALL ncio_read_serial (fsrfdata, 'soil_k_s              ', SITE_soil_k_s              )
+         CALL ncio_read_serial (fsrfdata, 'soil_csol             ', SITE_soil_csol             )
+         CALL ncio_read_serial (fsrfdata, 'soil_tksatu           ', SITE_soil_tksatu           )
+         CALL ncio_read_serial (fsrfdata, 'soil_tksatf           ', SITE_soil_tksatf           )
+         CALL ncio_read_serial (fsrfdata, 'soil_tkdry            ', SITE_soil_tkdry            )
+         CALL ncio_read_serial (fsrfdata, 'soil_k_solids         ', SITE_soil_k_solids         )
+         CALL ncio_read_serial (fsrfdata, 'soil_psi_s            ', SITE_soil_psi_s            )
+         CALL ncio_read_serial (fsrfdata, 'soil_lambda           ', SITE_soil_lambda           )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-         CALL ncio_read_serial (fsrfdata, 'soil_theta_r          ', SITE_soil_theta_r          ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            ) 
+         CALL ncio_read_serial (fsrfdata, 'soil_theta_r          ', SITE_soil_theta_r          )
+         CALL ncio_read_serial (fsrfdata, 'soil_alpha_vgm        ', SITE_soil_alpha_vgm        )
+         CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
+         CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
 #endif
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-         CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         ) 
-         CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          ) 
+         CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
+         CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
 #endif
       ENDIF
 
@@ -199,7 +199,7 @@ CONTAINS
       USE MOD_Namelist
       USE LC_Const
       IMPLICIT NONE
-      
+
       INTEGER, intent(in) :: numpatch
       INTEGER, intent(in), optional :: numpft
 
@@ -279,7 +279,7 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'lakedepth', SITE_lakedepth)
       CALL ncio_put_attr     (fsrfdata, 'lakedepth', 'source', datasource(USE_SITE_lakedepth))
-      
+
       source = datasource(USE_SITE_soilreflectance)
       CALL ncio_write_serial (fsrfdata, 'soil_s_v_alb', SITE_soil_s_v_alb)
       CALL ncio_put_attr     (fsrfdata, 'soil_s_v_alb', 'source', source)
@@ -297,8 +297,8 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'soil_vf_om            ', SITE_soil_vf_om            , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_wf_gravels       ', SITE_soil_wf_gravels       , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_wf_sand          ', SITE_soil_wf_sand          , 'soil')
-      CALL ncio_write_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       , 'soil') 
-      CALL ncio_write_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           , 'soil') 
+      CALL ncio_write_serial (fsrfdata, 'soil_OM_density       ', SITE_soil_OM_density       , 'soil')
+      CALL ncio_write_serial (fsrfdata, 'soil_BD_all           ', SITE_soil_BD_all           , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_theta_s          ', SITE_soil_theta_s          , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_k_s              ', SITE_soil_k_s              , 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_csol             ', SITE_soil_csol             , 'soil')
@@ -351,7 +351,7 @@ CONTAINS
 
    ! ---------
    CHARACTER(len=8) FUNCTION datasource (is_site)
-      
+
       IMPLICIT NONE
       LOGICAL, intent(in) :: is_site
 
@@ -366,7 +366,7 @@ CONTAINS
    ! ------
    SUBROUTINE single_srfdata_final ()
 
-      IMPLICIT NONE 
+      IMPLICIT NONE
 
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
       IF (allocated(SITE_pfttyp )) deallocate(SITE_pfttyp )
@@ -381,43 +381,43 @@ CONTAINS
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
       IF (allocated(SITE_htop_pfts)) deallocate(SITE_htop_pfts)
 #endif
-   
+
       IF (allocated(SITE_LAI_clim)) deallocate(SITE_LAI_clim)
       IF (allocated(SITE_SAI_clim)) deallocate(SITE_SAI_clim)
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-      IF (allocated(SITE_LAI_pfts_clim)) deallocate(SITE_LAI_pfts_clim)  
+      IF (allocated(SITE_LAI_pfts_clim)) deallocate(SITE_LAI_pfts_clim)
       IF (allocated(SITE_SAI_pfts_clim)) deallocate(SITE_SAI_pfts_clim)
 #endif
-   
+
       IF (allocated(SITE_LAI_year )) deallocate(SITE_LAI_year )
       IF (allocated(SITE_LAI_modis)) deallocate(SITE_LAI_modis)
 
       IF (allocated(SITE_soil_vf_quartz_mineral)) deallocate(SITE_soil_vf_quartz_mineral)
-      IF (allocated(SITE_soil_vf_gravels       )) deallocate(SITE_soil_vf_gravels       ) 
-      IF (allocated(SITE_soil_vf_sand          )) deallocate(SITE_soil_vf_sand          ) 
-      IF (allocated(SITE_soil_vf_om            )) deallocate(SITE_soil_vf_om            ) 
-      IF (allocated(SITE_soil_wf_gravels       )) deallocate(SITE_soil_wf_gravels       ) 
-      IF (allocated(SITE_soil_wf_sand          )) deallocate(SITE_soil_wf_sand          ) 
+      IF (allocated(SITE_soil_vf_gravels       )) deallocate(SITE_soil_vf_gravels       )
+      IF (allocated(SITE_soil_vf_sand          )) deallocate(SITE_soil_vf_sand          )
+      IF (allocated(SITE_soil_vf_om            )) deallocate(SITE_soil_vf_om            )
+      IF (allocated(SITE_soil_wf_gravels       )) deallocate(SITE_soil_wf_gravels       )
+      IF (allocated(SITE_soil_wf_sand          )) deallocate(SITE_soil_wf_sand          )
       IF (allocated(SITE_soil_OM_density       )) deallocate(SITE_soil_OM_density       )
       IF (allocated(SITE_soil_BD_all           )) deallocate(SITE_soil_BD_all           )
-      IF (allocated(SITE_soil_theta_s          )) deallocate(SITE_soil_theta_s          ) 
-      IF (allocated(SITE_soil_k_s              )) deallocate(SITE_soil_k_s              ) 
-      IF (allocated(SITE_soil_csol             )) deallocate(SITE_soil_csol             ) 
-      IF (allocated(SITE_soil_tksatu           )) deallocate(SITE_soil_tksatu           ) 
-      IF (allocated(SITE_soil_tksatf           )) deallocate(SITE_soil_tksatf           ) 
-      IF (allocated(SITE_soil_tkdry            )) deallocate(SITE_soil_tkdry            ) 
-      IF (allocated(SITE_soil_k_solids         )) deallocate(SITE_soil_k_solids         ) 
-      IF (allocated(SITE_soil_psi_s            )) deallocate(SITE_soil_psi_s            ) 
-      IF (allocated(SITE_soil_lambda           )) deallocate(SITE_soil_lambda           ) 
+      IF (allocated(SITE_soil_theta_s          )) deallocate(SITE_soil_theta_s          )
+      IF (allocated(SITE_soil_k_s              )) deallocate(SITE_soil_k_s              )
+      IF (allocated(SITE_soil_csol             )) deallocate(SITE_soil_csol             )
+      IF (allocated(SITE_soil_tksatu           )) deallocate(SITE_soil_tksatu           )
+      IF (allocated(SITE_soil_tksatf           )) deallocate(SITE_soil_tksatf           )
+      IF (allocated(SITE_soil_tkdry            )) deallocate(SITE_soil_tkdry            )
+      IF (allocated(SITE_soil_k_solids         )) deallocate(SITE_soil_k_solids         )
+      IF (allocated(SITE_soil_psi_s            )) deallocate(SITE_soil_psi_s            )
+      IF (allocated(SITE_soil_lambda           )) deallocate(SITE_soil_lambda           )
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      IF (allocated(SITE_soil_theta_r          )) deallocate(SITE_soil_theta_r          ) 
-      IF (allocated(SITE_soil_alpha_vgm        )) deallocate(SITE_soil_alpha_vgm        ) 
-      IF (allocated(SITE_soil_L_vgm            )) deallocate(SITE_soil_L_vgm            ) 
-      IF (allocated(SITE_soil_n_vgm            )) deallocate(SITE_soil_n_vgm            ) 
+      IF (allocated(SITE_soil_theta_r          )) deallocate(SITE_soil_theta_r          )
+      IF (allocated(SITE_soil_alpha_vgm        )) deallocate(SITE_soil_alpha_vgm        )
+      IF (allocated(SITE_soil_L_vgm            )) deallocate(SITE_soil_L_vgm            )
+      IF (allocated(SITE_soil_n_vgm            )) deallocate(SITE_soil_n_vgm            )
 #endif
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-      IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         ) 
-      IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          ) 
+      IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
+      IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
 #endif
 
    END SUBROUTINE single_srfdata_final

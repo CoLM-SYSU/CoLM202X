@@ -18,7 +18,7 @@ CONTAINS
       use MOD_Namelist
       USE MOD_DataType
       USE MOD_NetCDFSerial
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       character(len=*), intent(in) :: file_basin

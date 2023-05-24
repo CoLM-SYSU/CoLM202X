@@ -21,10 +21,10 @@ module MOD_BGC_Veg_CNFireLi2016
 
   use MOD_Precision
   use MOD_TimeManager
-  use PhysicalConstants, only: tfrz
+  use MOD_Const_Physical, only: tfrz
   use MOD_Vars_1DForcing, only: &
       forc_q, forc_t, forc_psrf, forc_us, forc_vs
-  use MOD_Vars_PFTConst, only: isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, fd_pft, fsr_pft, rootfr_p
+  use MOD_Const_PFT, only: isshrub, isgrass, isbetr, isbdtr, isbare, iscrop, isnatveg, fd_pft, fsr_pft, rootfr_p
   use MOD_Vars_TimeInvariants, only: &
       i_cwd, occur_hi_gdp_tree, gdp_lf, abm_lf, peatf_lf, &
       lfuel, ufuel, cropfire_a1, borealat, troplat, non_boreal_peatfire_c, boreal_peatfire_c, rh_low, rh_hgh, &

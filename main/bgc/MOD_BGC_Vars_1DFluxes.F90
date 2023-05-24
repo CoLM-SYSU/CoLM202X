@@ -166,7 +166,7 @@ MODULE MOD_BGC_Vars_1DFluxes
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
      USE MOD_Precision
-     USE GlobalVars
+     USE MOD_Vars_Global
      USE MOD_SPMD_Task
      USE mod_landpatch
      IMPLICIT NONE

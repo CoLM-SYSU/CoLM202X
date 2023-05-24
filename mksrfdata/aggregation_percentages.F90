@@ -3,7 +3,7 @@
 SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    
    USE MOD_Precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_SPMD_Task
    USE MOD_Grid
@@ -15,8 +15,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
    USE mod_aggregation
 
-   USE LC_Const
+   USE MOD_Const_LC
    USE MOD_5x5DataReadin
+
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
 #endif
@@ -61,12 +62,12 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #ifdef SrfdataDiag
 #ifdef CROP
    INTEGER :: typcrop(N_CFT), ityp
-   INTEGER :: typpft(0:N_PFT+N_CFT-1)   
+   INTEGER :: typpft(0:N_PFT+N_CFT-1)
 #else
-   INTEGER :: typpft(0:N_PFT-1)   
+   INTEGER :: typpft(0:N_PFT-1)
 #endif
 #endif
-      
+
    landdir = trim(dir_model_landdata) // '/pctpft/'
 
 #ifdef USEMPI
@@ -89,9 +90,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    suffix  = 'MOD2005'
-      
+
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
       CALL read_5x5_data_pft   (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
@@ -101,9 +102,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 
    IF (p_is_worker) THEN
- 
+
       allocate(pct_pfts (numpft))
-      
+
       DO ipatch = 1, numpatch
          IF (landpatch%settyp(ipatch) == 1) THEN
             CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
@@ -119,7 +120,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
             ENDDO
 
             pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)) =    &
-               pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   & 
+               pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch))   &
                / sum(pct_pfts(patch_pft_s(ipatch):patch_pft_e(ipatch)))
 #ifdef CROP
          ELSEIF (landpatch%settyp(ipatch) == 12) THEN
@@ -138,7 +139,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 #endif
 
 
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
@@ -169,7 +170,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
    ENDIF
 
-#if (defined CROP) 
+#if (defined CROP)
 #ifndef SinglePoint
    lndname = trim(landdir)//'/pct_crops.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
@@ -200,9 +201,9 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    suffix  = 'MOD2005'
-      
+
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
       CALL read_5x5_data_pft   (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
@@ -213,7 +214,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
 
    IF (p_is_worker) THEN
       allocate(pct_pcs (0:N_PFT-1, numpc))
-      
+
       DO ipatch = 1, numpatch
 
          IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
@@ -221,7 +222,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
                data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_pft_one = max(pct_pft_one, 0.)
-            
+
             pct_one = sum(pct_pft_one, dim=1)
             pct_one = max(pct_one, 1.0e-6)
 
@@ -229,7 +230,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
             DO ipft = 0, N_PFT-1
                sumarea = sum(area_one)
                pct_pcs(ipft,ipc) = sum(pct_pft_one(ipft,:) / pct_one * area_one) / sumarea
-            ENDDO 
+            ENDDO
          ENDIF
       ENDDO
 
@@ -245,7 +246,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
    ! ---------------------------------------------------
    ! write out the plant leaf area index of grid patches
    ! ---------------------------------------------------
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif
 
@@ -266,7 +267,7 @@ SUBROUTINE aggregation_percentages (gland, dir_rawdata, dir_model_landdata)
       IF (allocated(area_one   )) deallocate(area_one   )
       IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
    ENDIF
-   
+
 #endif
 
 END SUBROUTINE aggregation_percentages

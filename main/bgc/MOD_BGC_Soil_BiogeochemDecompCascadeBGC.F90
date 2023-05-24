@@ -27,7 +27,7 @@ module MOD_BGC_Soil_BiogeochemDecompCascadeBGC
       i_met_lit,i_cel_lit,i_lig_lit ,i_cwd,i_soil1,i_soil2,i_soil3
   use MOD_Vars_TimeVariables, only: &
       smp, t_soisno, t_scalar, w_scalar, o_scalar, depth_scalar, decomp_k
-  use GlobalVars, only: PI
+  use MOD_Vars_Global, only: PI
 
   implicit none
 

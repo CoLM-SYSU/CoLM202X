@@ -276,7 +276,7 @@ SAVE
 ! ------------------------------------------------------
 
   use MOD_Precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   use MOD_SPMD_Task
   use mod_landpatch, only : numpatch
   IMPLICIT NONE
@@ -796,7 +796,7 @@ SAVE
      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpatch
      use MOD_NetCDFVector
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -959,7 +959,7 @@ SAVE
    USE MOD_CoLMDebug
 #endif
      USE mod_landpatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 

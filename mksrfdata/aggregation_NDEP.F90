@@ -12,7 +12,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
    ! Xingjie Lu and Shupeng Zhang, 2022
    ! ----------------------------------------------------------------------
    USE MOD_Precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_SPMD_Task
    USE MOD_Grid
@@ -25,7 +25,7 @@ SUBROUTINE aggregation_NDEP (gridndep, dir_rawdata, dir_model_landdata)
 
    USE mod_aggregation
 
-   USE LC_Const
+   USE MOD_Const_LC
 
 #ifdef SrfdataDiag
    USE mod_srfdata_diag

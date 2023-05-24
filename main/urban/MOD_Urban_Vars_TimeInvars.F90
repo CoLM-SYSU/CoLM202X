@@ -1,6 +1,6 @@
 #include <define.h>
 #ifdef URBAN_MODEL
-MODULE MOD_UrbanTimeInvars
+MODULE MOD_Urban_Vars_TimeInvars
 
 ! -------------------------------
 ! Created by Hua Yuan, 12/2020
@@ -85,7 +85,7 @@ CONTAINS
       USE MOD_Precision
       USE MOD_SPMD_Task
       USE mod_landurban
-      USE GlobalVars
+      USE MOD_Vars_Global
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -200,7 +200,7 @@ CONTAINS
      use MOD_NetCDFVector
      use mod_landurban
      USE MOD_Namelist
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 
@@ -328,7 +328,7 @@ CONTAINS
       ENDIF
    END SUBROUTINE deallocate_UrbanTimeInvars
 
-END MODULE MOD_UrbanTimeInvars
+END MODULE MOD_Urban_Vars_TimeInvars
 #endif
 ! ---------- EOP ------------
 

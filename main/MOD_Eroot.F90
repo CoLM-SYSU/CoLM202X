@@ -33,7 +33,7 @@ MODULE MOD_Eroot
   !=======================================================================
 
     use MOD_Precision
-    use PhysicalConstants, only : tfrz
+    use MOD_Const_Physical, only : tfrz
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
     USE mod_soil_function, only : soil_psi_from_vliq
 #endif

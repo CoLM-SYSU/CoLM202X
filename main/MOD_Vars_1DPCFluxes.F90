@@ -52,7 +52,7 @@ MODULE MOD_Vars_1DPCFluxes
      USE MOD_SPMD_Task
      USE mod_landpc
      USE MOD_Precision
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      IF (p_is_worker) THEN

@@ -42,7 +42,7 @@ module MOD_BGC_Veg_CNNDynamics
 
   use MOD_BGC_Vars_1DPFTFluxes, only: plant_ndemand_p, soyfixn_p
 
-  use GlobalVars, only: z_soi, dz_soi, spval
+  use MOD_Vars_Global, only: z_soi, dz_soi, spval
   use MOD_TimeManager
   implicit none
 

@@ -1,5 +1,16 @@
 #include <define.h>
 
+MODULE MOD_Urban_WallTem
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanWallTem
+
+CONTAINS
+
+
  SUBROUTINE UrbanWallTem (deltim,capr,cnfac,&
                           cv_wall,tk_wall,t_wall,dz_wall,z_wall,zi_wall,&
                           twall_inner,lwall,clwall,sabwall,fsenwall,cwalls,tkdz_wall)
@@ -25,8 +36,8 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical
   USE MOD_Utils, only: tridia
 
   IMPLICIT NONE
@@ -147,4 +158,6 @@
       fn1(j) = tk(j)*(twall_inner - cnfac*t_wall(j))/(zi_wall(j)-z_wall(j))
 
  END SUBROUTINE UrbanWallTem
+
+END MODULE MOD_Urban_WallTem
 ! ---------- EOP ------------

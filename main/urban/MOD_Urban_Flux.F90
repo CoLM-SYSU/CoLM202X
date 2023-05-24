@@ -1,10 +1,10 @@
 #include <define.h>
 
-MODULE UrbanFlux
+MODULE MOD_Urban_Flux
 
 !-----------------------------------------------------------------------
   USE MOD_Precision
-  USE GlobalVars
+  USE MOD_Vars_Global
   USE MOD_Qsadv, only: qsadv
   IMPLICIT NONE
   SAVE
@@ -59,7 +59,7 @@ MODULE UrbanFlux
 
 !=======================================================================
      USE MOD_Precision
-     USE PhysicalConstants, only: cpair,vonkar,grav
+     USE MOD_Const_Physical, only: cpair,vonkar,grav
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -902,7 +902,7 @@ MODULE UrbanFlux
 !=======================================================================
 
      USE MOD_Precision
-     USE PhysicalConstants, only: vonkar,grav,hvap,cpair,stefnc
+     USE MOD_Const_Physical, only: vonkar,grav,hvap,cpair,stefnc
      USE MOD_FrictionVelocity
      USE MOD_AssimStomataConductance
      IMPLICIT NONE
@@ -1246,6 +1246,9 @@ MODULE UrbanFlux
      REAL(r8) fwetfac, lambda
      REAL(r8) cgw_imp, cgw_per
      REAL(r8) h_vec, l_vec
+
+     ! for interface
+     REAL(r8) o3coefv,o3coefg,assim_RuBP, assim_Rubisco, ci, vpd, gammas
 
 !-----------------------End Variable List-------------------------------
 
@@ -1681,8 +1684,16 @@ MODULE UrbanFlux
               shti    ,hhti    ,trda   ,trdm   ,trop   ,&
               gradm   ,binter  ,thm    ,psrf   ,po2m   ,&
               pco2m   ,pco2a   ,eah    ,ei(3)  ,tu(3)  ,&
-              par     ,rb(3)/lai,raw   ,rstfac ,cint(:),&
-              assim   ,respc   ,rs     )
+              par     ,&
+#ifdef OzoneStress
+              o3coefv ,o3coefg ,&
+#endif
+              rb(3)/lai,raw    ,rstfac ,cint(:),&
+              assim   ,respc   ,rs     &
+#ifdef WUEdiag
+              ,assim_RuBP,assim_Rubisco,ci,vpd,gammas&
+#endif
+              )
         ELSE
            rs = 2.e4; assim = 0.; respc = 0.
         ENDIF
@@ -3048,7 +3059,7 @@ MODULE UrbanFlux
 
   SUBROUTINE cal_z0_displa (lai, h, fc, z0, displa)
 
-     USE PhysicalConstants, only: vonkar
+     USE MOD_Const_Physical, only: vonkar
      IMPLICIT NONE
 
      REAL(r8), intent(in)  :: lai
@@ -3111,4 +3122,4 @@ MODULE UrbanFlux
 
   END SUBROUTINE cal_z0_displa
 
-END MODULE UrbanFlux
+END MODULE MOD_Urban_Flux

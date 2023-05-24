@@ -6,7 +6,7 @@ MODULE mod_landurban
 
    USE MOD_Grid
    USE MOD_Pixelset
-   USE GlobalVars, only: N_URB
+   USE MOD_Vars_Global, only: N_URB
    IMPLICIT NONE
 
    ! ---- Instance ----

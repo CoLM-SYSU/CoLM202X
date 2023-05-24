@@ -94,7 +94,7 @@ module MOD_BGC_CNSummary
       m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
       m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
   use MOD_Vars_TimeInvariants, only : patchclass
-  use GlobalVars, only : spval
+  use MOD_Vars_Global, only : spval
   use MOD_SPMD_Task
     
   implicit none

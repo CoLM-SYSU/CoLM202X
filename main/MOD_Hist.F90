@@ -10,7 +10,7 @@ module MOD_Hist
    USE MOD_Vars_PFTimeInvars, only: pftclass
    USE mod_landpft, only : patch_pft_s
 #endif
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_HistVector
@@ -33,7 +33,7 @@ contains
    !---------------------------------------
    subroutine hist_init (dir_hist, lon_res, lat_res)
 
-      USE GlobalVars
+      USE MOD_Vars_Global
       use MOD_SPMD_Task
       use MOD_Grid
       USE mod_landpatch
@@ -126,7 +126,7 @@ contains
       use MOD_Mapping_Pset2Grid
       use MOD_Vars_2DFluxes
       use MOD_CoLMDebug
-      use GlobalVars, only : spval
+      use MOD_Vars_Global, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
@@ -3110,7 +3110,7 @@ ENDIF
       use MOD_Block
       use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3186,7 +3186,7 @@ ENDIF
       use MOD_Block
       use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3266,7 +3266,7 @@ ENDIF
       use MOD_Block
       use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist
@@ -3348,7 +3348,7 @@ ENDIF
       use MOD_Block
       use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac_ln
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
       implicit none
 
       logical, intent(in) :: is_hist

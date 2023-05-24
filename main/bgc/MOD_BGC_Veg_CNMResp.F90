@@ -30,7 +30,7 @@ module MOD_BGC_Veg_CNMResp
       respc_p
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       leaf_mr_p, froot_mr_p, livestem_mr_p, livecroot_mr_p, grain_mr_p
-  use MOD_Vars_PFTConst, only: &
+  use MOD_Const_PFT, only: &
       woody, rootfr_p
 
   implicit none

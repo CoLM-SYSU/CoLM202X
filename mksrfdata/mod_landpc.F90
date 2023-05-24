@@ -22,7 +22,7 @@ CONTAINS
       USE MOD_Precision
       USE MOD_SPMD_Task
       USE mod_landpatch
-      USE LC_Const
+      USE MOD_Const_LC
       IMPLICIT NONE
 
       ! Local Variables
@@ -129,7 +129,7 @@ CONTAINS
 
       USE MOD_SPMD_Task
       USE mod_landpatch
-      USE LC_Const
+      USE MOD_Const_LC
       IMPLICIT NONE
 
       INTEGER :: ipatch, ipc

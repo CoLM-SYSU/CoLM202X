@@ -142,7 +142,7 @@ SAVE
   ! --------------------------------------------------------------------
 
      use MOD_Precision
-     use GlobalVars, only: nl_soil, ndecomp_transitions, ndecomp_pools
+     use MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools
      use MOD_SPMD_Task
      use mod_landpatch, only : numpatch
      IMPLICIT NONE
@@ -187,7 +187,7 @@ SAVE
      USE MOD_CoLMDebug
 #endif
      USE mod_landpatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 
@@ -316,7 +316,7 @@ SAVE
      use MOD_NetCDFSerial
      use MOD_NetCDFVector
      use mod_landpatch
-     USE GlobalVars
+     USE MOD_Vars_Global
 
      IMPLICIT NONE
 

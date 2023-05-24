@@ -37,8 +37,8 @@ MODULE MOD_CropReadin
       use MOD_CoLMDebug
 #endif
 
-      USE GlobalVars
-      USE LC_Const
+      USE MOD_Vars_Global
+      USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
       USE mod_landpft
       USE MOD_Vars_PFTimeVars

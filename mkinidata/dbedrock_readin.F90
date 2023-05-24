@@ -9,7 +9,7 @@ subroutine dbedrock_readin (dir_landdata)
    USE MOD_Namelist
    use mod_landpatch
    use MOD_NetCDFVector
-   USE GlobalVars, only : nl_soil, dz_soi
+   USE MOD_Vars_Global, only : nl_soil, dz_soi
    use MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
 #ifdef SinglePoint
    USE mod_single_srfdata

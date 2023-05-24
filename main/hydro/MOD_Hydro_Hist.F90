@@ -6,7 +6,7 @@ module MOD_Hydro_Hist
    use MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
-   USE GlobalVars,  only : spval
+   USE MOD_Vars_Global,  only : spval
    USE MOD_Mesh,    only : numelm
    USE mod_landhru, only : numhru
    USE MOD_Hydro_Vars_Timevars
@@ -199,7 +199,7 @@ CONTAINS
       use MOD_SPMD_Task
       USE MOD_Mesh,    only : numelm
       use mod_landhru, only : numhru
-      use GlobalVars,  only : spval 
+      use MOD_Vars_Global,  only : spval 
       implicit none
 
       INTEGER :: numbasin
@@ -260,7 +260,7 @@ CONTAINS
    SUBROUTINE acc1d_basin (var, s)
       
       use MOD_Precision
-      use GlobalVars, only: spval
+      use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
 

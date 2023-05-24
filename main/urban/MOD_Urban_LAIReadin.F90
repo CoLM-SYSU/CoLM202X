@@ -1,7 +1,17 @@
 #include <define.h>
 
 #ifdef URBAN_MODEL
-SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
+MODULE MOD_Urban_LAIReadin
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanLAI_readin
+
+CONTAINS
+
+ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
 
 ! ===========================================================
 ! Read in urban LAI, SAI and urban tree cover data
@@ -10,8 +20,8 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
       USE MOD_Precision
       USE MOD_Namelist
       USE MOD_SPMD_Task
-      USE GlobalVars
-      USE LC_Const
+      USE MOD_Vars_Global
+      USE MOD_Const_LC
       USE mod_landurban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
@@ -50,5 +60,7 @@ SUBROUTINE UrbanLAI_readin (year, time, dir_landdata)
          ENDDO
       ENDIF
 
-END SUBROUTINE UrbanLAI_readin
+ END SUBROUTINE UrbanLAI_readin
+
+END MODULE MOD_Urban_LAIReadin
 #endif

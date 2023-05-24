@@ -370,7 +370,7 @@ CONTAINS
       USE MOD_Precision
       USE MOD_SPMD_Task
       USE mod_landpft
-      USE GlobalVars
+      USE MOD_Vars_Global
       IMPLICIT NONE
 
       IF (p_is_worker) THEN
@@ -709,7 +709,7 @@ CONTAINS
 
       use MOD_NetCDFVector
       USE mod_landpft
-      USE GlobalVars
+      USE MOD_Vars_Global
 
       IMPLICIT NONE
 
@@ -1130,7 +1130,7 @@ CONTAINS
      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE mod_landpft
      use MOD_NetCDFVector
-     USE GlobalVars
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart

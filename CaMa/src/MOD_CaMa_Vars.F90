@@ -128,8 +128,8 @@ contains
       !----------------
       ! 2021.12.12  Zhongwang Wei @ SYSU
 
-      USE MOD_SPMD_Task
-      USE GlobalVars
+      USE spmd_task
+      USE MOD_Vars_Global
       USE mod_landpatch, ONLY : numpatch
 
       IMPLICIT NONE
@@ -185,7 +185,7 @@ contains
       ! 2020.10.21  Zhongwang Wei @ SYSU
       USE MOD_SPMD_Task
       USE mod_landpatch, ONLY : numpatch
-      USE GlobalVars,    ONLY : spval
+      USE MOD_Vars_Global,    ONLY : spval
 
       IMPLICIT NONE
 
@@ -246,8 +246,8 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE MOD_Precision
-      USE GlobalVars, ONLY: spval
+      USE precision
+      USE MOD_Vars_Global, ONLY: spval
 
       IMPLICIT NONE
 

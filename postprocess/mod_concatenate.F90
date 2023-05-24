@@ -7,7 +7,7 @@ module mod_concatenate
    USE MOD_Block
    USE MOD_NetCDFSerial
    use netcdf
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    implicit none
 
    type :: segment_type
@@ -144,7 +144,7 @@ contains
       ilon = ilon_w - 1
       iblk = 0
       ilonloc = 0
-      do while (.true.) 
+      do while (.true.)
          ilon = mod(ilon,ghist%nlon) + 1
          if (ghist%xblk(ilon) /= iblk) then
             block_info%nxseg = block_info%nxseg + 1
@@ -170,7 +170,7 @@ contains
       iblk = 0
       ilon = ilon_w - 1
       ilonloc = 0
-      do while (.true.) 
+      do while (.true.)
          ilon = mod(ilon,ghist%nlon) + 1
          ilonloc = ilonloc + 1
          if (ghist%xblk(ilon) /= iblk) then
@@ -188,7 +188,7 @@ contains
       end do
 
    end subroutine set_hist_block_info
-   
+
    ! -----------
    SUBROUTINE block_info_free_mem (this)
 
@@ -231,19 +231,19 @@ contains
       DO WHILE (hist_block_info%xsegs(ixseg)%cnt <= 0)
          ixseg = ixseg + 1
       ENDDO
-               
+
       call get_filename_block ( &
          filename, hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
       CALL ncio_read_serial (fileblock, dataname, minutes)
-      
+
       timelen = size(minutes)
       CALL ncio_define_dimension (filename, 'time', timelen)
       call ncio_write_serial (filename, dataname, minutes, 'time')
 
       CALL ncio_put_attr (filename, dataname, 'long_name', 'time')
       CALL ncio_put_attr (filename, dataname, 'units', 'minutes since 1900-1-1 0:0:0')
-      
+
    end subroutine hist_concatenate_time
 
    !------------------
@@ -256,14 +256,14 @@ contains
 
       call ncio_define_dimension(filename, 'lat' , hist_block_info%ginfo%nlat)
       call ncio_define_dimension(filename, 'lon' , hist_block_info%ginfo%nlon)
-      
+
       call ncio_write_serial (filename, 'lat_s', hist_block_info%ginfo%lat_s, 'lat')
       call ncio_write_serial (filename, 'lat_n', hist_block_info%ginfo%lat_n, 'lat')
       call ncio_write_serial (filename, 'lon_w', hist_block_info%ginfo%lon_w, 'lon')
       call ncio_write_serial (filename, 'lon_e', hist_block_info%ginfo%lon_e, 'lon')
       call ncio_write_serial (filename, 'lat',   hist_block_info%ginfo%lat_c, 'lat')
       call ncio_write_serial (filename, 'lon',   hist_block_info%ginfo%lon_c, 'lon')
-               
+
       CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
       CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
       CALL ncio_put_attr (filename, 'lat', 'axis', 'X')
@@ -282,7 +282,7 @@ contains
 
       character(len=*), intent(in) :: filename
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: timelen 
+      integer, intent(in) :: timelen
       integer, intent(in) :: compress
       character (len=*), intent(in), optional :: longname
       character (len=*), intent(in), optional :: units
@@ -294,7 +294,7 @@ contains
       LOGICAL :: fexists
 
       write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
-               
+
       nlat = hist_block_info%ginfo%nlat
       nlon = hist_block_info%ginfo%nlon
 
@@ -303,7 +303,7 @@ contains
 
       do iyseg = 1, hist_block_info%nyseg
          do ixseg = 1, hist_block_info%nxseg
-               
+
             call get_filename_block (filename, &
                hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
@@ -316,7 +316,7 @@ contains
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
-            
+
                vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
             end if
 
@@ -324,19 +324,19 @@ contains
       end do
 
       call ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
-         
+
       IF (present(longname)) THEN
          CALL ncio_put_attr (filename, varname, 'long_name', longname)
       ENDIF
       IF (present(units)) THEN
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
-         
+
       CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
-   
+
    end subroutine hist_concatenate_var_2d
 
    ! -----
@@ -348,7 +348,7 @@ contains
       character(len=*), intent(in) :: filename
       character(len=*), intent(in) :: varname
       INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name 
+      character(len=*), intent(in) :: dim1name
       INTEGER, intent(in) :: ndim1
       integer, intent(in) :: compress
       character (len=*), intent(in), optional :: longname
@@ -365,7 +365,7 @@ contains
 
       allocate (vdata (ndim1, nlon, nlat, timelen))
       vdata(:,:,:,:) = spval
-         
+
       write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
 
       do iyseg = 1, hist_block_info%nyseg
@@ -378,32 +378,32 @@ contains
             IF (fexists) THEN
 
                CALL ncio_read_serial (fileblock, varname, rcache)
-               
+
                xgdsp = hist_block_info%xsegs(ixseg)%gdsp
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
-               
+
                vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
             end if
 
          end do
       end do
-      
+
       call ncio_write_serial (filename, varname, vdata, dim1name, 'lon', 'lat', 'time', compress)
-      
+
       IF (present(longname)) THEN
          CALL ncio_put_attr (filename, varname, 'long_name', longname)
       ENDIF
       IF (present(units)) THEN
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
-      
+
       CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
-   
+
    end subroutine hist_concatenate_var_3d
 
    ! -----
@@ -415,8 +415,8 @@ contains
 
       character(len=*), intent(in) :: filename
       character(len=*), intent(in) :: varname
-      INTEGER, intent(in) :: timelen 
-      character(len=*), intent(in) :: dim1name, dim2name 
+      INTEGER, intent(in) :: timelen
+      character(len=*), intent(in) :: dim1name, dim2name
       INTEGER, intent(in) :: ndim1, ndim2
       integer, intent(in) :: compress
       character (len=*), intent(in), optional :: longname
@@ -438,7 +438,7 @@ contains
 
       do iyseg = 1, hist_block_info%nyseg
          do ixseg = 1, hist_block_info%nxseg
-               
+
             call get_filename_block (filename, &
                hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
@@ -446,7 +446,7 @@ contains
             IF (fexists) THEN
 
                CALL ncio_read_serial (fileblock, varname, rcache)
-               
+
                xgdsp = hist_block_info%xsegs(ixseg)%gdsp
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
@@ -457,17 +457,17 @@ contains
 
          end do
       end do
-      
+
       call ncio_write_serial (filename, varname, vdata, dim1name, dim2name, 'lon', 'lat', 'time', &
             compress)
-      
+
       IF (present(longname)) THEN
          CALL ncio_put_attr (filename, varname, 'long_name', longname)
       ENDIF
       IF (present(units)) THEN
          CALL ncio_put_attr (filename, varname, 'units', units)
       ENDIF
-   
+
       CALL ncio_put_attr (filename, varname, 'missing_value', spval)
 
       IF (allocated(rcache)) deallocate(rcache)
@@ -484,7 +484,7 @@ contains
 
       character(len=*), intent(in) :: filename
       character(len=*), intent(in) :: varname
-      integer, intent(in) :: timelen 
+      integer, intent(in) :: timelen
       integer, intent(in) :: compress
       character (len=*), intent(in), optional :: longname
       character (len=*), intent(in), optional :: units
@@ -502,13 +502,13 @@ contains
       IF (p_is_master) THEN
 
          write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
-      
+
          nlat = hist_block_info%ginfo%nlat
          nlon = hist_block_info%ginfo%nlon
 
          allocate (vdata (nlon, nlat, timelen))
          vdata(:,:,:) = spval
-         
+
          nblock = hist_block_info%nxseg * hist_block_info%nyseg
 
          iblock = 1
@@ -523,12 +523,12 @@ contains
                ixseg = mod(jblock, hist_block_info%nxseg)
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (jblock-1) / hist_block_info%nxseg + 1
-               
+
                xgdsp = hist_block_info%xsegs(ixseg)%gdsp
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
-                  
+
                IF (allocated(rcache)) deallocate(rcache)
                allocate (rcache (xcnt, ycnt, timelen))
 
@@ -537,7 +537,7 @@ contains
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-               
+
                nrecv = nrecv + 1
             ENDIF
 
@@ -546,23 +546,23 @@ contains
                ixseg = mod(iblock, hist_block_info%nxseg)
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (iblock-1) / hist_block_info%nxseg + 1
-              
+
                call get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
-               CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
-               CALL mpi_send (fileblock, 256, MPI_CHARACTER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
+               CALL mpi_send (fileblock, 256, MPI_CHARACTER, idest, mpi_tag_mesg, p_comm_glb, p_err)
 
                iblock = iblock + 1
             ELSE
                jblock = 0
-               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
             ENDIF
 
          ENDDO
-      
+
          call ncio_write_serial (filename, varname, vdata, 'lon', 'lat', 'time', compress)
-      
+
          IF (present(longname)) THEN
             CALL ncio_put_attr (filename, varname, 'long_name', longname)
          ENDIF
@@ -576,7 +576,7 @@ contains
 
       IF (.not. p_is_master) THEN
          smesg(:) = (/p_iam_glb, 0/)
-         CALL mpi_send (smesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+         CALL mpi_send (smesg, 2, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
          DO WHILE (.true.)
 
@@ -585,12 +585,12 @@ contains
             IF (iblock /= 0) THEN
                CALL mpi_recv (fileblock, 256, MPI_CHARACTER, &
                   p_root, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               
+
                CALL ncio_read_serial (fileblock, varname, rcache)
 
                smesg(:) = (/p_iam_glb, iblock/)
                CALL mpi_send (smesg, 2, MPI_INTEGER, &
-                  p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+                  p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
@@ -602,9 +602,9 @@ contains
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
-   
+
    end subroutine hist_concatenate_var_2d
 
    ! -----
@@ -616,7 +616,7 @@ contains
       character(len=*), intent(in) :: filename
       character(len=*), intent(in) :: varname
       INTEGER, intent(in) :: timelen
-      character(len=*), intent(in) :: dim1name 
+      character(len=*), intent(in) :: dim1name
       INTEGER, intent(in) :: ndim1
       integer, intent(in) :: compress
       character(len=*), intent(in), optional :: longname
@@ -635,13 +635,13 @@ contains
       IF (p_is_master) THEN
 
          write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
-      
+
          nlat = hist_block_info%ginfo%nlat
          nlon = hist_block_info%ginfo%nlon
 
          allocate (vdata (ndim1, nlon, nlat, timelen))
          vdata(:,:,:,:) = spval
-         
+
          nblock = hist_block_info%nxseg * hist_block_info%nyseg
 
          iblock = 1
@@ -656,7 +656,7 @@ contains
                ixseg = mod(jblock, hist_block_info%nxseg)
                IF (ixseg == 0) ixseg = hist_block_info%nxseg
                iyseg = (jblock-1) / hist_block_info%nxseg + 1
-                  
+
                xgdsp = hist_block_info%xsegs(ixseg)%gdsp
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
@@ -670,7 +670,7 @@ contains
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                vdata (:, xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-               
+
                nrecv = nrecv + 1
             ENDIF
 
@@ -682,20 +682,20 @@ contains
                call get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
-               CALL mpi_send (iblock,      1,  MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
-               CALL mpi_send (fileblock, 256, MPI_CHARACTER,idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (iblock,      1,  MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
+               CALL mpi_send (fileblock, 256, MPI_CHARACTER,idest, mpi_tag_mesg, p_comm_glb, p_err)
 
                iblock = iblock + 1
             ELSE
                jblock = 0
-               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
             ENDIF
 
          ENDDO
-      
+
          call ncio_write_serial (filename, varname, vdata, dim1name, &
             'lon', 'lat', 'time', compress)
-         
+
          IF (present(longname)) THEN
             CALL ncio_put_attr (filename, varname, 'long_name', longname)
          ENDIF
@@ -710,7 +710,7 @@ contains
       IF (.not. p_is_master) THEN
          smesg(:) = (/p_iam_glb, 0/)
          CALL mpi_send (smesg, 2, MPI_INTEGER, &
-            p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+            p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
          DO WHILE (.true.)
 
@@ -720,12 +720,12 @@ contains
             IF (iblock /= 0) THEN
                CALL mpi_recv (fileblock, 256, MPI_CHARACTER, &
                   p_root, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               
+
                CALL ncio_read_serial (fileblock, varname, rcache)
 
                smesg(:) = (/p_iam_glb, iblock/)
                CALL mpi_send (smesg, 2, MPI_INTEGER, &
-                  p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+                  p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
@@ -737,9 +737,9 @@ contains
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
-   
+
    end subroutine hist_concatenate_var_3d
 
    ! -----
@@ -770,13 +770,13 @@ contains
       IF (p_is_master) THEN
 
          write(*,*) 'Concatenate <', trim(varname), '> to <<', trim(filename), '>>'
-      
+
          nlat = hist_block_info%ginfo%nlat
          nlon = hist_block_info%ginfo%nlon
 
          allocate (vdata (ndim1, ndim2, nlon, nlat, timelen))
          vdata(:,:,:,:,:) = spval
-         
+
          nblock = hist_block_info%nxseg * hist_block_info%nyseg
 
          iblock = 1
@@ -796,7 +796,7 @@ contains
                ygdsp = hist_block_info%ysegs(iyseg)%gdsp
                xcnt  = hist_block_info%xsegs(ixseg)%cnt
                ycnt  = hist_block_info%ysegs(iyseg)%cnt
-                  
+
                IF (allocated(rcache)) deallocate(rcache)
                allocate (rcache (ndim1, ndim2, xcnt, ycnt, timelen))
 
@@ -805,7 +805,7 @@ contains
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                vdata (:, :, xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt,:) = rcache
-               
+
                nrecv = nrecv + 1
             ENDIF
 
@@ -817,17 +817,17 @@ contains
                call get_filename_block (filename, &
                   hist_block_info%xsegs(ixseg)%blk, hist_block_info%ysegs(iyseg)%blk, fileblock)
 
-               CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
-               CALL mpi_send (fileblock, 256, MPI_CHARACTER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (iblock,      1,   MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
+               CALL mpi_send (fileblock, 256, MPI_CHARACTER, idest, mpi_tag_mesg, p_comm_glb, p_err)
 
                iblock = iblock + 1
             ELSE
                jblock = 0
-               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               CALL mpi_send (jblock, 1, MPI_INTEGER, idest, mpi_tag_mesg, p_comm_glb, p_err)
             ENDIF
 
          ENDDO
-      
+
          call ncio_write_serial (filename, varname, vdata, dim1name, dim2name, &
             'lon', 'lat', 'time', compress)
 
@@ -845,7 +845,7 @@ contains
       IF (.not. p_is_master) THEN
          smesg(:) = (/p_iam_glb, 0/)
          CALL mpi_send (smesg, 2, MPI_INTEGER, &
-            p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+            p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
          DO WHILE (.true.)
 
@@ -855,12 +855,12 @@ contains
             IF (iblock /= 0) THEN
                CALL mpi_recv (fileblock, 256, MPI_CHARACTER, &
                   p_root, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-               
+
                CALL ncio_read_serial (fileblock, varname, rcache)
 
                smesg(:) = (/p_iam_glb, iblock/)
                CALL mpi_send (smesg, 2, MPI_INTEGER, &
-                  p_root, mpi_tag_mesg, p_comm_glb, p_err) 
+                  p_root, mpi_tag_mesg, p_comm_glb, p_err)
 
                CALL mpi_send (rcache, size(rcache), MPI_DOUBLE, &
                   p_root, mpi_tag_data, p_comm_glb, p_err)
@@ -872,9 +872,9 @@ contains
 
       IF (allocated(rcache)) deallocate(rcache)
       IF (allocated(vdata )) deallocate(vdata )
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
-   
+
    end subroutine hist_concatenate_var_4d
 #endif
 

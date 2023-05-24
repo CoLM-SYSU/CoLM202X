@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE UrbanALBEDO
+MODULE MOD_Urban_Albedo
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
 ! Calculate urban albedo,
@@ -50,8 +50,8 @@ MODULE UrbanALBEDO
 !=======================================================================
 
   USE MOD_Precision
-  USE PhysicalConstants, only: tfrz
-  USE UrbanShortwave
+  USE MOD_Const_Physical, only: tfrz
+  USE MOD_Urban_Shortwave
 
   IMPLICIT NONE
 
@@ -340,5 +340,5 @@ MODULE UrbanALBEDO
 
   END SUBROUTINE alburban
 
-END MODULE UrbanALBEDO
+END MODULE MOD_Urban_Albedo
 ! --------- EOP ----------

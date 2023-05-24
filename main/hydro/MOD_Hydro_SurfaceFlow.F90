@@ -24,7 +24,7 @@ CONTAINS
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_DrainageNetwork
       USE MOD_Hydro_RiverNetwork
-      USE PhysicalConstants, only : grav
+      USE MOD_Const_Physical, only : grav
 
       IMPLICIT NONE
       

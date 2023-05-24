@@ -17,10 +17,10 @@ PROGRAM CoLM
    use MOD_Precision
    use MOD_SPMD_Task
    use MOD_Namelist
-   USE GlobalVars
-   USE LC_Const
-   USE MOD_Vars_PFTConst
-   use PhysicalConstants
+   USE MOD_Vars_Global
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
    use MOD_Vars_1DForcing
@@ -42,6 +42,7 @@ PROGRAM CoLM
    use mod_landpatch
 #ifdef URBAN_MODEL
    USE mod_landurban
+   USE MOD_Urban_LAIReadin
 #endif
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft

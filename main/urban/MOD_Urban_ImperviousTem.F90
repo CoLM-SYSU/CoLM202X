@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_ImperviousTem
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanImperviousTem
+
+CONTAINS
+
  SUBROUTINE UrbanImperviousTem (patchtype,lb,deltim, &
                                 capr,cnfac,csol,porsl,dkdry,dksatu,&
                                 cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
@@ -30,8 +40,8 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical
   USE MOD_SoilThermalParameters
   USE MOD_Meltf, only: meltf_urban
   USE MOD_Utils, only: tridia
@@ -190,4 +200,6 @@
                   scv_gimp,snowdp_gimp,sm,xmf)
 
  END SUBROUTINE UrbanImperviousTem
+
+END MODULE MOD_Urban_ImperviousTem
 ! ---------- EOP ------------

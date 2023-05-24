@@ -1,5 +1,15 @@
 #include <define.h>
 
+MODULE MOD_Urban_Hydrology
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanHydrology
+
+CONTAINS
+
  SUBROUTINE UrbanHydrology ( &
         ! model running information
         ipatch         ,patchtype      ,lbr            ,lbi            ,&
@@ -23,6 +33,14 @@
         sm_roof        ,sm_gimp        ,sm_gper        ,sm_lake        ,&
         lake_icefrac   ,scv_lake       ,snowdp_lake    ,imelt_lake     ,&
         fioldl         ,w_old                                          ,&
+#if(defined CaMa_Flood)
+        flddepth       ,fldfrc         ,qinfl_fld                      ,&
+#endif
+#ifdef SNICAR
+        forc_aer       ,&
+        mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
+        mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
+#endif
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
         wa             ,qcharge        ,smp            ,hk             ,&
@@ -35,8 +53,8 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants, only: denice, denh2o, tfrz
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: denice, denh2o, tfrz
   USE MOD_SoilSnowHydrology
   USE MOD_Lake
 
@@ -96,6 +114,28 @@
         sm_gimp          ,&! snow melt (mm h2o/s)
         sm_gper          ,&! snow melt (mm h2o/s)
         w_old              ! liquid water mass of the column at the previous time step (mm)
+
+#if(defined CaMa_Flood)
+  real(r8), INTENT(inout) :: flddepth  ! inundation water depth [mm]
+  real(r8), INTENT(in)    :: fldfrc    ! inundation water depth   [0-1]
+  real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
+#endif
+
+#ifdef SNICAR
+! Aerosol Fluxes (Jan. 07, 2023)
+  real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+
+  real(r8), INTENT(inout) :: &
+        mss_bcpho (lbp:0), &! mass of hydrophobic BC in snow  (col,lyr) [kg]
+        mss_bcphi (lbp:0), &! mass of hydrophillic BC in snow (col,lyr) [kg]
+        mss_ocpho (lbp:0), &! mass of hydrophobic OC in snow  (col,lyr) [kg]
+        mss_ocphi (lbp:0), &! mass of hydrophillic OC in snow (col,lyr) [kg]
+        mss_dst1  (lbp:0), &! mass of dust species 1 in snow  (col,lyr) [kg]
+        mss_dst2  (lbp:0), &! mass of dust species 2 in snow  (col,lyr) [kg]
+        mss_dst3  (lbp:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
+        mss_dst4  (lbp:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
+! Aerosol Fluxes (Jan. 07, 2023)
+#endif
 
   INTEGER, intent(in) :: &
         imelt_lake(maxsnl+1:nl_soil)! lake flag for melting or freezing snow and soil layer [-]
@@ -177,7 +217,16 @@
              etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
              rsur_gper   ,rnof_gper   ,qinfl       ,wtfact    ,pondmx    ,&
              ssi         ,wimp        ,smpmin      ,zwt       ,wa        ,&
-             qcharge     ,errw_rsub   )
+             qcharge     ,errw_rsub                                       &
+#if(defined CaMa_Flood)
+            ,flddepth    ,fldfrc      ,qinfl_fld                 &
+#endif
+#ifdef SNICAR
+             ,forc_aer   ,&
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
+#endif
+            )
 
 !=======================================================================
 ! [2] for roof and impervious road
@@ -260,7 +309,14 @@
            z_lakesno    ,dz_lakesno   ,zi_lakesno      ,t_lakesno       ,&
            wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
            dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
-           snowdp_lake  ,sm_lake                                         )
+           snowdp_lake  ,sm_lake                                         &
+#ifdef SNICAR
+           ! SNICAR
+           ,forc_aer    ,&
+           mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
+           mss_dst1     , mss_dst2    ,mss_dst3        ,mss_dst4         &
+#endif
+           )
 
       ! We assume the land water bodies have zero extra liquid water capacity
       ! (i.e.,constant capacity), all excess liquid water are put into the runoff,
@@ -293,4 +349,6 @@
       !rnof = rnof*(1.-flake) + rnof_lake*flake
 
  END SUBROUTINE UrbanHydrology
+
+END MODULE MOD_Urban_Hydrology
 ! ---------- EOP ------------

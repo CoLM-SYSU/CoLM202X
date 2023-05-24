@@ -1,5 +1,17 @@
 #include <define.h>
 
+MODULE MOD_Urban_Thermal
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+  PRIVATE
+
+  PUBLIC :: UrbanTHERMAL
+
+CONTAINS
+
+
  SUBROUTINE UrbanTHERMAL ( &
 
         ! model running information
@@ -62,6 +74,9 @@
         ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
         twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
+#ifdef SNICAR
+        snofrz         ,sabg_lyr                                       ,&
+#endif
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
         lfevpa         ,fsenl          ,fevpl          ,etr            ,&
@@ -88,15 +103,20 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav
-  USE UrbanShortwave
-  USE UrbanLongwave
-  USE UrbanFlux
+  USE MOD_Urban_Shortwave
+  USE MOD_Urban_Longwave
+  USE MOD_Urban_GroundFlux
+  USE MOD_Urban_Flux
+  USE MOD_Urban_RoofTem
+  USE MOD_Urban_WallTem
+  USE MOD_Urban_PerviousTem
+  USE MOD_Urban_ImperviousTem
   USE MOD_Lake
-  USE UrbanBEM
-  USE UrbanAnthropogenic, only: LUCY
+  USE MOD_Urban_BEM
+  USE MOD_Urban_LUCY, only: LUCY
   USE MOD_Eroot, only: eroot
 
   IMPLICIT NONE
@@ -389,6 +409,11 @@
         fm         ,&! integral of profile function for momentum
         fh         ,&! integral of profile function for heat
         fq           ! integral of profile function for moisture
+
+#ifdef SNICAR
+  REAL(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
+  REAL(r8), intent(out) :: snofrz (lbp:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+#endif
 
 !---------------------Local Variables-----------------------------------
 
@@ -1319,4 +1344,6 @@
       deallocate ( fcover )
 
  END SUBROUTINE UrbanTHERMAL
+
+END MODULE MOD_Urban_Thermal
 ! ---------- EOP ------------

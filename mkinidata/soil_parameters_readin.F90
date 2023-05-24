@@ -15,7 +15,7 @@ SUBROUTINE soil_parameters_readin (dir_landdata)
 !------------------------------------------------------------------------------------------
 
    use MOD_Precision
-   USE GlobalVars, only : nl_soil
+   USE MOD_Vars_Global, only : nl_soil
    use MOD_SPMD_Task
    use MOD_NetCDFVector
    use mod_landpatch

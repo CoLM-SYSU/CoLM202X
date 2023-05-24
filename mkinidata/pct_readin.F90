@@ -3,7 +3,7 @@
 SUBROUTINE pct_readin (dir_landdata)
 
    use MOD_Precision
-   USE GlobalVars
+   USE MOD_Vars_Global
    use MOD_SPMD_Task
    use MOD_NetCDFVector
    USE mod_landpatch

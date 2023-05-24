@@ -21,7 +21,7 @@ CONTAINS
       USE mod_landpatch
       USE MOD_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
-      USE PhysicalConstants, only : grav
+      USE MOD_Const_Physical, only : grav
       USE MOD_CoLMDebug
       IMPLICIT NONE
 

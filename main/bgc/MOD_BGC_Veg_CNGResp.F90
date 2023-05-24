@@ -18,7 +18,7 @@ module MOD_BGC_Veg_CNGResp
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
   use MOD_Precision
-  use MOD_Vars_PFTConst, only: &
+  use MOD_Const_PFT, only: &
       grperc, grpnow, woody
 
   use MOD_Vars_PFTimeInvars, only: pftclass

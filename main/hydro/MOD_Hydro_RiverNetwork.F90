@@ -4,7 +4,7 @@
 MODULE MOD_Hydro_RiverNetwork
 
    USE MOD_Precision
-   USE GlobalVars, only : spval
+   USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
    
    ! -- river parameters --

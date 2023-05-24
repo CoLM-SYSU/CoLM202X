@@ -1,5 +1,16 @@
 #include <define.h>
 
+MODULE MOD_Urban_RoofFlux
+
+  USE precision
+  IMPLICIT NONE
+  SAVE
+
+  PUBLIC :: UrbanRoofFlux
+
+CONTAINS
+
+
  SUBROUTINE UrbanRoofFlux (hu, ht, hq, us, vs, tm, qm, rhoair, psrf, &
                            ur, thm, th, thv, zsno, fsno_roof, hroof, htvp_roof, &
                            lbr, wliq_roofsno, wice_roofsno, troof, qroof, dqroofdT, &
@@ -13,7 +24,7 @@
 !=======================================================================
 
   USE MOD_Precision
-  USE PhysicalConstants, only: cpair,vonkar,grav
+  USE MOD_Const_Physical, only: cpair,vonkar,grav
   USE MOD_FrictionVelocity
   IMPLICIT NONE
 
@@ -218,3 +229,5 @@
       fevproof  = -raiw*dqh*fwet_roof
 
  END SUBROUTINE UrbanRoofFlux
+
+END MODULE MOD_Urban_RoofFlux

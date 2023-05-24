@@ -1,11 +1,11 @@
 #include <define.h>
 
-MODULE UrbanBEM
+MODULE MOD_Urban_BEM
 
   USE MOD_Precision
-  USE GlobalVars
-  USE PhysicalConstants
-  USE UrbanShortwave, only: MatrixInverse
+  USE MOD_Vars_Global
+  USE MOD_Const_Physical
+  USE MOD_Urban_Shortwave, only: MatrixInverse
 
   IMPLICIT NONE
   SAVE
@@ -210,4 +210,4 @@ CONTAINS
 
   END SUBROUTINE
 
-END MODULE UrbanBEM
+END MODULE MOD_Urban_BEM

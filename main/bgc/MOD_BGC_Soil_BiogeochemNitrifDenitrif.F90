@@ -20,7 +20,7 @@ module MOD_BGC_Soil_BiogeochemNitrifDenitrif
   ! Xingjie Lu, 2021, revised original CLM5 code to be compatible with CoLM code structure.
 
   use MOD_Precision
-  use PhysicalConstants, only : denice, denh2o, tfrz
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
   use MOD_Vars_TimeVariables, only : t_soisno, wliq_soisno, wice_soisno, t_scalar, w_scalar, smp
   use MOD_Vars_TimeInvariants, only: &
       porsl, wfc, bsw, BD_all, OM_density

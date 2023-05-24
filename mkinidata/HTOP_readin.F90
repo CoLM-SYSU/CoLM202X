@@ -8,9 +8,9 @@ SUBROUTINE HTOP_readin (dir_landdata)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
-      USE GlobalVars
-      USE LC_Const
-      USE MOD_Vars_PFTConst
+      USE MOD_Vars_Global
+      USE MOD_Const_LC
+      USE MOD_Const_PFT
       USE MOD_Vars_TimeInvariants
       USE mod_landpatch
 #ifdef PFT_CLASSIFICATION

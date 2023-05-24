@@ -27,7 +27,7 @@ SUBROUTINE aggregation_forest_height ( &
    use mod_aggregation
    USE MOD_Utils
 
-   USE LC_Const
+   USE MOD_Const_LC
    USE MOD_5x5DataReadin
 #ifdef PFT_CLASSIFICATION
    USE mod_landpft
@@ -97,7 +97,7 @@ SUBROUTINE aggregation_forest_height ( &
 #endif
 
 #ifdef USGS_CLASSIFICATION
-   lndname = trim(dir_rawdata)//'/Forest_Height.nc' 
+   lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
    if (p_is_io) then
       call allocate_block_data (gland, tree_height)
@@ -111,10 +111,10 @@ SUBROUTINE aggregation_forest_height ( &
    if (p_is_worker) then
 
       allocate (tree_height_patches (numpatch))
-   
+
       do ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then   
+         if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then
             ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
             CALL aggregation_request_data (landpatch, ipatch, gland, &
                data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
@@ -123,7 +123,7 @@ SUBROUTINE aggregation_forest_height ( &
             tree_height_patches (ipatch) = -1.0e36_r8
          ENDIF
       end do
-      
+
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif
@@ -135,7 +135,7 @@ SUBROUTINE aggregation_forest_height ( &
 
 #ifdef CoLMDEBUG
    call check_vector_data ('htop_patches ', tree_height_patches)
-#endif 
+#endif
 
 #ifndef SinglePoint
    lndname = trim(landdir)//'/htop_patches.nc'
@@ -152,7 +152,7 @@ SUBROUTINE aggregation_forest_height ( &
 
 #else
    SITE_htop = tree_height_patches(1)
-#endif 
+#endif
 
    if (p_is_worker) then
       deallocate ( tree_height_patches )
@@ -166,7 +166,7 @@ SUBROUTINE aggregation_forest_height ( &
    ENDIF
 
    IF (p_is_io) THEN
-      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
       suffix  = 'MOD2005'
       CALL read_5x5_data (dir_5x5, suffix, gland, 'HTOP', htop)
 #ifdef USEMPI
@@ -187,7 +187,7 @@ SUBROUTINE aggregation_forest_height ( &
          ENDIF
 
       ENDDO
-      
+
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif
@@ -216,7 +216,7 @@ SUBROUTINE aggregation_forest_height ( &
 
 #else
    SITE_htop = htop_patches(1)
-#endif 
+#endif
 
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)
@@ -230,10 +230,10 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
-     
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    suffix  = 'MOD2005'
-      
+
    IF (p_is_io) THEN
       CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
       CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
@@ -244,7 +244,7 @@ SUBROUTINE aggregation_forest_height ( &
    ENDIF
 
    IF (p_is_worker) THEN
-      
+
       allocate (htop_patches (numpatch))
       allocate (htop_pfts    (numpft  ))
 
@@ -293,7 +293,7 @@ SUBROUTINE aggregation_forest_height ( &
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
    CALL ncio_write_vector (lndname, 'htop_patches', 'patch', landpatch, htop_patches, 1)
-   
+
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
    lndname  = trim(dir_model_landdata) // '/diag/htop_patch.nc'
@@ -321,7 +321,7 @@ SUBROUTINE aggregation_forest_height ( &
    allocate (SITE_htop_pfts(numpft))
    SITE_htop_pfts(:) = htop_pfts(:)
 #endif
-   
+
    IF (p_is_worker) THEN
       IF (allocated(htop_patches)) deallocate (htop_patches)
       IF (allocated(htop_pfts   )) deallocate (htop_pfts   )
@@ -336,10 +336,10 @@ SUBROUTINE aggregation_forest_height ( &
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
-     
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim' 
+
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    suffix  = 'MOD2005'
-      
+
    IF (p_is_io) THEN
       CALL read_5x5_data     (dir_5x5, suffix, gland, 'HTOP',    htop  )
       CALL read_5x5_data_pft (dir_5x5, suffix, gland, 'PCT_PFT', pftPCT)
@@ -350,7 +350,7 @@ SUBROUTINE aggregation_forest_height ( &
    ENDIF
 
    IF (p_is_worker) THEN
-      
+
       allocate (htop_patches (numpatch))
       allocate (htop_pcs (0:N_PFT-1, numpc))
 
