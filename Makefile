@@ -9,6 +9,12 @@ VPATH = include : share : mksrfdata : mkinidata : main : main/hydro : main/bgc :
 # ********** Targets ALL **********
 .PHONY: all
 all : mkdir_build mksrfdata.x mkinidata.x colm.x postprocess.x
+	@echo ''
+	@echo '*******************************************************'
+	@echo '*                                                     *'
+	@echo '*        Making all CoLM programs successfully.       *'
+	@echo '*                                                     *'
+	@echo '*******************************************************'
 # ******* End of Targets ALL ******
 
 .PHONY: mkdir_build
