@@ -518,11 +518,12 @@ MODULE MOD_LuLccTimeVars
         grid_patch_e_(:) = -1.
         grid_patch_s_(:) = -1.
 
-        ! loop for numelm of next year, patches at the beginning and end of the element were recorded
-        ! landpatch%eindex is arranged in order, and the not land element is skipped
-        ! so, if element is missing, the recorder is -1.
+        ! loop for numelm of next year, patches at the beginning and end of
+        ! the element were recorded landpatch%eindex is arranged in order,
+        ! and the not land element is skipped so, if element is missing, the
+        ! recorder is -1.
         DO i=1, numelm
-           ! how many i elements in this worker
+           ! how many patches in ith element in this worker
            numpxl = count(landpatch%eindex==landelm%eindex(i))
 
            IF (allocated(locpxl)) deallocate(locpxl)
@@ -561,8 +562,10 @@ MODULE MOD_LuLccTimeVars
                  np_= grid_patch_s_(j)
 
                  IF (np.le.0 .or. np_.le.0) CYCLE
+
                  ! if element is still present, loop for patches in same element
                  DO WHILE (np.le.grid_patch_e(i) .and. np_.le.grid_patch_e_(j))
+
                     ! if a patch is missing, CYCLE
                     IF (patchclass(np) > patchclass_(np_)) THEN
                        np_= np_+ 1
@@ -608,169 +611,171 @@ MODULE MOD_LuLccTimeVars
                     lake_icefrac(:,np) = lake_icefrac_(:,np_)
 
 #ifdef PFT_CLASSIFICATION
-              IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
-                 ip = patch_pft_s (np )
-                 ip_= patch_pft_s_(np_)
+IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
+                    ip = patch_pft_s (np )
+                    ip_= patch_pft_s_(np_)
 
-                 IF (ip.le.0 .or. ip_.le.0) THEN
-                    print *, "Error in REST_LuLccTimeVars PFT_CLASSIFICATION!"
-                    STOP
-                 ENDIF
-
-                 DO WHILE (ip.le.patch_pft_e(np) .and. ip_.le.patch_pft_e_(np_))
-
-                    ! if a PFT is missing, CYCLE
-                    IF (pftclass(ip) > pftclass_(ip_)) THEN
-                       ip_= ip_+ 1
-                       CYCLE
+                    IF (ip.le.0 .or. ip_.le.0) THEN
+                       print *, "Error in REST_LuLccTimeVars PFT_CLASSIFICATION!"
+                       STOP
                     ENDIF
 
-                    ! if a PFT is added, CYCLE
-                    IF (pftclass(ip) < pftclass_(ip_)) THEN
+                    DO WHILE (ip.le.patch_pft_e(np) .and. ip_.le.patch_pft_e_(np_))
+
+                       ! if a PFT is missing, CYCLE
+                       IF (pftclass(ip) > pftclass_(ip_)) THEN
+                          ip_= ip_+ 1
+                          CYCLE
+                       ENDIF
+
+                       ! if a PFT is added, CYCLE
+                       IF (pftclass(ip) < pftclass_(ip_)) THEN
+                          ip = ip + 1
+                          CYCLE
+                       ENDIF
+
+                       ! for the same PFT, set PFT value
+                       tleaf_p    (ip) = tleaf_p_    (ip_)
+                       ldew_p     (ip) = ldew_p_     (ip_)
+                       sigf_p     (ip) = sigf_p_     (ip_)
+                       lai_p      (ip) = lai_p_      (ip_)
+                       sai_p      (ip) = sai_p_      (ip_)
+                       ssun_p (:,:,ip) = ssun_p_ (:,:,ip_)
+                       ssha_p (:,:,ip) = ssha_p_ (:,:,ip_)
+                       thermk_p   (ip) = thermk_p_   (ip_)
+                       extkb_p    (ip) = extkb_p_    (ip_)
+                       extkd_p    (ip) = extkd_p_    (ip_)
+
                        ip = ip + 1
-                       CYCLE
-                    ENDIF
-
-                    ! for the same PFT, set PFT value
-                    tleaf_p    (ip) = tleaf_p_    (ip_)
-                    ldew_p     (ip) = ldew_p_     (ip_)
-                    sigf_p     (ip) = sigf_p_     (ip_)
-                    lai_p      (ip) = lai_p_      (ip_)
-                    sai_p      (ip) = sai_p_      (ip_)
-                    ssun_p (:,:,ip) = ssun_p_ (:,:,ip_)
-                    ssha_p (:,:,ip) = ssha_p_ (:,:,ip_)
-                    thermk_p   (ip) = thermk_p_   (ip_)
-                    extkb_p    (ip) = extkb_p_    (ip_)
-                    extkd_p    (ip) = extkd_p_    (ip_)
-
-                    ip = ip + 1
-                    ip_= ip_+ 1
-                 ENDDO
-              ENDIF
+                       ip_= ip_+ 1
+                    ENDDO
+ENDIF
 #endif
 
 #ifdef PC_CLASSIFICATION
-              IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
+IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
 
-                 pc = patch2pc (np )
-                 pc_= patch2pc_(np_)
+                    pc = patch2pc (np )
+                    pc_= patch2pc_(np_)
 
-                 IF (pc.le.0 .or. pc_.le.0) THEN
-                    print *, "Error in REST_LuLccTimeVars PC_CLASSIFICATION!"
-                    STOP
-                 ENDIF
+                    IF (pc.le.0 .or. pc_.le.0) THEN
+                       print *, "Error in REST_LuLccTimeVars PC_CLASSIFICATION!"
+                       STOP
+                    ENDIF
 
-                 ! for the same patch TYPE
-                 tleaf_c    (:,pc) = tleaf_c_    (:,pc)
-                 ldew_c     (:,pc) = ldew_c_     (:,pc)
-                 sigf_c     (:,pc) = sigf_c_     (:,pc)
-                 lai_c      (:,pc) = lai_c_      (:,pc)
-                 sai_c      (:,pc) = sai_c_      (:,pc)
-                 ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc)
-                 ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc)
-                 thermk_c   (:,pc) = thermk_c_   (:,pc)
-                 fshade_c   (:,pc) = fshade_c_   (:,pc)
-                 extkb_c    (:,pc) = extkb_c_    (:,pc)
-                 extkd_c    (:,pc) = extkd_c_    (:,pc)
-              ENDIF
+                    ! for the same patch TYPE
+                    tleaf_c    (:,pc) = tleaf_c_    (:,pc)
+                    ldew_c     (:,pc) = ldew_c_     (:,pc)
+                    sigf_c     (:,pc) = sigf_c_     (:,pc)
+                    lai_c      (:,pc) = lai_c_      (:,pc)
+                    sai_c      (:,pc) = sai_c_      (:,pc)
+                    ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc)
+                    ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc)
+                    thermk_c   (:,pc) = thermk_c_   (:,pc)
+                    fshade_c   (:,pc) = fshade_c_   (:,pc)
+                    extkb_c    (:,pc) = extkb_c_    (:,pc)
+                    extkd_c    (:,pc) = extkd_c_    (:,pc)
+ENDIF
 #endif
 
 #ifdef URBAN_MODEL
-              IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
-                 u = patch2urban (np )
-                 u_= patch2urban_(np_)
+IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
+                    u = patch2urban (np )
+                    u_= patch2urban_(np_)
 
-                 IF (u.le.0 .or. u_.le.0) THEN
-                    print *, "Error in REST_LuLccTimeVars URBAN_MODEL!"
-                    STOP
-                 ENDIF
+                    IF (u.le.0 .or. u_.le.0) THEN
+                       print *, "Error in REST_LuLccTimeVars URBAN_MODEL!"
+                       STOP
+                    ENDIF
 
-                 ! if a Urban TYPE is missing, CYCLE
-                 IF (landurban%settyp(u) > urbclass_(u_)) THEN
-                    np_= np_+ 1
-                    CYCLE
-                 ENDIF
+                    ! if a Urban TYPE is missing, CYCLE
+                    IF (landurban%settyp(u) > urbclass_(u_)) THEN
+                       np_= np_+ 1
+                       CYCLE
+                    ENDIF
 
-                 ! if a urban TYPE is added, CYCLE
-                 IF (landurban%settyp(u) < urbclass_(u_)) THEN
-                    np = np + 1
-                    CYCLE
-                 ENDIF
+                    ! if a urban TYPE is added, CYCLE
+                    IF (landurban%settyp(u) < urbclass_(u_)) THEN
+                       np = np + 1
+                       CYCLE
+                    ENDIF
 
-                 ! otherwise, set urban value
-                 ! include added urban and the same urban TYPE
-                 fwsun          (u) = fwsun_          (u_)
-                 dfwsun         (u) = dfwsun_         (u_)
+                    ! otherwise, set urban value
+                    ! include added urban and the same urban TYPE
+                    fwsun          (u) = fwsun_          (u_)
+                    dfwsun         (u) = dfwsun_         (u_)
 
-                 sroof      (:,:,u) = sroof_      (:,:,u_)
-                 swsun      (:,:,u) = swsun_      (:,:,u_)
-                 swsha      (:,:,u) = swsha_      (:,:,u_)
-                 sgimp      (:,:,u) = sgimp_      (:,:,u_)
-                 sgper      (:,:,u) = sgper_      (:,:,u_)
-                 slake      (:,:,u) = slake_      (:,:,u_)
+                    sroof      (:,:,u) = sroof_      (:,:,u_)
+                    swsun      (:,:,u) = swsun_      (:,:,u_)
+                    swsha      (:,:,u) = swsha_      (:,:,u_)
+                    sgimp      (:,:,u) = sgimp_      (:,:,u_)
+                    sgper      (:,:,u) = sgper_      (:,:,u_)
+                    slake      (:,:,u) = slake_      (:,:,u_)
 
-                 lwsun          (u) = lwsun_          (u_)
-                 lwsha          (u) = lwsha_          (u_)
-                 lgimp          (u) = lgimp_          (u_)
-                 lgper          (u) = lgper_          (u_)
-                 lveg           (u) = lveg_           (u_)
+                    lwsun          (u) = lwsun_          (u_)
+                    lwsha          (u) = lwsha_          (u_)
+                    lgimp          (u) = lgimp_          (u_)
+                    lgper          (u) = lgper_          (u_)
+                    lveg           (u) = lveg_           (u_)
 
-                 z_sno_roof   (:,u) = z_sno_roof_   (:,u_)
-                 z_sno_gimp   (:,u) = z_sno_gimp_   (:,u_)
-                 z_sno_gper   (:,u) = z_sno_gper_   (:,u_)
-                 z_sno_lake   (:,u) = z_sno_lake_   (:,u_)
+                    z_sno_roof   (:,u) = z_sno_roof_   (:,u_)
+                    z_sno_gimp   (:,u) = z_sno_gimp_   (:,u_)
+                    z_sno_gper   (:,u) = z_sno_gper_   (:,u_)
+                    z_sno_lake   (:,u) = z_sno_lake_   (:,u_)
 
-                 dz_sno_roof  (:,u) = dz_sno_roof_  (:,u_)
-                 dz_sno_gimp  (:,u) = dz_sno_gimp_  (:,u_)
-                 dz_sno_gper  (:,u) = dz_sno_gper_  (:,u_)
-                 dz_sno_lake  (:,u) = dz_sno_lake_  (:,u_)
+                    dz_sno_roof  (:,u) = dz_sno_roof_  (:,u_)
+                    dz_sno_gimp  (:,u) = dz_sno_gimp_  (:,u_)
+                    dz_sno_gper  (:,u) = dz_sno_gper_  (:,u_)
+                    dz_sno_lake  (:,u) = dz_sno_lake_  (:,u_)
 
-                 t_roofsno    (:,u) = t_roofsno_    (:,u_)
-                 t_wallsun    (:,u) = t_wallsun_    (:,u_)
-                 t_wallsha    (:,u) = t_wallsha_    (:,u_)
-                 t_gimpsno    (:,u) = t_gimpsno_    (:,u_)
-                 t_gpersno    (:,u) = t_gpersno_    (:,u_)
-                 t_lakesno    (:,u) = t_lakesno_    (:,u_)
+                    t_roofsno    (:,u) = t_roofsno_    (:,u_)
+                    t_wallsun    (:,u) = t_wallsun_    (:,u_)
+                    t_wallsha    (:,u) = t_wallsha_    (:,u_)
+                    t_gimpsno    (:,u) = t_gimpsno_    (:,u_)
+                    t_gpersno    (:,u) = t_gpersno_    (:,u_)
+                    t_lakesno    (:,u) = t_lakesno_    (:,u_)
 
-                 troof_inner    (u) = troof_inner_    (u_)
-                 twsun_inner    (u) = twsun_inner_    (u_)
-                 twsha_inner    (u) = twsha_inner_    (u_)
+                    troof_inner    (u) = troof_inner_    (u_)
+                    twsun_inner    (u) = twsun_inner_    (u_)
+                    twsha_inner    (u) = twsha_inner_    (u_)
 
-                 wliq_roofsno (:,u) = wliq_roofsno_ (:,u_)
-                 wice_roofsno (:,u) = wice_roofsno_ (:,u_)
-                 wliq_gimpsno (:,u) = wliq_gimpsno_ (:,u_)
-                 wice_gimpsno (:,u) = wice_gimpsno_ (:,u_)
-                 wliq_gpersno (:,u) = wliq_gpersno_ (:,u_)
-                 wice_gpersno (:,u) = wice_gpersno_ (:,u_)
-                 wliq_lakesno (:,u) = wliq_lakesno_ (:,u_)
-                 wice_lakesno (:,u) = wice_lakesno_ (:,u_)
+                    wliq_roofsno (:,u) = wliq_roofsno_ (:,u_)
+                    wice_roofsno (:,u) = wice_roofsno_ (:,u_)
+                    wliq_gimpsno (:,u) = wliq_gimpsno_ (:,u_)
+                    wice_gimpsno (:,u) = wice_gimpsno_ (:,u_)
+                    wliq_gpersno (:,u) = wliq_gpersno_ (:,u_)
+                    wice_gpersno (:,u) = wice_gpersno_ (:,u_)
+                    wliq_lakesno (:,u) = wliq_lakesno_ (:,u_)
+                    wice_lakesno (:,u) = wice_lakesno_ (:,u_)
 
-                 sag_roof       (u) = sag_roof_       (u_)
-                 sag_gimp       (u) = sag_gimp_       (u_)
-                 sag_gper       (u) = sag_gper_       (u_)
-                 sag_lake       (u) = sag_lake_       (u_)
-                 scv_roof       (u) = scv_roof_       (u_)
-                 scv_gimp       (u) = scv_gimp_       (u_)
-                 scv_gper       (u) = scv_gper_       (u_)
-                 scv_lake       (u) = scv_lake_       (u_)
-                 fsno_roof      (u) = fsno_roof_      (u_)
-                 fsno_gimp      (u) = fsno_gimp_      (u_)
-                 fsno_gper      (u) = fsno_gper_      (u_)
-                 fsno_lake      (u) = fsno_lake_      (u_)
-                 snowdp_roof    (u) = snowdp_roof_    (u_)
-                 snowdp_gimp    (u) = snowdp_gimp_    (u_)
-                 snowdp_gper    (u) = snowdp_gper_    (u_)
-                 snowdp_lake    (u) = snowdp_lake_    (u_)
+                    sag_roof       (u) = sag_roof_       (u_)
+                    sag_gimp       (u) = sag_gimp_       (u_)
+                    sag_gper       (u) = sag_gper_       (u_)
+                    sag_lake       (u) = sag_lake_       (u_)
+                    scv_roof       (u) = scv_roof_       (u_)
+                    scv_gimp       (u) = scv_gimp_       (u_)
+                    scv_gper       (u) = scv_gper_       (u_)
+                    scv_lake       (u) = scv_lake_       (u_)
+                    fsno_roof      (u) = fsno_roof_      (u_)
+                    fsno_gimp      (u) = fsno_gimp_      (u_)
+                    fsno_gper      (u) = fsno_gper_      (u_)
+                    fsno_lake      (u) = fsno_lake_      (u_)
+                    snowdp_roof    (u) = snowdp_roof_    (u_)
+                    snowdp_gimp    (u) = snowdp_gimp_    (u_)
+                    snowdp_gper    (u) = snowdp_gper_    (u_)
+                    snowdp_lake    (u) = snowdp_lake_    (u_)
 
-                 t_room         (u) = t_room_         (u_)
-                 tafu           (u) = tafu_           (u_)
-                 Fhac           (u) = Fhac_           (u_)
-                 Fwst           (u) = Fwst_           (u_)
-                 Fach           (u) = Fach_           (u_)
-              ENDIF
+                    t_room         (u) = t_room_         (u_)
+                    tafu           (u) = tafu_           (u_)
+                    Fhac           (u) = Fhac_           (u_)
+                    Fwst           (u) = Fwst_           (u_)
+                    Fach           (u) = Fach_           (u_)
+ENDIF
 #endif
-              np = np + 1
-              np_= np_+ 1
+                 ENDDO
+                 np = np + 1
+                 np_= np_+ 1
+              ENDIF
            ENDDO
         ENDDO
      ENDIF

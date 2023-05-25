@@ -60,4 +60,5 @@ SUBROUTINE LuLccDRIVER (casename,dir_landdata,dir_restart,&
 
    ! write out state variables
    CALL WRITE_TimeVariables (idate, casename, dir_restart)
+
 END SUBROUTINE LuLccDRIVER

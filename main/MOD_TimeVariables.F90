@@ -714,7 +714,7 @@ SAVE
      call ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) !  diffuse and scattered diffuse PAR extinction coefficient
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) !  the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) !  water storage in aquifer [mm]
-     call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
+     call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) !  depth of ponding water
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
