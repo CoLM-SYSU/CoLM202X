@@ -118,12 +118,12 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-         !TODO: add parameter input for time year
-!#ifdef IGBP_CLASSIFICATION
+         !TODO-done: add parameter input for time year
+#ifndef USGS_CLASSIFICATION
          file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
-!#endif
-#ifdef USGS_CLASSIFICATION
-         file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
+#else
+         !TODO: need usgs land cover TYPE data
+         !file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
@@ -297,6 +297,9 @@ CONTAINS
          IF (allocated(msk)) deallocate(msk)
       ENDIF
 
+#ifdef URBAN_MODEL
+      continue
+#else
 #if (defined CROP)
       IF (p_is_io) THEN
 !         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
@@ -341,7 +344,7 @@ CONTAINS
 #endif
 
       CALL write_patchfrac (DEF_dir_landdata, lc_year)
-
+#endif
    END SUBROUTINE landpatch_build
 
    ! -----

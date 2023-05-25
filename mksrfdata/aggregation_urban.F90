@@ -8,7 +8,7 @@
 ! ======================================================
 
 SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
-                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_500m)
 
    USE precision
    USE mod_namelist
@@ -27,7 +27,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    USE GlobalVars, only: N_URB
 #ifdef USE_LCZ
    USE UrbanLCZ_Const, only: wtroof_lcz, htroof_lcz
-#endif
+#ENDIF
 #ifdef SinglePoint
    USE mod_single_srfdata
 #endif
@@ -43,7 +43,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER , intent(in) :: lc_year
 
    TYPE(grid_type), intent(in) :: grid_urban_5km
-   TYPE(grid_type), intent(in) :: grid_urban_100m
+   ! TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
@@ -259,6 +259,9 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
+         where (pop_one < 0)
+            area_one = 0
+         END where
          ! area-weighted average
          pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
@@ -394,6 +397,9 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
+         where (gl30_wt_one < 0)
+            area_one = 0
+         end where
          ! only caculate when urban patch have water cover
          IF (sum(area_one) > 0) THEN
             pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
@@ -472,6 +478,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ! when urban patch has no data, use table data to fill gap
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
+
+         ! RG_-45_65_-50_70 of NCAR has no urban data,
+         ! all urban patches of this area are assigned to region 30
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
 
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
@@ -699,7 +711,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       ! loop for each urban patch to aggregate NCAR urban morphological and thermal paras with area-weighted average
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
-                                        data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one)
+                                        data_i4_2d_in2 = reg_typid, data_i4_2d_out2 = reg_typid_one)
 
          ! urban region and type id for look-up-table
          urb_typidx = landurban%settyp(iurban)
@@ -709,7 +721,10 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          ipxend = landurban%ipxend(iurban)
 
          sumarea = sum(area_one)
-
+         ! same for above, assign reg id for RG_-45_65_-50_70
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
          ! loop for each finer grid to aggregate data
          DO ipxl = ipxstt, ipxend
 
@@ -729,12 +744,12 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
             ! tkimrd and cvimrd have nanvalues, and need to be calculated separately
             DO il = 1, 10
 
-               IF (tkimrd(urb_typidx,urb_regidx,il) .ne. -999.) THEN
+               IF (tkimrd(urb_typidx,urb_regidx,il) > 0) THEN
                   tk_imrd(il,iurban) = tk_imrd(il,iurban) + tkimrd(urb_typidx,urb_regidx,il) * area_one(ipxl)
                   tk_wgt (il,iurban) = tk_wgt (il,iurban) + area_one(ipxl)
                ENDIF
 
-               IF (cvimrd(urb_typidx,urb_regidx,il) .ne. -999.) THEN
+               IF (cvimrd(urb_typidx,urb_regidx,il) > 0) THEN
                   cv_imrd(il,iurban) = cv_imrd(il,iurban) + cvimrd(urb_typidx,urb_regidx,il) * area_one(ipxl)
                   cv_wgt (il,iurban) = cv_wgt (il,iurban) + area_one(ipxl)
                ENDIF
@@ -844,10 +859,10 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
    landname  = trim(dir_srfdata) // '/diag/PCT_Urban.nc'
    CALL srfdata_map_and_write (area_md, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Urban', compress = 0, write_mode = 'one')
-   ! typindex = (/(ityp, ityp = 1, N_URB)/)
-   ! landname  = trim(dir_srfdata) // '/diag/cv_imrd.nc'
-   ! CALL srfdata_map_and_write (cv_imrd, landurban%settyp, typindex, m_urb2diag, &
-   !    -1.0e36_r8, landname, 'CV_IMPROAD', compress = 0, write_mode = 'one')
+   typindex = (/(ityp, ityp = 1, N_URB)/)
+   landname  = trim(dir_srfdata) // '/diag/cv_imrd.nc'
+   CALL srfdata_map_and_write (cv_imrd(1,:), landurban%settyp, typindex, m_urb2diag, &
+      -1.0e36_r8, landname, 'CV_IMPROAD', compress = 0, write_mode = 'one')
 #endif
 
 #ifdef USEMPI

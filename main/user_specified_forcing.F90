@@ -91,9 +91,14 @@ CONTAINS
 
       NVAR = DEF_forcing%NVAR
 
+      IF (allocated(dtime )) deallocate(dtime)
+      IF (allocated(offset)) deallocate(offset)
       allocate (dtime  (NVAR))
       allocate (offset (NVAR))
 
+      IF (allocated(fprefix )) deallocate(fprefix )
+      IF (allocated(vname   )) deallocate(vname   )
+      IF (allocated(tintalgo)) deallocate(tintalgo)
       allocate (fprefix  (NVAR))
       allocate (vname    (NVAR))
       allocate (tintalgo (NVAR))
@@ -150,17 +155,17 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---Princeton Global Meteorological Forcing Dataset for Land Surface Modeling
-   
+
       !data source:
       !-------------------
          !---https://rda.ucar.edu/datasets/ds314.0/
 
       !References:
       !-------------------
-         !---Sheffield, J., G. Goteti, and E. F. Wood, 2006: Development of a 50-year high-resolution 
-         !   global dataset of meteorological forcings for land surface modeling J. Climate, 19(13), 
+         !---Sheffield, J., G. Goteti, and E. F. Wood, 2006: Development of a 50-year high-resolution
+         !   global dataset of meteorological forcings for land surface modeling J. Climate, 19(13),
          !   3088-3111.
-         
+
       !REVISION HISTORY
       !----------------
          !---2022.05.01   Zhongwang Wei @ SYSU: remove the "z" dimension
@@ -170,7 +175,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---Global Meteorological Forcing Dataset for Global Soil Wetness Project Phase 3
-   
+
       !data source:
       !-------------------
          !---http://hydro.iis.u-tokyo.ac.jp/GSWP3/
@@ -181,7 +186,7 @@ CONTAINS
          !---Dirmeyer, P. A., Gao, X., Zhao, M., Guo, Z., Oki, T. and Hanasaki, N. (2006) GSWP-2:
          !   Multimodel Analysis and Implications for Our Perception of the Land Surface. Bulletin
          !   of the American Meteorological Society, 87(10), 1381–98.
-         
+
       !REVISION HISTORY
       !----------------
          !---
@@ -190,7 +195,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---Qian Global Meteorological Forcing Dataset from 1948 to 2004
-   
+
       !data source:
       !-------------------
          !---Not available now!
@@ -199,10 +204,10 @@ CONTAINS
       !-------------------
          !---Qian T., and co-authors, 2006: Simulation of Global Land Surface Conditions from 1948 to 2004.
          !   Part I: Forcing Data and Evaluations. J. Hydrometeorol., 7, 953-975.
-         
+
       !REVISION HISTORY
       !----------------
-         !---   
+         !---
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       case ('CRUNCEPV4') ! CRUNCEP V4 forcing data
@@ -216,19 +221,19 @@ CONTAINS
 
       !References:
       !-------------------
-         !---Viovy, N. (2010), CRU‐NCEP dataset. 
+         !---Viovy, N. (2010), CRU‐NCEP dataset.
          !   [Available at: http://dods.extra.cea.fr/data/p529viov/cruncep/readme.htm.]
 
       !REVISION HISTORY
       !----------------
-         !---      
+         !---
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       case ('CRUNCEPV7') ! CRUNCEP V7 forcing data
       !DESCRIPTION
       !===========
          !---CRUNCEP Version 7 - Atmospheric Forcing Data for the Community Land Model
-   
+
       !data source:
       !-------------------
          !---https://rda.ucar.edu/datasets/ds314.3/
@@ -236,22 +241,22 @@ CONTAINS
       !References:
       !-------------------
          !---Viovy, Nicolas. (2018). CRUNCEP Version 7 -
-         !   Atmospheric Forcing Data for the Community Land Model. 
-         !   Research Data Archive at the National Center for Atmospheric Research, 
-         !   Computational and Information Systems Laboratory. 
+         !   Atmospheric Forcing Data for the Community Land Model.
+         !   Research Data Archive at the National Center for Atmospheric Research,
+         !   Computational and Information Systems Laboratory.
          !   https://doi.org/10.5065/PZ8F-F017. Accessed 05 May 2023.
 
       !REVISION HISTORY
       !----------------
-         !--- 
+         !---
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//'-'//trim(monthstr)//'.nc'
       case ('ERA5LAND') ! ERA5-Land forcing data
       !DESCRIPTION
       !===========
-         !---enhanced global dataset for the land component of the fifth 
+         !---enhanced global dataset for the land component of the fifth
          !   generation of European ReAnalysis (ERA5)
-   
+
       !data source:
       !-------------------
          !---https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land?tab=form
@@ -260,7 +265,7 @@ CONTAINS
       !-------------------
          !---Muñoz-Sabater, J., Dutra, E., Agustí-Panareda, A., Albergel, C., Arduini, G., Balsamo, G., Boussetta, S.,
          !   Choulga, M., Harrigan, S., Hersbach, H. and Martens, B., 2021. ERA5-Land:
-         !   A state-of-the-art global reanalysis dataset for land applications. Earth System 
+         !   A state-of-the-art global reanalysis dataset for land applications. Earth System
          !   Science Data, 13(9), pp.4349-4383.
 
       !REVISION HISTORY
@@ -290,7 +295,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---The fifth generation of European ReAnalysis (ERA5)
-   
+
       !data source:
       !-------------------
          !---https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels?tab=overview
@@ -298,9 +303,9 @@ CONTAINS
       !References:
       !-------------------
          !---Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz‐Sabater, J.,
-         !   Nicolas, J., Peubey, C., Radu, R., Schepers, D. and Simmons, A., 2020. 
+         !   Nicolas, J., Peubey, C., Radu, R., Schepers, D. and Simmons, A., 2020.
          !   The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), pp.1999-2049.
-   
+
       !REVISION HISTORY
       !----------------
          !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
@@ -328,7 +333,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---Multi-Source Weather forcing data
-   
+
       !data source:
       !-------------------
          !---https://www.gloh2o.org/mswx/
@@ -341,14 +346,14 @@ CONTAINS
 
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: Regroup data into monthly 
+         !---2021.11.01   Zhongwang Wei @ SYSU: Regroup data into monthly
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'_'//trim(monthstr)//'.nc'
       case ('WFDE5')
       !DESCRIPTION
       !===========
          !---WATCH Forcing Data methodology applied to ERA5 reanalysis data
-   
+
       !data source:
       !-------------------
          !---https://doi.org/10.24381/cds.20d54e34
@@ -367,19 +372,19 @@ CONTAINS
       case ('CRUJRA')
       !DESCRIPTION
       !===========
-         !---Collection of CRU JRA forcing datasets of gridded land surface blend 
+         !---Collection of CRU JRA forcing datasets of gridded land surface blend
          !   of Climatic Research Unit (CRU) and Japanese reanalysis (JRA) data
-   
+
       !data source:
       !-------------------
          !---https://catalogue.ceda.ac.uk/uuid/863a47a6d8414b6982e1396c69a9efe8
 
       !References:
       !-------------------
-         !---University of East Anglia Climatic Research Unit; Harris, I.C. (2019): 
+         !---University of East Anglia Climatic Research Unit; Harris, I.C. (2019):
          !   CRU JRA: Collection of CRU JRA forcing datasets of gridded land surface blend
          !   of Climatic Research Unit (CRU) and Japanese reanalysis (JRA) data..
-         ! Centre for Environmental Data Analysis, date of citation. 
+         ! Centre for Environmental Data Analysis, date of citation.
          !http://catalogue.ceda.ac.uk/uuid/863a47a6d8414b6982e1396c69a9efe8
 
       !REVISION HISTORY
@@ -393,7 +398,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---WATCH Forcing Data methodology applied to ERA-Interim reanalysis data
-   
+
       !data source:
       !-------------------
          !---https://doi.org/10.24381/cds.20d54e34
@@ -413,7 +418,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---the Japanese 55-year Reanalysis
-   
+
       !data source:
       !-------------------
          !---https://jra.kishou.go.jp/JRA-55/index_en.html
@@ -425,21 +430,21 @@ CONTAINS
          !   The JRA-55 Reanalysis: General specifications and basic characteristics.
          !   J. Meteor. Soc. Japan, 93, 5-48, doi:10.2151/jmsj.2015-001.
          !---Harada, Y., H. Kamahori, C. Kobayashi, H. Endo, S. Kobayashi, Y. Ota, H. Onoda,
-         !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis: 
-         !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan, 
+         !   K. Onogi, K. Miyaoka, and K. Takahashi, 2016: The JRA-55 Reanalysis:
+         !   Representation of atmospheric circulation and climate variability, J. Meteor. Soc. Japan,
          !   94, 269-302, doi:10.2151/jmsj.2016-015.
 
       !REVISION HISTORY
       !----------------
          !---2021.11.01   Zhongwang Wei @ SYSU: zip file to reduce the size of the data; remove offset and scale_factor
-      
+
 
          metfilename = '/'//trim(fprefix(var_i))//'_'//trim(yearstr)//'.nc'
       case ('GDAS')
       !DESCRIPTION
       !===========
          !--- Forcing Data From Global Data Assimilation System
-   
+
       !data source:
       !-------------------
          !--https://disc.sci.gsfc.nasa.gov/datasets/GLDAS_NOAH025_3H_V2.1/summary
@@ -447,11 +452,11 @@ CONTAINS
       !References:
       !-------------------
          !---Beaudoing, H. and M. Rodell, NASA/GSFC/HSL (2020), GLDAS Noah Land Surface Model L4 3 hourly 0.25 x 0.25
-         !   degree V2.1, Greenbelt, Maryland, USA, Goddard Earth Sciences Data and Information Services 
+         !   degree V2.1, Greenbelt, Maryland, USA, Goddard Earth Sciences Data and Information Services
          !   Center (GES DISC), Accessed: [Data Access Date], 10.5067/E7TYRXPJKWOQ
-         !---Rodell, M., P.R. Houser, U. Jambor, J. Gottschalck, K. Mitchell, C. Meng, K. Arsenault, B. Cosgrove, 
+         !---Rodell, M., P.R. Houser, U. Jambor, J. Gottschalck, K. Mitchell, C. Meng, K. Arsenault, B. Cosgrove,
          !   J. Radakovich, M. Bosilovich, J.K. Entin, J.P. Walker, D. Lohmann, and D. Toll, 2004:
-         !   The Global Land Data Assimilation System, Bull. Amer. Meteor. Soc., 85, 381-394, 
+         !   The Global Land Data Assimilation System, Bull. Amer. Meteor. Soc., 85, 381-394,
          !   doi:10.1175/BAMS-85-3-381
 
       !REVISION HISTORY
@@ -460,20 +465,20 @@ CONTAINS
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc4'
       case ('CLDAS')
-      
+
       !DESCRIPTION
       !===========
-         !---The Real-Time Product Dataset Of The China Meteorological Administration 
+         !---The Real-Time Product Dataset Of The China Meteorological Administration
          !   Land Data Assimilation System
-   
+
       !data source:
       !-------------------
          !--CMA, not pulicly available
 
       !References:
       !-------------------
-         !---Xia, Y.L.; Hao, Z.C.; Shi, C.X.; Li, Y.H.; Meng, J.; Xu, T.R.; Wu, X.Y.; Zhang, B.Q. 
-         !    Regional and global land data assimilation systems: Innovations, challenges, and 
+         !---Xia, Y.L.; Hao, Z.C.; Shi, C.X.; Li, Y.H.; Meng, J.; Xu, T.R.; Wu, X.Y.; Zhang, B.Q.
+         !    Regional and global land data assimilation systems: Innovations, challenges, and
          !    prospects. J. Meteorol. Res. 2019, 33, 159–189.
 
       !REVISION HISTORY
@@ -485,17 +490,17 @@ CONTAINS
       !DESCRIPTION
       !===========
          !--- The China Meteorological Forcing Dataset
-   
+
       !data source:
       !-------------------
          !--https://data.tpdc.ac.cn/en/data/8028b944-daaa-4511-8769-965612652c49/
 
       !References:
       !-------------------
-         !---He, J., Yang, K., Tang, W., Lu, H., Qin, J., Chen, Y. and Li, X., 2020. 
-         !   The first high-resolution meteorological forcing dataset for land process 
+         !---He, J., Yang, K., Tang, W., Lu, H., Qin, J., Chen, Y. and Li, X., 2020.
+         !   The first high-resolution meteorological forcing dataset for land process
          !   studies over China. Scientific data, 7(1), p.25.
-      
+
          !REVISION HISTORY
       !----------------
          !---
@@ -505,7 +510,7 @@ CONTAINS
       !DESCRIPTION
       !===========
          !---the Climate Model Intercomparison Project Phase 6 (CMIP6) forcing data sets
-   
+
       !data source:
       !-------------------
          !---https://esgf-node.llnl.gov/projects/cmip6/
@@ -513,10 +518,10 @@ CONTAINS
       !References:
       !-------------------
          !---
-      
+
          !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file; 
+         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
          !   zip file to reduce the size of the data; remove offset and scale_factor
 
 
@@ -524,8 +529,8 @@ CONTAINS
       case ('TPMFD')
       !DESCRIPTION
       !===========
-         !---A high-resolution near-surface meteorological forcing dataset for the Third Pole region 
-   
+         !---A high-resolution near-surface meteorological forcing dataset for the Third Pole region
+
       !data source:
       !-------------------
          !---https://data.tpdc.ac.cn/zh-hans/data/44a449ce-e660-44c3-bbf2-31ef7d716ec7
@@ -533,14 +538,14 @@ CONTAINS
       !References:
       !-------------------
          !---Yang, K., Jiang, Y., Tang, W., He, J., Shao, C., Zhou, X., Lu, H.,
-         !   Chen, Y., Li, X., Shi, J. (2023). A high-resolution near-surface 
+         !   Chen, Y., Li, X., Shi, J. (2023). A high-resolution near-surface
          !   meteorological forcing dataset for the Third Pole region （TPMFD, 1979-2020）.
-         !   National Tibetan Plateau/Third Pole Environment Data Center, 
+         !   National Tibetan Plateau/Third Pole Environment Data Center,
          !   https://doi.org/10.11888/Atmos.tpdc.300398. https://cstr.cn/18406.11.Atmos.tpdc.300398.
-      
+
       !REVISION HISTORY
       !----------------
-         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file; 
+         !---2021.11.01   Zhongwang Wei @ SYSU: regroup the data into monthly file;
          !   zip file to reduce the size of the data; remove offset and scale_factor
 
          metfilename = '/'//trim(fprefix(var_i))//trim(yearstr)//trim(monthstr)//'.nc'
