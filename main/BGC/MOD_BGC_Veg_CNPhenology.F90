@@ -127,10 +127,10 @@ module MOD_BGC_Veg_CNPhenology
 
   use MOD_Vars_1DForcing, only: forc_prc, forc_prl
 
-  use timemanager
-  use precision
+  use MOD_TimeManager
+  use MOD_Precision
   use MOD_BGC_Daylength, only: daylength
-  use spmd_task
+  use MOD_SPMD_Task
 
   implicit none
 

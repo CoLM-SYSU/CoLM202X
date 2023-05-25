@@ -4,7 +4,7 @@
 MODULE MOD_NdepReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -32,10 +32,10 @@ MODULE MOD_NdepReadin
 ! Created by Xingjie Lu and Shupeng Zhang, 2022
 ! ===========================================================
 
-      use precision
-      use spmd_task
-      use ncio_vector
-      use mod_landpatch
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_NetCDFVector
+      use MOD_LandPatch
       use MOD_BGC_Vars_TimeVars,  only: ndep
       use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
       use MOD_Vars_TimeInvariants

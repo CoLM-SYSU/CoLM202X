@@ -15,7 +15,7 @@ module MOD_BGC_Soil_BiogeochemVerticalProfile
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
 
-  use precision
+  use MOD_Precision
   use MOD_Const_PFT, only: rootfr_p
   use MOD_BGC_Vars_TimeVars, only: &
       nfixation_prof, ndep_prof, altmax_lastyear_indx

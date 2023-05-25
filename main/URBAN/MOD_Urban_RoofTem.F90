@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_RoofTem
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -42,10 +42,10 @@ CONTAINS
 ! Original author : Yongjiu Dai, 05/2020
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical
-  USE mod_utils, only: tridia
+  USE MOD_Utils, only: tridia
   USE MOD_Meltf, only: meltf_urban
 
   IMPLICIT NONE

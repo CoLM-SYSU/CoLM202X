@@ -39,7 +39,7 @@ MODULE MOD_UserSpecifiedForcing
    ! Siguang Zhu and Nan Wei, 10/2014: metpreprocess for forc_q calibration
    ! Hua Yuan, 04/2014: initial code of forcing structure for CoLM2014
 
-   use precision
+   use MOD_Precision
 
    implicit none
 
@@ -83,7 +83,7 @@ CONTAINS
    ! ----------------
    subroutine init_user_specified_forcing
 
-      use mod_namelist
+      use MOD_Namelist
       implicit none
 
       ! Local variables
@@ -141,7 +141,7 @@ CONTAINS
    ! ----------------
    FUNCTION metfilename(year, month, day, var_i)
 
-      use mod_namelist
+      use MOD_Namelist
       implicit none
 
       integer, intent(in) :: year
@@ -570,11 +570,11 @@ CONTAINS
    SUBROUTINE metpreprocess(grid, forcn)
 
       use MOD_Const_Physical
-      use mod_namelist
-      use spmd_task
-      use mod_block
-      use mod_grid
-      use mod_data_type
+      use MOD_Namelist
+      use MOD_SPMD_Task
+      use MOD_Block
+      use MOD_Grid
+      use MOD_DataType
       USE MOD_Qsadv
       implicit none
       type(grid_type), intent(in) :: grid

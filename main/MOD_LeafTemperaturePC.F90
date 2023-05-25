@@ -3,7 +3,7 @@
 MODULE MOD_LeafTemperaturePC
 
 !-----------------------------------------------------------------------
- USE precision
+ USE MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -84,7 +84,7 @@ MODULE MOD_LeafTemperaturePC
 !                        make a proper update of um.
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
@@ -1750,7 +1750,7 @@ MODULE MOD_LeafTemperaturePC
 !
 !=======================================================================
 
- USE precision
+ USE MOD_Precision
  IMPLICIT NONE
 
   REAL(r8), intent(in) :: sigf   !fraction of veg cover, excluding snow-covered veg [-]
@@ -1794,7 +1794,7 @@ MODULE MOD_LeafTemperaturePC
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1822,7 +1822,7 @@ MODULE MOD_LeafTemperaturePC
   REAL(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
                     displah, htop, hbot, obu, ustar, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1857,7 +1857,7 @@ MODULE MOD_LeafTemperaturePC
 
   REAL(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1904,7 +1904,7 @@ MODULE MOD_LeafTemperaturePC
 
   REAL(r8) FUNCTION ueffect(utop, htop, hbot, &
                             z0mg, alpha, bee, fc)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1954,7 +1954,7 @@ MODULE MOD_LeafTemperaturePC
   REAL(r8) FUNCTION fuint(utop, ztop, zbot, &
         htop, hbot, z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop, ztop, zbot
@@ -1987,7 +1987,7 @@ MODULE MOD_LeafTemperaturePC
   RECURSIVE SUBROUTINE ufindroots(ztop,zbot,zmid, &
      utop, htop, hbot, z0mg, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -2057,7 +2057,7 @@ MODULE MOD_LeafTemperaturePC
 
   REAL(r8) FUNCTION udif(z, utop, htop, hbot, z0mg, alpha)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, utop, htop, hbot
@@ -2076,7 +2076,7 @@ MODULE MOD_LeafTemperaturePC
 
   REAL(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
                     displah, htop, hbot, obu, ustar, ztop, zbot)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop
@@ -2127,7 +2127,7 @@ MODULE MOD_LeafTemperaturePC
         ztop, zbot, displah, z0h, obu, ustar, &
         z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, htop, hbot
@@ -2182,7 +2182,7 @@ MODULE MOD_LeafTemperaturePC
   REAL(r8) FUNCTION fkint(ktop, ztop, zbot, htop, hbot, &
         z0h, obu, ustar, fac, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -2223,7 +2223,7 @@ MODULE MOD_LeafTemperaturePC
   RECURSIVE SUBROUTINE kfindroots(ztop,zbot,zmid, &
      ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -2295,7 +2295,7 @@ MODULE MOD_LeafTemperaturePC
   REAL(r8) FUNCTION kdif(z, ktop, htop, hbot, &
         obu, ustar, fac, alpha)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 

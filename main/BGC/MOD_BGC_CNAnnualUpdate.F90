@@ -30,8 +30,8 @@ module MOD_BGC_CNAnnualUpdate
        tempsum_potential_gpp_p, tempmax_retransn_p, tempavg_tref_p, tempsum_npp_p, &
        annsum_potential_gpp_p , annmax_retransn_p , annavg_tref_p , annsum_npp_p  
 
-   use timemanager, only: isendofyear
-   use precision
+   use MOD_TimeManager, only: isendofyear
+   use MOD_Precision
 
 implicit none
 

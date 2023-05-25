@@ -13,7 +13,7 @@ MODULE MOD_BGC_Vars_TimeInvars
   ! -------------------------------
 #ifdef BGC
 
-use precision
+use MOD_Precision
 IMPLICIT NONE
 SAVE
 !------------------------- BGC constant --------------------------------------
@@ -141,10 +141,10 @@ SAVE
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
 
-     use precision
+     use MOD_Precision
      use MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools
-     use spmd_task
-     use mod_landpatch, only : numpatch
+     use MOD_SPMD_Task
+     use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
 
   if (p_is_worker) then
@@ -179,14 +179,14 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist
-     use spmd_task
-     use ncio_vector
-     use ncio_serial
+     use MOD_Namelist
+     use MOD_SPMD_Task
+     use MOD_NetCDFVector
+     use MOD_NetCDFSerial
 #ifdef CoLMDEBUG
-     USE mod_colm_debug
+     USE MOD_CoLMDebug
 #endif
-     USE mod_landpatch
+     USE MOD_LandPatch
      USE MOD_Vars_Global
 
      IMPLICIT NONE
@@ -311,11 +311,11 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     use spmd_task
-     use ncio_serial
-     use ncio_vector
-     use mod_landpatch
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_SPMD_Task
+     use MOD_NetCDFSerial
+     use MOD_NetCDFVector
+     use MOD_LandPatch
      USE MOD_Vars_Global
 
      IMPLICIT NONE
@@ -450,8 +450,8 @@ SAVE
 
   SUBROUTINE deallocate_BGCTimeInvars ()
 
-     use spmd_task
-     use mod_landpatch, only : numpatch
+     use MOD_SPMD_Task
+     use MOD_LandPatch, only : numpatch
      implicit none
 
      ! --------------------------------------------------
@@ -486,8 +486,8 @@ SAVE
    !---------------------------------------
    SUBROUTINE check_BGCTimeInvars ()
 
-      use spmd_task
-      use mod_colm_debug
+      use MOD_SPMD_Task
+      use MOD_CoLMDebug
 
       IMPLICIT NONE
 

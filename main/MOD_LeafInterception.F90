@@ -22,9 +22,9 @@ MODULE MOD_LeafInterception
    ! 2021.12.12  Zhongwang Wei @ SYSU
    ! 2020.10.21  Zhongwang Wei @ SYSU
 
-   USE precision
+   USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
-   USE mod_namelist, only : DEF_Interception_scheme
+   USE MOD_Namelist, only : DEF_Interception_scheme
    IMPLICIT NONE
 
    REAL(r8), parameter ::  CICE        = 2.094E06  !specific heat capacity of ice (j/m3/k)
@@ -1344,9 +1344,9 @@ contains
    !----------------
       ! 2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
-      USE precision
+      USE MOD_Precision
+      USE MOD_LandPFT
       USE MOD_Const_Physical, only: tfrz
-      USE mod_landpft
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
       USE MOD_Vars_1DPFTFluxes
@@ -1473,7 +1473,7 @@ contains
 
    !Original Author:
    !-------------------
-      !---Shupeng Zhang
+      !--- Hua Yuan
 
    !References:
    !-------------------
@@ -1482,14 +1482,14 @@ contains
    !----------------
       !---2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
-      USE precision
+      USE MOD_Precision
       USE MOD_Vars_GlobalVars
       USE MOD_Const_Physical, only: tfrz
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
       USE MOD_Vars_1DPCFluxes
+      USE MOD_LandPC
       USE MOD_Const_PFT
-      USE mod_landpc
 
       IMPLICIT NONE
 

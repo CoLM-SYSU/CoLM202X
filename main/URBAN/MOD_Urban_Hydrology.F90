@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_Hydrology
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -52,7 +52,7 @@ CONTAINS
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: denice, denh2o, tfrz
   USE MOD_SoilSnowHydrology

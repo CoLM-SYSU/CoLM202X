@@ -19,8 +19,8 @@ module MOD_BGC_Veg_CNFireLi2016
   ! !REVISION:
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
-  use precision
-  use timemanager
+  use MOD_Precision
+  use MOD_TimeManager
   use MOD_Const_Physical, only: tfrz
   use MOD_Vars_1DForcing, only: &
       forc_q, forc_t, forc_psrf, forc_us, forc_vs

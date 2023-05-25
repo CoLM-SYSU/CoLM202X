@@ -11,7 +11,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !
 !=======================================================================
 
- use precision
+ use MOD_Precision
  use MOD_Const_Physical, only: tfrz, rgas, vonkar
  USE MOD_Const_LC
  USE MOD_Vars_Global
@@ -19,9 +19,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_Vars_TimeVariables
  use MOD_Vars_1DForcing
  use MOD_Vars_1DFluxes
- USE mod_landpatch, only: numpatch
- USE mod_landurban, only: patch2urban
- USE mod_namelist, only : DEF_forcing
+ USE MOD_LandPatch, only: numpatch
+ USE MOD_LandUrban, only: patch2urban
+ USE MOD_Namelist, only : DEF_forcing
  USE MOD_Forcing, only : forcmask
  use omp_lib
 #ifdef CaMa_Flood
@@ -111,7 +111,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
          forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
          forc_rhoair(i),                                                     &
-       ! CBL height forcing 
+       ! CBL height forcing
          forc_hpbl(i),                                                       &
 
        ! LAND SURFACE VARIABLES REQUIRED FOR RESTART

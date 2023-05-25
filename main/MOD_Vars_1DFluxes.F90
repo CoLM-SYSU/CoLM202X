@@ -5,7 +5,7 @@ MODULE MOD_Vars_1DFluxes
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-  USE precision
+  USE MOD_Precision
 #ifdef PFT_CLASSIFICATION
   USE MOD_Vars_1DPFTFluxes
 #endif
@@ -16,7 +16,7 @@ MODULE MOD_Vars_1DFluxes
   USE MOD_BGC_Vars_1DFluxes
 #endif
 #ifdef LATERAL_FLOW
-  USE MOD_1D_HydroFluxes
+  USE MOD_Hydro_Vars_1DFluxes
 #endif
 #ifdef URBAN_MODEL
   USE MOD_Urban_Vars_1DFluxes
@@ -92,10 +92,10 @@ MODULE MOD_Vars_1DFluxes
   ! --------------------------------------------------------------------
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
-     USE precision
+     USE MOD_Precision
      USE MOD_Vars_Global
-     USE spmd_task
-     USE mod_landpatch
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
      IMPLICIT NONE
 
       if (p_is_worker) then
@@ -180,8 +180,8 @@ MODULE MOD_Vars_1DFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
-     USE spmd_task
-     USE mod_landpatch
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
 
      if (p_is_worker) then
 

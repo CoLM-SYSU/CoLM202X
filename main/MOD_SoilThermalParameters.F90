@@ -3,7 +3,7 @@
 MODULE MOD_SoilThermalParameters
 
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -41,7 +41,7 @@ MODULE MOD_SoilThermalParameters
 !
 !-----------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : cpice,cpliq
   implicit none
 
@@ -99,7 +99,7 @@ MODULE MOD_SoilThermalParameters
 !                      underneath the lake
 !-----------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denh2o,denice,tfrz,tkwat,tkice,tkair
   implicit none
 

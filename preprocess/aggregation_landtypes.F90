@@ -19,8 +19,8 @@ SUBROUTINE aggregation_landtypes ( dir_rawdata,dir_model_landdata, &
 !               defined domain file.
 !
 ! ----------------------------------------------------------------------
-use precision
-use spmd_task
+use MOD_Precision
+use MOD_SPMD_Task
 
 IMPLICIT NONE
 

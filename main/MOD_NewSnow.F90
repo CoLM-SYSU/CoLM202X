@@ -1,7 +1,7 @@
 MODULE MOD_NewSnow
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -25,7 +25,7 @@ MODULE MOD_NewSnow
 ! Original author : Yongjiu Dai, 09/15/1999; 08/31/2002, 07/2013, 04/2014
 !=======================================================================
 !
-   use precision
+   use MOD_Precision
    use MOD_Const_Physical, only : tfrz, cpliq, cpice
 
    implicit none

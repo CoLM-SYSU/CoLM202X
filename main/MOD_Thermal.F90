@@ -3,7 +3,7 @@
 MODULE MOD_Thermal
 
 !-----------------------------------------------------------------------
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -105,7 +105,7 @@ MODULE MOD_Thermal
 !                    with canopy and ground for PFT and Plant Community (PC)
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_PFT
   USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
@@ -117,13 +117,13 @@ MODULE MOD_Thermal
   USE MOD_GroundTem
   USE MOD_Qsadv
 #ifdef PFT_CLASSIFICATION
-  USE mod_landpft, only : patch_pft_s, patch_pft_e
+  USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
   USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef PC_CLASSIFICATION
-  USE mod_landpc
+  USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
   USE MOD_Vars_1DPCFluxes
@@ -132,7 +132,7 @@ MODULE MOD_Thermal
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE mod_soil_function, only : soil_psi_from_vliq
 #endif
-use spmd_task
+use MOD_SPMD_Task
 
   IMPLICIT NONE
 

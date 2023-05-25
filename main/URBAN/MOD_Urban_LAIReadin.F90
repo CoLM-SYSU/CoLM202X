@@ -3,7 +3,7 @@
 #ifdef URBAN_MODEL
 MODULE MOD_Urban_LAIReadin
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -17,16 +17,16 @@ CONTAINS
 ! Read in urban LAI, SAI and urban tree cover data
 ! ===========================================================
 
-      USE precision
-      USE mod_namelist
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_SPMD_Task
+      USE MOD_LandUrban
       USE MOD_Vars_Global
       USE MOD_Const_LC
-      USE mod_landurban
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Urban_Vars_TimeInvars
-      USE ncio_vector
+      USE MOD_NetCDFVector
 
       IMPLICIT NONE
 

@@ -1,7 +1,7 @@
 MODULE MOD_GroundFluxes
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -38,7 +38,7 @@ MODULE MOD_GroundFluxes
 !                        make a proper update of um.
 !=======================================================================
 
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
     USE mod_namelist, only: DEF_USE_CBL_HEIGHT

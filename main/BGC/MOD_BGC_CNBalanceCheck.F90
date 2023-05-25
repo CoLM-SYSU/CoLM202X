@@ -14,7 +14,7 @@ module MOD_BGC_CNBalanceCheck
   ! !REVISION:
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeVars, only: &
       sminn, col_endcb, col_begcb, totcolc, col_endnb, col_begnb, totcoln, &
       col_vegbegcb, totvegc, ctrunc_veg, col_vegbegnb, totvegn, ntrunc_veg, &
@@ -35,7 +35,7 @@ module MOD_BGC_CNBalanceCheck
       grainc_p, grainc_storage_p, grainc_xfer_p, ctrunc_p, totvegc_p, cropseedc_deficit_p
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       grainc_to_food_p
-  use spmd_task
+  use MOD_SPMD_Task
   use MOD_Vars_PFTimeInvars, only: pftclass
   
   implicit none

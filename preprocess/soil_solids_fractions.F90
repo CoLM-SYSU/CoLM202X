@@ -19,7 +19,7 @@ SUBROUTINE soil_solids_fractions(BD,gravels,SOC,SAND,CLAY,&
 ! Nan Wei, 06/2018: add to CoLM/mksrfdata
 ! Nan Wei, 01/2020: update paticle size of soil solids and gravel porosity
 !-------------------------------------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: BD ! bulk density of fine earth (mineral+organic)(g/cm^3)
@@ -163,7 +163,7 @@ SUBROUTINE vf_quartz(sand,clay,vf_quartz_s)
 !
 ! Yongjiu Dai, 02/2014
 ! --------------------------------------------------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: sand
@@ -208,7 +208,7 @@ SUBROUTINE USDA_soil_classes(x,y,c)
 ! USDA major soil textural classes based on the relative percentage of sand, silt and clay
 ! Initial Author : Wei Shangguan and Yongjiu Dai, 02/2014
 ! --------------------------------------------------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
    integer, parameter :: TNUM=26   ! number of points in the triangle
@@ -287,7 +287,7 @@ SUBROUTINE pointinpolygon(xp,yp,xpol,ypol,ponum,c)
 !
 ! Initial Author :  Wei Shangguan, 02/2014
 ! --------------------------------------------------------
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
 

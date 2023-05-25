@@ -25,10 +25,10 @@
     ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
 
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical, only : tfrz, denh2o, denice
     use MOD_Vars_PFTimeInvars, only: pftfrac
-    use mod_landpft, only: patch_pft_s, patch_pft_e
+    use MOD_LandPFT, only: patch_pft_s, patch_pft_e
     use MOD_BGC_Vars_1DFluxes, only: plant_ndemand, ndep_to_sminn
     use MOD_BGC_Vars_1DPFTFluxes, only: plant_ndemand_p, cpool_to_leafc_p, crop_seedc_to_leaf_p
     use MOD_BGC_Veg_CNMResp, only: CNMResp
@@ -64,7 +64,7 @@
 #ifdef CROP
     use MOD_BGC_Veg_CNNDynamics, only: CNNFert, CNSoyfix
 #endif
-    use timemanager
+    use MOD_TimeManager
     use MOD_Vars_Global, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
                         z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 

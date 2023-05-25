@@ -13,7 +13,7 @@ module MOD_DownscalingForcing
   ! Updated by Yongjiu Dai, January 16, 2023
   !
 
-  USE precision
+  USE MOD_Precision
   use MOD_Qsadv
   IMPLICIT NONE
 

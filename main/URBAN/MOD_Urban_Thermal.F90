@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_Thermal
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
   PRIVATE
@@ -103,7 +103,7 @@ CONTAINS
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav

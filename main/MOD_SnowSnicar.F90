@@ -23,8 +23,8 @@ MODULE MOD_SnowSnicar
   ! Yongjiu Dai, and Hua Yuan, December, 2022 : ASSEMBLING and FITTING
   !
   ! !USES:
-  USE precision
-  USE spmd_task
+  USE MOD_Precision
+  USE MOD_SPMD_Task
 
   IMPLICIT NONE
 ! save
@@ -2729,7 +2729,7 @@ contains
 
   subroutine SnowOptics_init( fsnowoptics )
 
-      USE ncio_serial
+      USE MOD_NetCDFSerial
 
       IMPLICIT NONE
 
@@ -2925,7 +2925,7 @@ contains
 
   subroutine SnowAge_init( fsnowaging )
 
-     USE ncio_serial
+     USE MOD_NetCDFSerial
 
      IMPLICIT NONE
 
