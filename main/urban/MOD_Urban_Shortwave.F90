@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_Shortwave
 
-  USE precision
+  USE MOD_Precision
   USE MOD_LandUrban
   USE MOD_Vars_Global
   USE MOD_ThreeDCanopy, only: tee, phi

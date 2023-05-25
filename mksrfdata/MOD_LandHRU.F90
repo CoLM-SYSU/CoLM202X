@@ -4,9 +4,9 @@
 
 MODULE MOD_LandHRU
 
-   USE precision
-   USE mod_pixelset
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Pixelset
+   USE MOD_Grid
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -21,16 +21,16 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landhru_build ()
 
-      USE precision
-      USE spmd_task
-      USE mod_utils
-      USE mod_block
-      USE mod_grid
-      USE mod_data_type
-      USE mod_mesh
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Utils
+      USE MOD_Block
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Mesh
       USE MOD_LandElm
-      USE mod_catchment_data
-      USE mod_namelist
+      USE MOD_CatchmentDataReadin
+      USE MOD_Namelist
       USE MOD_AggregationRequestData
 
       IMPLICIT NONE

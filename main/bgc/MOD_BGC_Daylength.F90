@@ -2,7 +2,7 @@
 #ifdef BGC
 module MOD_BGC_Daylength
 
-  use precision
+  use MOD_Precision
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Computes day length and solar decliation angle based on given latitude and date.

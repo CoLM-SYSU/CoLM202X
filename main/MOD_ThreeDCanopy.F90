@@ -3,7 +3,7 @@
 MODULE MOD_ThreeDCanopy
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -42,7 +42,7 @@ MODULE MOD_ThreeDCanopy
 ! REVISIONS:
 !
 
-   USE precision
+   USE MOD_Precision
    USE MOD_LandPC
    USE MOD_Vars_GlobalVars
    USE MOD_Const_PFT

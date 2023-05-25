@@ -22,19 +22,19 @@ SUBROUTINE Aggregation_SoilParameters ( &
    ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
    ! -----------------------------------------------------------------------
 
-   USE precision
+   USE MOD_Precision
    USE MOD_Vars_Global
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE MOD_LandPatch
-   USE ncio_block
-   USE ncio_vector
+   USE MOD_NetCDFBlock
+   USE MOD_NetCDFVector
    USE MOD_AggregationRequestData
 #ifdef CoLMDEBUG
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
-   USE mod_utils
+   USE MOD_Utils
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -1678,7 +1678,7 @@ END SUBROUTINE Aggregation_SoilParameters
 !! Nan Wei, 02/2020
 !! ----------------------------------------------------------------
 
-!      use precision
+!      use MOD_Precision
 !      implicit none
 
 !      integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
@@ -1735,7 +1735,7 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       implicit none
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint
@@ -1785,7 +1785,7 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 ! Created by Nan Wei, 01/2019
 ! ----------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       implicit none
 
       integer m,n,ldfjac,iflag,i,nptf,isiter,npoint

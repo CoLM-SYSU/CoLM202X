@@ -2,9 +2,9 @@
 
 MODULE MOD_LandElm
 
-   USE precision
-   USE mod_pixelset
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Pixelset
+   USE MOD_Grid
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -15,9 +15,9 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landelm_build 
 
-      USE precision
-      USE spmd_task
-      USE mod_mesh
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Mesh
       IMPLICIT NONE
 
       ! Local Variables

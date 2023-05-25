@@ -3,7 +3,7 @@
 MODULE MOD_SoilParametersReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -32,14 +32,14 @@ MODULE MOD_SoilParametersReadin
    ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
    !------------------------------------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       USE MOD_Vars_Global, only : nl_soil
-      use spmd_task
-      use ncio_vector
+      use MOD_SPMD_Task
+      USE MOD_NetCDFVector
       use MOD_LandPatch
       use MOD_Vars_TimeInvariants
 #ifdef CoLMDEBUG
-      use mod_colm_debug
+      use MOD_CoLMDebug
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata

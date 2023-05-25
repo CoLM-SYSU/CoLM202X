@@ -42,13 +42,13 @@ PROGRAM MKSRFDATA
    !
    !
    ! ======================================================================
-   USE precision
-   USE spmd_task
-   USE mod_namelist
-   USE mod_block
-   USE mod_pixel
-   USE mod_grid
-   USE mod_mesh
+   USE MOD_Precision
+   USE MOD_SPMD_Task
+   USE MOD_Namelist
+   USE MOD_Block
+   USE MOD_Pixel
+   USE MOD_Grid
+   USE MOD_Mesh
    USE MOD_MeshFilter
    USE MOD_LandElm
 #ifdef CATCHMENT

@@ -3,7 +3,7 @@
 MODULE MOD_IniTimeVar
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -73,7 +73,7 @@ MODULE MOD_IniTimeVar
 !                         03/2014
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Const_Physical, only: tfrz
   USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
   USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn
@@ -92,8 +92,8 @@ MODULE MOD_IniTimeVar
 #endif
   USE MOD_Vars_Global
   USE MOD_Albedo
-  USE mod_namelist
-  USE mod_soil_water
+  USE MOD_Namelist
+  USE MOD_Hydro_SoilWater
   USE MOD_SnowFraction
 
   IMPLICIT NONE
@@ -1098,7 +1098,7 @@ ENDIF
 
 ! Snow spatial discretization initially
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      INTEGER,  intent(in) :: maxsnl    !maximum of snow layers
@@ -1189,7 +1189,7 @@ ENDIF
 ! P (xa(i)) = ya(i), i = 1, . . . , n, then the returned value
 ! (from: "Numerical Recipes")
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
      INTEGER n,NMAX
      REAL(r8) dy,x,y,xa(n),ya(n)

@@ -2,9 +2,9 @@
 
 MODULE MOD_LandPatch
 
-   USE precision
-   USE mod_grid
-   USE mod_pixelset
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_Pixelset
    USE MOD_Vars_Global
    USE MOD_Const_LC
 #ifdef SinglePoint
@@ -37,18 +37,18 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landpatch_build ()
 
-      USE precision
-      USE spmd_task
-      USE mod_utils
-      USE mod_grid
-      USE mod_data_type
-      USE mod_mesh
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Utils
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Mesh
       USE MOD_LandElm
 #ifdef CATCHMENT
       USE MOD_LandHRU
 #endif
-      USE mod_namelist
-      USE ncio_block
+      USE MOD_Namelist
+      USE MOD_NetCDFBlock
 #if (defined CROP)
       USE MOD_PixelsetShadow
 #endif
@@ -346,8 +346,8 @@ CONTAINS
    ! -----
    SUBROUTINE write_patchfrac (dir_landdata)
 
-      USE mod_namelist
-      USE ncio_vector
+      USE MOD_Namelist
+      USE MOD_NetCDFVector
       IMPLICIT NONE
 
       CHARACTER(LEN=*), intent(in) :: dir_landdata

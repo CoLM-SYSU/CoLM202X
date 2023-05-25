@@ -10,7 +10,7 @@ MODULE MOD_Vars_1DPCFluxes
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -49,9 +49,9 @@ MODULE MOD_Vars_1DPCFluxes
   ! Allocates memory for CoLM 1d [numpc] variables
   ! --------------------------------------------------------------------
 
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE MOD_LandPC
-     USE precision
+     USE MOD_Precision
      USE MOD_Vars_Global
      IMPLICIT NONE
 
@@ -82,7 +82,7 @@ MODULE MOD_Vars_1DPCFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CoLM 1d [numpc] variables
   ! --------------------------------------------------------------------
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE MOD_LandPC
 
      IF (p_is_worker) THEN

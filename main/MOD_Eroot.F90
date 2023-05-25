@@ -3,7 +3,7 @@
 MODULE MOD_Eroot
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -32,7 +32,7 @@ MODULE MOD_Eroot
   ! Original author : Yongjiu Dai, 08/30/2002
   !=======================================================================
 
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical, only : tfrz
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
     USE mod_soil_function, only : soil_psi_from_vliq

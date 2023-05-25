@@ -3,7 +3,7 @@
 MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
-  use precision
+  use MOD_Precision
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -63,7 +63,7 @@ MODULE MOD_SoilSnowHydrology
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o, tfrz
 
   implicit none
@@ -385,9 +385,9 @@ MODULE MOD_SoilSnowHydrology
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o, tfrz
-  USE mod_soil_water
+  USE MOD_Hydro_SoilWater
 
 #ifndef LATERAL_FLOW
   USE MOD_Vars_1DFluxes, only : rsub
@@ -827,7 +827,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 !
 !-----------------------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o  ! physical constant
   implicit none
 
@@ -1372,7 +1372,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! Author : Yongjiu Dai, 07/29/2002, Guoyue Niu, 06/2012
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   implicit none
 
 !-----------------------Arguments---------------------------------------
@@ -1489,9 +1489,9 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! r_j = a_j [d wat_j-1] + b_j [d wat_j] + c_j [d wat_j+1]
 !
 !-----------------------------------------------------------------------
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical , only : grav,hfus,tfrz,denh2o,denice
-    USE mod_utils
+    USE MOD_Utils
 
     IMPLICIT NONE
 
@@ -1769,7 +1769,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! -------------------------------------------------------------------------
 
 
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical, only : tfrz
 !
 ! ARGUMENTS:

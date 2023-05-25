@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_BEM
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical
   USE MOD_Urban_Shortwave, only: MatrixInverse

@@ -8,19 +8,19 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    !
    ! Created by Yongjiu Dai, 03/2014
    ! ----------------------------------------------------------------------
-   USE precision
-   USE mod_namelist
-   USE spmd_task
-   USE mod_block
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Block
+   USE MOD_Grid
    USE MOD_LandPatch
-   USE ncio_block
-   USE ncio_vector
+   USE MOD_NetCDFBlock
+   USE MOD_NetCDFVector
 #ifdef CoLMDEBUG 
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
-   USE mod_utils
+   USE MOD_Utils
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

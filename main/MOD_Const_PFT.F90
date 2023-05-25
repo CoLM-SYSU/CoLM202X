@@ -13,9 +13,9 @@ MODULE MOD_Const_PFT
 ! Xingjie Lu, TODO:10/2021?: added for crop PFTs
 !
 ! !USES:
-   USE precision
+   USE MOD_Precision
    USE MOD_Vars_Global
-   USE timemanager, only: get_calday
+   USE MOD_TimeManager, only: get_calday
 
    IMPLICIT NONE
    SAVE

@@ -5,8 +5,8 @@ MODULE MOD_Vars_TimeVariables
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-use precision
-use timemanager
+use MOD_Precision
+use MOD_TimeManager
 #ifdef PFT_CLASSIFICATION
 USE MOD_Vars_PFTimeVars
 #endif
@@ -17,7 +17,7 @@ USE MOD_Vars_PCTimeVars
 USE MOD_BGC_Vars_TimeVars
 #endif
 #ifdef LATERAL_FLOW
-USE MOD_HydroTimeVars
+USE MOD_Hydro_Vars_TimeVars
 #endif
 #ifdef URBAN_MODEL
 USE MOD_Urban_Vars_TimeVars
@@ -159,9 +159,9 @@ SAVE
 ! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------------
 
-  use precision
+  use MOD_Precision
   USE MOD_Vars_Global
-  use spmd_task
+  use MOD_SPMD_Task
   use MOD_LandPatch, only : numpatch
   IMPLICIT NONE
 
@@ -308,7 +308,7 @@ SAVE
 
   SUBROUTINE deallocate_TimeVariables ()
 
-     use spmd_task
+     use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
      implicit none
 
@@ -458,7 +458,7 @@ SAVE
   !---------------------------------------
   function save_to_restart (idate, deltim, itstamp, ptstamp) result(rwrite)
 
-     use mod_namelist
+     use MOD_Namelist
      implicit none
 
      logical :: rwrite
@@ -497,9 +497,9 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE MOD_LandPatch
-     use ncio_vector
+     use MOD_NetCDFVector
      USE MOD_Vars_Global
      IMPLICIT NONE
 
@@ -641,11 +641,11 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist
-     use spmd_task
-     use ncio_vector
+     use MOD_Namelist
+     use MOD_SPMD_Task
+     use MOD_NetCDFVector
 #ifdef CoLMDEBUG
-     USE mod_colm_debug
+     USE MOD_CoLMDebug
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -786,8 +786,8 @@ SAVE
 #ifdef CoLMDEBUG
   SUBROUTINE check_TimeVariables ()
 
-     use spmd_task
-     use mod_colm_debug
+     use MOD_SPMD_Task
+     use MOD_CoLMDebug
 
      IMPLICIT NONE
 

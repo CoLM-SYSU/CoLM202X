@@ -10,7 +10,7 @@ MODULE MOD_Vars_PFTimeInvars
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
@@ -46,9 +46,9 @@ MODULE MOD_Vars_PFTimeInvars
   ! Allocates memory for CoLM PFT 1d [numpft] variables
   ! --------------------------------------------------------------------
 
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE MOD_LandPFT,   only : numpft
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -64,7 +64,7 @@ MODULE MOD_Vars_PFTimeInvars
 
   SUBROUTINE READ_PFTimeInvars (file_restart)
 
-     use ncio_vector
+     use MOD_NetCDFVector
      USE MOD_LandPFT
      IMPLICIT NONE
 
@@ -79,9 +79,9 @@ MODULE MOD_Vars_PFTimeInvars
 
   SUBROUTINE WRITE_PFTimeInvars (file_restart)
 
-     use ncio_vector
+     use MOD_NetCDFVector
      use MOD_LandPFT
-     USE mod_namelist
+     USE MOD_Namelist
      USE MOD_Vars_Global
      IMPLICIT NONE
 
@@ -105,7 +105,7 @@ MODULE MOD_Vars_PFTimeInvars
 ! --------------------------------------------------
 ! Deallocates memory for CoLM PFT 1d [numpft] variables
 ! --------------------------------------------------
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE MOD_LandPFT
 
      IF (p_is_worker) THEN
@@ -122,7 +122,7 @@ MODULE MOD_Vars_PFTimeInvars
 #ifdef CoLMDEBUG
   SUBROUTINE check_PFTimeInvars ()
 
-     use mod_colm_debug
+     use MOD_CoLMDebug
      IMPLICIT NONE
 
      call check_vector_data ('pftfrac', pftfrac) !

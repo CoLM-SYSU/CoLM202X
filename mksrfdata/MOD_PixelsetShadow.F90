@@ -9,13 +9,13 @@ CONTAINS
    SUBROUTINE pixelsetshadow_build (pixelset, gshadow, datashadow, nmaxshadow, typfilter, &
          fracout, shadowclass, fracin)
 
-      USE spmd_task
-      USE mod_grid
-      USE mod_data_type
-      USE mod_pixel
-      USE mod_pixelset
-      USE mod_mesh
-      USE mod_utils
+      USE MOD_SPMD_Task
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Pixel
+      USE MOD_Pixelset
+      USE MOD_Mesh
+      USE MOD_Utils
       USE MOD_AggregationRequestData
       IMPLICIT NONE
 

@@ -13,7 +13,7 @@ module MOD_BGC_CNZeroFluxes
   ! !REVISION:
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
-  use precision
+  use MOD_Precision
 
   use MOD_BGC_Vars_1DPFTFluxes, only:        &
       m_leafc_to_litter_p                  , &

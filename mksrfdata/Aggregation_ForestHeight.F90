@@ -14,21 +14,21 @@ SUBROUTINE Aggregation_ForestHeight ( &
    !
    ! Created by Yongjiu Dai, 02/2014
    ! ----------------------------------------------------------------------
-   use precision
-   use mod_namelist
-   use spmd_task
-   use mod_grid
+   use MOD_Precision
+   use MOD_Namelist
+   use MOD_SPMD_Task
+   use MOD_Grid
    use MOD_LandPatch
-   use ncio_vector
-   use ncio_block
-#ifdef CoLMDEBUG
-   use mod_colm_debug
+   use MOD_NetCDFVector
+   use MOD_NetCDFBlock
+#ifdef CoLMDEBUG 
+   use MOD_CoLMDebug
 #endif
    use MOD_AggregationRequestData
-   USE mod_utils
+   USE MOD_Utils
 
    USE MOD_Const_LC
-   USE mod_5x5_data
+   USE MOD_5x5DataReadin
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT
 #endif

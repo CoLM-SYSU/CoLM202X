@@ -16,7 +16,7 @@ module MOD_BGC_Veg_NutrientCompetition
   ! Fang Li, 2022, add GPAM C allocation scheme for crop.
 
   ! 
-    use precision
+    use MOD_Precision
     use MOD_Const_PFT, only: &
         woody, leafcn, frootcn, livewdcn, deadwdcn, graincn, &
         froot_leaf, croot_stem, stem_leaf, flivewd, grperc, grpnow, fcur2, &

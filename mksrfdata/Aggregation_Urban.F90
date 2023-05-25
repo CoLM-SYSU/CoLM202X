@@ -10,19 +10,19 @@
 SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                               grid_urban_5km, grid_urban_100m, grid_urban_500m)
 
-   USE precision
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE MOD_LandPatch
-   USE ncio_serial
-   USE ncio_vector
-   USE ncio_block
-   USE mod_colm_debug
+   USE MOD_NetCDFSerial
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
+   USE MOD_CoLMDebug
    USE MOD_AggregationRequestData
-   USE mod_5x5_data
-   USE mod_data_type
-   USE mod_utils, only: num_max_frequency
+   USE MOD_5x5DataReadin
+   USE MOD_DataType
+   USE MOD_Utils, only: num_max_frequency
    USE MOD_LandUrban
    USE MOD_Vars_Global, only: N_URB
 #ifdef URBAN_LCZ

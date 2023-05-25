@@ -24,20 +24,20 @@ SUBROUTINE Aggregation_LakeDepth ( &
    !
    ! Created by Yongjiu Dai, 02/2014
    ! ----------------------------------------------------------------------
-   USE precision
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Precision
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE MOD_LandPatch
-   USE ncio_vector
-   USE ncio_block
+   USE MOD_NetCDFVector
+   USE MOD_NetCDFBlock
 #ifdef CoLMDEBUG
-   USE mod_colm_debug
+   USE MOD_CoLMDebug
 #endif
 
    USE MOD_AggregationRequestData
 
-   USE mod_utils
+   USE MOD_Utils
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

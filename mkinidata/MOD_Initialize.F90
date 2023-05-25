@@ -3,7 +3,6 @@
 MODULE MOD_Initialize
 
 !-----------------------------------------------------------------------
-   USE precision
    IMPLICIT NONE
    SAVE
 
@@ -29,11 +28,11 @@ MODULE MOD_Initialize
       ! Revised by Yongjiu Dai, 03/2014
       !
       ! ======================================================================
-      use precision
+      use MOD_Precision
       USE MOD_Vars_Global
-      use mod_namelist
-      use spmd_task
-      use mod_pixel
+      use MOD_Namelist
+      use MOD_SPMD_Task
+      use MOD_Pixel
       use MOD_LandPatch
 #ifdef URBAN_MODEL
       use MOD_LandUrban
@@ -57,22 +56,22 @@ MODULE MOD_Initialize
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT
-      use timemanager
+      use MOD_TimeManager
 
-      use mod_grid
-      use mod_data_type
+      use MOD_Grid
+      use MOD_DataType
    !   use mod_mapping_grid2pset
-      use ncio_serial
-      use ncio_block
+      use MOD_NetCDFSerial
+      use MOD_NetCDFBlock
 #ifdef CoLMDEBUG
-      use mod_colm_debug
+      use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      USE mod_soil_function
+      USE MOD_SoilFunction
 #endif
-      USE mod_mapping_grid2pset
+      USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
-      USE mod_mesh
+      USE MOD_Mesh
       USE MOD_LandHRU
       USE MOD_LandPatch
 #endif

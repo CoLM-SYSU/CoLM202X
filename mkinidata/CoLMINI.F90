@@ -15,12 +15,12 @@ PROGRAM CoLMINI
    !     Revised by Yongjiu Dai Februay 2014
    ! ======================================================================
 
-   use precision
-   use mod_namelist
-   use spmd_task
-   use mod_block
-   use mod_pixel
-   use mod_mesh
+   use MOD_Precision
+   use MOD_Namelist
+   use MOD_SPMD_Task
+   use MOD_Block
+   use MOD_Pixel
+   use MOD_Mesh
    USE MOD_LandElm
 #ifdef CATCHMENT
    USE MOD_LandHRU
@@ -30,7 +30,7 @@ PROGRAM CoLMINI
    USE MOD_Vars_Global
    USE MOD_Const_LC
    USE MOD_Const_PFT
-   USE timemanager
+   USE MOD_TimeManager
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT
 #endif

@@ -3,7 +3,7 @@
 MODULE MOD_Aerosol
 
   !-----------------------------------------------------------------------
-  use precision
+  use MOD_Precision
   IMPLICIT NONE
   SAVE
   ! !PUBLIC MEMBER FUNCTIONS:

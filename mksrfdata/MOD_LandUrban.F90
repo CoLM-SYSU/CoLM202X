@@ -4,8 +4,8 @@
 
 MODULE MOD_LandUrban
 
-   USE mod_grid
-   USE mod_pixelset
+   USE MOD_Grid
+   USE MOD_Pixelset
    USE MOD_Vars_Global, only: N_URB
    IMPLICIT NONE
 
@@ -28,16 +28,16 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landurban_build ()
 
-      USE precision
-      USE spmd_task
-      USE mod_grid
-      USE mod_data_type
-      USE mod_namelist
-      USE mod_5x5_data
-      USE mod_mesh
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Namelist
+      USE MOD_5x5DataReadin
+      USE MOD_Mesh
       USE MOD_LandPatch
       USE MOD_AggregationRequestData
-      USE mod_utils
+      USE MOD_Utils
 
       IMPLICIT NONE
 
@@ -293,7 +293,7 @@ CONTAINS
    ! ----------------------
    SUBROUTINE map_patch_to_urban
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE MOD_LandPatch
       IMPLICIT NONE
 

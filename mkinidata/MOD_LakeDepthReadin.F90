@@ -3,7 +3,7 @@
 MODULE MOD_LakeDepthReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -27,11 +27,11 @@ MODULE MOD_LakeDepthReadin
    ! Original author: Yongjiu Dai, 03/2018
    !------------------------------------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       USE MOD_Vars_Global, only : nl_lake
-      use spmd_task
+      use MOD_SPMD_Task
       use MOD_LandPatch
-      use ncio_vector
+      USE MOD_NetCDFVector
       use MOD_Vars_TimeInvariants, only : lakedepth, dz_lake
 #ifdef SinglePoint
       USE MOD_SingleSrfdata

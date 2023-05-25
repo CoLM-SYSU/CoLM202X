@@ -15,7 +15,7 @@ module MOD_BGC_Soil_BiogeochemDecomp
   ! !REVISION:
   ! Xingjie Lu, 2021, revised original CLM5 code to be compatible with CoLM code structure.
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeInvars, only: &
       floating_cn_ratio, initial_cn_ratio, dnp, rf_decomp, receiver_pool, donor_pool, i_atm 
 

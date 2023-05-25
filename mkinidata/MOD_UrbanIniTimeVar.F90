@@ -3,7 +3,7 @@
 #ifdef URBAN_MODEL
 MODULE MOD_UrbanIniTimeVar
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -23,7 +23,7 @@ CONTAINS
 ! Created by Hua Yuan, 09/16/2021
 !
 !=======================================================================
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Urban_Albedo
 

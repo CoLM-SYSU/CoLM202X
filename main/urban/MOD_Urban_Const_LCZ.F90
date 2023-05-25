@@ -21,7 +21,7 @@ MODULE MOD_Urban_Const_LCZ
   !
   ! -----------------------------------------------------------------------
   ! !USE
-   USE precision
+   USE MOD_Precision
 
    IMPLICIT NONE
    SAVE

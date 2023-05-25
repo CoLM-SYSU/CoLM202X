@@ -21,10 +21,10 @@ CONTAINS
          data_r8_3d_in1, n1_r8_3d_in1  , data_r8_3d_in2, n1_r8_3d_in2,   &
          data_i4_2d_in1, data_i4_2d_in2)
 
-      USE precision
-      USE spmd_task
-      USE mod_grid
-      USE mod_data_type
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Grid
+      USE MOD_DataType
 
       IMPLICIT NONE
 
@@ -273,15 +273,15 @@ CONTAINS
          data_i4_2d_in2, data_i4_2d_out2, &
          filledvalue_i4)
 
-      USE precision
-      USE spmd_task
-      USE mod_block
-      USE mod_pixel
-      USE mod_grid
-      USE mod_data_type
-      USE mod_mesh
-      USE mod_pixelset
-      USE mod_utils
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_Pixel
+      USE MOD_Grid
+      USE MOD_DataType
+      USE MOD_Mesh
+      USE MOD_Pixelset
+      USE MOD_Utils
 
       IMPLICIT NONE
 
@@ -598,7 +598,7 @@ CONTAINS
 
    SUBROUTINE aggregation_worker_done ()
 
-      USE spmd_task
+      USE MOD_SPMD_Task
 
       IMPLICIT NONE 
 

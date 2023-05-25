@@ -3,7 +3,7 @@
 MODULE MOD_NitrifReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -27,15 +27,15 @@ MODULE MOD_NitrifReadin
       ! Created by Xingjie Lu and Shupeng Zhang, 2022
       ! ==========================================================================================================
 
-      use precision
-      use mod_namelist
-      use spmd_task
-      use ncio_vector
+      use MOD_Precision
+      use MOD_Namelist
+      use MOD_SPMD_Task
+      use MOD_NetCDFVector
       use MOD_LandPatch
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
 #ifdef CoLMDEBUG
-      use mod_colm_debug
+      use MOD_CoLMDebug
 #endif
 
       USE MOD_Vars_Global

@@ -4,7 +4,7 @@ MODULE MOD_Const_Physical
 ! physical constants
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
   PUBLIC

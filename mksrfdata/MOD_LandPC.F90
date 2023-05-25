@@ -4,7 +4,7 @@
 
 MODULE MOD_LandPC
 
-   USE mod_pixelset
+   USE MOD_Pixelset
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -19,8 +19,8 @@ CONTAINS
    ! -------------------------------
    SUBROUTINE landpc_build ()
 
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE MOD_LandPatch
       USE MOD_Const_LC
       IMPLICIT NONE
@@ -127,7 +127,7 @@ CONTAINS
    ! ----------------------
    SUBROUTINE map_patch_to_pc
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE MOD_LandPatch
       USE MOD_Const_LC
       IMPLICIT NONE

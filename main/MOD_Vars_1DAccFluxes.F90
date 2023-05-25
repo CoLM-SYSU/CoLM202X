@@ -2,7 +2,7 @@
 
 module MOD_Vars_1DAccFluxes
 
-   use precision
+   use MOD_Precision
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -301,7 +301,7 @@ contains
 
    subroutine allocate_acc_fluxes
 
-      use spmd_task
+      use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       USE MOD_Vars_Global
       implicit none
@@ -604,7 +604,7 @@ contains
 
    subroutine deallocate_acc_fluxes ()
 
-      use spmd_task
+      use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       implicit none
 
@@ -905,7 +905,7 @@ contains
    !-----------------------
    SUBROUTINE FLUSH_acc_fluxes ()
 
-      use spmd_task
+      use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       use MOD_Vars_Global,    only : spval
       implicit none
@@ -1215,8 +1215,8 @@ contains
       ! Created by Yongjiu Dai, 03/2014
       !---------------------------------------------------------------------
 
-      use precision
-      use spmd_task
+      use MOD_Precision
+      use MOD_SPMD_Task
       use MOD_LandPatch,     only : numpatch
       use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
@@ -1224,12 +1224,12 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
       USE MOD_TurbulenceLEddy
-      use mod_colm_debug
+      use MOD_CoLMDebug
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
-      USE mod_hist_basin, only : accumulate_fluxes_basin
+      USE MOD_Hydro_Hist, only : accumulate_fluxes_basin
 #endif
 
       IMPLICIT NONE
@@ -1755,7 +1755,7 @@ contains
    !------
    SUBROUTINE acc1d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
@@ -1780,7 +1780,7 @@ contains
    !------
    SUBROUTINE acc2d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
@@ -1807,7 +1807,7 @@ contains
    !------
    SUBROUTINE acc3d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE

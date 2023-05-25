@@ -1,22 +1,23 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
-
-   USE precision
+   
+   USE MOD_Precision
    USE MOD_Vars_Global
-   USE mod_namelist
-   USE spmd_task
-   USE mod_grid
+   USE MOD_Namelist
+   USE MOD_SPMD_Task
+   USE MOD_Grid
    USE MOD_LandPatch
-   USE ncio_block
-   USE ncio_vector
-#ifdef CoLMDEBUG
-   USE mod_colm_debug
+   USE MOD_NetCDFBlock
+   USE MOD_NetCDFVector
+#ifdef CoLMDEBUG 
+   USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
 
    USE MOD_Const_LC
-   USE mod_5x5_data
+   USE MOD_5x5DataReadin
+
 #ifdef PFT_CLASSIFICATION
    USE MOD_LandPFT
 #endif

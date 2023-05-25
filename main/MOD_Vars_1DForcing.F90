@@ -7,7 +7,7 @@ MODULE MOD_Vars_1DForcing
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-USE precision
+USE MOD_Precision
 IMPLICIT NONE
 SAVE
 
@@ -68,8 +68,8 @@ SAVE
 ! ------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------
-  USE spmd_task
-  USE mod_mesh
+  USE MOD_SPMD_Task
+  USE MOD_Mesh
   USE MOD_LandPatch
   IMPLICIT NONE
 
@@ -129,8 +129,8 @@ SAVE
 
   SUBROUTINE deallocate_1D_Forcing ()
 
-     USE spmd_task
-     USE mod_mesh
+     USE MOD_SPMD_Task
+     USE MOD_Mesh
      USE MOD_LandPatch
      IMPLICIT NONE
 

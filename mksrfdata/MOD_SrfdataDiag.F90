@@ -3,8 +3,8 @@
 #ifdef SrfdataDiag
 MODULE MOD_SrfdataDiag
 
-   USE mod_grid
-   USE mod_mapping_pset2grid
+   USE MOD_Grid
+   USE MOD_Mapping_Pset2Grid
    
    IMPLICIT NONE
       
@@ -31,7 +31,7 @@ CONTAINS
    ! ------ SUBROUTINE ------
    SUBROUTINE srfdata_diag_init (dir_landdata)
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE MOD_LandPatch
 #ifdef PFT_CLASSIFICATION
       USE MOD_LandPFT
@@ -91,12 +91,12 @@ CONTAINS
          vsrfdata, settyp, typindex, m_srf, spv, filename, dataname, &
          compress, write_mode)
 
-      use spmd_task
-      use mod_namelist
-      use mod_block
-      use mod_grid
-      USE mod_data_type
-      USE ncio_serial
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_Block
+      use MOD_Grid
+      USE MOD_DataType
+      USE MOD_NetCDFSerial
       implicit none
 
       REAL(r8), intent(in) :: vsrfdata (:)
@@ -327,12 +327,12 @@ CONTAINS
 !          vsrfdata, settyp, typindex, m_srf, spv, filename, dataname, &
 !          compress, write_mode)
 
-!       use spmd_task
-!       use mod_namelist
-!       use mod_block
-!       use mod_grid
-!       USE mod_data_type
-!       USE ncio_serial
+!       use MOD_SPMD_Task
+!       use MOD_Namelist
+!       use MOD_Block
+!       use MOD_Grid
+!       USE MOD_DataType
+!       USE MOD_NetCDFSerial
 !       implicit none
 
 !       INTEGER , intent(in) :: vsrfdata (:)
@@ -545,9 +545,9 @@ CONTAINS
    !------------------
    subroutine srf_write_grid_info (fileblock, grid, iblk, jblk)
 
-      use mod_block
-      use mod_grid
-      USE ncio_serial
+      use MOD_Block
+      use MOD_Grid
+      USE MOD_NetCDFSerial
       implicit none
 
       character(len=*), intent(in) :: fileblock

@@ -5,7 +5,7 @@
 MODULE MOD_UrbanReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -26,16 +26,16 @@ MODULE MOD_UrbanReadin
 ! Read in the Urban dataset
 ! ===========================================================
 
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE MOD_Vars_Global
-      USE mod_namelist
+      USE MOD_Namelist
       USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Urban_Vars_TimeInvars
-      USE ncio_vector
-      USE ncio_serial
+      USE MOD_NetCDFVector
+      USE MOD_NetCDFSerial
       USE MOD_LandPatch
       USE MOD_LandUrban
 #ifdef URBAN_LCZ

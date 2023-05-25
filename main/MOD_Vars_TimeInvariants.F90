@@ -5,7 +5,7 @@ MODULE MOD_Vars_TimeInvariants
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-use precision
+use MOD_Precision
 #ifdef PFT_CLASSIFICATION
 USE MOD_Vars_PFTimeInvars
 #endif
@@ -110,9 +110,9 @@ SAVE
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
 
-     use precision
+     use MOD_Precision
      USE MOD_Vars_Global
-     use spmd_task
+     use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
 
@@ -200,12 +200,12 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist
-     use spmd_task
-     use ncio_vector
-     use ncio_serial
+     use MOD_Namelist
+     use MOD_SPMD_Task
+     use MOD_NetCDFVector
+     use MOD_NetCDFSerial
 #ifdef CoLMDEBUG
-     USE mod_colm_debug
+     USE MOD_CoLMDebug
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -328,10 +328,10 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     use spmd_task
-     use ncio_serial
-     use ncio_vector
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_SPMD_Task
+     use MOD_NetCDFSerial
+     use MOD_NetCDFVector
      use MOD_LandPatch
      USE MOD_Vars_Global
 
@@ -460,7 +460,7 @@ SAVE
 
   SUBROUTINE deallocate_TimeInvariants ()
 
-     use spmd_task
+     use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
      implicit none
 
@@ -549,8 +549,8 @@ SAVE
    !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
-      use spmd_task
-      use mod_colm_debug
+      use MOD_SPMD_Task
+      use MOD_CoLMDebug
 
       IMPLICIT NONE
 
