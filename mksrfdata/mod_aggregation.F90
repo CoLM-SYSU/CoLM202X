@@ -19,7 +19,7 @@ CONTAINS
          data_r8_2d_in1, data_r8_2d_in2, data_r8_2d_in3, data_r8_2d_in4, &
          data_r8_2d_in5, data_r8_2d_in6,                                 &
          data_r8_3d_in1, n1_r8_3d_in1  , data_r8_3d_in2, n1_r8_3d_in2,   &
-         data_i4_2d_in1 )
+         data_i4_2d_in1, data_i4_2d_in2)
 
       USE precision
       USE spmd_task
@@ -47,6 +47,7 @@ CONTAINS
       
       ! 2D INTEGER data
       TYPE (block_data_int32_2d), intent(in), optional :: data_i4_2d_in1
+      TYPE (block_data_int32_2d), intent(in), optional :: data_i4_2d_in2
       
       ! Local Variables
       INTEGER :: nreq, ireq, rmesg(2), isrc, idest
@@ -224,6 +225,20 @@ CONTAINS
                      idest, mpi_tag_data, p_comm_glb, p_err)
                ENDIF
 
+               IF (present(data_i4_2d_in2)) THEN
+                  DO ireq = 1, nreq
+                     xblk = grid_in%xblk(xlist(ireq))
+                     yblk = grid_in%yblk(ylist(ireq))
+                     xloc = grid_in%xloc(xlist(ireq))
+                     yloc = grid_in%yloc(ylist(ireq))
+
+                     sbuf_i4_1d(ireq) = data_i4_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
+                  ENDDO
+
+                  CALL mpi_send (sbuf_i4_1d, nreq, MPI_INTEGER, &
+                     idest, mpi_tag_data, p_comm_glb, p_err)
+               ENDIF
+
                deallocate (sbuf_i4_1d)
 
                deallocate (ylist)
@@ -255,6 +270,7 @@ CONTAINS
          data_r8_3d_in1, data_r8_3d_out1, n1_r8_3d_in1, lb1_r8_3d_in1, &
          data_r8_3d_in2, data_r8_3d_out2, n1_r8_3d_in2, lb1_r8_3d_in2, &
          data_i4_2d_in1, data_i4_2d_out1, &
+         data_i4_2d_in2, data_i4_2d_out2, &
          filledvalue_i4)
 
       USE precision
@@ -304,6 +320,9 @@ CONTAINS
       
       TYPE (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in1
       INTEGER, allocatable,       intent(out), optional :: data_i4_2d_out1 (:)
+
+      TYPE (block_data_int32_2d), intent(in),  optional :: data_i4_2d_in2
+      INTEGER, allocatable,       intent(out), optional :: data_i4_2d_out2 (:)
 
       INTEGER, intent(in), optional :: filledvalue_i4
 
@@ -378,6 +397,13 @@ CONTAINS
          allocate (data_i4_2d_out1 (ipxstt:ipxend))
          IF (present(filledvalue_i4)) THEN
             data_i4_2d_out1 = filledvalue_i4
+         ENDIF
+      ENDIF
+
+      IF (present(data_i4_2d_in2) .and. present(data_i4_2d_out2)) THEN
+         allocate (data_i4_2d_out2 (ipxstt:ipxend))
+         IF (present(filledvalue_i4)) THEN
+            data_i4_2d_out2 = filledvalue_i4
          ENDIF
       ENDIF
 
@@ -486,6 +512,13 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
                CALL unpack_inplace (rbuf_i4_1d, msk, data_i4_2d_out1)
             ENDIF
+
+            IF (present(data_i4_2d_in2) .and. present(data_i4_2d_out2)) THEN
+               CALL mpi_recv (rbuf_i4_1d, nreq, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               CALL unpack_inplace (rbuf_i4_1d, msk, data_i4_2d_out2)
+            ENDIF
+
             deallocate (rbuf_i4_1d)
 
             deallocate (ibuf)
@@ -549,6 +582,11 @@ CONTAINS
          IF (present(data_i4_2d_in1) .and. present(data_i4_2d_out1)) THEN
             data_i4_2d_out1(ipxl) = data_i4_2d_in1%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
+
+         IF (present(data_i4_2d_in2) .and. present(data_i4_2d_out2)) THEN
+            data_i4_2d_out2(ipxl) = data_i4_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
+         ENDIF
+
 
       ENDDO
       

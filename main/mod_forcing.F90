@@ -101,6 +101,8 @@ contains
       deltim_real = deltatime
 
       ! set initial values
+      IF (allocated(tstamp_LB)) deallocate(tstamp_LB)
+      IF (allocated(tstamp_UB)) deallocate(tstamp_UB)
       allocate (tstamp_LB(NVAR))
       allocate (tstamp_UB(NVAR))
       tstamp_LB(:) = timestamp(-1, -1, -1)
@@ -110,6 +112,9 @@ contains
 
       if (p_is_io) then
 
+         IF (allocated(forcn   )) deallocate(forcn   )
+         IF (allocated(forcn_LB)) deallocate(forcn_LB)
+         IF (allocated(forcn_UB)) deallocate(forcn_UB)
          allocate (forcn    (NVAR))
          allocate (forcn_LB (NVAR))
          allocate (forcn_UB (NVAR))
