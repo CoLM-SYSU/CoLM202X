@@ -7,8 +7,13 @@ INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
 VPATH = include : share : mksrfdata : mkinidata : main : main/hydro : main/bgc : main/urban : CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
-all : mksrfdata.x mkinidata.x colm.x postprocess.x
+.PHONY: all
+all : mkdir_build mksrfdata.x mkinidata.x colm.x postprocess.x
 # ******* End of Targets ALL ******
+
+.PHONY: mkdir_build
+mkdir_build : 
+	mkdir -p .bld
 
 OBJS_SHARED =    \
 					  MOD_Precision.o              \
@@ -76,10 +81,12 @@ $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
 OBJS_MKSRFDATA_T = $(addprefix .bld/,${OBJS_MKSRFDATA})
 
 # ------- Target 1: mksrfdata --------
-mksrfdata.x : ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
+mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 	@echo ''
 	@echo 'making CoLM surface data start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo ''
 	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_MKSRFDATA_T} -o run/mksrfdata.x ${LDFLAGS}
+	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM surface data completed!'
 	@echo ''
 # ----- End of Target 1 mksrfdata ----
@@ -113,21 +120,21 @@ OBJS_BASIC =    \
 					 MOD_Hydro_SoilWater.o       \
 					 MOD_Eroot.o                 \
 					 MOD_Qsadv.o                 \
-					 MOD_LAIEmpirical.o                        \
+					 MOD_LAIEmpirical.o          \
 					 MOD_LAIReadin.o             \
 					 MOD_CropReadin.o            \
 					 MOD_NitrifReadin.o          \
 					 MOD_NdepReadin.o            \
 					 MOD_FireReadin.o            \
-					 MOD_OrbCoszen.o                           \
-					 MOD_ThreeDCanopy.o                        \
-					 MOD_SnowSnicar.o                          \
-					 MOD_Aerosol.o                             \
-					 MOD_Albedo.o                              \
-					 MOD_SnowFraction.o                        \
-					 MOD_Urban_LAIReadin.o \
-					 MOD_Urban_Shortwave.o                     \
-					 MOD_Urban_Albedo.o                        \
+					 MOD_OrbCoszen.o             \
+					 MOD_ThreeDCanopy.o          \
+					 MOD_SnowSnicar.o            \
+					 MOD_Aerosol.o               \
+					 MOD_Albedo.o                \
+					 MOD_SnowFraction.o          \
+					 MOD_Urban_LAIReadin.o       \
+					 MOD_Urban_Shortwave.o       \
+					 MOD_Urban_Albedo.o          \
 					 MOD_MonthlyinSituCO2mlo.o
 
 
@@ -155,10 +162,12 @@ $(OBJS_MKINIDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}
 OBJS_MKINIDATA_T = $(addprefix .bld/,${OBJS_MKINIDATA})
 
 # -------- Target 2: mkinidata -------
-mkinidata.x : ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDATA}
+mkinidata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDATA}
 	@echo ''
 	@echo 'making CoLM initial data start >>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo ''
 	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MKINIDATA_T} -o run/mkinidata.x ${LDFLAGS}
+	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM initial data completed!'
 	@echo ''
 # ----- End of Target 2 mkinidata ----
@@ -265,10 +274,12 @@ DEF  = $(shell grep -i cama_flood include/define.h)
 CaMa = $(word 1, ${DEF})
 ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
-colm.x : ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
+colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo ''
 	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
 	@echo ''
 
@@ -277,11 +288,13 @@ CaMa_DIR = CaMa# The global river model CaMa-Flood (version 4.0.1)
 CaMa_MODS = -I$(CaMa_DIR)/src# CaMa Flood Model modules directories
 CaMa_LIBS = $(CaMa_DIR)/src/libcama.a# CaMa Flood Model libs (static) directories
 
-colm.x : ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN} mk_CaMa
+colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN} mk_CaMa
 	@echo ''
-	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo 'making CoLM with CaMa start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo ''
 	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${BASIC_MAIN_T} ${CaMa_LIBS} -o run/colm.x ${LDFLAGS}
-	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
+	@echo ''
+	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM with CaMa completed!'
 	@echo ''
 
 mk_CaMa :
@@ -324,15 +337,17 @@ endif
 
 .PHONY: postprocess.x
 ifneq (${vector2grid},\#define)
-postprocess.x : hist_concatenate.x srfdata_concatenate.x
+postprocess.x : mkdir_build hist_concatenate.x srfdata_concatenate.x
+	@echo '<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM postprocessing completed!'
 else
-postprocess.x : hist_concatenate.x srfdata_concatenate.x post_vector2grid.x
+postprocess.x : mkdir_build hist_concatenate.x srfdata_concatenate.x post_vector2grid.x
+	@echo '<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM postprocessing completed!'
 endif
 # --- End of Target 4 postprocess ------
 
 
 .PHONY: clean
 clean :
-	rm -f .bld/*
+	rm -rf .bld
 	rm -f run/mksrfdata.x run/mkinidata.x run/colm.x
 	rm -f run/hist_concatenate.x run/srfdata_concatenate.x run/post_vector2grid.x
