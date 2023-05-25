@@ -711,7 +711,7 @@ SUBROUTINE aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
       ! loop for each urban patch to aggregate NCAR urban morphological and thermal paras with area-weighted average
       DO iurban = 1, numurban
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
-                                        data_i4_2d_in2 = reg_typid, data_i4_2d_out2 = reg_typid_one)
+                                        data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one)
 
          ! urban region and type id for look-up-table
          urb_typidx = landurban%settyp(iurban)
