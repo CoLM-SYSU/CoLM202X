@@ -75,7 +75,7 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
 
    REAL(r8) rlat          !latitude in radians
    REAL(r8) rlon          !longitude in radians
-  
+
    LOGICAL  :: use_wtd
 
    CHARACTER(len=256) :: fwtd
@@ -167,9 +167,11 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
 #ifdef PC_CLASSIFICATION
       CALL landpc%forc_free_mem
 #endif
+#ifdef URBAN_MODEL
       CALL landurban%forc_free_mem
+#endif
    ! ENDIF
-   
+
    ! load pixelset and mesh data of next year
    !call pixel%load_from_file  (dir_landdata)
    !call gblock%load_from_file (dir_landdata)
@@ -180,7 +182,7 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
    !TODO: LC_YEAR or simulation year?
    CALL pixelset_load_from_file (year, dir_landdata, 'landhru', landhru, numhru)
 #endif
-  
+
    call pixelset_load_from_file (year, dir_landdata, 'landpatch', landpatch, numpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -197,7 +199,7 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
    CALL map_patch_to_urban
 #endif
 
-#if (defined UNSTRUCTURED || defined CATCHMENT) 
+#if (defined UNSTRUCTURED || defined CATCHMENT)
    CALL elm_vector_init ()
 #ifdef CATCHMENT
    CALL hru_vector_init ()

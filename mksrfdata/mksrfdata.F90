@@ -84,7 +84,7 @@ PROGRAM mksrfdata
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
-   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_500m
 
    INTEGER   :: lc_year
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
@@ -213,17 +213,6 @@ PROGRAM mksrfdata
    CALL gurban%define_by_name          ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
-   CALL grid_urban_100m%define_by_name ('colm_100m')
-
-   CALL pixel%assimilate_grid (gurban         )
-   CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_5km )
-   CALL pixel%assimilate_grid (grid_urban_100m)
-
-   CALL pixel%map_to_grid (gurban         )
-   CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_5km )
-   CALL pixel%map_to_grid (grid_urban_100m)
 #endif
 
    ! assimilate grids to build pixels
@@ -238,6 +227,13 @@ PROGRAM mksrfdata
 #endif
    CALL pixel%assimilate_grid (gpatch)
    CALL pixel%assimilate_grid (gridlai)
+
+#ifdef URBAN_MODEL
+   CALL pixel%assimilate_grid (gurban         )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+#endif
+
 #ifdef BGC
 #if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
@@ -264,6 +260,13 @@ PROGRAM mksrfdata
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+
+#ifdef URBAN_MODEL
+   CALL pixel%map_to_grid (gurban         )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+#ENDIF
+
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
@@ -296,16 +299,16 @@ PROGRAM mksrfdata
    ! build land patches
    CALL landpatch_build(lc_year)
 
+#ifdef URBAN_MODEL
+   CALL landurban_build(lc_year)
+#endif
+
 #ifdef PFT_CLASSIFICATION
    CALL landpft_build(lc_year)
 #endif
 
 #ifdef PC_CLASSIFICATION
    CALL landpc_build(lc_year)
-#endif
-
-#ifdef URBAN_MODEL
-   CALL landurban_build(lc_year)
 #endif
 
    ! ................................................................
@@ -324,7 +327,6 @@ PROGRAM mksrfdata
    CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landhru', landhru)
 #endif
 
-   print*, count(landpatch%settyp==13)
    CALL pixelset_save_to_file  (lc_year, dir_landdata, 'landpatch', landpatch)
 
 #ifdef PFT_CLASSIFICATION
@@ -385,7 +387,7 @@ PROGRAM mksrfdata
 
 #ifdef URBAN_MODEL
    CALL aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
-                           grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                           grid_urban_5km, grid_urban_500m)
 #endif
 
 

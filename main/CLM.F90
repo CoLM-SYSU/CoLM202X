@@ -392,6 +392,8 @@ PROGRAM CLM
 
          CALL allocate_1D_Forcing
          CALL allocate_1D_Fluxes
+
+         CALL forcing_init (dir_forcing, deltim, sdate)
       ENDIF
 #endif
 
