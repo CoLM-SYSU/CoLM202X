@@ -580,7 +580,7 @@ CONTAINS
 !==========================================================
 SUBROUTINE INTERPI(PBUFFIN,PBUFFOUT)
 ! interporlate field using "input matrix inverse: from catchment to other grid"
-USE YOS_CMF_INPUT,           ONLY: NXIN, NYIN,  RMIS, NX,NY
+USE YOS_CMF_INPUT,           ONLY: NXIN, NYIN, NX,NY
 IMPLICIT NONE
 REAL(KIND=JPRB),INTENT(IN)      :: PBUFFIN(:,:)     !! CaMa-Flood variable on catchment (NX*NY)
 REAL(KIND=JPRB),INTENT(OUT)     :: PBUFFOUT(:,:)    !! output on target grid = input runoff grid (NXIN * NYIN)
