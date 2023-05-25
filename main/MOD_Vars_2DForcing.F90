@@ -7,7 +7,7 @@ MODULE MOD_Vars_2DForcing
    ! Created by Yongjiu Dai, 03/2014
    ! -------------------------------
 
-   use mod_data_type
+   use MOD_DataType
    IMPLICIT NONE
    SAVE
 
@@ -31,6 +31,7 @@ MODULE MOD_Vars_2DForcing
    type(block_data_real8_2d) :: forc_xy_hgt_t  ! observational height of temperature [m]
    type(block_data_real8_2d) :: forc_xy_hgt_q  ! observational height of humidity [m]
    type(block_data_real8_2d) :: forc_xy_rhoair ! air density [kg/m3]
+   type(block_data_real8_2d) :: forc_xy_hpbl   ! atmospheric boundary layer height [m]
 
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_Forcing
@@ -43,9 +44,9 @@ CONTAINS
       ! ------------------------------------------------
       ! Allocates memory for CoLM 2d [lon_points,lat_points] variables
       ! ------------------------------------------------
-      use spmd_task
-      use mod_grid
-      use mod_data_type
+      use MOD_SPMD_Task
+      use MOD_Grid
+      use MOD_DataType
       IMPLICIT NONE
 
       type(grid_type), intent(in) :: grid
@@ -71,7 +72,7 @@ CONTAINS
          call allocate_block_data (grid, forc_xy_hgt_t ) ! observational height of temperature [m]
          call allocate_block_data (grid, forc_xy_hgt_q ) ! observational height of humidity [m]
          call allocate_block_data (grid, forc_xy_rhoair) ! air density [kg/m3]
-
+         call allocate_block_data (grid, forc_xy_hpbl  ) ! atmospheric boundary layer height [m]
       end if
 
    END SUBROUTINE allocate_2D_Forcing

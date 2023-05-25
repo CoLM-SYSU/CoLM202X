@@ -3,9 +3,9 @@
 MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
-USE precision
-USE mod_namelist, ONLY: DEF_Interception_scheme
-USE spmd_task
+USE MOD_Precision
+USE MOD_Namelist, ONLY: DEF_Interception_scheme
+USE MOD_SPMD_Task
 
 IMPLICIT NONE
 
@@ -50,6 +50,7 @@ CONTAINS
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 #endif
+			  hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
 
@@ -79,15 +80,19 @@ CONTAINS
 ! Hua Yuan, 10/2019: change leaf tempertature from two-leaf to one-leaf
 !                    (due to large differences may exist btween sunlit/shaded
 !                    leaf temperature.
-
 ! Xingjie Lu and Nan Wei, 01/2021: added plant hydraulic process interface
 ! Nan Wei,  01/2021: added interaction btw prec and canopy
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice, tfrz
   USE MOD_FrictionVelocity
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_TurbulenceLEddy
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
   USE MOD_Const_LC, only: z0mr, displar
@@ -192,6 +197,8 @@ CONTAINS
         rootfr  (1:nl_soil), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
+  REAL(r8), intent(in) :: &
+		hpbl        ! atmospheric boundary layer height [m]
 
   REAL(r8), intent(inout) :: &
 #ifdef PLANT_HYDRAULIC_STRESS
@@ -528,16 +535,27 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
          IF (rd_opt == 3) THEN
-           CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
-               displasink,z0mv,ustar,fh2m,fq2m, &
-               htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            if (DEF_USE_CBL_HEIGHT) then	
+              CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                                    displasink,z0mv, hpbl, ustar,fh2m,fq2m, &
+                                    htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            else
+              CALL moninobukm(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
+                              displasink,z0mv,ustar,fh2m,fq2m, &
+                              htop,fmtop,fm,fh,fq,fht,fqt,phih)
+            endif
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
             rah = 1./(vonkar/(fh-fht)*ustar)
             raw = 1./(vonkar/(fq-fqt)*ustar)
          ELSE
-            CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
-               ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            if (DEF_USE_CBL_HEIGHT) then	
+               CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, hpbl, &
+                                    ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            else
+               CALL moninobuk(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um,&
+                              ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+            endif
             ! Aerodynamic resistance
             ram = 1./(ustar*ustar/um)
             rah = 1./(vonkar/fh*ustar)
@@ -842,6 +860,9 @@ CONTAINS
          IF(zeta .ge. 0.)THEN
            um = max(ur,.1)
          ELSE
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*hu,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
@@ -1092,7 +1113,7 @@ CONTAINS
    !=======================================================================
 
 
-      USE precision
+      USE MOD_Precision
 
       IMPLICIT NONE
 
@@ -1190,7 +1211,7 @@ CONTAINS
 
   REAL(r8) FUNCTION uprofile(utop, fc, bee, alpha, z0mg, htop, hbot, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1218,7 +1239,7 @@ CONTAINS
   REAL(r8) FUNCTION kprofile(ktop, fc, bee, alpha, &
                     displah, htop, hbot, obu, ustar, z)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1253,7 +1274,7 @@ CONTAINS
 
   REAL(r8) FUNCTION uintegral(utop, fc, bee, alpha, z0mg, htop, hbot)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1300,7 +1321,7 @@ CONTAINS
 
   REAL(r8) FUNCTION ueffect(utop, htop, hbot, &
                             z0mg, alpha, bee, fc)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop
@@ -1350,7 +1371,7 @@ CONTAINS
   REAL(r8) FUNCTION fuint(utop, ztop, zbot, &
         htop, hbot, z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: utop, ztop, zbot
@@ -1383,7 +1404,7 @@ CONTAINS
   RECURSIVE SUBROUTINE ufindroots(ztop,zbot,zmid, &
      utop, htop, hbot, z0mg, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -1453,7 +1474,7 @@ CONTAINS
 
   REAL(r8) FUNCTION udif(z, utop, htop, hbot, z0mg, alpha)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: z, utop, htop, hbot
@@ -1472,7 +1493,7 @@ CONTAINS
 
   REAL(r8) FUNCTION kintegral(ktop, fc, bee, alpha, z0mg, &
                     displah, htop, hbot, obu, ustar, ztop, zbot)
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop
@@ -1523,7 +1544,7 @@ CONTAINS
         ztop, zbot, displah, z0h, obu, ustar, &
         z0mg, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ktop, htop, hbot
@@ -1578,7 +1599,7 @@ CONTAINS
   REAL(r8) FUNCTION fkint(ktop, ztop, zbot, htop, hbot, &
         z0h, obu, ustar, fac, alpha, bee, fc)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 
@@ -1619,7 +1640,7 @@ CONTAINS
   RECURSIVE SUBROUTINE kfindroots(ztop,zbot,zmid, &
      ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
-     USE precision
+     USE MOD_Precision
      IMPLICIT NONE
 
      REAL(r8), intent(in) :: ztop, zbot, zmid
@@ -1691,7 +1712,7 @@ CONTAINS
   REAL(r8) FUNCTION kdif(z, ktop, htop, hbot, &
         obu, ustar, fac, alpha)
 
-     USE precision
+     USE MOD_Precision
      USE MOD_FrictionVelocity
      IMPLICIT NONE
 

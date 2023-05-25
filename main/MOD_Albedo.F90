@@ -3,7 +3,7 @@
 MODULE MOD_Albedo
 
 !-----------------------------------------------------------------------
- USE precision
+ USE MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -75,16 +75,16 @@ MODULE MOD_Albedo
 !                    added SNICAR related variables
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz
 #ifdef PFT_CLASSIFICATION
-  USE mod_landpft, only: patch_pft_s, patch_pft_e
+  USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-  USE mod_landpc
+  USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
 #endif
@@ -459,7 +459,7 @@ ENDIF
 !
 !-----------------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
 ! parameters
@@ -771,7 +771,7 @@ ENDIF
 !
 !-----------------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
 ! parameters
@@ -1133,8 +1133,8 @@ ENDIF
 ! Created by Hua Yuan, 03/2020
 !
 !-----------------------------------------------------------------------
-      USE precision
-      USE mod_landpft
+      USE MOD_Precision
+      USE MOD_LandPFT
       USE MOD_Const_PFT
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
@@ -1241,7 +1241,7 @@ ENDIF
 ! yongjiu dai and xin-zhong liang (08/01/2001)
 !-----------------------------------------------------------------------
 
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
 
 !------------------------------Arguments--------------------------------
@@ -1937,7 +1937,7 @@ ENDIF
 ! Update snow cover and snow age, based on BATS code
 !=======================================================================
 
-   use precision
+   use MOD_Precision
    use MOD_Const_Physical, only : tfrz
    implicit none
 

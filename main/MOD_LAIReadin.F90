@@ -3,7 +3,7 @@
 MODULE MOD_LAIReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -26,29 +26,29 @@ MODULE MOD_LAIReadin
       ! Created by Yongjiu Dai, March, 2014
       ! ===========================================================
 
-      use precision
-      use mod_namelist
-      use spmd_task
-      use ncio_vector
-      use mod_landpatch
+      use MOD_Precision
+      use MOD_Namelist
+      use MOD_SPMD_Task
+      use MOD_NetCDFVector
+      use MOD_LandPatch
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
 #ifdef CoLMDEBUG
-      use mod_colm_debug
+      use MOD_CoLMDebug
 #endif
 
       USE MOD_Vars_Global
       USE MOD_Const_LC
 #ifdef PFT_CLASSIFICATION
-      USE mod_landpft
+      USE MOD_LandPFT
       USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-      USE mod_landpc
+      USE MOD_LandPC
       USE MOD_Vars_PCTimeVars
 #endif
 #ifdef SinglePoint
-      USE mod_single_srfdata
+      USE MOD_SingleSrfdata
 #endif
 
       IMPLICIT NONE

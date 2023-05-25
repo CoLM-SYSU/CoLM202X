@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_GroundFlux
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -22,7 +22,7 @@ CONTAINS
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Const_Physical, only: cpair,vonkar,grav
   USE MOD_FrictionVelocity
   IMPLICIT NONE

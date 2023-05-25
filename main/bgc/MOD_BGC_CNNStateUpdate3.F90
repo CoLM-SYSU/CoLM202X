@@ -16,7 +16,7 @@ module MOD_BGC_CNNStateUpdate3
   ! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
   !                   2) Record accumulated fire-associated N transfers for veg and soil N semi-analytic spinup
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeInvars, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2, i_soil3
   use MOD_BGC_Vars_TimeVars, only: &

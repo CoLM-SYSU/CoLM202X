@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_NetSolar
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -21,9 +21,9 @@ CONTAINS
 ! Net solar absorbed by urban surface
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
-  USE timemanager, only: isgreenwich
+  USE MOD_TimeManager, only: isgreenwich
   IMPLICIT NONE
 
 ! Dummy argument

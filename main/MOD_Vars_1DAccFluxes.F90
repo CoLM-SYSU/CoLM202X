@@ -2,7 +2,7 @@
 
 module MOD_Vars_1DAccFluxes
 
-   use precision
+   use MOD_Precision
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -16,6 +16,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_pbot   (:)
    real(r8), allocatable :: a_frl    (:)
    real(r8), allocatable :: a_solarin(:)
+   real(r8), allocatable :: a_hpbl   (:)
 
    real(r8), allocatable :: a_taux   (:)
    real(r8), allocatable :: a_tauy   (:)
@@ -300,9 +301,9 @@ contains
 
    subroutine allocate_acc_fluxes
 
-      use spmd_task
+      use MOD_SPMD_Task
+      use MOD_LandPatch, only : numpatch
       USE MOD_Vars_Global
-      use mod_landpatch, only : numpatch
       implicit none
 
       if (p_is_worker) then
@@ -317,6 +318,7 @@ contains
             allocate (a_pbot   (numpatch))
             allocate (a_frl    (numpatch))
             allocate (a_solarin(numpatch))
+            allocate (a_hpbl   (numpatch))
 
             allocate (a_taux      (numpatch))
             allocate (a_tauy      (numpatch))
@@ -602,8 +604,8 @@ contains
 
    subroutine deallocate_acc_fluxes ()
 
-      use spmd_task
-      use mod_landpatch, only : numpatch
+      use MOD_SPMD_Task
+      use MOD_LandPatch, only : numpatch
       implicit none
 
       if (p_is_worker) then
@@ -618,6 +620,7 @@ contains
             deallocate (a_pbot   )
             deallocate (a_frl    )
             deallocate (a_solarin)
+            deallocate (a_hpbl   )
 
             deallocate (a_taux      )
             deallocate (a_tauy      )
@@ -902,8 +905,8 @@ contains
    !-----------------------
    SUBROUTINE FLUSH_acc_fluxes ()
 
-      use spmd_task
-      use mod_landpatch, only : numpatch
+      use MOD_SPMD_Task
+      use MOD_LandPatch, only : numpatch
       use MOD_Vars_Global,    only : spval
       implicit none
 
@@ -923,6 +926,7 @@ contains
             a_pbot   (:) = spval
             a_frl    (:) = spval
             a_solarin(:) = spval
+            a_hpbl   (:) = spval
 
             a_taux    (:) = spval
             a_tauy    (:) = spval
@@ -1211,19 +1215,21 @@ contains
       ! Created by Yongjiu Dai, 03/2014
       !---------------------------------------------------------------------
 
-      use precision
-      use spmd_task
-      use mod_landpatch,     only : numpatch
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_LandPatch,     only : numpatch
       use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      use mod_colm_debug
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_TurbulenceLEddy
+      use MOD_CoLMDebug
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
-      USE mod_hist_basin, only : accumulate_fluxes_basin
+      USE MOD_Hydro_Hist, only : accumulate_fluxes_basin
 #endif
 
       IMPLICIT NONE
@@ -1233,6 +1239,7 @@ contains
       real(r8), allocatable :: r_trad  (:)
 
       real(r8), allocatable :: r_ustar (:)
+      real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
       real(r8), allocatable :: r_qstar (:)
       real(r8), allocatable :: r_zol   (:)
@@ -1248,6 +1255,7 @@ contains
       !---------------------------------------------------------------------
       integer  ib, jb, i, j
       real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
+	  real(r8) hpbl ! atmospheric boundary layer height [m]
       real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf
       real(r8) obu,fh2m,fq2m
       real(r8) um,thvstar,beta,zii,wc,wc2
@@ -1270,6 +1278,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
+			if (DEF_USE_CBL_HEIGHT) then
+              call acc1d (forc_hpbl , a_hpbl )
+		    endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1595,6 +1606,7 @@ contains
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
+            allocate (r_ustar2 (numpatch)) !Shaofeng, 2023.05.20
             allocate (r_tstar (numpatch))
             allocate (r_qstar (numpatch))
             allocate (r_zol   (numpatch))
@@ -1651,14 +1663,24 @@ contains
                if(r_zol(i) >= 0.)then
                   um = max(ur,0.1)
                else
+                 if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                  hpbl = forc_hpbl(i)
+                  zii = max(5.*hgt_u,hpbl)
+                 endif !//TODO: Shaofeng, 2023.05.18
                   wc = (-grav*r_ustar(i)*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
                endif
 
                obu = zldis/r_zol(i)
-               call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                  obu,um,r_ustar(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i))
+               if (DEF_USE_CBL_HEIGHT) then
+			     hpbl = forc_hpbl(i)
+                 call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+		       else
+                 call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                    obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+		       endif
 
                ! bug found by chen qiying 2013/07/01
                r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)
@@ -1683,6 +1705,7 @@ contains
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
+            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )
@@ -1732,7 +1755,7 @@ contains
    !------
    SUBROUTINE acc1d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
@@ -1757,7 +1780,7 @@ contains
    !------
    SUBROUTINE acc2d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE
@@ -1784,7 +1807,7 @@ contains
    !------
    SUBROUTINE acc3d (var, s)
 
-      use precision
+      use MOD_Precision
       use MOD_Vars_Global, only: spval
 
       IMPLICIT NONE

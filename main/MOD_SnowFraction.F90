@@ -3,7 +3,7 @@
 MODULE MOD_SnowFraction
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -37,7 +37,7 @@ MODULE MOD_SnowFraction
 ! Hua Yuan, 10/2019: removed sigf to be compatible with PFT classification
 !=======================================================================
 
-   use precision
+   use MOD_Precision
    implicit none
 
 ! dummy arguments
@@ -96,8 +96,8 @@ MODULE MOD_SnowFraction
 ! Hua Yuan, 10/2019: removed sigf_p to be compatible with PFT classification
 !=======================================================================
 
-   use precision
-   USE mod_landpft
+   use MOD_Precision
+   USE MOD_LandPFT
    USE MOD_Vars_PFTimeInvars
    USE MOD_Vars_PFTimeVars
    implicit none
@@ -175,8 +175,8 @@ MODULE MOD_SnowFraction
 ! Hua Yuan, 10/2019: removed sigf_c to be compatible with PFT classification
 !=======================================================================
 
-   use precision
-   USE mod_landpc
+   use MOD_Precision
+   USE MOD_LandPC
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
    implicit none

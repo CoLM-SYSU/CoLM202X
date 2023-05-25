@@ -2,9 +2,9 @@
 
 MODULE MOD_LightningData
 #ifdef Fire
-   USE mod_grid
-   USE mod_data_type
-   USE mod_mapping_grid2pset
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mapping_Grid2Pset
    use MOD_BGC_Vars_TimeVars, only: lnfm
    IMPLICIT NONE
 
@@ -20,14 +20,14 @@ CONTAINS
    ! ----------
    SUBROUTINE init_lightning_data (time, idate)
 
-      USE spmd_task
-      USE mod_namelist
-      USE timemanager
-      USE mod_grid
-      USE ncio_serial
-      USE ncio_block
-      USE mod_landpatch
-      USE mod_colm_debug
+      USE MOD_SPMD_Task
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_Grid
+      USE MOD_NetCDFSerial
+      USE MOD_NetCDFBlock
+      USE MOD_LandPatch
+      USE MOD_CoLMDebug
       IMPLICIT NONE
 
       type(timestamp), intent(in) :: time
@@ -66,9 +66,9 @@ CONTAINS
    ! ----------
    SUBROUTINE update_lightning_data (time, deltim)
 
-      USE timemanager
-      USE ncio_block
-      USE mod_colm_debug
+      USE MOD_TimeManager
+      USE MOD_NetCDFBlock
+      USE MOD_CoLMDebug
       IMPLICIT NONE
 
       type(timestamp), intent(in) :: time

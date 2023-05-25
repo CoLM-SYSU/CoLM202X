@@ -26,11 +26,11 @@ module MOD_CaMa_Vars
 
 #if(defined CaMa_Flood)
 
-   USE precision
-   USE mod_grid
-   USE mod_data_type
-   USE mod_mapping_pset2grid
-   USE mod_mapping_grid2pset
+   USE MOD_Precision
+   USE MOD_Grid
+   USE MOD_DataType
+   USE MOD_Mapping_Pset2Grid
+   USE MOD_Mapping_Grid2Pset
    USE YOS_CMF_INPUT,            ONLY:RMIS,DMIS
 
    real(r8) :: nacc                                        ! number of accumulation
@@ -129,8 +129,8 @@ contains
       ! 2021.12.12  Zhongwang Wei @ SYSU
 
       USE spmd_task
+      USE MOD_LandPatch, ONLY : numpatch
       USE MOD_Vars_Global
-      USE mod_landpatch, ONLY : numpatch
 
       IMPLICIT NONE
 
@@ -157,8 +157,8 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE spmd_task
-      USE mod_landpatch, ONLY : numpatch
+      USE MOD_SPMD_Task
+      USE MOD_LandPatch, ONLY : numpatch
 
       IMPLICIT NONE
 
@@ -183,8 +183,8 @@ contains
       !REVISION HISTORY
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
-      USE spmd_task
-      USE mod_landpatch, ONLY : numpatch
+      USE MOD_SPMD_Task
+      USE MOD_LandPatch, ONLY : numpatch
       USE MOD_Vars_Global,    ONLY : spval
 
       IMPLICIT NONE
@@ -216,10 +216,10 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE precision
-      USE spmd_task
+      USE MOD_Precision
+      USE MOD_SPMD_Task
       USE MOD_Vars_1DFluxes, ONLY : rnof
-      USE mod_landpatch, ONLY : numpatch
+      USE MOD_LandPatch, ONLY : numpatch
 
       IMPLICIT NONE
 
@@ -281,9 +281,9 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE spmd_task
-      USE mod_grid
-      USE mod_data_type
+      USE MOD_SPMD_Task
+      USE MOD_Grid
+      USE MOD_DataType
 
       IMPLICIT NONE
 
@@ -314,7 +314,7 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE spmd_task
+      USE MOD_SPMD_Task
       USE CMF_CALC_DIAG_MOD,  ONLY: CMF_DIAG_AVERAGE, CMF_DIAG_RESET
       USE YOS_CMF_PROG,       ONLY: P2RIVSTO,     P2FLDSTO,     P2GDWSTO, &
          P2damsto,P2LEVSTO !!! added
@@ -446,8 +446,8 @@ contains
       !----------------
       ! 2023.02.23  Zhongwang Wei @ SYSU
 
-      USE spmd_task
-      USE ncio_serial
+      USE MOD_SPMD_Task
+      USE MOD_NetCDFSerial
       USE YOS_CMF_INPUT, ONLY: NX, NY
       USE YOS_CMF_MAP,   ONLY: D1LON, D1LAT
 
@@ -494,12 +494,12 @@ contains
       !----------------
       ! 2023.02.23  Zhongwang Wei @ SYSU
 
-      USE mod_namelist
+      USE MOD_Namelist
       USE YOS_CMF_INPUT,  ONLY: NX, NY
       USE YOS_CMF_MAP,    ONLY: NSEQALL
       USE PARKIND1,       ONLY: JPRM
       USE CMF_UTILS_MOD,  ONLY: vecP2mapR
-      USE ncio_serial,    ONLY: ncio_write_serial_time, ncio_put_attr
+      USE MOD_NetCDFSerial,    ONLY: ncio_write_serial_time, ncio_put_attr
 
       IMPLICIT NONE
       logical, intent(in) :: is_hist
@@ -541,15 +541,15 @@ contains
       !----------------
       ! 2023.02.23  Zhongwang Wei @ SYSU
 
-      USE precision
-      USE mod_namelist
-      USE timemanager
-      USE spmd_task
-      USE mod_block
-      USE mod_data_type
-      USE mod_landpatch
-      USE mod_mapping_pset2grid
-      USE mod_colm_debug
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_DataType
+      USE MOD_LandPatch
+      USE MOD_Mapping_Pset2Grid
+      USE MOD_CoLMDebug
       USE MOD_Vars_TimeInvariants, ONLY : patchtype
       USE MOD_Forcing, ONLY : forcmask
 
@@ -691,17 +691,17 @@ contains
       ! 2023.02.23  Zhongwang Wei @ SYSU
       ! 2022.?      Zhongwang Wei and ShuPeng Zhang @ SYSU
 
-      USE precision
-      USE mod_namelist
-      USE timemanager
-      USE spmd_task
-      USE mod_block
-      USE mod_data_type
-      USE mod_landpatch
-      USE mod_mapping_pset2grid
-      USE mod_colm_debug
+      USE MOD_Precision
+      USE MOD_Namelist
+      USE MOD_TimeManager
+      USE MOD_SPMD_Task
+      USE MOD_Block
+      USE MOD_DataType
+      USE MOD_LandPatch
+      USE MOD_Mapping_Pset2Grid
+      USE MOD_CoLMDebug
       USE MOD_Vars_TimeInvariants, ONLY : patchtype
-      USE mod_grid
+      USE MOD_Grid
 
       IMPLICIT NONE
 

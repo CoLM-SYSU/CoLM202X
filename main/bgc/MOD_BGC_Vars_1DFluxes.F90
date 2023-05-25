@@ -10,7 +10,7 @@ MODULE MOD_BGC_Vars_1DFluxes
   ! Xingjie Lu, 2022, created the original version
 
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -165,10 +165,10 @@ MODULE MOD_BGC_Vars_1DFluxes
   ! --------------------------------------------------------------------
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
-     USE precision
+     USE MOD_Precision
      USE MOD_Vars_Global
-     USE spmd_task
-     USE mod_landpatch
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
      IMPLICIT NONE
 
 
@@ -320,8 +320,8 @@ MODULE MOD_BGC_Vars_1DFluxes
   ! --------------------------------------------------------------------
   ! deallocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
-     USE spmd_task
-     USE mod_landpatch
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
 
      if (p_is_worker) then
 

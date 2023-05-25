@@ -1,7 +1,7 @@
 MODULE MOD_OrbCoszen
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -29,7 +29,7 @@ MODULE MOD_OrbCoszen
 ! yongjiu dai (07/23/2002)
 !-------------------------------------------------------------------------------
 
-   use precision
+   use MOD_Precision
    implicit none
 
    real(r8), intent(in) :: calday        !Julian cal day (1.xx to 365.xx)

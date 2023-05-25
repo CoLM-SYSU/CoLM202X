@@ -3,7 +3,7 @@
 MODULE MOD_LAIEmpirical
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -25,7 +25,7 @@ MODULE MOD_LAIEmpirical
 ! Original author : Yongjiu Dai, 08/31/2002
 !-----------------------------------------------------------------------
 
-   use precision
+   use MOD_Precision
    implicit none
 
    integer, intent(in)  :: ivt      !land cover type

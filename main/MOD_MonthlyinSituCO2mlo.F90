@@ -52,8 +52,8 @@ MODULE MOD_MonthlyinSituCO2mlo
 ! !---2022.12.12  Zhongwang Wei @ SYSU: Added history and SSP CO2 data in init_monthly_co2_mlo()
 ! -------------------------------
 
-   USE precision
-   use mod_namelist, only: DEF_SSP
+   USE MOD_Precision
+   use MOD_Namelist, only: DEF_SSP
    IMPLICIT NONE
    SAVE
 

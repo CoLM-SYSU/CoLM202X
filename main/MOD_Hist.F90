@@ -2,16 +2,16 @@
 
 module MOD_Hist
 
-   use precision
-   use mod_grid
-   use mod_mapping_pset2grid
-   USE mod_namelist
+   use MOD_Precision
+   use MOD_Grid
+   use MOD_Mapping_Pset2Grid
+   USE MOD_Namelist
 #ifdef PFT_CLASSIFICATION
    USE MOD_Vars_PFTimeInvars, only: pftclass
-   USE mod_landpft, only : patch_pft_s
+   USE MOD_LandPFT, only : patch_pft_s
 #endif
    USE MOD_Vars_Global, only : spval
-   USE ncio_serial
+   USE MOD_NetCDFSerial
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_HistVector
 #endif
@@ -34,13 +34,13 @@ contains
    subroutine hist_init (dir_hist, lon_res, lat_res)
 
       USE MOD_Vars_Global
-      use spmd_task
-      use mod_grid
-      USE mod_landpatch
-      use mod_mapping_pset2grid
+      use MOD_SPMD_Task
+      use MOD_Grid
+      USE MOD_LandPatch
+      use MOD_Mapping_Pset2Grid
       use MOD_Vars_1DAccFluxes
 #ifdef LATERAL_FLOW
-      USE mod_hist_basin
+      USE MOD_Hydro_Hist
 #endif
       USE MOD_Forcing, only : gforc
       implicit none
@@ -94,7 +94,7 @@ contains
 
       use MOD_Vars_1DAccFluxes
 #ifdef LATERAL_FLOW
-      USE mod_hist_basin
+      USE MOD_Hydro_Hist
 #endif
       implicit none
 
@@ -114,25 +114,25 @@ contains
       ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
       !=======================================================================
 
-      use precision
-      use mod_namelist
-      use timemanager
-      use spmd_task
+      use MOD_Precision
+      use MOD_Namelist
+      use MOD_TimeManager
+      use MOD_SPMD_Task
       use MOD_Vars_2DFluxes
       use MOD_Vars_1DAccFluxes
-      use mod_block
-      use mod_data_type
-      use mod_landpatch
-      use mod_mapping_pset2grid
+      use MOD_Block
+      use MOD_DataType
+      use MOD_LandPatch
+      use MOD_Mapping_Pset2Grid
       use MOD_Vars_2DFluxes
-      use mod_colm_debug
+      use MOD_CoLMDebug
       use MOD_Vars_Global, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
 #ifdef LATERAL_FLOW
-      USE mod_hist_basin
+      USE MOD_Hydro_Hist
 #endif
       USE MOD_Forcing, only : forcmask
       IMPLICIT NONE
@@ -309,6 +309,13 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%xy_snow, &
             a_snow, f_xy_snow, file_hist, 'f_xy_snow', itime_in_file, sumwt, filter, &
             'snow','mm/s')
+
+		 if (DEF_USE_CBL_HEIGHT) then
+         ! atmospheric boundary layer height [m]
+           call flux_map_and_write_2d ( DEF_hist_vars%xy_hpbl, &
+              a_hpbl, f_xy_hpbl, file_hist, 'f_xy_hpbl', itime_in_file, sumwt, filter, &
+              'boundary layer height','m')
+		 endif
 
          ! ------------------------------------------------------------------------------------------
          ! Mapping the fluxes and state variables at patch [numpatch] to grid
@@ -3102,13 +3109,13 @@ ENDIF
          acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
-      use mod_data_type
-      use mod_mapping_pset2grid
-      use mod_block
-      use mod_grid
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_DataType
+      use MOD_Mapping_Pset2Grid
+      use MOD_Block
+      use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
       use MOD_Vars_Global, only: spval
       implicit none
@@ -3178,13 +3185,13 @@ ENDIF
          acc_vec, flux_xy, file_hist, varname, dim1name, &
          itime_in_file, sumwt, filter, longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
-      use mod_data_type
-      use mod_mapping_pset2grid
-      use mod_block
-      use mod_grid
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_DataType
+      use MOD_Mapping_Pset2Grid
+      use MOD_Block
+      use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
       use MOD_Vars_Global, only: spval
       implicit none
@@ -3258,13 +3265,13 @@ ENDIF
          acc_vec, flux_xy, file_hist, varname, dim1name, dim2name, itime_in_file, sumwt, filter, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
-      use mod_data_type
-      use mod_mapping_pset2grid
-      use mod_block
-      use mod_grid
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_DataType
+      use MOD_Mapping_Pset2Grid
+      use MOD_Block
+      use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac
       use MOD_Vars_Global, only: spval
       implicit none
@@ -3340,13 +3347,13 @@ ENDIF
          acc_vec, flux_xy, file_hist, varname, itime_in_file, sumwt, filter, &
          longname, units)
 
-      use precision
-      use spmd_task
-      use mod_namelist
-      use mod_data_type
-      use mod_mapping_pset2grid
-      use mod_block
-      use mod_grid
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_DataType
+      use MOD_Mapping_Pset2Grid
+      use MOD_Block
+      use MOD_Grid
       use MOD_Vars_1DAccFluxes,  only: nac_ln
       use MOD_Vars_Global, only: spval
       implicit none
@@ -3419,10 +3426,10 @@ ENDIF
    subroutine hist_write_time ( &
          filename, dataname, grid, time, itime)
 
-      use mod_namelist
-      use mod_grid
-      use mod_block
-      use spmd_task
+      use MOD_Namelist
+      use MOD_Grid
+      use MOD_Block
+      use MOD_SPMD_Task
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -3497,11 +3504,11 @@ ENDIF
    subroutine hist_write_var_real8_2d ( &
          filename, dataname, grid, itime, wdata, compress)
 
-      use mod_namelist
-      use mod_block
-      use mod_grid
-      use mod_data_type
-      use spmd_task
+      use MOD_Namelist
+      use MOD_Block
+      use MOD_Grid
+      use MOD_DataType
+      use MOD_SPMD_Task
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -3636,11 +3643,11 @@ ENDIF
    subroutine hist_write_var_real8_3d ( &
          filename, dataname, dim1name, grid, itime, wdata, compress)
 
-      use mod_namelist
-      use mod_block
-      use mod_grid
-      use mod_data_type
-      use spmd_task
+      use MOD_Namelist
+      use MOD_Block
+      use MOD_Grid
+      use MOD_DataType
+      use MOD_SPMD_Task
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -3789,11 +3796,11 @@ ENDIF
    subroutine hist_write_var_real8_4d ( &
          filename, dataname, dim1name, dim2name, grid, itime, wdata, compress)
 
-      use mod_namelist
-      use mod_block
-      use mod_grid
-      use mod_data_type
-      use spmd_task
+      use MOD_Namelist
+      use MOD_Block
+      use MOD_Grid
+      use MOD_DataType
+      use MOD_SPMD_Task
       implicit none
 
       character (len=*), intent(in) :: filename
@@ -3946,8 +3953,8 @@ ENDIF
    !------------------
    subroutine hist_write_grid_info (fileblock, grid, iblk, jblk)
 
-      use mod_block
-      use mod_grid
+      use MOD_Block
+      use MOD_Grid
       implicit none
 
       character(len=*), intent(in) :: fileblock

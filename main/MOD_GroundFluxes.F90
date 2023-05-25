@@ -1,7 +1,7 @@
 MODULE MOD_GroundFluxes
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -17,6 +17,7 @@ MODULE MOD_GroundFluxes
 
 
    subroutine groundfluxes (zlnd, zsno, hu, ht, hq,&
+                            hpbl, &
                             us, vs, tm, qm, rhoair, psrf,&
                             ur, thm, th, thv, t_grnd, qg, dqgdT, htvp,&
                             fsno, cgrnd, cgrndl, cgrnds,&
@@ -32,11 +33,16 @@ MODULE MOD_GroundFluxes
 ! REVISIONS:
 ! Hua Yuan, 09/2019: removed sigf to be consistant with PFT runs, removed fsena,
 !                    fevpa, renamed z0ma to z0m
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
-    use precision
+    use MOD_Precision
     use MOD_Const_Physical, only: cpair,vonkar,grav
     use MOD_FrictionVelocity
+    USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+    USE MOD_TurbulenceLEddy
     implicit none
 
 !----------------------- Dummy argument --------------------------------
@@ -48,6 +54,7 @@ MODULE MOD_GroundFluxes
           hu,       &! observational height of wind [m]
           ht,       &! observational height of temperature [m]
           hq,       &! observational height of humidity [m]
+          hpbl,     &! atmospheric boundary layer height [m]
           us,       &! wind component in eastward direction [m/s]
           vs,       &! wind component in northward direction [m/s]
           tm,       &! temperature at agcm reference height [kelvin] [not used]
@@ -154,8 +161,13 @@ MODULE MOD_GroundFluxes
         ITERATION : do iter = 1, niters         ! begin stability iteration
         !----------------------------------------------------------------
            displax = 0.
-           call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
-                          ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+           if (DEF_USE_CBL_HEIGHT) then
+             call moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+                                  ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+           else
+             call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+                            ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+           endif
 
            tstar = vonkar/fh*dth
            qstar = vonkar/fq*dqh
@@ -177,6 +189,9 @@ MODULE MOD_GroundFluxes
            if(zeta >= 0.)then
              um = max(ur,0.1)
            else
+             if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+               zii = max(5.*hu,hpbl)
+             endif !//TODO: Shaofeng, 2023.05.18
              wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
             wc2 = beta*beta*(wc*wc)
              um = sqrt(ur*ur+wc2)

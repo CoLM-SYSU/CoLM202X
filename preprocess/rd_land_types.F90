@@ -89,7 +89,7 @@ SUBROUTINE rd_land_types(dir_rawdata)
 !
 ! Created by Yongjiu Dai, 12/2013
 ! ----------------------------------------------------------------------
-use precision
+use MOD_Precision
 use spmd_TM
 #if (defined usempi)
 use spmd_io

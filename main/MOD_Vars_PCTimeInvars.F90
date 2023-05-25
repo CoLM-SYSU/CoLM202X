@@ -10,7 +10,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_GlobalVars
   IMPLICIT NONE
   SAVE
@@ -42,9 +42,9 @@ MODULE MOD_Vars_PCTimeInvars
   ! Allocates memory for CoLM Plant Community (PC) [numpc] variables
   ! --------------------------------------------------------------------
 
-     USE precision
-     USE spmd_task
-     USE mod_landpc
+     USE MOD_Precision
+     USE MOD_SPMD_Task
+     USE MOD_LandPC
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -60,8 +60,8 @@ MODULE MOD_Vars_PCTimeInvars
 
   SUBROUTINE READ_PCTimeInvars (file_restart)
 
-     use ncio_vector
-     USE mod_landpc
+     use MOD_NetCDFVector
+     USE MOD_LandPC
      IMPLICIT NONE
 
      character(LEN=*), intent(in) :: file_restart
@@ -74,9 +74,9 @@ MODULE MOD_Vars_PCTimeInvars
 
   SUBROUTINE WRITE_PCTimeInvars (file_restart)
 
-     use ncio_vector
-     use mod_landpc
-     USE mod_namelist
+     use MOD_NetCDFVector
+     use MOD_LandPC
+     USE MOD_Namelist
      USE MOD_Vars_Global
      IMPLICIT NONE
 
@@ -101,8 +101,8 @@ MODULE MOD_Vars_PCTimeInvars
 ! Deallocates memory for CoLM Plant Community (PC) variables
 ! --------------------------------------------------
 
-     USE spmd_task
-     USE mod_landpc
+     USE MOD_SPMD_Task
+     USE MOD_LandPC
 
      IF (p_is_worker) THEN
         IF (numpc > 0) THEN
@@ -117,7 +117,7 @@ MODULE MOD_Vars_PCTimeInvars
 #ifdef CoLMDEBUG
   SUBROUTINE check_PCTimeInvars ()
 
-     use mod_colm_debug
+     use MOD_CoLMDebug
      IMPLICIT NONE
 
      call check_vector_data ('pcfrc ', pcfrac) !

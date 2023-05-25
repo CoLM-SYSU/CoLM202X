@@ -14,7 +14,7 @@ module MOD_BGC_Veg_CNVegStructUpdate
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
   !
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &

@@ -15,7 +15,7 @@
 !
 ! Hua Yuan, 01/2023: added snow layer absorption in GLACIER_TEMP()
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -41,6 +41,7 @@
                     zlnd        ,zsno       ,capr        ,cnfac       ,&
                     forc_hgt_u ,forc_hgt_t  ,forc_hgt_q  ,&
                     forc_us     ,forc_vs    ,forc_t      ,forc_q      ,&
+                    forc_hpbl                                              ,&
                     forc_rhoair ,forc_psrf  ,coszen      ,sabg        ,&
                     forc_frl    ,fsno       ,dz_icesno   ,z_icesno    ,&
                     zi_icesno   ,t_icesno   ,wice_icesno ,wliq_icesno ,&
@@ -70,7 +71,7 @@
 !
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : hvap,hsub,rgas,cpair,stefnc,tfrz,cpliq,cpice
   use MOD_FrictionVelocity
   USE MOD_Qsadv
@@ -104,6 +105,7 @@
         t_precip,    &! snowfall/rainfall temperature [kelvin]
         pg_rain,     &! rainfall  [kg/(m2 s)]
         pg_snow,     &! snowfall  [kg/(m2 s)]
+        forc_hpbl,   &! atmospheric boundary layer height [m]
 
         ! Radiative fluxes
         coszen,      &! cosine of the solar zenith angle
@@ -235,6 +237,7 @@
       call groundfluxes_glacier (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,&
                         forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp,&
+                        forc_hpbl,&
                         fsno,cgrnd,cgrndl,cgrnds,&
                         taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
                         z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
@@ -332,6 +335,7 @@
  subroutine groundfluxes_glacier (zlnd,zsno,hu,ht,hq,&
                                   us,vs,tm,qm,rhoair,psrf,&
                                   ur,thm,th,thv,t_grnd,qg,dqgdT,htvp,&
+								  hpbl,&
                                   fsno,cgrnd,cgrndl,cgrnds,&
                                   taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
                                   z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
@@ -341,11 +345,18 @@
 ! and surface fluxes of land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
+! 
+! REVISIONS:
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : cpair,vonkar,grav
   use MOD_FrictionVelocity
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_TurbulenceLEddy
   implicit none
 
 !----------------------- Dummy argument --------------------------------
@@ -375,6 +386,9 @@
         qg,       &! ground specific humidity [kg/kg]
         dqgdT,    &! d(qg)/dT
         htvp       ! latent heat of vapor of water (or sublimation) [j/kg]
+  real(r8), INTENT(in) :: &
+        hpbl       ! atmospheric boundary layer height [m]
+
 
   real(r8), INTENT(out) :: &
         taux,     &! wind stress: E-W [kg/m/s**2]
@@ -472,8 +486,13 @@
       ITERATION : do iter = 1, niters         ! begin stability iteration
       !----------------------------------------------------------------
          displax = 0.
-         call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
-                        ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+		 if (DEF_USE_CBL_HEIGHT) then
+           call moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
+                          ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+	     else
+           call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
+                          ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+		 endif
 
          tstar = vonkar/fh*dth
          qstar = vonkar/fq*dqh
@@ -493,6 +512,9 @@
          if(zeta >= 0.)then
            um = max(ur,0.1)
          else
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+		     zii = max(5.*hu,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
            um = sqrt(ur*ur+wc2)
@@ -570,10 +592,10 @@
 !                    flux, temperature and melt calculation.
 !=======================================================================
 
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
   USE MOD_Meltf
-  USE mod_utils
+  USE MOD_Utils
 
   IMPLICIT NONE
 
@@ -846,7 +868,7 @@
                     ssi         ,wimp    )
 
 !=======================================================================
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology
@@ -968,7 +990,7 @@
                     mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4 )
 
 !=======================================================================
-  use precision
+  use MOD_Precision
   use MOD_Const_Physical, only : denice, denh2o, tfrz
   use MOD_SnowLayersCombineDivide
   use MOD_SoilSnowHydrology

@@ -1,7 +1,7 @@
 MODULE MOD_Qsadv
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -29,7 +29,7 @@ MODULE MOD_Qsadv
 !                   vapor pressure. Journal of Applied meteorology,31,1507-1513.
 !
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
 
 ! dummy arguments

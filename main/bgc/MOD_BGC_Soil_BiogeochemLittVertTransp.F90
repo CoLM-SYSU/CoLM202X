@@ -23,7 +23,7 @@ module MOD_BGC_Soil_BiogeochemLittVertTransp
   ! Xingjie Lu, 2021, 1) Revised the CLM5 code to be compatible with CoLM code sturcture.
   !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeInvars, only: &
       is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
   use MOD_BGC_Vars_TimeVars, only: &
@@ -34,7 +34,7 @@ module MOD_BGC_Soil_BiogeochemLittVertTransp
   use MOD_BGC_Vars_1DFluxes, only: &
       decomp_cpools_sourcesink, decomp_npools_sourcesink, &
       decomp_cpools_transport_tendency, decomp_npools_transport_tendency
-  USE mod_utils, only: tridia
+  USE MOD_Utils, only: tridia
 
   implicit none
 
