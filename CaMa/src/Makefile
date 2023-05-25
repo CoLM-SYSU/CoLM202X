@@ -11,11 +11,11 @@
 #  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 # See the License for the specific language governing permissions and limitations under the License.
 #==========================================================
-include  ../../include/Mkinclude
+include  ../../include/Makeoptions
 
 #=============================
 #*** module
-OBJECTS=\
+OBJECTS_CAMA=\
 parkind1.o \
 yos_cmf_input.o   \
 yos_cmf_time.o    \
@@ -51,15 +51,15 @@ cmf_drv_advance_mod.o
 #*** suffix rule
 .SUFFIXES : .o .F90
 .F90.o:
-	$(FCMP) ${FFLAGS} -c ${INC} $(MODS) ${CFLAGS} -c $<
-src: $(OBJECTS)
-	ar -rv libcama.a $(OBJECTS)
+	$(FCMP) ${FFLAGS} -c ${NETCDF_INC} $(MODS) ${CFLAGS} -c $<
+src: $(OBJECTS_CAMA)
+	ar -rv libcama.a $(OBJECTS_CAMA)
 
 #=============================
 #*** for main program
 TARGET = MAIN_cmf
-$(TARGET): $(OBJECTS) src $(TARGET).o
-	$(FCMP) $(FFLAGS) $(LFLAGS) $@.o $(OBJECTS) -o $@ $(LIB)
+$(TARGET): $(OBJECTS_CAMA) src $(TARGET).o
+	$(FCMP) $(FFLAGS) $(LFLAGS) $@.o $(OBJECTS_CAMA) -o $@ $(NETCDF_LIB)
 
 # bug in MacOSX libcama.a does not work
 #	$(FCMP) $(FFLAGS) $(LFLAGS) $@.o libcama.a -o $@ $(LIB)
