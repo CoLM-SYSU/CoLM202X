@@ -128,7 +128,7 @@ contains
       !----------------
       ! 2021.12.12  Zhongwang Wei @ SYSU
 
-      USE spmd_task
+      USE MOD_SPMD_Task !spmd_task
       USE MOD_LandPatch, ONLY : numpatch
       USE MOD_Vars_Global
 
@@ -246,7 +246,7 @@ contains
       !----------------
       ! 2020.10.21  Zhongwang Wei @ SYSU
 
-      USE precision
+      USE MOD_Precision
       USE MOD_Vars_Global, ONLY: spval
 
       IMPLICIT NONE
