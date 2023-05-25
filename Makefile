@@ -177,48 +177,38 @@ CaMa = $(word 1, ${DEF})
 ifeq (${CaMa},\#define)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
 
 OBJECTS_CAMA=\
-	parkind1.o \
-	yos_cmf_input.o   \
-	yos_cmf_time.o    \
-	yos_cmf_map.o     \
-	yos_cmf_prog.o    \
-	yos_cmf_diag.o    \
-	cmf_utils_mod.o   \
-	\
-	cmf_calc_outflw_mod.o   \
-	cmf_calc_pthout_mod.o   \
-	cmf_calc_fldstg_mod.o   \
-	cmf_calc_stonxt_mod.o   \
-	cmf_calc_diag_mod.o     \
-	cmf_opt_outflw_mod.o    \
-	\
-	cmf_ctrl_mpi_mod.o \
-	cmf_ctrl_damout_mod.o \
-	cmf_ctrl_levee_mod.o  \
-	cmf_ctrl_forcing_mod.o  \
-	cmf_ctrl_boundary_mod.o \
-	cmf_ctrl_output_mod.o   \
-	cmf_ctrl_restart_mod.o  \
-	cmf_ctrl_physics_mod.o  \
-	cmf_ctrl_time_mod.o     \
-	cmf_ctrl_maps_mod.o     \
-	cmf_ctrl_vars_mod.o     \
-	cmf_ctrl_nmlist_mod.o   \
-\
-	cmf_drv_control_mod.o   \
-	cmf_drv_advance_mod.o 
-	
+					  parkind1.o              \
+					  yos_cmf_input.o         \
+					  yos_cmf_time.o          \
+					  yos_cmf_map.o           \
+					  yos_cmf_prog.o          \
+					  yos_cmf_diag.o          \
+					  cmf_utils_mod.o         \
+					  cmf_calc_outflw_mod.o   \
+					  cmf_calc_pthout_mod.o   \
+					  cmf_calc_fldstg_mod.o   \
+					  cmf_calc_stonxt_mod.o   \
+					  cmf_calc_diag_mod.o     \
+					  cmf_opt_outflw_mod.o    \
+					  cmf_ctrl_mpi_mod.o      \
+					  cmf_ctrl_damout_mod.o   \
+					  cmf_ctrl_levee_mod.o    \
+					  cmf_ctrl_forcing_mod.o  \
+					  cmf_ctrl_boundary_mod.o \
+					  cmf_ctrl_output_mod.o   \
+					  cmf_ctrl_restart_mod.o  \
+					  cmf_ctrl_physics_mod.o  \
+					  cmf_ctrl_time_mod.o     \
+					  cmf_ctrl_maps_mod.o     \
+					  cmf_ctrl_vars_mod.o     \
+					  cmf_ctrl_nmlist_mod.o   \
+					  cmf_drv_control_mod.o   \
+					  cmf_drv_advance_mod.o 
 
 $(OBJECTS_CAMA) : %.o : %.F90 ${HEADER} 
 	$(FCMP)  -c ${FFLAGS} $(MODS) ${CFLAGS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
 
 OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
-
-else
-
-OBJECTS_CAMA=\
-
-OBJS_CAMA_T=
 
 endif
 
@@ -314,21 +304,36 @@ OBJS_MAIN = \
 				CoLMMAIN.o                                \
 				CoLM.o
 
-$(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJECTS_CAMA} 
+$(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} 
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
 
 OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
 
 # ------ Target 3: main --------
 
+ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
+
 colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_CAMA_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
 	@echo ''
+
+else
+colm.x : mkdir_build  ${HEADER} ${OBJS_SHARED} ${OBJECTS_CAMA} ${OBJS_BASIC} ${OBJS_MAIN}
+	@echo ''
+	@echo 'making CoLM with CaMa start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	@echo ''
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_CAMA_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+
+	@echo ''
+	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM with CaMa completed!'
+	@echo ''
+
+endif
 
 # ----- End of Target 3 main -----
 
