@@ -172,6 +172,46 @@ mkinidata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDAT
 	@echo ''
 # ----- End of Target 2 mkinidata ----
 
+DEF  = $(shell grep -i cama_flood include/define.h)
+CaMa = $(word 1, ${DEF})
+ifeq (${CaMa},\#define)# Compile CoLM decoupled with river routing scheme (CaMa-Flood)
+
+OBJECTS_CAMA=\
+					  parkind1.o              \
+					  yos_cmf_input.o         \
+					  yos_cmf_time.o          \
+					  yos_cmf_map.o           \
+					  yos_cmf_prog.o          \
+					  yos_cmf_diag.o          \
+					  cmf_utils_mod.o         \
+					  cmf_calc_outflw_mod.o   \
+					  cmf_calc_pthout_mod.o   \
+					  cmf_calc_fldstg_mod.o   \
+					  cmf_calc_stonxt_mod.o   \
+					  cmf_calc_diag_mod.o     \
+					  cmf_opt_outflw_mod.o    \
+					  cmf_ctrl_mpi_mod.o      \
+					  cmf_ctrl_damout_mod.o   \
+					  cmf_ctrl_levee_mod.o    \
+					  cmf_ctrl_forcing_mod.o  \
+					  cmf_ctrl_boundary_mod.o \
+					  cmf_ctrl_output_mod.o   \
+					  cmf_ctrl_restart_mod.o  \
+					  cmf_ctrl_physics_mod.o  \
+					  cmf_ctrl_time_mod.o     \
+					  cmf_ctrl_maps_mod.o     \
+					  cmf_ctrl_vars_mod.o     \
+					  cmf_ctrl_nmlist_mod.o   \
+					  cmf_drv_control_mod.o   \
+					  cmf_drv_advance_mod.o 
+
+$(OBJECTS_CAMA) : %.o : %.F90 ${HEADER} 
+	$(FCMP)  -c ${FFLAGS} $(MODS) ${CFLAGS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
+
+OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
+
+endif
+
 OBJS_MAIN = \
 				MOD_Hydro_DrainageNetwork.o   \
 				MOD_Hydro_RiverNetwork.o      \
@@ -270,8 +310,7 @@ $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}
 OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
 
 # ------ Target 3: main --------
-DEF  = $(shell grep -i cama_flood include/define.h)
-CaMa = $(word 1, ${DEF})
+
 ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
 
 colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
@@ -284,22 +323,18 @@ colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 
 else
-CaMa_DIR = CaMa# The global river model CaMa-Flood (version 4.0.1)
-CaMa_MODS = -I$(CaMa_DIR)/src# CaMa Flood Model modules directories
-CaMa_LIBS = $(CaMa_DIR)/src/libcama.a# CaMa Flood Model libs (static) directories
-
-colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN} mk_CaMa
+colm.x : mkdir_build  ${HEADER} ${OBJS_SHARED} ${OBJECTS_CAMA} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM with CaMa start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${BASIC_MAIN_T} ${CaMa_LIBS} -o run/colm.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_CAMA_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM with CaMa completed!'
 	@echo ''
 
-mk_CaMa :
-	cd ../CaMa/src && make
 endif
+
 # ----- End of Target 3 main -----
 
 OBJS_POST1 = MOD_Concatenate.o HistConcatenate.o
@@ -351,3 +386,4 @@ clean :
 	rm -rf .bld
 	rm -f run/mksrfdata.x run/mkinidata.x run/colm.x
 	rm -f run/hist_concatenate.x run/srfdata_concatenate.x run/post_vector2grid.x
+	rm -f CaMa/src/*.o CaMa/src/*.mod CaMa/src/*.a
