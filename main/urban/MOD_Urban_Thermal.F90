@@ -1339,12 +1339,11 @@ CONTAINS
                        troof_inner, twsun_inner, twsha_inner, &
                        Fhac, Fwst, Fach, Fhah )
 
-#ifdef USE_LUCY
       ! Anthropogenic heat flux for the rest (vehicle heat flux and metabolic heat flux)
       CALL LUCY(idate       , deltim  , patchlonr, fix_holiday, &
                 week_holiday, hum_prof, wdh_prof , weh_prof   ,popcell, &
                 vehicle     , Fahe    , vehc     , meta)
-#endif
+
       deallocate ( fcover )
 
  END SUBROUTINE UrbanTHERMAL

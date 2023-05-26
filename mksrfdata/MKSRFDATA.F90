@@ -218,16 +218,6 @@ PROGRAM MKSRFDATA
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
    ! CALL grid_urban_100m%define_by_name ('colm_100m')
-
-   CALL pixel%assimilate_grid (gurban         )
-   CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_5km )
-   ! CALL pixel%assimilate_grid (grid_urban_100m)
-
-   CALL pixel%map_to_grid (gurban         )
-   CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_5km )
-   ! CALL pixel%map_to_grid (grid_urban_100m)
 #endif
 
    ! assimilate grids to build pixels
@@ -242,6 +232,13 @@ PROGRAM MKSRFDATA
 #endif
    CALL pixel%assimilate_grid (gpatch)
    CALL pixel%assimilate_grid (gridlai)
+#ifdef URBAN_MODEL
+   CALL pixel%assimilate_grid (gurban         )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+   ! CALL pixel%assimilate_grid (grid_urban_100m)
+#endif
+
 #ifdef BGC
 #if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
@@ -268,6 +265,12 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+#ifdef URBAN_MODEL
+   CALL pixel%map_to_grid (gurban         )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+   ! CALL pixel%map_to_grid (grid_urban_100m)
+#endif
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif

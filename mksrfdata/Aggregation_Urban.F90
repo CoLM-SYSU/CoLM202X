@@ -259,6 +259,9 @@ SUBROUTINE Aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
+         where (pop_one < 0)
+            area_one = 0
+         END where
          ! area-weighted average
          pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
@@ -394,6 +397,9 @@ SUBROUTINE Aggregation_urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
+         where (gl30_wt_one < 0)
+            area_one = 0
+         END where
          ! only caculate when urban patch have water cover
          IF (sum(area_one) > 0) THEN
             pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
