@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_Thermal
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
   PRIVATE
@@ -74,6 +74,9 @@ CONTAINS
         ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
         twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
+#ifdef SNICAR
+        snofrz         ,sabg_lyr                                       ,&
+#endif
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
         lfevpa         ,fsenl          ,fevpl          ,etr            ,&
@@ -91,7 +94,8 @@ CONTAINS
         qref           ,trad           ,rst            ,assim          ,&
         respc          ,errore         ,emis           ,z0m            ,&
         zol            ,rib            ,ustar          ,qstar          ,&
-        tstar          ,fm             ,fh             ,fq              )
+        tstar          ,fm             ,fh             ,fq             ,&
+        hpbl                                                            )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -99,9 +103,9 @@ CONTAINS
 !
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
+  USE MOD_Const_Physical, only: denh2o,roverg,hvap,hsub,rgas,cpair,&
                                stefnc,denice,tfrz,vonkar,grav
   USE MOD_Urban_Shortwave
   USE MOD_Urban_Longwave
@@ -276,6 +280,8 @@ CONTAINS
         sigf       ,&! fraction of veg cover, excluding snow-covered veg [-]
         extkd        ! diffuse and scattered diffuse PAR extinction coefficient
 
+  real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
+
   REAL(r8), intent(inout) :: &
         fwsun      ,&! fraction of sunlit wall [-]
         lwsun      ,&! net longwave radiation of sunlit wall
@@ -406,6 +412,11 @@ CONTAINS
         fm         ,&! integral of profile function for momentum
         fh         ,&! integral of profile function for heat
         fq           ! integral of profile function for moisture
+
+#ifdef SNICAR
+  REAL(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
+  REAL(r8), intent(out) :: snofrz (lbp:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+#endif
 
 !---------------------Local Variables-----------------------------------
 
@@ -980,6 +991,7 @@ CONTAINS
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     ,BA_beta, &
 #endif
+                   hpbl, &
 
            ! "inout" laketem arguments
            ! ---------------------------

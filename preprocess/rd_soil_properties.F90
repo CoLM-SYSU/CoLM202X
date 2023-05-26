@@ -37,7 +37,7 @@ SUBROUTINE rd_soil_properties(dir_rawdata)
 !           06/2018: update a new version of soil hydraulic and thermal parameters
 ! Nan Wei,  12/2022: output more parameters for BGC parts
 ! ----------------------------------------------------------------------
-use precision
+use MOD_Precision
 IMPLICIT NONE
 
 ! arguments:

@@ -3,7 +3,7 @@
 MODULE MOD_ThreeDCanopy
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -42,10 +42,10 @@ MODULE MOD_ThreeDCanopy
 ! REVISIONS:
 !
 
-   USE precision
+   USE MOD_Precision
+   USE MOD_LandPC
    USE MOD_Vars_GlobalVars
-   USE MOD_Vars_PFTConst
-   USE mod_landpc
+   USE MOD_Const_PFT
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
 

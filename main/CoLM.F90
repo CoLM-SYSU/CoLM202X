@@ -14,13 +14,13 @@ PROGRAM CoLM
    !     Revised by Yongjiu Dai and Hua Yuan, April 2014
    ! ======================================================================
 
-   use precision
-   use spmd_task
-   use mod_namelist
+   use MOD_Precision
+   use MOD_SPMD_Task
+   use MOD_Namelist
    USE MOD_Vars_Global
-   USE MOD_Vars_LCConst
-   USE MOD_Vars_PFTConst
-   use MOD_Vars_PhysicalConst
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
    use MOD_Vars_1DForcing
@@ -29,42 +29,42 @@ PROGRAM CoLM
    use MOD_Vars_2DFluxes
    use MOD_Forcing
    use MOD_Hist
-   use timemanager
-   use mod_colm_debug
+   use MOD_TimeManager
+   use MOD_CoLMDebug
 
-   use mod_block
-   use mod_pixel
-   USE mod_mesh
-   use mod_landelm
+   use MOD_Block
+   use MOD_Pixel
+   USE MOD_Mesh
+   use MOD_LandElm
 #ifdef CATCHMENT
-   USE mod_landhru
+   USE MOD_LandHRU
 #endif
-   use mod_landpatch
+   use MOD_LandPatch
 #ifdef URBAN_MODEL
-   USE mod_landurban
+   USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
 #ifdef PFT_CLASSIFICATION
-   USE mod_landpft
+   USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION
-   USE mod_landpc
+   USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
-   USE mod_elm_vector
+   USE MOD_ElmVector
 #endif
 #ifdef CATCHMENT
-   USE mod_hru_vector
+   USE MOD_HRUVector
 #endif
 #if(defined CaMa_Flood)
    use MOD_CaMa_colmCaMa ! whether cama-flood is used
 #endif
 #ifdef SinglePoint
-   USE mod_single_srfdata
+   USE MOD_SingleSrfdata
 #endif
 
 #if (defined LATERAL_FLOW)
-   USE mod_lateral_flow
+   USE MOD_Hydro_LateralFlow
 #endif
 
 #ifdef Fire
@@ -75,7 +75,7 @@ PROGRAM CoLM
 #ifdef OzoneData
    USE MOD_OzoneData, only: init_ozone_data, update_ozone_data
 #endif
-   use mod_srfdata_restart
+   use MOD_SrfdataRestart
    USE MOD_LAIReadin
    USE MOD_NitrifReadin
 

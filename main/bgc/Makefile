@@ -35,14 +35,13 @@ OBJS_SHARED = \
 
 OBJS_MKSRFDATA = \
 				  ../../mksrfdata/mod_modis_data.o \
-				  ../../mksrfdata/mod_pixelsetshadow.o \
+				  ../../mksrfdata/MOD_PixelsetShadow.o \
 				  ../../mksrfdata/mod_landcell.o \
-				  ../../mksrfdata/mod_landpatch.o \
-				  ../../mksrfdata/mod_aggregation_PFT.o \
-				  ../../mksrfdata/mod_landpft.o
+				  ../../mksrfdata/MOD_LandPatch.o \
+				  ../../mksrfdata/MOD_LandPFT.o
 
 OBJS_MAIN =  \
-		  ../MOD_Vars_PFTConst.o \
+		  ../MOD_Const_PFT.o \
 		  ../MOD_Vars_PFTimeVars.o \
 		  ../MOD_Vars_PFTimeInvars.o \
 		  ../MOD_Vars_PCTimeVars.o \

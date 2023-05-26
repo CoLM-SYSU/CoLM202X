@@ -21,7 +21,7 @@ module MOD_BGC_Soil_BiogeochemDecompCascadeBGC
   ! !REVISION:
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
-  use precision
+  use MOD_Precision
   use MOD_Vars_TimeInvariants, only: &
       Q10, smpmax, smpmin, tau_l1, tau_l2_l3, tau_s1, tau_s2, tau_s3, tau_cwd, froz_q10, &
       i_met_lit,i_cel_lit,i_lig_lit ,i_cwd,i_soil1,i_soil2,i_soil3

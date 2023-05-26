@@ -2,7 +2,7 @@
 MODULE MOD_PlantHydraulic
 
 !-----------------------------------------------------------------------
-  use precision
+  use MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -42,7 +42,7 @@ MODULE MOD_PlantHydraulic
 !
 !----------------------------------------------------------------------
 
- use precision
+ use MOD_Precision
  IMPLICIT NONE
 
  integer ,intent(in) :: nl_soil ! upper bound of array
@@ -236,7 +236,7 @@ end do
 !
 !----------------------------------------------------------------------
 
- use precision
+ use MOD_Precision
  IMPLICIT NONE
 
  integer ,intent(in) :: nl_soil ! upper bound of array
@@ -968,7 +968,7 @@ end do
     !
     ! !USES:
     ! calls getqflx
-  use MOD_Vars_PhysicalConst, only : tfrz
+  use MOD_Const_Physical, only : tfrz
     implicit none
     !
     ! !ARGUMENTS:
@@ -1061,7 +1061,7 @@ end do
     !
     ! !USES:
     ! calls getqflx
-  use MOD_Vars_PhysicalConst, only : tfrz
+  use MOD_Const_Physical, only : tfrz
     implicit none
     !
     ! !ARGUMENTS:
@@ -1510,7 +1510,7 @@ end do
 
   subroutine getrootqflx_x2qe(nl_soil,smp,x_root_top,z_soisno,krad,kax,qeroot,dqeroot)
 
-  USE mod_utils
+  USE MOD_Utils
   ! DESCRIPTION
   ! Return root water potential at top soil node. Return soil-root water flux.
   !
@@ -1603,7 +1603,7 @@ end do
 
   subroutine getrootqflx_qe2x(nl_soil,smp,z_soisno,krad,kax,qeroot,xroot,x_root_top)
 
-  USE mod_utils
+  USE MOD_Utils
   ! DESCRIPTION
   ! Return root water potential at top soil node. Return soil-root water flux.
   !

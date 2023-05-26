@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_WallTem
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -35,10 +35,10 @@ CONTAINS
 ! Original author : Yongjiu Dai, 05/2020
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
-  USE mod_utils, only: tridia
+  USE MOD_Const_Physical
+  USE MOD_Utils, only: tridia
 
   IMPLICIT NONE
 

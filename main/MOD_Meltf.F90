@@ -3,7 +3,7 @@
 MODULE MOD_Meltf
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -50,9 +50,9 @@ MODULE MOD_Meltf
 ! Nan Wei, 04/2023: supercooled soil water is included IF supercool is defined.
 !-----------------------------------------------------------------------
 
-   use precision
-   USE mod_soil_function
-   use MOD_Vars_PhysicalConst, only : tfrz, hfus,grav
+   use MOD_Precision
+   USE MOD_Hydro_SoilFunction
+   use MOD_Const_Physical, only : tfrz, hfus,grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -319,9 +319,9 @@ MODULE MOD_Meltf
 ! Nan Wei , 04/2023: supercooled soil water is included IF supercool is defined.
 !-----------------------------------------------------------------------
 
-   use precision
-   USE mod_soil_function
-   use MOD_Vars_PhysicalConst, only : tfrz, hfus, grav
+   use MOD_Precision
+   USE MOD_Hydro_SoilFunction
+   use MOD_Const_Physical, only : tfrz, hfus, grav
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -583,8 +583,8 @@ MODULE MOD_Meltf
 !
 !-----------------------------------------------------------------------
 
-     use precision
-     use MOD_Vars_PhysicalConst, only : tfrz, hfus
+     use MOD_Precision
+     use MOD_Const_Physical, only : tfrz, hfus
      IMPLICIT NONE
 
 !-----------------------------------------------------------------------

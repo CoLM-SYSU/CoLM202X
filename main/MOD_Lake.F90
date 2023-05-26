@@ -18,7 +18,7 @@ MODULE MOD_Lake
 ! Hua Yuan, 01/2023: added snow layer absorption in melting calculation
 !-----------------------------------------------------------------------
 
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -64,8 +64,8 @@ MODULE MOD_Lake
 ! Nan Wei,  01/2018: update interaction btw prec and lake surface
 !-----------------------------------------------------------------------
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : tfrz, denh2o, cpliq, cpice, hfus
+  use MOD_Precision
+  use MOD_Const_Physical, only : tfrz, denh2o, cpliq, cpice, hfus
   implicit none
 ! ------------------------ Dummy Argument ------------------------------
   integer, INTENT(in) :: maxsnl    ! maximum number of snow layers
@@ -274,6 +274,7 @@ MODULE MOD_Lake
 #ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     , BA_beta     , &
 #endif
+		   hpbl, &
 
            ! "inout" arguments
            ! -------------------
@@ -345,15 +346,20 @@ MODULE MOD_Lake
 ! REVISIONS:
 ! Yongjiu Dai and Hua Yuan, 01/2023: added SNICAR for layer solar absorption, ground heat
 !                                    flux, temperature and freezing mass calculations
+! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
+!                        surface turbulence scheme (LZD2022);
+!                        make a proper update of um.
 !
 ! -----------------------------------------------------------------
-  use precision
-  use MOD_Vars_PhysicalConst, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
+  use MOD_Precision
+  use MOD_Const_Physical, only : tfrz,hvap,hfus,hsub,tkwat,tkice,tkair,stefnc,&
                                   vonkar,grav,cpliq,cpice,cpair,denh2o,denice,rgas
   use MOD_FrictionVelocity
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_SoilHcapCond
-  USE mod_utils
+  USE MOD_Utils
 
   IMPLICIT NONE
 ! ------------------------ input/output variables -----------------
@@ -404,6 +410,7 @@ MODULE MOD_Lake
   real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
   real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
 #endif
+  real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
 
   real(r8), INTENT(inout) :: t_grnd  ! surface temperature (kelvin)
   real(r8), INTENT(inout) :: scv     ! snow water equivalent [mm]
@@ -787,8 +794,13 @@ MODULE MOD_Lake
 
 ! Evaluated stability-dependent variables using moz from prior iteration
          displax = 0.
-         call moninobuk(forc_hgt_u,forc_hgt_t,forc_hgt_q,displax,z0mg,z0hg,z0qg,obu,um,&
+         if (DEF_USE_CBL_HEIGHT) then	
+            call moninobuk_leddy(forc_hgt_u,forc_hgt_t,forc_hgt_q,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+         else
+            call moninobuk(forc_hgt_u,forc_hgt_t,forc_hgt_q,displax,z0mg,z0hg,z0qg,obu,um,&
+                        ustar,fh2m,fq2m,fm10m,fm,fh,fq)
+         endif
 
 ! Get derivative of fluxes with repect to ground temperature
          ram    = 1./(ustar*ustar/um)
@@ -837,6 +849,9 @@ MODULE MOD_Lake
          if(zeta >= 0.)then
            um = max(ur,0.1)
          else
+           if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+             zii = max(5.*forc_hgt_u,hpbl)
+           endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta1*beta1*(wc*wc)
            um = sqrt(ur*ur+wc2)
@@ -1534,8 +1549,8 @@ MODULE MOD_Lake
 ! SnowLayersCombine_snicar, SnowLayersDivide_snicar()
 !-----------------------------------------------------------------------------------------------
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : denh2o, denice, hfus, tfrz, cpliq, cpice
+  use MOD_Precision
+  use MOD_Const_Physical, only : denh2o, denice, hfus, tfrz, cpliq, cpice
   use MOD_SoilSnowHydrology
   use MOD_SnowLayersCombineDivide
 
@@ -1799,8 +1814,8 @@ MODULE MOD_Lake
 ! Yongjiu Dai, Nan Wei, 01/2018
 !-----------------------------------------------------------------------
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : tfrz,vonkar,grav
+  use MOD_Precision
+  use MOD_Const_Physical, only : tfrz,vonkar,grav
 
   IMPLICIT NONE
 
@@ -1856,8 +1871,8 @@ MODULE MOD_Lake
 ! Diffusivity and implied thermal "conductivity" = diffusivity * cwat
 ! -------------------------------------------------------------------------
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : tfrz,tkwat,tkice,tkair,&
+  use MOD_Precision
+  use MOD_Const_Physical, only : tfrz,tkwat,tkice,tkair,&
                                 vonkar,grav,cpliq,cpice,cpair,denh2o,denice
 
   IMPLICIT NONE

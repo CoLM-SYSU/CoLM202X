@@ -7,7 +7,7 @@ MODULE MOD_Vars_1DForcing
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-USE precision
+USE MOD_Precision
 IMPLICIT NONE
 SAVE
 
@@ -52,6 +52,8 @@ SAVE
   REAL(r8), allocatable :: forc_hgt_elm   (:) ! atmospheric reference height [m]
 #endif
 
+  REAL(r8), allocatable :: forc_hpbl  (:) ! atmospheric boundary layer height [m]
+
   ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Forcing
   PUBLIC :: deallocate_1D_Forcing
@@ -66,9 +68,9 @@ SAVE
 ! ------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------
-  USE spmd_task
-  USE mod_mesh
-  USE mod_landpatch
+  USE MOD_SPMD_Task
+  USE MOD_Mesh
+  USE MOD_LandPatch
   IMPLICIT NONE
 
   IF (p_is_worker) THEN
@@ -102,6 +104,8 @@ SAVE
         allocate (forc_th     (numpatch) ) ! potential temperature [K]
 #endif
 
+        allocate (forc_hpbl   (numpatch) ) ! atmospheric boundary layer height [m]
+
      ENDIF
 
 #ifdef Forcing_Downscaling
@@ -125,9 +129,9 @@ SAVE
 
   SUBROUTINE deallocate_1D_Forcing ()
 
-     USE spmd_task
-     USE mod_mesh
-     USE mod_landpatch
+     USE MOD_SPMD_Task
+     USE MOD_Mesh
+     USE MOD_LandPatch
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -161,6 +165,7 @@ SAVE
            deallocate ( forc_th     ) ! potential temperature [K]
 #endif
 
+           deallocate ( forc_hpbl   ) ! atmospheric boundary layer height [m]
         ENDIF
 
 #ifdef Forcing_Downscaling

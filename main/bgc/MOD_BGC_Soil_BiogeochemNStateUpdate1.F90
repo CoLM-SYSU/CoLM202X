@@ -18,7 +18,7 @@ module MOD_BGC_Soil_BiogeochemNStateUpdate1
   ! Xingjie Lu, 2022, 1) modify original CLM5 to be compatible with CoLM code structure. 
   !                   2) Record accumulated nitrogen transfer network for semi-analytic spinup
 
-  use precision
+  use MOD_Precision
   use MOD_BGC_Vars_TimeInvars, only: &
     ! bgc constants
       i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
@@ -43,7 +43,7 @@ module MOD_BGC_Soil_BiogeochemNStateUpdate1
              sminn_to_plant_fun_vr   , sminn_to_plant_fun_nh4_vr, sminn_to_plant_fun_no3_vr, &
              sminn_to_denit_excess_vr, f_nit_vr                 , f_denit_vr               , soyfixn_to_sminn, &
              ndep_to_sminn           , ffix_to_sminn            , nfix_to_sminn            , fert_to_sminn
-  use spmd_task
+  use MOD_SPMD_Task
 
   implicit none
 

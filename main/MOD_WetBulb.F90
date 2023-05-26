@@ -1,7 +1,7 @@
 MODULE MOD_WetBulb
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -24,8 +24,8 @@ MODULE MOD_WetBulb
 ! Yongjiu Dai, 07/2013
 !=======================================================================
 
-      use precision
-      use MOD_Vars_PhysicalConst, only : tfrz, hvap, cpair
+      use MOD_Precision
+      use MOD_Const_Physical, only : tfrz, hvap, cpair
       USE MOD_Qsadv
 
       implicit none

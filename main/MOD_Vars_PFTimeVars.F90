@@ -10,8 +10,8 @@ MODULE MOD_Vars_PFTimeVars
 ! Created by Hua Yuan, 08/2019
 ! -----------------------------------------------------------------
 
-  USE precision
-  USE timemanager
+  USE MOD_Precision
+  USE MOD_TimeManager
 #ifdef BGC
   USE MOD_BGC_Vars_PFTimeVars
 #endif
@@ -78,9 +78,9 @@ CONTAINS
 ! ------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpft] variables
 ! ------------------------------------------------------
-      USE precision
-      USE spmd_task
-      USE mod_landpft
+      USE MOD_Precision
+      USE MOD_SPMD_Task
+      USE MOD_LandPFT
       USE MOD_Vars_Global
       IMPLICIT NONE
 
@@ -131,8 +131,8 @@ CONTAINS
 
    SUBROUTINE READ_PFTimeVars (file_restart)
 
-      use ncio_vector
-      USE mod_landpft
+      use MOD_NetCDFVector
+      USE MOD_LandPFT
       USE MOD_Vars_Global
 
       IMPLICIT NONE
@@ -178,9 +178,9 @@ CONTAINS
 
    SUBROUTINE WRITE_PFTimeVars (file_restart)
 
-     use mod_namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE mod_landpft
-     use ncio_vector
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     USE MOD_LandPFT
+     use MOD_NetCDFVector
      USE MOD_Vars_Global
      IMPLICIT NONE
 
@@ -241,8 +241,8 @@ CONTAINS
 ! --------------------------------------------------
 ! Deallocates memory for CoLM 1d [numpft/numpc] variables
 ! --------------------------------------------------
-      USE spmd_task
-      USE mod_landpft
+      USE MOD_SPMD_Task
+      USE MOD_LandPFT
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN
@@ -290,7 +290,7 @@ CONTAINS
 #ifdef CoLMDEBUG
    SUBROUTINE check_PFTimeVars
 
-      use mod_colm_debug
+      use MOD_CoLMDebug
       IMPLICIT NONE
 
       call check_vector_data ('tleaf_p  ', tleaf_p  )      !

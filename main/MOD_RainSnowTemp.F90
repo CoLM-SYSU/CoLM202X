@@ -3,7 +3,7 @@
 MODULE MOD_RainSnowTemp
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -27,8 +27,8 @@ MODULE MOD_RainSnowTemp
 ! Original author : Yongjiu Dai, 09/1999; 08/31/2002, 04/2014, 01/2023
 !=======================================================================
 !
-   use precision
-   use MOD_Vars_PhysicalConst, only : tfrz
+   use MOD_Precision
+   use MOD_Const_Physical, only : tfrz
    USE MOD_WetBulb
 
    IMPLICIT NONE

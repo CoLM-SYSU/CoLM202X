@@ -3,7 +3,7 @@
 MODULE MOD_GroundTem
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -65,11 +65,11 @@ MODULE MOD_GroundTem
 !                    calculation for SNICAR model
 !=======================================================================
 
-   use precision
-   use MOD_Vars_PhysicalConst, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
+   use MOD_Precision
+   use MOD_Const_Physical, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
    USE MOD_Meltf
    USE MOD_SoilHcapCond
-   USE mod_utils
+   USE MOD_Utils
 
    implicit none
 

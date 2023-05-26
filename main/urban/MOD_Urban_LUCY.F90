@@ -10,10 +10,10 @@ MODULE MOD_Urban_LUCY
   !
   ! -----------------------------------------------------------------------
   ! !USE
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
-  USE timemanager, only: julian2monthday, isleapyear
+  USE MOD_Const_Physical
+  USE MOD_TimeManager, only: julian2monthday, isleapyear
   IMPLICIT NONE
   SAVE
   PRIVATE :: timeweek, gmt2local

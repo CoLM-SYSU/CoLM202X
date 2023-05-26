@@ -3,7 +3,7 @@
 MODULE MOD_SoilHcapCond
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -41,8 +41,8 @@ MODULE MOD_SoilHcapCond
 ! Nan Wei, 06/2018: add to CoLM/main
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
-   use precision
-   USE MOD_Vars_PhysicalConst,only:tfrz
+   use MOD_Precision
+   USE MOD_Const_Physical,only:tfrz
 
    IMPLICIT NONE
       real(r8), intent(in) :: vf_gravels_s ! volumetric fraction of gravels within the soil solids

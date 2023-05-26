@@ -3,7 +3,7 @@
 MODULE MOD_SimpleOcean
 
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -35,8 +35,8 @@ MODULE MOD_SimpleOcean
 ! Original authors : yongjiu dai and xin-zhong liang (08/30/2001)
 !-----------------------------------------------------------------------
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : tfrz, hvap, hsub, stefnc, vonkar
+  use MOD_Precision
+  use MOD_Const_Physical, only : tfrz, hvap, hsub, stefnc, vonkar
   implicit none
 
 !------------------------------Arguments--------------------------------
@@ -193,8 +193,8 @@ MODULE MOD_SimpleOcean
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002
 !=======================================================================
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : cpair,rgas,vonkar,grav
+  use MOD_Precision
+  use MOD_Const_Physical, only : cpair,rgas,vonkar,grav
   use MOD_FrictionVelocity
   USE MOD_Qsadv
   implicit none
@@ -435,9 +435,9 @@ MODULE MOD_SimpleOcean
 !
 !-----------------------------------------------------------------------
 
-   use precision
-   use MOD_Vars_PhysicalConst, only: tkice, tkair
-   USE mod_utils
+   use MOD_Precision
+   use MOD_Const_Physical, only: tkice, tkair
+   USE MOD_Utils
    implicit none
 
 !------------------------------Arguments--------------------------------

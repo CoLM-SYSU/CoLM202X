@@ -2,7 +2,7 @@
 
 MODULE MOD_Urban_ImperviousTem
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -39,12 +39,12 @@ CONTAINS
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002; 05/2020
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   USE MOD_Vars_Global
-  USE MOD_Vars_PhysicalConst
+  USE MOD_Const_Physical
   USE MOD_SoilThermalParameters
   USE MOD_Meltf, only: meltf_urban
-  USE mod_utils, only: tridia
+  USE MOD_Utils, only: tridia
 
   IMPLICIT NONE
 

@@ -1,7 +1,7 @@
 MODULE MOD_FrictionVelocity
 
 !-----------------------------------------------------------------------
- use precision
+ use MOD_Precision
  IMPLICIT NONE
  SAVE
 
@@ -34,8 +34,8 @@ MODULE MOD_FrictionVelocity
 ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
 ! ======================================================================
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : vonkar
+  use MOD_Precision
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -187,8 +187,8 @@ MODULE MOD_FrictionVelocity
 !                    fm, fq and phih for roughness sublayer u/k profile calculation
 ! ======================================================================
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : vonkar
+  use MOD_Precision
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -378,8 +378,8 @@ MODULE MOD_FrictionVelocity
 !
 ! Created by Hua Yuan, 09/2017
 !
-  use precision
-  use MOD_Vars_PhysicalConst, only : vonkar
+  use MOD_Precision
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -429,8 +429,8 @@ MODULE MOD_FrictionVelocity
 ! Created by Hua Yuan, 09/2017
 !
 
-  use precision
-  use MOD_Vars_PhysicalConst, only : vonkar
+  use MOD_Precision
+  use MOD_Const_Physical, only : vonkar
   implicit none
 
 ! ---------------------- dummy argument --------------------------------
@@ -495,8 +495,8 @@ MODULE MOD_FrictionVelocity
 ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate, Vol. 11: 2628-2644
 ! ======================================================================
 
-   use precision
-   use MOD_Vars_PhysicalConst, only : grav, vonkar
+   use MOD_Precision
+   use MOD_Const_Physical, only : grav, vonkar
    implicit none
 
 ! Dummy argument
@@ -548,7 +548,7 @@ MODULE MOD_FrictionVelocity
 !=======================================================================
 ! stability function for unstable case (rib < 0)
 
-  use precision
+  use MOD_Precision
   implicit none
 
   integer k

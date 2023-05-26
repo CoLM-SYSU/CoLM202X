@@ -3,7 +3,7 @@
 MODULE MOD_AssimStomataConductance
 
 !-----------------------------------------------------------------------
-  use precision
+  use MOD_Precision
   IMPLICIT NONE
   SAVE
 
@@ -70,7 +70,7 @@ MODULE MOD_AssimStomataConductance
 !
 !----------------------------------------------------------------------
 
- use precision
+ use MOD_Precision
  IMPLICIT NONE
 
  real(r8),intent(in) :: &
@@ -415,7 +415,7 @@ MODULE MOD_AssimStomataConductance
 !     original author: P. J. Sellers (SiB2)
 !-----------------------------------------------------------------------
 
-      use precision
+      use MOD_Precision
       IMPLICIT NONE
 
       integer, intent(in) :: ic,iterationtotal

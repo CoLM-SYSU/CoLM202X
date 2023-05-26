@@ -1,7 +1,7 @@
 program rawdata_to_nc
 
-   use precision
-   use ncio_serial
+   use MOD_Precision
+   use MOD_NetCDFSerial
    implicit none
 
    integer, parameter :: nlat = 21600
