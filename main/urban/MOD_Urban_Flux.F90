@@ -691,10 +691,10 @@ MODULE MOD_Urban_Flux
            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)))
            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                    (cah(2) + cgh(2) + cfh(1)*fc(1) + cfh(2)*fc(2)) / &
+                    (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2)) / &
                     fact
 
-           IF ((qaf(2)-qgper) < 0.) THEN
+           IF (qgper < qaf(2)) THEN
              ! dew case. no soil resistance
              cgw_per= cgw(2)
            ELSE
@@ -1836,10 +1836,10 @@ MODULE MOD_Urban_Flux
            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                    (cah(2) + cgh(2) + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
+                    (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
                     fact
 
-           IF ((qaf(2)-qgper) < 0.) THEN
+           IF (qgper < qaf(2)) THEN
              ! dew case. no soil resistance
              cgw_per= cgw(2)
            ELSE
@@ -1890,7 +1890,7 @@ MODULE MOD_Urban_Flux
            tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))
            tmpw3  = cah(1)*cah(1)/&
-                    (cah(1) + cfh(1)*fg + cfh(3)*fc(3))/&
+                    (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
            tmpw4  = cah(2)*cah(2)/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))/&
@@ -1907,7 +1907,7 @@ MODULE MOD_Urban_Flux
            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))
 
-           IF ((qaf(1)-qgper) < 0.) THEN
+           IF ( qgper < qaf(1)) THEN
              ! dew case. no soil resistance
              cgw_per= cgw(1)
            ELSE
@@ -2103,10 +2103,10 @@ MODULE MOD_Urban_Flux
            fact   = 1. - (cah(2)*cah(2)/(cah(3) + cah(2) + cfh(0)*fc(0))/&
                     (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)))
            taf(2) = (tmpw1 + tmpw2 + tmpw3) / &
-                    (cah(2) + cgh(2) + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
+                    (cah(2) + cgh(2)*fg + cfh(1)*fc(1) + cfh(2)*fc(2) + cfh(3)*fc(3)) / &
                     fact
 
-           IF ((qaf(2)-qgper) < 0.) THEN
+           IF (qgper < qaf(2)) THEN
              ! dew case. no soil resistance
              cgw_per= cgw(2)
            ELSE
@@ -2157,7 +2157,7 @@ MODULE MOD_Urban_Flux
            tmpw2  = cah(2)*(cah(3)*thm + cfh(0)*tu(0)*fc(0) + 1/(4*hlr+1)*(Fhac+Fwst)/(rhoair*cpair))/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))
            tmpw3  = cah(1)*cah(1)/&
-                    (cah(1) + cfh(1)*fg + cfh(3)*fc(3))/&
+                    (cah(1) + cgh(1)*fg + cfh(3)*fc(3))/&
                     (cah(1) + cah(2) + cfh(1)*fc(1) + cfh(2)*fc(2))
            tmpw4  = cah(2)*cah(2)/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))/&
@@ -2174,7 +2174,7 @@ MODULE MOD_Urban_Flux
            taf(3) = (cah(3)*thm + cah(2)*taf(2) + cfh(0)*tu(0)*fc(0) + tmpw1)/&
                     (cah(3) + cah(2) + cfh(0)*fc(0))
 
-           IF ((qaf(1)-qgper) < 0.) THEN
+           IF (qgper < qaf(1)) THEN
              ! dew case. no soil resistance
              cgw_per= cgw(1)
            ELSE

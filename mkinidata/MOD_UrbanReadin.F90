@@ -170,6 +170,7 @@ MODULE MOD_UrbanReadin
             i       = urban2patch (u)
             lucy_id = lucyid      (u)
 
+         IF (DEF_URBAN_LUCY) THEN
             IF (lucy_id > 0) THEN
                vehicle      (:,u) = lvehicle      (lucy_id,:)
                week_holiday (:,u) = lweek_holiday (lucy_id,:)
@@ -178,10 +179,22 @@ MODULE MOD_UrbanReadin
                hum_prof     (:,u) = lhum_prof     (lucy_id,:)
                fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
             ENDIF
+         ELSE
+            vehicle      (:,u) = 0.
+            week_holiday (:,u) = 0.
+            weh_prof     (:,u) = 0.
+            wdh_prof     (:,u) = 0.
+            hum_prof     (:,u) = 0.
+            fix_holiday  (:,u) = 0.
+         ENDIF
 
 #ifndef URBAN_LCZ
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
+         IF ( .not. DEF_URBAN_BEM) THEN
+            t_roommax(u) = 373.16
+            t_roommin(u) = 180.00
+         ENDIF
 #else
             ! read in LCZ constants
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
