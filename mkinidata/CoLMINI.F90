@@ -106,7 +106,7 @@ PROGRAM CoLMINI
    lc_year = idate(1)
 #else
    lc_year = DEF_LC_YEAR
-#ENDIF
+#endif
 
    CALL Init_GlovalVars
    CAll Init_LC_Const
