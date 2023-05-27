@@ -4,7 +4,7 @@ MODULE MathConstants
 ! mathematical constants
 !=======================================================================
 
-  USE precision
+  USE MOD_Precision
   IMPLICIT NONE
 
   !NOTE, yuan: can be moved to GlobalVars.F90

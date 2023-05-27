@@ -22,7 +22,7 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
 ! Nan Wei, 09/2022: add soil thermal conductivity of Hailong He (Yan & He et al., 2019)
 ! -----------------------------------------------------------------------------------------
 
-use precision
+use MOD_Precision
 
 IMPLICIT NONE
       real(r8), intent(in) :: BD_mineral_s ! bulk density of mineral soil (g/cm^3)
@@ -75,7 +75,7 @@ IMPLICIT NONE
 ! Daniel Hillel, 1998, Environmental soil physics, Table 12.1 (pp.315)
       csol_om_s = 2.51e6   ! Hillel (1982)
 
-! [1] Weighted with mass fractions (CLM all versions)
+! [1] Weighted with mass fractions (CoLM all versions)
 ! Campbell and Norman (1998, page118, Table 8.2)
 ! 2.128 = 2.66(density, g/cm3) x 0.80 (quartz specific heat, J /g/K);
 ! 2.385 = 2.65(density, g/cm3) x 0.89 (other minerals specific heat, J /g/K)

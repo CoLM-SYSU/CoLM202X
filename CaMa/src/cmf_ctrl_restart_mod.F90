@@ -467,7 +467,7 @@ IF( LPTHOUT )THEN
 
   !! Single Precision Restart
   ELSE
-    R1PTH(:,:)=D1PTHFLW_PRE(:,:)
+    R1PTH(:,:)=REAL(D1PTHFLW_PRE(:,:),4)
 #ifdef UseMPI_CMF
     CALL CMF_MPI_AllReduce_R1PTH(R1PTH)
 #endif

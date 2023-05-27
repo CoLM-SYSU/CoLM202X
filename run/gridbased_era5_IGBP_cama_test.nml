@@ -37,6 +37,9 @@
    ! LAI setting
    DEF_LAI_CLIM = .true.
 
+   ! whether use CBL height
+   DEF_USE_CBL_HEIGHT = .true.
+
    ! Model settings
    DEF_LANDONLY = .true.
    DEF_USE_DOMINANT_PATCHTYPE = .false.
