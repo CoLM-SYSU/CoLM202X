@@ -135,7 +135,16 @@ OBJS_BASIC =    \
 					 MOD_Urban_LAIReadin.o       \
 					 MOD_Urban_Shortwave.o       \
 					 MOD_Urban_Albedo.o          \
-					 MOD_MonthlyinSituCO2mlo.o
+					 MOD_MonthlyinSituCO2mlo.o   \
+					 MOD_PercentagesPFTReadin.o \
+					 MOD_LakeDepthReadin.o      \
+					 MOD_DBedrockReadin.o       \
+					 MOD_SoilColorRefl.o        \
+					 MOD_SoilParametersReadin.o \
+					 MOD_HtopReadin.o           \
+					 MOD_UrbanReadin.o          \
+					 MOD_IniTimeVar.o           \
+					 MOD_UrbanIniTimeVar.o
 
 
 $(OBJS_BASIC) : %.o : %.F90 ${HEADER} 
@@ -144,16 +153,7 @@ $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})
 
 OBJS_MKINIDATA = \
-					  MOD_PercentagesPFTReadin.o \
-					  MOD_LakeDepthReadin.o      \
-					  MOD_DBedrockReadin.o       \
-					  MOD_SoilColorRefl.o        \
-					  MOD_SoilParametersReadin.o \
-					  MOD_HtopReadin.o           \
-					  MOD_UrbanReadin.o          \
-					  MOD_IniTimeVar.o           \
-					  MOD_UrbanIniTimeVar.o      \
-					  MOD_Initialize.o           \
+					  MOD_Initialize.o   \
 					  CoLMINI.o
 
 $(OBJS_MKINIDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} 
@@ -312,20 +312,6 @@ $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
 
 OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
-
-OBJS_MKINI_POST   = \
-					  MOD_PercentagesPFTReadin.o \
-					  MOD_LakeDepthReadin.o      \
-					  MOD_DBedrockReadin.o       \
-					  MOD_SoilColorRefl.o        \
-					  MOD_SoilParametersReadin.o \
-					  MOD_HtopReadin.o           \
-					  MOD_UrbanReadin.o          \
-					  MOD_IniTimeVar.o           \
-					  MOD_UrbanIniTimeVar.o      \
-					  MOD_Initialize.o
-
-OBJS_MKINI_POST_T = $(addprefix .bld/,${OBJS_MKINI_POST})
 
 # ------ Target 3: main --------
 
