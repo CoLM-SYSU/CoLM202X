@@ -1,6 +1,6 @@
 #include <define.h>
 
-SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
+SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
    ! 1. Global land cover types (updated with the specific dataset)
    !
@@ -48,6 +48,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
 
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gridlai
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
@@ -125,8 +126,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
          end_year   = DEF_simulation_time%end_year
          ntime      = 12
       ELSE
-         start_year = DEF_LC_YEAR
-         end_year   = DEF_LC_YEAR
+         start_year = lc_year
+         end_year   = lc_year
          ntime      = 12
       ENDIF
    ! 8-day LAI
@@ -359,8 +360,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
    ELSE
-      start_year = DEF_LC_YEAR
-      end_year   = DEF_LC_YEAR
+      start_year = lc_year
+      end_year   = lc_year
       ntime      = 12
    ENDIF
 
@@ -635,8 +636,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
    ELSE
-      start_year = DEF_LC_YEAR
-      end_year   = DEF_LC_YEAR
+      start_year = lc_year
+      end_year   = lc_year
       ntime      = 12
    ENDIF
 

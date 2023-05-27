@@ -1,62 +1,81 @@
 #include <define.h>
 
-SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
+#ifdef LULCC
+
+MODULE MOD_Lulcc_Initialize
+
+!-----------------------------------------------------------------------
+   USE MOD_Precision
+   IMPLICIT NONE
+   SAVE
+
+! PUBLIC MEMBER FUNCTIONS:
+   PUBLIC :: LulccInitialize
+
+
+!-----------------------------------------------------------------------
+
+   CONTAINS
+
+!-----------------------------------------------------------------------
+
+
+ SUBROUTINE LulccInitialize (casename,dir_landdata,dir_restart,&
                             idate,greenwich)
 
 ! ======================================================================
 !
-! Initialization routine for Land-use-Land-cover-change (LuLcc) case
+! Initialization routine for Land-use-Land-cover-change (Lulcc) case
 !
 ! ======================================================================
-   USE precision
-   USE GlobalVars
-   USE mod_namelist
-   USE spmd_task
-   USE mod_pixel
-   use mod_block
-   use mod_mesh
-   USE mod_landelm
-   USE mod_landpatch
+   use MOD_Precision
+   USE MOD_Vars_Global
+   use MOD_Namelist
+   use MOD_SPMD_Task
+   use MOD_Pixel
+   use MOD_LandPatch
 #ifdef URBAN_MODEL
-   USE mod_landurban
-   USE UrbanALBEDO
-   USE MOD_UrbanTimeVars
-   USE MOD_UrbanTimeInvars
+   USE MOD_Urban_Vars_TimeVars
+   USE MOD_Urban_Vars_TimeInvars
+   use MOD_LandUrban
+   USE MOD_UrbanIniTimeVar
+   USE MOD_UrbanReadin
+   USE MOD_Urban_LAIReadin
+   USE MOD_Urban_Albedo
 #endif
-   USE PhysicalConstants
-   USE MOD_TimeInvariants
-   USE MOD_TimeVariables
+   use MOD_Const_Physical
+   use MOD_Vars_TimeInvariants
+   use MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
-   USE mod_landpft
-   USE MOD_PFTimeInvars
-   USE MOD_PFTimeVars
+   USE MOD_LandPFT
+   USE MOD_Vars_PFTimeInvars
+   USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-   USE mod_landpc
-   USE MOD_PCTimeInvars
-   USE MOD_PCTimeVars
+   USE MOD_LandPC
+   USE MOD_Vars_PCTimeInvars
+   USE MOD_Vars_PCTimeVars
 #endif
 
-   ! USE MOD_LuLccTMatrix
-   USE LC_Const
-   USE PFT_Const
-   USE timemanager
-   use mod_grid
-   use mod_data_type
-!   use mod_mapping_grid2pset
-   use ncio_serial
-   use ncio_block
-#ifdef CLMDEBUG
-   use mod_colm_debug
+   ! USE MOD_LulccTMatrix
+   USE MOD_Const_LC
+   USE MOD_Const_PFT
+   use MOD_TimeManager
+   use MOD_Grid
+   use MOD_DataType
+   use MOD_NetCDFSerial
+   use MOD_NetCDFBlock
+#ifdef CoLMDEBUG
+      use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   USE mod_soil_function
+   USE MOD_SoilFunction
 #endif
-   USE mod_mapping_grid2pset
+   USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
-   USE mod_mesh
-   USE mod_landhru
-   USE mod_landpatch
+   USE MOD_Mesh
+   USE MOD_LandHRU
+   USE MOD_LandPatch
 #endif
    use mod_srfdata_restart
 
@@ -158,17 +177,17 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
 
    ! deallocate pixelset and mesh data of previous
    ! IF (p_is_worker) THEN
-      CALL mesh_free_mem
-      CALL landelm%forc_free_mem
-      CALL landpatch%forc_free_mem
+   CALL mesh_free_mem
+   CALL landelm%forc_free_mem
+   CALL landpatch%forc_free_mem
 #ifdef PFT_CLASSIFICATION
-      CALL landpft%forc_free_mem
+   CALL landpft%forc_free_mem
 #endif
 #ifdef PC_CLASSIFICATION
-      CALL landpc%forc_free_mem
+   CALL landpc%forc_free_mem
 #endif
 #ifdef URBAN_MODEL
-      CALL landurban%forc_free_mem
+   CALL landurban%forc_free_mem
 #endif
    ! ENDIF
 
@@ -179,7 +198,6 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
    CALL pixelset_load_from_file (year, dir_landdata, 'landelm', landelm, numelm)
 
 #ifdef CATCHMENT
-   !TODO: LC_YEAR or simulation year?
    CALL pixelset_load_from_file (year, dir_landdata, 'landhru', landhru, numhru)
 #endif
 
@@ -256,13 +274,13 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
    ! ------------------------------------------
    ! 1.2 Lake depth and layers' thickness
    ! ------------------------------------------
-   CALL lakedepth_readin (dir_landdata)
+   CALL lakedepth_readin (dir_landdata, year)
 
    ! ...............................................................
    ! 1.3 Read in the soil parameters of the patches of the gridcells
    ! ...............................................................
 
-   CALL soil_parameters_readin (dir_landdata)
+   CALL soil_parameters_readin (dir_landdata, year)
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    IF (p_is_worker) THEN
@@ -892,4 +910,8 @@ SUBROUTINE LuLccInitialize (casename,dir_landdata,dir_restart,&
 !   call mpi_barrier (p_comm_glb, p_err)
 !#endif
 
-END SUBROUTINE LuLccInitialize
+ END SUBROUTINE LulccInitialize
+
+END MODULE MOD_Lulcc_Initialize
+
+#endif

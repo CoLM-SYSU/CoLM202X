@@ -4,7 +4,7 @@ include include/Makeoptions
 HEADER = include/define.h
 
 INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
-VPATH = include : share : mksrfdata : mkinidata : main : main/hydro : main/bgc : main/urban : CaMa/src : postprocess : .bld
+VPATH = include : share : mksrfdata : mkinidata : main : main/HYDRO : main/BGC : main/URBAN : main/LULCC : CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
@@ -300,6 +300,10 @@ OBJS_MAIN = \
 				MOD_Urban_LUCY.o                          \
 				MOD_Urban_Thermal.o                       \
 				Urban_CoLMMAIN.o                          \
+				MOD_Lulcc_Vars_TimeInvars.o               \
+				MOD_Lulcc_Vars_TimeVars.o                 \
+				MOD_Lulcc_Initialize.o                    \
+				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \
 				CoLMMAIN.o                                \
 				CoLM.o

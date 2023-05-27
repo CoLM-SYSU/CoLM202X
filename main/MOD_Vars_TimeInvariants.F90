@@ -194,7 +194,7 @@ SAVE
   END SUBROUTINE allocate_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE READ_TimeInvariants (year, casename, dir_restart)
+  SUBROUTINE READ_TimeInvariants (lc_year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -212,7 +212,7 @@ SAVE
 
      IMPLICIT NONE
 
-     INTEGER         , intent(in) :: year
+     INTEGER         , intent(in) :: lc_year
      character(LEN=*), intent(in) :: casename
      character(LEN=*), intent(in) :: dir_restart
 
@@ -220,8 +220,8 @@ SAVE
      character(LEN=256) :: file_restart, cyear
 
 
-     write(cyear,'(i4.4)') year
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // trim(cyear) // '.nc'
+     write(cyear,'(i4.4)') lc_year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass) !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype ) !
@@ -291,22 +291,22 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_UrbanTimeInvars (file_restart)
 #endif
 
@@ -325,7 +325,7 @@ SAVE
   end subroutine READ_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE WRITE_TimeInvariants (year, casename, dir_restart)
+  SUBROUTINE WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -340,7 +340,7 @@ SAVE
 
      IMPLICIT NONE
 
-     INTEGER         , intent(in) :: year
+     INTEGER         , intent(in) :: lc_year
      character(len=*), intent(in) :: casename
      character(len=*), intent(in) :: dir_restart
 
@@ -350,8 +350,8 @@ SAVE
 
      compress = DEF_REST_COMPRESS_LEVEL
 
-     write(cyear,'(i4.4)') year
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // trim(cyear) // '.nc'
+     write(cyear,'(i4.4)') lc_year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' //'_lc'// trim(cyear) // '.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
 
@@ -442,22 +442,22 @@ SAVE
      end if
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // trim(cyear) // '.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_UrbanTimeInvars (file_restart)
 #endif
 

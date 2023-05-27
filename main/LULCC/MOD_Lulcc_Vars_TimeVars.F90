@@ -1,12 +1,12 @@
 #include <define.h>
 
-MODULE MOD_LuLccTimeVars
+MODULE MOD_LuLcc_Vars_TimeVars
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 ! -------------------------------
 
-  USE precision
-  USE GlobalVars
+  USE MOD_Precision
+  USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
 ! -----------------------------------------------------------------
@@ -162,21 +162,21 @@ MODULE MOD_LuLccTimeVars
   ! Allocates memory for LuLcc time variant variables
   ! --------------------------------------------------------------------
 
-     USE precision
-     USE spmd_task
-     USE GlobalVars
-     USE mod_landpatch
+     use MOD_SPMD_Task
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_LandPatch
 #ifdef PFT_CLASSIFICATION
-     USE MOD_PFTimeVars
-     USE mod_landpft
+     USE MOD_Vars_PFTimeVars
+     USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION
-     USE MOD_PCTimeVars
-     USE mod_landpc
+     USE MOD_Vars_PCTimeVars
+     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_UrbanTimeVars
-     USE mod_landurban
+     USE MOD_Urban_Vars_TimeVars
+     USE MOD_LandUrban
 #endif
 
      IMPLICIT NONE
@@ -323,18 +323,18 @@ MODULE MOD_LuLccTimeVars
 
   SUBROUTINE SAVE_LuLccTimeVars
 
-     USE precision
-     USE spmd_task
-     USE GlobalVars
-     USE MOD_TimeVariables
+     USE MOD_Precision
+     use MOD_SPMD_Task
+     USE MOD_Vars_Global
+     USE MOD_Vars_TimeVariables
 #ifdef PFT_CLASSIFICATION
-     USE MOD_PFTimeVars
+     USE MOD_Vars_PFTimeVars
 #endif
 #ifdef PC_CLASSIFICATION
-     USE MOD_PCTimeVars
+     USE MOD_Vars_PCTimeVars
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_UrbanTimeVars
+     USE MOD_Urban_Vars_TimeVars
 #endif
 
      IMPLICIT NONE
@@ -474,27 +474,27 @@ MODULE MOD_LuLccTimeVars
 
   SUBROUTINE REST_LuLccTimeVars
 
-     USE precision
-     USE spmd_task
-     USE GlobalVars
-     USE mod_landpatch
-     USE mod_landelm
-     USE mod_mesh
-     USE MOD_TimeInvariants
-     USE MOD_TimeVariables
-     USE MOD_LuLccTimeInvars
+     use MOD_SPMD_Task
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_LandPatch
+     USE MOD_LandElm
+     USE MOD_Mesh
+     USE MOD_Vars_TimeInvariants
+     USE MOD_Vars_TimeVariables
+     USE MOD_LuLcc_Vars_TimeInvars
 #ifdef PFT_CLASSIFICATION
-     USE MOD_PFTimeInvars
-     USE MOD_PFTimeVars
-     USE mod_landpft
+     USE MOD_Vars_PFTimeInvars
+     USE MOD_Vars_PFTimeVars
+     USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION
-     USE MOD_PCTimeVars
-     USE mod_landpc
+     USE MOD_Vars_PCTimeVars
+     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_UrbanTimeVars
-     USE mod_landurban
+     USE MOD_Urban_Vars_TimeVars
+     USE MOD_LandUrban
 #endif
 
      IMPLICIT NONE
@@ -791,8 +791,8 @@ ENDIF
 
 
   SUBROUTINE deallocate_LuLccTimeVars
-     USE spmd_task
-     USE MOD_LuLccTimeInvars, only: numpatch_, numpft_, numpc_, numurban_
+     use MOD_SPMD_Task
+     USE MOD_LuLcc_Vars_TimeInvars, only: numpatch_, numpft_, numpc_, numurban_
 
 ! --------------------------------------------------
 ! Deallocates memory for LuLcc time variant variables
@@ -937,5 +937,5 @@ ENDIF
 
   END SUBROUTINE deallocate_LuLccTimeVars
 
-END MODULE MOD_LuLccTimeVars
+END MODULE MOD_LuLcc_Vars_TimeVars
 ! ---------- EOP ------------

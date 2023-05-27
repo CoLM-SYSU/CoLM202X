@@ -491,7 +491,7 @@ SAVE
   end function save_to_restart
 
   !---------------------------------------
-  SUBROUTINE WRITE_TimeVariables (idate, site, dir_restart)
+  SUBROUTINE WRITE_TimeVariables (idate, lc_year, site, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -504,18 +504,24 @@ SAVE
      IMPLICIT NONE
 
      integer, INTENT(in) :: idate(3)
+     INTEGER, intent(in) :: lc_year      !year of land cover TYPE data
      character(LEN=*), intent(in) :: site
      character(LEN=*), intent(in) :: dir_restart
 
      ! Local variables
      character(LEN=256) :: file_restart
      character(len=14)  :: cdate
+     CHARACTER(len=256) :: cyear         !CHARACTER for lc_year
      integer :: compress
 
      compress = DEF_REST_COMPRESS_LEVEL
 
+     ! land cover type year
+     write(cyear,'(i4.4)') lc_year
+
      write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
+
 
      call ncio_create_file_vector (file_restart, landpatch)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
@@ -609,33 +615,33 @@ SAVE
      call ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) !     integral of profile function for moisture
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_PFTimeVars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_PCTimeVars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_BGCTimeVars (file_restart)
 #endif
 
 #if (defined LATERAL_FLOW)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_HydroTimeVars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_UrbanTimeVars (file_restart)
 #endif
   end subroutine WRITE_TimeVariables
 
   !---------------------------------------
-  SUBROUTINE READ_TimeVariables (idate, site, dir_restart)
+  SUBROUTINE READ_TimeVariables (idate, lc_year, site, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -653,12 +659,13 @@ SAVE
      IMPLICIT NONE
 
      integer, INTENT(in) :: idate(3)
+     INTEGER, intent(in) :: lc_year      !year of land cover type data
      character(LEN=*), intent(in) :: site
      character(LEN=*), intent(in) :: dir_restart
 
      ! Local variables
      character(LEN=256) :: file_restart
-     character(len=14)  :: cdate
+     character(len=14)  :: cdate, cyear
 
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)
@@ -668,8 +675,11 @@ SAVE
         write(*,'(/,A26)') 'Loading Time Variables ...'
      end if
 
+     ! land cover type year
+     write(cyear,'(i4.4)') lc_year
+
      write(cdate,'(i4.4,"-",i3.3,"-",i5.5)') idate(1), idate(2), idate(3)
-     file_restart = trim(dir_restart) // '/' // trim(site) //'_restart_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart) // '/' // trim(site) //'_restart_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
 
      ! Time-varying state variables which reaquired by restart run
      call ncio_read_vector (file_restart, 'z_sno   '   , -maxsnl, landpatch, z_sno ) !  node depth [m]
@@ -748,27 +758,27 @@ SAVE
      call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) ! integral of profile function for moisture
 
 #if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PFTimeVars (file_restart)
 #endif
 
 #if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PCTimeVars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_bgc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_BGCTimeVars (file_restart)
 #endif
 
 #if (defined LATERAL_FLOW)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_basin_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_HydroTimeVars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'.nc'
+     file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_urban_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_UrbanTimeVars (file_restart)
 #endif
 

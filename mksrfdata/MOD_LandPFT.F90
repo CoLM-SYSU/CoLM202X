@@ -49,8 +49,6 @@ CONTAINS
       LOGICAL, allocatable :: patchmask (:)
       INTEGER  :: npft_glb
 
-      ! add parameter input for time year
-      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
@@ -123,6 +121,8 @@ CONTAINS
          CALL flush_block_data (pctpft, 1.0)
 
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+         ! add parameter input for time year
+         write(cyear,'(i4.4)') lc_year
          suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data_pft (dir_5x5, suffix, gpatch, 'PCT_PFT', pctpft)
 

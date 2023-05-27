@@ -18,7 +18,7 @@ MODULE MOD_Initialize
 
 
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
-         idate, greenwich)
+         idate, lc_year, greenwich)
 
       ! ======================================================================
       ! initialization routine for land surface model.
@@ -100,6 +100,7 @@ MODULE MOD_Initialize
       character(len=*), intent(in) :: dir_landdata
       character(len=*), intent(in) :: dir_restart
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
+      integer, intent(in)    :: lc_year    ! year, land cover year
       logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
       ! ------------------------ local variables -----------------------------
@@ -168,7 +169,6 @@ MODULE MOD_Initialize
       real(r8) t
 #endif
 
-
       ! --------------------------------------------------------------------
       ! Allocates memory for CoLM 1d [numpatch] variables
       ! --------------------------------------------------------------------
@@ -215,13 +215,13 @@ MODULE MOD_Initialize
       ! ------------------------------------------
       ! 1.2 Lake depth and layers' thickness
       ! ------------------------------------------
-      CALL lakedepth_readin (dir_landdata)
+      CALL lakedepth_readin (dir_landdata, lc_year)
 
       ! ...............................................................
       ! 1.3 Read in the soil parameters of the patches of the gridcells
       ! ...............................................................
 
-      CALL soil_parameters_readin (dir_landdata)
+      CALL soil_parameters_readin (dir_landdata, lc_year)
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (p_is_worker) THEN
@@ -245,9 +245,9 @@ MODULE MOD_Initialize
       ! ...............................................................
 
       ! read global tree top height from nc file
-      CALL HTOP_readin (dir_landdata)
+      CALL HTOP_readin (dir_landdata, lc_year)
 #ifdef URBAN_MODEL
-      CALL Urban_readin (dir_landdata, 2005)
+      CALL Urban_readin (dir_landdata, lc_year)
 #endif
       ! ................................
       ! 1.5 Initialize TUNABLE constants
@@ -396,7 +396,7 @@ MODULE MOD_Initialize
       call check_TimeInvariants ()
 #endif
 
-      CALL WRITE_TimeInvariants (casename, dir_restart)
+      CALL WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
@@ -546,9 +546,9 @@ MODULE MOD_Initialize
             CALL UrbanLAI_readin (year, month, dir_landdata)
 #endif
          ELSE
-            CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+            CALL LAI_readin (lc_year, month, dir_landdata)
 #ifdef URBAN_MODEL
-            CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
+            CALL UrbanLAI_readin (lc_year, month, dir_landdata)
 #endif
          ENDIF
       ELSE
@@ -811,7 +811,7 @@ MODULE MOD_Initialize
 #ifdef CoLMDEBUG
       call check_TimeVariables ()
 #endif
-      CALL WRITE_TimeVariables (idate, casename, dir_restart)
+      CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif

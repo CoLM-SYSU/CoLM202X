@@ -6,7 +6,7 @@ MODULE MOD_LandUrban
 
    USE MOD_Grid
    USE MOD_Pixelset
-   USE MOD_Vars_Global, only: N_URB
+   USE MOD_Vars_Global, only: N_URB, URBAN
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -88,12 +88,10 @@ CONTAINS
 #endif
 
       ! allocate and read the grided LCZ/NCAR urban type
-      ! TODO: use dominant type of LCZ
       if (p_is_io) then
 
          dir_urban = trim(DEF_dir_rawdata) // '/urban'
 
-         !???怎么知道分配多大
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
@@ -115,7 +113,7 @@ CONTAINS
       if (p_is_worker) then
 
          ! a temporary numpatch with max urban patch
-         numpatch_ = numpatch + count(landpatch%settyp == 13) * (N_URB-1)
+         numpatch_ = numpatch + count(landpatch%settyp == URBAN) * (N_URB-1)
 
          allocate (eindex_(numpatch_))
          allocate (ipxstt_(numpatch_))
@@ -124,7 +122,7 @@ CONTAINS
          allocate (ielm_  (numpatch_))
 
          ! max urban patch number
-         numurban_ = count(landpatch%settyp == 13) * N_URB
+         numurban_ = count(landpatch%settyp == URBAN) * N_URB
          IF (numurban_ > 0) THEN
             allocate (urbclass(numurban_))
          ENDIF
@@ -134,7 +132,7 @@ CONTAINS
 
          ! loop for temporary numpatch to filter duplicate urban patch
          DO ipatch = 1, numpatch
-            IF (landpatch%settyp(ipatch) == 13) THEN
+            IF (landpatch%settyp(ipatch) == URBAN) THEN
 
                !???
                ie     = landpatch%ielm  (ipatch)
@@ -168,18 +166,15 @@ CONTAINS
                allocate (order (ipxstt:ipxend))
                order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
 
-               !???may have bugs below
-               ! change order vars, types->regid, why?
+               ! change order vars, types->regid
                ! add region information, because urban type may be same,
                ! but from different region in this urban patch
                ! relative code is changed
                CALL quicksort (npxl, types, order)
 
-               !???may have bugs below
                mesh(ie)%ilon(ipxstt:ipxend) = mesh(ie)%ilon(order)
                mesh(ie)%ilat(ipxstt:ipxend) = mesh(ie)%ilat(order)
 
-               !???
                DO ipxl = ipxstt, ipxend
                   IF (ipxl /= ipxstt) THEN
                      IF (types(ipxl) /= types(ipxl-1)) THEN
@@ -191,14 +186,14 @@ CONTAINS
 
                   jpatch = jpatch + 1
                   eindex_(jpatch) = mesh(ie)%indx
-                  settyp_(jpatch) = 13
+                  settyp_(jpatch) = URBAN
                   ipxstt_(jpatch) = ipxl
                   ielm_  (jpatch) = ie
 
                   iurban = iurban + 1
                   urbclass(iurban) = types(ipxl)
                ENDDO
-               ! correct, should be ipxend
+
                ipxend_(jpatch) = ipxend
 
                deallocate (types)
@@ -243,7 +238,7 @@ CONTAINS
 
          ! update urban patch number
          IF (numpatch > 0) THEN
-            numurban = count(landpatch%settyp == 13)
+            numurban = count(landpatch%settyp == URBAN)
          ELSE
             numurban = 0
          ENDIF
@@ -256,10 +251,10 @@ CONTAINS
             allocate (landurban%ielm   (numurban))
 
             ! copy urban path information from landpatch for landurban
-            landurban%eindex = pack(landpatch%eindex, landpatch%settyp == 13)
-            landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == 13)
-            landurban%ipxend = pack(landpatch%ipxend, landpatch%settyp == 13)
-            landurban%ielm   = pack(landpatch%ielm  , landpatch%settyp == 13)
+            landurban%eindex = pack(landpatch%eindex, landpatch%settyp == URBAN)
+            landurban%ipxstt = pack(landpatch%ipxstt, landpatch%settyp == URBAN)
+            landurban%ipxend = pack(landpatch%ipxend, landpatch%settyp == URBAN)
+            landurban%ielm   = pack(landpatch%ielm  , landpatch%settyp == URBAN)
 
             ! assign urban region id and type for each urban patch
             landurban%settyp = urbclass(1:numurban)
@@ -368,7 +363,7 @@ CONTAINS
 
          iurban = 0
          DO ipatch = 1, numpatch
-            IF (landpatch%settyp(ipatch) == 13) THEN
+            IF (landpatch%settyp(ipatch) == URBAN) THEN
                iurban = iurban + 1
                patch2urban(ipatch) = iurban
                urban2patch(iurban) = ipatch

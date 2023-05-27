@@ -1,7 +1,7 @@
 #include <define.h>
 
-SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
-   
+SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
+
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Namelist
@@ -10,7 +10,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
@@ -36,6 +36,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
@@ -45,7 +46,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    CHARACTER(len=256) :: landdir, lndname
 
    ! for IGBP data
-   CHARACTER(len=256) :: dir_5x5, suffix
+   CHARACTER(len=256) :: dir_5x5, suffix, cyear
    ! for PFT
    TYPE (block_data_real8_3d) :: pftPCT
    REAL(r8), allocatable :: pct_one(:), area_one(:)
@@ -91,7 +92,9 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   suffix  = 'MOD2005'
+   ! add parameter input for time year
+   write(cyear,'(i4.4)') lc_year
+   suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)

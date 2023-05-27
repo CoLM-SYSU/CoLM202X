@@ -67,6 +67,7 @@ PROGRAM CoLMINI
    integer  :: s_julian    ! starting date for run in julian day
    integer  :: s_seconds   ! starting time of day for run in seconds
    integer  :: idate(3)    ! starting date
+   INTEGER  :: lc_year     ! land cover year
    logical  :: greenwich   ! true: greenwich time, false: local time
 
    integer*8 :: start_time, end_time, c_per_sec, time_used
@@ -98,6 +99,12 @@ PROGRAM CoLMINI
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
 #endif
 
+#ifdef LULCC
+   lc_year = idate(1)
+#else
+   lc_year = DEF_LC_YEAR
+#endif
+
    CALL monthday2julian(s_year,s_month,s_day,s_julian)
    idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
    CALL adj2end(idate)
@@ -108,27 +115,27 @@ PROGRAM CoLMINI
 
    call pixel%load_from_file  (dir_landdata)
    call gblock%load_from_file (dir_landdata)
-   call mesh_load_from_file   (s_year, dir_landdata)
+   call mesh_load_from_file   (dir_landdata, lc_year)
 
-   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landelm', landelm, numelm)
+   CALL pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, lc_year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landhru', landhru, numhru)
+   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, lc_year)
 #endif
 
-   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpatch', landpatch, numpatch)
+   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landpc', landpc, numpc)
+   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
    CALL map_patch_to_pc
 #endif
 #ifdef URBAN_MODEL
-   CALL pixelset_load_from_file (DEF_LC_YEAR, dir_landdata, 'landurban', landurban, numurban)
+   CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, lc_year)
    CALL map_patch_to_urban
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -138,7 +145,7 @@ PROGRAM CoLMINI
 #endif
 #endif
 
-   CALL initialize (casename, dir_landdata, dir_restart, idate, greenwich)
+   CALL initialize (casename, dir_landdata, dir_restart, idate, lc_year, greenwich)
 
 #ifdef SinglePoint
    CALL single_srfdata_final ()

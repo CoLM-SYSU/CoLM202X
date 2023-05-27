@@ -1,21 +1,21 @@
 #include <define.h>
 
-MODULE MOD_LuLccTMatrix
+MODULE MOD_Lulcc_TMatrix
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 ! -------------------------------
 
-  USE precision
-  USE GlobalVars
+  USE MOD_Precision
+  USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
 ! -----------------------------------------------------------------
   !TODO: need coding below...
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_LuLccTMatrix
-  PUBLIC :: deallocate_LuLccTMatrix
-  PUBLIC :: READ_LuLccTMatrix
+  PUBLIC :: allocate_LulccTMatrix
+  PUBLIC :: deallocate_LulccTMatrix
+  PUBLIC :: READ_LulccTMatrix
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -25,41 +25,42 @@ MODULE MOD_LuLccTMatrix
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_LuLccTMatrix
+  SUBROUTINE allocate_LulccTMatrix
   ! --------------------------------------------------------------------
-  ! Allocates memory for LuLcc time invariant variables
+  ! Allocates memory for Lulcc time invariant variables
   ! --------------------------------------------------------------------
 
-     USE precision
-     USE GlobalVars
+     USE MOD_Precision
+     USE MOD_Vars_Global
+
      IMPLICIT NONE
 !TODO: need coding below...
 
-  END SUBROUTINE allocate_LuLccTMatrix
+  END SUBROUTINE allocate_LulccTMatrix
 
 
-  SUBROUTINE READ_LuLccTMatrix
+  SUBROUTINE READ_LulccTMatrix
 
-     USE precision
-     USE GlobalVars
-     USE MOD_TimeInvariants
-     USE MOD_PFTimeInvars
-     USE MOD_PCTimeInvars
-     USE MOD_UrbanTimeInvars
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_Vars_TimeInvariants
+     USE MOD_Vars_PFTimeInvars
+     USE MOD_Vars_PCTimeInvars
+     USE MOD_Urban_Vars_TimeInvars
      IMPLICIT NONE
 !TODO: need coding below...
 
-  END SUBROUTINE READ_LuLccTMatrix
+  END SUBROUTINE READ_LulccTMatrix
 
-  SUBROUTINE deallocate_LuLccTMatrix
+  SUBROUTINE deallocate_LulccTMatrix
 ! --------------------------------------------------
-! Deallocates memory for LuLcc time invariant variables
+! Deallocates memory for Lulcc time invariant variables
 ! --------------------------------------------------
 
 !TODO: need coding below...
 
 
-  END SUBROUTINE deallocate_LuLccTMatrix
+  END SUBROUTINE deallocate_LulccTMatrix
 
-END MODULE MOD_LuLccTMatrix
+END MODULE MOD_LulccTMatrix
 ! ---------- EOP ------------

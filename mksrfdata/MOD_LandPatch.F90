@@ -119,7 +119,7 @@ CONTAINS
          CALL allocate_block_data (gpatch, patchdata)
 
 #ifndef USGS_CLASSIFICATION
-         !TODO-done: add parameter input for time year
+         ! add parameter input for time year
          file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover TYPE data

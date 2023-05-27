@@ -2,7 +2,6 @@
 
 MODULE MOD_SrfdataRestart
 
-   USE MOD_Namelist, only: DEF_LC_YEAR
    IMPLICIT NONE
 
    INTEGER, parameter, PRIVATE :: rcompress = 1
@@ -17,7 +16,7 @@ MODULE MOD_SrfdataRestart
 CONTAINS
 
    ! -----------------------
-   SUBROUTINE mesh_save_to_file (lc_year, dir_landdata)
+   SUBROUTINE mesh_save_to_file (dir_landdata, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_NetCDFSerial
@@ -26,8 +25,8 @@ CONTAINS
       USE MOD_Utils
       IMPLICIT NONE
 
-      INTEGER         , intent(in) :: lc_year
       CHARACTER(len=*), intent(in) :: dir_landdata
+      INTEGER         , intent(in) :: lc_year
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock, cyear
@@ -226,7 +225,7 @@ CONTAINS
    END SUBROUTINE mesh_save_to_file
 
    !------------------------------------
-   SUBROUTINE mesh_load_from_file (lc_year, dir_landdata)
+   SUBROUTINE mesh_load_from_file (dir_landdata, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -319,7 +318,7 @@ CONTAINS
    END SUBROUTINE mesh_load_from_file
 
    !------------------------------------------------
-   SUBROUTINE pixelset_save_to_file (lc_year, dir_landdata, psetname, pixelset)
+   SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Block
@@ -327,10 +326,10 @@ CONTAINS
       USE MOD_Pixelset
       IMPLICIT NONE
 
-      INTEGER         ,    intent(in) :: lc_year
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(in) :: pixelset
+      INTEGER         ,    intent(in) :: lc_year
 
       ! Local variables
       CHARACTER(len=256)   :: filename, cyear
@@ -367,7 +366,7 @@ CONTAINS
 
 
    !---------------------------
-   SUBROUTINE pixelset_load_from_file (lc_year, dir_landdata, psetname, pixelset, numset)
+   SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Block

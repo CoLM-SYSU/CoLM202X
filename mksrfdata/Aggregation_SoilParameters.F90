@@ -1,7 +1,7 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_SoilParameters ( &
-      gland, dir_rawdata, dir_model_landdata)
+      gland, dir_rawdata, dir_model_landdata, lc_year)
 
    !-----------------------------------------------------------------------
    ! DESCRIPTION:
@@ -45,13 +45,14 @@ SUBROUTINE Aggregation_SoilParameters ( &
    IMPLICIT NONE
 
    ! arguments:
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname
+   CHARACTER(len=256) :: landdir, lndname, cyear
    CHARACTER(len=256) :: c
    INTEGER :: nsl, ipatch, L, np, LL, ipxstt, ipxend
 
@@ -177,7 +178,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
 #endif
-   landdir = trim(dir_model_landdata) // '/soil'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/soil/'//trim(cyear)
 
    ! ........................................
    ! ... [2] aggregate the soil parameters from the resolution of raw data to modelling resolution
