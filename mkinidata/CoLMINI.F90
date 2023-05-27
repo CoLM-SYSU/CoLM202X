@@ -97,11 +97,11 @@ PROGRAM CoLMINI
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
 #endif
-   print*, idate
+
    CALL monthday2julian(s_year,s_month,s_day,s_julian)
    idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
    CALL adj2end(idate)
-   print*, idate
+
 #ifdef LULCC
    lc_year = idate(1)
 #else
