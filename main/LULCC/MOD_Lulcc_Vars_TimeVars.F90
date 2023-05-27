@@ -772,9 +772,9 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
                     Fach           (u) = Fach_           (u_)
 ENDIF
 #endif
+                    np = np + 1
+                    np_= np_+ 1
                  ENDDO
-                 np = np + 1
-                 np_= np_+ 1
               ENDIF
            ENDDO
         ENDDO

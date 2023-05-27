@@ -313,6 +313,20 @@ $(OBJS_MAIN) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}
 
 OBJS_MAIN_T = $(addprefix .bld/,${OBJS_MAIN})
 
+OBJS_MKINI_POST   = \
+					  MOD_PercentagesPFTReadin.o \
+					  MOD_LakeDepthReadin.o      \
+					  MOD_DBedrockReadin.o       \
+					  MOD_SoilColorRefl.o        \
+					  MOD_SoilParametersReadin.o \
+					  MOD_HtopReadin.o           \
+					  MOD_UrbanReadin.o          \
+					  MOD_IniTimeVar.o           \
+					  MOD_UrbanIniTimeVar.o      \
+					  MOD_Initialize.o
+
+OBJS_MKINI_POST_T = $(addprefix .bld/,${OBJS_MKINI_POST})
+
 # ------ Target 3: main --------
 
 ifneq (${CaMa},\#define)# Compile CoLM decoupled without river routing scheme (CaMa-Flood)
@@ -321,7 +335,7 @@ colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MKINI_POST_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
 	@echo ''

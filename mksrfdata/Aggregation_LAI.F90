@@ -387,6 +387,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 
       IF (p_is_io) THEN
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
@@ -663,6 +664,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 
       IF (p_is_io) THEN
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)

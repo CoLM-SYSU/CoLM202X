@@ -1,7 +1,5 @@
 #include <define.h>
 
-#ifdef URBAN_MODEL
-
 MODULE MOD_LandUrban
 
    USE MOD_Grid
@@ -377,4 +375,3 @@ CONTAINS
    END SUBROUTINE map_patch_to_urban
 
 END MODULE MOD_LandUrban
-#endif

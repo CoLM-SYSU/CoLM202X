@@ -33,6 +33,9 @@ MODULE MOD_Lulcc_Initialize
    use MOD_Namelist
    use MOD_SPMD_Task
    use MOD_Pixel
+   USE MOD_Block
+   USE MOD_Mesh
+   USE MOD_LandElm
    use MOD_LandPatch
 #ifdef URBAN_MODEL
    USE MOD_Urban_Vars_TimeVars
@@ -66,18 +69,24 @@ MODULE MOD_Lulcc_Initialize
    use MOD_NetCDFSerial
    use MOD_NetCDFBlock
 #ifdef CoLMDEBUG
-      use MOD_CoLMDebug
+   use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    USE MOD_SoilFunction
 #endif
    USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
-   USE MOD_Mesh
    USE MOD_LandHRU
    USE MOD_LandPatch
 #endif
-   use mod_srfdata_restart
+   use MOD_SrfdataRestart
+   USE MOD_HtopReadin
+   USE MOD_IniTimeVar
+   USE MOD_LakeDepthReadin
+   USE MOD_PercentagesPFTReadin
+   USE MOD_SoilParametersReadin
+   USE MOD_LAIReadin
+   USE MOD_OrbCoszen
 
    IMPLICIT NONE
 
@@ -151,7 +160,7 @@ MODULE MOD_Lulcc_Initialize
    integer :: Julian_8day
    integer :: ltyp
 
-   real(r8), external :: orb_coszen     ! cosine of the solar zenith angle
+   !real(r8), external :: orb_coszen     ! cosine of the solar zenith angle
 
 #ifdef BGC
    real(r8) f_s1s2 (1:nl_soil)
@@ -194,26 +203,26 @@ MODULE MOD_Lulcc_Initialize
    ! load pixelset and mesh data of next year
    !call pixel%load_from_file  (dir_landdata)
    !call gblock%load_from_file (dir_landdata)
-   call mesh_load_from_file   (year, dir_landdata)
-   CALL pixelset_load_from_file (year, dir_landdata, 'landelm', landelm, numelm)
+   call mesh_load_from_file     (dir_landdata, year)
+   CALL pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (year, dir_landdata, 'landhru', landhru, numhru)
+   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, year)
 #endif
 
-   call pixelset_load_from_file (year, dir_landdata, 'landpatch', landpatch, numpatch)
+   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (year, dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, year)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (year, dir_landdata, 'landpc', landpc, numpc)
+   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, year)
    CALL map_patch_to_pc
 #endif
 #ifdef URBAN_MODEL
-   CALL pixelset_load_from_file (year, dir_landdata, 'landurban', landurban, numurban)
+   CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, year)
    CALL map_patch_to_urban
 #endif
 
@@ -256,7 +265,7 @@ MODULE MOD_Lulcc_Initialize
    ENDIF
 
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-   CALL pct_readin (dir_landdata)
+   CALL pct_readin (dir_landdata, year)
 #endif
 
    ! ------------------------------------------
@@ -305,9 +314,9 @@ MODULE MOD_Lulcc_Initialize
 
    ! read global tree top height from nc file
    print*, dir_landdata
-   CALL HTOP_readin (dir_landdata)
+   CALL HTOP_readin (dir_landdata, year)
 #ifdef URBAN_MODEL
-   CALL Urban_readin (year, dir_landdata)
+   CALL Urban_readin (dir_landdata, year)
 #endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants

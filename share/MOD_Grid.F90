@@ -708,6 +708,9 @@ CONTAINS
       ilat_u = findloc(grid%yblk /= 0, .true., dim=1, back=.true.)
 
       this%ginfo%nlat = ilat_u - ilat_l + 1
+      IF (allocated(this%ginfo%lat_s)) deallocate(this%ginfo%lat_s)
+      IF (allocated(this%ginfo%lat_n)) deallocate(this%ginfo%lat_n)
+      IF (allocated(this%ginfo%lat_c)) deallocate(this%ginfo%lat_c)
       allocate (this%ginfo%lat_s (this%ginfo%nlat))
       allocate (this%ginfo%lat_n (this%ginfo%nlat))
       allocate (this%ginfo%lat_c (this%ginfo%nlat))
@@ -727,6 +730,7 @@ CONTAINS
          this%ginfo%lat_c(ilatloc) = (grid%lat_s(ilat)+grid%lat_n(ilat)) * 0.5
       end do
 
+      IF (allocated(this%ysegs)) deallocate(this%ysegs)
       allocate (this%ysegs (this%nyseg))
 
       iyseg = 0
@@ -777,6 +781,9 @@ CONTAINS
          this%ginfo%nlon = this%ginfo%nlon + grid%nlon
       ENDIF
 
+      IF (allocated(this%ginfo%lon_w)) deallocate(this%ginfo%lon_w)
+      IF (allocated(this%ginfo%lon_e)) deallocate(this%ginfo%lon_e)
+      IF (allocated(this%ginfo%lon_c)) deallocate(this%ginfo%lon_c)
       allocate (this%ginfo%lon_w (this%ginfo%nlon))
       allocate (this%ginfo%lon_e (this%ginfo%nlon))
       allocate (this%ginfo%lon_c (this%ginfo%nlon))
@@ -805,6 +812,7 @@ CONTAINS
          if (ilon == ilon_e) exit
       end do
 
+      IF (allocated(this%xsegs)) deallocate(this%xsegs)
       allocate (this%xsegs (this%nxseg))
 
       ixseg = 0

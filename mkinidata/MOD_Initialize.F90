@@ -197,7 +197,7 @@ MODULE MOD_Initialize
       ENDIF
 
 #if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-      CALL pct_readin (dir_landdata)
+      CALL pct_readin (dir_landdata, lc_year)
 #endif
 
       ! ------------------------------------------

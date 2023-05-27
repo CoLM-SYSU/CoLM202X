@@ -1,6 +1,5 @@
 #include <define.h>
 
-#ifdef URBAN_MODEL
 ! ======================================================
 ! Aggreate/screen high-resolution urban dataset
 ! to a lower resolutioin/subset data, suitable for running
@@ -906,4 +905,3 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE Aggregation_Urban
-#endif
