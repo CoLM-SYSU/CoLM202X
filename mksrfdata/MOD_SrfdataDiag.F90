@@ -39,9 +39,6 @@ CONTAINS
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
-#ifdef URBAN_MODEL
-      USE mod_landurban
-#endif
 
       IMPLICIT NONE
 

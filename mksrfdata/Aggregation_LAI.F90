@@ -242,7 +242,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             varname = 'LAI_' // trim(c3)
          ELSE
             !TODO: rename file name of 8-day LAI
-            varname = 'LAI_8-day_' // '_' // trim(c3)
+            varname = 'LAI_8-day' // '_' // trim(c3)
          ENDIF
          CALL srfdata_map_and_write (LAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
             -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
@@ -335,7 +335,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                varname = 'SAI_' // trim(c3)
             ELSE
                !TODO: rename varname
-               varname = 'SAI_8-day_' // '_' // trim(c3)
+               varname = 'SAI_8-day' // '_' // trim(c3)
             ENDIF
             CALL srfdata_map_and_write (SAI_patches, landpatch%settyp, typpatch, m_patch2diag, &
                -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')

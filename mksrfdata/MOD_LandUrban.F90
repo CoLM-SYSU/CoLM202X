@@ -28,6 +28,7 @@ CONTAINS
 
       USE MOD_Precision
       USE MOD_SPMD_Task
+      USE MOD_NetCDFBlock
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_Namelist

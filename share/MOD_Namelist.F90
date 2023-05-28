@@ -116,9 +116,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LC_YEAR   = 2005
 
    ! ------ URBAN -------
+   !INTEGER :: DEF_Urban_type_scheme = 1
    LOGICAL :: DEF_Urban_BEM    = .true.
    LOGICAL :: DEF_Urban_TREE   = .true.
    LOGICAL :: DEF_Urban_WATER  = .true.
+   LOGICAL :: DEF_Urban_LUCY   = .true.
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
@@ -598,9 +600,11 @@ CONTAINS
 
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
 
+         !DEF_Urban_type_scheme,           &
          DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
          DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
          DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
+         DEF_Urban_LUCY,                  &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -767,10 +771,12 @@ CONTAINS
       CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
 
+      !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Urban_LUCY ,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)

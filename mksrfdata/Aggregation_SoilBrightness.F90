@@ -84,7 +84,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
 
    write(cyear,'(i4.4)') lc_year
-   landdir = trim(dir_model_landdata) //'/soil/'//trim(cyear)
+   landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)

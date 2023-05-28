@@ -40,9 +40,6 @@ PROGRAM CoLMINI
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
 #endif
-#ifdef URBAN_MODEL
-   USE mod_landurban
-#endif
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif

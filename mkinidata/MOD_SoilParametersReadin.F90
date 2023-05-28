@@ -49,7 +49,6 @@ MODULE MOD_SoilParametersReadin
       IMPLICIT NONE
 
       ! ----------------------------------------------------------------------
-
       INTEGER, intent(in) :: lc_year    ! which year of land cover data used
       character(LEN=*), INTENT(in) :: dir_landdata
 
@@ -90,7 +89,6 @@ MODULE MOD_SoilParametersReadin
       LOGICAL :: is_singlepoint
 
       ! ...............................................................
-
       write(cyear,'(i4.4)') lc_year
       landdir = trim(dir_landdata) // '/soil/' // trim(cyear)
 
