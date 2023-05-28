@@ -321,7 +321,7 @@ colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MKINI_POST_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
 	@echo ''
