@@ -124,7 +124,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
      USE MOD_Landelm
      USE MOD_Mesh
 #ifdef PFT_CLASSIFICATION
-     USE MOD_PFTimeInvars
+     USE MOD_Vars_PFTimeInvars
      USE MOD_LandPFT
 #endif
 #ifdef PC_CLASSIFICATION

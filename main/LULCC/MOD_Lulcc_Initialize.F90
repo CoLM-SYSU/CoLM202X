@@ -79,13 +79,24 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LandHRU
    USE MOD_LandPatch
 #endif
+   USE MOD_CropReadin
+   USE MOD_LAIEmpirical
+   USE MOD_LAIReadin
+   USE MOD_NitrifReadin
+#ifdef BGC
+   USE MOD_NdepReadin
+   USE MOD_FireReadin
+#endif
+   USE MOD_OrbCoszen
+#ifdef USE_DEPTH_TO_BEDROCK
+   use MOD_DBedrockReadin
+#endif
    use MOD_SrfdataRestart
    USE MOD_HtopReadin
    USE MOD_IniTimeVar
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
-   USE MOD_LAIReadin
    USE MOD_OrbCoszen
 
    IMPLICIT NONE
