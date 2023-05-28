@@ -46,6 +46,7 @@ OBJS_SHARED =    \
 					  MOD_LandUrban.o              \
 					  MOD_LandPFT.o                \
 					  MOD_LandPC.o                 \
+					  MOD_SrfdataDiag.o            \
 					  MOD_SrfdataRestart.o         \
 					  MOD_ElmVector.o              \
 					  MOD_HRUVector.o
@@ -72,7 +73,6 @@ OBJS_MKSRFDATA = \
 					  MOD_SingleSrfdata.o               \
 					  MOD_MeshFilter.o                  \
 					  MOD_RegionClip.o                  \
-					  MOD_SrfdataDiag.o                 \
 					  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}

@@ -143,7 +143,7 @@ CONTAINS
       ENDIF
 
       ! weighted qg
-      ! qg = qgimp*fgimp*fwet_gimp + qgper*fgper
+      qg = qgimp*fgimp*fwet_gimp + qgper*fgper
 
 !-----------------------------------------------------------------------
 !     Compute sensible and latent fluxes and their derivatives with respect
