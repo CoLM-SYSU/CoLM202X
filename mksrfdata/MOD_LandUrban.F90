@@ -1,7 +1,5 @@
 #include <define.h>
 
-#ifdef URBAN_MODEL
-
 MODULE MOD_LandUrban
 
    USE MOD_Grid
@@ -30,6 +28,7 @@ CONTAINS
 
       USE MOD_Precision
       USE MOD_SPMD_Task
+      USE MOD_NetCDFBlock
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_Namelist
@@ -377,4 +376,3 @@ CONTAINS
    END SUBROUTINE map_patch_to_urban
 
 END MODULE MOD_LandUrban
-#endif

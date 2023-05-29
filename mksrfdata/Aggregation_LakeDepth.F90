@@ -66,7 +66,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #endif
 
    write(cyear,'(i4.4)') lc_year
-   landdir = trim(dir_model_landdata) //'/'//trim(cyear)//'/lakedepth/'
+   landdir = trim(dir_model_landdata) // '/lakedepth/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -151,7 +151,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'patch', landpatch, lakedepth_patches, 1)
 
 #ifdef SrfdataDiag
-   lndname = trim(dir_model_landdata)//'/diag/lakedepth.nc'
+   lndname = trim(dir_model_landdata)//'/diag/lakedepth_'//trim(cyear)//'.nc'
    CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
       -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
 #endif

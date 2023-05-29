@@ -19,7 +19,6 @@ MODULE MOD_UrbanReadin
 
 !-----------------------------------------------------------------------
 
-
    SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 
 ! ===========================================================
@@ -126,33 +125,32 @@ MODULE MOD_UrbanReadin
 #endif
 
       !TODO: Variables distinguish between time-varying and time-invariant variables
-      !TODO: 2005 -> lc_year
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/POP.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'POP_DEN'     , landurban, pop_den     )
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/LUCY_country_id.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_country_id.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, lucyid  )
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/WT_ROOF.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'WT_ROOF', landurban, froof)
       ! write(cyear,'(i4.4)') lc_year
-      lndname = trim(dir_landdata)//'/urban/2005/HT_ROOF.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'HT_ROOF'     , landurban, hroof  )
 
-      lndname = trim(dir_landdata)//'/urban/2005/PCT_Water.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake)
 
-      lndname = trim(dir_landdata)//'/urban/2005/PCT_Tree.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'PCT_Tree'      , landurban, fveg_urb)
 
-      lndname = trim(dir_landdata)//'/urban/2005/htop_urb.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 
@@ -173,6 +171,7 @@ MODULE MOD_UrbanReadin
             i       = urban2patch (u)
             lucy_id = lucyid      (u)
 
+         IF (DEF_URBAN_LUCY) THEN
             IF (lucy_id > 0) THEN
                vehicle      (:,u) = lvehicle      (lucy_id,:)
                week_holiday (:,u) = lweek_holiday (lucy_id,:)
@@ -181,10 +180,22 @@ MODULE MOD_UrbanReadin
                hum_prof     (:,u) = lhum_prof     (lucy_id,:)
                fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
             ENDIF
+         ELSE
+            vehicle      (:,u) = 0.
+            week_holiday (:,u) = 0.
+            weh_prof     (:,u) = 0.
+            wdh_prof     (:,u) = 0.
+            hum_prof     (:,u) = 0.
+            fix_holiday  (:,u) = 0.
+         ENDIF
 
 #ifndef URBAN_LCZ
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
+         IF ( .not. DEF_URBAN_BEM) THEN
+            t_roommax(u) = 373.16
+            t_roommin(u) = 180.00
+         ENDIF
 #else
             ! read in LCZ constants
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance

@@ -27,6 +27,7 @@ PROGRAM CoLM
    use MOD_Vars_2DForcing
    use MOD_Vars_1DFluxes
    use MOD_Vars_2DFluxes
+   USE MOD_Vars_1DAccFluxes
    use MOD_Forcing
    use MOD_Hist
    use MOD_TimeManager
@@ -82,6 +83,10 @@ PROGRAM CoLM
 #ifdef BGC
    USE MOD_NdepReadin
 #endif
+
+#ifdef LULCC
+   USE MOD_Lulcc_Driver
+#ENDIF
 
    ! SNICAR
    USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
@@ -240,7 +245,7 @@ PROGRAM CoLM
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
-   CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
+   CALL READ_TimeVariables (sdate, lc_year, casename, dir_restart)
 
    ! Read in SNICAR optical and aging parameters
    CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
@@ -404,9 +409,11 @@ PROGRAM CoLM
                            idate,greenwich)
 
          CALL allocate_1D_Forcing
-         CALL allocate_1D_Fluxes
 
          CALL forcing_init (dir_forcing, deltim, idate)
+         CALL deallocate_acc_fluxes
+         call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
+         CALL allocate_1D_Fluxes
       ENDIF
 #endif
 

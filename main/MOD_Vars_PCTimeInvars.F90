@@ -11,7 +11,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! -----------------------------------------------------------------
 
   USE MOD_Precision
-  USE MOD_Vars_GlobalVars
+  USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
 
@@ -45,6 +45,7 @@ MODULE MOD_Vars_PCTimeInvars
      USE MOD_Precision
      USE MOD_SPMD_Task
      USE MOD_LandPC
+     USE MOD_Vars_Global
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -61,6 +62,7 @@ MODULE MOD_Vars_PCTimeInvars
   SUBROUTINE READ_PCTimeInvars (file_restart)
 
      use MOD_NetCDFVector
+     USE MOD_Vars_Global
      USE MOD_LandPC
      IMPLICIT NONE
 

@@ -17,13 +17,15 @@ MODULE MOD_LandPC
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpc_build ()
+   SUBROUTINE landpc_build (lc_year)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
       USE MOD_LandPatch
       USE MOD_Const_LC
       IMPLICIT NONE
+
+      INTEGER, intent(in) :: lc_year
 
       ! Local Variables
       INTEGER  :: ipatch, ipc, npc, m, npc_glb

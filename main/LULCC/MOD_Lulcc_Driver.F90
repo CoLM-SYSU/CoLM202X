@@ -35,7 +35,8 @@ MODULE MOD_Lulcc_Driver
    USE MOD_SPMD_Task
    USE MOD_Lulcc_Vars_TimeInvars
    USE MOD_Lulcc_Vars_TimeVars
-   USE MOD_Var_TimeVariables
+   USE MOD_Lulcc_Initialize
+   USE MOD_Vars_TimeVariables
 
    IMPLICIT NONE
 
@@ -79,7 +80,7 @@ MODULE MOD_Lulcc_Driver
    CALL deallocate_LulccTimeVars()
 
    ! write out state variables
-   CALL WRITE_TimeVariables (idate, casename, dir_restart)
+   CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
 
  END SUBROUTINE LulccDriver
 

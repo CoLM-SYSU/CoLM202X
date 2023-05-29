@@ -79,7 +79,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #endif
 
    write(cyear,'(i4.4)') lc_year
-   landdir = trim(dir_model_landdata) // '/htop/'//trim(cyear)
+   landdir = trim(dir_model_landdata) // '/htop/' //trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -147,7 +147,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (tree_height_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
@@ -211,7 +211,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
@@ -314,7 +314,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #else
    typpft  = (/(ityp, ityp = 0, N_PFT+N_CFT-1)/)
 #endif
-   lndname = trim(dir_model_landdata) // '/diag/htop_pft.nc'
+   lndname = trim(dir_model_landdata) // '/diag/htop_pft_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (htop_pfts, landpft%settyp, typpft, m_pft2diag, &
       -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
@@ -399,7 +399,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif

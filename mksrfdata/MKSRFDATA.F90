@@ -396,7 +396,7 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_ForestHeight    (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata)
+   CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
 #ifdef URBAN_MODEL
    CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &

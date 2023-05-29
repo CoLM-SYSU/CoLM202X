@@ -46,6 +46,7 @@ OBJS_SHARED =    \
 					  MOD_LandUrban.o              \
 					  MOD_LandPFT.o                \
 					  MOD_LandPC.o                 \
+					  MOD_SrfdataDiag.o            \
 					  MOD_SrfdataRestart.o         \
 					  MOD_ElmVector.o              \
 					  MOD_HRUVector.o
@@ -72,7 +73,6 @@ OBJS_MKSRFDATA = \
 					  MOD_SingleSrfdata.o               \
 					  MOD_MeshFilter.o                  \
 					  MOD_RegionClip.o                  \
-					  MOD_SrfdataDiag.o                 \
 					  MKSRFDATA.o
 
 $(OBJS_MKSRFDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED}
@@ -135,7 +135,16 @@ OBJS_BASIC =    \
 					 MOD_Urban_LAIReadin.o       \
 					 MOD_Urban_Shortwave.o       \
 					 MOD_Urban_Albedo.o          \
-					 MOD_MonthlyinSituCO2mlo.o
+					 MOD_MonthlyinSituCO2mlo.o   \
+					 MOD_PercentagesPFTReadin.o  \
+					 MOD_LakeDepthReadin.o       \
+					 MOD_DBedrockReadin.o        \
+					 MOD_SoilColorRefl.o         \
+					 MOD_SoilParametersReadin.o  \
+					 MOD_HtopReadin.o            \
+					 MOD_UrbanReadin.o           \
+					 MOD_IniTimeVar.o            \
+					 MOD_UrbanIniTimeVar.o
 
 
 $(OBJS_BASIC) : %.o : %.F90 ${HEADER} 
@@ -144,16 +153,7 @@ $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})
 
 OBJS_MKINIDATA = \
-					  MOD_PercentagesPFTReadin.o \
-					  MOD_LakeDepthReadin.o      \
-					  MOD_DBedrockReadin.o       \
-					  MOD_SoilColorRefl.o        \
-					  MOD_SoilParametersReadin.o \
-					  MOD_HtopReadin.o           \
-					  MOD_UrbanReadin.o          \
-					  MOD_IniTimeVar.o           \
-					  MOD_UrbanIniTimeVar.o      \
-					  MOD_Initialize.o           \
+					  MOD_Initialize.o   \
 					  CoLMINI.o
 
 $(OBJS_MKINIDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} 

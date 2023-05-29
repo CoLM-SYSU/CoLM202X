@@ -40,9 +40,6 @@ PROGRAM CoLMINI
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
 #endif
-#ifdef URBAN_MODEL
-   USE mod_landurban
-#endif
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
 #endif
@@ -93,21 +90,20 @@ PROGRAM CoLMINI
    s_day        = DEF_simulation_time%start_day
    s_seconds    = DEF_simulation_time%start_sec
 
-   print*, dir_landdata
 #ifdef SinglePoint
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
 #endif
+
+   CALL monthday2julian(s_year,s_month,s_day,s_julian)
+   idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
+   CALL adj2end(idate)
 
 #ifdef LULCC
    lc_year = idate(1)
 #else
    lc_year = DEF_LC_YEAR
 #endif
-
-   CALL monthday2julian(s_year,s_month,s_day,s_julian)
-   idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
-   CALL adj2end(idate)
 
    CALL Init_GlovalVars
    CAll Init_LC_Const

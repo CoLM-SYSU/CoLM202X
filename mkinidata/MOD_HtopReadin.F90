@@ -60,7 +60,7 @@ MODULE MOD_HtopReadin
          REAL(r8), allocatable :: htoppft (:)
 
          write(cyear,'(i4.4)') lc_year
-         landdir = trim(dir_landdata) // '/htop' // trim(cyear)
+         landdir = trim(dir_landdata) // '/htop/' // trim(cyear)
 
 
 #ifdef USGS_CLASSIFICATION

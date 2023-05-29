@@ -69,7 +69,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
 #endif
 
-   landdir = trim(dir_model_landdata) // '/pctpft/'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/pctpft/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -93,7 +94,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
    ! add parameter input for time year
-   write(cyear,'(i4.4)') lc_year
+   !write(cyear,'(i4.4)') lc_year
    suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
@@ -157,7 +158,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #else
    typpft = (/(ipft, ipft = 0, N_PFT-1)/)
 #endif
-   lndname = trim(dir_model_landdata)//'/diag/pct_pfts.nc'
+   lndname = trim(dir_model_landdata)//'/diag/pct_pfts_'//trim(cyear)//'.nc'
    CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
       -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
 #endif
@@ -182,7 +183,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
 #ifdef SrfdataDiag
    typcrop = (/(ityp, ityp = 1, N_CFT)/)
-   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch.nc'
+   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (pctcrop, cropclass, typcrop, m_patch2diag, &
       -1.0e36_r8, lndname, 'pctcrop', compress = 1, write_mode = 'one')
 #endif
@@ -205,7 +206,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   suffix  = 'MOD2005'
+   suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)

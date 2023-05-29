@@ -18,7 +18,7 @@ MODULE MOD_PercentagesPFTReadin
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE pct_readin (dir_landdata)
+   SUBROUTINE pct_readin (dir_landdata, lc_year)
 
       use MOD_Precision
       USE MOD_Vars_Global
@@ -38,15 +38,17 @@ MODULE MOD_PercentagesPFTReadin
 #endif
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       character(LEN=256), INTENT(in) :: dir_landdata
       ! Local Variables
-      character(len=256) :: lndname
+      character(len=256) :: lndname, cyear
       REAL(r8), allocatable :: sumpct (:)
       INTEGER :: npatch, ipatch
 
+      write(cyear,'(i4.4)') lc_year
 #ifdef PFT_CLASSIFICATION
 #ifndef SinglePoint
-      lndname = trim(dir_landdata)//'/pctpft/pct_pfts.nc'
+      lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_pfts.nc'
       call ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac)
 #else
       pftfrac = pack(SITE_pctpfts, SITE_pctpfts > 0.)
@@ -54,7 +56,7 @@ MODULE MOD_PercentagesPFTReadin
 
 #if (defined CROP)
 #ifndef SinglePoint
-      lndname = trim(dir_landdata)//'/pctpft/pct_crops.nc'
+      lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_crops.nc'
       call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop)
 #else
       allocate (pctcrop (numpatch))
@@ -87,7 +89,7 @@ MODULE MOD_PercentagesPFTReadin
 
 #ifdef PC_CLASSIFICATION
 #ifndef SinglePoint
-      lndname = trim(dir_landdata)//'/pctpft/pct_pcs.nc'
+      lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_pcs.nc'
       CALL ncio_read_vector (lndname, 'pct_pcs', N_PFT, landpc, pcfrac)
 #else
       pcfrac(:,1) = SITE_pctpfts

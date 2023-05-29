@@ -98,7 +98,7 @@ MODULE MOD_LAIReadin
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
          call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai)
 
-         lndname = trim(landdir)//'/SAI_patches'//trim(ctime)//'.nc'
+         lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
          call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai)
       ELSE
          write(cyear,'(i4.4)') year
