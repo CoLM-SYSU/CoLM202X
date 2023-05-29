@@ -97,7 +97,7 @@ PROGRAM CoLMINI
 
    CALL monthday2julian(s_year,s_month,s_day,s_julian)
    idate(1) = s_year; idate(2) = s_julian; idate(3) = s_seconds
-   CALL adj2end(idate)
+   CALL adj2begin(idate)
 
 #ifdef LULCC
    lc_year = idate(1)

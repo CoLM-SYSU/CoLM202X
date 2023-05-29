@@ -120,10 +120,10 @@ CONTAINS
 
 #ifndef USGS_CLASSIFICATION
          ! add parameter input for time year
-         file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
+         file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover TYPE data
-         !file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
+         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype_usgs_update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
