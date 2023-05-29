@@ -4,11 +4,17 @@ include include/Makeoptions
 HEADER = include/define.h
 
 INCLUDE_DIR = -Iinclude -I.bld -I${NETCDF_INC}
-VPATH = include : share : mksrfdata : mkinidata : main : main/hydro : main/bgc : main/urban : CaMa/src : postprocess : .bld
+VPATH = include : share : mksrfdata : mkinidata : main : main/HYDRO : main/BGC : main/URBAN : CaMa/src : postprocess : .bld
 
 # ********** Targets ALL **********
 .PHONY: all
 all : mkdir_build mksrfdata.x mkinidata.x colm.x postprocess.x
+	@echo ''
+	@echo '*******************************************************'
+	@echo '*                                                     *'
+	@echo '*        Making all CoLM programs successfully.       *'
+	@echo '*                                                     *'
+	@echo '*******************************************************'
 # ******* End of Targets ALL ******
 
 .PHONY: mkdir_build

@@ -42,10 +42,6 @@
 #undef LATERAL_FLOW
 #endif
 
-! 7. If defined, soil temperature, wetness and snow depth
-!     are initialized by input data.
-#undef SOILINI
-
 ! 8. Soil reflectance can be predefined values or load from files.
 #undef SOIL_REFL_GUESSED
 #define SOIL_REFL_READ
@@ -130,11 +126,6 @@
 #endif
 ! 15 If defined, SNICAR is on
 #undef   SNICAR
-! 16 If defined, ... need some one to finish here
-#undef   Forcing_Downscaling
-#define option_precipitation_adjust_II
-#define option_longwave_adjust_II
-#define option_precip_phase_discrimination_II
 ! 17. If defined, diagnostics in wue model will be output
 #undef WUEdiag
 ! 18. If defined, supercooled soil water is implemented, Niu & Yang (2006)
