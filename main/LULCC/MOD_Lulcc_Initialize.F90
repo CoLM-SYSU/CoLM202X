@@ -161,7 +161,6 @@ MODULE MOD_Lulcc_Initialize
    real(r8), allocatable :: dz_soisno(:,:)
 
    real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
-   INTEGER  :: idate0(3)
    integer  :: year, jday                ! Julian day and seconds
    INTEGER  :: month, mday, msec
 
@@ -617,17 +616,12 @@ MODULE MOD_Lulcc_Initialize
    end if
 #else
 
-   idate0 = idate
-   CALL adj2begin(idate0)
-   year = idate0(1)
-   jday = idate0(2)
-
    IF (DEF_LAI_CLIM) then
       ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)
    ELSE
-      Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
+      Julian_8day = int(calendarday(idate)-1)/8*8 + 1
       CALL LAI_readin (year, Julian_8day, dir_landdata)
    ENDIF
 
@@ -902,7 +896,7 @@ MODULE MOD_Lulcc_Initialize
 #ifdef CLMDEBUG
    call check_TimeVariables ()
 #endif
-   ! CALL WRITE_TimeVariables (idate, casename, dir_restart)
+   ! CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
 #endif

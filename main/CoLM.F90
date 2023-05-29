@@ -86,7 +86,7 @@ PROGRAM CoLM
 
 #ifdef LULCC
    USE MOD_Lulcc_Driver
-#ENDIF
+#endif
 
    ! SNICAR
    USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
@@ -106,7 +106,7 @@ PROGRAM CoLM
    integer  :: idate(3)     ! calendar (year, julian day, seconds)
    integer  :: edate(3)     ! calendar (year, julian day, seconds)
    integer  :: pdate(3)     ! calendar (year, julian day, seconds)
-   integer  :: jdate(3)     ! calendar (year, julian day, seconds)
+   integer  :: jdate(3)     ! calendar (year, julian day, seconds), year beginning style
    logical  :: greenwich    ! greenwich time
 
    logical :: doalb         ! true => start up the surface albedo calculation
@@ -245,7 +245,7 @@ PROGRAM CoLM
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
-   CALL READ_TimeVariables (sdate, lc_year, casename, dir_restart)
+   CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
    ! Read in SNICAR optical and aging parameters
    CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
