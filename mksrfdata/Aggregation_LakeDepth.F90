@@ -110,16 +110,16 @@ SUBROUTINE Aggregation_LakeDepth ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L==16)THEN  ! LAND WATER BODIES (16)
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
             CALL aggregation_request_data (landpatch, ipatch, gland, &

@@ -31,10 +31,10 @@ PROGRAM CoLMINI
    USE MOD_Const_LC
    USE MOD_Const_PFT
    USE MOD_TimeManager
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
@@ -121,12 +121,12 @@ PROGRAM CoLMINI
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
    CALL map_patch_to_pc
 #endif

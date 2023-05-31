@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 MODULE MOD_Vars_PCTimeInvars
 ! -----------------------------------------------------------------
@@ -15,7 +15,7 @@ MODULE MOD_Vars_PCTimeInvars
   IMPLICIT NONE
   SAVE
 
-  ! for PC_CLASSIFICATION
+  ! for LULC_IGBP_PC
   REAL(r8), allocatable :: pcfrac(:,:)    !PC fractional cover
   REAL(r8), allocatable :: htop_c(:,:)    !canopy top height [m]
   REAL(r8), allocatable :: hbot_c(:,:)    !canopy bottom height [m]

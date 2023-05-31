@@ -39,11 +39,11 @@ MODULE MOD_LAIReadin
 
       USE MOD_Vars_Global
       USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
       USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       USE MOD_LandPC
       USE MOD_Vars_PCTimeVars
 #endif
@@ -62,7 +62,7 @@ MODULE MOD_LAIReadin
       character(LEN=256) :: landdir, lndname
       integer :: m, npatch
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
       real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
          vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
@@ -80,7 +80,7 @@ MODULE MOD_LAIReadin
       ENDIF
 #endif
 
-#if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if (defined LULC_USGS || defined LULC_IGBP)
 
 !TODO: need to consider single point for urban model
 #ifdef SinglePoint
@@ -144,7 +144,7 @@ MODULE MOD_LAIReadin
 
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 #ifdef SinglePoint
       !TODO: how to add time parameter in single point case
@@ -190,7 +190,7 @@ MODULE MOD_LAIReadin
 
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 #ifdef SinglePoint
       IF (DEF_LAI_CLIM) THEN

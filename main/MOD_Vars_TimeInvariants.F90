@@ -6,10 +6,10 @@ MODULE MOD_Vars_TimeInvariants
 ! -------------------------------
 
 use MOD_Precision
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 USE MOD_Vars_PFTimeInvars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 USE MOD_Vars_PCTimeInvars
 #endif
 #ifdef BGC
@@ -173,11 +173,11 @@ SAVE
 #endif
      end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL allocate_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL allocate_PCTimeInvars
 #endif
 
@@ -290,12 +290,12 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PCTimeInvars (file_restart)
 #endif
@@ -441,12 +441,12 @@ SAVE
 
      end if
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PCTimeInvars (file_restart)
 #endif
@@ -533,11 +533,11 @@ SAVE
         end if
      end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL deallocate_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL deallocate_PCTimeInvars
 #endif
 
@@ -633,11 +633,11 @@ SAVE
          write(*,'(A7,E20.10)') 'tcrit ', tcrit  ! critical temp. to determine rain or snow
       end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL check_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL check_PCTimeInvars
 #endif
 

@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 MODULE MOD_LandPFT
 
@@ -99,7 +99,7 @@ CONTAINS
 #endif
             ENDIF
          ELSE
-            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for PFT_CLASSIFICATION'
+            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for LULC_IGBP_PFT'
             patch_pft_s(:) = -1
             patch_pft_e(:) = -1
          ENDIF

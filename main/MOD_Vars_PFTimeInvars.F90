@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 MODULE MOD_Vars_PFTimeInvars
 ! -----------------------------------------------------------------
@@ -15,7 +15,7 @@ MODULE MOD_Vars_PFTimeInvars
   IMPLICIT NONE
   SAVE
 
-  ! for PFT_CLASSIFICATION
+  ! for LULC_IGBP_PFT
   INTEGER , allocatable :: pftclass    (:)    !PFT type
 ! INTEGER , allocatable :: patch_pft_s (:)    !start PFT index of a patch
 ! INTEGER , allocatable :: patch_pft_e (:)    !end PFT index of a patch

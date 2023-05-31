@@ -79,7 +79,7 @@ CONTAINS
          write(*,'(A)') 'Making land patches :'
       ENDIF
 
-#if (defined SinglePoint && defined PFT_CLASSIFICATION && defined CROP)
+#if (defined SinglePoint && defined LULC_IGBP_PFT && defined CROP)
       IF ((SITE_landtype == CROPLAND) .and. (USE_SITE_pctcrop)) THEN
 
          numpatch = count(SITE_pctcrop > 0.)
@@ -118,7 +118,7 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-#ifndef USGS_CLASSIFICATION
+#ifndef LULC_USGS
          ! add parameter input for time year
          file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
@@ -187,7 +187,7 @@ CONTAINS
             ENDIF
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             ! For classification of plant function types, merge all land types with soil ground
             DO ipxl = ipxstt, ipxend
                IF (types(ipxl) > 0) THEN

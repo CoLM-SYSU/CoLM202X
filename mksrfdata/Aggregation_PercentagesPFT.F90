@@ -18,10 +18,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -50,11 +50,11 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    ! for PFT
    TYPE (block_data_real8_3d) :: pftPCT
    REAL(r8), allocatable :: pct_one(:), area_one(:)
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    REAL(r8), allocatable :: pct_pft_one(:,:)
    REAL(r8), allocatable :: pct_pfts(:)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    REAL(r8), allocatable :: pct_pft_one(:,:)
    REAL(r8), allocatable :: pct_pcs(:,:)
 #endif
@@ -84,7 +84,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
 
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 #ifdef SinglePoint
    IF (USE_SITE_pctpfts) THEN
@@ -197,7 +197,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 #ifdef SinglePoint
    IF (USE_SITE_pctpfts) THEN

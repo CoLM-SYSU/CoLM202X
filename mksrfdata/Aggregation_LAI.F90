@@ -30,10 +30,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -115,7 +115,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! ... global plant leaf area index
    ! ................................................
 
-#if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if (defined LULC_USGS || defined LULC_IGBP)
    ! add time variation of LAI
    IF (DEF_LAI_CLIM) THEN
       ! monthly average LAI
@@ -350,7 +350,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 
 ! PFT LAI!!!!!
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    ! add time variation of LAI
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
@@ -627,7 +627,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 
 ! PC LAI!!!!!!!!
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    ! add time variation of LAI
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
