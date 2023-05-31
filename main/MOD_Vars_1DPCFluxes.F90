@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 MODULE MOD_Vars_1DPCFluxes
 ! -----------------------------------------------------------------

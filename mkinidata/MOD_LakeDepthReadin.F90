@@ -18,7 +18,7 @@ MODULE MOD_LakeDepthReadin
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE lakedepth_readin (dir_landdata)
+   SUBROUTINE lakedepth_readin (dir_landdata, lc_year)
 
    !------------------------------------------------------------------------------------------
    ! DESCRIPTION:
@@ -39,10 +39,11 @@ MODULE MOD_LakeDepthReadin
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
       character(LEN=256), INTENT(in) :: dir_landdata
 
       ! Local Variables
-      character(len=256) :: lndname
+      character(len=256) :: lndname, cyear
       real(r8) :: depthratio                  ! ratio of lake depth to standard deep lake depth
       integer  :: ipatch
 
@@ -78,7 +79,8 @@ MODULE MOD_LakeDepthReadin
 #ifdef SinglePoint
       lakedepth(:) = SITE_lakedepth
 #else
-      lndname = trim(dir_landdata)//'/lakedepth/lakedepth_patches.nc'
+      write(cyear,'(i4.4)') lc_year
+      lndname = trim(dir_landdata)//'/lakedepth/'//trim(cyear)//'/lakedepth_patches.nc'
       call ncio_read_vector (lndname, 'lakedepth_patches', landpatch, lakedepth)
 #endif
 

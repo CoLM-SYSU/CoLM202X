@@ -15,7 +15,7 @@ MODULE MOD_Vars_Global
    IMPLICIT NONE
    SAVE
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    ! GLCC USGS number of land cover category
    INTEGER, parameter :: N_land_classification = 24
    ! GLCC USGS land cover named index (could be added IF needed)

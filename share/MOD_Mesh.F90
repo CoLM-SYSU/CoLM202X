@@ -7,8 +7,8 @@ MODULE MOD_Mesh
    IMPLICIT NONE
 
    ! ---- data types ----
-   TYPE :: irregular_elm_type 
-      
+   TYPE :: irregular_elm_type
+
       INTEGER :: indx
       INTEGER :: xblk, yblk
 
@@ -26,10 +26,10 @@ MODULE MOD_Mesh
 
    INTEGER, allocatable :: nelm_blk(:,:)
 
-#ifdef GRIDBASED 
+#ifdef GRIDBASED
    LOGICAL :: read_mesh_from_file = .true.
 #endif
-   
+
 CONTAINS
 
    ! ------
@@ -52,7 +52,7 @@ CONTAINS
          CALL gridmesh%define_by_res (DEF_GRIDBASED_lon_res, DEF_GRIDBASED_lat_res)
       ENDIF
 
-   END SUBROUTINE init_gridbased_mesh_grid 
+   END SUBROUTINE init_gridbased_mesh_grid
 #endif
 
    ! -------
@@ -62,10 +62,10 @@ CONTAINS
       TYPE (irregular_elm_type), intent(in)  :: elm_from
       TYPE (irregular_elm_type), intent(out) :: elm_to
 
-      elm_to%indx = elm_from%indx  
-      elm_to%npxl = elm_from%npxl 
-      elm_to%xblk = elm_from%xblk 
-      elm_to%yblk = elm_from%yblk 
+      elm_to%indx = elm_from%indx
+      elm_to%npxl = elm_from%npxl
+      elm_to%xblk = elm_from%xblk
+      elm_to%yblk = elm_from%yblk
 
       IF (allocated(elm_to%ilat)) deallocate(elm_to%ilat)
       IF (allocated(elm_to%ilon)) deallocate(elm_to%ilon)
@@ -73,10 +73,10 @@ CONTAINS
       allocate (elm_to%ilat (elm_to%npxl))
       allocate (elm_to%ilon (elm_to%npxl))
       elm_to%ilon = elm_from%ilon
-      elm_to%ilat = elm_from%ilat 
+      elm_to%ilat = elm_from%ilat
 
    END SUBROUTINE copy_elm
-   
+
    ! --------------------------------
    SUBROUTINE mesh_build ()
 
@@ -93,7 +93,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      ! Local Variables 
+      ! Local Variables
       TYPE(block_data_int32_2d) :: datamesh
 
       INTEGER  :: iworker
@@ -108,7 +108,7 @@ CONTAINS
       LOGICAL  :: is_new
       INTEGER  :: nsend, nrecv, irecv
       INTEGER  :: smesg(5), rmesg(5)
-      
+
       INTEGER, allocatable :: nelm_worker(:)
       TYPE(pointer_int32_1d), allocatable :: elist_worker(:)
 
@@ -132,7 +132,7 @@ CONTAINS
       numelm = 1
       allocate (mesh(1))
       mesh(1)%indx = 1
-      
+
       mesh(1)%npxl = 1
 
       allocate(mesh(1)%ilat(1))
@@ -141,7 +141,7 @@ CONTAINS
       allocate(mesh(1)%ilon(1))
       CALL normalize_longitude (SITE_lon_location)
       mesh(1)%ilon(1) = find_nearest_west  (SITE_lon_location, pixel%nlon, pixel%lon_w)
-      
+
       mesh(1)%xblk = find_nearest_west  (pixel%lon_w(mesh(1)%ilon(1)), gblock%nxblk, gblock%lon_w)
       mesh(1)%yblk = find_nearest_south (pixel%lat_s(mesh(1)%ilat(1)), gblock%nyblk, gblock%lat_s)
 
@@ -152,11 +152,11 @@ CONTAINS
       RETURN
 #endif
 
-      IF (p_is_io) THEN 
+      IF (p_is_io) THEN
          CALL allocate_block_data (gridmesh, datamesh)
       ENDIF
 
-#ifdef GRIDBASED 
+#ifdef GRIDBASED
       IF (read_mesh_from_file) THEN
          CALL ncio_read_block (DEF_file_mesh, 'landmask', gridmesh, datamesh)
       ELSE
@@ -186,14 +186,14 @@ CONTAINS
             allocate (elist_worker(iworker)%val (1000))
          ENDDO
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
-                  
+
             DO yloc = 1, gridmesh%ycnt(jblk)
                DO xloc = 1, gridmesh%xcnt(iblk)
 
-#ifdef GRIDBASED 
+#ifdef GRIDBASED
                   IF (datamesh%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
                      xg = gridmesh%xdsp(iblk) + xloc
                      IF (xg > gridmesh%nlon) xg = xg - gridmesh%nlon
@@ -226,30 +226,30 @@ CONTAINS
 
                ENDDO
             ENDDO
-                        
+
 #ifdef USEMPI
             DO iworker = 0, p_np_worker-1
-               IF (nelm_worker(iworker) > 0) then 
+               IF (nelm_worker(iworker) > 0) then
                   idest = p_address_worker(iworker)
-                  smesg(1:2) = (/p_iam_glb, nelm_worker(iworker)/) 
+                  smesg(1:2) = (/p_iam_glb, nelm_worker(iworker)/)
                   ! send(01)
                   CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
-                     idest, mpi_tag_size, p_comm_glb, p_err) 
+                     idest, mpi_tag_size, p_comm_glb, p_err)
                ENDIF
             ENDDO
 #endif
 
             nelm = nelm + sum(nelm_worker)
             nelm_worker(:) = 0
-         ENDDO               
-         
+         ENDDO
+
 #ifdef USEMPI
          DO iworker = 0, p_np_worker-1
             idest = p_address_worker(iworker)
             ! send(02)
             smesg(1:2) = (/p_iam_glb, 0/)
             CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
-               idest, mpi_tag_size, p_comm_glb, p_err) 
+               idest, mpi_tag_size, p_comm_glb, p_err)
          ENDDO
 #endif
 
@@ -259,7 +259,7 @@ CONTAINS
          ENDDO
          deallocate (elist_worker)
 
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
       IF (p_is_worker) THEN
@@ -276,10 +276,10 @@ CONTAINS
 
             IF (nrecv > 0) THEN
                nelm = nelm + nrecv
-            ELSE 
+            ELSE
                work_done(p_itis_io(isrc)) = .true.
-            ENDIF 
-         ENDDO 
+            ENDIF
+         ENDDO
 
          deallocate(work_done)
       ENDIF
@@ -293,17 +293,17 @@ CONTAINS
             allocate (meshtmp (nelm))
             allocate (elist (nelm))
             allocate (iaddr (nelm))
-         ENDIF 
+         ENDIF
          nelm = 0
-      ENDIF 
+      ENDIF
 
       IF (p_is_io) THEN
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
-            IF (gridmesh%xcnt(iblk) <= 0) cycle 
-            IF (gridmesh%ycnt(jblk) <= 0) cycle 
+            IF (gridmesh%xcnt(iblk) <= 0) cycle
+            IF (gridmesh%ycnt(jblk) <= 0) cycle
 
             ylg = gridmesh%ydsp(jblk) + 1
             yug = gridmesh%ydsp(jblk) + gridmesh%ycnt(jblk)
@@ -333,7 +333,7 @@ CONTAINS
             ENDIF
 
             nxp = xep - xwp + 1
-            IF (nxp <= 0) nxp = nxp + pixel%nlon 
+            IF (nxp <= 0) nxp = nxp + pixel%nlon
 
             allocate (elist2 (nxp,nyp))
             allocate (xlist2 (nxp,nyp))
@@ -356,12 +356,12 @@ CONTAINS
                DO while (.true.)
                   ixloc = ixloc + 1
                   dlonp = pixel%lon_e(ix) - pixel%lon_w(ix)
-                  IF (dlonp < 0) dlonp = dlonp + 360.0_r8 
+                  IF (dlonp < 0) dlonp = dlonp + 360.0_r8
 
                   xg = gridmesh%xgrd(ix)
                   xloc = gridmesh%xloc(xg)
 
-#ifdef GRIDBASED 
+#ifdef GRIDBASED
                   IF (datamesh%blk(iblk,jblk)%val(xloc,yloc) > 0) THEN
                      ie = gridmesh%nlon * (yg-1) + xg
                   ELSE
@@ -387,11 +387,11 @@ CONTAINS
                   ix = mod(ix,pixel%nlon) + 1
                ENDDO
             ENDDO
-                  
+
 #ifdef USEMPI
             allocate (sbuf (nxp*nyp))
             allocate (ipt2 (nxp,nyp))
-                  
+
             ipt2 = mod(elist2, p_np_worker)
             DO iproc = 0, p_np_worker-1
                msk2  = (ipt2 == iproc) .and. (elist2 > 0)
@@ -403,22 +403,22 @@ CONTAINS
                   smesg(1:2) = (/p_iam_glb, nsend/)
                   ! send(03)
                   CALL mpi_send (smesg(1:2), 2, MPI_INTEGER, &
-                     idest, mpi_tag_mesg, p_comm_glb, p_err) 
+                     idest, mpi_tag_mesg, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(elist2, msk2)
                   ! send(04)
                   CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err) 
+                     idest, mpi_tag_data, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(xlist2, msk2)
                   ! send(05)
                   CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err) 
+                     idest, mpi_tag_data, p_comm_glb, p_err)
 
                   sbuf(1:nsend) = pack(ylist2, msk2)
                   ! send(06)
                   CALL mpi_send (sbuf(1:nsend), nsend, MPI_INTEGER, &
-                     idest, mpi_tag_data, p_comm_glb, p_err) 
+                     idest, mpi_tag_data, p_comm_glb, p_err)
 
                ENDIF
             ENDDO
@@ -426,12 +426,12 @@ CONTAINS
             deallocate (sbuf  )
             deallocate (ipt2  )
 #else
-                  
+
             DO iy = 1, nyp
                DO ix = 1, nxp
 
                   ie = elist2(ix,iy)
-                  IF (ie > 0) THEN 
+                  IF (ie > 0) THEN
 
                      CALL insert_into_sorted_list1 (ie, nelm, elist, iloc, is_new)
 
@@ -462,7 +462,7 @@ CONTAINS
 
                      deallocate (xlist)
                      deallocate (ylist)
-                  ENDIF 
+                  ENDIF
 
                ENDDO
             ENDDO
@@ -481,7 +481,7 @@ CONTAINS
             ! send(07)
             rmesg(1:2) = (/p_iam_glb, 0/)
             CALL mpi_send (rmesg(1:2), 2, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
          ENDDO
 #endif
 
@@ -505,12 +505,12 @@ CONTAINS
                ! recv(04)
                CALL mpi_recv (elist_recv, nrecv, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
                allocate (xlist_recv (nrecv))
                ! recv(05)
                CALL mpi_recv (xlist_recv, nrecv, MPI_INTEGER, &
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               
+
                allocate (ylist_recv (nrecv))
                ! recv(06)
                CALL mpi_recv (ylist_recv, nrecv, MPI_INTEGER, &
@@ -552,9 +552,9 @@ CONTAINS
                      where(msk) elist_recv = -1
                      deallocate (xlist)
                      deallocate (ylist)
-                  ENDIF 
+                  ENDIF
 
-               ENDDO 
+               ENDDO
 
                deallocate (msk)
                deallocate (elist_recv)
@@ -565,16 +565,16 @@ CONTAINS
             ENDIF
          ENDDO
 
-      ENDIF 
+      ENDIF
 
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      
+
       IF (allocated(elist)) deallocate (elist)
       IF (allocated(iaddr)) deallocate (iaddr)
 
-      ! Step 3: Which block each elm locates at. 
-      IF (p_is_worker) THEN 
+      ! Step 3: Which block each elm locates at.
+      IF (p_is_worker) THEN
 
          allocate (npxl_blk (gblock%nxblk,gblock%nyblk))
          allocate (nelm_blk (gblock%nxblk,gblock%nyblk))
@@ -584,7 +584,7 @@ CONTAINS
          DO ie = 1, nelm
 
             npxl_blk (:,:) = 0
-            
+
             DO ipxl = 1, meshtmp(ie)%npxl
                xp = meshtmp(ie)%ilon(ipxl)
                yp = meshtmp(ie)%ilat(ipxl)
@@ -601,14 +601,14 @@ CONTAINS
             iloc_max = maxloc(npxl_blk)
             meshtmp(ie)%xblk = iloc_max(1)
             meshtmp(ie)%yblk = iloc_max(2)
-            
+
             nelm_blk(iloc_max(1), iloc_max(2)) = &
-               nelm_blk(iloc_max(1), iloc_max(2)) + 1 
+               nelm_blk(iloc_max(1), iloc_max(2)) + 1
 
          ENDDO
 
          deallocate (npxl_blk)
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
       IF (.not. p_is_worker) THEN
@@ -618,29 +618,29 @@ CONTAINS
 
       CALL mpi_allreduce (MPI_IN_PLACE, nelm_blk, gblock%nxblk*gblock%nyblk, &
          MPI_INTEGER, MPI_SUM, p_comm_glb, p_err)
-#endif 
+#endif
 
       ! Step 4: IF MPI is used, sending elms from worker to their IO processes.
-      
-      IF (p_is_io) THEN 
+
+      IF (p_is_io) THEN
 
          allocate (blkdsp (gblock%nxblk, gblock%nyblk))
          blkdsp(1,1) = 0
-         DO jblk = 1, gblock%nyblk 
-            DO iblk = 1, gblock%nxblk 
+         DO jblk = 1, gblock%nyblk
+            DO iblk = 1, gblock%nxblk
                IF ((iblk /= 1) .or. (jblk /= 1)) THEN
                   IF (iblk == 1) THEN
                      iblk_p = gblock%nxblk
                      jblk_p = jblk - 1
-                  ELSE                       
+                  ELSE
                      iblk_p = iblk - 1
                      jblk_p = jblk
-                  ENDIF 
+                  ENDIF
 
                   IF (gblock%pio(iblk_p,jblk_p) == p_iam_glb) THEN
-                     blkdsp(iblk,jblk) = blkdsp(iblk_p,jblk_p) + nelm_blk(iblk_p,jblk_p) 
+                     blkdsp(iblk,jblk) = blkdsp(iblk_p,jblk_p) + nelm_blk(iblk_p,jblk_p)
                   ELSE
-                     blkdsp(iblk,jblk) = blkdsp(iblk_p,jblk_p) 
+                     blkdsp(iblk,jblk) = blkdsp(iblk_p,jblk_p)
                   ENDIF
                ENDIF
             ENDDO
@@ -649,17 +649,17 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
-      IF (p_is_worker) THEN 
+      IF (p_is_worker) THEN
          DO ie = 1, nelm
-            
+
             idest = gblock%pio (meshtmp(ie)%xblk, meshtmp(ie)%yblk)
-         
+
             smesg(1) = p_iam_glb
             smesg(2:3) = (/meshtmp(ie)%indx, meshtmp(ie)%npxl/)
             smesg(4:5) = (/meshtmp(ie)%xblk, meshtmp(ie)%yblk/)
             ! send(09)
             CALL mpi_send (smesg(1:5), 5, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
             ! send(10)
             CALL mpi_send (meshtmp(ie)%ilon, meshtmp(ie)%npxl, MPI_INTEGER, &
                idest, mpi_tag_data, p_comm_glb, p_err)
@@ -667,9 +667,9 @@ CONTAINS
             CALL mpi_send (meshtmp(ie)%ilat, meshtmp(ie)%npxl, MPI_INTEGER, &
                idest, mpi_tag_data, p_comm_glb, p_err)
          ENDDO
-      ENDIF 
+      ENDIF
 
-      IF (p_is_io) THEN 
+      IF (p_is_io) THEN
 
          numelm = sum(nelm_blk, mask = gblock%pio == p_iam_glb)
 
@@ -710,8 +710,8 @@ CONTAINS
             ENDDO
 
          ENDIF
-      ENDIF 
-      
+      ENDIF
+
       CALL mpi_barrier (p_comm_glb, p_err)
 
 #else
@@ -753,7 +753,7 @@ CONTAINS
                CALL copy_elm(mesh(ie), meshtmp(ie))
             ENDDO
 
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
@@ -783,7 +783,7 @@ CONTAINS
 
       IF (allocated(blkdsp)) deallocate(blkdsp)
       IF (allocated(blkcnt)) deallocate(blkcnt)
-         
+
       IF (allocated (meshtmp)) THEN
          DO ie = 1, size(meshtmp)
             IF (allocated(meshtmp(ie)%ilon))  deallocate (meshtmp(ie)%ilon)
@@ -797,16 +797,16 @@ CONTAINS
 #ifdef USEMPI
       CALL scatter_mesh_from_io_to_worker ()
 #endif
-         
+
       IF (p_is_master) THEN
          write(*,'(A)') 'Making mesh elements :'
       ENDIF
-      
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 
       IF (p_is_io) THEN
-         
+
          write(*,'(I19,A,I6)') numelm, ' elements on IO ', p_iam_glb
 
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_io, p_err)
@@ -814,7 +814,7 @@ CONTAINS
             write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.'
          ENDIF
       ENDIF
-      
+
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numelm, ' elements.'
@@ -836,16 +836,16 @@ CONTAINS
       INTEGER :: smesg(4), rmesg(4)
       INTEGER, allocatable :: nelm_worker(:)
       INTEGER :: iblkme
-      
+
       IF (p_is_io) THEN
 
          allocate (nelm_worker (1:p_np_group-1))
          nelm_worker(:) = 0
 
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
-        
+
             nave = nelm_blk(iblk,jblk) / (p_np_group-1)
             nres = mod(nelm_blk(iblk,jblk), p_np_group-1)
             DO iproc = 1, p_np_group-1
@@ -856,12 +856,12 @@ CONTAINS
 
          DO iproc = 1, p_np_group-1
             CALL mpi_send (nelm_worker(iproc), 1, MPI_INTEGER, &
-               iproc, mpi_tag_size, p_comm_group, p_err) 
+               iproc, mpi_tag_size, p_comm_group, p_err)
          ENDDO
          deallocate (nelm_worker)
 
          ndsp = 0
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -876,7 +876,7 @@ CONTAINS
                   smesg(1:2) = (/mesh(ie)%indx, mesh(ie)%npxl/)
                   smesg(3:4) = (/mesh(ie)%xblk, mesh(ie)%yblk/)
                   CALL mpi_send (smesg(1:4), 4, MPI_INTEGER, &
-                     idest, mpi_tag_mesg, p_comm_group, p_err) 
+                     idest, mpi_tag_mesg, p_comm_group, p_err)
                   CALL mpi_send (mesh(ie)%ilon, mesh(ie)%npxl, &
                      MPI_INTEGER, idest, mpi_tag_data, p_comm_group, p_err)
                   CALL mpi_send (mesh(ie)%ilat, mesh(ie)%npxl, &
@@ -885,7 +885,7 @@ CONTAINS
                ndsp = ndsp + nsend
             ENDDO
          ENDDO
-            
+
       ENDIF
 
       IF (p_is_worker) THEN
@@ -923,7 +923,7 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE mesh_free_mem ()
-      
+
       IMPLICIT NONE
 
       ! Local variables

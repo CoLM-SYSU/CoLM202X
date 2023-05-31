@@ -1,6 +1,6 @@
 #include <define.h>
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
 
 MODULE MOD_BGC_Vars_PFTimeVars
 

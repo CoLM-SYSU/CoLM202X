@@ -266,6 +266,9 @@ CONTAINS
     IF (month==1 .or. month==2) THEN
       mmonth = month + 12
       myear  = year  - 1
+    ELSE
+      mmonth = month
+      myear  = year
     ENDIF
 
     y12 = myear/100

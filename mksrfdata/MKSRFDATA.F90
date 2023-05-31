@@ -57,16 +57,16 @@ PROGRAM MKSRFDATA
    USE MOD_LandPatch
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
 #endif
-
+   USE MOD_RegionClip
 #ifdef SrfdataDiag
    USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
 #endif
@@ -86,8 +86,9 @@ PROGRAM MKSRFDATA
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
    TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
-   TYPE (grid_type) :: grid_urban_5km, grid_urban_100m, grid_urban_500m
+   TYPE (grid_type) :: grid_urban_5km, grid_urban_500m
 
+   INTEGER   :: lc_year
    INTEGER*8 :: start_time, end_time, c_per_sec, time_used
 
 
@@ -136,6 +137,7 @@ PROGRAM MKSRFDATA
    edgen = DEF_domain%edgen
    edgew = DEF_domain%edgew
    edgee = DEF_domain%edgee
+   lc_year = DEF_LC_YEAR
 
    ! define blocks
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
@@ -177,16 +179,16 @@ PROGRAM MKSRFDATA
 #endif
 
    ! define grid coordinates of land types
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    CALL gpatch%define_by_name ('colm_1km')
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 #ifdef BGC
@@ -215,17 +217,6 @@ PROGRAM MKSRFDATA
    CALL gurban%define_by_name          ('colm_500m')
    CALL grid_urban_500m%define_by_name ('colm_500m')
    CALL grid_urban_5km%define_by_name  ('colm_5km' )
-   CALL grid_urban_100m%define_by_name ('colm_100m')
-
-   CALL pixel%assimilate_grid (gurban         )
-   CALL pixel%assimilate_grid (grid_urban_500m)
-   CALL pixel%assimilate_grid (grid_urban_5km )
-   CALL pixel%assimilate_grid (grid_urban_100m)
-
-   CALL pixel%map_to_grid (gurban         )
-   CALL pixel%map_to_grid (grid_urban_500m)
-   CALL pixel%map_to_grid (grid_urban_5km )
-   CALL pixel%map_to_grid (grid_urban_100m)
 #endif
 
    ! assimilate grids to build pixels
@@ -240,6 +231,13 @@ PROGRAM MKSRFDATA
 #endif
    CALL pixel%assimilate_grid (gpatch)
    CALL pixel%assimilate_grid (gridlai)
+
+#ifdef URBAN_MODEL
+   CALL pixel%assimilate_grid (gurban         )
+   CALL pixel%assimilate_grid (grid_urban_500m)
+   CALL pixel%assimilate_grid (grid_urban_5km )
+#endif
+
 #ifdef BGC
 #if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
@@ -266,6 +264,13 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+
+#ifdef URBAN_MODEL
+   CALL pixel%map_to_grid (gurban         )
+   CALL pixel%map_to_grid (grid_urban_500m)
+   CALL pixel%map_to_grid (grid_urban_5km )
+#endif
+
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
@@ -288,6 +293,7 @@ PROGRAM MKSRFDATA
 
 #ifdef GRIDBASED
    IF (.not. read_mesh_from_file) THEN
+      !TODO: distinguish USGS and IGBP land cover
       CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
    ENDIF
 #endif
@@ -302,18 +308,18 @@ PROGRAM MKSRFDATA
 #endif
 
    ! build land patches
-   CALL landpatch_build
-
-#ifdef PFT_CLASSIFICATION
-   CALL landpft_build
-#endif
-
-#ifdef PC_CLASSIFICATION
-   CALL landpc_build
-#endif
+   CALL landpatch_build(lc_year)
 
 #ifdef URBAN_MODEL
-   CALL landurban_build
+   CALL landurban_build(lc_year)
+#endif
+
+#ifdef LULC_IGBP_PFT
+   CALL landpft_build(lc_year)
+#endif
+
+#ifdef LULC_IGBP_PC
+   CALL landpc_build(lc_year)
 #endif
 
    ! ................................................................
@@ -324,27 +330,26 @@ PROGRAM MKSRFDATA
 
    CALL pixel%save_to_file     (dir_landdata)
 
-   CALL mesh_save_to_file      (dir_landdata)
+   CALL mesh_save_to_file      (dir_landdata, lc_year)
 
-   CALL pixelset_save_to_file  (dir_landdata, 'landelm', landelm)
+   CALL pixelset_save_to_file  (dir_landdata, 'landelm'  , landelm  , lc_year)
 
 #ifdef CATCHMENT
-   CALL pixelset_save_to_file  (dir_landdata, 'landhru', landhru)
+   CALL pixelset_save_to_file  (dir_landdata, 'landhru'  , landhru  , lc_year)
 #endif
 
-   !print*, count(landpatch%settyp==13)
-   CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch)
+   CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  )
+#ifdef LULC_IGBP_PFT
+   CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  , lc_year)
 #endif
 
-#ifdef PC_CLASSIFICATION
-   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   )
+#ifdef LULC_IGBP_PC
+   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   , lc_year)
 #endif
 
 #ifdef URBAN_MODEL
-   CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban)
+   CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban, lc_year)
 #endif
 
    ! ................................................................
@@ -361,48 +366,49 @@ PROGRAM MKSRFDATA
 #endif
 
 #ifdef BGC
-   call Aggregation_NDeposition            (gndep, dir_rawdata, dir_landdata)
+   call Aggregation_NDeposition     (gndep  , dir_rawdata, dir_landdata)
 #if (defined CROP)
-   call Aggregation_CropParameters (gcrop, dir_rawdata, dir_landdata)
+   call Aggregation_CropParameters  (gcrop  , dir_rawdata, dir_landdata)
 #endif
 #ifdef Fire
-   call Aggregation_Fire            (gfire, dir_rawdata, dir_landdata)
+   call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
 #endif
 #if (defined NITRIF)
   call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
 #endif
 #endif
 
-   CALL Aggregation_PercentagesPFT     (gpatch,  dir_rawdata, dir_landdata)
+   !TODO: for lulcc, need to run for each year and SAVE to different subdirs
 
-   CALL Aggregation_LakeDepth       (gpatch,  dir_rawdata, dir_landdata)
+   CALL Aggregation_PercentagesPFT  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilParameters (gpatch,  dir_rawdata, dir_landdata)
+   CALL Aggregation_LakeDepth       (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilBrightness (gpatch,  dir_rawdata, dir_landdata)
+   CALL Aggregation_SoilParameters  (gpatch , dir_rawdata, dir_landdata, lc_year)
+
+   CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
 #ifdef USE_DEPTH_TO_BEDROCK
-   CALL Aggregation_DBedrock        (gpatch,  dir_rawdata, dir_landdata)
+   CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
 #endif
 
-   CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata)
+   CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_ForestHeight   (gpatch,  dir_rawdata, dir_landdata)
+   CALL Aggregation_ForestHeight    (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_Topography      (gtopo,   dir_rawdata, dir_landdata)
+   CALL Aggregation_Topography      (gtopo  , dir_rawdata, dir_landdata, lc_year)
 
 #ifdef URBAN_MODEL
-   CALL Aggregation_Urban (dir_rawdata, dir_landdata, DEF_LC_YEAR, &
-                           grid_urban_5km, grid_urban_100m, grid_urban_500m)
+   CALL Aggregation_urban (dir_rawdata, dir_landdata, lc_year, &
+                           grid_urban_5km, grid_urban_500m)
 #endif
-
 
    ! ................................................................
    ! 4. Free memories.
    ! ................................................................
 
 #ifdef SinglePoint
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
    CALL write_surface_data_single (numpatch, numpft)
 #else
    CALL write_surface_data_single (numpatch)

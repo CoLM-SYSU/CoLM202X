@@ -61,7 +61,7 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_assim   ! canopy assimilation rate [mol m-2 s-1]
    type(block_data_real8_2d) :: f_respc   ! respiration (plant+soil) [mol m-2 s-1]
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    type(block_data_real8_2d) :: f_assim_RuBP_sun
    type(block_data_real8_2d) :: f_assim_RuBP_sha
    type(block_data_real8_2d) :: f_assim_Rubisco_sun
@@ -229,7 +229,7 @@ CONTAINS
          call allocate_block_data (grid, f_assim  )  ! canopy assimilation rate [mol m-2 s-1]
          call allocate_block_data (grid, f_respc  )  ! respiration (plant+soil) [mol m-2 s-1]
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          call allocate_block_data (grid, f_assim_RuBP_sun        )
          call allocate_block_data (grid, f_assim_RuBP_sha        )
          call allocate_block_data (grid, f_assim_Rubisco_sun        )

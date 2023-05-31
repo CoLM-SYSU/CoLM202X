@@ -27,6 +27,7 @@ PROGRAM CoLM
    use MOD_Vars_2DForcing
    use MOD_Vars_1DFluxes
    use MOD_Vars_2DFluxes
+   USE MOD_Vars_1DAccFluxes
    use MOD_Forcing
    use MOD_Hist
    use MOD_TimeManager
@@ -44,10 +45,10 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -83,6 +84,10 @@ PROGRAM CoLM
    USE MOD_NdepReadin
 #endif
 
+#ifdef LULCC
+   USE MOD_Lulcc_Driver
+#endif
+
    ! SNICAR
    USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
 
@@ -101,6 +106,7 @@ PROGRAM CoLM
    integer  :: idate(3)     ! calendar (year, julian day, seconds)
    integer  :: edate(3)     ! calendar (year, julian day, seconds)
    integer  :: pdate(3)     ! calendar (year, julian day, seconds)
+   integer  :: jdate(3)     ! calendar (year, julian day, seconds), year beginning style
    logical  :: greenwich    ! greenwich time
 
    logical :: doalb         ! true => start up the surface albedo calculation
@@ -113,7 +119,7 @@ PROGRAM CoLM
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
    INTEGER :: month, mday, month_p, mday_p
-   INTEGER :: spinup_repeat
+   INTEGER :: spinup_repeat, lc_year
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
@@ -176,28 +182,34 @@ PROGRAM CoLM
    call pixel%load_from_file    (dir_landdata)
    call gblock%load_from_file   (dir_landdata)
 
-   call mesh_load_from_file (dir_landdata)
-
-   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm)
-
-#ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru)
+#ifdef LULCC
+   lc_year = s_year
+#else
+   lc_year = DEF_LC_YEAR
 #endif
 
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch)
+   call mesh_load_from_file (dir_landdata, lc_year)
 
-#ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft)
+   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, lc_year)
+
+#ifdef CATCHMENT
+   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, lc_year)
+#endif
+
+   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
+
+#ifdef LULC_IGBP_PFT
+   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc)
+#ifdef LULC_IGBP_PC
+   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
    CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL
-   call pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban)
+   call pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, lc_year)
    CALL map_patch_to_urban
 #endif
 
@@ -216,6 +228,10 @@ PROGRAM CoLM
    etstamp = edate
    ptstamp = pdate
 
+   ! date in beginning style
+   jdate = sdate
+   CALL adj2begin(jdate)
+
    IF (ptstamp <= ststamp) THEN
       spinup_repeat = 0
    ELSE
@@ -225,11 +241,11 @@ PROGRAM CoLM
    ! ----------------------------------------------------------------------
    ! Read in the model time invariant constant data
    CALL allocate_TimeInvariants ()
-   CALL READ_TimeInvariants (casename, dir_restart)
+   CALL READ_TimeInvariants (lc_year, casename, dir_restart)
 
    ! Read in the model time varying data (model state variables)
    CALL allocate_TimeVariables  ()
-   CALL READ_TimeVariables (sdate, casename, dir_restart)
+   CALL READ_TimeVariables (jdate, lc_year, casename, dir_restart)
 
    ! Read in SNICAR optical and aging parameters
    CALL SnowOptics_init( DEF_file_snowoptics ) ! SNICAR optical parameters
@@ -274,19 +290,19 @@ PROGRAM CoLM
 
    TIMELOOP : DO while (itstamp < etstamp)
 
-      CALL julian2monthday (idate(1), idate(2), month_p, mday_p)
+      CALL julian2monthday (jdate(1), jdate(2), month_p, mday_p)
 
       if (p_is_master) then
          IF (itstamp < ptstamp) THEN
-            write(*, 99) idate(1), month_p, mday_p, idate(3), spinup_repeat
+            write(*, 99) jdate(1), month_p, mday_p, jdate(3), spinup_repeat
          ELSE
-            write(*,100) idate(1), month_p, mday_p, idate(3)
+            write(*,100) jdate(1), month_p, mday_p, jdate(3)
          ENDIF
       end if
 
 
-      Julian_1day_p = int(calendarday(idate)-1)/1*1 + 1
-      Julian_8day_p = int(calendarday(idate)-1)/8*8 + 1
+      Julian_1day_p = int(calendarday(jdate)-1)/1*1 + 1
+      Julian_8day_p = int(calendarday(jdate)-1)/8*8 + 1
 
       ! Read in the meteorological forcing
       ! ----------------------------------------------------------------------
@@ -303,6 +319,8 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       CALL TICKTIME (deltim,idate)
       itstamp = itstamp + int(deltim)
+      jdate = idate
+      CALL adj2begin(jdate)
 
       ! lateral flow
 #if (defined LATERAL_FLOW)
@@ -320,7 +338,7 @@ PROGRAM CoLM
 #if(defined DYN_PHENOLOGY)
       ! Update once a day
       dolai = .false.
-      Julian_1day = int(calendarday(idate)-1)/1*1 + 1
+      Julian_1day = int(calendarday(jdate)-1)/1*1 + 1
       if(Julian_1day /= Julian_1day_p)then
          dolai = .true.
       endif
@@ -331,22 +349,22 @@ PROGRAM CoLM
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       IF (DEF_LAI_CLIM) then
          ! yuan, 08/03/2019: read global LAI/SAI data
-         CALL julian2monthday (idate(1), idate(2), month, mday)
+         CALL julian2monthday (jdate(1), jdate(2), month, mday)
          IF (month /= month_p) THEN
             IF (DEF_LAICHANGE) THEN
-               CALL LAI_readin (idate(1), month, dir_landdata)
+               CALL LAI_readin (jdate(1), month, dir_landdata)
 #ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(idate(1), month, dir_landdata)
+               CALL UrbanLAI_readin(jdate(1), month, dir_landdata)
 #endif
             ELSE
-               CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+               CALL LAI_readin (lc_year, month, dir_landdata)
 #ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(DEF_LC_YEAR, month, dir_landdata)
+               CALL UrbanLAI_readin(lc_year, month, dir_landdata)
 #endif
             ENDIF
          ENDIF
       ELSE
-         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
+         Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
             CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
          ENDIF
@@ -381,8 +399,30 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       call hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
 
+#ifdef LULCC
+      ! DO land use and land cover change simulation
+      IF ( isendofyear(idate, deltim) ) THEN
+         CALL deallocate_1D_Forcing
+         CALL deallocate_1D_Fluxes
+
+         CALL LulccDriver (casename,dir_landdata,dir_restart,&
+                           idate,greenwich)
+
+         CALL allocate_1D_Forcing
+
+         CALL forcing_init (dir_forcing, deltim, idate)
+         CALL deallocate_acc_fluxes
+         call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
+         CALL allocate_1D_Fluxes
+      ENDIF
+#endif
+
       if (save_to_restart (idate, deltim, itstamp, ptstamp)) then
-         call WRITE_TimeVariables (idate, casename, dir_restart)
+#ifdef LULCC
+         call WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
+#else
+         call WRITE_TimeVariables (jdate, lc_year,  casename, dir_restart)
+#endif
       endif
 
 #ifdef CoLMDEBUG

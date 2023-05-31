@@ -1,7 +1,7 @@
 #include <define.h>
 
-SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
-   
+SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
+
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_Namelist
@@ -10,7 +10,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
@@ -18,10 +18,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -36,6 +36,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
@@ -45,15 +46,15 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    CHARACTER(len=256) :: landdir, lndname
 
    ! for IGBP data
-   CHARACTER(len=256) :: dir_5x5, suffix
+   CHARACTER(len=256) :: dir_5x5, suffix, cyear
    ! for PFT
    TYPE (block_data_real8_3d) :: pftPCT
    REAL(r8), allocatable :: pct_one(:), area_one(:)
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    REAL(r8), allocatable :: pct_pft_one(:,:)
    REAL(r8), allocatable :: pct_pfts(:)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    REAL(r8), allocatable :: pct_pft_one(:,:)
    REAL(r8), allocatable :: pct_pcs(:,:)
 #endif
@@ -68,7 +69,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 #endif
 #endif
 
-   landdir = trim(dir_model_landdata) // '/pctpft/'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/pctpft/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -82,7 +84,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 #endif
 
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 #ifdef SinglePoint
    IF (USE_SITE_pctpfts) THEN
@@ -90,8 +92,10 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   suffix  = 'MOD2005'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
+   ! add parameter input for time year
+   !write(cyear,'(i4.4)') lc_year
+   suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
@@ -154,7 +158,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 #else
    typpft = (/(ipft, ipft = 0, N_PFT-1)/)
 #endif
-   lndname = trim(dir_model_landdata)//'/diag/pct_pfts.nc'
+   lndname = trim(dir_model_landdata)//'/diag/pct_pfts_'//trim(cyear)//'.nc'
    CALL srfdata_map_and_write (pct_pfts, landpft%settyp, typpft, m_pft2diag, &
       -1.0e36_r8, lndname, 'pctpfts', compress = 1, write_mode = 'one')
 #endif
@@ -179,7 +183,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 
 #ifdef SrfdataDiag
    typcrop = (/(ityp, ityp = 1, N_CFT)/)
-   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch.nc'
+   lndname = trim(dir_model_landdata) // '/diag/pct_crops_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (pctcrop, cropclass, typcrop, m_patch2diag, &
       -1.0e36_r8, lndname, 'pctcrop', compress = 1, write_mode = 'one')
 #endif
@@ -193,7 +197,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
 
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 #ifdef SinglePoint
    IF (USE_SITE_pctpfts) THEN
@@ -201,8 +205,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata)
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
-   suffix  = 'MOD2005'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
+   suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)

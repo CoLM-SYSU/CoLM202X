@@ -63,15 +63,6 @@ MODULE MOD_Namelist
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
 
-   ! ----- simulation LULCC type -----
-   TYPE nl_LULCC_type
-      LOGICAL :: use_lulcc     = .FALSE.
-      INTEGER :: lc_year_start = 2005
-      INTEGER :: lc_year_end   = 2005
-   END TYPE nl_LULCC_type
-
-   TYPE (nl_LULCC_type) :: DEF_LULCC
-
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
@@ -114,9 +105,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LC_YEAR   = 2005
 
    ! ------ URBAN -------
+   !INTEGER :: DEF_Urban_type_scheme = 1
    LOGICAL :: DEF_Urban_BEM    = .true.
    LOGICAL :: DEF_Urban_TREE   = .true.
    LOGICAL :: DEF_Urban_WATER  = .true.
+   LOGICAL :: DEF_Urban_LUCY   = .true.
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
@@ -128,7 +121,7 @@ MODULE MOD_Namelist
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
-   
+
    LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
@@ -214,7 +207,7 @@ MODULE MOD_Namelist
    END TYPE nl_forcing_type
 
    TYPE (nl_forcing_type) :: DEF_forcing
-   
+
    !CBL height
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
 
@@ -238,52 +231,52 @@ MODULE MOD_Namelist
 
       LOGICAL :: xy_hpbl      = .true.
 
-      LOGICAL :: taux         = .true. 
-      LOGICAL :: tauy         = .true. 
-      LOGICAL :: fsena        = .true. 
-      LOGICAL :: lfevpa       = .true. 
-      LOGICAL :: fevpa        = .true. 
-      LOGICAL :: fsenl        = .true. 
-      LOGICAL :: fevpl        = .true. 
-      LOGICAL :: etr          = .true. 
-      LOGICAL :: fseng        = .true. 
-      LOGICAL :: fevpg        = .true. 
-      LOGICAL :: fgrnd        = .true. 
-      LOGICAL :: sabvsun      = .true. 
-      LOGICAL :: sabvsha      = .true. 
-      LOGICAL :: sabg         = .true. 
-      LOGICAL :: olrg         = .true. 
-      LOGICAL :: rnet         = .true. 
-      LOGICAL :: xerr         = .true. 
-      LOGICAL :: zerr         = .true. 
-      LOGICAL :: rsur         = .true. 
-      LOGICAL :: rsub         = .true. 
-      LOGICAL :: rnof         = .true. 
-      LOGICAL :: qintr        = .true. 
-      LOGICAL :: qinfl        = .true. 
-      LOGICAL :: qdrip        = .true. 
-      LOGICAL :: wat          = .true. 
-      LOGICAL :: assim        = .true. 
-      LOGICAL :: respc        = .true. 
-      LOGICAL :: qcharge      = .true. 
-      LOGICAL :: t_grnd       = .true. 
-      LOGICAL :: tleaf        = .true. 
-      LOGICAL :: ldew         = .true. 
-      LOGICAL :: scv          = .true. 
-      LOGICAL :: snowdp       = .true. 
-      LOGICAL :: fsno         = .true. 
-      LOGICAL :: sigf         = .true. 
-      LOGICAL :: green        = .true. 
-      LOGICAL :: lai          = .true. 
-      LOGICAL :: laisun       = .true. 
-      LOGICAL :: laisha       = .true. 
-      LOGICAL :: sai          = .true. 
-      LOGICAL :: alb          = .true. 
-      LOGICAL :: emis         = .true. 
-      LOGICAL :: z0m          = .true. 
-      LOGICAL :: trad         = .true. 
-      LOGICAL :: tref         = .true. 
-      LOGICAL :: qref         = .true. 
+      LOGICAL :: taux         = .true.
+      LOGICAL :: tauy         = .true.
+      LOGICAL :: fsena        = .true.
+      LOGICAL :: lfevpa       = .true.
+      LOGICAL :: fevpa        = .true.
+      LOGICAL :: fsenl        = .true.
+      LOGICAL :: fevpl        = .true.
+      LOGICAL :: etr          = .true.
+      LOGICAL :: fseng        = .true.
+      LOGICAL :: fevpg        = .true.
+      LOGICAL :: fgrnd        = .true.
+      LOGICAL :: sabvsun      = .true.
+      LOGICAL :: sabvsha      = .true.
+      LOGICAL :: sabg         = .true.
+      LOGICAL :: olrg         = .true.
+      LOGICAL :: rnet         = .true.
+      LOGICAL :: xerr         = .true.
+      LOGICAL :: zerr         = .true.
+      LOGICAL :: rsur         = .true.
+      LOGICAL :: rsub         = .true.
+      LOGICAL :: rnof         = .true.
+      LOGICAL :: qintr        = .true.
+      LOGICAL :: qinfl        = .true.
+      LOGICAL :: qdrip        = .true.
+      LOGICAL :: wat          = .true.
+      LOGICAL :: assim        = .true.
+      LOGICAL :: respc        = .true.
+      LOGICAL :: qcharge      = .true.
+      LOGICAL :: t_grnd       = .true.
+      LOGICAL :: tleaf        = .true.
+      LOGICAL :: ldew         = .true.
+      LOGICAL :: scv          = .true.
+      LOGICAL :: snowdp       = .true.
+      LOGICAL :: fsno         = .true.
+      LOGICAL :: sigf         = .true.
+      LOGICAL :: green        = .true.
+      LOGICAL :: lai          = .true.
+      LOGICAL :: laisun       = .true.
+      LOGICAL :: laisha       = .true.
+      LOGICAL :: sai          = .true.
+      LOGICAL :: alb          = .true.
+      LOGICAL :: emis         = .true.
+      LOGICAL :: z0m          = .true.
+      LOGICAL :: trad         = .true.
+      LOGICAL :: tref         = .true.
+      LOGICAL :: qref         = .true.
 #ifdef BGC
       LOGICAL :: leafc              = .true.
       LOGICAL :: leafc_storage      = .true.
@@ -365,7 +358,7 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       LOGICAL :: assim_RuBP_sun        = .true. !1
       LOGICAL :: assim_RuBP_sha        = .true. !1
       LOGICAL :: assim_Rubisco_sun        = .true. !1
@@ -606,13 +599,18 @@ CONTAINS
 
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
 
+         !DEF_Urban_type_scheme,           &
          DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
          DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
          DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
+         DEF_Urban_LUCY,                  &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
+
+         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
 
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
@@ -620,16 +618,15 @@ CONTAINS
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
 
-
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
 
          DEF_precip_phase_discrimination_scheme, &
-         
+
          DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
-      
+
          DEF_USE_WaterTable_INIT,         &
          DEF_file_water_table_depth,      &
 
@@ -708,10 +705,10 @@ CONTAINS
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not. DEF_LAI_CLIM) THEN
             write(*,*) 'Warning: 8-day LAI data is not supported for '
-            write(*,*) 'PFT_CLASSIFICATION and PC_CLASSIFICATION.'
+            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
             write(*,*) 'Changed to climatic data.'
             DEF_LAI_CLIM = .true.
          ENDIF
@@ -782,10 +779,12 @@ CONTAINS
       CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
 
+      !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_Urban_LUCY ,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -796,7 +795,7 @@ CONTAINS
 
       !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
- 
+
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -825,7 +824,7 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
@@ -863,7 +862,7 @@ CONTAINS
       call mpi_bcast (DEF_forcing%CBL_tintalgo,     256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%CBL_dtime,          1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%CBL_offset,         1, mpi_integer,   p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_file_snowoptics,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging,   256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
@@ -1035,7 +1034,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
