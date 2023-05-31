@@ -1,6 +1,5 @@
 #include <define.h>
 
-#ifdef URBAN_MODEL
 ! ======================================================
 ! Aggreate/screen high-resolution urban dataset
 ! to a lower resolutioin/subset data, suitable for running
@@ -8,7 +7,7 @@
 ! ======================================================
 
 SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
-                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_500m)
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -43,7 +42,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER , intent(in) :: lc_year
 
    TYPE(grid_type), intent(in) :: grid_urban_5km
-   TYPE(grid_type), intent(in) :: grid_urban_100m
+   ! TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
@@ -259,6 +258,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
+         where (pop_one < 0)
+            area_one = 0
+         END where
          ! area-weighted average
          pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
@@ -394,6 +396,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
+         where (gl30_wt_one < 0)
+            area_one = 0
+         END where
          ! only caculate when urban patch have water cover
          IF (sum(area_one) > 0) THEN
             pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
@@ -473,6 +478,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
 
+         ! RG_-45_65_-50_70 of NCAR has no urban data,
+         ! all urban patches of this area are assigned to region 30
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
+
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
@@ -534,9 +545,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! ******* LAI, SAI *******
    ! allocate and read grided LSAI raw data
-   landdir = TRIM(dir_rawdata)//'/lai_5x5/'
-   !TODO: rename Ur
-   suffix  = 'UrLAI_v5'//trim(c5year)
+   landdir = TRIM(dir_rawdata)//'/urban_lai_5x5/'
+   suffix  = 'UrbLAI_v5_'//trim(c5year)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (grid_urban_500m, ulai)
@@ -709,6 +719,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ipxend = landurban%ipxend(iurban)
 
          sumarea = sum(area_one)
+
+         ! same for above, assign reg id for RG_-45_65_-50_70
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
 
          ! loop for each finer grid to aggregate data
          DO ipxl = ipxstt, ipxend
@@ -906,4 +921,3 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE Aggregation_Urban
-#endif

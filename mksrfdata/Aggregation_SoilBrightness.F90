@@ -1,7 +1,7 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_SoilBrightness ( &
-      gland, dir_rawdata, dir_model_landdata)
+      gland, dir_rawdata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
    ! Creates land model surface dataset from original "raw" data files -
    !     data with 30 arc seconds resolution
@@ -19,7 +19,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
@@ -36,15 +36,16 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname
+   CHARACTER(len=256) :: landdir, lndname, cyear
 
-   TYPE (block_data_int32_2d) :: isc 
+   TYPE (block_data_int32_2d) :: isc
    TYPE (block_data_real8_2d) :: a_s_v_refl
    TYPE (block_data_real8_2d) :: a_d_v_refl
    TYPE (block_data_real8_2d) :: a_s_n_refl
@@ -85,7 +86,8 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    soil_d_n_refl = (/ 0.63, 0.59, 0.55, 0.51, 0.49, 0.47, 0.45, 0.43, 0.41, 0.39, &
       0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
 
-   landdir = trim(dir_model_landdata) // '/soil/'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -117,11 +119,11 @@ SUBROUTINE Aggregation_SoilBrightness ( &
       CALL allocate_block_data (gland, a_d_v_refl)
       CALL allocate_block_data (gland, a_s_n_refl)
       CALL allocate_block_data (gland, a_d_n_refl)
-   
+
       ! Read in the index of soil brightness (color)
       CALL ncio_read_block (lndname, 'soil_brightness', gland, isc)
 
-      DO iblkme = 1, gblock%nblkme 
+      DO iblkme = 1, gblock%nblkme
          iblk = gblock%xblkme(iblkme)
          jblk = gblock%yblkme(iblkme)
 
@@ -129,7 +131,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             DO ix = 1, gland%xcnt(iblk)
 
                ii = isc%blk(iblk,jblk)%val(ix,iy)
-               IF ((ii >= 1) .and. (ii <= 20)) THEN 
+               IF ((ii >= 1) .and. (ii <= 20)) THEN
                   a_s_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_v_refl( ii )
                   a_d_v_refl%blk(iblk,jblk)%val(ix,iy) = soil_d_v_refl( ii )
                   a_s_n_refl%blk(iblk,jblk)%val(ix,iy) = soil_s_n_refl( ii )
@@ -154,12 +156,12 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #endif
 
    IF (p_is_worker) THEN
-      
+
       allocate ( soil_s_v_alb (numpatch) )
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -169,7 +171,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             soil_s_v_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
-            soil_s_v_alb (ipatch) = -1.0e36_r8 
+            soil_s_v_alb (ipatch) = -1.0e36_r8
          ENDIF
 
       ENDDO
@@ -195,7 +197,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -205,7 +207,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             soil_d_v_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
-            soil_d_v_alb (ipatch) = -1.0e36_r8 
+            soil_d_v_alb (ipatch) = -1.0e36_r8
          ENDIF
 
       ENDDO
@@ -231,7 +233,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -241,7 +243,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             soil_s_n_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
-            soil_s_n_alb (ipatch) = -1.0e36_r8 
+            soil_s_n_alb (ipatch) = -1.0e36_r8
          ENDIF
 
       ENDDO
@@ -262,12 +264,12 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 #endif
 
    IF (p_is_worker) THEN
-      
+
       allocate ( soil_d_n_alb (numpatch) )
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -277,7 +279,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
             soil_d_n_alb (ipatch) = median (soil_one, size(soil_one))
 
          ELSE
-            soil_d_n_alb (ipatch) = -1.0e36_r8 
+            soil_d_n_alb (ipatch) = -1.0e36_r8
          ENDIF
 
       ENDDO
@@ -307,7 +309,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (soil_s_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'soil_s_v_alb', compress = 1, write_mode = 'one')
 #endif
@@ -320,7 +322,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (soil_d_v_alb, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'soil_d_v_alb', compress = 1, write_mode = 'one')
 #endif
@@ -333,7 +335,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (soil_s_n_alb, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'soil_s_n_alb', compress = 1, write_mode = 'one')
 #endif
@@ -346,13 +348,13 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/soil_brightness_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (soil_d_n_alb, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'soil_d_n_alb', compress = 1, write_mode = 'one')
 #endif
 
 #else
-   SITE_soil_s_v_alb = soil_s_v_alb(1) 
+   SITE_soil_s_v_alb = soil_s_v_alb(1)
    SITE_soil_d_v_alb = soil_d_v_alb(1)
    SITE_soil_s_n_alb = soil_s_n_alb(1)
    SITE_soil_d_n_alb = soil_d_n_alb(1)

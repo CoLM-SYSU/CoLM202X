@@ -106,7 +106,7 @@ CONTAINS
         z0mg,     &! roughness length over ground, momentum [m]
         z0qg       ! roughness length over ground, latent heat [m]
 
-  REAL(r8) fwet_gimp
+  REAL(r8) fwet_gimp, fwetfac
 
 !----------------------- Dummy argument --------------------------------
 ! initial roughness length
@@ -143,7 +143,8 @@ CONTAINS
       ENDIF
 
       ! weighted qg
-      ! qg = qgimp*fgimp*fwet_gimp + qgper*fgper
+      fwetfac = fgimp*fwet_gimp + fgper
+      qg = (qgimp*fgimp*fwet_gimp + qgper*fgper)/fwetfac
 
 !-----------------------------------------------------------------------
 !     Compute sensible and latent fluxes and their derivatives with respect

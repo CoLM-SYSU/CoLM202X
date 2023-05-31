@@ -13,7 +13,7 @@ MODULE MOD_LandElm
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landelm_build 
+   SUBROUTINE landelm_build
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -37,8 +37,8 @@ CONTAINS
 
          DO ielm = 1, numelm
             landelm%eindex(ielm) = mesh(ielm)%indx
-            landelm%ipxstt(ielm) = 1 
-            landelm%ipxend(ielm) = mesh(ielm)%npxl 
+            landelm%ipxstt(ielm) = 1
+            landelm%ipxend(ielm) = mesh(ielm)%npxl
             landelm%settyp(ielm) = 0
             landelm%ielm  (ielm) = ielm
          ENDDO
@@ -46,7 +46,7 @@ CONTAINS
       ENDIF
 
       landelm%nset = numelm
-      CALL landelm%set_vecgs 
+      CALL landelm%set_vecgs
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -54,7 +54,7 @@ CONTAINS
       IF (p_is_worker) THEN
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.' 
+            write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.'
          ENDIF
       ENDIF
 

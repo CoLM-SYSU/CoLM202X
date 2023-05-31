@@ -33,25 +33,25 @@ MODULE MOD_Mapping_Pset2Grid
 
       TYPE(pointer_int32_2d), allocatable :: address(:)
       TYPE(pointer_real8_1d), allocatable :: gweight(:)
-      
+
    CONTAINS
 
       procedure, PUBLIC :: build => mapping_pset2grid_build
-      
+
       procedure, PRIVATE :: map_2d => map_p2g_2d
       procedure, PRIVATE :: map_3d => map_p2g_3d
       procedure, PRIVATE :: map_4d => map_p2g_4d
       generic, PUBLIC :: map => map_2d, map_3d, map_4d
-      
+
       procedure, PUBLIC  :: map_split => map_p2g_split_to_3d
-      
+
       final :: mapping_pset2grid_free_mem
 
    END TYPE mapping_pset2grid_type
 
 !-----------------------
 CONTAINS
-   
+
    !------------------------------------------
    SUBROUTINE mapping_pset2grid_build (this, pixelset, fgrid, pctpset)
 
@@ -100,12 +100,16 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,101) 
+         write(*,101)
          101 format (/, 'Making mapping from pixel set to grid ...')
          write(*,*) fgrid%nlat, 'grids in latitude'
          write(*,*) fgrid%nlon, 'grids in longitude'
       ENDIF
 
+      IF (allocated(this%grid%xblk)) deallocate(this%grid%xblk)
+      IF (allocated(this%grid%yblk)) deallocate(this%grid%yblk)
+      IF (allocated(this%grid%xloc)) deallocate(this%grid%xloc)
+      IF (allocated(this%grid%yloc)) deallocate(this%grid%yloc)
       allocate (this%grid%xblk (size(fgrid%xblk)))
       allocate (this%grid%yblk (size(fgrid%yblk)))
       allocate (this%grid%xloc (size(fgrid%xloc)))
@@ -119,7 +123,7 @@ CONTAINS
       this%npset = pixelset%nset
 
       IF (p_is_worker) THEN
-      
+
          allocate (afrac (pixelset%nset))
          allocate (gfrom (pixelset%nset))
 
@@ -132,7 +136,7 @@ CONTAINS
             ys(ilat) = find_nearest_south (pixel%lat_s(ilat), fgrid%nlat, fgrid%lat_s)
             yn(ilat) = find_nearest_north (pixel%lat_n(ilat), fgrid%nlat, fgrid%lat_n)
          ENDDO
-               
+
          DO ilon = 1, pixel%nlon
             xw(ilon) = find_nearest_west (pixel%lon_w(ilon), fgrid%nlon, fgrid%lon_w)
             xe(ilon) = find_nearest_east (pixel%lon_e(ilon), fgrid%nlon, fgrid%lon_e)
@@ -162,7 +166,7 @@ CONTAINS
                ilon = mesh(ie)%ilon(ipxl)
 
                DO iy = ys(ilat), yn(ilat), fgrid%yinc
-                     
+
                   lat_s = max(fgrid%lat_s(iy), pixel%lat_s(ilat))
                   lat_n = min(fgrid%lat_n(iy), pixel%lat_n(ilat))
 
@@ -171,7 +175,7 @@ CONTAINS
                   ENDIF
 
                   ix = xw(ilon)
-                  DO while (.true.) 
+                  DO while (.true.)
 
                      IF (ix == xw(ilon)) THEN
                         lon_w = pixel%lon_w(ilon)
@@ -213,7 +217,7 @@ CONTAINS
 
                         afrac(iset)%val(iloc) = area
                      ELSE
-                        afrac(iset)%val(iloc) = afrac(iset)%val(iloc) + area                        
+                        afrac(iset)%val(iloc) = afrac(iset)%val(iloc) + area
                      ENDIF
 
                      IF (gfrom(iset)%ng == size(gfrom(iset)%ilat)) THEN
@@ -233,10 +237,10 @@ CONTAINS
                      ix = mod(ix,fgrid%nlon) + 1
                   ENDDO
                ENDDO
-               
+
             ENDDO
          ENDDO
-         
+
          deallocate (ys)
          deallocate (yn)
          deallocate (xw)
@@ -273,13 +277,14 @@ CONTAINS
          ENDDO
 #endif
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_io-1))
          DO iproc = 0, p_np_io-1
 #ifdef USEMPI
             msk = (ipt == p_address_io(iproc))
             ng  = count(msk)
 #else
-            ng  = ng_all 
+            ng  = ng_all
 #endif
 
             allocate (this%glist(iproc)%ilat (ng))
@@ -292,21 +297,23 @@ CONTAINS
 #ifdef USEMPI
             iproc = p_itis_io(ipt(ig))
 #else
-            iproc = 0 
+            iproc = 0
 #endif
 
             this%glist(iproc)%ng = this%glist(iproc)%ng + 1
-         
+
             ng = this%glist(iproc)%ng
             this%glist(iproc)%ilon(ng) = xlist(ig)
             this%glist(iproc)%ilat(ng) = ylist(ig)
          ENDDO
-         
+
 #ifdef USEMPI
          deallocate (ipt)
          deallocate (msk)
 #endif
-         
+
+         IF (allocated(this%address)) deallocate(this%address)
+         IF (allocated(this%gweight)) deallocate(this%gweight)
          allocate (this%address (pixelset%nset))
          allocate (this%gweight (pixelset%nset))
 
@@ -374,7 +381,7 @@ CONTAINS
             smesg = (/p_iam_glb, this%glist(iproc)%ng/)
 
             CALL mpi_send (smesg, 2, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err) 
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
 
             IF (this%glist(iproc)%ng > 0) THEN
                CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
@@ -382,19 +389,20 @@ CONTAINS
                CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
                   idest, mpi_tag_data, p_comm_glb, p_err)
                CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
             ENDIF
          ENDDO
 #endif
 
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
-      IF (p_is_io) THEN 
+      IF (p_is_io) THEN
 
          CALL allocate_block_data (fgrid, garea)
          CALL flush_block_data (garea, 0.0_r8)
-         
+
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
@@ -435,7 +443,7 @@ CONTAINS
                deallocate (gbuff)
             ENDIF
          ENDDO
-         
+
          DO iproc = 0, p_np_worker-1
             IF (this%glist(iproc)%ng > 0) THEN
 
@@ -454,17 +462,17 @@ CONTAINS
 
                idest = p_address_worker(iproc)
                CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
                deallocate (gbuff)
             ENDIF
          ENDDO
-         
-      ENDIF 
+
+      ENDIF
 #endif
 
 
-      IF (p_is_worker) THEN 
+      IF (p_is_worker) THEN
 
 #ifdef USEMPI
          DO iproc = 0, p_np_io-1
@@ -490,16 +498,16 @@ CONTAINS
                deallocate (parea(iproc)%val)
             ENDIF
          ENDDO
-         
+
          deallocate (parea)
 
-      ENDIF 
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   END SUBROUTINE mapping_pset2grid_build 
+   END SUBROUTINE mapping_pset2grid_build
 
 
    !-----------------------------------------------------
@@ -510,9 +518,9 @@ CONTAINS
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       class (mapping_pset2grid_type) :: this
-      
+
       REAL(r8), intent(in) :: pdata(:)
       TYPE(block_data_real8_2d), intent(inout) :: gdata
 
@@ -576,12 +584,12 @@ CONTAINS
             IF (this%glist(iproc)%ng > 0) THEN
                idest = p_address_io(iproc)
                CALL mpi_send (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
             ENDIF
          ENDDO
 #endif
 
-      ENDIF 
+      ENDIF
 
       IF (p_is_io) THEN
 
@@ -590,12 +598,12 @@ CONTAINS
          ELSE
             CALL flush_block_data (gdata, 0.0_r8)
          ENDIF
-         
+
          DO iproc = 0, p_np_worker-1
             IF (this%glist(iproc)%ng > 0) THEN
 
                allocate (gbuff (this%glist(iproc)%ng))
-               
+
 #ifdef USEMPI
                isrc = p_address_worker(iproc)
                CALL mpi_recv (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
@@ -603,7 +611,7 @@ CONTAINS
 #else
                gbuff = pbuff(0)%val
 #endif
-            
+
                DO ig = 1, this%glist(iproc)%ng
                   IF (present(spv)) THEN
                      IF (gbuff(ig) /= spv) THEN
@@ -616,7 +624,7 @@ CONTAINS
 
                         IF (gdata%blk(xblk,yblk)%val(xloc,yloc) /= spv) THEN
                            gdata%blk(xblk,yblk)%val(xloc,yloc) = &
-                              gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig) 
+                              gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
                         ELSE
                            gdata%blk(xblk,yblk)%val(xloc,yloc) = gbuff(ig)
                         ENDIF
@@ -630,14 +638,14 @@ CONTAINS
                      yloc = this%grid%yloc (ilat)
 
                      gdata%blk(xblk,yblk)%val(xloc,yloc) = &
-                        gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig) 
+                        gdata%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
                   ENDIF
                ENDDO
 
                deallocate (gbuff)
             ENDIF
          ENDDO
-      
+
       ENDIF
 
       IF (p_is_worker) THEN
@@ -660,9 +668,9 @@ CONTAINS
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       class (mapping_pset2grid_type) :: this
-      
+
       REAL(r8), intent(in) :: pdata(:,:)
       TYPE(block_data_real8_3d), intent(inout) :: gdata
 
@@ -732,7 +740,7 @@ CONTAINS
                idest = p_address_io(iproc)
                CALL mpi_send (pbuff(iproc)%val, &
                   (ub1-lb1+1) * this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 
             ENDIF
          ENDDO
@@ -744,18 +752,18 @@ CONTAINS
 
          lb1 = gdata%lb1
          ub1 = gdata%ub1
-               
+
          IF (present(spv)) THEN
             CALL flush_block_data (gdata, spv)
          ELSE
             CALL flush_block_data (gdata, 0.0_r8)
          ENDIF
-         
+
          DO iproc = 0, p_np_worker-1
             IF (this%glist(iproc)%ng > 0) THEN
 
                allocate (gbuff (lb1:ub1, this%glist(iproc)%ng))
-               
+
 #ifdef USEMPI
                isrc = p_address_worker(iproc)
                CALL mpi_recv (gbuff, &
@@ -764,7 +772,7 @@ CONTAINS
 #else
                gbuff = pbuff(0)%val
 #endif
-               
+
                DO ig = 1, this%glist(iproc)%ng
                   ilon = this%glist(iproc)%ilon(ig)
                   ilat = this%glist(iproc)%ilat(ig)
@@ -778,23 +786,23 @@ CONTAINS
                         IF (gbuff(i1,ig) /= spv) THEN
                            IF (gdata%blk(xblk,yblk)%val(i1,xloc,yloc) /= spv) THEN
                               gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = &
-                                 gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig) 
+                                 gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig)
                            ELSE
                               gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = gbuff(i1,ig)
                            ENDIF
                         ENDIF
                      ELSE
                         gdata%blk(xblk,yblk)%val(i1,xloc,yloc) = &
-                           gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig) 
+                           gdata%blk(xblk,yblk)%val(i1,xloc,yloc) + gbuff(i1,ig)
                      ENDIF
                   ENDDO
                ENDDO
-               
+
                deallocate (gbuff)
             ENDIF
 
          ENDDO
-      
+
       ENDIF
 
       IF (p_is_worker) THEN
@@ -816,9 +824,9 @@ CONTAINS
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       class (mapping_pset2grid_type) :: this
-      
+
       REAL(r8), intent(in) :: pdata(:,:,:)
       TYPE(block_data_real8_4d), intent(inout) :: gdata
 
@@ -841,7 +849,7 @@ CONTAINS
          lb1 = lbound(pdata,1)
          ub1 = ubound(pdata,1)
          ndim1 = ub1 - lb1 + 1
-         
+
          lb2 = lbound(pdata,2)
          ub2 = ubound(pdata,2)
          ndim2 = ub2 - lb2 + 1
@@ -893,7 +901,7 @@ CONTAINS
             IF (this%glist(iproc)%ng > 0) THEN
                idest = p_address_io(iproc)
                CALL mpi_send (pbuff(iproc)%val, ndim1 * ndim2 * this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
+                  idest, mpi_tag_data, p_comm_glb, p_err)
             ENDIF
          ENDDO
 #endif
@@ -905,22 +913,22 @@ CONTAINS
          lb1 = gdata%lb1
          ub1 = gdata%ub1
          ndim1 = ub1 - lb1 + 1
-         
+
          lb2 = gdata%lb2
          ub2 = gdata%ub2
          ndim2 = ub2 - lb2 + 1
-               
+
          IF (present(spv)) THEN
             CALL flush_block_data (gdata, spv)
          ELSE
             CALL flush_block_data (gdata, 0.0_r8)
          ENDIF
-         
+
          DO iproc = 0, p_np_worker-1
             IF (this%glist(iproc)%ng > 0) THEN
 
                allocate (gbuff (lb1:ub1, lb2:ub2, this%glist(iproc)%ng))
-               
+
 #ifdef USEMPI
                isrc = p_address_worker(iproc)
                CALL mpi_recv (gbuff, ndim1 * ndim2 * this%glist(iproc)%ng, MPI_DOUBLE, &
@@ -943,14 +951,14 @@ CONTAINS
                            IF (gbuff(i1,i2,ig) /= spv) THEN
                               IF (gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) /= spv) THEN
                                  gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = &
-                                    gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig) 
+                                    gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig)
                               ELSE
                                  gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = gbuff(i1,i2,ig)
                               ENDIF
                            ENDIF
                         ELSE
                            gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) = &
-                              gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig) 
+                              gdata%blk(xblk,yblk)%val(i1,i2,xloc,yloc) + gbuff(i1,i2,ig)
                         ENDIF
                      ENDDO
                   ENDDO
@@ -959,7 +967,7 @@ CONTAINS
                deallocate (gbuff)
             ENDIF
          ENDDO
-      ENDIF 
+      ENDIF
 
       IF (p_is_worker) THEN
          DO iproc = 0, p_np_io-1
@@ -980,9 +988,9 @@ CONTAINS
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       class (mapping_pset2grid_type) :: this
-      
+
       REAL(r8), intent(in) :: pdata (:)
       INTEGER , intent(in) :: settyp(:)
       INTEGER , intent(in) :: typidx(:)
@@ -1006,7 +1014,7 @@ CONTAINS
             ENDIF
          ENDDO
       ENDIF
-         
+
       IF (p_is_io) THEN
          CALL flush_block_data (gdata, spv)
       ENDIF
@@ -1045,7 +1053,7 @@ CONTAINS
                IF (this%glist(iproc)%ng > 0) THEN
                   idest = p_address_io(iproc)
                   CALL mpi_send (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-                     idest, mpi_tag_data, p_comm_glb, p_err) 
+                     idest, mpi_tag_data, p_comm_glb, p_err)
                ENDIF
             ENDDO
 #endif
@@ -1066,7 +1074,7 @@ CONTAINS
 #else
                   gbuff = pbuff(0)%val
 #endif
-               
+
                   DO ig = 1, this%glist(iproc)%ng
                      IF (gbuff(ig) /= spv) THEN
                         ilon = this%glist(iproc)%ilon(ig)
@@ -1078,7 +1086,7 @@ CONTAINS
 
                         IF (gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) /= spv) THEN
                            gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) = &
-                              gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) + gbuff(ig) 
+                              gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) + gbuff(ig)
                         ELSE
                            gdata%blk(xblk,yblk)%val(ityp,xloc,yloc) = gbuff(ig)
                         ENDIF
@@ -1110,7 +1118,7 @@ CONTAINS
 
    !-----------------------------------------------------
    SUBROUTINE mapping_pset2grid_free_mem (this)
-      
+
       USE MOD_SPMD_Task
       IMPLICIT NONE
 
@@ -1118,12 +1126,12 @@ CONTAINS
 
       ! Local variables
       INTEGER :: iproc, iset
-      
-      IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk) 
-      IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk) 
-      
-      IF (allocated (this%grid%xloc))   deallocate (this%grid%xloc) 
-      IF (allocated (this%grid%yloc))   deallocate (this%grid%yloc) 
+
+      IF (allocated (this%grid%xblk))   deallocate (this%grid%xblk)
+      IF (allocated (this%grid%yblk))   deallocate (this%grid%yblk)
+
+      IF (allocated (this%grid%xloc))   deallocate (this%grid%xloc)
+      IF (allocated (this%grid%yloc))   deallocate (this%grid%yloc)
 
       IF (p_is_io) THEN
          IF (allocated(this%glist)) THEN
@@ -1166,7 +1174,7 @@ CONTAINS
             deallocate (this%gweight)
          ENDIF
       ENDIF
-   
+
    END SUBROUTINE mapping_pset2grid_free_mem
 
 END MODULE MOD_Mapping_Pset2Grid

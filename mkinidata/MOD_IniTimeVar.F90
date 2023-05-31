@@ -79,12 +79,12 @@ MODULE MOD_IniTimeVar
 #ifdef USE_DEPTH_TO_BEDROCK
   USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #endif
-#if(defined PFT_CLASSIFICATION)
+#if(defined LULC_IGBP_PFT)
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
 #endif
-#if(defined PC_CLASSIFICATION)
+#if(defined LULC_IGBP_PC)
   USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
@@ -365,7 +365,7 @@ MODULE MOD_IniTimeVar
          scv    = snowdp*rhosno_ini
 
          ! 08/02/2019, yuan: NOTE! need to be changed in future
-         ! for PFT_CLASSIFICATION or PC_CLASSIFICATION
+         ! for LULC_IGBP_PFT or LULC_IGBP_PC
          ! have done but not for SOILINI right now
          CALL snowfraction (tlai(ipatch),tsai(ipatch),z0m,zlnd,scv,snowdp,wt,sigf,fsno)
          CALL snow_ini (patchtype,maxsnl,snowdp,snl,z_soisno,dz_soisno)
@@ -461,7 +461,7 @@ MODULE MOD_IniTimeVar
       gs0sha = 1.0e4
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
       ldew_rain_p(:,ps:pe) = 0.
@@ -475,7 +475,7 @@ MODULE MOD_IniTimeVar
 #endif
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       pc = patch2pc(ipatch)
       ldew_rain_c(:,pc)  = 0.
       ldew_snow_c(:,pc)  = 0.
@@ -496,13 +496,13 @@ MODULE MOD_IniTimeVar
       ! (6) Leaf area
       ! Variables: sigf, lai, sai
       IF (patchtype == 0) THEN
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if(defined LULC_USGS || defined LULC_IGBP)
          sigf = fveg
          lai  = tlai(ipatch)
          sai  = tsai(ipatch) * sigf
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          sigf_p (ps:pe)  = 1.
@@ -514,7 +514,7 @@ MODULE MOD_IniTimeVar
          sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          pc = patch2pc(ipatch)
          sigf_c(:,pc)   = 1.
          lai_c(:,pc)    = tlai_c(:,pc)
@@ -719,7 +719,7 @@ MODULE MOD_IniTimeVar
 #endif
     skip_balance_check              = .false.
 
-#if(defined PFT_CLASSIFICATION)
+#if(defined LULC_IGBP_PFT)
     IF (patchtype == 0) THEN
        do m = ps, pe
           ivt = pftclass(m)

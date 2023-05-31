@@ -102,6 +102,10 @@ CONTAINS
          write(*,*) fgrid%nlon, 'grids in longitude'
       ENDIF
 
+      IF (allocated(this%grid%xblk)) deallocate(this%grid%xblk)
+      IF (allocated(this%grid%yblk)) deallocate(this%grid%yblk)
+      IF (allocated(this%grid%xloc)) deallocate(this%grid%xloc)
+      IF (allocated(this%grid%yloc)) deallocate(this%grid%yloc)
       allocate (this%grid%xblk (size(fgrid%xblk)))
       allocate (this%grid%yblk (size(fgrid%yblk)))
       allocate (this%grid%xloc (size(fgrid%xloc)))
@@ -268,6 +272,7 @@ CONTAINS
          ENDDO
 #endif
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_io-1))
          DO iproc = 0, p_np_io-1
 #ifdef USEMPI
@@ -326,6 +331,7 @@ CONTAINS
 
       IF (p_is_io) THEN
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
@@ -491,6 +497,8 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
+         IF (allocated(this%address)) deallocate(this%address)
+         IF (allocated(this%gweight)) deallocate(this%gweight)
          allocate (this%address (pixelset%nset))
          allocate (this%gweight (pixelset%nset))
 
@@ -748,7 +756,7 @@ CONTAINS
 
    !-----------------------------------------------------
    SUBROUTINE mapping_grid2pset_free_mem (this)
-      
+
       USE MOD_SPMD_Task
       IMPLICIT NONE
 

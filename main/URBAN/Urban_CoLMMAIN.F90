@@ -783,7 +783,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew,ldew,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr,qintr)
+                              ldew,ldew,ldew,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr,qintr)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)
@@ -1115,7 +1115,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! energy balance check
       ! ----------------------------------------
       zerr=errore
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errore)>.5)THEN
          write(6,*) 'Warning: energy balance violation ',errore,patchclass
       ENDIF
@@ -1145,7 +1145,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       xerr   = errorw/deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errorw)>1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !stop

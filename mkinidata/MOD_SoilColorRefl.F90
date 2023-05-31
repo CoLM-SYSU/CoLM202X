@@ -59,7 +59,7 @@ MODULE MOD_SoilColorRefl
                             0.37, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25, 0.23, 0.21, 0.19 /)
 
    ! Guessed soil color of the Lawrence's classification
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
          if(L.eq. 0) isc = 1  ! 0  Ocean (not used)
          if(L.eq. 1) isc = 16 ! 1  Urban and Built-Up Land
          if(L.eq. 2) isc = 3  ! 2  Dryland Cropland and Pasture
@@ -87,7 +87,7 @@ MODULE MOD_SoilColorRefl
          if(L.eq.24) isc = 1  !24  Snow or Ice (not used)
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
          if(L.eq. 0) isc = 1  !0   Ocean (not used)
          if(L.eq. 1) isc = 17 !1   Evergreen Needleleaf Forest
          if(L.eq. 2) isc = 18 !2   Evergreen Broadleaf Forest

@@ -6,10 +6,10 @@ MODULE MOD_Vars_TimeInvariants
 ! -------------------------------
 
 use MOD_Precision
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 USE MOD_Vars_PFTimeInvars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 USE MOD_Vars_PCTimeInvars
 #endif
 #ifdef BGC
@@ -173,11 +173,11 @@ SAVE
 #endif
      end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL allocate_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL allocate_PCTimeInvars
 #endif
 
@@ -194,7 +194,7 @@ SAVE
   END SUBROUTINE allocate_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE READ_TimeInvariants (casename, dir_restart)
+  SUBROUTINE READ_TimeInvariants (lc_year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -212,13 +212,16 @@ SAVE
 
      IMPLICIT NONE
 
+     INTEGER         , intent(in) :: lc_year
      character(LEN=*), intent(in) :: casename
      character(LEN=*), intent(in) :: dir_restart
 
      ! Local variables
-     character(LEN=256) :: file_restart
+     character(LEN=256) :: file_restart, cyear
 
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const.nc'
+
+     write(cyear,'(i4.4)') lc_year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass) !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype ) !
@@ -287,23 +290,23 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
 
-#if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
+#if (defined LULC_IGBP_PFT)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
+#if (defined LULC_IGBP_PC)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_UrbanTimeInvars (file_restart)
 #endif
 
@@ -322,7 +325,7 @@ SAVE
   end subroutine READ_TimeInvariants
 
   !---------------------------------------
-  SUBROUTINE WRITE_TimeInvariants (casename, dir_restart)
+  SUBROUTINE WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -337,16 +340,18 @@ SAVE
 
      IMPLICIT NONE
 
+     INTEGER         , intent(in) :: lc_year
      character(len=*), intent(in) :: casename
      character(len=*), intent(in) :: dir_restart
 
      ! Local Variables
-     character(len=256) :: file_restart
+     character(len=256) :: file_restart, cyear
      integer :: compress
 
      compress = DEF_REST_COMPRESS_LEVEL
 
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const.nc'
+     write(cyear,'(i4.4)') lc_year
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' //'_lc'// trim(cyear) // '.nc'
 
      call ncio_create_file_vector (file_restart, landpatch)
 
@@ -436,23 +441,23 @@ SAVE
 
      end if
 
-#if (defined PFT_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const.nc'
+#if (defined LULC_IGBP_PFT)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const.nc'
+#if (defined LULC_IGBP_PC)
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PCTimeInvars (file_restart)
 #endif
 
 #if (defined BGC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_bgc_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_BGCTimeInvars (file_restart)
 #endif
 
 #if (defined URBAN_MODEL)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urban_const.nc'
+     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_urb_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_UrbanTimeInvars (file_restart)
 #endif
 
@@ -528,11 +533,11 @@ SAVE
         end if
      end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL deallocate_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL deallocate_PCTimeInvars
 #endif
 
@@ -628,11 +633,11 @@ SAVE
          write(*,'(A7,E20.10)') 'tcrit ', tcrit  ! critical temp. to determine rain or snow
       end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL check_PFTimeInvars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL check_PCTimeInvars
 #endif
 

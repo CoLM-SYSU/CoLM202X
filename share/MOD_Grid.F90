@@ -35,7 +35,7 @@ MODULE MOD_Grid
       INTEGER :: nlat
       INTEGER :: nlon
 
-      ! Latitude direction. (yinc = 1) means south to north.  
+      ! Latitude direction. (yinc = 1) means south to north.
       INTEGER :: yinc
 
       ! Coordinates.
@@ -43,7 +43,7 @@ MODULE MOD_Grid
       REAL(r8), allocatable :: lat_n (:)
       REAL(r8), allocatable :: lon_w (:)
       REAL(r8), allocatable :: lon_e (:)
-      
+
       ! Blocks.
       INTEGER, allocatable :: xdsp(:), ydsp(:)
       INTEGER, allocatable :: xcnt(:), ycnt(:)
@@ -58,8 +58,8 @@ MODULE MOD_Grid
       REAL(r8), allocatable :: rlat(:)
 
    CONTAINS
-      procedure, PUBLIC :: define_by_name   => grid_define_by_name  
-      procedure, PUBLIC :: define_by_ndims  => grid_define_by_ndims  
+      procedure, PUBLIC :: define_by_name   => grid_define_by_name
+      procedure, PUBLIC :: define_by_ndims  => grid_define_by_ndims
       procedure, PUBLIC :: define_by_res    => grid_define_by_res
       procedure, PUBLIC :: define_by_center => grid_define_by_center
       procedure, PUBLIC :: define_from_file => grid_define_from_file
@@ -71,11 +71,11 @@ MODULE MOD_Grid
       procedure, PRIVATE :: init => grid_init
       procedure, PRIVATE :: normalize  => grid_normalize
       procedure, PRIVATE :: set_blocks => grid_set_blocks
-      
+
       final :: grid_free_mem
 
    END TYPE grid_type
-   
+
    ! ---- data types ----
    TYPE :: grid_list_type
       INTEGER :: ng
@@ -114,7 +114,7 @@ CONTAINS
 
    ! --------------------------------
    SUBROUTINE grid_init (this, nlon, nlat)
-      
+
       IMPLICIT NONE
       class (grid_type) :: this
 
@@ -124,13 +124,17 @@ CONTAINS
       this%nlat = nlat
       this%nlon = nlon
 
+      IF (allocated(this%lat_s)) deallocate(this%lat_s)
+      IF (allocated(this%lat_n)) deallocate(this%lat_n)
+      IF (allocated(this%lon_w)) deallocate(this%lon_w)
+      IF (allocated(this%lon_e)) deallocate(this%lon_e)
       allocate (this%lat_s (nlat))
       allocate (this%lat_n (nlat))
       allocate (this%lon_w (nlon))
       allocate (this%lon_e (nlon))
 
    END SUBROUTINE grid_init
-   
+
    ! --------------------------------
    SUBROUTINE grid_define_by_name (this, gridname)
 
@@ -143,7 +147,7 @@ CONTAINS
       INTEGER  :: nlat, nlon, ilat, ilon
       REAL(r8) :: del_lat, del_lon
 
-      IF (trim(gridname) == 'merit_90m') THEN 
+      IF (trim(gridname) == 'merit_90m') THEN
 
          nlat = 180*60*20
          nlon = 360*60*20
@@ -155,7 +159,7 @@ CONTAINS
 
          del_lat = 180.0 / nlat
          DO ilat = 1, this%nlat
-            this%lat_s(ilat) = 90.0 - del_lat * ilat - del_lat/2.0 
+            this%lat_s(ilat) = 90.0 - del_lat * ilat - del_lat/2.0
             this%lat_n(ilat) = 90.0 - del_lat * (ilat-1) - del_lat/2.0
          ENDDO
 
@@ -237,7 +241,7 @@ CONTAINS
       CALL this%set_blocks ()
 
    END SUBROUTINE grid_define_by_ndims
-   
+
    !-----------------------------------------------------
    SUBROUTINE grid_define_by_res (this, lon_res, lat_res)
 
@@ -259,7 +263,7 @@ CONTAINS
    !---------------------------------------------
    SUBROUTINE grid_define_by_center (this, lat_in, lon_in, &
          south, north, west, east)
-      
+
       USE MOD_Precision
       USE MOD_Utils
       IMPLICIT NONE
@@ -328,7 +332,7 @@ CONTAINS
       ENDDO
 
       allocate (lon_in_n (size(lon_in)))
-      
+
       lon_in_n = lon_in
       DO ilon = 1, size(lon_in_n)
          CALL normalize_longitude (lon_in_n(ilon))
@@ -368,7 +372,7 @@ CONTAINS
 
    !-----------------------------------------------------
    SUBROUTINE grid_define_from_file (this, filename)
-      
+
       USE MOD_NetCDFSerial
       IMPLICIT NONE
       class (grid_type) :: this
@@ -385,12 +389,12 @@ CONTAINS
 
       CALL this%normalize  ()
       CALL this%set_blocks ()
-      
+
    END SUBROUTINE grid_define_from_file
 
    !-----------------------------------------------------
    SUBROUTINE grid_define_by_copy (this, grid_in)
-      
+
       USE MOD_NetCDFSerial
       IMPLICIT NONE
       class (grid_type) :: this
@@ -406,7 +410,7 @@ CONTAINS
 
       CALL this%normalize  ()
       CALL this%set_blocks ()
-      
+
    END SUBROUTINE grid_define_by_copy
 
    !-----------------------------------------------------
@@ -439,26 +443,34 @@ CONTAINS
 
    !-----------------------------------------------------
    SUBROUTINE grid_set_blocks (this)
-      
+
       USE MOD_Namelist
       USE MOD_Block
       USE MOD_Utils
       IMPLICIT NONE
-     
+
       class (grid_type) :: this
-      
+
       ! Local variables
       INTEGER  :: ilat, ilon, iblk, jblk, ilon_e
-      REAL(r8) :: edges, edgen, edgew, edgee 
-   
+      REAL(r8) :: edges, edgen, edgew, edgee
+
+      IF (allocated(this%xcnt)) deallocate(this%xcnt)
+      IF (allocated(this%xdsp)) deallocate(this%xdsp)
+      IF (allocated(this%ycnt)) deallocate(this%ycnt)
+      IF (allocated(this%ydsp)) deallocate(this%ydsp)
       allocate (this%xcnt (gblock%nxblk))
       allocate (this%xdsp (gblock%nxblk))
       allocate (this%ycnt (gblock%nyblk))
       allocate (this%ydsp (gblock%nyblk))
-      
+
+      IF (allocated(this%xblk)) deallocate(this%xblk)
+      IF (allocated(this%yblk)) deallocate(this%yblk)
       allocate (this%xblk (this%nlon))
       allocate (this%yblk (this%nlat))
-      
+
+      IF (allocated(this%xloc)) deallocate(this%xloc)
+      IF (allocated(this%yloc)) deallocate(this%yloc)
       allocate (this%xloc (this%nlon))
       allocate (this%yloc (this%nlat))
 
@@ -466,12 +478,12 @@ CONTAINS
       edgen = DEF_domain%edgen
       edgew = DEF_domain%edgew
       edgee = DEF_domain%edgee
-         
+
       CALL normalize_longitude (edgew)
       CALL normalize_longitude (edgee)
 
       IF (this%yinc == 1) THEN
-         
+
          this%ycnt(:) = 0
          this%yblk(:) = 0
 
@@ -604,7 +616,7 @@ CONTAINS
                         exit
                      ENDIF
                   ENDDO
-                  
+
                   exit
                ENDIF
             ENDIF
@@ -614,7 +626,7 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE grid_set_blocks
-   
+
    !-----------
    SUBROUTINE grid_set_rlon (this)
 
@@ -646,7 +658,7 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE grid_set_rlon
-   
+
    !-----------
    SUBROUTINE grid_set_rlat (this)
 
@@ -656,7 +668,7 @@ CONTAINS
       IMPLICIT NONE
 
       class (grid_type) :: this
-      
+
       ! Local variables
       INTEGER :: iy
 
@@ -681,24 +693,24 @@ CONTAINS
       IF (allocated (this%lat_n))  deallocate (this%lat_n)
       IF (allocated (this%lon_w))  deallocate (this%lon_w)
       IF (allocated (this%lon_e))  deallocate (this%lon_e)
-      
-      IF (allocated (this%xdsp))   deallocate (this%xdsp) 
-      IF (allocated (this%ydsp))   deallocate (this%ydsp) 
 
-      IF (allocated (this%xcnt))   deallocate (this%xcnt) 
-      IF (allocated (this%ycnt))   deallocate (this%ycnt) 
+      IF (allocated (this%xdsp))   deallocate (this%xdsp)
+      IF (allocated (this%ydsp))   deallocate (this%ydsp)
 
-      IF (allocated (this%xblk))   deallocate (this%xblk) 
-      IF (allocated (this%yblk))   deallocate (this%yblk) 
-      
-      IF (allocated (this%xloc))   deallocate (this%xloc) 
-      IF (allocated (this%yloc))   deallocate (this%yloc) 
+      IF (allocated (this%xcnt))   deallocate (this%xcnt)
+      IF (allocated (this%ycnt))   deallocate (this%ycnt)
 
-      IF (allocated (this%xgrd))   deallocate (this%xgrd) 
-      IF (allocated (this%ygrd))   deallocate (this%ygrd) 
-      
-      IF (allocated (this%rlon))   deallocate (this%rlon) 
-      IF (allocated (this%rlat))   deallocate (this%rlat) 
+      IF (allocated (this%xblk))   deallocate (this%xblk)
+      IF (allocated (this%yblk))   deallocate (this%yblk)
+
+      IF (allocated (this%xloc))   deallocate (this%xloc)
+      IF (allocated (this%yloc))   deallocate (this%yloc)
+
+      IF (allocated (this%xgrd))   deallocate (this%xgrd)
+      IF (allocated (this%ygrd))   deallocate (this%ygrd)
+
+      IF (allocated (this%rlon))   deallocate (this%rlon)
+      IF (allocated (this%rlat))   deallocate (this%rlat)
 
    END SUBROUTINE grid_free_mem
 
@@ -720,6 +732,9 @@ CONTAINS
       ilat_u = findloc(grid%yblk /= 0, .true., dim=1, back=.true.)
 
       this%ginfo%nlat = ilat_u - ilat_l + 1
+      IF (allocated(this%ginfo%lat_s)) deallocate(this%ginfo%lat_s)
+      IF (allocated(this%ginfo%lat_n)) deallocate(this%ginfo%lat_n)
+      IF (allocated(this%ginfo%lat_c)) deallocate(this%ginfo%lat_c)
       allocate (this%ginfo%lat_s (this%ginfo%nlat))
       allocate (this%ginfo%lat_n (this%ginfo%nlat))
       allocate (this%ginfo%lat_c (this%ginfo%nlat))
@@ -739,6 +754,7 @@ CONTAINS
          this%ginfo%lat_c(ilatloc) = (grid%lat_s(ilat)+grid%lat_n(ilat)) * 0.5
       end do
 
+      IF (allocated(this%ysegs)) deallocate(this%ysegs)
       allocate (this%ysegs (this%nyseg))
 
       iyseg = 0
@@ -789,6 +805,9 @@ CONTAINS
          this%ginfo%nlon = this%ginfo%nlon + grid%nlon
       ENDIF
 
+      IF (allocated(this%ginfo%lon_w)) deallocate(this%ginfo%lon_w)
+      IF (allocated(this%ginfo%lon_e)) deallocate(this%ginfo%lon_e)
+      IF (allocated(this%ginfo%lon_c)) deallocate(this%ginfo%lon_c)
       allocate (this%ginfo%lon_w (this%ginfo%nlon))
       allocate (this%ginfo%lon_e (this%ginfo%nlon))
       allocate (this%ginfo%lon_c (this%ginfo%nlon))
@@ -797,7 +816,7 @@ CONTAINS
       ilon = ilon_w - 1
       iblk = 0
       ilonloc = 0
-      do while (.true.) 
+      do while (.true.)
          ilon = mod(ilon,grid%nlon) + 1
          if (grid%xblk(ilon) /= iblk) then
             this%nxseg = this%nxseg + 1
@@ -817,13 +836,14 @@ CONTAINS
          if (ilon == ilon_e) exit
       end do
 
+      IF (allocated(this%xsegs)) deallocate(this%xsegs)
       allocate (this%xsegs (this%nxseg))
 
       ixseg = 0
       iblk = 0
       ilon = ilon_w - 1
       ilonloc = 0
-      do while (.true.) 
+      do while (.true.)
          ilon = mod(ilon,grid%nlon) + 1
          ilonloc = ilonloc + 1
          if (grid%xblk(ilon) /= iblk) then
