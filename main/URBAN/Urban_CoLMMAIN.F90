@@ -1115,7 +1115,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! energy balance check
       ! ----------------------------------------
       zerr=errore
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errore)>.5)THEN
          write(6,*) 'Warning: energy balance violation ',errore,patchclass
       ENDIF
@@ -1145,7 +1145,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       xerr   = errorw/deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errorw)>1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !stop

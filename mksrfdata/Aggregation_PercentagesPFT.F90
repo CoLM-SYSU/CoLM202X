@@ -92,7 +92,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    ! add parameter input for time year
    !write(cyear,'(i4.4)') lc_year
    suffix  = 'MOD'//trim(cyear)
@@ -205,7 +205,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    ENDIF
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN

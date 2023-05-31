@@ -168,7 +168,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 
    IF (p_is_io) THEN
-      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       suffix  = 'MOD'//trim(cyear)
       CALL read_5x5_data (dir_5x5, suffix, gland, 'HTOP', htop)
 #ifdef USEMPI
@@ -233,7 +233,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
@@ -339,7 +339,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
    ENDIF
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    suffix  = 'MOD'//trim(cyear)
 
    IF (p_is_io) THEN
