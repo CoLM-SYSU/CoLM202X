@@ -7,6 +7,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    !     data with 30 arc seconds resolution
    !
    ! Created by Yongjiu Dai, 03/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist

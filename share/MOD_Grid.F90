@@ -24,8 +24,6 @@ MODULE MOD_Grid
    !    1. "grid_list_type"   : list of grid boxes;
    !    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
    ! 
-   !    Notice that:
-   ! 
    ! Created by Shupeng Zhang, May 2023
 
    USE MOD_Precision

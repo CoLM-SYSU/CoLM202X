@@ -3,7 +3,7 @@
 SUBROUTINE Aggregation_SoilParameters ( &
       gland, dir_rawdata, dir_model_landdata)
 
-   !-----------------------------------------------------------------------
+   !--------------------------------------------------------------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! Create soil hydraulic and thermal parameters for the modeling reolustion
    !
@@ -19,8 +19,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    !
    ! REVISIONS:
    ! Nan Wei, 06/2019: add algorithms of fitting soil water retention curves to aggregate soil hydraulic parameters from pixels to a patch.
-   ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to parallel version
-   ! -----------------------------------------------------------------------
+   ! Shupeng Zhang and Nan Wei, 01/2022: porting codes to MPI parallel version
+   ! -------------------------------------------------------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global

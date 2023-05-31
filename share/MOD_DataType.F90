@@ -7,8 +7,8 @@ MODULE MOD_DataType
    !
    !    Definations of data types used in CoLM.
    !
-   !    Most frequently used data types in CoLM defined in this module 
-   !    are "blocked" data types, including,
+   !    Most frequently used data types in CoLM are "blocked" data types
+   !    including,
    !    1. Blocked 2D data of 4-byte integer type;
    !    2. Blocked 2D data of 8-byte float type;
    !    3. Blocked 3D data of 8-byte float type;

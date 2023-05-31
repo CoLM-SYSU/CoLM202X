@@ -1,5 +1,15 @@
 MODULE MOD_Utils
 
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module contains utilities.
+   !
+   ! History:
+   !    Subroutines lmder, enorm, tridia and polint are moved from other files.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+
    ! ---- PUBLIC subroutines ----
 
    PUBLIC :: normalize_longitude
@@ -34,10 +44,7 @@ MODULE MOD_Utils
    PUBLIC :: median
 
    PUBLIC :: areaquad
-
-   PUBLIC :: lmder
-
-   PUBLIC :: tridia
+   PUBLIC :: arclen
 
    interface unpack_inplace
       MODULE procedure unpack_inplace_int32
@@ -45,6 +52,17 @@ MODULE MOD_Utils
       MODULE procedure unpack_inplace_lastdim_real8
    END interface unpack_inplace
 
+   PUBLIC :: num_max_frequency
+
+   PUBLIC :: lmder
+   PUBLIC :: lmpar
+   PUBLIC :: qrfac
+   PUBLIC :: qrsolv
+
+   PUBLIC :: enorm
+   PUBLIC :: tridia
+   PUBLIC :: polint
+   
 CONTAINS
 
    !---------------------------------

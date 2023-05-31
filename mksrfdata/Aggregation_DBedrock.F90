@@ -5,6 +5,16 @@
 SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
+   ! ---------------------------------------------------------------------------
+   ! Depth to bedrock
+   !
+   !    Shangguan, W., Hengl, T., Mendes de Jesus, J., Yuan, H., Dai, Y. (2017). 
+   !    Mapping the global depth to bedrock for land surface modeling. 
+   !    Journal of Advances in Modeling Earth Systems, 9(1), 65–88. 
+   !
+   ! Created by Shupeng Zhang, 05/2023
+   ! ----------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Namelist
    USE MOD_SPMD_Task
@@ -23,8 +33,8 @@ SUBROUTINE Aggregation_DBedrock ( &
 #endif
 
    IMPLICIT NONE
-   ! arguments:
 
+   ! arguments:
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
@@ -60,10 +70,6 @@ SUBROUTINE Aggregation_DBedrock ( &
    ENDIF
 #endif
 
-   ! ................................................
-   ! ... (2) global depth to bedrock
-   ! ................................................
-
    IF (p_is_io) THEN
       
       CALL allocate_block_data (gland, dbedrock)
@@ -75,10 +81,6 @@ SUBROUTINE Aggregation_DBedrock ( &
       CALL aggregation_data_daemon (gland, data_r8_2d_in_1 = dbedrock)
 #endif
    ENDIF
-
-   !   ---------------------------------------------------------------
-   !   aggregate the depth to bedrock from the resolution of raw data to modelling resolution
-   !   ---------------------------------------------------------------
 
    IF (p_is_worker) THEN
 

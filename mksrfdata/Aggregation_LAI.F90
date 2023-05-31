@@ -2,9 +2,7 @@
 
 SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
-   !
-   ! 2. Global Plant Leaf Area Index
+   ! 1. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
    !    Reprocessing the MODIS Leaf Area Index products for land surface
@@ -12,7 +10,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata)
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   !
+   ! REVISIONS:
+   ! Hua Yuan,      ?/2020 : for land cover land use classifications
+   ! Shupeng Zhang, 01/2022: porting codes to parallel version
+   ! Hua Yuan,      05/2023: TODO
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
