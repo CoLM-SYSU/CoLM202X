@@ -82,6 +82,8 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_dir_history  = 'path/to/history'
 
    CHARACTER(len=256) :: DEF_file_mesh    = 'path/to/mesh/file'
+   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
+   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
 #ifdef CATCHMENT
    LOGICAL :: Catchment_data_in_ONE_file = .false.
@@ -89,10 +91,6 @@ MODULE MOD_Namelist
 #endif
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
-   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
-   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
-
-   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
    ! ----- Use surface data from existing dataset -----
    CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
@@ -126,9 +124,16 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+   CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
+
    ! ----- Initialization -----
-   CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
+   LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
+   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+   
+   LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
+   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
+
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
@@ -151,6 +156,10 @@ MODULE MOD_Namelist
 
    ! ----- forcing -----
    CHARACTER(len=256) :: DEF_forcing_namelist = 'null'
+
+   LOGICAL          :: DEF_USE_Forcing_Downscaling = .false.
+   CHARACTER(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
+   CHARACTER(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
    TYPE nl_forcing_type
 
@@ -583,14 +592,13 @@ CONTAINS
          DEF_dir_rawdata,                 &
          DEF_dir_output,                  &
          DEF_file_mesh,                   &
+         DEF_GRIDBASED_lon_res,           &
+         DEF_GRIDBASED_lat_res,           &
 #ifdef CATCHMENT
          Catchment_data_in_ONE_file,      &
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
-         DEF_GRIDBASED_lon_res,           &
-         DEF_GRIDBASED_lat_res,           &
-         DEF_file_water_table_depth,      &
 
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
@@ -623,11 +631,22 @@ CONTAINS
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
 
+         DEF_precip_phase_discrimination_scheme, &
+         
+         DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
+      
+         DEF_USE_WaterTable_INIT,         &
+         DEF_file_water_table_depth,      &
+
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
          DEF_forcing_namelist,            &
+
+         DEF_USE_Forcing_Downscaling,        &
+         DEF_DS_precipitation_adjust_scheme, &
+         DEF_DS_longwave_adjust_scheme,      &
 
          DEF_HISTORY_IN_VECTOR,           &
          DEF_hist_lon_res,                &
@@ -750,6 +769,8 @@ CONTAINS
 
 #if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
 #endif
 
 #ifdef CATCHMENT
@@ -758,10 +779,6 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
-
-      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -792,7 +809,14 @@ CONTAINS
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_file_soil_init , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -809,6 +833,10 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
+      
+      CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_forcing%dataset,          256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%solarin_all_band,   1, mpi_logical,   p_root, p_comm_glb, p_err)

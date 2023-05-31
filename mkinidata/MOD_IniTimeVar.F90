@@ -62,10 +62,8 @@ MODULE MOD_IniTimeVar
 #endif
 !------------------------------------------------------------
 #endif
-#if(defined SOILINI)
-                     ,nl_soil_ini,soil_z,soil_t,soil_w,snow_d
-#endif
-                     ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
+                     ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, snow_d     &
+                     ,use_wtd,     zwtmm,       zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 !=======================================================================
 ! Created by Yongjiu Dai, 09/15/1999
@@ -74,6 +72,7 @@ MODULE MOD_IniTimeVar
 !=======================================================================
 
   USE MOD_Precision
+  USE MOD_Utils
   USE MOD_Const_Physical, only: tfrz
   USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
   USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn
@@ -119,19 +118,18 @@ MODULE MOD_IniTimeVar
         psi0 (1:nl_soil),       &! saturated soil suction (mm) (NEGATIVE)
         hksati(1:nl_soil)        ! hydraulic conductivity at saturation [mm h2o/s]
 
-#if(defined SOILINI)
+  LOGICAL, intent(in)  :: use_soilini
   INTEGER, intent(in)  :: nl_soil_ini
   REAL(r8), intent(in) ::       &!
         soil_z(nl_soil_ini),    &! soil layer depth for initial (m)
         soil_t(nl_soil_ini),    &! soil temperature from initial file (K)
         soil_w(nl_soil_ini),    &! soil wetness from initial file (-)
         snow_d                   ! snow depth (m)
-#endif
 
   LOGICAL,  intent(in) :: use_wtd
   REAL(r8), intent(in) :: zwtmm
   REAL(r8), intent(in) :: zc_soimm(1:nl_soil)
-  REAL(r8), intent(in) :: zi_soimm(1:nl_soil)
+  REAL(r8), intent(in) :: zi_soimm(0:nl_soil)
   REAL(r8), INTENT(in) :: vliq_r  (1:nl_soil)
   INTEGER,  intent(in) :: nprms
   REAL(r8), intent(in) :: prms(nprms, 1:nl_soil)
@@ -321,249 +319,217 @@ MODULE MOD_IniTimeVar
 #endif
 
         INTEGER j, snl, m, ivt
-        REAL(r8) wet(nl_soil), wt, ssw, oro, rhosno_ini, a
-        real(r8) alpha       (1:nl_soil) ! used in calculating hk
-        real(r8) zmm         (1:nl_soil) ! z in mm
-        real(r8) den         (1:nl_soil) !
+        REAL(r8) wet(nl_soil), vliq, wt, ssw, oro, rhosno_ini, a
 
         ! SNICAR
         REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
         REAL(r8) snofrz     (maxsnl+1:0) ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
         INTEGER ps, pe, pc
-!-----------------------------------------------------------------------
 
-  IF(patchtype <= 5)THEN ! land grid
-     rhosno_ini = 250.
-#if(defined SOILINI)
-     DO j = 1, nl_soil
-        CALL polint(soil_z,soil_t,nl_soil_ini,z_soisno(j),t_soisno(j))
-        CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
-        a = min(soil_t(1),soil_t(2),soil_t(3))-5.
-        t_soisno(j) = max(t_soisno(j), a)
-        a = max(soil_t(1),soil_t(2),soil_t(3))+5.
-        t_soisno(j) = min(t_soisno(j), a)
+   !-----------------------------------------------------------------------
+   IF(patchtype <= 5)THEN ! land grid
 
-        a = min(soil_w(1),soil_w(2),soil_w(3))
-        wet(j) = max(wet(j), a, 0.1)
-        a = max(soil_w(1),soil_w(2),soil_w(3))
-        wet(j) = min(wet(j), a, 0.5)
+      ! (1) SOIL temperature, water and SNOW
+      ! Variables: t_soisno, wliq_soisno, wice_soisno
+      !            snowdp, sag, scv, fsno, snl, z_soisno, dz_soisno
+      IF (use_soilini) THEN
 
-        IF(t_soisno(j).ge.tfrz)THEN
-           wliq_soisno(j) = wet(j)*dz_soisno(j)*1000.
-!          wliq_soisno(j) = porsl(j)*wet(j)*dz_soisno(j)*1000.
-           wice_soisno(j) = 0.
-        ELSE
-           wliq_soisno(j) = 0.
-           wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
-!          wliq_soisno(j) = porsl(j)*wet(j)*dz_soisno(j)*1000.
-        ENDIF
-     ENDDO
+         DO j = 1, nl_soil
+            CALL polint(soil_z,soil_t,nl_soil_ini,z_soisno(j),t_soisno(j))
+            CALL polint(soil_z,soil_w,nl_soil_ini,z_soisno(j),wet(j))
+            a = min(soil_t(1),soil_t(2),soil_t(3))-5.
+            t_soisno(j) = max(t_soisno(j), a)
+            a = max(soil_t(1),soil_t(2),soil_t(3))+5.
+            t_soisno(j) = min(t_soisno(j), a)
 
-     snowdp = snow_d
-     sag    = 0.
-     scv    = snowdp*rhosno_ini
+            a = min(soil_w(1),soil_w(2),soil_w(3))
+            wet(j) = max(wet(j), a, 0.1)
+            a = max(soil_w(1),soil_w(2),soil_w(3))
+            wet(j) = min(wet(j), a, 0.5)
 
-! 08/02/2019, yuan: NOTE! need to be changed in future
-! for PFT_CLASSIFICATION or PC_CLASSIFICATION
-! have done but not for SOILINI right now
-     CALL snowfraction (lai,sai,z0m,zlnd,scv,snowdp,wt,sigf,fsno)
-     CALL snow_ini (patchtype,maxsnl,snowdp,snl,z_soisno,dz_soisno)
+            wet(j) = min(wet(j), porsl(j))
 
-     IF(snl.lt.0)THEN
-        DO j = snl+1, 0
-           t_soisno(j) = min(tfrz-1., t_soisno(1))
-           wliq_soisno(j) = 0.
-           wice_soisno(j) = dz_soisno(j)*rhosno_ini         !m * kg m-3 = kg m-2
-        ENDDO
-     ENDIF
+            IF(t_soisno(j).ge.tfrz)THEN
+               wliq_soisno(j) = wet(j)*dz_soisno(j)*1000.
+               wice_soisno(j) = 0.
+            ELSE
+               wliq_soisno(j) = 0.
+               wice_soisno(j) = wet(j)*dz_soisno(j)*1000.
+            ENDIF
+         ENDDO
 
-     IF(snl>maxsnl)THEN
-        t_soisno (maxsnl+1:snl) = -999.
-        wice_soisno(maxsnl+1:snl) = 0.
-        wliq_soisno(maxsnl+1:snl) = 0.
-        z_soisno   (maxsnl+1:snl) = 0.
-        dz_soisno  (maxsnl+1:snl) = 0.
-     ENDIF
-!#ifdef CLM5_INTERCEPTION
-   ldew_rain  = 0.
-   ldew_snow  = 0.
-!#endif
-     ldew  = 0.
-     tleaf = t_soisno(1)
-     t_grnd = t_soisno(1)
+         rhosno_ini = 250.
+         snowdp = snow_d
+         sag    = 0.
+         scv    = snowdp*rhosno_ini
 
+         ! 08/02/2019, yuan: NOTE! need to be changed in future
+         ! for PFT_CLASSIFICATION or PC_CLASSIFICATION
+         ! have done but not for SOILINI right now
+         CALL snowfraction (tlai(ipatch),tsai(ipatch),z0m,zlnd,scv,snowdp,wt,sigf,fsno)
+         CALL snow_ini (patchtype,maxsnl,snowdp,snl,z_soisno,dz_soisno)
+
+         IF(snl.lt.0)THEN
+            DO j = snl+1, 0
+               t_soisno(j) = min(tfrz-1., t_soisno(1))
+               wliq_soisno(j) = 0.
+               wice_soisno(j) = dz_soisno(j)*rhosno_ini         !m * kg m-3 = kg m-2
+            ENDDO
+         ENDIF
+
+         IF(snl>maxsnl)THEN
+            t_soisno   (maxsnl+1:snl) = -999.
+            wice_soisno(maxsnl+1:snl) = 0.
+            wliq_soisno(maxsnl+1:snl) = 0.
+            z_soisno   (maxsnl+1:snl) = 0.
+            dz_soisno  (maxsnl+1:snl) = 0.
+         ENDIF
+
+      ELSE
+
+         ! soil temperature, water content
+         DO j = 1, nl_soil
+            IF(patchtype==3)THEN !land ice
+               t_soisno(j) = 253.
+               wliq_soisno(j) = 0.
+               wice_soisno(j) = dz_soisno(j)*1000.
+            ELSE
+               t_soisno(j) = 283.
+               wliq_soisno(j) = dz_soisno(j)*porsl(j)*1000.
+               wice_soisno(j) = 0.
+            ENDIF
+         ENDDO
+      
+         snowdp = 0.
+         sag    = 0.
+         scv    = 0.
+         fsno   = 0.
+         snl    = 0
+
+         ! snow temperature and water content
+         t_soisno   (maxsnl+1:0) = -999.
+         wice_soisno(maxsnl+1:0) = 0.
+         wliq_soisno(maxsnl+1:0) = 0.
+         z_soisno   (maxsnl+1:0) = 0.
+         dz_soisno  (maxsnl+1:0) = 0.
+
+      ENDIF
+
+      ! (2) SOIL aquifer and water table
+      ! Variables: wa, zwt
+      IF (.not. use_wtd) THEN
+
+         IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+            wa  = 0.
+            zwt = zi_soimm(nl_soil)/1000.
+         ELSE
+            ! water table depth (initially at 1.0 m below the model bottom; wa when zwt
+            !                    is below the model bottom zi(nl_soil)
+            wa  = 4800.                             !assuming aquifer capacity is 5000 mm
+            zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
+         ENDIF
+      ELSE
+         IF (patchtype /= 3) THEN
+            CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
+               zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
+         ENDIF
+      ENDIF
+
+      ! (3) soil matrix potential hydraulic conductivity
+      ! Variables: smp, hk
+      DO j = 1, nl_soil
+         IF ((patchtype==3) .or. (t_soisno(j) < tfrz)) THEN !land ice or frozen soil
+            smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
+            hk(j)  = 0.
+         ELSE
+            vliq   = wliq_soisno(j) / (zi_soimm(j)-zi_soimm(j-1))
+            smp(j) = soil_psi_from_vliq (vliq, porsl(j), vliq_r(j), psi0(j), nprms, prms(:,j))
+            hk (j) = soil_hk_from_psi   (smp(j), psi0(j), hksati(j), nprms, prms(:,j))
+         ENDIF
+      ENDDO
+
+      ! (4) Vegetation water and temperature 
+      ! Variables: ldew_rain, ldew_snow, ldew, t_leaf, vegwp, gs0sun, gs0sha
+      ldew_rain  = 0.
+      ldew_snow  = 0.
+      ldew  = 0.
+      tleaf = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
-
-#else
-! soil temperature, water content and matrix potential
-     DO j = 1, nl_soil
-        IF(patchtype==3)THEN !land ice
-           t_soisno(j) = 253.
-           wliq_soisno(j) = 0.
-           wice_soisno(j) = dz_soisno(j)*1000.
-           smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
-        ELSE
-           t_soisno(j) = 283.
-           wliq_soisno(j) = dz_soisno(j)*porsl(j)*1000.
-           wice_soisno(j) = 0.
-           smp(j) = psi0(j)
-        ENDIF
-     ENDDO
-
-! soil hydraulic conductivity
-     zmm(1:) = z_soisno(1:)*1000.
-     DO j = 1, nl_soil
-        IF(patchtype==3)THEN !land ice
-           hk(j) = 0.
-        ELSE
-           if(j<nl_soil)then
-              den(j)   = (zmm(j+1)-zmm(j))
-              alpha(j) = (smp(j+1)-smp(j))/den(j) - 1._r8
-           else
-              alpha(j) = 0._r8
-           end if
-           if(alpha(j) <= 0.)then
-              hk(j) = hksati(j)
-           else
-              hk(j) = hksati(j+1)
-           end if
-        ENDIF
-     ENDDO
-
-! water table depth (initially at 1.0 m below the model bottom; wa when zwt
-!                    is below the model bottom zi(nl_soil)
-
-     IF (.not. use_wtd) THEN
-        wa  = 4800.                             !assuming aquifer capacity is 5000 mm
-        zwt = (25. + z_soisno(nl_soil))+dz_soisno(nl_soil)/2. - wa/1000./0.2 !to result in zwt = zi(nl_soil) + 1.0 m
-
-        IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-           wa = -1.0e5
-           zwt = zi_soi(nl_soil)
-        ENDIF
-     ELSE
-        IF (patchtype /= 3) THEN
-           CALL get_water_equilibrium_state (zwtmm, nl_soil, wliq_soisno(1:nl_soil), smp, hk, wa, &
-              zc_soimm, zi_soimm, porsl, vliq_r, psi0, hksati, nprms, prms)
-        ENDIF
-     ENDIF
-
-     dpond = 0.
-
-! snow temperature and water content
-     t_soisno(maxsnl+1:0) = -999.
-     wice_soisno(maxsnl+1:0) = 0.
-     wliq_soisno(maxsnl+1:0) = 0.
-     z_soisno (maxsnl+1:0) = 0.
-     dz_soisno(maxsnl+1:0) = 0.
-
-IF (patchtype == 0) THEN
-
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
-     sigf   = fveg
-     ldew_rain  = 0.
-     ldew_snow  = 0.
-     ldew  = 0.
-     tleaf  = t_soisno(1)
-     lai    = tlai(ipatch)
-     sai    = tsai(ipatch) * sigf
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+      vegwp(1:nvegwcs) = -2.5e4
+      gs0sun = 1.0e4
+      gs0sha = 1.0e4
 #endif
 
 #ifdef PFT_CLASSIFICATION
-     ps = patch_pft_s(ipatch)
-     pe = patch_pft_e(ipatch)
-     sigf_p(ps:pe)   = 1.
-!#ifdef CLM5_INTERCEPTION
-     ldew_p_rain(ps:pe)  = 0.
-     ldew_p_snow(ps:pe)  = 0.
-!#endif
-     ldew_p(ps:pe)   = 0.
-     tleaf_p(ps:pe)  = t_soisno(1)
+      ps = patch_pft_s(ipatch)
+      pe = patch_pft_e(ipatch)
+      tleaf_p(ps:pe)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
-     vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
-     gs0sun_p(ps:pe) = 1.0e4
-     gs0sha_p(ps:pe) = 1.0e4
+      vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
+      gs0sun_p(ps:pe) = 1.0e4
+      gs0sha_p(ps:pe) = 1.0e4
 #endif
-     lai_p(ps:pe)    = tlai_p(ps:pe)
-     sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
-
-     sigf  = 1.
-!#ifdef CLM5_INTERCEPTION
-     ldew_rain  = 0.
-     ldew_snow  = 0.
-!#endif
-     ldew  = 0.
-     tleaf = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
-     lai   = tlai(ipatch)
-     sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
 
 #ifdef PC_CLASSIFICATION
-     pc = patch2pc(ipatch)
-     sigf_c(:,pc)   = 1.
-     ldew_rain_c(:,pc)  = 0.
-     ldew_snow_c(:,pc)  = 0.
-     ldew_c(:,pc)   = 0.
-     tleaf_c(:,pc)  = t_soisno(1)
+      pc = patch2pc(ipatch)
+      ldew_rain_c(:,pc)  = 0.
+      ldew_snow_c(:,pc)  = 0.
+      ldew_c(:,pc)   = 0.
+      tleaf_c(:,pc)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
-     vegwp_c(1:nvegwcs,:,pc) = -2.5e4
-     gs0sun_c(:,pc) = 1.0e4
-     gs0sha_c(:,pc) = 1.0e4
+      vegwp_c(1:nvegwcs,:,pc) = -2.5e4
+      gs0sun_c(:,pc) = 1.0e4
+      gs0sha_c(:,pc) = 1.0e4
 #endif
-     lai_c(:,pc)    = tlai_c(:,pc)
-     sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
-
-     sigf  = 1.
-     ldew_rain  = 0.
-     ldew_snow  = 0.
-     ldew  = 0.
-     tleaf = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
 #endif
-     lai   = tlai(ipatch)
-     sai   = sum(sai_c(:,pc)*pcfrac(:,pc))
+      
+      ! (5) Ground
+      ! Variables: t_grnd, dpond
+      t_grnd = t_soisno(1)
+      dpond  = 0.
+
+      ! (6) Leaf area
+      ! Variables: sigf, lai, sai
+      IF (patchtype == 0) THEN
+#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+         sigf = fveg
+         lai  = tlai(ipatch)
+         sai  = tsai(ipatch) * sigf
 #endif
 
-ELSE
-     sigf   = fveg
-     ldew_rain  = 0.
-     ldew_snow  = 0.
-     ldew  = 0.
-     tleaf  = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
+#ifdef PFT_CLASSIFICATION
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         sigf_p (ps:pe)  = 1.
+         lai_p(ps:pe)    = tlai_p(ps:pe)
+         sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
+
+         sigf  = 1.
+         lai   = tlai(ipatch)
+         sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
-     lai    = tlai(ipatch)
-     sai    = tsai(ipatch) * sigf
-ENDIF
 
-     fsno   = 0.
-     scv    = 0.
-     sag    = 0.
-     snowdp = 0.
-     snl    = 0
+#ifdef PC_CLASSIFICATION
+         pc = patch2pc(ipatch)
+         sigf_c(:,pc)   = 1.
+         lai_c(:,pc)    = tlai_c(:,pc)
+         sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
 
-     ! SNICAR
+         sigf  = 1.
+         lai   = tlai(ipatch)
+         sai   = sum(sai_c(:,pc)*pcfrac(:,pc))
+#endif
+      ELSE
+         sigf  = fveg
+         lai   = tlai(ipatch)
+         sai   = tsai(ipatch) * sigf
+      ENDIF
+
+     ! (8) SNICAR
+     ! Variables: snw_rds, mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, 
+     !            mss_dst1, mss_dst2, mss_dst3, mss_dst4 
      snw_rds   (:) = 54.526_r8
      mss_bcpho (:) = 0.
      mss_bcphi (:) = 0.
@@ -574,11 +540,10 @@ ENDIF
      mss_dst3  (:) = 0.
      mss_dst4  (:) = 0.
 
-     wt     = 0.
-     t_grnd = t_soisno(1)
-#endif
 
-! surface albedo
+     ! (9) surface albedo
+     ! Variables: alb, ssun, ssha, ssno, thermk, extkb, extkd
+     wt      = 0.
      pg_snow = 0.
      snofrz (:) = 0.
      ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
@@ -590,53 +555,53 @@ ENDIF
                    mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
                    alb,ssun,ssha,ssno,thermk,extkb,extkd)
 
-  ELSE                 !ocean grid
-     t_soisno(:) = 300.
-     wice_soisno(:) = 0.
-     wliq_soisno(:) = 1000.
-     z_soisno (maxsnl+1:0) = 0.
-     dz_soisno(maxsnl+1:0) = 0.
-     sigf   = 0.
-     fsno   = 0.
-     ldew_rain  = 0.
-     ldew_snow  = 0.
-     ldew  = 0.
-     scv    = 0.
-     sag    = 0.
-     snowdp = 0.
-     tleaf  = 300.
+   ELSE                 !ocean grid
+      t_soisno(:) = 300.
+      wice_soisno(:) = 0.
+      wliq_soisno(:) = 1000.
+      z_soisno (maxsnl+1:0) = 0.
+      dz_soisno(maxsnl+1:0) = 0.
+      sigf   = 0.
+      fsno   = 0.
+      ldew_rain  = 0.
+      ldew_snow  = 0.
+      ldew  = 0.
+      scv    = 0.
+      sag    = 0.
+      snowdp = 0.
+      tleaf  = 300.
 #ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
+      vegwp(1:nvegwcs) = -2.5e4
+      gs0sun = 1.0e4
+      gs0sha = 1.0e4
 #endif
-     t_grnd = 300.
+      t_grnd = 300.
 
-     oro = 0
-     CALL albocean (oro,scv,coszen,alb)
-     ssun(:,:) = 0.0
-     ssha(:,:) = 0.0
-     ssno(:,:,:) = 0.0
-     thermk = 0.0
-     extkb = 0.0
-     extkd = 0.0
-  ENDIF
+      oro = 0
+      CALL albocean (oro,scv,coszen,alb)
+      ssun(:,:) = 0.0
+      ssha(:,:) = 0.0
+      ssno(:,:,:) = 0.0
+      thermk = 0.0
+      extkb = 0.0
+      extkd = 0.0
+   ENDIF
 
-! Additional variables required by reginal model (WRF & RSM)
-! totally arbitrarily assigned here
-  trad  = t_grnd
-  tref  = t_grnd
-  qref  = 0.3
-  rst   = 1.e36
-  emis  = 1.0
-  zol   = -1.0
-  rib   = -0.1
-  ustar = 0.25
-  qstar = 0.001
-  tstar = -1.5
-  fm    = alog(30.)
-  fh    = alog(30.)
-  fq    = alog(30.)
+   ! Additional variables required by reginal model (WRF & RSM)
+   ! totally arbitrarily assigned here
+   trad  = t_grnd
+   tref  = t_grnd
+   qref  = 0.3
+   rst   = 1.e36
+   emis  = 1.0
+   zol   = -1.0
+   rib   = -0.1
+   ustar = 0.25
+   qstar = 0.001
+   tstar = -1.5
+   fm    = alog(30.)
+   fh    = alog(30.)
+   fq    = alog(30.)
 
 #ifdef BGC
     totlitc                         = 0.0
@@ -1178,62 +1143,6 @@ ENDIF
      ENDIF
 
    END SUBROUTINE snow_ini
-!-----------------------------------------------------------------------
-! EOP
-
-
-   SUBROUTINE polint(xa,ya,n,x,y)
-
-! Given arrays xa and ya, each of length n, and gi
-! value y, and an error estimate dy. If P (x) is the p
-! P (xa(i)) = ya(i), i = 1, . . . , n, then the returned value
-! (from: "Numerical Recipes")
-
-     USE MOD_Precision
-     IMPLICIT NONE
-     INTEGER n,NMAX
-     REAL(r8) dy,x,y,xa(n),ya(n)
-     parameter (NMAX=10)      !Largest anticipated val
-     INTEGER i,m,ns
-     REAL(r8) den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
-
-     ns=1
-     dif=abs(x-xa(1))
-
-     DO i=1,n       !Here we find the index ns of the closest table entry,
-        dift=abs(x-xa(i))
-        IF(dift.lt.dif) THEN
-           ns=i
-           dif=dift
-        ENDIF
-        c(i)=ya(i)  !and initialize the tableau of c's and d's.
-        d(i)=ya(i)
-     ENDDO
-
-     y=ya(ns)       !This is the initial approximation to y.
-     ns=ns-1
-
-     DO m=1,n-1  !For each column of the tableau,
-        DO i=1,n-m   !we loop over the current c's and d's and update them.
-           ho=xa(i)-x
-           hp=xa(i+m)-x
-           w=c(i+1)-d(i)
-           den=ho-hp
-           IF(den.eq.0.) print*, 'failure in polint'  !two input xa's are identical.
-           den=w/den
-           d(i)=hp*den                                !here the c's and d's are updated.
-           c(i)=ho*den
-        ENDDO
-        IF(2*ns.lt.n-m)THEN  !After each column in the tableau is completed, we decide
-           dy=c(ns+1)        !which correction, c or d, we want to add to our accumulating
-        ELSE                 !value of y, i.e., which path to take through
-           dy=d(ns)          !the tableau-forking up or down. We DO this in such a
-           ns=ns-1           !way as to take the most "straight line" route through the
-        ENDIF                !tableau to its apex, updating ns accordingly to keep track
-        y=y+dy               !of where we are. This route keeps the partial approximations
-     ENDDO                   !centered (insofar as possible) on the target x. T he
-                             !last dy added is thus the error indication.
-   END SUBROUTINE polint
 
 END MODULE MOD_IniTimeVar
 !-----------------------------------------------------------------------
