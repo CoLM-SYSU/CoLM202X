@@ -463,7 +463,7 @@ MODULE MOD_IniTimeVar
 
       ! skipping the urban patch
       IF (patchtype == 0) THEN
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          tleaf_p(ps:pe)  = t_soisno(1)
@@ -474,7 +474,7 @@ MODULE MOD_IniTimeVar
 #endif
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          pc = patch2pc(ipatch)
          ldew_rain_c(:,pc)  = 0.
          ldew_snow_c(:,pc)  = 0.
