@@ -59,8 +59,6 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
 #endif
-
-   ! USE MOD_LulccTMatrix
    USE MOD_Const_LC
    USE MOD_Const_PFT
    use MOD_TimeManager
@@ -101,45 +99,20 @@ MODULE MOD_Lulcc_Initialize
 
    IMPLICIT NONE
 
-! ----------------------------------------------------------------------
-   CHARACTER(LEN=256), intent(in) :: casename      !casename name
-   CHARACTER(LEN=256), intent(in) :: dir_landdata  !surface data directory
-   CHARACTER(LEN=256), intent(in) :: dir_restart   !case restart data directory
+   ! ----------------------------------------------------------------------
+   character(len=*), intent(in) :: casename      ! case name
+   character(len=*), intent(in) :: dir_landdata
+   character(len=*), intent(in) :: dir_restart
+   integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
+   logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
-   LOGICAL, intent(in)    :: greenwich   !true: greenwich time, false: local time
-   INTEGER, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
+   ! ------------------------ local variables -----------------------------
+   real(r8) :: rlon, rlat
 
-! ------------------------ local variables -----------------------------
-! surface classification and soil information
+   ! for SOIL INIT of water, temperature, snow depth
+   LOGICAL :: use_soilini
 
-   REAL(r8) rlat          !latitude in radians
-   REAL(r8) rlon          !longitude in radians
-
-   LOGICAL  :: use_wtd
-
-   CHARACTER(len=256) :: fwtd
-   type(grid_type)    :: gwtd
-   type(block_data_real8_2d)    :: wtd_xy  ! [m]
-   type(mapping_grid2pset_type) :: m_wtd2p
-
-   REAL(r8) :: zwtmm
-   real(r8) :: zc_soimm(1:nl_soil)
-   real(r8) :: zi_soimm(0:nl_soil)
-   real(r8) :: vliq_r  (1:nl_soil)
-
-#ifdef Campbell_SOIL_MODEL
-   INTEGER, parameter :: nprms = 1
-#endif
-
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
-   INTEGER, parameter :: nprms = 5
-#endif
-
-   REAL(r8) :: prms(nprms, 1:nl_soil)
-
-#if(defined SOILINI)
    character(len=256) :: fsoildat
-
    type(grid_type) :: gsoil
    type(mapping_grid2pset_type) :: ms2p
 
@@ -154,23 +127,40 @@ MODULE MOD_Lulcc_Initialize
    real(r8), allocatable :: snow_d(:)
    real(r8), allocatable :: soil_t(:,:)
    real(r8), allocatable :: soil_w(:,:)
-#endif
 
-   ! CLM soil layer thickiness and depths
+   ! for SOIL Water INIT by using water table depth
+   LOGICAL  :: use_wtd
+
+   CHARACTER(len=256) :: fwtd
+   type(grid_type)    :: gwtd
+   type(block_data_real8_2d)    :: wtd_xy  ! [m]
+   type(mapping_grid2pset_type) :: m_wtd2p
+
+   REAL(r8) :: zwtmm
+   real(r8) :: zc_soimm(1:nl_soil)
+   real(r8) :: zi_soimm(0:nl_soil)
+   real(r8) :: vliq_r  (1:nl_soil)
+#ifdef Campbell_SOIL_MODEL
+   INTEGER, parameter :: nprms = 1
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   INTEGER, parameter :: nprms = 5
+#endif
+   REAL(r8) :: prms(nprms, 1:nl_soil)
+
+   ! CoLM soil layer thickiness and depths
    real(r8), allocatable :: z_soisno (:,:)
    real(r8), allocatable :: dz_soisno(:,:)
 
    real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
    integer  :: year, jday                ! Julian day and seconds
-   INTEGER  :: month, mday, msec
+   INTEGER  :: month, mday
 
    integer  :: i,j,ipatch,nsl,ps,pe,ivt,m, u  ! indices
    INTEGER  :: hs, he
 
    integer :: Julian_8day
    integer :: ltyp
-
-   !real(r8), external :: orb_coszen     ! cosine of the solar zenith angle
 
 #ifdef BGC
    real(r8) f_s1s2 (1:nl_soil)
@@ -188,7 +178,6 @@ MODULE MOD_Lulcc_Initialize
 
    year = idate(1)
    jday = idate(2)
-   msec = idate(3)
 
    CALL Init_GlovalVars
    CAll Init_LC_Const
@@ -208,29 +197,29 @@ MODULE MOD_Lulcc_Initialize
 #ifdef URBAN_MODEL
    CALL landurban%forc_free_mem
 #endif
-   ! ENDIF
 
    ! load pixelset and mesh data of next year
    !call pixel%load_from_file  (dir_landdata)
    !call gblock%load_from_file (dir_landdata)
    call mesh_load_from_file     (dir_landdata, year)
-   CALL pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, year)
+   CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, year)
+   CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , year)
 #endif
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
 #ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, year)
+   call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
 #ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, year)
+   call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , year)
    CALL map_patch_to_pc
 #endif
+
 #ifdef URBAN_MODEL
    CALL pixelset_load_from_file (dir_landdata, 'landurban', landurban, numurban, year)
    CALL map_patch_to_urban
@@ -244,21 +233,23 @@ MODULE MOD_Lulcc_Initialize
 #endif
 
    ! --------------------------------------------------------------------
-   ! Deallocates memory for CLM 1d [numpatch] variables
+   ! Deallocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------------------------
    CALL deallocate_TimeInvariants
    CALL deallocate_TimeVariables
 
    ! --------------------------------------------------------------------
-   ! Allocates memory for CLM 1d [numpatch] variables
+   ! Allocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------------------------
+
    CALL allocate_TimeInvariants
    CALL allocate_TimeVariables
 
    ! ---------------------------------------------------------------
    ! 1. INITIALIZE TIME INVARIANT VARIABLES
    ! ---------------------------------------------------------------
-   IF (p_is_worker) then
+
+   IF (p_is_worker) THEN
 
       patchclass = landpatch%settyp
 
@@ -347,7 +338,7 @@ MODULE MOD_Lulcc_Initialize
    tcrit  = 2.5     !critical temp. to determine rain or snow
 
 #ifdef BGC
-! bgc constant
+   ! bgc constant
    i_met_lit = 1
    i_cel_lit = 2
    i_lig_lit = 3
@@ -369,7 +360,6 @@ MODULE MOD_Lulcc_Initialize
       if(numpatch > 0)then
          do j=1,nl_soil
             do i = 1, numpatch
-!         t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - wf_sand(j))
                t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - 50._r8)
                f_s1s2 (j) = 1._r8 - .004_r8 / (1._r8 - t)
                f_s1s3 (j) = .004_r8 / (1._r8 - t)
@@ -385,10 +375,6 @@ MODULE MOD_Lulcc_Initialize
    is_cwd            = (/.false.,.false.,.false.,.true. ,.false.,.false.,.false./)
    is_litter         = (/.true. ,.true. ,.true. ,.false.,.false.,.false.,.false./)
    is_soil           = (/.false.,.false.,.false.,.false.,.true. ,.true. ,.true./)
-
-!   gdp_lf (:)    = 0._r8
-!   abm_lf (:)    = 0._r8
-!   peatf_lf (:)  = 0._r8
    cmb_cmplt_fact = (/0.5_r8,0.25_r8/)
 
    nitrif_n2o_loss_frac = 6.e-4 !fraction of N lost as N2O in nitrification (Li et al., 2000)
@@ -452,7 +438,7 @@ MODULE MOD_Lulcc_Initialize
    soilpsi_on      = -0.6
    soilpsi_off     = -0.8
 
-! constant for fire module
+   ! constant for fire module
    occur_hi_gdp_tree        = 0.39_r8
    lfuel                    = 75._r8
    ufuel                    = 650._r8
@@ -476,7 +462,7 @@ MODULE MOD_Lulcc_Initialize
    ! 1.6 Write out as a restart file [histTimeConst]
    ! ...............................................
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    call check_TimeInvariants ()
 #endif
 
@@ -524,67 +510,96 @@ MODULE MOD_Lulcc_Initialize
    !2.3 READ in or GUSSES land state information
    ! ...........................................
 
-#if(defined SOILINI)
-   fsoildat = DEF_file_soil_init
+   ! for SOIL INIT of water, temperature, snow depth
+   IF (DEF_USE_SOIL_INIT) THEN
 
-   call gsoil%define_from_file (fsoildat)
-   call ms2p%build (gsoil, landpatch)
-
-   call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
-   nl_soil_ini = size(soil_z)
-
-   if (p_is_io) then
-
-      call allocate_block_data (gsoil, snow_d_grid)
-      call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
-      call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
-
-      call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)  ! soil layer temperature (K)
-      call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)  ! soil layer wetness (-)
-      call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  ! snow depth (m)
-
-   end if
-
-   if (p_is_worker) then
-
-      allocate (snow_d(numpatch))
-      allocate (soil_t(nl_soil_ini,numpatch))
-      allocate (soil_w(nl_soil_ini,numpatch))
-
-   end if
-
-   call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
-   call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
-   call ms2p%map_aweighted (snow_d_grid, snow_d)
-
+      fsoildat = DEF_file_soil_init
+      IF (p_is_master) THEN
+         inquire (file=trim(fsoildat), exist=use_soilini)
+      ENDIF
+#ifdef USEMPI
+      call mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
-   fwtd = DEF_file_water_table_depth
+      IF (use_soilini) THEN
 
-   IF (p_is_master) THEN
-      inquire (file=trim(fwtd), exist=use_wtd)
-      IF (use_wtd) THEN
-         write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
-            // ' to initialize soil water content: ', trim(fwtd)
+         call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
+         nl_soil_ini = size(soil_z)
+
+         if (p_is_io) then
+            ! soil layer temperature (K)
+            call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
+            call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)
+            ! soil layer wetness (-)
+            call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
+            call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)
+            ! snow depth (m)
+            call allocate_block_data (gsoil, snow_d_grid)
+            call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)
+         end if
+
+         call gsoil%define_from_file (fsoildat)
+         call ms2p%build (gsoil, landpatch)
+
+         if (p_is_worker) then
+            nl_soil_ini = nl_soil
+            allocate (soil_z (nl_soil_ini))
+            allocate (snow_d (numpatch))
+            allocate (soil_t (nl_soil_ini,numpatch))
+            allocate (soil_w (nl_soil_ini,numpatch))
+         end if
+
+         call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
+         call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
+         call ms2p%map_aweighted (snow_d_grid, snow_d)
+
       ENDIF
+
+   ELSE
+      use_soilini = .false.
    ENDIF
+
+   IF (.not. use_soilini) THEN
+      !! not used, just for filling arguments
+      if (p_is_worker) then
+         allocate (soil_z (nl_soil))
+         allocate (snow_d (numpatch))
+         allocate (soil_t (nl_soil,numpatch))
+         allocate (soil_w (nl_soil,numpatch))
+      end if
+   ENDIF
+
+   ! for SOIL Water INIT by using water table depth
+   IF (DEF_USE_WaterTable_INIT) THEN
+
+      fwtd = DEF_file_water_table_depth
+      IF (p_is_master) THEN
+         inquire (file=trim(fwtd), exist=use_wtd)
+         IF (use_wtd) THEN
+            write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
+               // ' to initialize soil water content: ', trim(fwtd)
+         ENDIF
+      ENDIF
 #ifdef USEMPI
    call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
-   IF (use_wtd) THEN
+      IF (use_wtd) THEN
 
-      CALL julian2monthday (idate(1), idate(2), month, mday)
-      call gwtd%define_from_file (fwtd)
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         call gwtd%define_from_file (fwtd)
 
-      if (p_is_io) then
-         call allocate_block_data (gwtd, wtd_xy)
-         call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
+         if (p_is_io) then
+            call allocate_block_data (gwtd, wtd_xy)
+            call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
+         ENDIF
+
+         call m_wtd2p%build (gwtd, landpatch)
+         call m_wtd2p%map_aweighted (wtd_xy, zwt)
+
       ENDIF
-
-      call m_wtd2p%build (gwtd, landpatch)
-      call m_wtd2p%map_aweighted (wtd_xy, zwt)
-
+   ELSE
+      use_wtd = .false.
    ENDIF
 
    ! ...................
@@ -595,13 +610,13 @@ MODULE MOD_Lulcc_Initialize
    if (p_is_worker) then
 
       do i = 1, numpatch
-#if(defined SOILINI)
+            IF (DEF_USE_SOILINI) THEN
          do nsl = 1, nl_soil
             t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
          enddo
-#else
+            ELSE
          t_soisno(1:,i) = 283.
-#endif
+            ENDIF
       enddo
 
       tlai(:)=0.0; tsai(:)=0.0; green(:)=0.0; fveg(:)=0.0
@@ -629,47 +644,47 @@ MODULE MOD_Lulcc_Initialize
    CALL UrbanLAI_readin (year, month, dir_landdata)
 #endif
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    CALL check_vector_data ('LAI ', tlai)
    CALL check_vector_data ('SAI ', tsai)
 #endif
 
 #ifdef BGC
-      CALL NDEP_readin(year, dir_landdata, .true., .false.)
-      print*,'after NDEP readin'
+   CALL NDEP_readin(year, dir_landdata, .true., .false.)
+   print*,'after NDEP readin'
 #ifdef NITRIF
-      CALL NITRIF_readin (month, dir_landdata)
-      print*,'after NITRIF readin'
+   CALL NITRIF_readin (month, dir_landdata)
+   print*,'after NITRIF readin'
 #endif
 
 #ifdef CROP
-      CALL CROP_readin (dir_landdata)
-      print*,'after CROP readin'
-      if (p_is_worker) then
-         do i = 1, numpatch
-            if(patchtype(i) .eq.  0)then
-               ps = patch_pft_s(i)
-               pe = patch_pft_e(i)
-               do m = ps, pe
-                  ivt = pftclass(m)
-                  if(ivt >= npcropmin)then
-                    leafc_p (m) = 0._r8
-                    frootc_p(m) = 0._r8
-                    tlai    (i) = 0._r8
-                    tsai    (i) = 0._r8
-                    tlai_p  (m) = 0._r8
-                    tsai_p  (m) = 0._r8
-                  end if
-               end do
-            end if
-         end do
-      end if
+   CALL CROP_readin (dir_landdata)
+   print*,'after CROP readin'
+   if (p_is_worker) then
+      do i = 1, numpatch
+         if(patchtype(i) .eq.  0)then
+            ps = patch_pft_s(i)
+            pe = patch_pft_e(i)
+            do m = ps, pe
+               ivt = pftclass(m)
+               if(ivt >= npcropmin)then
+                 leafc_p (m) = 0._r8
+                 frootc_p(m) = 0._r8
+                 tlai    (i) = 0._r8
+                 tsai    (i) = 0._r8
+                 tlai_p  (m) = 0._r8
+                 tsai_p  (m) = 0._r8
+               end if
+            end do
+         end if
+      end do
+   end if
 #endif
 #endif
 #endif
 #ifdef Fire
-      CALL Fire_readin (year,dir_landdata)
-      print*,'after Fire readin'
+   CALL Fire_readin (year,dir_landdata)
+   print*,'after Fire readin'
 #endif
 
    ! ..............................................................................
@@ -679,7 +694,6 @@ MODULE MOD_Lulcc_Initialize
    ! PLEASE
    ! PLEASE UPDATE
    ! PLEASE UPDATE when have the observed lake status
-
    if (p_is_worker) then
 
       t_lake      (:,:) = 285.
@@ -702,8 +716,6 @@ MODULE MOD_Lulcc_Initialize
 
       do i = 1, numpatch
          m = patchclass(i)
-         ! print*,'before IniTimeVar',i
-         ! print*, 'patch class is ',m
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
@@ -715,7 +727,7 @@ MODULE MOD_Lulcc_Initialize
             prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vliq_r(:) = theta_r(i,:)
+               vliq_r(:) = theta_r(1:nl_soil,i)
             prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
             prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
             prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
@@ -755,7 +767,7 @@ MODULE MOD_Lulcc_Initialize
             ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
             ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) , skip_balance_check(i) &
 #ifdef SASU
-!------------------------SASU variables-----------------------
+   !------------------------SASU variables-----------------------
             ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
             ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &
             ,AKX_met_to_soil1_c_vr_acc  (:,i), AKX_cel_to_soil1_c_vr_acc  (:,i), AKX_lig_to_soil2_c_vr_acc  (:,i), AKX_soil1_to_soil2_c_vr_acc(:,i) &
@@ -772,12 +784,11 @@ MODULE MOD_Lulcc_Initialize
             ,AKX_soil1_exit_n_vr_acc    (:,i), AKX_soil2_exit_n_vr_acc    (:,i), AKX_soil3_exit_n_vr_acc    (:,i) &
             ,diagVX_n_vr_acc          (:,:,i), upperVX_n_vr_acc         (:,:,i), lowerVX_n_vr_acc         (:,:,i) &
 #endif
-!------------------------------------------------------------
+   !------------------------------------------------------------
 #endif
-#if(defined SOILINI)
-            ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i)
-#endif
-
+               ! for SOIL INIT of water, temperature, snow depth
+               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+               ! for SOIL Water INIT by using water table depth
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL
@@ -893,10 +904,10 @@ MODULE MOD_Lulcc_Initialize
    ! 2.6 Write out the model variables for restart run [histTimeVar]
    ! ...............................................................
 
-#ifdef CLMDEBUG
+#ifdef CoLMDEBUG
    call check_TimeVariables ()
 #endif
-   ! CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
+   ! CALL WRITE_TimeVariables (idate, year, casename, dir_restart)
 #ifdef USEMPI
    call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -905,7 +916,7 @@ MODULE MOD_Lulcc_Initialize
 
 
    ! --------------------------------------------------
-   ! Deallocates memory for CLM 1d [numpatch] variables
+      ! Deallocates memory for CoLM 1d [numpatch] variables
    ! --------------------------------------------------
    ! CALL deallocate_TimeInvariants
    ! CALL deallocate_TimeVariables
@@ -920,12 +931,11 @@ MODULE MOD_Lulcc_Initialize
    IF (allocated(soil_w)) deallocate (soil_w)
 #endif
 
-!#ifdef USEMPI
-!   call mpi_barrier (p_comm_glb, p_err)
-!#endif
-
  END SUBROUTINE LulccInitialize
 
 END MODULE MOD_Lulcc_Initialize
 
 #endif
+
+! --------------------------------------------------
+! EOP

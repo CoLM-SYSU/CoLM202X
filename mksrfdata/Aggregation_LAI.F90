@@ -183,7 +183,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
          IF (p_is_io) THEN
             IF (DEF_LAI_CLIM) THEN
-               dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+               dir_5x5 = trim(dir_rawdata) // '/plant_15s'
                suffix  = 'MOD'//trim(cyear)
                CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_LAI', itime, LAI)
             ELSE
@@ -274,7 +274,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
       allocate (SITE_SAI_clim (12))
 #endif
 
-      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       DO iy = start_year, end_year
          write(cyear,'(i4.4)') iy
          suffix  = 'MOD'//trim(cyear)
@@ -383,7 +383,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    allocate (SITE_SAI_pfts_clim (numpft,12))
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)
@@ -660,7 +660,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    allocate (SITE_SAI_pfts_clim (0:N_PFT-1,12))
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       suffix  = 'MOD'//trim(cyear)

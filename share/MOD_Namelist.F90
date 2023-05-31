@@ -63,15 +63,6 @@ MODULE MOD_Namelist
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
 
-   ! ----- simulation LULCC type -----
-   TYPE nl_LULCC_type
-      LOGICAL :: use_lulcc     = .FALSE.
-      INTEGER :: lc_year_start = 2005
-      INTEGER :: lc_year_end   = 2005
-   END TYPE nl_LULCC_type
-
-   TYPE (nl_LULCC_type) :: DEF_LULCC
-
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
@@ -130,7 +121,7 @@ MODULE MOD_Namelist
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
-   
+
    LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
    CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
@@ -632,10 +623,10 @@ CONTAINS
          DEF_USE_VARIABLY_SATURATED_FLOW, &
 
          DEF_precip_phase_discrimination_scheme, &
-         
+
          DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
-      
+
          DEF_USE_WaterTable_INIT,         &
          DEF_file_water_table_depth,      &
 
@@ -833,7 +824,7 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
-      
+
       CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
