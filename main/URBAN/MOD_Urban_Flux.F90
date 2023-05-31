@@ -811,7 +811,7 @@ MODULE MOD_Urban_Flux
 
      croof = croofs + croofl*htvp_roof
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
 #endif
 
      tafu = taf(2)
