@@ -545,9 +545,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! ******* LAI, SAI *******
    ! allocate and read grided LSAI raw data
-   landdir = TRIM(dir_rawdata)//'/lai_5x5/'
-   !TODO: rename Ur
-   suffix  = 'UrLAI_v5'//trim(c5year)
+   landdir = TRIM(dir_rawdata)//'/urban_lai_5x5/'
+   suffix  = 'UrbLAI_v5_'//trim(c5year)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (grid_urban_500m, ulai)

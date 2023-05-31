@@ -2,6 +2,32 @@
 
 MODULE MOD_Grid
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Definition of latitude-longitude grids and data types related to grids. 
+   !
+   !    Latitude-longitude grid can be defined by
+   !    1. "name"   : frequently used grids which is predefined in this module;
+   !    2. "ndims"  : how many longitude and latitude grids are used globally;
+   !    3. "res"    : longitude and latitude resolutions in radian
+   !    4. "center" : longitude and latitude grid centers, and the border lines 
+   !                  are defined by center lines of grid centers; the region
+   !                  boundaries is optional.
+   !    5. "file"   : read grid informations from a file, the variables are
+   !                  'lat_s', 'lat_n', 'lon_w', 'lon_e'
+   !    6. "copy"   : copy grid informations from an existing grid
+   ! 
+   !    Grid centers in radian can be calculated by using "set_rlon" and "set_rlat"
+   ! 
+   !    Two additional data types are defined:
+   !    1. "grid_list_type"   : list of grid boxes;
+   !    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
+   ! 
+   !    Notice that:
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+
    USE MOD_Precision
    IMPLICIT NONE
 

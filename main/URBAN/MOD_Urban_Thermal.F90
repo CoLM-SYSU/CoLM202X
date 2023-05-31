@@ -1315,7 +1315,7 @@ CONTAINS
          deallocate ( VegVF )
       ENDIF
 
-#if (defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
       write(6,*) 'THERMAL.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa,xmf

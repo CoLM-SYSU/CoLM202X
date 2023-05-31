@@ -120,7 +120,7 @@ CONTAINS
          call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
-         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
          ! add parameter input for time year
          write(cyear,'(i4.4)') lc_year
          suffix  = 'MOD'//trim(cyear)
