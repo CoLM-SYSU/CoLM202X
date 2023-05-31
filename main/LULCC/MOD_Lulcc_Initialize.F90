@@ -49,12 +49,12 @@ MODULE MOD_Lulcc_Initialize
    use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
    USE MOD_Vars_PFTimeInvars
    USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
    USE MOD_Vars_PCTimeInvars
    USE MOD_Vars_PCTimeVars
@@ -189,10 +189,10 @@ MODULE MOD_Lulcc_Initialize
    CALL mesh_free_mem
    CALL landelm%forc_free_mem
    CALL landpatch%forc_free_mem
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL landpft%forc_free_mem
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL landpc%forc_free_mem
 #endif
 #ifdef URBAN_MODEL
@@ -211,12 +211,12 @@ MODULE MOD_Lulcc_Initialize
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , year)
    CALL map_patch_to_pc
 #endif
@@ -260,13 +260,13 @@ MODULE MOD_Lulcc_Initialize
 
       call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       pftclass = landpft%settyp
 #endif
 
    ENDIF
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pct_readin (dir_landdata, year)
 #endif
 

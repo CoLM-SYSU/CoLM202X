@@ -44,12 +44,12 @@ MODULE MOD_Initialize
       use MOD_Const_Physical
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
       USE MOD_Vars_PFTimeInvars
       USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       USE MOD_LandPC
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars
@@ -190,13 +190,13 @@ MODULE MOD_Initialize
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          pftclass = landpft%settyp
 #endif
 
       ENDIF
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL pct_readin (dir_landdata, lc_year)
 #endif
 

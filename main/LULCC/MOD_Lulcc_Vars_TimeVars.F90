@@ -42,7 +42,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
   REAL(r8), allocatable :: t_lake_      (:,:)  !lake layer teperature [K]
   REAL(r8), allocatable :: lake_icefrac_(:,:)  !lake mass fraction of lake layer that is frozen
 
-  ! for PFT_CLASSIFICATION
+  ! for LULC_IGBP_PFT
   REAL(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
   REAL(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
@@ -54,7 +54,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
   REAL(r8), allocatable :: extkb_p_       (:)  !(k, g(mu)/mu) direct solar extinction coefficient
   REAL(r8), allocatable :: extkd_p_       (:)  !diffuse and scattered diffuse PAR extinction coefficient
 
-  ! for PC_CLASSIFICATION
+  ! for LULC_IGBP_PC
   REAL(r8), allocatable :: tleaf_c_     (:,:)  !leaf temperature [K]
   REAL(r8), allocatable :: ldew_c_      (:,:)  !depth of water on foliage [mm]
   REAL(r8), allocatable :: sigf_c_      (:,:)  !fraction of veg cover, excluding snow-covered veg [-]
@@ -166,11 +166,11 @@ MODULE MOD_LuLcc_Vars_TimeVars
      USE MOD_Precision
      USE MOD_Vars_Global
      USE MOD_LandPatch
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      USE MOD_Vars_PFTimeVars
      USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      USE MOD_Vars_PCTimeVars
      USE MOD_LandPC
 #endif
@@ -214,7 +214,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
            allocate (lake_icefrac_         (nl_lake,numpatch))
         ENDIF
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
         IF (numpft > 0) THEN
            allocate (tleaf_p_                        (numpft))
            allocate (ldew_p_                         (numpft))
@@ -229,7 +229,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
         ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
         IF (numpc > 0) THEN
            allocate (tleaf_c_               (0:N_PFT-1,numpc))
            allocate (ldew_c_                (0:N_PFT-1,numpc))
@@ -327,10 +327,10 @@ MODULE MOD_LuLcc_Vars_TimeVars
      use MOD_SPMD_Task
      USE MOD_Vars_Global
      USE MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      USE MOD_Vars_PCTimeVars
 #endif
 #ifdef URBAN_MODEL
@@ -370,7 +370,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
          t_lake_       = t_lake
          lake_icefrac_ = lake_icefrac
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          tleaf_p_      = tleaf_p
          ldew_p_       = ldew_p
          sigf_p_       = sigf_p
@@ -383,7 +383,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
          extkd_p_      = extkd_p
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          tleaf_c_      = tleaf_c
          ldew_c_       = ldew_c
          sigf_c_       = sigf_c
@@ -483,12 +483,12 @@ MODULE MOD_LuLcc_Vars_TimeVars
      USE MOD_Vars_TimeInvariants
      USE MOD_Vars_TimeVariables
      USE MOD_LuLcc_Vars_TimeInvars
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      USE MOD_Vars_PFTimeInvars
      USE MOD_Vars_PFTimeVars
      USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      USE MOD_Vars_PCTimeVars
      USE MOD_LandPC
 #endif
@@ -610,13 +610,13 @@ MODULE MOD_LuLcc_Vars_TimeVars
                     t_lake      (:,np) = t_lake_      (:,np_)
                     lake_icefrac(:,np) = lake_icefrac_(:,np_)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     ip = patch_pft_s (np )
                     ip_= patch_pft_s_(np_)
 
                     IF (ip.le.0 .or. ip_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVars PFT_CLASSIFICATION!"
+                       print *, "Error in REST_LuLccTimeVars LULC_IGBP_PFT!"
                        STOP
                     ENDIF
 
@@ -652,14 +652,14 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
 ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
 
                     pc = patch2pc (np )
                     pc_= patch2pc_(np_)
 
                     IF (pc.le.0 .or. pc_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVars PC_CLASSIFICATION!"
+                       print *, "Error in REST_LuLccTimeVars LULC_IGBP_PC!"
                        STOP
                     ENDIF
 
@@ -830,7 +830,7 @@ ENDIF
            deallocate (lake_icefrac_ )
         ENDIF
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
         IF (numpft_ > 0) THEN
            deallocate (tleaf_p_      )
            deallocate (ldew_p_       )
@@ -845,7 +845,7 @@ ENDIF
         ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
         IF (numpc_ > 0) THEN
            deallocate (tleaf_c_      )
            deallocate (ldew_c_       )

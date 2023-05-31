@@ -358,7 +358,7 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       LOGICAL :: assim_RuBP_sun        = .true. !1
       LOGICAL :: assim_RuBP_sha        = .true. !1
       LOGICAL :: assim_Rubisco_sun        = .true. !1
@@ -705,10 +705,10 @@ CONTAINS
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not. DEF_LAI_CLIM) THEN
             write(*,*) 'Warning: 8-day LAI data is not supported for '
-            write(*,*) 'PFT_CLASSIFICATION and PC_CLASSIFICATION.'
+            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
             write(*,*) 'Changed to climatic data.'
             DEF_LAI_CLIM = .true.
          ENDIF
@@ -1034,7 +1034,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)

@@ -57,10 +57,10 @@ PROGRAM MKSRFDATA
    USE MOD_LandPatch
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
@@ -179,16 +179,16 @@ PROGRAM MKSRFDATA
 #endif
 
    ! define grid coordinates of land types
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    CALL gpatch%define_by_name ('colm_1km')
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 #ifdef BGC
@@ -314,11 +314,11 @@ PROGRAM MKSRFDATA
    CALL landurban_build(lc_year)
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL landpft_build(lc_year)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL landpc_build(lc_year)
 #endif
 
@@ -340,11 +340,11 @@ PROGRAM MKSRFDATA
 
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  , lc_year)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   , lc_year)
 #endif
 
@@ -408,7 +408,7 @@ PROGRAM MKSRFDATA
    ! ................................................................
 
 #ifdef SinglePoint
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
    CALL write_surface_data_single (numpatch, numpft)
 #else
    CALL write_surface_data_single (numpatch)

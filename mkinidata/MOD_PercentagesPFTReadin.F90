@@ -28,11 +28,11 @@ MODULE MOD_PercentagesPFTReadin
 #ifdef CoLMDEBUG
       USE MOD_CoLMDebug
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       use MOD_LandPFT
       use MOD_Vars_PFTimeInvars, only : pftfrac
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       use MOD_LandPC
       use MOD_Vars_PCTimeInvars, only : pcfrac
 #endif
@@ -46,7 +46,7 @@ MODULE MOD_PercentagesPFTReadin
       INTEGER :: npatch, ipatch
 
       write(cyear,'(i4.4)') lc_year
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 #ifndef SinglePoint
       lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_pfts.nc'
       call ncio_read_vector (lndname, 'pct_pfts', landpft, pftfrac)
@@ -87,7 +87,7 @@ MODULE MOD_PercentagesPFTReadin
 #endif
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 #ifndef SinglePoint
       lndname = trim(dir_landdata)//'/pctpft/'//trim(cyear)//'/pct_pcs.nc'
       CALL ncio_read_vector (lndname, 'pct_pcs', N_PFT, landpc, pcfrac)

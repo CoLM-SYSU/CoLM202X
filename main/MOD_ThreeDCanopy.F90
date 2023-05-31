@@ -8,7 +8,7 @@ MODULE MOD_ThreeDCanopy
    SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    PUBLIC :: ThreeDCanopy_wrap
 #endif
    PUBLIC :: ThreeDCanopy
@@ -21,7 +21,7 @@ MODULE MOD_ThreeDCanopy
 !-----------------------------------------------------------------------
 
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 !-----------------------------------------------------------------------
    SUBROUTINE ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)

@@ -6,10 +6,10 @@ MODULE MOD_Vars_1DFluxes
 ! -------------------------------
 
   USE MOD_Precision
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   USE MOD_Vars_1DPFTFluxes
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
   USE MOD_Vars_1DPCFluxes
 #endif
 #ifdef BGC
@@ -154,11 +154,11 @@ MODULE MOD_Vars_1DFluxes
          end if
       end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL allocate_1D_PFTFluxes
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       CALL allocate_1D_PCFluxes
 #endif
 
@@ -239,11 +239,11 @@ MODULE MOD_Vars_1DFluxes
         end if
      end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL deallocate_1D_PFTFluxes
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL deallocate_1D_PCFluxes
 #endif
 

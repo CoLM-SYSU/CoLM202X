@@ -6,7 +6,7 @@ module MOD_Hist
    use MOD_Grid
    use MOD_Mapping_Pset2Grid
    USE MOD_Namelist
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_Vars_PFTimeInvars, only: pftclass
    USE MOD_LandPFT, only : patch_pft_s
 #endif
@@ -563,7 +563,7 @@ contains
             '2 m height air specific humidity','kg/kg')
 
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          ! 1: assim_RuBP_sun enf temperate
          call flux_map_and_write_2d ( DEF_hist_vars%assim_RuBP_sun, &
              a_assim_RuBP_sun, f_assim_RuBP_sun, file_hist, 'f_assim_RuBP_sun', itime_in_file, sumwt, filter, &

@@ -7,10 +7,10 @@
 
 ! 2. Land TYPE classification :
 !    Select one of the following options.
-#undef USGS_CLASSIFICATION
-#define IGBP_CLASSIFICATION
-#undef PFT_CLASSIFICATION
-#undef PC_CLASSIFICATION
+#undef LULC_USGS
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
 #define URBAN_MODEL
@@ -70,8 +70,8 @@
 
 ! 12. If defined, BGC model is used.
 #define BGC
-!    Conflicts :  only used when PFT_CLASSIFICATION is defined.
-#ifndef PFT_CLASSIFICATION
+!    Conflicts :  only used when LULC_IGBP_PFT is defined.
+#ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
 ! 12.1 If defined, LAI is prognostically calculated from leaf carbon and specific leaf area
@@ -114,8 +114,8 @@
 
 ! 14 If defined, OzoneStress on plant physiology is used
 #undef OzoneStress
-!    Conflicts : only used when PFT_CLASSIFICATION is used
-#ifndef PFT_CLASSIFICATION
+!    Conflicts : only used when LULC_IGBP_PFT is used
+#ifndef LULC_IGBP_PFT
 #undef OzoneStress
 #endif
 ! 14.1 If defined, Ozone Data is used instead of constant ozone concentration

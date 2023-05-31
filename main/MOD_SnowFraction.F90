@@ -9,10 +9,10 @@ MODULE MOD_SnowFraction
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: snowfraction
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    PUBLIC :: snowfraction_pftwrap
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    PUBLIC :: snowfraction_pcwrap
 #endif
 
@@ -82,7 +82,7 @@ MODULE MOD_SnowFraction
 
    end subroutine snowfraction
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    subroutine snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================
@@ -161,7 +161,7 @@ MODULE MOD_SnowFraction
    end subroutine snowfraction_pftwrap
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    subroutine snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================

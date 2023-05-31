@@ -45,10 +45,10 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -200,12 +200,12 @@ PROGRAM CoLM
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
    CALL map_patch_to_pc
 #endif

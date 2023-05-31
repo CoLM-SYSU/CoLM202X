@@ -29,10 +29,10 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -98,7 +98,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
    if (p_is_io) then
@@ -162,7 +162,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #endif
 
 
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
    ENDIF
@@ -227,7 +227,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
@@ -333,7 +333,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)

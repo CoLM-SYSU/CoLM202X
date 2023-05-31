@@ -23,12 +23,12 @@ MODULE MOD_LuLcc_Vars_TimeInvars
   INTEGER, allocatable :: patchclass_    (:)  !index of land cover type
   INTEGER, allocatable :: patchtype_     (:)  !land water type
 
-  ! for PFT_CLASSIFICATION
+  ! for LULC_IGBP_PFT
   INTEGER, allocatable :: pftclass_      (:)  !PFT type
   INTEGER, allocatable :: patch_pft_s_   (:)  !start PFT index of a patch
   INTEGER, allocatable :: patch_pft_e_   (:)  !end PFT index of a patch
 
-  ! for PC_CLASSIFICATION
+  ! for LULC_IGBP_PC
   INTEGER, allocatable :: patch2pc_      (:)  !projection from patch to PC
 
   ! for Urban model
@@ -58,10 +58,10 @@ MODULE MOD_LuLcc_Vars_TimeInvars
      USE MOD_Vars_Global
      USE MOD_LandPatch
      USE MOD_Mesh
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
@@ -88,7 +88,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            allocate (patchclass_                (numpatch))
            allocate (patchtype_                 (numpatch))
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
            IF (numpft > 0) THEN
               allocate (pftclass_                 (numpft))
               allocate (patch_pft_s_            (numpatch))
@@ -96,7 +96,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
            IF (numpc > 0) THEN
               allocate (patch2pc_               (numpatch))
            ENDIF
@@ -123,11 +123,11 @@ MODULE MOD_LuLcc_Vars_TimeInvars
      USE MOD_Landpatch
      USE MOD_Landelm
      USE MOD_Mesh
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      USE MOD_Vars_PFTimeInvars
      USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
@@ -145,7 +145,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            patchclass_       (:) = patchclass       (:)
            patchtype_        (:) = patchtype        (:)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
            IF (numpft > 0) THEN
               numpft_            = numpft
               pftclass_      (:) = pftclass         (:)
@@ -154,7 +154,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
            IF (numpc > 0) THEN
               numpc_             = numpc
               patch2pc_      (:) = patch2pc         (:)
@@ -186,7 +186,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            deallocate    (patchclass_   )
            deallocate    (patchtype_    )
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
            IF (numpft_ > 0) THEN
               deallocate (pftclass_     )
               deallocate (patch_pft_s_  )
@@ -194,7 +194,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
            ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
            IF (numpc_ > 0) THEN
               deallocate (patch2pc_     )
            ENDIF

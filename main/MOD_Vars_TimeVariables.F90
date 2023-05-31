@@ -7,10 +7,10 @@ MODULE MOD_Vars_TimeVariables
 
 use MOD_Precision
 use MOD_TimeManager
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 USE MOD_Vars_PCTimeVars
 #endif
 #ifdef BGC
@@ -57,7 +57,7 @@ SAVE
       real(r8), allocatable :: t_grnd   (:)     ! ground surface temperature [K]
 
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       real(r8), allocatable :: assim_RuBP_sun_out   (:) !1
       real(r8), allocatable :: assim_RuBP_sha_out   (:) !1
       real(r8), allocatable :: assim_Rubisco_sun_out(:) !1
@@ -198,7 +198,7 @@ SAVE
         allocate (gssun_out            (numpatch))
         allocate (gssha_out            (numpatch))
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             allocate ( assim_RuBP_sun_out        (numpatch) )
             allocate ( assim_RuBP_sha_out        (numpatch) )
             allocate ( assim_Rubisco_sun_out        (numpatch) )
@@ -282,11 +282,11 @@ SAVE
      end if
   end if
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
      CALL allocate_PFTimeVars
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
      CALL allocate_PCTimeVars
 #endif
 
@@ -348,7 +348,7 @@ SAVE
            deallocate (gssun_out )
            deallocate (gssha_out )
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
            deallocate ( assim_RuBP_sun_out        )
            deallocate ( assim_RuBP_sha_out        )
            deallocate ( assim_Rubisco_sun_out        )
@@ -432,11 +432,11 @@ SAVE
         end if
      end if
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      CALL deallocate_PFTimeVars
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      CALL deallocate_PCTimeVars
 #endif
 
@@ -614,12 +614,12 @@ SAVE
      call ncio_write_vector (file_restart, 'fh   ', 'patch', landpatch, fh   , compress) !     integral of profile function for heat
      call ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) !     integral of profile function for moisture
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_PFTimeVars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL WRITE_PCTimeVars (file_restart)
 #endif
@@ -757,12 +757,12 @@ SAVE
      call ncio_read_vector (file_restart, 'fh   ', landpatch, fh   ) ! integral of profile function for heat
      call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) ! integral of profile function for moisture
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PFTimeVars (file_restart)
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pc_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PCTimeVars (file_restart)
 #endif
@@ -860,11 +860,11 @@ SAVE
      call check_vector_data ('lake_icefrc ', lake_icefrac) !
      call check_vector_data ('savedtke1   ', savedtke1   ) !
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
      CALL check_PFTimeVars
 #endif
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
      CALL check_PCTimeVars
 #endif
 

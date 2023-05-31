@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 MODULE MOD_Vars_1DPFTFluxes
 ! -----------------------------------------------------------------

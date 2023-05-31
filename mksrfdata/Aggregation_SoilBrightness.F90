@@ -158,7 +158,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -194,7 +194,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -230,7 +230,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -266,7 +266,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)

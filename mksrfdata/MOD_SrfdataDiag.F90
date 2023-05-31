@@ -12,7 +12,7 @@ MODULE MOD_SrfdataDiag
    type(grid_type) :: gdiag
 
    TYPE(mapping_pset2grid_type) :: m_patch2diag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    TYPE(mapping_pset2grid_type) :: m_pft2diag
 #endif
 #ifdef URBAN_MODEL
@@ -33,7 +33,7 @@ CONTAINS
 
       USE MOD_SPMD_Task
       USE MOD_LandPatch
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
 #endif
 #ifdef URBAN_MODEL
@@ -62,7 +62,7 @@ CONTAINS
       CALL m_patch2diag%build (landpatch, gdiag, pctcrop)
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL m_pft2diag%build (landpft, gdiag)
 #endif
 
