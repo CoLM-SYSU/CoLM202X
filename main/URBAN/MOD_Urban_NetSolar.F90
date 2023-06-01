@@ -120,7 +120,7 @@ CONTAINS
            par     = forc_sols *ssun (1,1) + forc_solsd*ssun (1,2)
 
            ! LAI PAR
-           !TODO: 区别lai和sai的吸收
+           !TODO: to distinguish lai and sai
            !par     = par * lai*(1.-rho(1,1)-tau(1,1)) / &
            !              ( lai*(1.-rho(1,1)-tau(1,1)) + &
            !                sai*(1.-rho(1,2)-tau(1,2)) )

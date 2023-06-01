@@ -1596,7 +1596,7 @@ MODULE MOD_Urban_Flux
            rd(1) = frd(ktop, hroof, 0., displav+z0mv, z0qg, displa/hroof, z0h_g, &
               obug, ustarg, z0mg, alpha, bee, 1.)
 
-           ! 计算ra2m, rd2m
+           ! calculate ra2m, rd2m
            ra2m = frd(ktop, hroof, 0., displav+z0mv, 2., displa/hroof, z0h_g, &
               obug, ustarg, z0mg, alpha, bee, 1.)
 
@@ -1608,7 +1608,7 @@ MODULE MOD_Urban_Flux
            rd(2) = frd(ktop, hroof, 0., displau+z0mu, z0qg, displa/hroof, z0h_g, &
               obug, ustarg, z0mg, alpha, bee, 1.)
 
-           ! 计算ra2m, rd2m
+           ! calculate ra2m, rd2m
            ra2m = frd(ktop, hroof, 0., displau+z0mu, 2., displa/hroof, z0h_g, &
               obug, ustarg, z0mg, alpha, bee, 1.)
 

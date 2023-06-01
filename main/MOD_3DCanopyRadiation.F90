@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_ThreeDCanopy
+MODULE MOD_3DCanopyRadiation
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -1203,4 +1203,4 @@ MODULE MOD_ThreeDCanopy
 
    END SUBROUTINE mGauss
 
-END MODULE MOD_ThreeDCanopy
+END MODULE MOD_3DCanopyRadiation
