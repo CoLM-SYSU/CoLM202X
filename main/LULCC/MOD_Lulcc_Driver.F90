@@ -21,8 +21,8 @@ MODULE MOD_Lulcc_Driver
 
 
 
- SUBROUTINE LulccDriver (casename,dir_rawdata,dir_landdata,dir_restart,&
-                        idate,greenwich)
+ SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
+                         idate,greenwich)
 
 !=======================================================================
 ! PURPOSE:
@@ -41,7 +41,6 @@ MODULE MOD_Lulcc_Driver
    IMPLICIT NONE
 
    CHARACTER(LEN=256), intent(in) :: casename      !casename name
-   CHARACTER(LEN=256), intent(in) :: dir_rawdata
    CHARACTER(LEN=256), intent(in) :: dir_landdata  !surface data directory
    CHARACTER(LEN=256), intent(in) :: dir_restart   !case restart data directory
 
@@ -61,7 +60,7 @@ MODULE MOD_Lulcc_Driver
       print *, ">>> LULCC: initializing..."
    ENDIF
 
-   CALL LulccInitialize (casename,dir_rawdata,dir_landdata,dir_restart,&
+   CALL LulccInitialize (casename,dir_landdata,dir_restart,&
                          idate,greenwich)
 
    ! simple method for variable recovery

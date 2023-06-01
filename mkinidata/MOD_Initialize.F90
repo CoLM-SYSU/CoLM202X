@@ -17,7 +17,7 @@ MODULE MOD_Initialize
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE initialize (casename, dir_rawdata, dir_landdata, dir_restart, &
+   SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
          idate, lc_year, greenwich)
 
       ! ======================================================================
@@ -96,7 +96,6 @@ MODULE MOD_Initialize
 
       ! ----------------------------------------------------------------------
       character(len=*), intent(in) :: casename      ! case name
-      character(len=*), intent(in) :: dir_rawdata
       character(len=*), intent(in) :: dir_landdata
       character(len=*), intent(in) :: dir_restart
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
@@ -247,7 +246,7 @@ MODULE MOD_Initialize
       ! read global tree top height from nc file
       CALL HTOP_readin (dir_landdata, lc_year)
 #ifdef URBAN_MODEL
-      CALL Urban_readin (dir_rawdata, dir_landdata, lc_year)
+      CALL Urban_readin (dir_landdata, lc_year)
 #endif
       ! ................................
       ! 1.5 Initialize TUNABLE constants

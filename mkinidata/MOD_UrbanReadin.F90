@@ -19,7 +19,7 @@ MODULE MOD_UrbanReadin
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE Urban_readin (dir_rawdata, dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
+   SUBROUTINE Urban_readin (dir_landdata, lc_year)!(dir_srfdata,dir_atmdata,nam_urbdata,nam_atmdata,lc_year)
 
 ! ===========================================================
 ! Read in the Urban dataset
@@ -45,8 +45,8 @@ MODULE MOD_UrbanReadin
 
       INTEGER, intent(in) :: lc_year    ! which year of land cover data used
       CHARACTER(LEN=256), intent(in) :: dir_landdata
-      CHARACTER(LEN=256), intent(in) :: dir_rawdata
 
+      CHARACTER(LEN=256) :: dir_rawdata
       CHARACTER(LEN=256) :: lndname
       CHARACTER(len=256) :: cyear
 
@@ -155,7 +155,7 @@ MODULE MOD_UrbanReadin
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
 
-      !TODO-yuan: change to a defined patch/file
+      dir_rawdata = DEF_dir_rawdata
       lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'
       print*, lndname
       CALL ncio_read_bcast_serial (lndname,  "vehicle"    , lvehicle     )

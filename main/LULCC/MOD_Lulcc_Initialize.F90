@@ -20,7 +20,7 @@ MODULE MOD_Lulcc_Initialize
 !-----------------------------------------------------------------------
 
 
- SUBROUTINE LulccInitialize (casename,dir_rawdata,dir_landdata,dir_restart,&
+ SUBROUTINE LulccInitialize (casename,dir_landdata,dir_restart,&
                             idate,greenwich)
 
 ! ======================================================================
@@ -101,7 +101,6 @@ MODULE MOD_Lulcc_Initialize
 
    ! ----------------------------------------------------------------------
    character(len=*), intent(in) :: casename      ! case name
-   CHARACTER(len=*), intent(in) :: dir_rawdata
    character(len=*), intent(in) :: dir_landdata
    character(len=*), intent(in) :: dir_restart
    integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
@@ -318,7 +317,7 @@ MODULE MOD_Lulcc_Initialize
    print*, dir_landdata
    CALL HTOP_readin (dir_landdata, year)
 #ifdef URBAN_MODEL
-   CALL Urban_readin (dir_rawdata, dir_landdata, year)
+   CALL Urban_readin (dir_landdata, year)
 #endif
    ! ................................
    ! 1.5 Initialize TUNABLE constants
