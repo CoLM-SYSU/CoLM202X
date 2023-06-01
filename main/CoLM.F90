@@ -95,6 +95,7 @@ PROGRAM CoLM
 
    character(LEN=256) :: nlfile
    character(LEN=256) :: casename
+   character(len=256) :: dir_rawdata
    character(len=256) :: dir_landdata
    character(len=256) :: dir_forcing
    character(len=256) :: dir_hist
@@ -139,6 +140,7 @@ PROGRAM CoLM
    call read_namelist (nlfile)
 
    casename     = DEF_CASE_NAME
+   dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
    dir_forcing  = DEF_dir_forcing
    dir_hist     = DEF_dir_history
@@ -405,7 +407,7 @@ PROGRAM CoLM
          CALL deallocate_1D_Forcing
          CALL deallocate_1D_Fluxes
 
-         CALL LulccDriver (casename,dir_landdata,dir_restart,&
+         CALL LulccDriver (casename,dir_rawdata,dir_landdata,dir_restart,&
                            idate,greenwich)
 
          CALL allocate_1D_Forcing

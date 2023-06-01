@@ -17,7 +17,7 @@ MODULE MOD_Initialize
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
+   SUBROUTINE initialize (casename, dir_rawdata, dir_landdata, dir_restart, &
          idate, lc_year, greenwich)
 
       ! ======================================================================
@@ -96,6 +96,7 @@ MODULE MOD_Initialize
 
       ! ----------------------------------------------------------------------
       character(len=*), intent(in) :: casename      ! case name
+      character(len=*), intent(in) :: dir_rawdata
       character(len=*), intent(in) :: dir_landdata
       character(len=*), intent(in) :: dir_restart
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
@@ -246,7 +247,7 @@ MODULE MOD_Initialize
       ! read global tree top height from nc file
       CALL HTOP_readin (dir_landdata, lc_year)
 #ifdef URBAN_MODEL
-      CALL Urban_readin (dir_landdata, lc_year)
+      CALL Urban_readin (dir_rawdata, dir_landdata, lc_year)
 #endif
       ! ................................
       ! 1.5 Initialize TUNABLE constants
@@ -438,10 +439,10 @@ MODULE MOD_Initialize
       ! ...........................................
       !2.3 READ in or GUSSES land state information
       ! ...........................................
-         
+
       ! for SOIL INIT of water, temperature, snow depth
       IF (DEF_USE_SOIL_INIT) THEN
-         
+
          fsoildat = DEF_file_soil_init
          IF (p_is_master) THEN
             inquire (file=trim(fsoildat), exist=use_soilini)
@@ -451,25 +452,25 @@ MODULE MOD_Initialize
 #endif
 
          IF (use_soilini) THEN
-            
+
             call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
             nl_soil_ini = size(soil_z)
 
             if (p_is_io) then
                ! soil layer temperature (K)
                call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)  
+               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)
                ! soil layer wetness (-)
                call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)  
+               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)
                ! snow depth (m)
                call allocate_block_data (gsoil, snow_d_grid)
-               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  
+               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)
             end if
 
             call gsoil%define_from_file (fsoildat)
             call ms2p%build (gsoil, landpatch)
-      
+
             if (p_is_worker) then
                nl_soil_ini = nl_soil
                allocate (soil_z (nl_soil_ini))
@@ -489,7 +490,7 @@ MODULE MOD_Initialize
       ENDIF
 
       IF (.not. use_soilini) THEN
-         !! not used, just for filling arguments 
+         !! not used, just for filling arguments
          if (p_is_worker) then
             allocate (soil_z (nl_soil))
             allocate (snow_d (numpatch))
@@ -500,7 +501,7 @@ MODULE MOD_Initialize
 
       ! for SOIL Water INIT by using water table depth
       IF (DEF_USE_WaterTable_INIT) THEN
-      
+
          fwtd = DEF_file_water_table_depth
          IF (p_is_master) THEN
             inquire (file=trim(fwtd), exist=use_wtd)

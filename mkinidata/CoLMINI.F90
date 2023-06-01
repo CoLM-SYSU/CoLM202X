@@ -55,6 +55,7 @@ PROGRAM CoLMINI
    ! ----------------local variables ---------------------------------
    character(len=256) :: nlfile
    character(LEN=256) :: casename ! case name
+   CHARACTER(LEN=256) :: dir_rawdata
    character(LEN=256) :: dir_landdata
    character(LEN=256) :: dir_restart
    CHARACTER(LEN=256) :: fsrfdata
@@ -82,6 +83,7 @@ PROGRAM CoLMINI
    call read_namelist (nlfile)
 
    casename     = DEF_CASE_NAME
+   dir_rawdata  = DEF_dir_rawdata
    dir_landdata = DEF_dir_landdata
    dir_restart  = DEF_dir_restart
    greenwich    = DEF_simulation_time%greenwich
@@ -141,7 +143,7 @@ PROGRAM CoLMINI
 #endif
 #endif
 
-   CALL initialize (casename, dir_landdata, dir_restart, idate, lc_year, greenwich)
+   CALL initialize (casename, dir_rawdata, dir_landdata, dir_restart, idate, lc_year, greenwich)
 
 #ifdef SinglePoint
    CALL single_srfdata_final ()

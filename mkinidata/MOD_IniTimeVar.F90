@@ -400,7 +400,7 @@ MODULE MOD_IniTimeVar
                wice_soisno(j) = 0.
             ENDIF
          ENDDO
-      
+
          snowdp = 0.
          sag    = 0.
          scv    = 0.
@@ -449,7 +449,7 @@ MODULE MOD_IniTimeVar
          ENDIF
       ENDDO
 
-      ! (4) Vegetation water and temperature 
+      ! (4) Vegetation water and temperature
       ! Variables: ldew_rain, ldew_snow, ldew, t_leaf, vegwp, gs0sun, gs0sha
       ldew_rain  = 0.
       ldew_snow  = 0.
@@ -461,30 +461,32 @@ MODULE MOD_IniTimeVar
       gs0sha = 1.0e4
 #endif
 
+      IF (patchtype == 0) THEN
 #ifdef LULC_IGBP_PFT
-      ps = patch_pft_s(ipatch)
-      pe = patch_pft_e(ipatch)
-      tleaf_p(ps:pe)  = t_soisno(1)
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         tleaf_p(ps:pe)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
-      vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
-      gs0sun_p(ps:pe) = 1.0e4
-      gs0sha_p(ps:pe) = 1.0e4
+         vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
+         gs0sun_p(ps:pe) = 1.0e4
+         gs0sha_p(ps:pe) = 1.0e4
 #endif
 #endif
 
 #ifdef LULC_IGBP_PC
-      pc = patch2pc(ipatch)
-      ldew_rain_c(:,pc)  = 0.
-      ldew_snow_c(:,pc)  = 0.
-      ldew_c(:,pc)   = 0.
-      tleaf_c(:,pc)  = t_soisno(1)
+         pc = patch2pc(ipatch)
+         ldew_rain_c(:,pc)  = 0.
+         ldew_snow_c(:,pc)  = 0.
+         ldew_c(:,pc)   = 0.
+         tleaf_c(:,pc)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
-      vegwp_c(1:nvegwcs,:,pc) = -2.5e4
-      gs0sun_c(:,pc) = 1.0e4
-      gs0sha_c(:,pc) = 1.0e4
+         vegwp_c(1:nvegwcs,:,pc) = -2.5e4
+         gs0sun_c(:,pc) = 1.0e4
+         gs0sha_c(:,pc) = 1.0e4
 #endif
 #endif
-      
+      ENDIF
+
       ! (5) Ground
       ! Variables: t_grnd, dpond
       t_grnd = t_soisno(1)
@@ -528,8 +530,8 @@ MODULE MOD_IniTimeVar
       ENDIF
 
      ! (8) SNICAR
-     ! Variables: snw_rds, mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, 
-     !            mss_dst1, mss_dst2, mss_dst3, mss_dst4 
+     ! Variables: snw_rds, mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi,
+     !            mss_dst1, mss_dst2, mss_dst3, mss_dst4
      snw_rds   (:) = 54.526_r8
      mss_bcpho (:) = 0.
      mss_bcphi (:) = 0.
