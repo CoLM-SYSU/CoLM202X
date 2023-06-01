@@ -12,7 +12,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    !
    ! REVISIONS:
    ! Hua Yuan,      ?/2020 : for land cover land use classifications
-   ! Shupeng Zhang, 01/2022: porting codes to parallel version
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    ! Hua Yuan,      05/2023: TODO
    ! ----------------------------------------------------------------------
    USE MOD_Precision

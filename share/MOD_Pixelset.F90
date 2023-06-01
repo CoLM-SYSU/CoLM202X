@@ -21,7 +21,7 @@ MODULE MOD_Pixelset
    ! 
    !    The highest level pixelset in CoLM is ELEMENT, all other pixelsets are subsets 
    !    of ELEMENTs. 
-   !    In a pixelset, pixels are sorted to make pixels in its subsets are consecutive.
+   !    In a pixelset, pixels are sorted to make pixels in its subsets consecutive.
    !    Thus a subset can be represented by starting pixel index and ending pixel index
    !    in an ELEMENT. 
    !
@@ -39,6 +39,7 @@ MODULE MOD_Pixelset
    !    To write, vector is first gathered from worker to IO and then saved to files by IO.
    !
    ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType

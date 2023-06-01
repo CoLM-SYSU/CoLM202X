@@ -20,6 +20,7 @@ MODULE MOD_Pixel
    !    Subroutines to assimilate grid and map pixel to grid are defined as methods.
    ! 
    ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE

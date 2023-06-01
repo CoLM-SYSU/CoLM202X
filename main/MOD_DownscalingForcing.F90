@@ -16,6 +16,7 @@ module MOD_DownscalingForcing
   USE MOD_Precision
   use MOD_Qsadv
   USE MOD_Namelist
+  USE MOD_Const_Physical
   IMPLICIT NONE
 
   real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8       ! molecular weight dry air [kg/kmole]
@@ -24,14 +25,8 @@ module MOD_DownscalingForcing
   real(r8), parameter :: SHR_CONST_BOLTZ  = 1.38065e-23_r8  ! Boltzmann's constant [J/K/molecule]
   real(r8), parameter :: SHR_CONST_RGAS   = SHR_CONST_AVOGAD*SHR_CONST_BOLTZ  ! Universal gas constant [J/K/kmole]
   real(r8), parameter :: SHR_CONST_RDAIR  = SHR_CONST_RGAS/SHR_CONST_MWDAIR   ! Dry air gas constant [J/K/kg]
-  real(R8), parameter :: SHR_CONST_TKFRZ  = 273.15_r8       ! freezing T of fresh water [K]
 
-  real(r8), parameter :: cpair  = 1.00464e3_r8  ! specific heat of dry air [J/kg/K]
-  real(r8), parameter :: grav   = 9.80616_r8    ! acceleration of gravity [m/s^2]
-  real(r8), parameter :: denh2o = 1.000e3_r8    ! density of liquid water [kg/m3]
-  real(r8), parameter :: hfus   = 3.337e5_r8    ! latent heat of fusion for ice [J/kg]
   real(r8) :: rair = SHR_CONST_RDAIR  ! Dry air gas constant [J/K/kg]
-  real(r8) :: tfrz = SHR_CONST_TKFRZ  ! freezing T of fresh water [K]
 
   ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1),
   ! substantially smaller than the often-assumed 6.5 (deg km-1).

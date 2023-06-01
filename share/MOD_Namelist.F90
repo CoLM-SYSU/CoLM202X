@@ -9,6 +9,7 @@ MODULE MOD_Namelist
    !
    ! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
    !                  Hua Yuan, Wenzong Dong et al., May 2023
+   !-----------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
    IMPLICIT NONE

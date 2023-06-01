@@ -11,6 +11,10 @@ module MOD_Forcing
 ! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
 !                                    GETMET.F90 and rd_forcing.F90
 !
+! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!                         2) codes for dealing with missing forcing value
+!                         3) interface for downscaling
+!
 ! TODO...(need complement)
 
    use MOD_Precision

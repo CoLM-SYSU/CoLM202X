@@ -2,13 +2,13 @@
 
 MODULE MOD_Grid
 
-   !-----------------------------------------------------------------------
+   !-------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
    !    Definition of latitude-longitude grids and data types related to grids. 
    !
    !    Latitude-longitude grid can be defined by
-   !    1. "name"   : frequently used grids which is predefined in this module;
+   !    1. "name"   : frequently used grids is predefined in this module;
    !    2. "ndims"  : how many longitude and latitude grids are used globally;
    !    3. "res"    : longitude and latitude resolutions in radian
    !    4. "center" : longitude and latitude grid centers, and the border lines 
@@ -25,6 +25,7 @@ MODULE MOD_Grid
    !    2. "grid_concat_type" : used to concatenate grids distributed in blocks.
    ! 
    ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
