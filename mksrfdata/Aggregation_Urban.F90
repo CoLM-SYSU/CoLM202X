@@ -6,6 +6,7 @@
 ! regional or point cases.
 ! ======================================================
 
+#ifdef URBAN_MODEL
 SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                               grid_urban_5km, grid_urban_500m)
 
@@ -921,3 +922,4 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE Aggregation_Urban
+#endif

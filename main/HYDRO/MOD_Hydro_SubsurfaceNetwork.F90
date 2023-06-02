@@ -47,7 +47,7 @@ CONTAINS
       USE MOD_Mesh
       USE MOD_LandElm
       USE MOD_CoLMDebug
-      USE MOD_Hydro_DrainageNetwork
+      USE MOD_Hydro_SurfaceNetwork
       USE MOD_Utils
       IMPLICIT NONE
 
@@ -458,8 +458,8 @@ CONTAINS
             allocate (area_b(numbasin))
             allocate (elva_b(numbasin))
             DO ibasin = 1, numbasin
-               area_b(ibasin) = sum(drainagenetwork(ibasin)%area)
-               elva_b(ibasin) = sum(drainagenetwork(ibasin)%area * drainagenetwork(ibasin)%elva) / area_b(ibasin)
+               area_b(ibasin) = sum(surface_network(ibasin)%area)
+               elva_b(ibasin) = sum(surface_network(ibasin)%area * surface_network(ibasin)%elva) / area_b(ibasin)
             ENDDO
          ENDIF
          

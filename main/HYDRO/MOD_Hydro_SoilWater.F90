@@ -4,10 +4,18 @@
 
 module MOD_Hydro_SoilWater
 
-   ! Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
-   ! Modeling Variably Saturated Flow in Stratified Soils
+   !-------------------------------------------------------------------------
+   ! Description:
+   !    
+   !    Numerical Solver of Richards equation. 
+   !
+   !    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
+   !    Modeling Variably Saturated Flow in Stratified Soils
    !      With Explicit Tracking of Wetting Front and Water Table Locations.
-   ! Water Resources Research. doi:10.1029/2019wr025368
+   !    Water Resources Research. doi:10.1029/2019wr025368
+   !
+   ! Created by Shupeng Zhang, 2022.
+   !-------------------------------------------------------------------------
 
    use MOD_Precision
    use MOD_Hydro_SoilFunction

@@ -52,7 +52,7 @@ CONTAINS
       USE MOD_NetCDFSerial
       USE MOD_Mesh
       USE MOD_CoLMDebug
-      USE MOD_Hydro_DrainageNetwork
+      USE MOD_Hydro_SurfaceNetwork
       USE MOD_DataType
       USE MOD_Utils
       USE MOD_CoLMDebug
@@ -419,12 +419,12 @@ CONTAINS
             allocate (riverwdth (numbasin))
 
             DO ibasin = 1, numbasin
-               riverarea(ibasin) = drainagenetwork(ibasin)%area(1)
+               riverarea(ibasin) = surface_network(ibasin)%area(1)
                riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
                ! modify height above nearest drainage data to consider river depth
-               drainagenetwork(ibasin)%hand(1) = &
-                  drainagenetwork(ibasin)%hand(1) + riverdpth(ibasin)
+               surface_network(ibasin)%hand(1) = &
+                  surface_network(ibasin)%hand(1) + riverdpth(ibasin)
             ENDDO
 
          ENDIF

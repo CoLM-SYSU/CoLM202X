@@ -1,7 +1,7 @@
 ! 1. Spatial structure:
 !    Select one of the following options.
-#define GRIDBASED
-#undef CATCHMENT
+#undef GRIDBASED
+#define CATCHMENT
 #undef UNSTRUCTURED
 #undef SinglePoint
 
