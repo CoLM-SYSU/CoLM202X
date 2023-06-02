@@ -22,7 +22,7 @@ MODULE MOD_Lulcc_Driver
 
 
  SUBROUTINE LulccDriver (casename,dir_landdata,dir_restart,&
-                        idate,greenwich)
+                         idate,greenwich)
 
 !=======================================================================
 ! PURPOSE:

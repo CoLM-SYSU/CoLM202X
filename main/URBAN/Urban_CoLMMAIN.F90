@@ -934,14 +934,6 @@ SUBROUTINE UrbanCoLMMAIN ( &
          tstar                ,fm                   ,fh                   ,fq                   ,&
          hpbl                                                                                    )
 
-
-! 计算代谢热和交通热
-!#ifdef USE_LUCY
-!     f_fac  = 0.8
-!     car_sp = 54
-!     CALL LUCY(idate,deltim,fix_holiday,week_holiday,f_fac,car_sp,hum_prof, &
-!              wdh_prof,weh_prof,popcell,vehicle,Fahe) !vehc_tot,ahf_flx,vehc_flx)
-!#endif
 !----------------------------------------------------------------------
 ! [4] Urban hydrology
 !----------------------------------------------------------------------
@@ -1100,10 +1092,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
       lbp = snlp + 1
       tgper = t_gpersno(lbp)
 
-      !TODO: 暂定方案，设置t_soisno
+      !TODO: temporal, set to t_soisno
       t_soisno(:) = t_gpersno(:)
 
-      !TODO: 如何计算tlake
+      !TODO: how to set tlake
       lbl = snll + 1
       IF (lbl < 1) THEN
          tlake = t_lakesno(lbl)

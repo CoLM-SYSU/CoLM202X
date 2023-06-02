@@ -66,7 +66,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! output variables
    INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: LUCY_coun_
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_den
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
@@ -183,10 +182,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    IF (p_is_worker) THEN
 
       allocate ( LUCY_coun (numurban))
-      allocate ( LUCY_coun_(numurban))
 
       LUCY_coun (:) = 0
-      LUCY_coun_(:) = 0
 
       ! loop for each urban patch to get the LUCY id of all fine grid
       ! of iurban patch, then assign the most frequence id to this urban patch
@@ -195,8 +192,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
          ! the most frequence id to this urban patch
          LUCY_coun(iurban) = num_max_frequency (LUCY_reg_one)
-         ! for surface diag
-         LUCY_coun_(iurban)= LUCY_coun(iurban)
       ENDDO
 #ifdef USEMPI
       CALL aggregation_worker_done ()
@@ -212,7 +207,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
-   CALL srfdata_map_and_write (LUCY_coun_, landurban%settyp, typindex, m_urb2diag, &
+   CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one')
 #endif
 
