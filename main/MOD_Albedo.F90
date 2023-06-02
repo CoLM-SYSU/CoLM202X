@@ -92,7 +92,7 @@ MODULE MOD_Albedo
   USE MOD_Aerosol,    only: AerosolMasses
   USE MOD_SnowSnicar,  only: SnowAge_grain
 #ifdef LULC_IGBP_PC
-  USE MOD_ThreeDCanopy, only: ThreeDCanopy_wrap
+  USE MOD_3DCanopyRadiation, only: ThreeDCanopy_wrap
 #endif
 
   IMPLICIT NONE

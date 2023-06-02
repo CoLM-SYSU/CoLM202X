@@ -5,7 +5,7 @@ MODULE MOD_Urban_Shortwave
   USE MOD_Precision
   USE MOD_LandUrban
   USE MOD_Vars_Global
-  USE MOD_ThreeDCanopy, only: tee, phi
+  USE MOD_3DCanopyRadiation, only: tee, phi
 
   IMPLICIT NONE
   SAVE
@@ -157,8 +157,8 @@ CONTAINS
      !-------------------------------------------------
 
      ! Radiation absorption by each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: absorption per unit area: 2*HW
      swsun(1) = X(1)/awall*(1-awall)!/(4*fwsun*HL*fb/fg)
      swsha(1) = X(2)/awall*(1-awall)!/(4*fwsha*HL*fb/fg)
      sgimp(1) = X(3)/agimp*(1-agimp)!/fgimp
@@ -191,8 +191,8 @@ CONTAINS
      X = matmul(Ainv, B)
 
      ! Radiation absorption by each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: absorption per unit area: 2*HW
      swsun(2) = X(1)/awall*(1-awall)!/(4*fwsun*HL*fb/fg)
      swsha(2) = X(2)/awall*(1-awall)!/(4*fwsha*HL*fb/fg)
      sgimp(2) = X(3)/agimp*(1-agimp)!/fgimp
@@ -207,7 +207,7 @@ CONTAINS
         print *, "Diffuse - Energy Balance Check error!", eb-1
      ENDIF
 
-     ! 转成单位面积吸收
+     ! convert to per unit area absorption
      IF (fb > 0.) THEN
         swsun = swsun/(4*fwsun*HL*fb)*fg
         swsha = swsha/(4*fwsha*HL*fb)*fg
@@ -215,10 +215,10 @@ CONTAINS
      IF (fgimp > 0.) sgimp = sgimp/fgimp
      IF (fgper > 0.) sgper = sgper/fgper
 
-     ! 屋顶吸收
+     ! roof absorption
      sroof = 1. - aroof
 
-     ! 计算考虑屋顶的总体反照率
+     ! albedo accout for both roof and urban's wall and ground
      albu = aroof*fb + albu*fg
 
   END SUBROUTINE UrbanOnlyShortwave
@@ -534,8 +534,8 @@ CONTAINS
      !-------------------------------------------------
 
      ! Radiation absorption by each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: absorption per unit area: 2*HW
      swsun(1) = X(1)/awall*(1-awall)!/(4*fwsun*HL*fb/fg)
      swsha(1) = X(2)/awall*(1-awall)!/(4*fwsha*HL*fb/fg)
      sgimp(1) = X(3)/agimp*(1-agimp)!/fgimp
@@ -570,8 +570,8 @@ CONTAINS
      X = matmul(Ainv, B)
 
      ! Radiation absorption by each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: aborption per unit area: 2*HW
      swsun(2) = X(1)/awall*(1-awall)!/(4*fwsun*HL*fb/fg)
      swsha(2) = X(2)/awall*(1-awall)!/(4*fwsha*HL*fb/fg)
      sgimp(2) = X(3)/agimp*(1-agimp)!/fgimp
@@ -587,7 +587,7 @@ CONTAINS
         print *, "Diffuse tree - Energy Balance Check error!", eb-1
      ENDIF
 
-     ! 转成单位面积吸收
+     ! convert to per unit area absorption
      IF (fb > 0.) THEN
         swsun = swsun/(4*fwsun*HL*fb)*fg
         swsha = swsha/(4*fwsha*HL*fb)*fg
@@ -596,10 +596,10 @@ CONTAINS
      IF (fgper > 0.) sgper = sgper/fgper
      IF (   fv > 0.) sveg  =  sveg/fv*fg
 
-     ! 屋顶吸收
+     ! roof absorption
      sroof = 1. - aroof
 
-     ! 计算考虑屋顶的总体反照率
+     ! albedo accout for both roof and urban's wall and ground
      albu = aroof*fb + albu*fg
 
   END SUBROUTINE UrbanVegShortwave

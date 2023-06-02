@@ -38,7 +38,7 @@
 !"                                                                                           "
 !"-------------------------------------------------------------------------------------------"
 
-MODULE MOD_MonthlyinSituCO2mlo
+MODULE MOD_MonthlyinSituCO2MaunaLoa
 ! -------------------------------
 !
 ! !DESCRIPTION:
@@ -737,5 +737,5 @@ MODULE MOD_MonthlyinSituCO2mlo
 
    END FUNCTION get_monthly_co2_mlo
 
-END MODULE MOD_MonthlyinSituCO2mlo
+END MODULE MOD_MonthlyinSituCO2MaunaLoa
 ! ---------- EOP ------------

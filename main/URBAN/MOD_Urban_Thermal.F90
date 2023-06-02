@@ -740,7 +740,7 @@ CONTAINS
          allocate ( fcover(0:4) )
          allocate ( dT(0:4)     )
 
-         ! call longwave function，calculate Ainv, B, B1, dBdT
+         ! call longwave function, calculate Ainv, B, B1, dBdT
          CALL UrbanOnlyLongwave ( &
                                  theta, hwr, froof, fgper, hroof, forc_frl, &
                                  twsun, twsha, tgimp, tgper, ewall, egimp, egper, &

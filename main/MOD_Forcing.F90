@@ -24,7 +24,7 @@ module MOD_Forcing
    use MOD_UserSpecifiedForcing
    use MOD_TimeManager
    use MOD_SPMD_Task
-   USE MOD_MonthlyinSituCO2mlo
+   USE MOD_MonthlyinSituCO2MaunaLoa
    USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
 
@@ -490,7 +490,7 @@ contains
       endif
 
       IF (.not. DEF_USE_Forcing_Downscaling) THEN
-         
+
          call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
          call mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
          call mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
@@ -585,7 +585,7 @@ contains
       call check_vector_data ('Forcing frl   ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
-      endif         
+      endif
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
