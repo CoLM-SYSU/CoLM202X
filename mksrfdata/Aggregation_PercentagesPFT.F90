@@ -1,6 +1,16 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
+   
+   ! ----------------------------------------------------------------------
+   ! Percentage of Plant Function Types
+   ! 
+   ! Original from Hua Yuan's OpenMP version.
+   !
+   ! REVISIONS:
+   ! Hua Yuan,      ?/2020 : for land cover land use classifications
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+   ! ----------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -247,9 +257,6 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   ! ---------------------------------------------------
-   ! write out the plant leaf area index of grid patches
-   ! ---------------------------------------------------
 #ifdef CoLMDEBUG
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif

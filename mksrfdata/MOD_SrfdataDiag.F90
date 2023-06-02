@@ -2,6 +2,23 @@
 
 #ifdef SrfdataDiag
 MODULE MOD_SrfdataDiag
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines for checking the results of making surface data. 
+   !
+   !    The surface data in vector form is mapped to gridded data with last 
+   !    three dimensions of [type,longitude,latitude], which can be viewed by other softwares.
+   ! 
+   !    In GRIDBASED, the grid of gridded data is just the grid of the mesh.
+   !    In UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses area
+   !    weighted scheme.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !
+   ! Revisions:
+   ! TODO
+   !-----------------------------------------------------------------------------------------
 
    USE MOD_Grid
    USE MOD_Mapping_Pset2Grid

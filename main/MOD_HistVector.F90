@@ -3,6 +3,16 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT)
 module MOD_HistVector
 
+   !----------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !     Write out vectorized model results to history files.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !
+   ! TODO...(need complement)
+   !----------------------------------------------------------------------------
+
    use MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Namelist
