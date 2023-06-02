@@ -112,7 +112,7 @@ MODULE MOD_Thermal
   USE MOD_Eroot
   USE MOD_GroundFluxes
   USE MOD_LeafTemperature
-  USE MOD_GroundTem
+  USE MOD_GroundTemperature
   USE MOD_Qsadv
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e

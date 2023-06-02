@@ -46,7 +46,7 @@ CONTAINS
   USE MOD_Vars_Global
   USE MOD_Const_Physical
   USE MOD_Utils, only: tridia
-  USE MOD_Meltf, only: meltf_urban
+  USE MOD_PhaseChange, only: meltf_urban
 
   IMPLICIT NONE
 
