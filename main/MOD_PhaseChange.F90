@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Meltf
+MODULE MOD_PhaseChange
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -747,4 +747,4 @@ MODULE MOD_Meltf
 
   end subroutine meltf_urban
 
-END MODULE MOD_Meltf
+END MODULE MOD_PhaseChange
