@@ -1,7 +1,27 @@
 #include <define.h>
 
 MODULE MOD_PixelsetShadow
-
+   !----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Shadows of pixelset refer to two or more pixelsets sharing the same geographic area.
+   ! 
+   !    For example, for patch of crops, multiple crops can be planted on a piece of land.
+   !    When planting these crops, different irrigation schemes may be used. Thus the water 
+   !    and energy processes have difference in crops and should be modeled independently.
+   !    By using shadows, crop patch is splitted to two or more shadowed patches.
+   !    Each shadow is assigned with a percentage of area and has its own states.
+   !
+   !                Example of shadowed pixelsets
+   !        |<------------------- ELEMENT ------------------>| <-- level 1
+   !        |   subset 1  |       subset 2        | subset 3 | <-- level 2
+   !                      | subset 2 shadow 1 50% |            
+   !                      | subset 2 shadow 2 20% |            <-- subset 2 shadows
+   !                      | subset 2 shadow 3 30% |            
+   !
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !----------------------------------------------------------------------------------------
    IMPLICIT NONE
 
 CONTAINS

@@ -154,7 +154,7 @@ CONTAINS
      CALL ncio_read_vector (file_restart, 'URBAN_TREE_BOT', landurban, hbot_urb )
      CALL ncio_read_vector (file_restart, 'PCT_Water'     , landurban, flake    )
 
-     ! LUCY paras !TODO: 变量命名可以进行优化
+     ! LUCY paras !TODO: variable name can be optimized
      CALL ncio_read_vector (file_restart, 'POP_DEN'     ,      landurban, pop_den     )
      CALL ncio_read_vector (file_restart, 'VEHC_NUM'    , 3  , landurban, vehicle     )
      CALL ncio_read_vector (file_restart, 'week_holiday', 7  , landurban, week_holiday)

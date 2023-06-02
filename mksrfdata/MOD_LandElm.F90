@@ -2,9 +2,25 @@
 
 MODULE MOD_LandElm
 
-   USE MOD_Precision
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landelm".
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landelm" refers to pixelset ELEMENT.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
+
    USE MOD_Pixelset
-   USE MOD_Grid
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -13,7 +29,7 @@ MODULE MOD_LandElm
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landelm_build 
+   SUBROUTINE landelm_build
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -37,8 +53,8 @@ CONTAINS
 
          DO ielm = 1, numelm
             landelm%eindex(ielm) = mesh(ielm)%indx
-            landelm%ipxstt(ielm) = 1 
-            landelm%ipxend(ielm) = mesh(ielm)%npxl 
+            landelm%ipxstt(ielm) = 1
+            landelm%ipxend(ielm) = mesh(ielm)%npxl
             landelm%settyp(ielm) = 0
             landelm%ielm  (ielm) = ielm
          ENDDO
@@ -46,7 +62,7 @@ CONTAINS
       ENDIF
 
       landelm%nset = numelm
-      CALL landelm%set_vecgs 
+      CALL landelm%set_vecgs
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -54,7 +70,7 @@ CONTAINS
       IF (p_is_worker) THEN
          CALL mpi_reduce (numelm, nelm_glb, 1, MPI_INTEGER, MPI_SUM, p_root, p_comm_worker, p_err)
          IF (p_iam_worker == 0) THEN
-            write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.' 
+            write(*,'(A,I12,A)') 'Total: ', nelm_glb, ' elements.'
          ENDIF
       ENDIF
 

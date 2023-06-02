@@ -783,7 +783,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! with vegetation canopy
       CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref,tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew,ldew,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr,qintr)
+                              ldew,ldew,ldew,z0m,forc_hgt_u,pgper_rain,pgper_snow,qintr,qintr,qintr)
 
       ! for output, patch scale
       qintr = qintr * fveg * (1-flake)
@@ -934,14 +934,6 @@ SUBROUTINE UrbanCoLMMAIN ( &
          tstar                ,fm                   ,fh                   ,fq                   ,&
          hpbl                                                                                    )
 
-
-! 计算代谢热和交通热
-!#ifdef USE_LUCY
-!     f_fac  = 0.8
-!     car_sp = 54
-!     CALL LUCY(idate,deltim,fix_holiday,week_holiday,f_fac,car_sp,hum_prof, &
-!              wdh_prof,weh_prof,popcell,vehicle,Fahe) !vehc_tot,ahf_flx,vehc_flx)
-!#endif
 !----------------------------------------------------------------------
 ! [4] Urban hydrology
 !----------------------------------------------------------------------
@@ -1100,10 +1092,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
       lbp = snlp + 1
       tgper = t_gpersno(lbp)
 
-      !TODO: 暂定方案，设置t_soisno
+      !TODO: temporal, set to t_soisno
       t_soisno(:) = t_gpersno(:)
 
-      !TODO: 如何计算tlake
+      !TODO: how to set tlake
       lbl = snll + 1
       IF (lbl < 1) THEN
          tlake = t_lakesno(lbl)
@@ -1115,7 +1107,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! energy balance check
       ! ----------------------------------------
       zerr=errore
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errore)>.5)THEN
          write(6,*) 'Warning: energy balance violation ',errore,patchclass
       ENDIF
@@ -1145,7 +1137,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
       errorw = (endwb-totwb) - (forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
       xerr   = errorw/deltim
 
-#if(defined CLMDEBUG)
+#if(defined CoLMDEBUG)
       IF(abs(errorw)>1.e-3) THEN
          write(6,*) 'Warning: water balance violation', errorw, ipatch, patchclass
          !stop

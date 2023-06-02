@@ -1,0 +1,44 @@
+&General
+	Para_Tag    = True
+    Debug_Tag   = False
+	Num_Cores   = 120
+	Map_Tag     = glb_15min
+	Map_Dir     = /tera02/zhangsl/cama-flood/cama_v4.10/map/glb_15min
+    Save_Dir    = /tera02/zhangsl/cama-flood/cama_v4.10/etc/dam/dam_params/dam_params_glb_15min
+
+/
+
+
+&dam_basicInfo
+	Min_Error   = 0.1   
+	Min_Uparea  = 1000.0
+	GRanD_If    = /tera02/zhangsl/cama-flood/cama_v4.10/etc/dam/dam_data/GRanD/GRanD_reservoirs_v1_3.csv
+	
+/
+
+
+&dam_discharge
+    Start_Year  = 1981
+    End_Year    = 1983
+    Period_Year = 100
+    Max_Days    = 1
+    Qf1         = 0.5
+    Qf2         = 1.5
+    Sim_Dir     = /tera02/zhangsl/cama-flood/cama_v4.10/out/src_nat_15min
+
+/
+
+
+&dam_storage
+	Pc_Fld      = 75     
+	Pc_Nor      = 30    
+	Pc_Con      = 10
+	GRSADdir         = /tera02/zhangsl/cama-flood/cama_v4.10/etc/dam/dam_data/GRSAD/GRSAD_timeseries
+	ReGeomdir        = /tera02/zhangsl/cama-flood/cama_v4.10/etc/dam/dam_data/ReGeom/Area_Strg_Dp
+	ReGeom_ErrorFile = /tera02/zhangsl/cama-flood/cama_v4.10/etc/dam/dam_data/ReGeom/ReGeomData_WOW_V1.csv
+
+/
+
+
+
+

@@ -162,7 +162,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
    real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
    real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
@@ -358,7 +358,7 @@ contains
             allocate (a_respc     (numpatch))
 
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             allocate (a_assim_RuBP_sun        (numpatch)) !1
             allocate (a_assim_RuBP_sha        (numpatch)) !1
             allocate (a_assim_Rubisco_sun        (numpatch)) !1
@@ -766,7 +766,7 @@ contains
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             deallocate (a_assim_RuBP_sun        ) !1
             deallocate (a_assim_RuBP_sha        ) !1
             deallocate (a_assim_Rubisco_sun        ) !1
@@ -1072,7 +1072,7 @@ contains
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             a_assim_RuBP_sun        (:) = spval !1
             a_assim_RuBP_sha        (:) = spval !1
             a_assim_Rubisco_sun        (:) = spval !1
@@ -1438,7 +1438,7 @@ contains
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
             call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
             call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )

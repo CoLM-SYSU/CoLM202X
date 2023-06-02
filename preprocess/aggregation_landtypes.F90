@@ -25,10 +25,10 @@ use MOD_SPMD_Task
 IMPLICIT NONE
 
 ! arguments:
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       integer, parameter :: N_land_classification = 24 ! GLCC USGS number of land cover category
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       integer, parameter :: N_land_classification = 17 ! MODIS IGBP number of land cover category
 #endif
       integer, parameter :: nlat = 21600  ! 180*(60*2)
@@ -107,10 +107,10 @@ IMPLICIT NONE
    allocate (fraction_patches(0:N_land_classification,1:lon_points,1:lat_points))
    fraction_patches(:,:,:) = 0.0
 
-#if(defined USGS_CLASSIFICATION)
-   fraction_patches(USGS_CLASSIFICATION,:,:) = 1.0
+#if(defined LULC_USGS)
+   fraction_patches(LULC_USGS,:,:) = 1.0
 #else
-   fraction_patches(IGBP_CLASSIFICATION,:,:) = 1.0
+   fraction_patches(LULC_IGBP,:,:) = 1.0
 #endif
 
 #else
@@ -120,11 +120,11 @@ IMPLICIT NONE
 
       allocate (landtypes(nlon,nrow_start:nrow_end))
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
      ! GLCC USGS classification
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_usgs_update.bin'
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
      ! MODIS IGBP classification
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
 #endif
@@ -235,10 +235,10 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
                   area_patches(L) = area_patches(L) + area_for_sum 
                   area_grids = area_grids + area_for_sum
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                   if(L==24)then  ! GLACIER/ICE SHEET (24)
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                   if(L==15)then  ! GLACIER/ICE SHEET (15)
 #endif
                      g_patches = 100.
@@ -256,11 +256,11 @@ print *, 'OPENMP enabled, threads num = ', OPENMP
 
             f_glacier_patches = a_glacier_patches / area_grids
             if(f_glacier_patches > 0.001)then     ! 0.1/100
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                err_f_glacier = fraction_patches(24,i,j) - f_glacier_patches
                fraction_patches(24,i,j) = f_glacier_patches  ! GLCC USGS GLACIER/ICE SHEET (24)
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                err_f_glacier = fraction_patches(15,i,j) - f_glacier_patches
                fraction_patches(15,i,j) = f_glacier_patches  ! MODIS IGBP GLACIER/ICE SHEET (15)
 #endif

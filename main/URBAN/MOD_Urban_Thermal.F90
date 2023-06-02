@@ -740,7 +740,7 @@ CONTAINS
          allocate ( fcover(0:4) )
          allocate ( dT(0:4)     )
 
-         ! call longwave function，calculate Ainv, B, B1, dBdT
+         ! call longwave function, calculate Ainv, B, B1, dBdT
          CALL UrbanOnlyLongwave ( &
                                  theta, hwr, froof, fgper, hroof, forc_frl, &
                                  twsun, twsha, tgimp, tgper, ewall, egimp, egper, &
@@ -1315,7 +1315,7 @@ CONTAINS
          deallocate ( VegVF )
       ENDIF
 
-#if (defined CLMDEBUG)
+#if (defined CoLMDEBUG)
       IF (abs(errore)>.5) THEN
       write(6,*) 'THERMAL.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa,xmf
@@ -1339,12 +1339,11 @@ CONTAINS
                        troof_inner, twsun_inner, twsha_inner, &
                        Fhac, Fwst, Fach, Fhah )
 
-#ifdef USE_LUCY
       ! Anthropogenic heat flux for the rest (vehicle heat flux and metabolic heat flux)
       CALL LUCY(idate       , deltim  , patchlonr, fix_holiday, &
                 week_holiday, hum_prof, wdh_prof , weh_prof   ,popcell, &
                 vehicle     , Fahe    , vehc     , meta)
-#endif
+
       deallocate ( fcover )
 
  END SUBROUTINE UrbanTHERMAL

@@ -11,6 +11,10 @@ module MOD_Forcing
 ! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
 !                                    GETMET.F90 and rd_forcing.F90
 !
+! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!                         2) codes for dealing with missing forcing value
+!                         3) interface for downscaling
+!
 ! TODO...(need complement)
 
    use MOD_Precision
@@ -20,7 +24,7 @@ module MOD_Forcing
    use MOD_UserSpecifiedForcing
    use MOD_TimeManager
    use MOD_SPMD_Task
-   USE MOD_MonthlyinSituCO2mlo
+   USE MOD_MonthlyinSituCO2MaunaLoa
    USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
 
@@ -31,11 +35,10 @@ module MOD_Forcing
 
    LOGICAL, allocatable :: forcmask (:)
 
-#ifdef Forcing_Downscaling
+   ! for Forcing_Downscaling
    type (mapping_grid2pset_type) :: mg2p_forc_elm
    LOGICAL, allocatable :: forcmask_elm (:)
    LOGICAL, allocatable :: glacierss    (:)
-#endif
 
    ! local variables
    integer  :: deltim_int                ! model time step length
@@ -99,6 +102,8 @@ contains
       deltim_real = deltatime
 
       ! set initial values
+      IF (allocated(tstamp_LB)) deallocate(tstamp_LB)
+      IF (allocated(tstamp_UB)) deallocate(tstamp_UB)
       allocate (tstamp_LB(NVAR))
       allocate (tstamp_UB(NVAR))
       tstamp_LB(:) = timestamp(-1, -1, -1)
@@ -108,6 +113,9 @@ contains
 
       if (p_is_io) then
 
+         IF (allocated(forcn   )) deallocate(forcn   )
+         IF (allocated(forcn_LB)) deallocate(forcn_LB)
+         IF (allocated(forcn_UB)) deallocate(forcn_UB)
          allocate (forcn    (NVAR))
          allocate (forcn_LB (NVAR))
          allocate (forcn_UB (NVAR))
@@ -126,9 +134,9 @@ contains
 
       IF (.not. DEF_forcing%has_missing_value) THEN
          call mg2p_forc%build (gforc, landpatch)
-#ifdef Forcing_Downscaling
-         call mg2p_forc_elm%build (gforc, landelm)
-#endif
+         IF (DEF_USE_Forcing_Downscaling) THEN
+            call mg2p_forc_elm%build (gforc, landelm)
+         ENDIF
       ELSE
          mtstamp = idate
          call setstampLB(mtstamp, 1, year, month, day, time_i)
@@ -140,12 +148,12 @@ contains
                allocate (forcmask(numpatch))
                forcmask(:) = .true.
             ENDIF
-#ifdef Forcing_Downscaling
-            IF (numelm > 0) THEN
-               allocate (forcmask_elm(numelm))
-               forcmask_elm(:) = .true.
+            IF (DEF_USE_Forcing_Downscaling) THEN
+               IF (numelm > 0) THEN
+                  allocate (forcmask_elm(numelm))
+                  forcmask_elm(:) = .true.
+               ENDIF
             ENDIF
-#endif
          ENDIF
 
          IF (p_is_master) THEN
@@ -157,34 +165,36 @@ contains
 
          call ncio_read_block_time (filename, vname(1), gforc, time_i, metdata)
          call mg2p_forc%build (gforc, landpatch, metdata, missing_value, forcmask)
-#ifdef Forcing_Downscaling
-         call mg2p_forc_elm%build (gforc, landelm, metdata, missing_value, forcmask_elm)
-#endif
-      ENDIF
-
-#ifdef Forcing_Downscaling
-      lndname = trim(DEF_dir_landdata) // '/topography/topography_patches.nc'
-      call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
-
-      IF (p_is_worker) THEN
-#if (defined CROP)
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
-         CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
-#endif
-
-         DO ielm = 1, numelm
-            istt = elm_patch%substt(ielm)
-            iend = elm_patch%subend(ielm)
-            forc_topo_elm(ielm) = sum(forc_topo(istt:iend) * elm_patch%subfrc(istt:iend))
-         ENDDO
-
-         IF (numpatch > 0) THEN
-            allocate (glacierss(numpatch))
-            glacierss(:) = patchtype(:) == 3
+         IF (DEF_USE_Forcing_Downscaling) THEN
+            call mg2p_forc_elm%build (gforc, landelm, metdata, missing_value, forcmask_elm)
          ENDIF
       ENDIF
+
+      IF (DEF_USE_Forcing_Downscaling) THEN
+
+         lndname = trim(DEF_dir_landdata) // '/topography/topography_patches.nc'
+         call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
+
+         IF (p_is_worker) THEN
+#if (defined CROP)
+            CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+            CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
 #endif
+
+            DO ielm = 1, numelm
+               istt = elm_patch%substt(ielm)
+               iend = elm_patch%subend(ielm)
+               forc_topo_elm(ielm) = sum(forc_topo(istt:iend) * elm_patch%subfrc(istt:iend))
+            ENDDO
+
+            IF (numpatch > 0) THEN
+               allocate (glacierss(numpatch))
+               glacierss(:) = patchtype(:) == 3
+            ENDIF
+         ENDIF
+
+      ENDIF
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
          CALL metread_time (dir_forcing)
@@ -220,9 +230,7 @@ contains
       use MOD_Mapping_Grid2Pset
       use MOD_CoLMDebug
       use MOD_UserSpecifiedForcing
-#ifdef Forcing_Downscaling
       USE MOD_DownscalingForcing, only : rair, cpair, downscale_forcings
-#endif
 
       IMPLICIT NONE
       integer, INTENT(in) :: idate(3)
@@ -481,79 +489,83 @@ contains
 	    call mg2p_forc%map_aweighted (forc_xy_hpbl,   forc_hpbl)
       endif
 
-#ifndef Forcing_Downscaling
-      call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
-      call mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
-      call mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
-      call mg2p_forc%map_aweighted (forc_xy_prl  ,  forc_prl  )
-      call mg2p_forc%map_aweighted (forc_xy_pbot ,  forc_pbot )
-      call mg2p_forc%map_aweighted (forc_xy_frl  ,  forc_frl  )
+      IF (.not. DEF_USE_Forcing_Downscaling) THEN
 
-      if (p_is_worker) then
+         call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
+         call mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
+         call mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
+         call mg2p_forc%map_aweighted (forc_xy_prl  ,  forc_prl  )
+         call mg2p_forc%map_aweighted (forc_xy_pbot ,  forc_pbot )
+         call mg2p_forc%map_aweighted (forc_xy_frl  ,  forc_frl  )
 
-         do np = 1, numpatch
-            IF (DEF_forcing%has_missing_value) THEN
-               IF (.not. forcmask(np)) cycle
-            ENDIF
+         if (p_is_worker) then
 
-            ! The standard measuring conditions for temperature are two meters above the ground
-            ! Scientists have measured the most frigid temperature ever
-            ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
-            if(forc_t(np) < 180.) forc_t(np) = 180.
-            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
-            ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-            if(forc_t(np) > 326.) forc_t(np) = 326.
+            do np = 1, numpatch
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask(np)) cycle
+               ENDIF
 
-            forc_rhoair(np) = (forc_pbot(np) &
-               - 0.378*forc_q(np)*forc_pbot(np)/(0.622+0.378*forc_q(np)))&
-               / (rgas*forc_t(np))
+               ! The standard measuring conditions for temperature are two meters above the ground
+               ! Scientists have measured the most frigid temperature ever
+               ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
+               if(forc_t(np) < 180.) forc_t(np) = 180.
+               ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
+               ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
+               if(forc_t(np) > 326.) forc_t(np) = 326.
 
-         end do
+               forc_rhoair(np) = (forc_pbot(np) &
+                  - 0.378*forc_q(np)*forc_pbot(np)/(0.622+0.378*forc_q(np)))&
+                  / (rgas*forc_t(np))
 
-      end if
-#else
-      call mg2p_forc_elm%map_aweighted (forc_xy_t    ,  forc_t_elm    )
-      call mg2p_forc_elm%map_aweighted (forc_xy_q    ,  forc_q_elm    )
-      call mg2p_forc_elm%map_aweighted (forc_xy_prc  ,  forc_prc_elm  )
-      call mg2p_forc_elm%map_aweighted (forc_xy_prl  ,  forc_prl_elm  )
-      call mg2p_forc_elm%map_aweighted (forc_xy_pbot ,  forc_pbot_elm )
-      call mg2p_forc_elm%map_aweighted (forc_xy_frl  ,  forc_lwrad_elm)
-      call mg2p_forc_elm%map_aweighted (forc_xy_hgt_t,  forc_hgt_elm  )
+            end do
 
-      if (p_is_worker) then
+         end if
 
-         do ne = 1, numelm
-            IF (DEF_forcing%has_missing_value) THEN
-               IF (.not. forcmask_elm(ne)) cycle
-            ENDIF
+      ELSE
 
-            ! The standard measuring conditions for temperature are two meters above the ground
-            ! Scientists have measured the most frigid temperature ever
-            ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
-            if(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
-            ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
-            ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
-            if(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
+         call mg2p_forc_elm%map_aweighted (forc_xy_t    ,  forc_t_elm    )
+         call mg2p_forc_elm%map_aweighted (forc_xy_q    ,  forc_q_elm    )
+         call mg2p_forc_elm%map_aweighted (forc_xy_prc  ,  forc_prc_elm  )
+         call mg2p_forc_elm%map_aweighted (forc_xy_prl  ,  forc_prl_elm  )
+         call mg2p_forc_elm%map_aweighted (forc_xy_pbot ,  forc_pbot_elm )
+         call mg2p_forc_elm%map_aweighted (forc_xy_frl  ,  forc_lwrad_elm)
+         call mg2p_forc_elm%map_aweighted (forc_xy_hgt_t,  forc_hgt_elm  )
 
-            forc_rho_elm(ne) = (forc_pbot_elm(ne) &
-               - 0.378*forc_q_elm(ne)*forc_pbot_elm(ne)/(0.622+0.378*forc_q_elm(ne)))&
-               / (rgas*forc_t_elm(ne))
+         if (p_is_worker) then
 
-            forc_th_elm(ne) = forc_t_elm(ne) * (1.e5/forc_pbot_elm(ne)) ** (rair/cpair)
+            do ne = 1, numelm
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask_elm(ne)) cycle
+               ENDIF
 
-         end do
+               ! The standard measuring conditions for temperature are two meters above the ground
+               ! Scientists have measured the most frigid temperature ever
+               ! recorded on the continent's eastern highlands: about (180K) colder than dry ice.
+               if(forc_t_elm(ne) < 180.) forc_t_elm(ne) = 180.
+               ! the highest air temp was found in Kuwait 326 K, Sulaibya 2012-07-31;
+               ! Pakistan, Sindh 2010-05-26; Iraq, Nasiriyah 2011-08-03
+               if(forc_t_elm(ne) > 326.) forc_t_elm(ne) = 326.
 
-         CALL downscale_forcings ( &
-            numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
-            ! forcing in gridcells
+               forc_rho_elm(ne) = (forc_pbot_elm(ne) &
+                  - 0.378*forc_q_elm(ne)*forc_pbot_elm(ne)/(0.622+0.378*forc_q_elm(ne)))&
+                  / (rgas*forc_t_elm(ne))
+
+               forc_th_elm(ne) = forc_t_elm(ne) * (1.e5/forc_pbot_elm(ne)) ** (rair/cpair)
+
+            end do
+
+            CALL downscale_forcings ( &
+               numelm, numpatch, elm_patch%substt, elm_patch%subend, glacierss, elm_patch%subfrc,   &
+               ! forcing in gridcells
             forc_topo_elm, forc_t_elm,   forc_th_elm,  forc_q_elm,     forc_pbot_elm, &
-            forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
-            ! forcing in patches
+               forc_rho_elm,  forc_prc_elm, forc_prl_elm, forc_lwrad_elm, forc_hgt_elm,  &
+               ! forcing in patches
             forc_topo,     forc_t,       forc_th,      forc_q,         forc_pbot,     &
-            forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
+               forc_rhoair,   forc_prc,     forc_prl,     forc_frl)
 
-      end if
-#endif
+         end if
+
+      ENDIF
 
 #ifdef CoLMDEBUG
 #ifdef USEMPI
@@ -573,7 +585,7 @@ contains
       call check_vector_data ('Forcing frl   ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
-      endif         
+      endif
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)

@@ -21,7 +21,7 @@ MODULE MOD_Const_LC
    IMPLICIT NONE
    SAVE
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
 
 ! GLCC USGS Land Use/Land Cover System Legend
 !---------------------------
@@ -634,7 +634,7 @@ CONTAINS
 
       INTEGER :: i, nsl
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
       patchtypes (:) = patchtypes_usgs (:)
       htop0      (:) = htop0_usgs      (:)
       hbot0      (:) = hbot0_usgs      (:)

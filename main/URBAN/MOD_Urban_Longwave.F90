@@ -9,7 +9,7 @@ MODULE MOD_Urban_Longwave
   USE MOD_Urban_Shortwave, only: ShadowWall_dir
   USE MOD_Urban_Shortwave, only: ShadowWall_dif
   USE MOD_Urban_Shortwave, only: ShadowTree
-  USE MOD_ThreeDCanopy, only: tee, phi
+  USE MOD_3DCanopyRadiation, only: tee, phi
 
   IMPLICIT NONE
   SAVE
@@ -144,8 +144,8 @@ CONTAINS
      Igper = Ig*fgper
 
      ! Vector of initial LW radiatioin on each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: absorption per unit area: 2*HW
      B(1) = Iwsun*(1.-ewall) + 4*fwsun*HL*fb/fg*stefnc*ewall*twsun**4
      B(2) = Iwsha*(1.-ewall) + 4*fwsha*HL*fb/fg*stefnc*ewall*twsha**4
      !B(1) = Iwsun*(1.-ewall) + 2*fwsun*HW*stefnc*ewall*twsun**4
@@ -176,7 +176,7 @@ CONTAINS
      fcover(3) = fg*fgimp
      fcover(4) = fg*fgper
 
-     !NOTE: 下面代码放在THERMAL.F90中
+     !NOTE: the below codes put into the THERMAL.F90
      ! Equation solve
      ! X = matmul(Ainv, B)
 
@@ -197,8 +197,8 @@ CONTAINS
      !  print *, "Longwave - Energy Balance Check error!", eb-LW
      !ENDIF
 
-     !NOTE: put it outside, 在屋顶、墙面、地面温度变化后
-     ! 计算温度变化带来的辐射吸收变化，作为restart变量保留
+     !NOTE: put it outside, after temperature change of roof, wall and ground
+     ! absorption change due to temperature change, as restart variables.
      !dX = matmul(Ainv, dBdT*dT)
      !lwsun = ( ewall*dX(1) - dBdT(1)*dT(1) ) / (1-ewall) !/ (4*fwsun*HL*fb/fg)
      !lwsha = ( ewall*dX(2) - dBdT(2)*dT(2) ) / (1-ewall) !/ (4*fwsha*HL*fb/fg)
@@ -494,13 +494,14 @@ CONTAINS
      Iv    = LW*Fsv
 
      ! Vector of initial LW radiatioin on each surface
-     !NOTE: for 3D, 单位面积辐射吸收: 4*HL*fb/fg
-     !      for canyon: 单位面积辐射吸收: 2*HW
+     !NOTE: for 3D, absorption per unit area: 4*HL*fb/fg
+     !      for canyon: absorption per unit area: 2*HW
      B(1) = Iwsun*(1.-ewall) + 4*fwsun*HL*fb/fg*stefnc*ewall*twsun**4
      B(2) = Iwsha*(1.-ewall) + 4*fwsha*HL*fb/fg*stefnc*ewall*twsha**4
      B(3) = Igimp*(1.-egimp) + fgimp*stefnc*egimp*tgimp**4
      B(4) = Igper*(1.-egper) + fgper*stefnc*egper*tgper**4
-     ! 植被温度在湍流计算中迭代计算
+     ! leaf temperature iteration in urban flux calculation
+     ! see MOD_Urban_Flux.F90
      ! B(5) = 4*fv/fg*stefnc*ev*tl**4 !NOTE: 4*fv/fg or 2*fv/fg
                                       !4*fv/fg. equivalent to 2fc
      B(5) = max(2*fv/fg,Fsv+Fgv)*stefnc*ev
@@ -509,7 +510,7 @@ CONTAINS
      B1(2) = 4*fwsha*HL*fb/fg*stefnc*ewall*twsha**4
      B1(3) = fgimp*stefnc*egimp*tgimp**4
      B1(4) = fgper*stefnc*egper*tgper**4
-     ! 植被温度在湍流计算中迭代计算
+     ! leaf temperature iteration in urban flux calculation
      ! B1(5) = 4*fv/fg*stefnc*ev*tl**4
      B1(5) = max(2*fv/fg,Fsv+Fgv)*stefnc*ev
 
@@ -517,7 +518,7 @@ CONTAINS
      dBdT(2) = 16*fwsha*HL*fb/fg*stefnc*ewall*twsha**3
      dBdT(3) = 4*fgimp*stefnc*egimp*tgimp**3
      dBdT(4) = 4*fgper*stefnc*egper*tgper**3
-     ! 植被温度在湍流计算中迭代计算
+     ! leaf temperature iteration in urban flux calculation
      ! dBdT(5) = 16*fv/fg*stefnc*ev*tl**3
      dBdT(5) = 4*max(2*fv/fg,Fsv+Fgv)*stefnc*ev
 
@@ -536,8 +537,8 @@ CONTAINS
      fcover(4) = fg*fgper
      fcover(5) = fv
 
-     !NOTE: 以下的代码放到叶片温度迭代计算中
-     ! 每迭代一次，更新下面三项
+     !NOTE: the below codes are put in the leaf temperature iteration process
+     ! after each iteration, update the below iterms
      !B(5)    = 4*fv/fg*stefnc*ev*tl**4
      !B1(5)   = 4*fv/fg*stefnc*ev*tl**4
      !dBdT(5) = 16*fv/fg*stefnc*ev*tl**3
@@ -550,7 +551,7 @@ CONTAINS
      !lgimp = ( egimp*X(3) - B1(3) ) / (1-egimp) !/ fgimp
      !lgper = ( egper*X(4) - B1(4) ) / (1-egper) !/ fgper
 
-     !NOTE: 在进行温度迭代前进行计算
+     !NOTE: before leaf temperature iteration
      !lv    = ((X(1)*Fwv + X(2)*Fwv + X(3)*Fgv + X(4)*Fgv + LW*Fsv)*ev - B1(5))!/(fv/fg)
 
      ! Out-going LW of urban canopy
@@ -565,16 +566,16 @@ CONTAINS
      !  print *, "Longwave tree - Energy Balance Check error!", eb-LW
      !ENDIF
 
-     ! 叶片最后一次温度变化带来的辐射差异
-     ! dBdT前4项为0
+     ! Radiation difference due to the last temperature change of the leaf
+     ! dBdT: the first 4 iterms is 0
      !dX = matmul(Ainv, dBdT)
-     ! 最后求解前4项，叶片的已经求解
+     ! Finally solve the first 4 items, the leaf has been solved
      !lwsun = lwsun + ( ewall*dX(1) ) / (1-ewall) * dtl!/ (4*fwsun*HL*fb/fg)
      !lwsha = lwsha + ( ewall*dX(2) ) / (1-ewall) * dtl!/ (4*fwsha*HL*fb/fg)
      !lgimp = lwimp + ( egimp*dX(3) ) / (1-egimp) * dtl!/ fgimp
      !lgper = lgper + ( egper*dX(4) ) / (1-egper) * dtl!/ fgper
 
-     ! 每步温度迭代进行计算, 最后一次应为tlbef
+     ! update after each temperature iteration
      !lv    = lv + ((dX(1)*Fwv + dX(2)*Fwv + dX(3)*Fgv + dX(4)*Fgv)*ev - dBdT(5))*dtl!/(fv/fg)
      !dlvdt = (dX(1)*Fwv + dX(2)*Fwv + dX(3)*Fgv + dX(4)*Fgv)*ev - dBdT(5)
 
@@ -582,8 +583,8 @@ CONTAINS
      !lout  = lout + sum( dX * SkyVF * dtl )
 
      ! put it outside
-     ! 计算温度变化带来的辐射吸收变化，作为restart变量保留
-     ! 此时叶片温度已不改变, dBdT最后一项为0
+     ! absorption change due to temperature change, as restart variables.
+     ! now the leaf temperature does not change, the last iterm of dBdT is 0.
      !dX = matmul(Ainv, dBdT*dT)
 
      !lwsun = ( ewall*dX(1) - dBdT(1)*dT(1) ) / (1-ewall) !/ (4*fwsun*HL*fb/fg)

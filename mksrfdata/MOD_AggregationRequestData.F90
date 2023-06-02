@@ -2,6 +2,19 @@
 
 MODULE MOD_AggregationRequestData
 
+   !-------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Aggregation Utilities.
+   !    
+   !    On IO processes, a data daemon is running to provide data 
+   !       at fine resolutions for worker processes.
+   !    On worker processes, request is sent to IO processes and 
+   !       data is returned from IO processes. 
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------
+
    IMPLICIT NONE
 
    PUBLIC :: aggregation_request_data

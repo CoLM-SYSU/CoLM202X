@@ -2,6 +2,26 @@
 
 MODULE MOD_Pixel
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Pixels are rasterized points defined by fine-resolution data.
+   !   
+   !    CoLM use multiple grids to construct pixels. Grids are assimilated into pixel 
+   !    coordinate one by one. One grid is assimilated by adding grid lines not present 
+   !    in pixel coordinate. In other words, pixel coordinate is the union of all grids.
+   !   
+   !    Pixels are used to carry out land surface tessellation. The grids used to 
+   !    construct pixels are associated with surface data such as land cover types, soil 
+   !    parameters, plant function types, leaf area index and forest height. 
+   !    By using pixels, these variables are downscaled to fine resolution.
+   !
+   !    In pixel data type, region boundaries and each pixel boundaries are defined.
+   !    Subroutines to assimilate grid and map pixel to grid are defined as methods.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    IMPLICIT NONE
 

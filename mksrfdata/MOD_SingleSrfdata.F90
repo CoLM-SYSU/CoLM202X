@@ -2,6 +2,13 @@
 
 #ifdef SinglePoint
 MODULE MOD_SingleSrfdata
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to read or write surface data for "SinglePoint". 
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
    USE MOD_Vars_Global
@@ -10,7 +17,7 @@ MODULE MOD_SingleSrfdata
    IMPLICIT NONE
    SAVE
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    REAL(r8), allocatable :: SITE_pfttyp  (:)
    REAL(r8), allocatable :: SITE_pctpfts (:)
 #endif
@@ -21,13 +28,13 @@ MODULE MOD_SingleSrfdata
 #endif
 
    REAL(r8) :: SITE_htop
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    REAL(r8), allocatable :: SITE_htop_pfts (:)
 #endif
 
    REAL(r8), allocatable :: SITE_LAI_clim (:)
    REAL(r8), allocatable :: SITE_SAI_clim (:)
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    REAL(r8), allocatable :: SITE_LAI_pfts_clim (:,:)
    REAL(r8), allocatable :: SITE_SAI_pfts_clim (:,:)
 #endif
@@ -89,13 +96,13 @@ CONTAINS
       ! Local Variables
       INTEGER :: iyear, itime
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
          CALL ncio_read_serial (fsrfdata, 'pfttyp ', SITE_pfttyp )
          ! otherwise, retrieve from database by MOD_LandPFT.F90
       ENDIF
 #endif
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
          CALL ncio_read_serial (fsrfdata, 'pctpfts', SITE_pctpfts)
          ! otherwise, retrieve from database by Aggregation_PercentagesPFT.F90
@@ -114,7 +121,7 @@ CONTAINS
 
       IF ((.not. mksrfdata) .or. USE_SITE_htop) THEN
          ! otherwise, retrieve from database by Aggregation_ForestHeight.F90
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          CALL ncio_read_serial (fsrfdata, 'canopy_height_pfts', SITE_htop_pfts)
 #else
          CALL ncio_read_serial (fsrfdata, 'canopy_height', SITE_htop)
@@ -123,7 +130,7 @@ CONTAINS
 
       IF ((.not. mksrfdata) .or. USE_SITE_LAI) THEN
          ! otherwise, retrieve from database by Aggregation_LAI.F90
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (DEF_LAI_CLIM) THEN
             CALL ncio_read_serial (fsrfdata, 'LAI_pfts_clim', SITE_LAI_pfts_clim)
             CALL ncio_read_serial (fsrfdata, 'SAI_pfts_clim', SITE_SAI_pfts_clim)
@@ -214,10 +221,10 @@ CONTAINS
 
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
       CALL ncio_define_dimension (fsrfdata, 'patch', numpatch)
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
       CALL ncio_define_dimension (fsrfdata, 'pft', numpft)
 #endif
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
       IF (DEF_LAI_CLIM) THEN
@@ -231,11 +238,11 @@ CONTAINS
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
       CALL ncio_write_serial (fsrfdata, 'landtype',  SITE_landtype)
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')
       CALL ncio_put_attr     (fsrfdata, 'pfttyp', 'source', datasource(USE_SITE_pctpfts))
 #endif
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_write_serial (fsrfdata, 'pctpfts', SITE_pctpfts, 'pft')
       CALL ncio_put_attr     (fsrfdata, 'pctpfts', 'source', datasource(USE_SITE_pctpfts))
 #endif
@@ -248,7 +255,7 @@ CONTAINS
       ENDIF
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_write_serial (fsrfdata, 'canopy_height_pfts', SITE_htop_pfts, 'pft')
       CALL ncio_put_attr     (fsrfdata, 'canopy_height_pfts', 'source', datasource(USE_SITE_htop))
 #else
@@ -257,7 +264,7 @@ CONTAINS
 #endif
 
       source = datasource(USE_SITE_LAI)
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (DEF_LAI_CLIM) THEN
          CALL ncio_write_serial (fsrfdata, 'LAI_pfts_clim', SITE_LAI_pfts_clim, 'pft', 'month')
          CALL ncio_write_serial (fsrfdata, 'SAI_pfts_clim', SITE_SAI_pfts_clim, 'pft', 'month')
@@ -368,7 +375,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (allocated(SITE_pfttyp )) deallocate(SITE_pfttyp )
       IF (allocated(SITE_pctpfts)) deallocate(SITE_pctpfts)
 #endif
@@ -378,13 +385,13 @@ CONTAINS
       IF (allocated(SITE_pctcrop)) deallocate(SITE_pctcrop)
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (allocated(SITE_htop_pfts)) deallocate(SITE_htop_pfts)
 #endif
 
       IF (allocated(SITE_LAI_clim)) deallocate(SITE_LAI_clim)
       IF (allocated(SITE_SAI_clim)) deallocate(SITE_SAI_clim)
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (allocated(SITE_LAI_pfts_clim)) deallocate(SITE_LAI_pfts_clim)
       IF (allocated(SITE_SAI_pfts_clim)) deallocate(SITE_SAI_pfts_clim)
 #endif

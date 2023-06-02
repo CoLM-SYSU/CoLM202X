@@ -1,6 +1,6 @@
 #include <define.h>
 
-#if (defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PC)
 
 MODULE MOD_Vars_PCTimeVars
 ! -----------------------------------------------------------------
@@ -17,7 +17,7 @@ MODULE MOD_Vars_PCTimeVars
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
 
-  ! for PC_CLASSIFICATION
+  ! for LULC_IGBP_PC
   REAL(r8), allocatable :: tleaf_c    (:,:) !leaf temperature [K]
   REAL(r8), allocatable :: ldew_c     (:,:) !depth of water on foliage [mm]
 !#ifdef CLM5_INTERCEPTION

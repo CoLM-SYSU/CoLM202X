@@ -16,7 +16,7 @@ MODULE MOD_Albedo
 
 ! PRIVATE MEMBER FUNCTIONS:
   PRIVATE :: twostream
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   PRIVATE :: twostream_mod
   PRIVATE :: twostream_wrap
 #endif
@@ -78,12 +78,12 @@ MODULE MOD_Albedo
   USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
   USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
@@ -91,8 +91,8 @@ MODULE MOD_Albedo
   ! SNICAR
   USE MOD_Aerosol,    only: AerosolMasses
   USE MOD_SnowSnicar,  only: SnowAge_grain
-#ifdef PC_CLASSIFICATION
-  USE MOD_ThreeDCanopy, only: ThreeDCanopy_wrap
+#ifdef LULC_IGBP_PC
+  USE MOD_3DCanopyRadiation, only: ThreeDCanopy_wrap
 #endif
 
   IMPLICIT NONE
@@ -252,7 +252,7 @@ MODULE MOD_Albedo
       ssno(:,:,snl+1) = 1.     !set initial snow absorption
 
 IF (patchtype == 0) THEN
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
       ssun_p(:,:,ps:pe) = 0.
@@ -262,7 +262,7 @@ IF (patchtype == 0) THEN
       extkd_p(ps:pe)    = 0.718
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       pc = patch2pc(ipatch)
       ssun_c(:,:,:,pc) = 0.
       ssha_c(:,:,:,pc) = 0.
@@ -414,7 +414,7 @@ ENDIF
       IF (lai+sai > 1e-6) THEN
 
 IF (patchtype == 0) THEN
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if(defined LULC_USGS || defined LULC_IGBP)
          CALL twostream (chil,rho,tau,green,lai,sai,&
                          czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
@@ -422,13 +422,13 @@ IF (patchtype == 0) THEN
          alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          CALL twostream_wrap (ipatch, czen, albg, &
                               albv, tran, ssun, ssha)
          alb(:,:) = albv(:,:)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
          alb(:,:) = albv(:,:)
 #endif
@@ -569,7 +569,7 @@ ENDIF
       ENDIF
       zmu2 = zmu * zmu
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       ! yuan: to be consistance with CoLM2014, no stem considered
       ! for twostream and leaf optical property calculations
       sai_ = 0.
@@ -751,7 +751,7 @@ ENDIF
 
   END SUBROUTINE twostream
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   SUBROUTINE twostream_mod ( chil, rho, tau, green, lai, sai, &
              coszen, albg, albv, tran, thermk, extkb, extkd, ssun, ssha )
 
@@ -1121,7 +1121,7 @@ ENDIF
   END SUBROUTINE twostream_mod
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   SUBROUTINE twostream_wrap ( ipatch, coszen, albg, &
              albv, tran, ssun, ssha )
 

@@ -1,8 +1,27 @@
 #include <define.h>
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
 MODULE MOD_LandPC
+
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landpc" (Plant Community).
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landpc" refers to pixelset PC.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+   !------------------------------------------------------------------------------------
 
    USE MOD_Pixelset
    IMPLICIT NONE
@@ -17,13 +36,15 @@ MODULE MOD_LandPC
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpc_build ()
+   SUBROUTINE landpc_build (lc_year)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
       USE MOD_LandPatch
       USE MOD_Const_LC
       IMPLICIT NONE
+
+      INTEGER, intent(in) :: lc_year
 
       ! Local Variables
       INTEGER  :: ipatch, ipc, npc, m, npc_glb
@@ -137,6 +158,9 @@ CONTAINS
       IF (p_is_worker) THEN
 
          IF ((numpatch <= 0) .or. (numpc <= 0)) return
+
+         IF (allocated(pc2patch)) deallocate(pc2patch)
+         IF (allocated(patch2pc)) deallocate(patch2pc)
 
          allocate (pc2patch (numpc   ))
          allocate (patch2pc (numpatch))

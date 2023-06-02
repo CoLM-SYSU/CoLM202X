@@ -15,6 +15,8 @@ module MOD_DownscalingForcing
 
   USE MOD_Precision
   use MOD_Qsadv
+  USE MOD_Namelist
+  USE MOD_Const_Physical
   IMPLICIT NONE
 
   real(r8), parameter :: SHR_CONST_MWDAIR = 28.966_r8       ! molecular weight dry air [kg/kmole]
@@ -23,14 +25,8 @@ module MOD_DownscalingForcing
   real(r8), parameter :: SHR_CONST_BOLTZ  = 1.38065e-23_r8  ! Boltzmann's constant [J/K/molecule]
   real(r8), parameter :: SHR_CONST_RGAS   = SHR_CONST_AVOGAD*SHR_CONST_BOLTZ  ! Universal gas constant [J/K/kmole]
   real(r8), parameter :: SHR_CONST_RDAIR  = SHR_CONST_RGAS/SHR_CONST_MWDAIR   ! Dry air gas constant [J/K/kg]
-  real(R8), parameter :: SHR_CONST_TKFRZ  = 273.15_r8       ! freezing T of fresh water [K]
 
-  real(r8), parameter :: cpair  = 1.00464e3_r8  ! specific heat of dry air [J/kg/K]
-  real(r8), parameter :: grav   = 9.80616_r8    ! acceleration of gravity [m/s^2]
-  real(r8), parameter :: denh2o = 1.000e3_r8    ! density of liquid water [kg/m3]
-  real(r8), parameter :: hfus   = 3.337e5_r8    ! latent heat of fusion for ice [J/kg]
   real(r8) :: rair = SHR_CONST_RDAIR  ! Dry air gas constant [J/K/kg]
-  real(r8) :: tfrz = SHR_CONST_TKFRZ  ! freezing T of fresh water [K]
 
   ! On the windward side of the range, annual mean lapse rates of 3.9-5.2 (deg km-1),
   ! substantially smaller than the often-assumed 6.5 (deg km-1).
@@ -198,33 +194,33 @@ contains
           forc_pbot_c(c) = pbot_c
           forc_rho_c(c)  = rhos_c
 
-#if(defined option_precipitation_adjust_I)
-          ! Tesfa et al, 2020: Exploring Topography-Based Methods for Downscaling
-          ! Subgrid Precipitation for Use in Earth System Models. Equation (5)
-          ! https://doi.org/ 10.1029/2019JD031456
+          If (trim(DEF_DS_precipitation_adjust_scheme) == 'I') THEN
+             ! Tesfa et al, 2020: Exploring Topography-Based Methods for Downscaling
+             ! Subgrid Precipitation for Use in Earth System Models. Equation (5)
+             ! https://doi.org/ 10.1029/2019JD031456
 
-          delta_prc_c = forc_prc_g(g) * (forc_topo_c(c) - forc_topo_g(g)) / max_elev_c
-          forc_prc_c(c) = forc_prc_g(g) + delta_prc_c   ! convective precipitation [mm/s]
+             delta_prc_c = forc_prc_g(g) * (forc_topo_c(c) - forc_topo_g(g)) / max_elev_c
+             forc_prc_c(c) = forc_prc_g(g) + delta_prc_c   ! convective precipitation [mm/s]
 
-          delta_prl_c = forc_prl_g(g) * (forc_topo_c(c) - forc_topo_g(g)) / max_elev_c
-          forc_prl_c(c) = forc_prl_g(g) + delta_prl_c   ! large scale precipitation [mm/s]
+             delta_prl_c = forc_prl_g(g) * (forc_topo_c(c) - forc_topo_g(g)) / max_elev_c
+             forc_prl_c(c) = forc_prl_g(g) + delta_prl_c   ! large scale precipitation [mm/s]
 
-#elif(defined option_precipitation_adjust_II)
-          ! Liston, G. E. and Elder, K.: A meteorological distribution system
-          ! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
-          ! Equation (33) and Table 1: chi range from January to December:
-          ! [0.35,0.35,0.35,0.30,0.25,0.20,0.20,0.20,0.20,0.25,0.30,0.35] (1/m)
+          elseif (trim(DEF_DS_precipitation_adjust_scheme) == 'II') THEN
+             ! Liston, G. E. and Elder, K.: A meteorological distribution system
+             ! for high-resolution terrestrial modeling (MicroMet), J. Hydrometeorol., 7, 217-234, 2006.
+             ! Equation (33) and Table 1: chi range from January to December:
+             ! [0.35,0.35,0.35,0.30,0.25,0.20,0.20,0.20,0.20,0.25,0.30,0.35] (1/m)
 
-          delta_prc_c = forc_prc_g(g) * 2.0*0.27e-3*(forc_topo_c(c) - forc_topo_g(g)) &
-                                    /(1.0 - 0.27e-3*(forc_topo_c(c) - forc_topo_g(g)))
-          forc_prc_c(c) = forc_prc_g(g) + delta_prc_c   ! large scale precipitation [mm/s]
+             delta_prc_c = forc_prc_g(g) * 2.0*0.27e-3*(forc_topo_c(c) - forc_topo_g(g)) &
+                /(1.0 - 0.27e-3*(forc_topo_c(c) - forc_topo_g(g)))
+             forc_prc_c(c) = forc_prc_g(g) + delta_prc_c   ! large scale precipitation [mm/s]
 
-          delta_prl_c = forc_prl_g(g) * 2.0*0.27e-3*(forc_topo_c(c) - forc_topo_g(g)) &
-                                    /(1.0 - 0.27e-3*(forc_topo_c(c) - forc_topo_g(g)))
-          forc_prl_c(c) = forc_prl_g(g) + delta_prl_c   ! large scale precipitation [mm/s]
-#else
-
-#endif
+             delta_prl_c = forc_prl_g(g) * 2.0*0.27e-3*(forc_topo_c(c) - forc_topo_g(g)) &
+                /(1.0 - 0.27e-3*(forc_topo_c(c) - forc_topo_g(g)))
+             forc_prl_c(c) = forc_prl_g(g) + delta_prl_c   ! large scale precipitation [mm/s]
+          ELSE
+             ! TODO
+          ENDIF
 
           IF (forc_prl_c(c) < 0) THEN
              write(*,*) 'negative prl', forc_prl_g(g), max_elev_c, forc_topo_c(c), forc_topo_g(g)
@@ -349,42 +345,42 @@ contains
           hsurf_g = forc_topo_g(g)
           hsurf_c = forc_topo_c(c)
 
-#if(defined option_longwave_adjust_I)
-          ! Fiddes and Gruber, 2014, TopoSCALE v.1.0: downscaling gridded climate data in
-          ! complex terrain. Geosci. Model Dev., 7, 387-405. doi:10.5194/gmd-7-387-2014.
-          ! Equation (1) (2) (3); here, the empirical parameters x1 and x2 are different from
-          ! Konzelmann et al. (1994) where x1 = 0.443 and x2 = 8 (optimal for measurements on the Greenland ice sheet)
+          IF (trim(DEF_DS_longwave_adjust_scheme) == 'I') THEN
+             ! Fiddes and Gruber, 2014, TopoSCALE v.1.0: downscaling gridded climate data in
+             ! complex terrain. Geosci. Model Dev., 7, 387-405. doi:10.5194/gmd-7-387-2014.
+             ! Equation (1) (2) (3); here, the empirical parameters x1 and x2 are different from
+             ! Konzelmann et al. (1994) where x1 = 0.443 and x2 = 8 (optimal for measurements on the Greenland ice sheet)
 
-          call Qsadv(forc_t_g(g)  ,forc_pbot_g(g)  ,es_g,dum1,dum2,dum3)
-          call Qsadv(forc_t_c(c),forc_pbot_c(c),es_c,dum1,dum2,dum3)
-          pv_g = forc_q_g(g)  *es_g/100._r8  ! (hPa)
-          pv_c = forc_q_c(c)*es_c/100._r8  ! (hPa)
+             call Qsadv(forc_t_g(g)  ,forc_pbot_g(g)  ,es_g,dum1,dum2,dum3)
+             call Qsadv(forc_t_c(c),forc_pbot_c(c),es_c,dum1,dum2,dum3)
+             pv_g = forc_q_g(g)  *es_g/100._r8  ! (hPa)
+             pv_c = forc_q_c(c)*es_c/100._r8  ! (hPa)
 
-          emissivity_clearsky_g = 0.23_r8 + 0.43_r8*(pv_g/forc_t_g(g))**(1._r8/5.7_r8)
-          emissivity_clearsky_c = 0.23_r8 + 0.43_r8*(pv_c/forc_t_c(c))**(1._r8/5.7_r8)
-          emissivity_allsky_g = forc_lwrad_g(g) / (5.67e-8_r8*forc_t_g(g)**4)
+             emissivity_clearsky_g = 0.23_r8 + 0.43_r8*(pv_g/forc_t_g(g))**(1._r8/5.7_r8)
+             emissivity_clearsky_c = 0.23_r8 + 0.43_r8*(pv_c/forc_t_c(c))**(1._r8/5.7_r8)
+             emissivity_allsky_g = forc_lwrad_g(g) / (5.67e-8_r8*forc_t_g(g)**4)
 
-          forc_lwrad_c(c) = (emissivity_clearsky_c + (emissivity_allsky_g - emissivity_clearsky_g)) &
-                            * 5.67e-8_r8*forc_t_c(c)**4
-#else
-          ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation
-          ! with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the gridcell mean value,
-          ! then normalized to conserve gridcell total energy) (Van Tricht et al., 2016, TC) Figure 6,
-          ! doi:10.5194/tc-10-2379-2016
+             forc_lwrad_c(c) = (emissivity_clearsky_c + (emissivity_allsky_g - emissivity_clearsky_g)) &
+                * 5.67e-8_r8*forc_t_c(c)**4
+          ELSE
+             ! Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation
+             ! with increasing elevation (0.032 W m-2 m-1, limited to 0.5 - 1.5 times the gridcell mean value,
+             ! then normalized to conserve gridcell total energy) (Van Tricht et al., 2016, TC) Figure 6,
+             ! doi:10.5194/tc-10-2379-2016
 
-          if (glaciers(c)) then
-              forc_lwrad_c(c) = forc_lwrad_g(g) - lapse_rate_longwave * (hsurf_c-hsurf_g)
+             if (glaciers(c)) then
+                forc_lwrad_c(c) = forc_lwrad_g(g) - lapse_rate_longwave * (hsurf_c-hsurf_g)
 
-          ! Here we assume that deltaLW = (dLW/dT)*(dT/dz)*deltaz
-          ! We get dLW/dT = 4*eps*sigma*T^3 = 4*LW/T from the Stefan-Boltzmann law,
-          ! evaluated at the mean temp. We assume the same temperature lapse rate as above.
+                ! Here we assume that deltaLW = (dLW/dT)*(dT/dz)*deltaz
+                ! We get dLW/dT = 4*eps*sigma*T^3 = 4*LW/T from the Stefan-Boltzmann law,
+                ! evaluated at the mean temp. We assume the same temperature lapse rate as above.
 
-          else
-              forc_lwrad_c(c) = forc_lwrad_g(g) &
-                       - 4.0_r8 * forc_lwrad_g(g)/(0.5_r8*(forc_t_c(c)+forc_t_g(g))) &
-                       * lapse_rate * (hsurf_c - hsurf_g)
-          end if
-#endif
+             else
+                forc_lwrad_c(c) = forc_lwrad_g(g) &
+                   - 4.0_r8 * forc_lwrad_g(g)/(0.5_r8*(forc_t_c(c)+forc_t_g(g))) &
+                   * lapse_rate * (hsurf_c - hsurf_g)
+             end if
+          endif
 
           ! But ensure that we don't depart too far from the atmospheric forcing value:
           ! negative values of lwrad are certainly bad, but small positive values might

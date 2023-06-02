@@ -1,8 +1,14 @@
-#include <define.h>  
+#include <define.h>
 
 MODULE MOD_SrfdataRestart
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to read/write data of mesh and pixelsets.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
 
-   USE MOD_Namelist, only: DEF_LC_YEAR
    IMPLICIT NONE
 
    INTEGER, parameter, PRIVATE :: rcompress = 1
@@ -10,14 +16,14 @@ MODULE MOD_SrfdataRestart
    ! ----- subroutines -----
    PUBLIC :: mesh_save_to_file
    PUBLIC :: mesh_load_from_file
-   
+
    PUBLIC :: pixelset_save_to_file
    PUBLIC :: pixelset_load_from_file
-   
+
 CONTAINS
-   
+
    ! -----------------------
-   SUBROUTINE mesh_save_to_file (dir_landdata)
+   SUBROUTINE mesh_save_to_file (dir_landdata, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_NetCDFSerial
@@ -27,6 +33,7 @@ CONTAINS
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: dir_landdata
+      INTEGER         , intent(in) :: lc_year
 
       ! Local variables
       CHARACTER(len=256) :: filename, fileblock, cyear
@@ -38,24 +45,24 @@ CONTAINS
       REAL(r8),allocatable :: lon(:), lat(:)
 
       ! add parameter input for time year
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif 
+#endif
       IF (p_is_master) THEN
          write(*,*) 'Saving land elements ...'
          CALL system('mkdir -p ' // trim(dir_landdata) // '/mesh/' // trim(cyear))
       ENDIF
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif 
+#endif
 
       filename = trim(dir_landdata) // '/mesh/' //trim(cyear) // '/mesh.nc'
 
       DO jblk = 1, gblock%nyblk
          DO iblk = 1, gblock%nxblk
 
-#ifdef USEMPI 
+#ifdef USEMPI
             IF (p_is_worker) THEN
                IF (gblock%pio(iblk,jblk) == p_address_io(p_my_group)) THEN
 #endif
@@ -65,10 +72,10 @@ CONTAINS
                      IF ((mesh(ie)%xblk == iblk) .and. (mesh(ie)%yblk == jblk)) THEN
                         nelm = nelm + 1
                         elen = max(elen, mesh(ie)%npxl)
-                     ENDIF 
+                     ENDIF
                   ENDDO
-                  
-#ifdef USEMPI 
+
+#ifdef USEMPI
                   CALL mpi_allreduce (MPI_IN_PLACE, elen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
 #endif
 
@@ -91,38 +98,38 @@ CONTAINS
                      ENDDO
                   ENDIF
 
-#ifdef USEMPI 
+#ifdef USEMPI
                   CALL mpi_gather (nelm, 1, MPI_INTEGER, &
                      MPI_INULL_P, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
-                  
+
                   CALL mpi_gatherv (elmindx, nelm, MPI_INTEGER, &
                      MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
-         
+
                   CALL mpi_gatherv (npxlall, nelm, MPI_INTEGER, &
                      MPI_INULL_P, MPI_INULL_P, MPI_INULL_P, MPI_INTEGER, & ! insignificant on workers
                      p_root, p_comm_group, p_err)
 
                   DO ie = 1, nelm
                      CALL mpi_send (elmpixels(:,:,ie), 2*elen, MPI_INTEGER, &
-                        p_root, mpi_tag_data, p_comm_group, p_err) 
+                        p_root, mpi_tag_data, p_comm_group, p_err)
                   ENDDO
                ENDIF
             ENDIF
 #endif
 
-#ifdef USEMPI 
+#ifdef USEMPI
             IF (p_is_io) THEN
                IF (gblock%pio(iblk,jblk) == p_iam_glb) THEN
-                 
+
                   elen = 0
                   CALL mpi_allreduce (MPI_IN_PLACE, elen, 1, MPI_INTEGER, MPI_MAX, p_comm_group, p_err)
 
                   allocate (nelm_worker (0:p_np_group-1))
-                  nelm_worker(0) = 0                  
+                  nelm_worker(0) = 0
                   CALL mpi_gather (MPI_IN_PLACE, 0, MPI_INTEGER, &
                      nelm_worker, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
-                  
+
                   nelm = sum(nelm_worker)
 
                   allocate (ndsp_worker(0:p_np_group-1))
@@ -135,14 +142,14 @@ CONTAINS
                   CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
                      elmindx, nelm_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
-         
+
                   allocate (npxlall (nelm))
                   CALL mpi_gatherv (MPI_IN_PLACE, 0, MPI_INTEGER, &
                      npxlall, nelm_worker(0:), ndsp_worker(0:), MPI_INTEGER, &
                      p_root, p_comm_group, p_err)
-         
+
                   allocate (elmpixels (2, elen, nelm))
-                  DO iworker = 1, p_np_group-1 
+                  DO iworker = 1, p_np_group-1
                      DO ie = ndsp_worker(iworker)+1, ndsp_worker(iworker)+nelm_worker(iworker)
                         CALL mpi_recv (elmpixels(:,:,ie), 2*elen, MPI_INTEGER, &
                            iworker, mpi_tag_data, p_comm_group, p_stat, p_err)
@@ -169,24 +176,24 @@ CONTAINS
                   ENDIF
                ENDIF
             ENDIF
-                     
+
             IF (allocated (elmindx))   deallocate(elmindx)
             IF (allocated (npxlall))   deallocate(npxlall)
             IF (allocated (elmpixels)) deallocate(elmpixels)
-            
+
             IF (allocated (nelm_worker)) deallocate(nelm_worker)
             IF (allocated (ndsp_worker)) deallocate(ndsp_worker)
 
 #ifdef USEMPI
             CALL mpi_barrier (p_comm_group, p_err)
-#endif 
+#endif
          ENDDO
       ENDDO
 
       IF (p_is_master) THEN
 
          CALL ncio_create_file (filename)
-        
+
          CALL ncio_define_dimension (filename, 'xblk', gblock%nxblk)
          CALL ncio_define_dimension (filename, 'yblk', gblock%nyblk)
          CALL ncio_write_serial (filename, 'nelm_blk', nelm_blk, 'xblk', 'yblk')
@@ -213,19 +220,19 @@ CONTAINS
 
          deallocate (lon)
          deallocate (lat)
-         
+
       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif 
+#endif
 
       IF (p_is_master) write(*,*) 'SAVE land elements done.'
 
    END SUBROUTINE mesh_save_to_file
 
    !------------------------------------
-   SUBROUTINE mesh_load_from_file (dir_landdata)
+   SUBROUTINE mesh_load_from_file (dir_landdata, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -234,6 +241,7 @@ CONTAINS
       USE MOD_Mesh
       IMPLICIT NONE
 
+      INTEGER         , intent(in) :: lc_year
       CHARACTER(len=*), intent(in) :: dir_landdata
 
       ! Local variables
@@ -243,17 +251,15 @@ CONTAINS
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
-#endif 
-      
+#endif
+
       IF (p_is_master) THEN
          write(*,*) 'Loading land elements ...'
       ENDIF
-         
+
       ! add parameter input for time year
-      write(cyear,'(i4.4)') DEF_LC_YEAR
-      print*, cyear
+      write(cyear,'(i4.4)') lc_year
       filename = trim(dir_landdata) // '/mesh/' // trim(cyear) // '/mesh.nc'
-      print*, filename
       CALL ncio_read_bcast_serial (filename, 'nelm_blk', nelm_blk)
 
       IF (p_is_io) THEN
@@ -265,7 +271,7 @@ CONTAINS
             allocate (mesh (numelm))
 
             ndsp = 0
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
@@ -295,14 +301,14 @@ CONTAINS
                ENDIF
             ENDDO
          ENDIF
-         
+
          IF (allocated(elmindx)) deallocate(elmindx)
          IF (allocated(npxl  ))  deallocate(npxl   )
          IF (allocated(pixels))  deallocate(pixels )
-            
+
       ENDIF
 
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
       IF (p_is_io) write(*,'(I10,A,I4)') numelm, ' elements on group ', p_iam_io
 #endif
 
@@ -310,15 +316,15 @@ CONTAINS
       CALL scatter_mesh_from_io_to_worker
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-      
+
       IF (p_is_master) THEN
          write(*,*) 'Loading land elements done.'
       ENDIF
-      
-   END SUBROUTINE mesh_load_from_file 
+
+   END SUBROUTINE mesh_load_from_file
 
    !------------------------------------------------
-   SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset)
+   SUBROUTINE pixelset_save_to_file (dir_landdata, psetname, pixelset, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Block
@@ -329,11 +335,12 @@ CONTAINS
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(in) :: pixelset
+      INTEGER         ,    intent(in) :: lc_year
 
       ! Local variables
       CHARACTER(len=256)   :: filename, cyear
 
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -354,7 +361,7 @@ CONTAINS
       CALL ncio_write_vector (filename, 'ipxstt', trim(psetname), pixelset, pixelset%ipxstt, rcompress)
       CALL ncio_write_vector (filename, 'ipxend', trim(psetname), pixelset, pixelset%ipxend, rcompress)
       CALL ncio_write_vector (filename, 'settyp', trim(psetname), pixelset, pixelset%settyp, rcompress)
-     
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -365,7 +372,7 @@ CONTAINS
 
 
    !---------------------------
-   SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset)
+   SUBROUTINE pixelset_load_from_file (dir_landdata, psetname, pixelset, numset, lc_year)
 
       USE MOD_SPMD_Task
       USE MOD_Block
@@ -375,6 +382,7 @@ CONTAINS
       USE MOD_Pixelset
       IMPLICIT NONE
 
+      INTEGER         ,    intent(in) :: lc_year
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(inout) :: pixelset
@@ -387,30 +395,30 @@ CONTAINS
       INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
       LOGICAL, allocatable :: msk(:)
       LOGICAL :: fexists
-     
-      write(cyear,'(i4.4)') DEF_LC_YEAR 
+
+      write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-         
+
       IF (p_is_master) THEN
          write(*,*) 'Loading Pixel Sets ' // trim(psetname) // ' ...'
       ENDIF
-      
+
       filename = trim(dir_landdata) // '/' // trim(psetname) // '/' // trim(cyear) // '/' // trim(psetname) // '.nc'
 
       IF (p_is_io) THEN
 
          pixelset%nset = 0
-                  
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
-         
+
             CALL get_filename_block (filename, iblk, jblk, fileblock)
 
             inquire (file=trim(fileblock), exist=fexists)
-            IF (fexists) THEN 
+            IF (fexists) THEN
                CALL ncio_inquire_length (fileblock, 'eindex', nset)
                pixelset%nset = pixelset%nset + nset
             ENDIF
@@ -422,15 +430,15 @@ CONTAINS
             allocate (pixelset%eindex (pixelset%nset))
 
             ndsp = 0
-            DO iblkme = 1, gblock%nblkme 
+            DO iblkme = 1, gblock%nblkme
                iblk = gblock%xblkme(iblkme)
                jblk = gblock%yblkme(iblkme)
 
                CALL get_filename_block (filename, iblk, jblk, fileblock)
                inquire (file=trim(fileblock), exist=fexists)
-               IF (fexists) THEN 
+               IF (fexists) THEN
 
-                  CALL ncio_read_serial (fileblock, 'eindex', rbuff) 
+                  CALL ncio_read_serial (fileblock, 'eindex', rbuff)
 
                   nset = size(rbuff)
                   pixelset%eindex(ndsp+1:ndsp+nset) = rbuff
@@ -441,7 +449,7 @@ CONTAINS
             ENDDO
          ENDIF
       ENDIF
-         
+
 
 #ifdef USEMPI
       IF (p_is_io) THEN
@@ -477,28 +485,28 @@ CONTAINS
             DO iproc = 1, p_np_group-1
                msk = (iworker == iproc)
                nsend = count(msk)
-               CALL mpi_send (nsend, 1, MPI_INTEGER, iproc, mpi_tag_size, p_comm_group, p_err) 
+               CALL mpi_send (nsend, 1, MPI_INTEGER, iproc, mpi_tag_size, p_comm_group, p_err)
 
                IF (nsend > 0) THEN
                   allocate (sbuff(nsend))
                   sbuff = pack(pixelset%eindex, msk)
-                  CALL mpi_send (sbuff, nsend, MPI_INTEGER, iproc, mpi_tag_data, p_comm_group, p_err) 
+                  CALL mpi_send (sbuff, nsend, MPI_INTEGER, iproc, mpi_tag_data, p_comm_group, p_err)
                   deallocate (sbuff)
                ENDIF
             ENDDO
          ELSE
             DO iproc = 1, p_np_group-1
                nsend = 0
-               CALL mpi_send (nsend, 1, MPI_INTEGER, iproc, mpi_tag_size, p_comm_group, p_err) 
+               CALL mpi_send (nsend, 1, MPI_INTEGER, iproc, mpi_tag_size, p_comm_group, p_err)
             ENDDO
          ENDIF
 
       ENDIF
 
       IF (p_is_worker) THEN
-         
+
          CALL mpi_recv (nrecv, 1, MPI_INTEGER, p_root, mpi_tag_size, p_comm_group, p_stat, p_err)
-         
+
          pixelset%nset = nrecv
          IF (nrecv > 0) THEN
             allocate (pixelset%eindex (nrecv))
@@ -508,7 +516,7 @@ CONTAINS
       ENDIF
 #endif
 
-      
+
       CALL pixelset%set_vecgs
 
       CALL ncio_read_vector (filename, 'ipxstt', pixelset, pixelset%ipxstt)
@@ -532,7 +540,7 @@ CONTAINS
 
       numset = pixelset%nset
 
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
       IF (p_is_io)  write(*,*) numset, trim(psetname), ' on group', p_iam_io
 #endif
 

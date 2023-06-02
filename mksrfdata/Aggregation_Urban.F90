@@ -1,6 +1,5 @@
 #include <define.h>
 
-#ifdef URBAN_MODEL
 ! ======================================================
 ! Aggreate/screen high-resolution urban dataset
 ! to a lower resolutioin/subset data, suitable for running
@@ -8,7 +7,7 @@
 ! ======================================================
 
 SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
-                              grid_urban_5km, grid_urban_100m, grid_urban_500m)
+                              grid_urban_5km, grid_urban_500m)
 
    USE MOD_Precision
    USE MOD_Namelist
@@ -43,7 +42,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER , intent(in) :: lc_year
 
    TYPE(grid_type), intent(in) :: grid_urban_5km
-   TYPE(grid_type), intent(in) :: grid_urban_100m
+   ! TYPE(grid_type), intent(in) :: grid_urban_100m
    TYPE(grid_type), intent(in) :: grid_urban_500m
 
    ! dimensions
@@ -66,7 +65,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! output variables
    INTEGER , ALLOCATABLE, DIMENSION(:) :: LUCY_coun
-   REAL(r8), ALLOCATABLE, DIMENSION(:) :: LUCY_coun_
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: pop_den
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: pct_tree
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: htop_urb
@@ -183,10 +181,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    IF (p_is_worker) THEN
 
       allocate ( LUCY_coun (numurban))
-      allocate ( LUCY_coun_(numurban))
 
       LUCY_coun (:) = 0
-      LUCY_coun_(:) = 0
 
       ! loop for each urban patch to get the LUCY id of all fine grid
       ! of iurban patch, then assign the most frequence id to this urban patch
@@ -195,8 +191,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
          ! the most frequence id to this urban patch
          LUCY_coun(iurban) = num_max_frequency (LUCY_reg_one)
-         ! for surface diag
-         LUCY_coun_(iurban)= LUCY_coun(iurban)
       ENDDO
 #ifdef USEMPI
       CALL aggregation_worker_done ()
@@ -212,7 +206,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
-   CALL srfdata_map_and_write (LUCY_coun_, landurban%settyp, typindex, m_urb2diag, &
+   CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'LUCY_id', compress = 0, write_mode = 'one')
 #endif
 
@@ -259,6 +253,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
+         where (pop_one < 0)
+            area_one = 0
+         END where
          ! area-weighted average
          pop_den(iurban) = sum(pop_one * area_one) / sum(area_one)
       ENDDO
@@ -394,6 +391,9 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
+         where (gl30_wt_one < 0)
+            area_one = 0
+         END where
          ! only caculate when urban patch have water cover
          IF (sum(area_one) > 0) THEN
             pct_urbwt(iurban) = sum(gl30_wt_one * area_one) / sum(area_one)
@@ -473,6 +473,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! urban type and region id for look-up-table
          urb_typidx = landurban%settyp(iurban)
 
+         ! RG_-45_65_-50_70 of NCAR has no urban data,
+         ! all urban patches of this area are assigned to region 30
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
+
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
@@ -534,9 +540,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
    ! ******* LAI, SAI *******
    ! allocate and read grided LSAI raw data
-   landdir = TRIM(dir_rawdata)//'/lai_5x5/'
-   !TODO: rename Ur
-   suffix  = 'UrLAI_v5'//trim(c5year)
+   landdir = TRIM(dir_rawdata)//'/urban_lai_5x5/'
+   suffix  = 'UrbLAI_v5_'//trim(c5year)
 
    IF (p_is_io) THEN
       CALL allocate_block_data (grid_urban_500m, ulai)
@@ -709,6 +714,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ipxend = landurban%ipxend(iurban)
 
          sumarea = sum(area_one)
+
+         ! same for above, assign reg id for RG_-45_65_-50_70
+         IF (all(reg_typid_one==0)) THEN
+            reg_typid_one(:) = 30
+         ENDIF
 
          ! loop for each finer grid to aggregate data
          DO ipxl = ipxstt, ipxend
@@ -906,4 +916,3 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    ENDIF
 
 END SUBROUTINE Aggregation_Urban
-#endif

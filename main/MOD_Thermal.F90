@@ -114,13 +114,13 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperature
   USE MOD_GroundTem
   USE MOD_Qsadv
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvars
   USE MOD_Vars_PFTimeVars
   USE MOD_Vars_1DPFTFluxes
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
   USE MOD_LandPC
   USE MOD_Vars_PCTimeInvars
   USE MOD_Vars_PCTimeVars
@@ -410,7 +410,7 @@ use MOD_SPMD_Task
 
   INTEGER p, ps, pe, pc
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   REAL(r8), allocatable :: rootr_p (:,:)
   REAL(r8), allocatable :: etrc_p  (:)
   REAL(r8), allocatable :: rstfac_p(:)
@@ -454,7 +454,7 @@ use MOD_SPMD_Task
 #endif
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
   REAL(r8) :: rootr_c (nl_soil,0:N_PFT-1)
   REAL(r8) :: etrc_c  (0:N_PFT-1)
   REAL(r8) :: rstfac_c(0:N_PFT-1)
@@ -577,7 +577,7 @@ IF (patchtype == 0) THEN
 
 !=======================================================================
 !=======================================================================
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if(defined LULC_USGS || defined LULC_IGBP)
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                          forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
@@ -674,7 +674,7 @@ IF (patchtype == 0) THEN
 
 
 !=======================================================================
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
@@ -956,7 +956,7 @@ IF (patchtype == 0) THEN
 #endif
 
 !=======================================================================
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 
       pc = patch2pc(ipatch)
 

@@ -1,5 +1,16 @@
 MODULE MOD_Utils
 
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module contains utilities.
+   !
+   ! History:
+   !    Subroutines lmder, enorm, tridia and polint are moved from other files.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
+
    ! ---- PUBLIC subroutines ----
 
    PUBLIC :: normalize_longitude
@@ -34,10 +45,7 @@ MODULE MOD_Utils
    PUBLIC :: median
 
    PUBLIC :: areaquad
-
-   PUBLIC :: lmder
-
-   PUBLIC :: tridia
+   PUBLIC :: arclen
 
    interface unpack_inplace
       MODULE procedure unpack_inplace_int32
@@ -45,6 +53,17 @@ MODULE MOD_Utils
       MODULE procedure unpack_inplace_lastdim_real8
    END interface unpack_inplace
 
+   PUBLIC :: num_max_frequency
+
+   PUBLIC :: lmder
+   PUBLIC :: lmpar
+   PUBLIC :: qrfac
+   PUBLIC :: qrsolv
+
+   PUBLIC :: enorm
+   PUBLIC :: tridia
+   PUBLIC :: polint
+   
 CONTAINS
 
    !---------------------------------
@@ -2328,7 +2347,6 @@ CONTAINS
 
       INTEGER j
       REAL(r8) gam(1:n),bet
-! -----------------------------------------------------------------
 
       bet = b(1)
       u(1) = r(1) / bet
@@ -2342,5 +2360,60 @@ CONTAINS
       ENDDO
 
    END SUBROUTINE tridia
+
+   ! -----------------------------------------------------------------
+   SUBROUTINE polint(xa,ya,n,x,y)
+
+      ! Given arrays xa and ya, each of length n, and gi
+      ! value y, and an error estimate dy. If P (x) is the p
+      ! P (xa(i)) = ya(i), i = 1, . . . , n, then the returned value
+      ! (from: "Numerical Recipes")
+
+      USE MOD_Precision
+      IMPLICIT NONE
+      INTEGER n,NMAX
+      REAL(r8) dy,x,y,xa(n),ya(n)
+      parameter (NMAX=10)      !Largest anticipated val
+      INTEGER i,m,ns
+      REAL(r8) den,dif,dift,ho,hp,w,c(NMAX),d(NMAX)
+
+      ns=1
+      dif=abs(x-xa(1))
+
+      DO i=1,n       !Here we find the index ns of the closest table entry,
+         dift=abs(x-xa(i))
+         IF(dift.lt.dif) THEN
+            ns=i
+            dif=dift
+         ENDIF
+         c(i)=ya(i)  !and initialize the tableau of c's and d's.
+         d(i)=ya(i)
+      ENDDO
+
+      y=ya(ns)       !This is the initial approximation to y.
+      ns=ns-1
+
+      DO m=1,n-1  !For each column of the tableau,
+         DO i=1,n-m   !we loop over the current c's and d's and update them.
+            ho=xa(i)-x
+            hp=xa(i+m)-x
+            w=c(i+1)-d(i)
+            den=ho-hp
+            IF(den.eq.0.) print*, 'failure in polint'  !two input xa's are identical.
+            den=w/den
+            d(i)=hp*den                                !here the c's and d's are updated.
+            c(i)=ho*den
+         ENDDO
+         IF(2*ns.lt.n-m)THEN  !After each column in the tableau is completed, we decide
+            dy=c(ns+1)        !which correction, c or d, we want to add to our accumulating
+         ELSE                 !value of y, i.e., which path to take through
+            dy=d(ns)          !the tableau-forking up or down. We DO this in such a
+            ns=ns-1           !way as to take the most "straight line" route through the
+         ENDIF                !tableau to its apex, updating ns accordingly to keep track
+         y=y+dy               !of where we are. This route keeps the partial approximations
+      ENDDO                   !centered (insofar as possible) on the target x. T he
+      !last dy added is thus the error indication.
+
+   END SUBROUTINE polint
 
 END MODULE MOD_Utils

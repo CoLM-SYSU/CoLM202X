@@ -141,6 +141,8 @@ CONTAINS
       carflx = carflx*traf_frac &
                *EC*(car_sp*1000)/1e6
       carflx = carflx/3600
+   ELSE
+      carflx = 0.
    ENDIF
 
    ! heat release of motorbikes [W/m2]
@@ -148,7 +150,9 @@ CONTAINS
       motflx = mbkscell*popcell/1000
       motflx = motflx*traf_frac &
                *EM*(car_sp*1000)/1e6
-      motflx   = motflx/3600
+      motflx = motflx/3600
+   ELSE
+      motflx = 0.
    ENDIF
 
    ! heat release of freight [W/m2]
@@ -157,6 +161,8 @@ CONTAINS
       freflx = freflx*traf_frac &
                *EF*(car_sp*1000)/1e6
       freflx = freflx/3600
+   ELSE
+      freflx = 0.
    ENDIF
 
    ! total vehicle heat flux
@@ -266,6 +272,9 @@ CONTAINS
     IF (month==1 .or. month==2) THEN
       mmonth = month + 12
       myear  = year  - 1
+    ELSE
+      mmonth = month
+      myear  = year
     ENDIF
 
     y12 = myear/100

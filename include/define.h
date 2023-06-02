@@ -7,10 +7,10 @@
 
 ! 2. Land TYPE classification :
 !    Select one of the following options.
-#undef USGS_CLASSIFICATION       
-#define IGBP_CLASSIFICATION       
-#undef PFT_CLASSIFICATION       
-#undef PC_CLASSIFICATION       
+#undef LULC_USGS
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
+#undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
 #define URBAN_MODEL
@@ -42,10 +42,6 @@
 #undef LATERAL_FLOW
 #endif
 
-! 7. If defined, soil temperature, wetness and snow depth
-!     are initialized by input data.
-#undef SOILINI
-
 ! 8. Soil reflectance can be predefined values or load from files.
 #undef SOIL_REFL_GUESSED
 #define SOIL_REFL_READ
@@ -70,8 +66,8 @@
 
 ! 12. If defined, BGC model is used.
 #define BGC
-!    Conflicts :  only used when PFT_CLASSIFICATION is defined.
-#ifndef PFT_CLASSIFICATION
+!    Conflicts :  only used when LULC_IGBP_PFT is defined.
+#ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
 ! 12.1 If defined, CROP model is used
@@ -108,8 +104,8 @@
 
 ! 14 If defined, OzoneStress on plant physiology is used
 #undef OzoneStress
-!    Conflicts : only used when PFT_CLASSIFICATION is used
-#ifndef PFT_CLASSIFICATION
+!    Conflicts : only used when LULC_IGBP_PFT is used
+#ifndef LULC_IGBP_PFT
 #undef OzoneStress
 #endif
 ! 14.1 If defined, Ozone Data is used instead of constant ozone concentration
@@ -120,11 +116,6 @@
 #endif
 ! 15 If defined, SNICAR is on
 #undef   SNICAR
-! 16 If defined, ... need some one to finish here
-#undef   Forcing_Downscaling
-#define option_precipitation_adjust_II
-#define option_longwave_adjust_II
-#define option_precip_phase_discrimination_II
 ! 17. If defined, diagnostics in wue model will be output
 #undef WUEdiag
 ! 18. If defined, supercooled soil water is implemented, Niu & Yang (2006)
@@ -132,3 +123,6 @@
 !#ifdef BGC
 !#define supercool_water
 !#endif
+
+! 19. If defined, open Land use and land cover change mode.
+#undef LULCC

@@ -2,6 +2,25 @@
 
 MODULE MOD_LandPatch
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landpatch".
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landpatch" refers to pixelset PATCH.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_Pixelset
@@ -35,7 +54,7 @@ MODULE MOD_LandPatch
 CONTAINS
 
    ! -------------------------------
-   SUBROUTINE landpatch_build ()
+   SUBROUTINE landpatch_build (lc_year)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -56,6 +75,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       ! Local Variables
       CHARACTER(len=256) :: file_patch
       CHARACTER(len=255) :: cyear
@@ -73,12 +93,12 @@ CONTAINS
       INTEGER :: dominant_type
       INTEGER, allocatable :: npxl_types (:)
 
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land patches :'
       ENDIF
 
-#if (defined SinglePoint && defined PFT_CLASSIFICATION && defined CROP)
+#if (defined SinglePoint && defined LULC_IGBP_PFT && defined CROP)
       IF ((SITE_landtype == CROPLAND) .and. (USE_SITE_pctcrop)) THEN
 
          numpatch = count(SITE_pctcrop > 0.)
@@ -117,12 +137,12 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-#ifndef USGS_CLASSIFICATION
-         !TODO-done: add parameter input for time year
-         file_patch = trim(DEF_dir_rawdata)//'landtypes-modis-igbp-'//trim(cyear)//'.nc'
+#ifndef LULC_USGS
+         ! add parameter input for time year
+         file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
          !TODO: need usgs land cover TYPE data
-         !file_patch = trim(DEF_dir_rawdata) // '/landtype_update.nc'
+         file_patch = trim(DEF_dir_rawdata) //'/landtypes/landtype_usgs_update.nc'
 #endif
          CALL ncio_read_block (file_patch, 'landtype', gpatch, patchdata)
 
@@ -186,7 +206,7 @@ CONTAINS
             ENDIF
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             ! For classification of plant function types, merge all land types with soil ground
             DO ipxl = ipxstt, ipxend
                IF (types(ipxl) > 0) THEN
@@ -296,6 +316,9 @@ CONTAINS
          IF (allocated(msk)) deallocate(msk)
       ENDIF
 
+#ifdef URBAN_MODEL
+      continue
+#else
 #if (defined CROP)
       IF (p_is_io) THEN
 !         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
@@ -339,21 +362,22 @@ CONTAINS
 #endif
 #endif
 
-      CALL write_patchfrac (DEF_dir_landdata)
-
+      CALL write_patchfrac (DEF_dir_landdata, lc_year)
+#endif
    END SUBROUTINE landpatch_build
 
    ! -----
-   SUBROUTINE write_patchfrac (dir_landdata)
+   SUBROUTINE write_patchfrac (dir_landdata, lc_year)
 
       USE MOD_Namelist
       USE MOD_NetCDFVector
       IMPLICIT NONE
 
+      INTEGER, intent(in) :: lc_year
       CHARACTER(LEN=*), intent(in) :: dir_landdata
       CHARACTER(len=256) :: lndname, cyear
 
-      write(cyear,'(i4.4)') DEF_LC_YEAR
+      write(cyear,'(i4.4)') lc_year
       CALL system('mkdir -p ' // trim(dir_landdata) // '/landpatch/' // trim(cyear))
 
       lndname = trim(dir_landdata)//'/landpatch/'//trim(cyear)//'/patchfrac_elm.nc'

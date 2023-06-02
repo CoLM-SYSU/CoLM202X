@@ -1,6 +1,6 @@
 #include <define.h>
 
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
 
 MODULE MOD_Vars_PFTimeVars
 ! -----------------------------------------------------------------
@@ -21,7 +21,7 @@ MODULE MOD_Vars_PFTimeVars
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
 
-  ! for PFT_CLASSIFICATION
+  ! for LULC_IGBP_PFT
   REAL(r8), allocatable :: tleaf_p   (:) !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p    (:) !depth of water on foliage [mm]
   real(r8), allocatable :: ldew_p_rain(:)!depth of rain on foliage [mm]
@@ -248,6 +248,8 @@ CONTAINS
          IF (numpft > 0) THEN
             deallocate (tleaf_p  ) !leaf temperature [K]
             deallocate (ldew_p   ) !depth of water on foliage [mm]
+            deallocate (ldew_p_rain)
+            deallocate (ldew_p_snow)
             deallocate (sigf_p   ) !fraction of veg cover, excluding snow-covered veg [-]
             deallocate (tlai_p   ) !leaf area index
             deallocate (lai_p    ) !leaf area index

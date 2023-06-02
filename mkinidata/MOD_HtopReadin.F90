@@ -18,7 +18,7 @@ MODULE MOD_HtopReadin
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE HTOP_readin (dir_landdata)
+   SUBROUTINE HTOP_readin (dir_landdata, lc_year)
 
 ! ===========================================================
 ! Read in the canopy tree top height
@@ -31,37 +31,39 @@ MODULE MOD_HtopReadin
          USE MOD_Const_PFT
          USE MOD_Vars_TimeInvariants
          USE MOD_LandPatch
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          USE MOD_LandPFT
          USE MOD_Vars_PFTimeInvars
          USE MOD_Vars_PFTimeVars
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          USE MOD_LandPC
          USE MOD_Vars_PCTimeInvars
          USE MOD_Vars_PCTimeVars
 #endif
-         USE MOD_NetCDFVector 
+         USE MOD_NetCDFVector
 #ifdef SinglePoint
          USE MOD_SingleSrfdata
 #endif
 
          IMPLICIT NONE
 
+         INTEGER, intent(in) :: lc_year    ! which year of land cover data used
          character(LEN=256), INTENT(in) :: dir_landdata
 
          ! Local Variables
          character(LEN=256) :: c
-         character(LEN=256) :: landdir, lndname
+         character(LEN=256) :: landdir, lndname, cyear
          integer :: i,j,t,p,ps,pe,m,n,npatch
 
          REAL(r8), allocatable :: htoplc  (:)
          REAL(r8), allocatable :: htoppft (:)
 
-         landdir = trim(dir_landdata) // '/htop'
+         write(cyear,'(i4.4)') lc_year
+         landdir = trim(dir_landdata) // '/htop/' // trim(cyear)
 
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
 
          IF (p_is_worker) THEN
             do npatch = 1, numpatch
@@ -75,7 +77,7 @@ MODULE MOD_HtopReadin
 
 #endif
 
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
 #ifdef SinglePoint
          allocate (htoplc (numpatch))
          htoplc(:) = SITE_htop
@@ -109,7 +111,7 @@ MODULE MOD_HtopReadin
 #endif
 
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 #ifdef SinglePoint
          allocate(htoppft(numpft))
          htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
@@ -156,7 +158,7 @@ MODULE MOD_HtopReadin
          IF (allocated(htoppft)) deallocate(htoppft)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 #ifdef SinglePoint
          allocate(htoplc(1))
          htoplc(:) = sum(SITE_htop_pfts * SITE_pctpfts)

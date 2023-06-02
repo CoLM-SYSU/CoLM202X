@@ -3,6 +3,18 @@
 #if (defined CATCHMENT) 
 MODULE MOD_HRUVector
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !    
+   !    Address of Data associated with HRU.
+   !
+   !    To output a vector, Data is gathered from worker processes directly to master.
+   !    "hru_data_address" stores information on how to reorganize data gathered.
+   !    The output data in vector is sorted by global element index (i.e. catchment index)
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE

@@ -12,8 +12,6 @@ MODULE MOD_Aerosol
   !
   ! !PUBLIC DATA MEMBERS:
   !-----------------------------------------------------------------------
-    !integer, parameter :: begc = 1      !  beginning column index
-    !integer, parameter :: endc = 1      !  beginning and ending column index
     real(r8) :: dtime = 1800.0_r8       !  land model time step (sec)
 
     logical, parameter :: use_extrasnowlayers = .false.
@@ -79,75 +77,72 @@ contains
 
     !-----------------------------------------------------------------------
 
-      !do c = begc, endc
-         do j = -nlevsno+1, 0
+    do j = -nlevsno+1, 0
 
-            ! layer mass of snow:
-            snowmass = h2osno_ice(j) + h2osno_liq(j)
+      ! layer mass of snow:
+      snowmass = h2osno_ice(j) + h2osno_liq(j)
 
-            if (.not. use_extrasnowlayers) then
-               ! Correct the top layer aerosol mass to account for snow capping.
-               ! This approach conserves the aerosol mass concentration
-               ! (but not the aerosol amss) when snow-capping is invoked
+      if (.not. use_extrasnowlayers) then
+         ! Correct the top layer aerosol mass to account for snow capping.
+         ! This approach conserves the aerosol mass concentration
+         ! (but not the aerosol amss) when snow-capping is invoked
 
-               if (j == snl+1) then
-                  if (do_capsnow) then
+         if (j == snl+1) then
+            if (do_capsnow) then
 
-                     snowcap_scl_fct = snowmass / (snowmass + (qflx_snwcp_ice*dtime))
+               snowcap_scl_fct = snowmass / (snowmass + (qflx_snwcp_ice*dtime))
 
-                     mss_bcpho(j) = mss_bcpho(j)*snowcap_scl_fct
-                     mss_bcphi(j) = mss_bcphi(j)*snowcap_scl_fct
-                     mss_ocpho(j) = mss_ocpho(j)*snowcap_scl_fct
-                     mss_ocphi(j) = mss_ocphi(j)*snowcap_scl_fct
+               mss_bcpho(j) = mss_bcpho(j)*snowcap_scl_fct
+               mss_bcphi(j) = mss_bcphi(j)*snowcap_scl_fct
+               mss_ocpho(j) = mss_ocpho(j)*snowcap_scl_fct
+               mss_ocphi(j) = mss_ocphi(j)*snowcap_scl_fct
 
-                     mss_dst1(j)  = mss_dst1(j)*snowcap_scl_fct
-                     mss_dst2(j)  = mss_dst2(j)*snowcap_scl_fct
-                     mss_dst3(j)  = mss_dst3(j)*snowcap_scl_fct
-                     mss_dst4(j)  = mss_dst4(j)*snowcap_scl_fct
-                  endif
-               endif
+               mss_dst1(j)  = mss_dst1(j)*snowcap_scl_fct
+               mss_dst2(j)  = mss_dst2(j)*snowcap_scl_fct
+               mss_dst3(j)  = mss_dst3(j)*snowcap_scl_fct
+               mss_dst4(j)  = mss_dst4(j)*snowcap_scl_fct
             endif
+         endif
+      endif
 
-            if (j >= snl+1) then
+      if (j >= snl+1) then
 
-               mss_cnc_bcphi(j) = mss_bcphi(j) / snowmass
-               mss_cnc_bcpho(j) = mss_bcpho(j) / snowmass
+         mss_cnc_bcphi(j) = mss_bcphi(j) / snowmass
+         mss_cnc_bcpho(j) = mss_bcpho(j) / snowmass
 
-               mss_cnc_ocphi(j) = mss_ocphi(j) / snowmass
-               mss_cnc_ocpho(j) = mss_ocpho(j) / snowmass
+         mss_cnc_ocphi(j) = mss_ocphi(j) / snowmass
+         mss_cnc_ocpho(j) = mss_ocpho(j) / snowmass
 
-               mss_cnc_dst1(j)  = mss_dst1(j)  / snowmass
-               mss_cnc_dst2(j)  = mss_dst2(j)  / snowmass
-               mss_cnc_dst3(j)  = mss_dst3(j)  / snowmass
-               mss_cnc_dst4(j)  = mss_dst4(j)  / snowmass
+         mss_cnc_dst1(j)  = mss_dst1(j)  / snowmass
+         mss_cnc_dst2(j)  = mss_dst2(j)  / snowmass
+         mss_cnc_dst3(j)  = mss_dst3(j)  / snowmass
+         mss_cnc_dst4(j)  = mss_dst4(j)  / snowmass
 
-            else
-               ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
-               !snw_rds(j)       = 0._r8
-               snw_rds(j)       = snw_rds_min
+      else
+         ! 01/10/2023, yuan: set empty snow layers to snw_rds_min
+         !snw_rds(j)       = 0._r8
+         snw_rds(j)       = snw_rds_min
 
-               mss_bcpho(j)     = 0._r8
-               mss_bcphi(j)     = 0._r8
-               mss_cnc_bcphi(j) = 0._r8
-               mss_cnc_bcpho(j) = 0._r8
+         mss_bcpho(j)     = 0._r8
+         mss_bcphi(j)     = 0._r8
+         mss_cnc_bcphi(j) = 0._r8
+         mss_cnc_bcpho(j) = 0._r8
 
-               mss_ocpho(j)     = 0._r8
-               mss_ocphi(j)     = 0._r8
-               mss_cnc_ocphi(j) = 0._r8
-               mss_cnc_ocpho(j) = 0._r8
+         mss_ocpho(j)     = 0._r8
+         mss_ocphi(j)     = 0._r8
+         mss_cnc_ocphi(j) = 0._r8
+         mss_cnc_ocpho(j) = 0._r8
 
-               mss_dst1(j)      = 0._r8
-               mss_dst2(j)      = 0._r8
-               mss_dst3(j)      = 0._r8
-               mss_dst4(j)      = 0._r8
-               mss_cnc_dst1(j)  = 0._r8
-               mss_cnc_dst2(j)  = 0._r8
-               mss_cnc_dst3(j)  = 0._r8
-               mss_cnc_dst4(j)  = 0._r8
-            endif
-         enddo
-
-      !enddo
+         mss_dst1(j)      = 0._r8
+         mss_dst2(j)      = 0._r8
+         mss_dst3(j)      = 0._r8
+         mss_dst4(j)      = 0._r8
+         mss_cnc_dst1(j)  = 0._r8
+         mss_cnc_dst2(j)  = 0._r8
+         mss_cnc_dst3(j)  = 0._r8
+         mss_cnc_dst4(j)  = 0._r8
+      endif
+    enddo
 
   end subroutine AerosolMasses
 
@@ -209,79 +204,69 @@ contains
     ! (cloud-borne) aerosol, and "pho" flavors are interstitial
     ! aerosol. "wet" and "dry" fluxes of BC and OC specified here are
     ! purely diagnostic
-    !do c = begc, endc
 
-       flx_bc_dep_phi   = forc_aer(3)
-       flx_bc_dep_pho   = forc_aer(1) + forc_aer(2)
-       flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
+    flx_bc_dep_phi   = forc_aer(3)
+    flx_bc_dep_pho   = forc_aer(1) + forc_aer(2)
+    flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
 
-       flx_oc_dep_phi   = forc_aer(6)
-       flx_oc_dep_pho   = forc_aer(4) + forc_aer(5)
-       flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
+    flx_oc_dep_phi   = forc_aer(6)
+    flx_oc_dep_pho   = forc_aer(4) + forc_aer(5)
+    flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
 
-       flx_dst_dep_wet1 = forc_aer(7)
-       flx_dst_dep_dry1 = forc_aer(8)
-       flx_dst_dep_wet2 = forc_aer(9)
-       flx_dst_dep_dry2 = forc_aer(10)
-       flx_dst_dep_wet3 = forc_aer(11)
-       flx_dst_dep_dry3 = forc_aer(12)
-       flx_dst_dep_wet4 = forc_aer(13)
-       flx_dst_dep_dry4 = forc_aer(14)
-       flx_dst_dep      = forc_aer(7) + forc_aer(8) + forc_aer(9) + &
-                             forc_aer(10) + forc_aer(11) + forc_aer(12) + &
-                             forc_aer(13) + forc_aer(14)
-    !end do
-
+    flx_dst_dep_wet1 = forc_aer(7)
+    flx_dst_dep_dry1 = forc_aer(8)
+    flx_dst_dep_wet2 = forc_aer(9)
+    flx_dst_dep_dry2 = forc_aer(10)
+    flx_dst_dep_wet3 = forc_aer(11)
+    flx_dst_dep_dry3 = forc_aer(12)
+    flx_dst_dep_wet4 = forc_aer(13)
+    flx_dst_dep_dry4 = forc_aer(14)
+    flx_dst_dep      = forc_aer(7) + forc_aer(8) + forc_aer(9) + &
+                          forc_aer(10) + forc_aer(11) + forc_aer(12) + &
+                          forc_aer(13) + forc_aer(14)
 #else
 
     ! Original mapping for bulk aerosol deposition. phi and pho BC/OC
     ! species are distinguished in model, other fluxes (e.g., dry and
     ! wet BC/OC) are purely diagnostic.
 
-      !do c = begc,endc
+    flx_bc_dep_phi   = forc_aer(1) + forc_aer(3)
+    flx_bc_dep_pho   = forc_aer(2)
+    flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
 
-         flx_bc_dep_phi   = forc_aer(1) + forc_aer(3)
-         flx_bc_dep_pho   = forc_aer(2)
-         flx_bc_dep       = forc_aer(1) + forc_aer(2) + forc_aer(3)
+    flx_oc_dep_phi   = forc_aer(4) + forc_aer(6)
+    flx_oc_dep_pho   = forc_aer(5)
+    flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
 
-         flx_oc_dep_phi   = forc_aer(4) + forc_aer(6)
-         flx_oc_dep_pho   = forc_aer(5)
-         flx_oc_dep       = forc_aer(4) + forc_aer(5) + forc_aer(6)
-
-         flx_dst_dep_wet1 = forc_aer(7)
-         flx_dst_dep_dry1 = forc_aer(8)
-         flx_dst_dep_wet2 = forc_aer(9)
-         flx_dst_dep_dry2 = forc_aer(10)
-         flx_dst_dep_wet3 = forc_aer(11)
-         flx_dst_dep_dry3 = forc_aer(12)
-         flx_dst_dep_wet4 = forc_aer(13)
-         flx_dst_dep_dry4 = forc_aer(14)
-         flx_dst_dep      = forc_aer(7) + forc_aer(8) + forc_aer(9) + &
-                               forc_aer(10) + forc_aer(11) + forc_aer(12) + &
-                               forc_aer(13) + forc_aer(14)
-      !end do
+    flx_dst_dep_wet1 = forc_aer(7)
+    flx_dst_dep_dry1 = forc_aer(8)
+    flx_dst_dep_wet2 = forc_aer(9)
+    flx_dst_dep_dry2 = forc_aer(10)
+    flx_dst_dep_wet3 = forc_aer(11)
+    flx_dst_dep_dry3 = forc_aer(12)
+    flx_dst_dep_wet4 = forc_aer(13)
+    flx_dst_dep_dry4 = forc_aer(14)
+    flx_dst_dep      = forc_aer(7) + forc_aer(8) + forc_aer(9) + &
+                         forc_aer(10) + forc_aer(11) + forc_aer(12) + &
+                         forc_aer(13) + forc_aer(14)
 #endif
 
-      ! aerosol deposition fluxes into top layer
-      ! This is done after the inter-layer fluxes so that some aerosol
-      ! is in the top layer after deposition, and is not immediately
-      ! washed out before radiative calculations are done
+    ! aerosol deposition fluxes into top layer
+    ! This is done after the inter-layer fluxes so that some aerosol
+    ! is in the top layer after deposition, and is not immediately
+    ! washed out before radiative calculations are done
 
+    mss_bcphi(snl+1) = mss_bcphi(snl+1) + (flx_bc_dep_phi*dtime)
+    mss_bcpho(snl+1) = mss_bcpho(snl+1) + (flx_bc_dep_pho*dtime)
+    mss_ocphi(snl+1) = mss_ocphi(snl+1) + (flx_oc_dep_phi*dtime)
+    mss_ocpho(snl+1) = mss_ocpho(snl+1) + (flx_oc_dep_pho*dtime)
 
-      !do c = begc,endc
-         mss_bcphi(snl+1) = mss_bcphi(snl+1) + (flx_bc_dep_phi*dtime)
-         mss_bcpho(snl+1) = mss_bcpho(snl+1) + (flx_bc_dep_pho*dtime)
-         mss_ocphi(snl+1) = mss_ocphi(snl+1) + (flx_oc_dep_phi*dtime)
-         mss_ocpho(snl+1) = mss_ocpho(snl+1) + (flx_oc_dep_pho*dtime)
-
-         mss_dst1(snl+1) = mss_dst1(snl+1) + (flx_dst_dep_dry1 + flx_dst_dep_wet1)*dtime
-         mss_dst2(snl+1) = mss_dst2(snl+1) + (flx_dst_dep_dry2 + flx_dst_dep_wet2)*dtime
-         mss_dst3(snl+1) = mss_dst3(snl+1) + (flx_dst_dep_dry3 + flx_dst_dep_wet3)*dtime
-         mss_dst4(snl+1) = mss_dst4(snl+1) + (flx_dst_dep_dry4 + flx_dst_dep_wet4)*dtime
-      !end do
+    mss_dst1(snl+1) = mss_dst1(snl+1) + (flx_dst_dep_dry1 + flx_dst_dep_wet1)*dtime
+    mss_dst2(snl+1) = mss_dst2(snl+1) + (flx_dst_dep_dry2 + flx_dst_dep_wet2)*dtime
+    mss_dst3(snl+1) = mss_dst3(snl+1) + (flx_dst_dep_dry3 + flx_dst_dep_wet3)*dtime
+    mss_dst4(snl+1) = mss_dst4(snl+1) + (flx_dst_dep_dry4 + flx_dst_dep_wet4)*dtime
 
   end subroutine AerosolFluxes
 
 
 END MODULE MOD_Aerosol
-

@@ -199,8 +199,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         lakedepth(i)    ,dz_lake(1:,i)                                     ,&
 
       ! LUCY INPUT PARAMETERS
-        fix_holiday(u,:),week_holiday(u,:),hum_prof(u,:)  ,pop_den(u)      ,&
-        vehicle(u,:)    ,weh_prof(u,:)   ,wdh_prof(u,:)                    ,&
+        fix_holiday(:,u),week_holiday(:,u),hum_prof(:,u)  ,pop_den(u)      ,&
+        vehicle(:,u)    ,weh_prof(:,u)   ,wdh_prof(:,u)                    ,&
 
       ! SOIL INFORMATION AND LAKE DEPTH
         vf_quartz(1:,i) ,vf_gravels(1:,i),vf_om(1:,i)     ,vf_sand(1:,i)   ,&

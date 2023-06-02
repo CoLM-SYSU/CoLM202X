@@ -1,7 +1,7 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_LakeDepth ( &
-      gland, dir_rawdata, dir_model_landdata)
+      gland, dir_rawdata, dir_model_landdata, lc_year)
 
    ! ----------------------------------------------------------------------
    ! DESCRIPTION:
@@ -23,6 +23,9 @@ SUBROUTINE Aggregation_LakeDepth ( &
    ! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
    !
    ! Created by Yongjiu Dai, 02/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
@@ -49,22 +52,24 @@ SUBROUTINE Aggregation_LakeDepth ( &
    IMPLICIT NONE
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gland
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname
+   CHARACTER(len=256) :: landdir, lndname, cyear
    INTEGER :: L, ipatch
 
    TYPE (block_data_real8_2d) :: lakedepth
    REAL(r8), allocatable :: lakedepth_patches(:), lakedepth_one(:)
 #ifdef SrfdataDiag
-   INTEGER :: typlake(1) = (/17/)   
+   INTEGER :: typlake(1) = (/17/)
 #endif
 
-   landdir = trim(dir_model_landdata) // '/lakedepth/'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/lakedepth/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -84,7 +89,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #endif
 
    ! ................................................
-   ! ... (2) global lake coverage and lake depth
+   ! global lake coverage and lake depth
    ! ................................................
    lndname = trim(dir_rawdata)//'/lake_depth.nc'
 
@@ -108,16 +113,16 @@ SUBROUTINE Aggregation_LakeDepth ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L==16)THEN  ! LAND WATER BODIES (16)
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
             CALL aggregation_request_data (landpatch, ipatch, gland, &
@@ -141,7 +146,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
    CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 
-   ! Write-out the lake depth of the lake pacth in the gridcell
 #ifndef SinglePoint
    lndname = trim(landdir)//'/lakedepth_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
@@ -149,7 +153,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
    CALL ncio_write_vector (lndname, 'lakedepth_patches', 'patch', landpatch, lakedepth_patches, 1)
 
 #ifdef SrfdataDiag
-   lndname = trim(dir_model_landdata)//'/diag/lakedepth.nc'
+   lndname = trim(dir_model_landdata)//'/diag/lakedepth_'//trim(cyear)//'.nc'
    CALL srfdata_map_and_write (lakedepth_patches, landpatch%settyp, typlake, m_patch2diag, &
       -1.0e36_r8, lndname, 'lakedepth', compress = 1, write_mode = 'one')
 #endif

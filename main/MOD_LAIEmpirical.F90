@@ -45,7 +45,7 @@ MODULE MOD_LAIEmpirical
    integer j       !number of soil layers
 
 !-----------------------------------------------------------------------
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
 ! Maximum fractional cover of vegetation [-]
    real(r8), dimension(24), parameter :: &
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
@@ -93,7 +93,7 @@ MODULE MOD_LAIEmpirical
 #elif (defined OGE_CLASSIFICATION)
 
 #else
-!#elif(defined IGBP_CLASSIFICATION)
+!#elif(defined LULC_IGBP)
    real(r8), dimension(17), parameter :: &
    vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,&
           1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0/)
