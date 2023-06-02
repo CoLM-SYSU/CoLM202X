@@ -274,12 +274,12 @@ OBJS_MAIN = \
 				MOD_SoilThermalParameters.o               \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
-				MOD_Meltf.o                               \
+				MOD_PhaseChange.o                               \
 				MOD_Glacier.o                             \
 				MOD_Lake.o                                \
 				MOD_SimpleOcean.o                         \
 				MOD_GroundFluxes.o                        \
-				MOD_GroundTem.o                           \
+				MOD_GroundTemperature.o                           \
 				MOD_LeafInterception.o                    \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \
