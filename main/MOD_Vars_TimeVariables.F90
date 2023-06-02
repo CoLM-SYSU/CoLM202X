@@ -36,11 +36,11 @@ SAVE
       real(r8), allocatable :: smp(:,:)         ! soil matrix potential [mm]
       real(r8), allocatable :: hk (:,:)         ! hydraulic conductivity [mm h2o/s]
       real(r8), allocatable :: rootr(:,:)       ! water exchange between soil and root. Positive: soil->root [?]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
       real(r8), allocatable :: vegwp(:,:)       ! vegetation water potential [mm]
       real(r8), allocatable :: gs0sun   (:)     ! working copy of sunlit stomata conductance
       real(r8), allocatable :: gs0sha   (:)     ! working copy of shalit stomata conductance
-#endif
+!end plant hydraulic variables
 #ifdef OzoneStress
       real(r8), allocatable :: o3coefv_sun(:) ! Ozone stress factor for photosynthesis on sunlit leaf
       real(r8), allocatable :: o3coefv_sha(:) ! Ozone stress factor for photosynthesis on shaded leaf
@@ -179,11 +179,11 @@ SAVE
         allocate (hk         (1:nl_soil,numpatch))
         allocate (h2osoi     (1:nl_soil,numpatch))
         allocate (rootr      (1:nl_soil,numpatch))
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
         allocate (vegwp      (1:nvegwcs,numpatch))
         allocate (gs0sun               (numpatch))
         allocate (gs0sha               (numpatch))
-#endif
+!end plant hydraulic variables
 #ifdef OzoneStress
         allocate (o3coefv_sun          (numpatch)) ! Ozone stress factor for photosynthesis on sunlit leaf
         allocate (o3coefv_sha          (numpatch)) ! Ozone stress factor for photosynthesis on shaded leaf
@@ -329,11 +329,11 @@ SAVE
            deallocate (hk  )
            deallocate (h2osoi )
            deallocate (rootr  )
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
            deallocate (vegwp  )
            deallocate (gs0sun )
            deallocate (gs0sha )
-#endif
+!End plant hydraulic variables
 #ifdef OzoneStress
            deallocate (o3coefv_sun) ! Ozone stress factor for photosynthesis on sunlit leaf
            deallocate (o3coefv_sha) ! Ozone stress factor for photosynthesis on shaded leaf
@@ -526,9 +526,9 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
-#ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
+     end if
 
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
@@ -541,11 +541,11 @@ SAVE
      call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, wice_soisno, compress) !  ice lens in layers [kg/m2]
      call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'patch', landpatch, smp, compress) !  soil matrix potential [mm]
      call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'patch', landpatch, hk, compress) !  hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
-     call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress) !  vegetation water potential [mm]
-     call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
-     call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress) !  vegetation water potential [mm]
+        call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress) !  working copy of sunlit stomata conductance
+        call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress) !  working copy of shalit stomata conductance
+     end if
 #ifdef OzoneStress
      call ncio_write_vector (file_restart, 'lai_old    ', 'patch', landpatch, lai_old    , compress)
      call ncio_write_vector (file_restart, 'o3uptakesun', 'patch', landpatch, o3uptakesun, compress)
@@ -679,11 +679,11 @@ SAVE
      call ncio_read_vector (file_restart, 'wice_soisno', nl_soil-maxsnl, landpatch, wice_soisno) !  ice lens in layers [kg/m2]
      call ncio_read_vector (file_restart, 'smp',         nl_soil,        landpatch, smp        ) !  soil matrix potential [mm]
      call ncio_read_vector (file_restart, 'hk',          nl_soil,        landpatch, hk         ) !  hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
-     call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) !  vegetation water potential [mm]
-     call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) !  working copy of sunlit stomata conductance
-     call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) !  working copy of shalit stomata conductance
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) !  vegetation water potential [mm]
+        call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) !  working copy of sunlit stomata conductance
+        call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) !  working copy of shalit stomata conductance
+     end if
 #ifdef OzoneStress
      call ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
      call ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
@@ -805,11 +805,11 @@ SAVE
      call check_vector_data ('wice_soisno ', wice_soisno) !  ice lens in layers [kg/m2]
      call check_vector_data ('smp         ', smp        ) !  soil matrix potential [mm]
      call check_vector_data ('hk          ', hk         ) !  hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
-     call check_vector_data ('vegwp       ', vegwp      ) !  vegetation water potential [mm]
-     call check_vector_data ('gs0sun      ', gs0sun     ) !  working copy of sunlit stomata conductance
-     call check_vector_data ('gs0sha      ', gs0sha     ) !  working copy of shalit stomata conductance
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call check_vector_data ('vegwp       ', vegwp      ) !  vegetation water potential [mm]
+        call check_vector_data ('gs0sun      ', gs0sun     ) !  working copy of sunlit stomata conductance
+        call check_vector_data ('gs0sha      ', gs0sha     ) !  working copy of shalit stomata conductance
+     end if
 #ifdef OzoneStress
      call check_vector_data ('o3coefv_sun', o3coefv_sun)
      call check_vector_data ('o3coefv_sha', o3coefv_sha)

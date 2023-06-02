@@ -4,7 +4,7 @@ MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
 USE MOD_Precision
-USE MOD_Namelist, ONLY: DEF_Interception_scheme
+USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS
 USE MOD_SPMD_Task
 
 IMPLICIT NONE
@@ -36,10 +36,10 @@ CONTAINS
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
               ustar   ,qstar   ,tstar   ,fm      ,fh      ,fq      ,&
               rootfr                             ,&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
               psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
-#endif
+!end plant hydraulic variables
 #ifdef WUEdiag
               assimsun,etrsun  ,assimsha,etrsha  ,&
               assim_RuBP_sun   ,assim_Rubisco_sun, cisun  ,Dsun    ,gammasun, &
@@ -96,9 +96,7 @@ CONTAINS
   USE MOD_AssimStomataConductance
   USE MOD_Vars_TimeInvariants, only: patchclass
   USE MOD_Const_LC, only: z0mr, displar
-#ifdef PLANT_HYDRAULIC_STRESS
-  use MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
-#endif
+  USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
 #ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
 #endif
@@ -134,7 +132,8 @@ CONTAINS
         trop,       &! temperature coefficient in gs-a model         (273+25)
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
-#ifdef PLANT_HYDRAULIC_STRESS
+        extkn        ! coefficient of leaf nitrogen allocation
+  REAL(r8), intent(in) :: & ! for plant hydraulic scheme
         kmax_sun,   &
         kmax_sha,   &
         kmax_xyl,   &
@@ -143,9 +142,11 @@ CONTAINS
         psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
-        ck,         &! shape-fitting parameter for vulnerability curve (-)
-#endif
-        extkn        ! coefficient of leaf nitrogen allocation
+        ck           ! shape-fitting parameter for vulnerability curve (-)
+  REAL(r8), intent(inout) :: &
+        vegwp(1:nvegwcs),&! vegetation water potential
+        gs0sun,     &!
+        gs0sha       !
 
 ! input variables
   REAL(r8), intent(in) :: &
@@ -201,11 +202,6 @@ CONTAINS
 		hpbl        ! atmospheric boundary layer height [m]
 
   REAL(r8), intent(inout) :: &
-#ifdef PLANT_HYDRAULIC_STRESS
-        vegwp(1:nvegwcs),&! vegetation water potential
-        gs0sun,      &!
-        gs0sha,      &!
-#endif
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
         ldew_rain,       &! depth of rain on foliage [mm]
@@ -397,11 +393,9 @@ CONTAINS
 #ifndef WUEdiag
    real(r8) etrsun,etrsha
 #endif
-#ifdef PLANT_HYDRAULIC_STRESS
    real(r8) gb_mol_sun,gb_mol_sha
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
-#endif
 
    INTEGER,  parameter :: zd_opt = 3
    INTEGER,  parameter :: rb_opt = 3
@@ -608,8 +602,8 @@ CONTAINS
 
             eah = qaf * psrf / ( 0.622 + 0.378 * qaf )    !pa
 
-#ifdef PLANT_HYDRAULIC_STRESS
-            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
+            if(DEF_USE_PLANTHYDRAULICS) then
+               call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
                      dz_soi    ,rootfr    ,psrf       ,qsatl      ,qsatl      ,&
                      qaf       ,tl        ,tl         ,rbsun      ,rbsha      ,&
                      raw       ,rd        ,rstfacsun  ,rstfacsha  ,cintsun    ,&
@@ -619,8 +613,8 @@ CONTAINS
                      ck        ,smp       ,hk         ,hksati     ,vegwp      ,&
                      etrsun    ,etrsha    ,rootr      ,sigf       ,qg         ,&
                      qm        ,gs0sun    ,gs0sha     ,k_soil_root,k_ax_root  )
-            etr = etrsun + etrsha
-#endif
+               etr = etrsun + etrsha
+            end if
 
 ! Sunlit leaves
             CALL stomata  (vmax25   ,effcon ,slti   ,hlti    ,&
@@ -654,14 +648,13 @@ CONTAINS
 
             gssun = min( 1.e6, 1./(rssun*tl/tprcor) ) / cintsun(3) * 1.e6
             gssha = min( 1.e6, 1./(rssha*tl/tprcor) ) / cintsha(3) * 1.e6
-#ifdef PLANT_HYDRAULIC_STRESS
-            gs0sun  = gssun/amax1(rstfacsun,1.e-2)
-            gs0sha  = gssha/amax1(rstfacsha,1.e-2)
+            if(DEF_USE_PLANTHYDRAULICS) then
+               gs0sun  = gssun/amax1(rstfacsun,1.e-2)
+               gs0sha  = gssha/amax1(rstfacsha,1.e-2)
 
-            gb_mol_sun = 1./rbsun * tprcor/tl / cintsun(3) * 1.e6  ! leaf to canopy
-            gb_mol_sha = 1./rbsha * tprcor/tl / cintsha(3) * 1.e6  ! leaf to canopy
-#endif
-
+               gb_mol_sun = 1./rbsun * tprcor/tl / cintsun(3) * 1.e6  ! leaf to canopy
+               gb_mol_sha = 1./rbsha * tprcor/tl / cintsha(3) * 1.e6  ! leaf to canopy
+            end if
          ELSE
             rssun = 2.e4; assimsun = 0.; respcsun = 0.
             rssha = 2.e4; assimsha = 0.; respcsha = 0.
@@ -681,10 +674,10 @@ CONTAINS
             gammasha          = 0._r8
             etrsha            = 0._r8
 #endif
-#ifdef PLANT_HYDRAULIC_STRESS
-            etr = 0.
-            rootr = 0.
-#endif
+            if(DEF_USE_PLANTHYDRAULICS) then
+               etr = 0.
+               rootr = 0.
+            end if
          ENDIF
 
 !         if(p_iam_glb .eq. 85)print*,'etrsun in Leaftemp',p_iam_glb,ivt,lai,etrsun,etrsha
@@ -740,7 +733,7 @@ CONTAINS
          fsenl_dtl = rhoair * cpair * cfh * (wta0 + wtg0)
 
 ! latent heat fluxes and their derivatives
-#ifndef PLANT_HYDRAULIC_STRESS
+
          etr = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
@@ -749,17 +742,17 @@ CONTAINS
              * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
          etrsha = rhoair * (1.-fwet) * delta &
              * ( laisha/(rb+rssha) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-#endif
+
          etr_dtl = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * (wtaq0 + wtgq0)*qsatlDT
 
-#ifndef PLANT_HYDRAULIC_STRESS
-         IF(etr.ge.etrc)THEN
-            etr = etrc
-            etr_dtl = 0.
-         ENDIF
-#endif
+         if(.not. DEF_USE_PLANTHYDRAULICS)then
+            IF(etr.ge.etrc)THEN
+               etr = etrc
+               etr_dtl = 0.
+            ENDIF
+         end if
 
          evplwet = rhoair * (1.-delta*(1.-fwet)) * (lai+sai) / rb &
                  * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
@@ -930,13 +923,13 @@ CONTAINS
                + hvap*erre
        etr0    = etr
        etr     = etr     +     etr_dtl*dtl(it-1)
-#ifdef PLANT_HYDRAULIC_STRESS
-      if(abs(etr0) .ge. 1.e-15)then
-          rootr  = rootr * etr / etr0
-      else
-          rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+      if(DEF_USE_PLANTHYDRAULICS) then
+         if(abs(etr0) .ge. 1.e-15)then
+             rootr  = rootr * etr / etr0
+         else
+             rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+         end if
       end if
-#endif
 
        evplwet = evplwet + evplwet_dtl*dtl(it-1)
        fevpl   = fevpl_noadj

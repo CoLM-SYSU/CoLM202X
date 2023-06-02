@@ -29,11 +29,9 @@ SUBROUTINE CoLMMAIN ( &
          ! vegetation information
            htop,         hbot,         sqrtdi,                      &
            effcon,       vmax25,                                    &
-#ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun,     kmax_sha,     kmax_xyl,     kmax_root,     &
            psi50_sun,    psi50_sha,    psi50_xyl,    psi50_root,    &
            ck,                                                      &
-#endif
            slti,         hlti,                                      &
            shti,         hhti,         trda,         trdm,          &
            trop,         gradm,        binter,       extkn,         &
@@ -57,9 +55,7 @@ SUBROUTINE CoLMMAIN ( &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
            thermk,       extkb,        extkd,                       &
-#ifdef PLANT_HYDRAULIC_STRESS
            vegwp,        gs0sun,       gs0sha,                      &
-#endif
 #ifdef OzoneStress
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
 #endif
@@ -176,7 +172,7 @@ SUBROUTINE CoLMMAIN ( &
 #else
   USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
 #endif
-  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
@@ -250,7 +246,6 @@ SUBROUTINE CoLMMAIN ( &
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
-#ifdef PLANT_HYDRAULIC_STRESS
         kmax_sun    ,&
         kmax_sha    ,&
         kmax_xyl    ,&
@@ -260,7 +255,6 @@ SUBROUTINE CoLMMAIN ( &
         psi50_xyl   ,&! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root  ,&! water potential at 50% loss of root tissue conductance (mmH2O)
         ck          ,&! shape-fitting parameter for vulnerability curve (-)
-#endif
         slti        ,&! slope of low temperature inhibition function      [s3]
         hlti        ,&! 1/2 point of low temperature inhibition function  [s4]
         shti        ,&! slope of high temperature inhibition function     [s1]
@@ -338,11 +332,9 @@ SUBROUTINE CoLMMAIN ( &
         t_lake(nl_lake)       ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
         savedtke1             ,&! top level eddy conductivity (W/m K)
-#ifdef PLANT_HYDRAULIC_STRESS
         vegwp(nvegwcs)        ,&! ground surface temperature [k]
         gs0sun                ,&! working copy of sunlit stomata conductance
         gs0sha                ,&! working copy of shalit stomata conductance
-#endif
 #ifdef OzoneStress
         lai_old    ,&! lai in last time step
         o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
@@ -776,11 +768,9 @@ ENDIF
 #endif
            effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
-#ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
            psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&
            ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
-#endif
 #ifdef OzoneStress
            lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        , &
 #endif
@@ -1462,9 +1452,9 @@ ENDIF
        ENDIF
 
        qcharge = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-       vegwp = -2.5e4
-#endif
+       if (DEF_USE_PLANTHYDRAULICS)then
+          vegwp = -2.5e4
+       end if
     ENDIF
 
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)

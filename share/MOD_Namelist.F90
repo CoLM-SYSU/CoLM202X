@@ -111,6 +111,8 @@ MODULE MOD_Namelist
    ! ------LAI change and Land cover year setting ----------
    ! 05/2023, add by Dong: use for updating LAI with simulation year
    LOGICAL :: DEF_LAICHANGE = .FALSE.
+   ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
+   LOGICAL :: DEF_LAIFEEDBACK = .TRUE.
 
    ! ------ LULCC -------
    INTEGER :: DEF_LC_YEAR   = 2005
@@ -208,6 +210,8 @@ MODULE MOD_Namelist
    
    !CBL height
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
+   LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+
 
    ! ----- history variables -----
    TYPE history_var_type
@@ -598,6 +602,8 @@ CONTAINS
 
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
 
+         DEF_LAIFEEDBACK,                 &   !add by Xingjie Lu, use for updating LAI with leaf carbon
+
          DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
          DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
          DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
@@ -611,6 +617,7 @@ CONTAINS
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
+         DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
 
 
          DEF_LANDONLY,                    &
@@ -765,6 +772,9 @@ CONTAINS
       CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
 
+      ! 05/2023, added by Xingjie lu
+      CALL mpi_bcast (DEF_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -779,6 +789,7 @@ CONTAINS
 
       !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
  
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)

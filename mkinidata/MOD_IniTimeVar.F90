@@ -22,9 +22,9 @@ MODULE MOD_IniTimeVar
                      ,porsl,psi0,hksati,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb&
                      ,z0m,zlnd,chil,rho,tau,z_soisno,dz_soisno&
                      ,t_soisno,wliq_soisno,wice_soisno,smp,hk,zwt,wa&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
                      ,vegwp,gs0sun,gs0sha&
-#endif
+!End plant hydraulic parameter                             
                      ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
@@ -146,11 +146,11 @@ MODULE MOD_IniTimeVar
         wice_soisno(maxsnl+1:nl_soil), &! ice lens in layers [kg/m2]
         smp        (1:nl_soil)       , &! soil matrix potential
         hk         (1:nl_soil)       , &! soil hydraulic conductance
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
         vegwp(1:nvegwcs),       &! vegetation water potential
         gs0sun,                 &! working copy of sunlit stomata conductance
         gs0sha,                 &! working copy of shalit stomata conductance
-#endif
+!end plant hydraulic parameters
         t_grnd,                 &! ground surface temperature [K]
         tleaf,                  &! sunlit leaf temperature [K]
 !#ifdef CLM5_INTERCEPTION
@@ -393,11 +393,11 @@ MODULE MOD_IniTimeVar
      tleaf = t_soisno(1)
      t_grnd = t_soisno(1)
 
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
 
 #else
 ! soil temperature, water content and matrix potential
@@ -472,11 +472,11 @@ IF (patchtype == 0) THEN
      tleaf  = t_soisno(1)
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
 #endif
 
 #ifdef PFT_CLASSIFICATION
@@ -489,11 +489,11 @@ IF (patchtype == 0) THEN
 !#endif
      ldew_p(ps:pe)   = 0.
      tleaf_p(ps:pe)  = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
-     gs0sun_p(ps:pe) = 1.0e4
-     gs0sha_p(ps:pe) = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
+        gs0sun_p(ps:pe) = 1.0e4
+        gs0sha_p(ps:pe) = 1.0e4
+     end if
      lai_p(ps:pe)    = tlai_p(ps:pe)
      sai_p(ps:pe)    = tsai_p(ps:pe) * sigf_p(ps:pe)
 
@@ -504,11 +504,11 @@ IF (patchtype == 0) THEN
 !#endif
      ldew  = 0.
      tleaf = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
      lai   = tlai(ipatch)
      sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
 #endif
@@ -520,11 +520,11 @@ IF (patchtype == 0) THEN
      ldew_snow_c(:,pc)  = 0.
      ldew_c(:,pc)   = 0.
      tleaf_c(:,pc)  = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp_c(1:nvegwcs,:,pc) = -2.5e4
-     gs0sun_c(:,pc) = 1.0e4
-     gs0sha_c(:,pc) = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp_c(1:nvegwcs,:,pc) = -2.5e4
+        gs0sun_c(:,pc) = 1.0e4
+        gs0sha_c(:,pc) = 1.0e4
+     end if
      lai_c(:,pc)    = tlai_c(:,pc)
      sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
 
@@ -533,11 +533,11 @@ IF (patchtype == 0) THEN
      ldew_snow  = 0.
      ldew  = 0.
      tleaf = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
      lai   = tlai(ipatch)
      sai   = sum(sai_c(:,pc)*pcfrac(:,pc))
 #endif
@@ -548,11 +548,11 @@ ELSE
      ldew_snow  = 0.
      ldew  = 0.
      tleaf  = t_soisno(1)
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
      lai    = tlai(ipatch)
      sai    = tsai(ipatch) * sigf
 ENDIF
@@ -605,11 +605,11 @@ ENDIF
      sag    = 0.
      snowdp = 0.
      tleaf  = 300.
-#ifdef PLANT_HYDRAULIC_STRESS
-     vegwp(1:nvegwcs) = -2.5e4
-     gs0sun = 1.0e4
-     gs0sha = 1.0e4
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        vegwp(1:nvegwcs) = -2.5e4
+        gs0sun = 1.0e4
+        gs0sha = 1.0e4
+     end if
      t_grnd = 300.
 
      oro = 0

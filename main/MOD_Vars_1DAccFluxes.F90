@@ -3,6 +3,7 @@
 module MOD_Vars_1DAccFluxes
 
    use MOD_Precision
+   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -236,9 +237,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_BD_all      (:,:)
    real(r8), allocatable :: a_wfc         (:,:)
    real(r8), allocatable :: a_OM_density  (:,:)
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
    real(r8), allocatable :: a_vegwp       (:,:)
-#endif
+!end plant hydraulic parameters
    real(r8), allocatable :: a_t_lake      (:,:)
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
@@ -539,9 +540,9 @@ contains
             allocate (a_BD_all      (1:nl_soil,       numpatch))
             allocate (a_wfc         (1:nl_soil,       numpatch))
             allocate (a_OM_density  (1:nl_soil,       numpatch))
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
-#endif
+!End Plant Hydraulic parameters
             allocate (a_t_lake      (nl_lake,numpatch))
             allocate (a_lake_icefrac(nl_lake,numpatch))
 
@@ -840,9 +841,9 @@ contains
             deallocate (a_BD_all      )
             deallocate (a_wfc         )
             deallocate (a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             deallocate (a_vegwp       )
-#endif
+!end plant hydraulic parameters            
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 #ifdef BGC
@@ -1146,9 +1147,9 @@ contains
             a_BD_all       (:,:) = spval
             a_wfc          (:,:) = spval
             a_OM_density   (:,:) = spval
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             a_vegwp        (:,:) = spval
-#endif
+!end plant hydraulic parameters            
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 #ifdef BGC
@@ -1513,9 +1514,9 @@ contains
             call acc2d (BD_all     , a_BD_all      )
             call acc2d (wfc        , a_wfc         )
             call acc2d (OM_density , a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
-            call acc2d (vegwp      , a_vegwp      )
-#endif
+            if(DEF_USE_PLANTHYDRAULICS)then
+               call acc2d (vegwp      , a_vegwp      )
+            end if
             call acc2d (t_lake      , a_t_lake      )
             call acc2d (lake_icefrac, a_lake_icefrac)
 #ifdef BGC

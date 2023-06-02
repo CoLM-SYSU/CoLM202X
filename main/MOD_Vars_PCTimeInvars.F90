@@ -11,7 +11,7 @@ MODULE MOD_Vars_PCTimeInvars
 ! -----------------------------------------------------------------
 
   USE MOD_Precision
-  USE MOD_Vars_GlobalVars
+  USE MOD_Vars_Global
   IMPLICIT NONE
   SAVE
 

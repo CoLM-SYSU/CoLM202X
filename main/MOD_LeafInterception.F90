@@ -1483,7 +1483,7 @@ contains
       !---2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
       USE MOD_Precision
-      USE MOD_Vars_GlobalVars
+      USE MOD_Vars_Global
       USE MOD_Const_Physical, only: tfrz
       USE MOD_Vars_PCTimeInvars
       USE MOD_Vars_PCTimeVars

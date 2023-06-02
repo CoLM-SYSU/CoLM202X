@@ -778,12 +778,12 @@ contains
          a_rootr, file_hist, 'f_rootr', itime_in_file, filter, &
          'soil', nl_soil, 'root water uptake', 'mm h2o/s')
 
-#ifdef PLANT_HYDRAULIC_STRESS
+      if(DEF_USE_PLANTHYDRAULICS)then
       ! vegetation water potential [mm]
-      call aggregate_to_vector_and_write_3d ( DEF_hist_vars%vegwp, &
-         a_vegwp, file_hist, 'f_vegwp', itime_in_file, filter, &
-         'vegnodes', nvegwcs, 'vegetation water potential', 'mm')
-#endif
+         call aggregate_to_vector_and_write_3d ( DEF_hist_vars%vegwp, &
+            a_vegwp, file_hist, 'f_vegwp', itime_in_file, filter, &
+            'vegnodes', nvegwcs, 'vegetation water potential', 'mm')
+      end if
 
       ! water table depth [m]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%zwt, &

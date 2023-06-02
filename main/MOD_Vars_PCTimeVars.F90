@@ -37,11 +37,11 @@ MODULE MOD_Vars_PCTimeVars
   REAL(r8), allocatable :: extkd_c    (:,:) !diffuse and scattered diffuse PAR extinction coefficient
   REAL(r8), allocatable :: rst_c      (:,:) !canopy stomatal resistance (s/m)
   REAL(r8), allocatable :: z0m_c      (:,:) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
   real(r8), allocatable :: vegwp_c  (:,:,:) !vegetation water potential [mm]
   real(r8), allocatable :: gs0sun_c   (:,:) !working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_c   (:,:) !working copy of shalit stomata conductance
-#endif
+!end plant hydraulic parameters
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PCTimeVars
@@ -89,11 +89,11 @@ CONTAINS
             allocate (extkd_c    (0:N_PFT-1,numpc)) !diffuse and scattered diffuse PAR extinction coefficient
             allocate (rst_c      (0:N_PFT-1,numpc)) !canopy stomatal resistance (s/m)
             allocate (z0m_c      (0:N_PFT-1,numpc)) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             allocate (vegwp_c    (1:nvegwcs,0:N_PFT-1,numpc))
             allocate (gs0sun_c   (0:N_PFT-1,numpc))
             allocate (gs0sha_c   (0:N_PFT-1,numpc))
-#endif
+!end plant hydraulic parameters
          ENDIF
       ENDIF
 
@@ -102,7 +102,7 @@ CONTAINS
    SUBROUTINE READ_PCTimeVars (file_restart)
 
       USE MOD_Vars_Global
-      use MOD_Namelist
+      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
       use MOD_NetCDFVector
       USE MOD_LandPC
       IMPLICIT NONE
@@ -126,18 +126,18 @@ CONTAINS
       call ncio_read_vector (file_restart, 'extkd_c  ', N_PFT,     landpc, extkd_c  ) !
       call ncio_read_vector (file_restart, 'rst_c    ', N_PFT,     landpc, rst_c    ) !
       call ncio_read_vector (file_restart, 'z0m_c    ', N_PFT,     landpc, z0m_c    ) !
-#ifdef PLANT_HYDRAULIC_STRESS
-      call ncio_read_vector (file_restart, 'vegwp_c  ', nvegwcs,   N_PFT,  landpc, vegwp_c ) !
-      call ncio_read_vector (file_restart, 'gs0sun_c ', N_PFT,     landpc, gs0sun_c ) !
-      call ncio_read_vector (file_restart, 'gs0sha_c ', N_PFT,     landpc, gs0sha_c ) !
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call ncio_read_vector (file_restart, 'vegwp_c  ', nvegwcs,   N_PFT,  landpc, vegwp_c ) !
+         call ncio_read_vector (file_restart, 'gs0sun_c ', N_PFT,     landpc, gs0sun_c ) !
+         call ncio_read_vector (file_restart, 'gs0sha_c ', N_PFT,     landpc, gs0sha_c ) !
+      end if
 
    END SUBROUTINE READ_PCTimeVars
 
    SUBROUTINE WRITE_PCTimeVars (file_restart)
 
      USE MOD_Vars_Global
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS
      USE MOD_LandPC
      use MOD_NetCDFVector
      IMPLICIT NONE
@@ -154,33 +154,32 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpc, 'pft' , N_PFT)
      CALL ncio_define_dimension_vector (file_restart, landpc, 'band', 2    )
      CALL ncio_define_dimension_vector (file_restart, landpc, 'rtyp', 2    )
-#ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
+     end if
 
-      call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !
-      call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) !
-      call ncio_write_vector (file_restart, 'ldew_rain_c', 'pft', N_PFT, 'pc', landpc, ldew_rain_c, compress) ! depth of rain on foliage [mm]
-      call ncio_write_vector (file_restart, 'ldew_snow_c', 'pft', N_PFT, 'pc', landpc, ldew_snow_c, compress) ! depth of snow on foliage [mm]
-
-      call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'pc', landpc, sigf_c   , compress) !
-      call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'pc', landpc, tlai_c   , compress) !
-      call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'pc', landpc, lai_c    , compress) !
-      call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'pc', landpc, tsai_c   , compress) !
-      call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'pc', landpc, sai_c    , compress) !
-      call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssun_c, compress) !
-      call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssha_c, compress) !
-      call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'pc', landpc, thermk_c , compress) !
-      call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'pc', landpc, fshade_c , compress) !
-      call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'pc', landpc, extkb_c  , compress) !
-      call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !
-      call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !
-      call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !
-#ifdef PLANT_HYDRAULIC_STRESS
-      call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
-      call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
-      call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sha_c, compress) !
-#endif
+     call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !
+     call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) !
+     call ncio_write_vector (file_restart, 'ldew_rain_c', 'pft', N_PFT, 'pc', landpc, ldew_rain_c, compress) ! depth of rain on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_snow_c', 'pft', N_PFT, 'pc', landpc, ldew_snow_c, compress) ! depth of snow on foliage [mm]
+     call ncio_write_vector (file_restart, 'sigf_c   ', 'pft', N_PFT, 'pc', landpc, sigf_c   , compress) !
+     call ncio_write_vector (file_restart, 'tlai_c   ', 'pft', N_PFT, 'pc', landpc, tlai_c   , compress) !
+     call ncio_write_vector (file_restart, 'lai_c    ', 'pft', N_PFT, 'pc', landpc, lai_c    , compress) !
+     call ncio_write_vector (file_restart, 'tsai_c   ', 'pft', N_PFT, 'pc', landpc, tsai_c   , compress) !
+     call ncio_write_vector (file_restart, 'sai_c    ', 'pft', N_PFT, 'pc', landpc, sai_c    , compress) !
+     call ncio_write_vector (file_restart, 'ssun_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssun_c, compress) !
+     call ncio_write_vector (file_restart, 'ssha_c   ', 'band', 2, 'rtyp', 2, 'pft', N_PFT, 'pc', landpc, ssha_c, compress) !
+     call ncio_write_vector (file_restart, 'thermk_c ', 'pft', N_PFT, 'pc', landpc, thermk_c , compress) !
+     call ncio_write_vector (file_restart, 'fshade_c ', 'pft', N_PFT, 'pc', landpc, fshade_c , compress) !
+     call ncio_write_vector (file_restart, 'extkb_c  ', 'pft', N_PFT, 'pc', landpc, extkb_c  , compress) !
+     call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !
+     call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !
+     call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
+        call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
+        call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sha_c, compress) !
+     end if
 
    END SUBROUTINE WRITE_PCTimeVars
 
@@ -212,11 +211,11 @@ CONTAINS
             deallocate (extkd_c  ) !diffuse and scattered diffuse PAR extinction coefficient
             deallocate (rst_c    ) !canopy stomatal resistance (s/m)
             deallocate (z0m_c    ) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             deallocate (vegwp_c  ) !vegetation water potential [mm]
             deallocate (gs0sun_c ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_c ) !working copy of shalit stomata conductance
-#endif
+!end plant hydraulic parameters
          ENDIF
       ENDIF
 
@@ -245,11 +244,11 @@ CONTAINS
       call check_vector_data ('extkd_c  ', extkd_c  )      !
       call check_vector_data ('rst_c    ', rst_c    )      !
       call check_vector_data ('z0m_c    ', z0m_c    )      !
-#ifdef PLANT_HYDRAULIC_STRESS
-      call check_vector_data ('vegwp_c  ', vegwp_c  )      !
-      call check_vector_data ('gs0sun_c ', gs0sun_c )      !
-      call check_vector_data ('gs0sha_c ', gs0sha_c )      !
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call check_vector_data ('vegwp_c  ', vegwp_c  )      !
+         call check_vector_data ('gs0sun_c ', gs0sun_c )      !
+         call check_vector_data ('gs0sha_c ', gs0sha_c )      !
+      end if
 
    END SUBROUTINE check_PCTimeVars
 #endif

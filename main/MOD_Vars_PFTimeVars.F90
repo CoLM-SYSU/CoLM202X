@@ -42,11 +42,11 @@ MODULE MOD_Vars_PFTimeVars
   REAL(r8), allocatable :: qref_p    (:) !2 m height air specific humidity
   REAL(r8), allocatable :: rst_p     (:) !canopy stomatal resistance (s/m)
   REAL(r8), allocatable :: z0m_p     (:) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
   real(r8), allocatable :: vegwp_p (:,:) ! vegetation water potential [mm]
   real(r8), allocatable :: gs0sun_p  (:) ! working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_p  (:) ! working copy of shalit stomata conductance
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
   real(r8), allocatable :: o3coefv_sun_p(:) !Ozone stress factor for photosynthesis on sunlit leaf
   real(r8), allocatable :: o3coefv_sha_p(:) !Ozone stress factor for photosynthesis on shaded leaf
@@ -106,11 +106,11 @@ CONTAINS
             allocate (qref_p       (numpft)) !2 m height air specific humidity
             allocate (rst_p        (numpft)) !canopy stomatal resistance (s/m)
             allocate (z0m_p        (numpft)) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
             allocate (vegwp_p      (1:nvegwcs,numpft))
             allocate (gs0sun_p     (numpft))
             allocate (gs0sha_p     (numpft))
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
             allocate (o3coefv_sun_p(numpft)) !Ozone stress factor for photosynthesis on sunlit leaf
             allocate (o3coefv_sha_p(numpft)) !Ozone stress factor for photosynthesis on shaded leaf
@@ -159,11 +159,11 @@ CONTAINS
       call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !
       call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !
       call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !
-#ifdef PLANT_HYDRAULIC_STRESS
-      call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
-      call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
-      call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
+         call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
+         call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
+      end if
 #ifdef OzoneStress
       call ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
       call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
@@ -195,9 +195,9 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
      CALL ncio_define_dimension_vector (file_restart, landpft, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpft, 'rtyp', 2)
-#ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
+     end if
 
      call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
      call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
@@ -219,11 +219,11 @@ CONTAINS
      call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
      call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
      call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
-#ifdef PLANT_HYDRAULIC_STRESS
-     call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
-     call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
-     call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
+        call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
+        call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
+     end if
 #ifdef OzoneStress
      call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
      call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
@@ -264,11 +264,11 @@ CONTAINS
             deallocate (qref_p   ) !2 m height air specific humidity
             deallocate (rst_p    ) !canopy stomatal resistance (s/m)
             deallocate (z0m_p    ) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
             deallocate (vegwp_p  ) !vegetation water potential [mm]
             deallocate (gs0sun_p ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_p ) !working copy of shalit stomata conductance
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
             deallocate (o3coefv_sun_p ) !Ozone stress factor for photosynthesis on sunlit leaf
             deallocate (o3coefv_sha_p ) !Ozone stress factor for photosynthesis on shaded leaf
@@ -313,11 +313,11 @@ CONTAINS
       call check_vector_data ('qref_p   ', qref_p   )      !
       call check_vector_data ('rst_p    ', rst_p    )      !
       call check_vector_data ('z0m_p    ', z0m_p    )      !
-#ifdef PLANT_HYDRAULIC_STRESS
-      call check_vector_data ('vegwp_p  ', vegwp_p  )      !
-      call check_vector_data ('gs0sun_p ', gs0sun_p )      !
-      call check_vector_data ('gs0sha_p ', gs0sha_p )      !
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call check_vector_data ('vegwp_p  ', vegwp_p  )      !
+         call check_vector_data ('gs0sun_p ', gs0sun_p )      !
+         call check_vector_data ('gs0sha_p ', gs0sha_p )      !
+      end if
 #ifdef OzoneStress
       call check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
       call check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)

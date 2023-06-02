@@ -16,6 +16,7 @@ MODULE MOD_Const_LC
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
+   USE MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS
 
    IMPLICIT NONE
    SAVE
@@ -244,7 +245,6 @@ MODULE MOD_Const_LC
           2.012,  1.964,  1.955,  1.953,  1.303,  2.175,  1.631,  2.608,&
           2.608,  1.631,  8.992,  8.992,  8.992,  8.992,  0.978,  2.608/)
 
-#ifdef PLANT_HYDRAULIC_STRESS
 ! Plant Hydraulics Paramters
    REAL(r8), parameter, dimension(N_land_classification) :: kmax_sun0_usgs &
       = (/0., 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008,&
@@ -304,7 +304,7 @@ MODULE MOD_Const_LC
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 0., 3.95, 3.95, &
           0., 3.95, 3.95, 3.95, 0., 0./)
-#endif
+!end plant hydraulic parameters
 #else
 
 ! MODIS IGBP Land Use/Land Cover System Legend
@@ -515,7 +515,6 @@ MODULE MOD_Const_LC
           1.627,  2.608,  2.608,  2.614,  2.614,  2.614,  2.608,  0.978,&
           2.608 /)
 
-#ifdef PLANT_HYDRAULIC_STRESS
 ! Plant Hydraulics Paramters
    REAL(r8), parameter, dimension(N_land_classification) :: kmax_sun0_igbp &
       = (/2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, 2.e-008, &
@@ -566,7 +565,7 @@ MODULE MOD_Const_LC
       = (/3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           3.95, 3.95, 3.95, 3.95, 3.95, 3.95, &
           0.  , 3.95, 0.  , 0.  , 0.  /)
-#endif
+!end plant hydraulic parameters
 #endif
 
    REAL(r8), dimension(N_land_classification) :: &
@@ -597,7 +596,7 @@ MODULE MOD_Const_LC
       d50,        &! depth at 50% roots
       beta         ! coefficient of root profile
 
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic Parameters
    REAL(r8), dimension(N_land_classification) :: &
       kmax_sun,   &
       kmax_sha,   &
@@ -608,7 +607,7 @@ MODULE MOD_Const_LC
       psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
       psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
       ck           ! shape-fitting parameter for vulnerability curve (-)
-#endif
+! end plant hydraulic parameters
 
    REAL(r8), PRIVATE, dimension(N_land_classification) :: &
       roota,      &! root fraction para
@@ -660,17 +659,17 @@ CONTAINS
       extkn      (:) = extkn_usgs      (:)
       d50        (:) = d50_usgs        (:)
       beta       (:) = beta_usgs       (:)
-#ifdef PLANT_HYDRAULIC_STRESS
-      kmax_sun   (:) = kmax_sun0_usgs  (:)
-      kmax_sha   (:) = kmax_sha0_usgs  (:)
-      kmax_xyl   (:) = kmax_xyl0_usgs  (:)
-      kmax_root  (:) = kmax_root0_usgs (:)
-      psi50_sun  (:) = psi50_sun0_usgs (:)
-      psi50_sha  (:) = psi50_sha0_usgs (:)
-      psi50_xyl  (:) = psi50_xyl0_usgs (:)
-      psi50_root (:) = psi50_root0_usgs(:)
-      ck         (:) = ck0_usgs        (:)
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         kmax_sun   (:) = kmax_sun0_usgs  (:)
+         kmax_sha   (:) = kmax_sha0_usgs  (:)
+         kmax_xyl   (:) = kmax_xyl0_usgs  (:)
+         kmax_root  (:) = kmax_root0_usgs (:)
+         psi50_sun  (:) = psi50_sun0_usgs (:)
+         psi50_sha  (:) = psi50_sha0_usgs (:)
+         psi50_xyl  (:) = psi50_xyl0_usgs (:)
+         psi50_root (:) = psi50_root0_usgs(:)
+         ck         (:) = ck0_usgs        (:)
+      end if
       roota      (:) = roota_usgs      (:)
       rootb      (:) = rootb_usgs      (:)
       rho    (1,1,:) = rhol_vis_usgs   (:)
@@ -706,17 +705,17 @@ CONTAINS
       extkn      (:) = extkn_igbp      (:)
       d50        (:) = d50_igbp        (:)
       beta       (:) = beta_igbp       (:)
-#ifdef PLANT_HYDRAULIC_STRESS
-      kmax_sun   (:) = kmax_sun0_igbp  (:)
-      kmax_sha   (:) = kmax_sha0_igbp  (:)
-      kmax_xyl   (:) = kmax_xyl0_igbp  (:)
-      kmax_root  (:) = kmax_root0_igbp (:)
-      psi50_sun  (:) = psi50_sun0_igbp (:)
-      psi50_sha  (:) = psi50_sha0_igbp (:)
-      psi50_xyl  (:) = psi50_xyl0_igbp (:)
-      psi50_root (:) = psi50_root0_igbp(:)
-      ck         (:) = ck0_igbp        (:)
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         kmax_sun   (:) = kmax_sun0_igbp  (:)
+         kmax_sha   (:) = kmax_sha0_igbp  (:)
+         kmax_xyl   (:) = kmax_xyl0_igbp  (:)
+         kmax_root  (:) = kmax_root0_igbp (:)
+         psi50_sun  (:) = psi50_sun0_igbp (:)
+         psi50_sha  (:) = psi50_sha0_igbp (:)
+         psi50_xyl  (:) = psi50_xyl0_igbp (:)
+         psi50_root (:) = psi50_root0_igbp(:)
+         ck         (:) = ck0_igbp        (:)
+      end if
       roota      (:) = roota_igbp      (:)
       rootb      (:) = rootb_igbp      (:)
       rho    (1,1,:) = rhol_vis_igbp   (:)
