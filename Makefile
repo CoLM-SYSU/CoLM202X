@@ -25,9 +25,9 @@ OBJS_SHARED =    \
 				  MOD_Precision.o              \
 				  MOD_Vars_Global.o            \
 				  MOD_Const_Physical.o         \
-				  MOD_Const_LC.o               \
 				  MOD_SPMD_Task.o              \
 				  MOD_Namelist.o               \
+				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \

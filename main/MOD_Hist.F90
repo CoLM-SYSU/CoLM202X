@@ -2871,12 +2871,12 @@ contains
             a_rootr, f_rootr, file_hist, 'f_rootr', 'soil', itime_in_file, sumwt, filter, &
             'root water uptake', 'mm h2o/s')
 
-#ifdef PLANT_HYDRAULIC_STRESS
+         if(DEF_USE_PLANTHYDRAULICS)then
          ! vegetation water potential [mm]
-         call flux_map_and_write_3d ( DEF_hist_vars%vegwp, &
-            a_vegwp, f_vegwp, file_hist, 'f_vegwp', 'vegnodes', itime_in_file, sumwt, filter, &
-            'vegetation water potential', 'mm')
-#endif
+            call flux_map_and_write_3d ( DEF_hist_vars%vegwp, &
+               a_vegwp, f_vegwp, file_hist, 'f_vegwp', 'vegnodes', itime_in_file, sumwt, filter, &
+               'vegetation water potential', 'mm')
+         end if
 
          ! water table depth [m]
          call flux_map_and_write_2d ( DEF_hist_vars%zwt, &
