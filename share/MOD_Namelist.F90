@@ -2,6 +2,15 @@
 
 MODULE MOD_Namelist
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Variables in namelist files and subrroutines to read namelist files.
+   !
+   ! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
+   !                  Hua Yuan, Wenzong Dong et al., May 2023
+   !-----------------------------------------------------------------------
+
    USE MOD_Precision, only: r8
    IMPLICIT NONE
    SAVE

@@ -1,7 +1,16 @@
 #include <define.h>
 
 MODULE MOD_RegionClip
-
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to clip surface data from an existing data 
+   !    in a larger region.
+   !
+   !    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
 CONTAINS
 
    ! ----- region clip -----

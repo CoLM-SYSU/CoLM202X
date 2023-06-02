@@ -2,6 +2,23 @@
 
 MODULE MOD_Mapping_Pset2Grid
 
+   !----------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Mapping data types and subroutines from vector data defined on pixelsets
+   !    to gridded data.
+   !
+   !    Notice that:
+   !    1. A mapping can be built with method mapping%build.
+   !    2. Overloaded method "map" can map 1D, 2D or 3D vector data to gridded data 
+   !       by using area weighted scheme. 
+   !    3. Method "map_split" can split data in a vector according to pixelset type
+   !       and map data to 3D gridded data. 
+   !       The dimensions are from [vector] to [type,lon,lat].
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !----------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType

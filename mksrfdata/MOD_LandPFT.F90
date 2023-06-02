@@ -4,6 +4,25 @@
 
 MODULE MOD_LandPFT
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landpft" (Plant Function Type).
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landpft" refers to pixelset PFT.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+   !------------------------------------------------------------------------------------
+
    USE MOD_Namelist
    USE MOD_Pixelset
    USE MOD_Const_LC

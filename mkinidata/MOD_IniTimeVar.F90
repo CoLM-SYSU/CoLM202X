@@ -464,6 +464,9 @@ MODULE MOD_IniTimeVar
 #ifdef LULC_IGBP_PFT
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
+      ldew_rain_p(:,ps:pe) = 0.
+      ldew_snow_p(:,ps:pe) = 0.
+      ldew_p(:,ps:pe) = 0.
       tleaf_p(ps:pe)  = t_soisno(1)
 #ifdef PLANT_HYDRAULIC_STRESS
       vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
@@ -527,7 +530,7 @@ MODULE MOD_IniTimeVar
          sai   = tsai(ipatch) * sigf
       ENDIF
 
-     ! (8) SNICAR
+     ! (7) SNICAR
      ! Variables: snw_rds, mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, 
      !            mss_dst1, mss_dst2, mss_dst3, mss_dst4 
      snw_rds   (:) = 54.526_r8
@@ -541,7 +544,7 @@ MODULE MOD_IniTimeVar
      mss_dst4  (:) = 0.
 
 
-     ! (9) surface albedo
+     ! (8) surface albedo
      ! Variables: alb, ssun, ssha, ssno, thermk, extkb, extkd
      wt      = 0.
      pg_snow = 0.

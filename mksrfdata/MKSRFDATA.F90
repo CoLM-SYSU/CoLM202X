@@ -40,6 +40,8 @@ PROGRAM MKSRFDATA
    !
    ! Created by Yongjiu Dai, 02/2014
    !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    !
    ! ======================================================================
    USE MOD_Precision

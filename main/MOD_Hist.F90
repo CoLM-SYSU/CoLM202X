@@ -2,6 +2,19 @@
 
 module MOD_Hist
 
+   !----------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !     Write out gridded model results to history files.
+   !
+   ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+   !
+   ! TODO...(need complement)
+   !----------------------------------------------------------------------------
+
    use MOD_Precision
    use MOD_Grid
    use MOD_Mapping_Pset2Grid
