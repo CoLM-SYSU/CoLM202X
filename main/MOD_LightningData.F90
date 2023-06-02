@@ -5,7 +5,7 @@ MODULE MOD_LightningData
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mapping_Grid2Pset
-   use MOD_BGC_Vars_TimeVars, only: lnfm
+   use MOD_BGC_Vars_TimeVariables, only: lnfm
    IMPLICIT NONE
 
    CHARACTER(len=256) :: file_lightning

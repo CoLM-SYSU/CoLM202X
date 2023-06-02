@@ -44,9 +44,9 @@ MODULE MOD_Lulcc_TMatrix
      USE MOD_Precision
      USE MOD_Vars_Global
      USE MOD_Vars_TimeInvariants
-     USE MOD_Vars_PFTimeInvars
-     USE MOD_Vars_PCTimeInvars
-     USE MOD_Urban_Vars_TimeInvars
+     USE MOD_Vars_PFTimeInvariants
+     USE MOD_Vars_PCTimeInvariants
+     USE MOD_Urban_Vars_TimeInvariants
      IMPLICIT NONE
 !TODO: need coding below...
 

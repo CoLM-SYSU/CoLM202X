@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_BGC_Vars_TimeVars
+MODULE MOD_BGC_Vars_TimeVariables
 #ifdef BGC
   !---------------------------------------------------------------------------------------------------------
   ! !DESCRIPTION
@@ -253,12 +253,12 @@ SAVE
 !------------------------------------------------------
 
 ! PUBLIC MEMBER FUNCTIONS:
-      public :: allocate_BGCTimeVars
-      public :: deallocate_BGCTimeVars
-      public :: READ_BGCTimeVars
-      public :: WRITE_BGCTimeVars
+      public :: allocate_BGCTimeVariables
+      public :: deallocate_BGCTimeVariables
+      public :: READ_BGCTimeVariables
+      public :: WRITE_BGCTimeVariables
 #ifdef CoLMDEBUG
-      public :: check_BGCTimeVars
+      public :: check_BGCTimeVariables
 #endif
 
 ! PRIVATE MEMBER FUNCTIONS:
@@ -270,7 +270,7 @@ SAVE
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_BGCTimeVars
+  SUBROUTINE allocate_BGCTimeVariables
 ! --------------------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpatch] variables
 ! ------------------------------------------------------
@@ -527,10 +527,10 @@ SAVE
   end if
 
 
-  END SUBROUTINE allocate_BGCTimeVars
+  END SUBROUTINE allocate_BGCTimeVariables
 
 
-  SUBROUTINE deallocate_BGCTimeVars ()
+  SUBROUTINE deallocate_BGCTimeVariables ()
 
      use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
@@ -783,11 +783,11 @@ SAVE
         end if
      end if
 
-  END SUBROUTINE deallocate_BGCTimeVars
+  END SUBROUTINE deallocate_BGCTimeVariables
 
 
   !---------------------------------------
-  SUBROUTINE WRITE_BGCTimeVars (file_restart)
+  SUBROUTINE WRITE_BGCTimeVariables (file_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -943,10 +943,10 @@ SAVE
      call ncio_write_vector (file_restart, 'fertnitro_sugarcane' , 'patch', landpatch, fertnitro_sugarcane, compress)
 #endif
 
-  end subroutine WRITE_BGCTimeVars
+  end subroutine WRITE_BGCTimeVariables
 
   !---------------------------------------
-  SUBROUTINE READ_BGCTimeVars (file_restart)
+  SUBROUTINE READ_BGCTimeVariables (file_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -1085,14 +1085,14 @@ SAVE
 #endif
 
 #ifdef CoLMDEBUG
-     call check_BGCTimeVars
+     call check_BGCTimeVariables
 #endif
 
-  end subroutine READ_BGCTimeVars
+  end subroutine READ_BGCTimeVariables
 
   !---------------------------------------
 #ifdef CoLMDEBUG
-  SUBROUTINE check_BGCTimeVars ()
+  SUBROUTINE check_BGCTimeVariables ()
 
      use MOD_SPMD_Task
      use MOD_CoLMDebug
@@ -1339,9 +1339,9 @@ SAVE
 #endif
      call check_vector_data ('lag_npp    ' , lag_npp    )
 
-  end subroutine check_BGCTimeVars
+  end subroutine check_BGCTimeVariables
 #endif
 
 #endif
-END MODULE MOD_BGC_Vars_TimeVars
+END MODULE MOD_BGC_Vars_TimeVariables
 ! ------ EOP --------------

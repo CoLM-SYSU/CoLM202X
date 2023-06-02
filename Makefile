@@ -99,23 +99,19 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 
 OBJS_BASIC =    \
 				 MOD_Hydro_IO.o                 \
-				 MOD_Hydro_Vars_Timevars.o      \
+				 MOD_Hydro_Vars_TimeVariables.o \
 				 MOD_Hydro_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
 				 MOD_BGC_Vars_2DFluxes.o        \
-				 MOD_BGC_Vars_PFTimeVars.o      \
-				 MOD_BGC_Vars_TimeInvars.o      \
-				 MOD_BGC_Vars_TimeVars.o        \
+				 MOD_BGC_Vars_PFTimeVariables.o \
+				 MOD_BGC_Vars_TimeInvariants.o  \
+				 MOD_BGC_Vars_TimeVariables.o   \
 				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
-				 MOD_Urban_Vars_TimeVars.o      \
-				 MOD_Urban_Vars_TimeInvars.o    \
+				 MOD_Urban_Vars_TimeVariables.o \
+				 MOD_Urban_Vars_TimeInvariants.o\
 				 MOD_Const_PFT.o                \
-				 MOD_Vars_PFTimeVars.o          \
-				 MOD_Vars_PFTimeInvars.o        \
-				 MOD_Vars_PCTimeVars.o          \
-				 MOD_Vars_PCTimeInvars.o        \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
@@ -306,8 +302,8 @@ OBJS_MAIN = \
 				MOD_Urban_LUCY.o                          \
 				MOD_Urban_Thermal.o                       \
 				Urban_CoLMMAIN.o                          \
-				MOD_Lulcc_Vars_TimeInvars.o               \
-				MOD_Lulcc_Vars_TimeVars.o                 \
+				MOD_Lulcc_Vars_TimeInvariants.o           \
+				MOD_Lulcc_Vars_TimeVariables.o            \
 				MOD_Lulcc_Initialize.o                    \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \

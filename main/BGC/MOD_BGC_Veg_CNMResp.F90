@@ -17,14 +17,14 @@ module MOD_BGC_Veg_CNMResp
   ! Xingjie Lu, 2021, revised the CLM5 code to be compatible with CoLM code sturcture.
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       Q10,br, br_root
-  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass
   use MOD_Vars_TimeVariables, only: &
       t_soisno, tref
-  use MOD_Vars_PFTimeVars, only: &
+  use MOD_Vars_PFTimeVariables, only: &
       laisun_p, laisha_p, sigf_p
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       frootn_p, livestemn_p, livecrootn_p, grainn_p
   use MOD_Vars_1DPFTFluxes, only: &
       respc_p

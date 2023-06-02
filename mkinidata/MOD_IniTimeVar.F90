@@ -81,13 +81,13 @@ CONTAINS
 #endif
 #if(defined LULC_IGBP_PFT)
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
 #endif
 #if(defined LULC_IGBP_PC)
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
 #endif
    USE MOD_Vars_Global
    USE MOD_Albedo

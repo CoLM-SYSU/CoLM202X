@@ -24,9 +24,9 @@ module MOD_BGC_Veg_NutrientCompetition
         astemf, arooti, arootf, fleafi, bfact, declfact, allconss, allconsl, fleafcn, fstemcn, ffrootcn, &
         lfemerg, grnfill
     
-    use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
+    use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
 
-    use MOD_BGC_Vars_PFTimeVars, only: &
+    use MOD_BGC_Vars_PFTimeVariables, only: &
         xsmrpool_p, retransn_p, &
         tempsum_potential_gpp_p, tempmax_retransn_p, annmax_retransn_p, annsum_potential_gpp_p, &
 ! crop variables
@@ -38,7 +38,7 @@ module MOD_BGC_Veg_NutrientCompetition
         leafc_p, livestemc_p, frootc_p
     use MOD_Vars_Global, only: nwwheat, nirrig_wwheat 
 
-    use MOD_BGC_Vars_TimeVars, only: fpg 
+    use MOD_BGC_Vars_TimeVariables, only: fpg 
     use MOD_Vars_Global, only: ntmp_soybean, ntrp_soybean, nirrig_tmp_soybean, nirrig_trp_soybean
 
     use MOD_Vars_1DPFTFluxes, only: assim_p

@@ -9,7 +9,7 @@ module MOD_Hydro_Hist
    USE MOD_Vars_Global,  only : spval
    USE MOD_Mesh,    only : numelm
    USE MOD_LandHRU, only : numhru
-   USE MOD_Hydro_Vars_Timevars
+   USE MOD_Hydro_Vars_TimeVariables
    USE MOD_Hydro_Vars_1DFluxes
    USE MOD_Hydro_IO
 

@@ -46,13 +46,13 @@ MODULE MOD_Initialize
       use MOD_Vars_TimeVariables
 #ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeInvars
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeInvariants
+      USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeInvars
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeInvariants
+      USE MOD_Vars_PCTimeVariables
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT

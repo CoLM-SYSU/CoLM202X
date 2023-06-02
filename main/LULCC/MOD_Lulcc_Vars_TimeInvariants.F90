@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_LuLcc_Vars_TimeInvars
+MODULE MOD_LuLcc_Vars_TimeInvariants
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 ! -------------------------------
@@ -36,9 +36,9 @@ MODULE MOD_LuLcc_Vars_TimeInvars
   INTEGER, allocatable :: patch2urban_   (:)  !projection from patch to Urban
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_LuLccTimeInvars
-  PUBLIC :: deallocate_LuLccTimeInvars
-  PUBLIC :: SAVE_LuLccTimeInvars
+  PUBLIC :: allocate_LuLccTimeInvariants
+  PUBLIC :: deallocate_LuLccTimeInvariants
+  PUBLIC :: SAVE_LuLccTimeInvariants
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -48,7 +48,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_LuLccTimeInvars
+  SUBROUTINE allocate_LuLccTimeInvariants
   ! --------------------------------------------------------------------
   ! Allocates memory for LuLcc time invariant variables
   ! --------------------------------------------------------------------
@@ -110,10 +110,10 @@ MODULE MOD_LuLcc_Vars_TimeInvars
 #endif
         ENDIF
      ENDIF
-  END SUBROUTINE allocate_LuLccTimeInvars
+  END SUBROUTINE allocate_LuLccTimeInvariants
 
 
-  SUBROUTINE SAVE_LuLccTimeInvars
+  SUBROUTINE SAVE_LuLccTimeInvariants
 
      USE MOD_Precision
      USE MOD_Vars_Global
@@ -124,7 +124,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
      USE MOD_Landelm
      USE MOD_Mesh
 #ifdef LULC_IGBP_PFT
-     USE MOD_Vars_PFTimeInvars
+     USE MOD_Vars_PFTimeInvariants
      USE MOD_LandPFT
 #endif
 #ifdef LULC_IGBP_PC
@@ -170,10 +170,10 @@ MODULE MOD_LuLcc_Vars_TimeInvars
 #endif
         ENDIF
      ENDIF
-  END SUBROUTINE SAVE_LuLccTimeInvars
+  END SUBROUTINE SAVE_LuLccTimeInvariants
 
 
-  SUBROUTINE deallocate_LuLccTimeInvars
+  SUBROUTINE deallocate_LuLccTimeInvariants
       use MOD_SPMD_Task
       USE MOD_PixelSet
 ! --------------------------------------------------
@@ -209,7 +209,7 @@ MODULE MOD_LuLcc_Vars_TimeInvars
         ENDIF
      ENDIF
 
-  END SUBROUTINE deallocate_LuLccTimeInvars
+  END SUBROUTINE deallocate_LuLccTimeInvariants
 
-END MODULE MOD_LuLcc_Vars_TimeInvars
+END MODULE MOD_LuLcc_Vars_TimeInvariants
 ! ---------- EOP ------------

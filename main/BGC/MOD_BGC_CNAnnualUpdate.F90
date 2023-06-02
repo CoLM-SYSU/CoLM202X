@@ -26,7 +26,7 @@ module MOD_BGC_CNAnnualUpdate
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
 
-   use MOD_Vars_PFTimeVars, only: &
+   use MOD_Vars_PFTimeVariables, only: &
        tempsum_potential_gpp_p, tempmax_retransn_p, tempavg_tref_p, tempsum_npp_p, &
        annsum_potential_gpp_p , annmax_retransn_p , annavg_tref_p , annsum_npp_p  
 

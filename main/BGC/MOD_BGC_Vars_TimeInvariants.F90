@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_BGC_Vars_TimeInvars
+MODULE MOD_BGC_Vars_TimeInvariants
 
   ! --------------------------------------------------------------------
 
@@ -123,10 +123,10 @@ SAVE
 
 
 ! PUBLIC MEMBER FUNCTIONS:
-  public :: allocate_BGCTimeInvars
-  public :: deallocate_BGCTimeInvars
-  public :: READ_BGCTimeInvars
-  public :: WRITE_BGCTimeInvars
+  public :: allocate_BGCTimeInvariants
+  public :: deallocate_BGCTimeInvariants
+  public :: READ_BGCTimeInvariants
+  public :: WRITE_BGCTimeInvariants
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -136,7 +136,7 @@ SAVE
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_BGCTimeInvars ()
+  SUBROUTINE allocate_BGCTimeInvariants ()
   ! --------------------------------------------------------------------
   ! Allocates memory for CoLM 1d [numpatch] variables
   ! --------------------------------------------------------------------
@@ -170,10 +170,10 @@ SAVE
   end if
   ENDIF
 
-  END SUBROUTINE allocate_BGCTimeInvars
+  END SUBROUTINE allocate_BGCTimeInvariants
 
   !---------------------------------------
-  SUBROUTINE READ_BGCTimeInvars (file_restart)
+  SUBROUTINE READ_BGCTimeInvariants (file_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -295,17 +295,17 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'sf_no3', sf_no3)
 
 #ifdef CoLMDEBUG
-     call check_BGCTimeInvars ()
+     call check_BGCTimeInvariants ()
 #endif
 
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)
 #endif
 
-  end subroutine READ_BGCTimeInvars
+  end subroutine READ_BGCTimeInvariants
 
   !---------------------------------------
-  SUBROUTINE WRITE_BGCTimeInvars (file_restart)
+  SUBROUTINE WRITE_BGCTimeInvariants (file_restart)
 
      !=======================================================================
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -446,9 +446,9 @@ SAVE
 
      end if
 
-   end subroutine WRITE_BGCTimeInvars
+   end subroutine WRITE_BGCTimeInvariants
 
-  SUBROUTINE deallocate_BGCTimeInvars ()
+  SUBROUTINE deallocate_BGCTimeInvariants ()
 
      use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
@@ -480,11 +480,11 @@ SAVE
         end if
      end if
 
-  END SUBROUTINE deallocate_BGCTimeInvars
+  END SUBROUTINE deallocate_BGCTimeInvariants
 
 #ifdef CoLMDEBUG
    !---------------------------------------
-   SUBROUTINE check_BGCTimeInvars ()
+   SUBROUTINE check_BGCTimeInvariants ()
 
       use MOD_SPMD_Task
       use MOD_CoLMDebug
@@ -498,8 +498,8 @@ SAVE
       call check_vector_data ('peatf_lf       ',  peatf_lf       )
       call check_vector_data ('rice2pdt       ',  rice2pdt       )
 
-   end subroutine check_BGCTimeInvars
+   end subroutine check_BGCTimeInvariants
 #endif
 
 #endif
-END MODULE MOD_BGC_Vars_TimeInvars
+END MODULE MOD_BGC_Vars_TimeInvariants

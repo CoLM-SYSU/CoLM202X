@@ -21,7 +21,7 @@ module MOD_BGC_Veg_CNGResp
   use MOD_Const_PFT, only: &
       grperc, grpnow, woody
 
-  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass
 
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       cpool_to_leafc_p     , cpool_to_leafc_storage_p     , leafc_xfer_to_leafc_p          , &

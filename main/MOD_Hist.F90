@@ -7,7 +7,7 @@ module MOD_Hist
    use MOD_Mapping_Pset2Grid
    USE MOD_Namelist
 #ifdef LULC_IGBP_PFT
-   USE MOD_Vars_PFTimeInvars, only: pftclass
+   USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_LandPFT, only : patch_pft_s
 #endif
    USE MOD_Vars_Global, only : spval

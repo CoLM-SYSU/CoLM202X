@@ -32,7 +32,7 @@ MODULE MOD_UrbanReadin
       USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
-      USE MOD_Urban_Vars_TimeInvars
+      USE MOD_Urban_Vars_TimeInvariants
       USE MOD_NetCDFVector
       USE MOD_NetCDFSerial
       USE MOD_LandPatch

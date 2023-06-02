@@ -46,8 +46,8 @@ MODULE MOD_3DCanopyRadiation
    USE MOD_LandPC
    USE MOD_Vars_Global
    USE MOD_Const_PFT
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
 
    IMPLICIT NONE
 

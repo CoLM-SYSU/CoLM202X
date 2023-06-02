@@ -41,11 +41,11 @@ MODULE MOD_CropReadin
       USE MOD_Const_LC
 #ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
