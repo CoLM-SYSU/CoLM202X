@@ -86,9 +86,7 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_FireReadin
 #endif
    USE MOD_OrbCoszen
-#ifdef USE_DEPTH_TO_BEDROCK
    use MOD_DBedrockReadin
-#endif
    use MOD_SrfdataRestart
    USE MOD_HtopReadin
    USE MOD_IniTimeVar
@@ -272,9 +270,9 @@ MODULE MOD_Lulcc_Initialize
    ! ------------------------------------------
    ! 1.1 Ponding water
    ! ------------------------------------------
-#ifdef USE_DEPTH_TO_BEDROCK
-   CALL dbedrock_readin (dir_landdata)
-#endif
+   IF(DEF_USE_BEDROCK)THEN
+      CALL dbedrock_readin (dir_landdata)
+   ENDIF
 
    IF (p_is_worker) THEN
       IF (numpatch > 0) THEN

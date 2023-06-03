@@ -50,9 +50,9 @@ MODULE MOD_Thermal
                       kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
                       psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
                       ck          ,vegwp       ,gs0sun      ,gs0sha     ,&
-#ifdef OzoneStress
+!Ozone stress variables                      
                       lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
-#endif
+!end ozone stress variables
                       slti        ,hlti        ,shti        ,hhti       ,&
                       trda        ,trdm        ,trop        ,gradm      ,&
                       binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
@@ -260,12 +260,12 @@ use MOD_SPMD_Task
         vegwp(1:nvegwcs),&! vegetation water potential
         gs0sun,      &!
         gs0sha,      &!
-#ifdef OzoneStress
+!Ozone stress variables        
         lai_old    ,& ! lai in last time step
         o3uptakesun,& ! Ozone does, sunlit leaf (mmol O3/m^2)
         o3uptakesha,& ! Ozone does, shaded leaf (mmol O3/m^2)
         forc_ozone ,& ! Ozone
-#endif
+!end ozone stress variables
         tleaf,       &! shaded leaf temperature [K]
         t_soisno(lb:nl_soil),   &! soil temperature [K]
         wice_soisno(lb:nl_soil),&! ice lens [kg/m2]
@@ -404,9 +404,9 @@ use MOD_SPMD_Task
 
   REAL(r8) :: z0m_g,z0h_g,zol_g,obu_g,rib_g,ustar_g,qstar_g,tstar_g
   REAL(r8) :: fm10m,fm_g,fh_g,fq_g,fh2m,fq2m,um,obu
-#ifdef OzoneStress
+!Ozone stress variables
   REAL(r8) :: o3coefv_sun, o3coefv_sha, o3coefg_sun, o3coefg_sha
-#endif
+!end ozone stress variables
 
   INTEGER p, ps, pe, pc
 
@@ -646,10 +646,10 @@ IF (patchtype == 0) THEN
                  cisha_out   ,Dsha_out  ,gammasha_out                      ,&
                  lambdasun_out          ,lambdasha_out                     ,&
 #endif
-#ifdef OzoneStress
+!Ozone stress variables
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
-#endif
+!end ozone stress variables                 
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )
@@ -791,10 +791,10 @@ IF (patchtype == 0) THEN
                  assim_RuBP_sha_p(i), assim_Rubisco_sha_p(i), cisha_p(i), Dsha_p(i), gammasha_p(i), &
                  lambdasun_p(i)     , lambdasha_p(i)        ,&
 #endif
-#ifdef OzoneStress
+!Ozone stress variables                 
                  o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i), &
                  lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone,  &
-#endif
+!end ozone stress variables                 
                  forc_hpbl                                                     ,&
                  qintr_rain_p(i),qintr_snow_p(i),t_precip,hprl_p(i),smp     ,&
                  hk(1:)      ,hksati(1:),rootr_p(1:,i)                      )
@@ -1062,10 +1062,10 @@ IF (patchtype == 0) THEN
            assim_RuBP_sha_c (:)      ,assim_Rubisco_sha_c(:)          ,cisha_c(:) ,&
            Dsha_c(:)                 ,gammasha_c(:), &
 #endif
-#ifdef OzoneStress
+!Ozone stress variables                 
            o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
            lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
-#endif
+!End ozone stress variables                 
            forc_hpbl                                                                  ,&
            qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp           ,&
            hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                )
@@ -1218,10 +1218,10 @@ ELSE
                  cisha_out   ,Dsha_out  ,gammasha_out                      ,&
                  lambdasun_out          ,lambdasha_out                     ,&
 #endif
-#ifdef OzoneStress
+!Ozone stress variables                 
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
-#endif
+!End ozone stress variables                 
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )

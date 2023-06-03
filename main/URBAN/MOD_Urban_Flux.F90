@@ -1685,9 +1685,7 @@ MODULE MOD_Urban_Flux
               gradm   ,binter  ,thm    ,psrf   ,po2m   ,&
               pco2m   ,pco2a   ,eah    ,ei(3)  ,tu(3)  ,&
               par     ,&
-#ifdef OzoneStress
               o3coefv ,o3coefg ,&
-#endif
               rb(3)/lai,raw    ,rstfac ,cint(:),&
               assim   ,respc   ,rs     &
 #ifdef WUEdiag

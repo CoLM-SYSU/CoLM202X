@@ -77,9 +77,7 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
 #endif
 
-#ifdef USE_DEPTH_TO_BEDROCK
    REAL(r8) :: SITE_dbedrock = 1
-#endif
 
 CONTAINS
 
@@ -190,12 +188,12 @@ CONTAINS
 #endif
       ENDIF
 
-#ifdef USE_DEPTH_TO_BEDROCK
-      IF ((.not. mksrfdata) .or. USE_SITE_dbedrock) THEN
-         ! otherwise, retrieve from database by Aggregation_DBedrock.F90
-         CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
+      IF(DEF_USE_BEDROCK)THEN
+         IF ((.not. mksrfdata) .or. USE_SITE_dbedrock) THEN
+            ! otherwise, retrieve from database by Aggregation_DBedrock.F90
+            CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
+         ENDIF
       ENDIF
-#endif
 
    END SUBROUTINE read_surface_data_single
 
@@ -349,10 +347,10 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
 #endif
 
-#ifdef USE_DEPTH_TO_BEDROCK
-      CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
-      CALL ncio_put_attr     (fsrfdata, 'depth_to_bedrock', 'source', datasource(USE_SITE_dbedrock))
-#endif
+      IF(DEF_USE_BEDROCK)THEN
+         CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
+         CALL ncio_put_attr     (fsrfdata, 'depth_to_bedrock', 'source', datasource(USE_SITE_dbedrock))
+      ENDIF
 
    END SUBROUTINE write_surface_data_single
 

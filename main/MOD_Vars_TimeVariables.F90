@@ -50,7 +50,7 @@ MODULE MOD_Vars_PFTimeVariables
   real(r8), allocatable :: gs0sun_p     (:) ! working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_p     (:) ! working copy of shalit stomata conductance
 ! end plant hydraulic variables
-#ifdef OzoneStress
+!Ozone Stress Variables
   real(r8), allocatable :: o3coefv_sun_p(:) !Ozone stress factor for photosynthesis on sunlit leaf
   real(r8), allocatable :: o3coefv_sha_p(:) !Ozone stress factor for photosynthesis on shaded leaf
   real(r8), allocatable :: o3coefg_sun_p(:) !Ozone stress factor for stomata on sunlit leaf
@@ -58,7 +58,7 @@ MODULE MOD_Vars_PFTimeVariables
   real(r8), allocatable :: lai_old_p    (:) !lai in last time step
   real(r8), allocatable :: o3uptakesun_p(:) !Ozone does, sunlit leaf (mmol O3/m^2)
   real(r8), allocatable :: o3uptakesha_p(:) !Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+!End Ozone Stress Variables
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PFTimeVariables
@@ -114,7 +114,7 @@ CONTAINS
             allocate (gs0sun_p     (numpft))
             allocate (gs0sha_p     (numpft))
 ! end plant hydraulic variables
-#ifdef OzoneStress
+! Allocate Ozone Stress Variables
             allocate (o3coefv_sun_p(numpft)) !Ozone stress factor for photosynthesis on sunlit leaf
             allocate (o3coefv_sha_p(numpft)) !Ozone stress factor for photosynthesis on shaded leaf
             allocate (o3coefg_sun_p(numpft)) !Ozone stress factor for stomata on sunlit leaf
@@ -122,7 +122,7 @@ CONTAINS
             allocate (lai_old_p    (numpft)) !lai in last time step
             allocate (o3uptakesun_p(numpft)) !Ozone does, sunlit leaf (mmol O3/m^2)
             allocate (o3uptakesha_p(numpft)) !Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+! End allocate Ozone Stress Variables
          ENDIF
       ENDIF
 
@@ -134,6 +134,7 @@ CONTAINS
 
    SUBROUTINE READ_PFTimeVariables (file_restart)
 
+      USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
       use MOD_NetCDFVector
       USE MOD_LandPFT
       USE MOD_Vars_Global
@@ -162,16 +163,16 @@ CONTAINS
       call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !
       call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !
       call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !
-if(DEF_USE_PLANTHYDRAULICS)then
-      call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
-      call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
-      call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
-end if
-#ifdef OzoneStress
-      call ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
-      call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
-      call ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
-#endif
+      IF(DEF_USE_PLANTHYDRAULICS)THEN
+         call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
+         call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
+         call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
+      END IF
+      IF(DEF_USE_OZONESTRESS)THEN
+         call ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
+         call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
+         call ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
+      ENDIF
 
 #ifdef BGC
       CALL read_BGCPFTimeVariables (file_restart)
@@ -181,7 +182,7 @@ end if
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
      USE MOD_LandPFT
      use MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -198,9 +199,9 @@ end if
      CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
      CALL ncio_define_dimension_vector (file_restart, landpft, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpft, 'rtyp', 2)
-if(DEF_USE_PLANTHYDRAULICS)then
-     CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
-end if
+     if(DEF_USE_PLANTHYDRAULICS)then
+        CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
+     end if
 
      call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
      call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
@@ -222,16 +223,16 @@ end if
      call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
      call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
      call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
-if(DEF_USE_PLANTHYDRAULICS)then
-     call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
-     call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
-     call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
-end if
-#ifdef OzoneStress
-     call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
-     call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
-     call ncio_write_vector (file_restart, 'o3uptakesha_p', 'pft', landpft, o3uptakesha_p, compress)
-#endif
+     IF(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
+        call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
+        call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
+     END IF
+     IF(DEF_USE_OZONESTRESS)THEN
+        call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
+        call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
+        call ncio_write_vector (file_restart, 'o3uptakesha_p', 'pft', landpft, o3uptakesha_p, compress)
+     ENDIF
 
 #ifdef BGC
       CALL WRITE_BGCPFTimeVariables (file_restart)
@@ -274,7 +275,7 @@ end if
             deallocate (gs0sun_p ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_p ) !working copy of shalit stomata conductance
 ! end plant hydraulic variables
-#ifdef OzoneStress
+! Ozone Stress variables
             deallocate (o3coefv_sun_p ) !Ozone stress factor for photosynthesis on sunlit leaf
             deallocate (o3coefv_sha_p ) !Ozone stress factor for photosynthesis on shaded leaf
             deallocate (o3coefg_sun_p ) !Ozone stress factor for stomata on sunlit leaf
@@ -282,7 +283,7 @@ end if
             deallocate (lai_old_p     ) !lai in last time step
             deallocate (o3uptakesun_p ) !Ozone does, sunlit leaf (mmol O3/m^2)
             deallocate (o3uptakesha_p ) !Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+! Ozone Stress variables
          ENDIF
       ENDIF
 
@@ -296,6 +297,8 @@ end if
    SUBROUTINE check_PFTimeVariables
 
       use MOD_CoLMDebug
+      use MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+
       IMPLICIT NONE
 
       call check_vector_data ('tleaf_p  ', tleaf_p  )      !
@@ -318,20 +321,20 @@ end if
       call check_vector_data ('qref_p   ', qref_p   )      !
       call check_vector_data ('rst_p    ', rst_p    )      !
       call check_vector_data ('z0m_p    ', z0m_p    )      !
-if(DEF_USE_PLANTHYDRAULICS)then
-      call check_vector_data ('vegwp_p  ', vegwp_p  )      !
-      call check_vector_data ('gs0sun_p ', gs0sun_p )      !
-      call check_vector_data ('gs0sha_p ', gs0sha_p )      !
-end if
-#ifdef OzoneStress
-      call check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
-      call check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
-      call check_vector_data ('o3coefg_sun_p', o3coefg_sun_p)
-      call check_vector_data ('o3coefg_sha_p', o3coefg_sha_p)
-      call check_vector_data ('lai_old_p    ', lai_old_p    )
-      call check_vector_data ('o3uptakesun_p', o3uptakesun_p)
-      call check_vector_data ('o3uptakesha_p', o3uptakesha_p)
-#endif
+      IF(DEF_USE_PLANTHYDRAULICS)THEN
+         call check_vector_data ('vegwp_p  ', vegwp_p  )      !
+         call check_vector_data ('gs0sun_p ', gs0sun_p )      !
+         call check_vector_data ('gs0sha_p ', gs0sha_p )      !
+      ENDIF
+      IF(DEF_USE_OZONESTRESS)THEN
+         call check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
+         call check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
+         call check_vector_data ('o3coefg_sun_p', o3coefg_sun_p)
+         call check_vector_data ('o3coefg_sha_p', o3coefg_sha_p)
+         call check_vector_data ('lai_old_p    ', lai_old_p    )
+         call check_vector_data ('o3uptakesun_p', o3uptakesun_p)
+         call check_vector_data ('o3uptakesha_p', o3uptakesha_p)
+      ENDIF
 
 #ifdef BGC
       CALL check_BGCPFTimeVariables
@@ -386,6 +389,15 @@ MODULE MOD_Vars_PCTimeVariables
   real(r8), allocatable :: gs0sun_c   (:,:) !working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_c   (:,:) !working copy of shalit stomata conductance
 !end plant hydraulic parameters
+!Ozone Stress Variables
+  real(r8), allocatable :: o3coefv_sun_c(:,:) !Ozone stress factor for photosynthesis on sunlit leaf
+  real(r8), allocatable :: o3coefv_sha_c(:,:) !Ozone stress factor for photosynthesis on shaded leaf
+  real(r8), allocatable :: o3coefg_sun_c(:,:) !Ozone stress factor for stomata on sunlit leaf
+  real(r8), allocatable :: o3coefg_sha_c(:,:) !Ozone stress factor for stomata on shaded leaf
+  real(r8), allocatable :: lai_old_c    (:,:) !lai in last time step
+  real(r8), allocatable :: o3uptakesun_c(:,:) !Ozone does, sunlit leaf (mmol O3/m^2)
+  real(r8), allocatable :: o3uptakesha_c(:,:) !Ozone does, shaded leaf (mmol O3/m^2)
+!End Ozone Stress Variables
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PCTimeVariables
@@ -438,6 +450,15 @@ CONTAINS
             allocate (gs0sun_c   (0:N_PFT-1,numpc))
             allocate (gs0sha_c   (0:N_PFT-1,numpc))
 !end plant hydraulic parameters
+!Ozone Stress Variables
+            allocate (o3coefv_sun_c(0:N_PFT-1,numpc)) !Ozone stress factor for photosynthesis on sunlit leaf
+            allocate (o3coefv_sha_c(0:N_PFT-1,numpc)) !Ozone stress factor for photosynthesis on shaded leaf
+            allocate (o3coefg_sun_c(0:N_PFT-1,numpc)) !Ozone stress factor for stomata on sunlit leaf
+            allocate (o3coefg_sha_c(0:N_PFT-1,numpc)) !Ozone stress factor for stomata on shaded leaf
+            allocate (lai_old_c    (0:N_PFT-1,numpc)) !lai in last time step
+            allocate (o3uptakesun_c(0:N_PFT-1,numpc)) !Ozone does, sunlit leaf (mmol O3/m^2)
+            allocate (o3uptakesha_c(0:N_PFT-1,numpc)) !Ozone does, shaded leaf (mmol O3/m^2)
+!End Ozone Stress Variables
          ENDIF
       ENDIF
 
@@ -446,7 +467,7 @@ CONTAINS
    SUBROUTINE READ_PCTimeVariables (file_restart)
 
       USE MOD_Vars_Global
-      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
       use MOD_NetCDFVector
       USE MOD_LandPC
       IMPLICIT NONE
@@ -470,18 +491,29 @@ CONTAINS
       call ncio_read_vector (file_restart, 'extkd_c  ', N_PFT,     landpc, extkd_c  ) !
       call ncio_read_vector (file_restart, 'rst_c    ', N_PFT,     landpc, rst_c    ) !
       call ncio_read_vector (file_restart, 'z0m_c    ', N_PFT,     landpc, z0m_c    ) !
-if(DEF_USE_PLANTHYDRAULICS)then
-      call ncio_read_vector (file_restart, 'vegwp_c  ', nvegwcs,   N_PFT,  landpc, vegwp_c ) !
-      call ncio_read_vector (file_restart, 'gs0sun_c ', N_PFT,     landpc, gs0sun_c ) !
-      call ncio_read_vector (file_restart, 'gs0sha_c ', N_PFT,     landpc, gs0sha_c ) !
-end if
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call ncio_read_vector (file_restart, 'vegwp_c  ', nvegwcs,   N_PFT,  landpc, vegwp_c ) !
+         call ncio_read_vector (file_restart, 'gs0sun_c ', N_PFT,     landpc, gs0sun_c ) !
+         call ncio_read_vector (file_restart, 'gs0sha_c ', N_PFT,     landpc, gs0sha_c ) !
+      end if
+      IF(DEF_USE_OZONESTRESS)THEN
+!Ozone Stress Variables
+         call ncio_read_vector (file_restart, 'o3coefv_sun_c', N_PFT, landpc, o3coefv_sun_c)!Ozone stress factor for photosynthesis on sunlit leaf
+         call ncio_read_vector (file_restart, 'o3coefv_sha_c', N_PFT, landpc, o3coefv_sha_c) !Ozone stress factor for photosynthesis on shaded leaf
+         call ncio_read_vector (file_restart, 'o3coefg_sun_c', N_PFT, landpc, o3coefg_sun_c) !Ozone stress factor for stomata on sunlit leaf
+         call ncio_read_vector (file_restart, 'o3coefg_sha_c', N_PFT, landpc, o3coefg_sha_c) !Ozone stress factor for stomata on shaded leaf
+         call ncio_read_vector (file_restart, 'lai_old_c    ', N_PFT, landpc, lai_old_c    ) !lai in last time step
+         call ncio_read_vector (file_restart, 'o3uptakesun_c', N_PFT, landpc, o3uptakesun_c) !Ozone does, sunlit leaf (mmol O3/m^2)
+         call ncio_read_vector (file_restart, 'o3uptakesha_c', N_PFT, landpc, o3uptakesha_c) !Ozone does, shaded leaf (mmol O3/m^2)
+!End Ozone Stress Variables
+      ENDIF
 
    END SUBROUTINE READ_PCTimeVariables
 
    SUBROUTINE WRITE_PCTimeVariables (file_restart)
 
       USE MOD_Vars_Global
-      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS
+      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
       USE MOD_LandPC
       use MOD_NetCDFVector
       IMPLICIT NONE
@@ -498,9 +530,9 @@ end if
       CALL ncio_define_dimension_vector (file_restart, landpc, 'pft' , N_PFT)
       CALL ncio_define_dimension_vector (file_restart, landpc, 'band', 2    )
       CALL ncio_define_dimension_vector (file_restart, landpc, 'rtyp', 2    )
-if(DEF_USE_PLANTHYDRAULICS)then
-      CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
-end if
+      if(DEF_USE_PLANTHYDRAULICS)then
+         CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
+      end if
 
       call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !
       call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) !
@@ -520,11 +552,21 @@ end if
       call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !
       call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !
       call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !
-if(DEF_USE_PLANTHYDRAULICS)then
-      call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
-      call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
-      call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sha_c, compress) !
-end if
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
+         call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
+         call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sha_c, compress) !
+      end if
+      IF(DEF_USE_OZONESTRESS)THEN
+!Ozone Stress Variables
+         call ncio_write_vector (file_restart, 'o3coefv_sun_c', 'pft' , N_PFT  , 'pc' , landpc, o3coefv_sun_c, compress)!Ozone stress factor for photosynthesis on sunlit leaf
+         call ncio_write_vector (file_restart, 'o3coefv_sha_c', 'pft' , N_PFT  , 'pc' , landpc, o3coefv_sha_c, compress) !Ozone stress factor for photosynthesis on shaded leaf
+         call ncio_write_vector (file_restart, 'o3coefg_sun_c', 'pft' , N_PFT  , 'pc' , landpc, o3coefg_sun_c, compress) !Ozone stress factor for stomata on sunlit leaf
+         call ncio_write_vector (file_restart, 'o3coefg_sha_c', 'pft' , N_PFT  , 'pc' , landpc, o3coefg_sha_c, compress) !Ozone stress factor for stomata on shaded leaf
+         call ncio_write_vector (file_restart, 'lai_old_c    ', 'pft' , N_PFT  , 'pc' , landpc, lai_old_c    , compress) !lai in last time step
+         call ncio_write_vector (file_restart, 'o3uptakesun_c', 'pft' , N_PFT  , 'pc' , landpc, o3uptakesun_c, compress) !Ozone does, sunlit leaf (mmol O3/m^2)
+         call ncio_write_vector (file_restart, 'o3uptakesha_c', 'pft' , N_PFT  , 'pc' , landpc, o3uptakesha_c, compress) !Ozone does, shaded leaf (mmol O3/m^2)
+      ENDIF
 
    END SUBROUTINE WRITE_PCTimeVariables
 
@@ -561,6 +603,15 @@ end if
             deallocate (gs0sun_c ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_c ) !working copy of shalit stomata conductance
 !end plant hydraulic parameters
+!Ozone Stress Variables
+            deallocate (o3coefv_sun_c) !Ozone stress factor for photosynthesis on sunlit leaf
+            deallocate (o3coefv_sha_c) !Ozone stress factor for photosynthesis on shaded leaf
+            deallocate (o3coefg_sun_c) !Ozone stress factor for stomata on sunlit leaf
+            deallocate (o3coefg_sha_c) !Ozone stress factor for stomata on shaded leaf
+            deallocate (lai_old_c    ) !lai in last time step
+            deallocate (o3uptakesun_c) !Ozone does, sunlit leaf (mmol O3/m^2)
+            deallocate (o3uptakesha_c) !Ozone does, shaded leaf (mmol O3/m^2)
+!End Ozone Stress Variables
          ENDIF
       ENDIF
 
@@ -570,6 +621,7 @@ end if
    SUBROUTINE check_PCTimeVariables
 
       use MOD_CoLMDebug
+      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
       IMPLICIT NONE
 
       call check_vector_data ('tleaf_c  ', tleaf_c  )      !
@@ -589,11 +641,20 @@ end if
       call check_vector_data ('extkd_c  ', extkd_c  )      !
       call check_vector_data ('rst_c    ', rst_c    )      !
       call check_vector_data ('z0m_c    ', z0m_c    )      !
-if(DEF_USE_PLANTHYDRAULICS)then
-      call check_vector_data ('vegwp_c  ', vegwp_c  )      !
-      call check_vector_data ('gs0sun_c ', gs0sun_c )      !
-      call check_vector_data ('gs0sha_c ', gs0sha_c )      !
-end if
+      if(DEF_USE_PLANTHYDRAULICS)then
+         call check_vector_data ('vegwp_c  ', vegwp_c  )      !
+         call check_vector_data ('gs0sun_c ', gs0sun_c )      !
+         call check_vector_data ('gs0sha_c ', gs0sha_c )      !
+      end if
+      IF(DEF_USE_OZONESTRESS)THEN
+         call check_vector_data ('o3coefv_sun_c', o3coefv_sun_c) !Ozone stress factor for photosynthesis on sunlit leaf
+         call check_vector_data ('o3coefv_sha_c', o3coefv_sha_c) !Ozone stress factor for photosynthesis on shaded leaf
+         call check_vector_data ('o3coefg_sun_c', o3coefg_sun_c) !Ozone stress factor for stomata on sunlit leaf
+         call check_vector_data ('o3coefg_sha_c', o3coefg_sha_c) !Ozone stress factor for stomata on shaded leaf
+         call check_vector_data ('lai_old_c    ', lai_old_c    ) !lai in last time step
+         call check_vector_data ('o3uptakesun_c', o3uptakesun_c) !Ozone does, sunlit leaf (mmol O3/m^2)
+         call check_vector_data ('o3uptakesha_c', o3uptakesha_c) !Ozone does, shaded leaf (mmol O3/m^2)
+      END IF
 
    END SUBROUTINE check_PCTimeVariables
 #endif
@@ -644,7 +705,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
      real(r8), allocatable :: gs0sha       (:) ! working copy of shalit stomata conductance
 !end plant hydraulic variables
-#ifdef OzoneStress
+!Ozone stress variables
      real(r8), allocatable :: o3coefv_sun  (:) ! Ozone stress factor for photosynthesis on sunlit leaf
      real(r8), allocatable :: o3coefv_sha  (:) ! Ozone stress factor for photosynthesis on shaded leaf
      real(r8), allocatable :: o3coefg_sun  (:) ! Ozone stress factor for stomata on sunlit leaf
@@ -652,7 +713,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: lai_old      (:) ! lai in last time step
      real(r8), allocatable :: o3uptakesun  (:) ! Ozone does, sunlit leaf (mmol O3/m^2)
      real(r8), allocatable :: o3uptakesha  (:) ! Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+!End ozone stress variables
      real(r8), allocatable :: rstfacsun_out(:) ! factor of soil water stress on sunlit leaf
      real(r8), allocatable :: rstfacsha_out(:) ! factor of soil water stress on shaded leaf
      real(r8), allocatable :: gssun_out    (:) ! stomata conductance on sunlit leaf
@@ -787,7 +848,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (gs0sun                      (numpatch))
            allocate (gs0sha                      (numpatch))
 !end plant hydraulic variables
-#ifdef OzoneStress
+!Ozone Stress variables
            allocate (o3coefv_sun                 (numpatch)) ! Ozone stress factor for photosynthesis on sunlit leaf
            allocate (o3coefv_sha                 (numpatch)) ! Ozone stress factor for photosynthesis on shaded leaf
            allocate (o3coefg_sun                 (numpatch)) ! Ozone stress factor for stomata on sunlit leaf
@@ -795,7 +856,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (lai_old                     (numpatch)) ! lai in last time step
            allocate (o3uptakesun                 (numpatch)) ! Ozone does, sunlit leaf (mmol O3/m^2)
            allocate (o3uptakesha                 (numpatch)) ! Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+!End ozone stress variables
            allocate (rstfacsun_out               (numpatch))
            allocate (rstfacsha_out               (numpatch))
            allocate (gssun_out                   (numpatch))
@@ -937,7 +998,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (gs0sun                 )
            deallocate (gs0sha                 )
 !End plant hydraulic variables
-#ifdef OzoneStress
+!Ozone stress variables
            deallocate (o3coefv_sun            ) ! Ozone stress factor for photosynthesis on sunlit leaf
            deallocate (o3coefv_sha            ) ! Ozone stress factor for photosynthesis on shaded leaf
            deallocate (o3coefg_sun            ) ! Ozone stress factor for stomata on sunlit leaf
@@ -945,7 +1006,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (lai_old                ) ! lai in last time step
            deallocate (o3uptakesun            ) ! Ozone does, sunlit leaf (mmol O3/m^2)
            deallocate (o3uptakesha            ) ! Ozone does, shaded leaf (mmol O3/m^2)
-#endif
+!End Ozone stress variables
            deallocate (rstfacsun_out          )
            deallocate (rstfacsha_out          )
            deallocate (gssun_out              )
@@ -1100,7 +1161,7 @@ MODULE MOD_Vars_TimeVariables
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
      USE MOD_LandPatch
      use MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -1135,9 +1196,9 @@ MODULE MOD_Vars_TimeVariables
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
-if(DEF_USE_PLANTHYDRAULICS)then
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
-end if
+     if(DEF_USE_PLANTHYDRAULICS)then
+        CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
+     end if
 
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
@@ -1150,16 +1211,16 @@ end if
      call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, wice_soisno, compress) ! ice lens in layers [kg/m2]
      call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'patch', landpatch, smp, compress)                    ! soil matrix potential [mm]
      call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'patch', landpatch, hk, compress)                     ! hydraulic conductivity [mm h2o/s]
-if(DEF_USE_PLANTHYDRAULICS)then
-     call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress)                  ! vegetation water potential [mm]
-     call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress)                                    ! working copy of sunlit stomata conductance
-     call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress)                                    ! working copy of shalit stomata conductance
-end if
-#ifdef OzoneStress
-     call ncio_write_vector (file_restart, 'lai_old    ', 'patch', landpatch, lai_old    , compress)
-     call ncio_write_vector (file_restart, 'o3uptakesun', 'patch', landpatch, o3uptakesun, compress)
-     call ncio_write_vector (file_restart, 'o3uptakesha', 'patch', landpatch, o3uptakesha, compress)
-#endif
+     IF(DEF_USE_PLANTHYDRAULICS)THEN
+        call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress)               ! vegetation water potential [mm]
+        call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress)                                 ! working copy of sunlit stomata conductance
+        call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress)                                 ! working copy of shalit stomata conductance
+     ENDIF
+     IF(DEF_USE_OZONESTRESS)THEN
+        call ncio_write_vector (file_restart, 'lai_old    ', 'patch', landpatch, lai_old    , compress)
+        call ncio_write_vector (file_restart, 'o3uptakesun', 'patch', landpatch, o3uptakesun, compress)
+        call ncio_write_vector (file_restart, 'o3uptakesha', 'patch', landpatch, o3uptakesha, compress)
+     ENDIF
      call ncio_write_vector (file_restart, 't_grnd  '   , 'patch', landpatch, t_grnd    , compress)                    ! ground surface temperature [K]
      call ncio_write_vector (file_restart, 'tleaf   '   , 'patch', landpatch, tleaf     , compress)                    ! leaf temperature [K]
      call ncio_write_vector (file_restart, 'ldew    '   , 'patch', landpatch, ldew      , compress)                    ! depth of water on foliage [mm]
@@ -1292,16 +1353,16 @@ end if
      call ncio_read_vector (file_restart, 'wice_soisno', nl_soil-maxsnl, landpatch, wice_soisno) ! ice lens in layers [kg/m2]
      call ncio_read_vector (file_restart, 'smp',         nl_soil,        landpatch, smp        ) ! soil matrix potential [mm]
      call ncio_read_vector (file_restart, 'hk',          nl_soil,        landpatch, hk         ) ! hydraulic conductivity [mm h2o/s]
-if(DEF_USE_PLANTHYDRAULICS)then
-     call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) ! vegetation water potential [mm]
-     call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) ! working copy of sunlit stomata conductance
-     call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shalit stomata conductance
-end if
-#ifdef OzoneStress
-     call ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
-     call ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
-     call ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) ! vegetation water potential [mm]
+        call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) ! working copy of sunlit stomata conductance
+        call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shalit stomata conductance
+     end if
+     IF(DEF_USE_OZONESTRESS)THEN
+        call ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
+        call ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
+        call ncio_read_vector (file_restart, 'o3uptakesha', landpatch, o3uptakesha)
+     ENDIF
      call ncio_read_vector (file_restart, 't_grnd  '   , landpatch, t_grnd     ) ! ground surface temperature [K]
      call ncio_read_vector (file_restart, 'tleaf   '   , landpatch, tleaf      ) ! leaf temperature [K]
      call ncio_read_vector (file_restart, 'ldew    '   , landpatch, ldew       ) ! depth of water on foliage [mm]
@@ -1401,6 +1462,7 @@ end if
 
      use MOD_SPMD_Task
      use MOD_CoLMDebug
+     use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
 
      IMPLICIT NONE
 
@@ -1418,20 +1480,20 @@ end if
      call check_vector_data ('wice_soisno ', wice_soisno) ! ice lens in layers [kg/m2]
      call check_vector_data ('smp         ', smp        ) ! soil matrix potential [mm]
      call check_vector_data ('hk          ', hk         ) ! hydraulic conductivity [mm h2o/s]
-if(DEF_USE_PLANTHYDRAULICS)then
-     call check_vector_data ('vegwp       ', vegwp      ) ! vegetation water potential [mm]
-     call check_vector_data ('gs0sun      ', gs0sun     ) ! working copy of sunlit stomata conductance
-     call check_vector_data ('gs0sha      ', gs0sha     ) ! working copy of shalit stomata conductance
-end if
-#ifdef OzoneStress
-     call check_vector_data ('o3coefv_sun', o3coefv_sun)
-     call check_vector_data ('o3coefv_sha', o3coefv_sha)
-     call check_vector_data ('o3coefg_sun', o3coefg_sun)
-     call check_vector_data ('o3coefg_sha', o3coefg_sha)
-     call check_vector_data ('lai_old    ', lai_old    )
-     call check_vector_data ('o3uptakesun', o3uptakesun)
-     call check_vector_data ('o3uptakesha', o3uptakesha)
-#endif
+     if(DEF_USE_PLANTHYDRAULICS)then
+        call check_vector_data ('vegwp       ', vegwp      ) ! vegetation water potential [mm]
+        call check_vector_data ('gs0sun      ', gs0sun     ) ! working copy of sunlit stomata conductance
+        call check_vector_data ('gs0sha      ', gs0sha     ) ! working copy of shalit stomata conductance
+     end if
+     IF(DEF_USE_OZONESTRESS)THEN
+        call check_vector_data ('o3coefv_sun', o3coefv_sun)
+        call check_vector_data ('o3coefv_sha', o3coefv_sha)
+        call check_vector_data ('o3coefg_sun', o3coefg_sun)
+        call check_vector_data ('o3coefg_sha', o3coefg_sha)
+        call check_vector_data ('lai_old    ', lai_old    )
+        call check_vector_data ('o3uptakesun', o3uptakesun)
+        call check_vector_data ('o3uptakesha', o3uptakesha)
+     ENDIF
      call check_vector_data ('t_grnd      ', t_grnd     ) ! ground surface temperature [K]
      call check_vector_data ('tleaf       ', tleaf      ) ! leaf temperature [K]
      call check_vector_data ('ldew        ', ldew       ) ! depth of water on foliage [mm]
