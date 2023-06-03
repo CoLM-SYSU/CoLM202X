@@ -37,10 +37,8 @@ MODULE MOD_LeafTemperaturePC
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
               qstar   ,tstar   ,fm      ,fh      ,fq               ,&
               rootfr                             ,&
-#ifdef PLANT_HYDRAULIC_STRESS
               kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
               psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
-#endif
 #ifdef WUEdiag
               assimsun,etrsun  ,assimsha,etrsha  ,&
               assim_RuBP_sun   ,assim_Rubisco_sun, cisun  ,Dsun    ,gammasun, &
@@ -88,13 +86,11 @@ MODULE MOD_LeafTemperaturePC
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
-  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
-#ifdef PLANT_HYDRAULIC_STRESS
   USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
-#endif
 #ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
 #endif
@@ -134,7 +130,9 @@ MODULE MOD_LeafTemperaturePC
         trop,       &! temperature coefficient in gs-a model         (273+25)
         gradm,      &! conductance-photosynthesis slope parameter
         binter,     &! conductance-photosynthesis intercept
-#ifdef PLANT_HYDRAULIC_STRESS
+        extkn        ! coefficient of leaf nitrogen allocation
+
+  REAL(r8), dimension(npft), intent(in), optional :: &
         kmax_sun,   &
         kmax_sha,   &
         kmax_xyl,   &
@@ -143,9 +141,12 @@ MODULE MOD_LeafTemperaturePC
         psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
         psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
-        ck,         &! shape-fitting parameter for vulnerability curve (-)
-#endif
-        extkn        ! coefficient of leaf nitrogen allocation
+        ck           ! shape-fitting parameter for vulnerability curve (-)
+
+  REAL(r8), intent(inout) :: &
+        vegwp(1:nvegwcs,npft),  &! vegetation water potential
+        gs0sun(npft),           &!
+        gs0sha(npft)
 
 ! input variables
   REAL(r8), intent(in) :: &
@@ -198,12 +199,6 @@ MODULE MOD_LeafTemperaturePC
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
 
-#ifdef PLANT_HYDRAULIC_STRESS
-  REAL(r8), intent(inout) :: &
-        vegwp(1:nvegwcs,npft),  &! vegetation water potential
-        gs0sun(npft),           &!
-        gs0sha(npft)
-#endif
   REAL(r8), intent(in) :: &
         hpbl        ! atmospheric boundary layer height [m]
 
@@ -229,7 +224,6 @@ MODULE MOD_LeafTemperaturePC
 #ifdef WUEdiag
   REAL(r8), dimension(npft), intent(inout) :: &
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsun,     &
         assim_RuBP_sun, &
         assim_Rubisco_sun, &
         cisun,             &
@@ -237,7 +231,6 @@ MODULE MOD_LeafTemperaturePC
         gammasun,          &
         lambdasun,         &
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsha,     &
         assim_RuBP_sha, &
         assim_Rubisco_sha, &
         cisha,             &
@@ -383,14 +376,10 @@ MODULE MOD_LeafTemperaturePC
    REAL(r8) irab(npft), dirab_dtl(npft), fsenl_dtl(npft), fevpl_dtl(npft)
    REAL(r8) w, csoilcn, z0mg, z0hg, z0qg, cintsun(3, npft), cintsha(3, npft)
    REAL(r8), dimension(npft) :: fevpl_bef, fevpl_noadj, dtl_noadj, erre
-#ifdef PLANT_HYDRAULIC_STRESS
    real(r8),dimension(npft) :: gb_mol_sun,gb_mol_sha
-#ifndef WUEdiag
    real(r8),dimension(npft) :: etrsun,etrsha
-#endif
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
-#endif
 
    ! .................................................................
    ! defination for 3d run
@@ -1027,73 +1016,73 @@ MODULE MOD_LeafTemperaturePC
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
 #ifdef OzoneStress
-            call CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
-                                 rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
-            call CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
-                                 rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
+                call CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
+                                     rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
+                call CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
+                                     rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
                 lai_old(i) = lai(i)
 #endif
-#ifdef PLANT_HYDRAULIC_STRESS
-            call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
-                     dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
-                     qaf(clev) ,tl(i)     ,tl(i)      ,rbsun      ,rbsha      ,&
-                     raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&
-                     cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&
-                     sai(i)    ,kmax_sun(i),kmax_sha(i),kmax_xyl(i),kmax_root(i),&
-                     psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&
-                     ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&
-                     etrsun(i) ,etrsha(i) ,rootr(:,i) ,sigf(i)    ,qg         ,&
-                     qm        ,gs0sun(i) ,gs0sha(i)  ,k_soil_root,k_ax_root  )
-            etr(i) = etrsun(i) + etrsha(i)
-#endif
+                if(DEF_USE_PLANTHYDRAULICS)then
+                   call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
+                         dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
+                         qaf(clev) ,tl(i)     ,tl(i)      ,rbsun      ,rbsha      ,&
+                         raw       ,rd(clev)  ,rstfacsun(i),rstfacsha(i),cintsun(:,i),&
+                         cintsha(:,i),laisun(i),laisha(i) ,rhoair     ,fwet(i)    ,&
+                         sai(i)    ,kmax_sun(i),kmax_sha(i),kmax_xyl(i),kmax_root(i),&
+                         psi50_sun(i),psi50_sha(i),psi50_xyl(i),psi50_root(i),htop(i),&
+                         ck(i)     ,smp       ,hk         ,hksati     ,vegwp(:,i) ,&
+                         etrsun(i) ,etrsha(i) ,rootr(:,i) ,sigf(i)    ,qg         ,&
+                         qm        ,gs0sun(i) ,gs0sha(i)  ,k_soil_root,k_ax_root  )
+                   etr(i) = etrsun(i) + etrsha(i)
+                end if
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
                 CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
-                   shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                   gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     , parsun(i)  ,&
+                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
+                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
+                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     , parsun(i)  ,&
 #ifdef OzoneStress
-                   o3coefv_sun(i), o3coefg_sun(i), &
+                    o3coefv_sun(i), o3coefg_sun(i), &
 #endif
-                   rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
-                   assimsun(i),respcsun(i),rssun(i)  &
+                    rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
+                    assimsun(i),respcsun(i),rssun(i)  &
 #ifdef WUEdiag
-                   ,assim_RuBP_sun(i),assim_Rubisco_sun(i)  ,cisun(i)  ,Dsun(i)  ,gammasun(i)  &
+                    ,assim_RuBP_sun(i),assim_Rubisco_sun(i)  ,cisun(i)  ,Dsun(i)  ,gammasun(i)  &
 #endif
-                   )
+                    )
 
                 CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
-                   shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
-                   gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                   pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
+                    shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
+                    gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
+                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
 #ifdef OzoneStress
-                   o3coefv_sun(i), o3coefg_sun(i), &
+                    o3coefv_sun(i), o3coefg_sun(i), &
 #endif
-                   rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
-                   assimsha(i),respcsha(i),rssha(i) &
+                    rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
+                    assimsha(i),respcsha(i),rssha(i) &
 #ifdef WUEdiag
-                   ,assim_RuBP_sha(i),assim_Rubisco_sha(i)  ,cisha(i)  ,Dsha(i)  ,gammasha(i)  &
+                    ,assim_RuBP_sha(i),assim_Rubisco_sha(i)  ,cisha(i)  ,Dsha(i)  ,gammasha(i)  &
 #endif
-                   )
+                    )
 
-#ifdef PLANT_HYDRAULIC_STRESS
-            gssun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) ) / cintsun(3,i) * 1.e6
-            gssha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) ) / cintsha(3,i) * 1.e6
-            gs0sun(i)  = gssun(i)/amax1(rstfacsun(i),1.e-2)
-            gs0sha(i)  = gssha(i)/amax1(rstfacsha(i),1.e-2)
+                if(DEF_USE_PLANTHYDRAULICS)then
+                   gssun(i) = min( 1.e6, 1./(rssun(i)*tl(i)/tprcor) ) / cintsun(3,i) * 1.e6
+                   gssha(i) = min( 1.e6, 1./(rssha(i)*tl(i)/tprcor) ) / cintsha(3,i) * 1.e6
+                   gs0sun(i)  = gssun(i)/amax1(rstfacsun(i),1.e-2)
+                   gs0sha(i)  = gssha(i)/amax1(rstfacsha(i),1.e-2)
 
-            gb_mol_sun(i) = 1./rbsun * tprcor/tl(i) / cintsun(3,i) * 1.e6  ! leaf to canopy
-            gb_mol_sha(i) = 1./rbsha * tprcor/tl(i) / cintsha(3,i) * 1.e6  ! leaf to canopy
-#endif
+                   gb_mol_sun(i) = 1./rbsun * tprcor/tl(i) / cintsun(3,i) * 1.e6  ! leaf to canopy
+                   gb_mol_sha(i) = 1./rbsha * tprcor/tl(i) / cintsha(3,i) * 1.e6  ! leaf to canopy
+                end if
 
              ELSE
                 rssun(i) = 2.e4; assimsun(i) = 0.; respcsun(i) = 0.
                 rssha(i) = 2.e4; assimsha(i) = 0.; respcsha(i) = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-                etr(i) = 0.
-                rootr(:,i) = 0.
-#endif
+                if(DEF_USE_PLANTHYDRAULICS)then
+                   etr(i) = 0.
+                   rootr(:,i) = 0.
+                end if
              ENDIF
           ENDDO
 
@@ -1336,11 +1325,10 @@ MODULE MOD_LeafTemperaturePC
                 ENDIF
 
 ! latent heat fluxes and their derivatives
-#ifndef PLANT_HYDRAULIC_STRESS
+
                 etr(i) = rhoair * (1.-fwet(i)) * delta(i) &
                        * ( laisun(i)/(rb(i)+rssun(i)) + laisha(i)/(rb(i)+rssha(i)) ) &
                        * ( qsatl(i) - qaf(clev) )
-#endif
                 ! 09/25/2017: re-written
                 IF (numlay < 3 .or. clev == 2) THEN
                    etr_dtl(i) = rhoair * (1.-fwet(i)) * delta(i) &
@@ -1361,12 +1349,12 @@ MODULE MOD_LeafTemperaturePC
                    ENDIF
                 ENDIF
 
-#ifndef PLANT_HYDRAULIC_STRESS
-                IF(etr(i).ge.etrc(i))THEN
-                   etr(i) = etrc(i)
-                   etr_dtl(i) = 0.
-                ENDIF
-#endif
+                if(.not. DEF_USE_PLANTHYDRAULICS)then
+                   IF(etr(i).ge.etrc(i))THEN
+                      etr(i) = etrc(i)
+                      etr_dtl(i) = 0.
+                   ENDIF
+                end if
 
                 evplwet(i) = rhoair * (1.-delta(i)*(1.-fwet(i))) * lsai(i)/rb(i) &
                            * ( qsatl(i) - qaf(clev) )
@@ -1608,13 +1596,13 @@ MODULE MOD_LeafTemperaturePC
 
              etr0(i)    = etr(i)
              etr(i)     = etr(i)     +     etr_dtl(i)*dtl(it-1,i)
-#ifdef PLANT_HYDRAULIC_STRESS
-             if(abs(etr0(i)) .ge. 1.e-15)then
-                rootr(:,i) = rootr(:,i) * etr(i) / etr0(i)
-             else
-                rootr(:,i) = rootr(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
+             if(DEF_USE_PLANTHYDRAULICS)then
+                if(abs(etr0(i)) .ge. 1.e-15)then
+                   rootr(:,i) = rootr(:,i) * etr(i) / etr0(i)
+                else
+                   rootr(:,i) = rootr(:,i) + dz_soi / sum(dz_soi) * etr_dtl(i)* dtl(it-1,i)
+                end if
              end if
-#endif
              evplwet(i) = evplwet(i) + evplwet_dtl(i)*dtl(it-1,i)
              fevpl(i)   = fevpl_noadj(i)
              fevpl(i)   = fevpl(i)   +   fevpl_dtl(i)*dtl(it-1,i)

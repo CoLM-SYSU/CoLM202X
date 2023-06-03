@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_GroundTem
+MODULE MOD_GroundTemperature
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -67,7 +67,7 @@ MODULE MOD_GroundTem
 
    use MOD_Precision
    use MOD_Const_Physical, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
-   USE MOD_Meltf
+   USE MOD_PhaseChange
    USE MOD_SoilHcapCond
    USE MOD_Utils
 
@@ -358,4 +358,4 @@ MODULE MOD_GroundTem
 
    end subroutine groundtem
 
-END MODULE MOD_GroundTem
+END MODULE MOD_GroundTemperature

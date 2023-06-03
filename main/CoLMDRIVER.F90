@@ -94,11 +94,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
       ! VEGETATION INFORMATION
         htop(i),         hbot(i),         sqrtdi(m),                        &
         effcon(m),       vmax25(m),                                         &
-#ifdef PLANT_HYDRAULIC_STRESS
         kmax_sun(m),     kmax_sha(m),     kmax_xyl(m),     kmax_root(m),    &
         psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
         ck(m),                                                              &
-#endif
          slti(m),         hlti(m),                                           &
          shti(m),         hhti(m),         trda(m),         trdm(m),         &
          trop(m),         gradm(m),        binter(m),       extkn(m),        &
@@ -123,9 +121,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          fsno(i),         sigf(i),         green(i),        lai(i),          &
          sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
          thermk(i),       extkb(i),        extkd(i),                         &
-#ifdef PLANT_HYDRAULIC_STRESS
         vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
-#endif
 #ifdef OzoneStress
         lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
 #endif

@@ -61,10 +61,6 @@
 !      THERMAL_CONDUCTIVITY_SCHEME_8: Yan Hengnian, He Hailong et al. (2019)
 #define THERMAL_CONDUCTIVITY_SCHEME_4
 
-! 10. If defined, plant hydraulic scheme is used
-#define PLANT_HYDRAULIC_STRESS
-
-
 ! 11. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
 
@@ -74,13 +70,7 @@
 #ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
-! 12.1 If defined, LAI is prognostically calculated from leaf carbon and specific leaf area
-#define LAIfdbk
-!    Conflicts : only used when BGC is defined
-#ifndef BGC
-#undef LAIfdbk
-#endif
-! 12.2 If defined, CROP model is used
+! 12.1 If defined, CROP model is used
 #define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC

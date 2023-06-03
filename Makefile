@@ -25,9 +25,9 @@ OBJS_SHARED =    \
 				  MOD_Precision.o              \
 				  MOD_Vars_Global.o            \
 				  MOD_Const_Physical.o         \
-				  MOD_Const_LC.o               \
 				  MOD_SPMD_Task.o              \
 				  MOD_Namelist.o               \
+				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
@@ -274,12 +274,12 @@ OBJS_MAIN = \
 				MOD_SoilThermalParameters.o               \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
-				MOD_Meltf.o                               \
+				MOD_PhaseChange.o                               \
 				MOD_Glacier.o                             \
 				MOD_Lake.o                                \
 				MOD_SimpleOcean.o                         \
 				MOD_GroundFluxes.o                        \
-				MOD_GroundTem.o                           \
+				MOD_GroundTemperature.o                           \
 				MOD_LeafInterception.o                    \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \

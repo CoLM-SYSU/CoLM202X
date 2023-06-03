@@ -15,6 +15,7 @@ module MOD_BGC_Veg_CNVegStructUpdate
   !
 
   use MOD_Precision
+  use MOD_Namelist, only: DEF_LAIFEEDBACK
   use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
@@ -78,11 +79,11 @@ contains
           tlai_old = tlai_p(m) ! n-1 value
           tsai_old = tsai_p(m) ! n-1 value
 
-#ifdef LAIfdbk
-          tlai_p(m) = slatop(ivt) * leafc_p(m)
-          tlai_p(m) = max(0._r8, tlai_p(m))
-          lai_p (m) = tlai_p(m)
-#endif
+          if(DEF_LAIFEEDBACK)then
+             tlai_p(m) = slatop(ivt) * leafc_p(m)
+             tlai_p(m) = max(0._r8, tlai_p(m))
+             lai_p (m) = tlai_p(m)
+          end if
 
           ! update the stem area index and height based on LAI, stem mass, and veg type.
           ! With the exception of htop for woody vegetation, this follows the DGVM logic.
