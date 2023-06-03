@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_LuLcc_Vars_TimeVars
+MODULE MOD_LuLcc_Vars_TimeVariables
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
 ! -------------------------------
@@ -144,10 +144,10 @@ MODULE MOD_LuLcc_Vars_TimeVars
 
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_LuLccTimeVars
-  PUBLIC :: deallocate_LuLccTimeVars
-  PUBLIC :: SAVE_LuLccTimeVars
-  PUBLIC :: REST_LuLccTimeVars
+  PUBLIC :: allocate_LuLccTimeVariables
+  PUBLIC :: deallocate_LuLccTimeVariables
+  PUBLIC :: SAVE_LuLccTimeVariables
+  PUBLIC :: REST_LuLccTimeVariables
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -157,7 +157,7 @@ MODULE MOD_LuLcc_Vars_TimeVars
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_LuLccTimeVars
+  SUBROUTINE allocate_LuLccTimeVariables
   ! --------------------------------------------------------------------
   ! Allocates memory for LuLcc time variant variables
   ! --------------------------------------------------------------------
@@ -167,15 +167,15 @@ MODULE MOD_LuLcc_Vars_TimeVars
      USE MOD_Vars_Global
      USE MOD_LandPatch
 #ifdef LULC_IGBP_PFT
-     USE MOD_Vars_PFTimeVars
+     USE MOD_Vars_PFTimeVariables
      USE MOD_LandPFT
 #endif
 #ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVars
+     USE MOD_Vars_PCTimeVariables
      USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_Urban_Vars_TimeVars
+     USE MOD_Urban_Vars_TimeVariables
      USE MOD_LandUrban
 #endif
 
@@ -318,23 +318,23 @@ MODULE MOD_LuLcc_Vars_TimeVars
         ENDIF
 #endif
      ENDIF
-  END SUBROUTINE allocate_LuLccTimeVars
+  END SUBROUTINE allocate_LuLccTimeVariables
 
 
-  SUBROUTINE SAVE_LuLccTimeVars
+  SUBROUTINE SAVE_LuLccTimeVariables
 
      USE MOD_Precision
      use MOD_SPMD_Task
      USE MOD_Vars_Global
      USE MOD_Vars_TimeVariables
 #ifdef LULC_IGBP_PFT
-     USE MOD_Vars_PFTimeVars
+     USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVars
+     USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_Urban_Vars_TimeVars
+     USE MOD_Urban_Vars_TimeVariables
 #endif
 
      IMPLICIT NONE
@@ -469,10 +469,10 @@ MODULE MOD_LuLcc_Vars_TimeVars
 #endif
      ENDIF
 
-  END SUBROUTINE SAVE_LuLccTimeVars
+  END SUBROUTINE SAVE_LuLccTimeVariables
 
 
-  SUBROUTINE REST_LuLccTimeVars
+  SUBROUTINE REST_LuLccTimeVariables
 
      use MOD_SPMD_Task
      USE MOD_Precision
@@ -482,18 +482,18 @@ MODULE MOD_LuLcc_Vars_TimeVars
      USE MOD_Mesh
      USE MOD_Vars_TimeInvariants
      USE MOD_Vars_TimeVariables
-     USE MOD_LuLcc_Vars_TimeInvars
+     USE MOD_LuLcc_Vars_TimeInvariants
 #ifdef LULC_IGBP_PFT
-     USE MOD_Vars_PFTimeInvars
-     USE MOD_Vars_PFTimeVars
+     USE MOD_Vars_PFTimeInvariants
+     USE MOD_Vars_PFTimeVariables
      USE MOD_LandPFT
 #endif
 #ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVars
+     USE MOD_Vars_PCTimeVariables
      USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
-     USE MOD_Urban_Vars_TimeVars
+     USE MOD_Urban_Vars_TimeVariables
      USE MOD_LandUrban
 #endif
 
@@ -616,7 +616,7 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     ip_= patch_pft_s_(np_)
 
                     IF (ip.le.0 .or. ip_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVars LULC_IGBP_PFT!"
+                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PFT!"
                        STOP
                     ENDIF
 
@@ -659,7 +659,7 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     pc_= patch2pc_(np_)
 
                     IF (pc.le.0 .or. pc_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVars LULC_IGBP_PC!"
+                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PC!"
                        STOP
                     ENDIF
 
@@ -684,7 +684,7 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
                     u_= patch2urban_(np_)
 
                     IF (u.le.0 .or. u_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVars URBAN_MODEL!"
+                       print *, "Error in REST_LuLccTimeVariables URBAN_MODEL!"
                        STOP
                     ENDIF
 
@@ -787,12 +787,12 @@ ENDIF
         IF (allocated(grid_patch_e_)) deallocate(grid_patch_e_)
         IF (allocated(locpxl       )) deallocate(locpxl       )
      ENDIF
-  END SUBROUTINE REST_LuLccTimeVars
+  END SUBROUTINE REST_LuLccTimeVariables
 
 
-  SUBROUTINE deallocate_LuLccTimeVars
+  SUBROUTINE deallocate_LuLccTimeVariables
      use MOD_SPMD_Task
-     USE MOD_LuLcc_Vars_TimeInvars, only: numpatch_, numpft_, numpc_, numurban_
+     USE MOD_LuLcc_Vars_TimeInvariants, only: numpatch_, numpft_, numpc_, numurban_
 
 ! --------------------------------------------------
 ! Deallocates memory for LuLcc time variant variables
@@ -935,7 +935,7 @@ ENDIF
 #endif
      ENDIF
 
-  END SUBROUTINE deallocate_LuLccTimeVars
+  END SUBROUTINE deallocate_LuLccTimeVariables
 
-END MODULE MOD_LuLcc_Vars_TimeVars
+END MODULE MOD_LuLcc_Vars_TimeVariables
 ! ---------- EOP ------------

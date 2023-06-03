@@ -1,6 +1,7 @@
 #include <define.h>
+
 #ifdef URBAN_MODEL
-MODULE MOD_Urban_Vars_TimeInvars
+MODULE MOD_Urban_Vars_TimeInvariants
 
 ! -------------------------------
 ! Created by Hua Yuan, 12/2020
@@ -65,10 +66,10 @@ MODULE MOD_Urban_Vars_TimeInvars
    REAL(r8), allocatable :: t_roommin   (:)  !minimum temperature of inner room [K]
 
 ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: allocate_UrbanTimeInvars
-   PUBLIC :: deallocate_UrbanTimeInvars
-   PUBLIC :: READ_UrbanTimeInvars
-   PUBLIC :: WRITE_UrbanTimeInvars
+   PUBLIC :: allocate_UrbanTimeInvariants
+   PUBLIC :: deallocate_UrbanTimeInvariants
+   PUBLIC :: READ_UrbanTimeInvariants
+   PUBLIC :: WRITE_UrbanTimeInvariants
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -78,7 +79,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE allocate_UrbanTimeInvars ()
+   SUBROUTINE allocate_UrbanTimeInvariants ()
 ! ------------------------------------------------------
 ! Allocates memory for CLM 1d [numurban] variants
 ! ------------------------------------------------------
@@ -134,9 +135,9 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE allocate_UrbanTimeInvars
+   END SUBROUTINE allocate_UrbanTimeInvariants
 
-   SUBROUTINE READ_UrbanTimeInvars (file_restart)
+   SUBROUTINE READ_UrbanTimeInvariants (file_restart)
 
      USE MOD_NetCDFVector
      USE MOD_LandUrban
@@ -193,9 +194,9 @@ CONTAINS
      CALL ncio_read_vector (file_restart, 'ALB_IMPROAD', ns, nr, landurban, alb_gimp  )
      CALL ncio_read_vector (file_restart, 'ALB_PERROAD', ns, nr, landurban, alb_gper  )
 
-   END SUBROUTINE READ_UrbanTimeInvars
+   END SUBROUTINE READ_UrbanTimeInvariants
 
-   SUBROUTINE WRITE_UrbanTimeInvars (file_restart)
+   SUBROUTINE WRITE_UrbanTimeInvariants (file_restart)
 
      use MOD_NetCDFVector
      use MOD_LandUrban
@@ -273,9 +274,9 @@ CONTAINS
      CALL ncio_write_vector (file_restart, 'ALB_IMPROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gimp, DEF_REST_COMPRESS_LEVEL)
      CALL ncio_write_vector (file_restart, 'ALB_PERROAD', 'numsolar', ns, 'numrad', nr, 'urban', landurban, alb_gper, DEF_REST_COMPRESS_LEVEL)
 
-   END SUBROUTINE WRITE_UrbanTimeInvars
+   END SUBROUTINE WRITE_UrbanTimeInvariants
 
-   SUBROUTINE deallocate_UrbanTimeInvars
+   SUBROUTINE deallocate_UrbanTimeInvariants
 
       USE MOD_SPMD_Task
       USE MOD_LandUrban
@@ -326,9 +327,9 @@ CONTAINS
             deallocate (fix_holiday  )
          ENDIF
       ENDIF
-   END SUBROUTINE deallocate_UrbanTimeInvars
+   END SUBROUTINE deallocate_UrbanTimeInvariants
 
-END MODULE MOD_Urban_Vars_TimeInvars
+END MODULE MOD_Urban_Vars_TimeInvariants
 #endif
 ! ---------- EOP ------------
 

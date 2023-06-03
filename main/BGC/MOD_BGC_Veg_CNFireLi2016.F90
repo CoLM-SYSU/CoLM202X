@@ -35,10 +35,10 @@ module MOD_BGC_Veg_CNFireLi2016
       trotr1           , trotr2     , hdm_lf    , lnfm        , baf_crop , baf_peatf , &
       farea_burned     , nfire      , fsat      , prec60      , wf2      , &
       tsoi17           , rh30       , t_soisno  , wliq_soisno
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       burndate_p
-  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
-  use MOD_BGC_Vars_PFTimeVars, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p     , &
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
+  use MOD_BGC_Vars_PFTimeVariables, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p     , &
                                       frootc_p    , frootc_storage_p    , frootc_xfer_p    , &
                                       deadcrootc_p, deadcrootc_storage_p, deadcrootc_xfer_p, &
                                       livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p

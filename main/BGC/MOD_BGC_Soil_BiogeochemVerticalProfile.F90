@@ -17,11 +17,11 @@ module MOD_BGC_Soil_BiogeochemVerticalProfile
 
   use MOD_Precision
   use MOD_Const_PFT, only: rootfr_p
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       nfixation_prof, ndep_prof, altmax_lastyear_indx
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       leaf_prof_p, froot_prof_p, croot_prof_p, stem_prof_p, cinput_rootfr_p
-  use MOD_Vars_PFTimeInvars, only: &
+  use MOD_Vars_PFTimeInvariants, only: &
       pftclass, pftfrac
   implicit none
 

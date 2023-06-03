@@ -17,9 +17,9 @@ module MOD_BGC_CNNStateUpdate3
   !                   2) Record accumulated fire-associated N transfers for veg and soil N semi-analytic spinup
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2, i_soil3
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
     ! decomposition pools & fluxes variables (inout)
            decomp_npools_vr, sminn_vr, smin_no3_vr, smin_nh4_vr
 
@@ -31,7 +31,7 @@ module MOD_BGC_CNNStateUpdate3
     ! mineral nitrogen pools & fluxes variables (inout)
            sminn_leached_vr, smin_no3_leached_vr, smin_no3_runoff_vr
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
     ! vegetation nitrogen state variables (inout)
            leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
            frootn_p           , frootn_storage_p    , frootn_xfer_p    , &

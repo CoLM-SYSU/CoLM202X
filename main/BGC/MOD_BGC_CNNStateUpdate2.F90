@@ -16,9 +16,9 @@ module MOD_BGC_CNNStateUpdate2
   !                   2) Record the accumulated gap-mortality-associated N transfers for veg and soil N semi-analytic spinup
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd, i_soil1, i_soil2,i_soil3
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
     ! decompositionn nitrogen pools & fluxes variables (inout)
            decomp_npools_vr, &
            I_met_n_vr_acc     , I_cel_n_vr_acc      , I_lig_n_vr_acc   , I_cwd_n_vr_acc             
@@ -27,7 +27,7 @@ module MOD_BGC_CNNStateUpdate2
            gap_mortality_to_met_n, gap_mortality_to_cel_n , &
            gap_mortality_to_lig_n, gap_mortality_to_cwdn  
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
     ! vegetation nitrogen state variables (inout)
            leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
            frootn_p           , frootn_storage_p    , frootn_xfer_p    , &
@@ -56,7 +56,7 @@ module MOD_BGC_CNNStateUpdate2
            m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
            m_retransn_to_litter_p
 
-  use MOD_Vars_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftfrac
   implicit none
 
   public NStateUpdate2
