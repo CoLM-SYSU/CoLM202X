@@ -36,10 +36,13 @@ MODULE MOD_AssimStomataConductance
 
 !=======================================================================
 !
+!  ! DESCRIPTION:
 !     calculation of canopy photosynthetic rate using the integrated
 !     model relating assimilation and stomatal conductance.
 !
 !     Original author: Yongjiu Dai, 08/11/2001
+!
+!     Revision author: Xingjie Lu, 2021
 !
 !     Reference: Dai et al., 2004: A two-big-leaf model for canopy temperature,
 !         photosynthesis and stomatal conductance. J. Climate, 17: 2281-2299.
