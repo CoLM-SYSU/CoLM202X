@@ -751,10 +751,10 @@ CONTAINS
          totcolc = totcolc + (leafc_p(m) + leafc_storage_p(m) + deadstemc_p(m))* pftfrac(m)
          totcoln = totcoln + (leafn_p(m) + leafn_storage_p(m) + deadstemn_p(m))* pftfrac(m)
       end do
-#ifdef OzoneStress
-      o3uptakesun_p            (ps:pe) = 0._r8
-      o3uptakesha_p            (ps:pe) = 0._r8
-#endif
+      IF(DEF_USE_OZONESTRESS)THEN
+         o3uptakesun_p            (ps:pe) = 0._r8
+         o3uptakesha_p            (ps:pe) = 0._r8
+      ENDIF
       leafc_xfer_p             (ps:pe) = 0.0
       frootc_p                 (ps:pe) = 0.0
       frootc_storage_p         (ps:pe) = 0.0

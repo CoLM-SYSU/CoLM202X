@@ -225,9 +225,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_lnfm               (:)
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
    real(r8), allocatable :: a_ozone              (:)
-#endif
+! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
    real(r8), allocatable :: a_wliq_soisno (:,:)
@@ -529,9 +529,9 @@ contains
             allocate (a_lnfm               (numpatch))
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
             allocate (a_ozone              (numpatch))
-#endif
+! End ozone stress variables
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
@@ -829,9 +829,9 @@ contains
             deallocate (a_lnfm               )
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
             deallocate (a_ozone              )
-#endif
+! end ozone stress variables
 
             deallocate (a_t_soisno    )
             deallocate (a_wliq_soisno )
@@ -909,6 +909,7 @@ contains
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       use MOD_Vars_Global,    only : spval
+      use MOD_Namelist, only: DEF_USE_OZONESTRESS
       implicit none
 
       if (p_is_worker) then
@@ -1135,9 +1136,9 @@ contains
             a_lnfm               (:) = spval
 #endif
 #endif
-#ifdef OzoneStress
-            a_ozone              (:) = spval
-#endif
+            IF(DEF_USE_OZONESTRESS)THEN
+               a_ozone              (:) = spval
+            ENDIF
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1225,7 +1226,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS
       USE MOD_TurbulenceLEddy
       use MOD_CoLMDebug
       use MOD_Vars_Global
@@ -1501,9 +1502,9 @@ contains
             call acc1d (lnfm               ,   a_lnfm               )
 #endif
 #endif
-#ifdef OzoneStress
-            call acc1d (forc_ozone         ,   a_ozone              )
-#endif
+            IF(DEF_USE_OZONESTRESS)THEN
+               call acc1d (forc_ozone         ,   a_ozone              )
+            ENDIF
 
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)

@@ -1016,12 +1016,12 @@ contains
              a_ndep_to_sminn, f_ndep_to_sminn, file_hist, 'f_ndep_to_sminn', itime_in_file, sumwt, filter, &
              'nitrogen deposition','gN/m2/s')
 
-#ifdef OzoneStress
-         ! grain to crop seed carbon
-         call flux_map_and_write_2d ( DEF_hist_vars%xy_ozone, &
-             a_ozone, f_xy_ozone, file_hist, 'f_xy_ozone', itime_in_file, sumwt, filter, &
-             'Ozone concentration','mol/mol')
-#endif
+         IF(DEF_USE_OZONESTRESS)THEN
+         ! ozone concentration
+            call flux_map_and_write_2d ( DEF_hist_vars%xy_ozone, &
+               a_ozone, f_xy_ozone, file_hist, 'f_xy_ozone', itime_in_file, sumwt, filter, &
+               'Ozone concentration','mol/mol')
+         ENDIF
 
          ! litter 1 carbon density in soil layers
          call flux_map_and_write_3d ( DEF_hist_vars%litr1c_vr, &

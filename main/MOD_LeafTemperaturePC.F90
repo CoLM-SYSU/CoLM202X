@@ -45,10 +45,10 @@ MODULE MOD_LeafTemperaturePC
               assim_RuBP_sha   ,assim_Rubisco_sha, cisha  ,Dsha    ,gammasha, &
               lambdasun        ,lambdasha        ,&
 #endif
-#ifdef OzoneStress
+!Ozone stress variables
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
-#endif
+!End ozone stress variables              
               hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
@@ -86,14 +86,12 @@ MODULE MOD_LeafTemperaturePC
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_FrictionVelocity
-  USE mod_namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS
+  USE mod_namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
   USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
-#ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
-#endif
   IMPLICIT NONE
 
 !-----------------------Arguments---------------------------------------
@@ -207,7 +205,7 @@ MODULE MOD_LeafTemperaturePC
         ldew,       &! depth of water on foliage [mm]
         ldew_rain,       &! depth of rain on foliage [mm]
         ldew_snow,       &! depth of snow on foliage [mm]
-#ifdef OzoneStress
+!Ozone stress variables              
         lai_old    ,&! lai in last time step
         o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
         o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
@@ -215,7 +213,7 @@ MODULE MOD_LeafTemperaturePC
         o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
         o3coefg_sun,&! Ozone stress factor for stomata on shaded leaf
         o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
-#endif
+!End ozone stress variables              
         rstfacsun,  &! factor of soil water stress to transpiration on sunlit leaf
         rstfacsha,  &! factor of soil water stress to transpiration on shaded leaf
         gssun,      &
@@ -239,9 +237,9 @@ MODULE MOD_LeafTemperaturePC
         lambdasha
 #endif
 
-#ifdef OzoneStress
+!Ozone stress variables              
   REAL(r8), intent(inout) :: forc_ozone
-#endif
+!End ozone stress variables              
 
   REAL(r8), intent(inout) :: &
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
@@ -1015,13 +1013,13 @@ MODULE MOD_LeafTemperaturePC
                 clev = canlev(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
-#ifdef OzoneStress
-                call CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
-                                     rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
-                call CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
-                                     rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
-                lai_old(i) = lai(i)
-#endif
+                IF(DEF_USE_OZONESTRESS)THEN
+                   call CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
+                                        rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
+                   call CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
+                                        rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
+                   lai_old(i) = lai(i)
+                END IF
                 if(DEF_USE_PLANTHYDRAULICS)then
                    call PlantHydraulicStress_twoleaf (nl_soil   ,nvegwcs   ,z_soi    ,&
                          dz_soi    ,rootfr(:,i),psrf      ,qsatl(i)   ,qsatl(i)   ,&
@@ -1042,9 +1040,9 @@ MODULE MOD_LeafTemperaturePC
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
                     pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     , parsun(i)  ,&
-#ifdef OzoneStress
+!Ozone stress variables              
                     o3coefv_sun(i), o3coefg_sun(i), &
-#endif
+!End ozone stress variables              
                     rbsun      ,raw       ,rstfacsun(i),cintsun(:,i),&
                     assimsun(i),respcsun(i),rssun(i)  &
 #ifdef WUEdiag
@@ -1056,9 +1054,9 @@ MODULE MOD_LeafTemperaturePC
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
                     pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
-#ifdef OzoneStress
+!Ozone stress variables              
                     o3coefv_sun(i), o3coefg_sun(i), &
-#endif
+!End ozone stress variables              
                     rbsha      ,raw       ,rstfacsha(i) ,cintsha(:,i),&
                     assimsha(i),respcsha(i),rssha(i) &
 #ifdef WUEdiag
