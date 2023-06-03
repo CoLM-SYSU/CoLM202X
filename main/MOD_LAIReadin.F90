@@ -158,13 +158,13 @@ MODULE MOD_LAIReadin
 
       write(cyear,'(i4.4)') year
       write(ctime,'(i2.2)') time
-      IF (.not. DEF_LAIFEEDBACK)THEN
+      IF (.not. DEF_USE_LAIFEEDBACK)THEN
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
          call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
       END IF
       lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
-      IF (.not. DEF_LAIFEEDBACK)THEN
+      IF (.not. DEF_USE_LAIFEEDBACK)THEN
          lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pfts'//trim(ctime)//'.nc'
          call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
       END IF

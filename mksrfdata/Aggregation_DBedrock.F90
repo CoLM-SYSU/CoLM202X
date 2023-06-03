@@ -1,7 +1,5 @@
 #include <define.h>
 
-#ifdef USE_DEPTH_TO_BEDROCK
-
 SUBROUTINE Aggregation_DBedrock ( &
       gland, dir_rawdata, dir_model_landdata)
 
@@ -78,7 +76,7 @@ SUBROUTINE Aggregation_DBedrock ( &
       CALL ncio_read_block (lndname, 'dbedrock', gland, dbedrock)
 
 #ifdef USEMPI
-      CALL aggregation_data_daemon (gland, data_r8_2d_in_1 = dbedrock)
+      CALL aggregation_data_daemon (gland, data_r8_2d_in1 = dbedrock)
 #endif
    ENDIF
 
@@ -129,4 +127,3 @@ SUBROUTINE Aggregation_DBedrock ( &
 
 END SUBROUTINE Aggregation_DBedrock
 
-#endif

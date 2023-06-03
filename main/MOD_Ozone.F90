@@ -189,7 +189,7 @@ Module MOD_Ozone
    ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
    ! Initialize Ozone data read in.
 
-     USE spmd_task
+     USE MOD_SPMD_Task
      USE mod_namelist
      USE timemanager
      USE mod_grid

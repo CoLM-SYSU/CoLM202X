@@ -341,10 +341,8 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8), allocatable :: htop           (:)  !canopy top height [m]
   REAL(r8), allocatable :: hbot           (:)  !canopy bottom height [m]
 
-#ifdef USE_DEPTH_TO_BEDROCK
   real(r8), allocatable :: dbedrock       (:)  !depth to bedrock
   integer , allocatable :: ibedrock       (:)  !bedrock level
-#endif
 
 
   REAL(r8) :: zlnd                             !roughness length for soil [m]
@@ -438,10 +436,8 @@ MODULE MOD_Vars_TimeInvariants
            allocate (htop                 (numpatch))
            allocate (hbot                 (numpatch))
 
-#ifdef USE_DEPTH_TO_BEDROCK
            allocate (dbedrock             (numpatch))
            allocate (ibedrock             (numpatch))
-#endif
      end if
 
 #ifdef LULC_IGBP_PFT
@@ -541,10 +537,10 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'htop' ,    landpatch, htop)                    !
      call ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot)                    !
 
-#ifdef USE_DEPTH_TO_BEDROCK
-     call ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)            !
-     call ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)            !
-#endif
+     IF(DEF_USE_BEDROCK)THEN
+        call ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)            !
+        call ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)            !
+     ENDIF
 
      call ncio_read_bcast_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
      call ncio_read_bcast_serial (file_restart, 'zsno  ', zsno  ) ! roughness length for snow [m]
@@ -602,7 +598,7 @@ MODULE MOD_Vars_TimeInvariants
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_BEDROCK
      use MOD_SPMD_Task
      use MOD_NetCDFSerial
      use MOD_NetCDFVector
@@ -686,10 +682,10 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_write_vector (file_restart, 'htop' , 'patch', landpatch, htop)                                       !
      call ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot)                                       !
 
-#ifdef USE_DEPTH_TO_BEDROCK
-     call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                               !
-     call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                               !
-#endif
+     IF(DEF_USE_BEDROCK)THEN
+        call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                               !
+        call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                               !
+     ENDIF
 
      if (p_is_master) then
 
@@ -797,10 +793,8 @@ MODULE MOD_Vars_TimeInvariants
            deallocate (htop           )
            deallocate (hbot           )
 
-#ifdef USE_DEPTH_TO_BEDROCK
            deallocate (dbedrock       )
            deallocate (ibedrock       )
-#endif
 
         end if
      end if
@@ -880,9 +874,9 @@ MODULE MOD_Vars_TimeInvariants
      call check_vector_data ('htop        ', htop        )
      call check_vector_data ('hbot        ', hbot        )
 
-#ifdef USE_DEPTH_TO_BEDROCK
-     call check_vector_data ('dbedrock    ', dbedrock    ) !
-#endif
+     IF(DEF_USE_BEDROCK)THEN
+        call check_vector_data ('dbedrock    ', dbedrock    ) !
+     ENDIF
 
 #ifdef USEMPI
      call mpi_barrier (p_comm_glb, p_err)

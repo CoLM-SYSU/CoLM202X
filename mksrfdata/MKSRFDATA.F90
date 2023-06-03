@@ -390,9 +390,9 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-#ifdef USE_DEPTH_TO_BEDROCK
-   CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
-#endif
+   IF(DEF_USE_BEDROCK)THEN
+      CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
+   ENDIF
 
    CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
 

@@ -76,9 +76,7 @@ CONTAINS
    USE MOD_Const_Physical, only: tfrz
    USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
    USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn
-#ifdef USE_DEPTH_TO_BEDROCK
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
-#endif
 #if(defined LULC_IGBP_PFT)
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
@@ -465,9 +463,9 @@ CONTAINS
 #ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         ldew_rain_p(:,ps:pe) = 0.
-         ldew_snow_p(:,ps:pe) = 0.
-         ldew_p(:,ps:pe) = 0.
+         ldew_rain_p(ps:pe) = 0.
+         ldew_snow_p(ps:pe) = 0.
+         ldew_p(ps:pe) = 0.
          tleaf_p(ps:pe)  = t_soisno(1)
          IF(DEF_USE_PLANTHYDRAULICS)THEN
             vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
