@@ -257,7 +257,7 @@ OBJS_MAIN = \
 				MOD_Vars_2DFluxes.o                       \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
-				MOD_DownscalingForcing.o                  \
+				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \

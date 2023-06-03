@@ -33,7 +33,7 @@ MODULE MOD_Mapping_Pset2Grid
       TYPE(grid_list_type), allocatable :: glist (:)
 
       TYPE(pointer_int32_2d), allocatable :: address(:)
-      TYPE(pointer_real8_1d), allocatable :: gweight(:)
+      TYPE(pointer_real8_1d), allocatable :: olparea(:)
 
    CONTAINS
 
@@ -83,9 +83,9 @@ CONTAINS
       INTEGER,  allocatable :: xlist(:), ylist(:)
       INTEGER,  allocatable :: ipt(:)
       LOGICAL,  allocatable :: msk(:)
-      TYPE(block_data_real8_2d) :: garea
-      REAL(r8), allocatable :: gbuff(:)
-      TYPE(pointer_real8_1d), allocatable :: parea(:)
+      ! TYPE(block_data_real8_2d) :: garea
+      ! REAL(r8), allocatable :: gbuff(:)
+      ! TYPE(pointer_real8_1d), allocatable :: parea(:)
 
       INTEGER  :: ie, iset
       INTEGER  :: ng, ig, ng_all, iloc
@@ -314,19 +314,19 @@ CONTAINS
 #endif
 
          IF (allocated(this%address)) deallocate(this%address)
-         IF (allocated(this%gweight)) deallocate(this%gweight)
+         IF (allocated(this%olparea)) deallocate(this%olparea)
          allocate (this%address (pixelset%nset))
-         allocate (this%gweight (pixelset%nset))
+         allocate (this%olparea (pixelset%nset))
 
          DO iset = 1, pixelset%nset
             ng = gfrom(iset)%ng
             allocate (this%address(iset)%val (2,ng))
-            allocate (this%gweight(iset)%val (ng))
+            allocate (this%olparea(iset)%val (ng))
 
-            this%gweight(iset)%val = afrac(iset)%val(1:ng)
+            this%olparea(iset)%val = afrac(iset)%val(1:ng)
 
             IF (present(pctpset)) THEN
-               this%gweight(iset)%val = this%gweight(iset)%val * pctpset(iset)
+               this%olparea(iset)%val = this%olparea(iset)%val * pctpset(iset)
             ENDIF
 
             DO ig = 1, gfrom(iset)%ng
@@ -359,150 +359,150 @@ CONTAINS
          deallocate (afrac)
          deallocate (gfrom)
 
-         allocate (parea (0:p_np_io-1))
-
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               allocate (parea(iproc)%val (this%glist(iproc)%ng))
-               parea(iproc)%val(:) = 0
-            ENDIF
-         ENDDO
-
-         DO iset = 1, pixelset%nset
-            DO ig = 1, size(this%gweight(iset)%val)
-               iproc = this%address(iset)%val(1,ig)
-               iloc  = this%address(iset)%val(2,ig)
-               parea(iproc)%val(iloc) = parea(iproc)%val(iloc) + this%gweight(iset)%val(ig)
-            ENDDO
-         ENDDO
-
-#ifdef USEMPI
-         DO iproc = 0, p_np_io-1
-            idest = p_address_io(iproc)
-            smesg = (/p_iam_glb, this%glist(iproc)%ng/)
-
-            CALL mpi_send (smesg, 2, MPI_INTEGER, &
-               idest, mpi_tag_mesg, p_comm_glb, p_err)
-
-            IF (this%glist(iproc)%ng > 0) THEN
-               CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-               CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-               CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-            ENDIF
-         ENDDO
-#endif
-
-      ENDIF
-
-#ifdef USEMPI
-      IF (p_is_io) THEN
-
-         CALL allocate_block_data (fgrid, garea)
-         CALL flush_block_data (garea, 0.0_r8)
-
-         IF (allocated(this%glist)) deallocate(this%glist)
-         allocate (this%glist (0:p_np_worker-1))
-
-         DO iworker = 0, p_np_worker-1
-
-            CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
-               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-
-            isrc  = rmesg(1)
-            nrecv = rmesg(2)
-            iproc = p_itis_worker(isrc)
-
-            this%glist(iproc)%ng = nrecv
-
-            IF (nrecv > 0) THEN
-               allocate (this%glist(iproc)%ilon (nrecv))
-               allocate (this%glist(iproc)%ilat (nrecv))
-               allocate (gbuff (nrecv))
-
-               CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-               CALL mpi_recv (gbuff, nrecv, MPI_DOUBLE, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
-               DO ig = 1, this%glist(iproc)%ng
-                  ilon = this%glist(iproc)%ilon(ig)
-                  ilat = this%glist(iproc)%ilat(ig)
-                  xblk = fgrid%xblk (ilon)
-                  yblk = fgrid%yblk (ilat)
-                  xloc = fgrid%xloc (ilon)
-                  yloc = fgrid%yloc (ilat)
-
-                  garea%blk(xblk,yblk)%val(xloc,yloc) = &
-                     garea%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
-               ENDDO
-
-               deallocate (gbuff)
-            ENDIF
-         ENDDO
-
-         DO iproc = 0, p_np_worker-1
-            IF (this%glist(iproc)%ng > 0) THEN
-
-               allocate (gbuff (this%glist(iproc)%ng))
-
-               DO ig = 1, this%glist(iproc)%ng
-                  ilon = this%glist(iproc)%ilon(ig)
-                  ilat = this%glist(iproc)%ilat(ig)
-                  xblk = fgrid%xblk (ilon)
-                  yblk = fgrid%yblk (ilat)
-                  xloc = fgrid%xloc (ilon)
-                  yloc = fgrid%yloc (ilat)
-
-                  gbuff(ig) = garea%blk(xblk,yblk)%val(xloc,yloc)
-               ENDDO
-
-               idest = p_address_worker(iproc)
-               CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  idest, mpi_tag_data, p_comm_glb, p_err)
-
-               deallocate (gbuff)
-            ENDIF
-         ENDDO
+!          allocate (parea (0:p_np_io-1))
+! 
+!          DO iproc = 0, p_np_io-1
+!             IF (this%glist(iproc)%ng > 0) THEN
+!                allocate (parea(iproc)%val (this%glist(iproc)%ng))
+!                parea(iproc)%val(:) = 0
+!             ENDIF
+!          ENDDO
+! 
+!          DO iset = 1, pixelset%nset
+!             DO ig = 1, size(this%olparea(iset)%val)
+!                iproc = this%address(iset)%val(1,ig)
+!                iloc  = this%address(iset)%val(2,ig)
+!                parea(iproc)%val(iloc) = parea(iproc)%val(iloc) + this%olparea(iset)%val(ig)
+!             ENDDO
+!          ENDDO
+! 
+! #ifdef USEMPI
+!          DO iproc = 0, p_np_io-1
+!             idest = p_address_io(iproc)
+!             smesg = (/p_iam_glb, this%glist(iproc)%ng/)
+! 
+!             CALL mpi_send (smesg, 2, MPI_INTEGER, &
+!                idest, mpi_tag_mesg, p_comm_glb, p_err)
+! 
+!             IF (this%glist(iproc)%ng > 0) THEN
+!                CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
+!                   idest, mpi_tag_data, p_comm_glb, p_err)
+!                CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
+!                   idest, mpi_tag_data, p_comm_glb, p_err)
+!                CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+!                   idest, mpi_tag_data, p_comm_glb, p_err)
+!             ENDIF
+!          ENDDO
+! #endif
 
       ENDIF
-#endif
 
-
-      IF (p_is_worker) THEN
-
-#ifdef USEMPI
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               isrc = p_address_io(iproc)
-               CALL mpi_recv (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
-                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-            ENDIF
-         ENDDO
-#endif
-
-         DO iset = 1, pixelset%nset
-            DO ig = 1, size(this%gweight(iset)%val)
-               iproc = this%address(iset)%val(1,ig)
-               iloc  = this%address(iset)%val(2,ig)
-               this%gweight(iset)%val(ig) = &
-                  this%gweight(iset)%val(ig) / parea(iproc)%val(iloc)
-            ENDDO
-         ENDDO
-
-         DO iproc = 0, p_np_io-1
-            IF (this%glist(iproc)%ng > 0) THEN
-               deallocate (parea(iproc)%val)
-            ENDIF
-         ENDDO
-
-         deallocate (parea)
-
-      ENDIF
+! #ifdef USEMPI
+!       IF (p_is_io) THEN
+! 
+!          CALL allocate_block_data (fgrid, garea)
+!          CALL flush_block_data (garea, 0.0_r8)
+! 
+!          IF (allocated(this%glist)) deallocate(this%glist)
+!          allocate (this%glist (0:p_np_worker-1))
+! 
+!          DO iworker = 0, p_np_worker-1
+! 
+!             CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
+!                MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+! 
+!             isrc  = rmesg(1)
+!             nrecv = rmesg(2)
+!             iproc = p_itis_worker(isrc)
+! 
+!             this%glist(iproc)%ng = nrecv
+! 
+!             IF (nrecv > 0) THEN
+!                allocate (this%glist(iproc)%ilon (nrecv))
+!                allocate (this%glist(iproc)%ilat (nrecv))
+!                allocate (gbuff (nrecv))
+! 
+!                CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
+!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+!                CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
+!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+!                CALL mpi_recv (gbuff, nrecv, MPI_DOUBLE, &
+!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+! 
+!                DO ig = 1, this%glist(iproc)%ng
+!                   ilon = this%glist(iproc)%ilon(ig)
+!                   ilat = this%glist(iproc)%ilat(ig)
+!                   xblk = fgrid%xblk (ilon)
+!                   yblk = fgrid%yblk (ilat)
+!                   xloc = fgrid%xloc (ilon)
+!                   yloc = fgrid%yloc (ilat)
+! 
+!                   garea%blk(xblk,yblk)%val(xloc,yloc) = &
+!                      garea%blk(xblk,yblk)%val(xloc,yloc) + gbuff(ig)
+!                ENDDO
+! 
+!                deallocate (gbuff)
+!             ENDIF
+!          ENDDO
+! 
+!          DO iproc = 0, p_np_worker-1
+!             IF (this%glist(iproc)%ng > 0) THEN
+! 
+!                allocate (gbuff (this%glist(iproc)%ng))
+! 
+!                DO ig = 1, this%glist(iproc)%ng
+!                   ilon = this%glist(iproc)%ilon(ig)
+!                   ilat = this%glist(iproc)%ilat(ig)
+!                   xblk = fgrid%xblk (ilon)
+!                   yblk = fgrid%yblk (ilat)
+!                   xloc = fgrid%xloc (ilon)
+!                   yloc = fgrid%yloc (ilat)
+! 
+!                   gbuff(ig) = garea%blk(xblk,yblk)%val(xloc,yloc)
+!                ENDDO
+! 
+!                idest = p_address_worker(iproc)
+!                CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_DOUBLE, &
+!                   idest, mpi_tag_data, p_comm_glb, p_err)
+! 
+!                deallocate (gbuff)
+!             ENDIF
+!          ENDDO
+! 
+!       ENDIF
+! #endif
+! 
+! 
+!       IF (p_is_worker) THEN
+! 
+! #ifdef USEMPI
+!          DO iproc = 0, p_np_io-1
+!             IF (this%glist(iproc)%ng > 0) THEN
+!                isrc = p_address_io(iproc)
+!                CALL mpi_recv (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
+!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+!             ENDIF
+!          ENDDO
+! #endif
+! 
+!          DO iset = 1, pixelset%nset
+!             DO ig = 1, size(this%olparea(iset)%val)
+!                iproc = this%address(iset)%val(1,ig)
+!                iloc  = this%address(iset)%val(2,ig)
+!                this%olparea(iset)%val(ig) = &
+!                   this%olparea(iset)%val(ig) / parea(iproc)%val(iloc)
+!             ENDDO
+!          ENDDO
+! 
+!          DO iproc = 0, p_np_io-1
+!             IF (this%glist(iproc)%ng > 0) THEN
+!                deallocate (parea(iproc)%val)
+!             ENDIF
+!          ENDDO
+! 
+!          deallocate (parea)
+! 
+!       ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -561,21 +561,21 @@ CONTAINS
                IF (.not. msk(iset)) cycle
             ENDIF
 
-            DO ig = 1, size(this%gweight(iset)%val)
+            DO ig = 1, size(this%olparea(iset)%val)
                iproc = this%address(iset)%val(1,ig)
                iloc  = this%address(iset)%val(2,ig)
 
                IF (present(spv)) THEN
                   IF (pbuff(iproc)%val(iloc) /= spv) THEN
                      pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
-                        + pdata(iset) * this%gweight(iset)%val(ig)
+                        + pdata(iset) * this%olparea(iset)%val(ig)
                   ELSE
                      pbuff(iproc)%val(iloc) = &
-                        pdata(iset) * this%gweight(iset)%val(ig)
+                        pdata(iset) * this%olparea(iset)%val(ig)
                   ENDIF
                ELSE
                   pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
-                     + pdata(iset) * this%gweight(iset)%val(ig)
+                     + pdata(iset) * this%olparea(iset)%val(ig)
                ENDIF
             ENDDO
          ENDDO
@@ -712,7 +712,7 @@ CONTAINS
                IF (.not. msk(iset)) cycle
             ENDIF
 
-            DO ig = 1, size(this%gweight(iset)%val)
+            DO ig = 1, size(this%olparea(iset)%val)
                iproc = this%address(iset)%val(1,ig)
                iloc  = this%address(iset)%val(2,ig)
 
@@ -721,15 +721,15 @@ CONTAINS
                      IF (pdata(i1,iset) /= spv) THEN
                         IF (pbuff(iproc)%val(i1,iloc) /= spv) THEN
                            pbuff(iproc)%val(i1,iloc) = pbuff(iproc)%val(i1,iloc) &
-                              + pdata(i1,iset) * this%gweight(iset)%val(ig)
+                              + pdata(i1,iset) * this%olparea(iset)%val(ig)
                         ELSE
                            pbuff(iproc)%val(i1,iloc) = &
-                              pdata(i1,iset) * this%gweight(iset)%val(ig)
+                              pdata(i1,iset) * this%olparea(iset)%val(ig)
                         ENDIF
                      ENDIF
                   ELSE
                      pbuff(iproc)%val(i1,iloc) = pbuff(iproc)%val(i1,iloc) &
-                        + pdata(i1,iset) * this%gweight(iset)%val(ig)
+                        + pdata(i1,iset) * this%olparea(iset)%val(ig)
                   ENDIF
                ENDDO
             ENDDO
@@ -872,7 +872,7 @@ CONTAINS
                IF (.not. msk(iset)) cycle
             ENDIF
 
-            DO ig = 1, size(this%gweight(iset)%val)
+            DO ig = 1, size(this%olparea(iset)%val)
                iproc = this%address(iset)%val(1,ig)
                iloc  = this%address(iset)%val(2,ig)
 
@@ -882,15 +882,15 @@ CONTAINS
                         IF (pdata(i1,i2,iset) /= spv) THEN
                            IF (pbuff(iproc)%val(i1,i2,iloc) /= spv) THEN
                               pbuff(iproc)%val(i1,i2,iloc) = pbuff(iproc)%val(i1,i2,iloc) &
-                                 + pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                                 + pdata(i1,i2,iset) * this%olparea(iset)%val(ig)
                            ELSE
                               pbuff(iproc)%val(i1,i2,iloc) = &
-                                 pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                                 pdata(i1,i2,iset) * this%olparea(iset)%val(ig)
                            ENDIF
                         ENDIF
                      ELSE
                         pbuff(iproc)%val(i1,i2,iloc) = pbuff(iproc)%val(i1,i2,iloc) &
-                           + pdata(i1,i2,iset) * this%gweight(iset)%val(ig)
+                           + pdata(i1,i2,iset) * this%olparea(iset)%val(ig)
                      ENDIF
                   ENDDO
                ENDDO
@@ -1034,16 +1034,16 @@ CONTAINS
 
             DO iset = 1, this%npset
                IF ((settyp(iset) == typidx(ityp)) .and. (pdata(iset) /= spv)) THEN
-                  DO ig = 1, size(this%gweight(iset)%val)
+                  DO ig = 1, size(this%olparea(iset)%val)
                      iproc = this%address(iset)%val(1,ig)
                      iloc  = this%address(iset)%val(2,ig)
 
                      IF (pbuff(iproc)%val(iloc) /= spv) THEN
                         pbuff(iproc)%val(iloc) = pbuff(iproc)%val(iloc) &
-                           + pdata(iset) * this%gweight(iset)%val(ig)
+                           + pdata(iset) * this%olparea(iset)%val(ig)
                      ELSE
                         pbuff(iproc)%val(iloc) = &
-                           pdata(iset) * this%gweight(iset)%val(ig)
+                           pdata(iset) * this%olparea(iset)%val(ig)
                      ENDIF
                   ENDDO
                ENDIF
@@ -1165,14 +1165,14 @@ CONTAINS
             deallocate (this%address)
          ENDIF
 
-         IF (allocated(this%gweight)) THEN
+         IF (allocated(this%olparea)) THEN
             DO iset = 1, this%npset
-               IF (allocated(this%gweight(iset)%val)) THEN
-                  deallocate (this%gweight(iset)%val)
+               IF (allocated(this%olparea(iset)%val)) THEN
+                  deallocate (this%olparea(iset)%val)
                ENDIF
             ENDDO
 
-            deallocate (this%gweight)
+            deallocate (this%olparea)
          ENDIF
       ENDIF
 
