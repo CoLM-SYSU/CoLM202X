@@ -4,11 +4,11 @@ MODULE MOD_RegionClip
    !-----------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !    This module includes subroutines to clip surface data from an existing data 
+   !    This module includes subroutines to clip surface data from an existing data
    !    in a larger region.
    !
    !    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
-   ! 
+   !
    ! Created by Shupeng Zhang, May 2023
    !-----------------------------------------------------------------------------------------
 CONTAINS
@@ -403,13 +403,12 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'vf_sand_s_l'//trim(c1)//'_patches', patchmask)
 
-                  ! (4) volumetric fraction of organic matter
+                  ! (4) volumetric fraction of organic matter with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model
                   file_in  = trim(dir_landdata_in)  // '/soil/vf_om_s_l'//trim(c1)//'_patches.nc'
                   file_out = trim(dir_landdata_out) // '/soil/vf_om_s_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'vf_om_s_l'//trim(c1)//'_patches', patchmask)
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                   file_in  = trim(dir_landdata_in)  // '/soil/BA_alpha_l'//trim(c1)//'_patches.nc'
                   file_out = trim(dir_landdata_out) // '/soil/BA_alpha_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
@@ -419,7 +418,6 @@ CONTAINS
                   file_out = trim(dir_landdata_out) // '/soil/BA_beta_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'BA_beta_l'//trim(c1)//'_patches', patchmask)
-#endif
 
                   ! (5) gravimetric fraction of gravels
                   file_in  = trim(dir_landdata_in)  // '/soil/wf_gravels_s_l'//trim(c1)//'_patches.nc'

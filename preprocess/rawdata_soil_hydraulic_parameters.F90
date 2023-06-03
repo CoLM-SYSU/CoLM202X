@@ -5,8 +5,8 @@ SUBROUTINE soil_hydraulic_parameters(BD,SAND,CLAY,SOC,SOILDEPTH,&
 
 !-----------------------------------------------------------------------
 ! DESCRIPTION:
-! Calculate soil hydraulic parameters in soil water retension models (Brooks and Corey, 1964 & van Genuchten, 1980)
-! and soil saturated hydraulic conductivity with multiple soil Pedotransfer functions.
+! Calculate soil hydraulic parameters of soil water retension models (Brooks and Corey, 1964 & van Genuchten, 1980)
+! and soil saturated hydraulic conductivity with multiple soil Pedotransfer functions by using the rawdata soil properties.
 !
 ! REFERENCES:
 ! (1) Dai et al.,2013: Development of a China Dataset of Soil

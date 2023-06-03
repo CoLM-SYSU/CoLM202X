@@ -271,10 +271,7 @@ MODULE MOD_Lake
            vf_om        , vf_sand     , wf_gravels   , wf_sand   ,&
            porsl        , csol        , k_solids     , &
            dksatu       , dksatf      , dkdry        , &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-           BA_alpha     , BA_beta     , &
-#endif
-		   hpbl, &
+           BA_alpha     , BA_beta     , hpbl         , &
 
            ! "inout" arguments
            ! -------------------
@@ -406,10 +403,8 @@ MODULE MOD_Lake
   real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
   real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
   real(r8), INTENT(in) :: dkdry(1:nl_soil)  ! thermal conductivity of dry soil [W/m-K]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
   real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
   real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
   real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
 
   real(r8), INTENT(inout) :: t_grnd  ! surface temperature (kelvin)
@@ -794,7 +789,7 @@ MODULE MOD_Lake
 
 ! Evaluated stability-dependent variables using moz from prior iteration
          displax = 0.
-         if (DEF_USE_CBL_HEIGHT) then	
+         if (DEF_USE_CBL_HEIGHT) then
             call moninobuk_leddy(forc_hgt_u,forc_hgt_t,forc_hgt_q,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
                         ustar,fh2m,fq2m,fm10m,fm,fh,fq)
          else
@@ -957,9 +952,7 @@ MODULE MOD_Lake
          CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                              wf_gravels(i),wf_sand(i),k_solids(i),&
                              csol(i),dkdry(i),dksatu(i),dksatf(i),&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                              BA_alpha(i),BA_beta(i),&
-#endif
                              t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
          cv_soisno(i) = hcap(i)*dz_soisno(i)
       enddo

@@ -5,7 +5,7 @@ MODULE MOD_SingleSrfdata
    !-----------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !    This module includes subroutines to read or write surface data for "SinglePoint". 
+   !    This module includes subroutines to read or write surface data for "SinglePoint".
    !
    ! Created by Shupeng Zhang, May 2023
    !-----------------------------------------------------------------------------------------
@@ -72,10 +72,8 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_soil_L_vgm             (:)
    REAL(r8), allocatable :: SITE_soil_n_vgm             (:)
 #endif
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
    REAL(r8), allocatable :: SITE_soil_BA_alpha          (:)
    REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
-#endif
 
 #ifdef USE_DEPTH_TO_BEDROCK
    REAL(r8) :: SITE_dbedrock = 1
@@ -184,10 +182,8 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_L_vgm            ', SITE_soil_L_vgm            )
          CALL ncio_read_serial (fsrfdata, 'soil_n_vgm            ', SITE_soil_n_vgm            )
 #endif
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          CALL ncio_read_serial (fsrfdata, 'soil_BA_alpha         ', SITE_soil_BA_alpha         )
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
-#endif
       ENDIF
 
 #ifdef USE_DEPTH_TO_BEDROCK
@@ -342,12 +338,10 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'soil_L_vgm    ', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_n_vgm    ', 'source', source)
 #endif
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       CALL ncio_write_serial (fsrfdata, 'soil_BA_alpha', SITE_soil_BA_alpha, 'soil')
       CALL ncio_write_serial (fsrfdata, 'soil_BA_beta ', SITE_soil_BA_beta , 'soil')
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_alpha', 'source', source)
       CALL ncio_put_attr     (fsrfdata, 'soil_BA_beta ', 'source', source)
-#endif
 
 #ifdef USE_DEPTH_TO_BEDROCK
       CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
@@ -422,10 +416,8 @@ CONTAINS
       IF (allocated(SITE_soil_L_vgm            )) deallocate(SITE_soil_L_vgm            )
       IF (allocated(SITE_soil_n_vgm            )) deallocate(SITE_soil_n_vgm            )
 #endif
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       IF (allocated(SITE_soil_BA_alpha         )) deallocate(SITE_soil_BA_alpha         )
       IF (allocated(SITE_soil_BA_beta          )) deallocate(SITE_soil_BA_beta          )
-#endif
 
    END SUBROUTINE single_srfdata_final
 

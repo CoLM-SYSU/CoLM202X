@@ -53,6 +53,7 @@ MODULE MOD_Meltf
    use MOD_Precision
    USE MOD_Hydro_SoilFunction
    use MOD_Const_Physical, only : tfrz, hfus,grav
+   USE MOD_Namelist
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -98,10 +99,8 @@ MODULE MOD_Meltf
    real(r8) :: heatr                           ! energy residual or loss after melting or freezing
    real(r8) :: temp1                           ! temporary variables [kg/m2]
    real(r8) :: temp2                           ! temporary variables [kg/m2]
-#ifdef supercool_water
    REAL(r8) :: smp
    REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the freezing point [mm3/mm3]
-#endif
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -123,25 +122,25 @@ MODULE MOD_Meltf
    if(lb<=0) we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))
 
 ! supercooling water
-#ifdef supercool_water
-   DO j = 1, nl_soil
-      supercool(j) = 0.0
-      if(t_soisno(j) < tfrz .and. itypwat <=2 ) then
-         smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
-         if (porsl(j) > 0.) then
+   IF (DEF_USE_SUPERCOOL_WATER) THEN
+      DO j = 1, nl_soil
+         supercool(j) = 0.0
+         if(t_soisno(j) < tfrz .and. itypwat <=2 ) then
+            smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
+            if (porsl(j) > 0.) then
 #ifdef Campbell_SOIL_MODEL
-            supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
+               supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
 #else
-            supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
-               (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
+               supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
+                  (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
 #endif
-         else
-            supercool(j) = 0.
+            else
+               supercool(j) = 0.
+            end if
+            supercool(j) = supercool(j)*dz(j)*1000.              ! mm
          end if
-         supercool(j) = supercool(j)*dz(j)*1000.              ! mm
-      end if
-   END do
-#endif
+      END do
+   ENDIF
 
    do j = lb, nl_soil
       ! Melting identification
@@ -159,17 +158,17 @@ MODULE MOD_Meltf
             t_soisno(j) = tfrz
          endif
       ELSE
-#ifdef supercool_water
-         if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
-            imelt(j) = 2
-            t_soisno(j) = tfrz
+         if (DEF_USE_SUPERCOOL_WATER) then
+            if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
+               imelt(j) = 2
+               t_soisno(j) = tfrz
+            endif
+         else
+            if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+               imelt(j) = 2
+               t_soisno(j) = tfrz
+            endif
          endif
-#else
-         if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
-            imelt(j) = 2
-            t_soisno(j) = tfrz
-         endif
-#endif
       END if
    enddo
 
@@ -238,15 +237,15 @@ MODULE MOD_Meltf
             if(j <= 0) then  ! snow
                wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
             else
-#ifdef supercool_water
-               if(wmass0(j) < supercool(j)) then
-                    wice_soisno(j) = 0.
+               if (DEF_USE_SUPERCOOL_WATER) then
+                  if(wmass0(j) < supercool(j)) then
+                     wice_soisno(j) = 0.
+                  else
+                     wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+                  endif
                else
-                    wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+                  wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
                endif
-#else
-               wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
-#endif
             endif
             heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
          endif
@@ -259,13 +258,13 @@ MODULE MOD_Meltf
             else
                t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
             endif
-#ifdef supercool_water
-            IF(j <= 0 .or. itypwat == 3)THEN !snow
-#endif
-            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
-#ifdef supercool_water
+            if (DEF_USE_SUPERCOOL_WATER) then
+               IF(j <= 0 .or. itypwat == 3)THEN !snow
+                  if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
+               ENDIF
+            ELSE
+               if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
             ENDIF
-#endif
          endif
 
          xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim
@@ -322,6 +321,7 @@ MODULE MOD_Meltf
    use MOD_Precision
    USE MOD_Hydro_SoilFunction
    use MOD_Const_Physical, only : tfrz, hfus, grav
+   USE MOD_Namelist
    IMPLICIT NONE
 
 !-----------------------------------------------------------------------
@@ -368,10 +368,8 @@ MODULE MOD_Meltf
    real(r8) :: heatr                           ! energy residual or loss after melting or freezing
    real(r8) :: temp1                           ! temporary variables [kg/m2]
    real(r8) :: temp2                           ! temporary variables [kg/m2]
-#ifdef supercool_water
    REAL(r8) :: smp
    REAL(r8) :: supercool(1:nl_soil)            ! the maximum liquid water when the soil temperature is below the   freezing point [mm3/mm3]
-#endif
    real(r8), dimension(lb:nl_soil) :: wmass0, wice0, wliq0
    real(r8) :: propor, tinc, we, scvold
    integer j
@@ -394,25 +392,25 @@ MODULE MOD_Meltf
    if(lb<=0) we = sum(wice_soisno(lb:0)+wliq_soisno(lb:0))
 
 ! supercooling water
-#ifdef supercool_water
-   DO j = 1, nl_soil
-      supercool(j) = 0.0
-      if(t_soisno(j) < tfrz .and. itypwat <= 2) then
-         smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
-         if (porsl(j) > 0.) then
+   if (DEF_USE_SUPERCOOL_WATER) then
+      DO j = 1, nl_soil
+         supercool(j) = 0.0
+         if(t_soisno(j) < tfrz .and. itypwat <= 2) then
+            smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
+            if (porsl(j) > 0.) then
 #ifdef Campbell_SOIL_MODEL
-            supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
+               supercool(j) = porsl(j)*(smp/psi0(j))**(-1.0/bsw(j))
 #else
-            supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
-               (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
+               supercool(j) = soil_vliq_from_psi(smp, porsl(j), theta_r(j), -10.0, 5, &
+                  (/alpha_vgm(j), n_vgm(j), L_vgm(j), sc_vgm(j), fc_vgm(j)/))
 #endif
-         else
-            supercool(j) = 0.
+            else
+               supercool(j) = 0.
+            end if
+            supercool(j) = supercool(j)*dz(j)*1000.              ! mm
          end if
-         supercool(j) = supercool(j)*dz(j)*1000.              ! mm
-      end if
-   END do
-#endif
+      END do
+   endif
 
 
    do j = lb, nl_soil
@@ -431,17 +429,17 @@ MODULE MOD_Meltf
             t_soisno(j) = tfrz
          endif
       ELSE
-#ifdef supercool_water
-         if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
-            imelt(j) = 2
-            t_soisno(j) = tfrz
+         if (DEF_USE_SUPERCOOL_WATER) then
+            if(wliq_soisno(j) > supercool(j) .and. t_soisno(j) < tfrz) then
+               imelt(j) = 2
+               t_soisno(j) = tfrz
+            endif
+         else
+            if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
+               imelt(j) = 2
+               t_soisno(j) = tfrz
+            endif
          endif
-#else
-         if(wliq_soisno(j) > 0. .and. t_soisno(j) < tfrz) then
-            imelt(j) = 2
-            t_soisno(j) = tfrz
-         endif
-#endif
       END if
    enddo
 
@@ -514,15 +512,15 @@ MODULE MOD_Meltf
             IF(j <= 0) THEN ! snow
                wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
             ELSE
-#ifdef supercool_water
-               if(wmass0(j) < supercool(j)) then
-                    wice_soisno(j) = 0.
+               if (DEF_USE_SUPERCOOL_WATER) then
+                  if(wmass0(j) < supercool(j)) then
+                     wice_soisno(j) = 0.
+                  else
+                     wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+                  endif
                else
-                    wice_soisno(j) = min(wmass0(j)-supercool(j), wice0(j)-xm(j))
+                  wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
                endif
-#else
-               wice_soisno(j) = min(wmass0(j), wice0(j)-xm(j))
-#endif
             endif
             heatr = hm(j) - hfus*(wice0(j)-wice_soisno(j))/deltim
          endif
@@ -535,13 +533,14 @@ MODULE MOD_Meltf
             else
                t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
             endif
-#ifdef supercool_water
-            IF(j <= 0 .or. itypwat == 3)THEN !snow
-#endif
-            if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
-#ifdef supercool_water
+            if (DEF_USE_SUPERCOOL_WATER) then
+               IF(j <= 0 .or. itypwat == 3)THEN !snow
+                  if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
+               ENDIF
+            ELSE
+               if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
             ENDIF
-#endif
+
          endif
 
          xmf = xmf + hfus * (wice0(j)-wice_soisno(j))/deltim

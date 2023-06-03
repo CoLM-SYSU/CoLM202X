@@ -31,9 +31,7 @@ MODULE MOD_Thermal
                       sc_vgm      ,fc_vgm      ,                         &
 #endif
                       k_solids    ,dksatu      ,dksatf      ,dkdry      ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                       BA_alpha    ,BA_beta                              ,&
-#endif
                       lai         ,laisun      ,laisha                  ,&
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
                       rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
@@ -180,10 +178,8 @@ use MOD_SPMD_Task
         dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
         hksati    (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
 
         ! vegetation parameters
         lai,         &! adjusted leaf area index for seasonal variation [-]
@@ -1274,9 +1270,7 @@ ENDIF
                       sc_vgm , fc_vgm,&
 #endif
                       csol,k_solids,dksatu,dksatf,dkdry,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                       BA_alpha,BA_beta,&
-#endif
                       sigf,dz_soisno,z_soisno,zi_soisno,&
                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                       frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
