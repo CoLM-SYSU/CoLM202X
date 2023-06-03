@@ -4,6 +4,7 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
+  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -1583,30 +1584,49 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     ! Compute matric potential and derivative based on liquid water content only
     do j = 1, nl_soil
-#if(defined PLANT_HYDRAULIC_STRESS)
-       if(t_soisno(j)>=tfrz) then
-#else
-       if(t_soisno(j)>tfrz) then
-#endif
-          if(porsl(j)<1.e-6)then     ! bed rock
-             s_node = 0.001
-             smp(j) = psi0(j)
-             dsmpdw(j) = 0.
+       if(DEF_USE_PLANTHYDRAULICS)then
+          if(t_soisno(j)>=tfrz) then
+             if(porsl(j)<1.e-6)then     ! bed rock
+                s_node = 0.001
+                smp(j) = psi0(j)
+                dsmpdw(j) = 0.
+             else
+                s_node = max(vol_liq(j)/porsl(j),0.01)
+                s_node = min(1.0,s_node)
+                smp(j) = psi0(j)*s_node**(-bsw(j))
+                smp(j) = max(smpmin,smp(j))
+                dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
+             endif
           else
-             s_node = max(vol_liq(j)/porsl(j),0.01)
-             s_node = min(1.0,s_node)
-             smp(j) = psi0(j)*s_node**(-bsw(j))
-             smp(j) = max(smpmin,smp(j))
-             dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
+             ! when ice is present, the matric potential is only related to temperature
+             ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
+             ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
+             smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
+             smp(j) = max(smpmin, smp(j))        ! Limit soil suction
+             dsmpdw(j) = 0.
           endif
        else
-          ! when ice is present, the matric potential is only related to temperature
-          ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
-          ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
-          smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
-          smp(j) = max(smpmin, smp(j))        ! Limit soil suction
-          dsmpdw(j) = 0.
-       endif
+          if(t_soisno(j)>tfrz) then
+             if(porsl(j)<1.e-6)then     ! bed rock
+                s_node = 0.001
+                smp(j) = psi0(j)
+                dsmpdw(j) = 0.
+             else
+                s_node = max(vol_liq(j)/porsl(j),0.01)
+                s_node = min(1.0,s_node)
+                smp(j) = psi0(j)*s_node**(-bsw(j))
+                smp(j) = max(smpmin,smp(j))
+                dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
+             endif
+          else
+             ! when ice is present, the matric potential is only related to temperature
+             ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
+             ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
+             smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
+             smp(j) = max(smpmin, smp(j))        ! Limit soil suction
+             dsmpdw(j) = 0.
+          endif
+       end if
     end do
 
     ! Hydraulic conductivity and soil matric potential and their derivatives
@@ -1680,11 +1700,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = 0.
     bmx(j) = dzmm(j)/deltim + dqodw1(j)
     cmx(j) = dqodw2(j)
-#if(defined PLANT_HYDRAULIC_STRESS)
-    rmx(j) =  qin(j) - qout(j) - rootr(j)
-#else
-    rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-#endif
+    if(DEF_USE_PLANTHYDRAULICS)then
+       rmx(j) =  qin(j) - qout(j) - rootr(j)
+    else
+       rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
+    end if
 
     ! Nodes j=2 to j=nl_soil-1
 
@@ -1700,11 +1720,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
        amx(j) = -dqidw0(j)
        bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
        cmx(j) =  dqodw2(j)
-#if(defined PLANT_HYDRAULIC_STRESS)
-       rmx(j) =  qin(j) - qout(j) - rootr(j)
-#else
-       rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-#endif
+       if(DEF_USE_PLANTHYDRAULICS)then
+          rmx(j) =  qin(j) - qout(j) - rootr(j)
+       else
+          rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
+       end if
     end do
 
     ! Node j=nl_soil (bottom)
@@ -1727,11 +1747,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = -dqidw0(j)
     bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
     cmx(j) =  dqodw2(j)
-#if(defined PLANT_HYDRAULIC_STRESS)
-    rmx(j) =  qin(j) - qout(j) - rootr(j)
-#else
-    rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-#endif
+    if(DEF_USE_PLANTHYDRAULICS)then
+       rmx(j) =  qin(j) - qout(j) - rootr(j)
+    else
+       rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
+    end if
 
     ! Solve for dwat
 
@@ -1741,11 +1761,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! The mass balance error (mm) for this time step is
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
-#if(defined PLANT_HYDRAULIC_STRESS)
-       errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
-#else
-       errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
-#endif
+       if(DEF_USE_PLANTHYDRAULICS)then
+          errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
+       else
+          errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
+       end if
     enddo
 
     if(abs(errorw) > 1.e-3)then

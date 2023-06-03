@@ -2,9 +2,15 @@
 
 SUBROUTINE Aggregation_Topography ( &
       gtopo, dir_rawdata, dir_model_landdata, lc_year)
-
    ! ----------------------------------------------------------------------
-   ! 1. topography
+   ! Global Topography data
+   !   
+   !   Yamazaki, D., Ikeshima, D., Sosa, J.,Bates, P. D., Allen, G. H., 
+   !   Pavelsky, T. M. (2019). 
+   !   MERIT Hydro: ahigh‐resolution global hydrographymap based on 
+   !   latest topography dataset.Water Resources Research, 55, 5053–5073. 
+   ! 
+   ! Created by Shupeng Zhang, 05/2023
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist

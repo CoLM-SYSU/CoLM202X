@@ -594,7 +594,7 @@
 
   use MOD_Precision
   use MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
-  USE MOD_Meltf
+  USE MOD_PhaseChange
   USE MOD_Utils
 
   IMPLICIT NONE

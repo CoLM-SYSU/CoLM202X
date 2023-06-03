@@ -3,6 +3,18 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT) 
 MODULE MOD_ElmVector
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !    
+   !    Address of Data associated with land element.
+   !
+   !    To output a vector, Data is gathered from worker processes directly to master.
+   !    "elm_data_address" stores information on how to reorganize data gathered.
+   !    The output data in vector is sorted by global element index.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE

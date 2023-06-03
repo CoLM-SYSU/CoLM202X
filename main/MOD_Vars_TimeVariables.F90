@@ -27,8 +27,8 @@ MODULE MOD_Vars_PFTimeVariables
   ! for LULC_IGBP_PFT
   REAL(r8), allocatable :: tleaf_p      (:) !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p       (:) !depth of water on foliage [mm]
-  real(r8), allocatable :: ldew_p_rain  (:)!depth of rain on foliage [mm]
-  real(r8), allocatable :: ldew_p_snow  (:)!depth of snow on foliage [mm]
+  real(r8), allocatable :: ldew_rain_p  (:)!depth of rain on foliage [mm]
+  real(r8), allocatable :: ldew_snow_p  (:)!depth of snow on foliage [mm]
   REAL(r8), allocatable :: sigf_p       (:) !fraction of veg cover, excluding snow-covered veg [-]
   REAL(r8), allocatable :: tlai_p       (:) !leaf area index
   REAL(r8), allocatable :: lai_p        (:) !leaf area index
@@ -45,11 +45,11 @@ MODULE MOD_Vars_PFTimeVariables
   REAL(r8), allocatable :: qref_p       (:) !2 m height air specific humidity
   REAL(r8), allocatable :: rst_p        (:) !canopy stomatal resistance (s/m)
   REAL(r8), allocatable :: z0m_p        (:) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
   real(r8), allocatable :: vegwp_p    (:,:) ! vegetation water potential [mm]
   real(r8), allocatable :: gs0sun_p     (:) ! working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_p     (:) ! working copy of shalit stomata conductance
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
   real(r8), allocatable :: o3coefv_sun_p(:) !Ozone stress factor for photosynthesis on sunlit leaf
   real(r8), allocatable :: o3coefv_sha_p(:) !Ozone stress factor for photosynthesis on shaded leaf
@@ -91,8 +91,8 @@ CONTAINS
          IF (numpft > 0) THEN
             allocate (tleaf_p      (numpft)) !leaf temperature [K]
             allocate (ldew_p       (numpft)) !depth of water on foliage [mm]
-            allocate (ldew_p_rain  (numpft)) !depth of rain on foliage [mm]
-            allocate (ldew_p_snow  (numpft)) !depth of snow on foliage [mm]
+            allocate (ldew_rain_p  (numpft)) !depth of rain on foliage [mm]
+            allocate (ldew_snow_p  (numpft)) !depth of snow on foliage [mm]
             allocate (sigf_p       (numpft)) !fraction of veg cover, excluding snow-covered veg [-]
             allocate (tlai_p       (numpft)) !leaf area index
             allocate (lai_p        (numpft)) !leaf area index
@@ -109,11 +109,11 @@ CONTAINS
             allocate (qref_p       (numpft)) !2 m height air specific humidity
             allocate (rst_p        (numpft)) !canopy stomatal resistance (s/m)
             allocate (z0m_p        (numpft)) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
             allocate (vegwp_p      (1:nvegwcs,numpft))
             allocate (gs0sun_p     (numpft))
             allocate (gs0sha_p     (numpft))
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
             allocate (o3coefv_sun_p(numpft)) !Ozone stress factor for photosynthesis on sunlit leaf
             allocate (o3coefv_sha_p(numpft)) !Ozone stress factor for photosynthesis on shaded leaf
@@ -144,8 +144,8 @@ CONTAINS
 
       call ncio_read_vector (file_restart, 'tleaf_p  ', landpft, tleaf_p    ) !
       call ncio_read_vector (file_restart, 'ldew_p   ', landpft, ldew_p     ) !
-      call ncio_read_vector (file_restart, 'ldew_p_rain', landpft, ldew_p_rain) !depth of rain on foliage [mm]
-      call ncio_read_vector (file_restart, 'ldew_p_snow', landpft, ldew_p_snow) !depth of snow on foliage [mm]
+      call ncio_read_vector (file_restart, 'ldew_rain_p', landpft, ldew_rain_p) !depth of rain on foliage [mm]
+      call ncio_read_vector (file_restart, 'ldew_snow_p', landpft, ldew_snow_p) !depth of snow on foliage [mm]
       call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
       call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
       call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
@@ -162,11 +162,11 @@ CONTAINS
       call ncio_read_vector (file_restart, 'qref_p   ', landpft, qref_p     ) !
       call ncio_read_vector (file_restart, 'rst_p    ', landpft, rst_p      ) !
       call ncio_read_vector (file_restart, 'z0m_p    ', landpft, z0m_p      ) !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
       call ncio_read_vector (file_restart, 'vegwp_p  ', nvegwcs, landpft, vegwp_p ) !
       call ncio_read_vector (file_restart, 'gs0sun_p ', landpft, gs0sun_p   ) !
       call ncio_read_vector (file_restart, 'gs0sha_p ', landpft, gs0sha_p   ) !
-#endif
+end if
 #ifdef OzoneStress
       call ncio_read_vector (file_restart, 'lai_old_p    ', landpft, lai_old_p    , defval = 0._r8)
       call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
@@ -198,14 +198,14 @@ CONTAINS
      CALL ncio_define_dimension_vector (file_restart, landpft, 'pft')
      CALL ncio_define_dimension_vector (file_restart, landpft, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpft, 'rtyp', 2)
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      CALL ncio_define_dimension_vector (file_restart, landpft, 'vegnodes', nvegwcs)
-#endif
+end if
 
      call ncio_write_vector (file_restart, 'tleaf_p  ', 'pft', landpft, tleaf_p  , compress) !
      call ncio_write_vector (file_restart, 'ldew_p   ', 'pft', landpft, ldew_p   , compress) !
-     call ncio_write_vector (file_restart, 'ldew_p_rain', 'pft', landpft, ldew_p_rain, compress) !depth of rain on foliage [mm]
-     call ncio_write_vector (file_restart, 'ldew_p_snow', 'pft', landpft, ldew_p_snow, compress) !depth of snow on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_rain_p', 'pft', landpft, ldew_rain_p, compress) !depth of rain on foliage [mm]
+     call ncio_write_vector (file_restart, 'ldew_snow_p', 'pft', landpft, ldew_snow_p, compress) !depth of snow on foliage [mm]
      call ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
      call ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
      call ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
@@ -222,11 +222,11 @@ CONTAINS
      call ncio_write_vector (file_restart, 'qref_p   ', 'pft', landpft, qref_p   , compress) !
      call ncio_write_vector (file_restart, 'rst_p    ', 'pft', landpft, rst_p    , compress) !
      call ncio_write_vector (file_restart, 'z0m_p    ', 'pft', landpft, z0m_p    , compress) !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      call ncio_write_vector (file_restart, 'vegwp_p  '  , 'vegnodes', nvegwcs, 'pft',   landpft, vegwp_p, compress)
      call ncio_write_vector (file_restart, 'gs0sun_p '  , 'pft', landpft, gs0sun_p   , compress) !
      call ncio_write_vector (file_restart, 'gs0sha_p '  , 'pft', landpft, gs0sha_p   , compress) !
-#endif
+end if
 #ifdef OzoneStress
      call ncio_write_vector (file_restart, 'lai_old_p    ', 'pft', landpft, lai_old_p    , compress)
      call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
@@ -251,8 +251,8 @@ CONTAINS
          IF (numpft > 0) THEN
             deallocate (tleaf_p  ) !leaf temperature [K]
             deallocate (ldew_p   ) !depth of water on foliage [mm]
-            deallocate (ldew_p_rain)
-            deallocate (ldew_p_snow)
+            deallocate (ldew_rain_p)
+            deallocate (ldew_snow_p)
             deallocate (sigf_p   ) !fraction of veg cover, excluding snow-covered veg [-]
             deallocate (tlai_p   ) !leaf area index
             deallocate (lai_p    ) !leaf area index
@@ -269,11 +269,11 @@ CONTAINS
             deallocate (qref_p   ) !2 m height air specific humidity
             deallocate (rst_p    ) !canopy stomatal resistance (s/m)
             deallocate (z0m_p    ) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+! Plant Hydraulic variables
             deallocate (vegwp_p  ) !vegetation water potential [mm]
             deallocate (gs0sun_p ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_p ) !working copy of shalit stomata conductance
-#endif
+! end plant hydraulic variables
 #ifdef OzoneStress
             deallocate (o3coefv_sun_p ) !Ozone stress factor for photosynthesis on sunlit leaf
             deallocate (o3coefv_sha_p ) !Ozone stress factor for photosynthesis on shaded leaf
@@ -300,8 +300,8 @@ CONTAINS
 
       call check_vector_data ('tleaf_p  ', tleaf_p  )      !
       call check_vector_data ('ldew_p   ', ldew_p   )      !
-      call check_vector_data ('ldew_p_rain', ldew_p_rain ) !depth of rain on foliage [mm]
-      call check_vector_data ('ldew_p_snow', ldew_p_snow ) !depth of snow on foliage [mm]
+      call check_vector_data ('ldew_rain_p', ldew_rain_p ) !depth of rain on foliage [mm]
+      call check_vector_data ('ldew_snow_p', ldew_snow_p ) !depth of snow on foliage [mm]
       call check_vector_data ('sigf_p   ', sigf_p   )      !
       call check_vector_data ('tlai_p   ', tlai_p   )      !
       call check_vector_data ('lai_p    ', lai_p    )      !
@@ -318,11 +318,11 @@ CONTAINS
       call check_vector_data ('qref_p   ', qref_p   )      !
       call check_vector_data ('rst_p    ', rst_p    )      !
       call check_vector_data ('z0m_p    ', z0m_p    )      !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
       call check_vector_data ('vegwp_p  ', vegwp_p  )      !
       call check_vector_data ('gs0sun_p ', gs0sun_p )      !
       call check_vector_data ('gs0sha_p ', gs0sha_p )      !
-#endif
+end if
 #ifdef OzoneStress
       call check_vector_data ('o3coefv_sun_p', o3coefv_sun_p)
       call check_vector_data ('o3coefv_sha_p', o3coefv_sha_p)
@@ -381,11 +381,11 @@ MODULE MOD_Vars_PCTimeVariables
   REAL(r8), allocatable :: extkd_c    (:,:) !diffuse and scattered diffuse PAR extinction coefficient
   REAL(r8), allocatable :: rst_c      (:,:) !canopy stomatal resistance (s/m)
   REAL(r8), allocatable :: z0m_c      (:,:) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
   real(r8), allocatable :: vegwp_c  (:,:,:) !vegetation water potential [mm]
   real(r8), allocatable :: gs0sun_c   (:,:) !working copy of sunlit stomata conductance
   real(r8), allocatable :: gs0sha_c   (:,:) !working copy of shalit stomata conductance
-#endif
+!end plant hydraulic parameters
 
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PCTimeVariables
@@ -433,11 +433,11 @@ CONTAINS
             allocate (extkd_c    (0:N_PFT-1,numpc)) !diffuse and scattered diffuse PAR extinction coefficient
             allocate (rst_c      (0:N_PFT-1,numpc)) !canopy stomatal resistance (s/m)
             allocate (z0m_c      (0:N_PFT-1,numpc)) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             allocate (vegwp_c    (1:nvegwcs,0:N_PFT-1,numpc))
             allocate (gs0sun_c   (0:N_PFT-1,numpc))
             allocate (gs0sha_c   (0:N_PFT-1,numpc))
-#endif
+!end plant hydraulic parameters
          ENDIF
       ENDIF
 
@@ -446,7 +446,7 @@ CONTAINS
    SUBROUTINE READ_PCTimeVariables (file_restart)
 
       USE MOD_Vars_Global
-      use MOD_Namelist
+      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
       use MOD_NetCDFVector
       USE MOD_LandPC
       IMPLICIT NONE
@@ -470,37 +470,37 @@ CONTAINS
       call ncio_read_vector (file_restart, 'extkd_c  ', N_PFT,     landpc, extkd_c  ) !
       call ncio_read_vector (file_restart, 'rst_c    ', N_PFT,     landpc, rst_c    ) !
       call ncio_read_vector (file_restart, 'z0m_c    ', N_PFT,     landpc, z0m_c    ) !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
       call ncio_read_vector (file_restart, 'vegwp_c  ', nvegwcs,   N_PFT,  landpc, vegwp_c ) !
       call ncio_read_vector (file_restart, 'gs0sun_c ', N_PFT,     landpc, gs0sun_c ) !
       call ncio_read_vector (file_restart, 'gs0sha_c ', N_PFT,     landpc, gs0sha_c ) !
-#endif
+end if
 
    END SUBROUTINE READ_PCTimeVariables
 
    SUBROUTINE WRITE_PCTimeVariables (file_restart)
 
-     USE MOD_Vars_Global
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
-     USE MOD_LandPC
-     use MOD_NetCDFVector
-     IMPLICIT NONE
+      USE MOD_Vars_Global
+      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS
+      USE MOD_LandPC
+      use MOD_NetCDFVector
+      IMPLICIT NONE
 
-     character(LEN=*), intent(in) :: file_restart
+      character(LEN=*), intent(in) :: file_restart
 
-     ! Local variables
-     integer :: compress
+      ! Local variables
+      integer :: compress
 
-     compress = DEF_REST_COMPRESS_LEVEL
+      compress = DEF_REST_COMPRESS_LEVEL
 
-     call ncio_create_file_vector      (file_restart, landpc               )
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'pc'         )
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'pft' , N_PFT)
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'band', 2    )
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'rtyp', 2    )
-#ifdef PLANT_HYDRAULIC_STRESS
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
-#endif
+      call ncio_create_file_vector      (file_restart, landpc               )
+      CALL ncio_define_dimension_vector (file_restart, landpc, 'pc'         )
+      CALL ncio_define_dimension_vector (file_restart, landpc, 'pft' , N_PFT)
+      CALL ncio_define_dimension_vector (file_restart, landpc, 'band', 2    )
+      CALL ncio_define_dimension_vector (file_restart, landpc, 'rtyp', 2    )
+if(DEF_USE_PLANTHYDRAULICS)then
+      CALL ncio_define_dimension_vector (file_restart, landpc, 'vegnodes', nvegwcs)
+end if
 
       call ncio_write_vector (file_restart, 'tleaf_c  ', 'pft', N_PFT, 'pc', landpc, tleaf_c  , compress) !
       call ncio_write_vector (file_restart, 'ldew_c   ', 'pft', N_PFT, 'pc', landpc, ldew_c   , compress) !
@@ -520,11 +520,11 @@ CONTAINS
       call ncio_write_vector (file_restart, 'extkd_c  ', 'pft', N_PFT, 'pc', landpc, extkd_c  , compress) !
       call ncio_write_vector (file_restart, 'rst_c    ', 'pft', N_PFT, 'pc', landpc, rst_c    , compress) !
       call ncio_write_vector (file_restart, 'z0m_c    ', 'pft', N_PFT, 'pc', landpc, z0m_c    , compress) !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
       call ncio_write_vector (file_restart, 'vegwp_c  ', 'vegnodes', nvegwcs, 'pft', N_PFT , 'pc'    , landpc, vegwp_c, compress)
       call ncio_write_vector (file_restart, 'gs0sun_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sun_c, compress) !
       call ncio_write_vector (file_restart, 'gs0sha_c ', 'pft'     , N_PFT  , 'pc' , landpc, gs0sha_c, compress) !
-#endif
+end if
 
    END SUBROUTINE WRITE_PCTimeVariables
 
@@ -556,11 +556,11 @@ CONTAINS
             deallocate (extkd_c  ) !diffuse and scattered diffuse PAR extinction coefficient
             deallocate (rst_c    ) !canopy stomatal resistance (s/m)
             deallocate (z0m_c    ) !effective roughness [m]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             deallocate (vegwp_c  ) !vegetation water potential [mm]
             deallocate (gs0sun_c ) !working copy of sunlit stomata conductance
             deallocate (gs0sha_c ) !working copy of shalit stomata conductance
-#endif
+!end plant hydraulic parameters
          ENDIF
       ENDIF
 
@@ -589,11 +589,11 @@ CONTAINS
       call check_vector_data ('extkd_c  ', extkd_c  )      !
       call check_vector_data ('rst_c    ', rst_c    )      !
       call check_vector_data ('z0m_c    ', z0m_c    )      !
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
       call check_vector_data ('vegwp_c  ', vegwp_c  )      !
       call check_vector_data ('gs0sun_c ', gs0sun_c )      !
       call check_vector_data ('gs0sha_c ', gs0sha_c )      !
-#endif
+end if
 
    END SUBROUTINE check_PCTimeVariables
 #endif
@@ -626,128 +626,128 @@ MODULE MOD_Vars_TimeVariables
   USE MOD_Urban_Vars_TimeVariables
 #endif
 
-IMPLICIT NONE
-SAVE
+  IMPLICIT NONE
+  SAVE
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
-      real(r8), allocatable :: z_sno      (:,:) ! node depth [m]
-      real(r8), allocatable :: dz_sno     (:,:) ! interface depth [m]
-      real(r8), allocatable :: t_soisno   (:,:) ! soil temperature [K]
-      real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
-      real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]
-      real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
-      real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
-      real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
-      real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
-#ifdef PLANT_HYDRAULIC_STRESS
-      real(r8), allocatable :: vegwp      (:,:) ! vegetation water potential [mm]
-      real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
-      real(r8), allocatable :: gs0sha       (:) ! working copy of shalit stomata conductance
-#endif
+     real(r8), allocatable :: z_sno      (:,:) ! node depth [m]
+     real(r8), allocatable :: dz_sno     (:,:) ! interface depth [m]
+     real(r8), allocatable :: t_soisno   (:,:) ! soil temperature [K]
+     real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
+     real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]
+     real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
+     real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
+     real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
+     real(r8), allocatable :: rootr(:,:)       ! water exchange between soil and root. Positive: soil->root [?]
+!Plant Hydraulic variables
+     real(r8), allocatable :: vegwp(:,:)       ! vegetation water potential [mm]
+     real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
+     real(r8), allocatable :: gs0sha       (:) ! working copy of shalit stomata conductance
+!end plant hydraulic variables
 #ifdef OzoneStress
-      real(r8), allocatable :: o3coefv_sun  (:) ! Ozone stress factor for photosynthesis on sunlit leaf
-      real(r8), allocatable :: o3coefv_sha  (:) ! Ozone stress factor for photosynthesis on shaded leaf
-      real(r8), allocatable :: o3coefg_sun  (:) ! Ozone stress factor for stomata on sunlit leaf
-      real(r8), allocatable :: o3coefg_sha  (:) ! Ozone stress factor for stomata on shaded leaf
-      real(r8), allocatable :: lai_old      (:) ! lai in last time step
-      real(r8), allocatable :: o3uptakesun  (:) ! Ozone does, sunlit leaf (mmol O3/m^2)
-      real(r8), allocatable :: o3uptakesha  (:) ! Ozone does, shaded leaf (mmol O3/m^2)
+     real(r8), allocatable :: o3coefv_sun  (:) ! Ozone stress factor for photosynthesis on sunlit leaf
+     real(r8), allocatable :: o3coefv_sha  (:) ! Ozone stress factor for photosynthesis on shaded leaf
+     real(r8), allocatable :: o3coefg_sun  (:) ! Ozone stress factor for stomata on sunlit leaf
+     real(r8), allocatable :: o3coefg_sha  (:) ! Ozone stress factor for stomata on shaded leaf
+     real(r8), allocatable :: lai_old      (:) ! lai in last time step
+     real(r8), allocatable :: o3uptakesun  (:) ! Ozone does, sunlit leaf (mmol O3/m^2)
+     real(r8), allocatable :: o3uptakesha  (:) ! Ozone does, shaded leaf (mmol O3/m^2)
 #endif
-      real(r8), allocatable :: rstfacsun_out(:) ! factor of soil water stress on sunlit leaf
-      real(r8), allocatable :: rstfacsha_out(:) ! factor of soil water stress on shaded leaf
-      real(r8), allocatable :: gssun_out    (:) ! stomata conductance on sunlit leaf
-      real(r8), allocatable :: gssha_out    (:) ! stomata conductance on shaded leaf
-      real(r8), allocatable :: t_grnd       (:) ! ground surface temperature [K]
+     real(r8), allocatable :: rstfacsun_out(:) ! factor of soil water stress on sunlit leaf
+     real(r8), allocatable :: rstfacsha_out(:) ! factor of soil water stress on shaded leaf
+     real(r8), allocatable :: gssun_out    (:) ! stomata conductance on sunlit leaf
+     real(r8), allocatable :: gssha_out    (:) ! stomata conductance on shaded leaf
+     real(r8), allocatable :: t_grnd       (:) ! ground surface temperature [K]
 
 #ifdef WUEdiag
 #ifdef LULC_IGBP_PFT
-      real(r8), allocatable :: assim_RuBP_sun_out   (:) !1
-      real(r8), allocatable :: assim_RuBP_sha_out   (:) !1
-      real(r8), allocatable :: assim_Rubisco_sun_out(:) !1
-      real(r8), allocatable :: assim_Rubisco_sha_out(:) !1
-      real(r8), allocatable :: assimsun_out         (:) !1
-      real(r8), allocatable :: assimsha_out         (:) !1
-      real(r8), allocatable :: etrsun_out           (:) !1
-      real(r8), allocatable :: etrsha_out           (:) !1
-      real(r8), allocatable :: cisun_out            (:) !1
-      real(r8), allocatable :: cisha_out            (:) !1
-      real(r8), allocatable :: Dsun_out             (:) !1
-      real(r8), allocatable :: Dsha_out             (:) !1
-      real(r8), allocatable :: gammasun_out         (:) !1
-      real(r8), allocatable :: gammasha_out         (:) !1
-      real(r8), allocatable :: lambdasun_out        (:)
-      real(r8), allocatable :: lambdasha_out        (:)
-      real(r8), allocatable :: lambda_out           (:)
+     real(r8), allocatable :: assim_RuBP_sun_out   (:) !1
+     real(r8), allocatable :: assim_RuBP_sha_out   (:) !1
+     real(r8), allocatable :: assim_Rubisco_sun_out(:) !1
+     real(r8), allocatable :: assim_Rubisco_sha_out(:) !1
+     real(r8), allocatable :: assimsun_out         (:) !1
+     real(r8), allocatable :: assimsha_out         (:) !1
+     real(r8), allocatable :: etrsun_out           (:) !1
+     real(r8), allocatable :: etrsha_out           (:) !1
+     real(r8), allocatable :: cisun_out            (:) !1
+     real(r8), allocatable :: cisha_out            (:) !1
+     real(r8), allocatable :: Dsun_out             (:) !1
+     real(r8), allocatable :: Dsha_out             (:) !1
+     real(r8), allocatable :: gammasun_out         (:) !1
+     real(r8), allocatable :: gammasha_out         (:) !1
+     real(r8), allocatable :: lambdasun_out        (:)
+     real(r8), allocatable :: lambdasha_out        (:)
+     real(r8), allocatable :: lambda_out           (:)
 #endif
 #endif
 
-      real(r8), allocatable :: tleaf        (:) ! leaf temperature [K]
-      real(r8), allocatable :: ldew         (:) ! depth of water on foliage [mm]
-      real(r8), allocatable :: ldew_rain    (:) ! depth of rain on foliage [mm]
-      real(r8), allocatable :: ldew_snow    (:) ! depth of rain on foliage [mm]
-      real(r8), allocatable :: sag          (:) ! non dimensional snow age [-]
-      real(r8), allocatable :: scv          (:) ! snow cover, water equivalent [mm]
-      real(r8), allocatable :: snowdp       (:) ! snow depth [meter]
-      real(r8), allocatable :: fveg         (:) ! fraction of vegetation cover
-      real(r8), allocatable :: fsno         (:) ! fraction of snow cover on ground
-      real(r8), allocatable :: sigf         (:) ! fraction of veg cover, excluding snow-covered veg [-]
-      real(r8), allocatable :: green        (:) ! leaf greenness
-      real(r8), allocatable :: tlai         (:) ! leaf area index
-      real(r8), allocatable :: lai          (:) ! leaf area index
-      real(r8), allocatable :: laisun       (:) ! leaf area index for sunlit leaf
-      real(r8), allocatable :: laisha       (:) ! leaf area index for shaded leaf
-      real(r8), allocatable :: tsai         (:) ! stem area index
-      real(r8), allocatable :: sai          (:) ! stem area index
-      real(r8), allocatable :: coszen       (:) ! cosine of solar zenith angle
-      real(r8), allocatable :: alb      (:,:,:) ! averaged albedo [-]
-      real(r8), allocatable :: ssun     (:,:,:) ! sunlit canopy absorption for solar radiation (0-1)
-      real(r8), allocatable :: ssha     (:,:,:) ! shaded canopy absorption for solar radiation (0-1)
-      real(r8), allocatable :: thermk       (:) ! canopy gap fraction for tir radiation
-      real(r8), allocatable :: extkb        (:) ! (k, g(mu)/mu) direct solar extinction coefficient
-      real(r8), allocatable :: extkd        (:) ! diffuse and scattered diffuse PAR extinction coefficient
-      real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
-      real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
-      real(r8), allocatable :: wat          (:) ! total water storage [mm]
-      real(r8), allocatable :: dpond        (:) ! depth of ponding water [mm]
+     real(r8), allocatable :: tleaf        (:) ! leaf temperature [K]
+     real(r8), allocatable :: ldew         (:) ! depth of water on foliage [mm]
+     real(r8), allocatable :: ldew_rain    (:) ! depth of rain on foliage [mm]
+     real(r8), allocatable :: ldew_snow    (:) ! depth of rain on foliage [mm]
+     real(r8), allocatable :: sag          (:) ! non dimensional snow age [-]
+     real(r8), allocatable :: scv          (:) ! snow cover, water equivalent [mm]
+     real(r8), allocatable :: snowdp       (:) ! snow depth [meter]
+     real(r8), allocatable :: fveg         (:) ! fraction of vegetation cover
+     real(r8), allocatable :: fsno         (:) ! fraction of snow cover on ground
+     real(r8), allocatable :: sigf         (:) ! fraction of veg cover, excluding snow-covered veg [-]
+     real(r8), allocatable :: green        (:) ! leaf greenness
+     real(r8), allocatable :: tlai         (:) ! leaf area index
+     real(r8), allocatable :: lai          (:) ! leaf area index
+     real(r8), allocatable :: laisun       (:) ! leaf area index for sunlit leaf
+     real(r8), allocatable :: laisha       (:) ! leaf area index for shaded leaf
+     real(r8), allocatable :: tsai         (:) ! stem area index
+     real(r8), allocatable :: sai          (:) ! stem area index
+     real(r8), allocatable :: coszen       (:) ! cosine of solar zenith angle
+     real(r8), allocatable :: alb      (:,:,:) ! averaged albedo [-]
+     real(r8), allocatable :: ssun     (:,:,:) ! sunlit canopy absorption for solar radiation (0-1)
+     real(r8), allocatable :: ssha     (:,:,:) ! shaded canopy absorption for solar radiation (0-1)
+     real(r8), allocatable :: thermk       (:) ! canopy gap fraction for tir radiation
+     real(r8), allocatable :: extkb        (:) ! (k, g(mu)/mu) direct solar extinction coefficient
+     real(r8), allocatable :: extkd        (:) ! diffuse and scattered diffuse PAR extinction coefficient
+     real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
+     real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
+     real(r8), allocatable :: wat          (:) ! total water storage [mm]
+     real(r8), allocatable :: dpond        (:) ! depth of ponding water [mm]
 
-      real(r8), allocatable :: t_lake     (:,:) ! lake layer teperature [K]
-      real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
-      real(r8), allocatable :: savedtke1    (:) ! top level eddy conductivity (W/m K)
+     real(r8), allocatable :: t_lake     (:,:) ! lake layer teperature [K]
+     real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
+     real(r8), allocatable :: savedtke1    (:) ! top level eddy conductivity (W/m K)
 
-      REAL(r8), allocatable :: snw_rds    (:,:) ! effective grain radius (col,lyr) [microns, m-6]
-      REAL(r8), allocatable :: mss_bcpho  (:,:) ! mass of hydrophobic BC in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_bcphi  (:,:) ! mass of hydrophillic BC in snow (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_ocpho  (:,:) ! mass of hydrophobic OC in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_ocphi  (:,:) ! mass of hydrophillic OC in snow (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_dst1   (:,:) ! mass of dust species 1 in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_dst2   (:,:) ! mass of dust species 2 in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_dst3   (:,:) ! mass of dust species 3 in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: mss_dst4   (:,:) ! mass of dust species 4 in snow  (col,lyr) [kg]
-      REAL(r8), allocatable :: ssno   (:,:,:,:) ! snow layer absorption [-]
+     REAL(r8), allocatable :: snw_rds    (:,:) ! effective grain radius (col,lyr) [microns, m-6]
+     REAL(r8), allocatable :: mss_bcpho  (:,:) ! mass of hydrophobic BC in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_bcphi  (:,:) ! mass of hydrophillic BC in snow (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_ocpho  (:,:) ! mass of hydrophobic OC in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_ocphi  (:,:) ! mass of hydrophillic OC in snow (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_dst1   (:,:) ! mass of dust species 1 in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_dst2   (:,:) ! mass of dust species 2 in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_dst3   (:,:) ! mass of dust species 3 in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: mss_dst4   (:,:) ! mass of dust species 4 in snow  (col,lyr) [kg]
+     REAL(r8), allocatable :: ssno   (:,:,:,:) ! snow layer absorption [-]
 
-      real(r8), allocatable :: trad         (:) ! radiative temperature of surface [K]
-      real(r8), allocatable :: tref         (:) ! 2 m height air temperature [kelvin]
-      real(r8), allocatable :: qref         (:) ! 2 m height air specific humidity
-      real(r8), allocatable :: rst          (:) ! canopy stomatal resistance (s/m)
-      real(r8), allocatable :: emis         (:) ! averaged bulk surface emissivity
-      real(r8), allocatable :: z0m          (:) ! effective roughness [m]
-      real(r8), allocatable :: displa       (:) ! zero displacement height [m]
-      real(r8), allocatable :: zol          (:) ! dimensionless height (z/L) used in Monin-Obukhov theory
-      real(r8), allocatable :: rib          (:) ! bulk Richardson number in surface layer
-      real(r8), allocatable :: ustar        (:) ! u* in similarity theory [m/s]
-      real(r8), allocatable :: qstar        (:) ! q* in similarity theory [kg/kg]
-      real(r8), allocatable :: tstar        (:) ! t* in similarity theory [K]
-      real(r8), allocatable :: fm           (:) ! integral of profile function for momentum
-      real(r8), allocatable :: fh           (:) ! integral of profile function for heat
-      real(r8), allocatable :: fq           (:) ! integral of profile function for moisture
+     real(r8), allocatable :: trad         (:) ! radiative temperature of surface [K]
+     real(r8), allocatable :: tref         (:) ! 2 m height air temperature [kelvin]
+     real(r8), allocatable :: qref         (:) ! 2 m height air specific humidity
+     real(r8), allocatable :: rst          (:) ! canopy stomatal resistance (s/m)
+     real(r8), allocatable :: emis         (:) ! averaged bulk surface emissivity
+     real(r8), allocatable :: z0m          (:) ! effective roughness [m]
+     real(r8), allocatable :: displa       (:) ! zero displacement height [m]
+     real(r8), allocatable :: zol          (:) ! dimensionless height (z/L) used in Monin-Obukhov theory
+     real(r8), allocatable :: rib          (:) ! bulk Richardson number in surface layer
+     real(r8), allocatable :: ustar        (:) ! u* in similarity theory [m/s]
+     real(r8), allocatable :: qstar        (:) ! q* in similarity theory [kg/kg]
+     real(r8), allocatable :: tstar        (:) ! t* in similarity theory [K]
+     real(r8), allocatable :: fm           (:) ! integral of profile function for momentum
+     real(r8), allocatable :: fh           (:) ! integral of profile function for heat
+     real(r8), allocatable :: fq           (:) ! integral of profile function for moisture
 
-      ! PUBLIC MEMBER FUNCTIONS:
-      public :: allocate_TimeVariables
-      public :: deallocate_TimeVariables
-      public :: READ_TimeVariables
-      public :: WRITE_TimeVariables
+     ! PUBLIC MEMBER FUNCTIONS:
+     public :: allocate_TimeVariables
+     public :: deallocate_TimeVariables
+     public :: READ_TimeVariables
+     public :: WRITE_TimeVariables
 #ifdef CoLMDEBUG
-      public :: check_TimeVariables
+     public :: check_TimeVariables
 #endif
 
 
@@ -782,11 +782,11 @@ SAVE
            allocate (hk                (1:nl_soil,numpatch))
            allocate (h2osoi            (1:nl_soil,numpatch))
            allocate (rootr             (1:nl_soil,numpatch))
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
            allocate (vegwp             (1:nvegwcs,numpatch))
            allocate (gs0sun                      (numpatch))
            allocate (gs0sha                      (numpatch))
-#endif
+!end plant hydraulic variables
 #ifdef OzoneStress
            allocate (o3coefv_sun                 (numpatch)) ! Ozone stress factor for photosynthesis on sunlit leaf
            allocate (o3coefv_sha                 (numpatch)) ! Ozone stress factor for photosynthesis on shaded leaf
@@ -932,11 +932,11 @@ SAVE
            deallocate (hk                     )
            deallocate (h2osoi                 )
            deallocate (rootr                  )
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic variables
            deallocate (vegwp                  )
            deallocate (gs0sun                 )
            deallocate (gs0sha                 )
-#endif
+!End plant hydraulic variables
 #ifdef OzoneStress
            deallocate (o3coefv_sun            ) ! Ozone stress factor for photosynthesis on sunlit leaf
            deallocate (o3coefv_sha            ) ! Ozone stress factor for photosynthesis on shaded leaf
@@ -1135,9 +1135,9 @@ SAVE
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'vegnodes', nvegwcs)
-#endif
+end if
 
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
@@ -1150,11 +1150,11 @@ SAVE
      call ncio_write_vector (file_restart, 'wice_soisno', 'soilsnow', nl_soil-maxsnl, 'patch', landpatch, wice_soisno, compress) ! ice lens in layers [kg/m2]
      call ncio_write_vector (file_restart, 'smp',         'soil', nl_soil, 'patch', landpatch, smp, compress)                    ! soil matrix potential [mm]
      call ncio_write_vector (file_restart, 'hk',          'soil', nl_soil, 'patch', landpatch, hk, compress)                     ! hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      call ncio_write_vector (file_restart, 'vegwp',   'vegnodes', nvegwcs, 'patch', landpatch, vegwp, compress)                  ! vegetation water potential [mm]
      call ncio_write_vector (file_restart, 'gs0sun',    'patch', landpatch, gs0sun, compress)                                    ! working copy of sunlit stomata conductance
      call ncio_write_vector (file_restart, 'gs0sha',    'patch', landpatch, gs0sha, compress)                                    ! working copy of shalit stomata conductance
-#endif
+end if
 #ifdef OzoneStress
      call ncio_write_vector (file_restart, 'lai_old    ', 'patch', landpatch, lai_old    , compress)
      call ncio_write_vector (file_restart, 'o3uptakesun', 'patch', landpatch, o3uptakesun, compress)
@@ -1292,11 +1292,11 @@ SAVE
      call ncio_read_vector (file_restart, 'wice_soisno', nl_soil-maxsnl, landpatch, wice_soisno) ! ice lens in layers [kg/m2]
      call ncio_read_vector (file_restart, 'smp',         nl_soil,        landpatch, smp        ) ! soil matrix potential [mm]
      call ncio_read_vector (file_restart, 'hk',          nl_soil,        landpatch, hk         ) ! hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      call ncio_read_vector (file_restart, 'vegwp',       nvegwcs,        landpatch, vegwp      ) ! vegetation water potential [mm]
      call ncio_read_vector (file_restart, 'gs0sun  ',    landpatch, gs0sun     ) ! working copy of sunlit stomata conductance
      call ncio_read_vector (file_restart, 'gs0sha  ',    landpatch, gs0sha     ) ! working copy of shalit stomata conductance
-#endif
+end if
 #ifdef OzoneStress
      call ncio_read_vector (file_restart, 'lai_old    ', landpatch, lai_old    )
      call ncio_read_vector (file_restart, 'o3uptakesun', landpatch, o3uptakesun)
@@ -1418,11 +1418,11 @@ SAVE
      call check_vector_data ('wice_soisno ', wice_soisno) ! ice lens in layers [kg/m2]
      call check_vector_data ('smp         ', smp        ) ! soil matrix potential [mm]
      call check_vector_data ('hk          ', hk         ) ! hydraulic conductivity [mm h2o/s]
-#ifdef PLANT_HYDRAULIC_STRESS
+if(DEF_USE_PLANTHYDRAULICS)then
      call check_vector_data ('vegwp       ', vegwp      ) ! vegetation water potential [mm]
      call check_vector_data ('gs0sun      ', gs0sun     ) ! working copy of sunlit stomata conductance
      call check_vector_data ('gs0sha      ', gs0sha     ) ! working copy of shalit stomata conductance
-#endif
+end if
 #ifdef OzoneStress
      call check_vector_data ('o3coefv_sun', o3coefv_sun)
      call check_vector_data ('o3coefv_sha', o3coefv_sha)

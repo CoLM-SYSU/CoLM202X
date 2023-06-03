@@ -2,6 +2,32 @@
 
 MODULE MOD_SPMD_Task
 
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    SPMD refers to "Single Program/Multiple Data" parallelization.
+   ! 
+   !    In CoLM, processes do three types of tasks,
+   !    1. master : There is only one master process, usually rank 0 in global communicator. 
+   !                It reads or writes global data, prints informations.
+   !    2. io     : IO processes read data from files and scatter to workers, gather data from 
+   !                workers and write to files.
+   !    3. worker : Worker processes do model calculations.
+   !   
+   !    Notice that,
+   !    1. There are mainly two types of data in CoLM: gridded data and vector data. 
+   !       Gridded data takes longitude and latitude   as its last two dimensions. 
+   !       Vector  data takes ELEMENT/PATCH/HRU/PFT/PC as its last dimension.
+   !       Usually gridded data is allocated on IO processes and vector data is allocated on
+   !       worker processes.
+   !    2. One IO process and multiple worker processes form a group. The Input/Output 
+   !       in CoLM is mainly between IO and workers in the same group. However, all processes
+   !       can communicate with each other.
+   !    3. Number of IO is less or equal than the number of blocks with non-zero elements.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
+
    USE MOD_Precision
    IMPLICIT NONE
 

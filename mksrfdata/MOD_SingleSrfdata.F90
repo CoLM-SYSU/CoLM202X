@@ -2,6 +2,13 @@
 
 #ifdef SinglePoint
 MODULE MOD_SingleSrfdata
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to read or write surface data for "SinglePoint". 
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
 
    USE MOD_Precision, only: r8
    USE MOD_Vars_Global

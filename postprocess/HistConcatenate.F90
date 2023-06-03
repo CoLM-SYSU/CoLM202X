@@ -64,9 +64,9 @@ program hist_concatenate
       CALL ncio_define_dimension (filehist, 'soilsnow', nl_soil-maxsnl)
       CALL ncio_define_dimension (filehist, 'band', 2)
       CALL ncio_define_dimension (filehist, 'rtyp', 2)
-#ifdef PLANT_HYDRAULIC_STRESS
-      CALL ncio_define_dimension (filehist, 'vegnodes', nvegwcs)
-#endif
+      if(DEF_USE_PLANTHYDRAULICS)then
+         CALL ncio_define_dimension (filehist, 'vegnodes', nvegwcs)
+      end if
 
    ENDIF
 
@@ -440,9 +440,9 @@ program hist_concatenate
    ! water exchange between soil layers and root. Positive: soil->root [mm h2o/s] (PHS defined)
    call hist_concatenate_var_3d (filehist, 'f_rootr      ', timelen, 'soil', nl_soil, compress)
 
-#ifdef PLANT_HYDRAULIC_STRESS
-   call hist_concatenate_var_3d (filehist, 'f_vegwp      ', timelen, 'vegnodes', nvegwcs, compress)  ! vegetation water potential [mm]
-#endif
+   if(DEF_USE_PLANTHYDRAULICS)then
+      call hist_concatenate_var_3d (filehist, 'f_vegwp      ', timelen, 'vegnodes', nvegwcs, compress)  ! vegetation water potential [mm]
+   end if
 
    call hist_concatenate_var_2d (filehist, 'f_zwt        ', timelen, compress, &
       'the depth to water table','m')
