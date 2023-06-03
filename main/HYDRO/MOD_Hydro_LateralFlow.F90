@@ -5,9 +5,9 @@ MODULE MOD_Hydro_LateralFlow
    
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Hydro_DrainageNetwork
    USE MOD_Hydro_RiverNetwork
    USE MOD_Hydro_SubsurfaceNetwork
+   USE MOD_Hydro_SurfaceNetwork
    USE MOD_Hydro_SurfaceFlow
    USE MOD_Hydro_SubsurfaceFlow
    USE MOD_Hydro_RiverFlow
@@ -22,7 +22,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      CALL drainage_network_init ()
+      CALL surface_network_init ()
       CALL river_init ()
       CALL ssrf_init ()
 
@@ -127,7 +127,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      CALL drainage_network_final ()
+      CALL surface_network_final ()
       CALL river_final ()
       CALL ssrf_final  ()
 
@@ -177,9 +177,9 @@ CONTAINS
 
          DO ibasin = 1, numbasin
 
-            nhru = drainagenetwork(ibasin)%nhru
-            ihru_p => drainagenetwork(ibasin)%ihru
-            area_p => drainagenetwork(ibasin)%area
+            nhru = surface_network(ibasin)%nhru
+            ihru_p => surface_network(ibasin)%ihru
+            area_p => surface_network(ibasin)%area
 
             area_cat  = 0.
             precp_cat = 0.

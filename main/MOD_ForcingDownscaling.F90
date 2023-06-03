@@ -1,6 +1,6 @@
 #include <define.h>
 
-module MOD_DownscalingForcing
+module MOD_ForcingDownscaling
   !-----------------------------------------------------------------------
   ! DESCRIPTION:
   ! Downscaling of gridcell-level meteorological forcings into column-level forcings
@@ -434,4 +434,4 @@ contains
 
 
 !-----------------------------------------------------------------------
-end module MOD_DownscalingForcing
+end module MOD_ForcingDownscaling
