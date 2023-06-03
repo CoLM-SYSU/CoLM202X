@@ -230,7 +230,7 @@ contains
       use MOD_Mapping_Grid2Pset
       use MOD_CoLMDebug
       use MOD_UserSpecifiedForcing
-      USE MOD_DownscalingForcing, only : rair, cpair, downscale_forcings
+      USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
 
       IMPLICIT NONE
       integer, INTENT(in) :: idate(3)
