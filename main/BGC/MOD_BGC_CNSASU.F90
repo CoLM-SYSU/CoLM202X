@@ -30,10 +30,10 @@ module MOD_BGC_CNSASU
   !                   use accumulated transfer fluxes to calculate the matrix.
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3, floating_cn_ratio
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       decomp_cpools_vr           , decomp_npools_vr           , decomp0_cpools_vr          , decomp0_npools_vr          , &
       I_met_c_vr_acc             , I_cel_c_vr_acc             , I_lig_c_vr_acc             , I_cwd_c_vr_acc             , &
       AKX_met_to_soil1_c_vr_acc  , AKX_cel_to_soil1_c_vr_acc  , AKX_lig_to_soil2_c_vr_acc  , AKX_soil1_to_soil2_c_vr_acc, &
@@ -51,8 +51,8 @@ module MOD_BGC_CNSASU
       diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           , skip_balance_check         , &
       cn_decomp_pools 
 
-  use MOD_Vars_PFTimeInvars, only: pftclass
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       leafc_p           , leafc_storage_p      , leafc_xfer_p      , leafc0_p             , leafc0_storage_p     , leafc0_xfer_p     , &
       frootc_p          , frootc_storage_p     , frootc_xfer_p     , frootc0_p            , frootc0_storage_p    , frootc0_xfer_p    , &
       livestemc_p       , livestemc_storage_p  , livestemc_xfer_p  , livestemc0_p         , livestemc0_storage_p , livestemc0_xfer_p , &

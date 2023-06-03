@@ -30,11 +30,11 @@ MODULE MOD_PercentagesPFTReadin
 #endif
 #ifdef LULC_IGBP_PFT
       use MOD_LandPFT
-      use MOD_Vars_PFTimeInvars, only : pftfrac
+      use MOD_Vars_PFTimeInvariants, only : pftfrac
 #endif
 #ifdef LULC_IGBP_PC
       use MOD_LandPC
-      use MOD_Vars_PCTimeInvars, only : pcfrac
+      use MOD_Vars_PCTimeInvariants, only : pcfrac
 #endif
       IMPLICIT NONE
 

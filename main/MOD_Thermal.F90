@@ -116,14 +116,14 @@ MODULE MOD_Thermal
   USE MOD_Qsadv
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-  USE MOD_Vars_PFTimeInvars
-  USE MOD_Vars_PFTimeVars
+  USE MOD_Vars_PFTimeInvariants
+  USE MOD_Vars_PFTimeVariables
   USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef LULC_IGBP_PC
   USE MOD_LandPC
-  USE MOD_Vars_PCTimeInvars
-  USE MOD_Vars_PCTimeVars
+  USE MOD_Vars_PCTimeInvariants
+  USE MOD_Vars_PCTimeVariables
   USE MOD_Vars_1DPCFluxes
   USE MOD_LeafTemperaturePC
 #endif
@@ -776,7 +776,7 @@ IF (patchtype == 0) THEN
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
-                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_p_rain(i)  ,ldew_p_snow(i)  ,taux_p(i)  ,tauy_p(i)  ,&
+                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i)  ,ldew_snow_p(i)  ,taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
                  tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
                  fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
@@ -812,8 +812,8 @@ IF (patchtype == 0) THEN
             tleaf_p(i)     = forc_t
             laisun_p(i)    = 0.
             laisha_p(i)    = 0.
-            ldew_p_rain(i) = 0.
-            ldew_p_snow(i) = 0.
+            ldew_rain_p(i) = 0.
+            ldew_snow_p(i) = 0.
             ldew_p(i)      = 0.
             rootr_p(:,i)   = 0.
             rstfacsun_p(i) = 0.
@@ -858,8 +858,8 @@ IF (patchtype == 0) THEN
       dlrad  = sum( dlrad_p (ps:pe)*pftfrac(ps:pe) )
       ulrad  = sum( ulrad_p (ps:pe)*pftfrac(ps:pe) )
       tleaf  = sum( tleaf_p (ps:pe)*pftfrac(ps:pe) )
-      ldew_rain = sum( ldew_p_rain  (ps:pe)*pftfrac(ps:pe) )
-      ldew_snow = sum( ldew_p_snow  (ps:pe)*pftfrac(ps:pe) )
+      ldew_rain = sum( ldew_rain_p  (ps:pe)*pftfrac(ps:pe) )
+      ldew_snow = sum( ldew_snow_p  (ps:pe)*pftfrac(ps:pe) )
       ldew   = sum( ldew_p  (ps:pe)*pftfrac(ps:pe) )
       tref   = sum( tref_p  (ps:pe)*pftfrac(ps:pe) )
       qref   = sum( qref_p  (ps:pe)*pftfrac(ps:pe) )

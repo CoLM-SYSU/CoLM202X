@@ -36,7 +36,7 @@ CONTAINS
       USE MOD_LandPatch, only : numpatch
       USE MOD_Vars_1DFluxes
       USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_Vars_Timevars
+      USE MOD_Hydro_Vars_TimeVariables
       USE MOD_CoLMDebug
       IMPLICIT NONE
 

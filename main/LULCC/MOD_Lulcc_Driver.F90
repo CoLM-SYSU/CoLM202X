@@ -33,8 +33,8 @@ MODULE MOD_Lulcc_Driver
 
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Lulcc_Vars_TimeInvars
-   USE MOD_Lulcc_Vars_TimeVars
+   USE MOD_Lulcc_Vars_TimeInvariants
+   USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeVariables
 
@@ -48,12 +48,12 @@ MODULE MOD_Lulcc_Driver
    INTEGER, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
 
    ! allocate Lulcc memory
-   CALL allocate_LulccTimeInvars
-   CALL allocate_LulccTimeVars
+   CALL allocate_LulccTimeInvariants
+   CALL allocate_LulccTimeVariables
 
    ! SAVE variables
-   CALL SAVE_LulccTimeInvars
-   CALL SAVE_LulccTimeVars
+   CALL SAVE_LulccTimeInvariants
+   CALL SAVE_LulccTimeVariables
 
    ! cold start for Lulcc
    IF (p_is_master) THEN
@@ -67,7 +67,7 @@ MODULE MOD_Lulcc_Driver
    IF (p_is_master) THEN
       print *, ">>> LULCC: simple method for variable recovery..."
    ENDIF
-   CALL REST_LulccTimeVars
+   CALL REST_LulccTimeVariables
 
    ! conserved method for variable revocery
    !print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
@@ -76,8 +76,8 @@ MODULE MOD_Lulcc_Driver
    !CALL LulccWaterConserve()
 
    ! deallocate Lulcc memory
-   CALL deallocate_LulccTimeInvars()
-   CALL deallocate_LulccTimeVars()
+   CALL deallocate_LulccTimeInvariants()
+   CALL deallocate_LulccTimeVariables()
 
    ! write out state variables
    CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)

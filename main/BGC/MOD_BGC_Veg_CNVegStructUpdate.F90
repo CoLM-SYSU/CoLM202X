@@ -21,12 +21,12 @@ module MOD_BGC_Veg_CNVegStructUpdate
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                                 nswitchgrass, nirrig_switchgrass, noveg
 
-  use MOD_Vars_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
+  use MOD_Vars_PFTimeVariables, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
 #ifdef CROP
-  use MOD_BGC_Vars_PFTimeVars, only: peaklai_p
+  use MOD_BGC_Vars_PFTimeVariables, only: peaklai_p
 #endif
-  use MOD_Vars_PFTimeInvars, only: pftclass
-  use MOD_BGC_Vars_TimeVars, only: farea_burned
+  use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_BGC_Vars_TimeVariables, only: farea_burned
   use MOD_Const_PFT, only : dsladlai, slatop, laimx, woody
   !CLM5
   public :: CNVegStructUpdate

@@ -2,7 +2,7 @@
 
 #if (defined LULC_IGBP_PFT)
 
-MODULE MOD_BGC_Vars_PFTimeVars
+MODULE MOD_BGC_Vars_PFTimeVariables
 
   !---------------------------------------------------------------------------------------------------------
   ! !DESCRIPTION
@@ -347,12 +347,12 @@ MODULE MOD_BGC_Vars_PFTimeVars
 !------------------------- end BGC/SASU variables ---------------------
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_BGCPFTimeVars
-  PUBLIC :: deallocate_BGCPFTimeVars
-  PUBLIC :: READ_BGCPFTimeVars
-  PUBLIC :: WRITE_BGCPFTimeVars
+  PUBLIC :: allocate_BGCPFTimeVariables
+  PUBLIC :: deallocate_BGCPFTimeVariables
+  PUBLIC :: READ_BGCPFTimeVariables
+  PUBLIC :: WRITE_BGCPFTimeVariables
 #ifdef CoLMDEBUG
-  PUBLIC :: check_BGCPFTimeVars
+  PUBLIC :: check_BGCPFTimeVariables
 #endif
 
 ! PRIVATE MEMBER FUNCTIONS:
@@ -363,7 +363,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE allocate_BGCPFTimeVars ()
+   SUBROUTINE allocate_BGCPFTimeVariables ()
 ! ------------------------------------------------------
 ! Allocates memory for CoLM 1d [numpft] variables
 ! ------------------------------------------------------
@@ -703,9 +703,9 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE allocate_BGCPFTimeVars
+   END SUBROUTINE allocate_BGCPFTimeVariables
 
-   SUBROUTINE READ_BGCPFTimeVars (file_restart)
+   SUBROUTINE READ_BGCPFTimeVariables (file_restart)
 
       use MOD_NetCDFVector
       USE MOD_LandPFT
@@ -1123,9 +1123,9 @@ CONTAINS
      call ncio_read_vector (file_restart, 'AKX_grainn_xf_exit_p_acc                  ', landpft, &
      AKX_grainn_xf_exit_p_acc                 , defval = 0._r8)
 #endif
-   END SUBROUTINE READ_BGCPFTimeVars
+   END SUBROUTINE READ_BGCPFTimeVariables
 
-   SUBROUTINE WRITE_BGCPFTimeVars (file_restart)
+   SUBROUTINE WRITE_BGCPFTimeVariables (file_restart)
 
      use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
      USE MOD_LandPFT
@@ -1738,10 +1738,10 @@ CONTAINS
      call ncio_write_vector (file_restart, 'AKX_grainn_xf_exit_p_acc                  ', 'pft', landpft, &
      AKX_grainn_xf_exit_p_acc                 , compress)
 #endif
-   END SUBROUTINE WRITE_BGCPFTimeVars
+   END SUBROUTINE WRITE_BGCPFTimeVariables
 
 
-   SUBROUTINE deallocate_BGCPFTimeVars ()
+   SUBROUTINE deallocate_BGCPFTimeVariables ()
 ! --------------------------------------------------
 ! Deallocates memory for CoLM 1d [numpft/numpc] variables
 ! --------------------------------------------------
@@ -2078,10 +2078,10 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE deallocate_BGCPFTimeVars
+   END SUBROUTINE deallocate_BGCPFTimeVariables
 
 #ifdef CoLMDEBUG
-   SUBROUTINE check_BGCPFTimeVars
+   SUBROUTINE check_BGCPFTimeVariables
 
       use MOD_CoLMDebug
       use MOD_SPMD_Task
@@ -2405,11 +2405,11 @@ CONTAINS
       call check_vector_data ('AKX_deadcrootn_xf_exit_p_acc              ', AKX_deadcrootn_xf_exit_p_acc              )
       call check_vector_data ('AKX_grainn_xf_exit_p_acc                  ', AKX_grainn_xf_exit_p_acc                  )
 #endif
-   END SUBROUTINE check_BGCPFTimeVars
+   END SUBROUTINE check_BGCPFTimeVariables
 #endif
 
 #endif
-END MODULE MOD_BGC_Vars_PFTimeVars
+END MODULE MOD_BGC_Vars_PFTimeVariables
 
 #endif
 ! ---------- EOP ------------

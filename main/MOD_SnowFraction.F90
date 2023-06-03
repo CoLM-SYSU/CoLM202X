@@ -98,8 +98,8 @@ MODULE MOD_SnowFraction
 
    use MOD_Precision
    USE MOD_LandPFT
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
    implicit none
 
 ! dummy arguments
@@ -177,8 +177,8 @@ MODULE MOD_SnowFraction
 
    use MOD_Precision
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
    implicit none
 
 ! dummy arguments
