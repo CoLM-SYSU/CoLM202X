@@ -61,7 +61,7 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_assim   ! canopy assimilation rate [mol m-2 s-1]
    type(block_data_real8_2d) :: f_respc   ! respiration (plant+soil) [mol m-2 s-1]
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    type(block_data_real8_2d) :: f_assim_RuBP_sun
    type(block_data_real8_2d) :: f_assim_RuBP_sha
    type(block_data_real8_2d) :: f_assim_Rubisco_sun
@@ -116,9 +116,9 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_3d) :: f_BD_all       ! bulk density in soil layers [kg/m3]
    type(block_data_real8_3d) :: f_wfc          ! water field capacity [m3/m3]
    type(block_data_real8_3d) :: f_OM_density   ! soil organic matter density [kg/m3]
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
    type(block_data_real8_3d) :: f_vegwp        ! vegetation water potential [mm]
-#endif
+!end plant hydraulic parameters
    type(block_data_real8_2d) :: f_rstfacsun    ! factor of soil water stress
    type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
    type(block_data_real8_2d) :: f_gssun        ! factor of soil water stress
@@ -229,7 +229,7 @@ CONTAINS
          call allocate_block_data (grid, f_assim  )  ! canopy assimilation rate [mol m-2 s-1]
          call allocate_block_data (grid, f_respc  )  ! respiration (plant+soil) [mol m-2 s-1]
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          call allocate_block_data (grid, f_assim_RuBP_sun        )
          call allocate_block_data (grid, f_assim_RuBP_sha        )
          call allocate_block_data (grid, f_assim_Rubisco_sun        )
@@ -282,9 +282,9 @@ CONTAINS
          call allocate_block_data (grid, f_BD_all     , nl_soil)
          call allocate_block_data (grid, f_wfc        , nl_soil)
          call allocate_block_data (grid, f_OM_density , nl_soil)
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
          call allocate_block_data (grid, f_vegwp      , nvegwcs)  ! vegetation water potential [mm]
-#endif
+!end plant hydraulic parameters
          call allocate_block_data (grid, f_rstfacsun)  ! factor of soil water stress
          call allocate_block_data (grid, f_rstfacsha)  ! factor of soil water stress
          call allocate_block_data (grid, f_gssun)  ! factor of soil water stress

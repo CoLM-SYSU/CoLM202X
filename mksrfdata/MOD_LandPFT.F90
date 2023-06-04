@@ -1,8 +1,27 @@
 #include <define.h>
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 
 MODULE MOD_LandPFT
+
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landpft" (Plant Function Type).
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landpft" refers to pixelset PFT.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+   !------------------------------------------------------------------------------------
 
    USE MOD_Namelist
    USE MOD_Pixelset
@@ -49,8 +68,6 @@ CONTAINS
       LOGICAL, allocatable :: patchmask (:)
       INTEGER  :: npft_glb
 
-      ! add parameter input for time year
-      write(cyear,'(i4.4)') lc_year
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land plant function type tiles :'
       ENDIF
@@ -101,7 +118,7 @@ CONTAINS
 #endif
             ENDIF
          ELSE
-            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for PFT_CLASSIFICATION'
+            write(*,*) 'Warning : land type ', landpatch%settyp(1), ' for LULC_IGBP_PFT'
             patch_pft_s(:) = -1
             patch_pft_e(:) = -1
          ENDIF
@@ -122,7 +139,9 @@ CONTAINS
          call allocate_block_data (gpatch, pctpft, N_PFT_modis, lb1 = 0)
          CALL flush_block_data (pctpft, 1.0)
 
-         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s_clim'
+         dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
+         ! add parameter input for time year
+         write(cyear,'(i4.4)') lc_year
          suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data_pft (dir_5x5, suffix, gpatch, 'PCT_PFT', pctpft)
 

@@ -202,7 +202,7 @@ USE YOS_CMF_DIAG,       ONLY: N2DIAG, D2DIAG, &
 USE YOS_CMF_DIAG,       ONLY: N2DIAG_AVG, D2DIAG_AVG, NADD, &
                             &   D2RIVOUT_AVG, D2FLDOUT_AVG, D2OUTFLW_AVG, D2RIVVEL_AVG, D2PTHOUT_AVG, &
                             &   D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG, D1PTHFLW_AVG, D2WEVAPEX_AVG,&
-			                        D2WINFILTEX_AVG, &
+                                D2WINFILTEX_AVG, &
                             &   D2DAMINF_AVG
 USE YOS_CMF_DIAG,       ONLY: N2DIAG_MAX, D2DIAG_MAX, &
                             &   D2STORGE_MAX, D2OUTFLW_MAX, D2RIVDPH_MAX

@@ -1321,10 +1321,10 @@ contains
 
    END SUBROUTINE LEAF_interception_VIC
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    SUBROUTINE LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                               ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
    !DESCRIPTION
    !===========
@@ -1347,8 +1347,8 @@ contains
       USE MOD_Precision
       USE MOD_LandPFT
       USE MOD_Const_Physical, only: tfrz
-      USE MOD_Vars_PFTimeInvars
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeInvariants
+      USE MOD_Vars_PFTimeVariables
       USE MOD_Vars_1DPFTFluxes
       USE MOD_Const_PFT
 
@@ -1459,10 +1459,10 @@ contains
    END SUBROUTINE LEAF_interception_pftwrap
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    SUBROUTINE LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,chil,&
                                prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain, ldew_snow,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                               ldew,ldew_rain, ldew_snow,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
    !DESCRIPTION
    !===========
@@ -1483,10 +1483,10 @@ contains
       !---2023.02.21  Zhongwang Wei @ SYSU : add different options of canopy interception for PFTs
 
       USE MOD_Precision
-      USE MOD_Vars_GlobalVars
+      USE MOD_Vars_Global
       USE MOD_Const_Physical, only: tfrz
-      USE MOD_Vars_PCTimeInvars
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeInvariants
+      USE MOD_Vars_PCTimeVariables
       USE MOD_Vars_1DPCFluxes
       USE MOD_LandPC
       USE MOD_Const_PFT
@@ -1627,5 +1627,3 @@ contains
 
 
 END MODULE MOD_LeafInterception
-
-

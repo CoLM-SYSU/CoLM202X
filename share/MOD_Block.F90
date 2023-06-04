@@ -2,7 +2,7 @@
 
 MODULE MOD_Block
 
-   !-----------------------------------------------------------------------
+   !-------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
    !    To deal with high-resolution data, the globe is divided into blocks.
@@ -41,6 +41,7 @@ MODULE MOD_Block
    !    or set by predefined boundaries in files (by set_by_file).
    ! 
    ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE

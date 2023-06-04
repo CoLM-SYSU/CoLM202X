@@ -2,6 +2,21 @@
 
 MODULE MOD_Mapping_Grid2Pset
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Mapping data types and subroutines from gridded data to vector data
+   !    defined on pixelset.
+   !
+   !    Notice that:
+   !    1. A mapping can be built with method mapping%build.
+   !    2. Area weighted mapping is carried out.     
+   !    3. For 2D gridded data, dimensions are from [lon,lat] to [vector].
+   !    4. For 3D gridded data, dimensions are from [d,lon,lat] to [d,vector].
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_DataType
@@ -88,6 +103,10 @@ CONTAINS
          write(*,*) fgrid%nlon, 'grids in longitude'
       ENDIF
 
+      IF (allocated(this%grid%xblk)) deallocate(this%grid%xblk)
+      IF (allocated(this%grid%yblk)) deallocate(this%grid%yblk)
+      IF (allocated(this%grid%xloc)) deallocate(this%grid%xloc)
+      IF (allocated(this%grid%yloc)) deallocate(this%grid%yloc)
       allocate (this%grid%xblk (size(fgrid%xblk)))
       allocate (this%grid%yblk (size(fgrid%yblk)))
       allocate (this%grid%xloc (size(fgrid%xloc)))
@@ -254,6 +273,7 @@ CONTAINS
          ENDDO
 #endif
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_io-1))
          DO iproc = 0, p_np_io-1
 #ifdef USEMPI
@@ -312,6 +332,7 @@ CONTAINS
 
       IF (p_is_io) THEN
 
+         IF (allocated(this%glist)) deallocate(this%glist)
          allocate (this%glist (0:p_np_worker-1))
 
          DO iworker = 0, p_np_worker-1
@@ -477,6 +498,8 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
+         IF (allocated(this%address)) deallocate(this%address)
+         IF (allocated(this%gweight)) deallocate(this%gweight)
          allocate (this%address (pixelset%nset))
          allocate (this%gweight (pixelset%nset))
 
@@ -734,7 +757,7 @@ CONTAINS
 
    !-----------------------------------------------------
    SUBROUTINE mapping_grid2pset_free_mem (this)
-      
+
       USE MOD_SPMD_Task
       IMPLICIT NONE
 

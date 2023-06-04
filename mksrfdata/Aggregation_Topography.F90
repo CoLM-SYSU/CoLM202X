@@ -1,10 +1,16 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_Topography ( &
-      gtopo, dir_rawdata, dir_model_landdata)
-
+      gtopo, dir_rawdata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
-   ! 1. topography
+   ! Global Topography data
+   !   
+   !   Yamazaki, D., Ikeshima, D., Sosa, J.,Bates, P. D., Allen, G. H., 
+   !   Pavelsky, T. M. (2019). 
+   !   MERIT Hydro: ahigh‐resolution global hydrographymap based on 
+   !   latest topography dataset.Water Resources Research, 55, 5053–5073. 
+   ! 
+   ! Created by Shupeng Zhang, 05/2023
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
@@ -13,7 +19,7 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
-#ifdef CoLMDEBUG 
+#ifdef CoLMDEBUG
    USE MOD_CoLMDebug
 #endif
    USE MOD_AggregationRequestData
@@ -25,14 +31,14 @@ SUBROUTINE Aggregation_Topography ( &
 
    IMPLICIT NONE
    ! arguments:
-
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gtopo
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname
+   CHARACTER(len=256) :: landdir, lndname, cyear
    INTEGER :: ipatch
 
    TYPE (block_data_real8_2d) :: topography
@@ -41,8 +47,8 @@ SUBROUTINE Aggregation_Topography ( &
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
 #endif
-
-   landdir = trim(dir_model_landdata) // '/topography/'
+   write(cyear,'(i4.4)') lc_year
+   landdir = trim(dir_model_landdata) // '/topography/' // trim(cyear)
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -59,7 +65,7 @@ SUBROUTINE Aggregation_Topography ( &
    RETURN
 #endif
 
-   lndname = trim(dir_rawdata)//'/elevation.nc' 
+   lndname = trim(dir_rawdata)//'/elevation.nc'
 
    IF (p_is_io) THEN
       CALL allocate_block_data (gtopo, topography)
@@ -77,7 +83,7 @@ SUBROUTINE Aggregation_Topography ( &
    IF (p_is_worker) THEN
 
       allocate (topography_patches (numpatch))
-   
+
       DO ipatch = 1, numpatch
          CALL aggregation_request_data (landpatch, ipatch, gtopo, area = area_one, &
             data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
@@ -89,7 +95,7 @@ SUBROUTINE Aggregation_Topography ( &
             topography_patches (ipatch) = -1.0e36
          ENDIF
       ENDDO
-      
+
 #ifdef USEMPI
       CALL aggregation_worker_done ()
 #endif
@@ -110,7 +116,7 @@ SUBROUTINE Aggregation_Topography ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/topo.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/topo_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'topography', compress = 0, write_mode = 'one')
 #endif

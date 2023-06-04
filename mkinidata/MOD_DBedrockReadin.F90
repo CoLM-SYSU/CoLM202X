@@ -1,11 +1,9 @@
 #include <define.h>
 
-#ifdef USE_DEPTH_TO_BEDROCK
-
 MODULE MOD_DBedrockReadin
 
 !-----------------------------------------------------------------------
-   USE precision
+   USE MOD_Precision
    IMPLICIT NONE
    SAVE
 
@@ -22,11 +20,11 @@ MODULE MOD_DBedrockReadin
 
    subroutine dbedrock_readin (dir_landdata)
 
-      use precision
-      use spmd_task
+      use MOD_Precision
+      use MOD_SPMD_Task
       USE mod_namelist
       use MOD_LandPatch
-      use ncio_vector
+      use MOD_NetCDFVector
       USE MOD_Vars_Global, only : nl_soil, dz_soi
       use MOD_Vars_TimeInvariants, only : dbedrock, ibedrock
 #ifdef SinglePoint
@@ -77,4 +75,3 @@ MODULE MOD_DBedrockReadin
 
 END MODULE MOD_DBedrockReadin
 
-#endif

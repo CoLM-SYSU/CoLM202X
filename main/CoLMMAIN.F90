@@ -29,11 +29,9 @@ SUBROUTINE CoLMMAIN ( &
          ! vegetation information
            htop,         hbot,         sqrtdi,                      &
            effcon,       vmax25,                                    &
-#ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun,     kmax_sha,     kmax_xyl,     kmax_root,     &
            psi50_sun,    psi50_sha,    psi50_xyl,    psi50_root,    &
            ck,                                                      &
-#endif
            slti,         hlti,                                      &
            shti,         hhti,         trda,         trdm,          &
            trop,         gradm,        binter,       extkn,         &
@@ -57,12 +55,10 @@ SUBROUTINE CoLMMAIN ( &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
            thermk,       extkb,        extkd,                       &
-#ifdef PLANT_HYDRAULIC_STRESS
            vegwp,        gs0sun,       gs0sha,                      &
-#endif
-#ifdef OzoneStress
+           !Ozone stress variables
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
-#endif
+           !End ozone stress variables
            zwt,          dpond,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
 
@@ -147,15 +143,15 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-  USE MOD_Vars_PFTimeInvars
-  USE MOD_Vars_PFTimeVars
+  USE MOD_Vars_PFTimeInvariants
+  USE MOD_Vars_PFTimeVariables
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
   USE MOD_LandPC
-  USE MOD_Vars_PCTimeInvars
-  USE MOD_Vars_PCTimeVars
+  USE MOD_Vars_PCTimeInvariants
+  USE MOD_Vars_PCTimeVariables
 #endif
   USE MOD_RainSnowTemp
   USE MOD_NetSolar
@@ -176,7 +172,7 @@ SUBROUTINE CoLMMAIN ( &
 #else
   USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
 #endif
-  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW
+  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
@@ -250,7 +246,6 @@ SUBROUTINE CoLMMAIN ( &
         sqrtdi      ,&! inverse sqrt of leaf dimension [m**-0.5]
         effcon      ,&! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25      ,&! maximum carboxylation rate at 25 C at canopy top
-#ifdef PLANT_HYDRAULIC_STRESS
         kmax_sun    ,&
         kmax_sha    ,&
         kmax_xyl    ,&
@@ -260,7 +255,6 @@ SUBROUTINE CoLMMAIN ( &
         psi50_xyl   ,&! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root  ,&! water potential at 50% loss of root tissue conductance (mmH2O)
         ck          ,&! shape-fitting parameter for vulnerability curve (-)
-#endif
         slti        ,&! slope of low temperature inhibition function      [s3]
         hlti        ,&! 1/2 point of low temperature inhibition function  [s4]
         shti        ,&! slope of high temperature inhibition function     [s1]
@@ -338,17 +332,15 @@ SUBROUTINE CoLMMAIN ( &
         t_lake(nl_lake)       ,&! lake temperature (kelvin)
         lake_icefrac(nl_lake) ,&! lake mass fraction of lake layer that is frozen
         savedtke1             ,&! top level eddy conductivity (W/m K)
-#ifdef PLANT_HYDRAULIC_STRESS
         vegwp(nvegwcs)        ,&! ground surface temperature [k]
         gs0sun                ,&! working copy of sunlit stomata conductance
         gs0sha                ,&! working copy of shalit stomata conductance
-#endif
-#ifdef OzoneStress
+        !Ozone stress variables
         lai_old    ,&! lai in last time step
         o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
         o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
         forc_ozone ,&
-#endif
+        !End ozone stress variables
         t_grnd      ,&! ground surface temperature [k]
         tleaf       ,&! leaf temperature [K]
         ldew        ,&! depth of water on foliage [kg/m2/s]
@@ -639,7 +631,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 
 IF (patchtype == 0) THEN
 
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if(defined LULC_USGS || defined LULC_IGBP)
 !zhongwang wei, 20221220: add option for canopy interception calculation.
 if (DEF_Interception_scheme==1) then
    CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
@@ -674,14 +666,14 @@ endif
 
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       CALL LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,chil,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
@@ -776,14 +768,12 @@ ENDIF
 #endif
            effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
-#ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
            psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&
            ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
-#endif
-#ifdef OzoneStress
+        !Ozone stress variables
            lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        , &
-#endif
+        !End ozone stress variables
            slti              ,hlti              ,shti              ,hhti              ,&
            trda              ,trdm              ,trop              ,gradm             ,&
            binter            ,extkn             ,forc_hgt_u        ,forc_hgt_t        ,&
@@ -1296,13 +1286,13 @@ endif
 !NOTE: lai from remote sensing has already considered snow coverage
 IF (patchtype == 0) THEN
 
-#if(defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if(defined LULC_USGS || defined LULC_IGBP)
        CALL snowfraction (tlai(ipatch),tsai(ipatch),z0m,zlnd,scv,snowdp,wt,sigf,fsno)
        lai = tlai(ipatch)
        sai = tsai(ipatch) * sigf
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
        ps = patch_pft_s(ipatch)
        pe = patch_pft_e(ipatch)
        CALL snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
@@ -1312,7 +1302,7 @@ IF (patchtype == 0) THEN
        sai = sum(sai_p(ps:pe)*pftfrac(ps:pe))
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
        pc = patch2pc(ipatch)
        CALL snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
        lai_c(:,pc) = tlai_c(:,pc)
@@ -1462,9 +1452,9 @@ ENDIF
        ENDIF
 
        qcharge = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-       vegwp = -2.5e4
-#endif
+       if (DEF_USE_PLANTHYDRAULICS)then
+          vegwp = -2.5e4
+       end if
     ENDIF
 
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)

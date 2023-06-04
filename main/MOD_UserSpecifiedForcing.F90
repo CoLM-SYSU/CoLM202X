@@ -95,9 +95,14 @@ CONTAINS
          NVAR=NVAR+1
       endif
 
+      IF (allocated(dtime )) deallocate(dtime)
+      IF (allocated(offset)) deallocate(offset)
       allocate (dtime  (NVAR))
       allocate (offset (NVAR))
 
+      IF (allocated(fprefix )) deallocate(fprefix )
+      IF (allocated(vname   )) deallocate(vname   )
+      IF (allocated(tintalgo)) deallocate(tintalgo)
       allocate (fprefix  (NVAR))
       allocate (vname    (NVAR))
       allocate (tintalgo (NVAR))

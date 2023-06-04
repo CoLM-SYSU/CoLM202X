@@ -18,7 +18,7 @@ MODULE MOD_Initialize
 
 
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
-         idate, greenwich)
+         idate, lc_year, greenwich)
 
       ! ======================================================================
       ! initialization routine for land surface model.
@@ -36,7 +36,7 @@ MODULE MOD_Initialize
       use MOD_LandPatch
 #ifdef URBAN_MODEL
       use MOD_LandUrban
-      USE MOD_UrbanIniTimeVar
+      USE MOD_UrbanIniTimeVariable
       USE MOD_UrbanReadin
       USE MOD_Urban_LAIReadin
       USE MOD_Urban_Albedo
@@ -44,15 +44,15 @@ MODULE MOD_Initialize
       use MOD_Const_Physical
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeInvars
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeInvariants
+      USE MOD_Vars_PFTimeVariables
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeInvars
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeInvariants
+      USE MOD_Vars_PCTimeVariables
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT
@@ -60,7 +60,6 @@ MODULE MOD_Initialize
 
       use MOD_Grid
       use MOD_DataType
-   !   use mod_mapping_grid2pset
       use MOD_NetCDFSerial
       use MOD_NetCDFBlock
 #ifdef CoLMDEBUG
@@ -84,11 +83,9 @@ MODULE MOD_Initialize
       USE MOD_FireReadin
 #endif
       USE MOD_OrbCoszen
-#ifdef USE_DEPTH_TO_BEDROCK
       use MOD_DBedrockReadin
-#endif
       USE MOD_HtopReadin
-      USE MOD_IniTimeVar
+      USE MOD_IniTimeVariable
       USE MOD_LakeDepthReadin
       USE MOD_PercentagesPFTReadin
       USE MOD_SoilParametersReadin
@@ -100,11 +97,32 @@ MODULE MOD_Initialize
       character(len=*), intent(in) :: dir_landdata
       character(len=*), intent(in) :: dir_restart
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
+      integer, intent(in)    :: lc_year    ! year, land cover year
       logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
       ! ------------------------ local variables -----------------------------
       real(r8) :: rlon, rlat
 
+      ! for SOIL INIT of water, temperature, snow depth
+      LOGICAL :: use_soilini
+
+      character(len=256) :: fsoildat
+      type(grid_type) :: gsoil
+      type(mapping_grid2pset_type) :: ms2p
+
+      integer :: nl_soil_ini
+
+      real(r8), allocatable :: soil_z(:)
+
+      type(block_data_real8_2d) :: snow_d_grid
+      type(block_data_real8_3d) :: soil_t_grid
+      type(block_data_real8_3d) :: soil_w_grid
+
+      real(r8), allocatable :: snow_d(:)
+      real(r8), allocatable :: soil_t(:,:)
+      real(r8), allocatable :: soil_w(:,:)
+
+      ! for SOIL Water INIT by using water table depth
       LOGICAL  :: use_wtd
 
       CHARACTER(len=256) :: fwtd
@@ -124,31 +142,11 @@ MODULE MOD_Initialize
 #endif
       REAL(r8) :: prms(nprms, 1:nl_soil)
 
-#if(defined SOILINI)
-      character(len=256) :: fsoildat
-
-      type(grid_type) :: gsoil
-      type(mapping_grid2pset_type) :: ms2p
-
-      integer :: nl_soil_ini
-
-      real(r8), allocatable :: soil_z(:)
-
-      type(block_data_real8_2d) :: snow_d_grid
-      type(block_data_real8_3d) :: soil_t_grid
-      type(block_data_real8_3d) :: soil_w_grid
-
-      real(r8), allocatable :: snow_d(:)
-      real(r8), allocatable :: soil_t(:,:)
-      real(r8), allocatable :: soil_w(:,:)
-#endif
-
       ! CoLM soil layer thickiness and depths
       real(r8), allocatable :: z_soisno (:,:)
       real(r8), allocatable :: dz_soisno(:,:)
 
       real(r8) :: calday                    ! Julian cal day (1.xx to 365.xx)
-      INTEGER  :: idate0(3)
       integer  :: year, jday                ! Julian day and seconds
       INTEGER  :: month, mday
 
@@ -167,7 +165,6 @@ MODULE MOD_Initialize
       real(r8) f_s2s3
       real(r8) t
 #endif
-
 
       ! --------------------------------------------------------------------
       ! Allocates memory for CoLM 1d [numpatch] variables
@@ -190,22 +187,22 @@ MODULE MOD_Initialize
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          pftclass = landpft%settyp
 #endif
 
       ENDIF
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-      CALL pct_readin (dir_landdata)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+      CALL pct_readin (dir_landdata, lc_year)
 #endif
 
       ! ------------------------------------------
       ! 1.1 Ponding water
       ! ------------------------------------------
-#ifdef USE_DEPTH_TO_BEDROCK
-      CALL dbedrock_readin (dir_landdata)
-#endif
+      IF(DEF_USE_BEDROCK)THEN
+         CALL dbedrock_readin (dir_landdata)
+      ENDIF
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
@@ -215,13 +212,13 @@ MODULE MOD_Initialize
       ! ------------------------------------------
       ! 1.2 Lake depth and layers' thickness
       ! ------------------------------------------
-      CALL lakedepth_readin (dir_landdata)
+      CALL lakedepth_readin (dir_landdata, lc_year)
 
       ! ...............................................................
       ! 1.3 Read in the soil parameters of the patches of the gridcells
       ! ...............................................................
 
-      CALL soil_parameters_readin (dir_landdata)
+      CALL soil_parameters_readin (dir_landdata, lc_year)
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       IF (p_is_worker) THEN
@@ -245,9 +242,9 @@ MODULE MOD_Initialize
       ! ...............................................................
 
       ! read global tree top height from nc file
-      CALL HTOP_readin (dir_landdata)
+      CALL HTOP_readin (dir_landdata, lc_year)
 #ifdef URBAN_MODEL
-      CALL Urban_readin (DEF_LC_YEAR, dir_landdata)
+      CALL Urban_readin (dir_landdata, lc_year)
 #endif
       ! ................................
       ! 1.5 Initialize TUNABLE constants
@@ -396,7 +393,7 @@ MODULE MOD_Initialize
       call check_TimeInvariants ()
 #endif
 
-      CALL WRITE_TimeInvariants (DEF_LC_YEAR, casename, dir_restart)
+      CALL WRITE_TimeInvariants (lc_year, casename, dir_restart)
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
@@ -440,67 +437,96 @@ MODULE MOD_Initialize
       !2.3 READ in or GUSSES land state information
       ! ...........................................
 
-#if(defined SOILINI)
-      fsoildat = DEF_file_soil_init
+      ! for SOIL INIT of water, temperature, snow depth
+      IF (DEF_USE_SOIL_INIT) THEN
 
-      call gsoil%define_from_file (fsoildat)
-      call ms2p%build (gsoil, landpatch)
-
-      call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
-      nl_soil_ini = size(soil_z)
-
-      if (p_is_io) then
-
-         call allocate_block_data (gsoil, snow_d_grid)
-         call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
-         call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
-
-         call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)  ! soil layer temperature (K)
-         call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)  ! soil layer wetness (-)
-         call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  ! snow depth (m)
-
-      end if
-
-      if (p_is_worker) then
-
-         allocate (snow_d(numpatch))
-         allocate (soil_t(nl_soil_ini,numpatch))
-         allocate (soil_w(nl_soil_ini,numpatch))
-
-      end if
-
-      call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
-      call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
-      call ms2p%map_aweighted (snow_d_grid, snow_d)
-
-#endif
-
-      fwtd = DEF_file_water_table_depth
-
-      IF (p_is_master) THEN
-         inquire (file=trim(fwtd), exist=use_wtd)
-         IF (use_wtd) THEN
-            write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
-               // ' to initialize soil water content: ', trim(fwtd)
+         fsoildat = DEF_file_soil_init
+         IF (p_is_master) THEN
+            inquire (file=trim(fsoildat), exist=use_soilini)
          ENDIF
-      ENDIF
 #ifdef USEMPI
-      call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+         call mpi_bcast (use_soilini, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
-      IF (use_wtd) THEN
+         IF (use_soilini) THEN
 
-         CALL julian2monthday (idate(1), idate(2), month, mday)
-         call gwtd%define_from_file (fwtd)
+            call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
+            nl_soil_ini = size(soil_z)
 
-         if (p_is_io) then
-            call allocate_block_data (gwtd, wtd_xy)
-            call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
+            if (p_is_io) then
+               ! soil layer temperature (K)
+               call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
+               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)
+               ! soil layer wetness (-)
+               call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
+               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)
+               ! snow depth (m)
+               call allocate_block_data (gsoil, snow_d_grid)
+               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)
+            end if
+
+            call gsoil%define_from_file (fsoildat)
+            call ms2p%build (gsoil, landpatch)
+
+            if (p_is_worker) then
+               nl_soil_ini = nl_soil
+               allocate (soil_z (nl_soil_ini))
+               allocate (snow_d (numpatch))
+               allocate (soil_t (nl_soil_ini,numpatch))
+               allocate (soil_w (nl_soil_ini,numpatch))
+            end if
+
+            call ms2p%map_aweighted (soil_t_grid, nl_soil_ini, soil_t)
+            call ms2p%map_aweighted (soil_w_grid, nl_soil_ini, soil_w)
+            call ms2p%map_aweighted (snow_d_grid, snow_d)
+
          ENDIF
 
-         call m_wtd2p%build (gwtd, landpatch)
-         call m_wtd2p%map_aweighted (wtd_xy, zwt)
+      ELSE
+         use_soilini = .false.
+      ENDIF
 
+      IF (.not. use_soilini) THEN
+         !! not used, just for filling arguments
+         if (p_is_worker) then
+            allocate (soil_z (nl_soil))
+            allocate (snow_d (numpatch))
+            allocate (soil_t (nl_soil,numpatch))
+            allocate (soil_w (nl_soil,numpatch))
+         end if
+      ENDIF
+
+      ! for SOIL Water INIT by using water table depth
+      IF (DEF_USE_WaterTable_INIT) THEN
+
+         fwtd = DEF_file_water_table_depth
+         IF (p_is_master) THEN
+            inquire (file=trim(fwtd), exist=use_wtd)
+            IF (use_wtd) THEN
+               write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
+                  // ' to initialize soil water content: ', trim(fwtd)
+            ENDIF
+         ENDIF
+#ifdef USEMPI
+         call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+#endif
+
+         IF (use_wtd) THEN
+
+            CALL julian2monthday (idate(1), idate(2), month, mday)
+            call gwtd%define_from_file (fwtd)
+
+            if (p_is_io) then
+               call allocate_block_data (gwtd, wtd_xy)
+               call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
+            ENDIF
+
+            call m_wtd2p%build (gwtd, landpatch)
+            call m_wtd2p%map_aweighted (wtd_xy, zwt)
+
+         ENDIF
+      ELSE
+         use_wtd = .false.
       ENDIF
 
       ! ...................
@@ -511,13 +537,13 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          do i = 1, numpatch
-#if(defined SOILINI)
-            do nsl = 1, nl_soil
-               t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
-            enddo
-#else
-            t_soisno(1:,i) = 283.
-#endif
+            IF (DEF_USE_SOILINI) THEN
+               do nsl = 1, nl_soil
+                  t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
+               enddo
+            ELSE
+               t_soisno(1:,i) = 283.
+            ENDIF
          enddo
 
          tlai(:)=0.0; tsai(:)=0.0; green(:)=0.0; fveg(:)=0.0
@@ -532,10 +558,8 @@ MODULE MOD_Initialize
       end if
 #else
 
-      idate0 = idate
-      CALL adj2begin(idate0)
-      year = idate0(1)
-      jday = idate0(2)
+      year = idate(1)
+      jday = idate(2)
 
       IF (DEF_LAI_CLIM) then
          CALL julian2monthday (year, jday, month, mday)
@@ -546,13 +570,13 @@ MODULE MOD_Initialize
             CALL UrbanLAI_readin (year, month, dir_landdata)
 #endif
          ELSE
-            CALL LAI_readin (DEF_LC_YEAR, month, dir_landdata)
+            CALL LAI_readin (lc_year, month, dir_landdata)
 #ifdef URBAN_MODEL
-            CALL UrbanLAI_readin (DEF_LC_YEAR, month, dir_landdata)
+            CALL UrbanLAI_readin (lc_year, month, dir_landdata)
 #endif
          ENDIF
       ELSE
-         Julian_8day = int(calendarday(idate0)-1)/8*8 + 1
+         Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          CALL LAI_readin (year, Julian_8day, dir_landdata)
       ENDIF
 #ifdef CoLMDEBUG
@@ -654,9 +678,9 @@ MODULE MOD_Initialize
                ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
                ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -697,10 +721,9 @@ MODULE MOD_Initialize
 #endif
    !------------------------------------------------------------
 #endif
-#if(defined SOILINI)
-               ,nl_soil_ini,soil_z,soil_t(1:,i),soil_w(1:,i),snow_d(i)
-#endif
-
+               ! for SOIL INIT of water, temperature, snow depth
+               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+               ! for SOIL Water INIT by using water table depth
                ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL
@@ -811,7 +834,7 @@ MODULE MOD_Initialize
 #ifdef CoLMDEBUG
       call check_TimeVariables ()
 #endif
-      CALL WRITE_TimeVariables (idate, casename, dir_restart)
+      CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -828,12 +851,10 @@ MODULE MOD_Initialize
       IF (allocated(z_soisno )) deallocate (z_soisno )
       IF (allocated(dz_soisno)) deallocate (dz_soisno)
 
-#if(defined SOILINI)
       IF (allocated(soil_z)) deallocate (soil_z)
       IF (allocated(snow_d)) deallocate (snow_d)
       IF (allocated(soil_t)) deallocate (soil_t)
       IF (allocated(soil_w)) deallocate (soil_w)
-#endif
 
    END SUBROUTINE initialize
 

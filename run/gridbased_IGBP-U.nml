@@ -2,10 +2,10 @@
    
    DEF_CASE_NAME = 'gridbased_IGBP-U'         
    
-   DEF_domain%edges =  -90.0      
-   DEF_domain%edgen =   90.0      
-   DEF_domain%edgew = -180.0   
-   DEF_domain%edgee =  180.0      
+   DEF_domain%edges =   20.0      
+   DEF_domain%edgen =   25.0      
+   DEF_domain%edgew =  110.0   
+   DEF_domain%edgee =  115.0      
    
    DEF_nx_blocks = 30
    DEF_ny_blocks = 30

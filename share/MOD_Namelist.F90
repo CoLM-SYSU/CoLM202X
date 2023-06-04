@@ -2,6 +2,15 @@
 
 MODULE MOD_Namelist
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Variables in namelist files and subrroutines to read namelist files.
+   !
+   ! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
+   !                  Hua Yuan, Wenzong Dong et al., May 2023
+   !-----------------------------------------------------------------------
+
    USE MOD_Precision, only: r8
    IMPLICIT NONE
    SAVE
@@ -37,9 +46,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_lakedepth       = .true.
    LOGICAL  :: USE_SITE_soilreflectance = .true.
    LOGICAL  :: USE_SITE_soilparameters  = .true.
-#ifdef USE_DEPTH_TO_BEDROCK
    LOGICAL  :: USE_SITE_dbedrock = .true.
-#endif
 #endif
 
    ! ----- simulation time type -----
@@ -63,15 +70,6 @@ MODULE MOD_Namelist
 
    TYPE (nl_simulation_time_type) :: DEF_simulation_time
 
-   ! ----- simulation LULCC type -----
-   TYPE nl_LULCC_type
-      LOGICAL :: use_lulcc     = .FALSE.
-      INTEGER :: lc_year_start = 2005
-      INTEGER :: lc_year_end   = 2005
-   END TYPE nl_LULCC_type
-
-   TYPE (nl_LULCC_type) :: DEF_LULCC
-
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
@@ -82,6 +80,8 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_dir_history  = 'path/to/history'
 
    CHARACTER(len=256) :: DEF_file_mesh    = 'path/to/mesh/file'
+   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
+   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
 #ifdef CATCHMENT
    LOGICAL :: Catchment_data_in_ONE_file = .false.
@@ -89,10 +89,6 @@ MODULE MOD_Namelist
 #endif
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
-   REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
-   REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
-
-   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
    ! ----- Use surface data from existing dataset -----
    CHARACTER(len=256) :: DEF_dir_existing_srfdata = 'path/to/landdata'
@@ -111,6 +107,8 @@ MODULE MOD_Namelist
    ! ------LAI change and Land cover year setting ----------
    ! 05/2023, add by Dong: use for updating LAI with simulation year
    LOGICAL :: DEF_LAICHANGE = .FALSE.
+   ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
+   LOGICAL :: DEF_USE_LAIFEEDBACK = .TRUE.
 
    ! ------ LULCC -------
    INTEGER :: DEF_LC_YEAR   = 2005
@@ -126,9 +124,20 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+   LOGICAL :: DEF_USE_BEDROCK                 = .false.
+   LOGICAL :: DEF_USE_OZONESTRESS             = .false.
+   LOGICAL :: DEF_USE_OZONEDATA               = .false.
+
+   CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
+
    ! ----- Initialization -----
-   CHARACTER(len=256) :: DEF_file_soil_init  = 'null'
+   LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
+   CHARACTER(len=256) :: DEF_file_soil_init = 'null'
+
+   LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
+   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
+
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
@@ -151,6 +160,10 @@ MODULE MOD_Namelist
 
    ! ----- forcing -----
    CHARACTER(len=256) :: DEF_forcing_namelist = 'null'
+
+   LOGICAL          :: DEF_USE_Forcing_Downscaling = .false.
+   CHARACTER(len=5) :: DEF_DS_precipitation_adjust_scheme = 'II'
+   CHARACTER(len=5) :: DEF_DS_longwave_adjust_scheme      = 'II'
 
    TYPE nl_forcing_type
 
@@ -210,6 +223,8 @@ MODULE MOD_Namelist
 
    !CBL height
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
+   LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+
 
    ! ----- history variables -----
    TYPE history_var_type
@@ -225,9 +240,7 @@ MODULE MOD_Namelist
       LOGICAL :: xy_solarin   = .true.
       LOGICAL :: xy_rain      = .true.
       LOGICAL :: xy_snow      = .true.
-#ifdef OzoneStress
       LOGICAL :: xy_ozone     = .true.
-#endif
 
       LOGICAL :: xy_hpbl      = .true.
 
@@ -358,7 +371,7 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       LOGICAL :: assim_RuBP_sun        = .true. !1
       LOGICAL :: assim_RuBP_sha        = .true. !1
       LOGICAL :: assim_Rubisco_sun        = .true. !1
@@ -572,9 +585,7 @@ CONTAINS
          USE_SITE_lakedepth,       &
          USE_SITE_soilreflectance, &
          USE_SITE_soilparameters,  &
-#ifdef USE_DEPTH_TO_BEDROCK
          USE_SITE_dbedrock,       &
-#endif
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -583,14 +594,13 @@ CONTAINS
          DEF_dir_rawdata,                 &
          DEF_dir_output,                  &
          DEF_file_mesh,                   &
+         DEF_GRIDBASED_lon_res,           &
+         DEF_GRIDBASED_lat_res,           &
 #ifdef CATCHMENT
          Catchment_data_in_ONE_file,      &
          DEF_path_Catchment_data,         &
 #endif
          DEF_file_mesh_filter,            &
-         DEF_GRIDBASED_lon_res,           &
-         DEF_GRIDBASED_lat_res,           &
-         DEF_file_water_table_depth,      &
 
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
@@ -599,6 +609,8 @@ CONTAINS
          DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
 
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+
+         DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
 
          !DEF_Urban_type_scheme,           &
          DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
@@ -610,22 +622,39 @@ CONTAINS
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
 
+         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+
          DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
-
+         DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
+         DEF_USE_BEDROCK,                 &
+         DEF_USE_OZONESTRESS,             &
+         DEF_USE_OZONEDATA,               &
 
+         DEF_precip_phase_discrimination_scheme, &
+
+         DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
+
+         DEF_USE_WaterTable_INIT,         &
+         DEF_file_water_table_depth,      &
+
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
          DEF_forcing_namelist,            &
+
+         DEF_USE_Forcing_Downscaling,        &
+         DEF_DS_precipitation_adjust_scheme, &
+         DEF_DS_longwave_adjust_scheme,      &
 
          DEF_HISTORY_IN_VECTOR,           &
          DEF_hist_lon_res,                &
@@ -693,15 +722,30 @@ CONTAINS
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not. DEF_LAI_CLIM) THEN
             write(*,*) 'Warning: 8-day LAI data is not supported for '
-            write(*,*) 'PFT_CLASSIFICATION and PC_CLASSIFICATION.'
+            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
             write(*,*) 'Changed to climatic data.'
             DEF_LAI_CLIM = .true.
          ENDIF
 #endif
 
+#ifndef BGC
+        IF(DEF_USE_LAIFEEDBACK)then
+           DEF_USE_LAIFEEDBACK = .false.
+           write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
+           write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
+        ENDIF
+#endif
+
+        IF(.not. DEF_USE_OZONESTRESS)then
+           IF(DEF_USE_OZONEDATA)then
+              DEF_USE_OZONEDATA = .false.
+              write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
+              write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
+           ENDIF
+        ENDIF
         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
 
@@ -748,6 +792,8 @@ CONTAINS
 
 #if (defined GRIDBASED || defined UNSTRUCTURED)
       CALL mpi_bcast (DEF_file_mesh,    256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
 #endif
 
 #ifdef CATCHMENT
@@ -756,10 +802,6 @@ CONTAINS
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lon_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_GRIDBASED_lat_res, 1, mpi_real8, p_root, p_comm_glb, p_err)
-
-      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -769,7 +811,10 @@ CONTAINS
       CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_Urban_type_scheme,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! 05/2023, added by Xingjie lu
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
       CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -785,12 +830,23 @@ CONTAINS
 
       !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
-
+      call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
+ 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_BEDROCK                ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONESTRESS            ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONEDATA              ,1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_file_soil_init , 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
+
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -807,6 +863,10 @@ CONTAINS
       CALL mpi_bcast (DEF_HIST_mode,         256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_REST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_HIST_COMPRESS_LEVEL, 1, mpi_integer,   p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_USE_Forcing_Downscaling,        1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_DS_precipitation_adjust_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_DS_longwave_adjust_scheme,      5, mpi_character, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_forcing%dataset,          256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_forcing%solarin_all_band,   1, mpi_logical,   p_root, p_comm_glb, p_err)
@@ -1013,7 +1073,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)

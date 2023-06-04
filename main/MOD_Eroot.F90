@@ -28,8 +28,10 @@ MODULE MOD_Eroot
          psi0,rootfr, dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
 
   !=======================================================================
+  ! !DESCRIPTION:
   ! effective root fraction and maximum possible transpiration rate
   ! Original author : Yongjiu Dai, 08/30/2002
+  ! Revision author : Shupeng Zhang and Xingjie Lu.
   !=======================================================================
 
     use MOD_Precision

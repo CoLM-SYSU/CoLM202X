@@ -124,10 +124,10 @@ IMPLICIT NONE
 
       ! (2) global land cover characteristics
       ! ---------------------------------
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       integer, allocatable :: landtypes_usgs(:,:)  ! GLCC USGS land cover types 
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       integer, allocatable :: landtypes_igbp(:,:)  ! MODIS IGBP land cover types
 #endif
 
@@ -198,10 +198,10 @@ IMPLICIT NONE
 !   ---------------------------------------------------------------
 !   
       allocate ( elevation      (nlon,buff_lb:buff_ub) ,&
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                  landtypes_usgs (nlon,buff_lb:buff_ub) ,& 
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                  landtypes_igbp (nlon,buff_lb:buff_ub) ,& 
 #endif
 
@@ -270,7 +270,7 @@ IMPLICIT NONE
 ! ........................................
 !     (2.1) global land cover type (version 2.0) (USGS) 
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
      ! GLCC USGS classification
      ! -------------------
 
@@ -347,7 +347,7 @@ IMPLICIT NONE
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
      ! MODIS IGBP classification
      ! -------------------
 
@@ -457,10 +457,10 @@ IMPLICIT NONE
             if(elevation(ncol,nrow)>-9990) then
                ! Replace GLCC_USGS and MODIS_IGBP water bodies with GLWD classification
                if(lakewetland(ncol,nrow) <= 3) then
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                   landtypes_usgs(ncol,nrow) = 16
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                   landtypes_igbp(ncol,nrow) = 17
 #endif
                   ii = ii + 1
@@ -470,10 +470,10 @@ IMPLICIT NONE
                !if(lakewetland(ncol,nrow) > 3 .and. lakewetland(ncol,nrow) < 13)then
 ! deleted by dai, 08/15/2016
 !               if(lakewetland(ncol,nrow) > 3 .and. lakewetland(ncol,nrow) < 11)then
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !                  landtypes_usgs(ncol,nrow) = 17
 !#endif
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !                  landtypes_igbp(ncol,nrow) = 11
 !#endif
 !                  iii = iii + 1
@@ -536,23 +536,23 @@ IMPLICIT NONE
             if(elevation(ncol,nrow)>-9990) then
                ! Replace GLCC and MODIS glacier/ice sheet with glacier specific dataset
                if(glacier(ncol,nrow) > 0.5 .and. glacier(ncol,nrow) < 101.)then
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                   landtypes_usgs(ncol,nrow) = 24
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                   landtypes_igbp(ncol,nrow) = 15
 #endif
                   ii = ii + 1
                endif
                ! Antarctic (ice sheet / baren ONLY)
                if(nrow > 18000)then  ! (90N + 60S) * 120  
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                   if(landtypes_usgs(ncol,nrow)/=23)then
                      landtypes_usgs(ncol,nrow) = 24
                      glacier(ncol,nrow) = 100.
                   endif
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                   if(landtypes_igbp(ncol,nrow)/=16)then
                      landtypes_igbp(ncol,nrow) = 15
                      glacier(ncol,nrow) = 100.
@@ -563,13 +563,13 @@ IMPLICIT NONE
 !               ! Greenland  (ice sheet / baren / built-up ONLY)
 !               ! BETWEEN (59-83N, 74-11W) =>| 0<nrow<(90-31)*120, (180-74)*120<ncol<(180-11)*120
 !               if(nrow<3720 .and. (ncol>12720 .and. ncol<20280))then
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !                  if(landtypes_usgs(ncol,nrow)/=23 .or. landtypes_usgs(ncol,nrow)/=1)then
 !                     landtypes_usgs(ncol,nrow) = 24  
 !                     glacier(ncol,nrow) = 100.
 !                  endif
 !#endif
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !                  if(landtypes_igbp(ncol,nrow)/=16 .or. landtypes_igbp(ncol,nrow)/=13)then
 !                     landtypes_igbp(ncol,nrow) = 15
 !                     glacier(ncol,nrow) = 100.
@@ -631,10 +631,10 @@ IMPLICIT NONE
             if(elevation(ncol,nrow)>-9990) then
                ! Replace GLCC and MODIS urban/built-up with urban specific dataset
                if(urban(ncol,nrow) == 1)then
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                   landtypes_usgs(ncol,nrow) = 1
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                   landtypes_igbp(ncol,nrow) = 13
 #endif
                   ii = ii + 1
@@ -665,7 +665,7 @@ IMPLICIT NONE
       if (p_master) print*,'Urban and Built-up Land Points =', ii
 
 #if(defined CoLMDEBUG)
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       ii = 0
       iii = 0
       iiii = 0
@@ -706,7 +706,7 @@ IMPLICIT NONE
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       ii = 0
       iii = 0
       iiii = 0
@@ -749,10 +749,10 @@ IMPLICIT NONE
 #endif
 
 #if (defined usempi)
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       call update_buff (landtypes_usgs, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub)
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       call update_buff (landtypes_igbp, nlon, nlat, buff_lb, nrow_start, nrow_end, buff_ub)
 #endif
 #endif
@@ -763,7 +763,7 @@ IMPLICIT NONE
       allocate (ntmp(nlon,buff_lb:buff_ub))
 !      ! WATER BODIES
 !      ! ------------
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !      iii = 0
 !
 !      ! GLCC USGS land cover classification (WATER BODIES)
@@ -799,7 +799,7 @@ IMPLICIT NONE
 !      if (p_master) print*, 'GLCC WATER BODIES','iii=',iii
 !#endif
 !
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !      iii = 0
 !
 !      ! MODIS IGBP land cover classification (WATER BODIES)
@@ -836,7 +836,7 @@ IMPLICIT NONE
 !#endif
 !
 !#if(defined CoLMDEBUG)
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !      iiii = 0
 !
 !      do j = nrow_start, nrow_end
@@ -857,7 +857,7 @@ IMPLICIT NONE
 !#endif
 !      if (p_master) print*, 'GLCC WATER BODIES','iiii=',iiii
 !#endif
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !      iiii = 0
 !
 !      do j = nrow_start, nrow_end
@@ -886,7 +886,7 @@ IMPLICIT NONE
 ! 
 !      ! WETLAND
 !      ! -------
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !      iii = 0
 !
 !      ! GLCC USGS land cover classification (WETLAND)
@@ -919,7 +919,7 @@ IMPLICIT NONE
 !      if (p_master) print*, 'GLCC WETLAND','iii=',iii
 !#endif
 !
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !      iii = 0
 !
 !      ! MODIS land cover classification (WETLAND)
@@ -953,7 +953,7 @@ IMPLICIT NONE
 !#endif
 !
 !#if(defined CoLMDEBUG)
-!#if(defined USGS_CLASSIFICATION)
+!#if(defined LULC_USGS)
 !      iiii = 0
 !
 !      do j = nrow_start, nrow_end
@@ -974,7 +974,7 @@ IMPLICIT NONE
 !#endif
 !      if (p_master) print*, 'GLCC WETLAND', 'iiii=',iiii
 !#endif
-!#if(defined IGBP_CLASSIFICATION)
+!#if(defined LULC_IGBP)
 !      iiii = 0
 !
 !      do j = nrow_start, nrow_end
@@ -999,7 +999,7 @@ IMPLICIT NONE
 
       ! GLACIER/ICESHEET
       ! ------------------
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       iii = 0
 
       ! GLCC USGS land cover classification (GLACIER/ICESHEET)
@@ -1034,7 +1034,7 @@ IMPLICIT NONE
 #endif
       if (p_master) print*, 'GLCC GLACIER/ICESHEET','iii=',iii
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       iii = 0
 
       ! MODIS IGBP land cover classification (GLACIER/ICESHEET)
@@ -1071,7 +1071,7 @@ IMPLICIT NONE
 #endif
 
 #if(defined CoLMDEBUG)
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       iiii = 0
 
       do j = nrow_start, nrow_end
@@ -1092,7 +1092,7 @@ IMPLICIT NONE
 #endif
       if (p_master) print*, 'GLCC GLACIER/ICESHEET', 'iiii=',iiii
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       iiii = 0
 
       do j = nrow_start, nrow_end
@@ -1117,7 +1117,7 @@ IMPLICIT NONE
 
       ! URBAN and BUILT-UP LAND
       ! ------------------
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       iii = 0
 
       ! GLCC USGS land cover classification (URBAN and BUILT-UP LAND)
@@ -1153,7 +1153,7 @@ IMPLICIT NONE
       if (p_master) print*, 'GLCC URBAN and BUILT-UP LAND','iii=',iii
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       iii = 0
 
       ! MODIS IGBP land cover classification (URBAN and BUILT-UP LAND)
@@ -1190,7 +1190,7 @@ IMPLICIT NONE
 #endif
 
 #if(defined CoLMDEBUG)
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       iiii = 0
 
       do j = nrow_start, nrow_end
@@ -1212,7 +1212,7 @@ IMPLICIT NONE
       if (p_master) print*, 'GLCC URBAN and BUILT-UP LAND', 'iiii=',iiii
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       iiii = 0
       do j = nrow_start, nrow_end
          do i = 1, nlon
@@ -1236,7 +1236,7 @@ IMPLICIT NONE
 
       !--------------------------------------------------------------------
 #if(defined CoLMDEBUG)
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
       ii = 0
       iii = 0
       iiii = 0
@@ -1279,7 +1279,7 @@ IMPLICIT NONE
       if (p_master) print*,'land water points =', ii, 'wetland points=', iii, 'glacier points=', iiii, 'urban points=', jjj
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
       ii = 0
       iii = 0
       iiii = 0
@@ -1331,7 +1331,7 @@ IMPLICIT NONE
 !#endif 
 
 ! Write out the land cover types
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
      ! GLCC USGS classification
      ! -------------------
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_usgs_update.bin'
@@ -1357,7 +1357,7 @@ IMPLICIT NONE
       close (iunit)
 #endif
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
      ! MODIS IGBP classification
      ! -------------------
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
@@ -1393,10 +1393,10 @@ IMPLICIT NONE
 
       deallocate ( ntmp )
       deallocate ( elevation      ,&
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                    landtypes_usgs ,&
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                    landtypes_igbp ,&
 #endif
                    lakewetland    ,&

@@ -2,9 +2,7 @@
 
 SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
-   !
-   ! 2. Global Plant Leaf Area Index
+   ! 1. Global Plant Leaf Area Index
    !    (http://globalchange.bnu.edu.cn)
    !    Yuan H., et al., 2011:
    !    Reprocessing the MODIS Leaf Area Index products for land surface
@@ -12,7 +10,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    !
    ! Created by Yongjiu Dai, 02/2014
    !
-   !
+   ! REVISIONS:
+   ! Hua Yuan,      ?/2020 : for land cover land use classifications
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
+   ! Hua Yuan,      05/2023: TODO
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Vars_Global
@@ -30,10 +31,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -48,6 +49,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
    ! arguments:
 
+   INTEGER, intent(in) :: lc_year
    TYPE(grid_type),  intent(in) :: gridlai
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
@@ -116,7 +118,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! ... global plant leaf area index
    ! ................................................
 
-#if (defined USGS_CLASSIFICATION || defined IGBP_CLASSIFICATION)
+#if (defined LULC_USGS || defined LULC_IGBP)
    ! add time variation of LAI
    IF (DEF_LAI_CLIM) THEN
       ! monthly average LAI
@@ -184,7 +186,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
          IF (p_is_io) THEN
             IF (DEF_LAI_CLIM) THEN
-               dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+               dir_5x5 = trim(dir_rawdata) // '/plant_15s'
                suffix  = 'MOD'//trim(cyear)
                CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_LAI', itime, LAI)
             ELSE
@@ -275,7 +277,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
       allocate (SITE_SAI_clim (12))
 #endif
 
-      dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+      dir_5x5 = trim(dir_rawdata) // '/plant_15s'
       DO iy = start_year, end_year
          write(cyear,'(i4.4)') iy
          suffix  = 'MOD'//trim(cyear)
@@ -351,7 +353,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 
 ! PFT LAI!!!!!
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    ! add time variation of LAI
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
@@ -384,11 +386,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    allocate (SITE_SAI_pfts_clim (numpft,12))
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 
       IF (p_is_io) THEN
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
@@ -628,7 +631,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 
 ! PC LAI!!!!!!!!
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    ! add time variation of LAI
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
@@ -661,11 +664,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    allocate (SITE_SAI_pfts_clim (0:N_PFT-1,12))
 #endif
 
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s_clim'
+   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
+      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 
       IF (p_is_io) THEN
          CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)

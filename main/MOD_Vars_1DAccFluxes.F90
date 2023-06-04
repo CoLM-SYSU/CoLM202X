@@ -3,6 +3,7 @@
 module MOD_Vars_1DAccFluxes
 
    use MOD_Precision
+   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -161,7 +162,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
    real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
    real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
@@ -224,9 +225,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_lnfm               (:)
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
    real(r8), allocatable :: a_ozone              (:)
-#endif
+! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
    real(r8), allocatable :: a_wliq_soisno (:,:)
@@ -236,9 +237,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_BD_all      (:,:)
    real(r8), allocatable :: a_wfc         (:,:)
    real(r8), allocatable :: a_OM_density  (:,:)
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
    real(r8), allocatable :: a_vegwp       (:,:)
-#endif
+!end plant hydraulic parameters
    real(r8), allocatable :: a_t_lake      (:,:)
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
@@ -357,7 +358,7 @@ contains
             allocate (a_respc     (numpatch))
 
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             allocate (a_assim_RuBP_sun        (numpatch)) !1
             allocate (a_assim_RuBP_sha        (numpatch)) !1
             allocate (a_assim_Rubisco_sun        (numpatch)) !1
@@ -528,9 +529,9 @@ contains
             allocate (a_lnfm               (numpatch))
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
             allocate (a_ozone              (numpatch))
-#endif
+! End ozone stress variables
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
@@ -539,9 +540,9 @@ contains
             allocate (a_BD_all      (1:nl_soil,       numpatch))
             allocate (a_wfc         (1:nl_soil,       numpatch))
             allocate (a_OM_density  (1:nl_soil,       numpatch))
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
-#endif
+!End Plant Hydraulic parameters
             allocate (a_t_lake      (nl_lake,numpatch))
             allocate (a_lake_icefrac(nl_lake,numpatch))
 
@@ -765,7 +766,7 @@ contains
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             deallocate (a_assim_RuBP_sun        ) !1
             deallocate (a_assim_RuBP_sha        ) !1
             deallocate (a_assim_Rubisco_sun        ) !1
@@ -828,9 +829,9 @@ contains
             deallocate (a_lnfm               )
 #endif
 #endif
-#ifdef OzoneStress
+! Ozone stress variables
             deallocate (a_ozone              )
-#endif
+! end ozone stress variables
 
             deallocate (a_t_soisno    )
             deallocate (a_wliq_soisno )
@@ -840,9 +841,9 @@ contains
             deallocate (a_BD_all      )
             deallocate (a_wfc         )
             deallocate (a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             deallocate (a_vegwp       )
-#endif
+!end plant hydraulic parameters            
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 #ifdef BGC
@@ -908,6 +909,7 @@ contains
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       use MOD_Vars_Global,    only : spval
+      use MOD_Namelist, only: DEF_USE_OZONESTRESS
       implicit none
 
       if (p_is_worker) then
@@ -1071,7 +1073,7 @@ contains
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             a_assim_RuBP_sun        (:) = spval !1
             a_assim_RuBP_sha        (:) = spval !1
             a_assim_Rubisco_sun        (:) = spval !1
@@ -1134,9 +1136,9 @@ contains
             a_lnfm               (:) = spval
 #endif
 #endif
-#ifdef OzoneStress
-            a_ozone              (:) = spval
-#endif
+            IF(DEF_USE_OZONESTRESS)THEN
+               a_ozone              (:) = spval
+            ENDIF
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1146,9 +1148,9 @@ contains
             a_BD_all       (:,:) = spval
             a_wfc          (:,:) = spval
             a_OM_density   (:,:) = spval
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             a_vegwp        (:,:) = spval
-#endif
+!end plant hydraulic parameters            
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 #ifdef BGC
@@ -1224,7 +1226,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS
       USE MOD_TurbulenceLEddy
       use MOD_CoLMDebug
       use MOD_Vars_Global
@@ -1437,7 +1439,7 @@ contains
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
 #ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
             call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
             call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )
@@ -1500,9 +1502,9 @@ contains
             call acc1d (lnfm               ,   a_lnfm               )
 #endif
 #endif
-#ifdef OzoneStress
-            call acc1d (forc_ozone         ,   a_ozone              )
-#endif
+            IF(DEF_USE_OZONESTRESS)THEN
+               call acc1d (forc_ozone         ,   a_ozone              )
+            ENDIF
 
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)
@@ -1513,9 +1515,9 @@ contains
             call acc2d (BD_all     , a_BD_all      )
             call acc2d (wfc        , a_wfc         )
             call acc2d (OM_density , a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
-            call acc2d (vegwp      , a_vegwp      )
-#endif
+            if(DEF_USE_PLANTHYDRAULICS)then
+               call acc2d (vegwp      , a_vegwp      )
+            end if
             call acc2d (t_lake      , a_t_lake      )
             call acc2d (lake_icefrac, a_lake_icefrac)
 #ifdef BGC

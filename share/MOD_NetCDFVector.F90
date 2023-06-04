@@ -2,6 +2,24 @@
 
 MODULE MOD_NetCDFVector
 
+   !----------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    High-level Subroutines to read and write variables in files with netCDF format.
+   !
+   !    CoLM read and write netCDF files mainly in three ways:
+   !    1. Serial: read and write data by a single process;
+   !    2. Vector: 1) read vector data by IO and scatter from IO to workers
+   !               2) gather from workers to IO and write vectors by IO
+   !               Notice: each file contains vector data in one block.
+   !    3. Block : read blocked data by IO
+   !               Notice: input file is a single file.
+   !    
+   !    This module contains subroutines of "2. Vector".
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !----------------------------------------------------------------------------------
+
    USE MOD_DataType
    IMPLICIT NONE
 

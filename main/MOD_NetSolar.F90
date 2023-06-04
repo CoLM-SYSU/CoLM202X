@@ -43,16 +43,16 @@ MODULE MOD_NetSolar
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_TimeManager, only: isgreenwich
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
    USE MOD_Vars_1DPFTFluxes
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
    USE MOD_Vars_1DPCFluxes
 #endif
 
@@ -130,7 +130,7 @@ MODULE MOD_NetSolar
 
    IF (patchtype == 0) THEN
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          sabvsun_p(ps:pe) = 0.
@@ -139,7 +139,7 @@ MODULE MOD_NetSolar
          parsha_p(ps:pe)  = 0.
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          pc = patch2pc(ipatch)
          sabvsun_c(:,pc) = 0.
          sabvsha_c(:,pc) = 0.
@@ -163,7 +163,7 @@ MODULE MOD_NetSolar
 
    IF (patchtype == 0) THEN
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
@@ -172,7 +172,7 @@ MODULE MOD_NetSolar
                                 + forc_soll*ssha_p(2,1,ps:pe) + forc_solld*ssha_p(2,2,ps:pe)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                parsun_c(:,pc)  = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc)
                parsha_c(:,pc)  = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc)
                sabvsun_c(:,pc) = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc) &

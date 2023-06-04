@@ -1,15 +1,28 @@
 #include <define.h>
 
-#ifdef OzoneStress
 Module MOD_Ozone
+
+ !-----------------------------------------------------------------------
+ ! !DESCRIPTION:
+ ! This module hold the plant physiological response to the ozone, including vcmax response and stomata response.
+ ! Ozone concentration can be either readin through Mod_OzoneData module or set to constant.
+ !
+ ! !ORIGINAL:
+ ! The Community Land Model version 5.0 (CLM5.0)
+ !
+ ! !REVISION:
+ ! Xingjie Lu 2022, revised the CLM5 code to be compatible with CoLM code structure.
+
+
 
   use MOD_Precision
   USE MOD_Const_Physical, only: rgas
   USE MOD_Const_PFT, only: isevg, leaf_long, woody
-  USE mod_grid
-  USE mod_data_type
-  USE mod_mapping_grid2pset
+  USE MOD_Grid
+  USE MOD_DataType
+  USE MOD_Mapping_Grid2Pset
   USE MOD_Vars_1DForcing, only: forc_ozone
+  USE MOD_Namelist, only: DEF_USE_OZONEDATA
   IMPLICIT NONE
 
    CHARACTER(len=256) :: file_ozone
@@ -30,6 +43,10 @@ Module MOD_Ozone
 
   subroutine CalcOzoneStress (o3coefv,o3coefg, forc_ozone, forc_psrf, th, ram, &
                               rs, rb, lai, lai_old, ivt, o3uptake, deltim)
+   !-------------------------------------------------
+   ! DESCRIPTION:
+   ! Calculate Ozone Stress on both vcmax and stomata conductance.
+   !
      ! convert o3 from mol/mol to nmol m^-3
      real(r8), intent(out)   :: o3coefv
      real(r8), intent(out)   :: o3coefg
@@ -81,9 +98,9 @@ Module MOD_Ozone
      real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
      real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
 
-#ifndef OzoneData
-     forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
-#endif
+     IF(.not. DEF_USE_OZONEDATA)then
+        forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
+     ENDIF
 
      o3concnmolm3 = forc_ozone * 1.e9_r8 * (forc_psrf/(th*rgas*0.001_r8 ))
 
@@ -167,14 +184,19 @@ Module MOD_Ozone
 
   SUBROUTINE init_ozone_data (time, idate)
       
-     USE spmd_task
-     USE mod_namelist
-     USE timemanager
-     USE mod_grid
-     USE ncio_serial
-     USE ncio_block
-     USE mod_landpatch
-     USE mod_colm_debug
+   !----------------------
+   ! DESCTIPTION:
+   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+   ! Initialize Ozone data read in.
+
+     USE MOD_SPMD_Task
+     USE MOD_Namelist
+     USE MOD_TimeManager
+     USE MOD_Grid
+     USE MOD_NetCDFSerial
+     USE MOD_NetCDFBlock
+     USE MOD_LandPatch
+     USE MOD_CoLMDebug
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -210,21 +232,19 @@ Module MOD_Ozone
      CALL check_block_data ('Ozone', f_ozone)
 #endif
 
-!      IF (p_is_worker) THEN
-!         IF (numpatch > 0) THEN
-!            allocate (lnfm (numpatch))
-!         ENDIF
-!      ENDIF
-
   END SUBROUTINE init_ozone_data 
 
    ! ----------
   SUBROUTINE update_ozone_data (time, deltim)
       
-     USE timemanager
-     USE mod_namelist
-     USE ncio_block
-     USE mod_colm_debug
+   !----------------------
+   ! DESCTIPTION:
+   ! read ozone data during simulation
+
+     USE MOD_TimeManager
+     USE MOD_Namelist
+     USE MOD_NetCDFBlock
+     USE MOD_CoLMDebug
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -270,4 +290,3 @@ Module MOD_Ozone
    END SUBROUTINE update_ozone_data 
 
 end module MOD_Ozone
-#endif
