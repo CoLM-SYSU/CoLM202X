@@ -2,17 +2,23 @@
 
 module MOD_Hydro_SoilFunction
 
+   !----------------------------------------------------------------------------
+   ! Description:
+   !
+   !    Soil function type 1:
+   !    Campbell model
+   !    CAMPBELL, G. S. (1974), Soil Science, 117(6), 311-314.
+   !
+   !    Soil function type 2:
+   !    Modified van Genuchten & Mualem model by introducing an air-entry value 
+   !    Ippisch et al. (2006), Advances in Water Resources, 29(12), 1780-1789. 
+   !
+   ! Created by Shupeng Zhang, 2022.
+   !----------------------------------------------------------------------------
+
    use MOD_Precision
 
    implicit none
-
-   ! Soil function type 1:
-   ! Campbell model
-   ! CAMPBELL, G. S. (1974), Soil Science, 117(6), 311-314.
-   
-   ! Soil function type 2:
-   ! Modified van Genuchten & Mualem model by introducing an air-entry value 
-   ! Ippisch et al. (2006), Advances in Water Resources, 29(12), 1780-1789. 
 
    REAL(r8), parameter :: minsmp = -1.e8
 

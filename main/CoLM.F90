@@ -73,9 +73,8 @@ PROGRAM CoLM
    USE MOD_FireReadin, only: Fire_readin
 #endif
 
-#ifdef OzoneData
-   USE MOD_OzoneData, only: init_ozone_data, update_ozone_data
-#endif
+   USE MOD_Ozone, only: init_ozone_data, update_ozone_data
+ 
    use MOD_SrfdataRestart
    USE MOD_LAIReadin
    USE MOD_NitrifReadin
@@ -270,9 +269,10 @@ PROGRAM CoLM
 #if(defined CaMa_Flood)
    call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
 #endif
-#ifdef OzoneData
-   CALL init_Ozone_data(itstamp,sdate)
-#endif
+
+   IF(DEF_USE_OZONEDATA)THEN
+      CALL init_Ozone_data(itstamp,sdate)
+   ENDIF
 #ifdef Fire
    CALL init_lightning_data (itstamp,sdate)
 #endif
@@ -308,9 +308,9 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
 
-#ifdef OzoneData
-      CALL update_Ozone_data(itstamp, deltim)
-#endif
+      IF(DEF_USE_OZONEDATA)THEN
+         CALL update_Ozone_data(itstamp, deltim)
+      ENDIF
 #ifdef Fire
       CALL update_lightning_data (itstamp, deltim)
 #endif

@@ -46,9 +46,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_lakedepth       = .true.
    LOGICAL  :: USE_SITE_soilreflectance = .true.
    LOGICAL  :: USE_SITE_soilparameters  = .true.
-#ifdef USE_DEPTH_TO_BEDROCK
    LOGICAL  :: USE_SITE_dbedrock = .true.
-#endif
 #endif
 
    ! ----- simulation time type -----
@@ -110,7 +108,7 @@ MODULE MOD_Namelist
    ! 05/2023, add by Dong: use for updating LAI with simulation year
    LOGICAL :: DEF_LAICHANGE = .FALSE.
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
-   LOGICAL :: DEF_LAIFEEDBACK = .TRUE.
+   LOGICAL :: DEF_USE_LAIFEEDBACK = .TRUE.
 
    ! ------ LULCC -------
    INTEGER :: DEF_LC_YEAR   = 2005
@@ -140,6 +138,10 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+   LOGICAL :: DEF_USE_BEDROCK                 = .false.
+   LOGICAL :: DEF_USE_OZONESTRESS             = .false.
+   LOGICAL :: DEF_USE_OZONEDATA               = .false.
+
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
@@ -252,9 +254,7 @@ MODULE MOD_Namelist
       LOGICAL :: xy_solarin   = .true.
       LOGICAL :: xy_rain      = .true.
       LOGICAL :: xy_snow      = .true.
-#ifdef OzoneStress
       LOGICAL :: xy_ozone     = .true.
-#endif
 
       LOGICAL :: xy_hpbl      = .true.
 
@@ -599,9 +599,7 @@ CONTAINS
          USE_SITE_lakedepth,       &
          USE_SITE_soilreflectance, &
          USE_SITE_soilparameters,  &
-#ifdef USE_DEPTH_TO_BEDROCK
          USE_SITE_dbedrock,       &
-#endif
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -622,7 +620,7 @@ CONTAINS
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
-         DEF_LAIFEEDBACK,                 &   !add by Xingjie Lu, use for updating LAI with leaf carbon
+         DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
 
          !DEF_Urban_type_scheme,           &
          DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
@@ -647,6 +645,9 @@ CONTAINS
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
+         DEF_USE_BEDROCK,                 &
+         DEF_USE_OZONESTRESS,             &
+         DEF_USE_OZONEDATA,               &
 
          DEF_precip_phase_discrimination_scheme, &
 
@@ -740,6 +741,21 @@ CONTAINS
          ENDIF
 #endif
 
+#ifndef BGC
+        IF(DEF_USE_LAIFEEDBACK)then
+           DEF_USE_LAIFEEDBACK = .false.
+           write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
+           write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
+        ENDIF
+#endif
+
+        IF(.not. DEF_USE_OZONESTRESS)then
+           IF(DEF_USE_OZONEDATA)then
+              DEF_USE_OZONEDATA = .false.
+              write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
+              write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
+           ENDIF
+        ENDIF
         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
 
@@ -806,7 +822,7 @@ CONTAINS
       CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
 
       ! 05/2023, added by Xingjie lu
-      CALL mpi_bcast (DEF_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
@@ -834,6 +850,9 @@ CONTAINS
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_BEDROCK                ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONESTRESS            ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONEDATA              ,1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
 

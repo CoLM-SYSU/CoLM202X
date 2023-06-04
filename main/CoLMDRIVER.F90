@@ -120,9 +120,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
          sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
          thermk(i),       extkb(i),        extkd(i),                         &
         vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
-#ifdef OzoneStress
+       ! Ozone Stress Variables
         lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
-#endif
+       ! End ozone stress variables
         zwt(i),          dpond(i),        wa(i),                            &
         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 

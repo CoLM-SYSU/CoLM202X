@@ -215,7 +215,7 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
-				MOD_Hydro_DrainageNetwork.o               \
+				MOD_Hydro_SurfaceNetwork.o                \
 				MOD_Hydro_RiverNetwork.o                  \
 				MOD_Hydro_SubsurfaceNetwork.o             \
 				MOD_Hydro_SurfaceFlow.o                   \
@@ -257,7 +257,7 @@ OBJS_MAIN = \
 				MOD_Vars_2DFluxes.o                       \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
-				MOD_DownscalingForcing.o                  \
+				MOD_ForcingDownscaling.o                  \
 				MOD_Forcing.o                             \
 				MOD_AssimStomataConductance.o             \
 				MOD_PlantHydraulic.o                      \

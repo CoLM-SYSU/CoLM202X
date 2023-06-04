@@ -1,6 +1,5 @@
 #include <define.h>
 
-#ifdef OzoneStress
 Module MOD_Ozone
 
  !-----------------------------------------------------------------------
@@ -19,10 +18,11 @@ Module MOD_Ozone
   use MOD_Precision
   USE MOD_Const_Physical, only: rgas
   USE MOD_Const_PFT, only: isevg, leaf_long, woody
-  USE mod_grid
-  USE mod_data_type
-  USE mod_mapping_grid2pset
+  USE MOD_Grid
+  USE MOD_DataType
+  USE MOD_Mapping_Grid2Pset
   USE MOD_Vars_1DForcing, only: forc_ozone
+  USE MOD_Namelist, only: DEF_USE_OZONEDATA
   IMPLICIT NONE
 
    CHARACTER(len=256) :: file_ozone
@@ -98,9 +98,9 @@ Module MOD_Ozone
      real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
      real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
 
-#ifndef OzoneData
-     forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
-#endif
+     IF(.not. DEF_USE_OZONEDATA)then
+        forc_ozone = 100._r8 * 1.e-9_r8 ! ozone partial pressure [mol/mol]
+     ENDIF
 
      o3concnmolm3 = forc_ozone * 1.e9_r8 * (forc_psrf/(th*rgas*0.001_r8 ))
 
@@ -189,14 +189,14 @@ Module MOD_Ozone
    ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
    ! Initialize Ozone data read in.
 
-     USE spmd_task
-     USE mod_namelist
-     USE timemanager
-     USE mod_grid
-     USE ncio_serial
-     USE ncio_block
-     USE mod_landpatch
-     USE mod_colm_debug
+     USE MOD_SPMD_Task
+     USE MOD_Namelist
+     USE MOD_TimeManager
+     USE MOD_Grid
+     USE MOD_NetCDFSerial
+     USE MOD_NetCDFBlock
+     USE MOD_LandPatch
+     USE MOD_CoLMDebug
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -241,10 +241,10 @@ Module MOD_Ozone
    ! DESCTIPTION:
    ! read ozone data during simulation
 
-     USE timemanager
-     USE mod_namelist
-     USE ncio_block
-     USE mod_colm_debug
+     USE MOD_TimeManager
+     USE MOD_Namelist
+     USE MOD_NetCDFBlock
+     USE MOD_CoLMDebug
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -290,4 +290,3 @@ Module MOD_Ozone
    END SUBROUTINE update_ozone_data 
 
 end module MOD_Ozone
-#endif

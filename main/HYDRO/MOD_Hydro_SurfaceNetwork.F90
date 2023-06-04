@@ -1,13 +1,13 @@
 #include <define.h>
 
 #ifdef LATERAL_FLOW
-MODULE MOD_Hydro_DrainageNetwork
+MODULE MOD_Hydro_SurfaceNetwork
 
    USE MOD_Precision
    IMPLICIT NONE
    
    ! -- data type --
-   TYPE :: drainage_network_info_type
+   TYPE :: surface_network_info_type
       INTEGER :: nhru
       INTEGER , pointer :: ihru (:)
       INTEGER , pointer :: indx (:)
@@ -17,15 +17,15 @@ MODULE MOD_Hydro_DrainageNetwork
       REAL(r8), pointer :: plen (:)
       REAL(r8), pointer :: flen (:)
       INTEGER , pointer :: inext(:)
-   END TYPE drainage_network_info_type
+   END TYPE surface_network_info_type
 
    ! -- Instance --
-   TYPE(drainage_network_info_type), pointer :: drainagenetwork (:)
+   TYPE(surface_network_info_type), pointer :: surface_network (:)
    
 CONTAINS
    
    ! ----------
-   SUBROUTINE drainage_network_init ()
+   SUBROUTINE surface_network_init ()
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -36,7 +36,7 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      CHARACTER(len=256) :: drainage_network_file
+      CHARACTER(len=256) :: surface_network_file
 
       INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, i, j
       INTEGER :: iworker, mesg(2), nrecv, irecv, isrc, idest
@@ -59,16 +59,16 @@ CONTAINS
 
       numbasin = numelm
 
-      drainage_network_file = DEF_path_Catchment_data 
+      surface_network_file = DEF_path_Catchment_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_index',      indxhru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_area',       areahru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_hand',       handhru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_elva',       elvahru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_pathlen',    plenhru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_facelen',    lfachru)
-         CALL ncio_read_serial (drainage_network_file, 'hydrounit_downstream', nexthru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_index',      indxhru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_area',       areahru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_hand',       handhru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_elva',       elvahru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_pathlen',    plenhru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_facelen',    lfachru)
+         CALL ncio_read_serial (surface_network_file, 'hydrounit_downstream', nexthru)
       ENDIF
 
       IF (p_is_master) maxnumhru = size(indxhru,1) 
@@ -243,40 +243,40 @@ CONTAINS
 #endif
 
          IF (numbasin > 0) THEN
-            allocate( drainagenetwork (numbasin))
+            allocate( surface_network (numbasin))
          ENDIF
 
          DO ibasin = 1, numbasin
 
             nhru = count(indxhru(:,ibasin) >= 0)
-            drainagenetwork(ibasin)%nhru = nhru
+            surface_network(ibasin)%nhru = nhru
 
-            allocate (drainagenetwork(ibasin)%indx  (nhru))
-            allocate (drainagenetwork(ibasin)%area  (nhru))
-            allocate (drainagenetwork(ibasin)%hand  (nhru))
-            allocate (drainagenetwork(ibasin)%elva  (nhru))
-            allocate (drainagenetwork(ibasin)%plen  (nhru))
-            allocate (drainagenetwork(ibasin)%flen  (nhru))
-            allocate (drainagenetwork(ibasin)%inext (nhru))
+            allocate (surface_network(ibasin)%indx  (nhru))
+            allocate (surface_network(ibasin)%area  (nhru))
+            allocate (surface_network(ibasin)%hand  (nhru))
+            allocate (surface_network(ibasin)%elva  (nhru))
+            allocate (surface_network(ibasin)%plen  (nhru))
+            allocate (surface_network(ibasin)%flen  (nhru))
+            allocate (surface_network(ibasin)%inext (nhru))
             
-            drainagenetwork(ibasin)%indx = indxhru(1:nhru,ibasin) 
-            drainagenetwork(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
-            drainagenetwork(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
-            drainagenetwork(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
-            drainagenetwork(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
-            drainagenetwork(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
+            surface_network(ibasin)%indx = indxhru(1:nhru,ibasin) 
+            surface_network(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
+            surface_network(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
+            surface_network(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
+            surface_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
+            surface_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
 
-            allocate (drainagenetwork(ibasin)%ihru (nhru))
+            allocate (surface_network(ibasin)%ihru (nhru))
             istt = basin_hru%substt(ibasin)
             iend = basin_hru%subend(ibasin)
-            drainagenetwork(ibasin)%ihru = (/ (i, i = istt, iend) /)
+            surface_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
 
             DO i = 1, nhru
                IF (nexthru(i,ibasin) >= 0) THEN
                   j = findloc(indxhru(1:nhru,ibasin), nexthru(i,ibasin), dim=1)
-                  drainagenetwork(ibasin)%inext(i) = j 
+                  surface_network(ibasin)%inext(i) = j 
                ELSE
-                  drainagenetwork(ibasin)%inext(i) = -1
+                  surface_network(ibasin)%inext(i) = -1
                ENDIF
             ENDDO
 
@@ -297,32 +297,32 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       
-   END SUBROUTINE drainage_network_init
+   END SUBROUTINE surface_network_init
    
    ! ----------
-   SUBROUTINE drainage_network_final ()
+   SUBROUTINE surface_network_final ()
 
       IMPLICIT NONE
 
       ! Local Variables
       INTEGER :: ibasin
 
-      IF (associated(drainagenetwork)) THEN
-         DO ibasin = 1, size(drainagenetwork)
-            IF (associated(drainagenetwork(ibasin)%ihru )) deallocate(drainagenetwork(ibasin)%ihru )
-            IF (associated(drainagenetwork(ibasin)%indx )) deallocate(drainagenetwork(ibasin)%indx )
-            IF (associated(drainagenetwork(ibasin)%area )) deallocate(drainagenetwork(ibasin)%area )
-            IF (associated(drainagenetwork(ibasin)%hand )) deallocate(drainagenetwork(ibasin)%hand )
-            IF (associated(drainagenetwork(ibasin)%elva )) deallocate(drainagenetwork(ibasin)%elva )
-            IF (associated(drainagenetwork(ibasin)%plen )) deallocate(drainagenetwork(ibasin)%plen )
-            IF (associated(drainagenetwork(ibasin)%flen )) deallocate(drainagenetwork(ibasin)%flen )
-            IF (associated(drainagenetwork(ibasin)%inext)) deallocate(drainagenetwork(ibasin)%inext)
+      IF (associated(surface_network)) THEN
+         DO ibasin = 1, size(surface_network)
+            IF (associated(surface_network(ibasin)%ihru )) deallocate(surface_network(ibasin)%ihru )
+            IF (associated(surface_network(ibasin)%indx )) deallocate(surface_network(ibasin)%indx )
+            IF (associated(surface_network(ibasin)%area )) deallocate(surface_network(ibasin)%area )
+            IF (associated(surface_network(ibasin)%hand )) deallocate(surface_network(ibasin)%hand )
+            IF (associated(surface_network(ibasin)%elva )) deallocate(surface_network(ibasin)%elva )
+            IF (associated(surface_network(ibasin)%plen )) deallocate(surface_network(ibasin)%plen )
+            IF (associated(surface_network(ibasin)%flen )) deallocate(surface_network(ibasin)%flen )
+            IF (associated(surface_network(ibasin)%inext)) deallocate(surface_network(ibasin)%inext)
          ENDDO
 
-         deallocate(drainagenetwork)
+         deallocate(surface_network)
       ENDIF
 
-   END SUBROUTINE drainage_network_final
+   END SUBROUTINE surface_network_final
 
-END MODULE MOD_Hydro_DrainageNetwork
+END MODULE MOD_Hydro_SurfaceNetwork
 #endif

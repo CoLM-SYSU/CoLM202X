@@ -4,7 +4,7 @@ MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
 USE MOD_Precision
-USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS
+USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
 USE MOD_SPMD_Task
 
 IMPLICIT NONE
@@ -46,10 +46,10 @@ CONTAINS
               assim_RuBP_sha   ,assim_Rubisco_sha, cisha  ,Dsha    ,gammasha, &
               lambdasun        ,lambdasha        ,&
 #endif
-#ifdef OzoneStress
+!Ozone stress variables
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
-#endif
+!End ozone stress variables
 			  hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
@@ -97,9 +97,7 @@ CONTAINS
   USE MOD_Vars_TimeInvariants, only: patchclass
   USE MOD_Const_LC, only: z0mr, displar
   USE MOD_PlantHydraulic, only : PlantHydraulicStress_twoleaf
-#ifdef OzoneStress
   use MOD_Ozone, only: CalcOzoneStress
-#endif
   USE MOD_Qsadv
 
   IMPLICIT NONE
@@ -207,12 +205,12 @@ CONTAINS
         ldew_rain,       &! depth of rain on foliage [mm]
         ldew_snow,       &! depth of snow on foliage [mm]
 
-#ifdef OzoneStress
+!Ozone stress variables
         lai_old    ,&! lai in last time step
         o3uptakesun,&! Ozone does, sunlit leaf (mmol O3/m^2)
         o3uptakesha,&! Ozone does, shaded leaf (mmol O3/m^2)
         forc_ozone ,&
-#endif
+!End ozone stress variables
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
@@ -258,12 +256,12 @@ CONTAINS
         dlrad,      &! downward longwave radiation blow the canopy [W/m2]
         ulrad,      &! upward longwave radiation above the canopy [W/m2]
         hprl,       &! precipitation sensible heat from canopy
-#ifdef OzoneStress
+!Ozone stress variables
         o3coefv_sun,&! Ozone stress factor for photosynthesis on sunlit leaf
         o3coefv_sha,&! Ozone stress factor for photosynthesis on sunlit leaf
         o3coefg_sun,&! Ozone stress factor for stomata on shaded leaf
         o3coefg_sha,&! Ozone stress factor for stomata on shaded leaf
-#endif
+!End ozone stress variables
 
         z0m,        &! effective roughness [m]
         zol,        &! dimensionless height (z/L) used in Monin-Obukhov theory
@@ -621,9 +619,9 @@ CONTAINS
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
                  pco2m    ,pco2a    ,eah    ,ei     ,tl      , parsun   ,&
-#ifdef OzoneStress
+!Ozone stress variables
                  o3coefv_sun ,o3coefg_sun, &
-#endif
+!End ozone stress variables
                  rbsun   ,raw  ,rstfacsun ,cintsun ,&
                  assimsun ,respcsun ,rssun  &
 #ifdef WUEdiag
@@ -636,9 +634,9 @@ CONTAINS
                  shti     ,hhti     ,trda   ,trdm   ,trop    ,&
                  gradm    ,binter   ,thm    ,psrf   ,po2m    ,&
                  pco2m    ,pco2a    ,eah    ,ei     ,tl      ,  parsha  ,&
-#ifdef OzoneStress
+!Ozone stress variables
                  o3coefv_sha ,o3coefg_sha, &
-#endif
+!End ozone stress variables
                  rbsha    ,raw  ,rstfacsha ,cintsha ,&
                  assimsha ,respcsha ,rssha  &
 #ifdef WUEdiag
@@ -882,17 +880,17 @@ CONTAINS
 
        ENDDO
 
-#ifdef OzoneStress
-       call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
-                             rssun,rbsun,lai,lai_old,ivt,o3uptakesun,deltim)
-       call CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
-                             rssha,rbsha,lai,lai_old,ivt,o3uptakesha,deltim)
-       lai_old  = lai
-       assimsun = assimsun * o3coefv_sun
-       assimsha = assimsha * o3coefv_sha
-       rssun    = rssun / o3coefg_sun
-       rssha    = rssha / o3coefg_sha
-#endif
+       IF(DEF_USE_OZONESTRESS)THEN
+          call CalcOzoneStress(o3coefv_sun,o3coefg_sun,forc_ozone,psrf,th,ram,&
+                                rssun,rbsun,lai,lai_old,ivt,o3uptakesun,deltim)
+          call CalcOzoneStress(o3coefv_sha,o3coefg_sha,forc_ozone,psrf,th,ram,&
+                                rssha,rbsha,lai,lai_old,ivt,o3uptakesha,deltim)
+          lai_old  = lai
+          assimsun = assimsun * o3coefv_sun
+          assimsha = assimsha * o3coefv_sha
+          rssun    = rssun / o3coefg_sun
+          rssha    = rssha / o3coefg_sha
+       ENDIF
 ! ======================================================================
 !      END stability iteration
 ! ======================================================================

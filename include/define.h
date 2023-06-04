@@ -28,82 +28,66 @@
 #undef USEMPI
 #endif
 
-! 5. If defined, depth to bedrock data is included.
-#undef USE_DEPTH_TO_BEDROCK
-
-! 6. Hydrological process options.
-! 6.1 Two soil hydraulic models can be used.
+! 5. Hydrological process options.
+! 5.1 Two soil hydraulic models can be used.
 #define  Campbell_SOIL_MODEL
 #undef   vanGenuchten_Mualem_SOIL_MODEL
-! 6.2 If defined, lateral flow is modeled.
+! 5.2 If defined, lateral flow is modeled.
 #define  LATERAL_FLOW
 !    Conflicts :
 #ifndef CATCHMENT
 #undef LATERAL_FLOW
 #endif
 
-! 8. Soil reflectance can be predefined values or load from files.
+! 6. Soil reflectance can be predefined values or load from files.
 #undef SOIL_REFL_GUESSED
 #define SOIL_REFL_READ
 
-
-! 11. If defined, CaMa-Flood model will be used.
+! 7. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
 
-! 12. If defined, BGC model is used.
+! 8. If defined, BGC model is used.
 #define BGC
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
-! 12.1 If defined, CROP model is used
+! 8.1 If defined, CROP model is used
 #define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
 #endif
-! 12.3 If defined, Semi-Analytic-Spin-Up (SASU) is used
+! 8.2 If defined, Semi-Analytic-Spin-Up (SASU) is used
 #undef SASU
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef SASU
 #endif
-! 12.4 If defined, Fertlization on crop is used
+! 8.3 If defined, Fertlization on crop is used
 #define FERT
 !    Conflicts : only used when CROP is defined
 #ifndef CROP
 #undef FERT
 #endif
-! 12.5 If defined, Nitrification-Denitrification is used
+! 8.4 If defined, Nitrification-Denitrification is used
 #define NITRIF
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef NITRIF
 #endif
 
-! 13 If defined, Fire is on
+! 9 If defined, Fire is on
 #undef Fire
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef Fire
 #endif
 
-! 14 If defined, OzoneStress on plant physiology is used
-#undef OzoneStress
-!    Conflicts : only used when LULC_IGBP_PFT is used
-#ifndef LULC_IGBP_PFT
-#undef OzoneStress
-#endif
-! 14.1 If defined, Ozone Data is used instead of constant ozone concentration
-#undef OzoneData
-!    Conflicts : only used when OzoneStress is defined
-#ifndef OzoneStress
-#undef OzoneData
-#endif
-! 15 If defined, SNICAR is on
+! 10 If defined, SNICAR is on
 #undef   SNICAR
-! 17. If defined, diagnostics in wue model will be output
+! 11. If defined, diagnostics in wue model will be output
 #undef WUEdiag
 
-! 19. If defined, open Land use and land cover change mode.
+! 12. If defined, open Land use and land cover change mode.
 #undef LULCC

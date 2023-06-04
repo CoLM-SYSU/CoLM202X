@@ -315,12 +315,12 @@ CONTAINS
 #endif
 
                ! depth to bedrock
-#ifdef USE_DEPTH_TO_BEDROCK
-               CALL system('mkdir -p ' // trim(dir_landdata_out) // '/dbedrock')
-               file_in  = trim(dir_landdata_in)  // '/dbedrock/dbedrock_patches.nc'
-               file_out = trim(dir_landdata_out) // '/dbedrock/dbedrock_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'dbedrock_patches', patchmask)
-#endif
+               IF(DEF_USE_BEDROCK)THEN
+                  CALL system('mkdir -p ' // trim(dir_landdata_out) // '/dbedrock')
+                  file_in  = trim(dir_landdata_in)  // '/dbedrock/dbedrock_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/dbedrock/dbedrock_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'dbedrock_patches', patchmask)
+               ENDIF
 
                ! forest height
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/htop')

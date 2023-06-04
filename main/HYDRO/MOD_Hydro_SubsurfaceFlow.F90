@@ -21,7 +21,7 @@ CONTAINS
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DFluxes
-      USE MOD_Hydro_DrainageNetwork
+      USE MOD_Hydro_SurfaceNetwork
       USE MOD_Hydro_RiverNetwork
       USE MOD_Hydro_SubsurfaceNetwork
       USE MOD_Const_Physical, only : denice, denh2o
@@ -34,7 +34,7 @@ CONTAINS
       ! Local Variables
       INTEGER :: numbasin, nhru, ibasin, i, j, ihru, ipatch, ps, pe, ilev
 
-      TYPE(drainage_network_info_type), pointer :: hrus
+      TYPE(surface_network_info_type), pointer :: hrus
 
       REAL(r8), allocatable :: theta_a_h (:) 
       REAL(r8), allocatable :: zwt_h     (:) 
@@ -76,7 +76,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
 
-            hrus => drainagenetwork(ibasin)
+            hrus => surface_network(ibasin)
             
             theta_a_bsn (ibasin) = 0.
             zwt_bsn     (ibasin) = 0.
@@ -280,7 +280,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
             
-            hrus => drainagenetwork(ibasin)
+            hrus => surface_network(ibasin)
             
             DO jnb = 1, num_nb(ibasin)
 
