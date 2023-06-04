@@ -19,9 +19,9 @@ module MOD_BGC_Soil_BiogeochemCompetition
       actual_immob_vr, sminn_to_plant, pot_f_nit_vr, actual_immob_nh4_vr, f_nit_vr, &
       smin_nh4_to_plant_vr, pot_f_denit_vr, actual_immob_no3_vr, f_denit_vr, smin_no3_to_plant_vr, &
       n2_n2o_ratio_denit_vr, f_n2o_nit_vr, f_n2o_denit_vr
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       sminn_vr, smin_no3_vr, smin_nh4_vr, nfixation_prof, fpi_vr, fpi, fpg
-  use MOD_BGC_Vars_TimeInVars,only: &
+  use MOD_BGC_Vars_TimeInvariants,only: &
       bdnr, compet_plant_no3, compet_plant_nh4, compet_decomp_no3, compet_decomp_nh4, compet_denit, compet_nit, &
       nitrif_n2o_loss_frac
   

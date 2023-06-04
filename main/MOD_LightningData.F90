@@ -1,11 +1,19 @@
 #include <define.h>
 
 MODULE MOD_LightningData
+ !-----------------------------------------------------------------------
+ ! !DESCRIPTION:
+ ! This module read in lightning data for fire subroutine
+ !
+ ! !ORIGINAL:
+ ! Zhang Shupeng, 2022, prepare the original version of the lightning data module.
+
+
 #ifdef Fire
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mapping_Grid2Pset
-   use MOD_BGC_Vars_TimeVars, only: lnfm
+   use MOD_BGC_Vars_TimeVariables, only: lnfm
    IMPLICIT NONE
 
    CHARACTER(len=256) :: file_lightning
@@ -19,6 +27,11 @@ CONTAINS
 
    ! ----------
    SUBROUTINE init_lightning_data (time, idate)
+
+   !----------------------
+   ! DESCTIPTION:
+   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+   ! Initialize Ozone data read in.
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -65,6 +78,10 @@ CONTAINS
 
    ! ----------
    SUBROUTINE update_lightning_data (time, deltim)
+
+   !----------------------
+   ! DESCTIPTION:
+   ! read ozone data during simulation
 
       USE MOD_TimeManager
       USE MOD_NetCDFBlock

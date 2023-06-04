@@ -19,13 +19,13 @@ module MOD_BGC_CNCStateUpdate1
   !                   3) Record the accumulated decomposition-associated C transfer for soil C semi-analytic spinup
 
   use MOD_Precision
-  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
   use MOD_Const_PFT, only: woody
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
 ! bgc constants
            donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
            I_met_c_vr_acc, I_cel_c_vr_acc, I_lig_c_vr_acc, &
            AKX_met_to_soil1_c_vr_acc  , AKX_cel_to_soil1_c_vr_acc  , AKX_lig_to_soil2_c_vr_acc  , AKX_soil1_to_soil2_c_vr_acc, &
            AKX_cwd_to_cel_c_vr_acc    , AKX_cwd_to_lig_c_vr_acc    , AKX_soil1_to_soil3_c_vr_acc, AKX_soil2_to_soil1_c_vr_acc, &
@@ -38,7 +38,7 @@ module MOD_BGC_CNCStateUpdate1
            decomp_cpools_sourcesink, decomp_ctransfer_vr, decomp_hr_vr      , &
            phenology_to_met_c      , phenology_to_cel_c , phenology_to_lig_c
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
 ! vegetation carbon state variables (inout)
            leafc_p            , leafc_storage_p     , leafc_xfer_p     , &
            frootc_p           , frootc_storage_p    , frootc_xfer_p    , &

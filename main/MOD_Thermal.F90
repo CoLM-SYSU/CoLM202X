@@ -45,11 +45,9 @@ MODULE MOD_Thermal
                       gammasha_out,lambdasha_out            ,lambda_out ,&
 #endif
                       effcon      ,vmax25      ,hksati      ,smp        ,hk,&
-#ifdef PLANT_HYDRAULIC_STRESS
                       kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
                       psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
                       ck          ,vegwp       ,gs0sun      ,gs0sha     ,&
-#endif
 #ifdef OzoneStress
                       lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
 #endif
@@ -112,18 +110,18 @@ MODULE MOD_Thermal
   USE MOD_Eroot
   USE MOD_GroundFluxes
   USE MOD_LeafTemperature
-  USE MOD_GroundTem
+  USE MOD_GroundTemperature
   USE MOD_Qsadv
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-  USE MOD_Vars_PFTimeInvars
-  USE MOD_Vars_PFTimeVars
+  USE MOD_Vars_PFTimeInvariants
+  USE MOD_Vars_PFTimeVariables
   USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef LULC_IGBP_PC
   USE MOD_LandPC
-  USE MOD_Vars_PCTimeInvars
-  USE MOD_Vars_PCTimeVars
+  USE MOD_Vars_PCTimeInvariants
+  USE MOD_Vars_PCTimeVariables
   USE MOD_Vars_1DPCFluxes
   USE MOD_LeafTemperaturePC
 #endif
@@ -131,6 +129,7 @@ MODULE MOD_Thermal
   USE mod_soil_function, only : soil_psi_from_vliq
 #endif
 use MOD_SPMD_Task
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
   IMPLICIT NONE
 
@@ -191,7 +190,6 @@ use MOD_SPMD_Task
 
         effcon,      &! quantum efficiency of RuBP regeneration (mol CO2/mol quanta)
         vmax25,      &! maximum carboxylation rate at 25 C at canopy top
-#ifdef PLANT_HYDRAULIC_STRESS
         kmax_sun,   &
         kmax_sha,   &
         kmax_xyl,   &
@@ -201,7 +199,6 @@ use MOD_SPMD_Task
         psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
         psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
         ck,         &! shape-fitting parameter for vulnerability curve (-)
-#endif
         slti,        &! slope of low temperature inhibition function      [s3]
         hlti,        &! 1/2 point of low temperature inhibition function  [s4]
         shti,        &! slope of high temperature inhibition function     [s1]
@@ -256,11 +253,9 @@ use MOD_SPMD_Task
 
         ! state variables (2)
   REAL(r8), intent(inout) :: &
-#ifdef PLANT_HYDRAULIC_STRESS
         vegwp(1:nvegwcs),&! vegetation water potential
         gs0sun,      &!
         gs0sha,      &!
-#endif
 #ifdef OzoneStress
         lai_old    ,& ! lai in last time step
         o3uptakesun,& ! Ozone does, sunlit leaf (mmol O3/m^2)
@@ -636,11 +631,9 @@ IF (patchtype == 0) THEN
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
                  z0m        ,zol        ,rib       ,ustar      ,qstar      ,&
                  tstar      ,fm         ,fh        ,fq         ,rootfr     ,&
-#ifdef PLANT_HYDRAULIC_STRESS
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
-#endif
 #ifdef WUEdiag
                  assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
                  assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
@@ -669,9 +662,9 @@ IF (patchtype == 0) THEN
          ldew   = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-         vegwp = -2.5e4
-#endif
+         if(DEF_USE_PLANTHYDRAULICS)then
+            vegwp = -2.5e4
+         end if
       ENDIF
 #endif
 
@@ -779,17 +772,15 @@ IF (patchtype == 0) THEN
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
                  sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
-                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_p_rain(i)  ,ldew_p_snow(i)  ,taux_p(i)  ,tauy_p(i)  ,&
+                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i)  ,ldew_snow_p(i)  ,taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
                  tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
                  fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
                  z0m_p(i)   ,zol_p(i)   ,rib_p(i)   ,ustar_p(i) ,qstar_p(i) ,&
                  tstar_p(i) ,fm_p(i)    ,fh_p(i)    ,fq_p(i)    ,rootfr_p(:,p),&
-#ifdef PLANT_HYDRAULIC_STRESS
                  kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
                  psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
                  gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
-#endif
 #ifdef WUEdiag
                  assimsun_p(i)      , etrsun_p(i) , assimsha_p(i)      ,etrsha_p(i) ,&
                  assim_RuBP_sun_p(i), assim_Rubisco_sun_p(i), cisun_p(i), Dsun_p(i), gammasun_p(i), &
@@ -817,8 +808,8 @@ IF (patchtype == 0) THEN
             tleaf_p(i)     = forc_t
             laisun_p(i)    = 0.
             laisha_p(i)    = 0.
-            ldew_p_rain(i) = 0.
-            ldew_p_snow(i) = 0.
+            ldew_rain_p(i) = 0.
+            ldew_snow_p(i) = 0.
             ldew_p(i)      = 0.
             rootr_p(:,i)   = 0.
             rstfacsun_p(i) = 0.
@@ -852,11 +843,10 @@ IF (patchtype == 0) THEN
             dlrad_p(i)   = frl
             ulrad_p(i)   = frl*(1.-emg) + emg*stefnc*t_grnd**4
             hprl_p(i)    = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-            vegwp_p(:,i) = -2.5e4
-#endif
+            if(DEF_USE_PLANTHYDRAULICS)then
+               vegwp_p(:,i) = -2.5e4
+            end if
          ENDIF
-!         if(p_iam_glb .eq. 85)print*,'gssun_p THERMAL',ipatch,i,p,gssun_p(i),lai_p(i),sai_p(i)
       ENDDO
 
       laisun = sum( laisun_p(ps:pe)*pftfrac(ps:pe) )
@@ -864,8 +854,8 @@ IF (patchtype == 0) THEN
       dlrad  = sum( dlrad_p (ps:pe)*pftfrac(ps:pe) )
       ulrad  = sum( ulrad_p (ps:pe)*pftfrac(ps:pe) )
       tleaf  = sum( tleaf_p (ps:pe)*pftfrac(ps:pe) )
-      ldew_rain = sum( ldew_p_rain  (ps:pe)*pftfrac(ps:pe) )
-      ldew_snow = sum( ldew_p_snow  (ps:pe)*pftfrac(ps:pe) )
+      ldew_rain = sum( ldew_rain_p  (ps:pe)*pftfrac(ps:pe) )
+      ldew_snow = sum( ldew_snow_p  (ps:pe)*pftfrac(ps:pe) )
       ldew   = sum( ldew_p  (ps:pe)*pftfrac(ps:pe) )
       tref   = sum( tref_p  (ps:pe)*pftfrac(ps:pe) )
       qref   = sum( qref_p  (ps:pe)*pftfrac(ps:pe) )
@@ -893,23 +883,23 @@ IF (patchtype == 0) THEN
       fh     = sum( fh_p    (ps:pe)*pftfrac(ps:pe) )
       fq     = sum( fq_p    (ps:pe)*pftfrac(ps:pe) )
 
-#ifdef PLANT_HYDRAULIC_STRESS
-      DO j = 1, nvegwcs
-         vegwp(j) = sum( vegwp_p(j,ps:pe)*pftfrac(ps:pe) )
-      ENDDO
+      if(DEF_USE_PLANTHYDRAULICS)then
+         DO j = 1, nvegwcs
+            vegwp(j) = sum( vegwp_p(j,ps:pe)*pftfrac(ps:pe) )
+         ENDDO
 
-      IF (etr > 0.) THEN
-         DO j = 1, nl_soil
-            rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
-         ENDDO
-      ENDIF
-#else
-      IF (etr > 0.) THEN
-         DO j = 1, nl_soil
-            rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
-         ENDDO
-      ENDIF
-#endif
+         IF (etr > 0.) THEN
+            DO j = 1, nl_soil
+               rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
+            ENDDO
+         ENDIF
+      else
+         IF (etr > 0.) THEN
+            DO j = 1, nl_soil
+               rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
+            ENDDO
+         ENDIF
+      end if
 
       rstfacsun_out         = sum( rstfacsun_p         (ps:pe) * pftfrac(ps:pe) )
       rstfacsha_out         = sum( rstfacsha_p         (ps:pe) * pftfrac(ps:pe) )
@@ -1030,9 +1020,9 @@ IF (patchtype == 0) THEN
             fevpl_c(p,pc)     = 0.
             etr_c(p,pc)       = 0.
             hprl_c(p)         = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-            vegwp_c (:,p,pc)  = -2.5e4
-#endif
+            if(DEF_USE_PLANTHYDRAULICS)then
+               vegwp_c (:,p,pc)  = -2.5e4
+            end if
          ENDIF
 
       ENDDO
@@ -1058,11 +1048,9 @@ IF (patchtype == 0) THEN
            fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
            z0m           ,zol           ,rib           ,ustar         ,qstar         ,&
            tstar         ,fm            ,fh            ,fq            ,rootfr_p(:,:) ,&
-#ifdef PLANT_HYDRAULIC_STRESS
            kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
            psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
            gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&
-#endif
 #ifdef WUEdiag
            assimsun_c(:)             ,etrsun_c(:)      ,assimsha_c(:) ,etrsha_c(:),&
            assim_RuBP_sun_c (:)      ,assim_Rubisco_sun_c(:)          ,cisun_c(:) ,&
@@ -1091,9 +1079,9 @@ IF (patchtype == 0) THEN
          fevpl_c (:,pc) = 0.
          etr_c   (:,pc) = 0.
          hprl_c  (:)    = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-         vegwp_c (:,:,pc) = -2.5e4
-#endif
+         if(DEF_USE_PLANTHYDRAULICS)then
+            vegwp_c (:,:,pc) = -2.5e4
+         end if
       ENDIF
 
       laisun = sum( laisun_c(:)   *pcfrac(:,pc) )
@@ -1109,25 +1097,25 @@ IF (patchtype == 0) THEN
       fevpl  = sum( fevpl_c (:,pc)*pcfrac(:,pc) )
       etr    = sum( etr_c   (:,pc)*pcfrac(:,pc) )
 
-#ifdef PLANT_HYDRAULIC_STRESS
-      DO j = 1, nvegwcs
-         vegwp(j) = sum( vegwp_c(j,:,pc)*pcfrac(:,pc) )
-      ENDDO
+      if(DEF_USE_PLANTHYDRAULICS)then
+         DO j = 1, nvegwcs
+            vegwp(j) = sum( vegwp_c(j,:,pc)*pcfrac(:,pc) )
+         ENDDO
 
       ! loop for each soil layer
-      IF (etr > 0.) THEN
-         DO j = 1, nl_soil
-            rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
-         ENDDO
-      ENDIF
-#else
+         IF (etr > 0.) THEN
+            DO j = 1, nl_soil
+               rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
+            ENDDO
+         ENDIF
+      else
       ! loop for each soil layer
-      IF (etr > 0.) THEN
-         DO j = 1, nl_soil
-            rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
-         ENDDO
-      ENDIF
-#endif
+         IF (etr > 0.) THEN
+            DO j = 1, nl_soil
+               rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
+            ENDDO
+         ENDIF
+      end if
 
       rstfacsun_out          = sum( rstfacsun_c(:)         * pcfrac(:,pc) )
       rstfacsha_out          = sum( rstfacsha_c(:)         * pcfrac(:,pc) )
@@ -1215,11 +1203,9 @@ ELSE
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
                  z0m        ,zol        ,rib       ,ustar      ,qstar      ,&
                  tstar      ,fm         ,fh        ,fq         ,rootfr     ,&
-#ifdef PLANT_HYDRAULIC_STRESS
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
-#endif
 #ifdef WUEdiag
                  assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
                  assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
@@ -1248,9 +1234,9 @@ ELSE
          ldew          = 0.
          rstfacsun_out = 0.
          rstfacsha_out = 0.
-#ifdef PLANT_HYDRAULIC_STRESS
-         vegwp = -2.5e4
-#endif
+         if(DEF_USE_PLANTHYDRAULICS)then
+            vegwp = -2.5e4
+         end if
       ENDIF
 
 ENDIF

@@ -392,7 +392,7 @@ module MOD_BGC_CNZeroFluxes
 
       decomp_npools_sourcesink       
    
-  use MOD_BGC_Vars_TimeVars, only:           &
+  use MOD_BGC_Vars_TimeVariables, only:           &
       decomp_k                  
     
   implicit none

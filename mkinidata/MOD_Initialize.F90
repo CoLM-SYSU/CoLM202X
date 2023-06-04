@@ -46,13 +46,13 @@ MODULE MOD_Initialize
       use MOD_Vars_TimeVariables
 #ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeInvars
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeInvariants
+      USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeInvars
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeInvariants
+      USE MOD_Vars_PCTimeVariables
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT
@@ -680,9 +680,9 @@ MODULE MOD_Initialize
                ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
                ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables                       
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&

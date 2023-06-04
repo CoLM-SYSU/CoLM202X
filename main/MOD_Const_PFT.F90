@@ -1427,7 +1427,6 @@ MODULE MOD_Const_PFT
 #endif
 !   end bgc variables
 
-#ifdef PLANT_HYDRAULIC_STRESS
 ! Plant Hydraulics Paramters
    REAL(r8), parameter :: kmax_sun_p(0:N_PFT+N_CFT-1) &
       = (/     0.,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008,2.e-008&
@@ -1567,7 +1566,7 @@ MODULE MOD_Const_PFT
          ,3.95,  3.95, 3.95,  3.95, 3.95,  3.95, 3.95&
 #endif
          /)
-#endif
+!end plant hydraulic parameters
 
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
    INTEGER, PRIVATE :: ROOTFR_SCHEME = 1

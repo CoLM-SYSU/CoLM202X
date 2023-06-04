@@ -1,7 +1,7 @@
 #include <define.h>
 
 #if (defined URBAN_MODEL)
-MODULE MOD_Urban_Vars_TimeVars
+MODULE MOD_Urban_Vars_TimeVariables
 
 ! -------------------------------
 ! Created by Hua Yuan, 12/2020
@@ -101,10 +101,10 @@ MODULE MOD_Urban_Vars_TimeVars
 
 
 ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: allocate_UrbanTimeVars
-   PUBLIC :: deallocate_UrbanTimeVars
-   PUBLIC :: READ_UrbanTimeVars
-   PUBLIC :: WRITE_UrbanTimeVars
+   PUBLIC :: allocate_UrbanTimeVariables
+   PUBLIC :: deallocate_UrbanTimeVariables
+   PUBLIC :: READ_UrbanTimeVariables
+   PUBLIC :: WRITE_UrbanTimeVariables
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -114,7 +114,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE allocate_UrbanTimeVars ()
+   SUBROUTINE allocate_UrbanTimeVariables ()
 ! ------------------------------------------------------
 ! Allocates memory for CLM 1d [numurban] variables
 ! ------------------------------------------------------
@@ -207,9 +207,9 @@ CONTAINS
             allocate (urb_sai                       (numurban))
          ENDIF
       ENDIF
-   END SUBROUTINE allocate_UrbanTimeVars
+   END SUBROUTINE allocate_UrbanTimeVariables
 
-   SUBROUTINE READ_UrbanTimeVars (file_restart)
+   SUBROUTINE READ_UrbanTimeVariables (file_restart)
 
       USE MOD_NetCDFVector
       USE MOD_LandUrban
@@ -294,9 +294,9 @@ CONTAINS
       call ncio_read_vector (file_restart, 'tree_lai'   , landurban, urb_lai    ) !
       call ncio_read_vector (file_restart, 'tree_sai'   , landurban, urb_sai    ) !
 
-   END SUBROUTINE READ_UrbanTimeVars
+   END SUBROUTINE READ_UrbanTimeVariables
 
-   SUBROUTINE WRITE_UrbanTimeVars (file_restart)
+   SUBROUTINE WRITE_UrbanTimeVariables (file_restart)
 
       USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
       USE MOD_LandUrban
@@ -400,9 +400,9 @@ CONTAINS
       call ncio_write_vector (file_restart, 'tree_sai'   , 'urban', landurban, urb_sai    , compress) !
       call ncio_write_vector (file_restart, 'urb_green'  , 'urban', landurban, urb_green  , compress) !
 
-   END SUBROUTINE WRITE_UrbanTimeVars
+   END SUBROUTINE WRITE_UrbanTimeVariables
 
-   SUBROUTINE deallocate_UrbanTimeVars
+   SUBROUTINE deallocate_UrbanTimeVariables
 
       USE MOD_SPMD_Task
       USE MOD_LandUrban
@@ -491,8 +491,8 @@ CONTAINS
          ENDIF
       ENDIF
 
-   END SUBROUTINE deallocate_UrbanTimeVars
+   END SUBROUTINE deallocate_UrbanTimeVariables
 
-END MODULE MOD_Urban_Vars_TimeVars
+END MODULE MOD_Urban_Vars_TimeVariables
 ! ---------- EOP ------------
 #endif

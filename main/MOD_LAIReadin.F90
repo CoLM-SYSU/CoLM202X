@@ -41,11 +41,11 @@ MODULE MOD_LAIReadin
       USE MOD_Const_LC
 #ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
@@ -158,16 +158,16 @@ MODULE MOD_LAIReadin
 
       write(cyear,'(i4.4)') year
       write(ctime,'(i2.2)') time
-#ifndef LAIfdbk
-      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
-#endif
+      IF (.not. DEF_LAIFEEDBACK)THEN
+         lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
+         call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
+      END IF
       lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
-#ifndef LAIfdbk
-      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pfts'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
-#endif
+      IF (.not. DEF_LAIFEEDBACK)THEN
+         lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pfts'//trim(ctime)//'.nc'
+         call ncio_read_vector (lndname, 'LAI_pfts', landpft, tlai_p )
+      END IF
       lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_pfts'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'SAI_pfts', landpft, tsai_p )
 

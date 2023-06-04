@@ -19,13 +19,13 @@ module MOD_BGC_Soil_BiogeochemNStateUpdate1
   !                   2) Record accumulated nitrogen transfer network for semi-analytic spinup
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
     ! bgc constants
       i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       receiver_pool, donor_pool, nitrif_n2o_loss_frac
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       ! Mineral nitrogen pools (inout)
       sminn_vr                   , smin_nh4_vr                , smin_no3_vr              , &
       ndep_prof                  , nfixation_prof             , &

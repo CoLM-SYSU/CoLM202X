@@ -18,13 +18,13 @@ module MOD_BGC_CNNStateUpdate1
   !                   3) Record the accumulated decomposition-associated N transfer for soil N semi-analytic spinup
 
   use MOD_Precision
-  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass
   use MOD_Const_PFT, only: woody
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
   ! bgc constants
            donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
            I_met_n_vr_acc, I_cel_n_vr_acc, I_lig_n_vr_acc
 
   use MOD_BGC_Vars_1DFluxes, only: &
@@ -32,7 +32,7 @@ module MOD_BGC_CNNStateUpdate1
            decomp_npools_sourcesink, &
            phenology_to_met_n      , phenology_to_cel_n,  phenology_to_lig_n
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
   ! vegetation nitrogen state variables (inout)
            leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
            frootn_p           , frootn_storage_p    , frootn_xfer_p    , &
@@ -114,7 +114,7 @@ module MOD_BGC_CNNStateUpdate1
            npool_to_deadcrootn_p, npool_to_deadcrootn_storage_p, &
            npool_to_grainn_p    , npool_to_grainn_storage_p    , plant_nalloc_p 
 
-  use MOD_Vars_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftfrac
   implicit none
 
   public NStateUpdate1

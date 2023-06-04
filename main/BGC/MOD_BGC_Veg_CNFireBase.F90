@@ -27,7 +27,7 @@ module MOD_BGC_Veg_CNFireBase
   use MOD_Vars_TimeInvariants, only: &
       cmb_cmplt_fact, patchlatr, borealat, is_cwd, is_litter
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       ! decomposition pools & fluxes variables (inout)
       decomp_cpools_vr, decomp_npools_vr,  cropf, farea_burned, baf_crop, baf_peatf, totsomc
 
@@ -37,7 +37,7 @@ module MOD_BGC_Veg_CNFireBase
       fire_mortality_to_met_n, fire_mortality_to_cel_n, fire_mortality_to_lig_n, fire_mortality_to_cwdn, &
       somc_fire
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       leafc_p     , leafc_storage_p     , leafc_xfer_p     , frootc_p    , frootc_storage_p    , frootc_xfer_p    , &
       livestemc_p , livestemc_storage_p , livestemc_xfer_p , deadstemc_p , deadstemc_storage_p , deadstemc_xfer_p , &
       livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p, deadcrootc_p, deadcrootc_storage_p, deadcrootc_xfer_p, &
@@ -79,7 +79,7 @@ module MOD_BGC_Veg_CNFireBase
       m_livecrootn_to_litter_fire_p, m_livecrootn_storage_to_litter_fire_p, m_livecrootn_xfer_to_litter_fire_p, &
       m_deadcrootn_to_litter_fire_p, m_deadcrootn_storage_to_litter_fire_p, m_deadcrootn_xfer_to_litter_fire_p
    
-  use MOD_Vars_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftfrac
 
   implicit none
 

@@ -25,9 +25,9 @@ OBJS_SHARED =    \
 				  MOD_Precision.o              \
 				  MOD_Vars_Global.o            \
 				  MOD_Const_Physical.o         \
-				  MOD_Const_LC.o               \
 				  MOD_SPMD_Task.o              \
 				  MOD_Namelist.o               \
+				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
@@ -99,23 +99,19 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 
 OBJS_BASIC =    \
 				 MOD_Hydro_IO.o                 \
-				 MOD_Hydro_Vars_Timevars.o      \
+				 MOD_Hydro_Vars_TimeVariables.o \
 				 MOD_Hydro_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
 				 MOD_BGC_Vars_2DFluxes.o        \
-				 MOD_BGC_Vars_PFTimeVars.o      \
-				 MOD_BGC_Vars_TimeInvars.o      \
-				 MOD_BGC_Vars_TimeVars.o        \
+				 MOD_BGC_Vars_PFTimeVariables.o \
+				 MOD_BGC_Vars_TimeInvariants.o  \
+				 MOD_BGC_Vars_TimeVariables.o   \
 				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
-				 MOD_Urban_Vars_TimeVars.o      \
-				 MOD_Urban_Vars_TimeInvars.o    \
+				 MOD_Urban_Vars_TimeVariables.o \
+				 MOD_Urban_Vars_TimeInvariants.o\
 				 MOD_Const_PFT.o                \
-				 MOD_Vars_PFTimeVars.o          \
-				 MOD_Vars_PFTimeInvars.o        \
-				 MOD_Vars_PCTimeVars.o          \
-				 MOD_Vars_PCTimeInvars.o        \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
@@ -274,12 +270,12 @@ OBJS_MAIN = \
 				MOD_SoilThermalParameters.o               \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
-				MOD_Meltf.o                               \
+				MOD_PhaseChange.o                               \
 				MOD_Glacier.o                             \
 				MOD_Lake.o                                \
 				MOD_SimpleOcean.o                         \
 				MOD_GroundFluxes.o                        \
-				MOD_GroundTem.o                           \
+				MOD_GroundTemperature.o                           \
 				MOD_LeafInterception.o                    \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \
@@ -306,8 +302,8 @@ OBJS_MAIN = \
 				MOD_Urban_LUCY.o                          \
 				MOD_Urban_Thermal.o                       \
 				Urban_CoLMMAIN.o                          \
-				MOD_Lulcc_Vars_TimeInvars.o               \
-				MOD_Lulcc_Vars_TimeVars.o                 \
+				MOD_Lulcc_Vars_TimeInvariants.o           \
+				MOD_Lulcc_Vars_TimeVariables.o            \
 				MOD_Lulcc_Initialize.o                    \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \

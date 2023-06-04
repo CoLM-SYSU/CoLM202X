@@ -15,17 +15,18 @@ module MOD_BGC_Veg_CNVegStructUpdate
   !
 
   use MOD_Precision
+  use MOD_Namelist, only: DEF_LAIFEEDBACK
   use MOD_Vars_Global, only: nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, &
                                 npcropmin, ntmp_corn, nirrig_tmp_corn, ntrp_corn, nirrig_trp_corn, &
                                 nsugarcane, nirrig_sugarcane, nmiscanthus, nirrig_miscanthus, &
                                 nswitchgrass, nirrig_switchgrass, noveg
 
-  use MOD_Vars_PFTimeVars, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
+  use MOD_Vars_PFTimeVariables, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
 #ifdef CROP
-  use MOD_BGC_Vars_PFTimeVars, only: peaklai_p
+  use MOD_BGC_Vars_PFTimeVariables, only: peaklai_p
 #endif
-  use MOD_Vars_PFTimeInvars, only: pftclass
-  use MOD_BGC_Vars_TimeVars, only: farea_burned
+  use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_BGC_Vars_TimeVariables, only: farea_burned
   use MOD_Const_PFT, only : dsladlai, slatop, laimx, woody
   !CLM5
   public :: CNVegStructUpdate
@@ -78,11 +79,11 @@ contains
           tlai_old = tlai_p(m) ! n-1 value
           tsai_old = tsai_p(m) ! n-1 value
 
-#ifdef LAIfdbk
-          tlai_p(m) = slatop(ivt) * leafc_p(m)
-          tlai_p(m) = max(0._r8, tlai_p(m))
-          lai_p (m) = tlai_p(m)
-#endif
+          if(DEF_LAIFEEDBACK)then
+             tlai_p(m) = slatop(ivt) * leafc_p(m)
+             tlai_p(m) = max(0._r8, tlai_p(m))
+             lai_p (m) = tlai_p(m)
+          end if
 
           ! update the stem area index and height based on LAI, stem mass, and veg type.
           ! With the exception of htop for woody vegetation, this follows the DGVM logic.

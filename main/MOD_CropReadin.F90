@@ -20,10 +20,11 @@ MODULE MOD_CropReadin
 
    SUBROUTINE CROP_readin (dir_landdata)
       ! ===========================================================
-      ! Read in the LAI, the LAI dataset was created by Yuan et al. (2011)
-      ! http://globalchange.bnu.edu.cn
+      ! ! DESCRIPTION:
+      ! Read in crop planting date from data, and fertilization from data.
+      ! Save these data in patch vector.
       !
-      ! Created by Yongjiu Dai, March, 2014
+      ! Original: Shupeng Zhang, Zhongwang Wei, and Xingjie Lu, 2022
       ! ===========================================================
 
       use MOD_Precision
@@ -41,11 +42,11 @@ MODULE MOD_CropReadin
       USE MOD_Const_LC
 #ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
@@ -78,43 +79,7 @@ MODULE MOD_CropReadin
       IF (p_is_worker) then
          IF (numpatch > 0) then
             DO npatch = 1, numpatch
-   !            m = patchclass(npatch)
-   !            IF( m == 12 )then
-                  pdrice2    (npatch) = int(pdrice2_tmp    (npatch))
-   !            ELSE
-   !               pdcorn     (npatch) = -9999
-   !               pdswheat   (npatch) = -9999
-   !               pdwwheat   (npatch) = -9999
-   !               pdsoybean  (npatch) = -9999
-   !               pdcotton   (npatch) = -9999
-   !               pdrice1    (npatch) = -9999
-   !               pdrice2    (npatch) = -9999
-   !               pdsugarcane(npatch) = -9999
-   !            ENDIF
-   !            IF (pdcorn_tmp(npatch)      < 1E-10) THEN
-   !               pdcorn(npatch)      = -9999
-   !            ENDIF
-   !            IF (pdswheat_tmp(npatch)    < 1E-10) THEN
-   !               pdswheat(npatch)    = -9999
-   !            ENDIF
-   !            IF (pdwwheat_tmp(npatch)    < 1E-10) THEN
-   !               pdwwheat(npatch)    = -9999
-   !            ENDIF
-   !            IF (pdsoybean_tmp(npatch)   < 1E-10) THEN
-   !               pdsoybean(npatch)   = -9999
-   !            ENDIF
-   !            IF (pdcotton_tmp(npatch)    < 1E-10) THEN
-   !               pdcotton(npatch)    = -9999
-   !            ENDIF
-   !            IF (pdrice1_tmp(npatch)     < 1E-10) THEN
-   !               pdrice1(npatch)     = -9999
-   !            ENDIF
-   !            IF (pdrice2_tmp(npatch)     < 1E-10) THEN
-   !               pdrice2(npatch)     = -9999
-   !            ENDIF
-   !            IF (pdsugarcane_tmp(npatch) < 1E-10) THEN
-   !               pdsugarcane(npatch) = -9999
-   !            ENDIF
+               pdrice2    (npatch) = int(pdrice2_tmp    (npatch))
             ENDDO
 
          ENDIF
@@ -144,16 +109,12 @@ MODULE MOD_CropReadin
          end if
       end if
 
-      !print*,'landdir cropreadin',trim(landdir)
       lndname = trim(landdir) // '/fertnitro_pfts.nc'
-      !print*,'in cropreadin',lndname
       call ncio_read_vector (lndname, 'fertnitro_pfts',  landpft, fertnitro_tmp)
-   !   print*,'fertnitro_tmp',p_iam_glb,fertnitro_tmp
       if (p_is_worker) then
          if (numpatch > 0) then
             do npatch = 1, numpatch
                m = patchclass(npatch)
-      !         print*,'read fertnitro_pfts',npatch,p_iam_glb,m,patch_pft_s(npatch), patch_pft_e(npatch)
                if( m == 12 )then
                   do ipft = patch_pft_s(npatch), patch_pft_e(npatch)
                      fertnitro_p(ipft)  = fertnitro_tmp(ipft)
@@ -171,8 +132,6 @@ MODULE MOD_CropReadin
                      end do
                   end if
                endif
-   !            if(m .eq. 1 .or. m .eq. 12)print*,'fertnitro_p',p_iam_glb,npatch,patch_pft_s(npatch),patch_pft_e(npatch),fertnitro_p(patch_pft_s(npatch):patch_pft_e(npatch))
-   !            if(m .ne. 1 .and. m .ne. 12 .and. patch_pft_s(npatch) .ne. -1 .and. patch_pft_e(npatch) .ne. -1)print*,'missing pft'
             end do
          ENDIF
       ENDIF

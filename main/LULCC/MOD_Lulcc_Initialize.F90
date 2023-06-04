@@ -38,8 +38,8 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LandElm
    use MOD_LandPatch
 #ifdef URBAN_MODEL
-   USE MOD_Urban_Vars_TimeVars
-   USE MOD_Urban_Vars_TimeInvars
+   USE MOD_Urban_Vars_TimeVariables
+   USE MOD_Urban_Vars_TimeInvariants
    use MOD_LandUrban
    USE MOD_UrbanIniTimeVar
    USE MOD_UrbanReadin
@@ -51,13 +51,13 @@ MODULE MOD_Lulcc_Initialize
    use MOD_Vars_TimeVariables
 #ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
 #endif
 #ifdef LULC_IGBP_PC
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
 #endif
    USE MOD_Const_LC
    USE MOD_Const_PFT

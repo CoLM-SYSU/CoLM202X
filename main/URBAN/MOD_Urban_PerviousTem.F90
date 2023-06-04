@@ -51,7 +51,7 @@ CONTAINS
   USE MOD_Const_Physical
   USE MOD_SoilThermalParameters
   USE MOD_Utils, only: tridia
-  USE MOD_Meltf, only: meltf
+  USE MOD_PhaseChange, only: meltf
 
   IMPLICIT NONE
 

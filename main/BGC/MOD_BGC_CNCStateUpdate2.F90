@@ -28,7 +28,7 @@ module MOD_BGC_CNCStateUpdate2
            gap_mortality_to_met_c, gap_mortality_to_cel_c , &
            gap_mortality_to_lig_c, gap_mortality_to_cwdc  
   
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
     ! vegetation carbon state variables (inout)
            leafc_p            , leafc_storage_p     , leafc_xfer_p     , &
            frootc_p           , frootc_storage_p    , frootc_xfer_p    , &
