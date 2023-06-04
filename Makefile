@@ -145,8 +145,8 @@ OBJS_BASIC =    \
 				 MOD_SoilParametersReadin.o     \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
-				 MOD_IniTimeVar.o               \
-				 MOD_UrbanIniTimeVar.o
+				 MOD_IniTimeVariable.o          \
+				 MOD_UrbanIniTimeVariable.o
 
 
 $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
@@ -293,10 +293,10 @@ OBJS_MAIN = \
 				MOD_Urban_Flux.o                          \
 				MOD_Urban_GroundFlux.o                    \
 				MOD_Urban_RoofFlux.o                      \
-				MOD_Urban_RoofTem.o                       \
-				MOD_Urban_WallTem.o                       \
-				MOD_Urban_PerviousTem.o                   \
-				MOD_Urban_ImperviousTem.o                 \
+				MOD_Urban_RoofTemperature.o               \
+				MOD_Urban_WallTemperature.o               \
+				MOD_Urban_PerviousTemperature.o           \
+				MOD_Urban_ImperviousTemperature.o         \
 				MOD_Urban_Hydrology.o                     \
 				MOD_Urban_BEM.o                           \
 				MOD_Urban_LUCY.o                          \

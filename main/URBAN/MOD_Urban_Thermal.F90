@@ -111,10 +111,10 @@ CONTAINS
   USE MOD_Urban_Longwave
   USE MOD_Urban_GroundFlux
   USE MOD_Urban_Flux
-  USE MOD_Urban_RoofTem
-  USE MOD_Urban_WallTem
-  USE MOD_Urban_PerviousTem
-  USE MOD_Urban_ImperviousTem
+  USE MOD_Urban_RoofTemperature
+  USE MOD_Urban_WallTemperature
+  USE MOD_Urban_PerviousTemperature
+  USE MOD_Urban_ImperviousTemperature
   USE MOD_Lake
   USE MOD_Urban_BEM
   USE MOD_Urban_LUCY, only: LUCY

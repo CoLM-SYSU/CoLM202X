@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Urban_PerviousTem
+MODULE MOD_Urban_PerviousTemperature
 
   USE MOD_Precision
   IMPLICIT NONE
@@ -213,5 +213,5 @@ CONTAINS
 
  END SUBROUTINE UrbanPerviousTem
 
-END MODULE MOD_Urban_PerviousTem
+END MODULE MOD_Urban_PerviousTemperature
 ! ---------- EOP ------------
