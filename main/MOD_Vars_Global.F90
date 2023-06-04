@@ -17,45 +17,45 @@ MODULE MOD_Vars_Global
 
 #ifdef LULC_USGS
    ! GLCC USGS number of land cover category
-   INTEGER, parameter :: N_land_classification = 24
+   integer, parameter :: N_land_classification = 24
    ! GLCC USGS land cover named index (could be added IF needed)
-   INTEGER, parameter :: URBAN    = 1
-   INTEGER, parameter :: WATERBODY= 16
+   integer, parameter :: URBAN     = 1
+   integer, parameter :: WATERBODY = 16
 #else
    ! MODIS IGBP number of land cover category
-   INTEGER, parameter :: N_land_classification = 17
+   integer, parameter :: N_land_classification = 17
    ! MODIS IGBP land cover named index (could be added IF needed)
-   INTEGER, parameter :: WETLAND  = 11
-   INTEGER, parameter :: CROPLAND = 12
-   INTEGER, parameter :: URBAN    = 13
-   INTEGER, parameter :: GLACIERS = 15
-   INTEGER, parameter :: WATERBODY= 17
+   integer, parameter :: WETLAND   = 11
+   integer, parameter :: CROPLAND  = 12
+   integer, parameter :: URBAN     = 13
+   integer, parameter :: GLACIERS  = 15
+   integer, parameter :: WATERBODY = 17
 #endif
 
    ! number of plant functional types
 #ifndef CROP
-   INTEGER, parameter :: N_PFT    = 16
-   INTEGER, parameter :: N_CFT    = 0
+   integer, parameter :: N_PFT     = 16
+   integer, parameter :: N_CFT     = 0
 #else
-   INTEGER, parameter :: N_PFT    = 15
-   INTEGER, parameter :: N_CFT    = 64
+   integer, parameter :: N_PFT     = 15
+   integer, parameter :: N_CFT     = 64
 #endif
 
 #ifdef URBAN_LCZ
-   INTEGER, parameter :: N_URB    = 10
+   integer, parameter :: N_URB     = 10
 #else
-   INTEGER, parameter :: N_URB    = 3
+   integer, parameter :: N_URB     = 3
 #endif
 
    ! vertical layer number
-   INTEGER, parameter :: maxsnl   = -5
-   INTEGER, parameter :: nl_soil  = 10
-   INTEGER, parameter :: nl_soil_full  = 15
+   integer, parameter :: maxsnl    = -5
+   integer, parameter :: nl_soil   = 10
+   integer, parameter :: nl_soil_full = 15
 
-   INTEGER, parameter :: nl_lake  = 10
-   INTEGER, parameter :: nl_roof  = 10
-   INTEGER, parameter :: nl_wall  = 10
-   INTEGER, parameter :: nvegwcs  = 4  ! number of vegetation water potential nodes
+   integer, parameter :: nl_lake   = 10
+   integer, parameter :: nl_roof   = 10
+   integer, parameter :: nl_wall   = 10
+   integer, parameter :: nvegwcs   = 4  ! number of vegetation water potential nodes
 
    ! bgc variables
    integer, parameter :: ndecomp_pools        = 7
@@ -94,17 +94,14 @@ MODULE MOD_Vars_Global
    integer, parameter :: ntrp_soybean         = 77 ! tropical soybean
    integer, parameter :: nirrig_trp_soybean   = 78 ! irrigated tropical soybean
 
-   !TODO: need moved when coupling urban model
-   !INTEGER, parameter :: numurban = 1  !total number of Urban patches of grids
+   real(r8) :: z_soi (1:nl_soil)       !node depth [m]
+   real(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]
+   real(r8) :: zi_soi(1:nl_soil)       !interface level below a zsoi level [m]
+   real(r8) :: dz_soi(1:nl_soil)       !soil node thickness [m]
 
-   REAL(r8) :: z_soi (1:nl_soil)       !node depth [m]
-   REAL(r8) :: z_soih(1:nl_soil)       !interface level below a zsoi level [m]
-   REAL(r8) :: zi_soi(1:nl_soil)       !interface level below a zsoi level [m]
-   REAL(r8) :: dz_soi(1:nl_soil)       !soil node thickness [m]
-
-   REAL(r8), parameter :: spval = -1.e36_r8  !missing value
-   REAL(r8), parameter :: PI    = 4*atan(1.) !pi value
-   REAL(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
+   real(r8), parameter :: spval   = -1.e36_r8  !missing value
+   real(r8), parameter :: PI      = 4*atan(1.) !pi value
+   real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlovalVars
@@ -115,7 +112,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER :: nsl
+      integer :: nsl
 
       DO nsl = 1, nl_soil
          z_soi(nsl) = 0.025*(exp(0.5*(nsl-0.5))-1.)  !node depths
