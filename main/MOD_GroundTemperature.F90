@@ -66,7 +66,7 @@ MODULE MOD_GroundTemperature
    use MOD_Precision
    use MOD_Const_Physical, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
    USE MOD_PhaseChange
-   USE MOD_SoilHcapCond
+   USE MOD_SoilThermalParameters
    USE MOD_Utils
 
    implicit none

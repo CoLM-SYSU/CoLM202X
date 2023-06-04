@@ -355,7 +355,7 @@ MODULE MOD_Lake
   USE mod_namelist, only: DEF_USE_CBL_HEIGHT
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
-  USE MOD_SoilHcapCond
+  USE MOD_SoilThermalParameters
   USE MOD_Utils
 
   IMPLICIT NONE
