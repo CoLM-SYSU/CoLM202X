@@ -45,9 +45,7 @@ CONTAINS
         sc_vgm         ,fc_vgm         ,&
 #endif
         k_solids       ,dksatu         ,dksatf         ,dkdry          ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha       ,BA_beta        ,&
-#endif
         cv_roof        ,cv_wall        ,cv_gimp        ,&
         tk_roof        ,tk_wall        ,tk_gimp        ,dz_roofsno     ,&
         dz_gimpsno     ,dz_gpersno     ,dz_lakesno     ,dz_wall        ,&
@@ -219,10 +217,8 @@ CONTAINS
         dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
         cv_roof(1:nl_roof) ,&! heat capacity of roof [J/(m2 K)]
         cv_wall(1:nl_wall) ,&! heat capacity of wall [J/(m2 K)]
         cv_gimp(1:nl_soil) ,&! heat capacity of impervious [J/(m2 K)]
@@ -988,10 +984,7 @@ CONTAINS
            vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
            porsl        ,csol         ,k_solids        , &
            dksatu       ,dksatf       ,dkdry           , &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-           BA_alpha     ,BA_beta, &
-#endif
-                   hpbl, &
+           BA_alpha     ,BA_beta      ,hpbl            , &
 
            ! "inout" laketem arguments
            ! ---------------------------

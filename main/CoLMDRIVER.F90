@@ -82,9 +82,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
         hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
         dksatf(1:,i),    dkdry(1:,i),                                       &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha(1:,i),  BA_beta(1:,i),                                     &
-#endif
         rootfr(1:,m),    lakedepth(i),    dz_lake(1:,i),                    &
 #if(defined CaMa_Flood)
       ! flood variables [mm, m2/m2, mm/s, mm/s]
@@ -212,9 +210,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
         hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
         dksatf(1:,i),    dkdry(1:,i),                                       &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha(1:,i),  BA_beta(1:,i),                                     &
-#endif
         alb_roof(:,:,u) ,alb_wall(:,:,u) ,alb_gimp(:,:,u) ,alb_gper(:,:,u) ,&
 
       ! VEGETATION INFORMATION

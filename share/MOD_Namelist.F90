@@ -120,6 +120,20 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_Urban_WATER  = .true.
    LOGICAL :: DEF_Urban_LUCY   = .true.
 
+   ! ------ SOIL parameters and supercool water setting -------
+   LOGICAL :: DEF_USE_SOILPAR_UPS_FIT = .true.     ! soil hydraulic parameters are upscaled from rawdata (1km resolution)
+                                                   ! to model patches through FIT algorithm (Montzka et al., 2017).
+   INTEGER :: DEF_THERMAL_CONDUCTIVITY_SCHEME = 4  ! Options for soil thermal conductivity schemes
+                                                   ! 1: Farouki (1981)
+                                                   ! 2: Johansen(1975)
+                                                   ! 3: Cote and Konrad (2005)
+                                                   ! 4: Balland and Arp (2005)
+                                                   ! 5: Lu et al. (2007)
+                                                   ! 6: Tarnawski and Leong (2012)
+                                                   ! 7: De Vries (1963)
+                                                   ! 8: Yan Hengnian, He Hailong et al.(2019)
+   LOGICAL :: DEF_USE_SUPERCOOL_WATER = .true.     ! supercooled soil water scheme, Niu & Yang (2006)
+
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
@@ -606,10 +620,6 @@ CONTAINS
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
-         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
-
-         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
-
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
 
          !DEF_Urban_type_scheme,           &
@@ -618,16 +628,16 @@ CONTAINS
          DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
          DEF_Urban_LUCY,                  &
 
+         DEF_USE_SOILPAR_UPS_FIT,         &
+         DEF_THERMAL_CONDUCTIVITY_SCHEME, &
+         DEF_USE_SUPERCOOL_WATER,         &
+
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
 
          DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
          DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
-
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
-         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
-         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
@@ -821,6 +831,11 @@ CONTAINS
       CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_Urban_LUCY ,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
+      ! 06/2023, added by weinan
+      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME,  1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
+
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
@@ -831,7 +846,7 @@ CONTAINS
       !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
- 
+
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)

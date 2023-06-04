@@ -103,10 +103,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    REAL(r8), allocatable :: tksatf_patches  (:)
    REAL(r8), allocatable :: tkdry_patches   (:)
    REAL(r8), allocatable :: k_solids_patches  (:)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
    REAL(r8), allocatable :: BA_alpha_patches  (:)
    REAL(r8), allocatable :: BA_beta_patches  (:)
-#endif
 
    REAL(r8), allocatable :: vf_quartz_mineral_s_one (:)
    REAL(r8), allocatable :: vf_gravels_s_one (:)
@@ -132,12 +130,9 @@ SUBROUTINE Aggregation_SoilParameters ( &
    REAL(r8), allocatable :: tkdry_one   (:)
    REAL(r8), allocatable :: k_solids_one  (:)
    REAL(r8), allocatable :: area_one   (:)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
    REAL(r8), allocatable :: BA_alpha_one  (:)
    REAL(r8), allocatable :: BA_beta_one  (:)
-#endif
 
-#ifdef SOILPAR_UPS_FIT
 ! local variables for estimating the upscaled soil parameters using the Levenberg–Marquardt fitting method
 ! ---------------------------------------------------------------
    integer, parameter   :: npointw  = 24
@@ -174,7 +169,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
    external SW_CB_dist                    ! the objective function to be fitted for Campbell SW retention curve
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
 !   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
-#endif
+
 #ifdef SrfdataDiag
    INTEGER :: typpatch(N_land_classification+1), ityp
 #endif
@@ -222,10 +217,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
       allocate ( SITE_soil_tksatf   (nl_soil) )
       allocate ( SITE_soil_tkdry    (nl_soil) )
       allocate ( SITE_soil_k_solids (nl_soil) )
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       allocate ( SITE_soil_BA_alpha (nl_soil) )
       allocate ( SITE_soil_BA_beta  (nl_soil) )
-#endif
    ENDIF
 #endif
 
@@ -254,10 +247,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
       allocate ( tksatf_patches    (numpatch) )
       allocate ( tkdry_patches     (numpatch) )
       allocate ( k_solids_patches  (numpatch) )
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       allocate ( BA_alpha_patches  (numpatch) )
       allocate ( BA_beta_patches   (numpatch) )
-#endif
 
    ENDIF
 
@@ -329,7 +320,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (2) volumetric fraction of gravels
       ! (3) volumetric fraction of sand
       ! (4) volumetric fraction of organic matter
-      ! with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model if defined THERMAL_CONDUCTIVITY_SCHEME_4
+      ! with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, vf_gravels_s_grid)
@@ -365,7 +356,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
                vf_sand_s_patches (ipatch) = sum (vf_sand_s_one * (area_one/sum(area_one)))
                vf_om_s_patches (ipatch) = sum (vf_om_s_one * (area_one/sum(area_one)))
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                ! the parameter values of Balland and Arp (2005) Ke-Sr relationship,
                ! modified by Barry-Macaulay et al.(2015), Evaluation of soil thermal conductivity models
 
@@ -388,7 +378,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                BA_alpha_patches (ipatch) = median (BA_alpha_one, size(BA_alpha_one), spval)
                BA_beta_patches (ipatch) = median (BA_beta_one, size(BA_beta_one), spval)
 
-#ifdef SOILPAR_UPS_FIT
+               IF (DEF_USE_SOILPAR_UPS_FIT) THEN
 !               np = size(BA_alpha_one)
 !               IF( np > 1 ) then
 !                  allocate ( ydatb  (ipxstt:ipxend,npointb) )
@@ -430,19 +420,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
 !                  deallocate(fvecb)
 
 !               ENDIF
-#endif
+               ENDIF
                deallocate(BA_alpha_one)
                deallocate(BA_beta_one)
-#endif
 
             ELSE
                vf_gravels_s_patches (ipatch) = -1.0e36_r8
                vf_sand_s_patches (ipatch) = -1.0e36_r8
                vf_om_s_patches (ipatch) = -1.0e36_r8
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                BA_alpha_patches (ipatch) = -1.0e36_r8
                BA_beta_patches (ipatch) = -1.0e36_r8
-#endif
             ENDIF
 
             IF (isnan(vf_gravels_s_patches(ipatch))) THEN
@@ -475,10 +462,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL check_vector_data ('vf_gravels_s lev '//trim(c), vf_gravels_s_patches)
       CALL check_vector_data ('vf_sand_s lev '//trim(c), vf_sand_s_patches)
       CALL check_vector_data ('vf_om_s lev '//trim(c), vf_om_s_patches)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       CALL check_vector_data ('BA_alpha lev '//trim(c), BA_alpha_patches)
       CALL check_vector_data ('BA_beta lev '//trim(c), BA_beta_patches)
-#endif
 #endif
 
 #ifndef SinglePoint
@@ -532,7 +517,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
       SITE_soil_vf_om(nsl) = vf_om_s_patches(1)
 #endif
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
 #ifndef SinglePoint
       lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
       CALL ncio_create_file_vector (lndname, landpatch)
@@ -565,7 +549,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
 #endif
 #else
       SITE_soil_BA_beta(nsl) = BA_beta_patches(1)
-#endif
 #endif
 
       ! (5) gravimetric fraction of gravels
@@ -800,49 +783,49 @@ SUBROUTINE Aggregation_SoilParameters ( &
                n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval)
                theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))
 
-#ifdef SOILPAR_UPS_FIT
-               np = size(theta_r_one)
-               ipxstt = landpatch%ipxstt(ipatch)
-               ipxend = landpatch%ipxend(ipatch)
+               IF (DEF_USE_SOILPAR_UPS_FIT) THEN
+                  np = size(theta_r_one)
+                  ipxstt = landpatch%ipxstt(ipatch)
+                  ipxend = landpatch%ipxend(ipatch)
 
-               IF( np > 1 ) then
-                  allocate ( ydatv  (ipxstt:ipxend,npointw) )
+                  IF( np > 1 ) then
+                     allocate ( ydatv  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
+                     allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted
-                  allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
+                     allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
 
 ! SW VG retentions at fine grids for each patch
-                  do LL = ipxstt,ipxend
-                     ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
-                                 * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
-                  end do
+                     do LL = ipxstt,ipxend
+                        ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
+                                    * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
+                     end do
 
 ! Fitting the van Genuchten SW retention parameters
-                  ldfjac = npointw
-                  xv(1) = theta_r_patches (ipatch)
-                  xv(2) = alpha_vgm_patches (ipatch)
-                  xv(3) = n_vgm_patches (ipatch)
-                  maxfev = 100 * ( nv + 1 )
-                  isiter = 1
+                     ldfjac = npointw
+                     xv(1) = theta_r_patches (ipatch)
+                     xv(2) = alpha_vgm_patches (ipatch)
+                     xv(3) = n_vgm_patches (ipatch)
+                     maxfev = 100 * ( nv + 1 )
+                     isiter = 1
 
-                  call lmder ( SW_VG_dist, npointw, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
-                        diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
-                        xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
+                     call lmder ( SW_VG_dist, npointw, nv, xv, fvecv, fjacv, ldfjac, ftol, xtol, gtol, maxfev, &
+                           diagv, mode, factor, nprint, info, nfev, njev, ipvtv, qtfv,&
+                           xdat, npointw, ydatv, np, theta_s_patches(ipatch), isiter)
 
-                  if ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
-                       xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) then
-                       theta_r_patches(ipatch)   = xv(1)
-                       alpha_vgm_patches(ipatch) = xv(2)
-                       n_vgm_patches(ipatch)     = xv(3)
-                  end if
+                     if ( xv(1) >= 0.0 .and. xv(1) <= theta_s_patches(ipatch) .and. xv(2) >= 1.0e-5 .and. xv(2) <= 1.0 .and. &
+                          xv(3) >= 1.1 .and. xv(3) <= 10.0 .and. isiter == 1) then
+                          theta_r_patches(ipatch)   = xv(1)
+                          alpha_vgm_patches(ipatch) = xv(2)
+                          n_vgm_patches(ipatch)     = xv(3)
+                     end if
 
-                  deallocate(ydatv)
-                  deallocate(fjacv)
-                  deallocate(fvecv)
+                     deallocate(ydatv)
+                     deallocate(fjacv)
+                     deallocate(fvecv)
 
+                  ENDIF
                ENDIF
-#endif
 
             ELSE
                theta_r_patches (ipatch) = -1.0e36_r8
@@ -993,45 +976,45 @@ SUBROUTINE Aggregation_SoilParameters ( &
                psi_s_patches (ipatch) = median (psi_s_one, size(psi_s_one), spval)
                lambda_patches (ipatch) = median (lambda_one, size(lambda_one), spval)
 
-#ifdef SOILPAR_UPS_FIT
-               np = size(psi_s_one)
-               ipxstt = landpatch%ipxstt(ipatch)
-               ipxend = landpatch%ipxend(ipatch)
+               IF (DEF_USE_SOILPAR_UPS_FIT) THEN
+                  np = size(psi_s_one)
+                  ipxstt = landpatch%ipxstt(ipatch)
+                  ipxend = landpatch%ipxend(ipatch)
 
-               IF( np > 1 ) then
-                  allocate ( ydatc  (ipxstt:ipxend,npointw) )
+                  IF( np > 1 ) then
+                     allocate ( ydatc  (ipxstt:ipxend,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
-                  allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
+                     allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted
-                  allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist
+                     allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist
 
 ! SW CB retentions at fine grids for each patch
-                  do LL = ipxstt,ipxend
-                     ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
-                  end do
+                     do LL = ipxstt,ipxend
+                        ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
+                     end do
 
 ! Fitting the Campbell SW retention parameters
-                  ldfjac = npointw
-                  xc(1) = psi_s_patches (ipatch)
-                  xc(2) = lambda_patches (ipatch)
-                  maxfev = 100 * ( nc + 1 )
-                  isiter = 1
+                     ldfjac = npointw
+                     xc(1) = psi_s_patches (ipatch)
+                     xc(2) = lambda_patches (ipatch)
+                     maxfev = 100 * ( nc + 1 )
+                     isiter = 1
 
-                  call lmder ( SW_CB_dist, npointw, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
-                        diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
-                        xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
+                     call lmder ( SW_CB_dist, npointw, nc, xc, fvecc, fjacc, ldfjac, ftol, xtol, gtol, maxfev, &
+                           diagc, mode, factor, nprint, info, nfev, njev, ipvtc, qtfc,&
+                           xdat, npointw, ydatc, np, theta_s_patches(ipatch), isiter)
 
-                  if( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)then
-                        psi_s_patches (ipatch) = xc(1)
-                        lambda_patches(ipatch) = xc(2)
-                  end if
+                     if( xc(1) >= -300. .and. xc(1) < 0.0 .and. xc(2) > 0.0 .and. xc(2) <= 1.0 .and. isiter == 1)then
+                           psi_s_patches (ipatch) = xc(1)
+                           lambda_patches(ipatch) = xc(2)
+                     end if
 
-                  deallocate(ydatc)
-                  deallocate(fjacc)
-                  deallocate(fvecc)
+                     deallocate(ydatc)
+                     deallocate(fjacc)
+                     deallocate(fvecc)
 
+                  ENDIF
                ENDIF
-#endif
 
             ELSE
                theta_s_patches (ipatch) = -1.0e36_r8
@@ -1629,10 +1612,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
       deallocate ( tkdry_patches   )
       deallocate ( tksatf_patches  )
       deallocate ( k_solids_patches)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       deallocate ( BA_alpha_patches)
       deallocate ( BA_beta_patches )
-#endif
 
       IF (allocated(vf_quartz_mineral_s_one)) deallocate (vf_quartz_mineral_s_one)
       IF (allocated(vf_gravels_s_one))        deallocate (vf_gravels_s_one)
@@ -1667,7 +1648,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
 END SUBROUTINE Aggregation_SoilParameters
 
-#ifdef SOILPAR_UPS_FIT
 
 !SUBROUTINE Ke_Sr_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatb, nptf, phi, isiter, &
 !                        vf_om_s, vf_sand_s, vf_gravels_s )
@@ -1830,6 +1810,5 @@ subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv,
 
 end subroutine SW_VG_dist
 
-#endif
 !-----------------------------------------------------------------------
 !EOP

@@ -17,9 +17,7 @@ SUBROUTINE CoLMMAIN ( &
 #endif
            hksati,       csol,         k_solids,     dksatu,        &
            dksatf,       dkdry,                                     &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha,     BA_beta,                                   &
-#endif
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
            !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
@@ -234,10 +232,8 @@ SUBROUTINE CoLMMAIN ( &
         dksatu(nl_soil)  ,&! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf(nl_soil)  ,&! thermal conductivity of saturated frozen soil [W/m-K]
         dkdry(nl_soil)   ,&! thermal conductivity for dry soil  [J/(K s m)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha(nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
         rootfr(nl_soil)  ,&! fraction of roots in each soil layer
 
         ! vegetation static, dynamic, derived parameters
@@ -751,9 +747,7 @@ ENDIF
            sc_vgm            ,fc_vgm            ,                                      &
 #endif
            k_solids          ,dksatu            ,dksatf            ,dkdry             ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha          ,BA_beta                                                 ,&
-#endif
            lai               ,laisun            ,laisha                               ,&
            sai               ,htop              ,hbot              ,sqrtdi            ,&
            rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
@@ -1118,10 +1112,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
            porsl        ,csol         ,k_solids        , &
            dksatu       ,dksatf       ,dkdry           , &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-           BA_alpha     ,BA_beta, &
-#endif
-           forc_hpbl, &
+           BA_alpha     ,BA_beta      ,forc_hpbl       , &
 
            ! "inout" laketem arguments
            ! ---------------------------
