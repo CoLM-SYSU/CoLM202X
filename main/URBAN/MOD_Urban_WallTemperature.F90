@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Urban_WallTem
+MODULE MOD_Urban_WallTemperature
 
   USE MOD_Precision
   IMPLICIT NONE
@@ -159,5 +159,5 @@ CONTAINS
 
  END SUBROUTINE UrbanWallTem
 
-END MODULE MOD_Urban_WallTem
+END MODULE MOD_Urban_WallTemperature
 ! ---------- EOP ------------

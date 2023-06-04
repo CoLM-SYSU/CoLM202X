@@ -41,7 +41,7 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_Urban_Vars_TimeVariables
    USE MOD_Urban_Vars_TimeInvariants
    use MOD_LandUrban
-   USE MOD_UrbanIniTimeVar
+   USE MOD_UrbanIniTimeVariable
    USE MOD_UrbanReadin
    USE MOD_Urban_LAIReadin
    USE MOD_Urban_Albedo
@@ -89,7 +89,7 @@ MODULE MOD_Lulcc_Initialize
    use MOD_DBedrockReadin
    use MOD_SrfdataRestart
    USE MOD_HtopReadin
-   USE MOD_IniTimeVar
+   USE MOD_IniTimeVariable
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin

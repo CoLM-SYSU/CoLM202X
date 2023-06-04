@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_IniTimeVar
+MODULE MOD_IniTimeVariable
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
@@ -24,7 +24,7 @@ CONTAINS
                      ,t_soisno,wliq_soisno,wice_soisno,smp,hk,zwt,wa&
 !Plant Hydraulic parameters
                      ,vegwp,gs0sun,gs0sha&
-!End plant hydraulic parameter                             
+!End plant hydraulic parameter
                      ,t_grnd,tleaf,ldew,ldew_rain,ldew_snow,sag,scv&
                      ,snowdp,fveg,fsno,sigf,green,lai,sai,coszen&
                      ,snw_rds,mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi&
@@ -1146,6 +1146,6 @@ CONTAINS
 
    END SUBROUTINE snow_ini
 
-END MODULE MOD_IniTimeVar
+END MODULE MOD_IniTimeVariable
 !-----------------------------------------------------------------------
 ! EOP

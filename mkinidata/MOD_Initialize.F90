@@ -36,7 +36,7 @@ MODULE MOD_Initialize
       use MOD_LandPatch
 #ifdef URBAN_MODEL
       use MOD_LandUrban
-      USE MOD_UrbanIniTimeVar
+      USE MOD_UrbanIniTimeVariable
       USE MOD_UrbanReadin
       USE MOD_Urban_LAIReadin
       USE MOD_Urban_Albedo
@@ -85,7 +85,7 @@ MODULE MOD_Initialize
       USE MOD_OrbCoszen
       use MOD_DBedrockReadin
       USE MOD_HtopReadin
-      USE MOD_IniTimeVar
+      USE MOD_IniTimeVariable
       USE MOD_LakeDepthReadin
       USE MOD_PercentagesPFTReadin
       USE MOD_SoilParametersReadin
@@ -680,7 +680,7 @@ MODULE MOD_Initialize
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
 !Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-!end plant hydraulic variables                       
+!end plant hydraulic variables
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&

@@ -1,6 +1,6 @@
 #include <define.h>
 
-MODULE MOD_Urban_RoofTem
+MODULE MOD_Urban_RoofTemperature
 
   USE MOD_Precision
   IMPLICIT NONE
@@ -233,5 +233,5 @@ CONTAINS
 
  END SUBROUTINE UrbanRoofTem
 
-END MODULE MOD_Urban_RoofTem
+END MODULE MOD_Urban_RoofTemperature
 ! ---------- EOP ------------

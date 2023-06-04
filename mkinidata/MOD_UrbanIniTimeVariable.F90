@@ -1,7 +1,7 @@
 #include <define.h>
 
 #ifdef URBAN_MODEL
-MODULE MOD_UrbanIniTimeVar
+MODULE MOD_UrbanIniTimeVariable
 
   USE MOD_Precision
   IMPLICIT NONE
@@ -116,7 +116,7 @@ CONTAINS
 
  END SUBROUTINE UrbanIniTimeVar
 
-END MODULE MOD_UrbanIniTimeVar
+END MODULE MOD_UrbanIniTimeVariable
 !-----------------------------------------------------------------------
 ! EOP
 #endif
