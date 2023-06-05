@@ -54,8 +54,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    CHARACTER(LEN=*), intent(in) :: dir_rawdata
    CHARACTER(LEN=*), intent(in) :: dir_model_landdata
 
-   INTEGER, intent(in) :: lc_year
-
    ! local variables:
    ! ----------------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname
@@ -389,7 +387,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
-      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 
@@ -667,7 +664,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    dir_5x5 = trim(dir_rawdata) // '/plant_15s'
    DO iy = start_year, end_year
       write(cyear,'(i4.4)') iy
-      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
       suffix  = 'MOD'//trim(cyear)
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
 

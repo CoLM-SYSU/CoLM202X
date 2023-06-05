@@ -353,7 +353,7 @@ PROGRAM MKSRFDATA
 #ifdef URBAN_MODEL
    CALL pixelset_save_to_file  (dir_landdata, 'landurban', landurban, lc_year)
 #endif
-print*, numpatch
+
    ! ................................................................
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................

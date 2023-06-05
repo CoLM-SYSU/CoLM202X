@@ -45,7 +45,6 @@ CONTAINS
       USE MOD_Namelist
       USE MOD_5x5DataReadin
       USE MOD_Mesh
-      USE MOD_LandElm
       USE MOD_LandPatch
       USE MOD_LandElm
 #ifdef CATCHMENT

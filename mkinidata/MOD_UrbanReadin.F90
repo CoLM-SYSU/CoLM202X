@@ -1,4 +1,5 @@
 #include <define.h>
+
 #ifdef URBAN_MODEL
 
 MODULE MOD_UrbanReadin
@@ -42,7 +43,7 @@ MODULE MOD_UrbanReadin
 
       IMPLICIT NONE
 
-      INTEGER, intent(in) :: year    ! which year of land cover data used
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
       CHARACTER(LEN=256), intent(in) :: dir_landdata
 
       CHARACTER(LEN=256) :: dir_rawdata
@@ -81,7 +82,7 @@ MODULE MOD_UrbanReadin
       allocate (thickwall (numurban))
 
       ! READ in urban data
-      write(cyear,'(i4.4)') year
+      write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
       CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
@@ -124,7 +125,6 @@ MODULE MOD_UrbanReadin
       wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
 #endif
 
-      !TODO: duplication, delete
       !TODO: Variables distinguish between time-varying and time-invariant variables
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'

@@ -32,7 +32,6 @@ CONTAINS
       USE MOD_Utils
       IMPLICIT NONE
 
-      INTEGER         , intent(in) :: lc_year
       CHARACTER(len=*), intent(in) :: dir_landdata
       INTEGER         , intent(in) :: lc_year
 
@@ -333,7 +332,6 @@ CONTAINS
       USE MOD_Pixelset
       IMPLICIT NONE
 
-      INTEGER         ,    intent(in) :: lc_year
       CHARACTER(len=*),    intent(in) :: dir_landdata
       CHARACTER(len=*),    intent(in) :: psetname
       TYPE(pixelset_type), intent(in) :: pixelset

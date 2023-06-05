@@ -620,6 +620,11 @@ MODULE MOD_Vars_TimeInvariants
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake', nl_lake)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'band', 2)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'rtyp', 2)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snow',     -maxsnl       )
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'snowp1',   -maxsnl+1     )
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soilsnow', nl_soil-maxsnl)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'lake',     nl_lake)
 
      call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
      call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
