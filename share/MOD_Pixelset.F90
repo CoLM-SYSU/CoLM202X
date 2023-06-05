@@ -439,7 +439,7 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         IF (count(mask) < this%nset) THEN
+         IF ((this%nset > 0) .and. (count(mask) < this%nset)) THEN
 
             allocate (eindex1(this%nset))
             allocate (ipxstt1(this%nset))
