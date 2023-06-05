@@ -334,10 +334,8 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8), allocatable :: dksatu       (:,:)  !thermal conductivity of saturated soil [W/m-K]
   real(r8), allocatable :: dksatf       (:,:)  !thermal conductivity of saturated frozen soil [W/m-K]
   REAL(r8), allocatable :: dkdry        (:,:)  !thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
   REAL(r8), allocatable :: BA_alpha     (:,:)  !alpha in Balland and Arp(2005) thermal conductivity scheme
   REAL(r8), allocatable :: BA_beta      (:,:)  !beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
   REAL(r8), allocatable :: htop           (:)  !canopy top height [m]
   REAL(r8), allocatable :: hbot           (:)  !canopy bottom height [m]
 
@@ -429,13 +427,10 @@ MODULE MOD_Vars_TimeInvariants
            allocate (dksatu       (nl_soil,numpatch))
            allocate (dksatf       (nl_soil,numpatch))
            allocate (dkdry        (nl_soil,numpatch))
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            allocate (BA_alpha     (nl_soil,numpatch))
            allocate (BA_beta      (nl_soil,numpatch))
-#endif
            allocate (htop                 (numpatch))
            allocate (hbot                 (numpatch))
-
            allocate (dbedrock             (numpatch))
            allocate (ibedrock             (numpatch))
      end if
@@ -530,10 +525,8 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'dksatu ' ,     nl_soil, landpatch, dksatu )    ! thermal conductivity of unfrozen saturated soil [W/m-K]
      call ncio_read_vector (file_restart, 'dksatf ' ,     nl_soil, landpatch, dksatf )    ! thermal conductivity of frozen saturated soil [W/m-K]
      call ncio_read_vector (file_restart, 'dkdry  ' ,     nl_soil, landpatch, dkdry  )    ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
      call ncio_read_vector (file_restart, 'BA_alpha',     nl_soil, landpatch, BA_alpha)   ! alpha in Balland and Arp(2005) thermal conductivity scheme
      call ncio_read_vector (file_restart, 'BA_beta' ,     nl_soil, landpatch, BA_beta )   ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
      call ncio_read_vector (file_restart, 'htop' ,    landpatch, htop)                    !
      call ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot)                    !
 
@@ -669,10 +662,8 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_write_vector (file_restart, 'dksatu   ' , 'soil', nl_soil, 'patch', landpatch, dksatu    , compress) ! thermal conductivity of saturated soil [W/m-K]
      call ncio_write_vector (file_restart, 'dksatf   ' , 'soil', nl_soil, 'patch', landpatch, dksatf    , compress) ! thermal conductivity of saturated soil [W/m-K]
      call ncio_write_vector (file_restart, 'dkdry    ' , 'soil', nl_soil, 'patch', landpatch, dkdry     , compress) ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
      call ncio_write_vector (file_restart, 'BA_alpha ' , 'soil', nl_soil, 'patch', landpatch, BA_alpha  , compress) ! alpha in Balland and Arp(2005) thermal conductivity scheme
      call ncio_write_vector (file_restart, 'BA_beta  ' , 'soil', nl_soil, 'patch', landpatch, BA_beta   , compress) ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
 
      call ncio_write_vector (file_restart, 'htop' , 'patch', landpatch, htop)                                       !
      call ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot)                                       !
@@ -780,10 +771,8 @@ MODULE MOD_Vars_TimeInvariants
            deallocate (dksatu         )
            deallocate (dksatf         )
            deallocate (dkdry          )
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            deallocate (BA_alpha       )
            deallocate (BA_beta        )
-#endif
 
            deallocate (htop           )
            deallocate (hbot           )
@@ -861,10 +850,8 @@ MODULE MOD_Vars_TimeInvariants
      call check_vector_data ('dksatu      ', dksatu      ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
      call check_vector_data ('dksatf      ', dksatf      ) ! thermal conductivity of frozen saturated soil [W/m-K]
      call check_vector_data ('dkdry       ', dkdry       ) ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
      call check_vector_data ('BA_alpha    ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
      call check_vector_data ('BA_beta     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
 
      call check_vector_data ('htop        ', htop        )
      call check_vector_data ('hbot        ', hbot        )

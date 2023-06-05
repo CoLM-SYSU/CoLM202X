@@ -29,9 +29,7 @@ MODULE MOD_GroundTemperature
                          sc_vgm , fc_vgm,&
 #endif
                          csol,k_solids,dksatu,dksatf,dkdry,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                          BA_alpha,BA_beta,&
-#endif
                          sigf,dz_soisno,z_soisno,zi_soisno,&
                          t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                          frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
@@ -68,7 +66,7 @@ MODULE MOD_GroundTemperature
    use MOD_Precision
    use MOD_Const_Physical, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
    USE MOD_PhaseChange
-   USE MOD_SoilHcapCond
+   USE MOD_SoilThermalParameters
    USE MOD_Utils
 
    implicit none
@@ -106,10 +104,8 @@ MODULE MOD_GroundTemperature
    real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
    real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
    real(r8), INTENT(in) :: dkdry(1:nl_soil)  ! thermal conductivity of dry soil [W/m-K]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
    real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
    real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
 
    real(r8), INTENT(in) :: sigf     !fraction of veg cover, excluding snow-covered veg [-]
    real(r8), INTENT(in) :: dz_soisno(lb:nl_soil)   !layer thickiness [m]
@@ -177,9 +173,7 @@ MODULE MOD_GroundTemperature
       CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
                           wf_gravels(i),wf_sand(i),k_solids(i),&
                           csol(i),dkdry(i),dksatu(i),dksatf(i),&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                           BA_alpha(i),BA_beta(i),&
-#endif
                           t_soisno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
       cv(i) = hcap(i)*dz_soisno(i)
    enddo

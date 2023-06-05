@@ -7,7 +7,7 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
 
 !------------------------------------------------------------------------------------------
 ! DESCRIPTION:
-! Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes
+! Calculate volumetric soil heat capacity and soil thermal conductivity with 8 optional schemes by using the rawdata soil properties.
 ! The default soil thermal conductivity scheme is the fourth one (Balland V. and P. A. Arp, 2005)
 !
 ! REFERENCE:
@@ -23,6 +23,7 @@ SUBROUTINE soil_thermal_parameters(wf_gravels_s,wf_sand_s,wf_clay_s,&
 ! -----------------------------------------------------------------------------------------
 
 use MOD_Precision
+USE MOD_Namelist
 
 IMPLICIT NONE
       real(r8), intent(in) :: BD_mineral_s ! bulk density of mineral soil (g/cm^3)
@@ -132,7 +133,8 @@ IMPLICIT NONE
       f2 = vf_om_s     /(vf_gravels_s+vf_om_s+a)
       f3 = a           /(vf_gravels_s+vf_om_s+a)
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_1)
+      select case (DEF_THERMAL_CONDUCTIVITY_SCHEME)
+      case (1)
 ! -----------------------------------------------------------------------------------------
 ! [1] Oleson K.W. et al., 2013: Technical Description of version 4.5 of the Community
 !     Land Model (CLM). NCAR/TN-503+STR (Section 6.3: Soil and snow thermal properties)
@@ -152,9 +154,9 @@ IMPLICIT NONE
 
       ksat_u = k_solids**(1.0-vf_pores_s) * k_water**vf_pores_s
       ksat_f = k_solids**(1.0-vf_pores_s) * k_ice**vf_pores_s
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_2)
+
+      case (2)
 ! -----------------------------------------------------------------------------------------
 ! [2] Johansen O (1975): Thermal conductivity of soils. PhD Thesis. Trondheim, Norway:
 !     University of Trondheim. US army Crops of Engineerings,
@@ -168,9 +170,9 @@ IMPLICIT NONE
 
       ksat_u = k_solids * k_water**vf_pores_s
       ksat_f = k_solids * k_ice**vf_pores_s
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_3)
+
+      case (3)
 ! -----------------------------------------------------------------------------------------
 ! [3] Cote, J., and J.-M. Konrad (2005), A generalized thermal conductivity model for soils
 !     and construction materials. Canadian Geotechnical Journal, 42(2): 443-458.
@@ -191,9 +193,9 @@ IMPLICIT NONE
 
       ksat_u = k_solids * k_water**vf_pores_s
       ksat_f = k_solids * k_ice**vf_pores_s
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_4)
+
+      case (4)
 ! -----------------------------------------------------------------------------------------
 ! [4] Balland V. and P. A. Arp, 2005: Modeling soil thermal conductivities over a wide
 ! range of conditions. J. Environ. Eng. Sci. 4: 549-558.
@@ -209,9 +211,8 @@ IMPLICIT NONE
       ksat_u = k_solids * k_water**vf_pores_s
       ksat_f = k_solids * k_ice**vf_pores_s
 
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_5)
+      case (5)
 ! -----------------------------------------------------------------------------------------
 ! [5] Lu et al., 2007: An improved model for predicting soil thermal conductivity from
 !     water content at room temperature. Soil Sci. Soc. Am. J. 71:8-14
@@ -226,9 +227,9 @@ IMPLICIT NONE
 
       ksat_u = k_solids * k_water**vf_pores_s
       ksat_f = k_solids * k_ice**vf_pores_s
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_6)
+
+      case (6)
 ! -----------------------------------------------------------------------------------------
 ! [6] Series-Parallel Models (Woodside and Messmer, 1961; Kasubuchi et al., 2007;
 !                         Tarnawski and Leong, 2012)
@@ -254,9 +255,9 @@ IMPLICIT NONE
       ksat_f = k_solids*aa &
                 + (1.0-vf_pores_s-aa+nwm)**2/((1.0-vf_pores_s-aa)/k_solids+nwm/k_ice) &
                 + k_ice*(vf_pores_s-nwm)
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_7)
+
+      case (7)
 !*-----------------------------------------------------------------------------------------
 !*[7] de Vries, Thermal properties of soils, in Physics of Plant Environment,
 !*    ed. by W.R. van Wijk (North-Holland, Amsterdam, 1963), pp. 210-235
@@ -279,9 +280,9 @@ IMPLICIT NONE
          +  1.0/(1.0+(k_solids/k_ice-1.0)*(1.0-2.0*0.125)))/3.0
       ksat_f = k_ice*(1.0+(1.0-vf_pores_s)*(aa*k_solids/k_ice-1.0)) &
                 / (1.0+(1.0-vf_pores_s)*(aa-1.0))
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_8)
+
+      case (8)
 ! -----------------------------------------------------------------------------------------
 ! [8] Yan & He et al., 2019: A generalized model for estimating effective soil thermal conductivity
 !     based on the Kasubuchi algorithm, Geoderma, Vol 353, 227-242
@@ -295,9 +296,8 @@ IMPLICIT NONE
       ksat_u = k_solids * k_water**vf_pores_s
       ksat_f = k_solids * k_ice**vf_pores_s
 
-#endif
 
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_9)
+      case (9)
 !*-----------------------------------------------------------------------------------------
 !*[9] Tarnawski et al (2018) Canadian field soils IV: Modeling thermal
 !*    conductivity at dryness and saturation. Int J Thermophys (2018) 39:35
@@ -311,9 +311,9 @@ IMPLICIT NONE
 !*       ksat_u = 1.284 + 13.36e-6*vf_pores_s**(-17.484)
 !*       ksat_f = ?
 !*    endif
-#endif
-!*
-#if(defined THERMAL_CONDUCTIVITY_SCHEME_10)
+
+
+      case (10)
 !*-----------------------------------------------------------------------------------------
 !*[10] Tarnawski et al (2018) Canadian field soils IV: Modeling thermal
 !*    conductivity at dryness and saturation. Int J Thermophys (2018) 39:35
@@ -328,7 +328,7 @@ IMPLICIT NONE
 !*       ksat_u = (5.0831-3.437*vf_pores_s)/(1.517+1.18*vf_pores_s)
 !*       ksat_f = ?
 !*    endif
-#endif
+      end select
 !*-----------------------------------------------------------------------------------------
 
 

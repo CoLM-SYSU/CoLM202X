@@ -28,9 +28,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
 #endif
            hksati       ,csol         ,k_solids     ,dksatu       ,&
            dksatf       ,dkdry        ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     ,BA_beta      ,&
-#endif
            alb_roof     ,alb_wall     ,alb_gimp     ,alb_gper     ,&
 
          ! vegetation information
@@ -216,10 +214,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         dksatf    (nl_soil),&! thermal conductivity of saturated frozen soil [W/m-K]
         dkdry     (nl_soil),&! thermal conductivity for dry soil  [J/(K s m)]
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha  (nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta   (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
         alb_roof(2,2)      ,&! albedo of roof [-]
         alb_wall(2,2)      ,&! albedo of walls [-]
         alb_gimp(2,2)      ,&! albedo of impervious [-]
@@ -883,9 +879,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          sc_vgm               ,fc_vgm               ,&
 #endif
          k_solids             ,dksatu               ,dksatf               ,dkdry                ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          BA_alpha             ,BA_beta              ,&
-#endif
          cv_roof              ,cv_wall              ,cv_gimp              ,&
          tk_roof              ,tk_wall              ,tk_gimp              ,dz_roofsno(lbr:)     ,&
          dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,dz_wall(:)           ,&

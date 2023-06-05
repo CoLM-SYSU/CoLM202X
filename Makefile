@@ -266,16 +266,15 @@ OBJS_MAIN = \
 				MOD_Ozone.o                               \
 				MOD_LeafTemperature.o                     \
 				MOD_LeafTemperaturePC.o                   \
-				MOD_SoilHcapCond.o                        \
 				MOD_SoilThermalParameters.o               \
 				MOD_SoilSnowHydrology.o                   \
 				MOD_SnowLayersCombineDivide.o             \
-				MOD_PhaseChange.o                               \
+				MOD_PhaseChange.o                         \
 				MOD_Glacier.o                             \
 				MOD_Lake.o                                \
 				MOD_SimpleOcean.o                         \
 				MOD_GroundFluxes.o                        \
-				MOD_GroundTemperature.o                           \
+				MOD_GroundTemperature.o                   \
 				MOD_LeafInterception.o                    \
 				MOD_NetSolar.o                            \
 				MOD_WetBulb.o                             \
