@@ -35,7 +35,7 @@
    DEF_file_mesh = '/tera05/zhangsp/data/landdata/mask/landmask_igbp_25km.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
 
    ! whether use CBL height
    DEF_USE_CBL_HEIGHT = .true.

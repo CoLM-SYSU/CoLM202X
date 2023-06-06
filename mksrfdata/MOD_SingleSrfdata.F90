@@ -32,15 +32,15 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_htop_pfts (:)
 #endif
 
-   REAL(r8), allocatable :: SITE_LAI_clim (:)
-   REAL(r8), allocatable :: SITE_SAI_clim (:)
+   REAL(r8), allocatable :: SITE_LAI_monthly (:,:)
+   REAL(r8), allocatable :: SITE_SAI_monthly (:,:)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   REAL(r8), allocatable :: SITE_LAI_pfts_clim (:,:)
-   REAL(r8), allocatable :: SITE_SAI_pfts_clim (:,:)
+   REAL(r8), allocatable :: SITE_LAI_pfts_monthly (:,:,:)
+   REAL(r8), allocatable :: SITE_SAI_pfts_monthly (:,:,:)
 #endif
 
-   INTEGER,  allocatable :: SITE_LAI_year  (:)
-   REAL(r8), allocatable :: SITE_LAI_modis (:,:)
+   INTEGER,  allocatable :: SITE_LAI_year (:)
+   REAL(r8), allocatable :: SITE_LAI_8day (:,:)
 
    REAL(r8) :: SITE_lakedepth = 1.
 
@@ -127,17 +127,17 @@ CONTAINS
       IF ((.not. mksrfdata) .or. USE_SITE_LAI) THEN
          ! otherwise, retrieve from database by Aggregation_LAI.F90
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF (DEF_LAI_CLIM) THEN
-            CALL ncio_read_serial (fsrfdata, 'LAI_pfts_clim', SITE_LAI_pfts_clim)
-            CALL ncio_read_serial (fsrfdata, 'SAI_pfts_clim', SITE_SAI_pfts_clim)
+         IF (DEF_LAI_MONTHLY) THEN
+            CALL ncio_read_serial (fsrfdata, 'LAI_pfts_monthly', SITE_LAI_pfts_monthly)
+            CALL ncio_read_serial (fsrfdata, 'SAI_pfts_monthly', SITE_SAI_pfts_monthly)
          ENDIF
 #else
-         IF (DEF_LAI_CLIM) THEN
-            CALL ncio_read_serial (fsrfdata, 'LAI_clim', SITE_LAI_clim)
-            CALL ncio_read_serial (fsrfdata, 'SAI_clim', SITE_SAI_clim)
+         IF (DEF_LAI_MONTHLY) THEN
+            CALL ncio_read_serial (fsrfdata, 'LAI_monthly', SITE_LAI_monthly)
+            CALL ncio_read_serial (fsrfdata, 'SAI_monthly', SITE_SAI_monthly)
          ELSE
-            CALL ncio_read_serial (fsrfdata, 'LAI_year',  SITE_LAI_year)
-            CALL ncio_read_serial (fsrfdata, 'LAI_modis', SITE_LAI_modis)
+            CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
+            CALL ncio_read_serial (fsrfdata, 'LAI_8day', SITE_LAI_8day)
          ENDIF
 #endif
       ENDIF
@@ -221,7 +221,8 @@ CONTAINS
 #if (defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
-      IF (DEF_LAI_CLIM) THEN
+      IF (DEF_LAI_MONTHLY) THEN
+         CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
          CALL ncio_define_dimension (fsrfdata, 'month', 12)
       ELSE
          CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
@@ -259,22 +260,23 @@ CONTAINS
 
       source = datasource(USE_SITE_LAI)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      IF (DEF_LAI_CLIM) THEN
-         CALL ncio_write_serial (fsrfdata, 'LAI_pfts_clim', SITE_LAI_pfts_clim, 'pft', 'month')
-         CALL ncio_write_serial (fsrfdata, 'SAI_pfts_clim', SITE_SAI_pfts_clim, 'pft', 'month')
-         CALL ncio_put_attr     (fsrfdata, 'LAI_pfts_clim', 'source', source)
-         CALL ncio_put_attr     (fsrfdata, 'SAI_pfts_clim', 'source', source)
+      IF (DEF_LAI_MONTHLY) THEN
+         CALL ncio_write_serial (fsrfdata, 'LAI_pfts_monthly', SITE_LAI_pfts_monthly, 'pft', 'month', 'LAI_year')
+         CALL ncio_write_serial (fsrfdata, 'SAI_pfts_monthly', SITE_SAI_pfts_monthly, 'pft', 'month', 'LAI_year')
+         CALL ncio_put_attr     (fsrfdata, 'LAI_pfts_monthly', 'source', source)
+         CALL ncio_put_attr     (fsrfdata, 'SAI_pfts_monthly', 'source', source)
       ENDIF
 #else
-      IF (DEF_LAI_CLIM) THEN
-         CALL ncio_write_serial (fsrfdata, 'LAI_clim', SITE_LAI_clim, 'month')
-         CALL ncio_write_serial (fsrfdata, 'SAI_clim', SITE_SAI_clim, 'month')
-         CALL ncio_put_attr     (fsrfdata, 'LAI_clim', 'source', source)
-         CALL ncio_put_attr     (fsrfdata, 'SAI_clim', 'source', source)
+      IF (DEF_LAI_MONTHLY) THEN
+         CALL ncio_write_serial (fsrfdata, 'LAI_year',    SITE_LAI_year, 'LAI_year')
+         CALL ncio_write_serial (fsrfdata, 'LAI_monthly', SITE_LAI_monthly, 'month', 'LAI_year')
+         CALL ncio_write_serial (fsrfdata, 'SAI_monthly', SITE_SAI_monthly, 'month', 'LAI_year')
+         CALL ncio_put_attr     (fsrfdata, 'LAI_monthly', 'source', source)
+         CALL ncio_put_attr     (fsrfdata, 'SAI_monthly', 'source', source)
       ELSE
-         CALL ncio_write_serial (fsrfdata, 'LAI_year',  SITE_LAI_year,  'LAI_year')
-         CALL ncio_write_serial (fsrfdata, 'LAI_modis', SITE_LAI_modis, 'J8day', 'LAI_year')
-         CALL ncio_put_attr     (fsrfdata, 'LAI_modis', 'source', source)
+         CALL ncio_write_serial (fsrfdata, 'LAI_year', SITE_LAI_year, 'LAI_year')
+         CALL ncio_write_serial (fsrfdata, 'LAI_8day', SITE_LAI_8day, 'J8day', 'LAI_year')
+         CALL ncio_put_attr     (fsrfdata, 'LAI_8day', 'source', source)
       ENDIF
 #endif
 
@@ -381,15 +383,15 @@ CONTAINS
       IF (allocated(SITE_htop_pfts)) deallocate(SITE_htop_pfts)
 #endif
 
-      IF (allocated(SITE_LAI_clim)) deallocate(SITE_LAI_clim)
-      IF (allocated(SITE_SAI_clim)) deallocate(SITE_SAI_clim)
+      IF (allocated(SITE_LAI_monthly)) deallocate(SITE_LAI_monthly)
+      IF (allocated(SITE_SAI_monthly)) deallocate(SITE_SAI_monthly)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-      IF (allocated(SITE_LAI_pfts_clim)) deallocate(SITE_LAI_pfts_clim)
-      IF (allocated(SITE_SAI_pfts_clim)) deallocate(SITE_SAI_pfts_clim)
+      IF (allocated(SITE_LAI_pfts_monthly)) deallocate(SITE_LAI_pfts_monthly)
+      IF (allocated(SITE_SAI_pfts_monthly)) deallocate(SITE_SAI_pfts_monthly)
 #endif
 
-      IF (allocated(SITE_LAI_year )) deallocate(SITE_LAI_year )
-      IF (allocated(SITE_LAI_modis)) deallocate(SITE_LAI_modis)
+      IF (allocated(SITE_LAI_year)) deallocate(SITE_LAI_year)
+      IF (allocated(SITE_LAI_8day)) deallocate(SITE_LAI_8day)
 
       IF (allocated(SITE_soil_vf_quartz_mineral)) deallocate(SITE_soil_vf_quartz_mineral)
       IF (allocated(SITE_soil_vf_gravels       )) deallocate(SITE_soil_vf_gravels       )

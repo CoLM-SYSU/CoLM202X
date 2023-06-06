@@ -101,24 +101,33 @@ MODULE MOD_Namelist
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
-   logical :: DEF_LAI_CLIM = .FALSE.
+   ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
+   logical :: DEF_LAI_MONTHLY = .true.
    INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 
    ! ------LAI change and Land cover year setting ----------
-   ! 05/2023, add by Dong: use for updating LAI with simulation year
-   LOGICAL :: DEF_LAICHANGE = .FALSE.
+   ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
+   LOGICAL :: DEF_LAI_CHANGE_YEARLY = .TRUE.
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
    LOGICAL :: DEF_USE_LAIFEEDBACK = .TRUE.
 
-   ! ------ LULCC -------
-   INTEGER :: DEF_LC_YEAR   = 2005
+   ! 06/2023, add by hua yuan and wenzong dong
+   ! ------ Land use and land cover (LULC) related -------
 
-   ! ------ URBAN -------
-   !INTEGER :: DEF_Urban_type_scheme = 1
-   LOGICAL :: DEF_Urban_BEM    = .true.
-   LOGICAL :: DEF_Urban_TREE   = .true.
-   LOGICAL :: DEF_Urban_WATER  = .true.
-   LOGICAL :: DEF_Urban_LUCY   = .true.
+   ! USE a static year land cover type
+   INTEGER :: DEF_LC_YEAR      = 2005
+
+   ! Options for LULCC year-to-year transfer schemes
+   ! 1: Same Type Assignment scheme (STA), state variables assignment for the same TYPE (LC, PFT or PC)
+   ! 2: Energy and Mass Conservation scheme (EMC), DO energy and mass conservation calculation
+   INTEGER :: DEF_LULCC_SCHEME = 1
+
+   ! ------ Urban model related -------
+   !INTEGER :: DEF_URBAN_type_scheme = 1
+   LOGICAL :: DEF_URBAN_BEM    = .true.
+   LOGICAL :: DEF_URBAN_TREE   = .true.
+   LOGICAL :: DEF_URBAN_WATER  = .true.
+   LOGICAL :: DEF_URBAN_LUCY   = .true.
 
    ! ------ SOIL parameters and supercool water setting -------
    LOGICAL :: DEF_USE_SOILPAR_UPS_FIT = .true.     ! soil hydraulic parameters are upscaled from rawdata (1km resolution)
@@ -141,6 +150,7 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_BEDROCK                 = .false.
    LOGICAL :: DEF_USE_OZONESTRESS             = .false.
    LOGICAL :: DEF_USE_OZONEDATA               = .false.
+   logical :: DEF_USE_SNICAR                  = .false.
 
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
@@ -616,17 +626,21 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
 
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
+         DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
 
-         !DEF_Urban_type_scheme,           &
-         DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
-         DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
-         DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
-         DEF_Urban_LUCY,                  &
+         DEF_LC_YEAR,                     &
+         DEF_LULCC_SCHEME,                &
+
+        !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
+         DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
+         DEF_URBAN_WATER,                 &   !add by hua yuan, modeling urban water or not
+         DEF_URBAN_LUCY,                  &
 
          DEF_USE_SOILPAR_UPS_FIT,         &
          DEF_THERMAL_CONDUCTIVITY_SCHEME, &
@@ -635,9 +649,6 @@ CONTAINS
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
-
-         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
-         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
@@ -648,6 +659,7 @@ CONTAINS
          DEF_USE_BEDROCK,                 &
          DEF_USE_OZONESTRESS,             &
          DEF_USE_OZONEDATA,               &
+         DEF_USE_SNICAR,                  &
 
          DEF_precip_phase_discrimination_scheme, &
 
@@ -733,11 +745,11 @@ CONTAINS
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF (.not. DEF_LAI_CLIM) THEN
+         IF (.not.DEF_LAI_MONTHLY) THEN
             write(*,*) 'Warning: 8-day LAI data is not supported for '
             write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
-            write(*,*) 'Changed to climatic data.'
-            DEF_LAI_CLIM = .true.
+            write(*,*) 'Changed to monthly data.'
+            DEF_LAI_MONTHLY = .true.
          ENDIF
 #endif
 
@@ -817,19 +829,21 @@ CONTAINS
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      ! 05/2023, added by Dong
-      CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 05/2023, added by Xingjie lu
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! LULC related
+      CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
-      CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_LUCY ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_LUCY,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 06/2023, added by weinan
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -837,7 +851,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !zhongwang wei, 20210927: add option to read non-climatological mean LAI
-      call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
