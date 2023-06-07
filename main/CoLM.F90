@@ -267,7 +267,7 @@ PROGRAM CoLM
 
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
+   call colm_CaMa_init !initialize CaMa-Flood
 #endif
 
    IF(DEF_USE_OZONEDATA)THEN
@@ -400,7 +400,7 @@ PROGRAM CoLM
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_drv(idate(3)) !zhongwang wei, 20210927: run CaMa-Flood
+   call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file
@@ -481,7 +481,7 @@ PROGRAM CoLM
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_cama_exit !zhongwang wei, 20210927: finalize CaMa-Flood
+   call colm_cama_exit ! finalize CaMa-Flood
 #endif
 
    if (p_is_master) then

@@ -850,14 +850,10 @@ CONTAINS
       CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME,  1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
-      !zhongwang wei, 20220520: add option to choose different canopy interception schemes
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
       call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
 
-      !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
 

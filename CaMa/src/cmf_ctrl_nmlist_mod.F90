@@ -340,7 +340,7 @@ IF ( LWEVAPFIX .AND. .NOT. LWEVAP ) THEN
   WRITE(LOGNAM,*) "LWEVAPFIX can only be active if LWEVAP is active"
 ENDIF 
 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+!  add water re-infiltration calculation 
 IF ( LWINFILTFIX .AND. .NOT. LWINFILT ) THEN
   WRITE(LOGNAM,*) "LWINFILTFIX=true and LWINFILT=false"
   WRITE(LOGNAM,*) "LWINFILTFIX can only be active if LWINFILT is active"

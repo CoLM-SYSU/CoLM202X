@@ -20,7 +20,7 @@ SUBROUTINE CoLMMAIN ( &
            BA_alpha,     BA_beta,                                   &
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-           !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
+           !add flood depth, flood fraction, flood evaporation and flood re-infiltration
            flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
 #endif
 
@@ -173,7 +173,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
-   !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
+   !get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
    USE MOD_CaMa_colmCaMa,only:get_fldevp
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
@@ -534,7 +534,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 #if(defined CaMa_Flood)
-      !zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+      !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
       REAL(r8) :: kk
       REAL(r8) :: taux_fld       ! wind stress: E-W [kg/m/s**2]
       REAL(r8) :: tauy_fld       ! wind stress: N-S [kg/m/s**2]
@@ -628,7 +628,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined LULC_USGS || defined LULC_IGBP)
-!zhongwang wei, 20221220: add option for canopy interception calculation.
+! add option for canopy interception calculation.
 if (DEF_Interception_scheme==1) then
    CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
@@ -805,7 +805,7 @@ ENDIF
               wa                ,qcharge           ,errw_rsub &
 
 #if(defined CaMa_Flood)
-            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
+            !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
             ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR
@@ -834,7 +834,7 @@ ENDIF
               wimp              ,zwt               ,dpond             ,wa                ,&
               qcharge           ,errw_rsub &
 #if(defined CaMa_Flood)
-            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
+            !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
 #ifdef SNICAR

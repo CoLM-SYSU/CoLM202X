@@ -31,7 +31,7 @@ USE YOS_CMF_DIAG,       ONLY: P0GLBSTOPRE,P0GLBSTONXT,P0GLBSTONEW,P0GLBRIVINF,P0
 IMPLICIT NONE
 ! Save for OpenMP
 INTEGER(KIND=JPIM),SAVE    ::  ISEQ
-REAL(KIND=JPRB),SAVE       ::  DRIVROF, DFLDROF, DWEVAPEX,DWINFILTEX !added by Zhongwang Wei @ SYSU 2022.11.20
+REAL(KIND=JPRB),SAVE       ::  DRIVROF, DFLDROF, DWEVAPEX,DWINFILTEX 
 !$OMP THREADPRIVATE           (DRIVROF, DFLDROF, DWEVAPEX,DWINFILTEX)
 !================================================
 IF ( LGDWDLY ) THEN
@@ -94,7 +94,6 @@ DO ISEQ=1, NSEQALL
     !! Find out amount of water to be extracted from flooplain reservoir
     !! Assuming " water re-infiltration", multiplied by flood area fraction
     !! Limited by total amount of flooplain storage 
-    !!added by Zhongwang Wei @ SYSU 2022.11.20
     D2WINFILTEX = MIN(P2FLDSTO(ISEQ,1),D2FLDFRC(ISEQ,1)*DT*D2WINFILT(ISEQ,1)*1._JPRD)
     P2FLDSTO(ISEQ,1) = P2FLDSTO(ISEQ,1) - DWINFILTEX 
     D2WINFILTEX(ISEQ,1) = DWINFILTEX/DT ! keept for output as flux 
