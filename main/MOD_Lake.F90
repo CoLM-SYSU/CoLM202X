@@ -904,7 +904,7 @@ MODULE MOD_Lake
       fgrnd1 = betaprime*sabg + forc_frl - olrg - fseng - htvp*fevpg
 
 #ifdef SNICAR
-      ! January 12, 2023 by Yuan Hua
+      ! January 12, 2023 by Yongjiu Dai
       hs = sabg_lyr(lb) + forc_frl - olrg - fseng - htvp*fevpg
       dhsdT = 0.0
 #endif
@@ -1006,7 +1006,7 @@ MODULE MOD_Lake
       end do
 
       ! Set up solar source terms (phix)
-      ! Modified January 12, 2023 by Yuan Hua
+      ! Modified January 12, 2023 by Yongjiu Dai
 #ifndef SNICAR
       if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0)) then      !no snow cover, unfrozen layer lakes
 #endif
@@ -1589,7 +1589,7 @@ MODULE MOD_Lake
   real(r8), INTENT(inout) :: sm     ! rate of snow melt (mm H2O /s)
 
 #ifdef SNICAR
-! Aerosol Fluxes (Jan. 07, 2023 by Yuan Hua)
+! Aerosol Fluxes (Jan. 07, 2023 by Yongjiu Dai)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
   real(r8), INTENT(inout) :: &

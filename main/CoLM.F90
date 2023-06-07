@@ -74,7 +74,7 @@ PROGRAM CoLM
 #endif
 
    USE MOD_Ozone, only: init_ozone_data, update_ozone_data
- 
+
    use MOD_SrfdataRestart
    USE MOD_LAIReadin
    USE MOD_NitrifReadin
@@ -118,7 +118,7 @@ PROGRAM CoLM
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
    INTEGER :: month, mday, month_p, mday_p
-   INTEGER :: spinup_repeat, lc_year
+   INTEGER :: spinup_repeat, lc_year, lai_year
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
@@ -189,21 +189,21 @@ PROGRAM CoLM
 
    call mesh_load_from_file (dir_landdata, lc_year)
 
-   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, lc_year)
+   call pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, lc_year)
+   CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , lc_year)
 #endif
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
 #ifdef LULC_IGBP_PFT
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
+   call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
    CALL map_patch_to_pft
 #endif
 
 #ifdef LULC_IGBP_PC
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
+   call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , lc_year)
    CALL map_patch_to_pc
 #endif
 
@@ -271,7 +271,7 @@ PROGRAM CoLM
 #endif
 
    IF(DEF_USE_OZONEDATA)THEN
-      CALL init_Ozone_data(itstamp,sdate)
+      CALL init_Ozone_data (itstamp,sdate)
    ENDIF
 #ifdef Fire
    CALL init_lightning_data (itstamp,sdate)
@@ -344,29 +344,37 @@ PROGRAM CoLM
       endif
 #else
       ! READ in Leaf area index and stem area index
-      ! Update every 8 days (time interval of the MODIS LAI data)
       ! ----------------------------------------------------------------------
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
-      IF (DEF_LAI_CLIM) then
-         ! yuan, 08/03/2019: read global LAI/SAI data
+      ! Hua Yuan, 08/03/2019: read global monthly LAI/SAI data
+      ! zhongwang wei, 20210927: add option to read non-climatological mean LAI
+      ! Update every 8 days (time interval of the MODIS LAI data)
+      ! Hua Yuan, 06/2023: change namelist DEF_LAI_MONTHLY to DEF_LAI_MONTHLY
+      ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
+      !
+      ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
+      ! case, that means the LAI changes without condisderation of land cover change.
+
+      IF (DEF_LAI_CHANGE_YEARLY) THEN
+         lai_year = jdate(1)
+      ELSE
+         lai_year = DEF_LC_YEAR
+      ENDIF
+
+      IF (DEF_LAI_MONTHLY) THEN
          CALL julian2monthday (jdate(1), jdate(2), month, mday)
          IF (month /= month_p) THEN
-            IF (DEF_LAICHANGE) THEN
-               CALL LAI_readin (jdate(1), month, dir_landdata)
+               CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(jdate(1), month, dir_landdata)
+               CALL UrbanLAI_readin(lai_year, month, dir_landdata)
 #endif
-            ELSE
-               CALL LAI_readin (lc_year, month, dir_landdata)
-#ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(lc_year, month, dir_landdata)
-#endif
-            ENDIF
          ENDIF
       ELSE
+         ! Update every 8 days (time interval of the MODIS LAI data)
          Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
-            CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
+            CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
+            ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
+            !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
          ENDIF
       ENDIF
 #endif
@@ -409,7 +417,6 @@ PROGRAM CoLM
                            idate,greenwich)
 
          CALL allocate_1D_Forcing
-
          CALL forcing_init (dir_forcing, deltim, idate)
          CALL deallocate_acc_fluxes
          call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)

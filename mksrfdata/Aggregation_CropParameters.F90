@@ -86,7 +86,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1
@@ -182,7 +182,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1
@@ -314,7 +314,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1

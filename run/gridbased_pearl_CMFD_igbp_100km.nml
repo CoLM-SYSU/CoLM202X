@@ -35,7 +35,7 @@
    ! DEF_file_mesh_filter = '/tera05/zhangsp/data/landdata/filter/pearl_mesh_filter.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
    
    ! Model settings
    DEF_LANDONLY = .true.

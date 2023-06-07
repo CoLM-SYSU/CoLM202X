@@ -65,8 +65,8 @@ MODULE MOD_LAIReadin
 #ifdef LULC_USGS
       real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
          vegc=(/1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, &
-         1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
-         1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, &
+                1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0 /)
 #endif
 
       ! READ in Leaf area index and stem area index
@@ -74,8 +74,8 @@ MODULE MOD_LAIReadin
       landdir = trim(dir_landdata) // '/LAI'
 
 #ifdef SinglePoint
-      IF (.not. DEF_LAI_CLIM) THEN
-         iyear = findloc(SITE_LAI_year, year, dim=1)
+      iyear = findloc(SITE_LAI_year, year, dim=1)
+      IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
 #endif
@@ -84,14 +84,14 @@ MODULE MOD_LAIReadin
 
 !TODO: need to consider single point for urban model
 #ifdef SinglePoint
-      IF (DEF_LAI_CLIM) THEN
-         tlai(:) = SITE_LAI_clim(time)
-         tsai(:) = SITE_SAI_clim(time)
+      IF (DEF_LAI_MONTHLY) THEN
+         tlai(:) = SITE_LAI_monthly(time,iyear)
+         tsai(:) = SITE_SAI_monthly(time,iyear)
       ELSE
-         tlai(:) = SITE_LAI_modis(itime,iyear)
+         tlai(:) = SITE_LAI_8day(itime,iyear)
       ENDIF
 #else
-      IF (DEF_LAI_CLIM) THEN
+      IF (DEF_LAI_MONTHLY) THEN
          write(cyear,'(i4.4)') year
          write(ctime,'(i2.2)') time
 
@@ -125,7 +125,7 @@ MODULE MOD_LAIReadin
                   fveg(npatch)  = fveg0(m)           !fraction of veg. cover
                   IF (fveg0(m) > 0) THEN
                      tlai(npatch)  = tlai(npatch)/fveg0(m) !leaf area index
-                     IF (DEF_LAI_CLIM) THEN
+                     IF (DEF_LAI_MONTHLY) THEN
                         tsai(npatch)  = tsai(npatch)/fveg0(m) !stem are index
                      ELSE
                         tsai(npatch)  = sai0(m) !stem are index
@@ -148,11 +148,11 @@ MODULE MOD_LAIReadin
 
 #ifdef SinglePoint
       !TODO: how to add time parameter in single point case
-      IF (DEF_LAI_CLIM) THEN
-         tlai_p(:) = pack(SITE_LAI_pfts_clim(:,time), SITE_pctpfts > 0.)
-         tsai_p(:) = pack(SITE_SAI_pfts_clim(:,time), SITE_pctpfts > 0.)
-         tlai(:)   = sum (SITE_LAI_pfts_clim(:,time) * SITE_pctpfts)
-         tsai(:)   = sum (SITE_SAI_pfts_clim(:,time) * SITE_pctpfts)
+      IF (DEF_LAI_MONTHLY) THEN
+         tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
+         tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
+         tlai(:)   = sum (SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
       ENDIF
 #else
 
@@ -193,11 +193,11 @@ MODULE MOD_LAIReadin
 #ifdef LULC_IGBP_PC
 
 #ifdef SinglePoint
-      IF (DEF_LAI_CLIM) THEN
-         tlai(:)   = sum(SITE_LAI_pfts_clim(:,time) * SITE_pctpfts)
-         tsai(:)   = sum(SITE_SAI_pfts_clim(:,time) * SITE_pctpfts)
-         tlai_c(:,1) = SITE_LAI_pfts_clim(:,time)
-         tsai_c(:,1) = SITE_SAI_pfts_clim(:,time)
+      IF (DEF_LAI_MONTHLY) THEN
+         tlai(:)   = sum(SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         tsai(:)   = sum(SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         tlai_c(:,1) = SITE_LAI_pfts_monthly(:,time,iyear)
+         tsai_c(:,1) = SITE_SAI_pfts_monthly(:,time,iyear)
       ENDIF
 #else
 
