@@ -87,7 +87,6 @@ contains
       call mp2g_hist%build (landpatch, ghist, pctcrop)
 #endif
 
-      !>>>>>add by zhongwang wei
       call hist_concat%set (ghist)
 #ifdef SinglePoint
       hist_concat%ginfo%lat_c(:) = SITE_lat_location
@@ -97,7 +96,6 @@ contains
       if (trim(DEF_HIST_mode) == 'one') then
          hist_data_id = 1000
       end if
-      !<<<<<add by zhongwang wei
 
 
    end subroutine hist_init
@@ -221,7 +219,7 @@ contains
          end if
 
 #if(defined CaMa_Flood)
-         !zhongwang wei, 20221220: add variables to write cama-flood output.
+         !add variables to write cama-flood output.
          file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' !file name of cama-flood output
          call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         ! write CaMa-Flood output
 #endif
