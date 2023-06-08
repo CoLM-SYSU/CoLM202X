@@ -218,7 +218,7 @@ WRITE(LOGNAM,*) "CMF::DIAG_INIT: initialize diagnostic variables"
 !*** 1. snapshot 2D diagnostics
 N2DIAG=12
 IF ( LLEVEE  ) N2DIAG=N2DIAG+1 !! levee variables are added     (P2LEVSTO )
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+! add water re-infiltration calculation 
 IF ( LWEVAP  ) N2DIAG=N2DIAG+1 !! evapolation added             (D2WEVAPEX) 
 IF ( LWINFILT  ) N2DIAG=N2DIAG+1 !! Infiltration added            (D2WEVAPEX) 
 IF ( LOUTINS ) N2DIAG=N2DIAG+1 !! instantaneous discharge added (D2OUTINS )
@@ -295,7 +295,7 @@ ELSE
   D2WEVAPEX_AVG => D2DAMMY(:,:)
 ENDIF
 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+!  add water re-infiltration calculation 
 IF ( LWINFILT ) THEN
   IND=IND+1
   D2WINFILTEX_AVG => D2DIAG_AVG(:,:,IND)

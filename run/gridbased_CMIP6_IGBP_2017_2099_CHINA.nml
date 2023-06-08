@@ -35,7 +35,7 @@
    DEF_file_mesh = '/share/home/dq013/zhwei/colm/data/landdata/landmask_igbp_25km.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
 
    ! Model settings
    DEF_LANDONLY = .true.

@@ -41,7 +41,7 @@ MODULE MOD_SoilSnowHydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  &  ! zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+            ,flddepth,fldfrc,qinfl_fld  & 
 #endif
 #ifdef SNICAR
              ,forc_aer   ,&
@@ -217,7 +217,7 @@ MODULE MOD_SoilSnowHydrology
       qinfl = gwat - rsur
 #if(defined CaMa_Flood)
    IF (LWINFILT) then
-         ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+         !  re-infiltration [mm/s] calculation.
          ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
          ! the re-infiltration will not be calculated.
       IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
@@ -596,7 +596,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 #if(defined CaMa_Flood)
       IF (LWINFILT) then
-            ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+            ! \ re-infiltration [mm/s] calculation.
             ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
             ! the re-infiltration will not be calculated.
          IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then

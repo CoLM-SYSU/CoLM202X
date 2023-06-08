@@ -629,7 +629,7 @@ MODULE MOD_Lulcc_Initialize
    end if
 #else
 
-   IF (DEF_LAI_CLIM) then
+   IF (DEF_LAI_MONTHLY) then
       ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)

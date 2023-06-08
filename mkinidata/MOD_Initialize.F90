@@ -561,9 +561,9 @@ MODULE MOD_Initialize
       year = idate(1)
       jday = idate(2)
 
-      IF (DEF_LAI_CLIM) then
+      IF (DEF_LAI_MONTHLY) then
          CALL julian2monthday (year, jday, month, mday)
-         IF (DEF_LAICHANGE) THEN
+         IF (DEF_LAI_CHANGE_YEARLY) THEN
             ! 08/03/2019, yuan: read global LAI/SAI data
             CALL LAI_readin (year, month, dir_landdata)
 #ifdef URBAN_MODEL

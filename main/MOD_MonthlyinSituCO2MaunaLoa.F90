@@ -58,8 +58,8 @@ MODULE MOD_MonthlyinSituCO2MaunaLoa
    SAVE
 
    ! define the CO2 data time range
-   INTEGER, parameter :: syear  = 1849 !Modified by Zhongwang Wei @ SYSU 2022.12.12
-   INTEGER, parameter :: eyear  = 2100 !Modified by Zhongwang Wei @ SYSU 2022.12.12
+   INTEGER, parameter :: syear  = 1849 
+   INTEGER, parameter :: eyear  = 2100 
    INTEGER, parameter :: smonth = 1
    INTEGER, parameter :: emonth = 12
 
