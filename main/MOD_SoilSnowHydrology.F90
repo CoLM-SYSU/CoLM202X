@@ -387,14 +387,9 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use MOD_Precision
-  use MOD_Const_Physical, only : denice, denh2o, tfrz
   USE MOD_Hydro_SoilWater
-
-#ifndef LATERAL_FLOW
-  USE MOD_Vars_1DFluxes, only : rsub
-#else
-  USE MOD_Vars_1DFluxes, only : rsub, rsubs_pch
-#endif
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
+  USE MOD_Vars_1DFluxes,  only : rsub
 
   implicit none
 
@@ -664,14 +659,12 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ENDIF
       ENDIF
 
-      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-      rsub(ipatch) = rsubst
-#else
-      ! for lateral flow:
-      ! "rsub" is defined as baseflow to river, which is calculated in hydro/mod_subsurface_flow.F90
-      ! "rsubs_pch" is defined as baseflow to neighbouring patches
-      rsubst = rsubs_pch(ipatch)
+      rsub(ipatch) = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 #endif
+
+      ! for lateral flow:
+      ! "rsub" is calculated in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
+      rsubst = rsub(ipatch)
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nlev)
@@ -768,11 +761,6 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         write(*,*) 'Warning: negative', wliq_soisno(1:nlev)
      ENDIF
 #endif
-
-     IF (dpond > pondmx) THEN
-        rnof = rnof + (dpond - pondmx) / deltim
-        dpond = pondmx
-     ENDIF
 
 !=======================================================================
 ! [6] assumed hydrological scheme for the wetland and glacier

@@ -165,11 +165,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Albedo
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
-#ifndef LATERAL_FLOW
   USE MOD_Vars_1DFluxes, only : rsub
-#else
-  USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
-#endif
   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
@@ -925,7 +921,8 @@ ENDIF
 #ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+      ! for lateral flow, "rsur" is removed in HYDRO/MOD_Hydro_SurfaceFlow.F90
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -1167,7 +1164,8 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rsub(ipatch) = 0.
       rnof = rsur
 #else
-      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      ! for lateral flow, "rsub" refers to water exchage between hillslope and river
+      dpond = max(dpond - rsub(ipatch) * deltim, 0.)
       rnof = rsur + rsub(ipatch)
 #endif
 

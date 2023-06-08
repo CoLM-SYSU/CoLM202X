@@ -7,10 +7,11 @@ MODULE MOD_Hydro_Vars_1DFluxes
    IMPLICIT NONE
 
    ! -- fluxes --
-   REAL(r8), allocatable :: rsubs_pch (:)  ! mm/s
-
    REAL(r8), allocatable :: rsurf_hru (:)  ! m/s
+
+   REAL(r8), allocatable :: rsubs_pch (:)  ! mm/s
    REAL(r8), allocatable :: rsubs_hru (:)  ! m/s
+   REAL(r8), allocatable :: rsubs_bsn (:)  ! m/s
 
    REAL(r8), allocatable :: riverheight_ta (:) ! time step average of river height [m]
    REAL(r8), allocatable :: rivermomtem_ta (:) ! time step average of river momentum [m^2/s]
@@ -46,6 +47,7 @@ CONTAINS
            allocate (riverheight_ta (numbasin))
            allocate (rivermomtem_ta (numbasin))
            allocate (riverveloct_ta (numbasin))
+           allocate (rsubs_bsn      (numbasin))
         ENDIF
         IF (numhru > 0) THEN
            allocate (rsurf_hru (numhru))
@@ -62,10 +64,11 @@ CONTAINS
 
      IMPLICIT NONE
 
-     IF (allocated(rsubs_pch)) deallocate(rsubs_pch)
-
      IF (allocated(rsurf_hru)) deallocate(rsurf_hru)
+
+     IF (allocated(rsubs_pch)) deallocate(rsubs_pch)
      IF (allocated(rsubs_hru)) deallocate(rsubs_hru)
+     IF (allocated(rsubs_bsn)) deallocate(rsubs_bsn)
      
      IF (allocated(riverheight_ta)) deallocate(riverheight_ta)
      IF (allocated(rivermomtem_ta)) deallocate(rivermomtem_ta)

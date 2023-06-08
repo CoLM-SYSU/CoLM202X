@@ -2,6 +2,23 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_SurfaceFlow
+   !-------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !   
+   !   Shallow water equation solver over hillslopes.
+   !
+   !   References
+   !   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
+   !      Chichester: John Wiley & Sons; 2001.
+   !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
+   !      flows with wet-dry fronts over complex topography. 
+   !      Computers and Fluids, 38(2), 221–234.
+   !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
+   !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
+   !      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
@@ -13,7 +30,7 @@ MODULE MOD_Hydro_SurfaceFlow
 CONTAINS
    
    ! ----------
-   SUBROUTINE surface_runoff (dt)
+   SUBROUTINE surface_flow (dt)
 
       USE MOD_SPMD_Task
       USE MOD_Mesh
@@ -52,7 +69,6 @@ CONTAINS
 
       REAL(r8) :: friction, ac
       REAL(r8) :: dt_res, dt_this
-      CHARACTER(len=50) :: fmtt
 
       IF (p_is_worker) THEN
 
@@ -66,6 +82,7 @@ CONTAINS
             IF (nhru <= 1) THEN
                istt = hru_patch%substt(hrus%ihru(1))
                iend = hru_patch%subend(hrus%ihru(1))
+
                dpond_hru(hrus%ihru(1)) = sum(dpond(istt:iend) * hru_patch%subfrc(istt:iend)) / 1.0e3
                veloc_hru(hrus%ihru(1)) = 0. 
 
@@ -177,35 +194,38 @@ CONTAINS
                   sum_mflux_h(i) = sum_mflux_h(i) + mflux_fc
                   sum_mflux_h(j) = sum_mflux_h(j) - mflux_fc
                   
-                  sum_zgrad_h(i) = sum_zgrad_h(i) - hrus%flen(i) * 0.5*grav * dpond_up**2
-                  sum_zgrad_h(j) = sum_zgrad_h(j) + hrus%flen(i) * 0.5*grav * dpond_dn**2 
+                  sum_zgrad_h(i) = sum_zgrad_h(i) + hrus%flen(i) * 0.5*grav * dpond_up**2
+                  sum_zgrad_h(j) = sum_zgrad_h(j) - hrus%flen(i) * 0.5*grav * dpond_dn**2 
 
                ENDDO
 
                DO i = 1, nhru
-                  ! CFL condition
+                  ! constraint 1: CFL condition
                   IF (i > 1) then
                      IF ((veloc_h(i) /= 0.) .or. (dpond_h(i) > 0.)) THEN
                         dt_this = min(dt_this, hrus%plen(i)/(abs(veloc_h(i)) + sqrt(grav*dpond_h(i)))*0.8)
                      ENDIF
                   ENDIF
 
-                  IF (i > 1) THEN
-                     j = hrus%inext(i)
-                     ac = hrus%area(j) / (hrus%area(i)+hrus%area(j))
-                  ELSE
-                     ac = 1.
-                  ENDIF 
+                  ! IF (i > 1) THEN
+                  !    j = hrus%inext(i)
+                  !    ac = hrus%area(j) / (hrus%area(i)+hrus%area(j))
+                  ! ELSE
+                  !    ac = 1.
+                  ! ENDIF 
+                  ac = 1. 
 
+                  ! constraint 2: Avoid negative values of water
                   rsurf_h(i) = sum_hflux_h(i) / hrus%area(i)
                   IF (rsurf_h(i) > 0) THEN
                      dt_this = min(dt_this, ac * dpond_h(i) / rsurf_h(i))
                   ENDIF
                      
+                  ! constraint 3: Avoid change of flow direction
                   IF ((abs(veloc_h(i)) > 0.1) &
-                     .and. (veloc_h(i) * (sum_mflux_h(i) + sum_zgrad_h(i)) > 0)) THEN
+                     .and. (veloc_h(i) * (sum_mflux_h(i) - sum_zgrad_h(i)) > 0)) THEN
                      dt_this = min(dt_this, ac * &
-                        abs(momtm_h(i) * hrus%area(i) / (sum_mflux_h(i) + sum_zgrad_h(i))))
+                        abs(momtm_h(i) * hrus%area(i) / (sum_mflux_h(i) - sum_zgrad_h(i))))
                   ENDIF
                ENDDO 
 
@@ -218,7 +238,7 @@ CONTAINS
                      veloc_h(i) = 0
                   ELSE
                      friction = grav * nmanning_hslp**2 * abs(momtm_h(i)) / dpond_h(i)**(7.0/3.0) 
-                     momtm_h(i) = (momtm_h(i) - (sum_mflux_h(i) + sum_zgrad_h(i)) / hrus%area(i) * dt_this) &
+                     momtm_h(i) = (momtm_h(i) - (sum_mflux_h(i) - sum_zgrad_h(i)) / hrus%area(i) * dt_this) &
                         / (1 + friction * dt_this) 
                      veloc_h(i) = momtm_h(i) / dpond_h(i)
 
@@ -274,7 +294,7 @@ CONTAINS
 
       ENDIF
 
-   END SUBROUTINE surface_runoff
+   END SUBROUTINE surface_flow
 
 END MODULE MOD_Hydro_SurfaceFlow
 #endif

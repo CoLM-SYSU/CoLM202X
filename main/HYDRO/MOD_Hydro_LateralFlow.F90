@@ -67,9 +67,9 @@ CONTAINS
 
          DO istep = 1, nsubstep
 
-            CALL surface_runoff (deltime/nsubstep)
+            CALL surface_flow (deltime/nsubstep)
 
-            CALL river_flow     (deltime/nsubstep)
+            CALL river_flow   (deltime/nsubstep)
 
          ENDDO
 
@@ -101,7 +101,7 @@ CONTAINS
             rsur(:) = rsur(:) / deltime
          ENDIF
 
-         CALL subsurface_runoff (deltime)
+         CALL subsurface_flow (deltime)
 
       ENDIF
 
