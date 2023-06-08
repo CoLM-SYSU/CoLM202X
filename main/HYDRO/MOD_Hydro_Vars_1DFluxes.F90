@@ -2,22 +2,27 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_Vars_1DFluxes
+   !-------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !   
+   !   1D fluxes in lateral hydrological processes.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
    
    USE MOD_Precision
    IMPLICIT NONE
 
    ! -- fluxes --
-   REAL(r8), allocatable :: rsurf_hru (:)  ! m/s
+   REAL(r8), allocatable :: rsubs_bsn (:)  ! subsurface lateral flow between basins                      [m/s]
+   REAL(r8), allocatable :: rsubs_hru (:)  ! subsurface lateral flow between hydrological response units [m/s]
+   REAL(r8), allocatable :: rsubs_pch (:)  ! subsurface lateral flow between patches inside one HRU      [m/s]
 
-   REAL(r8), allocatable :: rsubs_pch (:)  ! mm/s
-   REAL(r8), allocatable :: rsubs_hru (:)  ! m/s
-   REAL(r8), allocatable :: rsubs_bsn (:)  ! m/s
-
-   REAL(r8), allocatable :: riverheight_ta (:) ! time step average of river height [m]
+   REAL(r8), allocatable :: riverheight_ta (:) ! time step average of river height   [m]
    REAL(r8), allocatable :: rivermomtem_ta (:) ! time step average of river momentum [m^2/s]
    REAL(r8), allocatable :: riverveloct_ta (:) ! time step average of river velocity [m/s]
 
-   REAL(r8), allocatable :: dpond_hru_ta (:) ! time step average of surface water depth [m]
+   REAL(r8), allocatable :: wdsrf_hru_ta (:) ! time step average of surface water depth    [m]
    REAL(r8), allocatable :: momtm_hru_ta (:) ! time step average of surface water momentum [m^2/s]
    REAL(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water veloctiy [m/s]
 
@@ -44,15 +49,14 @@ CONTAINS
            allocate (rsubs_pch (numpatch))
         ENDIF
         IF (numbasin > 0) THEN
+           allocate (rsubs_bsn      (numbasin))
            allocate (riverheight_ta (numbasin))
            allocate (rivermomtem_ta (numbasin))
            allocate (riverveloct_ta (numbasin))
-           allocate (rsubs_bsn      (numbasin))
         ENDIF
         IF (numhru > 0) THEN
-           allocate (rsurf_hru (numhru))
-           allocate (rsubs_hru (numhru))
-           allocate (dpond_hru_ta (numhru))
+           allocate (rsubs_hru    (numhru))
+           allocate (wdsrf_hru_ta (numhru))
            allocate (momtm_hru_ta (numhru))
            allocate (veloc_hru_ta (numhru))
         ENDIF
@@ -64,8 +68,6 @@ CONTAINS
 
      IMPLICIT NONE
 
-     IF (allocated(rsurf_hru)) deallocate(rsurf_hru)
-
      IF (allocated(rsubs_pch)) deallocate(rsubs_pch)
      IF (allocated(rsubs_hru)) deallocate(rsubs_hru)
      IF (allocated(rsubs_bsn)) deallocate(rsubs_bsn)
@@ -74,7 +76,7 @@ CONTAINS
      IF (allocated(rivermomtem_ta)) deallocate(rivermomtem_ta)
      IF (allocated(riverveloct_ta)) deallocate(riverveloct_ta)
      
-     IF (allocated(dpond_hru_ta)) deallocate(dpond_hru_ta)
+     IF (allocated(wdsrf_hru_ta)) deallocate(wdsrf_hru_ta)
      IF (allocated(momtm_hru_ta)) deallocate(momtm_hru_ta)
      IF (allocated(veloc_hru_ta)) deallocate(veloc_hru_ta)
 

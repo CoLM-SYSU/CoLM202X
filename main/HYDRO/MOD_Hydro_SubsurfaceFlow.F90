@@ -97,10 +97,8 @@ CONTAINS
             Ks_bsn      (ibasin) = 0.
             
             nhru = hrus%nhru
+
             IF (nhru <= 1) THEN
-               ps = hru_patch%substt(hrus%ihru(1))
-               pe = hru_patch%subend(hrus%ihru(1))
-               zwt_hru(hrus%ihru(1)) = sum(zwt(ps:pe) * hru_patch%subfrc(ps:pe))
                cycle
             ENDIF
             
@@ -186,7 +184,7 @@ CONTAINS
                IF (j > 1) THEN
                   zsubs_h_dn = hrus%elva(j) - zwt_h(j)
                ELSE
-                  zsubs_h_dn = hrus%elva(1) - riverdpth(ibasin) + dpond_hru(hrus%ihru(1)) 
+                  zsubs_h_dn = hrus%elva(1) - riverdpth(ibasin) + wdsrf_hru(hrus%ihru(1)) 
                ENDIF
 
                IF (j > 1) THEN
@@ -272,7 +270,6 @@ CONTAINS
 
                ENDIF
 
-               zwt_hru  (hrus%ihru(i)) = zwt_h  (i)
                rsubs_hru(hrus%ihru(i)) = rsubs_h(i)
 
             ENDDO

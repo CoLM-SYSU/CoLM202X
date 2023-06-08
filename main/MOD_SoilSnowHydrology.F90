@@ -359,7 +359,7 @@ MODULE MOD_SoilSnowHydrology
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
-             wimp        ,zwt         ,dpond       ,wa      ,qcharge,&
+             wimp        ,zwt         ,wdsrf       ,wa      ,qcharge,&
              errw_rsub                  &
 #if(defined CaMa_Flood)
              ,flddepth,fldfrc,qinfl_fld  &
@@ -447,7 +447,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         smp(1:nl_soil)   , &! soil matrix potential [mm]
         hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
         zwt              , &! the depth from ground (soil) surface to water table [m]
-        dpond            , &! depth of ponding water [mm]
+        wdsrf            , &! depth of surface water [mm]
         wa                  ! water storage in aquifer [mm]
 
   real(r8), INTENT(out) :: &
@@ -547,7 +547,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   if(patchtype<=1)then   ! soil ground only
 
       ! For water balance check, the sum of water in soil column before the calcultion
-      w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + dpond
+      w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + wdsrf
 
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
@@ -699,14 +699,14 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ENDDO
       ENDIF
 
-      dpond = max(0., dpond)
+      wdsrf = max(0., wdsrf)
 
       CALL soil_water_vertical_movement ( &
          nlev, deltim, sp_zc(1:nlev), sp_zi (0:nlev), is_permeable(1:nlev), &
          eff_porosity(1:nlev), theta_r (1:nlev), psi0 (1:nlev), hksati(1:nlev), nprms, prms(:,1:nlev), &
          porsl(nlev), &
          qraing, etr, rootr(1:nlev), rsubst, qinfl, &
-         dpond, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
+         wdsrf, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
 
       ! update the mass of liquid water
       DO j = nlev, 1, -1
@@ -729,9 +729,9 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       zwt = zwtmm/1000.0
 
 #ifndef LATERAL_FLOW
-     IF (dpond > pondmx) THEN
-        rsur = rsur + (dpond - pondmx) / deltim
-        dpond = pondmx
+     IF (wdsrf > pondmx) THEN
+        rsur = rsur + (wdsrf - pondmx) / deltim
+        wdsrf = pondmx
      ENDIF
 #endif
 
@@ -739,10 +739,10 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       rnof = rsub(ipatch) + rsur
 
 #ifndef LATERAL_FLOW
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsur-rsubst)*deltim
 #else
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsubst)*deltim
 #endif
       if(lb >= 1)then

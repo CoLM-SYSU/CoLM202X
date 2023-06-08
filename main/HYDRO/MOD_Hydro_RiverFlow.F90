@@ -96,7 +96,7 @@ CONTAINS
          DO i = 1, nriver
             istt = hru_patch%substt(basin_hru%substt(i))
             iend = hru_patch%subend(basin_hru%substt(i))
-            height_riv(i) = sum(dpond(istt:iend) * hru_patch%subfrc(istt:iend))
+            height_riv(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
             height_riv(i) = height_riv(i) / 1.0e3 ! mm to m
          ENDDO
 
@@ -291,7 +291,7 @@ CONTAINS
 
             istt = hru_patch%substt(basin_hru%substt(i))
             iend = hru_patch%subend(basin_hru%substt(i))
-            dpond(istt:iend) = height_riv(i) * 1.0e3 ! m to mm
+            wdsrf(istt:iend) = height_riv(i) * 1.0e3 ! m to mm
 
          ENDDO
             

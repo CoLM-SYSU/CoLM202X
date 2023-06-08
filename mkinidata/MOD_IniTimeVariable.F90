@@ -74,7 +74,7 @@ CONTAINS
    USE MOD_Precision
    USE MOD_Utils
    USE MOD_Const_Physical, only: tfrz
-   USE MOD_Vars_TimeVariables, only: tlai, tsai, dpond
+   USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
    USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
 #if(defined LULC_IGBP_PFT)
@@ -489,9 +489,9 @@ CONTAINS
       ENDIF
 
       ! (5) Ground
-      ! Variables: t_grnd, dpond
+      ! Variables: t_grnd, wdsrf
       t_grnd = t_soisno(1)
-      dpond  = 0.
+      wdsrf  = 0.
 
       ! (6) Leaf area
       ! Variables: sigf, lai, sai

@@ -769,7 +769,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
      real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
      real(r8), allocatable :: wat          (:) ! total water storage [mm]
-     real(r8), allocatable :: dpond        (:) ! depth of ponding water [mm]
+     real(r8), allocatable :: wdsrf        (:) ! depth of surface water [mm]
 
      real(r8), allocatable :: t_lake     (:,:) ! lake layer teperature [K]
      real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
@@ -910,7 +910,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (zwt                         (numpatch))
            allocate (wa                          (numpatch))
            allocate (wat                         (numpatch))
-           allocate (dpond                       (numpatch))
+           allocate (wdsrf                       (numpatch))
 
            allocate (t_lake              (nl_lake,numpatch))!new lake scheme
            allocate (lake_icefrac        (nl_lake,numpatch))!new lake scheme
@@ -1060,7 +1060,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (zwt                    )
            deallocate (wa                     )
            deallocate (wat                    )
-           deallocate (dpond                  )
+           deallocate (wdsrf                  )
 
            deallocate (t_lake                 ) ! new lake scheme
            deallocate (lake_icefrac           ) ! new lake scheme
@@ -1246,7 +1246,7 @@ MODULE MOD_Vars_TimeVariables
      call ncio_write_vector (file_restart, 'extkd   '   , 'patch', landpatch, extkd     , compress)                    ! diffuse and scattered diffuse PAR extinction coefficient
      call ncio_write_vector (file_restart, 'zwt     '   , 'patch', landpatch, zwt       , compress)                    ! the depth to water table [m]
      call ncio_write_vector (file_restart, 'wa      '   , 'patch', landpatch, wa        , compress)                    ! water storage in aquifer [mm]
-     call ncio_write_vector (file_restart, 'dpond   '   , 'patch', landpatch, dpond     , compress)                    ! depth of ponding water
+     call ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
 
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
      call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
@@ -1388,7 +1388,7 @@ MODULE MOD_Vars_TimeVariables
      call ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) ! the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) ! water storage in aquifer [mm]
-     call ncio_read_vector (file_restart, 'dpond   '   , landpatch, dpond      ) ! depth of ponding water
+     call ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
@@ -1519,7 +1519,7 @@ MODULE MOD_Vars_TimeVariables
      call check_vector_data ('extkd       ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
      call check_vector_data ('zwt         ', zwt        ) ! the depth to water table [m]
      call check_vector_data ('wa          ', wa         ) ! water storage in aquifer [mm]
-     call check_vector_data ('dpond       ', dpond      ) ! depth of ponding water
+     call check_vector_data ('wdsrf       ', wdsrf      ) ! depth of surface water [mm]
 
      call check_vector_data ('t_lake      ', t_lake      )!
      call check_vector_data ('lake_icefrc ', lake_icefrac)!

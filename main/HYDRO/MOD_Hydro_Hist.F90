@@ -2,11 +2,19 @@
 
 #ifdef LATERAL_FLOW
 module MOD_Hydro_Hist
+   !--------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !     Write out model results in lateral hydrological processes to history files.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !--------------------------------------------------------------------------------
 
    use MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_NetCDFSerial
    USE MOD_Vars_Global,  only : spval
+
    USE MOD_Mesh,    only : numelm
    USE MOD_LandHRU, only : numhru
    USE MOD_Hydro_Vars_TimeVariables
@@ -16,11 +24,10 @@ module MOD_Hydro_Hist
    ! -- ACC Fluxes --
    INTEGER :: nac_basin
 
-   REAL(r8), allocatable :: a_dpond_hru  (:)
+   REAL(r8), allocatable :: a_wdsrf_hru  (:)
    REAL(r8), allocatable :: a_veloc_hru  (:)
-   REAL(r8), allocatable :: a_zwt_hru    (:)
 
-   REAL(r8), allocatable :: a_rsurf_hru  (:)
+   REAL(r8), allocatable :: a_rsubs_bsn  (:)
    REAL(r8), allocatable :: a_rsubs_hru  (:)
 
    REAL(r8), allocatable :: a_height_riv (:)
@@ -44,16 +51,15 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (numhru > 0) THEN
-            allocate ( a_dpond_hru  (numhru))
+            allocate ( a_wdsrf_hru  (numhru))
             allocate ( a_veloc_hru  (numhru))
-            allocate ( a_zwt_hru    (numhru))
-            allocate ( a_rsurf_hru  (numhru))
             allocate ( a_rsubs_hru  (numhru))
          ENDIF
 
          IF (numbasin > 0) THEN
             allocate ( a_height_riv (numbasin))
             allocate ( a_veloct_riv (numbasin))
+            allocate ( a_rsubs_bsn  (numbasin))
          ENDIF
       ENDIF
 
@@ -66,11 +72,12 @@ CONTAINS
 
       implicit none
 
-      IF (allocated(a_dpond_hru )) deallocate(a_dpond_hru )
+      IF (allocated(a_wdsrf_hru )) deallocate(a_wdsrf_hru )
       IF (allocated(a_veloc_hru )) deallocate(a_veloc_hru )
-      IF (allocated(a_zwt_hru   )) deallocate(a_zwt_hru   )
-      IF (allocated(a_rsurf_hru )) deallocate(a_rsurf_hru )
+
+      IF (allocated(a_rsubs_bsn )) deallocate(a_rsubs_bsn )
       IF (allocated(a_rsubs_hru )) deallocate(a_rsubs_hru )
+
       IF (allocated(a_height_riv)) deallocate(a_height_riv)
       IF (allocated(a_veloct_riv)) deallocate(a_veloct_riv)
 
@@ -78,10 +85,6 @@ CONTAINS
 
    !---------------------------------------
    SUBROUTINE hist_basin_out (file_hist, idate)
-
-      !=======================================================================
-      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
-      !=======================================================================
 
       use MOD_Precision
       use MOD_Namelist
@@ -149,13 +152,13 @@ CONTAINS
          file_hist_basin, a_veloct_riv, numbasin, totalnumelm, 'riverveloct', 'basin', elm_data_address, &
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
-      where(a_dpond_hru /= spval)
-         a_dpond_hru = a_dpond_hru / nac_basin
+      where(a_wdsrf_hru /= spval)
+         a_wdsrf_hru = a_wdsrf_hru / nac_basin
       END where
 
       CALL vector_write_basin (&
-         file_hist_basin, a_dpond_hru, numhru, totalnumhru, 'dpond_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%dpond_hru, itime_in_file, 'Depth of Ponding Water in Hydro unit', 'm')
+         file_hist_basin, a_wdsrf_hru, numhru, totalnumhru, 'wdsrf_hru', 'hydrounit', hru_data_address, &
+         DEF_hist_vars%wdsrf_hru, itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
 
       where(a_veloc_hru /= spval)
          a_veloc_hru = a_veloc_hru / nac_basin
@@ -165,21 +168,13 @@ CONTAINS
          file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
-      where(a_zwt_hru /= spval)
-         a_zwt_hru = a_zwt_hru / nac_basin
+      where(a_rsubs_bsn /= spval)
+         a_rsubs_bsn = a_rsubs_bsn / nac_basin
       END where
 
       CALL vector_write_basin (&
-         file_hist_basin, a_zwt_hru, numhru, totalnumhru, 'zwt_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%zwt_hru, itime_in_file, 'Depth of Water Table in Hydro unit', 'm')
-
-      where(a_rsurf_hru /= spval)
-         a_rsurf_hru = a_rsurf_hru / nac_basin
-      END where
-
-      CALL vector_write_basin (&
-         file_hist_basin, a_rsurf_hru, numhru, totalnumhru, 'rsurf_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%rsurf_hru, itime_in_file, 'Surface runoff in Hydro unit', 'm/s')
+         file_hist_basin, a_rsubs_bsn, numbasin, totalnumelm, 'rsubs_bsn', 'basin', elm_data_address, &
+         DEF_hist_vars%rsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
 
       where(a_rsubs_hru /= spval)
          a_rsubs_hru = a_rsubs_hru / nac_basin
@@ -187,7 +182,7 @@ CONTAINS
 
       CALL vector_write_basin (&
          file_hist_basin, a_rsubs_hru, numhru, totalnumhru, 'rsubs_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%rsubs_hru, itime_in_file, 'SubSurface runoff in Hydro unit', 'm/s')
+         DEF_hist_vars%rsubs_hru, itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
 
       call FLUSH_acc_fluxes_basin ()
 
@@ -213,13 +208,12 @@ CONTAINS
          IF (numbasin > 0) THEN
             a_height_riv(:) = spval
             a_veloct_riv(:) = spval
+            a_rsubs_bsn (:) = spval
          ENDIF
 
          IF (numhru > 0) THEN
-            a_dpond_hru(:) = spval
+            a_wdsrf_hru(:) = spval
             a_veloc_hru(:) = spval
-            a_zwt_hru  (:) = spval
-            a_rsurf_hru(:) = spval
             a_rsubs_hru(:) = spval
          ENDIF
 
@@ -243,13 +237,12 @@ CONTAINS
          IF (numbasin > 0) THEN
             CALL acc1d_basin (riverheight_ta, a_height_riv)
             CALL acc1d_basin (riverveloct_ta, a_veloct_riv)
+            CALL acc1d_basin (rsubs_bsn     , a_rsubs_bsn )
          ENDIF
 
          IF (numhru > 0) THEN
-            CALL acc1d_basin (dpond_hru_ta, a_dpond_hru)
+            CALL acc1d_basin (wdsrf_hru_ta, a_wdsrf_hru)
             CALL acc1d_basin (veloc_hru_ta, a_veloc_hru)
-            CALL acc1d_basin (zwt_hru     , a_zwt_hru  )
-            CALL acc1d_basin (rsurf_hru   , a_rsurf_hru)
             CALL acc1d_basin (rsubs_hru   , a_rsubs_hru)
          ENDIF
       ENDIF

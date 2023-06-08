@@ -206,7 +206,7 @@ MODULE MOD_Initialize
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
-            dpond(:) = 0._r8
+            wdsrf(:) = 0._r8
          ENDIF
       ENDIF
       ! ------------------------------------------
@@ -821,8 +821,8 @@ MODULE MOD_Initialize
             DO i = 1, numhru
                ps = hru_patch%substt(i)
                pe = hru_patch%subend(i)
-               dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
-               dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+               wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
+               wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
             ENDDO
          ENDIF
       ENDIF
