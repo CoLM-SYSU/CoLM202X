@@ -72,9 +72,10 @@ CONTAINS
         ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
         twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
-#ifdef SNICAR
+! SNICAR model variables
         snofrz         ,sabg_lyr                                       ,&
-#endif
+! END SNICAR model variables
+
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
         lfevpa         ,fsenl          ,fevpl          ,etr            ,&
@@ -409,10 +410,10 @@ CONTAINS
         fh         ,&! integral of profile function for heat
         fq           ! integral of profile function for moisture
 
-#ifdef SNICAR
+! SNICAR model variables
   REAL(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
   REAL(r8), intent(out) :: snofrz (lbp:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
-#endif
+! END SNICAR model variables
 
 !---------------------Local Variables-----------------------------------
 
@@ -992,10 +993,10 @@ CONTAINS
            wliq_lakesno ,wice_lakesno ,imelt_lake      ,t_lake          ,&
            lake_icefrac ,savedtke1                                      ,&
 
-#ifdef SNICAR
-           ! SNICAR
+! SNICAR model variables
            snofrz       ,sabg_lyr     ,&
-#endif
+! END SNICAR model variables
+
            ! "out" laketem arguments
            ! ---------------------------
            taux_lake    ,tauy_lake    ,fsena_lake                       ,&

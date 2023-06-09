@@ -124,6 +124,7 @@ MODULE MOD_Namelist
 
    ! ------ Urban model related -------
    !INTEGER :: DEF_URBAN_type_scheme = 1
+   logical :: DEF_URBAN_RUN    = .false.
    LOGICAL :: DEF_URBAN_BEM    = .true.
    LOGICAL :: DEF_URBAN_TREE   = .true.
    LOGICAL :: DEF_URBAN_WATER  = .true.
@@ -142,6 +143,12 @@ MODULE MOD_Namelist
                                                    ! 7: De Vries (1963)
                                                    ! 8: Yan Hengnian, He Hailong et al.(2019)
    LOGICAL :: DEF_USE_SUPERCOOL_WATER = .true.     ! supercooled soil water scheme, Niu & Yang (2006)
+
+
+   ! Options for soil reflectance setting schemes
+   ! 1: Guessed soil color type according to land cover classes
+   ! 2: Read a global soil color map from CLM
+   INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
@@ -637,6 +644,7 @@ CONTAINS
          DEF_LULCC_SCHEME,                &
 
         !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
          DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
          DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
          DEF_URBAN_WATER,                 &   !add by hua yuan, modeling urban water or not
@@ -645,6 +653,7 @@ CONTAINS
          DEF_USE_SOILPAR_UPS_FIT,         &
          DEF_THERMAL_CONDUCTIVITY_SCHEME, &
          DEF_USE_SUPERCOOL_WATER,         &
+         DEF_SOIL_REFL_SCHEME,            &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -740,6 +749,9 @@ CONTAINS
          DEF_HIST_mode = 'one'
 #endif
 
+! ----- Macros&Namelist conflicts and dependency management -----
+
+
 #if (defined vanGenuchten_Mualem_SOIL_MODEL)
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
@@ -771,7 +783,55 @@ CONTAINS
         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
 
+
+! ----- Urban model conflicts and dependency management -----
+#ifdef URBAN_MODEL
+        DEF_URBAN_RUN = .true.
+
+        IF (DEF_USE_SNICAR) THEN
+           write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
+           write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
+           DEF_USE_SNICAR = .false.
+        ENDIF
+#else
+        IF (DEF_URBAN_RUN) then
+           write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '
+           write(*,*) 'please #define URBAN_MODEL in define.h. otherwise DEF_URBAN_RUN will '
+           write(*,*) 'be set to false automatically.'
+           DEF_URBAN_RUN = .true.
+        ENDIF
+#endif
+
+
+! ----- LULCC conflicts and dependency management -----
+#ifdef LULCC
+
+#if (defined LULC_USGS || defined BGC)
+        write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS|BGC at present. STOP! '
+        STOP
+#endif
+        IF (.not.DEF_LAI_MONTHLY) THEN
+           write(*,*) 'Note: When LULCC is opened, DEF_LAI_MONTHLY '
+           write(*,*) 'will be set to true automatically.'
+           DEF_LAI_MONTHLY = .true.
+        ENDIF
+
+        IF (.not.DEF_LAI_CHANGE_YEARLY) THEN
+           write(*,*) 'Note: When LULCC is opened, DEF_LAI_CHANGE_YEARLY '
+           write(*,*) 'will be set to true automatically.'
+           DEF_LAI_CHANGE_YEARLY = .true.
+        ENDIF
+#else
+        !TODO: Complement IF needed
+
+#endif
+
+
+! -----END Macros&Namelist conflicts and dependency management -----
+
+
       ENDIF
+
 
 #ifdef USEMPI
       CALL mpi_bcast (DEF_CASE_NAME,    256, mpi_character, p_root, p_comm_glb, p_err)
@@ -838,10 +898,11 @@ CONTAINS
       CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_TREE,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_LUCY,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
@@ -849,6 +910,9 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME,  1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      ! 06/2023, added by hua yuan
+      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)

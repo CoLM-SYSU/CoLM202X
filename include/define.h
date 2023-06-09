@@ -40,8 +40,10 @@
 #endif
 
 ! 6. Soil reflectance can be predefined values or load from files.
-#undef SOIL_REFL_GUESSED
-#define SOIL_REFL_READ
+! Soil reflectance is now a namelist DEF_SOIL_REFL_SCHEME
+! The below will be removed later
+!#undef SOIL_REFL_GUESSED
+!#define SOIL_REFL_READ
 
 ! 7. If defined, CaMa-Flood model will be used.
 #undef CaMa_Flood
@@ -85,7 +87,10 @@
 #endif
 
 ! 10 If defined, SNICAR is on
-#undef   SNICAR
+! NOTE: SNICAR is now a namelist DEF_USE_SNICAR
+! This macro will be removed later
+!#undef SNICAR
+
 ! 11. If defined, diagnostics in wue model will be output
 #undef WUEdiag
 

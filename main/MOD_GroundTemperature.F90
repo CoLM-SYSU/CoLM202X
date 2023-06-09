@@ -64,7 +64,8 @@ MODULE MOD_GroundTemperature
 !=======================================================================
 
    use MOD_Precision
-   use MOD_Const_Physical, only : stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
+   use MOD_Const_Physical, only: stefnc,denh2o,denice,tfrz,cpice,cpliq,tkwat,tkice,tkair
+   USE MOD_Namelist, only: DEF_USE_SNICAR
    USE MOD_PhaseChange
    USE MOD_SoilThermalParameters
    USE MOD_Utils
@@ -227,15 +228,19 @@ MODULE MOD_GroundTemperature
    tk(nl_soil) = 0.
 
 ! net ground heat flux into the surface and its temperature derivative
-#ifdef SNICAR
-   hs = sabg_lyr(lb) + dlrad*emg &
-#else
-   hs = sabg + dlrad*emg &
-#endif
-! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
-      - emg*stefnc*t_soisno(lb)**4 &
-      - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_soisno(lb)) &
-      + cpice * pg_snow * (t_precip - t_soisno(lb))
+   IF (DEF_USE_SNICAR) THEN
+      hs = sabg_lyr(lb) + dlrad*emg &
+         ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
+         - emg*stefnc*t_soisno(lb)**4 &
+         - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_soisno(lb)) &
+         + cpice * pg_snow * (t_precip - t_soisno(lb))
+   ELSE
+      hs = sabg + dlrad*emg &
+         ! 08/19/2021, yuan: NOTE! removed sigf, LAI->100% cover
+         - emg*stefnc*t_soisno(lb)**4 &
+         - (fseng+fevpg*htvp) + cpliq * pg_rain * (t_precip - t_soisno(lb)) &
+         + cpice * pg_snow * (t_precip - t_soisno(lb))
+   ENDIF
 
    dhsdT = - cgrnd - 4.*emg * stefnc * t_soisno(lb)**3 - cpliq * pg_rain - cpice * pg_snow
    t_soisno_bef(lb:) = t_soisno(lb:)
@@ -309,11 +314,12 @@ MODULE MOD_GroundTemperature
       brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
    enddo
 
-#ifdef SNICAR
 
-   wice_soisno_bef(lb:0) = wice_soisno(lb:0)
+   IF (DEF_USE_SNICAR) THEN
 
-   call meltf_snicar (itypwat,lb,nl_soil,deltim, &
+      wice_soisno_bef(lb:0) = wice_soisno(lb:0)
+
+      call meltf_snicar (itypwat,lb,nl_soil,deltim, &
                fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
                t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                scv,snowdp,sm,xmf,porsl,psi0,&
@@ -327,15 +333,14 @@ MODULE MOD_GroundTemperature
                dz_soisno(1:nl_soil))
 
       ! layer freezing mass flux (positive):
-   DO j = lb, 0
-      IF (imelt(j)==2 .and. j<1) THEN
-          snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
-      ENDIF
-   ENDDO
+      DO j = lb, 0
+         IF (imelt(j)==2 .and. j<1) THEN
+             snofrz(j) = max(0._r8,(wice_soisno(j)-wice_soisno_bef(j)))/deltim
+         ENDIF
+      ENDDO
 
-#else
-
-   call meltf (itypwat,lb,nl_soil,deltim, &
+   ELSE
+      call meltf (itypwat,lb,nl_soil,deltim, &
                fact(lb:),brr(lb:),hs,dhsdT, &
                t_soisno_bef(lb:),t_soisno(lb:),wliq_soisno(lb:),wice_soisno(lb:),imelt(lb:), &
                scv,snowdp,sm,xmf,porsl,psi0,&
@@ -347,7 +352,8 @@ MODULE MOD_GroundTemperature
                sc_vgm,fc_vgm,&
 #endif
                dz_soisno(1:nl_soil))
-#endif
+   ENDIF
+
 !-----------------------------------------------------------------------
 
    end subroutine groundtem
