@@ -33,7 +33,8 @@ MODULE MOD_SoilParametersReadin
    !------------------------------------------------------------------------------------------
 
       use MOD_Precision
-      USE MOD_Vars_Global, only : nl_soil
+      USE MOD_Vars_Global, only: nl_soil
+      USE MOD_Namelist, only: DEF_SOIL_REFL_SCHEME
       use MOD_SPMD_Task
       USE MOD_NetCDFVector
       use MOD_LandPatch
@@ -425,42 +426,45 @@ MODULE MOD_SoilParametersReadin
       end if
 
       ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the sarurated(_s) and dry(_d) soil
-#if(defined SOIL_REFL_GUESSED)
-      if (p_is_worker) then
-         do ipatch = 1, numpatch
-            m = landpatch%settyp(ipatch)
-            CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
-               soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
-         enddo
-      end if
-#elif(defined SOIL_REFL_READ)
+      ! SCHEME 1: Guessed soil color type according to land cover classes
+      IF (DEF_SOIL_REFL_SCHEME .eq. 1) THEN
+         if (p_is_worker) then
+            do ipatch = 1, numpatch
+               m = landpatch%settyp(ipatch)
+               CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
+                  soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
+            enddo
+         end if
+      ENDIF
+
+      ! SCHEME 2: Read a global soil color map from CLM
+      IF (DEF_SOIL_REFL_SCHEME .eq. 2) THEN
 
 #ifdef SinglePoint
-      IF (USE_SITE_soilreflectance) THEN
-         soil_s_v_alb(:) = SITE_soil_s_v_alb
-         soil_d_v_alb(:) = SITE_soil_d_v_alb
-         soil_s_n_alb(:) = SITE_soil_s_n_alb
-         soil_d_n_alb(:) = SITE_soil_d_n_alb
-      ENDIF
+         IF (USE_SITE_soilreflectance) THEN
+            soil_s_v_alb(:) = SITE_soil_s_v_alb
+            soil_d_v_alb(:) = SITE_soil_d_v_alb
+            soil_s_n_alb(:) = SITE_soil_s_n_alb
+            soil_d_n_alb(:) = SITE_soil_d_n_alb
+         ENDIF
 #else
-      ! (1) Read in the albedo of visible of the saturated soil
-      lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
+         ! (1) Read in the albedo of visible of the saturated soil
+         lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
 
-      ! (2) Read in the albedo of visible of the dry soil
-      lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
+         ! (2) Read in the albedo of visible of the dry soil
+         lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
 
-      ! (3) Read in the albedo of near infrared of the saturated soil
-      lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
+         ! (3) Read in the albedo of near infrared of the saturated soil
+         lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
 
-      ! (4) Read in the albedo of near infrared of the dry soil
-      lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+         ! (4) Read in the albedo of near infrared of the dry soil
+         lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
 #endif
-
-#endif
+      ENDIF
 
    END SUBROUTINE soil_parameters_readin
 

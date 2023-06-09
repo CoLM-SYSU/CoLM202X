@@ -78,6 +78,7 @@ MODULE MOD_Albedo
   USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz
+  USE MOD_Namelist, only: DEF_USE_SNICAR
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
@@ -88,9 +89,8 @@ MODULE MOD_Albedo
   USE MOD_Vars_PCTimeInvariants
   USE MOD_Vars_PCTimeVariables
 #endif
-  ! SNICAR
-  USE MOD_Aerosol,    only: AerosolMasses
-  USE MOD_SnowSnicar,  only: SnowAge_grain
+  USE MOD_Aerosol, only: AerosolMasses
+  USE MOD_SnowSnicar, only: SnowAge_grain
 #ifdef LULC_IGBP_PC
   USE MOD_3DCanopyRadiation, only: ThreeDCanopy_wrap
 #endif
@@ -349,59 +349,58 @@ ENDIF
 ! ----------------------------------------------------------------------
       IF(scv>0.)THEN
 
-#ifndef SNICAR
-         cons = 0.2
-         conn = 0.5
-         sl  = 2.0           !sl helps control albedo zenith dependence
+         IF (.not. DEF_USE_SNICAR) THEN
+            cons = 0.2
+            conn = 0.5
+            sl  = 2.0           !sl helps control albedo zenith dependence
 
-         ! 05/02/2023, Dai: move from CoLMMAIN.F90
-         ! update the snow age
-         IF (snl == 0) sag=0.
-         CALL snowage (deltim,t_grnd,scv,scvold,sag)
+            ! 05/02/2023, Dai: move from CoLMMAIN.F90
+            ! update the snow age
+            IF (snl == 0) sag=0.
+            CALL snowage (deltim,t_grnd,scv,scvold,sag)
 
-         ! correction for snow age
-         age = 1.-1./(1.+sag) !correction for snow age
-         dfalbs = snal0*(1.-cons*age)
+            ! correction for snow age
+            age = 1.-1./(1.+sag) !correction for snow age
+            dfalbs = snal0*(1.-cons*age)
 
-         ! czf corrects albedo of new snow for solar zenith
-         cff    = ((1.+1./sl)/(1.+czen*2.*sl )- 1./sl)
-         cff    = max(cff,0.)
-         czf    = 0.4*cff*(1.-dfalbs)
-         dralbs = dfalbs+czf
-         dfalbl = snal1*(1.-conn*age)
-         czf    = 0.4*cff*(1.-dfalbl)
-         dralbl = dfalbl+czf
+            ! czf corrects albedo of new snow for solar zenith
+            cff    = ((1.+1./sl)/(1.+czen*2.*sl )- 1./sl)
+            cff    = max(cff,0.)
+            czf    = 0.4*cff*(1.-dfalbs)
+            dralbs = dfalbs+czf
+            dfalbl = snal1*(1.-conn*age)
+            czf    = 0.4*cff*(1.-dfalbl)
+            dralbl = dfalbl+czf
 
-         albsno(1,1) = dralbs
-         albsno(2,1) = dralbl
-         albsno(1,2) = dfalbs
-         albsno(2,2) = dfalbl
+            albsno(1,1) = dralbs
+            albsno(2,1) = dralbl
+            albsno(1,2) = dfalbs
+            albsno(2,2) = dfalbl
 
-#else
-         ! 01/09/2023, yuan: CALL SNICAR to snow albedo
-         !NOTE: need soil albedo, so put it here (after 2. albedo for snow cover)
+         ELSE
 
-         use_snicar_frc = .false.  !  true: if radiative forcing is being calculated, first estimate clean-snow albedo
-         use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
+            ! 01/09/2023, yuan: CALL SNICAR for snow albedo
+            use_snicar_frc = .false.  !  true: if radiative forcing is being calculated, first estimate clean-snow albedo
+            use_snicar_ad  = .true.   !  use true: use SNICAR_AD_RT, false: use SNICAR_RT
 
-         CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
-              albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
-              scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
+            CALL SnowAlbedo(     use_snicar_frc ,use_snicar_ad  ,coszen         ,&
+                 albg(:,1)      ,albg(:,2)      ,snl            ,fsno           ,&
+                 scv            ,wliq_soisno    ,wice_soisno    ,snw_rds        ,&
 
-              mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
-              mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
+                 mss_cnc_bcphi  ,mss_cnc_bcpho  ,mss_cnc_ocphi  ,mss_cnc_ocpho  ,&
+                 mss_cnc_dst1   ,mss_cnc_dst2   ,mss_cnc_dst3   ,mss_cnc_dst4   ,&
 
-              albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
-              albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
-              albsno_dst(:,1),albsno_dst(:,2),ssno(1,1,:)    ,ssno(2,1,:)    ,&
-              ssno(1,2,:)    ,ssno(2,2,:)    )
+                 albsno(:,1)    ,albsno(:,2)    ,albsno_pur(:,1),albsno_pur(:,2),&
+                 albsno_bc(:,1) ,albsno_bc(:,2) ,albsno_oc(:,1) ,albsno_oc(:,2) ,&
+                 albsno_dst(:,1),albsno_dst(:,2),ssno(1,1,:)    ,ssno(2,1,:)    ,&
+                 ssno(1,2,:)    ,ssno(2,2,:)    )
 
-         ! IF no snow layer exist
-         IF (snl == 0) THEN
-            ssno(:,:,1) = ssno(:,:,1) + ssno(:,:,0)
-            ssno(:,:,0) = 0.
-         END IF
-#endif
+            ! IF no snow layer exist
+            IF (snl == 0) THEN
+               ssno(:,:,1) = ssno(:,:,1) + ssno(:,:,0)
+               ssno(:,:,0) = 0.
+            END IF
+         ENDIF
       ENDIF
 
 ! 3.1 correction due to snow cover

@@ -905,9 +905,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
          twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
 
-#ifdef SNICAR
+! SNICAR model variables
          snofrz(lbsn:0)       ,sabg_lyr(lbp:1)                                                  ,&
-#endif
+! END SNICAR model variables
+
          ! output
          taux                 ,tauy                 ,fsena                ,fevpa                ,&
          lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
@@ -965,11 +966,12 @@ SUBROUTINE UrbanCoLMMAIN ( &
         flddepth             ,fldfrc               ,qinfl_fld                                  ,&
 #endif
 
-#ifdef SNICAR
+! SNICAR model variables
         forc_aer             ,&
         mss_bcpho(lbsn:0)    ,mss_bcphi(lbsn:0)    ,mss_ocpho(lbsn:0)    ,mss_ocphi(lbsn:0)    ,&
         mss_dst1(lbsn:0)     ,mss_dst2(lbsn:0)     ,mss_dst3(lbsn:0)     ,mss_dst4(lbsn:0)     ,&
-#endif
+! END SNICAR model variables
+
         ! output
         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
         wa                   ,qcharge              ,smp                  ,hk                   ,&

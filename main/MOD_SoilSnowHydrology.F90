@@ -4,7 +4,7 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
-  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -43,11 +43,11 @@ MODULE MOD_SoilSnowHydrology
 #if(defined CaMa_Flood)
             ,flddepth,fldfrc,qinfl_fld  & 
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer   ,&
              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-#endif
+! END SNICAR model variables
             )
 !=======================================================================
 ! this is the main subroutine to execute the calculation of
@@ -124,7 +124,7 @@ MODULE MOD_SoilSnowHydrology
         qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
 
-#ifdef SNICAR
+! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
@@ -138,7 +138,7 @@ MODULE MOD_SoilSnowHydrology
         mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
-#endif
+! END SNICAR model variables
 
 !-----------------------Local Variables------------------------------
 !
@@ -167,18 +167,18 @@ MODULE MOD_SoilSnowHydrology
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
-#ifndef SNICAR
-         call snowwater (lb,deltim,ssi,wimp,&
+         IF (.not. DEF_USE_SNICAR) THEN
+            call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
-#else
-         call snowwater_snicar (lb,deltim,ssi,wimp,&
+         ELSE
+            call snowwater_snicar (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
                          forc_aer,&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#endif
+         ENDIF
       endif
 
 !=======================================================================
@@ -360,15 +360,15 @@ MODULE MOD_SoilSnowHydrology
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
              wimp        ,zwt         ,wdsrf       ,wa      ,qcharge,&
-             errw_rsub                  &
+             errw_rsub                 &
 #if(defined CaMa_Flood)
-             ,flddepth,fldfrc,qinfl_fld  &
+             ,flddepth,fldfrc,qinfl_fld&
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer   ,&
-             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
-             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-#endif
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4   &
+! END SNICAR model variables
              )
 
 !=======================================================================
@@ -458,7 +458,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
   real(r8), INTENT(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
-#ifdef SNICAR
+! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
@@ -472,7 +472,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
-#endif
+! END SNICAR model variables
 
 !-----------------------Local Variables------------------------------
 !
@@ -526,18 +526,19 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ! gwat = pg_rain + sm - qseva + qsdew
          gwat = pg_rain + sm + qsdew
       else
-#ifndef SNICAR
-         call snowwater (lb,deltim,ssi,wimp,&
+
+         IF (.not. DEF_USE_SNICAR) THEN
+            call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
-#else
-         call snowwater_snicar (lb,deltim,ssi,wimp,&
+         ELSE
+            call snowwater_snicar (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
                          forc_aer,&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#endif
+         ENDIF
       endif
 
 !=======================================================================
