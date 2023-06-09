@@ -198,7 +198,7 @@ CONTAINS
 
       USE MOD_NetCDFSerial
       USE MOD_Namelist
-      USE LC_Const
+      USE MOD_Const_LC
       IMPLICIT NONE
 
       INTEGER, intent(in) :: numpatch
