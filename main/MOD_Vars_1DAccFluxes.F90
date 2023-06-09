@@ -47,7 +47,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_gssun (:)
    real(r8), allocatable :: a_gssha (:)
-   real(r8), allocatable :: a_dpond  (:)
+   real(r8), allocatable :: a_wdsrf  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
@@ -349,7 +349,7 @@ contains
             allocate (a_rstfacsha (numpatch))
             allocate (a_gssun     (numpatch))
             allocate (a_gssha     (numpatch))
-            allocate (a_dpond     (numpatch))
+            allocate (a_wdsrf     (numpatch))
 
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
@@ -651,7 +651,7 @@ contains
             deallocate (a_rstfacsha )
             deallocate (a_gssun )
             deallocate (a_gssha )
-            deallocate (a_dpond     )
+            deallocate (a_wdsrf     )
 
             deallocate (a_zwt       )
             deallocate (a_wa        )
@@ -959,7 +959,7 @@ contains
             a_gssun   (:) = spval
             a_gssha   (:) = spval
 
-            a_dpond   (:) = spval
+            a_wdsrf   (:) = spval
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
@@ -1316,7 +1316,7 @@ contains
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
 
-            call acc1d (dpond  , a_dpond  )
+            call acc1d (wdsrf  , a_wdsrf  )
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )

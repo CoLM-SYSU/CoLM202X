@@ -2,6 +2,13 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_SurfaceNetwork
+   !--------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !    Surface networks (hillslope bands): data and communication subroutines.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !--------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE

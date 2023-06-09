@@ -513,7 +513,7 @@ MODULE MOD_Namelist
       LOGICAL :: BD_all       = .true.
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
-      LOGICAL :: dpond        = .true.
+      LOGICAL :: wdsrf        = .true.
       LOGICAL :: zwt          = .true.
       LOGICAL :: wa           = .true.
 
@@ -568,13 +568,12 @@ MODULE MOD_Namelist
       LOGICAL :: srndln       = .true.
       LOGICAL :: srniln       = .true.
 
-      LOGICAL :: rsurf_hru    = .true.
+      LOGICAL :: rsubs_bsn    = .true.
       LOGICAL :: rsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
-      LOGICAL :: dpond_hru    = .true.
+      LOGICAL :: wdsrf_hru    = .true.
       LOGICAL :: veloc_hru    = .true.
-      LOGICAL :: zwt_hru      = .true.
 
    END TYPE history_var_type
 
@@ -1193,7 +1192,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%dpond       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
 
@@ -1248,13 +1247,12 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%zwt_hru     ,  set_defaults)
 
    END SUBROUTINE sync_hist_vars
 

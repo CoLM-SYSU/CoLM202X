@@ -2,9 +2,25 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_RiverFlow
+   !-------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !   
+   !   Shallow water equation solver in rivers.
+   !
+   !   References
+   !   [1] Toro EF. Shock-capturing methods for free-surface shallow flows. 
+   !      Chichester: John Wiley & Sons; 2001.
+   !   [2] Liang, Q., Borthwick, A. G. L. (2009). Adaptive quadtree simulation of shallow 
+   !      flows with wet-dry fronts over complex topography. 
+   !      Computers and Fluids, 38(2), 221–234.
+   !   [3] Audusse, E., Bouchut, F., Bristeau, M.-O., Klein, R., Perthame, B. (2004). 
+   !      A Fast and Stable Well-Balanced Scheme with Hydrostatic Reconstruction for 
+   !      Shallow Water Flows. SIAM Journal on Scientific Computing, 25(6), 2050–2065.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
-   USE MOD_Hydro_RiverNetwork
    IMPLICIT NONE
    
    REAL(r8), parameter :: RIVERMIN  = 1.e-4 
@@ -21,6 +37,7 @@ CONTAINS
       USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
+      USE MOD_Hydro_RiverNetwork
       USE MOD_Const_Physical, only : grav
       USE MOD_CoLMDebug
       IMPLICIT NONE
@@ -40,14 +57,14 @@ CONTAINS
 
       REAL(r8), allocatable :: hflux_fc(:)
       REAL(r8), allocatable :: mflux_fc(:)
-      REAL(r8), allocatable :: zgrad_fc(:)
+      REAL(r8), allocatable :: zgrad_dn(:)
       
       REAL(r8), allocatable :: sum_hflux_riv(:)
       REAL(r8), allocatable :: sum_mflux_riv(:)
       REAL(r8), allocatable :: sum_zgrad_riv(:)
       
       REAL(r8) :: veloct_fc, height_fc, momtem_fc, zsurf_fc
-      REAL(r8) :: riverelv_fc, height_up, height_dn
+      REAL(r8) :: bedelv_fc, height_up, height_dn
       REAL(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
       REAL(r8) :: loss, friction
       REAL(r8) :: dt_res, dt_this
@@ -69,7 +86,7 @@ CONTAINS
             
             allocate (hflux_fc (nriver))
             allocate (mflux_fc (nriver))
-            allocate (zgrad_fc (nriver))
+            allocate (zgrad_dn (nriver))
             
             allocate (sum_hflux_riv (nriver))
             allocate (sum_mflux_riv (nriver))
@@ -79,7 +96,7 @@ CONTAINS
          DO i = 1, nriver
             istt = hru_patch%substt(basin_hru%substt(i))
             iend = hru_patch%subend(basin_hru%substt(i))
-            height_riv(i) = sum(dpond(istt:iend) * hru_patch%subfrc(istt:iend))
+            height_riv(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
             height_riv(i) = height_riv(i) / 1.0e3 ! mm to m
          ENDDO
 
@@ -123,20 +140,20 @@ CONTAINS
                   IF ((height_riv(i) < RIVERMIN) .and. (height_riv_ds(i) < RIVERMIN)) THEN
                      hflux_fc(i) = 0
                      mflux_fc(i) = 0
-                     zgrad_fc(i) = 0
+                     zgrad_dn(i) = 0
                      cycle
                   ENDIF
                   
                   ! reconstruction of height of water near interface
-                  riverelv_fc = max(riverelv(i), riverelv_ds(i))
-                  height_up = max(0., height_riv(i)   +riverelv(i)   -riverelv_fc) 
-                  height_dn = max(0., height_riv_ds(i)+riverelv_ds(i)-riverelv_fc) 
+                  bedelv_fc = max(riverelv(i), riverelv_ds(i))
+                  height_up = max(0., height_riv(i)   +riverelv(i)   -bedelv_fc) 
+                  height_dn = max(0., height_riv_ds(i)+riverelv_ds(i)-bedelv_fc) 
 
-                  ! velocity at river downstream face
+                  ! velocity at river downstream face (middle region in Riemann problem)
                   veloct_fc = 0.5 * (veloct_riv(i) + veloct_riv_ds(i)) & 
                      + sqrt(grav * height_up) - sqrt(grav * height_dn)
 
-                  ! height of water at downstream face
+                  ! height of water at downstream face (middle region in Riemann problem)
                   height_fc = 1/grav * (0.5*(sqrt(grav*height_up) + sqrt(grav*height_dn)) &
                      + 0.25 * (veloct_riv(i) - veloct_riv_ds(i))) ** 2
 
@@ -170,9 +187,9 @@ CONTAINS
                         + vwave_up*vwave_dn*(hflux_dn-hflux_up)) / (vwave_dn-vwave_up)
                   ENDIF
                
-                  sum_zgrad_riv(i) = sum_zgrad_riv(i) - riverfac_ds(i) * 0.5*grav * height_up**2
+                  sum_zgrad_riv(i) = sum_zgrad_riv(i) + riverfac_ds(i) * 0.5*grav * height_up**2
 
-                  zgrad_fc(i) = riverfac_ds(i) * 0.5*grav * height_dn**2
+                  zgrad_dn(i) = riverfac_ds(i) * 0.5*grav * height_dn**2
                   
                ELSE
                   IF (riverdown(i) == 0) THEN
@@ -180,12 +197,12 @@ CONTAINS
                      veloct_fc = max(0., veloct_riv(i))
                      hflux_fc(i) = height_riv(i) * veloct_fc * riverwdth(i)
                      mflux_fc(i) = momtem_riv(i) * veloct_fc * riverwdth(i)
-                     zgrad_fc(i) = 0
+                     zgrad_dn(i) = 0
                   ELSE 
                      ! inland depression
                      hflux_fc(i) = 0
                      mflux_fc(i) = 0
-                     zgrad_fc(i) = 0
+                     zgrad_dn(i) = 0
                   ENDIF
                ENDIF
 
@@ -196,7 +213,7 @@ CONTAINS
                   j = addrdown(i)
                   sum_hflux_riv(j) = sum_hflux_riv(j) - hflux_fc(i)
                   sum_mflux_riv(j) = sum_mflux_riv(j) - mflux_fc(i)
-                  sum_zgrad_riv(j) = sum_zgrad_riv(j) + zgrad_fc(i)
+                  sum_zgrad_riv(j) = sum_zgrad_riv(j) - zgrad_dn(i)
                ENDIF
             
             ENDDO
@@ -204,27 +221,30 @@ CONTAINS
 #ifdef USEMPI
             hflux_fc = - hflux_fc
             mflux_fc = - mflux_fc
+            zgrad_dn = - zgrad_dn
             CALL river_data_exchange (SEND_DATA_UP_TO_DOWN, accum = .true., &
                vec_send1 = hflux_fc, vec_recv1 = sum_hflux_riv, &
                vec_send2 = mflux_fc, vec_recv2 = sum_mflux_riv, &
-               vec_send3 = zgrad_fc, vec_recv3 = sum_zgrad_riv)
+               vec_send3 = zgrad_dn, vec_recv3 = sum_zgrad_riv)
 #endif
 
             DO i = 1, nriver
-               ! CFL condition
+               ! constraint 1: CFL condition
                IF ((veloct_riv(i) /= 0.) .or. (height_riv(i) > 0.)) THEN
                   dt_this = min(dt_this, riverlen(i)/(abs(veloct_riv(i))+sqrt(grav*height_riv(i)))*0.8)
                ENDIF
 
+               ! constraint 2: Avoid negative values of water
                loss = sum_hflux_riv(i) / riverarea(i)
                IF (loss > 0) THEN
                   dt_this = min(dt_this, height_riv(i) / loss)
                ENDIF
 
+               ! constraint 3: Avoid change of flow direction
                IF ((abs(veloct_riv(i)) > 0.1) &
-                  .and. (veloct_riv(i) * (sum_mflux_riv(i)+sum_zgrad_riv(i)) > 0)) THEN
+                  .and. (veloct_riv(i) * (sum_mflux_riv(i)-sum_zgrad_riv(i)) > 0)) THEN
                   dt_this = min(dt_this, &
-                     abs(momtem_riv(i) * riverarea(i) / (sum_mflux_riv(i)+sum_zgrad_riv(i))))
+                     abs(momtem_riv(i) * riverarea(i) / (sum_mflux_riv(i)-sum_zgrad_riv(i))))
                ENDIF
             ENDDO 
 
@@ -242,7 +262,7 @@ CONTAINS
                ELSE
                   friction = grav * nmanning_riv**2 / height_riv(i)**(7.0/3.0) * abs(momtem_riv(i))
                   momtem_riv(i) = (momtem_riv(i) &
-                     - (sum_mflux_riv(i) + sum_zgrad_riv(i)) / riverarea(i) * dt_this) &
+                     - (sum_mflux_riv(i) - sum_zgrad_riv(i)) / riverarea(i) * dt_this) &
                      / (1 + friction * dt_this) 
                   veloct_riv(i) = momtem_riv(i) / height_riv(i)
                ENDIF
@@ -271,7 +291,7 @@ CONTAINS
 
             istt = hru_patch%substt(basin_hru%substt(i))
             iend = hru_patch%subend(basin_hru%substt(i))
-            dpond(istt:iend) = height_riv(i) * 1.0e3 ! m to mm
+            wdsrf(istt:iend) = height_riv(i) * 1.0e3 ! m to mm
 
          ENDDO
             
@@ -285,7 +305,7 @@ CONTAINS
 
          IF (allocated(hflux_fc)) deallocate(hflux_fc)
          IF (allocated(mflux_fc)) deallocate(mflux_fc)
-         IF (allocated(zgrad_fc)) deallocate(zgrad_fc)
+         IF (allocated(zgrad_dn)) deallocate(zgrad_dn)
 
          IF (allocated(sum_hflux_riv)) deallocate(sum_hflux_riv)
          IF (allocated(sum_mflux_riv)) deallocate(sum_mflux_riv)
