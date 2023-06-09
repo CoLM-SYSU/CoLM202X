@@ -813,10 +813,10 @@ contains
             ENDIF
          end if
       end if
-      ! depth of ponding water [m]
-      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%dpond, &
-         a_dpond, file_hist, 'f_dpond', itime_in_file, filter, &
-         'depth of ponding water','mm')
+      ! depth of surface water [m]
+      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%wdsrf, &
+         a_wdsrf, file_hist, 'f_wdsrf', itime_in_file, filter, &
+         'depth of surface water','mm')
 
       ! -----------------------------------------------
       ! Land water bodies' ice fraction and temperature

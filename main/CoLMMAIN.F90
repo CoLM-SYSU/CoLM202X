@@ -57,7 +57,7 @@ SUBROUTINE CoLMMAIN ( &
            !Ozone stress variables
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
            !End ozone stress variables
-           zwt,          dpond,        wa,                          &
+           zwt,          wdsrf,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
 
          ! SNICAR snow model related
@@ -165,11 +165,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Albedo
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
-#ifndef LATERAL_FLOW
   USE MOD_Vars_1DFluxes, only : rsub
-#else
-  USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
-#endif
   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
@@ -346,7 +342,7 @@ SUBROUTINE CoLMMAIN ( &
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
         zwt         ,&! the depth to water table [m]
-        dpond       ,&! depth of ponding water [mm]
+        wdsrf       ,&! depth of surface water [mm]
         wa          ,&! water storage in aquifer [mm]
 
         snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
@@ -613,7 +609,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         totwb = totwb + dpond
+         totwb = totwb + wdsrf
       ENDIF
 
       fiold(:) = 0.0
@@ -830,8 +826,8 @@ ENDIF
               pg_rain           ,sm                ,etr               ,qseva             ,&
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
-              pondmx            ,&
-              wimp              ,zwt               ,dpond             ,wa                ,&
+              pondmx,                                                                     &
+              wimp              ,zwt               ,wdsrf             ,wa                ,&
               qcharge           ,errw_rsub          &
 #if(defined CaMa_Flood)
              !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
@@ -914,7 +910,7 @@ ENDIF
       endwb=sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         endwb = endwb + dpond
+         endwb = endwb + wdsrf
       ENDIF
 #if(defined CaMa_Flood)
    if (LWINFILT) then
@@ -927,7 +923,8 @@ ENDIF
 #ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+      ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -1168,7 +1165,8 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rsub(ipatch) = 0.
       rnof = rsur
 #else
-      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      ! for lateral flow, "rsub" refers to water exchage between hillslope and river
+      wdsrf = max(wdsrf - rsub(ipatch) * deltim, 0.)
       rnof = rsur + rsub(ipatch)
 #endif
 

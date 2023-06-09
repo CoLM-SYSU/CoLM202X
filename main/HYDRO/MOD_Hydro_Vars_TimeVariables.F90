@@ -2,17 +2,22 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_Vars_TimeVariables
+   !-------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !   
+   !   Time Variables in lateral hydrological processes.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
 
-
    ! -- state variables --
-   REAL(r8), allocatable :: riverheight (:)
-   REAL(r8), allocatable :: riverveloct (:)
-   REAL(r8), allocatable :: dpond_hru   (:) ! depth of ponding water [m]
-   REAL(r8), allocatable :: veloc_hru   (:) ! [m/s]
-   REAL(r8), allocatable :: zwt_hru     (:)
+   REAL(r8), allocatable :: riverheight (:) ! river height   [m]
+   REAL(r8), allocatable :: riverveloct (:) ! river velocity [m/s]
+   REAL(r8), allocatable :: wdsrf_hru   (:) ! surface water depth [m]
+   REAL(r8), allocatable :: veloc_hru   (:) ! surface water velocity [m/s]
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_HydroTimeVariables
@@ -26,8 +31,8 @@ CONTAINS
   SUBROUTINE allocate_HydroTimeVariables
 
      USE MOD_SPMD_Task
-     USE MOD_Mesh
-     USE MOD_LandHRU
+     USE MOD_Mesh,    only : numelm
+     USE MOD_LandHRU, only : numhru
      IMPLICIT NONE
 
      INTEGER :: numbasin
@@ -41,9 +46,8 @@ CONTAINS
         ENDIF
 
         IF (numhru > 0) THEN
-           allocate (dpond_hru (numhru))
+           allocate (wdsrf_hru (numhru))
            allocate (veloc_hru (numhru))
-           allocate (zwt_hru   (numhru))
         ENDIF
      ENDIF
 
@@ -66,9 +70,8 @@ CONTAINS
      CALL vector_read_basin (file_restart, riverheight, numbasin, 'riverheight', elm_data_address)
      CALL vector_read_basin (file_restart, riverveloct, numbasin, 'riverveloct', elm_data_address)
 
-     CALL vector_read_basin (file_restart, dpond_hru, numhru, 'dpond_hru', hru_data_address)
+     CALL vector_read_basin (file_restart, wdsrf_hru, numhru, 'wdsrf_hru', hru_data_address)
      CALL vector_read_basin (file_restart, veloc_hru, numhru, 'veloc_hru', hru_data_address)
-     CALL vector_read_basin (file_restart, zwt_hru  , numhru, 'zwt_hru'  , hru_data_address)
 
   END SUBROUTINE READ_HydroTimeVariables
 
@@ -103,7 +106,6 @@ CONTAINS
         CALL ncio_write_serial (file_restart, 'hru_type' , htype_hru, 'hydrounit')
         CALL ncio_put_attr (file_restart, 'hru_type' , &
            'long_name', 'index of hydrological units inside basin')
-
      ENDIF
 
      CALL vector_write_basin (&
@@ -113,13 +115,10 @@ CONTAINS
         file_restart, riverveloct, numbasin, totalnumelm, 'riverveloct', 'basin', elm_data_address)
 
      CALL vector_write_basin (&
-        file_restart, dpond_hru, numhru, totalnumhru, 'dpond_hru', 'hydrounit', hru_data_address)
+        file_restart, wdsrf_hru, numhru, totalnumhru, 'wdsrf_hru', 'hydrounit', hru_data_address)
 
      CALL vector_write_basin (&
         file_restart, veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address)
-
-     CALL vector_write_basin (&
-        file_restart, zwt_hru, numhru, totalnumhru, 'zwt_hru', 'hydrounit', hru_data_address)
 
   END SUBROUTINE WRITE_HydroTimeVariables
 
@@ -130,9 +129,8 @@ CONTAINS
      IF (allocated(riverheight)) deallocate(riverheight)
      IF (allocated(riverveloct)) deallocate(riverveloct)
 
-     IF (allocated(dpond_hru)) deallocate(dpond_hru)
+     IF (allocated(wdsrf_hru)) deallocate(wdsrf_hru)
      IF (allocated(veloc_hru)) deallocate(veloc_hru)
-     IF (allocated(zwt_hru  )) deallocate(zwt_hru  )
 
   END SUBROUTINE deallocate_HydroTimeVariables
 

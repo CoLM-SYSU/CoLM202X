@@ -811,6 +811,7 @@ MODULE MOD_Vars_TimeInvariants
 
       use MOD_SPMD_Task
       use MOD_CoLMDebug
+      use MOD_Namelist, only : DEF_USE_BEDROCK
 
       IMPLICIT NONE
 

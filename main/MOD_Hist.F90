@@ -436,17 +436,17 @@ contains
          ! surface runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rsur, &
             a_rsur, f_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
-            'surface runoff','mm/s')
+            'surface runoff / surface water change by lateral flow)','mm/s')
 
          ! subsurface runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rsub, &
             a_rsub, f_rsub, file_hist, 'f_rsub', itime_in_file, sumarea, filter, &
-            'subsurface runoff','mm/s')
+            'subsurface runoff / groundwater change by lateral flow','mm/s')
 
          ! total runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rnof, &
             a_rnof, f_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
-            'total runoff','mm/s')
+            'total runoff / total change of surface water and groundwater by lateral flow','mm/s')
 
          ! interception [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%qintr, &
@@ -2898,10 +2898,10 @@ contains
 
          call mp2g_hist%map (vectmp, sumarea, spv = spval, msk = filter)
 
-         ! depth of ponding water [m]
-         call flux_map_and_write_2d ( DEF_hist_vars%dpond, &
-            a_dpond, f_dpond, file_hist, 'f_dpond', itime_in_file, sumarea, filter, &
-            'depth of ponding water','mm')
+         ! depth of surface water [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%wdsrf, &
+            a_wdsrf, f_wdsrf, file_hist, 'f_wdsrf', itime_in_file, sumarea, filter, &
+            'depth of surface water','mm')
 
          ! -----------------------------------------------
          ! Land water bodies' ice fraction and temperature

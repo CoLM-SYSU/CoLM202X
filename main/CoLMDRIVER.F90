@@ -119,7 +119,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
       ! Ozone Stress Variables
         lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
       ! End ozone stress variables
-        zwt(i),          dpond(i),        wa(i),                            &
+        zwt(i),          wdsrf(i),        wa(i),                            &
         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
       ! SNICAR snow model related

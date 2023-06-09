@@ -1960,7 +1960,7 @@ contains
          vl_s, psi_s, hksat, nprm, prms, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
          is_sat, has_wf, has_wt, is_update_sublevel, &
-         wf, vl, wt, dpond, infl_max, zwt, psi_us, hk_us, &
+         wf, vl, wt, wdsrf, infl_max, zwt, psi_us, hk_us, &
          qq, qq_wt, qq_wf, tol_q, tol_z, tol_p)
 
       integer,  intent(in) :: lb, ub
@@ -1989,7 +1989,7 @@ contains
       real(r8), intent(inout) :: wf (lb:ub)
       real(r8), intent(inout) :: vl (lb:ub)
       real(r8), intent(inout) :: wt (lb:ub)
-      real(r8), intent(in) :: dpond, infl_max
+      real(r8), intent(in) :: wdsrf, infl_max
       real(r8), intent(in) :: zwt
       real(r8), intent(in) :: psi_us (lb:ub)
       real(r8), intent(in) :: hk_us  (lb:ub)
@@ -2078,9 +2078,9 @@ contains
          if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_head)) then
 
             call flux_sat_zone_fixed_bc (nlev_sat, &
-               dz_sat, psi_sat, hk_sat, dpond, lbc_val, qlc)
+               dz_sat, psi_sat, hk_sat, wdsrf, lbc_val, qlc)
 
-            if ((dpond < tol_z) .and. (qlc(lb) > infl_max)) then
+            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
                ptop = psi_s(lb)
                call flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ptop, lbc_val, qlc, &
@@ -2106,10 +2106,10 @@ contains
          if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_fix_flux)) then
 
             call flux_sat_zone_fixed_bc (nlev_sat, &
-               dz_sat, psi_sat, hk_sat, dpond, psi_s(ub), qlc, &
+               dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc, &
                flux_btm = lbc_val)
 
-            if ((dpond < tol_z) .and. (qlc(lb) > infl_max)) then
+            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
                ptop = psi_s(lb)
                call flux_sat_zone_fixed_bc (nlev_sat, &
                   dz_sat, psi_sat, hk_sat, ptop, psi_s(ub), qlc, &
@@ -2140,14 +2140,14 @@ contains
          if ((ubc_typ == bc_rainfall) .and. (lbc_typ == bc_drainage)) then
             if (zwt > sp_zi(ub)) then
                call flux_sat_zone_fixed_bc (nlev_sat, &
-                  dz_sat, psi_sat, hk_sat, dpond, psi_s(ub), qlc)
+                  dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc)
             else
                call flux_sat_zone_fixed_bc (nlev_sat, &
-                  dz_sat, psi_sat, hk_sat, dpond, psi_s(ub), qlc, &
+                  dz_sat, psi_sat, hk_sat, wdsrf, psi_s(ub), qlc, &
                   flux_btm = 0.0)
             end if
 
-            if ((dpond < tol_z) .and. (qlc(lb) > infl_max)) then
+            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
                ptop = psi_s(lb)
                if (zwt > sp_zi(ub)) then
                   call flux_sat_zone_fixed_bc (nlev_sat, &
@@ -2202,10 +2202,10 @@ contains
             call flux_btm_transitive_interface ( &
                psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
                dz_us_btm, psi_us(i_end), hk_us(i_end), &
-               nlev_sat, dz_sat, psi_sat, hk_sat, dpond, &
+               nlev_sat, dz_sat, psi_sat, hk_sat, wdsrf, &
                qq_wf(i_end), qlc, tol_q, tol_z, tol_p)
 
-            if ((dpond < tol_z) .and. (qlc(lb) > infl_max)) then
+            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
                ptop = psi_s(lb)
                call flux_btm_transitive_interface ( &
                   psi_s(i_end), hksat(i_end), nprm, prms(:,i_end), &
@@ -2237,9 +2237,9 @@ contains
          case (bc_rainfall)
 
             call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
-               hk_sat, dpond, psi_s(i_end), qlc)
+               hk_sat, wdsrf, psi_s(i_end), qlc)
 
-            if ((dpond < tol_z) .and. (qlc(lb) > infl_max)) then
+            if ((wdsrf < tol_z) .and. (qlc(lb) > infl_max)) then
                ptop = psi_s(lb)
                call flux_sat_zone_fixed_bc (nlev_sat, dz_sat, psi_sat, &
                   hk_sat, ptop, psi_s(i_end), qlc, &
@@ -2392,7 +2392,7 @@ contains
             qq(lb-1) = ubc_val ! min(qlc(lb), ubc_val)
             is_trans = (qlc(lb) > ubc_val)
          case (bc_rainfall)
-            if (dpond < tol_z) then
+            if (wdsrf < tol_z) then
                qq(lb-1) = min(qlc(lb), infl_max)
                is_trans = (qlc(lb) > infl_max)
             else
