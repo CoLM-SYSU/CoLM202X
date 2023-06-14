@@ -15,7 +15,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            lakedepth    ,dz_lake                                  ,&
 
          ! LUCY model input parameters
-           fix_holiday  ,week_holiday ,hum_prof     ,popcell      ,&
+           fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
            vehicle      ,weh_prof     ,wdh_prof     ,&
 
          ! soil ground and wall information
@@ -165,7 +165,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         hum_prof(24)    , &! Diurnal metabolic heat profile
         weh_prof(24)    , &! Diurnal traffic flow profile of weekend
         wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-        popcell         , &! population density
+        pop_den         , &! population density
         vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
@@ -861,7 +861,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          par                  ,Fhac                 ,Fwst                 ,Fach                 ,&
          Fahe                 ,Fhah                 ,vehc                 ,meta                 ,&
          ! LUCY INPUT PARAMETERS
-         fix_holiday          ,week_holiday         ,hum_prof             ,popcell              ,&
+         fix_holiday          ,week_holiday         ,hum_prof             ,pop_den              ,&
          vehicle              ,weh_prof             ,wdh_prof             ,idate                ,&
          patchlonr                                                                              ,&
          ! GROUND PARAMETERS

@@ -27,7 +27,7 @@ CONTAINS
         par            ,Fhac           ,Fwst           ,Fach           ,&
         Fahe           ,Fhah           ,vehc           ,meta           ,&
         ! LUCY model input parameters
-        fix_holiday    ,week_holiday   ,hum_prof       ,popcell        ,&
+        fix_holiday    ,week_holiday   ,hum_prof       ,pop_den        ,&
         vehicle        ,weh_prof       ,wdh_prof       ,idate          ,&
         patchlonr                                                      ,&
         ! surface parameters
@@ -143,7 +143,7 @@ CONTAINS
         hum_prof(24)    , &! Diurnal metabolic heat profile
         weh_prof(24)    , &! Diurnal traffic flow profile of weekend
         wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-        popcell         , &! population density
+        pop_den         , &! population density
         vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
@@ -325,7 +325,9 @@ CONTAINS
         Fhah       ,&! flux from heating
         Fhac       ,&! flux from heat or cool AC
         Fwst       ,&! waste heat from cool or heat
-        Fach         ! flux from air exchange
+        Fach       ,&! flux from air exchange
+        vehc       ,&! flux from vehicle
+        meta         ! flux from metabolic
 
        ! Output
   REAL(r8), intent(out) :: &
@@ -396,8 +398,8 @@ CONTAINS
         respc      ,&! respiration
         errore     ,&! energy balnce error [w/m2]
 
-        vehc       ,&! flux from vehicle
-        meta       ,&! flux from metabolic
+        !vehc       ,&! flux from vehicle
+        !meta       ,&! flux from metabolic
         ! additionalvariables required by coupling with WRF or RSM model
         emis       ,&! averaged bulk surface emissivity
         z0m        ,&! effective roughness [m]
@@ -1335,7 +1337,7 @@ CONTAINS
 
       ! Anthropogenic heat flux for the rest (vehicle heat flux and metabolic heat flux)
       CALL LUCY(idate       , deltim  , patchlonr, fix_holiday, &
-                week_holiday, hum_prof, wdh_prof , weh_prof   ,popcell, &
+                week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
                 vehicle     , Fahe    , vehc     , meta)
 
       deallocate ( fcover )
