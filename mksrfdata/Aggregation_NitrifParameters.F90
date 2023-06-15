@@ -78,7 +78,7 @@ SUBROUTINE Aggregation_NitrifParameters (gridnitrif, dir_rawdata, dir_model_land
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 12
@@ -187,7 +187,7 @@ enddo
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 12

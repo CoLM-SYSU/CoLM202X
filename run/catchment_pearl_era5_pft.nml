@@ -36,7 +36,7 @@
    DEF_path_catchment_data = '/tera04/zhangsp/hillslope/output/pearl.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
 
    ! Model settings
    DEF_LANDONLY = .true.

@@ -629,7 +629,7 @@ MODULE MOD_Lulcc_Initialize
    end if
 #else
 
-   IF (DEF_LAI_CLIM) then
+   IF (DEF_LAI_MONTHLY) then
       ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)
@@ -712,27 +712,29 @@ MODULE MOD_Lulcc_Initialize
          dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
       enddo
 
+      zc_soimm = z_soi * 1000.
+      zi_soimm(0) = 0.
+      zi_soimm(1:nl_soil) = zi_soi * 1000.
+
       do i = 1, numpatch
          m = patchclass(i)
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
-            zc_soimm = z_soi  * 1000.
-            zi_soimm(0) = 0.
-            zi_soimm(1:nl_soil) = zi_soi * 1000.
+         ENDIF
+
 #ifdef Campbell_SOIL_MODEL
-            vliq_r(:) = 0.
-            prms(1,1:nl_soil) = bsw(1:nl_soil,i)
+         vliq_r(:) = 0.
+         prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               vliq_r(:) = theta_r(1:nl_soil,i)
-            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
-            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
-            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
-            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
-            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
+         vliq_r(:) = theta_r(1:nl_soil,i)
+         prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
+         prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
+         prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
+         prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
+         prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
 #endif
-         ENDIF
 
          CALL iniTimeVar(i, patchtype(i)&
             ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
@@ -784,9 +786,9 @@ MODULE MOD_Lulcc_Initialize
 #endif
    !------------------------------------------------------------
 #endif
-               ! for SOIL INIT of water, temperature, snow depth
-               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
-               ! for SOIL Water INIT by using water table depth
+            ! for SOIL INIT of water, temperature, snow depth
+            ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+            ! for SOIL Water INIT by using water table depth
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL

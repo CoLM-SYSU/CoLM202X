@@ -46,6 +46,7 @@ OBJS_SHARED =    \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
 				  MOD_PixelsetShadow.o         \
+				  MOD_SingleSrfdata.o          \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \
@@ -76,7 +77,6 @@ OBJS_MKSRFDATA = \
 				  Aggregation_DBedrock.o            \
 				  Aggregation_Topography.o          \
 				  Aggregation_Urban.o               \
-				  MOD_SingleSrfdata.o               \
 				  MOD_MeshFilter.o                  \
 				  MOD_RegionClip.o                  \
 				  MKSRFDATA.o

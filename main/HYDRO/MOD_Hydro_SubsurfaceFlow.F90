@@ -2,17 +2,29 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_SubsurfaceFlow
+   !-------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !   
+   !   Ground water lateral flow.
+   !
+   !   Ground water fluxes are calculated
+   !   1. between basins
+   !   2. between hydrological response units
+   !   3. between patches inside one HRU  
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-------------------------------------------------------------------------------------
 
    USE MOD_Precision
    IMPLICIT NONE
     
    REAL(r8), parameter :: e_ice  = 6.0   ! soil ice impedance factor
-   REAL(r8), parameter :: raniso = 1.   ! anisotropy ratio, unitless
+   REAL(r8), parameter :: raniso = 1.    ! anisotropy ratio, unitless
    
 CONTAINS
    
    ! ---------
-   SUBROUTINE subsurface_runoff (deltime)
+   SUBROUTINE subsurface_flow (deltime)
       
       USE MOD_SPMD_Task
       USE MOD_Mesh
@@ -25,7 +37,7 @@ CONTAINS
       USE MOD_Hydro_RiverNetwork
       USE MOD_Hydro_SubsurfaceNetwork
       USE MOD_Const_Physical, only : denice, denh2o
-      USE MOD_Vars_Global, only : pi
+      USE MOD_Vars_Global,    only : pi
 
       IMPLICIT NONE
       
@@ -41,7 +53,7 @@ CONTAINS
       REAL(r8), allocatable :: Ks_h      (:) ! [m/s]
       REAL(r8), allocatable :: rsubs_h   (:) ! [m/s]
       REAL(r8), allocatable :: rsubs_fc  (:) ! [m/s]
-      REAL(r8) :: rsubs_bsn
+      REAL(r8) :: rsubs_riv
 
       REAL(r8) :: theta_s_h, air_h, icefrac, imped, delp
       REAL(r8) :: zsubs_h_up, zsubs_h_dn
@@ -62,9 +74,11 @@ CONTAINS
 
          numbasin = numelm
             
-         rsubs_pch(:) = 0.  ! subsurface runoff in each patch
-         rsub     (:) = 0.  ! subsurface runoff into river network
-         rsubs_hru(:) = 0.  ! subsurface runoff in each hydro unit
+         rsubs_bsn(:) = 0.  ! subsurface lateral flow between basins                     
+         rsubs_hru(:) = 0.  ! subsurface lateral flow between hydrological response units
+         rsubs_pch(:) = 0.  ! subsurface lateral flow between patches inside one HRU     
+
+         rsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
 
          bdamp = 4.8
 
@@ -83,10 +97,8 @@ CONTAINS
             Ks_bsn      (ibasin) = 0.
             
             nhru = hrus%nhru
+
             IF (nhru <= 1) THEN
-               ps = hru_patch%substt(hrus%ihru(1))
-               pe = hru_patch%subend(hrus%ihru(1))
-               zwt_hru(hrus%ihru(1)) = sum(zwt(ps:pe) * hru_patch%subfrc(ps:pe))
                cycle
             ENDIF
             
@@ -172,7 +184,7 @@ CONTAINS
                IF (j > 1) THEN
                   zsubs_h_dn = hrus%elva(j) - zwt_h(j)
                ELSE
-                  zsubs_h_dn = hrus%elva(1) - riverdpth(ibasin) + dpond_hru(hrus%ihru(1)) 
+                  zsubs_h_dn = hrus%elva(1) - riverdpth(ibasin) + wdsrf_hru(hrus%ihru(1)) 
                ENDIF
 
                IF (j > 1) THEN
@@ -220,11 +232,11 @@ CONTAINS
 
             ENDDO
             
-            rsubs_bsn = - rsubs_h(1) * hrus%area(1)/sum(hrus%area) * 1.0e3 ! (positive = out of soil column) 
+            rsubs_riv = - rsubs_h(1) * hrus%area(1)/sum(hrus%area) * 1.0e3 ! (positive = out of soil column) 
 
             IF (rsubs_h(1)*deltime > riverheight(ibasin)*riverarea(ibasin)) THEN 
                alp = riverheight(ibasin)*riverarea(ibasin) / (rsubs_h(1)*deltime)
-               rsubs_bsn  = rsubs_bsn  * alp
+               rsubs_riv  = rsubs_riv  * alp
                rsubs_h(1) = rsubs_h(1) * alp
                DO i = 2, nhru
                   j = hrus%inext(i)
@@ -238,8 +250,8 @@ CONTAINS
                ps = hru_patch%substt(hrus%ihru(i))
                pe = hru_patch%subend(hrus%ihru(i))
                
-               ! Between hydrological units
-               rsubs_pch(ps:pe) = rsubs_h(i) ! (positive = out of soil column) 
+               ! Update total subsurface lateral flow (1): Between hydrological units
+               rsub(ps:pe) = rsub(ps:pe) + rsubs_h(i) * 1.e3 ! (positive = out of soil column) 
 
                ! Inside hydrological units
                IF (i > 1) THEN
@@ -250,16 +262,16 @@ CONTAINS
                      Ks_in = raniso * Ks_h(i) * ((1.5-zwt_h(i)) + bdamp)
                   ENDIF
 
-                  rsubs_pch(ps:pe) = rsubs_pch(ps:pe) &
+                  rsubs_pch(ps:pe) = &
                      - Ks_in * (zwt(ps:pe) - sum(zwt(ps:pe)*hru_patch%subfrc(ps:pe))) *6.0*pi/hrus%area(i)
+               
+                  ! Update total subsurface lateral flow (2): Between patches
+                  rsub(ps:pe) = rsub(ps:pe) + rsubs_pch(ps:pe) * 1.e3 ! m/s to mm/s
+
                ENDIF
 
-               rsubs_pch(ps:pe) = rsubs_pch(ps:pe) * 1.e3 ! m/s to mm/s
-
-               zwt_hru(hrus%ihru(i)) = zwt_h(i)
                rsubs_hru(hrus%ihru(i)) = rsubs_h(i)
 
-               rsub(ps:pe) = rsubs_bsn 
             ENDDO
             
             theta_a_bsn (ibasin) = sum(theta_a_h(2:) * hrus%area(2:)) / sum(hrus%area(2:))
@@ -336,16 +348,19 @@ CONTAINS
 
                rsubs_nb = (zsubs_up - zsubs_dn) * lenbdr * Ks_fc / (1+ca+cb) / delp
                rsubs_nb = rsubs_nb / sum(hrus%area(2:))
-
-               DO i = 2, hrus%nhru
-                  ps = hru_patch%substt(hrus%ihru(i))
-                  pe = hru_patch%subend(hrus%ihru(i))
                
-                  rsubs_pch(ps:pe) = rsubs_pch(ps:pe) + rsubs_nb * 1.e3 ! m/s to mm/s
-                  rsubs_hru(hrus%ihru(i)) = rsubs_hru(hrus%ihru(i)) + rsubs_nb
-               ENDDO
+               rsubs_bsn(ibasin) = rsubs_bsn(ibasin) + rsubs_nb
 
             ENDDO
+
+            DO i = 2, hrus%nhru
+               ps = hru_patch%substt(hrus%ihru(i))
+               pe = hru_patch%subend(hrus%ihru(i))
+
+               ! Update total subsurface lateral flow (3): Between basins
+               rsub(ps:pe) = rsub(ps:pe) + rsubs_bsn(ibasin) * 1.e3 ! m/s to mm/s
+            ENDDO
+
          ENDDO
 
          IF (allocated(theta_a_bsn)) deallocate(theta_a_bsn)
@@ -355,7 +370,7 @@ CONTAINS
       ENDIF
 
 
-   END SUBROUTINE subsurface_runoff
+   END SUBROUTINE subsurface_flow
 
 END MODULE MOD_Hydro_SubsurfaceFlow
 #endif

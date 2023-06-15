@@ -15,7 +15,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            lakedepth    ,dz_lake                                  ,&
 
          ! LUCY model input parameters
-           fix_holiday  ,week_holiday ,hum_prof     ,popcell      ,&
+           fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
            vehicle      ,weh_prof     ,wdh_prof     ,&
 
          ! soil ground and wall information
@@ -165,7 +165,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         hum_prof(24)    , &! Diurnal metabolic heat profile
         weh_prof(24)    , &! Diurnal traffic flow profile of weekend
         wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-        popcell         , &! population density
+        pop_den         , &! population density
         vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
@@ -861,7 +861,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          par                  ,Fhac                 ,Fwst                 ,Fach                 ,&
          Fahe                 ,Fhah                 ,vehc                 ,meta                 ,&
          ! LUCY INPUT PARAMETERS
-         fix_holiday          ,week_holiday         ,hum_prof             ,popcell              ,&
+         fix_holiday          ,week_holiday         ,hum_prof             ,pop_den              ,&
          vehicle              ,weh_prof             ,wdh_prof             ,idate                ,&
          patchlonr                                                                              ,&
          ! GROUND PARAMETERS
@@ -905,9 +905,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
          twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
 
-#ifdef SNICAR
+! SNICAR model variables
          snofrz(lbsn:0)       ,sabg_lyr(lbp:1)                                                  ,&
-#endif
+! END SNICAR model variables
+
          ! output
          taux                 ,tauy                 ,fsena                ,fevpa                ,&
          lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
@@ -965,11 +966,12 @@ SUBROUTINE UrbanCoLMMAIN ( &
         flddepth             ,fldfrc               ,qinfl_fld                                  ,&
 #endif
 
-#ifdef SNICAR
+! SNICAR model variables
         forc_aer             ,&
         mss_bcpho(lbsn:0)    ,mss_bcphi(lbsn:0)    ,mss_ocpho(lbsn:0)    ,mss_ocphi(lbsn:0)    ,&
         mss_dst1(lbsn:0)     ,mss_dst2(lbsn:0)     ,mss_dst3(lbsn:0)     ,mss_dst4(lbsn:0)     ,&
-#endif
+! END SNICAR model variables
+
         ! output
         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
         wa                   ,qcharge              ,smp                  ,hk                   ,&

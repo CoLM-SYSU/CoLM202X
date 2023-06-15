@@ -4,7 +4,7 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
-  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -41,13 +41,13 @@ MODULE MOD_SoilSnowHydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  &  ! zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+            ,flddepth,fldfrc,qinfl_fld  & 
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer   ,&
              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-#endif
+! END SNICAR model variables
             )
 !=======================================================================
 ! this is the main subroutine to execute the calculation of
@@ -124,7 +124,7 @@ MODULE MOD_SoilSnowHydrology
         qcharge          , &! groundwater recharge (positive to aquifer) [mm/s]
         errw_rsub
 
-#ifdef SNICAR
+! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
@@ -138,7 +138,7 @@ MODULE MOD_SoilSnowHydrology
         mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
-#endif
+! END SNICAR model variables
 
 !-----------------------Local Variables------------------------------
 !
@@ -167,18 +167,18 @@ MODULE MOD_SoilSnowHydrology
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
-#ifndef SNICAR
-         call snowwater (lb,deltim,ssi,wimp,&
+         IF (.not. DEF_USE_SNICAR) THEN
+            call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
-#else
-         call snowwater_snicar (lb,deltim,ssi,wimp,&
+         ELSE
+            call snowwater_snicar (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
                          forc_aer,&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#endif
+         ENDIF
       endif
 
 !=======================================================================
@@ -217,7 +217,7 @@ MODULE MOD_SoilSnowHydrology
       qinfl = gwat - rsur
 #if(defined CaMa_Flood)
    IF (LWINFILT) then
-         ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+         !  re-infiltration [mm/s] calculation.
          ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
          ! the re-infiltration will not be calculated.
       IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
@@ -359,16 +359,16 @@ MODULE MOD_SoilSnowHydrology
              etr         ,qseva       ,qsdew       ,qsubl   ,qfros  ,&
              rsur        ,rnof        ,qinfl       ,wtfact  ,ssi    ,&
              pondmx      ,                                           &
-             wimp        ,zwt         ,dpond       ,wa      ,qcharge,&
-             errw_rsub                  &
+             wimp        ,zwt         ,wdsrf       ,wa      ,qcharge,&
+             errw_rsub                 &
 #if(defined CaMa_Flood)
-             ,flddepth,fldfrc,qinfl_fld  &
+             ,flddepth,fldfrc,qinfl_fld&
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer   ,&
-             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
-             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-#endif
+             mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi ,&
+             mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4   &
+! END SNICAR model variables
              )
 
 !=======================================================================
@@ -387,14 +387,9 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
   use MOD_Precision
-  use MOD_Const_Physical, only : denice, denh2o, tfrz
   USE MOD_Hydro_SoilWater
-
-#ifndef LATERAL_FLOW
-  USE MOD_Vars_1DFluxes, only : rsub
-#else
-  USE MOD_Vars_1DFluxes, only : rsub, rsubs_pch
-#endif
+  use MOD_Const_Physical, only : denice, denh2o, tfrz
+  USE MOD_Vars_1DFluxes,  only : rsub
 
   implicit none
 
@@ -452,7 +447,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         smp(1:nl_soil)   , &! soil matrix potential [mm]
         hk (1:nl_soil)   , &! hydraulic conductivity [mm h2o/m]
         zwt              , &! the depth from ground (soil) surface to water table [m]
-        dpond            , &! depth of ponding water [mm]
+        wdsrf            , &! depth of surface water [mm]
         wa                  ! water storage in aquifer [mm]
 
   real(r8), INTENT(out) :: &
@@ -463,7 +458,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
   real(r8), INTENT(out) :: errw_rsub ! the possible subsurface runoff dificit after PHS is included
 
-#ifdef SNICAR
+! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
@@ -477,7 +472,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         mss_dst3  (lb:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  (lb:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
-#endif
+! END SNICAR model variables
 
 !-----------------------Local Variables------------------------------
 !
@@ -531,18 +526,19 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ! gwat = pg_rain + sm - qseva + qsdew
          gwat = pg_rain + sm + qsdew
       else
-#ifndef SNICAR
-         call snowwater (lb,deltim,ssi,wimp,&
+
+         IF (.not. DEF_USE_SNICAR) THEN
+            call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
-#else
-         call snowwater_snicar (lb,deltim,ssi,wimp,&
+         ELSE
+            call snowwater_snicar (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat,&
                          forc_aer,&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#endif
+         ENDIF
       endif
 
 !=======================================================================
@@ -552,7 +548,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   if(patchtype<=1)then   ! soil ground only
 
       ! For water balance check, the sum of water in soil column before the calcultion
-      w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + dpond
+      w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + wdsrf
 
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
@@ -601,7 +597,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 #if(defined CaMa_Flood)
       IF (LWINFILT) then
-            ! zhongwang wei, 20221220:  re-infiltration [mm/s] calculation.
+            ! \ re-infiltration [mm/s] calculation.
             ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
             ! the re-infiltration will not be calculated.
          IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
@@ -664,14 +660,12 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ENDIF
       ENDIF
 
-      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-      rsub(ipatch) = rsubst
-#else
-      ! for lateral flow:
-      ! "rsub" is defined as baseflow to river, which is calculated in hydro/mod_subsurface_flow.F90
-      ! "rsubs_pch" is defined as baseflow to neighbouring patches
-      rsubst = rsubs_pch(ipatch)
+      rsub(ipatch) = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 #endif
+
+      ! for lateral flow:
+      ! "rsub" is calculated in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
+      rsubst = rsub(ipatch)
 
 #ifdef Campbell_SOIL_MODEL
       prms(1,:) = bsw(1:nlev)
@@ -706,14 +700,14 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          ENDDO
       ENDIF
 
-      dpond = max(0., dpond)
+      wdsrf = max(0., wdsrf)
 
       CALL soil_water_vertical_movement ( &
          nlev, deltim, sp_zc(1:nlev), sp_zi (0:nlev), is_permeable(1:nlev), &
          eff_porosity(1:nlev), theta_r (1:nlev), psi0 (1:nlev), hksati(1:nlev), nprms, prms(:,1:nlev), &
          porsl(nlev), &
          qraing, etr, rootr(1:nlev), rsubst, qinfl, &
-         dpond, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
+         wdsrf, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
 
       ! update the mass of liquid water
       DO j = nlev, 1, -1
@@ -736,9 +730,9 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       zwt = zwtmm/1000.0
 
 #ifndef LATERAL_FLOW
-     IF (dpond > pondmx) THEN
-        rsur = rsur + (dpond - pondmx) / deltim
-        dpond = pondmx
+     IF (wdsrf > pondmx) THEN
+        rsur = rsur + (wdsrf - pondmx) / deltim
+        wdsrf = pondmx
      ENDIF
 #endif
 
@@ -746,10 +740,10 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       rnof = rsub(ipatch) + rsur
 
 #ifndef LATERAL_FLOW
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsur-rsubst)*deltim
 #else
-      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+dpond) - w_sum &
+      err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsubst)*deltim
 #endif
       if(lb >= 1)then
@@ -768,11 +762,6 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
         write(*,*) 'Warning: negative', wliq_soisno(1:nlev)
      ENDIF
 #endif
-
-     IF (dpond > pondmx) THEN
-        rnof = rnof + (dpond - pondmx) / deltim
-        dpond = pondmx
-     ENDIF
 
 !=======================================================================
 ! [6] assumed hydrological scheme for the wetland and glacier

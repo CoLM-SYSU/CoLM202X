@@ -20,8 +20,8 @@ SUBROUTINE CoLMMAIN ( &
            BA_alpha,     BA_beta,                                   &
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-           !zhongwang wei, 20210927: add flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood re-infiltration [mm/s]
-           flddepth,    fldfrc,     fevpg_fld, qinfl_fld,             &
+           !add flood depth, flood fraction, flood evaporation and flood re-infiltration
+           flddepth,     fldfrc,       fevpg_fld,    qinfl_fld,     &
 #endif
 
          ! vegetation information
@@ -48,7 +48,7 @@ SUBROUTINE CoLMMAIN ( &
          ! land surface variables required for restart
            z_sno,        dz_sno,       t_soisno,     wliq_soisno,   &
            wice_soisno,  smp,          hk,                          &
-           t_grnd,       tleaf,        ldew,     ldew_rain,      ldew_snow,             &
+           t_grnd,       tleaf,        ldew,ldew_rain,ldew_snow,    &
            sag,          scv,          snowdp,       fveg,          &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
@@ -57,13 +57,13 @@ SUBROUTINE CoLMMAIN ( &
            !Ozone stress variables
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
            !End ozone stress variables
-           zwt,          dpond,        wa,                          &
+           zwt,          wdsrf,        wa,                          &
            t_lake,       lake_icefrac, savedtke1,                   &
 
          ! SNICAR snow model related
-           snw_rds,      ssno,                                     &
-           mss_bcpho,    mss_bcphi,   mss_ocpho,     mss_ocphi,    &
-           mss_dst1,     mss_dst2,    mss_dst3,      mss_dst4,     &
+           snw_rds,      ssno,                                      &
+           mss_bcpho,    mss_bcphi,    mss_ocpho,     mss_ocphi,    &
+           mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,     &
 
          ! additional diagnostic variables for output
            laisun,       laisha,       rootr,                       &
@@ -165,15 +165,11 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Albedo
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
-#ifndef LATERAL_FLOW
   USE MOD_Vars_1DFluxes, only : rsub
-#else
-  USE MOD_Vars_1DFluxes, only : rsubs_pch, rsub
-#endif
   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
-   !zhongwang wei, 20210927: get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
+   !get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
    USE MOD_CaMa_colmCaMa,only:get_fldevp
    USE YOS_CMF_INPUT,      ONLY: LWINFILT,LWEVAP
 #endif
@@ -346,7 +342,7 @@ SUBROUTINE CoLMMAIN ( &
         scv         ,&! snow mass (kg/m2)
         snowdp      ,&! snow depth (m)
         zwt         ,&! the depth to water table [m]
-        dpond       ,&! depth of ponding water [mm]
+        wdsrf       ,&! depth of surface water [mm]
         wa          ,&! water storage in aquifer [mm]
 
         snw_rds   ( maxsnl+1:0 ) ,&! effective grain radius (col,lyr) [microns, m-6]
@@ -534,7 +530,7 @@ SUBROUTINE CoLMMAIN ( &
 
 !======================================================================
 #if(defined CaMa_Flood)
-      !zhongwang wei, 20221220: add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
+      !add variables for flood evaporation [mm/s] and re-infiltration [mm/s] calculation.
       REAL(r8) :: kk
       REAL(r8) :: taux_fld       ! wind stress: E-W [kg/m/s**2]
       REAL(r8) :: tauy_fld       ! wind stress: N-S [kg/m/s**2]
@@ -568,7 +564,7 @@ SUBROUTINE CoLMMAIN ( &
       ! SNICAR
       snofrz(:)   = 0.        !snow freezing rate (col,lyr) [kg m-2 s-1]
       forc_aer(:) = 4.2E-7    !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-      !forc_aer(:) = 0.        !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+      !forc_aer(:) = 0.       !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&
@@ -613,7 +609,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
       totwb = ldew + scv + sum(wice_soisno(1:)+wliq_soisno(1:)) + wa
 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         totwb = totwb + dpond
+         totwb = totwb + wdsrf
       ENDIF
 
       fiold(:) = 0.0
@@ -628,7 +624,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined LULC_USGS || defined LULC_IGBP)
-!zhongwang wei, 20221220: add option for canopy interception calculation.
+! add option for canopy interception calculation.
 if (DEF_Interception_scheme==1) then
    CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
@@ -805,14 +801,14 @@ ENDIF
               wa                ,qcharge           ,errw_rsub &
 
 #if(defined CaMa_Flood)
-            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
-            ,flddepth,fldfrc,qinfl_fld  &
+             !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
+             ,flddepth,fldfrc,qinfl_fld  &
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer          ,&
-             mss_bcpho(lbsn:0)   ,mss_bcphi(lbsn:0)   ,mss_ocpho(lbsn:0)   ,mss_ocphi(lbsn:0)   ,&
-             mss_dst1(lbsn:0)    ,mss_dst2(lbsn:0)    ,mss_dst3(lbsn:0)    ,mss_dst4(lbsn:0)     &
-#endif
+              mss_bcpho(lbsn:0) ,mss_bcphi(lbsn:0) ,mss_ocpho(lbsn:0)  ,mss_ocphi(lbsn:0),&
+              mss_dst1(lbsn:0)  ,mss_dst2(lbsn:0)  ,mss_dst3(lbsn:0)   ,mss_dst4(lbsn:0)  &
+! END SNICAR model variables
               )
       ELSE
 
@@ -823,25 +819,25 @@ ENDIF
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
               theta_r           ,alpha_vgm         ,n_vgm             ,L_vgm             ,&
-              sc_vgm            ,fc_vgm            ,                                      &
+              sc_vgm            ,fc_vgm            ,&
 #endif
-              porsl             ,psi0              ,hksati            ,                   &
+              porsl             ,psi0              ,hksati            ,&
               rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
               pg_rain           ,sm                ,etr               ,qseva             ,&
               qsdew             ,qsubl             ,qfros             ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
               pondmx,                                                                     &
-              wimp              ,zwt               ,dpond             ,wa                ,&
-              qcharge           ,errw_rsub &
+              wimp              ,zwt               ,wdsrf             ,wa                ,&
+              qcharge           ,errw_rsub          &
 #if(defined CaMa_Flood)
-            !zhongwang wei, 20221220: add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
+             !add variables for flood depth [mm], flood fraction [0-1] and re-infiltration [mm/s] calculation.
              ,flddepth,fldfrc,qinfl_fld  &
 #endif
-#ifdef SNICAR
-             ,forc_aer         ,&
-             mss_bcpho(lbsn:0)   ,mss_bcphi(lbsn:0)   ,mss_ocpho(lbsn:0)   ,mss_ocphi(lbsn:0)   ,&
-             mss_dst1(lbsn:0)    ,mss_dst2(lbsn:0)    ,mss_dst3(lbsn:0)    ,mss_dst4(lbsn:0)     &
-#endif
+! SNICAR model variables
+             ,forc_aer          ,&
+             mss_bcpho(lbsn:0)  ,mss_bcphi(lbsn:0) ,mss_ocpho(lbsn:0) ,mss_ocphi(lbsn:0) ,&
+             mss_dst1(lbsn:0)   ,mss_dst2(lbsn:0)  ,mss_dst3(lbsn:0)  ,mss_dst4(lbsn:0)   &
+! END SNICAR model variables
              )
 
       ENDIF
@@ -857,31 +853,33 @@ ENDIF
 
          ! Combine thin snow elements
          lb = maxsnl + 1
-#ifdef SNICAR
-         CALL snowlayerscombine_snicar (lb,snl,&
+
+         IF (DEF_USE_SNICAR) THEN
+            CALL snowlayerscombine_snicar (lb,snl,&
                          z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:1),&
                          wliq_soisno(lb:1),wice_soisno(lb:1),t_soisno(lb:1),scv,snowdp,&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#else
-         CALL snowlayerscombine (lb,snl,&
+         ELSE
+            CALL snowlayerscombine (lb,snl,&
                          z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:1),&
                          wliq_soisno(lb:1),wice_soisno(lb:1),t_soisno(lb:1),scv,snowdp)
-#endif
+         ENDIF
 
          ! Divide thick snow elements
-         IF(snl<0) &
-#ifdef SNICAR
-         CALL snowlayersdivide_snicar (lb,snl,&
+         IF(snl<0) THEN
+            IF (DEF_USE_SNICAR) THEN
+               CALL snowlayersdivide_snicar (lb,snl,&
                          z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
                          wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0),&
                          mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
-#else
-         CALL snowlayersdivide (lb,snl,&
+            ELSE
+               CALL snowlayersdivide (lb,snl,&
                          z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
                          wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0))
-#endif
+            ENDIF
+         ENDIF
       ENDIF
 
       ! Set zero to the empty node
@@ -912,7 +910,7 @@ ENDIF
       endwb=sum(wice_soisno(1:)+wliq_soisno(1:))+ldew+scv + wa
 
       IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
-         endwb = endwb + dpond
+         endwb = endwb + wdsrf
       ENDIF
 #if(defined CaMa_Flood)
    if (LWINFILT) then
@@ -925,7 +923,8 @@ ENDIF
 #ifndef LATERAL_FLOW
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rsubs_pch(ipatch)-errw_rsub)*deltim
+      ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -1000,7 +999,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    forc_hgt_u  ,forc_hgt_t  ,forc_hgt_q ,forc_us     ,&
                    forc_vs     ,forc_t      ,forc_q                  ,&
                    forc_hpbl                                         ,&
-				   forc_rhoair                                       ,&
+                   forc_rhoair                                       ,&
                    forc_psrf   ,coszen      ,sabg       ,forc_frl    ,&
                    fsno,dz_soisno(lb:),z_soisno(lb:),zi_soisno(lb-1:),&
                    t_soisno(lb:),wice_soisno(lb:),wliq_soisno(lb:)   ,&
@@ -1013,11 +1012,11 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    rib         ,ustar       ,qstar      ,tstar       ,&
                    fm          ,fh          ,fq         ,pg_rain     ,&
                    pg_snow     ,t_precip    ,                         &
-                   snofrz(lbsn:0), sabg_lyr(lb:1)               )
+                   snofrz(lbsn:0), sabg_lyr(lb:1)                     )
 
 
-#ifdef SNICAR
-      CALL GLACIER_WATER_snicar (nl_soil    ,maxsnl     ,deltim      ,&
+      IF (DEF_USE_SNICAR) THEN
+         CALL GLACIER_WATER_snicar (nl_soil ,maxsnl     ,deltim      ,&
                    z_soisno    ,dz_soisno   ,zi_soisno  ,t_soisno    ,&
                    wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
                    sm          ,scv         ,snowdp     ,imelt       ,&
@@ -1028,15 +1027,15 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    forc_aer    ,&
                    mss_bcpho   ,mss_bcphi   ,mss_ocpho  ,mss_ocphi   ,&
                    mss_dst1    ,mss_dst2    ,mss_dst3   ,mss_dst4     )
-#else
-      CALL GLACIER_WATER (nl_soil,maxsnl,deltim                      ,&
+      ELSE
+         CALL GLACIER_WATER (   nl_soil     ,maxsnl     ,deltim      ,&
                    z_soisno    ,dz_soisno   ,zi_soisno  ,t_soisno    ,&
                    wliq_soisno ,wice_soisno ,pg_rain    ,pg_snow     ,&
                    sm          ,scv         ,snowdp     ,imelt       ,&
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
                    ssi         ,wimp                                  )
-#endif
+      ENDIF
 
 
       lb = snl + 1
@@ -1118,12 +1117,12 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            ! ---------------------------
            t_grnd       ,scv          ,snowdp          ,t_soisno        ,&
            wliq_soisno  ,wice_soisno  ,imelt           ,t_lake          ,&
-           lake_icefrac ,savedtke1, &
+           lake_icefrac ,savedtke1    ,&
 
-#ifdef SNICAR
-           ! SNICAR
+! SNICAR model variables
            snofrz       ,sabg_lyr     ,&
-#endif
+! END SNICAR model variables
+
            ! "out" laketem arguments
            ! ---------------------------
            taux         ,tauy         ,fsena                            ,&
@@ -1132,7 +1131,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            olrg         ,fgrnd        ,tref            ,qref            ,&
            trad         ,emis         ,z0m             ,zol             ,&
            rib          ,ustar        ,qstar           ,tstar           ,&
-           fm           ,fh           ,fq              ,sm )
+           fm           ,fh           ,fq              ,sm               )
 
       CALL snowwater_lake ( &
            ! "in" snowater_lake arguments
@@ -1149,12 +1148,11 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            fseng        ,fgrnd        ,snl             ,scv             ,&
            snowdp       ,sm            &
 
-#ifdef SNICAR
-           ! SNICAR
+! SNICAR model variables
            ,forc_aer    ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
            mss_dst1     ,mss_dst2     ,mss_dst3        ,mss_dst4         &
-#endif
+! END SNICAR model variables
            )
 
       ! We assume the land water bodies have zero extra liquid water capacity
@@ -1167,7 +1165,8 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rsub(ipatch) = 0.
       rnof = rsur
 #else
-      dpond = max(dpond - rsubs_pch(ipatch) * deltim, 0.)
+      ! for lateral flow, "rsub" refers to water exchage between hillslope and river
+      wdsrf = max(wdsrf - rsub(ipatch) * deltim, 0.)
       rnof = rsur + rsub(ipatch)
 #endif
 

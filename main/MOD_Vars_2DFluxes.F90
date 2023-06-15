@@ -123,7 +123,7 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_rstfacsha    ! factor of soil water stress
    type(block_data_real8_2d) :: f_gssun        ! factor of soil water stress
    type(block_data_real8_2d) :: f_gssha        ! factor of soil water stress
-   type(block_data_real8_2d) :: f_dpond        ! depth of ponding water [mm]
+   type(block_data_real8_2d) :: f_wdsrf        ! depth of surface water [mm]
    type(block_data_real8_2d) :: f_zwt          ! the depth to water table [m]
    type(block_data_real8_2d) :: f_wa           ! water storage in aquifer [mm]
    type(block_data_real8_2d) :: f_wat          ! total water storage [mm]
@@ -290,7 +290,7 @@ CONTAINS
          call allocate_block_data (grid, f_gssun)  ! factor of soil water stress
          call allocate_block_data (grid, f_gssha)  ! factor of soil water stress
 
-         call allocate_block_data (grid, f_dpond  )  ! depth of ponding water [m]
+         call allocate_block_data (grid, f_wdsrf  )  ! depth of surface water [mm]
 
          call allocate_block_data (grid, f_zwt   )  ! the depth to water table [m]
          call allocate_block_data (grid, f_wa    )  ! water storage in aquifer [mm]

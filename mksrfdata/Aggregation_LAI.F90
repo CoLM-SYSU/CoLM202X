@@ -118,11 +118,11 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
 #if (defined LULC_USGS || defined LULC_IGBP)
    ! add time variation of LAI
-   IF (DEF_LAI_CLIM) THEN
+   IF (DEF_LAI_MONTHLY) THEN
       ! monthly average LAI
       ! if use lai change, LAI data of simulation start year and end year will be made
       ! if not use lai change, only make LAI data of defined lc year
-      IF (DEF_LAICHANGE) THEN
+      IF (DEF_LAI_CHANGE_YEARLY) THEN
          start_year = DEF_simulation_time%start_year
          end_year   = DEF_simulation_time%end_year
          ntime      = 12
@@ -148,19 +148,22 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 
 #ifdef SinglePoint
-   IF (DEF_LAI_CLIM) THEN
-      allocate (SITE_LAI_clim (12))
-   ELSE
-      allocate (SITE_LAI_year (start_year:end_year))
-      SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
 
-      allocate (SITE_LAI_modis (46,start_year:end_year))
+   allocate (SITE_LAI_year (start_year:end_year))
+   SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
+
+   IF (DEF_LAI_MONTHLY) THEN
+      !TODO-yuan-done: for multiple years
+      allocate (SITE_LAI_monthly (12,start_year:end_year))
+   ELSE
+      allocate (SITE_LAI_8day    (46,start_year:end_year))
    ENDIF
+
 #endif
 
    DO iy = start_year, end_year
 
-      !IF (.not. DEF_LAI_CLIM) THEN
+      !IF (.not. DEF_LAI_MONTHLY) THEN
       ! lai data of each year -> case/landdata/year
       write(cyear,'(i4.4)') iy
       CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
@@ -171,7 +174,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ! -----------------------
          ! read in leaf area index
          ! -----------------------
-         IF (DEF_LAI_CLIM) THEN
+         IF (DEF_LAI_MONTHLY) THEN
             write(c3, '(i2.2)') itime
          ELSE
             Julian_day = 1 + (itime-1)*8
@@ -183,7 +186,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          endif
 
          IF (p_is_io) THEN
-            IF (DEF_LAI_CLIM) THEN
+            IF (DEF_LAI_MONTHLY) THEN
                dir_5x5 = trim(dir_rawdata) // '/plant_15s'
                suffix  = 'MOD'//trim(cyear)
                CALL read_5x5_data_time (dir_5x5, suffix, gridlai, 'MONTHLY_LC_LAI', itime, LAI)
@@ -225,7 +228,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          ! write out the plant leaf area index of grid patches
          ! ---------------------------------------------------
 #ifndef SinglePoint
-         IF (DEF_LAI_CLIM) THEN
+         IF (DEF_LAI_MONTHLY) THEN
             lndname = trim(landdir) // trim(cyear) // '/LAI_patches' // trim(c3) // '.nc'
          ELSE
             !TODO: rename filename of 8-day LAI
@@ -239,7 +242,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #ifdef SrfdataDiag
          typpatch = (/(ityp, ityp = 0, N_land_classification)/)
          lndname  = trim(dir_model_landdata) // '/diag/LAI_patch_'// trim(cyear) // '.nc'
-         IF (DEF_LAI_CLIM) THEN
+         IF (DEF_LAI_MONTHLY) THEN
             varname = 'LAI_' // trim(c3)
          ELSE
             !TODO: rename file name of 8-day LAI
@@ -251,17 +254,17 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #else
          ! single point cases
          !TODO: parameter input for time year
-         IF (DEF_LAI_CLIM) THEN
-            SITE_LAI_clim(itime) = LAI_patches(1)
+         IF (DEF_LAI_MONTHLY) THEN
+            SITE_LAI_monthly(itime,iy) = LAI_patches(1)
          ELSE
-            SITE_LAI_modis(itime,iy) = LAI_patches(1)
+            SITE_LAI_8day(itime,iy) = LAI_patches(1)
          ENDIF
 #endif
       ENDDO
    ENDDO
 
    ! ----- SAI -----
-   IF (DEF_LAI_CLIM) THEN
+   IF (DEF_LAI_MONTHLY) THEN
 
       IF (p_is_io) THEN
          CALL allocate_block_data (gridlai, SAI)
@@ -272,7 +275,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
       ENDIF
 
 #ifdef SinglePoint
-      allocate (SITE_SAI_clim (12))
+      allocate (SITE_SAI_monthly (12,start_year:end_year))
 #endif
 
       dir_5x5 = trim(dir_rawdata) // '/plant_15s'
@@ -284,7 +287,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             write(c3, '(i2.2)') itime
 
             IF (p_is_master) THEN
-               write(*,'(A,I3,A1,I3)') 'Aggregate SAI :', itime, '/', ntime
+               write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate SAI :', iy, ':', itime, '/', ntime
             endif
 
             IF (p_is_io) THEN
@@ -332,7 +335,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #ifdef SrfdataDiag
             typpatch = (/(ityp, ityp = 0, N_land_classification)/)
             lndname  = trim(dir_model_landdata) // '/diag/SAI_patch_'// trim(cyear) // '.nc'
-            IF (DEF_LAI_CLIM) THEN
+            IF (DEF_LAI_MONTHLY) THEN
                varname = 'SAI_' // trim(c3)
             ELSE
                !TODO: rename varname
@@ -343,7 +346,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 #else
             !TODO: single point case
-            SITE_SAI_clim(itime) = SAI_patches(1)
+            SITE_SAI_monthly(itime,iy) = SAI_patches(1)
 #endif
          ENDDO
       ENDDO
@@ -356,7 +359,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
    ! if not use lai change, only make LAI data of defined lc year
-   IF (DEF_LAICHANGE) THEN
+   IF (DEF_LAI_CHANGE_YEARLY) THEN
       start_year = DEF_simulation_time%start_year
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
@@ -379,9 +382,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 
 #ifdef SinglePoint
-   !TODO: single point case
-   allocate (SITE_LAI_pfts_clim (numpft,12))
-   allocate (SITE_SAI_pfts_clim (numpft,12))
+   allocate (SITE_LAI_year (start_year:end_year))
+   SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
+
+   !TODO-yuan-done: for multiple years
+   allocate (SITE_LAI_pfts_monthly (numpft,12,start_year:end_year))
+   allocate (SITE_SAI_pfts_monthly (numpft,12,start_year:end_year))
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s'
@@ -449,10 +455,10 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
          ENDIF
 
-      write(c2,'(i2.2)') month
+         write(c2,'(i2.2)') month
 #ifdef CoLMDEBUG
-      CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
-      CALL check_vector_data ('LAI_pfts    ' // trim(c2), LAI_pfts   )
+         CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
+         CALL check_vector_data ('LAI_pfts    ' // trim(c2), LAI_pfts   )
 #endif
 #ifdef USEMPI
          CALL mpi_barrier (p_comm_glb, p_err)
@@ -493,7 +499,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
 #else
          !TODO: single point case
-         SITE_LAI_pfts_clim(:,month) = LAI_pfts(:)
+         SITE_LAI_pfts_monthly(:,month,iy) = LAI_pfts(:)
 #endif
       ! loop end of month
       ENDDO
@@ -606,7 +612,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             -1.0e36_r8, lndname, trim(varname), compress = 0, write_mode = 'one')
 #endif
 #else
-         SITE_SAI_pfts_clim(:,month) = SAI_pfts(:)
+         SITE_SAI_pfts_monthly(:,month,iy) = SAI_pfts(:)
 #endif
       ! loop end of month
       ENDDO
@@ -633,7 +639,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
    ! if not use lai change, only make LAI data of defined lc year
-   IF (DEF_LAICHANGE) THEN
+   IF (DEF_LAI_CHANGE_YEARLY) THEN
       start_year = DEF_simulation_time%start_year
       end_year   = DEF_simulation_time%end_year
       ntime      = 12
@@ -656,9 +662,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 
 #ifdef SinglePoint
-   !TODO: singles case
-   allocate (SITE_LAI_pfts_clim (0:N_PFT-1,12))
-   allocate (SITE_SAI_pfts_clim (0:N_PFT-1,12))
+   allocate (SITE_LAI_year (start_year:end_year))
+   SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
+
+   !TODO-yuan-done: for multiple years
+   allocate (SITE_LAI_pfts_monthly (0:N_PFT-1,12,start_year:end_year))
+   allocate (SITE_SAI_pfts_monthly (0:N_PFT-1,12,start_year:end_year))
 #endif
 
    dir_5x5 = trim(dir_rawdata) // '/plant_15s'
@@ -746,7 +755,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          CALL ncio_define_dimension_vector (lndname, landpc, 'pft', N_PFT)
          CALL ncio_write_vector (lndname, 'LAI_pcs', 'pft', N_PFT, 'pc', landpc, LAI_pcs, 1)
 #else
-         SITE_LAI_pfts_clim(:,month) = LAI_pcs(:,1)
+         SITE_LAI_pfts_monthly(:,month,iy) = LAI_pcs(:,1)
 #endif
       ! loop end of month
       ENDDO
@@ -837,7 +846,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          CALL ncio_write_vector (lndname, 'SAI_pcs', 'pft', N_PFT, 'pc', landpc, SAI_pcs, 1)
 #else
          !TODO: single points
-         SITE_SAI_pfts_clim(:,month) = SAI_pcs(:,1)
+         SITE_SAI_pfts_monthly(:,month,iy) = SAI_pcs(:,1)
 #endif
       ! loop end of month
       ENDDO

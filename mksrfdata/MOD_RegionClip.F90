@@ -48,6 +48,7 @@ CONTAINS
 #endif
 
       INTEGER :: month, YY, itime, Julian_day, nsl
+      integer :: start_year, end_year
       CHARACTER(len=1) :: c1
       CHARACTER(len=2) :: c2, cx
       CHARACTER(len=3) :: c3
@@ -257,17 +258,28 @@ CONTAINS
                ! Leaf Area Index
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/LAI')
 
-               IF (DEF_LAI_CLIM) THEN
-                  DO month = 1, 12
-                     write(c2,'(i2.2)') month
+               IF (DEF_LAI_CHANGE_YEARLY) THEN
+                  start_year = DEF_simulation_time%start_year
+                  end_year   = DEF_simulation_time%end_year
+               ELSE
+                  start_year = DEF_LC_YEAR
+                  end_year   = DEF_LC_YEAR
+               ENDIF
 
-                     file_in  = trim(dir_landdata_in)  // '/LAI/LAI_patches' // trim(c2) // '.nc'
-                     file_out = trim(dir_landdata_out) // '/LAI/LAI_patches' // trim(c2) // '.nc'
-                     CALL clip_vector (file_in, file_out, iblk, jblk, 'LAI_patches', patchmask)
+               IF (DEF_LAI_MONTHLY) THEN
+                  DO YY = start_year, end_year
+                     DO month = 1, 12
+                        write(c2,'(i2.2)') month
+                        write(cyear,'(i4.4)') YY
 
-                     file_in  = trim(dir_landdata_in)  // '/LAI/SAI_patches' // trim(c2) // '.nc'
-                     file_out = trim(dir_landdata_out) // '/LAI/SAI_patches' // trim(c2) // '.nc'
-                     CALL clip_vector (file_in, file_out, iblk, jblk, 'SAI_patches', patchmask)
+                        file_in  = trim(dir_landdata_in)  // '/LAI/' // trim(cyear) // '/LAI_patches' // trim(c2) // '.nc'
+                        file_out = trim(dir_landdata_out) // '/LAI/' // trim(cyear) // '/LAI_patches' // trim(c2) // '.nc'
+                        CALL clip_vector (file_in, file_out, iblk, jblk, 'LAI_patches', patchmask)
+
+                        file_in  = trim(dir_landdata_in)  // '/LAI/' // trim(cyear) // '/SAI_patches' // trim(c2) // '.nc'
+                        file_out = trim(dir_landdata_out) // '/LAI/' // trim(cyear) // '/SAI_patches' // trim(c2) // '.nc'
+                        CALL clip_vector (file_in, file_out, iblk, jblk, 'SAI_patches', patchmask)
+                     ENDDO
                   ENDDO
                ELSE
                   DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year

@@ -18,6 +18,9 @@ MODULE CMF_CTRL_FORCING_MOD
 ! Unless required by applicable law or agreed to in writing, software distributed under the License is 
 !  distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 ! See the License for the specific language governing permissions and limitations under the License.
+  
+! Modified by Zhongwang Wei @ SYSU 2022.11.20
+
 !==========================================================
 USE PARKIND1,                ONLY: JPIM, JPRB, JPRM
 USE YOS_CMF_INPUT,           ONLY: LOGNAM
@@ -242,7 +245,7 @@ IF ( .NOT. LWEVAP ) THEN
   ROFCDF%CVAR(3)="NONE"
   ROFCDF%NVARID(3)=-1
 ENDIF 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+! add water re-infiltration calculation 
 IF ( .NOT. LWINFILT ) THEN
   ROFCDF%CVAR(4)="NONE"
   ROFCDF%NVARID(4)=-1
@@ -260,7 +263,7 @@ ENDIF
 IF ( LWEVAP ) THEN
   CALL NCERROR( NF90_INQ_VARID(ROFCDF%NCID,ROFCDF%CVAR(3),ROFCDF%NVARID(3)) )
 ENDIF
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+!  add water re-infiltration calculation 
 IF ( LWINFILT ) THEN
   CALL NCERROR( NF90_INQ_VARID(ROFCDF%NCID,ROFCDF%CVAR(4),ROFCDF%NVARID(4)) )
 ENDIF
@@ -619,7 +622,7 @@ END SUBROUTINE CMF_FORCING_COM
 SUBROUTINE CMF_FORCING_PUT(PBUFF)
 ! interporlate with inpmat, then send runoff data to CaMa-Flood 
 ! -- called from "Main Program / Coupler" or CMF_DRV_ADVANCE
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+!  add water re-infiltration calculation 
 USE YOS_CMF_INPUT,           ONLY: LROSPLIT,LWEVAP,LWINFILT
 USE YOS_CMF_PROG,            ONLY: D2RUNOFF,D2ROFSUB,D2WEVAP,D2WINFILT
 IMPLICIT NONE 
@@ -637,7 +640,7 @@ IF (LINTERP) THEN ! mass conservation using "input matrix table (inpmat)"
   IF (LWEVAP) THEN
       CALL ROFF_INTERP(PBUFF(:,:,3),D2WEVAP)
   ENDIF
-  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+  ! add water re-infiltration calculation 
   IF (LWINFILT) THEN
       CALL ROFF_INTERP(PBUFF(:,:,4),D2WINFILT)
   ENDIF
@@ -651,7 +654,7 @@ ELSE !  nearest point
   IF (LWEVAP) THEN
       CALL CONV_RESOL(PBUFF(:,:,3),D2WEVAP)
   ENDIF 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation 
+!  add water re-infiltration calculation 
   IF (LWINFILT) THEN
     CALL CONV_RESOL(PBUFF(:,:,4),D2WINFILT)
   ENDIF

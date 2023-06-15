@@ -21,11 +21,12 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
  use MOD_Vars_1DFluxes
  USE MOD_LandPatch, only: numpatch
  USE MOD_LandUrban, only: patch2urban
- USE MOD_Namelist, only : DEF_forcing
+ USE MOD_Namelist, only : DEF_forcing, DEF_URBAN_RUN
  USE MOD_Forcing, only : forcmask
  use omp_lib
 #ifdef CaMa_Flood
- !get flood variables: inundation depth[mm], inundation fraction [0-1], inundation evaporation [mm/s], inundation re-infiltration[mm/s]
+ ! get flood variables: inundation depth[mm], inundation fraction [0-1],
+ ! inundation evaporation [mm/s], inundation re-infiltration[mm/s]
  use MOD_CaMa_Vars, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
 #endif
  IMPLICIT NONE
@@ -40,41 +41,36 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
   real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
   integer :: i, m, u
-  logical :: run_urban_model = .false.
 
 ! ======================================================================
-
-#ifdef URBAN_MODEL
-  run_urban_model = .true.
-#endif
 
 #ifdef OPENMP
 !$OMP PARALLEL DO NUM_THREADS(OPENMP) &
 !$OMP PRIVATE(i, m, u) &
 !$OMP SCHEDULE(STATIC, 1)
 #endif
-      DO i = 1, numpatch
+  DO i = 1, numpatch
 
-         IF (DEF_forcing%has_missing_value) THEN
-            IF (.not. forcmask(i)) cycle
-         ENDIF
+     IF (DEF_forcing%has_missing_value) THEN
+        IF (.not. forcmask(i)) cycle
+     ENDIF
 
-         m = patchclass(i)
+     m = patchclass(i)
 
-         IF (.not.run_urban_model .or. m.ne.URBAN) THEN
+     IF (.not.DEF_URBAN_RUN .or. m.ne.URBAN) THEN
 
-            IF (run_urban_model) CYCLE  !fortest only
+        !IF (DEF_URBAN_RUN) CYCLE  !fortest only
 
-        ! For non urban patches or slab urban
-            CALL CoLMMAIN (i, idate,           coszen(i),       deltim,      &
-            patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i), &
-            doalb,           dolai,           dosst,           oro(i),       &
+      ! For non urban patches or slab urban
+        CALL CoLMMAIN (i,idate,           coszen(i),       deltim,          &
+        patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i),    &
+        doalb,           dolai,           dosst,           oro(i),          &
 
       ! SOIL INFORMATION AND LAKE DEPTH
-            soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
-            vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
-            wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
-            bsw(1:,i),                                                          &
+        soil_s_v_alb(i), soil_d_v_alb(i), soil_s_n_alb(i), soil_d_n_alb(i), &
+        vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
+        wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
+        bsw(1:,i),                                                          &
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
@@ -95,35 +91,35 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         kmax_sun(m),     kmax_sha(m),     kmax_xyl(m),     kmax_root(m),    &
         psi50_sun(m),    psi50_sha(m),    psi50_xyl(m),    psi50_root(m),   &
         ck(m),                                                              &
-         slti(m),         hlti(m),                                           &
-         shti(m),         hhti(m),         trda(m),         trdm(m),         &
-         trop(m),         gradm(m),        binter(m),       extkn(m),        &
-         chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
+        slti(m),         hlti(m),                                           &
+        shti(m),         hhti(m),         trda(m),         trdm(m),         &
+        trop(m),         gradm(m),        binter(m),       extkn(m),        &
+        chil(m),         rho(1:,1:,m),    tau(1:,1:,m),                     &
 
-       ! ATMOSPHERIC FORCING
-         forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
-         forc_t(i),       forc_q(i),       forc_prc(i),     forc_prl(i),     &
-         forc_rain(i), forc_snow(i), forc_psrf(i), forc_pbot(i), &
-         forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
-         forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
-         forc_rhoair(i),                                                     &
-       ! CBL height forcing
-         forc_hpbl(i),                                                       &
+      ! ATMOSPHERIC FORCING
+        forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
+        forc_t(i),       forc_q(i),       forc_prc(i),     forc_prl(i),     &
+        forc_rain(i), forc_snow(i), forc_psrf(i), forc_pbot(i), &
+        forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
+        forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
+        forc_rhoair(i),                                                     &
+      ! CBL height forcing
+        forc_hpbl(i),                                                       &
 
-       ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
-         z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
-         t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
-         wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
-         t_grnd(i),       tleaf(i),        ldew(i),     ldew_rain(i),      ldew_snow(i),             &
-         sag(i),          scv(i),          snowdp(i),       fveg(i),         &
-         fsno(i),         sigf(i),         green(i),        lai(i),          &
-         sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
-         thermk(i),       extkb(i),        extkd(i),                         &
+      ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
+        z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &
+        t_soisno(maxsnl+1:,i),            wliq_soisno(maxsnl+1:,i),         &
+        wice_soisno(maxsnl+1:,i),         smp(1:,i),          hk(1:,i),     &
+        t_grnd(i),       tleaf(i),        ldew(i),ldew_rain(i),ldew_snow(i),&
+        sag(i),          scv(i),          snowdp(i),       fveg(i),         &
+        fsno(i),         sigf(i),         green(i),        lai(i),          &
+        sai(i),          alb(1:,1:,i),    ssun(1:,1:,i),   ssha(1:,1:,i),   &
+        thermk(i),       extkb(i),        extkd(i),                         &
         vegwp(1:,i),     gs0sun(i),       gs0sha(i),                        &
-       ! Ozone Stress Variables
+      ! Ozone Stress Variables
         lai_old(i),      o3uptakesun(i),  o3uptakesha(i)  ,forc_ozone(i),   &
-       ! End ozone stress variables
-        zwt(i),          dpond(i),        wa(i),                            &
+      ! End ozone stress variables
+        zwt(i),          wdsrf(i),        wa(i),                            &
         t_lake(1:,i),    lake_icefrac(1:,i),               savedtke1(i),    &
 
       ! SNICAR snow model related
@@ -135,12 +131,12 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         laisun(i),       laisha(i),       rootr(1:,i),                      &
         rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
 #ifdef WUEdiag
-        assimsun_out(i), etrsun_out(i),   assim_RuBP_sun_out(i)          ,&
-        assim_Rubisco_sun_out(i)      ,   cisun_out(i)    ,Dsun_out(i)   ,&
-        gammasun_out(i)               ,   lambdasun_out(i)               ,&
-        assimsha_out(i), etrsha_out(i),   assim_RuBP_sha_out(i)          ,&
-        assim_Rubisco_sha_out(i)      ,   cisha_out(i)    ,Dsha_out(i)   ,&
-        gammasha_out(i), lambdasha_out(i),lambda_out(i)                  ,&
+        assimsun_out(i), etrsun_out(i),   assim_RuBP_sun_out(i),            &
+        assim_Rubisco_sun_out(i)      ,   cisun_out(i)    ,Dsun_out(i),     &
+        gammasun_out(i)               ,   lambdasun_out(i),                 &
+        assimsha_out(i), etrsha_out(i),   assim_RuBP_sha_out(i),            &
+        assim_Rubisco_sha_out(i)      ,   cisha_out(i)    ,Dsha_out(i),     &
+        gammasha_out(i), lambdasha_out(i),lambda_out(i),                    &
 #endif
         h2osoi(1:,i),    wat(i),          &
 
@@ -167,7 +163,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
       ! additional variables required by coupling with WRF model
         emis(i),         z0m(i),          zol(i),          rib(i),          &
         ustar(i),        qstar(i),        tstar(i),                         &
-        fm(i),           fh(i),           fq(i) )
+        fm(i),           fh(i),           fq(i)                             )
      ENDIF
 
 #if(defined BGC)
@@ -178,7 +174,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
 #ifdef URBAN_MODEL
      ! For urban model and urban patches
-     IF (run_urban_model .and. m.eq.URBAN) THEN
+     IF (DEF_URBAN_RUN .and. m.eq.URBAN) THEN
 
         u = patch2urban(i)
         !print *, "patch:", i, "urban:", u  !fortest only
@@ -205,12 +201,12 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         wf_gravels(1:,i),wf_sand(1:,i)   ,porsl(1:,i)     ,psi0(1:,i)      ,&
         bsw(1:,i)       ,&
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i)     ,L_vgm(1:,i),     &
-        sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
+        theta_r(1:,i)   ,alpha_vgm(1:,i) ,n_vgm(1:,i)     ,L_vgm(1:,i)     ,&
+        sc_vgm (1:,i)   ,fc_vgm   (1:,i) ,&
 #endif
-        hksati(1:,i),    csol(1:,i),      k_solids(1:,i),  dksatu(1:,i),    &
-        dksatf(1:,i),    dkdry(1:,i),                                       &
-        BA_alpha(1:,i),  BA_beta(1:,i),                                     &
+        hksati(1:,i)    ,csol(1:,i)      ,k_solids(1:,i),  dksatu(1:,i)    ,&
+        dksatf(1:,i)    ,dkdry(1:,i)     ,&
+        BA_alpha(1:,i)  ,BA_beta(1:,i)   ,&
         alb_roof(:,:,u) ,alb_wall(:,:,u) ,alb_gimp(:,:,u) ,alb_gper(:,:,u) ,&
 
       ! VEGETATION INFORMATION
@@ -264,13 +260,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         t_lake(1:,i)    ,lake_icefrac(1:,i),               savedtke1(i)    ,&
 
       ! SNICAR snow model related
-        snw_rds(:,i),    ssno(:,:,:,i),                                     &
-        mss_bcpho(:,i),  mss_bcphi(:,i),  mss_ocpho(:,i),  mss_ocphi(:,i),  &
-        mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
+        snw_rds(:,i)    ,ssno(:,:,:,i)   ,&
+        mss_bcpho(:,i)  ,mss_bcphi(:,i)  ,mss_ocpho(:,i)  ,mss_ocphi(:,i)  ,&
+        mss_dst1(:,i)   ,mss_dst2(:,i)   ,mss_dst3(:,i)   ,mss_dst4(:,i)   ,&
 
 #if(defined CaMa_Flood)
       ! flood variables [mm, m2/m2, mm/s, mm/s]
-        flddepth_cama(i),fldfrc_cama(i),fevpg_fld(i),  finfg_fld(i),        &
+        flddepth_cama(i),fldfrc_cama(i)  ,fevpg_fld(i)    ,finfg_fld(i)    ,&
 #endif
 
       ! additional diagnostic variables for output
@@ -303,7 +299,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
       ! additional variables required by coupling with WRF model
         emis(i)         ,z0m(i)          ,zol(i)          ,rib(i)          ,&
         ustar(i)        ,qstar(i)        ,tstar(i)        ,fm(i)           ,&
-        fh(i)           ,fq(i)           ,forc_hpbl(i)                     )
+        fh(i)           ,fq(i)           ,forc_hpbl(i)                      )
      ENDIF
 
 #endif

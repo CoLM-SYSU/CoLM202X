@@ -87,7 +87,6 @@ contains
       call mp2g_hist%build (landpatch, ghist, pctcrop)
 #endif
 
-      !>>>>>add by zhongwang wei
       call hist_concat%set (ghist)
 #ifdef SinglePoint
       hist_concat%ginfo%lat_c(:) = SITE_lat_location
@@ -97,7 +96,6 @@ contains
       if (trim(DEF_HIST_mode) == 'one') then
          hist_data_id = 1000
       end if
-      !<<<<<add by zhongwang wei
 
 
    end subroutine hist_init
@@ -221,7 +219,7 @@ contains
          end if
 
 #if(defined CaMa_Flood)
-         !zhongwang wei, 20221220: add variables to write cama-flood output.
+         !add variables to write cama-flood output.
          file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' !file name of cama-flood output
          call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         ! write CaMa-Flood output
 #endif
@@ -438,17 +436,17 @@ contains
          ! surface runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rsur, &
             a_rsur, f_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
-            'surface runoff','mm/s')
+            'surface runoff / surface water change by lateral flow)','mm/s')
 
          ! subsurface runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rsub, &
             a_rsub, f_rsub, file_hist, 'f_rsub', itime_in_file, sumarea, filter, &
-            'subsurface runoff','mm/s')
+            'subsurface runoff / groundwater change by lateral flow','mm/s')
 
          ! total runoff [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rnof, &
             a_rnof, f_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
-            'total runoff','mm/s')
+            'total runoff / total change of surface water and groundwater by lateral flow','mm/s')
 
          ! interception [mm/s]
          call flux_map_and_write_2d ( DEF_hist_vars%qintr, &
@@ -2900,10 +2898,10 @@ contains
 
          call mp2g_hist%map (vectmp, sumarea, spv = spval, msk = filter)
 
-         ! depth of ponding water [m]
-         call flux_map_and_write_2d ( DEF_hist_vars%dpond, &
-            a_dpond, f_dpond, file_hist, 'f_dpond', itime_in_file, sumarea, filter, &
-            'depth of ponding water','mm')
+         ! depth of surface water [m]
+         call flux_map_and_write_2d ( DEF_hist_vars%wdsrf, &
+            a_wdsrf, f_wdsrf, file_hist, 'f_wdsrf', itime_in_file, sumarea, filter, &
+            'depth of surface water','mm')
 
          ! -----------------------------------------------
          ! Land water bodies' ice fraction and temperature

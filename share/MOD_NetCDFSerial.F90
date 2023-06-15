@@ -1247,7 +1247,6 @@ CONTAINS
       ! Local variables
       INTEGER :: ncid, varid, dimid, status
 
-      write(*,*) trim(dataname), trim(dimname)
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
       IF (status /= NF90_NOERR) THEN
