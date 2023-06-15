@@ -142,7 +142,7 @@ CONTAINS
          fwet_gimp = min(1., fwet_gimp)
       ENDIF
 
-      ! ! dew case
+      ! dew case
       IF (qm > qgimp) THEN
          fwet_gimp = 1.
       ENDIF

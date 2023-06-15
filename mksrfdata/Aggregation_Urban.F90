@@ -76,7 +76,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: lai_urb
    REAL(r8), ALLOCATABLE, DIMENSION(:) :: sai_urb
 
-   !TODO: check the blow
    ! delete variables not used
    INTEGER , allocatable, dimension(:) :: reg_typid_one
    INTEGER , allocatable, dimension(:) :: LUCY_reg_one
@@ -604,7 +603,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
                   area_one = 0
                END WHERE
 
-               !TODO: check below
                ! area-weight average
                IF (sum(gfcc_tc_one * area_one) > 0) THEN
                   lai_urb(iurban) = sum(ulai_one * gfcc_tc_one * area_one) / &

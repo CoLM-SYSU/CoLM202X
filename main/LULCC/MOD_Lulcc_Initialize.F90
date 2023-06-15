@@ -712,7 +712,7 @@ MODULE MOD_Lulcc_Initialize
          dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
       enddo
 
-      zc_soimm = z_soi  * 1000.
+      zc_soimm = z_soi * 1000.
       zi_soimm(0) = 0.
       zi_soimm(1:nl_soil) = zi_soi * 1000.
 
@@ -786,9 +786,9 @@ MODULE MOD_Lulcc_Initialize
 #endif
    !------------------------------------------------------------
 #endif
-               ! for SOIL INIT of water, temperature, snow depth
-               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
-               ! for SOIL Water INIT by using water table depth
+            ! for SOIL INIT of water, temperature, snow depth
+            ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+            ! for SOIL Water INIT by using water table depth
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL
