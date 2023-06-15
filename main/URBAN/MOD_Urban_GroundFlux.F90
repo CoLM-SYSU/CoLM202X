@@ -142,6 +142,11 @@ CONTAINS
          fwet_gimp = min(1., fwet_gimp)
       ENDIF
 
+      ! ! dew case
+      IF (qm > qgimp) THEN
+         fwet_gimp = 1.
+      ENDIF
+
       ! weighted qg
       fwetfac = fgimp*fwet_gimp + fgper
       qg = (qgimp*fgimp*fwet_gimp + qgper*fgper)/fwetfac

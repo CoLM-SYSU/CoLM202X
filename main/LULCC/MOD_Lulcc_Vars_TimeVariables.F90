@@ -664,17 +664,17 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     ENDIF
 
                     ! for the same patch TYPE
-                    tleaf_c    (:,pc) = tleaf_c_    (:,pc)
-                    ldew_c     (:,pc) = ldew_c_     (:,pc)
-                    sigf_c     (:,pc) = sigf_c_     (:,pc)
-                    lai_c      (:,pc) = lai_c_      (:,pc)
-                    sai_c      (:,pc) = sai_c_      (:,pc)
-                    ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc)
-                    ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc)
-                    thermk_c   (:,pc) = thermk_c_   (:,pc)
-                    fshade_c   (:,pc) = fshade_c_   (:,pc)
-                    extkb_c    (:,pc) = extkb_c_    (:,pc)
-                    extkd_c    (:,pc) = extkd_c_    (:,pc)
+                    tleaf_c    (:,pc) = tleaf_c_    (:,pc_)
+                    ldew_c     (:,pc) = ldew_c_     (:,pc_)
+                    sigf_c     (:,pc) = sigf_c_     (:,pc_)
+                    lai_c      (:,pc) = lai_c_      (:,pc_)
+                    sai_c      (:,pc) = sai_c_      (:,pc_)
+                    ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc_)
+                    ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc_)
+                    thermk_c   (:,pc) = thermk_c_   (:,pc_)
+                    fshade_c   (:,pc) = fshade_c_   (:,pc_)
+                    extkb_c    (:,pc) = extkb_c_    (:,pc_)
+                    extkd_c    (:,pc) = extkd_c_    (:,pc_)
 ENDIF
 #endif
 

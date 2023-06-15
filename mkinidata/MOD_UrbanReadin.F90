@@ -182,6 +182,7 @@ MODULE MOD_UrbanReadin
                fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
             ENDIF
          ELSE
+            pop_den        (u)   = 0.
             vehicle      (:,u) = 0.
             week_holiday (:,u) = 0.
             weh_prof     (:,u) = 0.
@@ -233,6 +234,10 @@ MODULE MOD_UrbanReadin
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
+
+            IF (all(cv_gimp(:,u)==0)) THEN
+               fgper(u) = 1
+            ENDIF
 
          IF (DEF_URBAN_BEM) THEN
             t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
