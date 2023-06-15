@@ -4,7 +4,7 @@ module MOD_Hist
 
    !----------------------------------------------------------------------------
    ! DESCRIPTION:
-   ! 
+   !
    !     Write out gridded model results to history files.
    !
    ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
@@ -19,6 +19,9 @@ module MOD_Hist
    use MOD_Grid
    use MOD_Mapping_Pset2Grid
    USE MOD_Namelist
+#ifdef URBAN_MODEL
+   USE MOD_LandUrban
+#endif
 #ifdef LULC_IGBP_PFT
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_LandPFT, only : patch_pft_s
@@ -30,7 +33,9 @@ module MOD_Hist
 #endif
 
    type(grid_type), target :: ghist
+   TYPE(grid_type), target :: ghist_urb
    type(mapping_pset2grid_type) :: mp2g_hist
+   type(mapping_pset2grid_type) :: mp2g_hist_urb
 
    public :: hist_init
    public :: hist_out
@@ -87,6 +92,10 @@ contains
       call mp2g_hist%build (landpatch, ghist, pctcrop)
 #endif
 
+#ifdef URBAN_MODEL
+      CALL mp2g_hist_urb%build (landurban, ghist)
+#endif
+
       call hist_concat%set (ghist)
 #ifdef SinglePoint
       hist_concat%ginfo%lat_c(:) = SITE_lat_location
@@ -139,6 +148,9 @@ contains
       use MOD_CoLMDebug
       use MOD_Vars_Global, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
+#ifdef URBAN_MODEL
+      USE MOD_LandUrban
+#endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
@@ -170,11 +182,17 @@ contains
       character(len=256) :: groupby
 
       type(block_data_real8_2d) :: sumarea
+      type(block_data_real8_2d) :: sumarea_urb
       real(r8), allocatable ::  vectmp(:)
       real(r8), allocatable ::  vecacc(:)
       logical,  allocatable ::  filter(:)
 
-      integer i
+      integer i, u
+#ifdef URBAN_MODEL
+      real(r8), allocatable ::  vectmp_urb(:)
+      logical,  allocatable ::  filter_urb(:)
+#endif
+
       if (itstamp <= ptstamp) then
          call FLUSH_acc_fluxes ()
          return
@@ -245,10 +263,19 @@ contains
                allocate (vectmp (numpatch))
                allocate (vecacc (numpatch))
             end if
+#ifdef URBAN_MODEL
+            IF (numurban > 0) THEN
+               allocate (filter_urb (numurban))
+               allocate (vectmp_urb (numurban))
+            ENDIF
+#endif
          end if
 
          if (p_is_io) then
             call allocate_block_data (ghist, sumarea)
+#ifdef URBAN_MODEL
+            call allocate_block_data (ghist, sumarea_urb)
+#endif
          end if
 
          ! ---------------------------------------------------
@@ -572,6 +599,131 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%qref, &
             a_qref, f_qref, file_hist, 'f_qref', itime_in_file, sumarea, filter, &
             '2 m height air specific humidity','kg/kg')
+
+         ! ------------------------------------------------------------------------------------------
+         ! Mapping the urban variables at patch [numurban] to grid
+         ! ------------------------------------------------------------------------------------------
+
+#ifdef URBAN_MODEL
+         if (p_is_worker) then
+            if (numpatch > 0) then
+               DO i = 1, numpatch
+                  IF (patchtype(i) == 1) THEN
+                     u = patch2urban(i)
+
+                     filter_urb(u) = .true.
+                     vectmp_urb(u) = 1.
+
+                     IF (DEF_forcing%has_missing_value) THEN
+                        filter_urb(u) = filter_urb(u) .and. forcmask(i)
+                     ENDIF
+                  ENDIF
+               ENDDO
+            end if
+         end if
+         
+         call mp2g_hist_urb%map (vectmp_urb, sumarea_urb, spv = spval, msk = filter_urb)
+         
+         ! sensible heat from building roof [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_roof, &
+            a_senroof, f_senroof, file_hist, 'f_fsenroof', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban roof [W/m2]','W/m2')
+
+         ! sensible heat from building sunlit wall [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_wsun, &
+            a_senwsun, f_senwsun, file_hist, 'f_fsenwsun', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban sunlit wall [W/m2]','W/m2')
+
+         ! sensible heat from building shaded wall [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_wsha, &
+            a_senwsha, f_senwsha, file_hist, 'f_fsenwsha', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban shaded wall [W/m2]','W/m2')
+
+         ! sensible heat from impervious ground [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_gimp, &
+            a_sengimp, f_sengimp, file_hist, 'f_fsengimp', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban impervious ground [W/m2]','W/m2')
+
+         ! sensible heat from pervious ground [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_gper, &
+            a_sengper, f_sengper, file_hist, 'f_fsengper', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban pervious ground [W/m2]','W/m2')
+
+         ! sensible heat from urban tree [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_urbl, &
+            a_senurbl, f_senurbl, file_hist, 'f_fsenurbl', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible heat from urban tree [W/m2]','W/m2')
+
+         ! latent heat flux from building roof [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%lfevp_roof, &
+            a_lfevproof, f_lfevproof, file_hist, 'f_lfevproof', itime_in_file, sumarea_urb, filter_urb, &
+            'latent heat from urban roof [W/m2]','W/m2')
+
+         ! latent heat flux from impervious ground [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%lfevp_gimp, &
+            a_lfevpgimp, f_lfevpgimp, file_hist, 'f_lfevpgimp', itime_in_file, sumarea_urb, filter_urb, &
+            'latent heat from urban impervious ground [W/m2]','W/m2')
+
+         ! latent heat flux from pervious ground [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%lfevp_gper, &
+            a_lfevpgper, f_lfevpgper, file_hist, 'f_lfevpgper', itime_in_file, sumarea_urb, filter_urb, &
+            'latent heat from urban pervious ground [W/m2]','W/m2')
+
+         ! latent heat flux from urban tree [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%lfevp_urbl, &
+            a_lfevpurbl, f_lfevpurbl, file_hist, 'f_lfevpurbl', itime_in_file, sumarea_urb, filter_urb, &
+            'latent heat from urban tree [W/m2]','W/m2')
+
+         ! sensible flux from heat or cool AC [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fhac, &
+            a_fhac, f_fhac, file_hist, 'f_fhac', itime_in_file, sumarea_urb, filter_urb, &
+            'sensible flux from heat or cool AC [W/m2]','W/m2')
+
+         ! waste heat flux from heat or cool AC [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fwst, &
+            a_fwst, f_fwst, file_hist, 'f_fwst', itime_in_file, sumarea_urb, filter_urb, &
+            'waste heat flux from heat or cool AC [W/m2]','W/m2')
+
+         ! flux from inner and outter air exchange [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fach, &
+            a_fach, f_fach, file_hist, 'f_fach', itime_in_file, sumarea_urb, filter_urb, &
+            'flux from inner and outter air exchange [W/m2]','W/m2')
+
+         ! flux from total heating/cooling [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%fhah, &
+            a_fhah, f_fhah, file_hist, 'f_fhah', itime_in_file, sumarea_urb, filter_urb, &
+            'flux from heating/cooling [W/m2]','W/m2')
+
+         ! flux from metabolism [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%meta, &
+            a_meta, f_fmeta, file_hist, 'f_fmeta', itime_in_file, sumarea_urb, filter_urb, &
+            'flux from human metabolism [W/m2]','W/m2')
+
+         ! flux from vehicle [W/m2]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%vehc, &
+            a_vehc, f_fvehc, file_hist, 'f_fvehc', itime_in_file, sumarea_urb, filter_urb, &
+            'flux from traffic [W/m2]','W/m2')
+
+         ! temperature of inner building [K]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%t_room, &
+            a_t_room, f_t_room, file_hist, 'f_t_room', itime_in_file, sumarea_urb, filter_urb, &
+            'temperature of inner building [K]','kelvin')
+
+         ! temperature of outer building [K]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%tafu, &
+            a_tafu, f_tafu, file_hist, 'f_tafu', itime_in_file, sumarea_urb, filter_urb, &
+            'temperature of outer building [K]','kelvin')
+
+         ! temperature of building roof [K]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%t_roof, &
+            a_troof, f_troof, file_hist, 'f_t_roof', itime_in_file, sumarea_urb, filter_urb, &
+            'temperature of urban roof [K]','kelvin')
+
+         ! temperature of building wall [K]
+         call flux_map_and_write_urb_2d ( DEF_hist_vars%t_wall, &
+            a_twall, f_twall, file_hist, 'f_t_wall', itime_in_file, sumarea_urb, filter_urb, &
+            'temperature of urban wall [K]','kelvin')
+#endif
 
 #ifdef WUEdiag
 #ifdef LULC_IGBP_PFT
@@ -3108,7 +3260,10 @@ ENDIF
 
          if (allocated(filter)) deallocate(filter)
          if (allocated(vectmp)) deallocate(vectmp)
-
+#ifdef URBAN_MODEL
+         if (allocated(filter_urb)) deallocate(filter_urb)
+         if (allocated(vectmp_urb)) deallocate(vectmp_urb)
+#endif
          call FLUSH_acc_fluxes ()
 
       end if
@@ -3190,6 +3345,82 @@ ENDIF
       ENDIF
 
    end subroutine flux_map_and_write_2d
+
+   ! -------
+   subroutine flux_map_and_write_urb_2d ( is_hist, &
+         acc_vec, flux_xy, file_hist, varname, itime_in_file, sumarea, filter, &
+         longname, units)
+
+      use MOD_Precision
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_DataType
+      use MOD_Mapping_Pset2Grid
+      use MOD_Block
+      use MOD_Grid
+      use MOD_Vars_1DAccFluxes,  only: nac
+      use MOD_Vars_Global, only: spval
+      implicit none
+
+      logical, intent(in) :: is_hist
+
+      real(r8), intent(inout) :: acc_vec(:)
+      type(block_data_real8_2d), intent(inout) :: flux_xy
+      character(len=*), intent(in) :: file_hist
+      character(len=*), intent(in) :: varname
+      integer,          intent(in) :: itime_in_file
+      character(len=*), intent(in) :: longname
+      character(len=*), intent(in) :: units
+
+      type(block_data_real8_2d), intent(in) :: sumarea
+      logical, intent(in) :: filter(:)
+
+      ! Local variables
+      integer :: iblkme, xblk, yblk, xloc, yloc
+      integer :: compress
+
+      if (.not. is_hist) return
+
+      if (p_is_worker) then
+         where (acc_vec /= spval)  acc_vec = acc_vec / nac
+      end if
+
+      call mp2g_hist_urb%map (acc_vec, flux_xy, spv = spval, msk = filter)
+
+      if (p_is_io) then
+         DO iblkme = 1, gblock%nblkme
+            xblk = gblock%xblkme(iblkme)
+            yblk = gblock%yblkme(iblkme)
+
+            do yloc = 1, ghist%ycnt(yblk)
+               do xloc = 1, ghist%xcnt(xblk)
+
+                  if (sumarea%blk(xblk,yblk)%val(xloc,yloc) > 0.00001) then
+                     IF (flux_xy%blk(xblk,yblk)%val(xloc,yloc) /= spval) THEN
+                        flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                           = flux_xy%blk(xblk,yblk)%val(xloc,yloc) &
+                           / sumarea%blk(xblk,yblk)%val(xloc,yloc)
+                     ENDIF
+                  else
+                     flux_xy%blk(xblk,yblk)%val(xloc,yloc) = spval
+                  end if
+
+               end do
+            end do
+
+         end do
+      end if
+
+      compress = DEF_HIST_COMPRESS_LEVEL
+      call hist_write_var_real8_2d (file_hist, varname, ghist, itime_in_file, flux_xy, compress)
+
+      IF (p_is_master .and. (itime_in_file == 1) .and. (trim(DEF_HIST_mode) == 'one')) then
+         CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+         CALL ncio_put_attr (file_hist, varname, 'units', units)
+         CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+      ENDIF
+
+   end subroutine flux_map_and_write_urb_2d
 
    ! -------
    subroutine flux_map_and_write_3d ( is_hist, &
