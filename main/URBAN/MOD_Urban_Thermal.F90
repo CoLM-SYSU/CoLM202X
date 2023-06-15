@@ -398,8 +398,6 @@ CONTAINS
         respc      ,&! respiration
         errore     ,&! energy balnce error [w/m2]
 
-        !vehc       ,&! flux from vehicle
-        !meta       ,&! flux from metabolic
         ! additionalvariables required by coupling with WRF or RSM model
         emis       ,&! averaged bulk surface emissivity
         z0m        ,&! effective roughness [m]
@@ -1336,9 +1334,9 @@ CONTAINS
                        Fhac, Fwst, Fach, Fhah )
 
       ! Anthropogenic heat flux for the rest (vehicle heat flux and metabolic heat flux)
-      CALL LUCY(idate       , deltim  , patchlonr, fix_holiday, &
-                week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
-                vehicle     , Fahe    , vehc     , meta)
+      CALL LUCY ( idate       , deltim  , patchlonr, fix_holiday, &
+                  week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
+                  vehicle     , Fahe    , vehc     , meta )
 
       deallocate ( fcover )
 
