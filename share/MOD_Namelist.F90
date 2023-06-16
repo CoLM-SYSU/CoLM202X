@@ -321,6 +321,28 @@ MODULE MOD_Namelist
       LOGICAL :: trad         = .true.
       LOGICAL :: tref         = .true.
       LOGICAL :: qref         = .true.
+#ifdef URBAN_MODEL
+      LOGICAL :: fsen_roof    = .true.
+      LOGICAL :: fsen_wsun    = .true.
+      LOGICAL :: fsen_wsha    = .true.
+      LOGICAL :: fsen_gimp    = .true.
+      LOGICAL :: fsen_gper    = .true.
+      LOGICAL :: fsen_urbl    = .true.
+      LOGICAL :: lfevp_roof   = .true.
+      LOGICAL :: lfevp_gimp   = .true.
+      LOGICAL :: lfevp_gper   = .true.
+      LOGICAL :: lfevp_urbl   = .true.
+      LOGICAL :: fhac         = .true.
+      LOGICAL :: fwst         = .true.
+      LOGICAL :: fach         = .true.
+      LOGICAL :: fhah         = .true.
+      LOGICAL :: meta         = .true.
+      LOGICAL :: vehc         = .true.
+      LOGICAL :: t_room       = .true.
+      LOGICAL :: tafu         = .true.
+      LOGICAL :: t_roof       = .true.
+      LOGICAL :: t_wall       = .true.
+#endif
 #ifdef BGC
       LOGICAL :: leafc              = .true.
       LOGICAL :: leafc_storage      = .true.
@@ -1080,6 +1102,28 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
+#ifdef URBAN_MODEL
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsun   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsha   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gimp   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gper   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_urbl   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_roof  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gimp  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gper  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_urbl  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhac        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fwst        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fach        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhah        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%meta        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vehc        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_room      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tafu        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_roof      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_wall      ,  set_defaults)
+#endif
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%leafc              ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      ,  set_defaults)
