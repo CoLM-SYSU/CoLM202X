@@ -276,7 +276,7 @@ MODULE MOD_Lulcc_Initialize
 
    IF (p_is_worker) THEN
       IF (numpatch > 0) THEN
-         dpond(:) = 0._r8
+         wdsrf(:) = 0._r8
       ENDIF
    ENDIF
    ! ------------------------------------------
@@ -712,27 +712,29 @@ MODULE MOD_Lulcc_Initialize
          dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
       enddo
 
+      zc_soimm = z_soi * 1000.
+      zi_soimm(0) = 0.
+      zi_soimm(1:nl_soil) = zi_soi * 1000.
+
       do i = 1, numpatch
          m = patchclass(i)
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
-            zc_soimm = z_soi  * 1000.
-            zi_soimm(0) = 0.
-            zi_soimm(1:nl_soil) = zi_soi * 1000.
+         ENDIF
+
 #ifdef Campbell_SOIL_MODEL
-            vliq_r(:) = 0.
-            prms(1,1:nl_soil) = bsw(1:nl_soil,i)
+         vliq_r(:) = 0.
+         prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               vliq_r(:) = theta_r(1:nl_soil,i)
-            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
-            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
-            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
-            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
-            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
+         vliq_r(:) = theta_r(1:nl_soil,i)
+         prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
+         prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
+         prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
+         prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
+         prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
 #endif
-         ENDIF
 
          CALL iniTimeVar(i, patchtype(i)&
             ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
@@ -741,9 +743,9 @@ MODULE MOD_Lulcc_Initialize
             ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
             ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
             ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
             ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables
             ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
             ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
             ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -784,9 +786,9 @@ MODULE MOD_Lulcc_Initialize
 #endif
    !------------------------------------------------------------
 #endif
-               ! for SOIL INIT of water, temperature, snow depth
-               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
-               ! for SOIL Water INIT by using water table depth
+            ! for SOIL INIT of water, temperature, snow depth
+            ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+            ! for SOIL Water INIT by using water table depth
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL
@@ -892,8 +894,8 @@ MODULE MOD_Lulcc_Initialize
          DO i = 1, numhru
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
-            dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
-            dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+            wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
+            wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
       ENDIF
    ENDIF

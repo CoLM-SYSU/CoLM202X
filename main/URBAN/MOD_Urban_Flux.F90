@@ -830,8 +830,8 @@ MODULE MOD_Urban_Flux
      fsengper = cpair*rhoair*cgh(2)*(tgper-taf(2))
      fsengimp = cpair*rhoair*cgh(2)*(tgimp-taf(2))
 
-     fevpgper = rhoair*cgw(2)*(qgper-qaf(2))
-     fevpgimp = rhoair*cgw(2)*(qgimp-qaf(2))
+     fevpgper = rhoair*cgw_per*(qgper-qaf(2))
+     fevpgimp = rhoair*cgw_imp*(qgimp-qaf(2))
      fevpgimp = fevpgimp*fwet_gimp
 
 !-----------------------------------------------------------------------
@@ -839,8 +839,15 @@ MODULE MOD_Urban_Flux
 !-----------------------------------------------------------------------
 
      cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-     cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-     cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+     ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
+     ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+
+     cgperl = rhoair*cgw_per*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+              /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
+              /facq)*dqgperdT
+     cgimpl = rhoair*cgw_imp*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+              /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
+              /facq)*dqgimpdT
      cgimpl = cgimpl*fwet_gimp
 
      cgimp  = cgrnds + cgimpl*htvp_gimp
@@ -2421,8 +2428,8 @@ MODULE MOD_Urban_Flux
      fsengimp = cpair*rhoair*cgh(botlay)*(tgimp-taf(botlay))
      fsengper = cpair*rhoair*cgh(botlay)*(tgper-taf(botlay))
 
-     fevpgimp = rhoair*cgw(botlay)*(qgimp-qaf(botlay))
-     fevpgper = rhoair*cgw(botlay)*(qgper-qaf(botlay))
+     fevpgimp = rhoair*cgw_imp*(qgimp-qaf(botlay))
+     fevpgper = rhoair*cgw_per*(qgper-qaf(botlay))
 
      fevpgimp = fevpgimp*fwet_gimp
 
@@ -2432,13 +2439,19 @@ MODULE MOD_Urban_Flux
 
      IF (botlay == 2) THEN
         cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
-        cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
-        cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+        ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
+        ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
+        cgperl = rhoair*cgw_per*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
+                 /facq)*dqgperdT
+        cgimpl = rhoair*cgw_imp*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
+                 /facq)*dqgimpdT
         cgimpl = cgimpl*fwet_gimp
      ELSE !botlay == 1
         cgrnds = cpair*rhoair*cgh(1)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
-        cgperl = rhoair*cgw(1)*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgperdT
-        cgimpl = rhoair*cgw(1)*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgimpdT
+        cgperl = rhoair*cgw_per*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgperdT
+        cgimpl = rhoair*cgw_imp*(1.-wtaq0(1)*wtgq0(2)*wtgq0(1)/facq-wtgq0(1))*dqgimpdT
         cgimpl = cgimpl*fwet_gimp
      ENDIF
 

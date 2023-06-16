@@ -287,7 +287,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             write(c3, '(i2.2)') itime
 
             IF (p_is_master) THEN
-               write(*,'(A,I3,A1,I3)') 'Aggregate SAI :', itime, '/', ntime
+               write(*,'(A,I4,A1,I3,A1,I3)') 'Aggregate SAI :', iy, ':', itime, '/', ntime
             endif
 
             IF (p_is_io) THEN

@@ -129,23 +129,23 @@ MODULE MOD_UrbanReadin
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'POP_DEN'     , landurban, pop_den     )
+      CALL ncio_read_vector (lndname, 'POP_DEN'       , landurban, pop_den )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LUCY_country_id.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'LUCY_id'     , landurban, lucyid  )
+      CALL ncio_read_vector (lndname, 'LUCY_id'       , landurban, lucyid  )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/WT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'WT_ROOF', landurban, froof)
+      CALL ncio_read_vector (lndname, 'WT_ROOF'       , landurban, froof   )
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/HT_ROOF.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'HT_ROOF'     , landurban, hroof  )
+      CALL ncio_read_vector (lndname, 'HT_ROOF'       , landurban, hroof   )
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Water.nc'
       print*, lndname
-      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake)
+      CALL ncio_read_vector (lndname, 'PCT_Water'     , landurban, flake   )
 
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/PCT_Tree.nc'
       print*, lndname
@@ -182,6 +182,7 @@ MODULE MOD_UrbanReadin
                fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
             ENDIF
          ELSE
+            pop_den        (u) = 0.
             vehicle      (:,u) = 0.
             week_holiday (:,u) = 0.
             weh_prof     (:,u) = 0.
@@ -233,6 +234,10 @@ MODULE MOD_UrbanReadin
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
+
+            IF (all(cv_gimp(:,u)==0)) THEN
+               fgper(u) = 1.
+            ENDIF
 
          IF (DEF_URBAN_BEM) THEN
             t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
