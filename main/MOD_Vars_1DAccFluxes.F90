@@ -99,13 +99,13 @@ module MOD_Vars_1DAccFluxes
    REAL(r8), allocatable :: a_sengper(:)    !sensible heat flux from pervious road [W/m2]
    REAL(r8), allocatable :: a_senurbl(:)    !sensible heat flux from urban vegetation [W/m2]
 
-   REAL(r8), allocatable :: a_lfevproof(:)    !latent heat flux from roof [W/m2]
-   REAL(r8), allocatable :: a_lfevpgimp(:)    !latent heat flux from impervious road [W/m2]
-   REAL(r8), allocatable :: a_lfevpgper(:)    !latent heat flux from pervious road [W/m2]
-   REAL(r8), allocatable :: a_lfevpurbl(:)    !latent heat flux from urban vegetation [W/m2]
+   REAL(r8), allocatable :: a_lfevproof(:)  !latent heat flux from roof [W/m2]
+   REAL(r8), allocatable :: a_lfevpgimp(:)  !latent heat flux from impervious road [W/m2]
+   REAL(r8), allocatable :: a_lfevpgper(:)  !latent heat flux from pervious road [W/m2]
+   REAL(r8), allocatable :: a_lfevpurbl(:)  !latent heat flux from urban vegetation [W/m2]
 
-   REAL(r8), allocatable :: a_troof    (:)    !temperature of roof [K]
-   REAL(r8), allocatable :: a_twall    (:)    !temperature of wall [K]
+   REAL(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
+   REAL(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
 #endif
 
 #ifdef BGC
@@ -1477,30 +1477,30 @@ contains
 
 #ifdef URBAN_MODEL
             IF (numurban > 0) THEN
-               CALL acc1d(t_room, a_t_room   )
-               CALL acc1d(tafu  , a_tafu     )
-               CALL acc1d(fhac  , a_fhac     )
-               CALL acc1d(fwst  , a_fwst     )
-               CALL acc1d(fach  , a_fach     )
-               CALL acc1d(fahe  , a_fahe     )
-               CALL acc1d(fhah  , a_fhah     )
-               CALL acc1d(vehc  , a_vehc     )
-               CALL acc1d(meta  , a_meta     )
+               CALL acc1d(t_room    , a_t_room    )
+               CALL acc1d(tafu      , a_tafu      )
+               CALL acc1d(fhac      , a_fhac      )
+               CALL acc1d(fwst      , a_fwst      )
+               CALL acc1d(fach      , a_fach      )
+               CALL acc1d(fahe      , a_fahe      )
+               CALL acc1d(fhah      , a_fhah      )
+               CALL acc1d(vehc      , a_vehc      )
+               CALL acc1d(meta      , a_meta      )
 
-               CALL acc1d(fsen_roof, a_senroof  )
-               CALL acc1d(fsen_wsun, a_senwsun  )
-               CALL acc1d(fsen_wsha, a_senwsha  )
-               CALL acc1d(fsen_gimp, a_sengimp  )
-               CALL acc1d(fsen_gper, a_sengper  )
-               CALL acc1d(fsen_urbl, a_senurbl  )
+               CALL acc1d(fsen_roof , a_senroof   )
+               CALL acc1d(fsen_wsun , a_senwsun   )
+               CALL acc1d(fsen_wsha , a_senwsha   )
+               CALL acc1d(fsen_gimp , a_sengimp   )
+               CALL acc1d(fsen_gper , a_sengper   )
+               CALL acc1d(fsen_urbl , a_senurbl   )
 
-               CALL acc1d(lfevp_roof, a_lfevproof)
-               CALL acc1d(lfevp_gimp, a_lfevpgimp)
-               CALL acc1d(lfevp_gper, a_lfevpgper)
-               CALL acc1d(lfevp_urbl, a_lfevpurbl)
+               CALL acc1d(lfevp_roof, a_lfevproof )
+               CALL acc1d(lfevp_gimp, a_lfevpgimp )
+               CALL acc1d(lfevp_gper, a_lfevpgper )
+               CALL acc1d(lfevp_urbl, a_lfevpurbl )
 
-               CALL acc1d(t_roof, a_troof    )
-               CALL acc1d(t_wall, a_twall    )
+               CALL acc1d(t_roof    , a_troof     )
+               CALL acc1d(t_wall    , a_twall     )
             ENDIF
 #endif
 

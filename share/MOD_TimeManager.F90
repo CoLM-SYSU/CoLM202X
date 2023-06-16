@@ -18,6 +18,12 @@ MODULE MOD_TimeManager
    USE MOD_Precision
    IMPLICIT NONE
 
+   integer, dimension(0:12), parameter :: &
+      daysofmonth_leap      = (/0,31,29,31,30,31,30,31,31,30,31,30,31/)          ,&
+      daysofmonth_noleap    = (/0,31,28,31,30,31,30,31,31,30,31,30,31/)          ,&
+      accdaysofmonth_leap   = (/0,31,60,91,121,152,182,213,244,274,305,335,366/) ,&
+      accdaysofmonth_noleap = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+
    TYPE :: timestamp
       INTEGER :: year, day, sec
    END TYPE timestamp
@@ -250,21 +256,21 @@ CONTAINS
       INTEGER, intent(in)  :: year, day
       INTEGER, intent(out) :: month, mday
 
-      INTEGER :: i, months(0:12)
+      INTEGER :: i, monthday(0:12)
 
       IF ( isleapyear(year) ) THEN
-         months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         monthday(:) = accdaysofmonth_leap(:)
       ELSE
-         months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         monthday(:) = accdaysofmonth_noleap(:)
       ENDIF
 
     ! calculate month and day values
       DO i = 1, 12
-         IF (day .LE. months(i)) THEN
+         IF (day .LE. monthday(i)) THEN
             month = i; exit
          ENDIF
       ENDDO
-      mday = day - months(i-1)
+      mday = day - monthday(i-1)
 
    END SUBROUTINE julian2monthday
 
@@ -274,16 +280,16 @@ CONTAINS
       INTEGER, intent(in)  :: year, month, mday
       INTEGER, intent(out) :: day
 
-      INTEGER :: months(0:12)
+      INTEGER :: monthday(0:12)
 
       IF ( isleapyear(year) ) THEN
-         months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         monthday(:) = accdaysofmonth_leap(:)
       ELSE
-         months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         monthday(:) = accdaysofmonth_noleap(:)
       ENDIF
 
     ! calculate julian day
-      day  = months(month-1) + mday
+      day  = monthday(month-1) + mday
 
    END SUBROUTINE monthday2julian
 
@@ -540,10 +546,6 @@ CONTAINS
       INTEGER, intent(in) :: mmdd
       LOGICAL, intent(in) :: isleap
 
-      INTEGER, dimension(0:12) :: daysofmonth_noleap &
-                               = (/0,31,28,31,30,31,30,31,31,30,31,30,31/)
-      INTEGER, dimension(0:12) :: daysofmonth_leap &
-                               = (/0,31,29,31,30,31,30,31,31,30,31,30,31/)
       INTEGER imonth, iday
 
       imonth = mmdd / 100
@@ -653,28 +655,15 @@ CONTAINS
     INTEGER, intent(out) :: iweek, day
 
     INTEGER :: myear, mmonth
-    INTEGER :: judy1, judy2, judy3
     INTEGER :: yy, mm, dd, y12, y34
     INTEGER :: A, B, C, D, i
 
-    INTEGER, save :: DayOfMonth(12) = [31,28,31,30,31,30,31,31,30,31,30,31]
+    INTEGER :: monthday(0:12)
 
-    judy1 = mod(year, 400)
-    judy2 = mod(year, 100)
-    judy3 = mod(year, 4  )
-
-    IF (judy2 == 0) THEN
-      IF (judy1 == 0) THEN
-         DayOfMonth(2) = 29
-      ELSE
-         DayOfMonth(2) = 28
-      ENDIF
+    IF ( isleapyear(year) ) THEN
+       monthday(:) = daysofmonth_leap(:)
     ELSE
-      IF (judy3 == 0) THEN
-         DayOfMonth(2) = 29
-      ELSE
-         DayOfMonth(2) = 28
-      ENDIF
+       monthday(:) = daysofmonth_noleap(:)
     ENDIF
 
     IF (month==1 .or. month==2) THEN
@@ -696,7 +685,7 @@ CONTAINS
     iweek = abs(mod((y34+A+B-C+D+day-1), 7))
 
     DO i=1, month-1
-       day = day + DayOfMonth(i)
+       day = day + monthday(i)
     ENDDO
 
     IF (iweek == 0) THEN

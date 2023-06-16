@@ -109,6 +109,7 @@ OBJS_BASIC =    \
 				 MOD_BGC_Vars_TimeVariables.o   \
 				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
+				 MOD_Urban_Vars_2DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
 				 MOD_Const_PFT.o                \
