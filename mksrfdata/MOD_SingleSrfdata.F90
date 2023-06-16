@@ -133,6 +133,7 @@ CONTAINS
          ENDIF
 #else
          IF (DEF_LAI_MONTHLY) THEN
+            CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
             CALL ncio_read_serial (fsrfdata, 'LAI_monthly', SITE_LAI_monthly)
             CALL ncio_read_serial (fsrfdata, 'SAI_monthly', SITE_SAI_monthly)
          ELSE
