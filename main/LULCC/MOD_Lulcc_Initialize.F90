@@ -276,7 +276,7 @@ MODULE MOD_Lulcc_Initialize
 
    IF (p_is_worker) THEN
       IF (numpatch > 0) THEN
-         dpond(:) = 0._r8
+         wdsrf(:) = 0._r8
       ENDIF
    ENDIF
    ! ------------------------------------------
@@ -743,9 +743,9 @@ MODULE MOD_Lulcc_Initialize
             ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
             ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
             ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
             ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables
             ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
             ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
             ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -894,8 +894,8 @@ MODULE MOD_Lulcc_Initialize
          DO i = 1, numhru
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
-            dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
-            dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+            wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
+            wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
       ENDIF
    ENDIF
