@@ -376,56 +376,56 @@ CONTAINS
 !             ENDDO
 !          ENDDO
 ! 
-! #ifdef USEMPI
-!          DO iproc = 0, p_np_io-1
-!             idest = p_address_io(iproc)
-!             smesg = (/p_iam_glb, this%glist(iproc)%ng/)
-! 
-!             CALL mpi_send (smesg, 2, MPI_INTEGER, &
-!                idest, mpi_tag_mesg, p_comm_glb, p_err)
-! 
-!             IF (this%glist(iproc)%ng > 0) THEN
-!                CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
-!                   idest, mpi_tag_data, p_comm_glb, p_err)
-!                CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
-!                   idest, mpi_tag_data, p_comm_glb, p_err)
+#ifdef USEMPI
+         DO iproc = 0, p_np_io-1
+            idest = p_address_io(iproc)
+            smesg = (/p_iam_glb, this%glist(iproc)%ng/)
+
+            CALL mpi_send (smesg, 2, MPI_INTEGER, &
+               idest, mpi_tag_mesg, p_comm_glb, p_err)
+ 
+            IF (this%glist(iproc)%ng > 0) THEN
+               CALL mpi_send (this%glist(iproc)%ilon, this%glist(iproc)%ng, MPI_INTEGER, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
+               CALL mpi_send (this%glist(iproc)%ilat, this%glist(iproc)%ng, MPI_INTEGER, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
 !                CALL mpi_send (parea(iproc)%val, this%glist(iproc)%ng, MPI_DOUBLE, &
 !                   idest, mpi_tag_data, p_comm_glb, p_err)
-!             ENDIF
-!          ENDDO
-! #endif
+            ENDIF
+         ENDDO
+#endif
 
       ENDIF
 
-! #ifdef USEMPI
-!       IF (p_is_io) THEN
-! 
+#ifdef USEMPI
+      IF (p_is_io) THEN
+
 !          CALL allocate_block_data (fgrid, garea)
 !          CALL flush_block_data (garea, 0.0_r8)
 ! 
-!          IF (allocated(this%glist)) deallocate(this%glist)
-!          allocate (this%glist (0:p_np_worker-1))
-! 
-!          DO iworker = 0, p_np_worker-1
-! 
-!             CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
-!                MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-! 
-!             isrc  = rmesg(1)
-!             nrecv = rmesg(2)
-!             iproc = p_itis_worker(isrc)
-! 
-!             this%glist(iproc)%ng = nrecv
-! 
-!             IF (nrecv > 0) THEN
-!                allocate (this%glist(iproc)%ilon (nrecv))
-!                allocate (this%glist(iproc)%ilat (nrecv))
+         IF (allocated(this%glist)) deallocate(this%glist)
+         allocate (this%glist (0:p_np_worker-1))
+
+         DO iworker = 0, p_np_worker-1
+
+            CALL mpi_recv (rmesg, 2, MPI_INTEGER, &
+               MPI_ANY_SOURCE, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+
+            isrc  = rmesg(1)
+            nrecv = rmesg(2)
+            iproc = p_itis_worker(isrc)
+
+            this%glist(iproc)%ng = nrecv
+
+            IF (nrecv > 0) THEN
+               allocate (this%glist(iproc)%ilon (nrecv))
+               allocate (this%glist(iproc)%ilat (nrecv))
 !                allocate (gbuff (nrecv))
-! 
-!                CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
-!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
-!                CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
-!                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+               CALL mpi_recv (this%glist(iproc)%ilon, nrecv, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+               CALL mpi_recv (this%glist(iproc)%ilat, nrecv, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 !                CALL mpi_recv (gbuff, nrecv, MPI_DOUBLE, &
 !                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 ! 
@@ -442,8 +442,8 @@ CONTAINS
 !                ENDDO
 ! 
 !                deallocate (gbuff)
-!             ENDIF
-!          ENDDO
+            ENDIF
+         ENDDO
 ! 
 !          DO iproc = 0, p_np_worker-1
 !             IF (this%glist(iproc)%ng > 0) THEN
@@ -469,8 +469,8 @@ CONTAINS
 !             ENDIF
 !          ENDDO
 ! 
-!       ENDIF
-! #endif
+      ENDIF
+#endif
 ! 
 ! 
 !       IF (p_is_worker) THEN
