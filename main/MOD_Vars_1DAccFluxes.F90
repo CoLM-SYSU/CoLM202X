@@ -1335,6 +1335,7 @@ contains
 
       use MOD_Precision
       use MOD_SPMD_Task
+      USE mod_forcing, only : forcmask
       use MOD_LandPatch,     only : numpatch
       USE MOD_LandUrban,     only : numurban
       use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
@@ -1768,6 +1769,10 @@ contains
             allocate (r_fm10m (numpatch))
 
             do i = 1, numpatch
+               
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask(i)) cycle
+               ENDIF
 
                z0m_av = z0m(i)
                z0h_av = z0m(i)
