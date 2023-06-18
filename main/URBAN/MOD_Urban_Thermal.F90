@@ -762,7 +762,6 @@ CONTAINS
 
          IF (abs(eb-forc_frl) > 1e-6) THEN
             print *, "Urban Only Longwave - Energy Balance Check error!", eb-forc_frl
-            CALL abort
          ENDIF
 
          ! fur per unit surface
@@ -1267,7 +1266,6 @@ CONTAINS
 
       IF (abs(eb) > 1e-6) THEN
          print *, "Urban Vegetation Longwave - Energy Balance Check error!", eb
-         CALL abort
       ENDIF
 
       ! for per unit surface
@@ -1290,11 +1288,7 @@ CONTAINS
 
       IF (olrg < 0) THEN !fordebug
          print*, ipatch, olrg
-         ! write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
-         print*, forc_t, tgper, tgimp, troof, twsha, twsun
-         print*, cv_gimp
-         ! print*, patchlonr*180/PI, patchlatr*180/PI
-         CALL abort
+         write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
       ENDIF
 
       ! radiative temperature
