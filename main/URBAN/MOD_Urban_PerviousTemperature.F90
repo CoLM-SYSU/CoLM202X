@@ -11,7 +11,9 @@ MODULE MOD_Urban_PerviousTemperature
 CONTAINS
 
  SUBROUTINE UrbanPerviousTem (patchtype,lb,deltim, &
-                              capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+                              capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+                              vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+                              BA_alpha, BA_beta,&
 #ifdef Campbell_SOIL_MODEL
                               bsw,&
 #endif
@@ -55,19 +57,31 @@ CONTAINS
 
   IMPLICIT NONE
 
-  INTEGER, intent(in) :: lb        !lower bound of array
-  INTEGER, intent(in) :: patchtype !land water TYPE (0=soil,1=urban or built-up,2=wetland,
+  INTEGER, intent(in)  :: lb        !lower bound of array
+  INTEGER, intent(in)  :: patchtype !land water TYPE (0=soil,1=urban or built-up,2=wetland,
                                    !3=land ice, 4=deep lake, 5=shallow lake)
   REAL(r8), intent(in) :: deltim   !seconds in a time step [second]
   REAL(r8), intent(in) :: capr     !tuning factor to turn first layer T into surface T
   REAL(r8), intent(in) :: cnfac    !Crank Nicholson factor between 0 and 1
 
   REAL(r8), intent(in) :: csol  (1:nl_soil) !heat capacity of soil solids [J/(m3 K)]
+  real(r8), INTENT(in) :: k_solids(1:nl_soil) ! thermal conductivity of minerals soil [W/m-K]
   REAL(r8), intent(in) :: porsl (1:nl_soil) !soil porosity [-]
   REAL(r8), intent(in) :: psi0  (1:nl_soil) !soil water suction, negative potential [mm]
 
   REAL(r8), intent(in) :: dkdry (1:nl_soil) !thermal conductivity of dry soil [W/m-K]
   REAL(r8), intent(in) :: dksatu(1:nl_soil) !thermal conductivity of saturated soil [W/m-K]
+  real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
+
+  real(r8), INTENT(in) :: vf_quartz (1:nl_soil) ! volumetric fraction of quartz within mineral soil
+  real(r8), INTENT(in) :: vf_gravels(1:nl_soil) ! volumetric fraction of gravels
+  real(r8), INTENT(in) :: vf_om     (1:nl_soil) ! volumetric fraction of organic matter
+  real(r8), INTENT(in) :: vf_sand   (1:nl_soil) ! volumetric fraction of sand
+  real(r8), INTENT(in) :: wf_gravels(1:nl_soil) ! gravimetric fraction of gravels
+  real(r8), INTENT(in) :: wf_sand   (1:nl_soil) ! gravimetric fraction of sand
+
+  real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+  real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
 
 #ifdef Campbell_SOIL_MODEL
   real(r8), INTENT(in) :: bsw   (1:nl_soil) ! clapp and hornbereger "b" parameter [-]
@@ -108,6 +122,10 @@ CONTAINS
   REAL(r8) cv(lb:nl_soil)     !heat capacity [J/(m2 K)]
   REAL(r8) tk(lb:nl_soil)     !thermal conductivity [W/(m K)]
 
+  REAL(r8) hcap(1:nl_soil)    ! J/(m3 K)
+  REAL(r8) thk(lb:nl_soil)    ! W/(m K)
+  REAL(r8) rhosnow  ! partitial density of water (ice + liquid)
+
   REAL(r8) at(lb:nl_soil)     !"a" vector for tridiagonal matrix
   REAL(r8) bt(lb:nl_soil)     !"b" vector for tridiagonal matrix
   REAL(r8) ct(lb:nl_soil)     !"c" vector for tridiagonal matrix
@@ -123,16 +141,71 @@ CONTAINS
   REAL(r8) dhsdt              !d(hs)/dT
   REAL(r8) brr(lb:nl_soil)    !temporay set
 
+  REAL(r8) vf_water(1:nl_soil) ! volumetric fraction liquid water within soil
+  REAL(r8) vf_ice(1:nl_soil)   ! volumetric fraction ice len within soil
+
   INTEGER i,j
 
 !=======================================================================
-! heat capacity
-      CALL hCapacity (patchtype,lb,nl_soil,csol,porsl,wice_gpersno,wliq_gpersno,scv_gper,dz_gpersno,cv)
+! soil ground and wetland heat capacity
+      DO i = 1, nl_soil
+         vf_water(i) = wliq_gpersno(i)/(dz_gpersno(i)*denh2o)
+         vf_ice(i) = wice_gpersno(i)/(dz_gpersno(i)*denice)
+         CALL soil_hcap_cond(vf_gravels(i),vf_om(i),vf_sand(i),porsl(i),&
+                             wf_gravels(i),wf_sand(i),k_solids(i),&
+                             csol(i),dkdry(i),dksatu(i),dksatf(i),&
+                             BA_alpha(i),BA_beta(i),&
+                             t_gpersno(i),vf_water(i),vf_ice(i),hcap(i),thk(i))
+         cv(i) = hcap(i)*dz_gpersno(i)
+      ENDDO
+      IF(lb==1 .AND. scv_gper>0.) cv(1) = cv(1) + cpice*scv_gper
 
-! thermal conductivity
-      CALL hConductivity (patchtype,lb,nl_soil,&
-                          dkdry,dksatu,porsl,dz_gpersno,z_gpersno,zi_gpersno,&
-                          t_gpersno,wice_gpersno,wliq_gpersno,tk)
+! Snow heat capacity
+      IF(lb <= 0)THEN
+         cv(:0) = cpliq*wliq_gpersno(:0) + cpice*wice_gpersno(:0)
+      ENDIF
+
+! Snow thermal conductivity
+      IF(lb <= 0)THEN
+         DO i = lb, 0
+            rhosnow = (wice_gpersno(i)+wliq_gpersno(i))/dz_gpersno(i)
+
+            ! presently option [1] is the default option
+            ! [1] Jordan (1991) pp. 18
+            thk(i) = tkair+(7.75e-5*rhosnow+1.105e-6*rhosnow*rhosnow)*(tkice-tkair)
+
+            ! [2] Sturm et al (1997)
+            ! thk(i) = 0.0138 + 1.01e-3*rhosnow + 3.233e-6*rhosnow**2
+            ! [3] Ostin and Andersson presented in Sturm et al., (1997)
+            ! thk(i) = -0.871e-2 + 0.439e-3*rhosnow + 1.05e-6*rhosnow**2
+            ! [4] Jansson(1901) presented in Sturm et al. (1997)
+            ! thk(i) = 0.0293 + 0.7953e-3*rhosnow + 1.512e-12*rhosnow**2
+            ! [5] Douville et al., (1995)
+            ! thk(i) = 2.2*(rhosnow/denice)**1.88
+            ! [6] van Dusen (1992) presented in Sturm et al. (1997)
+            ! thk(i) = 0.021 + 0.42e-3*rhosnow + 0.22e-6*rhosnow**2
+
+         ENDDO
+      ENDIF
+
+! Thermal conductivity at the layer interface
+      DO i = lb, nl_soil-1
+
+! the following consideration is try to avoid the snow conductivity
+! to be dominant in the thermal conductivity of the interface.
+! Because when the distance of bottom snow node to the interfacee
+! is larger than that of interface to top soil node,
+! the snow thermal conductivity will be dominant, and the result is that
+! lees heat tranfer between snow and soil
+         IF((i==0) .AND. (z_gpersno(i+1)-zi_gpersno(i)<zi_gpersno(i)-z_gpersno(i)))THEN
+            tk(i) = 2.*thk(i)*thk(i+1)/(thk(i)+thk(i+1))
+            tk(i) = max(0.5*thk(i+1),tk(i))
+         ELSE
+            tk(i) = thk(i)*thk(i+1)*(z_gpersno(i+1)-z_gpersno(i)) &
+                  /(thk(i)*(z_gpersno(i+1)-zi_gpersno(i))+thk(i+1)*(zi_gpersno(i)-z_gpersno(i)))
+         ENDIF
+      ENDDO
+      tk(nl_soil) = 0.
 
 ! net ground heat flux into the surface and its temperature derivative
       hs = sabgper + lgper - (fsengper+fevpgper*htvp)

@@ -762,6 +762,7 @@ CONTAINS
 
          IF (abs(eb-forc_frl) > 1e-6) THEN
             print *, "Urban Only Longwave - Energy Balance Check error!", eb-forc_frl
+            CALL abort
          ENDIF
 
          ! fur per unit surface
@@ -948,9 +949,25 @@ CONTAINS
            t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
            lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp_gimp,&
            imelt_gimp,sm_gimp,xmf,facti)
+      
+!       CALL UrbanPerviousTem (patchtype,lbp,deltim,&
+!            capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+! #ifdef Campbell_SOIL_MODEL
+!            bsw,&
+! #endif
+! #ifdef vanGenuchten_Mualem_SOIL_MODEL
+!            theta_r,alpha_vgm,n_vgm,L_vgm,&
+!            sc_vgm,fc_vgm,&
+! #endif
+!            dz_gpersno,z_gpersno,zi_gpersno,&
+!            t_gpersno,wice_gpersno,wliq_gpersno,scv_gper,snowdp_gper,&
+!            lgper,clgper,sabgper,fsengper,fevpgper,cgper,htvp_gper,&
+!            imelt_gper,sm_gper,xmf,factp)
 
       CALL UrbanPerviousTem (patchtype,lbp,deltim,&
-           capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+           capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+           vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+           BA_alpha, BA_beta,&
 #ifdef Campbell_SOIL_MODEL
            bsw,&
 #endif
@@ -1250,6 +1267,7 @@ CONTAINS
 
       IF (abs(eb) > 1e-6) THEN
          print *, "Urban Vegetation Longwave - Energy Balance Check error!", eb
+         CALL abort
       ENDIF
 
       ! for per unit surface
@@ -1268,9 +1286,15 @@ CONTAINS
       olrg = lout*fg + rout*froof
       olrg = olrg*(1-flake) + olrg_lake*flake
 
+      !print*, forc_t, tgper, tgimp, troof, twsha, twsun
+
       IF (olrg < 0) THEN !fordebug
          print*, ipatch, olrg
-         write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
+         ! write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
+         print*, forc_t, tgper, tgimp, troof, twsha, twsun
+         print*, cv_gimp
+         ! print*, patchlonr*180/PI, patchlatr*180/PI
+         CALL abort
       ENDIF
 
       ! radiative temperature
