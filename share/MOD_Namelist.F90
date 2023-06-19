@@ -814,6 +814,12 @@ CONTAINS
            write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
            DEF_USE_SNICAR = .false.
         ENDIF
+
+        IF (DEF_USE_PLANTHYDRAULICS) THEN
+           write(*,*) 'Warning: PLANTHYDRAULICS is not well supported for URBAN model. '
+           write(*,*) 'DEF_USE_PLANTHYDRAULICS is set to false automatically.'
+           DEF_USE_PLANTHYDRAULICS = .false.
+        ENDIF
 #else
         IF (DEF_URBAN_RUN) then
            write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '

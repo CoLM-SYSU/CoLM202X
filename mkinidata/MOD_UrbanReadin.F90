@@ -195,10 +195,14 @@ MODULE MOD_UrbanReadin
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
 
-            IF ( .not. DEF_URBAN_BEM) THEN
-               t_roommax(u) = 373.16
-               t_roommin(u) = 180.00
+            IF (all(cv_gimp(:,u)==0)) THEN
+               fgper(u) = 1.
             ENDIF
+
+         IF ( .not. DEF_URBAN_BEM) THEN
+            t_roommax(u) = 373.16
+            t_roommin(u) = 180.00
+         ENDIF
 #else
             ! read in LCZ constants
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
@@ -235,10 +239,6 @@ MODULE MOD_UrbanReadin
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
-
-            IF (all(cv_gimp(:,u)==0)) THEN
-               fgper(u) = 1.
-            ENDIF
 
             IF (DEF_URBAN_BEM) THEN
                t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]

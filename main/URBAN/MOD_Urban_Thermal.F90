@@ -943,14 +943,18 @@ CONTAINS
            twsha_inner,lwsha,clwsha,sabwsha,fsenwsha,cwalls,tkdz_wsha)
 
       CALL UrbanImperviousTem (patchtype,lbi,deltim,&
-           capr,cnfac,csol,porsl,dkdry,dksatu,&
+           capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+           vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+           BA_alpha, BA_beta,&
            cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
            t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
            lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp_gimp,&
            imelt_gimp,sm_gimp,xmf,facti)
 
       CALL UrbanPerviousTem (patchtype,lbp,deltim,&
-           capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+           capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+           vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+           BA_alpha, BA_beta,&
 #ifdef Campbell_SOIL_MODEL
            bsw,&
 #endif
@@ -1267,6 +1271,8 @@ CONTAINS
 
       olrg = lout*fg + rout*froof
       olrg = olrg*(1-flake) + olrg_lake*flake
+
+      !print*, forc_t, tgper, tgimp, troof, twsha, twsun
 
       IF (olrg < 0) THEN !fordebug
          print*, ipatch, olrg

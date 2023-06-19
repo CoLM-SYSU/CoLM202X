@@ -841,12 +841,14 @@ MODULE MOD_Urban_Flux
      ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
      ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
 
-     cgperl = rhoair*cgw_per*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+     cgperl = rhoair*cgw_per*(dqgperdT &
+              - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
               /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-              /facq)*dqgperdT
-     cgimpl = rhoair*cgw_imp*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
+              /facq)
+     cgimpl = rhoair*cgw_imp*(dqgimpdT &
+              - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
               /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-              /facq)*dqgimpdT
+              /facq)
      cgimpl = cgimpl*fwet_gimp
 
      cgimp  = cgrnds + cgimpl*htvp_gimp
@@ -2442,12 +2444,14 @@ MODULE MOD_Urban_Flux
         cgrnds = cpair*rhoair*cgh(2)*(1.-wtg0(2)/fact)
         ! cgperl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgperdT
         ! cgimpl = rhoair*cgw(2)*(1.-wtgq0(2)/facq)*dqgimpdT
-        cgperl = rhoair*cgw_per*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
-                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-                 /facq)*dqgperdT
-        cgimpl = rhoair*cgw_imp*(1.-(cgw_per*qgper*fgper*fg+cgw_imp*qgimp*fgimp*fg) &
-                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg) &
-                 /facq)*dqgimpdT
+        cgperl = rhoair*cgw_per*(dqgperdT &
+                 - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
+                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
+                 /facq)
+        cgimpl = rhoair*cgw_imp*(dqgimpdT &
+                 - (dqgperdT*cgw_per*fgper*fg+dqgimpdT*cgw_imp*fgimp*fg) &
+                 /(caw(2) + cgw_per*fgper*fg + cgw_imp*fgimp*fg + cfw(3)*fc(3)) &
+                 /facq)
         cgimpl = cgimpl*fwet_gimp
      ELSE !botlay == 1
         cgrnds = cpair*rhoair*cgh(1)*(1.-wta0(1)*wtg0(2)*wtg0(1)/fact-wtg0(1))
