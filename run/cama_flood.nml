@@ -9,9 +9,9 @@ LLEVEE   = .FALSE.                     ! true: activate levee scheme  (under dev
 
 
 LROSPLIT     = .FALSE.                          ! true: input if surface (Qs) and sub-surface (Qsb) runoff
-LWEVAP       = .TRUE.                           ! true: input water evaporation to extract from floodplain
+LWEVAP       = .FALSE.                           ! true: input water evaporation to extract from floodplain
 LWEVAPFIX    = .FALSE.                          ! true: water balance closure extracting water from evap when available
-LWINFILT     = .TRUE.                           ! true: input water infiltration to extract from floodplain
+LWINFILT     = .FALSE.                           ! true: input water infiltration to extract from floodplain
 LWINFILTFIX  = .FALSE.                          ! true: water balance closure extracting water from Infiltration when available
 LWEXTRACTRIV = .FALSE.                          ! true: also extract water from rivers 
 LSLOPEMOUTH  = .FALSE.                          ! true: prescribe water level slope == elevation slope on river month
