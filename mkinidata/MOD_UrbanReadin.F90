@@ -172,28 +172,33 @@ MODULE MOD_UrbanReadin
             i       = urban2patch (u)
             lucy_id = lucyid      (u)
 
-         IF (DEF_URBAN_LUCY) THEN
-            IF (lucy_id > 0) THEN
-               vehicle      (:,u) = lvehicle      (lucy_id,:)
-               week_holiday (:,u) = lweek_holiday (lucy_id,:)
-               weh_prof     (:,u) = lweh_prof     (lucy_id,:)
-               wdh_prof     (:,u) = lwdh_prof     (lucy_id,:)
-               hum_prof     (:,u) = lhum_prof     (lucy_id,:)
-               fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
+            IF (DEF_URBAN_LUCY) THEN
+               IF (lucy_id > 0) THEN
+                  vehicle      (:,u) = lvehicle      (lucy_id,:)
+                  week_holiday (:,u) = lweek_holiday (lucy_id,:)
+                  weh_prof     (:,u) = lweh_prof     (lucy_id,:)
+                  wdh_prof     (:,u) = lwdh_prof     (lucy_id,:)
+                  hum_prof     (:,u) = lhum_prof     (lucy_id,:)
+                  fix_holiday  (:,u) = lfix_holiday  (lucy_id,:)
+               ENDIF
+            ELSE
+               pop_den        (u) = 0.
+               vehicle      (:,u) = 0.
+               week_holiday (:,u) = 0.
+               weh_prof     (:,u) = 0.
+               wdh_prof     (:,u) = 0.
+               hum_prof     (:,u) = 0.
+               fix_holiday  (:,u) = 0.
             ENDIF
-         ELSE
-            pop_den        (u) = 0.
-            vehicle      (:,u) = 0.
-            week_holiday (:,u) = 0.
-            weh_prof     (:,u) = 0.
-            wdh_prof     (:,u) = 0.
-            hum_prof     (:,u) = 0.
-            fix_holiday  (:,u) = 0.
-         ENDIF
 
 #ifndef URBAN_LCZ
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
+
+            IF (all(cv_gimp(:,u)==0)) THEN
+               fgper(u) = 1.
+            ENDIF
+
          IF ( .not. DEF_URBAN_BEM) THEN
             t_roommax(u) = 373.16
             t_roommin(u) = 180.00
@@ -235,42 +240,38 @@ MODULE MOD_UrbanReadin
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
             thick_wall = thickwall_lcz (landurban%settyp(u)) !thickness of wall [m]
 
-            IF (all(cv_gimp(:,u)==0)) THEN
-               fgper(u) = 1.
+            IF (DEF_URBAN_BEM) THEN
+               t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
+               t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
+            ELSE
+               t_roommax(u) = 373.16                !maximum temperature of inner room [K]
+               t_roommin(u) = 180.00                !minimum temperature of inner room [K]
             ENDIF
-
-         IF (DEF_URBAN_BEM) THEN
-            t_roommax(u) = 297.65 !tbuildingmax  (landurban%settyp(u)) !maximum temperature of inner room [K]
-            t_roommin(u) = 290.65 !tbuildingmin  (landurban%settyp(u)) !minimum temperature of inner room [K]
-         ELSE
-            t_roommax(u) = 373.16                !maximum temperature of inner room [K]
-            t_roommin(u) = 180.00                !minimum temperature of inner room [K]
-         ENDIF
 #endif
 
-         IF (DEF_URBAN_WATER) THEN
-            flake(u) = flake(u)/100. !urban water fractional cover
-         ELSE
-            flake(u) = 0.
-         ENDIF
-
-         IF (DEF_URBAN_TREE) THEN
-            ! set tree fractional cover (<= 1.-froof)
-            fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
-            IF (flake(u) < 1.) THEN
-               fveg_urb(u) = fveg_urb(u)/(1.-flake(u))
+            IF (DEF_URBAN_WATER) THEN
+               flake(u) = flake(u)/100. !urban water fractional cover
             ELSE
-               fveg_urb(u) = 0.
+               flake(u) = 0.
             ENDIF
 
-            ! Assuming that the tree coverage is less than or equal
-            ! to the ground cover (assume no trees on the roof)
-            fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
-            fveg    (i) = fveg_urb(u)
-         ELSE
-            fveg_urb(u) = 0.
-            fveg    (i) = fveg_urb(u)
-         ENDIF
+            IF (DEF_URBAN_TREE) THEN
+               ! set tree fractional cover (<= 1.-froof)
+               fveg_urb(u) = fveg_urb(u)/100. !urban tree percent
+               IF (flake(u) < 1.) THEN
+                  fveg_urb(u) = fveg_urb(u)/(1.-flake(u))
+               ELSE
+                  fveg_urb(u) = 0.
+               ENDIF
+
+               ! Assuming that the tree coverage is less than or equal
+               ! to the ground cover (assume no trees on the roof)
+               fveg_urb(u) = min(fveg_urb(u), 1.-froof(u))
+               fveg    (i) = fveg_urb(u)
+            ELSE
+               fveg_urb(u) = 0.
+               fveg    (i) = fveg_urb(u)
+            ENDIF
 
             ! set urban tree crown top and bottom [m]
             htop_urb(u) = min(hroof(u), htop_urb(u))
