@@ -51,7 +51,8 @@ SAVE
   REAL(r8), allocatable :: forc_lwrad_elm (:) ! grid downward longwave [W/m**2]
   REAL(r8), allocatable :: forc_hgt_elm   (:) ! atmospheric reference height [m]
 
-  REAL(r8), allocatable :: forc_hpbl  (:) ! atmospheric boundary layer height [m]
+  REAL(r8), allocatable :: forc_hpbl  (:)     ! atmospheric boundary layer height [m]
+  real(r8), allocatable :: forc_aerdep(:,:)   ! atmospheric aerosol deposition data [kg/m/s]
 
   ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Forcing
@@ -105,6 +106,10 @@ SAVE
         ENDIF
 
         allocate (forc_hpbl   (numpatch) ) ! atmospheric boundary layer height [m]
+
+        IF (DEF_Aerosol_Readin) THEN
+           allocate (forc_aerdep(14,numpatch) ) ! atmospheric aerosol deposition data [kg/m/s]
+        ENDIF
 
      ENDIF
 
@@ -167,6 +172,11 @@ SAVE
            ENDIF
 
            deallocate ( forc_hpbl   ) ! atmospheric boundary layer height [m]
+
+           IF (DEF_Aerosol_Readin) THEN
+              deallocate ( forc_aerdep ) ! atmospheric aerosol deposition data [kg/m/s]
+           ENDIF
+
         ENDIF
 
         IF (DEF_USE_Forcing_Downscaling) THEN
