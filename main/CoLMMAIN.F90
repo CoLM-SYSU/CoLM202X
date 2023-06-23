@@ -624,37 +624,9 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined LULC_USGS || defined LULC_IGBP)
-! add option for canopy interception calculation.
-if (DEF_Interception_scheme==1) then
-   CALL LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-
-ELSEIF (DEF_Interception_scheme==2) then
-   CALL LEAF_interception_CLM4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-ELSEIF (DEF_Interception_scheme==3) then
-   CALL LEAF_interception_CLM5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-ELSEIF (DEF_Interception_scheme==4) then
-   CALL LEAF_interception_NoahMP (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-ELSEIF  (DEF_Interception_scheme==5) then
-   CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-ELSEIF  (DEF_Interception_scheme==6) then
-   CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-ELSEIF  (DEF_Interception_scheme==7) then
-   CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-endif
+      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      prc_rain,prc_snow,prl_rain,prl_snow,&
+      ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
 #endif
 
@@ -672,37 +644,10 @@ endif
 #endif
 
 ELSE
-   if (DEF_Interception_scheme==1) then
-      CALL LEAF_interception_colm2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-
-   ELSEIF (DEF_Interception_scheme==2) then
-      CALL LEAF_interception_clm4 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   ELSEIF (DEF_Interception_scheme==3) then
-      CALL LEAF_interception_clm5 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   ELSEIF (DEF_Interception_scheme==4) then
-      CALL LEAF_interception_noahmp (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   ELSEIF  (DEF_Interception_scheme==5) then
-      CALL LEAF_interception_matsiro (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-
-   ELSEIF  (DEF_Interception_scheme==6) then
-      CALL LEAF_interception_vic (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   ELSEIF (DEF_Interception_scheme==7) then
-      CALL LEAF_interception_colm202x (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
-                                 prc_rain,prc_snow,prl_rain,prl_snow,&
-                                 ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
-   endif
+      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      prc_rain,prc_snow,prl_rain,prl_snow,&
+      ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+     
 
 ENDIF
 

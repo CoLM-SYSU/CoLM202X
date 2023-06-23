@@ -22,7 +22,15 @@ MODULE CMF_CTRL_DAMOUT_MOD
 !  -- To access the reservoir parameter preprocessing code, please refer to the "preprocessing" folder.
 !==========================================================
 USE PARKIND1,                ONLY: JPIM, JPRB, JPRM, JPRD
-USE YOS_CMF_INPUT,           ONLY: LOGNAM, IMIS, LDAMOUT
+USE CMF_UTILS_MOD,           ONLY: INQUIRE_FID
+USE YOS_CMF_INPUT,           ONLY: LOGNAM, IMIS, LDAMOUT, LPTHOUT, LRESTART
+USE YOS_CMF_INPUT,           ONLY: NX, NY, DT
+USE YOS_CMF_MAP,             ONLY: I2VECTOR, I1NEXT, NSEQALL, NSEQRIV, NSEQMAX
+USE YOS_CMF_MAP,             ONLY: NPTHOUT,  NPTHLEV, PTH_UPST, PTH_DOWN, PTH_ELV, I2MASK!! bifurcation pass
+USE YOS_CMF_PROG,            ONLY: D2RIVOUT, D2FLDOUT, P2RIVSTO, P2FLDSTO, P2DAMSTO, P2DAMINF, D2RUNOFF
+USE YOS_CMF_DIAG,            ONLY: D2RIVINF, D2FLDINF
+USE YOS_CMF_TIME,            ONLY: ISYYYY        
+
 !============================
 IMPLICIT NONE
 SAVE
@@ -323,7 +331,11 @@ IF( LPTHOUT )THEN
 ENDIF
 !####################################################################
 
-CONTAINS
+END SUBROUTINE CMF_DAMOUT_INIT
+!####################################################################
+
+
+
 SUBROUTINE READ_WATER_USE
   USE YOS_CMF_TIME,       ONLY: NSTEPS   
 
@@ -331,6 +343,8 @@ SUBROUTINE READ_WATER_USE
   CHARACTER(LEN=256)         :: CDAMFILE_WUSE_YEAR
   CHARACTER(len=4)           :: CYYYY
   CHARACTER(LEN=16)          :: tmp_i, tmp_name  
+  INTEGER(KIND=JPIM)         :: NDAMFILE
+
   !=======================================  
   write(CYYYY,'(I4)') ISYYYY
   CDAMFILE_WUSE_YEAR = trim(CDAMFILE)//'water_use/'//trim(adjustl(CYYYY))//'.txt'
@@ -353,9 +367,49 @@ SUBROUTINE READ_WATER_USE
 
 END SUBROUTINE READ_WATER_USE
 
-END SUBROUTINE CMF_DAMOUT_INIT
 !####################################################################
+SUBROUTINE CMF_DAMOUT_WATBAL
+  IMPLICIT NONE
 
+  ! SAVE for OMP
+  INTEGER(KIND=JPIM),SAVE    :: ISEQD
+  !*** water balance
+  REAL(KIND=JPRB),SAVE       :: DamInflow
+  REAL(KIND=JPRB),SAVE       :: DamOutflw           !! Total outflw 
+  REAL(KIND=JPRD),SAVE       :: GlbDAMSTO, GlbDAMSTONXT, GlbDAMINF, GlbDAMOUT, DamMiss
+  
+  !$OMP THREADPRIVATE    (ISEQD,DamInflow,DamOutflw)
+  ! ==========================================
+  !* 4) update reservoir storage and check water DamMiss --------------------------
+  GlbDAMSTO    = 0._JPRB
+  GlbDAMSTONXT = 0._JPRB
+  GlbDAMINF    = 0._JPRB
+  GlbDAMOUT    = 0._JPRB
+  
+  !$OMP PARALLEL DO REDUCTION(+:GlbDAMSTO, GlbDAMSTONXT, GlbDAMINF, GlbDAMOUT)
+  DO IDAM=1, NDAM
+    IF( DamSeq(IDAM)<=0 ) CYCLE
+    ISEQD = DamSeq(IDAM)
+  
+    DamInflow = D2RIVINF(ISEQD,1) + D2FLDINF(ISEQD,1) + D2RUNOFF(ISEQD,1)
+    DamOutflw = D2RIVOUT(ISEQD,1) + D2FLDOUT(ISEQD,1)
+  !!P2DAMINF(ISEQD,1)=DamInflow   !! if water balance needs to be checked in the output file, P2DAMINF should be updated.
+  
+    GlbDAMSTO = GlbDAMSTO + P2DAMSTO(ISEQD,1)
+    GlbDAMINF = GlbDAMINF + DamInflow*DT
+    GlbDAMOUT = GlbDAMOUT + DamOutflw*DT
+  
+    P2DAMSTO(ISEQD,1) = P2DAMSTO(ISEQD,1) + DamInflow * DT - DamOutflw * DT
+  
+    GlbDAMSTONXT = GlbDAMSTONXT + P2DAMSTO(ISEQD,1)
+  END DO
+  !$OMP END PARALLEL DO
+  
+  DamMiss = GlbDAMSTO-GlbDAMSTONXT+GlbDAMINF-GlbDAMOUT
+  WRITE(LOGNAM,*) "CMF::DAM_CALC: DamMiss at all dams:", DamMiss*1.D-9
+  
+  END SUBROUTINE CMF_DAMOUT_WATBAL
+  !####################################################################
 
 
 !####################################################################
