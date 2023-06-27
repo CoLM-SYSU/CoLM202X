@@ -41,7 +41,7 @@ MODULE MOD_SoilSnowHydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  & 
+            ,flddepth,fldfrc,qinfl_fld  &
 #endif
 ! SNICAR model variables
              ,forc_aer   ,&
@@ -1239,6 +1239,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     ! (cloud-borne) aerosol, and "pho" flavors are interstitial
     ! aerosol. "wet" and "dry" fluxes of BC and OC specified here are
     ! purely diagnostic
+    !
+    ! NOTE: right now the macro 'MODAL_AER' is not defined anywhere, i.e.,
+    ! the below (modal aerosol scheme) is not available and can not be
+    ! active either. It depends on the specific input aerosol deposition
+    ! data which is suitable for modal scheme. [06/15/2023, Hua Yuan]
 
     flx_bc_dep_phi   = forc_aer(3)
     flx_bc_dep_pho   = forc_aer(1) + forc_aer(2)

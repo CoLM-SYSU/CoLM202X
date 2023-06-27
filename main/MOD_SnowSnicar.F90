@@ -29,33 +29,30 @@ MODULE MOD_SnowSnicar
 
   IMPLICIT NONE
 ! save
-    real(R8),parameter :: SHR_CONST_PI     = 3.14159265358979323846_R8
-    real(R8),parameter :: SHR_CONST_RHOICE = 0.917e3_R8 !  density of ice (kg/m^3)
+  real(R8),parameter :: SHR_CONST_PI     = 3.14159265358979323846_R8
+  real(R8),parameter :: SHR_CONST_RHOICE = 0.917e3_R8           !  density of ice (kg/m^3)
 
-    integer, parameter :: iulog = 6      ! "stdout" log file unit number, default is 6
-    integer, parameter :: numrad  = 2    !  number of solar radiation bands: vis, nir
+  integer, parameter :: iulog = 6                               ! "stdout" log file unit number, default is 6
+  integer, parameter :: numrad  = 2                             !  number of solar radiation bands: vis, nir
 
 !--------------------------------------------------------------------
 ! DAI, Dec. 29, 2022
 ! Temporay setting
 
-    logical, parameter :: use_extrasnowlayers = .false.
-    character(len=256), parameter :: snow_shape = 'sphere' ! (=1), 'spheroid'(=2), 'hexagonal_plate'(=3), 'koch_snowflake'(=4)
-    logical, parameter :: use_dust_snow_internal_mixing = .false.
-    character(len=256), parameter :: snicar_atm_type = 'default'  ! Atmospheric profile used to obtain surface-incident spectral flux distribution
-                                                                  ! and subsequent broadband albedo
-                                   ! = 'mid-latitude_winter'  ! => 1
-                                   ! = 'mid-latitude_summer'  ! => 2
-                                   ! = 'sub-Arctic_winter'    ! => 3
-                                   ! = 'sub-Arctic_summer'    ! => 4
-                                   ! = 'summit_Greenland'     ! => 5 (sub-Arctic summer, surface pressure of 796hPa)
-                                   ! = 'high_mountain'        ! => 6 (summer, surface pressure of 556 hPa)
+  logical, parameter :: use_extrasnowlayers = .false.
+  character(len=256), parameter :: snow_shape = 'sphere'        ! (=1), 'spheroid'(=2), 'hexagonal_plate'(=3), 'koch_snowflake'(=4)
+  logical, parameter :: use_dust_snow_internal_mixing = .false.
+  character(len=256), parameter :: snicar_atm_type = 'default'  ! Atmospheric profile used to obtain surface-incident spectral flux distribution
+                                                                ! and subsequent broadband albedo
+                                                                ! = 'mid-latitude_winter'  ! => 1
+                                                                ! = 'mid-latitude_summer'  ! => 2
+                                                                ! = 'sub-Arctic_winter'    ! => 3
+                                                                ! = 'sub-Arctic_summer'    ! => 4
+                                                                ! = 'summit_Greenland'     ! => 5 (sub-Arctic summer, surface pressure of 796hPa)
+                                                                ! = 'high_mountain'        ! => 6 (summer, surface pressure of 556 hPa)
 !DAI, Dec. 29, 2022
+!-----------------------------------------------------------------------
 
-  !-----------------------------------------------------------------------
-
-! save
-  !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SNICAR_RT        ! Snow albedo and vertically-resolved solar absorption
   public :: SNICAR_AD_RT     ! Snow albedo and vertically-resolved solar absorption by adding-doubling solution
@@ -83,6 +80,10 @@ MODULE MOD_SnowSnicar
   integer,  parameter :: idx_rhos_min   = 1              ! minimum snow density index used in aging lookup table [idx]
 
 #ifdef MODAL_AER
+  ! NOTE: right now the macro 'MODAL_AER' is not defined anywhere, i.e.,
+  ! the below (modal aerosol scheme) is not available and can not be
+  ! active either. It depends on the specific input aerosol deposition
+  ! data which is suitable for modal scheme. [06/15/2023, Hua Yuan]
   !mgf++
   integer,  parameter :: idx_bc_nclrds_min     = 1       ! minimum index for BC particle size in optics lookup table
   integer,  parameter :: idx_bc_nclrds_max     = 10      ! maximum index for BC particle size in optics lookup table
@@ -262,18 +263,18 @@ contains
 
     integer  , intent(in)  :: flg_snw_ice                   ! flag: =1 when called from CLM, =2 when called from CSIM
     integer  , intent(in)  :: flg_slr_in                    ! flag: =1 for direct-beam incident flux,=2 for diffuse incident flux
-    real(r8) , intent(in)  :: coszen           ! cosine of solar zenith angle for next time step (col) [unitless]
+    real(r8) , intent(in)  :: coszen                        ! cosine of solar zenith angle for next time step (col) [unitless]
 
-    integer  , intent(in)  :: snl              !  negative number of snow layers (col) [nbr]
-    real(r8) , intent(in)  :: h2osno           !  snow liquid water equivalent (col) [kg/m2]
-    real(r8) , intent(in)  :: frac_sno         !  fraction of ground covered by snow (0 to 1)
+    integer  , intent(in)  :: snl                           ! negative number of snow layers (col) [nbr]
+    real(r8) , intent(in)  :: h2osno                        ! snow liquid water equivalent (col) [kg/m2]
+    real(r8) , intent(in)  :: frac_sno                      ! fraction of ground covered by snow (0 to 1)
 
-    real(r8) , intent(in)  :: h2osno_liq     ( maxsnl+1:0 )   ! liquid water content (col,lyr) [kg/m2]
-    real(r8) , intent(in)  :: h2osno_ice     ( maxsnl+1:0 )   ! ice content (col,lyr) [kg/m2]
-    integer  , intent(in)  :: snw_rds        ( maxsnl+1:0 )   ! snow effective radius (col,lyr) [microns, m^-6]
+    real(r8) , intent(in)  :: h2osno_liq     ( maxsnl+1:0 ) ! liquid water content (col,lyr) [kg/m2]
+    real(r8) , intent(in)  :: h2osno_ice     ( maxsnl+1:0 ) ! ice content (col,lyr) [kg/m2]
+    integer  , intent(in)  :: snw_rds        ( maxsnl+1:0 ) ! snow effective radius (col,lyr) [microns, m^-6]
     real(r8) , intent(in)  :: mss_cnc_aer_in ( maxsnl+1:0 , 1:sno_nbr_aer ) ! mass concentration of all aerosol species (col,lyr,aer) [kg/kg]
-    real(r8) , intent(in)  :: albsfc         ( 1:numrad )     ! albedo of surface underlying snow (col,bnd) [frc]
-    real(r8) , intent(out) :: albout         ( 1:numrad )     ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
+    real(r8) , intent(in)  :: albsfc         ( 1:numrad )   ! albedo of surface underlying snow (col,bnd) [frc]
+    real(r8) , intent(out) :: albout         ( 1:numrad )   ! snow albedo, averaged into 2 bands (=0 if no sun or no snow) (col,bnd) [frc]
     real(r8) , intent(out) :: flx_abs        ( maxsnl+1:1 , 1:numrad ) ! absorbed flux in each layer per unit flux incident (col, lyr, bnd)
     !
     ! !LOCAL VARIABLES:
@@ -299,8 +300,8 @@ contains
 
 #ifdef MODAL_AER
     !mgf++
-    real(r8) :: rds_bcint_lcl(maxsnl+1:0)       ! effective radius of within-ice BC [nm]
-    real(r8) :: rds_bcext_lcl(maxsnl+1:0)       ! effective radius of external BC [nm]
+    real(r8) :: rds_bcint_lcl(maxsnl+1:0)          ! effective radius of within-ice BC [nm]
+    real(r8) :: rds_bcext_lcl(maxsnl+1:0)          ! effective radius of external BC [nm]
     !mgf--
 #endif
 
