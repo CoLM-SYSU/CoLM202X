@@ -254,7 +254,20 @@ MODULE MOD_Namelist
 
    !CBL height
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
+   !Plant Hydraulics
    LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+   !Semi-Analytic-Spin-Up
+   LOGICAL            :: DEF_USE_SASU = .false.
+   !Fertilisation on crop
+   LOGICAL            :: DEF_USE_FERT = .true.
+   !Nitrification and denitrification switch
+   LOGICAL            :: DEF_USE_NITRIF = .true.
+   !Soy nitrogen fixation
+   LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
+   !Fire module
+   LOGICAL            :: DEF_USE_FIRE = .false.
+   !WUE diagnostics
+   LOGICAL            :: DEF_USE_WUEDIAG = .false.
 
 
    ! ----- history variables -----
@@ -423,7 +436,7 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3arcgrass   = .false. !12
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
-#ifdef WUEdiag
+!WUE diagnostic variables      
 #ifdef LULC_IGBP_PFT
       LOGICAL :: assim_RuBP_sun        = .true. !1
       LOGICAL :: assim_RuBP_sha        = .true. !1
@@ -442,7 +455,6 @@ MODULE MOD_Namelist
       LOGICAL :: lambdasun        = .true.
       LOGICAL :: lambdasha        = .true.
       LOGICAL :: lambda                   = .true.
-#endif
 #endif
 #ifdef CROP
       LOGICAL :: cphase             = .true.
@@ -515,17 +527,13 @@ MODULE MOD_Namelist
       LOGICAL :: fertnitro_sugarcane= .true.
 #endif
       LOGICAL :: ndep_to_sminn      = .true.
-#ifdef NITRIF
       LOGICAL :: CONC_O2_UNSAT      = .true.
       LOGICAL :: O2_DECOMP_DEPTH_UNSAT = .true.
-#endif
-#ifdef Fire
       LOGICAL :: abm                = .true.
       LOGICAL :: gdp                = .true.
       LOGICAL :: peatf              = .true.
       LOGICAL :: hdm                = .true.
       LOGICAL :: lnfm               = .true.
-#endif
 #endif
 
       LOGICAL :: t_soisno     = .true.
@@ -682,6 +690,12 @@ CONTAINS
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
+         DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_NITRIF,                  &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_CNSOYFIXN,               &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_FIRE,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_WUEDIAG,                 &   !add by Xingjie Lu @ sysu 2023/06/28
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
@@ -778,12 +792,12 @@ CONTAINS
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         IF (.not.DEF_LAI_MONTHLY) THEN
-            write(*,*) 'Warning: 8-day LAI data is not supported for '
-            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
-            write(*,*) 'Changed to monthly data.'
-            DEF_LAI_MONTHLY = .true.
-         ENDIF
+        IF (.not.DEF_LAI_MONTHLY) THEN
+           write(*,*) 'Warning: 8-day LAI data is not supported for '
+           write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
+           write(*,*) 'Changed to monthly data.'
+           DEF_LAI_MONTHLY = .true.
+        ENDIF
 #endif
 
 #ifndef BGC
@@ -793,7 +807,45 @@ CONTAINS
            write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
         ENDIF
 #endif
+#ifndef BGC
+        IF(DEF_USE_SASU)then
+           DEF_USE_SASU = .false.
+           write(*,*) 'Warning: Semi-Analytic Spin-up is off when BGC is off.'
+           write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
+        ENDIF
+#endif
 
+#ifndef CROP
+        IF(DEF_USE_FERT)then
+           DEF_USE_FERT = .false.
+           write(*,*) 'Warning: Fertilization is on when CROP is off.'
+           write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off'
+        ENDIF
+#endif
+
+#ifndef BGC
+        IF(DEF_USE_NITRIF)then
+           DEF_USE_NITRIF = .false.
+           write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
+           write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off'
+        ENDIF
+#endif
+
+#ifndef CROP
+        IF(DEF_USE_CNSOYFIXN)then
+           DEF_USE_CNSOYFIXN = .false.
+           write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
+           write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off'
+        ENDIF
+#endif
+
+#ifndef BGC
+        IF(DEF_USE_FIRE)then
+           DEF_USE_FIRE = .false.
+           write(*,*) 'Warning: Fire model is on when BGC is off.'
+           write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off'
+        ENDIF
+#endif
         IF(.not. DEF_USE_OZONESTRESS)then
            IF(DEF_USE_OZONEDATA)then
               DEF_USE_OZONEDATA = .false.
@@ -947,6 +999,12 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_SASU, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FERT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_NITRIF, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_CNSOYFIXN, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FIRE, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_WUEDIAG, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1210,27 +1268,27 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
-#ifdef WUEdiag
+      if(DEF_USE_WUEDIAG)then
 #ifdef LULC_IGBP_PFT
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cisun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cisha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%Dsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%Dsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gammasun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gammasha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun        ,  set_defaults) !1
-      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha        ,  set_defaults) !1
-      CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
+         CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%cisun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%cisha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%Dsun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%Dsha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%gammasun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%gammasha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%lambdasun        ,  set_defaults) !1
+         CALL sync_hist_vars_one (DEF_hist_vars%lambdasha        ,  set_defaults) !1
+         CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
 #endif
-#endif
+      end if
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -1283,13 +1341,13 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
-#ifdef Fire
-      CALL sync_hist_vars_one (DEF_hist_vars%abm                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gdp                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%peatf                           , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%hdm                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lnfm                            , set_defaults)
-#endif
+      if(DEF_USE_FIRE)then
+         CALL sync_hist_vars_one (DEF_hist_vars%abm                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%gdp                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%peatf                        , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%hdm                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%lnfm                         , set_defaults)
+      endif
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    ,  set_defaults)

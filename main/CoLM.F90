@@ -68,7 +68,7 @@ PROGRAM CoLM
    USE MOD_Hydro_LateralFlow
 #endif
 
-#ifdef Fire
+#ifdef BGC
    USE MOD_LightningData, only: init_lightning_data, update_lightning_data
    USE MOD_FireReadin, only: Fire_readin
 #endif
@@ -77,9 +77,9 @@ PROGRAM CoLM
 
    use MOD_SrfdataRestart
    USE MOD_LAIReadin
-   USE MOD_NitrifReadin
 
 #ifdef BGC
+   USE MOD_NitrifReadin
    USE MOD_NdepReadin
 #endif
 
@@ -273,8 +273,10 @@ PROGRAM CoLM
    IF(DEF_USE_OZONEDATA)THEN
       CALL init_Ozone_data (itstamp,sdate)
    ENDIF
-#ifdef Fire
-   CALL init_lightning_data (itstamp,sdate)
+#ifdef BGC
+   IF(DEF_USE_FIRE)THEN
+      CALL init_lightning_data (itstamp,sdate)
+   ENDIF
 #endif
 
 #if (defined LATERAL_FLOW)
@@ -311,8 +313,10 @@ PROGRAM CoLM
       IF(DEF_USE_OZONEDATA)THEN
          CALL update_Ozone_data(itstamp, deltim)
       ENDIF
-#ifdef Fire
-      CALL update_lightning_data (itstamp, deltim)
+#ifdef BGC
+      IF(DEF_USE_FIRE)THEN
+         CALL update_lightning_data (itstamp, deltim)
+      ENDIF
 #endif
 
       ! Calendar for NEXT time step
@@ -380,23 +384,23 @@ PROGRAM CoLM
 #endif
 
 #ifdef BGC
-#ifdef NITRIF
-      CALL julian2monthday (idate(1), idate(2), month, mday)
-      if(mday .eq. 1)then
-         CALL NITRIF_readin(month, dir_landdata)
+      if(DEF_USE_NITRIF) then
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         if(mday .eq. 1)then
+            CALL NITRIF_readin(month, dir_landdata)
+         end if
       end if
-#endif
       if(idate(2) .eq. 1)then
          isread = .true.
       else
          isread = .false.
       end if
       CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
-#ifdef Fire
-      if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
-         CALL Fire_readin(idate(1), dir_landdata)
+      if(DEF_USE_FIRE)then
+         if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
+            CALL Fire_readin(idate(1), dir_landdata)
+         end if
       end if
-#endif
 #endif
 
 #if(defined CaMa_Flood)

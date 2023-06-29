@@ -198,13 +198,9 @@ PROGRAM MKSRFDATA
    ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
-#if (defined Fire)
    ! define grid for crop parameters
    CALL gfire%define_by_ndims (720,360)
-#endif
-#ifdef NITRIF
    CALL gnitrif%define_by_name ('nitrif_2deg')
-#endif
    CALL gndep%define_by_name ('nitrif_2deg')
 #endif
 
@@ -244,12 +240,10 @@ PROGRAM MKSRFDATA
 #if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
 #endif
-#if (defined Fire)
    CALL pixel%assimilate_grid (gfire )
-#endif
-#ifdef NITRIF
+
    CALL pixel%assimilate_grid (gnitrif)
-#endif
+
    CALL pixel%assimilate_grid (gndep)
 #endif
 
@@ -276,13 +270,9 @@ PROGRAM MKSRFDATA
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
-#if (defined Fire)
    CALL pixel%map_to_grid (gfire )
-#endif
    CALL pixel%map_to_grid (gridlai)
-#ifdef NITRIF
    CALL pixel%map_to_grid (gnitrif)
-#endif
 #ifdef BGC
    CALL pixel%map_to_grid (gndep)
 #endif
@@ -372,12 +362,12 @@ PROGRAM MKSRFDATA
 #if (defined CROP)
    call Aggregation_CropParameters  (gcrop  , dir_rawdata, dir_landdata)
 #endif
-#ifdef Fire
-   call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
-#endif
-#if (defined NITRIF)
-  call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
-#endif
+   if(DEF_USE_FIRE)then
+      call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
+   end if
+   if(DEF_USE_NITRIF)then
+     call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
+   end if
 #endif
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs

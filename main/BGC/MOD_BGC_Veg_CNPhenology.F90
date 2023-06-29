@@ -129,6 +129,7 @@ module MOD_BGC_Veg_CNPhenology
 
   use MOD_TimeManager
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_FERT
   use MOD_BGC_Daylength, only: daylength
   use MOD_SPMD_Task
 
@@ -1134,11 +1135,11 @@ contains
                    onset_counter_p(m) = deltim
                    fert_counter_p(m)  = ndays_on * 86400.
                    if (ndays_on .gt. 0) then
-#ifdef FERT
-                      fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
-#else
-                      fert_p(m) = 0._r8
-#endif
+                      if(DEF_USE_FERT)then
+                         fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
+                      else
+                         fert_p(m) = 0._r8
+                      end if
                    else
                       fert_p(m) = 0._r8
                    end if

@@ -68,14 +68,14 @@ SUBROUTINE CoLMMAIN ( &
          ! additional diagnostic variables for output
            laisun,       laisha,       rootr,                       &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
-#ifdef WUEdiag
+         ! WUE diagnostic variables
            assimsun_out, etrsun_out,   assim_RuBP_sun_out,          &
            assim_Rubisco_sun_out,      cisun_out,    Dsun_out,      &
            gammasun_out,lambdasun_out,                              &
            assimsha_out, etrsha_out,   assim_RuBP_sha_out,          &
            assim_Rubisco_sha_out,      cisha_out,    Dsha_out,      &
            gammasha_out, lambdasha_out,lambda_out,                  &
-#endif
+         !-------------------------
            h2osoi,       wat,           &
 
          ! FLUXES
@@ -384,7 +384,6 @@ SUBROUTINE CoLMMAIN ( &
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
-#ifdef WUEdiag
   REAL(r8), intent(out) :: &
         assimsun_out           ,&
         etrsun_out             ,&
@@ -403,7 +402,6 @@ SUBROUTINE CoLMMAIN ( &
         gammasha_out           ,&
         lambdasha_out          ,&
         lambda_out
-#endif
 ! Fluxes
 ! ----------------------------------------------------------------------
   REAL(r8), intent(out) :: &
@@ -693,14 +691,14 @@ ENDIF
            sai               ,htop              ,hbot              ,sqrtdi            ,&
            rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
            gssun_out         ,gssha_out         ,&
-#ifdef WUEdiag
+! WUE diagnostic variables
            assimsun_out      ,etrsun_out        ,assim_RuBP_sun_out                   ,&
            assim_Rubisco_sun_out                ,cisun_out         ,Dsun_out          ,&
            gammasun_out      ,lambdasun_out     ,&
            assimsha_out      ,etrsha_out        ,assim_RuBP_sha_out,&
            assim_Rubisco_sha_out                ,cisha_out         ,Dsha_out          ,&
            gammasha_out      ,lambdasha_out     ,lambda_out        ,&
-#endif
+! -----------------------
            effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
@@ -1358,7 +1356,6 @@ ENDIF
        rstfacsha_out = 0.
        gssun_out = 0.
        gssha_out = 0.
-#ifdef WUEdiag
        assimsun_out           =0.
        etrsun_out             =0.
        assim_RuBP_sun_out     =0.
@@ -1376,7 +1373,6 @@ ENDIF
        gammasha_out           =0.
        lambdasha_out          =0.
        lambda_out             =0.
-#endif
        rootr = 0.
        zwt = 0.
 

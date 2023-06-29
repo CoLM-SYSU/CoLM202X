@@ -8,8 +8,8 @@
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef LULC_USGS
-#define LULC_IGBP
-#undef LULC_IGBP_PFT
+#undef LULC_IGBP
+#define LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
@@ -33,7 +33,7 @@
 #define  Campbell_SOIL_MODEL
 #undef   vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
-#define  LATERAL_FLOW
+#undef  LATERAL_FLOW
 !    Conflicts :
 #ifndef CATCHMENT
 #undef LATERAL_FLOW
@@ -61,30 +61,34 @@
 #undef CROP
 #endif
 ! 8.2 If defined, Semi-Analytic-Spin-Up (SASU) is used
-#undef SASU
+!#undef SASU
 !    Conflicts : only used when BGC is defined
-#ifndef BGC
-#undef SASU
-#endif
+!#ifndef BGC
+!#undef SASU
+!#endif
+!SASU switch has been moved to namelist: DEF_USE_SASU
 ! 8.3 If defined, Fertlization on crop is used
-#define FERT
+!@#define FERT
 !    Conflicts : only used when CROP is defined
-#ifndef CROP
-#undef FERT
-#endif
+!#ifndef CROP
+!#undef FERT
+!#endif
+!FERT has been moved to namelist: DEF_USE_FERT
 ! 8.4 If defined, Nitrification-Denitrification is used
-#define NITRIF
+!#define NITRIF
 !    Conflicts : only used when BGC is defined
-#ifndef BGC
-#undef NITRIF
-#endif
+!#ifndef BGC
+!#undef NITRIF
+!#endif
+!NITRIF switch has been moved to namelist: DEF_USE_NITRIF
 
-! 9 If defined, Fire is on
-#undef Fire
+!! 9 If defined, Fire is on
+!#undef Fire
 !    Conflicts : only used when BGC is defined
-#ifndef BGC
-#undef Fire
-#endif
+!#ifndef BGC
+!#undef Fire
+!#endif
+!FIRE switch has been moved to namelist: DEF_USE_FIRE
 
 ! 10 If defined, SNICAR is on
 ! NOTE: SNICAR is now a namelist DEF_USE_SNICAR
@@ -92,7 +96,7 @@
 !#undef SNICAR
 
 ! 11. If defined, diagnostics in wue model will be output
-#undef WUEdiag
+!#undef WUEdiag
 
 ! 12. If defined, open Land use and land cover change mode.
 #undef LULCC

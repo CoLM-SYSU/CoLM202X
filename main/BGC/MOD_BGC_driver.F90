@@ -26,6 +26,7 @@
 
 
     use MOD_Precision
+    use MOD_Namelist, only : DEF_USE_SASU, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE
     use MOD_Const_Physical, only : tfrz, denh2o, denice
     use MOD_Vars_PFTimeInvariants, only: pftfrac
     use MOD_LandPFT, only: patch_pft_s, patch_pft_e
@@ -37,9 +38,8 @@
     use MOD_BGC_Soil_BiogeochemVerticalProfile, only: SoilBiogeochemVerticalProfile
     use MOD_BGC_Veg_NutrientCompetition, only: calc_plant_nutrient_demand_CLM45_default,&
                                             calc_plant_nutrient_competition_CLM45_default
-#ifdef NITRIF
     use MOD_BGC_Soil_BiogeochemNitrifDenitrif, only: SoilBiogeochemNitrifDenitrif
-#endif
+
     use MOD_BGC_Soil_BiogeochemCompetition, only: SoilBiogeochemCompetition
     use MOD_BGC_Soil_BiogeochemDecomp, only: SoilBiogeochemDecomp
     use MOD_BGC_Veg_CNPhenology, only: CNPhenology
@@ -69,10 +69,8 @@
                         z_soi,dz_soi,zi_soi,nbedrock,zmin_bedrock
 
     use MOD_BGC_Vars_TimeVariables, only: sminn_vr, col_begnb, skip_balance_check, decomp_cpools_vr
-#ifdef Fire
     use MOD_BGC_Veg_CNFireBase, only: CNFireFluxes
     use MOD_BGC_Veg_CNFireLi2016, only: CNFireArea
-#endif
 
     implicit none
 
@@ -93,18 +91,18 @@
     call decomp_rate_constants_bgc(i,nl_soil,z_soi)
     call SoilBiogeochemPotential(i,nl_soil,ndecomp_pools,ndecomp_transitions)
     call SoilBiogeochemVerticalProfile(i,ps,pe,nl_soil,nl_soil_full,nbedrock,zmin_bedrock,z_soi,dz_soi)
-#ifdef NITRIF
-    call SoilBiogeochemNitrifDenitrif(i,nl_soil,dz_soi)
-#endif
+    if(DEF_USE_NITRIF)then
+       call SoilBiogeochemNitrifDenitrif(i,nl_soil,dz_soi)
+    end if
     call calc_plant_nutrient_demand_CLM45_default(i,ps,pe,deltim,npcropmin)
   
     plant_ndemand(i) = sum( plant_ndemand_p(ps:pe)*pftfrac(ps:pe) )
 
     call SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
     call calc_plant_nutrient_competition_CLM45_default(i,ps,pe,npcropmin)
-#ifdef CNSOYFIXN
-    call CNSoyfix (i, ps, pe, nl_soil)
-#endif
+    if(DEF_USE_CNSOYFIXN)then
+       call CNSoyfix (i, ps, pe, nl_soil)
+    end if
   
     call SoilBiogeochemDecomp(i,nl_soil,ndecomp_pools,ndecomp_transitions, dz_soi)
     call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=1)
@@ -129,11 +127,11 @@
     call NStateUpdate2(i, ps, pe, deltim, nl_soil, dz_soi)
 
 
-#ifdef Fire
-! update vegetation and fire pools from fire
-    call CNFireArea(i,ps,pe,dlat,nl_soil,idate,dz_soi)
-    call CNFireFluxes(i,ps,pe,dlat,nl_soil,ndecomp_pools)
-#endif
+    if(DEF_USE_FIRE)then
+       ! update vegetation and fire pools from fire
+       call CNFireArea(i,ps,pe,dlat,nl_soil,idate,dz_soi)
+       call CNFireFluxes(i,ps,pe,dlat,nl_soil,ndecomp_pools)
+    end if   
     call CStateUpdate3(i,ps,pe,deltim, nl_soil, ndecomp_pools)
     call CNAnnualUpdate(i,ps,pe,deltim,idate(1:3))
 
@@ -141,9 +139,9 @@
     call SoilBiogeochemNLeaching(i,deltim,nl_soil,zi_soi,dz_soi)
     call NstateUpdate3(i, ps, pe, deltim, nl_soil, ndecomp_pools,dz_soi)
 
-#ifdef SASU
-    call CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
-#endif
+    if(DEF_USE_SASU)then
+       call CNSASU(i,ps,pe,deltim,idate(1:3),nl_soil,ndecomp_transitions,ndecomp_pools,ndecomp_pools_vr)! only for spin up
+    end if
 
     call CNDriverSummarizeStates(i,ps,pe,nl_soil,dz_soi,ndecomp_pools)
     call CNDriverSummarizeFluxes(i,ps,pe,nl_soil,dz_soi,ndecomp_transitions,ndecomp_pools,deltim)

@@ -61,7 +61,7 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_qdrip   ! throughfall [mm/s]
    type(block_data_real8_2d) :: f_assim   ! canopy assimilation rate [mol m-2 s-1]
    type(block_data_real8_2d) :: f_respc   ! respiration (plant+soil) [mol m-2 s-1]
-#ifdef WUEdiag
+! WUE diagnostic variables
 #ifdef LULC_IGBP_PFT
    type(block_data_real8_2d) :: f_assim_RuBP_sun
    type(block_data_real8_2d) :: f_assim_RuBP_sha
@@ -80,7 +80,6 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_lambdasun
    type(block_data_real8_2d) :: f_lambdasha
    type(block_data_real8_2d) :: f_lambda
-#endif
 #endif
    type(block_data_real8_2d) :: f_qcharge ! groundwater recharge rate [mm/s]
 
@@ -229,27 +228,27 @@ CONTAINS
          call allocate_block_data (grid, f_qdrip  )  ! throughfall [mm/s]
          call allocate_block_data (grid, f_assim  )  ! canopy assimilation rate [mol m-2 s-1]
          call allocate_block_data (grid, f_respc  )  ! respiration (plant+soil) [mol m-2 s-1]
-#ifdef WUEdiag
+         if(DEF_USE_WUEDIAG)then
 #ifdef LULC_IGBP_PFT
-         call allocate_block_data (grid, f_assim_RuBP_sun        )
-         call allocate_block_data (grid, f_assim_RuBP_sha        )
-         call allocate_block_data (grid, f_assim_Rubisco_sun        )
-         call allocate_block_data (grid, f_assim_Rubisco_sha        )
-         call allocate_block_data (grid, f_assimsun        )
-         call allocate_block_data (grid, f_assimsha        )
-         call allocate_block_data (grid, f_etrsun        )
-         call allocate_block_data (grid, f_etrsha        )
-         call allocate_block_data (grid, f_cisun        )
-         call allocate_block_data (grid, f_cisha        )
-         call allocate_block_data (grid, f_Dsun        )
-         call allocate_block_data (grid, f_Dsha        )
-         call allocate_block_data (grid, f_gammasun        )
-         call allocate_block_data (grid, f_gammasha        )
-         call allocate_block_data (grid, f_lambdasun        )
-         call allocate_block_data (grid, f_lambdasha        )
-         call allocate_block_data (grid, f_lambda                   )
+            call allocate_block_data (grid, f_assim_RuBP_sun        )
+            call allocate_block_data (grid, f_assim_RuBP_sha        )
+            call allocate_block_data (grid, f_assim_Rubisco_sun        )
+            call allocate_block_data (grid, f_assim_Rubisco_sha        )
+            call allocate_block_data (grid, f_assimsun        )
+            call allocate_block_data (grid, f_assimsha        )
+            call allocate_block_data (grid, f_etrsun        )
+            call allocate_block_data (grid, f_etrsha        )
+            call allocate_block_data (grid, f_cisun        )
+            call allocate_block_data (grid, f_cisha        )
+            call allocate_block_data (grid, f_Dsun        )
+            call allocate_block_data (grid, f_Dsha        )
+            call allocate_block_data (grid, f_gammasun        )
+            call allocate_block_data (grid, f_gammasha        )
+            call allocate_block_data (grid, f_lambdasun        )
+            call allocate_block_data (grid, f_lambdasha        )
+            call allocate_block_data (grid, f_lambda                   )
 #endif
-#endif
+         end if
          call allocate_block_data (grid, f_qcharge)  ! groundwater recharge rate [mm/s]
 
          !---------------------------------------------------------------------

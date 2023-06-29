@@ -725,93 +725,94 @@ contains
             'temperature of urban wall [K]','kelvin')
 #endif
 
-#ifdef WUEdiag
+
 #ifdef LULC_IGBP_PFT
-         ! 1: assim_RuBP_sun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assim_RuBP_sun, &
-             a_assim_RuBP_sun, f_assim_RuBP_sun, file_hist, 'f_assim_RuBP_sun', itime_in_file, sumarea, filter, &
-             'RuBP-limited Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+         if(DEF_USE_WUEDIAG)then
+            ! 1: assim_RuBP_sun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assim_RuBP_sun, &
+                a_assim_RuBP_sun, f_assim_RuBP_sun, file_hist, 'f_assim_RuBP_sun', itime_in_file, sumarea, filter, &
+                'RuBP-limited Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: assim_RuBP_sha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assim_RuBP_sha, &
-             a_assim_RuBP_sha, f_assim_RuBP_sha, file_hist, 'f_assim_RuBP_sha', itime_in_file, sumarea, filter, &
-             'RuBP-limited Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+            ! 1: assim_RuBP_sha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assim_RuBP_sha, &
+                a_assim_RuBP_sha, f_assim_RuBP_sha, file_hist, 'f_assim_RuBP_sha', itime_in_file, sumarea, filter, &
+                'RuBP-limited Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: assim_Rubisco_sun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assim_Rubisco_sun, &
-             a_assim_Rubisco_sun, f_assim_Rubisco_sun, file_hist, 'f_assim_Rubisco_sun', itime_in_file, sumarea, filter, &
-             'Rubisco-limited Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+            ! 1: assim_Rubisco_sun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assim_Rubisco_sun, &
+                a_assim_Rubisco_sun, f_assim_Rubisco_sun, file_hist, 'f_assim_Rubisco_sun', itime_in_file, sumarea, filter, &
+                'Rubisco-limited Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: assim_Rubisco_sha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assim_Rubisco_sha, &
-             a_assim_Rubisco_sha, f_assim_Rubisco_sha, file_hist, 'f_assim_Rubisco_sha', itime_in_file, sumarea, filter, &
-             'Rubisco-limited Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+            ! 1: assim_Rubisco_sha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assim_Rubisco_sha, &
+                a_assim_Rubisco_sha, f_assim_Rubisco_sha, file_hist, 'f_assim_Rubisco_sha', itime_in_file, sumarea, filter, &
+                'Rubisco-limited Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: assimsun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assimsun, &
-             a_assimsun, f_assimsun, file_hist, 'f_assimsun', itime_in_file, sumarea, filter, &
-             'Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+            ! 1: assimsun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assimsun, &
+                a_assimsun, f_assimsun, file_hist, 'f_assimsun', itime_in_file, sumarea, filter, &
+                'Photosynthetic assimilation rate of sunlit leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: assimsha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%assimsha, &
-             a_assimsha, f_assimsha, file_hist, 'f_assimsha', itime_in_file, sumarea, filter, &
-             'Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
+            ! 1: assimsha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%assimsha, &
+                a_assimsha, f_assimsha, file_hist, 'f_assimsha', itime_in_file, sumarea, filter, &
+                'Photosynthetic assimilation rate of shaded leaf for needleleaf evergreen temperate tree','mol m-2 s-1')
 
-         ! 1: etrsun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%etrsun, &
-             a_etrsun, f_etrsun, file_hist, 'f_etrsun', itime_in_file, sumarea, filter, &
-             'Transpiration rate of sunlit leaf for needleleaf evergreen temperate tree','mm s-1')
+            ! 1: etrsun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%etrsun, &
+                a_etrsun, f_etrsun, file_hist, 'f_etrsun', itime_in_file, sumarea, filter, &
+                'Transpiration rate of sunlit leaf for needleleaf evergreen temperate tree','mm s-1')
 
-         ! 1: etrsha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%etrsha, &
-             a_etrsha, f_etrsha, file_hist, 'f_etrsha', itime_in_file, sumarea, filter, &
-             'Transpiration rate of shaded leaf for needleleaf evergreen temperate tree','mm s-1')
+            ! 1: etrsha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%etrsha, &
+                a_etrsha, f_etrsha, file_hist, 'f_etrsha', itime_in_file, sumarea, filter, &
+                'Transpiration rate of shaded leaf for needleleaf evergreen temperate tree','mm s-1')
 
-         ! 1: cisun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%cisun, &
-             a_cisun, f_cisun, file_hist, 'f_cisun', itime_in_file, sumarea, filter, &
-             'Intercellular CO2 concentration of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: cisun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%cisun, &
+                a_cisun, f_cisun, file_hist, 'f_cisun', itime_in_file, sumarea, filter, &
+                'Intercellular CO2 concentration of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: cisha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%cisha, &
-             a_cisha, f_cisha, file_hist, 'f_cisha', itime_in_file, sumarea, filter, &
-             'Intercellular CO2 concentration of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: cisha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%cisha, &
+                a_cisha, f_cisha, file_hist, 'f_cisha', itime_in_file, sumarea, filter, &
+                'Intercellular CO2 concentration of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: Dsun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%Dsun, &
-             a_Dsun, f_Dsun, file_hist, 'f_Dsun', itime_in_file, sumarea, filter, &
-             'Vapor concentration deficit of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: Dsun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%Dsun, &
+                a_Dsun, f_Dsun, file_hist, 'f_Dsun', itime_in_file, sumarea, filter, &
+                'Vapor concentration deficit of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: Dsha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%Dsha, &
-             a_Dsha, f_Dsha, file_hist, 'f_Dsha', itime_in_file, sumarea, filter, &
-             'Vapor concentration deficit of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: Dsha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%Dsha, &
+                a_Dsha, f_Dsha, file_hist, 'f_Dsha', itime_in_file, sumarea, filter, &
+                'Vapor concentration deficit of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: gammasun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%gammasun, &
-             a_gammasun, f_gammasun, file_hist, 'f_gammasun', itime_in_file, sumarea, filter, &
-             'CO2 compensation point of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: gammasun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%gammasun, &
+                a_gammasun, f_gammasun, file_hist, 'f_gammasun', itime_in_file, sumarea, filter, &
+                'CO2 compensation point of sunlit leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: gammasha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%gammasha, &
-             a_gammasha, f_gammasha, file_hist, 'f_gammasha', itime_in_file, sumarea, filter, &
-             'CO2 compensation point of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
+            ! 1: gammasha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%gammasha, &
+                a_gammasha, f_gammasha, file_hist, 'f_gammasha', itime_in_file, sumarea, filter, &
+                'CO2 compensation point of shaded leaf for needleleaf evergreen temperate tree','mol mol-1')
 
-         ! 1: lambdasun enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%lambdasun, &
-             a_lambdasun, f_lambdasun, file_hist, 'f_lambdasun', itime_in_file, sumarea, filter, &
-             'Marginal water use cost on sunlit leaf for needleleaf evergreen temperate tree','unitless')
+            ! 1: lambdasun enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%lambdasun, &
+                a_lambdasun, f_lambdasun, file_hist, 'f_lambdasun', itime_in_file, sumarea, filter, &
+                'Marginal water use cost on sunlit leaf for needleleaf evergreen temperate tree','unitless')
 
-         ! 1: lambdasha enf temperate
-         call flux_map_and_write_2d ( DEF_hist_vars%lambdasha, &
-             a_lambdasha, f_lambdasha, file_hist, 'f_lambdasha', itime_in_file, sumarea, filter, &
-             'Marginal water use cost on shaded leaf for needleleaf evergreen temperate tree','unitless')
+            ! 1: lambdasha enf temperate
+            call flux_map_and_write_2d ( DEF_hist_vars%lambdasha, &
+                a_lambdasha, f_lambdasha, file_hist, 'f_lambdasha', itime_in_file, sumarea, filter, &
+                'Marginal water use cost on shaded leaf for needleleaf evergreen temperate tree','unitless')
 
-         ! lambda
-         call flux_map_and_write_2d ( DEF_hist_vars%lambda, &
-             a_lambda, f_lambda, file_hist, 'f_lambda', itime_in_file, sumarea, filter, &
-             'Ecosystem level Marginal water use cost','unitless')
-#endif
+            ! lambda
+            call flux_map_and_write_2d ( DEF_hist_vars%lambda, &
+                a_lambda, f_lambda, file_hist, 'f_lambda', itime_in_file, sumarea, filter, &
+                'Ecosystem level Marginal water use cost','unitless')
+         end if
 #endif
 
          ! rstfacsun
@@ -1263,41 +1264,40 @@ contains
             a_OM_density, f_OM_density, file_hist, 'f_OM_density', 'soil', &
             itime_in_file, sumarea, filter,'organic matter density in soil layers','kg/m3')
 
-#ifdef NITRIF
-         ! O2 soil Concentration for non-inundated area
-         call flux_map_and_write_3d ( DEF_hist_vars%CONC_O2_UNSAT, &
-            a_conc_o2_unsat, f_conc_o2_unsat, file_hist, 'f_CONC_O2_UNSAT', 'soil', &
-            itime_in_file, sumarea, filter,'O2 soil Concentration for non-inundated area','mol/m3')
+         if(DEF_USE_NITRIF)then
+            ! O2 soil Concentration for non-inundated area
+            call flux_map_and_write_3d ( DEF_hist_vars%CONC_O2_UNSAT, &
+               a_conc_o2_unsat, f_conc_o2_unsat, file_hist, 'f_CONC_O2_UNSAT', 'soil', &
+               itime_in_file, sumarea, filter,'O2 soil Concentration for non-inundated area','mol/m3')
 
-         ! O2 consumption from HR and AR for non-inundated area
-         call flux_map_and_write_3d ( DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT, &
-            a_o2_decomp_depth_unsat, f_o2_decomp_depth_unsat, file_hist, 'f_O2_DECOMP_DEPTH_UNSAT', 'soil', &
-            itime_in_file, sumarea, filter,'O2 consumption from HR and AR for non-inundated area','mol/m3/s')
+            ! O2 consumption from HR and AR for non-inundated area
+            call flux_map_and_write_3d ( DEF_hist_vars%O2_DECOMP_DEPTH_UNSAT, &
+               a_o2_decomp_depth_unsat, f_o2_decomp_depth_unsat, file_hist, 'f_O2_DECOMP_DEPTH_UNSAT', 'soil', &
+               itime_in_file, sumarea, filter,'O2 consumption from HR and AR for non-inundated area','mol/m3/s')
+         end if
 
-#endif
+         if(DEF_USE_FIRE)then
+            call flux_map_and_write_2d ( DEF_hist_vars%abm, &
+                 vecacc, f_abm, file_hist, 'f_abm', itime_in_file, sumarea, filter, &
+                 'peak crop fire month','unitless')
 
-#ifdef Fire
-        call flux_map_and_write_2d ( DEF_hist_vars%abm, &
-             vecacc, f_abm, file_hist, 'f_abm', itime_in_file, sumarea, filter, &
-             'peak crop fire month','unitless')
+            call flux_map_and_write_2d ( DEF_hist_vars%gdp, &
+                 vecacc, f_gdp, file_hist, 'f_gdp', itime_in_file, sumarea, filter, &
+                 'gdp','unitless')
 
-        call flux_map_and_write_2d ( DEF_hist_vars%gdp, &
-             vecacc, f_gdp, file_hist, 'f_gdp', itime_in_file, sumarea, filter, &
-             'gdp','unitless')
+            call flux_map_and_write_2d ( DEF_hist_vars%peatf, &
+                 vecacc, f_peatf, file_hist, 'f_peatf', itime_in_file, sumarea, filter, &
+                 'peatf','unitless')
 
-        call flux_map_and_write_2d ( DEF_hist_vars%peatf, &
-             vecacc, f_peatf, file_hist, 'f_peatf', itime_in_file, sumarea, filter, &
-             'peatf','unitless')
+            call flux_map_and_write_2d ( DEF_hist_vars%hdm, &
+                 vecacc, f_hdm, file_hist, 'f_hdm', itime_in_file, sumarea, filter, &
+                 'hdm','unitless')
 
-        call flux_map_and_write_2d ( DEF_hist_vars%hdm, &
-             vecacc, f_hdm, file_hist, 'f_hdm', itime_in_file, sumarea, filter, &
-             'hdm','unitless')
+            call flux_map_and_write_2d ( DEF_hist_vars%lnfm, &
+                 vecacc, f_lnfm, file_hist, 'f_lnfm', itime_in_file, sumarea, filter, &
+                 'lnfm','unitless')
+         end if
 
-        call flux_map_and_write_2d ( DEF_hist_vars%lnfm, &
-             vecacc, f_lnfm, file_hist, 'f_lnfm', itime_in_file, sumarea, filter, &
-             'lnfm','unitless')
-
-#endif
 
          if (p_is_worker) then
             if (numpatch > 0) then

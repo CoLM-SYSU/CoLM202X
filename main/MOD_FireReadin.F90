@@ -70,7 +70,6 @@ MODULE MOD_FireReadin
       CHARACTER(LEN=4) ::cx
       ! READ in crops
 
-#ifdef Fire
       allocate(abm_tmp     (numpatch))
       allocate(gdp_tmp     (numpatch))
       allocate(peatf_tmp   (numpatch))
@@ -126,7 +125,6 @@ MODULE MOD_FireReadin
       deallocate(peatf_tmp )
       deallocate(hdm_tmp   )
 
-#endif
    END SUBROUTINE Fire_readin
 
 END MODULE MOD_FireReadin
