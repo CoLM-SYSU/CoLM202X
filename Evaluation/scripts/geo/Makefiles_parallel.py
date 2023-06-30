@@ -109,7 +109,7 @@ class Makefiles_parallel:
                     #    regridder = xe.Regridder(obsx0, new_grid, 'bilinear', periodic=False)
                     #else:
                     #    regridder = xe.Regridder(obsx0, new_grid, 'bilinear', periodic=False, reuse_weights=True)
-                    regridder = xe.Regridder(obsx0, new_grid, 'bilinear', periodic=True)
+                    regridder = xe.Regridder(obsx0, new_grid, 'bilinear', periodic=False)
 
                 # Perform the remapping
                 obsx = regridder(obsx0)
