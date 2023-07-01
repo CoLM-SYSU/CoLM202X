@@ -80,7 +80,7 @@ nRMSEScore=True       # RMSE Score from ILAMB
 
   Obs_source      =  GLEAM
   OBSDIR          =  /tera03/zhwei/Validation_Data/geo_obs/GLEAM/v3.7a/
-  Obs_TimRes      =  Month         #Day or Month
+  Obs_TimRes      =  Day         #Day or Month
   Obs_GeoRes      =  15min
   Obs_DataGroupby = Year
   Obs_Suffix      =  
@@ -104,7 +104,7 @@ nRMSEScore=True       # RMSE Score from ILAMB
 
   Obs_source      =  GLEAM
   OBSDIR          =  /tera03/zhwei/Validation_Data/geo_obs/GLEAM/v3.7a/
-  Obs_TimRes      =  Month         #Day or Month
+  Obs_TimRes      =  Day         #Day or Month
   Obs_GeoRes      =  15min
   Obs_DataGroupby = Year
   Obs_Suffix      =  
