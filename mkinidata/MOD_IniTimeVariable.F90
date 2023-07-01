@@ -42,7 +42,6 @@ CONTAINS
                      ,altmax, altmax_lastyear, altmax_lastyear_indx, lag_npp &
                      ,sminn_vr, sminn, smin_no3_vr, smin_nh4_vr &
                      ,prec10, prec60, prec365, prec_today, prec_daily, tsoi17, rh30, accumnstep, skip_balance_check &
-#ifdef SASU
 !------------------------SASU variables-----------------
                      ,decomp0_cpools_vr          , decomp0_npools_vr           &
                      ,I_met_c_vr_acc             , I_cel_c_vr_acc             , I_lig_c_vr_acc             , I_cwd_c_vr_acc              &
@@ -59,7 +58,6 @@ CONTAINS
                      ,AKX_met_exit_n_vr_acc      , AKX_cel_exit_n_vr_acc      , AKX_lig_exit_n_vr_acc      , AKX_cwd_exit_n_vr_acc       &
                      ,AKX_soil1_exit_n_vr_acc    , AKX_soil2_exit_n_vr_acc    , AKX_soil3_exit_n_vr_acc     &
                      ,diagVX_n_vr_acc            , upperVX_n_vr_acc           , lowerVX_n_vr_acc           &
-#endif
 !------------------------------------------------------------
 #endif
                      ,use_soilini, nl_soil_ini, soil_z,   soil_t,   soil_w, snow_d     &
@@ -252,7 +250,6 @@ CONTAINS
         rh30                                                  , &
         accumnstep
 
-#ifdef SASU
  !---------------SASU variables-----------------------
    REAL(r8),intent(out) ::      &
         decomp0_cpools_vr          (nl_soil,ndecomp_pools)  , &
@@ -309,7 +306,6 @@ CONTAINS
         upperVX_n_vr_acc           (nl_soil,ndecomp_pools)  , &
         lowerVX_n_vr_acc           (nl_soil,ndecomp_pools)
 
-#endif
  !----------------------------------------------------
    LOGICAL, intent(out) :: &
         skip_balance_check
@@ -659,7 +655,6 @@ CONTAINS
    tsoi17                          = 273.15_r8
    rh30                            = 0._r8
    accumnstep                      = 0._r8
-#ifdef SASU
  !---------------SASU variables-----------------------
    decomp0_cpools_vr         (:,:) = 0.0
    I_met_c_vr_acc              (:) = 0.0
@@ -715,7 +710,6 @@ CONTAINS
    lowerVX_n_vr_acc          (:,:) = 0.0
 
  !----------------------------------------------------
-#endif
    skip_balance_check              = .false.
 
 #if(defined LULC_IGBP_PFT)
@@ -870,7 +864,6 @@ CONTAINS
       latbaset_p               (ps:pe) = spval
 #endif
 
-#ifdef SASU
 ! SASU varaibles
       leafc0_p                 (ps:pe) = 0.0
       leafc0_storage_p         (ps:pe) = 0.0
@@ -1051,7 +1044,6 @@ CONTAINS
       AKX_livecrootn_xf_exit_p_acc                (ps:pe) = 0._r8
       AKX_deadcrootn_xf_exit_p_acc                (ps:pe) = 0._r8
       AKX_grainn_xf_exit_p_acc                    (ps:pe) = 0._r8
-#endif
 
    end if
 #endif

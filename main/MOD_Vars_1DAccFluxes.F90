@@ -3,7 +3,6 @@
 module MOD_Vars_1DAccFluxes
 
    use MOD_Precision
-   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
 
    real(r8) :: nac              ! number of accumulation
    real(r8), allocatable :: nac_ln   (:)
@@ -53,6 +52,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_wat    (:)
    real(r8), allocatable :: a_assim  (:)
    real(r8), allocatable :: a_respc  (:)
+   real(r8), allocatable :: a_assimsun   (:) !1
+   real(r8), allocatable :: a_assimsha   (:) !1
+   real(r8), allocatable :: a_etrsun     (:) !1
+   real(r8), allocatable :: a_etrsha     (:) !1
 
    real(r8), allocatable :: a_qcharge(:)
 
@@ -107,6 +110,7 @@ module MOD_Vars_1DAccFluxes
    REAL(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
    REAL(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
 #endif
+
 
 #ifdef BGC
    real(r8), allocatable :: a_leafc              (:)
@@ -188,31 +192,8 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
-#ifdef WUEdiag
-#ifdef LULC_IGBP_PFT
-   real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
-   real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sha        (:) !1
-   real(r8), allocatable :: a_assimsun        (:) !1
-   real(r8), allocatable :: a_assimsha        (:) !1
-   real(r8), allocatable :: a_etrsun        (:) !1
-   real(r8), allocatable :: a_etrsha        (:) !1
-   real(r8), allocatable :: a_cisun        (:) !1
-   real(r8), allocatable :: a_cisha        (:) !1
-   real(r8), allocatable :: a_Dsun        (:) !1
-   real(r8), allocatable :: a_Dsha        (:) !1
-   real(r8), allocatable :: a_gammasun        (:) !1
-   real(r8), allocatable :: a_gammasha        (:) !1
-   real(r8), allocatable :: a_lambdasun        (:) !1
-   real(r8), allocatable :: a_lambdasha        (:) !1
-   real(r8), allocatable :: a_lambda                   (:) !14
-#endif
-#endif
-#ifdef NITRIF
    real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
    real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
-#endif
 #ifdef CROP
    real(r8), allocatable :: a_pdcorn                (:)
    real(r8), allocatable :: a_pdswheat              (:)
@@ -244,13 +225,11 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fert_to_sminn      (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
-#ifdef Fire
    real(r8), allocatable :: a_abm                (:)
    real(r8), allocatable :: a_gdp                (:)
    real(r8), allocatable :: a_peatf              (:)
    real(r8), allocatable :: a_hdm                (:)
    real(r8), allocatable :: a_lnfm               (:)
-#endif
 #endif
 ! Ozone stress variables
    real(r8), allocatable :: a_ozone              (:)
@@ -385,27 +364,10 @@ contains
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
-#ifdef WUEdiag
-#ifdef LULC_IGBP_PFT
-            allocate (a_assim_RuBP_sun        (numpatch)) !1
-            allocate (a_assim_RuBP_sha        (numpatch)) !1
-            allocate (a_assim_Rubisco_sun        (numpatch)) !1
-            allocate (a_assim_Rubisco_sha        (numpatch)) !1
             allocate (a_assimsun        (numpatch)) !1
             allocate (a_assimsha        (numpatch)) !1
             allocate (a_etrsun        (numpatch)) !1
             allocate (a_etrsha        (numpatch)) !1
-            allocate (a_cisun        (numpatch)) !1
-            allocate (a_cisha        (numpatch)) !1
-            allocate (a_Dsun        (numpatch)) !1
-            allocate (a_Dsha        (numpatch)) !1
-            allocate (a_gammasun        (numpatch)) !1
-            allocate (a_gammasha        (numpatch)) !1
-            allocate (a_lambdasun        (numpatch)) !1
-            allocate (a_lambdasha        (numpatch)) !1
-            allocate (a_lambda                   (numpatch)) !1
-#endif
-#endif
 
             allocate (a_qcharge   (numpatch))
 
@@ -541,10 +503,10 @@ contains
             allocate (a_leafc_c3arcgrass   (numpatch)) !12
             allocate (a_leafc_c3grass      (numpatch)) !13
             allocate (a_leafc_c4grass      (numpatch)) !14
-#ifdef NITRIF
+
             allocate (a_O2_DECOMP_DEPTH_UNSAT (1:nl_soil,numpatch))
             allocate (a_CONC_O2_UNSAT         (1:nl_soil,numpatch))
-#endif
+
 #ifdef CROP
             allocate (a_pdcorn             (numpatch))
             allocate (a_pdswheat           (numpatch))
@@ -576,13 +538,13 @@ contains
             allocate (a_fert_to_sminn      (numpatch))
 #endif
             allocate (a_ndep_to_sminn      (numpatch))
-#ifdef Fire
+
             allocate (a_abm                (numpatch))
             allocate (a_gdp                (numpatch))
             allocate (a_peatf              (numpatch))
             allocate (a_hdm                (numpatch))
             allocate (a_lnfm               (numpatch))
-#endif
+
 #endif
 ! Ozone stress variables
             allocate (a_ozone              (numpatch))
@@ -714,6 +676,11 @@ contains
             deallocate (a_wat       )
             deallocate (a_assim     )
             deallocate (a_respc     )
+
+            deallocate (a_assimsun        ) !1
+            deallocate (a_assimsha        ) !1
+            deallocate (a_etrsun        ) !1
+            deallocate (a_etrsha        ) !1
 
             deallocate (a_qcharge   )
 
@@ -850,31 +817,10 @@ contains
             deallocate (a_leafc_c3arcgrass   ) !12
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
-#ifdef WUEdiag
-#ifdef LULC_IGBP_PFT
-            deallocate (a_assim_RuBP_sun        ) !1
-            deallocate (a_assim_RuBP_sha        ) !1
-            deallocate (a_assim_Rubisco_sun        ) !1
-            deallocate (a_assim_Rubisco_sha        ) !1
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
-            deallocate (a_cisun        ) !1
-            deallocate (a_cisha        ) !1
-            deallocate (a_Dsun        ) !1
-            deallocate (a_Dsha        ) !1
-            deallocate (a_gammasun        ) !1
-            deallocate (a_gammasha        ) !1
-            deallocate (a_lambdasun        ) !1
-            deallocate (a_lambdasha        ) !1
-            deallocate (a_lambda                   ) !1
-#endif
-#endif
-#ifdef NITRIF
+
             deallocate (a_O2_DECOMP_DEPTH_UNSAT )
             deallocate (a_CONC_O2_UNSAT         )
-#endif
+
 #ifdef CROP
             deallocate (a_pdcorn             )
             deallocate (a_pdswheat           )
@@ -906,13 +852,13 @@ contains
             deallocate (a_fert_to_sminn      )
 #endif
             deallocate (a_ndep_to_sminn      )
-#ifdef Fire
+
             deallocate (a_abm                )
             deallocate (a_gdp                )
             deallocate (a_peatf              )
             deallocate (a_hdm                )
             deallocate (a_lnfm               )
-#endif
+
 #endif
 ! Ozone stress variables
             deallocate (a_ozone              )
@@ -995,7 +941,6 @@ contains
       use MOD_LandPatch, only : numpatch
       USE MOD_LandUrban, only : numurban
       use MOD_Vars_Global,    only : spval
-      use MOD_Namelist, only: DEF_USE_OZONESTRESS
       implicit none
 
       if (p_is_worker) then
@@ -1051,6 +996,10 @@ contains
             a_wat     (:) = spval
             a_assim   (:) = spval
             a_respc   (:) = spval
+            a_assimsun(:) = spval !1
+            a_assimsha(:) = spval !1
+            a_etrsun  (:) = spval !1
+            a_etrsha  (:) = spval !1
 
             a_qcharge (:) = spval
 
@@ -1188,31 +1137,9 @@ contains
             a_leafc_c3arcgrass   (:) = spval
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
-#ifdef WUEdiag
-#ifdef LULC_IGBP_PFT
-            a_assim_RuBP_sun        (:) = spval !1
-            a_assim_RuBP_sha        (:) = spval !1
-            a_assim_Rubisco_sun        (:) = spval !1
-            a_assim_Rubisco_sha        (:) = spval !1
-            a_assimsun        (:) = spval !1
-            a_assimsha        (:) = spval !1
-            a_etrsun        (:) = spval !1
-            a_etrsha        (:) = spval !1
-            a_cisun        (:) = spval !1
-            a_cisha        (:) = spval !1
-            a_Dsun        (:) = spval !1
-            a_Dsha        (:) = spval !1
-            a_gammasun        (:) = spval !1
-            a_gammasha        (:) = spval !1
-            a_lambdasun        (:) = spval  !1
-            a_lambdasha        (:) = spval  !1
-            a_lambda                   (:) = spval  !1
-#endif
-#endif
-#ifdef NITRIF
+
             a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
             a_CONC_O2_UNSAT         (:,:) = spval
-#endif
 #ifdef CROP
             a_pdcorn             (:) = spval
             a_pdswheat           (:) = spval
@@ -1244,17 +1171,15 @@ contains
             a_fert_to_sminn      (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
-#ifdef Fire
+
             a_abm                (:) = spval
             a_gdp                (:) = spval
             a_peatf              (:) = spval
             a_hdm                (:) = spval
             a_lnfm               (:) = spval
+
 #endif
-#endif
-            IF(DEF_USE_OZONESTRESS)THEN
-               a_ozone              (:) = spval
-            ENDIF
+            a_ozone              (:) = spval
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1344,7 +1269,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
       use MOD_CoLMDebug
       use MOD_Vars_Global
@@ -1440,6 +1365,10 @@ contains
             call acc1d (wat    , a_wat    )
             call acc1d (assim  , a_assim  )
             call acc1d (respc  , a_respc  )
+            call acc1d (assimsun_out  , a_assimsun      )
+            call acc1d (assimsha_out  , a_assimsha      )
+            call acc1d (etrsun_out    , a_etrsun        )
+            call acc1d (etrsha_out    , a_etrsha        )
 
             call acc1d (qcharge, a_qcharge)
 
@@ -1585,31 +1514,10 @@ contains
             call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
-#ifdef WUEdiag
-#ifdef LULC_IGBP_PFT
-            call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
-            call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
-            call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )
-            call acc1d (assim_Rubisco_sha_out    , a_assim_Rubisco_sha        )
-            call acc1d (assimsun_out    , a_assimsun        )
-            call acc1d (assimsha_out    , a_assimsha        )
-            call acc1d (etrsun_out    , a_etrsun        )
-            call acc1d (etrsha_out    , a_etrsha        )
-            call acc1d (cisun_out    , a_cisun        )
-            call acc1d (cisha_out    , a_cisha        )
-            call acc1d (Dsun_out    , a_Dsun        )
-            call acc1d (Dsha_out    , a_Dsha        )
-            call acc1d (gammasun_out    , a_gammasun        )
-            call acc1d (gammasha_out    , a_gammasha        )
-            call acc1d (lambdasun_out    , a_lambdasun        )
-            call acc1d (lambdasha_out    , a_lambdasha        )
-            call acc1d (lambda_out               , a_lambda                   )
-#endif
-#endif
-#ifdef NITRIF
-            call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
-            call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
-#endif
+            if(DEF_USE_NITRIF)then
+               call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
+               call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
+            end if
 #ifdef CROP
             call acc1d (pdcorn             ,   a_pdcorn             )
             call acc1d (pdswheat           ,   a_pdswheat           )
@@ -1641,13 +1549,13 @@ contains
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
-#ifdef Fire
-            call acc1d (abm_lf             ,   a_abm                )
-            call acc1d (gdp_lf             ,   a_gdp                )
-            call acc1d (peatf_lf           ,   a_peatf              )
-            call acc1d (hdm_lf             ,   a_hdm                )
-            call acc1d (lnfm               ,   a_lnfm               )
-#endif
+            if(DEF_USE_FIRE)then
+               call acc1d (abm_lf             ,   a_abm                )
+               call acc1d (gdp_lf             ,   a_gdp                )
+               call acc1d (peatf_lf           ,   a_peatf              )
+               call acc1d (hdm_lf             ,   a_hdm                )
+               call acc1d (lnfm               ,   a_lnfm               )
+            end if
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
                call acc1d (forc_ozone         ,   a_ozone              )

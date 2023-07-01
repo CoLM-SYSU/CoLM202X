@@ -118,6 +118,9 @@ CONTAINS
   USE MOD_Urban_BEM
   USE MOD_Urban_LUCY, only: LUCY
   USE MOD_Eroot, only: eroot
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+#endif
 
   IMPLICIT NONE
 

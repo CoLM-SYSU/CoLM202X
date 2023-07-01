@@ -24,6 +24,7 @@ module MOD_BGC_Soil_BiogeochemLittVertTransp
   !                   2) Record accumulated organic CN vertical transfer rates for semi-analytic spin-up.
 
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_SASU
   use MOD_BGC_Vars_TimeInvariants, only: &
       is_cwd, som_adv_flux, som_diffus, cryoturb_diffusion_k, max_altdepth_cryoturbation, max_depth_cryoturb
   use MOD_BGC_Vars_TimeVariables, only: &
@@ -230,12 +231,12 @@ contains
                 b_tri(j) = - a_tri(j) - c_tri(j) + a_p_0
                 r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_c(j)
                 r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + (a_p_0 - adv_flux(j)) * conc_trcr_n(j)
-#ifdef SASU
-                upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_c(j+1)! upwards transfer
-                diagVX_c_vr_acc (j,s,i) = diagVX_c_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)! exit flux
-                upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_n(j+1)! upwards transfer
-                diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! exit flux
-#endif
+                if(DEF_USE_SASU)then
+                   upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_c(j+1)! upwards transfer
+                   diagVX_c_vr_acc (j,s,i) = diagVX_c_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)! exit flux
+                   upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) -  c_tri(j)          / dz_soi(j) * deltim * conc_trcr_n(j+1)! upwards transfer
+                   diagVX_n_vr_acc (j,s,i) = diagVX_n_vr_acc (j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)! exit flux
+                end if
              elseif (j < nl_soil+1) then
 
                 a_tri(j) = -(d_m1_zm1(j) * aaa(pe_m1(j)) + max( f_m1(j), 0._r8)) ! Eqn 5.47 Patankar
@@ -244,23 +245,23 @@ contains
                 r_tri_c(j) = decomp_cpools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_c(j)
                 r_tri_n(j) = decomp_npools_sourcesink(j,s,i) * dz_soi(j) /deltim + a_p_0 * conc_trcr_n(j)
 
-#ifdef SASU
-                if(j .le. nbedrock)then
-                   lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)
-                   lowerVX_n_vr_acc(j,s,i) = lowerVX_n_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j-1)
-                   if(j .ne. nl_soil)then
-                      upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j+1)
-                      upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j+1)
-                   end if
-                   diagVX_c_vr_acc(j,s,i) = diagVX_c_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)
-                   diagVX_n_vr_acc(j,s,i) = diagVX_n_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)
-                else
-                   if(j .eq. nbedrock + 1 .and. j .ne. nl_soil .and. j .gt. 1)then
-                      diagVX_c_vr_acc(j-1,s,i) = diagVX_c_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_c(j-1)
-                      diagVX_n_vr_acc(j-1,s,i) = diagVX_n_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_n(j-1)
+                if(DEF_USE_SASU)then
+                   if(j .le. nbedrock)then
+                      lowerVX_c_vr_acc(j,s,i) = lowerVX_c_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j-1)
+                      lowerVX_n_vr_acc(j,s,i) = lowerVX_n_vr_acc(j,s,i) - a_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j-1)
+                      if(j .ne. nl_soil)then
+                         upperVX_c_vr_acc(j,s,i) = upperVX_c_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_c(j+1)
+                         upperVX_n_vr_acc(j,s,i) = upperVX_n_vr_acc(j,s,i) - c_tri(j) / dz_soi(j) * deltim * conc_trcr_n(j+1)
+                      end if
+                      diagVX_c_vr_acc(j,s,i) = diagVX_c_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_c(j)
+                      diagVX_n_vr_acc(j,s,i) = diagVX_n_vr_acc(j,s,i) + (b_tri(j) - a_p_0) / dz_soi(j) * deltim * conc_trcr_n(j)
+                   else
+                      if(j .eq. nbedrock + 1 .and. j .ne. nl_soil .and. j .gt. 1)then
+                         diagVX_c_vr_acc(j-1,s,i) = diagVX_c_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_c(j-1)
+                         diagVX_n_vr_acc(j-1,s,i) = diagVX_n_vr_acc(j-1,s,i) + a_tri(j) / dz_soi(j-1) * deltim * conc_trcr_n(j-1)
+                      end if
                    end if
                 end if
-#endif
              else ! j==nl_soil+1; 0 concentration gradient at bottom
                 a_tri(j)   = -1._r8
                 b_tri(j)   = 1._r8

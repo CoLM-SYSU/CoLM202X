@@ -204,8 +204,6 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/plantdate_pfts.nc'
@@ -336,8 +334,6 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/fertnitro_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/fertnitro_pfts.nc'

@@ -552,36 +552,35 @@ CONTAINS
                file_in  = trim(dir_landdata_in)  // '/crop/plantdate_pfts.nc'
                file_out = trim(dir_landdata_out) // '/crop/plantdate_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'plantdate_pfts'         , pftmask  )
-
                file_in  = trim(dir_landdata_in)  // '/crop/fertnitro_pfts.nc'
                file_out = trim(dir_landdata_out) // '/crop/fertnitro_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'fertnitro_pfts'         , pftmask  )
 #endif
 
                ! fire
-#ifdef Fire
-               CALL system('mkdir -p ' // trim(dir_landdata_out) // '/FIRE')
+               if(DEF_USE_FIRE)then
+                  CALL system('mkdir -p ' // trim(dir_landdata_out) // '/FIRE')
 
-               DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year
-                  write(cyear,'(i4.4)') YY
+                  DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year
+                     write(cyear,'(i4.4)') YY
+   
+                     file_in  = trim(dir_landdata_in)  // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
+                     file_out = trim(dir_landdata_out) // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
+                     CALL clip_vector (file_in, file_out, iblk, jblk, 'hdm_patches', patchmask)
+                  ENDDO
 
-                  file_in  = trim(dir_landdata_in)  // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
-                  file_out = trim(dir_landdata_out) // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
-                  CALL clip_vector (file_in, file_out, iblk, jblk, 'hdm_patches', patchmask)
-               ENDDO
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/abm_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/abm_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'abm_patches', patchmask)
 
-               file_in  = trim(dir_landdata_in)  // '/FIRE/abm_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/abm_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'abm_patches', patchmask)
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/peatf_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/peatf_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'peatf_patches', patchmask)
 
-               file_in  = trim(dir_landdata_in)  // '/FIRE/peatf_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/peatf_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'peatf_patches', patchmask)
-
-               file_in  = trim(dir_landdata_in)  // '/FIRE/gdp_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/gdp_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'gdp_patches', patchmask)
-#endif
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/gdp_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/gdp_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'gdp_patches', patchmask)
+               end if
 
                ! NDEP
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/NDEP')

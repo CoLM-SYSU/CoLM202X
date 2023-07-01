@@ -16,6 +16,7 @@ module MOD_BGC_CNSummary
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_NITRIF
   use MOD_Vars_PFTimeInvariants, only: pftclass
   use MOD_BGC_Vars_TimeVariables, only: &
       totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
@@ -540,18 +541,17 @@ contains
        smin_no3_runoff(i)     = smin_no3_runoff(i)     + smin_no3_runoff_vr(j,i) * dz_soi(j)
        sminn_leached(i)       = sminn_leached(i)       + sminn_leached_vr(j,i) * dz_soi(j)
        f_n2o_nit(i)           = f_n2o_nit(i)           + f_n2o_nit_vr(j,i) * dz_soi(j)
-       denit(i)               = denit(i)               &
-#ifdef NITRIF
-                              + f_denit_vr(j,i) * dz_soi(j)
-#else
-                              + sminn_to_denit_excess_vr(j,i) * dz_soi(j)
-#endif
+       if(DEF_USE_NITRIF)then
+          denit(i)            = denit(i)               + f_denit_vr(j,i) * dz_soi(j)
+       else
+          denit(i)            = denit(i)               + sminn_to_denit_excess_vr(j,i) * dz_soi(j)
+       end if
 
-#ifndef NITRIF
-       do k = 1, ndecomp_transitions
-          denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
-       end do
-#endif
+       if(.not. DEF_USE_NITRIF)then
+          do k = 1, ndecomp_transitions
+             denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
+          end do
+       end if
     end do
   end subroutine soilbiogeochem_nitrogenflux_summary
 
