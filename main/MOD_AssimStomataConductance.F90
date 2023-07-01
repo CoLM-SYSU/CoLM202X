@@ -29,8 +29,6 @@ MODULE MOD_AssimStomataConductance
                       ,o3coefv,o3coefg &
 !End ozone stress variables
                       ,rb,ra,rstfac,cint,assim,respc,rst &
-!WUE diagnostic variables
-                      ,assim_RuBP, assim_Rubisco, ci, vpd, gammas &
                               )
 
 !=======================================================================
@@ -116,12 +114,8 @@ MODULE MOD_AssimStomataConductance
       assim,        &! canopy assimilation rate (mol m-2 s-1)
       respc,        &! canopy respiration (mol m-2 s-1)
       rst            ! canopy stomatal resistance (s m-1)
- real(r8),intent(out) :: &
-      assim_RuBP,   &
-      assim_Rubisco,&
-      ci,           &
-      vpd,          &
-      gammas
+
+ real(r8)  gammas
 
 !-------------------- local --------------------------------------------
 
@@ -390,10 +384,6 @@ MODULE MOD_AssimStomataConductance
 
 ! convert gsh2o (mol m-2 s-1) to resistance rst ( s m-1)
       rst   = min( 1.e6, 1./(gsh2o*tlef/tprcor) )     ! s m-1
-      assim_RuBP    = ome
-      assim_Rubisco = omc
-      ci            = pco2i / psrf
-      vpd           = (ei - es) / psrf
 
 
   end subroutine stomata

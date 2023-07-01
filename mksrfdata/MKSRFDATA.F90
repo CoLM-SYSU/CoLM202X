@@ -260,6 +260,7 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+   CALL pixel%map_to_grid (gridlai)
 
 #ifdef URBAN_MODEL
    CALL pixel%map_to_grid (gurban         )
@@ -267,13 +268,12 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (grid_urban_5km )
 #endif
 
+#ifdef BGC
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
    CALL pixel%map_to_grid (gfire )
-   CALL pixel%map_to_grid (gridlai)
    CALL pixel%map_to_grid (gnitrif)
-#ifdef BGC
    CALL pixel%map_to_grid (gndep)
 #endif
 

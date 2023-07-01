@@ -1699,8 +1699,6 @@ MODULE MOD_Urban_Flux
               o3coefv ,o3coefg ,&
               rb(3)/lai,raw    ,rstfac ,cint(:),&
               assim   ,respc   ,rs     &
-!WUE diagnostic varialbes              
-              ,assim_RuBP,assim_Rubisco,ci,vpd,gammas&
               )
         ELSE
            rs = 2.e4; assim = 0.; respc = 0.

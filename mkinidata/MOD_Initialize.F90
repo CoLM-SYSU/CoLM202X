@@ -66,7 +66,7 @@ MODULE MOD_Initialize
       use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      USE MOD_SoilFunction
+      USE MOD_Hydro_SoilFunction
 #endif
       USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW

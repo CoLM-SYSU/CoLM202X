@@ -258,6 +258,8 @@ MODULE MOD_Namelist
    LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
    !Semi-Analytic-Spin-Up
    LOGICAL            :: DEF_USE_SASU = .false.
+   !Punctuated nitrogen addition Spin up
+   LOGICAL            :: DEF_USE_PN   = .false.
    !Fertilisation on crop
    LOGICAL            :: DEF_USE_FERT = .true.
    !Nitrification and denitrification switch
@@ -266,8 +268,6 @@ MODULE MOD_Namelist
    LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
    !Fire module
    LOGICAL            :: DEF_USE_FIRE = .false.
-   !WUE diagnostics
-   LOGICAL            :: DEF_USE_WUEDIAG = .false.
 
 
    ! ----- history variables -----
@@ -356,6 +356,10 @@ MODULE MOD_Namelist
       LOGICAL :: t_roof       = .true.
       LOGICAL :: t_wall       = .true.
 #endif
+      LOGICAL :: assimsun        = .true. !1
+      LOGICAL :: assimsha        = .true. !1
+      LOGICAL :: etrsun        = .true. !1
+      LOGICAL :: etrsha        = .true. !1
 #ifdef BGC
       LOGICAL :: leafc              = .true.
       LOGICAL :: leafc_storage      = .true.
@@ -436,26 +440,6 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3arcgrass   = .false. !12
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
-!WUE diagnostic variables      
-#ifdef LULC_IGBP_PFT
-      LOGICAL :: assim_RuBP_sun        = .true. !1
-      LOGICAL :: assim_RuBP_sha        = .true. !1
-      LOGICAL :: assim_Rubisco_sun        = .true. !1
-      LOGICAL :: assim_Rubisco_sha        = .true. !1
-      LOGICAL :: assimsun        = .true. !1
-      LOGICAL :: assimsha        = .true. !1
-      LOGICAL :: etrsun        = .true. !1
-      LOGICAL :: etrsha        = .true. !1
-      LOGICAL :: cisun        = .true. !1
-      LOGICAL :: cisha        = .true. !1
-      LOGICAL :: Dsun        = .true. !1
-      LOGICAL :: Dsha        = .true. !1
-      LOGICAL :: gammasun        = .true. !1
-      LOGICAL :: gammasha        = .true. !1
-      LOGICAL :: lambdasun        = .true.
-      LOGICAL :: lambdasha        = .true.
-      LOGICAL :: lambda                   = .true.
-#endif
 #ifdef CROP
       LOGICAL :: cphase             = .true.
       LOGICAL :: gddmaturity        = .true.
@@ -691,11 +675,11 @@ CONTAINS
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
          DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_NITRIF,                  &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_CNSOYFIXN,               &   !add by Xingjie Lu @ sysu 2023/06/27
          DEF_USE_FIRE,                    &   !add by Xingjie Lu @ sysu 2023/06/27
-         DEF_USE_WUEDIAG,                 &   !add by Xingjie Lu @ sysu 2023/06/28
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
@@ -810,8 +794,13 @@ CONTAINS
 #ifndef BGC
         IF(DEF_USE_SASU)then
            DEF_USE_SASU = .false.
-           write(*,*) 'Warning: Semi-Analytic Spin-up is off when BGC is off.'
+           write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
            write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
+        ENDIF
+        IF(DEF_USE_PN)then
+           DEF_USE_PN = .false.
+           write(*,*) 'Warning: Punctuated nitrogen addition spin up is on when BGC is off.'
+           write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off'
         ENDIF
 #endif
 
@@ -1000,11 +989,11 @@ CONTAINS
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_SASU, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_PN, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_FERT, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_NITRIF, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_CNSOYFIXN, 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_FIRE, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_WUEDIAG, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1268,27 +1257,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
-      if(DEF_USE_WUEDIAG)then
-#ifdef LULC_IGBP_PFT
-         CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha        ,  set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
          CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%cisun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%cisha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%Dsun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%Dsha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%gammasun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%gammasha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%lambdasun        ,  set_defaults) !1
-         CALL sync_hist_vars_one (DEF_hist_vars%lambdasha        ,  set_defaults) !1
-         CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
-#endif
-      end if
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)

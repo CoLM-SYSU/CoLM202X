@@ -100,9 +100,11 @@
 
     call SoilBiogeochemCompetition(i,deltim,nl_soil,dz_soi)
     call calc_plant_nutrient_competition_CLM45_default(i,ps,pe,npcropmin)
+#ifdef CROP
     if(DEF_USE_CNSOYFIXN)then
        call CNSoyfix (i, ps, pe, nl_soil)
     end if
+#endif
   
     call SoilBiogeochemDecomp(i,nl_soil,ndecomp_pools,ndecomp_transitions, dz_soi)
     call CNPhenology(i,ps,pe,nl_soil,idate(1:3),dz_soi,deltim,dlat,npcropmin,phase=1)

@@ -17,7 +17,7 @@
 #undef URBAN_LCZ
 
 ! 3. If defined, debug information is output.
-#undef CoLMDEBUG
+#define CoLMDEBUG
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
 #undef SrfdataDiag
 

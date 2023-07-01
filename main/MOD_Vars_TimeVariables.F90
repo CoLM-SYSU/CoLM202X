@@ -720,24 +720,10 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: gssha_out    (:) ! stomata conductance on shaded leaf
      real(r8), allocatable :: t_grnd       (:) ! ground surface temperature [K]
 
-!WUE diagnostic variables     
-     real(r8), allocatable :: assim_RuBP_sun_out   (:) !1
-     real(r8), allocatable :: assim_RuBP_sha_out   (:) !1
-     real(r8), allocatable :: assim_Rubisco_sun_out(:) !1
-     real(r8), allocatable :: assim_Rubisco_sha_out(:) !1
      real(r8), allocatable :: assimsun_out         (:) !1
      real(r8), allocatable :: assimsha_out         (:) !1
      real(r8), allocatable :: etrsun_out           (:) !1
      real(r8), allocatable :: etrsha_out           (:) !1
-     real(r8), allocatable :: cisun_out            (:) !1
-     real(r8), allocatable :: cisha_out            (:) !1
-     real(r8), allocatable :: Dsun_out             (:) !1
-     real(r8), allocatable :: Dsha_out             (:) !1
-     real(r8), allocatable :: gammasun_out         (:) !1
-     real(r8), allocatable :: gammasha_out         (:) !1
-     real(r8), allocatable :: lambdasun_out        (:)
-     real(r8), allocatable :: lambdasha_out        (:)
-     real(r8), allocatable :: lambda_out           (:)
 
      real(r8), allocatable :: tleaf        (:) ! leaf temperature [K]
      real(r8), allocatable :: ldew         (:) ! depth of water on foliage [mm]
@@ -858,24 +844,10 @@ MODULE MOD_Vars_TimeVariables
            allocate (rstfacsha_out               (numpatch))
            allocate (gssun_out                   (numpatch))
            allocate (gssha_out                   (numpatch))
-!WUE diagnostic variables
-           allocate (assim_RuBP_sun_out          (numpatch))
-           allocate (assim_RuBP_sha_out          (numpatch))
-           allocate (assim_Rubisco_sun_out       (numpatch))
-           allocate (assim_Rubisco_sha_out       (numpatch))
            allocate (assimsun_out                (numpatch))
            allocate (assimsha_out                (numpatch))
            allocate (etrsun_out                  (numpatch))
            allocate (etrsha_out                  (numpatch))
-           allocate (cisun_out                   (numpatch))
-           allocate (cisha_out                   (numpatch))
-           allocate (Dsun_out                    (numpatch))
-           allocate (Dsha_out                    (numpatch))
-           allocate (gammasun_out                (numpatch))
-           allocate (gammasha_out                (numpatch))
-           allocate (lambdasun_out               (numpatch))
-           allocate (lambdasha_out               (numpatch))
-           allocate (lambda_out                  (numpatch))
 
            allocate (t_grnd                      (numpatch))
            allocate (tleaf                       (numpatch))
@@ -1006,24 +978,10 @@ MODULE MOD_Vars_TimeVariables
            deallocate (rstfacsha_out          )
            deallocate (gssun_out              )
            deallocate (gssha_out              )
-!WUE diagnostic variables
-           deallocate ( assim_RuBP_sun_out    )
-           deallocate ( assim_RuBP_sha_out    )
-           deallocate ( assim_Rubisco_sun_out )
-           deallocate ( assim_Rubisco_sha_out )
            deallocate ( assimsun_out          )
            deallocate ( assimsha_out          )
            deallocate ( etrsun_out            )
            deallocate ( etrsha_out            )
-           deallocate ( cisun_out             )
-           deallocate ( cisha_out             )
-           deallocate ( Dsun_out              )
-           deallocate ( Dsha_out              )
-           deallocate ( gammasun_out          )
-           deallocate ( gammasha_out          )
-           deallocate ( lambdasun_out         )
-           deallocate ( lambdasha_out         )
-           deallocate ( lambda_out            )
 
            deallocate (t_grnd                 )
            deallocate (tleaf                  )

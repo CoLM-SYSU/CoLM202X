@@ -1089,6 +1089,7 @@ SAVE
 
      use MOD_SPMD_Task
      use MOD_CoLMDebug
+     use MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU
 
      IMPLICIT NONE
 

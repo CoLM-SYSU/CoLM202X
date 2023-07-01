@@ -52,6 +52,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_wat    (:)
    real(r8), allocatable :: a_assim  (:)
    real(r8), allocatable :: a_respc  (:)
+   real(r8), allocatable :: a_assimsun   (:) !1
+   real(r8), allocatable :: a_assimsha   (:) !1
+   real(r8), allocatable :: a_etrsun     (:) !1
+   real(r8), allocatable :: a_etrsha     (:) !1
 
    real(r8), allocatable :: a_qcharge(:)
 
@@ -106,6 +110,7 @@ module MOD_Vars_1DAccFluxes
    REAL(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
    REAL(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
 #endif
+
 
 #ifdef BGC
    real(r8), allocatable :: a_leafc              (:)
@@ -187,26 +192,6 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
-! WUE diagnostic variables   
-#ifdef LULC_IGBP_PFT
-   real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
-   real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sha        (:) !1
-   real(r8), allocatable :: a_assimsun        (:) !1
-   real(r8), allocatable :: a_assimsha        (:) !1
-   real(r8), allocatable :: a_etrsun        (:) !1
-   real(r8), allocatable :: a_etrsha        (:) !1
-   real(r8), allocatable :: a_cisun        (:) !1
-   real(r8), allocatable :: a_cisha        (:) !1
-   real(r8), allocatable :: a_Dsun        (:) !1
-   real(r8), allocatable :: a_Dsha        (:) !1
-   real(r8), allocatable :: a_gammasun        (:) !1
-   real(r8), allocatable :: a_gammasha        (:) !1
-   real(r8), allocatable :: a_lambdasun        (:) !1
-   real(r8), allocatable :: a_lambdasha        (:) !1
-   real(r8), allocatable :: a_lambda                   (:) !14
-#endif
    real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
    real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
 #ifdef CROP
@@ -379,26 +364,10 @@ contains
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
-! WUE diagnostic variables            
-#ifdef LULC_IGBP_PFT
-            allocate (a_assim_RuBP_sun        (numpatch)) !1
-            allocate (a_assim_RuBP_sha        (numpatch)) !1
-            allocate (a_assim_Rubisco_sun        (numpatch)) !1
-            allocate (a_assim_Rubisco_sha        (numpatch)) !1
             allocate (a_assimsun        (numpatch)) !1
             allocate (a_assimsha        (numpatch)) !1
             allocate (a_etrsun        (numpatch)) !1
             allocate (a_etrsha        (numpatch)) !1
-            allocate (a_cisun        (numpatch)) !1
-            allocate (a_cisha        (numpatch)) !1
-            allocate (a_Dsun        (numpatch)) !1
-            allocate (a_Dsha        (numpatch)) !1
-            allocate (a_gammasun        (numpatch)) !1
-            allocate (a_gammasha        (numpatch)) !1
-            allocate (a_lambdasun        (numpatch)) !1
-            allocate (a_lambdasha        (numpatch)) !1
-            allocate (a_lambda                   (numpatch)) !1
-#endif
 
             allocate (a_qcharge   (numpatch))
 
@@ -708,6 +677,11 @@ contains
             deallocate (a_assim     )
             deallocate (a_respc     )
 
+            deallocate (a_assimsun        ) !1
+            deallocate (a_assimsha        ) !1
+            deallocate (a_etrsun        ) !1
+            deallocate (a_etrsha        ) !1
+
             deallocate (a_qcharge   )
 
             deallocate (a_t_grnd    )
@@ -843,26 +817,6 @@ contains
             deallocate (a_leafc_c3arcgrass   ) !12
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
-! WUE diagnostic variables
-#ifdef LULC_IGBP_PFT
-            deallocate (a_assim_RuBP_sun        ) !1
-            deallocate (a_assim_RuBP_sha        ) !1
-            deallocate (a_assim_Rubisco_sun        ) !1
-            deallocate (a_assim_Rubisco_sha        ) !1
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
-            deallocate (a_cisun        ) !1
-            deallocate (a_cisha        ) !1
-            deallocate (a_Dsun        ) !1
-            deallocate (a_Dsha        ) !1
-            deallocate (a_gammasun        ) !1
-            deallocate (a_gammasha        ) !1
-            deallocate (a_lambdasun        ) !1
-            deallocate (a_lambdasha        ) !1
-            deallocate (a_lambda                   ) !1
-#endif
 
             deallocate (a_O2_DECOMP_DEPTH_UNSAT )
             deallocate (a_CONC_O2_UNSAT         )
@@ -1042,6 +996,10 @@ contains
             a_wat     (:) = spval
             a_assim   (:) = spval
             a_respc   (:) = spval
+            a_assimsun(:) = spval !1
+            a_assimsha(:) = spval !1
+            a_etrsun  (:) = spval !1
+            a_etrsha  (:) = spval !1
 
             a_qcharge (:) = spval
 
@@ -1179,26 +1137,6 @@ contains
             a_leafc_c3arcgrass   (:) = spval
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
-! WUE diagnostic variables            
-#ifdef LULC_IGBP_PFT
-            a_assim_RuBP_sun        (:) = spval !1
-            a_assim_RuBP_sha        (:) = spval !1
-            a_assim_Rubisco_sun        (:) = spval !1
-            a_assim_Rubisco_sha        (:) = spval !1
-            a_assimsun        (:) = spval !1
-            a_assimsha        (:) = spval !1
-            a_etrsun        (:) = spval !1
-            a_etrsha        (:) = spval !1
-            a_cisun        (:) = spval !1
-            a_cisha        (:) = spval !1
-            a_Dsun        (:) = spval !1
-            a_Dsha        (:) = spval !1
-            a_gammasun        (:) = spval !1
-            a_gammasha        (:) = spval !1
-            a_lambdasun        (:) = spval  !1
-            a_lambdasha        (:) = spval  !1
-            a_lambda                   (:) = spval  !1
-#endif
 
             a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
             a_CONC_O2_UNSAT         (:,:) = spval
@@ -1427,6 +1365,10 @@ contains
             call acc1d (wat    , a_wat    )
             call acc1d (assim  , a_assim  )
             call acc1d (respc  , a_respc  )
+            call acc1d (assimsun_out  , a_assimsun      )
+            call acc1d (assimsha_out  , a_assimsha      )
+            call acc1d (etrsun_out    , a_etrsun        )
+            call acc1d (etrsha_out    , a_etrsha        )
 
             call acc1d (qcharge, a_qcharge)
 
@@ -1572,27 +1514,6 @@ contains
             call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
-            if(DEF_USE_WUEDIAG)then
-#ifdef LULC_IGBP_PFT
-               call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
-               call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
-               call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )
-               call acc1d (assim_Rubisco_sha_out    , a_assim_Rubisco_sha        )
-               call acc1d (assimsun_out    , a_assimsun        )
-               call acc1d (assimsha_out    , a_assimsha        )
-               call acc1d (etrsun_out    , a_etrsun        )
-               call acc1d (etrsha_out    , a_etrsha        )
-               call acc1d (cisun_out    , a_cisun        )
-               call acc1d (cisha_out    , a_cisha        )
-               call acc1d (Dsun_out    , a_Dsun        )
-               call acc1d (Dsha_out    , a_Dsha        )
-               call acc1d (gammasun_out    , a_gammasun        )
-               call acc1d (gammasha_out    , a_gammasha        )
-               call acc1d (lambdasun_out    , a_lambdasun        )
-               call acc1d (lambdasha_out    , a_lambdasha        )
-               call acc1d (lambda_out               , a_lambda           )        
-#endif
-            end if
             if(DEF_USE_NITRIF)then
                call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
                call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
