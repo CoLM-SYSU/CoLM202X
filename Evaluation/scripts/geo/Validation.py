@@ -48,8 +48,8 @@ class Validation:
                 if variable_value=='QSOIL':
                     s=s*86400
                 if (variable_value == 'H2OSOI') and (key == 'SMsurf'):
-                    s=s[:,0,:,:]
-
+                    s=s[:,0,:,:].squeeze()
+                    
                 s['time']=o['time']
 
                 mask1 = np.isnan(s) | np.isnan(o)
