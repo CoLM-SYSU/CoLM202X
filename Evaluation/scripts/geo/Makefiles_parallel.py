@@ -78,6 +78,7 @@ class Makefiles_parallel:
                 VarFiles=(f'{self.OBSDIR}/{self.Obs_Suffix}{ii}*{self.Obs_Prefix}.nc')
                 obsx0= xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
                                    preprocess=lambda obsx: obsx[f'{key}'].astype('float32'))
+            obsx0['lon'] = xr.where(obsx0.lon > 180, obsx0.lon - 360, obsx0.lon)
 
             lon_new = xr.DataArray(
                 data=np.arange(self.Min_lon+self.res/2, self.Max_lon, self.res),
@@ -184,7 +185,7 @@ class Makefiles_parallel:
             VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}*{self.Sim_Prefix}.nc')
             simx0=xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
                                    preprocess=lambda simx0: simx0[list(self.variables.values())].astype('float32'))
-
+        simx0['lon'] = xr.where(simx0.lon > 180, simx0.lon - 360, simx0.lon)
         lon_new = xr.DataArray(
                 data=np.arange(self.Min_lon+self.res/2, self.Max_lon, self.res),
                 dims=('lon',),

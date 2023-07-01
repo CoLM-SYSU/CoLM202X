@@ -48,8 +48,8 @@ class Validation:
                 if variable_value=='QSOIL':
                     s=s*86400
                 if (variable_value == 'H2OSOI') and (key == 'SMsurf'):
-                    s=s[:,0,:,:]
-
+                    s=s[:,0,:,:].squeeze()
+                    
                 s['time']=o['time']
 
                 mask1 = np.isnan(s) | np.isnan(o)
@@ -69,7 +69,7 @@ class Validation:
                         pb_da.to_netcdf(f'{self.casedir}/output/{key}_{metric}.nc')
 
                     elif metric == 'RMSE':
-                        pb=pp2.RMSE(s,o)
+                        pb=pp2.rmse(s,o)
                         pb_da = xr.DataArray(pb, coords=[o.lat, o.lon], dims=['lat', 'lon'], name='RMSE')
                         pb_da.to_netcdf(f'{self.casedir}/output/{key}_{metric}.nc')
 
