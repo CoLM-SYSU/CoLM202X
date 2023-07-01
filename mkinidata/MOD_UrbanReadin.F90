@@ -199,10 +199,10 @@ MODULE MOD_UrbanReadin
                fgper(u) = 1.
             ENDIF
 
-         IF ( .not. DEF_URBAN_BEM) THEN
-            t_roommax(u) = 373.16
-            t_roommin(u) = 180.00
-         ENDIF
+            IF ( .not. DEF_URBAN_BEM) THEN
+               t_roommax(u) = 373.16
+               t_roommin(u) = 180.00
+            ENDIF
 #else
             ! read in LCZ constants
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance

@@ -4,7 +4,8 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
-  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR
+  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR, &
+                          DEF_URBAN_RUN
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -77,7 +78,7 @@ MODULE MOD_SoilSnowHydrology
 
   integer, INTENT(in) :: &
         lb               , &! lower bound of array
-        nl_soil            ! upper bound of array
+        nl_soil             ! upper bound of array
 
   real(r8), INTENT(in) :: &
         deltim           , &! time step (s)
@@ -1490,7 +1491,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     IMPLICIT NONE
 
-    INTEGER , intent(in) :: patchtype !land water type
+    INTEGER , intent(in) :: patchtype ! land water type
     integer , INTENT(in) :: nl_soil   ! number of soil layers
     real(r8), INTENT(in) :: deltim    ! land model time step (sec)
     real(r8), INTENT(in) :: wimp      ! water impremeable if porosity less than wimp
@@ -1579,50 +1580,27 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     ! Compute matric potential and derivative based on liquid water content only
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS)then
-          IF (patchtype /= 1) THEN
-            if(t_soisno(j)>=tfrz) then
-               if(porsl(j)<1.e-6)then     ! bed rock
-                  s_node = 0.001
-                  smp(j) = psi0(j)
-                  dsmpdw(j) = 0.
-               else
-                  s_node = max(vol_liq(j)/porsl(j),0.01)
-                  s_node = min(1.0,s_node)
-                  smp(j) = psi0(j)*s_node**(-bsw(j))
-                  smp(j) = max(smpmin,smp(j))
-                  dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
-               endif
-            else
-               ! when ice is present, the matric potential is only related to temperature
-               ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
-               ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
-               smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
-               smp(j) = max(smpmin, smp(j))        ! Limit soil suction
-               dsmpdw(j) = 0.
-            endif
-          ELSE
-            if (t_soisno(j)>tfrz) then
-               if (porsl(j)<1.e-6) then     ! bed rock
-                  s_node = 0.001
-                  smp(j) = psi0(j)
-                  dsmpdw(j) = 0.
-               else
-                  s_node = max(vol_liq(j)/porsl(j),0.01)
-                  s_node = min(1.0,s_node)
-                  smp(j) = psi0(j)*s_node**(-bsw(j))
-                  smp(j) = max(smpmin,smp(j))
-                  dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
-               endif
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+          if(t_soisno(j)>=tfrz) then
+             if(porsl(j)<1.e-6)then     ! bed rock
+                s_node = 0.001
+                smp(j) = psi0(j)
+                dsmpdw(j) = 0.
              else
-               ! when ice is present, the matric potential is only related to temperature
-               ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
-               ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
-               smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
-               smp(j) = max(smpmin, smp(j))        ! Limit soil suction
-               dsmpdw(j) = 0.
-            endif
-          ENDIF
+                s_node = max(vol_liq(j)/porsl(j),0.01)
+                s_node = min(1.0,s_node)
+                smp(j) = psi0(j)*s_node**(-bsw(j))
+                smp(j) = max(smpmin,smp(j))
+                dsmpdw(j) = -bsw(j)*smp(j)/(s_node*porsl(j))
+             endif
+          else
+             ! when ice is present, the matric potential is only related to temperature
+             ! by (Fuchs et al., 1978: Soil Sci. Soc. Amer. J. 42(3):379-385)
+             ! Unit 1 Joule = 1 (kg m2/s2), J/kg /(m/s2) ==> m ==> 1e3 mm
+             smp(j) = 1.e3 * 0.3336e6/9.80616*(t_soisno(j)-tfrz)/t_soisno(j)
+             smp(j) = max(smpmin, smp(j))        ! Limit soil suction
+             dsmpdw(j) = 0.
+          endif
        else
           if(t_soisno(j)>tfrz) then
              if(porsl(j)<1.e-6)then     ! bed rock
@@ -1718,12 +1696,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = 0.
     bmx(j) = dzmm(j)/deltim + dqodw1(j)
     cmx(j) = dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS)then
-       IF (patchtype /= 1) THEN
-          rmx(j) =  qin(j) - qout(j) - rootr(j)
-       ELSE
-          rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-       ENDIF
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+       rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
     end if
@@ -1742,12 +1716,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
        amx(j) = -dqidw0(j)
        bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
        cmx(j) =  dqodw2(j)
-       if(DEF_USE_PLANTHYDRAULICS)then
-          IF (patchtype /= 1) THEN
-             rmx(j) =  qin(j) - qout(j) - rootr(j)
-          ELSE
-             rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-          ENDIF
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+          rmx(j) =  qin(j) - qout(j) - rootr(j)
        else
           rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
        end if
@@ -1773,12 +1743,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = -dqidw0(j)
     bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
     cmx(j) =  dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS)then
-       IF (patchtype /= 1) THEN
-          rmx(j) =  qin(j) - qout(j) - rootr(j)
-       ELSE
-          rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
-       ENDIF
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+       rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
     end if
@@ -1791,12 +1757,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! The mass balance error (mm) for this time step is
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS)then
-          IF (patchtype /= 1) THEN
-             errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
-          ELSE
-             errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
-          ENDIF
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
+          errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
        else
           errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
        end if
