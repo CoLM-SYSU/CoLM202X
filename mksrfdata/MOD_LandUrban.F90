@@ -105,7 +105,7 @@ CONTAINS
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         write(cyear,'(i4.4)') lc_year
+         write(cyear,'(i4.4)') int(lc_year/5)*5
          suffix = 'URB'//trim(cyear)
 #ifdef URBAN_LCZ
          CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)

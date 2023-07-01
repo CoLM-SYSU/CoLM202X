@@ -107,9 +107,9 @@ MODULE MOD_Namelist
 
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
-   LOGICAL :: DEF_LAI_CHANGE_YEARLY = .TRUE.
+   LOGICAL :: DEF_LAI_CHANGE_YEARLY = .true.
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
-   LOGICAL :: DEF_USE_LAIFEEDBACK = .TRUE.
+   LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
 
    ! 06/2023, add by hua yuan and wenzong dong
    ! ------ Land use and land cover (LULC) related -------
@@ -157,7 +157,15 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_BEDROCK                 = .false.
    LOGICAL :: DEF_USE_OZONESTRESS             = .false.
    LOGICAL :: DEF_USE_OZONEDATA               = .false.
-   logical :: DEF_USE_SNICAR                  = .false.
+
+   ! .true. for running SNICAR model
+   logical :: DEF_USE_SNICAR                  = .true.
+
+   ! .true. read aerosol deposition data from file or .false. set in the code
+   logical :: DEF_Aerosol_Readin              = .true.
+
+   ! .true. Read aerosol deposition climatology data or .false. yearly changed
+   logical :: DEF_Aerosol_Clim                = .false.
 
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
@@ -688,6 +696,8 @@ CONTAINS
          DEF_USE_OZONESTRESS,             &
          DEF_USE_OZONEDATA,               &
          DEF_USE_SNICAR,                  &
+         DEF_Aerosol_Readin,              &
+         DEF_Aerosol_Clim,                &
 
          DEF_precip_phase_discrimination_scheme, &
 
@@ -776,98 +786,102 @@ CONTAINS
 #endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-        IF (.not.DEF_LAI_MONTHLY) THEN
-           write(*,*) 'Warning: 8-day LAI data is not supported for '
-           write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
-           write(*,*) 'Changed to monthly data.'
-           DEF_LAI_MONTHLY = .true.
-        ENDIF
+         IF (.not.DEF_LAI_MONTHLY) THEN
+            write(*,*) 'Warning: 8-day LAI data is not supported for '
+            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
+            write(*,*) 'Changed to monthly data.'
+            DEF_LAI_MONTHLY = .true.
+         ENDIF
 #endif
 
 #ifndef BGC
-        IF(DEF_USE_LAIFEEDBACK)then
-           DEF_USE_LAIFEEDBACK = .false.
-           write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
-           write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
-        ENDIF
+         IF(DEF_USE_LAIFEEDBACK)then
+            DEF_USE_LAIFEEDBACK = .false.
+            write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
+            write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
+         ENDIF
 #endif
 #ifndef BGC
-        IF(DEF_USE_SASU)then
-           DEF_USE_SASU = .false.
-           write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
-           write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
-        ENDIF
-        IF(DEF_USE_PN)then
-           DEF_USE_PN = .false.
-           write(*,*) 'Warning: Punctuated nitrogen addition spin up is on when BGC is off.'
-           write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off'
-        ENDIF
+         IF(DEF_USE_SASU)then
+            DEF_USE_SASU = .false.
+            write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
+            write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
+         ENDIF
+         IF(DEF_USE_PN)then
+            DEF_USE_PN = .false.
+            write(*,*) 'Warning: Punctuated nitrogen addition spin up is on when BGC is off.'
+            write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off'
+         ENDIF
 #endif
 
 #ifndef CROP
-        IF(DEF_USE_FERT)then
-           DEF_USE_FERT = .false.
-           write(*,*) 'Warning: Fertilization is on when CROP is off.'
-           write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off'
-        ENDIF
+         IF(DEF_USE_FERT)then
+            DEF_USE_FERT = .false.
+            write(*,*) 'Warning: Fertilization is on when CROP is off.'
+            write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off'
+         ENDIF
 #endif
 
 #ifndef BGC
-        IF(DEF_USE_NITRIF)then
-           DEF_USE_NITRIF = .false.
-           write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
-           write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off'
-        ENDIF
+         IF(DEF_USE_NITRIF)then
+            DEF_USE_NITRIF = .false.
+            write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
+            write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off'
+         ENDIF
 #endif
 
 #ifndef CROP
-        IF(DEF_USE_CNSOYFIXN)then
-           DEF_USE_CNSOYFIXN = .false.
-           write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
-           write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off'
-        ENDIF
+         IF(DEF_USE_CNSOYFIXN)then
+            DEF_USE_CNSOYFIXN = .false.
+            write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
+            write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off'
+         ENDIF
 #endif
 
 #ifndef BGC
-        IF(DEF_USE_FIRE)then
-           DEF_USE_FIRE = .false.
-           write(*,*) 'Warning: Fire model is on when BGC is off.'
-           write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off'
-        ENDIF
+         IF(DEF_USE_FIRE)then
+            DEF_USE_FIRE = .false.
+            write(*,*) 'Warning: Fire model is on when BGC is off.'
+            write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off'
+         ENDIF
 #endif
-        IF(.not. DEF_USE_OZONESTRESS)then
-           IF(DEF_USE_OZONEDATA)then
-              DEF_USE_OZONEDATA = .false.
-              write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
-              write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
-           ENDIF
-        ENDIF
-        DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
-        DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+         IF(.not. DEF_USE_OZONESTRESS)then
+            IF(DEF_USE_OZONEDATA)then
+               DEF_USE_OZONEDATA = .false.
+               write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
+               write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
+            ENDIF
+         ENDIF
 
+! ----- SNICAR model ------
+
+         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+
+         IF (.not. DEF_USE_SNICAR) THEN
+            IF (DEF_Aerosol_Readin) THEN
+               DEF_Aerosol_Readin = .false.
+               write(*,*) 'Warning: DEF_Aerosol_Readin is not needed for DEF_USE_SNICAR off. '
+               write(*,*) 'DEF_Aerosol_Readin is set to false automatically.'
+            ENDIF
+         ENDIF
 
 ! ----- Urban model conflicts and dependency management -----
 #ifdef URBAN_MODEL
-        DEF_URBAN_RUN = .true.
+         DEF_URBAN_RUN = .true.
 
-        IF (DEF_USE_SNICAR) THEN
-           write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
-           write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
-           DEF_USE_SNICAR = .false.
-        ENDIF
-
-        IF (DEF_USE_PLANTHYDRAULICS) THEN
-           write(*,*) 'Warning: PLANTHYDRAULICS is not well supported for URBAN model. '
-           write(*,*) 'DEF_USE_PLANTHYDRAULICS is set to false automatically.'
-           DEF_USE_PLANTHYDRAULICS = .false.
-        ENDIF
+         IF (DEF_USE_SNICAR) THEN
+            write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
+            write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
+            DEF_USE_SNICAR = .false.
+         ENDIF
 #else
-        IF (DEF_URBAN_RUN) then
-           write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '
-           write(*,*) 'please #define URBAN_MODEL in define.h. otherwise DEF_URBAN_RUN will '
-           write(*,*) 'be set to false automatically.'
-           DEF_URBAN_RUN = .true.
-        ENDIF
+         IF (DEF_URBAN_RUN) then
+            write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '
+            write(*,*) 'please #define URBAN_MODEL in define.h. otherwise DEF_URBAN_RUN will '
+            write(*,*) 'be set to false automatically.'
+            DEF_URBAN_RUN = .false.
+         ENDIF
 #endif
 
 
@@ -875,22 +889,22 @@ CONTAINS
 #ifdef LULCC
 
 #if (defined LULC_USGS || defined BGC)
-        write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS|BGC at present. STOP! '
-        STOP
+         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS|BGC at present. STOP! '
+         STOP
 #endif
-        IF (.not.DEF_LAI_MONTHLY) THEN
-           write(*,*) 'Note: When LULCC is opened, DEF_LAI_MONTHLY '
-           write(*,*) 'will be set to true automatically.'
-           DEF_LAI_MONTHLY = .true.
-        ENDIF
+         IF (.not.DEF_LAI_MONTHLY) THEN
+            write(*,*) 'Note: When LULCC is opened, DEF_LAI_MONTHLY '
+            write(*,*) 'will be set to true automatically.'
+            DEF_LAI_MONTHLY = .true.
+         ENDIF
 
-        IF (.not.DEF_LAI_CHANGE_YEARLY) THEN
-           write(*,*) 'Note: When LULCC is opened, DEF_LAI_CHANGE_YEARLY '
-           write(*,*) 'will be set to true automatically.'
-           DEF_LAI_CHANGE_YEARLY = .true.
-        ENDIF
+         IF (.not.DEF_LAI_CHANGE_YEARLY) THEN
+            write(*,*) 'Note: When LULCC is opened, DEF_LAI_CHANGE_YEARLY '
+            write(*,*) 'will be set to true automatically.'
+            DEF_LAI_CHANGE_YEARLY = .true.
+         ENDIF
 #else
-        !TODO: Complement IF needed
+         !TODO: Complement IF needed
 
 #endif
 
@@ -1010,8 +1024,12 @@ CONTAINS
       call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
+      call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 

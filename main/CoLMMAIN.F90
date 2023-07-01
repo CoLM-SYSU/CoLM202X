@@ -44,6 +44,8 @@ SUBROUTINE CoLMMAIN ( &
            forc_rhoair,                                             &
            ! cbl forcing
            forc_hpbl,                                               &
+           ! aerosol deposition
+           forc_aerdep,                                             &
 
          ! land surface variables required for restart
            z_sno,        dz_sno,       t_soisno,     wliq_soisno,   &
@@ -291,8 +293,10 @@ SUBROUTINE CoLMMAIN ( &
         forc_hgt_u  ,&! observational height of wind [m]
         forc_hgt_t  ,&! observational height of temperature [m]
         forc_hgt_q  ,&! observational height of humidity [m]
+        forc_rhoair ,&! density air [kg/m3]
         forc_hpbl   ,&! atmospheric boundary layer height [m]
-        forc_rhoair   ! density air [kg/m3]
+        forc_aerdep(14)!atmospheric aerosol deposition data [kg/m/s]
+
 #if(defined CaMa_Flood)
    REAL(r8), intent(in)    :: fldfrc    !inundation fraction--> allow re-evaporation and infiltrition![0-1]
    REAL(r8), intent(inout) :: flddepth  !inundation depth--> allow re-evaporation and infiltrition![mm]
@@ -534,15 +538,26 @@ SUBROUTINE CoLMMAIN ( &
       dz_soisno(maxsnl+1:0) = dz_sno(maxsnl+1:0)
       dz_soisno(1:nl_soil ) = dz_soi(1:nl_soil )
 
+
+      ! SNICAR initialization
+      ! ---------------------
+
+      ! snow freezing rate (col,lyr) [kg m-2 s-1]
+      snofrz(:) = 0.
+
+      ! aerosol deposition value
+      IF (DEF_Aerosol_Readin) THEN
+         forc_aer(:) = forc_aerdep   ! read from outside forcing file
+      ELSE
+         forc_aer(:) = 4.2E-7        ! manual setting
+         !forc_aer(:) = 0.
+      ENDIF
+
+
 !======================================================================
 !  [1] Solar absorbed by vegetation and ground
 !      and precipitation information (rain/snow fall and precip temperature
 !======================================================================
-
-      ! SNICAR
-      snofrz(:)   = 0.        !snow freezing rate (col,lyr) [kg m-2 s-1]
-      forc_aer(:) = 4.2E-7    !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-      !forc_aer(:) = 0.       !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&

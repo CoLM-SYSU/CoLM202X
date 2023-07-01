@@ -99,12 +99,14 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
       ! ATMOSPHERIC FORCING
         forc_pco2m(i),   forc_po2m(i),    forc_us(i),      forc_vs(i),      &
         forc_t(i),       forc_q(i),       forc_prc(i),     forc_prl(i),     &
-        forc_rain(i), forc_snow(i), forc_psrf(i), forc_pbot(i), &
+        forc_rain(i),    forc_snow(i),    forc_psrf(i),    forc_pbot(i),    &
         forc_sols(i),    forc_soll(i),    forc_solsd(i),   forc_solld(i),   &
         forc_frl(i),     forc_hgt_u(i),   forc_hgt_t(i),   forc_hgt_q(i),   &
         forc_rhoair(i),                                                     &
       ! CBL height forcing
         forc_hpbl(i),                                                       &
+      ! Aerosol deposition
+        forc_aerdep(:,i),                                                   &
 
       ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
         z_sno(maxsnl+1:,i),               dz_sno(maxsnl+1:,i),              &

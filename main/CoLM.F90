@@ -88,7 +88,8 @@ PROGRAM CoLM
 #endif
 
    ! SNICAR
-   USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
+   USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
+   USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
 
    IMPLICIT NONE
 
@@ -117,8 +118,9 @@ PROGRAM CoLM
    integer :: s_year, s_month, s_day, s_seconds, s_julian
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
-   INTEGER :: month, mday, month_p, mday_p
-   INTEGER :: spinup_repeat, lc_year, lai_year
+   integer :: lc_year, lai_year
+   integer :: month, mday, month_p, mday_p
+   integer :: spinup_repeat, istep
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
@@ -273,6 +275,12 @@ PROGRAM CoLM
    IF(DEF_USE_OZONEDATA)THEN
       CALL init_Ozone_data (itstamp,sdate)
    ENDIF
+
+   ! Initialize aerosol deposition forcing data
+   IF (DEF_Aerosol_Readin) THEN
+      CALL AerosolDepInit ()
+   ENDIF
+
 #ifdef BGC
    IF(DEF_USE_FIRE)THEN
       CALL init_lightning_data (itstamp,sdate)
@@ -287,6 +295,7 @@ PROGRAM CoLM
    ! begin time stepping loop
    ! ======================================================================
 
+   istep   = 1
    idate   = sdate
    itstamp = ststamp
 
@@ -296,9 +305,9 @@ PROGRAM CoLM
 
       if (p_is_master) then
          IF (itstamp < ptstamp) THEN
-            write(*, 99) jdate(1), month_p, mday_p, jdate(3), spinup_repeat
+            write(*, 99) istep, jdate(1), month_p, mday_p, jdate(3), spinup_repeat
          ELSE
-            write(*,100) jdate(1), month_p, mday_p, jdate(3)
+            write(*,100) istep, jdate(1), month_p, mday_p, jdate(3)
          ENDIF
       end if
 
@@ -318,6 +327,11 @@ PROGRAM CoLM
          CALL update_lightning_data (itstamp, deltim)
       ENDIF
 #endif
+
+      ! Read in aerosol deposition forcing data
+      IF (DEF_Aerosol_Readin) THEN
+         CALL AerosolDepReadin (jdate)
+      ENDIF
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
@@ -352,7 +366,7 @@ PROGRAM CoLM
       ! Hua Yuan, 08/03/2019: read global monthly LAI/SAI data
       ! zhongwang wei, 20210927: add option to read non-climatological mean LAI
       ! Update every 8 days (time interval of the MODIS LAI data)
-      ! Hua Yuan, 06/2023: change namelist DEF_LAI_MONTHLY to DEF_LAI_MONTHLY
+      ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
       ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
       !
       ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
@@ -463,6 +477,8 @@ PROGRAM CoLM
          CALL forcing_reset ()
       ENDIF
 
+      istep = istep + 1
+
    END DO TIMELOOP
 
    call deallocate_TimeInvariants ()
@@ -492,8 +508,8 @@ PROGRAM CoLM
       write(*,'(/,A25)') 'CoLM Execution Completed.'
    end if
 
-   99  format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I3, ' repeat left)')
-   100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
+   99  format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I0, ' repeat left)')
+   100 format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
    101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.')
    102 format (/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
    103 format (/, 'Time elapsed : ', I3, ' seconds.')

@@ -4,7 +4,8 @@ MODULE MOD_SoilSnowHydrology
 
 !-----------------------------------------------------------------------
   use MOD_Precision
-  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR
+  use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR, &
+                          DEF_URBAN_RUN
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
@@ -41,7 +42,7 @@ MODULE MOD_SoilSnowHydrology
              ssi         ,wimp        ,smpmin      ,zwt     ,wa    ,&
              qcharge     ,errw_rsub     &
 #if(defined CaMa_Flood)
-            ,flddepth,fldfrc,qinfl_fld  & 
+            ,flddepth,fldfrc,qinfl_fld  &
 #endif
 ! SNICAR model variables
              ,forc_aer   ,&
@@ -77,7 +78,7 @@ MODULE MOD_SoilSnowHydrology
 
   integer, INTENT(in) :: &
         lb               , &! lower bound of array
-        nl_soil            ! upper bound of array
+        nl_soil             ! upper bound of array
 
   real(r8), INTENT(in) :: &
         deltim           , &! time step (s)
@@ -253,7 +254,7 @@ MODULE MOD_SoilSnowHydrology
       dzmm(1:) = dz_soisno(1:)*1000.
       zimm(0:) = zi_soisno(0:)*1000.
 
-      call soilwater(nl_soil,deltim,wimp,smpmin,&
+      call soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                      qinfl,etr,z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                      t_soisno(1:),vol_liq,vol_ice,smp,hk,icefrac,eff_porosity,&
                      porsl,hksati,bsw,psi0,rootr,&
@@ -1239,6 +1240,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     ! (cloud-borne) aerosol, and "pho" flavors are interstitial
     ! aerosol. "wet" and "dry" fluxes of BC and OC specified here are
     ! purely diagnostic
+    !
+    ! NOTE: right now the macro 'MODAL_AER' is not defined anywhere, i.e.,
+    ! the below (modal aerosol scheme) is not available and can not be
+    ! active either. It depends on the specific input aerosol deposition
+    ! data which is suitable for modal scheme. [06/15/2023, Hua Yuan]
 
     flx_bc_dep_phi   = forc_aer(3)
     flx_bc_dep_pho   = forc_aer(1) + forc_aer(2)
@@ -1408,7 +1414,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 
 
-  subroutine soilwater(nl_soil,deltim,wimp,smpmin,&
+  subroutine soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                        qinfl,etr,z_soisno,dz_soisno,zi_soisno,&
                        t_soisno,vol_liq,vol_ice,smp,hk,icefrac,eff_porosity,&
                        porsl,hksati,bsw,psi0,rootr,&
@@ -1485,13 +1491,14 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     IMPLICIT NONE
 
-    integer, INTENT(in) :: nl_soil  ! number of soil layers
-    real(r8), INTENT(in) :: deltim  ! land model time step (sec)
-    real(r8), INTENT(in) :: wimp    ! water impremeable if porosity less than wimp
-    real(r8), INTENT(in) :: smpmin  ! restriction for min of soil potential (mm)
+    INTEGER , intent(in) :: patchtype ! land water type
+    integer , INTENT(in) :: nl_soil   ! number of soil layers
+    real(r8), INTENT(in) :: deltim    ! land model time step (sec)
+    real(r8), INTENT(in) :: wimp      ! water impremeable if porosity less than wimp
+    real(r8), INTENT(in) :: smpmin    ! restriction for min of soil potential (mm)
 
-    real(r8), INTENT(in) :: qinfl   ! infiltration (mm H2O /s)
-    real(r8), INTENT(in) :: etr     ! vegetation transpiration (mm H2O/s) (+ = to atm)
+    real(r8), INTENT(in) :: qinfl     ! infiltration (mm H2O /s)
+    real(r8), INTENT(in) :: etr       ! vegetation transpiration (mm H2O/s) (+ = to atm)
 
     real(r8), INTENT(in) :: z_soisno (1:nl_soil) ! layer depth (m)
     real(r8), INTENT(in) :: dz_soisno(1:nl_soil) ! layer thickness (m)
@@ -1573,7 +1580,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
     ! Compute matric potential and derivative based on liquid water content only
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS)then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
           if(t_soisno(j)>=tfrz) then
              if(porsl(j)<1.e-6)then     ! bed rock
                 s_node = 0.001
@@ -1689,7 +1696,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = 0.
     bmx(j) = dzmm(j)/deltim + dqodw1(j)
     cmx(j) = dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS)then
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
        rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1709,7 +1716,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
        amx(j) = -dqidw0(j)
        bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
        cmx(j) =  dqodw2(j)
-       if(DEF_USE_PLANTHYDRAULICS)then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
           rmx(j) =  qin(j) - qout(j) - rootr(j)
        else
           rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1736,7 +1743,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
     amx(j) = -dqidw0(j)
     bmx(j) =  dzmm(j)/deltim - dqidw1(j) + dqodw1(j)
     cmx(j) =  dqodw2(j)
-    if(DEF_USE_PLANTHYDRAULICS)then
+    if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
        rmx(j) =  qin(j) - qout(j) - rootr(j)
     else
        rmx(j) =  qin(j) - qout(j) - etr*rootr(j)
@@ -1750,7 +1757,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 ! The mass balance error (mm) for this time step is
     errorw = -deltim*(qin(1)-qout(nl_soil)-dqodw1(nl_soil)*dwat(nl_soil))
     do j = 1, nl_soil
-       if(DEF_USE_PLANTHYDRAULICS)then
+       if(DEF_USE_PLANTHYDRAULICS .and. (patchtype/=1 .or. .not.DEF_URBAN_RUN))then
           errorw = errorw+dwat(j)*dzmm(j)+rootr(j)*deltim
        else
           errorw = errorw+dwat(j)*dzmm(j)+etr*rootr(j)*deltim
