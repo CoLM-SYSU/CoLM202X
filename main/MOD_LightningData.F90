@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef BGC
 MODULE MOD_LightningData
  !-----------------------------------------------------------------------
  ! !DESCRIPTION:
@@ -9,7 +10,6 @@ MODULE MOD_LightningData
  ! Zhang Shupeng, 2022, prepare the original version of the lightning data module.
 
 
-#ifdef Fire
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mapping_Grid2Pset
@@ -62,17 +62,12 @@ CONTAINS
       call mg2p_lnfm%build (grid_lightning, landpatch)
 
       itime = (idate(2)-1)*8 + min(idate(3)/10800+1,8)
+      if (itime .gt. 2920)itime = itime - 8 ! for the leap year
 
       CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime, f_lnfm)
 #ifdef CoLMDEBUG
       CALL check_block_data ('lightning', f_lnfm)
 #endif
-
-!      IF (p_is_worker) THEN
-!         IF (numpatch > 0) THEN
-!            allocate (lnfm (numpatch))
-!         ENDIF
-!      ENDIF
 
    END SUBROUTINE init_lightning_data
 
@@ -116,5 +111,5 @@ CONTAINS
 
    END SUBROUTINE update_lightning_data
 
-#endif
 END MODULE MOD_LightningData
+#endif

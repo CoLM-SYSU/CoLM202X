@@ -11,6 +11,7 @@ MODULE MOD_BGC_Vars_TimeVariables
   ! Xingjie Lu, 2022, created the original version
 
 use MOD_Precision
+use MOD_Namelist, only : DEF_USE_SASU
 use MOD_TimeManager
 IMPLICIT NONE
 SAVE
@@ -123,10 +124,8 @@ SAVE
       REAL(r8), allocatable :: sminn                    (:)      ! soil mineral nitrogen (gN m-2)
       REAL(r8), allocatable :: ndep                     (:)      ! atmospheric nitrogen deposition (gN m-2)
 
-#ifdef NITRIF
       REAL(r8), allocatable :: to2_decomp_depth_unsat   (:,:)    ! vertical resolved: O2 soil consumption from heterotrophic respiration and autotrophic respiration (mol m-3 s-1)
       REAL(r8), allocatable :: tconc_o2_unsat           (:,:)    ! vertical resolved: O2 soil consumption (mol m-3 s-1)
-#endif
 
       REAL(r8), allocatable :: ndep_prof                (:,:)    ! vertical resolved: atmospheric N deposition input to soil (m-1)
       REAL(r8), allocatable :: nfixation_prof           (:,:)    ! vertical resolved: N fixation input to soil (m-1)
@@ -392,10 +391,8 @@ SAVE
         allocate (sminn                        (numpatch))
         allocate (ndep                         (numpatch))
 
-#ifdef NITRIF
         allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))
         allocate (tconc_o2_unsat               (nl_soil,numpatch))
-#endif
 
         allocate (ndep_prof                    (nl_soil,numpatch))
         allocate (nfixation_prof               (nl_soil,numpatch))
@@ -438,7 +435,6 @@ SAVE
         allocate (dayl                         (numpatch))
         allocate (prev_dayl                    (numpatch))
 
-#ifdef SASU
 !---------------------------SASU variables--------------------------------------
         allocate (decomp0_cpools_vr            (nl_soil,ndecomp_pools,numpatch))
         allocate (I_met_c_vr_acc               (nl_soil,numpatch))
@@ -494,7 +490,6 @@ SAVE
         allocate (lowerVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))
 
 !---------------------------------------------------------------------------
-#endif
         allocate (skip_balance_check           (numpatch))
 
 #ifdef CROP
@@ -650,10 +645,8 @@ SAVE
            deallocate (sminn                        )
            deallocate (ndep                         )
 
-#ifdef NITRIF
            deallocate (to2_decomp_depth_unsat       )
            deallocate (tconc_o2_unsat               )
-#endif
 
            deallocate (ndep_prof                    )
            deallocate (nfixation_prof               )
@@ -696,7 +689,6 @@ SAVE
            deallocate (dayl                         )
            deallocate (prev_dayl                    )
 
-#ifdef SASU
 !---------------------------SASU variables--------------------------------------
            deallocate (decomp0_cpools_vr            )
            deallocate (I_met_c_vr_acc               )
@@ -752,7 +744,6 @@ SAVE
            deallocate (lowerVX_n_vr_acc             )
 
 !---------------------------------------------------------------------------
-#endif
            deallocate (skip_balance_check           )
 #ifdef CROP
            deallocate (cphase                       )
@@ -793,7 +784,7 @@ SAVE
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_NITRIF
      USE MOD_LandPatch
      use MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -842,10 +833,11 @@ SAVE
      call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil'  ,   nl_soil, 'patch', landpatch, sminn_vr    )
      call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_no3_vr )
      call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
-#ifdef NITRIF
-     call ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
-     call ncio_write_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT','soil'  ,   nl_soil, 'patch', landpatch, to2_decomp_depth_unsat)
-#endif
+
+     if(DEF_USE_NITRIF)then
+        call ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
+        call ncio_write_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT','soil'  ,   nl_soil, 'patch', landpatch, to2_decomp_depth_unsat)
+     end if
 
      call ncio_write_vector (file_restart, 'prec10               ', 'patch', landpatch, prec10               )
      call ncio_write_vector (file_restart, 'prec60               ', 'patch', landpatch, prec60               )
@@ -856,71 +848,71 @@ SAVE
      call ncio_write_vector (file_restart, 'rh30                 ', 'patch', landpatch, rh30                 )
      call ncio_write_vector (file_restart, 'accumnstep           ', 'patch', landpatch, accumnstep           )
 
-#ifdef SASU
+     if(DEF_USE_SASU)then
 !---------------SASU variables-----------------------
-     call ncio_write_vector (file_restart, 'decomp0_cpools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, decomp0_cpools_vr            )
-     call ncio_write_vector (file_restart, 'I_met_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_met_c_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_cel_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cel_c_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_lig_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_lig_c_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_cwd_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cwd_c_vr_acc               )
-     call ncio_write_vector (file_restart, 'AKX_met_to_soil1_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_to_soil1_c_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_cel_to_soil1_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_to_soil1_c_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_lig_to_soil2_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_to_soil2_c_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_soil1_to_soil2_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil2_c_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_cwd_to_cel_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_cel_c_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_cwd_to_lig_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_lig_c_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil1_to_soil3_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil3_c_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil2_to_soil1_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil1_c_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil2_to_soil3_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil3_c_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil3_to_soil1_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_to_soil1_c_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_met_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_exit_c_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_cel_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_exit_c_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_lig_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_exit_c_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_cwd_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_exit_c_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_c_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_c_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_c_vr_acc      )
-
-     call ncio_write_vector (file_restart, 'decomp0_npools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, decomp0_npools_vr            )
-     call ncio_write_vector (file_restart, 'I_met_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_met_n_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_cel_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cel_n_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_lig_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_lig_n_vr_acc               )
-     call ncio_write_vector (file_restart, 'I_cwd_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cwd_n_vr_acc               )
-     call ncio_write_vector (file_restart, 'AKX_met_to_soil1_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_to_soil1_n_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_cel_to_soil1_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_to_soil1_n_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_lig_to_soil2_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_to_soil2_n_vr_acc    )
-     call ncio_write_vector (file_restart, 'AKX_soil1_to_soil2_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil2_n_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_cwd_to_cel_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_cel_n_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_cwd_to_lig_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_lig_n_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil1_to_soil3_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil3_n_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil2_to_soil1_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil1_n_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil2_to_soil3_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil3_n_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_soil3_to_soil1_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_to_soil1_n_vr_acc  )
-     call ncio_write_vector (file_restart, 'AKX_met_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_exit_n_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_cel_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_exit_n_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_lig_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_exit_n_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_cwd_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_exit_n_vr_acc        )
-     call ncio_write_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_n_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_n_vr_acc      )
-     call ncio_write_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_n_vr_acc      )
-
-     call ncio_write_vector (file_restart, 'diagVX_c_vr_acc              ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, diagVX_c_vr_acc              )
-     call ncio_write_vector (file_restart, 'upperVX_c_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, upperVX_c_vr_acc             )
-     call ncio_write_vector (file_restart, 'lowerVX_c_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, lowerVX_c_vr_acc             )
-     call ncio_write_vector (file_restart, 'diagVX_n_vr_acc              ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, diagVX_n_vr_acc              )
-     call ncio_write_vector (file_restart, 'upperVX_n_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, upperVX_n_vr_acc             )
-     call ncio_write_vector (file_restart, 'lowerVX_n_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                            'patch', landpatch, lowerVX_n_vr_acc             )
+        call ncio_write_vector (file_restart, 'decomp0_cpools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, decomp0_cpools_vr            )
+        call ncio_write_vector (file_restart, 'I_met_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_met_c_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_cel_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cel_c_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_lig_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_lig_c_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_cwd_c_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cwd_c_vr_acc               )
+        call ncio_write_vector (file_restart, 'AKX_met_to_soil1_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_to_soil1_c_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_cel_to_soil1_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_to_soil1_c_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_lig_to_soil2_c_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_to_soil2_c_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_soil1_to_soil2_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil2_c_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_cwd_to_cel_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_cel_c_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_cwd_to_lig_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_lig_c_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil1_to_soil3_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil3_c_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil2_to_soil1_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil1_c_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil2_to_soil3_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil3_c_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil3_to_soil1_c_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_to_soil1_c_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_met_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_exit_c_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_cel_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_exit_c_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_lig_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_exit_c_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_cwd_exit_c_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_exit_c_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_c_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_c_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_c_vr_acc      )
+   
+        call ncio_write_vector (file_restart, 'decomp0_npools_vr            ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, decomp0_npools_vr            )
+        call ncio_write_vector (file_restart, 'I_met_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_met_n_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_cel_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cel_n_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_lig_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_lig_n_vr_acc               )
+        call ncio_write_vector (file_restart, 'I_cwd_n_vr_acc               ', 'soil'  ,   nl_soil, 'patch', landpatch, I_cwd_n_vr_acc               )
+        call ncio_write_vector (file_restart, 'AKX_met_to_soil1_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_to_soil1_n_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_cel_to_soil1_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_to_soil1_n_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_lig_to_soil2_n_vr_acc    ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_to_soil2_n_vr_acc    )
+        call ncio_write_vector (file_restart, 'AKX_soil1_to_soil2_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil2_n_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_cwd_to_cel_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_cel_n_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_cwd_to_lig_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_to_lig_n_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil1_to_soil3_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_to_soil3_n_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil2_to_soil1_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil1_n_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil2_to_soil3_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_to_soil3_n_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_soil3_to_soil1_n_vr_acc  ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_to_soil1_n_vr_acc  )
+        call ncio_write_vector (file_restart, 'AKX_met_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_met_exit_n_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_cel_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cel_exit_n_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_lig_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_lig_exit_n_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_cwd_exit_n_vr_acc        ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_cwd_exit_n_vr_acc        )
+        call ncio_write_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil1_exit_n_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil2_exit_n_vr_acc      )
+        call ncio_write_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ', 'soil'  ,   nl_soil, 'patch', landpatch, AKX_soil3_exit_n_vr_acc      )
+   
+        call ncio_write_vector (file_restart, 'diagVX_c_vr_acc              ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, diagVX_c_vr_acc              )
+        call ncio_write_vector (file_restart, 'upperVX_c_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, upperVX_c_vr_acc             )
+        call ncio_write_vector (file_restart, 'lowerVX_c_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, lowerVX_c_vr_acc             )
+        call ncio_write_vector (file_restart, 'diagVX_n_vr_acc              ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, diagVX_n_vr_acc              )
+        call ncio_write_vector (file_restart, 'upperVX_n_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, upperVX_n_vr_acc             )
+        call ncio_write_vector (file_restart, 'lowerVX_n_vr_acc             ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
+                                                                               'patch', landpatch, lowerVX_n_vr_acc             )
 
 !----------------------------------------------------
-#endif
+     end if
      call ncio_write_vector (file_restart, 'skip_balance_check           ', 'patch', landpatch, skip_balance_check           )
 
 #ifdef CROP
@@ -992,10 +984,11 @@ SAVE
      call ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
      call ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
      call ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )
-#ifdef NITRIF
-     call ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
-     call ncio_read_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT',  nl_soil, landpatch, to2_decomp_depth_unsat )
-#endif
+
+     if(DEF_USE_NITRIF)then
+        call ncio_read_vector (file_restart, 'tCONC_O2_UNSAT       ',   nl_soil, landpatch, tconc_o2_unsat         )
+        call ncio_read_vector (file_restart, 'tO2_DECOMP_DEPTH_UNSAT',  nl_soil, landpatch, to2_decomp_depth_unsat )
+     end if
 
      call ncio_read_vector (file_restart, 'prec10               ', landpatch, prec10               )
      call ncio_read_vector (file_restart, 'prec60               ', landpatch, prec60               )
@@ -1006,63 +999,63 @@ SAVE
      call ncio_read_vector (file_restart, 'rh30                 ', landpatch, rh30                 )
      call ncio_read_vector (file_restart, 'accumnstep           ', landpatch, accumnstep           )
 
-#ifdef SASU
+     if(DEF_USE_SASU)then
 !---------------SASU variables-----------------------
-     call ncio_read_vector (file_restart, 'decomp0_cpools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_cpools_vr, defval = 1._r8            )
-     call ncio_read_vector (file_restart, 'I_met_c_vr_acc               ',   nl_soil, landpatch, I_met_c_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_cel_c_vr_acc               ',   nl_soil, landpatch, I_cel_c_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_lig_c_vr_acc               ',   nl_soil, landpatch, I_lig_c_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_cwd_c_vr_acc               ',   nl_soil, landpatch, I_cwd_c_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'AKX_met_to_soil1_c_vr_acc    ',   nl_soil, landpatch, AKX_met_to_soil1_c_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_cel_to_soil1_c_vr_acc    ',   nl_soil, landpatch, AKX_cel_to_soil1_c_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_lig_to_soil2_c_vr_acc    ',   nl_soil, landpatch, AKX_lig_to_soil2_c_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_soil1_to_soil2_c_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil2_c_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_cwd_to_cel_c_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_cel_c_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_cwd_to_lig_c_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_lig_c_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil1_to_soil3_c_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil3_c_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil2_to_soil1_c_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil1_c_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil2_to_soil3_c_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil3_c_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil3_to_soil1_c_vr_acc  ',   nl_soil, landpatch, AKX_soil3_to_soil1_c_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_met_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_met_exit_c_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_cel_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_cel_exit_c_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_lig_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_lig_exit_c_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_cwd_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_cwd_exit_c_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_c_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_c_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_c_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'decomp0_cpools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_cpools_vr, defval = 1._r8            )
+        call ncio_read_vector (file_restart, 'I_met_c_vr_acc               ',   nl_soil, landpatch, I_met_c_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_cel_c_vr_acc               ',   nl_soil, landpatch, I_cel_c_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_lig_c_vr_acc               ',   nl_soil, landpatch, I_lig_c_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_cwd_c_vr_acc               ',   nl_soil, landpatch, I_cwd_c_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'AKX_met_to_soil1_c_vr_acc    ',   nl_soil, landpatch, AKX_met_to_soil1_c_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_cel_to_soil1_c_vr_acc    ',   nl_soil, landpatch, AKX_cel_to_soil1_c_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_lig_to_soil2_c_vr_acc    ',   nl_soil, landpatch, AKX_lig_to_soil2_c_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_soil1_to_soil2_c_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil2_c_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_cwd_to_cel_c_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_cel_c_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_cwd_to_lig_c_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_lig_c_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil1_to_soil3_c_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil3_c_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil2_to_soil1_c_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil1_c_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil2_to_soil3_c_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil3_c_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil3_to_soil1_c_vr_acc  ',   nl_soil, landpatch, AKX_soil3_to_soil1_c_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_met_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_met_exit_c_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_cel_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_cel_exit_c_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_lig_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_lig_exit_c_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_cwd_exit_c_vr_acc        ',   nl_soil, landpatch, AKX_cwd_exit_c_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_soil1_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_c_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil2_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_c_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil3_exit_c_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_c_vr_acc, defval = 0._r8      )
 
-     call ncio_read_vector (file_restart, 'decomp0_npools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_npools_vr, defval = 1._r8)
-     call ncio_read_vector (file_restart, 'I_met_n_vr_acc               ',   nl_soil, landpatch, I_met_n_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_cel_n_vr_acc               ',   nl_soil, landpatch, I_cel_n_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_lig_n_vr_acc               ',   nl_soil, landpatch, I_lig_n_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'I_cwd_n_vr_acc               ',   nl_soil, landpatch, I_cwd_n_vr_acc, defval = 0._r8               )
-     call ncio_read_vector (file_restart, 'AKX_met_to_soil1_n_vr_acc    ',   nl_soil, landpatch, AKX_met_to_soil1_n_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_cel_to_soil1_n_vr_acc    ',   nl_soil, landpatch, AKX_cel_to_soil1_n_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_lig_to_soil2_n_vr_acc    ',   nl_soil, landpatch, AKX_lig_to_soil2_n_vr_acc, defval = 0._r8    )
-     call ncio_read_vector (file_restart, 'AKX_soil1_to_soil2_n_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil2_n_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_cwd_to_cel_n_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_cel_n_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_cwd_to_lig_n_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_lig_n_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil1_to_soil3_n_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil3_n_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil2_to_soil1_n_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil1_n_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil2_to_soil3_n_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil3_n_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_soil3_to_soil1_n_vr_acc  ',   nl_soil, landpatch, AKX_soil3_to_soil1_n_vr_acc, defval = 0._r8  )
-     call ncio_read_vector (file_restart, 'AKX_met_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_met_exit_n_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_cel_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_cel_exit_n_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_lig_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_lig_exit_n_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_cwd_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_cwd_exit_n_vr_acc, defval = 0._r8        )
-     call ncio_read_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_n_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_n_vr_acc, defval = 0._r8      )
-     call ncio_read_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_n_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'decomp0_npools_vr            ',   nl_soil, ndecomp_pools, landpatch, decomp0_npools_vr, defval = 1._r8)
+        call ncio_read_vector (file_restart, 'I_met_n_vr_acc               ',   nl_soil, landpatch, I_met_n_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_cel_n_vr_acc               ',   nl_soil, landpatch, I_cel_n_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_lig_n_vr_acc               ',   nl_soil, landpatch, I_lig_n_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'I_cwd_n_vr_acc               ',   nl_soil, landpatch, I_cwd_n_vr_acc, defval = 0._r8               )
+        call ncio_read_vector (file_restart, 'AKX_met_to_soil1_n_vr_acc    ',   nl_soil, landpatch, AKX_met_to_soil1_n_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_cel_to_soil1_n_vr_acc    ',   nl_soil, landpatch, AKX_cel_to_soil1_n_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_lig_to_soil2_n_vr_acc    ',   nl_soil, landpatch, AKX_lig_to_soil2_n_vr_acc, defval = 0._r8    )
+        call ncio_read_vector (file_restart, 'AKX_soil1_to_soil2_n_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil2_n_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_cwd_to_cel_n_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_cel_n_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_cwd_to_lig_n_vr_acc      ',   nl_soil, landpatch, AKX_cwd_to_lig_n_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil1_to_soil3_n_vr_acc  ',   nl_soil, landpatch, AKX_soil1_to_soil3_n_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil2_to_soil1_n_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil1_n_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil2_to_soil3_n_vr_acc  ',   nl_soil, landpatch, AKX_soil2_to_soil3_n_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_soil3_to_soil1_n_vr_acc  ',   nl_soil, landpatch, AKX_soil3_to_soil1_n_vr_acc, defval = 0._r8  )
+        call ncio_read_vector (file_restart, 'AKX_met_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_met_exit_n_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_cel_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_cel_exit_n_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_lig_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_lig_exit_n_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_cwd_exit_n_vr_acc        ',   nl_soil, landpatch, AKX_cwd_exit_n_vr_acc, defval = 0._r8        )
+        call ncio_read_vector (file_restart, 'AKX_soil1_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil1_exit_n_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil2_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil2_exit_n_vr_acc, defval = 0._r8      )
+        call ncio_read_vector (file_restart, 'AKX_soil3_exit_n_vr_acc      ',   nl_soil, landpatch, AKX_soil3_exit_n_vr_acc, defval = 0._r8      )
 
-     call ncio_read_vector (file_restart, 'diagVX_c_vr_acc              ',   nl_soil, ndecomp_pools, landpatch, diagVX_c_vr_acc, defval = 0._r8              )
-     call ncio_read_vector (file_restart, 'upperVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_c_vr_acc, defval = 0._r8             )
-     call ncio_read_vector (file_restart, 'lowerVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_c_vr_acc, defval = 0._r8             )
-     call ncio_read_vector (file_restart, 'diagVX_n_vr_acc              ',   nl_soil, ndecomp_pools, landpatch, diagVX_n_vr_acc, defval = 0._r8              )
-     call ncio_read_vector (file_restart, 'upperVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_n_vr_acc, defval = 0._r8             )
-     call ncio_read_vector (file_restart, 'lowerVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_n_vr_acc, defval = 0._r8             )
+        call ncio_read_vector (file_restart, 'diagVX_c_vr_acc              ',   nl_soil, ndecomp_pools, landpatch, diagVX_c_vr_acc, defval = 0._r8              )
+        call ncio_read_vector (file_restart, 'upperVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_c_vr_acc, defval = 0._r8             )
+        call ncio_read_vector (file_restart, 'lowerVX_c_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_c_vr_acc, defval = 0._r8             )
+        call ncio_read_vector (file_restart, 'diagVX_n_vr_acc              ',   nl_soil, ndecomp_pools, landpatch, diagVX_n_vr_acc, defval = 0._r8              )
+        call ncio_read_vector (file_restart, 'upperVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, upperVX_n_vr_acc, defval = 0._r8             )
+        call ncio_read_vector (file_restart, 'lowerVX_n_vr_acc             ',   nl_soil, ndecomp_pools, landpatch, lowerVX_n_vr_acc, defval = 0._r8             )
+     end if
 
 !----------------------------------------------------
-#endif
      call ncio_read_vector (file_restart, 'skip_balance_check           ', landpatch, skip_balance_check           )
 #ifdef CROP
      call ncio_read_vector (file_restart, 'cphase     ' , landpatch, cphase     )
@@ -1096,6 +1089,7 @@ SAVE
 
      use MOD_SPMD_Task
      use MOD_CoLMDebug
+     use MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU
 
      IMPLICIT NONE
 
@@ -1206,10 +1200,10 @@ SAVE
      call check_vector_data ('smin_no3_vr              ', smin_no3_vr              )
      call check_vector_data ('smin_nh4_vr              ', smin_nh4_vr              )
 
-#ifdef NITRIF
-     call check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
-     call check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
-#endif
+     if(DEF_USE_NITRIF)then
+        call check_vector_data ('tCONC_O2_UNSAT           ', tconc_o2_unsat )
+        call check_vector_data ('tO2_DECOMP_DEPTH_UNSAT   ', to2_decomp_depth_unsat   )
+     end if
 
      call check_vector_data ('sminn                    ', sminn                    )
      call check_vector_data ('ndep                     ', ndep                     )
@@ -1255,63 +1249,63 @@ SAVE
      call check_vector_data ('dayl                     ', dayl                     )
      call check_vector_data ('prev_dayl                ', prev_dayl                )
 
-#ifdef SASU
+     if(DEF_USE_SASU)then
 !--------------SASU variables---------------------------
-     call check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           )
-     call check_vector_data ('I_met_c_vr_acc              ', I_met_c_vr_acc              )
-     call check_vector_data ('I_cel_c_vr_acc              ', I_cel_c_vr_acc              )
-     call check_vector_data ('I_lig_c_vr_acc              ', I_lig_c_vr_acc              )
-     call check_vector_data ('I_cwd_c_vr_acc              ', I_cwd_c_vr_acc              )
-     call check_vector_data ('AKX_met_to_soil1_c_vr_acc   ', AKX_met_to_soil1_c_vr_acc   )
-     call check_vector_data ('AKX_cel_to_soil1_c_vr_acc   ', AKX_cel_to_soil1_c_vr_acc   )
-     call check_vector_data ('AKX_lig_to_soil2_c_vr_acc   ', AKX_lig_to_soil2_c_vr_acc   )
-     call check_vector_data ('AKX_soil1_to_soil2_c_vr_acc ', AKX_soil1_to_soil2_c_vr_acc )
-     call check_vector_data ('AKX_cwd_to_cel_c_vr_acc     ', AKX_cwd_to_cel_c_vr_acc     )
-     call check_vector_data ('AKX_cwd_to_lig_c_vr_acc     ', AKX_cwd_to_lig_c_vr_acc     )
-     call check_vector_data ('AKX_soil1_to_soil3_c_vr_acc ', AKX_soil1_to_soil3_c_vr_acc )
-     call check_vector_data ('AKX_soil2_to_soil1_c_vr_acc ', AKX_soil2_to_soil1_c_vr_acc )
-     call check_vector_data ('AKX_soil2_to_soil3_c_vr_acc ', AKX_soil2_to_soil3_c_vr_acc )
-     call check_vector_data ('AKX_soil3_to_soil1_c_vr_acc ', AKX_soil3_to_soil1_c_vr_acc )
-     call check_vector_data ('AKX_met_exit_c_vr_acc       ', AKX_met_exit_c_vr_acc       )
-     call check_vector_data ('AKX_cel_exit_c_vr_acc       ', AKX_cel_exit_c_vr_acc       )
-     call check_vector_data ('AKX_lig_exit_c_vr_acc       ', AKX_lig_exit_c_vr_acc       )
-     call check_vector_data ('AKX_cwd_exit_c_vr_acc       ', AKX_cwd_exit_c_vr_acc       )
-     call check_vector_data ('AKX_soil1_exit_c_vr_acc     ', AKX_soil1_exit_c_vr_acc     )
-     call check_vector_data ('AKX_soil2_exit_c_vr_acc     ', AKX_soil2_exit_c_vr_acc     )
-     call check_vector_data ('AKX_soil3_exit_c_vr_acc     ', AKX_soil3_exit_c_vr_acc     )
+        call check_vector_data ('decomp0_cpools_vr           ', decomp0_cpools_vr           )
+        call check_vector_data ('I_met_c_vr_acc              ', I_met_c_vr_acc              )
+        call check_vector_data ('I_cel_c_vr_acc              ', I_cel_c_vr_acc              )
+        call check_vector_data ('I_lig_c_vr_acc              ', I_lig_c_vr_acc              )
+        call check_vector_data ('I_cwd_c_vr_acc              ', I_cwd_c_vr_acc              )
+        call check_vector_data ('AKX_met_to_soil1_c_vr_acc   ', AKX_met_to_soil1_c_vr_acc   )
+        call check_vector_data ('AKX_cel_to_soil1_c_vr_acc   ', AKX_cel_to_soil1_c_vr_acc   )
+        call check_vector_data ('AKX_lig_to_soil2_c_vr_acc   ', AKX_lig_to_soil2_c_vr_acc   )
+        call check_vector_data ('AKX_soil1_to_soil2_c_vr_acc ', AKX_soil1_to_soil2_c_vr_acc )
+        call check_vector_data ('AKX_cwd_to_cel_c_vr_acc     ', AKX_cwd_to_cel_c_vr_acc     )
+        call check_vector_data ('AKX_cwd_to_lig_c_vr_acc     ', AKX_cwd_to_lig_c_vr_acc     )
+        call check_vector_data ('AKX_soil1_to_soil3_c_vr_acc ', AKX_soil1_to_soil3_c_vr_acc )
+        call check_vector_data ('AKX_soil2_to_soil1_c_vr_acc ', AKX_soil2_to_soil1_c_vr_acc )
+        call check_vector_data ('AKX_soil2_to_soil3_c_vr_acc ', AKX_soil2_to_soil3_c_vr_acc )
+        call check_vector_data ('AKX_soil3_to_soil1_c_vr_acc ', AKX_soil3_to_soil1_c_vr_acc )
+        call check_vector_data ('AKX_met_exit_c_vr_acc       ', AKX_met_exit_c_vr_acc       )
+        call check_vector_data ('AKX_cel_exit_c_vr_acc       ', AKX_cel_exit_c_vr_acc       )
+        call check_vector_data ('AKX_lig_exit_c_vr_acc       ', AKX_lig_exit_c_vr_acc       )
+        call check_vector_data ('AKX_cwd_exit_c_vr_acc       ', AKX_cwd_exit_c_vr_acc       )
+        call check_vector_data ('AKX_soil1_exit_c_vr_acc     ', AKX_soil1_exit_c_vr_acc     )
+        call check_vector_data ('AKX_soil2_exit_c_vr_acc     ', AKX_soil2_exit_c_vr_acc     )
+        call check_vector_data ('AKX_soil3_exit_c_vr_acc     ', AKX_soil3_exit_c_vr_acc     )
 
-     call check_vector_data ('decomp0_npools_vr           ', decomp0_npools_vr           )
-     call check_vector_data ('I_met_n_vr_acc              ', I_met_n_vr_acc              )
-     call check_vector_data ('I_cel_n_vr_acc              ', I_cel_n_vr_acc              )
-     call check_vector_data ('I_lig_n_vr_acc              ', I_lig_n_vr_acc              )
-     call check_vector_data ('I_cwd_n_vr_acc              ', I_cwd_n_vr_acc              )
-     call check_vector_data ('AKX_met_to_soil1_n_vr_acc   ', AKX_met_to_soil1_n_vr_acc   )
-     call check_vector_data ('AKX_cel_to_soil1_n_vr_acc   ', AKX_cel_to_soil1_n_vr_acc   )
-     call check_vector_data ('AKX_lig_to_soil2_n_vr_acc   ', AKX_lig_to_soil2_n_vr_acc   )
-     call check_vector_data ('AKX_soil1_to_soil2_n_vr_acc ', AKX_soil1_to_soil2_n_vr_acc )
-     call check_vector_data ('AKX_cwd_to_cel_n_vr_acc     ', AKX_cwd_to_cel_n_vr_acc     )
-     call check_vector_data ('AKX_cwd_to_lig_n_vr_acc     ', AKX_cwd_to_lig_n_vr_acc     )
-     call check_vector_data ('AKX_soil1_to_soil3_n_vr_acc ', AKX_soil1_to_soil3_n_vr_acc )
-     call check_vector_data ('AKX_soil2_to_soil1_n_vr_acc ', AKX_soil2_to_soil1_n_vr_acc )
-     call check_vector_data ('AKX_soil2_to_soil3_n_vr_acc ', AKX_soil2_to_soil3_n_vr_acc )
-     call check_vector_data ('AKX_soil3_to_soil1_n_vr_acc ', AKX_soil3_to_soil1_n_vr_acc )
-     call check_vector_data ('AKX_met_exit_n_vr_acc       ', AKX_met_exit_n_vr_acc       )
-     call check_vector_data ('AKX_cel_exit_n_vr_acc       ', AKX_cel_exit_n_vr_acc       )
-     call check_vector_data ('AKX_lig_exit_n_vr_acc       ', AKX_lig_exit_n_vr_acc       )
-     call check_vector_data ('AKX_cwd_exit_n_vr_acc       ', AKX_cwd_exit_n_vr_acc       )
-     call check_vector_data ('AKX_soil1_exit_n_vr_acc     ', AKX_soil1_exit_n_vr_acc     )
-     call check_vector_data ('AKX_soil2_exit_n_vr_acc     ', AKX_soil2_exit_n_vr_acc     )
-     call check_vector_data ('AKX_soil3_exit_n_vr_acc     ', AKX_soil3_exit_n_vr_acc     )
+        call check_vector_data ('decomp0_npools_vr           ', decomp0_npools_vr           )
+        call check_vector_data ('I_met_n_vr_acc              ', I_met_n_vr_acc              )
+        call check_vector_data ('I_cel_n_vr_acc              ', I_cel_n_vr_acc              )
+        call check_vector_data ('I_lig_n_vr_acc              ', I_lig_n_vr_acc              )
+        call check_vector_data ('I_cwd_n_vr_acc              ', I_cwd_n_vr_acc              )
+        call check_vector_data ('AKX_met_to_soil1_n_vr_acc   ', AKX_met_to_soil1_n_vr_acc   )
+        call check_vector_data ('AKX_cel_to_soil1_n_vr_acc   ', AKX_cel_to_soil1_n_vr_acc   )
+        call check_vector_data ('AKX_lig_to_soil2_n_vr_acc   ', AKX_lig_to_soil2_n_vr_acc   )
+        call check_vector_data ('AKX_soil1_to_soil2_n_vr_acc ', AKX_soil1_to_soil2_n_vr_acc )
+        call check_vector_data ('AKX_cwd_to_cel_n_vr_acc     ', AKX_cwd_to_cel_n_vr_acc     )
+        call check_vector_data ('AKX_cwd_to_lig_n_vr_acc     ', AKX_cwd_to_lig_n_vr_acc     )
+        call check_vector_data ('AKX_soil1_to_soil3_n_vr_acc ', AKX_soil1_to_soil3_n_vr_acc )
+        call check_vector_data ('AKX_soil2_to_soil1_n_vr_acc ', AKX_soil2_to_soil1_n_vr_acc )
+        call check_vector_data ('AKX_soil2_to_soil3_n_vr_acc ', AKX_soil2_to_soil3_n_vr_acc )
+        call check_vector_data ('AKX_soil3_to_soil1_n_vr_acc ', AKX_soil3_to_soil1_n_vr_acc )
+        call check_vector_data ('AKX_met_exit_n_vr_acc       ', AKX_met_exit_n_vr_acc       )
+        call check_vector_data ('AKX_cel_exit_n_vr_acc       ', AKX_cel_exit_n_vr_acc       )
+        call check_vector_data ('AKX_lig_exit_n_vr_acc       ', AKX_lig_exit_n_vr_acc       )
+        call check_vector_data ('AKX_cwd_exit_n_vr_acc       ', AKX_cwd_exit_n_vr_acc       )
+        call check_vector_data ('AKX_soil1_exit_n_vr_acc     ', AKX_soil1_exit_n_vr_acc     )
+        call check_vector_data ('AKX_soil2_exit_n_vr_acc     ', AKX_soil2_exit_n_vr_acc     )
+        call check_vector_data ('AKX_soil3_exit_n_vr_acc     ', AKX_soil3_exit_n_vr_acc     )
 
-     call check_vector_data ('diagVX_c_vr_acc             ', diagVX_c_vr_acc             )
-     call check_vector_data ('upperVX_c_vr_acc            ', upperVX_c_vr_acc            )
-     call check_vector_data ('lowerVX_c_vr_acc            ', lowerVX_c_vr_acc            )
-     call check_vector_data ('diagVX_n_vr_acc             ', diagVX_n_vr_acc             )
-     call check_vector_data ('upperVX_n_vr_acc            ', upperVX_n_vr_acc            )
-     call check_vector_data ('lowerVX_n_vr_acc            ', lowerVX_n_vr_acc            )
+        call check_vector_data ('diagVX_c_vr_acc             ', diagVX_c_vr_acc             )
+        call check_vector_data ('upperVX_c_vr_acc            ', upperVX_c_vr_acc            )
+        call check_vector_data ('lowerVX_c_vr_acc            ', lowerVX_c_vr_acc            )
+        call check_vector_data ('diagVX_n_vr_acc             ', diagVX_n_vr_acc             )
+        call check_vector_data ('upperVX_n_vr_acc            ', upperVX_n_vr_acc            )
+        call check_vector_data ('lowerVX_n_vr_acc            ', lowerVX_n_vr_acc            )
 !     call check_vector_data ('skip_balance_check          ', skip_balance_check          )
 !------------------------------------------------------
-#endif
+     end if
 #ifdef CROP
      call check_vector_data ('cphase     ' , cphase     )
      call check_vector_data ('vf         ' , vf         )

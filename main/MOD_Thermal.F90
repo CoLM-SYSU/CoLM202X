@@ -36,14 +36,8 @@ MODULE MOD_Thermal
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
                       rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
                       gssun_out   ,gssha_out   ,&
-#ifdef WUEdiag
-                      assimsun_out,etrsun_out  ,assim_RuBP_sun_out      ,&
-                      assim_Rubisco_sun_out    ,cisun_out   ,Dsun_out   ,&
-                      gammasun_out             ,lambdasun_out           ,&
-                      assimsha_out,etrsha_out  ,assim_RuBP_sha_out      ,&
-                      assim_Rubisco_sha_out    ,cisha_out   ,Dsha_out   ,&
-                      gammasha_out,lambdasha_out            ,lambda_out ,&
-#endif
+                      assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
+! photosynthesis and plant hydraulic variables                      
                       effcon      ,vmax25      ,hksati      ,smp        ,hk,&
                       kmax_sun    ,kmax_sha    ,kmax_xyl    ,kmax_root  ,&
                       psi50_sun   ,psi50_sha   ,psi50_xyl   ,psi50_root ,&
@@ -126,7 +120,7 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperaturePC
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  USE mod_soil_function, only : soil_psi_from_vliq
+  USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
 #endif
 use MOD_SPMD_Task
   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
@@ -288,26 +282,11 @@ use MOD_SPMD_Task
        gssha_out,    &! shaded stomata conductance
        rstfacsun_out,&! factor of soil water stress on sunlit leaf
        rstfacsha_out  ! factor of soil water stress on shaded leaf
-#ifdef WUEdiag
   REAL(r8), intent(out) :: &
        assimsun_out           ,&
        etrsun_out             ,&
-       assim_RuBP_sun_out     ,&
-       assim_Rubisco_sun_out  ,&
-       cisun_out              ,&
-       Dsun_out               ,&
-       gammasun_out           ,&
-       lambdasun_out          ,&
        assimsha_out           ,&
-       etrsha_out             ,&
-       assim_RuBP_sha_out     ,&
-       assim_Rubisco_sha_out  ,&
-       cisha_out              ,&
-       Dsha_out               ,&
-       gammasha_out           ,&
-       lambdasha_out          ,&
-       lambda_out
-#endif
+       etrsha_out            
 
         ! Output fluxes
   REAL(r8), intent(out) :: &
@@ -430,24 +409,10 @@ use MOD_SPMD_Task
   REAL(r8), allocatable :: fh_p    (:)
   REAL(r8), allocatable :: fq_p    (:)
   REAL(r8), allocatable :: hprl_p  (:)
-#ifdef WUEdiag
   REAL(r8), allocatable :: assimsun_p          (:)
   REAL(r8), allocatable :: etrsun_p            (:)
-  REAL(r8), allocatable :: assim_RuBP_sun_p    (:)
-  REAL(r8), allocatable :: assim_Rubisco_sun_p (:)
-  REAL(r8), allocatable :: cisun_p             (:)
-  REAL(r8), allocatable :: Dsun_p              (:)
-  REAL(r8), allocatable :: gammasun_p          (:)
-  REAL(r8), allocatable :: lambdasun_p         (:)
   REAL(r8), allocatable :: assimsha_p          (:)
   REAL(r8), allocatable :: etrsha_p            (:)
-  REAL(r8), allocatable :: assim_RuBP_sha_p    (:)
-  REAL(r8), allocatable :: assim_Rubisco_sha_p (:)
-  REAL(r8), allocatable :: cisha_p             (:)
-  REAL(r8), allocatable :: Dsha_p              (:)
-  REAL(r8), allocatable :: gammasha_p          (:)
-  REAL(r8), allocatable :: lambdasha_p         (:)
-#endif
 #endif
 
 #ifdef LULC_IGBP_PC
@@ -463,24 +428,10 @@ use MOD_SPMD_Task
   REAL(r8) :: fsun_c  (0:N_PFT-1)
   REAL(r8) :: sabv_c  (0:N_PFT-1)
   REAL(r8) :: hprl_c  (0:N_PFT-1)
-#ifdef WUEdiag
-  REAL(r8) :: assimsun_p          (0:N_PFT-1)
-  REAL(r8) :: etrsun_p            (0:N_PFT-1)
-  REAL(r8) :: assim_RuBP_sun_p    (0:N_PFT-1)
-  REAL(r8) :: assim_Rubisco_sun_p (0:N_PFT-1)
-  REAL(r8) :: cisun_p             (0:N_PFT-1)
-  REAL(r8) :: Dsun_p              (0:N_PFT-1)
-  REAL(r8) :: gammasun_p          (0:N_PFT-1)
-  REAL(r8) :: lambdasun_p         (0:N_PFT-1)
-  REAL(r8) :: assimsha_p          (0:N_PFT-1)
-  REAL(r8) :: etrsha_p            (0:N_PFT-1)
-  REAL(r8) :: assim_RuBP_sha_p    (0:N_PFT-1)
-  REAL(r8) :: assim_Rubisco_sha_p (0:N_PFT-1)
-  REAL(r8) :: cisha_p             (0:N_PFT-1)
-  REAL(r8) :: Dsha_p              (0:N_PFT-1)
-  REAL(r8) :: gammasha_p          (0:N_PFT-1)
-  REAL(r8) :: lambdasha_p         (0:N_PFT-1)
-#endif
+  REAL(r8) :: assimsun_c          (0:N_PFT-1)
+  REAL(r8) :: etrsun_c            (0:N_PFT-1)
+  REAL(r8) :: assimsha_c          (0:N_PFT-1)
+  REAL(r8) :: etrsha_c            (0:N_PFT-1)
 #endif
 
 !=======================================================================
@@ -634,14 +585,7 @@ IF (patchtype == 0) THEN
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
-#ifdef WUEdiag
                  assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
-                 assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
-                 cisun_out   ,Dsun_out  ,gammasun_out                      ,&
-                 assim_RuBP_sha_out     ,assim_Rubisco_sha_out             ,&
-                 cisha_out   ,Dsha_out  ,gammasha_out                      ,&
-                 lambdasun_out          ,lambdasha_out                     ,&
-#endif
 !Ozone stress variables
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
@@ -698,24 +642,10 @@ IF (patchtype == 0) THEN
       allocate ( fh_p    (ps:pe) )
       allocate ( fq_p    (ps:pe) )
       allocate ( hprl_p  (ps:pe) )
-#ifdef WUEdiag
       allocate ( assimsun_p         (ps:pe) )
       allocate ( etrsun_p           (ps:pe) )
-      allocate ( assim_RuBP_sun_p   (ps:pe) )
-      allocate ( assim_Rubisco_sun_p(ps:pe) )
-      allocate ( cisun_p            (ps:pe) )
-      allocate ( Dsun_p             (ps:pe) )
-      allocate ( gammasun_p         (ps:pe) )
-      allocate ( lambdasun_p        (ps:pe) )
       allocate ( assimsha_p         (ps:pe) )
       allocate ( etrsha_p           (ps:pe) )
-      allocate ( assim_RuBP_sha_p   (ps:pe) )
-      allocate ( assim_Rubisco_sha_p(ps:pe) )
-      allocate ( cisha_p            (ps:pe) )
-      allocate ( Dsha_p             (ps:pe) )
-      allocate ( gammasha_p         (ps:pe) )
-      allocate ( lambdasha_p        (ps:pe) )
-#endif
 
       ! always DO CALL groundfluxes
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
@@ -781,12 +711,7 @@ IF (patchtype == 0) THEN
                  kmax_sun_p(p) ,kmax_sha_p(p) ,kmax_xyl_p(p)  ,kmax_root_p(p) ,psi50_sun_p(p),&
                  psi50_sha_p(p),psi50_xyl_p(p),psi50_root_p(p),ck_p(p)        ,vegwp_p(:,i)  ,&
                  gs0sun_p(i)   ,gs0sha_p(i)                                                  ,&
-#ifdef WUEdiag
                  assimsun_p(i)      , etrsun_p(i) , assimsha_p(i)      ,etrsha_p(i) ,&
-                 assim_RuBP_sun_p(i), assim_Rubisco_sun_p(i), cisun_p(i), Dsun_p(i), gammasun_p(i), &
-                 assim_RuBP_sha_p(i), assim_Rubisco_sha_p(i), cisha_p(i), Dsha_p(i), gammasha_p(i), &
-                 lambdasun_p(i)     , lambdasha_p(i)        ,&
-#endif
 !Ozone stress variables                 
                  o3coefv_sun_p(i) ,o3coefv_sha_p(i) ,o3coefg_sun_p(i) ,o3coefg_sha_p(i), &
                  lai_old_p(i), o3uptakesun_p(i) ,o3uptakesha_p(i) ,forc_ozone,  &
@@ -816,24 +741,10 @@ IF (patchtype == 0) THEN
             rstfacsha_p(i) = 0.
             gssun_p(i)     = 0.
             gssha_p(i)     = 0.
-#ifdef WUEdiag
             assimsun_p          (i) = 0.
             etrsun_p            (i) = 0.
-            assim_RuBP_sun_p    (i) = 0.
-            assim_Rubisco_sun_p (i) = 0.
-            cisun_p             (i) = 0.
-            Dsun_p              (i) = 0.
-            gammasun_p          (i) = 0.
-            lambdasun_p         (i) = 0.
             assimsha_p          (i) = 0.
             etrsha_p            (i) = 0.
-            assim_RuBP_sha_p    (i) = 0.
-            assim_Rubisco_sha_p (i) = 0.
-            cisha_p             (i) = 0.
-            Dsha_p              (i) = 0.
-            gammasha_p          (i) = 0.
-            lambdasha_p         (i) = 0.
-#endif
             rst_p(i)     = 2.0e4
             assim_p(i)   = 0.
             respc_p(i)   = 0.
@@ -905,25 +816,10 @@ IF (patchtype == 0) THEN
       rstfacsha_out         = sum( rstfacsha_p         (ps:pe) * pftfrac(ps:pe) )
       gssun_out             = sum( gssun_p             (ps:pe) * pftfrac(ps:pe) )
       gssha_out             = sum( gssha_p             (ps:pe) * pftfrac(ps:pe) )
-#ifdef WUEdiag
       assimsun_out          = sum( assimsun_p          (ps:pe) * pftfrac(ps:pe) )
       etrsun_out            = sum( etrsun_p            (ps:pe) * pftfrac(ps:pe) )
-      assim_RuBP_sun_out    = sum( assim_RuBP_sun_p    (ps:pe) * pftfrac(ps:pe) )
-      assim_Rubisco_sun_out = sum( assim_Rubisco_sun_p (ps:pe) * pftfrac(ps:pe) )
-      cisun_out             = sum( cisun_p             (ps:pe) * pftfrac(ps:pe) )
-      Dsun_out              = sum( Dsun_p              (ps:pe) * pftfrac(ps:pe) )
-      gammasun_out          = sum( gammasun_p          (ps:pe) * pftfrac(ps:pe) )
-      lambdasun_out         = sum( lambdasun_p         (ps:pe) * pftfrac(ps:pe) )
       assimsha_out          = sum( assimsha_p          (ps:pe) * pftfrac(ps:pe) )
       etrsha_out            = sum( etrsha_p            (ps:pe) * pftfrac(ps:pe) )
-      assim_RuBP_sha_out    = sum( assim_RuBP_sha_p    (ps:pe) * pftfrac(ps:pe) )
-      assim_Rubisco_sha_out = sum( assim_Rubisco_sha_p (ps:pe) * pftfrac(ps:pe) )
-      cisha_out             = sum( cisha_p             (ps:pe) * pftfrac(ps:pe) )
-      Dsha_out              = sum( Dsha_p              (ps:pe) * pftfrac(ps:pe) )
-      gammasha_out          = sum( gammasha_p          (ps:pe) * pftfrac(ps:pe) )
-      lambdasha_out         = sum( lambdasha_p         (ps:pe) * pftfrac(ps:pe) )
-      lambda_out            = sum((lambdasun_p(ps:pe)*laisun_p(ps:pe)+lambdasun_p(ps:pe)*laisun_p(ps:pe))*pftfrac(ps:pe))
-#endif
 
       hprl = sum( hprl_p  (ps:pe)*pftfrac(ps:pe) )
 
@@ -1051,13 +947,7 @@ IF (patchtype == 0) THEN
            kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
            psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
            gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&
-#ifdef WUEdiag
            assimsun_c(:)             ,etrsun_c(:)      ,assimsha_c(:) ,etrsha_c(:),&
-           assim_RuBP_sun_c (:)      ,assim_Rubisco_sun_c(:)          ,cisun_c(:) ,&
-           Dsun_c(:)                 ,gammasun_c(:), &
-           assim_RuBP_sha_c (:)      ,assim_Rubisco_sha_c(:)          ,cisha_c(:) ,&
-           Dsha_c(:)                 ,gammasha_c(:), &
-#endif
 !Ozone stress variables                 
            o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
            lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
@@ -1121,26 +1011,11 @@ IF (patchtype == 0) THEN
       rstfacsha_out          = sum( rstfacsha_c(:)         * pcfrac(:,pc) )
       gssun_out              = sum( gssun_c(:)             * pcfrac(:,pc) )
       gssha_out              = sum( gssha_c(:)             * pcfrac(:,pc) )
-#ifdef WUEdiag
       assimsun_out           = sum( assimsun_c(:)          * pcfrac(:,pc) )
       etrsun_out             = sum( etrsun_c(:)            * pcfrac(:,pc) )
-      assim_RuBP_sun_out     = sum( assim_RuBP_sun_c(:)    * pcfrac(:,pc) )
-      assim_Rubisco_sun_out  = sum( assim_Rubisco_sun_c(:) * pcfrac(:,pc) )
-      cisun_out              = sum( cisun_c(:)             * pcfrac(:,pc) )
-      Dsun_out               = sum( Dsun_c(:)              * pcfrac(:,pc) )
-      gammasun_out           = sum( gammasun_c(:)          * pcfrac(:,pc) )
-      lambdasun_out          = sum( lambdasun_c(:)         * pcfrac(:,pc) )
       assimsha_out           = sum( assimsha_c(:)          * pcfrac(:,pc) )
       etrsha_out             = sum( etrsha_c(:)            * pcfrac(:,pc) )
-      assim_RuBP_sha_out     = sum( assim_RuBP_sha_c(:)    * pcfrac(:,pc) )
-      assim_Rubisco_sha_out  = sum( assim_Rubisco_sha_c(:) * pcfrac(:,pc) )
-      cisha_out              = sum( cisha_c(:)             * pcfrac(:,pc) )
-      Dsha_out               = sum( Dsha_c(:)              * pcfrac(:,pc) )
-      gammasha_out           = sum( gammasha_c(:)          * pcfrac(:,pc) )
-      lambdasha_out          = sum( lambdasha_c(:)         * pcfrac(:,pc) )
-      lambda_out             = sum((lambdasun_c(:)*laisun_c(:)+lambdasun_c(:)*laisun_c(:))*pcfrac(:,pc))
-#endif
-      hprl   = sum( hprl_c  (:)   *pcfrac(:,pc) )
+      hprl                   = sum( hprl_c  (:)   *pcfrac(:,pc) )
 
 #endif
 
@@ -1206,18 +1081,11 @@ ELSE
                  kmax_sun    ,kmax_sha  ,kmax_xyl  ,kmax_root  ,psi50_sun  ,&
                  psi50_sha   ,psi50_xyl ,psi50_root,ck         ,vegwp      ,&
                  gs0sun      ,gs0sha                                       ,&
-#ifdef WUEdiag
                  assimsun_out,etrsun_out,assimsha_out          ,etrsha_out ,&
-                 assim_RuBP_sun_out     ,assim_Rubisco_sun_out             ,&
-                 cisun_out   ,Dsun_out  ,gammasun_out                      ,&
-                 assim_RuBP_sha_out     ,assim_Rubisco_sha_out             ,&
-                 cisha_out   ,Dsha_out  ,gammasha_out                      ,&
-                 lambdasun_out          ,lambdasha_out                     ,&
-#endif
-!Ozone stress variables                 
+! Ozone stress variables                 
                  o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
                  lai_old     ,o3uptakesun ,o3uptakesha ,forc_ozone, &
-!End ozone stress variables                 
+! End ozone stress variables                 
                  forc_hpbl                                                 ,&
                  qintr_rain  ,qintr_snow,t_precip  ,hprl       ,smp        ,&
                  hk(1:)      ,hksati(1:),rootr(1:)                         )
