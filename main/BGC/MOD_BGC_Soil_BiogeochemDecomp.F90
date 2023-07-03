@@ -16,6 +16,7 @@ module MOD_BGC_Soil_BiogeochemDecomp
   ! Xingjie Lu, 2021, revised original CLM5 code to be compatible with CoLM code structure.
 
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_NITRIF
   use MOD_BGC_Vars_TimeInvariants, only: &
       floating_cn_ratio, initial_cn_ratio, dnp, rf_decomp, receiver_pool, donor_pool, i_atm 
 
@@ -78,13 +79,13 @@ contains
              if ( pmnf_decomp(j,k,i) > 0._r8 ) then
                 p_decomp_cpool_loss(j,k,i) = p_decomp_cpool_loss(j,k,i) * fpi_vr(j,i)
                 pmnf_decomp(j,k,i) = pmnf_decomp(j,k,i) * fpi_vr(j,i)
-#ifndef NITRIF
-                sminn_to_denit_decomp_vr(j,k,i) = 0._r8
-#endif
+                if(.not. DEF_USE_NITRIF)then
+                   sminn_to_denit_decomp_vr(j,k,i) = 0._r8
+                end if
              else
-#ifndef NITRIF
-                sminn_to_denit_decomp_vr(j,k,i) = -dnp * pmnf_decomp(j,k,i)
-#endif
+                if(.not. DEF_USE_NITRIF)then
+                   sminn_to_denit_decomp_vr(j,k,i) = -dnp * pmnf_decomp(j,k,i)
+                end if
              end if
              decomp_hr_vr(j,k,i) = rf_decomp(j,k,i) * p_decomp_cpool_loss(j,k,i)
              decomp_ctransfer_vr(j,k,i) = (1._r8 - rf_decomp(j,k,i)) * p_decomp_cpool_loss(j,k,i)
@@ -101,9 +102,9 @@ contains
              net_nmin_vr(j,i) = net_nmin_vr(j,i) - pmnf_decomp(j,k,i)
           else
              decomp_ntransfer_vr(j,k,i) = 0._r8
-#ifndef NITRIF
-             sminn_to_denit_decomp_vr(j,k,i) = 0._r8
-#endif
+             if(.not. DEF_USE_NITRIF)then
+                sminn_to_denit_decomp_vr(j,k,i) = 0._r8
+             end if
              decomp_sminn_flux_vr(j,k,i) = 0._r8
           end if
 

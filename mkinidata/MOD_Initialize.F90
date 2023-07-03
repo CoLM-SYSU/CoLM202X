@@ -66,7 +66,7 @@ MODULE MOD_Initialize
       use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      USE MOD_SoilFunction
+      USE MOD_Hydro_SoilFunction
 #endif
       USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
@@ -77,8 +77,8 @@ MODULE MOD_Initialize
       USE MOD_CropReadin
       USE MOD_LAIEmpirical
       USE MOD_LAIReadin
-      USE MOD_NitrifReadin
 #ifdef BGC
+      USE MOD_NitrifReadin
       USE MOD_NdepReadin
       USE MOD_FireReadin
 #endif
@@ -319,11 +319,11 @@ MODULE MOD_Initialize
       rij_kro_beta  = 0.6_r8
       rij_kro_gamma = 0.6_r8
       rij_kro_delta = 0.85_r8
-#ifdef NITRIF
-      nfix_timeconst = 10._r8
-#else
-      nfix_timeconst = 0._r8
-#endif
+      if(DEF_USE_NITRIF)then
+         nfix_timeconst = 10._r8
+      else
+         nfix_timeconst = 0._r8
+      end if
       organic_max        = 130
       d_con_g21          = 0.1759_r8
       d_con_g22          = 0.00117_r8
@@ -586,15 +586,12 @@ MODULE MOD_Initialize
 
 #ifdef BGC
          CALL NDEP_readin(year, dir_landdata, .true., .false.)
-         print*,'after NDEP readin'
-#ifdef NITRIF
-         CALL NITRIF_readin (month, dir_landdata)
-         print*,'after NITRIF readin'
-#endif
+         if(DEF_USE_NITRIF)then
+            CALL NITRIF_readin (month, dir_landdata)
+         end if
 
 #ifdef CROP
          CALL CROP_readin (dir_landdata)
-         print*,'after CROP readin'
          if (p_is_worker) then
             do i = 1, numpatch
                if(patchtype(i) .eq.  0)then
@@ -615,11 +612,10 @@ MODULE MOD_Initialize
             end do
          end if
 #endif
+         if(DEF_USE_FIRE)then
+            CALL Fire_readin (year,dir_landdata)
+         end if
 #endif
-#endif
-#ifdef Fire
-         CALL Fire_readin (year,dir_landdata)
-         print*,'after Fire readin'
 #endif
 
       ! ..............................................................................
@@ -703,7 +699,6 @@ MODULE MOD_Initialize
                ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i), lag_npp(i) &
                ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
                ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) , skip_balance_check(i) &
-#ifdef SASU
    !------------------------SASU variables-----------------------
                ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
                ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &
@@ -720,7 +715,6 @@ MODULE MOD_Initialize
                ,AKX_met_exit_n_vr_acc      (:,i), AKX_cel_exit_n_vr_acc      (:,i), AKX_lig_exit_n_vr_acc      (:,i), AKX_cwd_exit_n_vr_acc      (:,i) &
                ,AKX_soil1_exit_n_vr_acc    (:,i), AKX_soil2_exit_n_vr_acc    (:,i), AKX_soil3_exit_n_vr_acc    (:,i) &
                ,diagVX_n_vr_acc          (:,:,i), upperVX_n_vr_acc         (:,:,i), lowerVX_n_vr_acc         (:,:,i) &
-#endif
    !------------------------------------------------------------
 #endif
                ! for SOIL INIT of water, temperature, snow depth

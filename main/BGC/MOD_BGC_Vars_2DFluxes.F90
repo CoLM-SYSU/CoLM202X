@@ -132,10 +132,8 @@ MODULE MOD_BGC_Vars_2DFluxes
    type(block_data_real8_3d) :: f_soil3n_vr          ! 3D grid (vertical resolved): soil 3 (passive soil organic matter) carbon density in soil layers (gN m-3)
    type(block_data_real8_3d) :: f_sminn_vr           ! 3D grid (vertical resolved): mineral nitrogen density in soil layers (gN m-3)
 
-#ifdef NITRIF
    type(block_data_real8_3d) :: f_O2_DECOMP_DEPTH_UNSAT  ! 3D grid (vertical resolved): O2 consumption from heterotrophic respiration and autotrophic respiration for non-inundated area (mol m-3 s-1)
    type(block_data_real8_3d) :: f_CONC_O2_UNSAT          ! 3D grid (vertical resolved): O2 soil Concentration for non-inundated area (mol m-3)
-#endif
 #ifdef CROP
    type(block_data_real8_2d) :: f_hui                    ! 2D grid: gdd since planting (degree-days)
    type(block_data_real8_2d) :: f_vf                     ! 2D grid: vernalization factor for cereal
@@ -158,13 +156,11 @@ MODULE MOD_BGC_Vars_2DFluxes
    type(block_data_real8_2d) :: f_fertnitro_rice2        ! 2D grid: nitrogen fertilizer for rice2 (gN m-2 year-1)
    type(block_data_real8_2d) :: f_fertnitro_sugarcane    ! 2D grid: nitrogen fertilizer for sugarcane (gN m-2 year-1)
 #endif
-#ifdef Fire
    type(block_data_real8_2d) :: f_abm                    ! 2D grid: peak crop fire month
    type(block_data_real8_2d) :: f_gdp                    ! 2D grid: global gdp
    type(block_data_real8_2d) :: f_peatf                  ! 2D grid: global peatland fraction data (0-1)
    type(block_data_real8_2d) :: f_hdm                    ! 2D grid: human population density (counts km-2)
    type(block_data_real8_2d) :: f_lnfm                   ! 2D grid: lightning frequency (counts km-2 hr-1)
-#endif
 
    ! PUBLIC MEMBER FUNCTIONS:
    public :: allocate_2D_BGCFluxes
@@ -179,6 +175,7 @@ CONTAINS
       use MOD_SPMD_Task
       use MOD_Grid
       use MOD_DataType
+      use MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_FIRE
       implicit none
 
       type(grid_type), intent(in) :: grid
@@ -299,10 +296,11 @@ CONTAINS
          call allocate_block_data (grid, f_soil2n_vr  ,nl_soil)  ! soil nitrogen pool (gN/m2)
          call allocate_block_data (grid, f_soil3n_vr  ,nl_soil)  ! soil nitrogen pool (gN/m2)
          call allocate_block_data (grid, f_sminn_vr   ,nl_soil)  ! soil mineral nitrogen pool (gN/m2)
-#ifdef NITRIF
-         call allocate_block_data (grid, f_O2_DECOMP_DEPTH_UNSAT, nl_soil)
-         call allocate_block_data (grid, f_CONC_O2_UNSAT        , nl_soil)
-#endif
+
+         if(DEF_USE_NITRIF)then
+            call allocate_block_data (grid, f_O2_DECOMP_DEPTH_UNSAT, nl_soil)
+            call allocate_block_data (grid, f_CONC_O2_UNSAT        , nl_soil)
+         end if
 #ifdef CROP
          call allocate_block_data (grid, f_hui                 )
          call allocate_block_data (grid, f_vf                  )
@@ -325,13 +323,13 @@ CONTAINS
          call allocate_block_data (grid, f_fertnitro_rice2     )
          call allocate_block_data (grid, f_fertnitro_sugarcane )
 #endif
-#ifdef Fire
-         call allocate_block_data (grid, f_abm                 )
-         call allocate_block_data (grid, f_gdp                 )
-         call allocate_block_data (grid, f_peatf               )
-         call allocate_block_data (grid, f_hdm                 )
-         call allocate_block_data (grid, f_lnfm                )
-#endif
+         if(DEF_USE_FIRE)then
+            call allocate_block_data (grid, f_abm                 )
+            call allocate_block_data (grid, f_gdp                 )
+            call allocate_block_data (grid, f_peatf               )
+            call allocate_block_data (grid, f_hdm                 )
+            call allocate_block_data (grid, f_lnfm                )
+         end if
 
       end if
 

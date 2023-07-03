@@ -82,7 +82,7 @@ contains
     integer ,intent(in) :: idate2  ! day of the year
     real(r8),parameter  :: PI = 4.*atan(1.)  ! circular constant
 
-    declin_angle=23.44_r8/180._r8*PI*cos(2*PI/365*(idate2+10))
+    declin_angle=-23.44_r8/180._r8*PI*cos(2*PI/365*(idate2+10))
 
   end function declin_angle
    

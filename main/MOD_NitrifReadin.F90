@@ -1,5 +1,6 @@
 #include <define.h>
 
+#ifdef BGC
 MODULE MOD_NitrifReadin
 
 !-----------------------------------------------------------------------
@@ -67,7 +68,6 @@ MODULE MOD_NitrifReadin
       REAL(r8),allocatable :: tO2_DECOMP_DEPTH_UNSAT_tmp(:)
       ! READ in nitrif
 
-#ifdef NITRIF
       allocate(tCONC_O2_UNSAT_tmp(numpatch))
       allocate(tO2_DECOMP_DEPTH_UNSAT_tmp(numpatch))
 
@@ -119,7 +119,7 @@ MODULE MOD_NitrifReadin
       END do
       deallocate(tCONC_O2_UNSAT_tmp)
       deallocate(tO2_DECOMP_DEPTH_UNSAT_tmp)
-#endif
    END SUBROUTINE NITRIF_readin
 
 END MODULE MOD_NitrifReadin
+#endif
