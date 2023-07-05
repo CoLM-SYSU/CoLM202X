@@ -104,11 +104,11 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 
    ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: Init_GlovalVars
+   PUBLIC :: Init_GlobalVars
 
 CONTAINS
 
-   SUBROUTINE Init_GlovalVars
+   SUBROUTINE Init_GlobalVars
 
       IMPLICIT NONE
 
@@ -137,7 +137,7 @@ CONTAINS
 
 !     ndecomp_pools_vr = ndecomp_pools * nl_soil
 
-   END SUBROUTINE Init_GlovalVars
+   END SUBROUTINE Init_GlobalVars
 
 END MODULE MOD_Vars_Global
 ! ---------- EOP ------------

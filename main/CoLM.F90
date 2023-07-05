@@ -176,7 +176,7 @@ PROGRAM CoLM
    edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
    pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
