@@ -39,17 +39,17 @@ class Validation:
                 variable_value = self.variables[key]                
                 o=xr.open_dataset(f'{self.casedir}/tmp/obs/'+f'obs_{key}.nc')[f'{key}']
                 s=xr.open_dataset(f'{self.casedir}/tmp/sim/'+f'sim_{variable_value}.nc')[f'{variable_value}']
-                if variable_value=='f_fevpa':
-                    s=s*86400
-                if variable_value=='QVEGT':
-                    s=s*86400
-                if variable_value=='QVEGE':
-                    s=s*86400
-                if variable_value=='QSOIL':
-                    s=s*86400
-                if (variable_value == 'H2OSOI') and (key == 'SMsurf'):
+                if key=='E':
+                    o=o/86400
+                if key=='Et':
+                    o=o/86400
+                if key=='Ei':
+                    o=o/86400
+                if key=='Es':
+                    o=o/86400
+                if (key == 'SMsurf'):
                     s=s[:,0,:,:].squeeze()
-                    
+
                 s['time']=o['time']
 
                 mask1 = np.isnan(s) | np.isnan(o)
