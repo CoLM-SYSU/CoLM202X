@@ -157,18 +157,27 @@ SUBROUTINE colm_CaMa_init
          CASE ('levdph')   !flood depth in protected side [m]
                DEF_hist_cama_vars%levdph=.true.
          CASE ('wevap')    ! input inundation Evaporation [m]
+            IF (LWEVAP) then
                DEF_hist_cama_vars%wevap=.true.
+            ELSE
+               DEF_hist_cama_vars%wevap=.false.
+            ENDIF
          CASE ('winfilt')  ! input inundation re-infiltrition [m]
+            IF (LWINFILT) then
                DEF_hist_cama_vars%winfilt=.true.
+            else
+               DEF_hist_cama_vars%winfilt=.false.
+            ENDIF
          CASE DEFAULT
             stop
          END SELECT
       end do
    ENDIF
+   
       !Broadcast the variables to all the processors
-      CALL mpi_bcast (NX      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
-      CALL mpi_bcast (NY      ,   1, MPI_LOGICAL,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
-      CALL mpi_bcast (IFRQ_INP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
+      CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
+      CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
+      CALL mpi_bcast (IFRQ_INP ,   1, MPI_INTEGER,  p_root, p_comm_glb, p_err) ! input frequency of CaMa-Flood (hour)
       CALL mpi_bcast (LWEVAP ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err)   ! switch for inundation evaporation
       CALL mpi_bcast (LWINFILT ,   1, MPI_LOGICAL,  p_root, p_comm_glb, p_err) ! switch for inundation re-infiltration
 

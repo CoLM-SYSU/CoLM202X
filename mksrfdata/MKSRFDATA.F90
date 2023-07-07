@@ -145,7 +145,7 @@ PROGRAM MKSRFDATA
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
    ! CALL gblock%set_by_file (DEF_file_block)
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
 
    ! ...........................................................................
