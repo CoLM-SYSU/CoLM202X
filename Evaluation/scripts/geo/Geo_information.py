@@ -157,6 +157,51 @@ class Evapotranspiration:
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
 
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            print(self.casedir+'/scratch')
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="Y", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="Y", periods=num, calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
 
 class Transpiration:
     def __init__(self,namelist):
@@ -222,6 +267,50 @@ class Transpiration:
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
+
+        if self.Sim_DataGroupby=='single':
+            shutil.rmtree(self.casedir+'/scratch',ignore_errors=True)
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+            num=len(ds['time'])
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="Y", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="Y", periods=num, calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
 
 
 class Interception:
@@ -289,6 +378,50 @@ class Interception:
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
 
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar='standard')
+                else:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
+
 class SoilEvaporation:
     def __init__(self,namelist):
         self.name = 'SoilEvaporation_validation'
@@ -329,7 +462,7 @@ class SoilEvaporation:
         self.use_Eyear=min(self.Obs_Eyear,self.Sim_Eyear,self.Eyear)
         self.num_cores               =  namelist['General']['num_cores']
         if (self.obs_source=='GLEAM'):
-            print('GLEAM .')
+            print('GLEAM.')
         else:
             print('The source is not exist.')
             sys.exit(1)
@@ -354,6 +487,50 @@ class SoilEvaporation:
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
+
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar='standard')
+                else:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
 
 
 
@@ -422,6 +599,49 @@ class SoilMoisture:
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
 
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar='standard')
+                else:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
 
 class Runoff:
     def __init__(self,namelist):
@@ -490,6 +710,49 @@ class Runoff:
         print(self.metrics)
 
 
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar='standard')
+                else:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'
 
 class LAI:
     def __init__(self,namelist):
@@ -555,3 +818,46 @@ class LAI:
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
         print(self.metrics)
+        if self.Sim_DataGroupby=='single':
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            # Open the netCDF file
+            VarFile = os.path.join(self.Sim_Dir, f'{self.Sim_Suffix}{self.Sim_Prefix}.nc')
+            ds = xr.open_dataset(VarFile)
+        
+            num=len(ds['time'])
+                
+            if (self.Sim_TimRes=="Hour"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="H", periods=num,calendar='standard')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="H", periods=num, calendar="noleap") 
+
+            elif (self.Sim_TimRes=="Day"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="standard") 
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="D", periods=num, calendar="noleap") 
+            elif (self.Sim_TimRes=="Month"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="standard") 
+                    print('leap')
+                else:
+                    ds['time'] = xr.cftime_range(start=f"{self.Sim_Syear}-01-01", freq="M", periods=num, calendar="noleap") 
+                    print('noleap')
+            elif (self.Sim_TimRes=="Year"):
+                if any(ds['time'].dt.dayofyear) == 366:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar='standard')
+                else:
+                    ds['time'] = pd.date_range(f"{self.Sim_Syear}-01-01", freq="Y", periods=num,calendar="noleap") 
+            else:
+                sys.exit(1)
+           
+           
+            # Split the data into yearly files
+            for year in range(self.use_Syear, self.use_Eyear+1):
+                ds_year = ds.sel(time=slice(f'{year}-01-01T00:00:00',f'{year}-12-31T23:59:59'))[list(self.variables.values())]
+                # Remove all attributes
+                ds_year.attrs = {}
+                ds_year.to_netcdf(os.path.join(self.casedir,'scratch',f'{self.Sim_Suffix}{year}{self.Sim_Prefix}.nc'))
+            ds.close()
+        self.Sim_Dir=self.casedir+'/scratch'

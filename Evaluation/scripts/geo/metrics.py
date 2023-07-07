@@ -62,7 +62,7 @@ class metrics:
         apb=100.0*k1.sum(dim='time')/(o.sum(dim='time'))
         return apb
 
-    def rmse(self,s,o):
+    def RMSE(self,s,o):
         """
         Root Mean Squared Error
         input:
@@ -144,7 +144,7 @@ class metrics:
       
         return corr
 
-    def corrlation_R2(self,s,o):
+    def correlation_R2(self,s,o):
         """
         correlation coefficient R2
         input:
