@@ -1376,12 +1376,12 @@ contains
 
 
       if (DEF_Interception_scheme==1) then
- 
+
          CALL LEAF_interception_CoLM2014 (  deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                              prc_rain,prc_snow,prl_rain,prl_snow,&
                                               ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                           pg_snow,qintr,qintr_rain,qintr_snow)
-      
+
       ELSEIF (DEF_Interception_scheme==2) then
          CALL LEAF_interception_CLM4 (  deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
                                                  prc_rain,prc_snow,prl_rain,prl_snow,&
@@ -1408,7 +1408,7 @@ contains
                                                  prc_rain,prc_snow,prl_rain,prl_snow,&
                                                 ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,&
                                              pg_snow,qintr,qintr_rain,qintr_snow)
-      
+
       ELSEIF  (DEF_Interception_scheme==7) then
 
          CALL LEAF_interception_colm202x (   deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf, &
@@ -1714,10 +1714,10 @@ contains
 
      pg_rain = pg_rain_tmp
      pg_snow = pg_snow_tmp
-     ldew  = sum( ldew_c(:,pc) * pcfrac(:,pc))
-     qintr = sum(qintr_c(:,pc) * pcfrac(:,pc))
-     qintr = sum(qintr_rain_c(:,pc) * pcfrac(:,pc))
-     qintr = sum(qintr_snow_c(:,pc) * pcfrac(:,pc))
+     ldew    = sum( ldew_c(:,pc) * pcfrac(:,pc))
+     qintr   = sum(qintr_c(:,pc) * pcfrac(:,pc))
+     qintr_rain = sum(qintr_rain_c(:,pc) * pcfrac(:,pc))
+     qintr_snow = sum(qintr_snow_c(:,pc) * pcfrac(:,pc))
 
  END SUBROUTINE LEAF_interception_pcwrap
 #endif
