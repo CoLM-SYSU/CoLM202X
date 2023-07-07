@@ -156,7 +156,6 @@ SUBROUTINE colm_CaMa_init
                DEF_hist_cama_vars%levsto=.true.
          CASE ('levdph')   !flood depth in protected side [m]
                DEF_hist_cama_vars%levdph=.true.
-            ENDIF
          CASE ('wevap')    ! input inundation Evaporation [m]
             IF (LWEVAP) then
                DEF_hist_cama_vars%wevap=.true.
