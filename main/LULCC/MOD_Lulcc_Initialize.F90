@@ -177,7 +177,7 @@ MODULE MOD_Lulcc_Initialize
    year = idate(1)
    jday = idate(2)
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
