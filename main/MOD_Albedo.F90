@@ -239,7 +239,8 @@ MODULE MOD_Albedo
       albv(:,:) = 0.   ! vegetation
       ssun(:,:) = 0.
       ssha(:,:) = 0.
-      thermk    = 1.e-3
+      ! 07/06/2023, yuan: use the values of previous timestep.
+      !thermk    = 1.e-3
       extkb     = 1.
       extkd     = 0.718
 
@@ -257,7 +258,8 @@ IF (patchtype == 0) THEN
       pe = patch_pft_e(ipatch)
       ssun_p(:,:,ps:pe) = 0.
       ssha_p(:,:,ps:pe) = 0.
-      thermk_p(ps:pe)   = 1.e-3
+      ! 07/06/2023, yuan: use the values of previous timestep.
+      !thermk_p(ps:pe)   = 1.e-3
       extkb_p(ps:pe)    = 1.
       extkd_p(ps:pe)    = 0.718
 #endif
@@ -266,9 +268,10 @@ IF (patchtype == 0) THEN
       pc = patch2pc(ipatch)
       ssun_c(:,:,:,pc) = 0.
       ssha_c(:,:,:,pc) = 0.
-      thermk_c(:,pc)   = 1.e-3
-      fshade_c(:,pc)   = pcfrac(:,pc)
-      fshade_c(0,pc)   = 0.
+      ! 07/06/2023, yuan: use the values of previous timestep.
+      !thermk_c(:,pc)   = 1.e-3
+      !fshade_c(:,pc)   = pcfrac(:,pc)
+      !fshade_c(0,pc)   = 0.
       extkb_c(:,pc)    = 1.
       extkd_c(:,pc)    = 0.718
 #endif
