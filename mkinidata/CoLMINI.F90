@@ -105,7 +105,7 @@ PROGRAM CoLMINI
    lc_year = DEF_LC_YEAR
 #endif
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
