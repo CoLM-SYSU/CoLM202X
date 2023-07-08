@@ -97,6 +97,17 @@ def read_namelist(file_path):
     return namelist
 
 if __name__=='__main__':
+    print("Welcome to the Geo module of the validation system!")
+    print("This module is used to validate the Geo information of the model output data")
+    print("===============================================================================")
+    print("Start running Geo module...")
+    
+    print("-------------------------------------Caution-----------------------------------")
+    print("Please make sure the time axis of the simulation data is consistent with the time axis of the validation data!")
+    print("--------------------------------------------=-----------------------------------")
+
+    input("Press Enter to continue...")
+    print("...............................................................................")
     namelist = read_namelist('namelist_geo.txt')
     if(namelist['General']['Run_Inundation']):
         p1=Inundation(namelist)
@@ -104,46 +115,54 @@ if __name__=='__main__':
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
     if (namelist['General']['Run_Evapotranspiration']):
         p1=Evapotranspiration(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+        p3.make_plot_index()
     if (namelist['General']['Run_Transpiration']):
         p1=Transpiration(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
     if (namelist['General']['Run_Interception']):
         p1=Interception(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
     if (namelist['General']['Run_SoilEvaporation']):
         p1=SoilEvaporation(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
     if (namelist['General']['Run_SoilMoisture']):
         p1=SoilMoisture(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+	    p3.make_plot_index()
     if (namelist['General']['Run_Runoff']):
         p1=Runoff(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
     if (namelist['General']['Run_LAI']):
         p1=LAI(namelist)
         p2=Makefiles_parallel(p1)
         p2.Makefiles_parallel()
         p3=Validation(p1)
         p3.make_validation()
+		p3.make_plot_index()
 
