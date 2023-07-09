@@ -41,7 +41,7 @@
    DEF_file_mesh = '/share/home/dq010/CoLM/data/landdata/landmask_igbp_144x96.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
 
    ! Model settings
    DEF_LANDONLY = .true.

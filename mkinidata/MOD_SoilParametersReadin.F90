@@ -33,7 +33,8 @@ MODULE MOD_SoilParametersReadin
    !------------------------------------------------------------------------------------------
 
       use MOD_Precision
-      USE MOD_Vars_Global, only : nl_soil
+      USE MOD_Vars_Global, only: nl_soil
+      USE MOD_Namelist, only: DEF_SOIL_REFL_SCHEME
       use MOD_SPMD_Task
       USE MOD_NetCDFVector
       use MOD_LandPatch
@@ -77,10 +78,8 @@ MODULE MOD_SoilParametersReadin
       real(r8), allocatable :: soil_tksatu_l  (:)  ! thermal conductivity of saturated unforzen soil [W/m-K]
       real(r8), allocatable :: soil_tksatf_l  (:)  ! thermal conductivity of saturated forzen soil [W/m-K]
       real(r8), allocatable :: soil_tkdry_l   (:)  ! thermal conductivity for dry soil  [W/(m-K)]
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
       real(r8), allocatable :: soil_BA_alpha_l(:)  ! alpha in Balland and Arp(2005) thermal conductivity scheme
       real(r8), allocatable :: soil_BA_beta_l (:)  ! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
 
       integer  :: ipatch, m, nsl  ! indices
 
@@ -120,10 +119,8 @@ MODULE MOD_SoilParametersReadin
             allocate ( soil_tksatu_l  (numpatch) )
             allocate ( soil_tksatf_l  (numpatch) )
             allocate ( soil_tkdry_l   (numpatch) )
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
             allocate ( soil_BA_alpha_l(numpatch) )
             allocate ( soil_BA_beta_l (numpatch) )
-#endif
          end if
 
       end if
@@ -158,10 +155,8 @@ MODULE MOD_SoilParametersReadin
          soil_tksatu_l  (:) = SITE_soil_tksatu   (nsl)
          soil_tksatf_l  (:) = SITE_soil_tksatf   (nsl)
          soil_tkdry_l   (:) = SITE_soil_tkdry    (nsl)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          soil_BA_alpha_l(:) = SITE_soil_BA_alpha (nsl)
          soil_BA_beta_l (:) = SITE_soil_BA_beta  (nsl)
-#endif
 
 #else
          write(c,'(i1)') nsl
@@ -244,7 +239,6 @@ MODULE MOD_SoilParametersReadin
          lndname = trim(landdir)//'/k_solids_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'k_solids_l'//trim(c)//'_patches', landpatch, soil_k_solids_l)
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          ! (20) read in the parameter alpha in the Balland V. and P. A. Arp (2005) model
          lndname = trim(landdir)//'/BA_alpha_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'BA_alpha_l'//trim(c)//'_patches', landpatch, soil_BA_alpha_l)
@@ -252,7 +246,6 @@ MODULE MOD_SoilParametersReadin
          ! (21) read in the parameter beta in the Balland V. and P. A. Arp (2005) model
          lndname = trim(landdir)//'/BA_beta_l'//trim(c)//'_patches.nc'
          call ncio_read_vector (lndname, 'BA_beta_l'//trim(c)//'_patches', landpatch, soil_BA_beta_l)
-#endif
 
          ! (22) read in the OM density (kg/m3)
          lndname = trim(landdir)//'/OM_density_s_l'//trim(c)//'_patches.nc'
@@ -293,10 +286,8 @@ MODULE MOD_SoilParametersReadin
                   dksatu    (nsl,ipatch) = -1.e36
                   dksatf    (nsl,ipatch) = -1.e36
                   dkdry     (nsl,ipatch) = -1.e36
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                   BA_alpha  (nsl,ipatch) = -1.e36
                   BA_beta   (nsl,ipatch) = -1.e36
-#endif
                else                 ! non ocean
                   vf_quartz  (nsl,ipatch) = soil_vf_quartz_mineral_s_l(ipatch)
                   vf_gravels (nsl,ipatch) = soil_vf_gravels_s_l       (ipatch)
@@ -326,10 +317,8 @@ MODULE MOD_SoilParametersReadin
                   dksatu     (nsl,ipatch) = soil_tksatu_l   (ipatch)               ! W/(m K)
                   dksatf     (nsl,ipatch) = soil_tksatf_l   (ipatch)               ! W/(m K)
                   dkdry      (nsl,ipatch) = soil_tkdry_l    (ipatch)               ! W/(m K)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                   BA_alpha   (nsl,ipatch) = soil_BA_alpha_l (ipatch)
                   BA_beta    (nsl,ipatch) = soil_BA_beta_l  (ipatch)
-#endif
                endif
             end do
 
@@ -363,10 +352,8 @@ MODULE MOD_SoilParametersReadin
             deallocate ( soil_tksatu_l  )
             deallocate ( soil_tksatf_l  )
             deallocate ( soil_tkdry_l   )
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
             deallocate ( soil_BA_alpha_l)
             deallocate ( soil_BA_beta_l )
-#endif
          end if
 
       end if
@@ -403,10 +390,8 @@ MODULE MOD_SoilParametersReadin
             dksatu     (nsl,:) = dksatu    (nsl-1,:)
             dksatf     (nsl,:) = dksatf    (nsl-1,:)
             dkdry      (nsl,:) = dkdry     (nsl-1,:)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
             BA_alpha   (nsl,:) = BA_alpha  (nsl-1,:)
             BA_beta    (nsl,:) = BA_beta   (nsl-1,:)
-#endif
          enddo
 
          do nsl = nl_soil, 10, -1
@@ -434,51 +419,52 @@ MODULE MOD_SoilParametersReadin
             dksatu     (nsl,:) = dksatu    (9,:)
             dksatf     (nsl,:) = dksatf    (9,:)
             dkdry      (nsl,:) = dkdry     (9,:)
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
             BA_alpha   (nsl,:) = BA_alpha  (9,:)
             BA_beta    (nsl,:) = BA_beta   (9,:)
-#endif
          end do
 
       end if
 
       ! Soil reflectance of broadband of visible(_v) and near-infrared(_n) of the sarurated(_s) and dry(_d) soil
-#if(defined SOIL_REFL_GUESSED)
-      if (p_is_worker) then
-         do ipatch = 1, numpatch
-            m = landpatch%settyp(ipatch)
-            CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
-               soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
-         enddo
-      end if
-#elif(defined SOIL_REFL_READ)
+      ! SCHEME 1: Guessed soil color type according to land cover classes
+      IF (DEF_SOIL_REFL_SCHEME .eq. 1) THEN
+         if (p_is_worker) then
+            do ipatch = 1, numpatch
+               m = landpatch%settyp(ipatch)
+               CALL soil_color_refl(m,soil_s_v_alb(ipatch),soil_d_v_alb(ipatch),&
+                  soil_s_n_alb(ipatch),soil_d_n_alb(ipatch))
+            enddo
+         end if
+      ENDIF
+
+      ! SCHEME 2: Read a global soil color map from CLM
+      IF (DEF_SOIL_REFL_SCHEME .eq. 2) THEN
 
 #ifdef SinglePoint
-      IF (USE_SITE_soilreflectance) THEN
-         soil_s_v_alb(:) = SITE_soil_s_v_alb
-         soil_d_v_alb(:) = SITE_soil_d_v_alb
-         soil_s_n_alb(:) = SITE_soil_s_n_alb
-         soil_d_n_alb(:) = SITE_soil_d_n_alb
-      ENDIF
+         IF (USE_SITE_soilreflectance) THEN
+            soil_s_v_alb(:) = SITE_soil_s_v_alb
+            soil_d_v_alb(:) = SITE_soil_d_v_alb
+            soil_s_n_alb(:) = SITE_soil_s_n_alb
+            soil_d_n_alb(:) = SITE_soil_d_n_alb
+         ENDIF
 #else
-      ! (1) Read in the albedo of visible of the saturated soil
-      lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
+         ! (1) Read in the albedo of visible of the saturated soil
+         lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_s_v_alb', landpatch, soil_s_v_alb)
 
-      ! (2) Read in the albedo of visible of the dry soil
-      lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
+         ! (2) Read in the albedo of visible of the dry soil
+         lndname = trim(landdir)//'/soil_d_v_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_d_v_alb', landpatch, soil_d_v_alb)
 
-      ! (3) Read in the albedo of near infrared of the saturated soil
-      lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
+         ! (3) Read in the albedo of near infrared of the saturated soil
+         lndname = trim(landdir)//'/soil_s_n_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_s_n_alb', landpatch, soil_s_n_alb)
 
-      ! (4) Read in the albedo of near infrared of the dry soil
-      lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
-      call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
+         ! (4) Read in the albedo of near infrared of the dry soil
+         lndname = trim(landdir)//'/soil_d_n_alb_patches.nc'
+         call ncio_read_vector (lndname, 'soil_d_n_alb', landpatch, soil_d_n_alb)
 #endif
-
-#endif
+      ENDIF
 
    END SUBROUTINE soil_parameters_readin
 

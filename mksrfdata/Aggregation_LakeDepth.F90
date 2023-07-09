@@ -23,6 +23,9 @@ SUBROUTINE Aggregation_LakeDepth ( &
    ! for USE in numerical weather prediction and climate modelling. Tellus A, 64, 15640.
    !
    ! Created by Yongjiu Dai, 02/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
@@ -86,7 +89,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #endif
 
    ! ................................................
-   ! ... (2) global lake coverage and lake depth
+   ! global lake coverage and lake depth
    ! ................................................
    lndname = trim(dir_rawdata)//'/lake_depth.nc'
 
@@ -110,16 +113,16 @@ SUBROUTINE Aggregation_LakeDepth ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L==16)THEN  ! LAND WATER BODIES (16)
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
             CALL aggregation_request_data (landpatch, ipatch, gland, &
@@ -143,7 +146,6 @@ SUBROUTINE Aggregation_LakeDepth ( &
    CALL check_vector_data ('lakedepth_patches ', lakedepth_patches)
 #endif
 
-   ! Write-out the lake depth of the lake pacth in the gridcell
 #ifndef SinglePoint
    lndname = trim(landdir)//'/lakedepth_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)

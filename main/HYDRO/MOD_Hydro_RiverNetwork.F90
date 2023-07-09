@@ -2,6 +2,13 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_RiverNetwork
+   !--------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !    River networks: data and communication subroutines.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !--------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_Vars_Global, only : spval
@@ -45,14 +52,14 @@ MODULE MOD_Hydro_RiverNetwork
 CONTAINS
    
    ! ----------
-   SUBROUTINE river_init ()
+   SUBROUTINE river_network_init ()
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
       USE MOD_NetCDFSerial
       USE MOD_Mesh
       USE MOD_CoLMDebug
-      USE MOD_Hydro_DrainageNetwork
+      USE MOD_Hydro_SurfaceNetwork
       USE MOD_DataType
       USE MOD_Utils
       USE MOD_CoLMDebug
@@ -419,12 +426,12 @@ CONTAINS
             allocate (riverwdth (numbasin))
 
             DO ibasin = 1, numbasin
-               riverarea(ibasin) = drainagenetwork(ibasin)%area(1)
+               riverarea(ibasin) = surface_network(ibasin)%area(1)
                riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
                ! modify height above nearest drainage data to consider river depth
-               drainagenetwork(ibasin)%hand(1) = &
-                  drainagenetwork(ibasin)%hand(1) + riverdpth(ibasin)
+               surface_network(ibasin)%hand(1) = &
+                  surface_network(ibasin)%hand(1) + riverdpth(ibasin)
             ENDDO
 
          ENDIF
@@ -477,7 +484,7 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-   END SUBROUTINE river_init
+   END SUBROUTINE river_network_init
 
    ! ----------
 #ifdef USEMPI
@@ -716,7 +723,7 @@ CONTAINS
 #endif
 
    ! ----------
-   SUBROUTINE river_final ()
+   SUBROUTINE river_network_final ()
 
       IMPLICIT NONE
 
@@ -733,7 +740,7 @@ CONTAINS
       IF (allocated(riverelv_ds))  deallocate(riverelv_ds)
       IF (allocated(riverfac_ds))  deallocate(riverfac_ds)
 
-   END SUBROUTINE river_final
+   END SUBROUTINE river_network_final
 
    ! ---------
    SUBROUTINE river_sendrecv_free_mem (this)

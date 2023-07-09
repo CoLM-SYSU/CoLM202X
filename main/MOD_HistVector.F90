@@ -3,6 +3,16 @@
 #if (defined UNSTRUCTURED || defined CATCHMENT)
 module MOD_HistVector
 
+   !----------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !     Write out vectorized model results to history files.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !
+   ! TODO...(need complement)
+   !----------------------------------------------------------------------------
+
    use MOD_Precision
    USE MOD_SPMD_Task
    USE MOD_Namelist
@@ -778,12 +788,12 @@ contains
          a_rootr, file_hist, 'f_rootr', itime_in_file, filter, &
          'soil', nl_soil, 'root water uptake', 'mm h2o/s')
 
-#ifdef PLANT_HYDRAULIC_STRESS
+      if(DEF_USE_PLANTHYDRAULICS)then
       ! vegetation water potential [mm]
-      call aggregate_to_vector_and_write_3d ( DEF_hist_vars%vegwp, &
-         a_vegwp, file_hist, 'f_vegwp', itime_in_file, filter, &
-         'vegnodes', nvegwcs, 'vegetation water potential', 'mm')
-#endif
+         call aggregate_to_vector_and_write_3d ( DEF_hist_vars%vegwp, &
+            a_vegwp, file_hist, 'f_vegwp', itime_in_file, filter, &
+            'vegnodes', nvegwcs, 'vegetation water potential', 'mm')
+      end if
 
       ! water table depth [m]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%zwt, &
@@ -803,10 +813,10 @@ contains
             ENDIF
          end if
       end if
-      ! depth of ponding water [m]
-      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%dpond, &
-         a_dpond, file_hist, 'f_dpond', itime_in_file, filter, &
-         'depth of ponding water','mm')
+      ! depth of surface water [m]
+      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%wdsrf, &
+         a_wdsrf, file_hist, 'f_wdsrf', itime_in_file, filter, &
+         'depth of surface water','mm')
 
       ! -----------------------------------------------
       ! Land water bodies' ice fraction and temperature

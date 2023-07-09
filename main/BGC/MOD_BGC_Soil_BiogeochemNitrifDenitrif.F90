@@ -1,6 +1,5 @@
 #include <define.h>
 #ifdef BGC
-#ifdef NITRIF
 module MOD_BGC_Soil_BiogeochemNitrifDenitrif
 
   !--------------------------------------------------------------------------------------------
@@ -25,12 +24,12 @@ module MOD_BGC_Soil_BiogeochemNitrifDenitrif
   use MOD_Vars_TimeInvariants, only: &
       porsl, wfc, bsw, BD_all, OM_density
     
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       surface_tension_water, rij_kro_a, rij_kro_alpha, rij_kro_beta, rij_kro_gamma, rij_kro_delta, organic_max, &
       k_nitr_max, d_con_g21, d_con_g22, d_con_w21, d_con_w22, d_con_w23, &
       denit_resp_coef, denit_resp_exp, denit_nitrate_coef, denit_nitrate_exp
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       ! decomposition carbon & nitrogen pools
       to2_decomp_depth_unsat, tconc_o2_unsat, smin_nh4_vr, smin_no3_vr
 
@@ -184,5 +183,4 @@ contains
     end do
   end subroutine SoilBiogeochemNitrifDenitrif
 end module MOD_BGC_Soil_BiogeochemNitrifDenitrif
-#endif
 #endif

@@ -31,15 +31,15 @@ MODULE MOD_HtopReadin
          USE MOD_Const_PFT
          USE MOD_Vars_TimeInvariants
          USE MOD_LandPatch
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          USE MOD_LandPFT
-         USE MOD_Vars_PFTimeInvars
-         USE MOD_Vars_PFTimeVars
+         USE MOD_Vars_PFTimeInvariants
+         USE MOD_Vars_PFTimeVariables
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          USE MOD_LandPC
-         USE MOD_Vars_PCTimeInvars
-         USE MOD_Vars_PCTimeVars
+         USE MOD_Vars_PCTimeInvariants
+         USE MOD_Vars_PCTimeVariables
 #endif
          USE MOD_NetCDFVector
 #ifdef SinglePoint
@@ -63,7 +63,7 @@ MODULE MOD_HtopReadin
          landdir = trim(dir_landdata) // '/htop/' // trim(cyear)
 
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
 
          IF (p_is_worker) THEN
             do npatch = 1, numpatch
@@ -77,7 +77,7 @@ MODULE MOD_HtopReadin
 
 #endif
 
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
 #ifdef SinglePoint
          allocate (htoplc (numpatch))
          htoplc(:) = SITE_htop
@@ -111,7 +111,7 @@ MODULE MOD_HtopReadin
 #endif
 
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
 #ifdef SinglePoint
          allocate(htoppft(numpft))
          htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
@@ -158,7 +158,7 @@ MODULE MOD_HtopReadin
          IF (allocated(htoppft)) deallocate(htoppft)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
 #ifdef SinglePoint
          allocate(htoplc(1))
          htoplc(:) = sum(SITE_htop_pfts * SITE_pctpfts)

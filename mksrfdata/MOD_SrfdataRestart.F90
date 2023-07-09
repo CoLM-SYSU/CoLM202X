@@ -1,6 +1,13 @@
 #include <define.h>
 
 MODULE MOD_SrfdataRestart
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to read/write data of mesh and pixelsets.
+   ! 
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
 
    IMPLICIT NONE
 

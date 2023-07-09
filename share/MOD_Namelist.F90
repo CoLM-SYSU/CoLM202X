@@ -2,6 +2,15 @@
 
 MODULE MOD_Namelist
 
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Variables in namelist files and subrroutines to read namelist files.
+   !
+   ! Initial Authors: Shupeng Zhang, Zhongwang Wei, Xingjie Lu, Nan Wei,
+   !                  Hua Yuan, Wenzong Dong et al., May 2023
+   !-----------------------------------------------------------------------
+
    USE MOD_Precision, only: r8
    IMPLICIT NONE
    SAVE
@@ -37,9 +46,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_lakedepth       = .true.
    LOGICAL  :: USE_SITE_soilreflectance = .true.
    LOGICAL  :: USE_SITE_soilparameters  = .true.
-#ifdef USE_DEPTH_TO_BEDROCK
    LOGICAL  :: USE_SITE_dbedrock = .true.
-#endif
 #endif
 
    ! ----- simulation time type -----
@@ -94,27 +101,72 @@ MODULE MOD_Namelist
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
-   logical :: DEF_LAI_CLIM = .FALSE.
+   ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
+   logical :: DEF_LAI_MONTHLY = .true.
    INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 
    ! ------LAI change and Land cover year setting ----------
-   ! 05/2023, add by Dong: use for updating LAI with simulation year
-   LOGICAL :: DEF_LAICHANGE = .FALSE.
+   ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
+   LOGICAL :: DEF_LAI_CHANGE_YEARLY = .true.
+   ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
+   LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
 
-   ! ------ LULCC -------
-   INTEGER :: DEF_LC_YEAR   = 2005
+   ! 06/2023, add by hua yuan and wenzong dong
+   ! ------ Land use and land cover (LULC) related -------
 
-   ! ------ URBAN -------
-   !INTEGER :: DEF_Urban_type_scheme = 1
-   LOGICAL :: DEF_Urban_BEM    = .true.
-   LOGICAL :: DEF_Urban_TREE   = .true.
-   LOGICAL :: DEF_Urban_WATER  = .true.
-   LOGICAL :: DEF_Urban_LUCY   = .true.
+   ! USE a static year land cover type
+   INTEGER :: DEF_LC_YEAR      = 2005
+
+   ! Options for LULCC year-to-year transfer schemes
+   ! 1: Same Type Assignment scheme (STA), state variables assignment for the same TYPE (LC, PFT or PC)
+   ! 2: Energy and Mass Conservation scheme (EMC), DO energy and mass conservation calculation
+   INTEGER :: DEF_LULCC_SCHEME = 1
+
+   ! ------ Urban model related -------
+   !INTEGER :: DEF_URBAN_type_scheme = 1
+   logical :: DEF_URBAN_RUN    = .false.
+   LOGICAL :: DEF_URBAN_BEM    = .true.
+   LOGICAL :: DEF_URBAN_TREE   = .true.
+   LOGICAL :: DEF_URBAN_WATER  = .true.
+   LOGICAL :: DEF_URBAN_LUCY   = .true.
+
+   ! ------ SOIL parameters and supercool water setting -------
+   LOGICAL :: DEF_USE_SOILPAR_UPS_FIT = .true.     ! soil hydraulic parameters are upscaled from rawdata (1km resolution)
+                                                   ! to model patches through FIT algorithm (Montzka et al., 2017).
+   INTEGER :: DEF_THERMAL_CONDUCTIVITY_SCHEME = 4  ! Options for soil thermal conductivity schemes
+                                                   ! 1: Farouki (1981)
+                                                   ! 2: Johansen(1975)
+                                                   ! 3: Cote and Konrad (2005)
+                                                   ! 4: Balland and Arp (2005)
+                                                   ! 5: Lu et al. (2007)
+                                                   ! 6: Tarnawski and Leong (2012)
+                                                   ! 7: De Vries (1963)
+                                                   ! 8: Yan Hengnian, He Hailong et al.(2019)
+   LOGICAL :: DEF_USE_SUPERCOOL_WATER = .true.     ! supercooled soil water scheme, Niu & Yang (2006)
+
+
+   ! Options for soil reflectance setting schemes
+   ! 1: Guessed soil color type according to land cover classes
+   ! 2: Read a global soil color map from CLM
+   INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+   LOGICAL :: DEF_USE_BEDROCK                 = .false.
+   LOGICAL :: DEF_USE_OZONESTRESS             = .false.
+   LOGICAL :: DEF_USE_OZONEDATA               = .false.
+
+   ! .true. for running SNICAR model
+   logical :: DEF_USE_SNICAR                  = .true.
+
+   ! .true. read aerosol deposition data from file or .false. set in the code
+   logical :: DEF_Aerosol_Readin              = .true.
+
+   ! .true. Read aerosol deposition climatology data or .false. yearly changed
+   logical :: DEF_Aerosol_Clim                = .false.
+
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
@@ -210,6 +262,21 @@ MODULE MOD_Namelist
 
    !CBL height
    LOGICAL            :: DEF_USE_CBL_HEIGHT = .false.
+   !Plant Hydraulics
+   LOGICAL            :: DEF_USE_PLANTHYDRAULICS = .true.
+   !Semi-Analytic-Spin-Up
+   LOGICAL            :: DEF_USE_SASU = .false.
+   !Punctuated nitrogen addition Spin up
+   LOGICAL            :: DEF_USE_PN   = .false.
+   !Fertilisation on crop
+   LOGICAL            :: DEF_USE_FERT = .true.
+   !Nitrification and denitrification switch
+   LOGICAL            :: DEF_USE_NITRIF = .true.
+   !Soy nitrogen fixation
+   LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
+   !Fire module
+   LOGICAL            :: DEF_USE_FIRE = .false.
+
 
    ! ----- history variables -----
    TYPE history_var_type
@@ -225,9 +292,7 @@ MODULE MOD_Namelist
       LOGICAL :: xy_solarin   = .true.
       LOGICAL :: xy_rain      = .true.
       LOGICAL :: xy_snow      = .true.
-#ifdef OzoneStress
       LOGICAL :: xy_ozone     = .true.
-#endif
 
       LOGICAL :: xy_hpbl      = .true.
 
@@ -277,6 +342,32 @@ MODULE MOD_Namelist
       LOGICAL :: trad         = .true.
       LOGICAL :: tref         = .true.
       LOGICAL :: qref         = .true.
+#ifdef URBAN_MODEL
+      LOGICAL :: fsen_roof    = .true.
+      LOGICAL :: fsen_wsun    = .true.
+      LOGICAL :: fsen_wsha    = .true.
+      LOGICAL :: fsen_gimp    = .true.
+      LOGICAL :: fsen_gper    = .true.
+      LOGICAL :: fsen_urbl    = .true.
+      LOGICAL :: lfevp_roof   = .true.
+      LOGICAL :: lfevp_gimp   = .true.
+      LOGICAL :: lfevp_gper   = .true.
+      LOGICAL :: lfevp_urbl   = .true.
+      LOGICAL :: fhac         = .true.
+      LOGICAL :: fwst         = .true.
+      LOGICAL :: fach         = .true.
+      LOGICAL :: fhah         = .true.
+      LOGICAL :: meta         = .true.
+      LOGICAL :: vehc         = .true.
+      LOGICAL :: t_room       = .true.
+      LOGICAL :: tafu         = .true.
+      LOGICAL :: t_roof       = .true.
+      LOGICAL :: t_wall       = .true.
+#endif
+      LOGICAL :: assimsun        = .true. !1
+      LOGICAL :: assimsha        = .true. !1
+      LOGICAL :: etrsun        = .true. !1
+      LOGICAL :: etrsha        = .true. !1
 #ifdef BGC
       LOGICAL :: leafc              = .true.
       LOGICAL :: leafc_storage      = .true.
@@ -357,27 +448,6 @@ MODULE MOD_Namelist
       LOGICAL :: leafc_c3arcgrass   = .false. !12
       LOGICAL :: leafc_c3grass      = .false. !13
       LOGICAL :: leafc_c4grass      = .false. !14
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-      LOGICAL :: assim_RuBP_sun        = .true. !1
-      LOGICAL :: assim_RuBP_sha        = .true. !1
-      LOGICAL :: assim_Rubisco_sun        = .true. !1
-      LOGICAL :: assim_Rubisco_sha        = .true. !1
-      LOGICAL :: assimsun        = .true. !1
-      LOGICAL :: assimsha        = .true. !1
-      LOGICAL :: etrsun        = .true. !1
-      LOGICAL :: etrsha        = .true. !1
-      LOGICAL :: cisun        = .true. !1
-      LOGICAL :: cisha        = .true. !1
-      LOGICAL :: Dsun        = .true. !1
-      LOGICAL :: Dsha        = .true. !1
-      LOGICAL :: gammasun        = .true. !1
-      LOGICAL :: gammasha        = .true. !1
-      LOGICAL :: lambdasun        = .true.
-      LOGICAL :: lambdasha        = .true.
-      LOGICAL :: lambda                   = .true.
-#endif
-#endif
 #ifdef CROP
       LOGICAL :: cphase             = .true.
       LOGICAL :: gddmaturity        = .true.
@@ -449,17 +519,13 @@ MODULE MOD_Namelist
       LOGICAL :: fertnitro_sugarcane= .true.
 #endif
       LOGICAL :: ndep_to_sminn      = .true.
-#ifdef NITRIF
       LOGICAL :: CONC_O2_UNSAT      = .true.
       LOGICAL :: O2_DECOMP_DEPTH_UNSAT = .true.
-#endif
-#ifdef Fire
       LOGICAL :: abm                = .true.
       LOGICAL :: gdp                = .true.
       LOGICAL :: peatf              = .true.
       LOGICAL :: hdm                = .true.
       LOGICAL :: lnfm               = .true.
-#endif
 #endif
 
       LOGICAL :: t_soisno     = .true.
@@ -476,7 +542,7 @@ MODULE MOD_Namelist
       LOGICAL :: BD_all       = .true.
       LOGICAL :: wfc          = .true.
       LOGICAL :: OM_density   = .true.
-      LOGICAL :: dpond        = .true.
+      LOGICAL :: wdsrf        = .true.
       LOGICAL :: zwt          = .true.
       LOGICAL :: wa           = .true.
 
@@ -531,13 +597,12 @@ MODULE MOD_Namelist
       LOGICAL :: srndln       = .true.
       LOGICAL :: srniln       = .true.
 
-      LOGICAL :: rsurf_hru    = .true.
+      LOGICAL :: rsubs_bsn    = .true.
       LOGICAL :: rsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
-      LOGICAL :: dpond_hru    = .true.
+      LOGICAL :: wdsrf_hru    = .true.
       LOGICAL :: veloc_hru    = .true.
-      LOGICAL :: zwt_hru      = .true.
 
    END TYPE history_var_type
 
@@ -572,9 +637,7 @@ CONTAINS
          USE_SITE_lakedepth,       &
          USE_SITE_soilreflectance, &
          USE_SITE_soilparameters,  &
-#ifdef USE_DEPTH_TO_BEDROCK
          USE_SITE_dbedrock,       &
-#endif
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -591,36 +654,50 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
 
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
-         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
+         DEF_LAI_CHANGE_YEARLY,           &
+         DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
 
-         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
+         DEF_LC_YEAR,                     &
+         DEF_LULCC_SCHEME,                &
 
-         !DEF_Urban_type_scheme,           &
-         DEF_Urban_BEM,                   &   !add by yuan, open urban BEM model or not
-         DEF_Urban_TREE,                  &   !add by yuan, modeling urban tree or not
-         DEF_Urban_WATER,                 &   !add by yuan, modeling urban water or not
-         DEF_Urban_LUCY,                  &
+        !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
+         DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
+         DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
+         DEF_URBAN_WATER,                 &   !add by hua yuan, modeling urban water or not
+         DEF_URBAN_LUCY,                  &
+
+         DEF_USE_SOILPAR_UPS_FIT,         &
+         DEF_THERMAL_CONDUCTIVITY_SCHEME, &
+         DEF_USE_SUPERCOOL_WATER,         &
+         DEF_SOIL_REFL_SCHEME,            &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
 
-         DEF_LAICHANGE,                   &   !add by Dong, use for changing LAI of simulation year
-         DEF_LC_YEAR,                     &   !add by Dong, use for define the year of land cover data
-
-         DEF_LAI_CLIM,                    &   !add by zhongwang wei @ sysu 2021/12/23
-         DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
-         DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
-
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
+         DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
+         DEF_USE_SASU,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_PN,                      &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_FERT,                    &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_NITRIF,                  &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_CNSOYFIXN,               &   !add by Xingjie Lu @ sysu 2023/06/27
+         DEF_USE_FIRE,                    &   !add by Xingjie Lu @ sysu 2023/06/27
 
          DEF_LANDONLY,                    &
          DEF_USE_DOMINANT_PATCHTYPE,      &
          DEF_USE_VARIABLY_SATURATED_FLOW, &
+         DEF_USE_BEDROCK,                 &
+         DEF_USE_OZONESTRESS,             &
+         DEF_USE_OZONEDATA,               &
+         DEF_USE_SNICAR,                  &
+         DEF_Aerosol_Readin,              &
+         DEF_Aerosol_Clim,                &
 
          DEF_precip_phase_discrimination_scheme, &
 
@@ -701,23 +778,142 @@ CONTAINS
          DEF_HIST_mode = 'one'
 #endif
 
+! ----- Macros&Namelist conflicts and dependency management -----
+
+
 #if (defined vanGenuchten_Mualem_SOIL_MODEL)
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
-         IF (.not. DEF_LAI_CLIM) THEN
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+         IF (.not.DEF_LAI_MONTHLY) THEN
             write(*,*) 'Warning: 8-day LAI data is not supported for '
-            write(*,*) 'PFT_CLASSIFICATION and PC_CLASSIFICATION.'
-            write(*,*) 'Changed to climatic data.'
-            DEF_LAI_CLIM = .true.
+            write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
+            write(*,*) 'Changed to monthly data.'
+            DEF_LAI_MONTHLY = .true.
          ENDIF
 #endif
 
-        DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
-        DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+#ifndef BGC
+         IF(DEF_USE_LAIFEEDBACK)then
+            DEF_USE_LAIFEEDBACK = .false.
+            write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
+            write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
+         ENDIF
+#endif
+#ifndef BGC
+         IF(DEF_USE_SASU)then
+            DEF_USE_SASU = .false.
+            write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
+            write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
+         ENDIF
+         IF(DEF_USE_PN)then
+            DEF_USE_PN = .false.
+            write(*,*) 'Warning: Punctuated nitrogen addition spin up is on when BGC is off.'
+            write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off'
+         ENDIF
+#endif
+
+#ifndef CROP
+         IF(DEF_USE_FERT)then
+            DEF_USE_FERT = .false.
+            write(*,*) 'Warning: Fertilization is on when CROP is off.'
+            write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off'
+         ENDIF
+#endif
+
+#ifndef BGC
+         IF(DEF_USE_NITRIF)then
+            DEF_USE_NITRIF = .false.
+            write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
+            write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off'
+         ENDIF
+#endif
+
+#ifndef CROP
+         IF(DEF_USE_CNSOYFIXN)then
+            DEF_USE_CNSOYFIXN = .false.
+            write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
+            write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off'
+         ENDIF
+#endif
+
+#ifndef BGC
+         IF(DEF_USE_FIRE)then
+            DEF_USE_FIRE = .false.
+            write(*,*) 'Warning: Fire model is on when BGC is off.'
+            write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off'
+         ENDIF
+#endif
+         IF(.not. DEF_USE_OZONESTRESS)then
+            IF(DEF_USE_OZONEDATA)then
+               DEF_USE_OZONEDATA = .false.
+               write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
+               write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
+            ENDIF
+         ENDIF
+
+! ----- SNICAR model ------
+
+         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+
+         IF (.not. DEF_USE_SNICAR) THEN
+            IF (DEF_Aerosol_Readin) THEN
+               DEF_Aerosol_Readin = .false.
+               write(*,*) 'Warning: DEF_Aerosol_Readin is not needed for DEF_USE_SNICAR off. '
+               write(*,*) 'DEF_Aerosol_Readin is set to false automatically.'
+            ENDIF
+         ENDIF
+
+! ----- Urban model conflicts and dependency management -----
+#ifdef URBAN_MODEL
+         DEF_URBAN_RUN = .true.
+
+         IF (DEF_USE_SNICAR) THEN
+            write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
+            write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
+            DEF_USE_SNICAR = .false.
+         ENDIF
+#else
+         IF (DEF_URBAN_RUN) then
+            write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '
+            write(*,*) 'please #define URBAN_MODEL in define.h. otherwise DEF_URBAN_RUN will '
+            write(*,*) 'be set to false automatically.'
+            DEF_URBAN_RUN = .false.
+         ENDIF
+#endif
+
+
+! ----- LULCC conflicts and dependency management -----
+#ifdef LULCC
+
+#if (defined LULC_USGS || defined BGC)
+         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS|BGC at present. STOP! '
+         STOP
+#endif
+         IF (.not.DEF_LAI_MONTHLY) THEN
+            write(*,*) 'Note: When LULCC is opened, DEF_LAI_MONTHLY '
+            write(*,*) 'will be set to true automatically.'
+            DEF_LAI_MONTHLY = .true.
+         ENDIF
+
+         IF (.not.DEF_LAI_CHANGE_YEARLY) THEN
+            write(*,*) 'Note: When LULCC is opened, DEF_LAI_CHANGE_YEARLY '
+            write(*,*) 'will be set to true automatically.'
+            DEF_LAI_CHANGE_YEARLY = .true.
+         ENDIF
+#else
+         !TODO: Complement IF needed
+
+#endif
+
+
+! -----END Macros&Namelist conflicts and dependency management -----
+
 
       ENDIF
+
 
 #ifdef USEMPI
       CALL mpi_bcast (DEF_CASE_NAME,    256, mpi_character, p_root, p_comm_glb, p_err)
@@ -775,30 +971,50 @@ CONTAINS
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      ! 05/2023, added by Dong
-      CALL mpi_bcast (DEF_LAICHANGE  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_LC_YEAR    ,     1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_Urban_type_scheme, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! 05/2023, added by Xingjie lu
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      ! LULC related
+      CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
-      CALL mpi_bcast (DEF_Urban_BEM  ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_TREE ,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_Urban_LUCY ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_LUCY,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
-      call mpi_bcast (DEF_LAI_CLIM,        1, mpi_logical, p_root, p_comm_glb, p_err)
-      !zhongwang wei, 20220520: add option to choose different canopy interception schemes
+      ! 06/2023, added by weinan
+      CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_THERMAL_CONDUCTIVITY_SCHEME,  1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_SUPERCOOL_WATER,          1, mpi_logical, p_root, p_comm_glb, p_err)
+
+      ! 06/2023, added by hua yuan
+      CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      !zhongwang wei, 20230207: add option to use different CO2 path if CMIP6 is used.
       call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
 
-      !zhongwang wei, 20221231: add option to read CBL height
       call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_SASU, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_PN, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FERT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_NITRIF, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_CNSOYFIXN, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FIRE, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_VARIABLY_SATURATED_FLOW,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_BEDROCK                ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONESTRESS            ,1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_OZONEDATA              ,1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_precip_phase_discrimination_scheme, 5, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -808,8 +1024,12 @@ CONTAINS
       call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
+      call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowaging , 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      call mpi_bcast (DEF_Aerosol_Readin,    1, mpi_logical,   p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_Aerosol_Clim,      1, mpi_logical,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_HISTORY_IN_VECTOR, 1, mpi_logical,  p_root, p_comm_glb, p_err)
 
@@ -953,6 +1173,28 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
+#ifdef URBAN_MODEL
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_roof   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsun   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_wsha   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gimp   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_gper   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fsen_urbl   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_roof  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gimp  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_gper  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%lfevp_urbl  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhac        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fwst        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fach        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%fhah        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%meta        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%vehc        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_room      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%tafu        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_roof      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%t_wall      ,  set_defaults)
+#endif
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%leafc              ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      ,  set_defaults)
@@ -1033,27 +1275,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_RuBP_sha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assim_Rubisco_sha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cisun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%cisha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%Dsun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%Dsha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gammasun        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gammasha        ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lambdasun        ,  set_defaults) !1
-      CALL sync_hist_vars_one (DEF_hist_vars%lambdasha        ,  set_defaults) !1
-      CALL sync_hist_vars_one (DEF_hist_vars%lambda                   ,  set_defaults) !14
-#endif
-#endif
+         CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -1106,13 +1331,13 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
-#ifdef Fire
-      CALL sync_hist_vars_one (DEF_hist_vars%abm                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%gdp                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%peatf                           , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%hdm                             , set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%lnfm                            , set_defaults)
-#endif
+      if(DEF_USE_FIRE)then
+         CALL sync_hist_vars_one (DEF_hist_vars%abm                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%gdp                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%peatf                        , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%hdm                          , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%lnfm                         , set_defaults)
+      endif
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%t_soisno    ,  set_defaults)
@@ -1129,7 +1354,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%BD_all      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wfc         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%OM_density  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%dpond       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zwt         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wa          ,  set_defaults)
 
@@ -1184,13 +1409,12 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%rsurf_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%dpond_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%zwt_hru     ,  set_defaults)
 
    END SUBROUTINE sync_hist_vars
 

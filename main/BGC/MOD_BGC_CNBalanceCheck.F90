@@ -15,7 +15,8 @@ module MOD_BGC_CNBalanceCheck
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure.
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_Namelist, only : DEF_USE_NITRIF
+  use MOD_BGC_Vars_TimeVariables, only: &
       sminn, col_endcb, col_begcb, totcolc, col_endnb, col_begnb, totcoln, &
       col_vegbegcb, totvegc, ctrunc_veg, col_vegbegnb, totvegn, ntrunc_veg, &
       col_soilbegcb, totsomc, totlitc, totcwdc, ctrunc_soil, &
@@ -26,7 +27,7 @@ module MOD_BGC_CNBalanceCheck
       som_c_leached, ndep_to_sminn, nfix_to_sminn, supplement_to_sminn, ffix_to_sminn, &
       fert_to_sminn, soyfixn_to_sminn, denit, fire_nloss, wood_harvestn, grainn_to_cropprodn, &
       sminn_leached, f_n2o_nit, smin_no3_leached, smin_no3_runoff, som_n_leached, sminn_to_plant
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       leafc_p, frootc_p, livestemc_p, deadstemc_p, livecrootc_p, deadcrootc_p, &
       leafc_storage_p, frootc_storage_p, livestemc_storage_p, &
       deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
@@ -36,7 +37,7 @@ module MOD_BGC_CNBalanceCheck
   use MOD_BGC_Vars_1DPFTFluxes, only: &
       grainc_to_food_p
   use MOD_SPMD_Task
-  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass
   
   implicit none
   
@@ -176,11 +177,11 @@ contains
 
     col_noutputs = denit(i) + fire_nloss(i) + wood_harvestn(i) + grainn_to_cropprodn(i)
 
-#ifdef NITRIF
-    col_noutputs = col_noutputs + f_n2o_nit(i) + smin_no3_leached(i) + smin_no3_runoff(i)
-#else
-    col_noutputs = col_noutputs + sminn_leached(i)
-#endif
+    if(DEF_USE_NITRIF)then
+       col_noutputs = col_noutputs + f_n2o_nit(i) + smin_no3_leached(i) + smin_no3_runoff(i)
+    else
+       col_noutputs = col_noutputs + sminn_leached(i)
+    end if
 
     col_noutputs = col_noutputs - som_n_leached(i)
     col_errnb    =(col_ninputs - col_noutputs)*deltim - (col_endnb(i) - col_begnb(i))
@@ -202,13 +203,13 @@ contains
        write(*,*)'net flux                 = ',(col_ninputs-col_noutputs)*deltim
        write(*,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(i)*deltim,nfix_to_sminn(i)*deltim,ndep_to_sminn(i)*deltim,&
                                           fert_to_sminn(i)*deltim,soyfixn_to_sminn(i)*deltim
-#ifdef NITRIF
-       write(*,*)'outputs,leached,runoff,denit = ',smin_no3_leached(i)*deltim, smin_no3_runoff(i)*deltim,f_n2o_nit(i)*deltim
-#else
-       write(*,*)'outputs,leached,denit,fire,harvest,som_n_leached',&
-                 sminn_leached(i)*deltim,denit(i)*deltim,fire_nloss(i)*deltim,&
-                 (wood_harvestn(i)+grainn_to_cropprodn(i))*deltim, - som_n_leached(i)
-#endif
+       if(DEF_USE_NITRIF)then
+          write(*,*)'outputs,leached,runoff,denit = ',smin_no3_leached(i)*deltim, smin_no3_runoff(i)*deltim,f_n2o_nit(i)*deltim
+       else
+          write(*,*)'outputs,leached,denit,fire,harvest,som_n_leached',&
+                    sminn_leached(i)*deltim,denit(i)*deltim,fire_nloss(i)*deltim,&
+                    (wood_harvestn(i)+grainn_to_cropprodn(i))*deltim, - som_n_leached(i)
+       end if
        call abort
     end if
 

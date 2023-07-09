@@ -15,7 +15,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            lakedepth    ,dz_lake                                  ,&
 
          ! LUCY model input parameters
-           fix_holiday  ,week_holiday ,hum_prof     ,popcell      ,&
+           fix_holiday  ,week_holiday ,hum_prof     ,pop_den      ,&
            vehicle      ,weh_prof     ,wdh_prof     ,&
 
          ! soil ground and wall information
@@ -28,9 +28,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
 #endif
            hksati       ,csol         ,k_solids     ,dksatu       ,&
            dksatf       ,dkdry        ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
            BA_alpha     ,BA_beta      ,&
-#endif
            alb_roof     ,alb_wall     ,alb_gimp     ,alb_gper     ,&
 
          ! vegetation information
@@ -167,7 +165,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         hum_prof(24)    , &! Diurnal metabolic heat profile
         weh_prof(24)    , &! Diurnal traffic flow profile of weekend
         wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-        popcell         , &! population density
+        pop_den         , &! population density
         vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
@@ -216,10 +214,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         dksatf    (nl_soil),&! thermal conductivity of saturated frozen soil [W/m-K]
         dkdry     (nl_soil),&! thermal conductivity for dry soil  [J/(K s m)]
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha  (nl_soil),&! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta   (nl_soil),&! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
         alb_roof(2,2)      ,&! albedo of roof [-]
         alb_wall(2,2)      ,&! albedo of walls [-]
         alb_gimp(2,2)      ,&! albedo of impervious [-]
@@ -865,7 +861,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          par                  ,Fhac                 ,Fwst                 ,Fach                 ,&
          Fahe                 ,Fhah                 ,vehc                 ,meta                 ,&
          ! LUCY INPUT PARAMETERS
-         fix_holiday          ,week_holiday         ,hum_prof             ,popcell              ,&
+         fix_holiday          ,week_holiday         ,hum_prof             ,pop_den              ,&
          vehicle              ,weh_prof             ,wdh_prof             ,idate                ,&
          patchlonr                                                                              ,&
          ! GROUND PARAMETERS
@@ -883,9 +879,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          sc_vgm               ,fc_vgm               ,&
 #endif
          k_solids             ,dksatu               ,dksatf               ,dkdry                ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
          BA_alpha             ,BA_beta              ,&
-#endif
          cv_roof              ,cv_wall              ,cv_gimp              ,&
          tk_roof              ,tk_wall              ,tk_gimp              ,dz_roofsno(lbr:)     ,&
          dz_gimpsno(lbi:)     ,dz_gpersno(lbp:)     ,dz_lakesno(:)        ,dz_wall(:)           ,&
@@ -911,9 +905,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
          ldew                 ,t_room               ,troof_inner          ,twsun_inner          ,&
          twsha_inner          ,t_roommax            ,t_roommin            ,tafu                 ,&
 
-#ifdef SNICAR
+! SNICAR model variables
          snofrz(lbsn:0)       ,sabg_lyr(lbp:1)                                                  ,&
-#endif
+! END SNICAR model variables
+
          ! output
          taux                 ,tauy                 ,fsena                ,fevpa                ,&
          lfevpa               ,fsenl                ,fevpl                ,etr                  ,&
@@ -934,14 +929,6 @@ SUBROUTINE UrbanCoLMMAIN ( &
          tstar                ,fm                   ,fh                   ,fq                   ,&
          hpbl                                                                                    )
 
-
-! 计算代谢热和交通热
-!#ifdef USE_LUCY
-!     f_fac  = 0.8
-!     car_sp = 54
-!     CALL LUCY(idate,deltim,fix_holiday,week_holiday,f_fac,car_sp,hum_prof, &
-!              wdh_prof,weh_prof,popcell,vehicle,Fahe) !vehc_tot,ahf_flx,vehc_flx)
-!#endif
 !----------------------------------------------------------------------
 ! [4] Urban hydrology
 !----------------------------------------------------------------------
@@ -979,11 +966,12 @@ SUBROUTINE UrbanCoLMMAIN ( &
         flddepth             ,fldfrc               ,qinfl_fld                                  ,&
 #endif
 
-#ifdef SNICAR
+! SNICAR model variables
         forc_aer             ,&
         mss_bcpho(lbsn:0)    ,mss_bcphi(lbsn:0)    ,mss_ocpho(lbsn:0)    ,mss_ocphi(lbsn:0)    ,&
         mss_dst1(lbsn:0)     ,mss_dst2(lbsn:0)     ,mss_dst3(lbsn:0)     ,mss_dst4(lbsn:0)     ,&
-#endif
+! END SNICAR model variables
+
         ! output
         rsur                 ,rnof                 ,qinfl                ,zwt                  ,&
         wa                   ,qcharge              ,smp                  ,hk                   ,&
@@ -1100,10 +1088,10 @@ SUBROUTINE UrbanCoLMMAIN ( &
       lbp = snlp + 1
       tgper = t_gpersno(lbp)
 
-      !TODO: 暂定方案，设置t_soisno
+      !TODO: temporal, set to t_soisno
       t_soisno(:) = t_gpersno(:)
 
-      !TODO: 如何计算tlake
+      !TODO: how to set tlake
       lbl = snll + 1
       IF (lbl < 1) THEN
          tlake = t_lakesno(lbl)

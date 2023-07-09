@@ -16,8 +16,9 @@ module MOD_BGC_CNSummary
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
   use MOD_Precision
-  use MOD_Vars_PFTimeInvars, only: pftclass
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_Namelist, only : DEF_USE_NITRIF
+  use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_BGC_Vars_TimeVariables, only: &
       totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
       totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
       totvegc, totvegn, totcolc, totcoln, sminn, sminn_vr, &
@@ -34,9 +35,9 @@ module MOD_BGC_CNSummary
       leafn, frootn, livestemn, deadstemn, livecrootn, deadcrootn, leafn_storage, frootn_storage, livestemn_storage, &
       deadstemn_storage, livecrootn_storage, deadcrootn_storage, leafn_xfer, frootn_xfer, livestemn_xfer, &
       deadstemn_xfer, livecrootn_xfer, deadcrootn_xfer, retransn, downreg, lag_npp
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       is_litter, is_soil, is_cwd, nfix_timeconst
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       leafc_p, frootc_p, livestemc_p, deadstemc_p, livecrootc_p, deadcrootc_p, &
       leafc_storage_p, frootc_storage_p, livestemc_storage_p, &
       deadstemc_storage_p, livecrootc_storage_p, deadcrootc_storage_p, gresp_storage_p, &
@@ -57,7 +58,7 @@ module MOD_BGC_CNSummary
       leafn_xfer_p, frootn_xfer_p, livestemn_xfer_p, &
       deadstemn_xfer_p, livecrootn_xfer_p, deadcrootn_xfer_p, retransn_p, npool_p, &
       ntrunc_p, totvegn_p, downreg_p
-  use MOD_Vars_PFTimeInvars,  only: pftfrac
+  use MOD_Vars_PFTimeInvariants,  only: pftfrac
   use MOD_BGC_Vars_1DFluxes, only: &
       gpp_enftemp, gpp_enfboreal, gpp_dnfboreal, gpp_ebftrop, gpp_ebftemp, gpp_dbftrop, gpp_dbftemp, &
       gpp_dbfboreal, gpp_ebstemp, gpp_dbstemp, gpp_dbsboreal, gpp_c3arcgrass, gpp_c3grass, gpp_c4grass, &
@@ -540,18 +541,17 @@ contains
        smin_no3_runoff(i)     = smin_no3_runoff(i)     + smin_no3_runoff_vr(j,i) * dz_soi(j)
        sminn_leached(i)       = sminn_leached(i)       + sminn_leached_vr(j,i) * dz_soi(j)
        f_n2o_nit(i)           = f_n2o_nit(i)           + f_n2o_nit_vr(j,i) * dz_soi(j)
-       denit(i)               = denit(i)               &
-#ifdef NITRIF
-                              + f_denit_vr(j,i) * dz_soi(j)
-#else
-                              + sminn_to_denit_excess_vr(j,i) * dz_soi(j)
-#endif
+       if(DEF_USE_NITRIF)then
+          denit(i)            = denit(i)               + f_denit_vr(j,i) * dz_soi(j)
+       else
+          denit(i)            = denit(i)               + sminn_to_denit_excess_vr(j,i) * dz_soi(j)
+       end if
 
-#ifndef NITRIF
-       do k = 1, ndecomp_transitions
-          denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
-       end do
-#endif
+       if(.not. DEF_USE_NITRIF)then
+          do k = 1, ndecomp_transitions
+             denit(i) = denit(i) + sminn_to_denit_decomp_vr(j,k,i) * dz_soi(j)
+          end do
+       end if
     end do
   end subroutine soilbiogeochem_nitrogenflux_summary
 

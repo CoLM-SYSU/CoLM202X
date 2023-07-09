@@ -335,7 +335,7 @@
  subroutine groundfluxes_glacier (zlnd,zsno,hu,ht,hq,&
                                   us,vs,tm,qm,rhoair,psrf,&
                                   ur,thm,th,thv,t_grnd,qg,dqgdT,htvp,&
-								  hpbl,&
+                                  hpbl,&
                                   fsno,cgrnd,cgrndl,cgrnds,&
                                   taux,tauy,fsena,fevpa,fseng,fevpg,tref,qref,&
                                   z0m,zol,rib,ustar,qstar,tstar,fm,fh,fq)
@@ -345,7 +345,7 @@
 ! and surface fluxes of land ice (glacier and ice sheet)
 !
 ! Original author : Yongjiu Dai and Nan Wei, /05/2014/
-! 
+!
 ! REVISIONS:
 ! Shaofeng Liu, 05/2023: add option to call moninobuk_leddy, the LargeEddy
 !                        surface turbulence scheme (LZD2022);
@@ -355,7 +355,7 @@
   use MOD_Precision
   use MOD_Const_Physical, only : cpair,vonkar,grav
   use MOD_FrictionVelocity
-  USE mod_namelist, only: DEF_USE_CBL_HEIGHT
+  USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
   USE MOD_TurbulenceLEddy
   implicit none
 
@@ -486,13 +486,13 @@
       ITERATION : do iter = 1, niters         ! begin stability iteration
       !----------------------------------------------------------------
          displax = 0.
-		 if (DEF_USE_CBL_HEIGHT) then
+         if (DEF_USE_CBL_HEIGHT) then
            call moninobuk_leddy(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um, hpbl, &
                           ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-	     else
+         else
            call moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
                           ustar,fh2m,fq2m,fm10m,fm,fh,fq)
-		 endif
+         endif
 
          tstar = vonkar/fh*dth
          qstar = vonkar/fq*dqh
@@ -513,7 +513,7 @@
            um = max(ur,0.1)
          else
            if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-		     zii = max(5.*hu,hpbl)
+             zii = max(5.*hu,hpbl)
            endif !//TODO: Shaofeng, 2023.05.18
            wc = (-grav*ustar*thvstar*zii/thv)**(1./3.)
           wc2 = beta*beta*(wc*wc)
@@ -521,7 +521,7 @@
          endif
 
          if (obuold*obu < 0.) nmozsgn = nmozsgn+1
-         if(nmozsgn >= 4) EXIT
+         if (nmozsgn >= 4) EXIT
 
          obuold = obu
 
@@ -593,14 +593,15 @@
 !=======================================================================
 
   use MOD_Precision
+  USE MOD_Namelist, only: DEF_USE_SNICAR
   use MOD_Const_Physical, only : stefnc,cpice,cpliq,denh2o,denice,tfrz,tkwat,tkice,tkair
-  USE MOD_Meltf
+  USE MOD_PhaseChange
   USE MOD_Utils
 
   IMPLICIT NONE
 
   integer, INTENT(in) :: patchtype     ! land water type (0=soil, 1=urban and built-up,
-                              ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+                                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
   integer, INTENT(in) :: lb         !lower bound of array
   integer, INTENT(in) :: nl_ice     !upper bound of array
   real(r8), INTENT(in) :: deltim    !seconds in a time step [second]
@@ -732,13 +733,13 @@
 
 
 ! net ground heat flux into the surface and its temperature derivative
-#ifdef SNICAR
-      hs = sabg_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
-           cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
-#else
-      hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
-           cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
-#endif
+      IF (DEF_USE_SNICAR) THEN
+         hs = sabg_lyr(lb) + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
+              cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
+      ELSE
+         hs = sabg + emg*forc_frl - emg*stefnc*t_icesno(lb)**4 - (fseng+fevpg*htvp) +&
+              cpliq * pg_rain * (t_precip - t_icesno(lb)) + cpice * pg_snow * (t_precip - t_icesno(lb))
+      ENDIF
 
       dhsdT = - cgrnd - 4.*emg * stefnc * t_icesno(lb)**3 - cpliq * pg_rain - cpice * pg_snow
       t_icesno_bef(lb:) = t_icesno(lb:)
@@ -814,11 +815,11 @@
          brr(j) = cnfac*(fn(j)-fn(j-1)) + (1.-cnfac)*(fn1(j)-fn1(j-1))
       enddo
 
-#ifdef SNICAR
+      IF (DEF_USE_SNICAR) THEN
 
-      wice_icesno_bef(lb:0) = wice_icesno(lb:0)
+         wice_icesno_bef(lb:0) = wice_icesno(lb:0)
 
-      call meltf_snicar (patchtype,lb,nl_ice,deltim, &
+         call meltf_snicar (patchtype,lb,nl_ice,deltim, &
                   fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf,porsl,psi0,&
@@ -831,18 +832,18 @@
 #endif
                    dz_icesno(1:))
 
-      ! layer freezing mass flux (positive):
-      DO j = lb, 0
-         IF (imelt(j)==2 .and. j<1) THEN
-            snofrz(j) = max(0._r8,(wice_icesno(j)-wice_icesno_bef(j)))/deltim
-         ENDIF
-      ENDDO
+         ! layer freezing mass flux (positive):
+         DO j = lb, 0
+            IF (imelt(j)==2 .and. j<1) THEN
+               snofrz(j) = max(0._r8,(wice_icesno(j)-wice_icesno_bef(j)))/deltim
+            ENDIF
+         ENDDO
 
-#else
-      call meltf (patchtype,lb,nl_ice,deltim, &
-                  fact(lb:),brr(lb:),hs,dhsdT, &
-                  t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
-                  scv,snowdp,sm,xmf,porsl,psi0,&
+      ELSE
+         call meltf (patchtype,lb,nl_ice,deltim, &
+                   fact(lb:),brr(lb:),hs,dhsdT, &
+                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
+                   scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
                    bsw,&
 #endif
@@ -851,7 +852,7 @@
                    sc_vgm,fc_vgm,&
 #endif
                    dz_icesno(1:))
-#endif
+      ENDIF
 
 !-----------------------------------------------------------------------
 
@@ -985,9 +986,9 @@
                     qsubl       ,qfros       ,rsur      ,rnof    ,&
                     ssi         ,wimp        ,&
                     ! SNICAR
-                    forc_aer,&
-                    mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, &
-                    mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4 )
+                    forc_aer    ,&
+                    mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
+                    mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
 
 !=======================================================================
   use MOD_Precision

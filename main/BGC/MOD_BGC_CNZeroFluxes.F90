@@ -14,6 +14,7 @@ module MOD_BGC_CNZeroFluxes
   ! Xingjie Lu, 2022, modify original CLM5 to be compatible with CoLM code structure. 
 
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_NITRIF
 
   use MOD_BGC_Vars_1DPFTFluxes, only:        &
       m_leafc_to_litter_p                  , &
@@ -337,11 +338,10 @@ module MOD_BGC_CNZeroFluxes
       somc_fire                            , &
       som_c_leached                        , &
 
-#ifndef NITRIF
       sminn_to_denit_excess_vr             , &
       sminn_leached_vr                     , &
       sminn_to_plant_fun_vr                , &
-#else
+
       f_nit_vr                             , &
       f_denit_vr                           , &
       smin_no3_leached_vr                  , &
@@ -356,7 +356,6 @@ module MOD_BGC_CNZeroFluxes
       f_n2o_denit_vr                       , &
       f_n2o_nit_vr                         , &
 
-#endif
       potential_immob_vr                   , &
       actual_immob_vr                      , &
       sminn_to_plant                       , &
@@ -386,13 +385,11 @@ module MOD_BGC_CNZeroFluxes
 
       decomp_ntransfer_vr                  , &
       decomp_sminn_flux_vr                 , &
-#ifndef NITRIF
       sminn_to_denit_decomp_vr             , &
-#endif
 
       decomp_npools_sourcesink       
    
-  use MOD_BGC_Vars_TimeVars, only:           &
+  use MOD_BGC_Vars_TimeVariables, only:           &
       decomp_k                  
     
   implicit none
@@ -757,27 +754,32 @@ contains
     decomp_hr(i)                                = 0._r8
 
 
-    do j = 1, nl_soil
-#ifndef NITRIF
-       sminn_to_denit_excess_vr(j,i)            = 0._r8
-       sminn_leached_vr(j,i)                    = 0._r8
-       sminn_to_plant_fun_vr(j,i)               = 0._r8
-#else
-       f_nit_vr(j,i)                            = 0._r8
-       f_denit_vr(j,i)                          = 0._r8
-       smin_no3_leached_vr(j,i)                 = 0._r8
-       smin_no3_runoff_vr(j,i)                  = 0._r8
-       n2_n2o_ratio_denit_vr(j,i)               = 0._r8
-       pot_f_nit_vr(j,i)                        = 0._r8
-       pot_f_denit_vr(j,i)                      = 0._r8
-       actual_immob_no3_vr(j,i)                 = 0._r8
-       actual_immob_nh4_vr(j,i)                 = 0._r8
-       smin_no3_to_plant_vr(j,i)                = 0._r8
-       smin_nh4_to_plant_vr(j,i)                = 0._r8
-       f_n2o_denit_vr(j,i)                      = 0._r8
-       f_n2o_nit_vr(j,i)                        = 0._r8
 
-#endif
+    if(.not. DEF_USE_NITRIF)then
+       do j = 1, nl_soil
+          sminn_to_denit_excess_vr(j,i)            = 0._r8
+          sminn_leached_vr(j,i)                    = 0._r8
+          sminn_to_plant_fun_vr(j,i)               = 0._r8
+       end do
+    else
+       do j = 1, nl_soil
+          f_nit_vr(j,i)                            = 0._r8
+          f_denit_vr(j,i)                          = 0._r8
+          smin_no3_leached_vr(j,i)                 = 0._r8
+          smin_no3_runoff_vr(j,i)                  = 0._r8
+          n2_n2o_ratio_denit_vr(j,i)               = 0._r8
+          pot_f_nit_vr(j,i)                        = 0._r8
+          pot_f_denit_vr(j,i)                      = 0._r8
+          actual_immob_no3_vr(j,i)                 = 0._r8
+          actual_immob_nh4_vr(j,i)                 = 0._r8
+          smin_no3_to_plant_vr(j,i)                = 0._r8
+          smin_nh4_to_plant_vr(j,i)                = 0._r8
+          f_n2o_denit_vr(j,i)                      = 0._r8
+          f_n2o_nit_vr(j,i)                        = 0._r8
+       end do
+    end if
+
+    do j = 1, nl_soil
        potential_immob_vr(j,i)                  = 0._r8
        actual_immob_vr(j,i)                     = 0._r8
        sminn_to_plant(i)                        = 0._r8
@@ -813,11 +815,16 @@ contains
        do j = 1, nl_soil
           decomp_ntransfer_vr(j,k,i)            = 0._r8
           decomp_sminn_flux_vr(j,k,i)           = 0._r8
-#ifndef NITRIF
-          sminn_to_denit_decomp_vr(j,k,i)       = 0._r8
-#endif
        end do
     end do
+
+    if(.not. DEF_USE_NITRIF)then
+       do k = 1, ndecomp_transitions
+          do j = 1, nl_soil
+             sminn_to_denit_decomp_vr(j,k,i)    = 0._r8
+          end do
+       end do
+    end if
 
     do k = 1, ndecomp_pools
        do j = 1, nl_soil

@@ -16,9 +16,9 @@ module MOD_BGC_CNCStateUpdate3
   !                   2) Record accumulated fire-associated C transfers for veg and soil C semi-analytic spinup
 
   use MOD_Precision
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
            i_met_lit,i_cel_lit,i_lig_lit ,i_cwd 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
     ! decomposition pools & fluxes variables (inout)
            decomp_cpools_vr 
 
@@ -27,7 +27,7 @@ module MOD_BGC_CNCStateUpdate3
            fire_mortality_to_met_c, fire_mortality_to_cel_c, &
            fire_mortality_to_lig_c, fire_mortality_to_cwdc
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
     ! vegetation carbon state variables (inout)
            leafc_p            , leafc_storage_p     , leafc_xfer_p     , &
            frootc_p           , frootc_storage_p    , frootc_xfer_p    , &

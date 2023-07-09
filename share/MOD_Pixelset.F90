@@ -2,6 +2,45 @@
 
 MODULE MOD_Pixelset
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Pixelset refers to a set of pixels in CoLM.
+   ! 
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   !
+   !    In CoLM, the land surface is first divided into pixels, which are rasterized 
+   !    points defined by fine-resolution data. Then ELEMENT, PATCH, HRU, PFT, PC 
+   !    are all consists of pixels, and hence they are all pixelsets.
+   ! 
+   !    The highest level pixelset in CoLM is ELEMENT, all other pixelsets are subsets 
+   !    of ELEMENTs. 
+   !    In a pixelset, pixels are sorted to make pixels in its subsets consecutive.
+   !    Thus a subset can be represented by starting pixel index and ending pixel index
+   !    in an ELEMENT. 
+   !
+   !                Example of hierarchical pixelsets
+   !        ************************************************ <-- pixels in an ELEMENT
+   !        |<------------------- ELEMENT ---------------->| <-- level 1
+   !        |   subset 1  |       subset 2      | subset 3 | <-- level 2
+   !        |s11|   s12   | s21 |   s22   | s23 |    s31   | <-- level 3
+   !
+   !    "Vector" is a collection of data when each pixelset in a given level is associated
+   !    with a value, representing its averaged physical, chemical or biological state.
+   !
+   !    "Vector" is usually defined on worker process, while its IO is through IO process.
+   !    To read,  vector is first loaded from files by IO and then scattered from IO to worker.
+   !    To write, vector is first gathered from worker to IO and then saved to files by IO.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_DataType
    IMPLICIT NONE
@@ -400,7 +439,7 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         IF (count(mask) < this%nset) THEN
+         IF ((this%nset > 0) .and. (count(mask) < this%nset)) THEN
 
             allocate (eindex1(this%nset))
             allocate (ipxstt1(this%nset))

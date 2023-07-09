@@ -25,7 +25,7 @@ CONTAINS
       USE MOD_Const_LC
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
-      USE MOD_Urban_Vars_TimeInvars
+      USE MOD_Urban_Vars_TimeInvariants
       USE MOD_NetCDFVector
 
       IMPLICIT NONE
@@ -43,10 +43,10 @@ CONTAINS
       write(cyear,'(i4.4)') year
 
       !TODO-done: parameter input for time year
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban_LAI_'//trim(ctime)//'.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_LAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_LAI',  landurban, urb_lai)
 
-      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban_SAI_'//trim(ctime)//'.nc'
+      lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/LAI/urban_SAI_'//trim(ctime)//'.nc'
       call ncio_read_vector (lndname, 'TREE_SAI',  landurban, urb_sai)
 
       ! loop for urban atch to assign fraction of green leaf

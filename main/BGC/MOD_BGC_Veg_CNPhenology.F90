@@ -23,7 +23,7 @@ module MOD_BGC_Veg_CNPhenology
 ! crop variables
        manunitro, lfemerg, mxmat, grnfill,  baset
 
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
       ndays_on        , ndays_off      , fstor2tran, crit_dayl  , crit_onset_fdd, crit_onset_swi, &
       crit_offset_fdd , crit_offset_swi, soilpsi_on, soilpsi_off, lwtop, rice2pdt
 
@@ -41,13 +41,13 @@ module MOD_BGC_Veg_CNPhenology
   use MOD_Vars_TimeVariables, only: &
       t_soisno, smp
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
       dayl, prev_dayl, prec10, prec60, prec365, prec_today, prec_daily, accumnstep
 
-  use MOD_Vars_PFTimeVars, only: &
+  use MOD_Vars_PFTimeVariables, only: &
       tref_p       ,tlai_p
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       tempavg_tref_p , annavg_tref_p  , gdd0_p        , gdd8_p            , &
       gdd10_p      , gdd020_p       , gdd820_p       , gdd1020_p     , nyrs_crop_active_p, &
       bglfr_p      , bgtr_p         , lgsf_p         , offset_flag_p , offset_counter_p  , &
@@ -118,7 +118,7 @@ module MOD_BGC_Veg_CNPhenology
       livestemc_to_litter_p          , livestemn_to_litter_p          , &
       cpool_to_livestemc_p           , fert_p
 
-  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
 
   use MOD_BGC_Vars_1DFluxes, only: &
       phenology_to_met_c , phenology_to_cel_c , phenology_to_lig_c, &
@@ -129,6 +129,7 @@ module MOD_BGC_Veg_CNPhenology
 
   use MOD_TimeManager
   use MOD_Precision
+  use MOD_Namelist, only : DEF_USE_FERT
   use MOD_BGC_Daylength, only: daylength
   use MOD_SPMD_Task
 
@@ -1134,11 +1135,11 @@ contains
                    onset_counter_p(m) = deltim
                    fert_counter_p(m)  = ndays_on * 86400.
                    if (ndays_on .gt. 0) then
-#ifdef FERT
-                      fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
-#else
-                      fert_p(m) = 0._r8
-#endif
+                      if(DEF_USE_FERT)then
+                         fert_p(m) = (manunitro(ivt) * 1000._r8 + fertnitro_p(m))/ fert_counter_p(m)
+                      else
+                         fert_p(m) = 0._r8
+                      end if
                    else
                       fert_p(m) = 0._r8
                    end if

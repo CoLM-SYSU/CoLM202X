@@ -36,7 +36,7 @@ MODULE MOD_Initialize
       use MOD_LandPatch
 #ifdef URBAN_MODEL
       use MOD_LandUrban
-      USE MOD_UrbanIniTimeVar
+      USE MOD_UrbanIniTimeVariable
       USE MOD_UrbanReadin
       USE MOD_Urban_LAIReadin
       USE MOD_Urban_Albedo
@@ -44,15 +44,15 @@ MODULE MOD_Initialize
       use MOD_Const_Physical
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       USE MOD_LandPFT
-      USE MOD_Vars_PFTimeInvars
-      USE MOD_Vars_PFTimeVars
+      USE MOD_Vars_PFTimeInvariants
+      USE MOD_Vars_PFTimeVariables
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       USE MOD_LandPC
-      USE MOD_Vars_PCTimeInvars
-      USE MOD_Vars_PCTimeVars
+      USE MOD_Vars_PCTimeInvariants
+      USE MOD_Vars_PCTimeVariables
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT
@@ -66,7 +66,7 @@ MODULE MOD_Initialize
       use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      USE MOD_SoilFunction
+      USE MOD_Hydro_SoilFunction
 #endif
       USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
@@ -77,17 +77,15 @@ MODULE MOD_Initialize
       USE MOD_CropReadin
       USE MOD_LAIEmpirical
       USE MOD_LAIReadin
-      USE MOD_NitrifReadin
 #ifdef BGC
+      USE MOD_NitrifReadin
       USE MOD_NdepReadin
       USE MOD_FireReadin
 #endif
       USE MOD_OrbCoszen
-#ifdef USE_DEPTH_TO_BEDROCK
       use MOD_DBedrockReadin
-#endif
       USE MOD_HtopReadin
-      USE MOD_IniTimeVar
+      USE MOD_IniTimeVariable
       USE MOD_LakeDepthReadin
       USE MOD_PercentagesPFTReadin
       USE MOD_SoilParametersReadin
@@ -189,26 +187,26 @@ MODULE MOD_Initialize
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          pftclass = landpft%settyp
 #endif
 
       ENDIF
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL pct_readin (dir_landdata, lc_year)
 #endif
 
       ! ------------------------------------------
       ! 1.1 Ponding water
       ! ------------------------------------------
-#ifdef USE_DEPTH_TO_BEDROCK
-      CALL dbedrock_readin (dir_landdata)
-#endif
+      IF(DEF_USE_BEDROCK)THEN
+         CALL dbedrock_readin (dir_landdata)
+      ENDIF
 
       IF (p_is_worker) THEN
          IF (numpatch > 0) THEN
-            dpond(:) = 0._r8
+            wdsrf(:) = 0._r8
          ENDIF
       ENDIF
       ! ------------------------------------------
@@ -321,11 +319,11 @@ MODULE MOD_Initialize
       rij_kro_beta  = 0.6_r8
       rij_kro_gamma = 0.6_r8
       rij_kro_delta = 0.85_r8
-#ifdef NITRIF
-      nfix_timeconst = 10._r8
-#else
-      nfix_timeconst = 0._r8
-#endif
+      if(DEF_USE_NITRIF)then
+         nfix_timeconst = 10._r8
+      else
+         nfix_timeconst = 0._r8
+      end if
       organic_max        = 130
       d_con_g21          = 0.1759_r8
       d_con_g22          = 0.00117_r8
@@ -438,10 +436,10 @@ MODULE MOD_Initialize
       ! ...........................................
       !2.3 READ in or GUSSES land state information
       ! ...........................................
-         
+
       ! for SOIL INIT of water, temperature, snow depth
       IF (DEF_USE_SOIL_INIT) THEN
-         
+
          fsoildat = DEF_file_soil_init
          IF (p_is_master) THEN
             inquire (file=trim(fsoildat), exist=use_soilini)
@@ -451,25 +449,25 @@ MODULE MOD_Initialize
 #endif
 
          IF (use_soilini) THEN
-            
+
             call ncio_read_bcast_serial (fsoildat, 'soil_z', soil_z)
             nl_soil_ini = size(soil_z)
 
             if (p_is_io) then
                ! soil layer temperature (K)
                call allocate_block_data (gsoil, soil_t_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)  
+               call ncio_read_block (fsoildat, 'soil_t', gsoil, nl_soil_ini, soil_t_grid)
                ! soil layer wetness (-)
                call allocate_block_data (gsoil, soil_w_grid, nl_soil_ini)
-               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)  
+               call ncio_read_block (fsoildat, 'soil_w', gsoil, nl_soil_ini, soil_w_grid)
                ! snow depth (m)
                call allocate_block_data (gsoil, snow_d_grid)
-               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)  
+               call ncio_read_block (fsoildat, 'snow_d', gsoil, snow_d_grid)
             end if
 
             call gsoil%define_from_file (fsoildat)
             call ms2p%build (gsoil, landpatch)
-      
+
             if (p_is_worker) then
                nl_soil_ini = nl_soil
                allocate (soil_z (nl_soil_ini))
@@ -489,7 +487,7 @@ MODULE MOD_Initialize
       ENDIF
 
       IF (.not. use_soilini) THEN
-         !! not used, just for filling arguments 
+         !! not used, just for filling arguments
          if (p_is_worker) then
             allocate (soil_z (nl_soil))
             allocate (snow_d (numpatch))
@@ -500,7 +498,7 @@ MODULE MOD_Initialize
 
       ! for SOIL Water INIT by using water table depth
       IF (DEF_USE_WaterTable_INIT) THEN
-      
+
          fwtd = DEF_file_water_table_depth
          IF (p_is_master) THEN
             inquire (file=trim(fwtd), exist=use_wtd)
@@ -563,9 +561,9 @@ MODULE MOD_Initialize
       year = idate(1)
       jday = idate(2)
 
-      IF (DEF_LAI_CLIM) then
+      IF (DEF_LAI_MONTHLY) then
          CALL julian2monthday (year, jday, month, mday)
-         IF (DEF_LAICHANGE) THEN
+         IF (DEF_LAI_CHANGE_YEARLY) THEN
             ! 08/03/2019, yuan: read global LAI/SAI data
             CALL LAI_readin (year, month, dir_landdata)
 #ifdef URBAN_MODEL
@@ -588,15 +586,12 @@ MODULE MOD_Initialize
 
 #ifdef BGC
          CALL NDEP_readin(year, dir_landdata, .true., .false.)
-         print*,'after NDEP readin'
-#ifdef NITRIF
-         CALL NITRIF_readin (month, dir_landdata)
-         print*,'after NITRIF readin'
-#endif
+         if(DEF_USE_NITRIF)then
+            CALL NITRIF_readin (month, dir_landdata)
+         end if
 
 #ifdef CROP
          CALL CROP_readin (dir_landdata)
-         print*,'after CROP readin'
          if (p_is_worker) then
             do i = 1, numpatch
                if(patchtype(i) .eq.  0)then
@@ -617,11 +612,10 @@ MODULE MOD_Initialize
             end do
          end if
 #endif
+         if(DEF_USE_FIRE)then
+            CALL Fire_readin (year,dir_landdata)
+         end if
 #endif
-#endif
-#ifdef Fire
-         CALL Fire_readin (year,dir_landdata)
-         print*,'after Fire readin'
 #endif
 
       ! ..............................................................................
@@ -651,27 +645,29 @@ MODULE MOD_Initialize
             dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
          enddo
 
+         zc_soimm = z_soi  * 1000.
+         zi_soimm(0) = 0.
+         zi_soimm(1:nl_soil) = zi_soi * 1000.
+
          do i = 1, numpatch
             m = patchclass(i)
 
             IF (use_wtd) THEN
                zwtmm = zwt(i) * 1000.
-               zc_soimm = z_soi  * 1000.
-               zi_soimm(0) = 0.
-               zi_soimm(1:nl_soil) = zi_soi * 1000.
+            ENDIF
+
 #ifdef Campbell_SOIL_MODEL
-               vliq_r(:) = 0.
-               prms(1,1:nl_soil) = bsw(1:nl_soil,i)
+            vliq_r(:) = 0.
+            prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               vliq_r(:) = theta_r(1:nl_soil,i)
-               prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
-               prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
-               prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
-               prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
-               prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
+            vliq_r(:) = theta_r(1:nl_soil,i)
+            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
+            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
+            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
+            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
+            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
 #endif
-            ENDIF
 
             CALL iniTimeVar(i, patchtype(i)&
                ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
@@ -680,9 +676,9 @@ MODULE MOD_Initialize
                ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
                ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
                ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables
                ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
                ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
                ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -703,7 +699,6 @@ MODULE MOD_Initialize
                ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i), lag_npp(i) &
                ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
                ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) , skip_balance_check(i) &
-#ifdef SASU
    !------------------------SASU variables-----------------------
                ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
                ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &
@@ -720,7 +715,6 @@ MODULE MOD_Initialize
                ,AKX_met_exit_n_vr_acc      (:,i), AKX_cel_exit_n_vr_acc      (:,i), AKX_lig_exit_n_vr_acc      (:,i), AKX_cwd_exit_n_vr_acc      (:,i) &
                ,AKX_soil1_exit_n_vr_acc    (:,i), AKX_soil2_exit_n_vr_acc    (:,i), AKX_soil3_exit_n_vr_acc    (:,i) &
                ,diagVX_n_vr_acc          (:,:,i), upperVX_n_vr_acc         (:,:,i), lowerVX_n_vr_acc         (:,:,i) &
-#endif
    !------------------------------------------------------------
 #endif
                ! for SOIL INIT of water, temperature, snow depth
@@ -823,8 +817,8 @@ MODULE MOD_Initialize
             DO i = 1, numhru
                ps = hru_patch%substt(i)
                pe = hru_patch%subend(i)
-               dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
-               dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+               wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
+               wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
             ENDDO
          ENDIF
       ENDIF

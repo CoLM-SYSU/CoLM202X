@@ -1,7 +1,16 @@
 #include <define.h>
 
 MODULE MOD_RegionClip
-
+   !-----------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    This module includes subroutines to clip surface data from an existing data
+   !    in a larger region.
+   !
+   !    Please use namelist variable "USE_srfdata_from_larger_region" to call these subroutines.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------------------------
 CONTAINS
 
    ! ----- region clip -----
@@ -31,14 +40,15 @@ CONTAINS
 #ifdef CATCHMENT
       LOGICAL, allocatable :: hrumask  (:)
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       LOGICAL, allocatable :: pftmask  (:)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       LOGICAL, allocatable :: pcmask   (:)
 #endif
 
       INTEGER :: month, YY, itime, Julian_day, nsl
+      integer :: start_year, end_year
       CHARACTER(len=1) :: c1
       CHARACTER(len=2) :: c2, cx
       CHARACTER(len=3) :: c3
@@ -176,10 +186,10 @@ CONTAINS
 #ifdef CATCHMENT
                   CALL clip_pixelset (dir_landdata_in, 'landhru'  , iblk, jblk, elmmask, elmindex, hrumask  )
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                   CALL clip_pixelset (dir_landdata_in, 'landpft'  , iblk, jblk, elmmask, elmindex, pftmask  )
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                   CALL clip_pixelset (dir_landdata_in, 'landpc'   , iblk, jblk, elmmask, elmindex, pcmask   )
 #endif
 
@@ -224,7 +234,7 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, 'patchfrac_hru', patchmask)
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                   CALL system('mkdir -p ' // trim(dir_landdata_out) // '/landpft')
                   file_in  = trim(dir_landdata_in)  // '/landpft/landpft.nc'
                   file_out = trim(dir_landdata_out) // '/landpft/landpft.nc'
@@ -234,7 +244,7 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, 'settyp', pftmask)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                   CALL system('mkdir -p ' // trim(dir_landdata_out) // '/landpc')
                   file_in  = trim(dir_landdata_in)  // '/landpc/landpc.nc'
                   file_out = trim(dir_landdata_out) // '/landpc/landpc.nc'
@@ -248,17 +258,28 @@ CONTAINS
                ! Leaf Area Index
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/LAI')
 
-               IF (DEF_LAI_CLIM) THEN
-                  DO month = 1, 12
-                     write(c2,'(i2.2)') month
+               IF (DEF_LAI_CHANGE_YEARLY) THEN
+                  start_year = DEF_simulation_time%start_year
+                  end_year   = DEF_simulation_time%end_year
+               ELSE
+                  start_year = DEF_LC_YEAR
+                  end_year   = DEF_LC_YEAR
+               ENDIF
 
-                     file_in  = trim(dir_landdata_in)  // '/LAI/LAI_patches' // trim(c2) // '.nc'
-                     file_out = trim(dir_landdata_out) // '/LAI/LAI_patches' // trim(c2) // '.nc'
-                     CALL clip_vector (file_in, file_out, iblk, jblk, 'LAI_patches', patchmask)
+               IF (DEF_LAI_MONTHLY) THEN
+                  DO YY = start_year, end_year
+                     DO month = 1, 12
+                        write(c2,'(i2.2)') month
+                        write(cyear,'(i4.4)') YY
 
-                     file_in  = trim(dir_landdata_in)  // '/LAI/SAI_patches' // trim(c2) // '.nc'
-                     file_out = trim(dir_landdata_out) // '/LAI/SAI_patches' // trim(c2) // '.nc'
-                     CALL clip_vector (file_in, file_out, iblk, jblk, 'SAI_patches', patchmask)
+                        file_in  = trim(dir_landdata_in)  // '/LAI/' // trim(cyear) // '/LAI_patches' // trim(c2) // '.nc'
+                        file_out = trim(dir_landdata_out) // '/LAI/' // trim(cyear) // '/LAI_patches' // trim(c2) // '.nc'
+                        CALL clip_vector (file_in, file_out, iblk, jblk, 'LAI_patches', patchmask)
+
+                        file_in  = trim(dir_landdata_in)  // '/LAI/' // trim(cyear) // '/SAI_patches' // trim(c2) // '.nc'
+                        file_out = trim(dir_landdata_out) // '/LAI/' // trim(cyear) // '/SAI_patches' // trim(c2) // '.nc'
+                        CALL clip_vector (file_in, file_out, iblk, jblk, 'SAI_patches', patchmask)
+                     ENDDO
                   ENDDO
                ELSE
                   DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year
@@ -277,7 +298,7 @@ CONTAINS
                   ENDDO
                ENDIF
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                DO month = 1, 12
                   write(c2,'(i2.2)') month
 
@@ -291,7 +312,7 @@ CONTAINS
                ENDDO
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                DO month = 1, 12
                   write(c2,'(i2.2)') month
 
@@ -306,24 +327,24 @@ CONTAINS
 #endif
 
                ! depth to bedrock
-#ifdef USE_DEPTH_TO_BEDROCK
-               CALL system('mkdir -p ' // trim(dir_landdata_out) // '/dbedrock')
-               file_in  = trim(dir_landdata_in)  // '/dbedrock/dbedrock_patches.nc'
-               file_out = trim(dir_landdata_out) // '/dbedrock/dbedrock_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'dbedrock_patches', patchmask)
-#endif
+               IF(DEF_USE_BEDROCK)THEN
+                  CALL system('mkdir -p ' // trim(dir_landdata_out) // '/dbedrock')
+                  file_in  = trim(dir_landdata_in)  // '/dbedrock/dbedrock_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/dbedrock/dbedrock_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'dbedrock_patches', patchmask)
+               ENDIF
 
                ! forest height
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/htop')
                file_in  = trim(dir_landdata_in)  // '/htop/htop_patches.nc'
                file_out = trim(dir_landdata_out) // '/htop/htop_patches.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'htop_patches', patchmask)
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                file_in  = trim(dir_landdata_in)  // '/htop/htop_pfts.nc'
                file_out = trim(dir_landdata_out) // '/htop/htop_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'htop_pfts', pftmask)
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                file_in  = trim(dir_landdata_in)  // '/htop/htop_pcs.nc'
                file_out = trim(dir_landdata_out) // '/htop/htop_pcs.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'htop_pcs', pcmask)
@@ -337,7 +358,7 @@ CONTAINS
 
                ! plant function type percentage
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/pctpft')
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
                file_in  = trim(dir_landdata_in)  // '/pctpft/pct_pfts.nc'
                file_out = trim(dir_landdata_out) // '/pctpft/pct_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'pct_pfts', pftmask)
@@ -347,7 +368,7 @@ CONTAINS
                CALL clip_vector (file_in, file_out, iblk, jblk, 'pct_crops', patchmask)
 #endif
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                file_in  = trim(dir_landdata_in)  // '/pctpft/pct_pcs.nc'
                file_out = trim(dir_landdata_out) // '/pctpft/pct_pcs.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'pct_pcs', pcmask)
@@ -394,13 +415,12 @@ CONTAINS
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'vf_sand_s_l'//trim(c1)//'_patches', patchmask)
 
-                  ! (4) volumetric fraction of organic matter
+                  ! (4) volumetric fraction of organic matter with the parameter alpha and beta in the Balland V. and P. A. Arp (2005) model
                   file_in  = trim(dir_landdata_in)  // '/soil/vf_om_s_l'//trim(c1)//'_patches.nc'
                   file_out = trim(dir_landdata_out) // '/soil/vf_om_s_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'vf_om_s_l'//trim(c1)//'_patches', patchmask)
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
                   file_in  = trim(dir_landdata_in)  // '/soil/BA_alpha_l'//trim(c1)//'_patches.nc'
                   file_out = trim(dir_landdata_out) // '/soil/BA_alpha_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
@@ -410,7 +430,6 @@ CONTAINS
                   file_out = trim(dir_landdata_out) // '/soil/BA_beta_l'//trim(c1)//'_patches.nc'
                   CALL clip_vector (file_in, file_out, iblk, jblk, &
                      'BA_beta_l'//trim(c1)//'_patches', patchmask)
-#endif
 
                   ! (5) gravimetric fraction of gravels
                   file_in  = trim(dir_landdata_in)  // '/soil/wf_gravels_s_l'//trim(c1)//'_patches.nc'
@@ -533,36 +552,35 @@ CONTAINS
                file_in  = trim(dir_landdata_in)  // '/crop/plantdate_pfts.nc'
                file_out = trim(dir_landdata_out) // '/crop/plantdate_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'plantdate_pfts'         , pftmask  )
-
                file_in  = trim(dir_landdata_in)  // '/crop/fertnitro_pfts.nc'
                file_out = trim(dir_landdata_out) // '/crop/fertnitro_pfts.nc'
                CALL clip_vector (file_in, file_out, iblk, jblk, 'fertnitro_pfts'         , pftmask  )
 #endif
 
                ! fire
-#ifdef Fire
-               CALL system('mkdir -p ' // trim(dir_landdata_out) // '/FIRE')
+               if(DEF_USE_FIRE)then
+                  CALL system('mkdir -p ' // trim(dir_landdata_out) // '/FIRE')
 
-               DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year
-                  write(cyear,'(i4.4)') YY
+                  DO YY = DEF_simulation_time%start_year, DEF_simulation_time%end_year
+                     write(cyear,'(i4.4)') YY
+   
+                     file_in  = trim(dir_landdata_in)  // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
+                     file_out = trim(dir_landdata_out) // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
+                     CALL clip_vector (file_in, file_out, iblk, jblk, 'hdm_patches', patchmask)
+                  ENDDO
 
-                  file_in  = trim(dir_landdata_in)  // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
-                  file_out = trim(dir_landdata_out) // '/FIRE/hdm_'//trim(cyear)//'_patches.nc'
-                  CALL clip_vector (file_in, file_out, iblk, jblk, 'hdm_patches', patchmask)
-               ENDDO
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/abm_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/abm_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'abm_patches', patchmask)
 
-               file_in  = trim(dir_landdata_in)  // '/FIRE/abm_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/abm_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'abm_patches', patchmask)
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/peatf_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/peatf_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'peatf_patches', patchmask)
 
-               file_in  = trim(dir_landdata_in)  // '/FIRE/peatf_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/peatf_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'peatf_patches', patchmask)
-
-               file_in  = trim(dir_landdata_in)  // '/FIRE/gdp_patches.nc'
-               file_out = trim(dir_landdata_out) // '/FIRE/gdp_patches.nc'
-               CALL clip_vector (file_in, file_out, iblk, jblk, 'gdp_patches', patchmask)
-#endif
+                  file_in  = trim(dir_landdata_in)  // '/FIRE/gdp_patches.nc'
+                  file_out = trim(dir_landdata_out) // '/FIRE/gdp_patches.nc'
+                  CALL clip_vector (file_in, file_out, iblk, jblk, 'gdp_patches', patchmask)
+               end if
 
                ! NDEP
                CALL system('mkdir -p ' // trim(dir_landdata_out) // '/NDEP')
@@ -630,10 +648,10 @@ CONTAINS
 #ifdef CATCHMENT
       IF (allocated(hrumask  )) deallocate(hrumask  )
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       IF (allocated(pftmask  )) deallocate(pftmask  )
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
       IF (allocated(pcmask   )) deallocate(pcmask   )
 #endif
 

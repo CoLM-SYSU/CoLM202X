@@ -166,7 +166,7 @@ IMPLICIT NONE
       inquire(iolength=length) land_chr1
       allocate ( landtypes(nlon,nlat) )
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
      ! GLCC USGS classification
      ! -------------------
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_usgs_update.bin'
@@ -180,7 +180,7 @@ IMPLICIT NONE
       close (iunit)
 #endif
 
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
      ! MODIS IGBP classification
      ! -------------------
       lndname = trim(dir_rawdata)//'RAW_DATA_updated/landtypes_igbp_update.bin'
@@ -406,10 +406,10 @@ print *, 'OPENMP enabled, threads num = ', OPENMP, "soil parameters..."
 
                if(soil_grav_l < 0.0) soil_grav_l = 0.0  ! missing value = -1
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                if(landtypes(i,j)==16)then   !WATER BODIES(16)
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                if(landtypes(i,j)==17)then   !WATER BODIES(17)
 #endif
                   soil_grav_l = 0.
@@ -419,10 +419,10 @@ print *, 'OPENMP enabled, threads num = ', OPENMP, "soil parameters..."
                   soil_bd_l   = 1.2
                endif
 
-#if(defined USGS_CLASSIFICATION)
+#if(defined LULC_USGS)
                if(landtypes(i,j)==24)then   !GLACIER and ICESHEET(24)
 #endif
-#if(defined IGBP_CLASSIFICATION)
+#if(defined LULC_IGBP)
                if(landtypes(i,j)==15)then   !GLACIER and ICE SHEET(15)
 #endif
                   soil_grav_l = 90.

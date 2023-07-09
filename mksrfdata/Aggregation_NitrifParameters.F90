@@ -23,10 +23,10 @@ SUBROUTINE Aggregation_NitrifParameters (gridnitrif, dir_rawdata, dir_model_land
    USE MOD_AggregationRequestData
 
    USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 
@@ -78,7 +78,7 @@ SUBROUTINE Aggregation_NitrifParameters (gridnitrif, dir_rawdata, dir_model_land
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 12
@@ -187,7 +187,7 @@ enddo
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 12

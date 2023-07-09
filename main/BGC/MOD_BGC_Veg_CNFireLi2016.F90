@@ -29,16 +29,19 @@ module MOD_BGC_Veg_CNFireLi2016
       i_cwd, occur_hi_gdp_tree, gdp_lf, abm_lf, peatf_lf, &
       lfuel, ufuel, cropfire_a1, borealat, troplat, non_boreal_peatfire_c, boreal_peatfire_c, rh_low, rh_hgh, &
       bt_min, bt_max, pot_hmn_ign_counts_alpha, g0, psi0, porsl, bsw
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  use MOD_Vars_TimeInvariants, only: theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm
+#endif
   use MOD_Vars_TimeVariables, only: &
       decomp_cpools_vr , totlitc    , totvegc   ,  cropf      , lfwt     , fuelc     , fuelc_crop , fsr     , &
       fd               , rootc      , lgdp      , lgdp1       , lpop     , wtlf      , &
       trotr1           , trotr2     , hdm_lf    , lnfm        , baf_crop , baf_peatf , &
       farea_burned     , nfire      , fsat      , prec60      , wf2      , &
       tsoi17           , rh30       , t_soisno  , wliq_soisno
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       burndate_p
-  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
-  use MOD_BGC_Vars_PFTimeVars, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p     , &
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
+  use MOD_BGC_Vars_PFTimeVariables, only:  leafc_p     , leafc_storage_p     , leafc_xfer_p     , &
                                       frootc_p    , frootc_storage_p    , frootc_xfer_p    , &
                                       deadcrootc_p, deadcrootc_storage_p, deadcrootc_xfer_p, &
                                       livecrootc_p, livecrootc_storage_p, livecrootc_xfer_p
@@ -103,7 +106,14 @@ contains
     call julian2monthday(idate(1),idate(2),kmo,kda)
 
     do m = ps, pe
-       call eroot(nl_soil,0._r8,porsl(1:,i),bsw(1:,i),psi0(1:,i),rootfr_p(1:,pftclass(m)),dz_soi(1:),&
+       call eroot(nl_soil,0._r8,porsl(1:,i),&
+#ifdef Campbell_SOIL_MODEL               
+               bsw(1:,i),&
+#endif                       
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+               theta_r(1:,i), alpha_vgm(1:,i), n_vgm(1:,i), L_vgm(1:,i), sc_vgm(1:,i), fc_vgm(1:,i), &
+#endif
+               psi0(1:,i),rootfr_p(1:,pftclass(m)),dz_soi(1:),&
             t_soisno(1:,i),wliq_soisno(1:,i),tmp1d,tmp0d,btran2_p(m))
        btran2 = sum(btran2_p(ps:pe) * pftfrac(m))
     end do

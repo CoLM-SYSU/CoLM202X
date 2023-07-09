@@ -36,11 +36,12 @@ CONTAINS
 #if(defined CaMa_Flood)
         flddepth       ,fldfrc         ,qinfl_fld                      ,&
 #endif
-#ifdef SNICAR
+! SNICAR model variables
         forc_aer       ,&
         mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
         mss_dst1       ,mss_dst2       ,mss_dst3       ,mss_dst4       ,&
-#endif
+! END SNICAR model variables
+
         ! output
         rsur           ,rnof           ,qinfl          ,zwt            ,&
         wa             ,qcharge        ,smp            ,hk             ,&
@@ -121,7 +122,7 @@ CONTAINS
   real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
 
-#ifdef SNICAR
+! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
@@ -135,7 +136,7 @@ CONTAINS
         mss_dst3  (lbp:0), &! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  (lbp:0)   ! mass of dust species 4 in snow  (col,lyr) [kg]
 ! Aerosol Fluxes (Jan. 07, 2023)
-#endif
+! END SNICAR model variables
 
   INTEGER, intent(in) :: &
         imelt_lake(maxsnl+1:nl_soil)! lake flag for melting or freezing snow and soil layer [-]
@@ -221,11 +222,11 @@ CONTAINS
 #if(defined CaMa_Flood)
             ,flddepth    ,fldfrc      ,qinfl_fld                 &
 #endif
-#ifdef SNICAR
+! SNICAR model variables
              ,forc_aer   ,&
              mss_bcpho   ,mss_bcphi   ,mss_ocpho   ,mss_ocphi   ,&
              mss_dst1    ,mss_dst2    ,mss_dst3    ,mss_dst4     &
-#endif
+! END SNICAR model variables
             )
 
 !=======================================================================
@@ -293,7 +294,7 @@ CONTAINS
       rnof_gimp = rsur_gimp
 
 !=======================================================================
-! [3] 湖泊水文过程
+! [3] lake hydrology
 !=======================================================================
 
       CALL snowwater_lake ( &
@@ -310,12 +311,11 @@ CONTAINS
            wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
            dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
            snowdp_lake  ,sm_lake                                         &
-#ifdef SNICAR
-           ! SNICAR
+! SNICAR model variables
            ,forc_aer    ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
            mss_dst1     , mss_dst2    ,mss_dst3        ,mss_dst4         &
-#endif
+! END SNICAR model variables
            )
 
       ! We assume the land water bodies have zero extra liquid water capacity

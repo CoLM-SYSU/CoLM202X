@@ -2,6 +2,13 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_SubsurfaceNetwork
+   !--------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   ! 
+   !    Subsurface networks: data and communication subroutines.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !--------------------------------------------------------------------------------
 
    USE MOD_Precision
    USE MOD_DataType
@@ -39,7 +46,7 @@ MODULE MOD_Hydro_SubsurfaceNetwork
 CONTAINS
    
    ! ----------
-   SUBROUTINE ssrf_init ()
+   SUBROUTINE subsurface_network_init ()
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -47,7 +54,7 @@ CONTAINS
       USE MOD_Mesh
       USE MOD_LandElm
       USE MOD_CoLMDebug
-      USE MOD_Hydro_DrainageNetwork
+      USE MOD_Hydro_SurfaceNetwork
       USE MOD_Utils
       IMPLICIT NONE
 
@@ -458,8 +465,8 @@ CONTAINS
             allocate (area_b(numbasin))
             allocate (elva_b(numbasin))
             DO ibasin = 1, numbasin
-               area_b(ibasin) = sum(drainagenetwork(ibasin)%area)
-               elva_b(ibasin) = sum(drainagenetwork(ibasin)%area * drainagenetwork(ibasin)%elva) / area_b(ibasin)
+               area_b(ibasin) = sum(surface_network(ibasin)%area)
+               elva_b(ibasin) = sum(surface_network(ibasin)%area * surface_network(ibasin)%elva) / area_b(ibasin)
             ENDDO
          ENDIF
          
@@ -489,7 +496,7 @@ CONTAINS
          
       ENDIF
 
-   END SUBROUTINE ssrf_init
+   END SUBROUTINE subsurface_network_init
 
    ! ----------
    SUBROUTINE retrieve_neighbour_data (vec_in, nbdata)
@@ -613,7 +620,7 @@ CONTAINS
    END SUBROUTINE allocate_neighbour_data 
 
    ! ----------
-   SUBROUTINE ssrf_final ()
+   SUBROUTINE subsurface_network_final ()
 
       IMPLICIT NONE
       INTEGER :: i
@@ -646,7 +653,7 @@ CONTAINS
       IF (allocated(recvaddr)) deallocate(recvaddr)
       IF (allocated(sendaddr)) deallocate(sendaddr)
 
-   END SUBROUTINE ssrf_final
+   END SUBROUTINE subsurface_network_final
 
 END MODULE MOD_Hydro_SubsurfaceNetwork
 #endif

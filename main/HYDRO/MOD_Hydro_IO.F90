@@ -2,6 +2,13 @@
 
 #ifdef LATERAL_FLOW
 MODULE MOD_Hydro_IO
+   !-----------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Read/Write data in lateral hydrological processes.   
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !-----------------------------------------------------------------------
 
    PUBLIC :: vector_write_basin
    PUBLIC :: vector_read_basin

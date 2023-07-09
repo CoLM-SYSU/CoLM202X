@@ -15,10 +15,10 @@ module MOD_BGC_Veg_CNGapMortality
 
   use MOD_Precision
   use MOD_Const_PFT, only: lf_flab, lf_fcel, lf_flig, fr_flab, fr_fcel, fr_flig
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_BGC_Vars_TimeInvariants, only: &
     ! bgc constants
       am
-  use MOD_Vars_PFTimeInvars, only: pftclass, pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
 
   use MOD_BGC_Vars_1DFluxes, only: &
       ! decomposition carbon flux varables (in)
@@ -48,7 +48,7 @@ module MOD_BGC_Veg_CNGapMortality
              m_deadcrootn_to_litter_p   , m_deadcrootn_storage_to_litter_p, m_deadcrootn_xfer_to_litter_p, &
              m_retransn_to_litter_p
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
       ! vegetation carbon state variables (inout)
              leafc_p            , leafc_storage_p     , leafc_xfer_p     , &
              frootc_p           , frootc_storage_p    , frootc_xfer_p    , &

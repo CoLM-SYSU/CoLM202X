@@ -2,6 +2,25 @@
 
 MODULE MOD_LandPatch
 
+   !------------------------------------------------------------------------------------
+   ! DESCRIPTION:
+   !
+   !    Build pixelset "landpatch".
+   !
+   !    In CoLM, the global/regional area is divided into a hierarchical structure:
+   !    1. If GRIDBASED or UNSTRUCTURED is defined, it is
+   !       ELEMENT >>> PATCH
+   !    2. If CATCHMENT is defined, it is
+   !       ELEMENT >>> HRU >>> PATCH
+   !    If Plant Function Type classification is used, PATCH is further divided into PFT.
+   !    If Plant Community classification is used,     PATCH is further divided into PC.
+   ! 
+   !    "landpatch" refers to pixelset PATCH.
+   !
+   ! Created by Shupeng Zhang, May 2023
+   !    porting codes from Hua Yuan's OpenMP version to MPI parallel version.
+   !------------------------------------------------------------------------------------
+
    USE MOD_Precision
    USE MOD_Grid
    USE MOD_Pixelset
@@ -79,7 +98,7 @@ CONTAINS
          write(*,'(A)') 'Making land patches :'
       ENDIF
 
-#if (defined SinglePoint && defined PFT_CLASSIFICATION && defined CROP)
+#if (defined SinglePoint && defined LULC_IGBP_PFT && defined CROP)
       IF ((SITE_landtype == CROPLAND) .and. (USE_SITE_pctcrop)) THEN
 
          numpatch = count(SITE_pctcrop > 0.)
@@ -118,7 +137,7 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, patchdata)
 
-#ifndef USGS_CLASSIFICATION
+#ifndef LULC_USGS
          ! add parameter input for time year
          file_patch = trim(DEF_dir_rawdata)//'landtypes/landtype-igbp-modis-'//trim(cyear)//'.nc'
 #else
@@ -187,7 +206,7 @@ CONTAINS
             ENDIF
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
             ! For classification of plant function types, merge all land types with soil ground
             DO ipxl = ipxstt, ipxend
                IF (types(ipxl) > 0) THEN

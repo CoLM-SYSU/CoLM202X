@@ -40,6 +40,8 @@ PROGRAM MKSRFDATA
    !
    ! Created by Yongjiu Dai, 02/2014
    !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    !
    ! ======================================================================
    USE MOD_Precision
@@ -57,10 +59,10 @@ PROGRAM MKSRFDATA
    USE MOD_LandPatch
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
@@ -143,7 +145,7 @@ PROGRAM MKSRFDATA
    CALL gblock%set_by_size (DEF_nx_blocks, DEF_ny_blocks)
    ! CALL gblock%set_by_file (DEF_file_block)
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
 
    ! ...........................................................................
@@ -179,16 +181,16 @@ PROGRAM MKSRFDATA
 #endif
 
    ! define grid coordinates of land types
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    CALL gpatch%define_by_name ('colm_1km')
 #endif
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 #ifdef BGC
@@ -196,13 +198,9 @@ PROGRAM MKSRFDATA
    ! define grid for crop parameters
    CALL gcrop%define_by_ndims (720,360)
 #endif
-#if (defined Fire)
    ! define grid for crop parameters
    CALL gfire%define_by_ndims (720,360)
-#endif
-#ifdef NITRIF
    CALL gnitrif%define_by_name ('nitrif_2deg')
-#endif
    CALL gndep%define_by_name ('nitrif_2deg')
 #endif
 
@@ -242,12 +240,10 @@ PROGRAM MKSRFDATA
 #if (defined CROP)
    CALL pixel%assimilate_grid (gcrop )
 #endif
-#if (defined Fire)
    CALL pixel%assimilate_grid (gfire )
-#endif
-#ifdef NITRIF
+
    CALL pixel%assimilate_grid (gnitrif)
-#endif
+
    CALL pixel%assimilate_grid (gndep)
 #endif
 
@@ -264,6 +260,7 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+   CALL pixel%map_to_grid (gridlai)
 
 #ifdef URBAN_MODEL
    CALL pixel%map_to_grid (gurban         )
@@ -271,17 +268,12 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (grid_urban_5km )
 #endif
 
+#ifdef BGC
 #if (defined CROP)
    CALL pixel%map_to_grid (gcrop )
 #endif
-#if (defined Fire)
    CALL pixel%map_to_grid (gfire )
-#endif
-   CALL pixel%map_to_grid (gridlai)
-#ifdef NITRIF
    CALL pixel%map_to_grid (gnitrif)
-#endif
-#ifdef BGC
    CALL pixel%map_to_grid (gndep)
 #endif
 
@@ -314,11 +306,11 @@ PROGRAM MKSRFDATA
    CALL landurban_build(lc_year)
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL landpft_build(lc_year)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL landpc_build(lc_year)
 #endif
 
@@ -340,11 +332,11 @@ PROGRAM MKSRFDATA
 
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  , lc_year)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   , lc_year)
 #endif
 
@@ -370,12 +362,12 @@ PROGRAM MKSRFDATA
 #if (defined CROP)
    call Aggregation_CropParameters  (gcrop  , dir_rawdata, dir_landdata)
 #endif
-#ifdef Fire
-   call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
-#endif
-#if (defined NITRIF)
-  call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
-#endif
+   if(DEF_USE_FIRE)then
+      call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
+   end if
+   if(DEF_USE_NITRIF)then
+     call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
+   end if
 #endif
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs
@@ -388,9 +380,9 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-#ifdef USE_DEPTH_TO_BEDROCK
-   CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
-#endif
+   IF(DEF_USE_BEDROCK)THEN
+      CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
+   ENDIF
 
    CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
 
@@ -408,7 +400,7 @@ PROGRAM MKSRFDATA
    ! ................................................................
 
 #ifdef SinglePoint
-#if (defined PFT_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT)
    CALL write_surface_data_single (numpatch, numpft)
 #else
    CALL write_surface_data_single (numpatch)

@@ -177,7 +177,7 @@ ALLOCATE(VAROUT(NVARSOUT))
 WRITE(CTIME,'(A14,I4.4,A1,I2.2,A1,I2.2,A1,I2.2,A1,I2.2)') 'seconds since ',ISYYYY,'-',ISMM,'-',ISDD,' ',ISHOUR,":",ISMIN
 
 !* Loop on variables and create files 
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: add water re-infiltration calculation
+!  add water re-infiltration calculation
 ! currently was not used in colm-cama coupling model
 
 DO JF=1,NVARSOUT

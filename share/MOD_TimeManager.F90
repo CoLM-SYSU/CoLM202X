@@ -18,6 +18,12 @@ MODULE MOD_TimeManager
    USE MOD_Precision
    IMPLICIT NONE
 
+   integer, dimension(0:12), parameter :: &
+      daysofmonth_leap      = (/0,31,29,31,30,31,30,31,31,30,31,30,31/)          ,&
+      daysofmonth_noleap    = (/0,31,28,31,30,31,30,31,31,30,31,30,31/)          ,&
+      accdaysofmonth_leap   = (/0,31,60,91,121,152,182,213,244,274,305,335,366/) ,&
+      accdaysofmonth_noleap = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+
    TYPE :: timestamp
       INTEGER :: year, day, sec
    END TYPE timestamp
@@ -250,21 +256,21 @@ CONTAINS
       INTEGER, intent(in)  :: year, day
       INTEGER, intent(out) :: month, mday
 
-      INTEGER :: i, months(0:12)
+      INTEGER :: i, monthday(0:12)
 
       IF ( isleapyear(year) ) THEN
-         months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         monthday(:) = accdaysofmonth_leap(:)
       ELSE
-         months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         monthday(:) = accdaysofmonth_noleap(:)
       ENDIF
 
     ! calculate month and day values
       DO i = 1, 12
-         IF (day .LE. months(i)) THEN
+         IF (day .LE. monthday(i)) THEN
             month = i; exit
          ENDIF
       ENDDO
-      mday = day - months(i-1)
+      mday = day - monthday(i-1)
 
    END SUBROUTINE julian2monthday
 
@@ -274,16 +280,16 @@ CONTAINS
       INTEGER, intent(in)  :: year, month, mday
       INTEGER, intent(out) :: day
 
-      INTEGER :: months(0:12)
+      INTEGER :: monthday(0:12)
 
       IF ( isleapyear(year) ) THEN
-         months = (/0,31,60,91,121,152,182,213,244,274,305,335,366/)
+         monthday(:) = accdaysofmonth_leap(:)
       ELSE
-         months = (/0,31,59,90,120,151,181,212,243,273,304,334,365/)
+         monthday(:) = accdaysofmonth_noleap(:)
       ENDIF
 
     ! calculate julian day
-      day  = months(month-1) + mday
+      day  = monthday(month-1) + mday
 
    END SUBROUTINE monthday2julian
 
@@ -540,10 +546,6 @@ CONTAINS
       INTEGER, intent(in) :: mmdd
       LOGICAL, intent(in) :: isleap
 
-      INTEGER, dimension(0:12) :: daysofmonth_noleap &
-                               = (/0,31,28,31,30,31,30,31,31,30,31,30,31/)
-      INTEGER, dimension(0:12) :: daysofmonth_leap &
-                               = (/0,31,29,31,30,31,30,31,31,30,31,30,31/)
       INTEGER imonth, iday
 
       imonth = mmdd / 100
@@ -581,5 +583,115 @@ CONTAINS
 
    END FUNCTION minutes_since_1900
 
+   ! -----------------------------------------------------------------------
+  SUBROUTINE gmt2local(idate, long, ldate)
+
+  ! !DESCRIPTION:
+  ! A subroutine to calculate local time
+  ! !PURPOSE
+  ! Convert GMT time to local time in global run
+  ! -----------------------------------------------------------------------
+
+    IMPLICIT NONE
+
+    INTEGER , intent(in ) :: idate(3)
+    REAL(r8), intent(in ) :: long
+    REAL(r8), intent(out) :: ldate(3)
+
+    INTEGER  :: maxday
+    REAL(r8) :: tdiff
+
+    tdiff = long/15.*3600
+
+    ldate(3) = idate(3) + tdiff
+
+    IF (ldate(3) < 0) THEN
+
+      ldate(3) = 86400 + ldate(3)
+      ldate(2) = idate(2) - 1
+
+      IF (ldate(2) < 1) THEN
+         ldate(1) = idate(1) - 1
+         IF ( isleapyear(int(ldate(1))) ) THEN
+            ldate(2) = 366
+         ELSE
+            ldate(2) = 365
+         ENDIF
+      ENDIF
+
+    ELSE IF (ldate(3) > 86400) THEN
+
+      ldate(3) = ldate(3) - 86400
+      ldate(2) = idate(2) + 1
+
+      IF ( isleapyear(int(ldate(1))) ) THEN
+         maxday = 366
+      ELSE
+         maxday = 365
+      ENDIF
+
+      IF(ldate(2) > maxday) THEN
+         ldate(1) = idate(1) + 1
+         ldate(2) = 1
+      ENDIF
+    ELSE
+      ldate(2) = idate(2)
+      ldate(1) = idate(1)
+    ENDIF
+   END SUBROUTINE gmt2local
+
+  ! -----------------------------------------------------------------------
+  SUBROUTINE timeweek(year, month, day, iweek)
+
+  ! !DESCRIPTION:
+  ! A subroutine to calculate day of week
+  ! !PURPOSE
+  ! Calculate day of week to determine if the day is week holiday
+  ! -----------------------------------------------------------------------
+
+    IMPLICIT NONE
+
+    INTEGER, intent(in ) :: year, month
+    INTEGER, intent(out) :: iweek, day
+
+    INTEGER :: myear, mmonth
+    INTEGER :: yy, mm, dd, y12, y34
+    INTEGER :: A, B, C, D, i
+
+    INTEGER :: monthday(0:12)
+
+    IF ( isleapyear(year) ) THEN
+       monthday(:) = daysofmonth_leap(:)
+    ELSE
+       monthday(:) = daysofmonth_noleap(:)
+    ENDIF
+
+    IF (month==1 .or. month==2) THEN
+      mmonth = month + 12
+      myear  = year  - 1
+    ELSE
+      mmonth = month
+      myear  = year
+    ENDIF
+
+    y12 = myear/100
+    y34 = myear - y12*100
+
+    A = int(y34/4.)
+    B = int(y12/4.)
+    C = y12*2
+    D = int(26*(mmonth+1)/10.)
+
+    iweek = abs(mod((y34+A+B-C+D+day-1), 7))
+
+    DO i=1, month-1
+       day = day + monthday(i)
+    ENDDO
+
+    IF (iweek == 0) THEN
+       iweek = 7
+    ENDIF
+
+  END SUBROUTINE timeweek
 
 END MODULE MOD_TimeManager

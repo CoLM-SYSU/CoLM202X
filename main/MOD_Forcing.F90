@@ -11,6 +11,10 @@ module MOD_Forcing
 ! Yongjiu Dai and Hua Yuan, 04/2014: initial code from CoLM2014 (metdata.F90,
 !                                    GETMET.F90 and rd_forcing.F90
 !
+! Shupeng Zhang, 05/2023: 1) porting codes to MPI parallel version
+!                         2) codes for dealing with missing forcing value
+!                         3) interface for downscaling
+!
 ! TODO...(need complement)
 
    use MOD_Precision
@@ -20,7 +24,7 @@ module MOD_Forcing
    use MOD_UserSpecifiedForcing
    use MOD_TimeManager
    use MOD_SPMD_Task
-   USE MOD_MonthlyinSituCO2mlo
+   USE MOD_MonthlyinSituCO2MaunaLoa
    USE MOD_Vars_Global, only : pi
    USE MOD_OrbCoszen
 
@@ -60,7 +64,7 @@ module MOD_Forcing
 contains
 
    !--------------------------------
-   subroutine forcing_init (dir_forcing, deltatime, idate)
+   subroutine forcing_init (dir_forcing, deltatime, idate, lc_year)
 
       use MOD_SPMD_Task
       USE MOD_Namelist
@@ -80,9 +84,10 @@ contains
       character(len=*), intent(in) :: dir_forcing
       real(r8), intent(in) :: deltatime  ! model time step
       integer,  intent(in) :: idate(3)
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
 
       ! Local variables
-      CHARACTER(len=256) :: filename, lndname
+      CHARACTER(len=256) :: filename, lndname, cyear
       type(timestamp)    :: mtstamp
       integer            :: ivar, year, month, day, time_i
       REAL(r8)           :: missing_value
@@ -168,7 +173,8 @@ contains
 
       IF (DEF_USE_Forcing_Downscaling) THEN
 
-         lndname = trim(DEF_dir_landdata) // '/topography/topography_patches.nc'
+         write(cyear,'(i4.4)') lc_year
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
          call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
 
          IF (p_is_worker) THEN
@@ -226,7 +232,7 @@ contains
       use MOD_Mapping_Grid2Pset
       use MOD_CoLMDebug
       use MOD_UserSpecifiedForcing
-      USE MOD_DownscalingForcing, only : rair, cpair, downscale_forcings
+      USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
 
       IMPLICIT NONE
       integer, INTENT(in) :: idate(3)
@@ -486,7 +492,7 @@ contains
       endif
 
       IF (.not. DEF_USE_Forcing_Downscaling) THEN
-         
+
          call mg2p_forc%map_aweighted (forc_xy_t    ,  forc_t    )
          call mg2p_forc%map_aweighted (forc_xy_q    ,  forc_q    )
          call mg2p_forc%map_aweighted (forc_xy_prc  ,  forc_prc  )
@@ -581,7 +587,7 @@ contains
       call check_vector_data ('Forcing frl   ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
-      endif         
+      endif
 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)

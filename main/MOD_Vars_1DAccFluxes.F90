@@ -46,12 +46,16 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_gssun (:)
    real(r8), allocatable :: a_gssha (:)
-   real(r8), allocatable :: a_dpond  (:)
+   real(r8), allocatable :: a_wdsrf  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
    real(r8), allocatable :: a_wat    (:)
    real(r8), allocatable :: a_assim  (:)
    real(r8), allocatable :: a_respc  (:)
+   real(r8), allocatable :: a_assimsun   (:) !1
+   real(r8), allocatable :: a_assimsha   (:) !1
+   real(r8), allocatable :: a_etrsun     (:) !1
+   real(r8), allocatable :: a_etrsha     (:) !1
 
    real(r8), allocatable :: a_qcharge(:)
 
@@ -79,6 +83,34 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_qref (:)
    real(r8), allocatable :: a_rain (:)
    real(r8), allocatable :: a_snow (:)
+
+#ifdef URBAN_MODEL
+   REAL(r8), allocatable :: a_t_room (:)    !temperature of inner building [K]
+   REAL(r8), allocatable :: a_tafu   (:)    !temperature of outer building [K]
+   REAL(r8), allocatable :: a_fhac   (:)    !sensible flux from heat or cool AC [W/m2]
+   REAL(r8), allocatable :: a_fwst   (:)    !waste heat flux from heat or cool AC [W/m2]
+   REAL(r8), allocatable :: a_fach   (:)    !flux from inner and outter air exchange [W/m2]
+   REAL(r8), allocatable :: a_fahe   (:)    !flux from metabolic and vehicle [W/m2]
+   REAL(r8), allocatable :: a_fhah   (:)    !sensible flux from heating [W/m2]
+   REAL(r8), allocatable :: a_vehc   (:)    !flux from vehicle [W/m2]
+   REAL(r8), allocatable :: a_meta   (:)    !flux from metabolic [W/m2]
+
+   REAL(r8), allocatable :: a_senroof(:)    !sensible heat flux from roof [W/m2]
+   REAL(r8), allocatable :: a_senwsun(:)    !sensible heat flux from sunlit wall [W/m2]
+   REAL(r8), allocatable :: a_senwsha(:)    !sensible heat flux from shaded wall [W/m2]
+   REAL(r8), allocatable :: a_sengimp(:)    !sensible heat flux from impervious road [W/m2]
+   REAL(r8), allocatable :: a_sengper(:)    !sensible heat flux from pervious road [W/m2]
+   REAL(r8), allocatable :: a_senurbl(:)    !sensible heat flux from urban vegetation [W/m2]
+
+   REAL(r8), allocatable :: a_lfevproof(:)  !latent heat flux from roof [W/m2]
+   REAL(r8), allocatable :: a_lfevpgimp(:)  !latent heat flux from impervious road [W/m2]
+   REAL(r8), allocatable :: a_lfevpgper(:)  !latent heat flux from pervious road [W/m2]
+   REAL(r8), allocatable :: a_lfevpurbl(:)  !latent heat flux from urban vegetation [W/m2]
+
+   REAL(r8), allocatable :: a_troof    (:)  !temperature of roof [K]
+   REAL(r8), allocatable :: a_twall    (:)  !temperature of wall [K]
+#endif
+
 
 #ifdef BGC
    real(r8), allocatable :: a_leafc              (:)
@@ -160,31 +192,8 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_leafc_c3arcgrass   (:) !12
    real(r8), allocatable :: a_leafc_c3grass      (:) !13
    real(r8), allocatable :: a_leafc_c4grass      (:) !14
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-   real(r8), allocatable :: a_assim_RuBP_sun        (:) !1
-   real(r8), allocatable :: a_assim_RuBP_sha        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sun        (:) !1
-   real(r8), allocatable :: a_assim_Rubisco_sha        (:) !1
-   real(r8), allocatable :: a_assimsun        (:) !1
-   real(r8), allocatable :: a_assimsha        (:) !1
-   real(r8), allocatable :: a_etrsun        (:) !1
-   real(r8), allocatable :: a_etrsha        (:) !1
-   real(r8), allocatable :: a_cisun        (:) !1
-   real(r8), allocatable :: a_cisha        (:) !1
-   real(r8), allocatable :: a_Dsun        (:) !1
-   real(r8), allocatable :: a_Dsha        (:) !1
-   real(r8), allocatable :: a_gammasun        (:) !1
-   real(r8), allocatable :: a_gammasha        (:) !1
-   real(r8), allocatable :: a_lambdasun        (:) !1
-   real(r8), allocatable :: a_lambdasha        (:) !1
-   real(r8), allocatable :: a_lambda                   (:) !14
-#endif
-#endif
-#ifdef NITRIF
    real(r8), allocatable :: a_O2_DECOMP_DEPTH_UNSAT (:,:)
    real(r8), allocatable :: a_CONC_O2_UNSAT         (:,:)
-#endif
 #ifdef CROP
    real(r8), allocatable :: a_pdcorn                (:)
    real(r8), allocatable :: a_pdswheat              (:)
@@ -216,17 +225,15 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fert_to_sminn      (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
-#ifdef Fire
    real(r8), allocatable :: a_abm                (:)
    real(r8), allocatable :: a_gdp                (:)
    real(r8), allocatable :: a_peatf              (:)
    real(r8), allocatable :: a_hdm                (:)
    real(r8), allocatable :: a_lnfm               (:)
 #endif
-#endif
-#ifdef OzoneStress
+! Ozone stress variables
    real(r8), allocatable :: a_ozone              (:)
-#endif
+! End ozone stress variables
 
    real(r8), allocatable :: a_t_soisno    (:,:)
    real(r8), allocatable :: a_wliq_soisno (:,:)
@@ -236,9 +243,9 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_BD_all      (:,:)
    real(r8), allocatable :: a_wfc         (:,:)
    real(r8), allocatable :: a_OM_density  (:,:)
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
    real(r8), allocatable :: a_vegwp       (:,:)
-#endif
+!end plant hydraulic parameters
    real(r8), allocatable :: a_t_lake      (:,:)
    real(r8), allocatable :: a_lake_icefrac(:,:)
 
@@ -303,6 +310,7 @@ contains
 
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
+      USE MOD_LandUrban, only : numurban
       USE MOD_Vars_Global
       implicit none
 
@@ -348,7 +356,7 @@ contains
             allocate (a_rstfacsha (numpatch))
             allocate (a_gssun     (numpatch))
             allocate (a_gssha     (numpatch))
-            allocate (a_dpond     (numpatch))
+            allocate (a_wdsrf     (numpatch))
 
             allocate (a_zwt       (numpatch))
             allocate (a_wa        (numpatch))
@@ -356,27 +364,10 @@ contains
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-            allocate (a_assim_RuBP_sun        (numpatch)) !1
-            allocate (a_assim_RuBP_sha        (numpatch)) !1
-            allocate (a_assim_Rubisco_sun        (numpatch)) !1
-            allocate (a_assim_Rubisco_sha        (numpatch)) !1
             allocate (a_assimsun        (numpatch)) !1
             allocate (a_assimsha        (numpatch)) !1
             allocate (a_etrsun        (numpatch)) !1
             allocate (a_etrsha        (numpatch)) !1
-            allocate (a_cisun        (numpatch)) !1
-            allocate (a_cisha        (numpatch)) !1
-            allocate (a_Dsun        (numpatch)) !1
-            allocate (a_Dsha        (numpatch)) !1
-            allocate (a_gammasun        (numpatch)) !1
-            allocate (a_gammasha        (numpatch)) !1
-            allocate (a_lambdasun        (numpatch)) !1
-            allocate (a_lambdasha        (numpatch)) !1
-            allocate (a_lambda                   (numpatch)) !1
-#endif
-#endif
 
             allocate (a_qcharge   (numpatch))
 
@@ -404,7 +395,34 @@ contains
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
             allocate (a_snow      (numpatch))
+#ifdef URBAN_MODEL
+            IF (numurban > 0) THEN
+               allocate (a_t_room    (numurban))
+               allocate (a_tafu      (numurban))
+               allocate (a_fhac      (numurban))
+               allocate (a_fwst      (numurban))
+               allocate (a_fach      (numurban))
+               allocate (a_fahe      (numurban))
+               allocate (a_fhah      (numurban))
+               allocate (a_vehc      (numurban))
+               allocate (a_meta      (numurban))
 
+               allocate (a_senroof   (numurban))
+               allocate (a_senwsun   (numurban))
+               allocate (a_senwsha   (numurban))
+               allocate (a_sengimp   (numurban))
+               allocate (a_sengper   (numurban))
+               allocate (a_senurbl   (numurban))
+
+               allocate (a_lfevproof (numurban))
+               allocate (a_lfevpgimp (numurban))
+               allocate (a_lfevpgper (numurban))
+               allocate (a_lfevpurbl (numurban))
+
+               allocate (a_troof     (numurban))
+               allocate (a_twall     (numurban))
+            ENDIF
+#endif
 #ifdef BGC
             allocate (a_leafc              (numpatch))
             allocate (a_leafc_storage      (numpatch))
@@ -485,10 +503,10 @@ contains
             allocate (a_leafc_c3arcgrass   (numpatch)) !12
             allocate (a_leafc_c3grass      (numpatch)) !13
             allocate (a_leafc_c4grass      (numpatch)) !14
-#ifdef NITRIF
+
             allocate (a_O2_DECOMP_DEPTH_UNSAT (1:nl_soil,numpatch))
             allocate (a_CONC_O2_UNSAT         (1:nl_soil,numpatch))
-#endif
+
 #ifdef CROP
             allocate (a_pdcorn             (numpatch))
             allocate (a_pdswheat           (numpatch))
@@ -520,17 +538,17 @@ contains
             allocate (a_fert_to_sminn      (numpatch))
 #endif
             allocate (a_ndep_to_sminn      (numpatch))
-#ifdef Fire
+
             allocate (a_abm                (numpatch))
             allocate (a_gdp                (numpatch))
             allocate (a_peatf              (numpatch))
             allocate (a_hdm                (numpatch))
             allocate (a_lnfm               (numpatch))
+
 #endif
-#endif
-#ifdef OzoneStress
+! Ozone stress variables
             allocate (a_ozone              (numpatch))
-#endif
+! End ozone stress variables
             allocate (a_t_soisno    (maxsnl+1:nl_soil,numpatch))
             allocate (a_wliq_soisno (maxsnl+1:nl_soil,numpatch))
             allocate (a_wice_soisno (maxsnl+1:nl_soil,numpatch))
@@ -539,9 +557,9 @@ contains
             allocate (a_BD_all      (1:nl_soil,       numpatch))
             allocate (a_wfc         (1:nl_soil,       numpatch))
             allocate (a_OM_density  (1:nl_soil,       numpatch))
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             allocate (a_vegwp       (1:nvegwcs,       numpatch))
-#endif
+!End Plant Hydraulic parameters
             allocate (a_t_lake      (nl_lake,numpatch))
             allocate (a_lake_icefrac(nl_lake,numpatch))
 
@@ -606,6 +624,7 @@ contains
 
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
+      USE MOD_LandUrban, only : numurban
       implicit none
 
       if (p_is_worker) then
@@ -650,13 +669,18 @@ contains
             deallocate (a_rstfacsha )
             deallocate (a_gssun )
             deallocate (a_gssha )
-            deallocate (a_dpond     )
+            deallocate (a_wdsrf     )
 
             deallocate (a_zwt       )
             deallocate (a_wa        )
             deallocate (a_wat       )
             deallocate (a_assim     )
             deallocate (a_respc     )
+
+            deallocate (a_assimsun        ) !1
+            deallocate (a_assimsha        ) !1
+            deallocate (a_etrsun        ) !1
+            deallocate (a_etrsha        ) !1
 
             deallocate (a_qcharge   )
 
@@ -684,6 +708,35 @@ contains
             deallocate (a_qref      )
             deallocate (a_rain      )
             deallocate (a_snow      )
+#ifdef URBAN_MODEL
+            IF (numurban > 0) THEN
+               deallocate (a_t_room    )
+               deallocate (a_tafu      )
+               deallocate (a_fhac      )
+               deallocate (a_fwst      )
+               deallocate (a_fach      )
+               deallocate (a_fahe      )
+               deallocate (a_fhah      )
+               deallocate (a_vehc      )
+               deallocate (a_meta      )
+
+               deallocate (a_senroof   )
+               deallocate (a_senwsun   )
+               deallocate (a_senwsha   )
+               deallocate (a_sengimp   )
+               deallocate (a_sengper   )
+               deallocate (a_senurbl   )
+
+               deallocate (a_lfevproof )
+               deallocate (a_lfevpgimp )
+               deallocate (a_lfevpgper )
+               deallocate (a_lfevpurbl )
+
+               deallocate (a_troof     )
+               deallocate (a_twall     )
+            ENDIF
+#endif
+
 #ifdef BGC
             deallocate (a_leafc              )
             deallocate (a_leafc_storage      )
@@ -764,31 +817,10 @@ contains
             deallocate (a_leafc_c3arcgrass   ) !12
             deallocate (a_leafc_c3grass      ) !13
             deallocate (a_leafc_c4grass      ) !14
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-            deallocate (a_assim_RuBP_sun        ) !1
-            deallocate (a_assim_RuBP_sha        ) !1
-            deallocate (a_assim_Rubisco_sun        ) !1
-            deallocate (a_assim_Rubisco_sha        ) !1
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
-            deallocate (a_cisun        ) !1
-            deallocate (a_cisha        ) !1
-            deallocate (a_Dsun        ) !1
-            deallocate (a_Dsha        ) !1
-            deallocate (a_gammasun        ) !1
-            deallocate (a_gammasha        ) !1
-            deallocate (a_lambdasun        ) !1
-            deallocate (a_lambdasha        ) !1
-            deallocate (a_lambda                   ) !1
-#endif
-#endif
-#ifdef NITRIF
+
             deallocate (a_O2_DECOMP_DEPTH_UNSAT )
             deallocate (a_CONC_O2_UNSAT         )
-#endif
+
 #ifdef CROP
             deallocate (a_pdcorn             )
             deallocate (a_pdswheat           )
@@ -820,17 +852,17 @@ contains
             deallocate (a_fert_to_sminn      )
 #endif
             deallocate (a_ndep_to_sminn      )
-#ifdef Fire
+
             deallocate (a_abm                )
             deallocate (a_gdp                )
             deallocate (a_peatf              )
             deallocate (a_hdm                )
             deallocate (a_lnfm               )
+
 #endif
-#endif
-#ifdef OzoneStress
+! Ozone stress variables
             deallocate (a_ozone              )
-#endif
+! end ozone stress variables
 
             deallocate (a_t_soisno    )
             deallocate (a_wliq_soisno )
@@ -840,9 +872,9 @@ contains
             deallocate (a_BD_all      )
             deallocate (a_wfc         )
             deallocate (a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             deallocate (a_vegwp       )
-#endif
+!end plant hydraulic parameters
             deallocate (a_t_lake      )
             deallocate (a_lake_icefrac)
 #ifdef BGC
@@ -907,6 +939,7 @@ contains
 
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
+      USE MOD_LandUrban, only : numurban
       use MOD_Vars_Global,    only : spval
       implicit none
 
@@ -957,12 +990,16 @@ contains
             a_gssun   (:) = spval
             a_gssha   (:) = spval
 
-            a_dpond   (:) = spval
+            a_wdsrf   (:) = spval
             a_zwt     (:) = spval
             a_wa      (:) = spval
             a_wat     (:) = spval
             a_assim   (:) = spval
             a_respc   (:) = spval
+            a_assimsun(:) = spval !1
+            a_assimsha(:) = spval !1
+            a_etrsun  (:) = spval !1
+            a_etrsha  (:) = spval !1
 
             a_qcharge (:) = spval
 
@@ -990,6 +1027,36 @@ contains
             a_qref      (:) = spval
             a_rain      (:) = spval
             a_snow      (:) = spval
+
+#ifdef URBAN_MODEL
+            IF (numurban > 0) THEN
+               a_t_room   (:) = spval
+               a_tafu     (:) = spval
+               a_fhac     (:) = spval
+               a_fwst     (:) = spval
+               a_fach     (:) = spval
+               a_fahe     (:) = spval
+               a_fhah     (:) = spval
+               a_vehc     (:) = spval
+               a_meta     (:) = spval
+
+               a_senroof  (:) = spval
+               a_senwsun  (:) = spval
+               a_senwsha  (:) = spval
+               a_sengimp  (:) = spval
+               a_sengper  (:) = spval
+               a_senurbl  (:) = spval
+
+               a_lfevproof(:) = spval
+               a_lfevpgimp(:) = spval
+               a_lfevpgper(:) = spval
+               a_lfevpurbl(:) = spval
+
+               a_troof    (:) = spval
+               a_twall    (:) = spval
+            ENDIF
+#endif
+
 #ifdef BGC
             a_leafc              (:) = spval
             a_leafc_storage      (:) = spval
@@ -1070,31 +1137,9 @@ contains
             a_leafc_c3arcgrass   (:) = spval
             a_leafc_c3grass      (:) = spval
             a_leafc_c4grass      (:) = spval
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-            a_assim_RuBP_sun        (:) = spval !1
-            a_assim_RuBP_sha        (:) = spval !1
-            a_assim_Rubisco_sun        (:) = spval !1
-            a_assim_Rubisco_sha        (:) = spval !1
-            a_assimsun        (:) = spval !1
-            a_assimsha        (:) = spval !1
-            a_etrsun        (:) = spval !1
-            a_etrsha        (:) = spval !1
-            a_cisun        (:) = spval !1
-            a_cisha        (:) = spval !1
-            a_Dsun        (:) = spval !1
-            a_Dsha        (:) = spval !1
-            a_gammasun        (:) = spval !1
-            a_gammasha        (:) = spval !1
-            a_lambdasun        (:) = spval  !1
-            a_lambdasha        (:) = spval  !1
-            a_lambda                   (:) = spval  !1
-#endif
-#endif
-#ifdef NITRIF
+
             a_O2_DECOMP_DEPTH_UNSAT (:,:) = spval
             a_CONC_O2_UNSAT         (:,:) = spval
-#endif
 #ifdef CROP
             a_pdcorn             (:) = spval
             a_pdswheat           (:) = spval
@@ -1126,17 +1171,15 @@ contains
             a_fert_to_sminn      (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
-#ifdef Fire
+
             a_abm                (:) = spval
             a_gdp                (:) = spval
             a_peatf              (:) = spval
             a_hdm                (:) = spval
             a_lnfm               (:) = spval
+
 #endif
-#endif
-#ifdef OzoneStress
             a_ozone              (:) = spval
-#endif
 
             a_t_soisno     (:,:) = spval
             a_wliq_soisno  (:,:) = spval
@@ -1146,9 +1189,9 @@ contains
             a_BD_all       (:,:) = spval
             a_wfc          (:,:) = spval
             a_OM_density   (:,:) = spval
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant Hydraulic parameters
             a_vegwp        (:,:) = spval
-#endif
+!end plant hydraulic parameters
             a_t_lake       (:,:) = spval
             a_lake_icefrac (:,:) = spval
 #ifdef BGC
@@ -1217,14 +1260,16 @@ contains
 
       use MOD_Precision
       use MOD_SPMD_Task
+      USE mod_forcing, only : forcmask
       use MOD_LandPatch,     only : numpatch
+      USE MOD_LandUrban,     only : numurban
       use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
       use MOD_CoLMDebug
       use MOD_Vars_Global
@@ -1314,12 +1359,16 @@ contains
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
 
-            call acc1d (dpond  , a_dpond  )
+            call acc1d (wdsrf  , a_wdsrf  )
             call acc1d (zwt    , a_zwt    )
             call acc1d (wa     , a_wa     )
             call acc1d (wat    , a_wat    )
             call acc1d (assim  , a_assim  )
             call acc1d (respc  , a_respc  )
+            call acc1d (assimsun_out  , a_assimsun      )
+            call acc1d (assimsha_out  , a_assimsha      )
+            call acc1d (etrsun_out    , a_etrsun        )
+            call acc1d (etrsha_out    , a_etrsha        )
 
             call acc1d (qcharge, a_qcharge)
 
@@ -1355,6 +1404,35 @@ contains
 
             call acc1d (forc_rain, a_rain )
             call acc1d (forc_snow, a_snow )
+
+#ifdef URBAN_MODEL
+            IF (numurban > 0) THEN
+               CALL acc1d(t_room    , a_t_room    )
+               CALL acc1d(tafu      , a_tafu      )
+               CALL acc1d(fhac      , a_fhac      )
+               CALL acc1d(fwst      , a_fwst      )
+               CALL acc1d(fach      , a_fach      )
+               CALL acc1d(fahe      , a_fahe      )
+               CALL acc1d(fhah      , a_fhah      )
+               CALL acc1d(vehc      , a_vehc      )
+               CALL acc1d(meta      , a_meta      )
+
+               CALL acc1d(fsen_roof , a_senroof   )
+               CALL acc1d(fsen_wsun , a_senwsun   )
+               CALL acc1d(fsen_wsha , a_senwsha   )
+               CALL acc1d(fsen_gimp , a_sengimp   )
+               CALL acc1d(fsen_gper , a_sengper   )
+               CALL acc1d(fsen_urbl , a_senurbl   )
+
+               CALL acc1d(lfevp_roof, a_lfevproof )
+               CALL acc1d(lfevp_gimp, a_lfevpgimp )
+               CALL acc1d(lfevp_gper, a_lfevpgper )
+               CALL acc1d(lfevp_urbl, a_lfevpurbl )
+
+               CALL acc1d(t_roof    , a_troof     )
+               CALL acc1d(t_wall    , a_twall     )
+            ENDIF
+#endif
 
 #ifdef BGC
             call acc1d (leafc              , a_leafc               )
@@ -1436,31 +1514,10 @@ contains
             call acc1d (leafc_c3arcgrass   , a_leafc_c3arcgrass    )
             call acc1d (leafc_c3grass      , a_leafc_c3grass       )
             call acc1d (leafc_c4grass      , a_leafc_c4grass       )
-#ifdef WUEdiag
-#ifdef PFT_CLASSIFICATION
-            call acc1d (assim_RuBP_sun_out    , a_assim_RuBP_sun        )
-            call acc1d (assim_RuBP_sha_out    , a_assim_RuBP_sha        )
-            call acc1d (assim_Rubisco_sun_out    , a_assim_Rubisco_sun        )
-            call acc1d (assim_Rubisco_sha_out    , a_assim_Rubisco_sha        )
-            call acc1d (assimsun_out    , a_assimsun        )
-            call acc1d (assimsha_out    , a_assimsha        )
-            call acc1d (etrsun_out    , a_etrsun        )
-            call acc1d (etrsha_out    , a_etrsha        )
-            call acc1d (cisun_out    , a_cisun        )
-            call acc1d (cisha_out    , a_cisha        )
-            call acc1d (Dsun_out    , a_Dsun        )
-            call acc1d (Dsha_out    , a_Dsha        )
-            call acc1d (gammasun_out    , a_gammasun        )
-            call acc1d (gammasha_out    , a_gammasha        )
-            call acc1d (lambdasun_out    , a_lambdasun        )
-            call acc1d (lambdasha_out    , a_lambdasha        )
-            call acc1d (lambda_out               , a_lambda                   )
-#endif
-#endif
-#ifdef NITRIF
-            call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
-            call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
-#endif
+            if(DEF_USE_NITRIF)then
+               call acc2d (to2_decomp_depth_unsat, a_O2_DECOMP_DEPTH_UNSAT)
+               call acc2d (tconc_o2_unsat        , a_CONC_O2_UNSAT        )
+            end if
 #ifdef CROP
             call acc1d (pdcorn             ,   a_pdcorn             )
             call acc1d (pdswheat           ,   a_pdswheat           )
@@ -1492,17 +1549,17 @@ contains
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
-#ifdef Fire
-            call acc1d (abm_lf             ,   a_abm                )
-            call acc1d (gdp_lf             ,   a_gdp                )
-            call acc1d (peatf_lf           ,   a_peatf              )
-            call acc1d (hdm_lf             ,   a_hdm                )
-            call acc1d (lnfm               ,   a_lnfm               )
+            if(DEF_USE_FIRE)then
+               call acc1d (abm_lf             ,   a_abm                )
+               call acc1d (gdp_lf             ,   a_gdp                )
+               call acc1d (peatf_lf           ,   a_peatf              )
+               call acc1d (hdm_lf             ,   a_hdm                )
+               call acc1d (lnfm               ,   a_lnfm               )
+            end if
 #endif
-#endif
-#ifdef OzoneStress
-            call acc1d (forc_ozone         ,   a_ozone              )
-#endif
+            IF(DEF_USE_OZONESTRESS)THEN
+               call acc1d (forc_ozone         ,   a_ozone              )
+            ENDIF
 
             call acc2d (t_soisno   , a_t_soisno   )
             call acc2d (wliq_soisno, a_wliq_soisno)
@@ -1513,9 +1570,9 @@ contains
             call acc2d (BD_all     , a_BD_all      )
             call acc2d (wfc        , a_wfc         )
             call acc2d (OM_density , a_OM_density  )
-#ifdef PLANT_HYDRAULIC_STRESS
-            call acc2d (vegwp      , a_vegwp      )
-#endif
+            if(DEF_USE_PLANTHYDRAULICS)then
+               call acc2d (vegwp      , a_vegwp      )
+            end if
             call acc2d (t_lake      , a_t_lake      )
             call acc2d (lake_icefrac, a_lake_icefrac)
 #ifdef BGC
@@ -1620,6 +1677,10 @@ contains
             allocate (r_fm10m (numpatch))
 
             do i = 1, numpatch
+               
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask(i)) cycle
+               ENDIF
 
                z0m_av = z0m(i)
                z0h_av = z0m(i)
@@ -1674,13 +1735,13 @@ contains
 
                obu = zldis/r_zol(i)
                if (DEF_USE_CBL_HEIGHT) then
-			     hpbl = forc_hpbl(i)
-                 call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+                  hpbl = forc_hpbl(i)
+                  call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
-		       else
-                 call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
+		         else
+                  call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
-		       endif
+		         endif
 
                ! bug found by chen qiying 2013/07/01
                r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)

@@ -28,14 +28,16 @@ MODULE MOD_Eroot
          psi0,rootfr, dz_soisno,t_soisno,wliq_soisno,rootr,etrc,rstfac)
 
   !=======================================================================
+  ! !DESCRIPTION:
   ! effective root fraction and maximum possible transpiration rate
   ! Original author : Yongjiu Dai, 08/30/2002
+  ! Revision author : Shupeng Zhang and Xingjie Lu.
   !=======================================================================
 
     use MOD_Precision
     use MOD_Const_Physical, only : tfrz
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-    USE mod_soil_function, only : soil_psi_from_vliq
+    USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
 #endif
     implicit none
 

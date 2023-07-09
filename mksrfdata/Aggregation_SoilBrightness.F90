@@ -7,6 +7,9 @@ SUBROUTINE Aggregation_SoilBrightness ( &
    !     data with 30 arc seconds resolution
    !
    ! Created by Yongjiu Dai, 03/2014
+   !
+   ! REVISIONS:
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version.
    ! ----------------------------------------------------------------------
    USE MOD_Precision
    USE MOD_Namelist
@@ -158,7 +161,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -194,7 +197,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -230,7 +233,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)
@@ -266,7 +269,7 @@ SUBROUTINE Aggregation_SoilBrightness ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
          IF(L/=16 .and. L/=24)THEN  ! NOT OCEAN(0)/WATER BODIES(16)/GLACIER and ICESHEET(24)
 #else
          IF(L/=17 .and. L/=15)THEN  ! NOT OCEAN(0)/WATER BODIES(17)/GLACIER and ICE SHEET(15)

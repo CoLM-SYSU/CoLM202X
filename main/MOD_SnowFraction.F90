@@ -9,10 +9,10 @@ MODULE MOD_SnowFraction
 
 ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: snowfraction
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    PUBLIC :: snowfraction_pftwrap
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    PUBLIC :: snowfraction_pcwrap
 #endif
 
@@ -82,7 +82,7 @@ MODULE MOD_SnowFraction
 
    end subroutine snowfraction
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    subroutine snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================
@@ -98,8 +98,8 @@ MODULE MOD_SnowFraction
 
    use MOD_Precision
    USE MOD_LandPFT
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
    implicit none
 
 ! dummy arguments
@@ -161,7 +161,7 @@ MODULE MOD_SnowFraction
    end subroutine snowfraction_pftwrap
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    subroutine snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
 
 !=======================================================================
@@ -177,8 +177,8 @@ MODULE MOD_SnowFraction
 
    use MOD_Precision
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
    implicit none
 
 ! dummy arguments

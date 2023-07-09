@@ -27,7 +27,7 @@ CONTAINS
         par            ,Fhac           ,Fwst           ,Fach           ,&
         Fahe           ,Fhah           ,vehc           ,meta           ,&
         ! LUCY model input parameters
-        fix_holiday    ,week_holiday   ,hum_prof       ,popcell        ,&
+        fix_holiday    ,week_holiday   ,hum_prof       ,pop_den        ,&
         vehicle        ,weh_prof       ,wdh_prof       ,idate          ,&
         patchlonr                                                      ,&
         ! surface parameters
@@ -45,9 +45,7 @@ CONTAINS
         sc_vgm         ,fc_vgm         ,&
 #endif
         k_solids       ,dksatu         ,dksatf         ,dkdry          ,&
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha       ,BA_beta        ,&
-#endif
         cv_roof        ,cv_wall        ,cv_gimp        ,&
         tk_roof        ,tk_wall        ,tk_gimp        ,dz_roofsno     ,&
         dz_gimpsno     ,dz_gpersno     ,dz_lakesno     ,dz_wall        ,&
@@ -74,9 +72,10 @@ CONTAINS
         ldew           ,troom          ,troof_inner    ,twsun_inner    ,&
         twsha_inner    ,troommax       ,troommin       ,tafu           ,&
 
-#ifdef SNICAR
+! SNICAR model variables
         snofrz         ,sabg_lyr                                       ,&
-#endif
+! END SNICAR model variables
+
         ! output
         taux           ,tauy           ,fsena          ,fevpa          ,&
         lfevpa         ,fsenl          ,fevpl          ,etr            ,&
@@ -111,14 +110,17 @@ CONTAINS
   USE MOD_Urban_Longwave
   USE MOD_Urban_GroundFlux
   USE MOD_Urban_Flux
-  USE MOD_Urban_RoofTem
-  USE MOD_Urban_WallTem
-  USE MOD_Urban_PerviousTem
-  USE MOD_Urban_ImperviousTem
+  USE MOD_Urban_RoofTemperature
+  USE MOD_Urban_WallTemperature
+  USE MOD_Urban_PerviousTemperature
+  USE MOD_Urban_ImperviousTemperature
   USE MOD_Lake
   USE MOD_Urban_BEM
   USE MOD_Urban_LUCY, only: LUCY
   USE MOD_Eroot, only: eroot
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+  USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+#endif
 
   IMPLICIT NONE
 
@@ -144,7 +146,7 @@ CONTAINS
         hum_prof(24)    , &! Diurnal metabolic heat profile
         weh_prof(24)    , &! Diurnal traffic flow profile of weekend
         wdh_prof(24)    , &! Diurnal traffic flow profile of weekday
-        popcell         , &! population density
+        pop_den         , &! population density
         vehicle(3)         ! vehicle numbers per thousand people
 
   REAL(r8), intent(in) :: &
@@ -219,10 +221,8 @@ CONTAINS
         dksatu    (1:nl_soil), &! thermal conductivity of saturated unfrozen soil [W/m-K]
         dksatf    (1:nl_soil), &! thermal conductivity of saturated frozen soil [W/m-K]
 
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
         BA_alpha  (1:nl_soil), &! alpha in Balland and Arp(2005) thermal conductivity scheme
         BA_beta   (1:nl_soil), &! beta in Balland and Arp(2005) thermal conductivity scheme
-#endif
         cv_roof(1:nl_roof) ,&! heat capacity of roof [J/(m2 K)]
         cv_wall(1:nl_wall) ,&! heat capacity of wall [J/(m2 K)]
         cv_gimp(1:nl_soil) ,&! heat capacity of impervious [J/(m2 K)]
@@ -328,7 +328,9 @@ CONTAINS
         Fhah       ,&! flux from heating
         Fhac       ,&! flux from heat or cool AC
         Fwst       ,&! waste heat from cool or heat
-        Fach         ! flux from air exchange
+        Fach       ,&! flux from air exchange
+        vehc       ,&! flux from vehicle
+        meta         ! flux from metabolic
 
        ! Output
   REAL(r8), intent(out) :: &
@@ -399,8 +401,6 @@ CONTAINS
         respc      ,&! respiration
         errore     ,&! energy balnce error [w/m2]
 
-        vehc       ,&! flux from vehicle
-        meta       ,&! flux from metabolic
         ! additionalvariables required by coupling with WRF or RSM model
         emis       ,&! averaged bulk surface emissivity
         z0m        ,&! effective roughness [m]
@@ -413,10 +413,10 @@ CONTAINS
         fh         ,&! integral of profile function for heat
         fq           ! integral of profile function for moisture
 
-#ifdef SNICAR
+! SNICAR model variables
   REAL(r8), intent(in)  :: sabg_lyr(lbp:1) !snow layer aborption
   REAL(r8), intent(out) :: snofrz (lbp:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
-#endif
+! END SNICAR model variables
 
 !---------------------Local Variables-----------------------------------
 
@@ -740,7 +740,7 @@ CONTAINS
          allocate ( fcover(0:4) )
          allocate ( dT(0:4)     )
 
-         ! call longwave function，calculate Ainv, B, B1, dBdT
+         ! call longwave function, calculate Ainv, B, B1, dBdT
          CALL UrbanOnlyLongwave ( &
                                  theta, hwr, froof, fgper, hroof, forc_frl, &
                                  twsun, twsha, tgimp, tgper, ewall, egimp, egper, &
@@ -946,14 +946,18 @@ CONTAINS
            twsha_inner,lwsha,clwsha,sabwsha,fsenwsha,cwalls,tkdz_wsha)
 
       CALL UrbanImperviousTem (patchtype,lbi,deltim,&
-           capr,cnfac,csol,porsl,dkdry,dksatu,&
+           capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+           vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+           BA_alpha, BA_beta,&
            cv_gimp,tk_gimp,dz_gimpsno,z_gimpsno,zi_gimpsno,&
            t_gimpsno,wice_gimpsno,wliq_gimpsno,scv_gimp,snowdp_gimp,&
            lgimp,clgimp,sabgimp,fsengimp,fevpgimp,cgimp,htvp_gimp,&
            imelt_gimp,sm_gimp,xmf,facti)
 
       CALL UrbanPerviousTem (patchtype,lbp,deltim,&
-           capr,cnfac,csol,porsl,psi0,dkdry,dksatu,&
+           capr,cnfac,csol,k_solids,porsl,psi0,dkdry,dksatu,dksatf,&
+           vf_quartz,vf_gravels,vf_om,vf_sand,wf_gravels,wf_sand,&
+           BA_alpha, BA_beta,&
 #ifdef Campbell_SOIL_MODEL
            bsw,&
 #endif
@@ -988,10 +992,7 @@ CONTAINS
            vf_om        ,vf_sand      ,wf_gravels      ,wf_sand         ,&
            porsl        ,csol         ,k_solids        , &
            dksatu       ,dksatf       ,dkdry           , &
-#ifdef THERMAL_CONDUCTIVITY_SCHEME_4
-           BA_alpha     ,BA_beta, &
-#endif
-                   hpbl, &
+           BA_alpha     ,BA_beta      ,hpbl            , &
 
            ! "inout" laketem arguments
            ! ---------------------------
@@ -999,10 +1000,10 @@ CONTAINS
            wliq_lakesno ,wice_lakesno ,imelt_lake      ,t_lake          ,&
            lake_icefrac ,savedtke1                                      ,&
 
-#ifdef SNICAR
-           ! SNICAR
+! SNICAR model variables
            snofrz       ,sabg_lyr     ,&
-#endif
+! END SNICAR model variables
+
            ! "out" laketem arguments
            ! ---------------------------
            taux_lake    ,tauy_lake    ,fsena_lake                       ,&
@@ -1274,6 +1275,8 @@ CONTAINS
       olrg = lout*fg + rout*froof
       olrg = olrg*(1-flake) + olrg_lake*flake
 
+      !print*, forc_t, tgper, tgimp, troof, twsha, twsun
+
       IF (olrg < 0) THEN !fordebug
          print*, ipatch, olrg
          write(6,*) ipatch,sabv,sabg,forc_frl,olrg,fsenl,fseng,hvap*fevpl,lfevpa
@@ -1340,9 +1343,9 @@ CONTAINS
                        Fhac, Fwst, Fach, Fhah )
 
       ! Anthropogenic heat flux for the rest (vehicle heat flux and metabolic heat flux)
-      CALL LUCY(idate       , deltim  , patchlonr, fix_holiday, &
-                week_holiday, hum_prof, wdh_prof , weh_prof   ,popcell, &
-                vehicle     , Fahe    , vehc     , meta)
+      CALL LUCY ( idate       , deltim  , patchlonr, fix_holiday, &
+                  week_holiday, hum_prof, wdh_prof , weh_prof   ,pop_den, &
+                  vehicle     , Fahe    , vehc     , meta )
 
       deallocate ( fcover )
 

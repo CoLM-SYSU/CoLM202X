@@ -45,10 +45,10 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
@@ -68,19 +68,18 @@ PROGRAM CoLM
    USE MOD_Hydro_LateralFlow
 #endif
 
-#ifdef Fire
+#ifdef BGC
    USE MOD_LightningData, only: init_lightning_data, update_lightning_data
    USE MOD_FireReadin, only: Fire_readin
 #endif
 
-#ifdef OzoneData
-   USE MOD_OzoneData, only: init_ozone_data, update_ozone_data
-#endif
+   USE MOD_Ozone, only: init_ozone_data, update_ozone_data
+
    use MOD_SrfdataRestart
    USE MOD_LAIReadin
-   USE MOD_NitrifReadin
 
 #ifdef BGC
+   USE MOD_NitrifReadin
    USE MOD_NdepReadin
 #endif
 
@@ -89,7 +88,8 @@ PROGRAM CoLM
 #endif
 
    ! SNICAR
-   USE MOD_SnowSnicar , only:SnowAge_init, SnowOptics_init
+   USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
+   USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
 
    IMPLICIT NONE
 
@@ -118,8 +118,9 @@ PROGRAM CoLM
    integer :: s_year, s_month, s_day, s_seconds, s_julian
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
-   INTEGER :: month, mday, month_p, mday_p
-   INTEGER :: spinup_repeat, lc_year
+   integer :: lc_year, lai_year
+   integer :: month, mday, month_p, mday_p
+   integer :: spinup_repeat, istep
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
@@ -175,7 +176,7 @@ PROGRAM CoLM
    edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
    pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
@@ -190,21 +191,21 @@ PROGRAM CoLM
 
    call mesh_load_from_file (dir_landdata, lc_year)
 
-   call pixelset_load_from_file (dir_landdata, 'landelm', landelm, numelm, lc_year)
+   call pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , lc_year)
 
 #ifdef CATCHMENT
-   CALL pixelset_load_from_file (dir_landdata, 'landhru', landhru, numhru, lc_year)
+   CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , lc_year)
 #endif
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef PFT_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpft', landpft, numpft, lc_year)
+#ifdef LULC_IGBP_PFT
+   call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
-   call pixelset_load_from_file (dir_landdata, 'landpc', landpc, numpc, lc_year)
+#ifdef LULC_IGBP_PC
+   call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , lc_year)
    CALL map_patch_to_pc
 #endif
 
@@ -258,7 +259,7 @@ PROGRAM CoLM
 
    ! Initialize meteorological forcing data module
    call allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, sdate)
+   CALL forcing_init (dir_forcing, deltim, sdate, lc_year)
    call allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
@@ -268,13 +269,22 @@ PROGRAM CoLM
 
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_init !zhongwang wei, 20210927: initialize CaMa-Flood
+   call colm_CaMa_init !initialize CaMa-Flood
 #endif
-#ifdef OzoneData
-   CALL init_Ozone_data(itstamp,sdate)
-#endif
-#ifdef Fire
-   CALL init_lightning_data (itstamp,sdate)
+
+   IF(DEF_USE_OZONEDATA)THEN
+      CALL init_Ozone_data (itstamp,sdate)
+   ENDIF
+
+   ! Initialize aerosol deposition forcing data
+   IF (DEF_Aerosol_Readin) THEN
+      CALL AerosolDepInit ()
+   ENDIF
+
+#ifdef BGC
+   IF(DEF_USE_FIRE)THEN
+      CALL init_lightning_data (itstamp,sdate)
+   ENDIF
 #endif
 
 #if (defined LATERAL_FLOW)
@@ -285,6 +295,7 @@ PROGRAM CoLM
    ! begin time stepping loop
    ! ======================================================================
 
+   istep   = 1
    idate   = sdate
    itstamp = ststamp
 
@@ -294,9 +305,9 @@ PROGRAM CoLM
 
       if (p_is_master) then
          IF (itstamp < ptstamp) THEN
-            write(*, 99) jdate(1), month_p, mday_p, jdate(3), spinup_repeat
+            write(*, 99) istep, jdate(1), month_p, mday_p, jdate(3), spinup_repeat
          ELSE
-            write(*,100) jdate(1), month_p, mday_p, jdate(3)
+            write(*,100) istep, jdate(1), month_p, mday_p, jdate(3)
          ENDIF
       end if
 
@@ -308,12 +319,19 @@ PROGRAM CoLM
       ! ----------------------------------------------------------------------
       CALL read_forcing (idate, dir_forcing)
 
-#ifdef OzoneData
-      CALL update_Ozone_data(itstamp, deltim)
+      IF(DEF_USE_OZONEDATA)THEN
+         CALL update_Ozone_data(itstamp, deltim)
+      ENDIF
+#ifdef BGC
+      IF(DEF_USE_FIRE)THEN
+         CALL update_lightning_data (itstamp, deltim)
+      ENDIF
 #endif
-#ifdef Fire
-      CALL update_lightning_data (itstamp, deltim)
-#endif
+
+      ! Read in aerosol deposition forcing data
+      IF (DEF_Aerosol_Readin) THEN
+         CALL AerosolDepReadin (jdate)
+      ENDIF
 
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
@@ -344,55 +362,63 @@ PROGRAM CoLM
       endif
 #else
       ! READ in Leaf area index and stem area index
-      ! Update every 8 days (time interval of the MODIS LAI data)
       ! ----------------------------------------------------------------------
-      !zhongwang wei, 20210927: add option to read non-climatological mean LAI
-      IF (DEF_LAI_CLIM) then
-         ! yuan, 08/03/2019: read global LAI/SAI data
+      ! Hua Yuan, 08/03/2019: read global monthly LAI/SAI data
+      ! zhongwang wei, 20210927: add option to read non-climatological mean LAI
+      ! Update every 8 days (time interval of the MODIS LAI data)
+      ! Hua Yuan, 06/2023: change namelist DEF_LAI_CLIM to DEF_LAI_MONTHLY
+      ! and add DEF_LAI_CHANGE_YEARLY for monthly LAI data
+      !
+      ! NOTES: Should be caution for setting DEF_LAI_CHANGE_YEARLY to ture in non-LULCC
+      ! case, that means the LAI changes without condisderation of land cover change.
+
+      IF (DEF_LAI_CHANGE_YEARLY) THEN
+         lai_year = jdate(1)
+      ELSE
+         lai_year = DEF_LC_YEAR
+      ENDIF
+
+      IF (DEF_LAI_MONTHLY) THEN
          CALL julian2monthday (jdate(1), jdate(2), month, mday)
          IF (month /= month_p) THEN
-            IF (DEF_LAICHANGE) THEN
-               CALL LAI_readin (jdate(1), month, dir_landdata)
+               CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(jdate(1), month, dir_landdata)
+               CALL UrbanLAI_readin(lai_year, month, dir_landdata)
 #endif
-            ELSE
-               CALL LAI_readin (lc_year, month, dir_landdata)
-#ifdef URBAN_MODEL
-               CALL UrbanLAI_readin(lc_year, month, dir_landdata)
-#endif
-            ENDIF
          ENDIF
       ELSE
+         ! Update every 8 days (time interval of the MODIS LAI data)
          Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
          if(Julian_8day /= Julian_8day_p)then
-            CALL LAI_readin (idate(1), Julian_8day, dir_landdata)
+            CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
+            ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
+            !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
          ENDIF
       ENDIF
 #endif
 
 #ifdef BGC
-#ifdef NITRIF
-      CALL julian2monthday (idate(1), idate(2), month, mday)
-      if(mday .eq. 1)then
-         CALL NITRIF_readin(month, dir_landdata)
+      if(DEF_USE_NITRIF) then
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         if(mday .eq. 1)then
+            CALL NITRIF_readin(month, dir_landdata)
+         end if
       end if
-#endif
       if(idate(2) .eq. 1)then
          isread = .true.
       else
          isread = .false.
       end if
       CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
-#ifdef Fire
-      if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
-         CALL Fire_readin(idate(1), dir_landdata)
+      if(DEF_USE_FIRE)then
+         if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
+            CALL Fire_readin(idate(1), dir_landdata)
+         end if
       end if
-#endif
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_CaMa_drv(idate(3)) !zhongwang wei, 20210927: run CaMa-Flood
+   call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file
@@ -409,8 +435,7 @@ PROGRAM CoLM
                            idate,greenwich)
 
          CALL allocate_1D_Forcing
-
-         CALL forcing_init (dir_forcing, deltim, idate)
+         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
          CALL deallocate_acc_fluxes
          call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
          CALL allocate_1D_Fluxes
@@ -452,6 +477,8 @@ PROGRAM CoLM
          CALL forcing_reset ()
       ENDIF
 
+      istep = istep + 1
+
    END DO TIMELOOP
 
    call deallocate_TimeInvariants ()
@@ -474,15 +501,15 @@ PROGRAM CoLM
 #endif
 
 #if(defined CaMa_Flood)
-   call colm_cama_exit !zhongwang wei, 20210927: finalize CaMa-Flood
+   call colm_cama_exit ! finalize CaMa-Flood
 #endif
 
    if (p_is_master) then
       write(*,'(/,A25)') 'CoLM Execution Completed.'
    end if
 
-   99  format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I3, ' repeat left)')
-   100 format(/, 'TIMELOOP = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
+   99  format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5, ' Spinup (', I0, ' repeat left)')
+   100 format(/, 'TIMESTEP = ', I0, ' | DATE = ', I4.4, '-', I2.2, '-', I2.2, '-', I5.5)
    101 format (/, 'Time elapsed : ', I4, ' hours', I3, ' minutes', I3, ' seconds.')
    102 format (/, 'Time elapsed : ', I3, ' minutes', I3, ' seconds.')
    103 format (/, 'Time elapsed : ', I3, ' seconds.')

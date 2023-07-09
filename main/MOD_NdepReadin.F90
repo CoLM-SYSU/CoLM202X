@@ -5,6 +5,7 @@ MODULE MOD_NdepReadin
 
 !-----------------------------------------------------------------------
    USE MOD_Precision
+   USE MOD_Namelist, only : DEF_USE_PN
    IMPLICIT NONE
    SAVE
 
@@ -36,7 +37,7 @@ MODULE MOD_NdepReadin
       use MOD_SPMD_Task
       use MOD_NetCDFVector
       use MOD_LandPatch
-      use MOD_BGC_Vars_TimeVars,  only: ndep
+      use MOD_BGC_Vars_TimeVariables,  only: ndep
       use MOD_BGC_Vars_1DFluxes, only: ndep_to_sminn
       use MOD_Vars_TimeInvariants
 
@@ -67,7 +68,11 @@ MODULE MOD_NdepReadin
                if(m == 0)then
                   ndep_to_sminn(npatch) = 0.
                else
-                  ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24.
+                  if(DEF_USE_PN)then
+                     ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24. * 5
+                  else
+                     ndep_to_sminn(npatch)  = ndep(npatch) / 3600. / 365. / 24.
+                  end if
                end if
             end do
 

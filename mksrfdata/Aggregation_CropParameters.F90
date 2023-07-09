@@ -24,10 +24,10 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    USE MOD_AggregationRequestData
 
    USE MOD_Const_LC
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 
@@ -86,7 +86,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1
@@ -182,7 +182,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1
@@ -204,8 +204,6 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/plantdate_pfts.nc'
@@ -314,7 +312,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    ! ... global ****
    ! ................................................
 
-!   IF (DEF_LAI_CLIM) THEN
+!   IF (DEF_LAI_MONTHLY) THEN
       start_year = 1
       end_year   = 1
       ntime = 1
@@ -336,8 +334,6 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
 
    IF (p_is_io) THEN
       lndname = trim(dir_rawdata)//'/crop/fertnitro_fillcoast.nc'
-      print *, lndname
-      call system('ls -l '//trim(lndname))
    ENDIF
 
    lndname_out = trim(landdir) // '/fertnitro_pfts.nc'

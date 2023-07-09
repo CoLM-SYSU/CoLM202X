@@ -4,16 +4,19 @@ SUBROUTINE Aggregation_ForestHeight ( &
       gland, dir_rawdata, dir_model_landdata, lc_year)
 
    ! ----------------------------------------------------------------------
-   ! 1. Global land cover types (updated with the specific dataset)
-   !
-   ! 2. Global Forest Height
+   ! Global Forest Height
    !    (http://lidarradar.jpl.nasa.gov/)
    !     Simard, M., N. Pinto, J. B. Fisher, and A. Baccini, 2011: Mapping
    !     forest canopy height globally with spaceborne lidar.
    !     J. Geophys. Res., 116, G04021.
    !
    ! Created by Yongjiu Dai, 02/2014
+   !
+   ! REVISIONS:
+   ! Hua Yuan,      ?/2020 : for land cover land use classifications
+   ! Shupeng Zhang, 01/2022: porting codes to MPI parallel version
    ! ----------------------------------------------------------------------
+
    use MOD_Precision
    use MOD_Namelist
    use MOD_SPMD_Task
@@ -29,10 +32,10 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
 #endif
 #ifdef SinglePoint
@@ -98,7 +101,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef USGS_CLASSIFICATION
+#ifdef LULC_USGS
    lndname = trim(dir_rawdata)//'/Forest_Height.nc'
 
    if (p_is_io) then
@@ -162,7 +165,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 #endif
 
 
-#ifdef IGBP_CLASSIFICATION
+#ifdef LULC_IGBP
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
    ENDIF
@@ -227,7 +230,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)
@@ -333,7 +336,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    ENDIF
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    IF (p_is_io) THEN
       CALL allocate_block_data (gland, htop)
       CALL allocate_block_data (gland, pftPCT, N_PFT_modis, lb1 = 0)

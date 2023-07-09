@@ -95,7 +95,7 @@ DO ISTEP=1,KSTEPS
   !$ ZTT1=OMP_GET_WTIME()
 
   !============================
-! Modified by Zhongwang Wei @ SYSU 2022.11.20: do not write output file in cmf_drv_advance
+!  do not write output file in cmf_drv_advance
 ! the output file will be written in colm driver
 
   !*** 3. Write output file (when needed)
@@ -116,12 +116,12 @@ DO ISTEP=1,KSTEPS
     CALL CMF_OUTTXT_WRTE            !! reservoir operation
     CALL CMF_DAMOUT_WRTE            !! reservoir operation
 
-  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: not need to reset variable here, will be reset in colm driver
+  ! not need to reset variable here, will be reset in colm driver
     !*** reset variable
   !    CALL CMF_DIAG_RESET
   !  ENDIF
   
-  ! Modified by Zhongwang Wei @ SYSU 2022.11.20: not need to write restart file here, will be written in colm driver
+  ! not need to write restart file here, will be written in colm driver
   !============================ 
   !*** 4. Write restart file 
  ! CALL CMF_RESTART_WRITE

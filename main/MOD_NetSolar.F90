@@ -13,7 +13,7 @@ MODULE MOD_NetSolar
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+CONTAINS
 
 !-----------------------------------------------------------------------
 
@@ -42,17 +42,18 @@ MODULE MOD_NetSolar
 ! !USES:
    USE MOD_Precision
    USE MOD_Vars_Global
+   USE MOD_Namelist, only: DEF_USE_SNICAR
    USE MOD_TimeManager, only: isgreenwich
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
    USE MOD_Vars_1DPFTFluxes
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
    USE MOD_Vars_1DPCFluxes
 #endif
 
@@ -114,23 +115,23 @@ MODULE MOD_NetSolar
          sabg_lyr(maxsnl+1:1)   ! solar absorbed by snow layers [W/m2]
 
 ! ----------------local variables ---------------------------------
-    INTEGER  :: local_secs
-    REAL(r8) :: radpsec, sabvg
+   INTEGER  :: local_secs
+   REAL(r8) :: radpsec, sabvg
 
-    INTEGER ps, pe, pc
+   INTEGER ps, pe, pc
 !=======================================================================
 
-         sabvsun = 0.
-         sabvsha = 0.
-         parsun  = 0.
-         parsha  = 0.
+      sabvsun = 0.
+      sabvsha = 0.
+      parsun  = 0.
+      parsha  = 0.
 
-         sabg  = 0.
-         sabg_lyr(:) = 0.
+      sabg  = 0.
+      sabg_lyr(:) = 0.
 
-   IF (patchtype == 0) THEN
+      IF (patchtype == 0) THEN
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          sabvsun_p(ps:pe) = 0.
@@ -139,31 +140,32 @@ MODULE MOD_NetSolar
          parsha_p(ps:pe)  = 0.
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
          pc = patch2pc(ipatch)
          sabvsun_c(:,pc) = 0.
          sabvsha_c(:,pc) = 0.
          parsun_c(:,pc)  = 0.
          parsha_c(:,pc)  = 0.
 #endif
+      ENDIF
 
-   ENDIF
-         IF (forc_sols+forc_soll+forc_solsd+forc_solld > 0.) THEN
-            IF (patchtype < 4) THEN        !non lake and ocean
-             ! Radiative fluxes onto surface
-               parsun  = forc_sols*ssun(1,1) + forc_solsd*ssun(1,2)
-               parsha  = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2)
-               sabvsun = forc_sols*ssun(1,1) + forc_solsd*ssun(1,2) &
-                       + forc_soll*ssun(2,1) + forc_solld*ssun(2,2)
-               sabvsha = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2) &
-                       + forc_soll*ssha(2,1) + forc_solld*ssha(2,2)
-               sabvg   = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
-                       + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
-               sabg    = sabvg - sabvsun - sabvsha
 
-   IF (patchtype == 0) THEN
+      IF (forc_sols+forc_soll+forc_solsd+forc_solld > 0.) THEN
+         IF (patchtype < 4) THEN        !non lake and ocean
+          ! Radiative fluxes onto surface
+            parsun  = forc_sols*ssun(1,1) + forc_solsd*ssun(1,2)
+            parsha  = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2)
+            sabvsun = forc_sols*ssun(1,1) + forc_solsd*ssun(1,2) &
+                    + forc_soll*ssun(2,1) + forc_solld*ssun(2,2)
+            sabvsha = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2) &
+                    + forc_soll*ssha(2,1) + forc_solld*ssha(2,2)
+            sabvg   = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
+                    + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
+            sabg    = sabvg - sabvsun - sabvsha
 
-#ifdef PFT_CLASSIFICATION
+            IF (patchtype == 0) THEN
+
+#ifdef LULC_IGBP_PFT
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
@@ -172,7 +174,7 @@ MODULE MOD_NetSolar
                                 + forc_soll*ssha_p(2,1,ps:pe) + forc_solld*ssha_p(2,2,ps:pe)
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
                parsun_c(:,pc)  = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc)
                parsha_c(:,pc)  = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc)
                sabvsun_c(:,pc) = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc) &
@@ -181,13 +183,15 @@ MODULE MOD_NetSolar
                                + forc_soll*ssha_c(2,1,:,pc) + forc_solld*ssha_c(2,2,:,pc)
 #endif
 
-   ENDIF
-            ELSE               !lake or ocean
-               sabvg = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
-                     + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
-               sabg = sabvg
             ENDIF
-#ifdef SNICAR
+
+         ELSE               !lake or ocean
+            sabvg = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
+                  + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
+            sabg = sabvg
+         ENDIF
+
+         IF (DEF_USE_SNICAR) THEN
             ! normalization
             IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)-ssun(1,1)-ssha(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
             IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)-ssun(1,2)-ssha(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))
@@ -197,50 +201,50 @@ MODULE MOD_NetSolar
             ! snow layer absorption
             sabg_lyr(:) = forc_sols*ssno(1,1,:) + forc_solsd*ssno(1,2,:) &
                         + forc_soll*ssno(2,1,:) + forc_solld*ssno(2,2,:)
-#endif
          ENDIF
+      ENDIF
 
-         solvd = forc_sols
-         solvi = forc_solsd
-         solnd = forc_soll
-         solni = forc_solld
-         srvd  = solvd*alb(1,1)
-         srvi  = solvi*alb(1,2)
-         srnd  = solnd*alb(2,1)
-         srni  = solni*alb(2,2)
-         sr    = srvd + srvi + srnd + srni
+      solvd = forc_sols
+      solvi = forc_solsd
+      solnd = forc_soll
+      solni = forc_solld
+      srvd  = solvd*alb(1,1)
+      srvi  = solvi*alb(1,2)
+      srnd  = solnd*alb(2,1)
+      srni  = solni*alb(2,2)
+      sr    = srvd + srvi + srnd + srni
 
-         !print *, "solar radiation balance check:", forc_sols+forc_soll+forc_solsd+forc_solld-&
-         !   sabg-sabvsun-sabvsha-sr
+      !print *, "solar radiation balance check:", forc_sols+forc_soll+forc_solsd+forc_solld-&
+      !   sabg-sabvsun-sabvsha-sr
 
-       ! calculate the local secs
-         radpsec = pi/12./3600.
-         IF ( isgreenwich ) THEN
-            local_secs = idate(3) + nint((dlon/radpsec)/deltim)*deltim
-            local_secs = mod(local_secs,86400)
-         ELSE
-            local_secs = idate(3)
-         ENDIF
+      ! calculate the local secs
+      radpsec = pi/12./3600.
+      IF ( isgreenwich ) THEN
+         local_secs = idate(3) + nint((dlon/radpsec)/deltim)*deltim
+         local_secs = mod(local_secs,86400)
+      ELSE
+         local_secs = idate(3)
+      ENDIF
 
-         IF (local_secs == 86400/2) THEN
-            solvdln = forc_sols
-            solviln = forc_solsd
-            solndln = forc_soll
-            solniln = forc_solld
-            srvdln  = solvdln*alb(1,1)
-            srviln  = solviln*alb(1,2)
-            srndln  = solndln*alb(2,1)
-            srniln  = solniln*alb(2,2)
-         ELSE
-            solvdln = spval
-            solviln = spval
-            solndln = spval
-            solniln = spval
-            srvdln  = spval
-            srviln  = spval
-            srndln  = spval
-            srniln  = spval
-         ENDIF
+      IF (local_secs == 86400/2) THEN
+         solvdln = forc_sols
+         solviln = forc_solsd
+         solndln = forc_soll
+         solniln = forc_solld
+         srvdln  = solvdln*alb(1,1)
+         srviln  = solviln*alb(1,2)
+         srndln  = solndln*alb(2,1)
+         srniln  = solniln*alb(2,2)
+      ELSE
+         solvdln = spval
+         solviln = spval
+         solndln = spval
+         solniln = spval
+         srvdln  = spval
+         srviln  = spval
+         srndln  = spval
+         srniln  = spval
+      ENDIF
 
    END SUBROUTINE netsolar
 

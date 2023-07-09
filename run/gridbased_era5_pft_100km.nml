@@ -36,7 +36,7 @@
    DEF_file_mesh = '/tera05/zhangsp/data/landdata/mask/landmask_igbp_100km.nc'
 
    ! LAI setting
-   DEF_LAI_CLIM = .true.
+   DEF_LAI_MONTHLY = .true.
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC

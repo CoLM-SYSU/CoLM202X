@@ -18,13 +18,14 @@ module MOD_BGC_CNNStateUpdate1
   !                   3) Record the accumulated decomposition-associated N transfer for soil N semi-analytic spinup
 
   use MOD_Precision
-  use MOD_Vars_PFTimeInvars, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass
   use MOD_Const_PFT, only: woody
-  use MOD_BGC_Vars_TimeInvars, only: &
+  use MOD_Namelist, only : DEF_USE_SASU
+  use MOD_BGC_Vars_TimeInvariants, only: &
   ! bgc constants
            donor_pool, receiver_pool, i_met_lit, i_cel_lit, i_lig_lit, i_cwd, i_soil1, i_soil2, i_soil3
 
-  use MOD_BGC_Vars_TimeVars, only: &
+  use MOD_BGC_Vars_TimeVariables, only: &
            I_met_n_vr_acc, I_cel_n_vr_acc, I_lig_n_vr_acc
 
   use MOD_BGC_Vars_1DFluxes, only: &
@@ -32,7 +33,7 @@ module MOD_BGC_CNNStateUpdate1
            decomp_npools_sourcesink, &
            phenology_to_met_n      , phenology_to_cel_n,  phenology_to_lig_n
 
-  use MOD_BGC_Vars_PFTimeVars, only: &
+  use MOD_BGC_Vars_PFTimeVariables, only: &
   ! vegetation nitrogen state variables (inout)
            leafn_p            , leafn_storage_p     , leafn_xfer_p     , &
            frootn_p           , frootn_storage_p    , frootn_xfer_p    , &
@@ -114,7 +115,7 @@ module MOD_BGC_CNNStateUpdate1
            npool_to_deadcrootn_p, npool_to_deadcrootn_storage_p, &
            npool_to_grainn_p    , npool_to_grainn_storage_p    , plant_nalloc_p 
 
-  use MOD_Vars_PFTimeInvars, only: pftfrac
+  use MOD_Vars_PFTimeInvariants, only: pftfrac
   implicit none
 
   public NStateUpdate1
@@ -149,13 +150,13 @@ contains
 
     end do
 
-#ifdef SASU
-    do j=1,nl_soil
-       I_met_n_vr_acc(j,i) = I_met_n_vr_acc(j,i) + phenology_to_met_n(j,i) * deltim
-       I_cel_n_vr_acc(j,i) = I_cel_n_vr_acc(j,i) + phenology_to_cel_n(j,i) * deltim
-       I_lig_n_vr_acc(j,i) = I_lig_n_vr_acc(j,i) + phenology_to_lig_n(j,i) * deltim
-    end do
-#endif
+    if(DEF_USE_SASU)then
+       do j=1,nl_soil
+          I_met_n_vr_acc(j,i) = I_met_n_vr_acc(j,i) + phenology_to_met_n(j,i) * deltim
+          I_cel_n_vr_acc(j,i) = I_cel_n_vr_acc(j,i) + phenology_to_cel_n(j,i) * deltim
+          I_lig_n_vr_acc(j,i) = I_lig_n_vr_acc(j,i) + phenology_to_lig_n(j,i) * deltim
+       end do
+    end if
 
     do m = ps , pe
        ivt = pftclass(m)
@@ -183,28 +184,28 @@ contains
           grainn_p(m)          = grainn_p(m)         + grainn_xfer_to_grainn_p(m)*deltim
           grainn_xfer_p(m)     = grainn_xfer_p(m)    - grainn_xfer_to_grainn_p(m)*deltim
        end if
-#ifdef SASU
-       AKX_leafn_xf_to_leafn_p_acc  (m) = AKX_leafn_xf_to_leafn_p_acc  (m) + leafn_xfer_to_leafn_p  (m) * deltim
-       AKX_frootn_xf_to_frootn_p_acc(m) = AKX_frootn_xf_to_frootn_p_acc(m) + frootn_xfer_to_frootn_p(m) * deltim
-       AKX_leafn_xf_exit_p_acc      (m) = AKX_leafn_xf_exit_p_acc      (m) + leafn_xfer_to_leafn_p  (m) * deltim
-       AKX_frootn_xf_exit_p_acc     (m) = AKX_frootn_xf_exit_p_acc     (m) + frootn_xfer_to_frootn_p(m) * deltim
-       if(woody(ivt) == 1)then
-          AKX_livestemn_xf_to_livestemn_p_acc  (m) = AKX_livestemn_xf_to_livestemn_p_acc  (m) + livestemn_xfer_to_livestemn_p  (m) * deltim
-          AKX_livestemn_xf_exit_p_acc          (m) = AKX_livestemn_xf_exit_p_acc          (m) + livestemn_xfer_to_livestemn_p  (m) * deltim
-          AKX_deadstemn_xf_to_deadstemn_p_acc  (m) = AKX_deadstemn_xf_to_deadstemn_p_acc  (m) + deadstemn_xfer_to_deadstemn_p  (m) * deltim
-          AKX_deadstemn_xf_exit_p_acc          (m) = AKX_deadstemn_xf_exit_p_acc          (m) + deadstemn_xfer_to_deadstemn_p  (m) * deltim
-          AKX_livecrootn_xf_to_livecrootn_p_acc(m) = AKX_livecrootn_xf_to_livecrootn_p_acc(m) + livecrootn_xfer_to_livecrootn_p(m) * deltim
-          AKX_livecrootn_xf_exit_p_acc         (m) = AKX_livecrootn_xf_exit_p_acc         (m) + livecrootn_xfer_to_livecrootn_p(m) * deltim
-          AKX_deadcrootn_xf_to_deadcrootn_p_acc(m) = AKX_deadcrootn_xf_to_deadcrootn_p_acc(m) + deadcrootn_xfer_to_deadcrootn_p(m) * deltim
-          AKX_deadcrootn_xf_exit_p_acc         (m) = AKX_deadcrootn_xf_exit_p_acc         (m) + deadcrootn_xfer_to_deadcrootn_p(m) * deltim
+       if(DEF_USE_SASU)then
+          AKX_leafn_xf_to_leafn_p_acc  (m) = AKX_leafn_xf_to_leafn_p_acc  (m) + leafn_xfer_to_leafn_p  (m) * deltim
+          AKX_frootn_xf_to_frootn_p_acc(m) = AKX_frootn_xf_to_frootn_p_acc(m) + frootn_xfer_to_frootn_p(m) * deltim
+          AKX_leafn_xf_exit_p_acc      (m) = AKX_leafn_xf_exit_p_acc      (m) + leafn_xfer_to_leafn_p  (m) * deltim
+          AKX_frootn_xf_exit_p_acc     (m) = AKX_frootn_xf_exit_p_acc     (m) + frootn_xfer_to_frootn_p(m) * deltim
+          if(woody(ivt) == 1)then
+             AKX_livestemn_xf_to_livestemn_p_acc  (m) = AKX_livestemn_xf_to_livestemn_p_acc  (m) + livestemn_xfer_to_livestemn_p  (m) * deltim
+             AKX_livestemn_xf_exit_p_acc          (m) = AKX_livestemn_xf_exit_p_acc          (m) + livestemn_xfer_to_livestemn_p  (m) * deltim
+             AKX_deadstemn_xf_to_deadstemn_p_acc  (m) = AKX_deadstemn_xf_to_deadstemn_p_acc  (m) + deadstemn_xfer_to_deadstemn_p  (m) * deltim
+             AKX_deadstemn_xf_exit_p_acc          (m) = AKX_deadstemn_xf_exit_p_acc          (m) + deadstemn_xfer_to_deadstemn_p  (m) * deltim
+             AKX_livecrootn_xf_to_livecrootn_p_acc(m) = AKX_livecrootn_xf_to_livecrootn_p_acc(m) + livecrootn_xfer_to_livecrootn_p(m) * deltim
+             AKX_livecrootn_xf_exit_p_acc         (m) = AKX_livecrootn_xf_exit_p_acc         (m) + livecrootn_xfer_to_livecrootn_p(m) * deltim
+             AKX_deadcrootn_xf_to_deadcrootn_p_acc(m) = AKX_deadcrootn_xf_to_deadcrootn_p_acc(m) + deadcrootn_xfer_to_deadcrootn_p(m) * deltim
+             AKX_deadcrootn_xf_exit_p_acc         (m) = AKX_deadcrootn_xf_exit_p_acc         (m) + deadcrootn_xfer_to_deadcrootn_p(m) * deltim
+          end if
+          if(ivt >= npcropmin) then
+             AKX_livestemn_xf_to_livestemn_p_acc(m) = AKX_livestemn_xf_to_livestemn_p_acc(m) + livestemn_xfer_to_livestemn_p(m) * deltim
+             AKX_livestemn_xf_exit_p_acc        (m) = AKX_livestemn_xf_exit_p_acc        (m) + livestemn_xfer_to_livestemn_p(m) * deltim
+             AKX_grainn_xf_to_grainn_p_acc      (m) = AKX_grainn_xf_to_grainn_p_acc      (m) + grainn_xfer_to_grainn_p      (m) * deltim
+             AKX_grainn_xf_exit_p_acc           (m) = AKX_grainn_xf_exit_p_acc           (m) + grainn_xfer_to_grainn_p      (m) * deltim
+          end if
        end if
-       if(ivt >= npcropmin) then
-          AKX_livestemn_xf_to_livestemn_p_acc(m) = AKX_livestemn_xf_to_livestemn_p_acc(m) + livestemn_xfer_to_livestemn_p(m) * deltim
-          AKX_livestemn_xf_exit_p_acc        (m) = AKX_livestemn_xf_exit_p_acc        (m) + livestemn_xfer_to_livestemn_p(m) * deltim
-          AKX_grainn_xf_to_grainn_p_acc      (m) = AKX_grainn_xf_to_grainn_p_acc      (m) + grainn_xfer_to_grainn_p      (m) * deltim
-          AKX_grainn_xf_exit_p_acc           (m) = AKX_grainn_xf_exit_p_acc           (m) + grainn_xfer_to_grainn_p      (m) * deltim
-       end if
-#endif
 
        ! phenology: litterfall and retranslocation fluxes
        leafn_p(m)    = leafn_p(m)    - leafn_to_litter_p(m)*deltim
@@ -236,31 +237,31 @@ contains
                             - crop_seedn_to_leaf_p(m) * deltim &
                             + grainn_to_seed_p(m) * deltim
        end if
-#ifdef SASU
-       AKX_leafn_exit_p_acc       (m) = AKX_leafn_exit_p_acc       (m) + leafn_to_litter_p  (m) * deltim
-       AKX_frootn_exit_p_acc      (m) = AKX_frootn_exit_p_acc      (m) + frootn_to_litter_p (m) * deltim
-       AKX_leafn_to_retransn_p_acc(m) = AKX_leafn_to_retransn_p_acc(m) + leafn_to_retransn_p(m) * deltim
-       AKX_leafn_exit_p_acc       (m) = AKX_leafn_exit_p_acc       (m) + leafn_to_retransn_p(m) * deltim
-       if(woody(ivt) == 1) then
-          AKX_livestemn_to_deadstemn_p_acc  (m) = AKX_livestemn_to_deadstemn_p_acc  (m) + livestemn_to_deadstemn_p  (m) * deltim
-          AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_deadstemn_p  (m) * deltim
-          AKX_livecrootn_to_deadcrootn_p_acc(m) = AKX_livecrootn_to_deadcrootn_p_acc(m) + livecrootn_to_deadcrootn_p(m) * deltim
-          AKX_livecrootn_exit_p_acc         (m) = AKX_livecrootn_exit_p_acc         (m) + livecrootn_to_deadcrootn_p(m) * deltim
-
-          AKX_livestemn_to_retransn_p_acc   (m) = AKX_livestemn_to_retransn_p_acc   (m) + livestemn_to_retransn_p   (m) * deltim
-          AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_retransn_p   (m) * deltim
-          AKX_livecrootn_to_retransn_p_acc  (m) = AKX_livecrootn_to_retransn_p_acc  (m) + livecrootn_to_retransn_p  (m) * deltim
-          AKX_livecrootn_exit_p_acc         (m) = AKX_livecrootn_exit_p_acc         (m) + livecrootn_to_retransn_p  (m) * deltim
+       if(DEF_USE_SASU)then
+          AKX_leafn_exit_p_acc       (m) = AKX_leafn_exit_p_acc       (m) + leafn_to_litter_p  (m) * deltim
+          AKX_frootn_exit_p_acc      (m) = AKX_frootn_exit_p_acc      (m) + frootn_to_litter_p (m) * deltim
+          AKX_leafn_to_retransn_p_acc(m) = AKX_leafn_to_retransn_p_acc(m) + leafn_to_retransn_p(m) * deltim
+          AKX_leafn_exit_p_acc       (m) = AKX_leafn_exit_p_acc       (m) + leafn_to_retransn_p(m) * deltim
+          if(woody(ivt) == 1) then
+             AKX_livestemn_to_deadstemn_p_acc  (m) = AKX_livestemn_to_deadstemn_p_acc  (m) + livestemn_to_deadstemn_p  (m) * deltim
+             AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_deadstemn_p  (m) * deltim
+             AKX_livecrootn_to_deadcrootn_p_acc(m) = AKX_livecrootn_to_deadcrootn_p_acc(m) + livecrootn_to_deadcrootn_p(m) * deltim
+             AKX_livecrootn_exit_p_acc         (m) = AKX_livecrootn_exit_p_acc         (m) + livecrootn_to_deadcrootn_p(m) * deltim
+   
+             AKX_livestemn_to_retransn_p_acc   (m) = AKX_livestemn_to_retransn_p_acc   (m) + livestemn_to_retransn_p   (m) * deltim
+             AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_retransn_p   (m) * deltim
+             AKX_livecrootn_to_retransn_p_acc  (m) = AKX_livecrootn_to_retransn_p_acc  (m) + livecrootn_to_retransn_p  (m) * deltim
+             AKX_livecrootn_exit_p_acc         (m) = AKX_livecrootn_exit_p_acc         (m) + livecrootn_to_retransn_p  (m) * deltim
+          end if
+          if(ivt >= npcropmin) then
+             AKX_frootn_to_retransn_p_acc      (m) = AKX_frootn_to_retransn_p_acc      (m) + frootn_to_retransn_p      (m) * deltim
+             AKX_frootn_exit_p_acc             (m) = AKX_frootn_exit_p_acc             (m) + frootn_to_retransn_p      (m) * deltim
+             AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_litter_p     (m) * deltim
+             AKX_livestemn_to_retransn_p_acc   (m) = AKX_livestemn_to_retransn_p_acc   (m) + livestemn_to_retransn_p   (m) * deltim
+             AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_retransn_p   (m) * deltim
+             AKX_grainn_exit_p_acc             (m) = AKX_grainn_exit_p_acc             (m) + (grainn_to_food_p(m) + grainn_to_seed_p(m)) * deltim
+          end if
        end if
-       if(ivt >= npcropmin) then
-          AKX_frootn_to_retransn_p_acc      (m) = AKX_frootn_to_retransn_p_acc      (m) + frootn_to_retransn_p      (m) * deltim
-          AKX_frootn_exit_p_acc             (m) = AKX_frootn_exit_p_acc             (m) + frootn_to_retransn_p      (m) * deltim
-          AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_litter_p     (m) * deltim
-          AKX_livestemn_to_retransn_p_acc   (m) = AKX_livestemn_to_retransn_p_acc   (m) + livestemn_to_retransn_p   (m) * deltim
-          AKX_livestemn_exit_p_acc          (m) = AKX_livestemn_exit_p_acc          (m) + livestemn_to_retransn_p   (m) * deltim
-          AKX_grainn_exit_p_acc             (m) = AKX_grainn_exit_p_acc             (m) + (grainn_to_food_p(m) + grainn_to_seed_p(m)) * deltim
-       end if
-#endif
   
        ! allocation fluxes
        retransn_p(m)        = retransn_p(m)       - retransn_to_npool_p(m)*deltim
@@ -287,73 +288,73 @@ contains
           grainn_p(m)             = grainn_p(m)             + npool_to_grainn_p(m)*deltim
           grainn_storage_p(m)     = grainn_storage_p(m)     + npool_to_grainn_storage_p(m)*deltim
        end if
-#ifdef SASU
-       if(plant_nalloc_p(m) .ne. 0)then
-          f_retr_in_nall = retransn_to_npool_p(m) / plant_nalloc_p(m)
-          AKX_retransn_exit_p_acc        (m) = AKX_retransn_exit_p_acc        (m) &
-                                             + (retransn_to_npool_p       (m) + free_retransn_to_npool_p (m)) * deltim
-          I_leafn_p_acc                  (m) = I_leafn_p_acc              (m) + npool_to_leafn_p         (m) * (1._r8 - f_retr_in_nall) * deltim
-          AKX_retransn_to_leafn_p_acc    (m) = AKX_retransn_to_leafn_p_acc    (m) + npool_to_leafn_p         (m) * f_retr_in_nall           * deltim
-          I_leafn_st_p_acc               (m) = I_leafn_st_p_acc           (m) + npool_to_leafn_storage_p (m) * (1._r8 - f_retr_in_nall) * deltim
-          AKX_retransn_to_leafn_st_p_acc (m) = AKX_retransn_to_leafn_st_p_acc (m) + npool_to_leafn_storage_p (m) * f_retr_in_nall           * deltim
-          I_frootn_p_acc                 (m) = I_frootn_p_acc             (m) + npool_to_frootn_p        (m) * (1._r8 - f_retr_in_nall) * deltim
-          AKX_retransn_to_frootn_p_acc   (m) = AKX_retransn_to_frootn_p_acc   (m) + npool_to_frootn_p        (m) * f_retr_in_nall           * deltim
-          I_frootn_st_p_acc              (m) = I_frootn_st_p_acc          (m) + npool_to_frootn_storage_p(m) * (1._r8 - f_retr_in_nall) * deltim
-          AKX_retransn_to_frootn_st_p_acc(m) = AKX_retransn_to_frootn_st_p_acc(m) + npool_to_frootn_storage_p(m) * f_retr_in_nall           * deltim
-          if(woody(ivt) == 1)then
-             I_livestemn_p_acc                  (m) = I_livestemn_p_acc              (m) &
-                                                    + npool_to_livestemn_p           (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livestemn_p_acc    (m) = AKX_retransn_to_livestemn_p_acc    (m) &
-                                                    + npool_to_livestemn_p           (m) * f_retr_in_nall           * deltim
-             I_livestemn_st_p_acc               (m) = I_livestemn_st_p_acc           (m) &
-                                                    + npool_to_livestemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livestemn_st_p_acc (m) = AKX_retransn_to_livestemn_st_p_acc (m) &
-                                                    + npool_to_livestemn_storage_p   (m) * f_retr_in_nall           * deltim
-             I_deadstemn_p_acc                  (m) = I_deadstemn_p_acc              (m) &
-                                                    + npool_to_deadstemn_p           (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_deadstemn_p_acc    (m) = AKX_retransn_to_deadstemn_p_acc    (m) &
-                                                    + npool_to_deadstemn_p           (m) * f_retr_in_nall           * deltim
-             I_deadstemn_st_p_acc               (m) = I_deadstemn_st_p_acc           (m) &
-                                                    + npool_to_deadstemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_deadstemn_st_p_acc (m) = AKX_retransn_to_deadstemn_st_p_acc (m) &
-                                                    + npool_to_deadstemn_storage_p   (m) * f_retr_in_nall           * deltim
-             I_livecrootn_p_acc                 (m) = I_livecrootn_p_acc             (m) &
-                                                    + npool_to_livecrootn_p          (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livecrootn_p_acc   (m) = AKX_retransn_to_livecrootn_p_acc   (m) &
-                                                    + npool_to_livecrootn_p          (m) * f_retr_in_nall           * deltim
-             I_livecrootn_st_p_acc              (m) = I_livecrootn_st_p_acc          (m) &
-                                                    + npool_to_livecrootn_storage_p  (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livecrootn_st_p_acc(m) = AKX_retransn_to_livecrootn_st_p_acc(m) &
-                                                    + npool_to_livecrootn_storage_p  (m) * f_retr_in_nall           * deltim
-             I_deadcrootn_p_acc                 (m) = I_deadcrootn_p_acc             (m) &
-                                                    + npool_to_deadcrootn_p          (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_deadcrootn_p_acc   (m) = AKX_retransn_to_deadcrootn_p_acc   (m) &
-                                                    + npool_to_deadcrootn_p          (m) * f_retr_in_nall           * deltim
-             I_deadcrootn_st_p_acc              (m) = I_deadcrootn_st_p_acc          (m) &
-                                                    + npool_to_deadcrootn_storage_p  (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_deadcrootn_st_p_acc(m) = AKX_retransn_to_deadcrootn_st_p_acc(m) &
-                                                    + npool_to_deadcrootn_storage_p  (m) * f_retr_in_nall           * deltim
-          end if
-          if (ivt >= npcropmin) then ! skip 2 generic crops
-             I_livestemn_p_acc                  (m) = I_livestemn_p_acc          (m) &
-                                                    + npool_to_livestemn_p       (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livestemn_p_acc    (m) = AKX_retransn_to_livestemn_p_acc   (m) &
-                                                    + npool_to_livestemn_p       (m) * f_retr_in_nall           * deltim
-             I_livestemn_st_p_acc               (m) = I_livestemn_st_p_acc       (m) &
-                                                + npool_to_livestemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_livestemn_st_p_acc (m) = AKX_retransn_to_livestemn_st_p_acc(m) &
-                                                + npool_to_livestemn_storage_p   (m) * f_retr_in_nall           * deltim
-             I_grainn_p_acc                     (m) = I_grainn_p_acc             (m) &
-                                                + npool_to_grainn_p              (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_grainn_p_acc       (m) = AKX_retransn_to_grainn_p_acc      (m) &
-                                                + npool_to_grainn_p              (m) * f_retr_in_nall           * deltim
-             I_grainn_st_p_acc                  (m) = I_grainn_st_p_acc          (m) &
-                                                + npool_to_grainn_storage_p      (m) * (1._r8 - f_retr_in_nall) * deltim
-             AKX_retransn_to_grainn_st_p_acc    (m) = AKX_retransn_to_grainn_st_p_acc   (m) &
-                                                + npool_to_grainn_storage_p      (m) * f_retr_in_nall           * deltim
+       if(DEF_USE_SASU)then
+          if(plant_nalloc_p(m) .ne. 0)then
+             f_retr_in_nall = retransn_to_npool_p(m) / plant_nalloc_p(m)
+             AKX_retransn_exit_p_acc        (m) = AKX_retransn_exit_p_acc        (m) &
+                                                + (retransn_to_npool_p       (m) + free_retransn_to_npool_p (m)) * deltim
+             I_leafn_p_acc                  (m) = I_leafn_p_acc              (m) + npool_to_leafn_p         (m) * (1._r8 - f_retr_in_nall) * deltim
+             AKX_retransn_to_leafn_p_acc    (m) = AKX_retransn_to_leafn_p_acc    (m) + npool_to_leafn_p         (m) * f_retr_in_nall           * deltim
+             I_leafn_st_p_acc               (m) = I_leafn_st_p_acc           (m) + npool_to_leafn_storage_p (m) * (1._r8 - f_retr_in_nall) * deltim
+             AKX_retransn_to_leafn_st_p_acc (m) = AKX_retransn_to_leafn_st_p_acc (m) + npool_to_leafn_storage_p (m) * f_retr_in_nall           * deltim
+             I_frootn_p_acc                 (m) = I_frootn_p_acc             (m) + npool_to_frootn_p        (m) * (1._r8 - f_retr_in_nall) * deltim
+             AKX_retransn_to_frootn_p_acc   (m) = AKX_retransn_to_frootn_p_acc   (m) + npool_to_frootn_p        (m) * f_retr_in_nall           * deltim
+             I_frootn_st_p_acc              (m) = I_frootn_st_p_acc          (m) + npool_to_frootn_storage_p(m) * (1._r8 - f_retr_in_nall) * deltim
+             AKX_retransn_to_frootn_st_p_acc(m) = AKX_retransn_to_frootn_st_p_acc(m) + npool_to_frootn_storage_p(m) * f_retr_in_nall           * deltim
+             if(woody(ivt) == 1)then
+                I_livestemn_p_acc                  (m) = I_livestemn_p_acc              (m) &
+                                                       + npool_to_livestemn_p           (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livestemn_p_acc    (m) = AKX_retransn_to_livestemn_p_acc    (m) &
+                                                       + npool_to_livestemn_p           (m) * f_retr_in_nall           * deltim
+                I_livestemn_st_p_acc               (m) = I_livestemn_st_p_acc           (m) &
+                                                       + npool_to_livestemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livestemn_st_p_acc (m) = AKX_retransn_to_livestemn_st_p_acc (m) &
+                                                       + npool_to_livestemn_storage_p   (m) * f_retr_in_nall           * deltim
+                I_deadstemn_p_acc                  (m) = I_deadstemn_p_acc              (m) &
+                                                       + npool_to_deadstemn_p           (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_deadstemn_p_acc    (m) = AKX_retransn_to_deadstemn_p_acc    (m) &
+                                                       + npool_to_deadstemn_p           (m) * f_retr_in_nall           * deltim
+                I_deadstemn_st_p_acc               (m) = I_deadstemn_st_p_acc           (m) &
+                                                       + npool_to_deadstemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_deadstemn_st_p_acc (m) = AKX_retransn_to_deadstemn_st_p_acc (m) &
+                                                       + npool_to_deadstemn_storage_p   (m) * f_retr_in_nall           * deltim
+                I_livecrootn_p_acc                 (m) = I_livecrootn_p_acc             (m) &
+                                                       + npool_to_livecrootn_p          (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livecrootn_p_acc   (m) = AKX_retransn_to_livecrootn_p_acc   (m) &
+                                                       + npool_to_livecrootn_p          (m) * f_retr_in_nall           * deltim
+                I_livecrootn_st_p_acc              (m) = I_livecrootn_st_p_acc          (m) &
+                                                       + npool_to_livecrootn_storage_p  (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livecrootn_st_p_acc(m) = AKX_retransn_to_livecrootn_st_p_acc(m) &
+                                                       + npool_to_livecrootn_storage_p  (m) * f_retr_in_nall           * deltim
+                I_deadcrootn_p_acc                 (m) = I_deadcrootn_p_acc             (m) &
+                                                       + npool_to_deadcrootn_p          (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_deadcrootn_p_acc   (m) = AKX_retransn_to_deadcrootn_p_acc   (m) &
+                                                       + npool_to_deadcrootn_p          (m) * f_retr_in_nall           * deltim
+                I_deadcrootn_st_p_acc              (m) = I_deadcrootn_st_p_acc          (m) &
+                                                       + npool_to_deadcrootn_storage_p  (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_deadcrootn_st_p_acc(m) = AKX_retransn_to_deadcrootn_st_p_acc(m) &
+                                                       + npool_to_deadcrootn_storage_p  (m) * f_retr_in_nall           * deltim
+             end if
+             if (ivt >= npcropmin) then ! skip 2 generic crops
+                I_livestemn_p_acc                  (m) = I_livestemn_p_acc              (m) &
+                                                       + npool_to_livestemn_p           (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livestemn_p_acc    (m) = AKX_retransn_to_livestemn_p_acc(m) &
+                                                       + npool_to_livestemn_p           (m) * f_retr_in_nall           * deltim
+                I_livestemn_st_p_acc               (m) = I_livestemn_st_p_acc           (m) &
+                                                       + npool_to_livestemn_storage_p   (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_livestemn_st_p_acc (m) = AKX_retransn_to_livestemn_st_p_acc(m) &
+                                                       + npool_to_livestemn_storage_p   (m) * f_retr_in_nall           * deltim
+                I_grainn_p_acc                     (m) = I_grainn_p_acc                 (m) &
+                                                       + npool_to_grainn_p              (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_grainn_p_acc       (m) = AKX_retransn_to_grainn_p_acc   (m) &
+                                                       + npool_to_grainn_p              (m) * f_retr_in_nall           * deltim
+                I_grainn_st_p_acc                  (m) = I_grainn_st_p_acc              (m) &
+                                                       + npool_to_grainn_storage_p      (m) * (1._r8 - f_retr_in_nall) * deltim
+                AKX_retransn_to_grainn_st_p_acc    (m) = AKX_retransn_to_grainn_st_p_acc(m) &
+                                                       + npool_to_grainn_storage_p      (m) * f_retr_in_nall           * deltim
+             end if
           end if
        end if
-#endif
        ! move storage pools into transfer pools
        leafn_storage_p(m)  = leafn_storage_p(m)  - leafn_storage_to_xfer_p(m)*deltim
        leafn_xfer_p(m)     = leafn_xfer_p(m)     + leafn_storage_to_xfer_p(m)*deltim
@@ -379,28 +380,28 @@ contains
           grainn_xfer_p(m)        = grainn_xfer_p(m)       + grainn_storage_to_xfer_p(m)*deltim
        end if
 
-#ifdef SASU
-       AKX_leafn_st_to_leafn_xf_p_acc             (m) = AKX_leafn_st_to_leafn_xf_p_acc          (m) + leafn_storage_to_xfer_p     (m) * deltim
-       AKX_leafn_st_exit_p_acc                    (m) = AKX_leafn_st_exit_p_acc                 (m) + leafn_storage_to_xfer_p     (m) * deltim
-       AKX_frootn_st_to_frootn_xf_p_acc           (m) = AKX_frootn_st_to_frootn_xf_p_acc        (m) + frootn_storage_to_xfer_p    (m) * deltim
-       AKX_frootn_st_exit_p_acc                   (m) = AKX_frootn_st_exit_p_acc                (m) + frootn_storage_to_xfer_p    (m) * deltim
-       if(woody(ivt) == 1) then
-          AKX_livestemn_st_to_livestemn_xf_p_acc  (m) = AKX_livestemn_st_to_livestemn_xf_p_acc  (m) + livestemn_storage_to_xfer_p (m) * deltim
-          AKX_livestemn_st_exit_p_acc             (m) = AKX_livestemn_st_exit_p_acc             (m) + livestemn_storage_to_xfer_p (m) * deltim
-          AKX_deadstemn_st_to_deadstemn_xf_p_acc  (m) = AKX_deadstemn_st_to_deadstemn_xf_p_acc  (m) + deadstemn_storage_to_xfer_p (m) * deltim
-          AKX_deadstemn_st_exit_p_acc             (m) = AKX_deadstemn_st_exit_p_acc             (m) + deadstemn_storage_to_xfer_p (m) * deltim
-          AKX_livecrootn_st_to_livecrootn_xf_p_acc(m) = AKX_livecrootn_st_to_livecrootn_xf_p_acc(m) + livecrootn_storage_to_xfer_p(m) * deltim
-          AKX_livecrootn_st_exit_p_acc            (m) = AKX_livecrootn_st_exit_p_acc            (m) + livecrootn_storage_to_xfer_p(m) * deltim
-          AKX_deadcrootn_st_to_deadcrootn_xf_p_acc(m) = AKX_deadcrootn_st_to_deadcrootn_xf_p_acc(m) + deadcrootn_storage_to_xfer_p(m) * deltim
-          AKX_deadcrootn_st_exit_p_acc            (m) = AKX_deadcrootn_st_exit_p_acc            (m) + deadcrootn_storage_to_xfer_p(m) * deltim
+       if(DEF_USE_SASU)then
+          AKX_leafn_st_to_leafn_xf_p_acc             (m) = AKX_leafn_st_to_leafn_xf_p_acc          (m) + leafn_storage_to_xfer_p     (m) * deltim
+          AKX_leafn_st_exit_p_acc                    (m) = AKX_leafn_st_exit_p_acc                 (m) + leafn_storage_to_xfer_p     (m) * deltim
+          AKX_frootn_st_to_frootn_xf_p_acc           (m) = AKX_frootn_st_to_frootn_xf_p_acc        (m) + frootn_storage_to_xfer_p    (m) * deltim
+          AKX_frootn_st_exit_p_acc                   (m) = AKX_frootn_st_exit_p_acc                (m) + frootn_storage_to_xfer_p    (m) * deltim
+          if(woody(ivt) == 1) then
+             AKX_livestemn_st_to_livestemn_xf_p_acc  (m) = AKX_livestemn_st_to_livestemn_xf_p_acc  (m) + livestemn_storage_to_xfer_p (m) * deltim
+             AKX_livestemn_st_exit_p_acc             (m) = AKX_livestemn_st_exit_p_acc             (m) + livestemn_storage_to_xfer_p (m) * deltim
+             AKX_deadstemn_st_to_deadstemn_xf_p_acc  (m) = AKX_deadstemn_st_to_deadstemn_xf_p_acc  (m) + deadstemn_storage_to_xfer_p (m) * deltim
+             AKX_deadstemn_st_exit_p_acc             (m) = AKX_deadstemn_st_exit_p_acc             (m) + deadstemn_storage_to_xfer_p (m) * deltim
+             AKX_livecrootn_st_to_livecrootn_xf_p_acc(m) = AKX_livecrootn_st_to_livecrootn_xf_p_acc(m) + livecrootn_storage_to_xfer_p(m) * deltim
+             AKX_livecrootn_st_exit_p_acc            (m) = AKX_livecrootn_st_exit_p_acc            (m) + livecrootn_storage_to_xfer_p(m) * deltim
+             AKX_deadcrootn_st_to_deadcrootn_xf_p_acc(m) = AKX_deadcrootn_st_to_deadcrootn_xf_p_acc(m) + deadcrootn_storage_to_xfer_p(m) * deltim
+             AKX_deadcrootn_st_exit_p_acc            (m) = AKX_deadcrootn_st_exit_p_acc            (m) + deadcrootn_storage_to_xfer_p(m) * deltim
+          end if
+          if( ivt >= npcropmin) then
+             AKX_livestemn_st_to_livestemn_xf_p_acc  (m) = AKX_livestemn_st_to_livestemn_xf_p_acc  (m) + livestemn_storage_to_xfer_p (m) * deltim
+             AKX_livestemn_st_exit_p_acc             (m) = AKX_livestemn_st_exit_p_acc             (m) + livestemn_storage_to_xfer_p (m) * deltim
+             AKX_grainn_st_to_grainn_xf_p_acc        (m) = AKX_grainn_st_to_grainn_xf_p_acc        (m) + grainn_storage_to_xfer_p    (m) * deltim
+             AKX_grainn_st_exit_p_acc                (m) = AKX_grainn_st_exit_p_acc                (m) + grainn_storage_to_xfer_p    (m) * deltim
+          end if
        end if
-       if( ivt >= npcropmin) then
-          AKX_livestemn_st_to_livestemn_xf_p_acc  (m) = AKX_livestemn_st_to_livestemn_xf_p_acc  (m) + livestemn_storage_to_xfer_p (m) * deltim
-          AKX_livestemn_st_exit_p_acc             (m) = AKX_livestemn_st_exit_p_acc             (m) + livestemn_storage_to_xfer_p (m) * deltim
-          AKX_grainn_st_to_grainn_xf_p_acc        (m) = AKX_grainn_st_to_grainn_xf_p_acc        (m) + grainn_storage_to_xfer_p    (m) * deltim
-          AKX_grainn_st_exit_p_acc                (m) = AKX_grainn_st_exit_p_acc                (m) + grainn_storage_to_xfer_p    (m) * deltim
-       end if
-#endif
     end do ! end pft loop
 
   end subroutine NStateUpdate1

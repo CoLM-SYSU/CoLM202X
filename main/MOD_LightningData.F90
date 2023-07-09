@@ -1,11 +1,19 @@
 #include <define.h>
 
+#ifdef BGC
 MODULE MOD_LightningData
-#ifdef Fire
+ !-----------------------------------------------------------------------
+ ! !DESCRIPTION:
+ ! This module read in lightning data for fire subroutine
+ !
+ ! !ORIGINAL:
+ ! Zhang Shupeng, 2022, prepare the original version of the lightning data module.
+
+
    USE MOD_Grid
    USE MOD_DataType
    USE MOD_Mapping_Grid2Pset
-   use MOD_BGC_Vars_TimeVars, only: lnfm
+   use MOD_BGC_Vars_TimeVariables, only: lnfm
    IMPLICIT NONE
 
    CHARACTER(len=256) :: file_lightning
@@ -19,6 +27,11 @@ CONTAINS
 
    ! ----------
    SUBROUTINE init_lightning_data (time, idate)
+
+   !----------------------
+   ! DESCTIPTION:
+   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+   ! Initialize Ozone data read in.
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -49,22 +62,21 @@ CONTAINS
       call mg2p_lnfm%build (grid_lightning, landpatch)
 
       itime = (idate(2)-1)*8 + min(idate(3)/10800+1,8)
+      if (itime .gt. 2920)itime = itime - 8 ! for the leap year
 
       CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime, f_lnfm)
 #ifdef CoLMDEBUG
       CALL check_block_data ('lightning', f_lnfm)
 #endif
 
-!      IF (p_is_worker) THEN
-!         IF (numpatch > 0) THEN
-!            allocate (lnfm (numpatch))
-!         ENDIF
-!      ENDIF
-
    END SUBROUTINE init_lightning_data
 
    ! ----------
    SUBROUTINE update_lightning_data (time, deltim)
+
+   !----------------------
+   ! DESCTIPTION:
+   ! read ozone data during simulation
 
       USE MOD_TimeManager
       USE MOD_NetCDFBlock
@@ -99,5 +111,5 @@ CONTAINS
 
    END SUBROUTINE update_lightning_data
 
-#endif
 END MODULE MOD_LightningData
+#endif

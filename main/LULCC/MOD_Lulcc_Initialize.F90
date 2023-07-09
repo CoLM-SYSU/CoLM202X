@@ -38,10 +38,10 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LandElm
    use MOD_LandPatch
 #ifdef URBAN_MODEL
-   USE MOD_Urban_Vars_TimeVars
-   USE MOD_Urban_Vars_TimeInvars
+   USE MOD_Urban_Vars_TimeVariables
+   USE MOD_Urban_Vars_TimeInvariants
    use MOD_LandUrban
-   USE MOD_UrbanIniTimeVar
+   USE MOD_UrbanIniTimeVariable
    USE MOD_UrbanReadin
    USE MOD_Urban_LAIReadin
    USE MOD_Urban_Albedo
@@ -49,15 +49,15 @@ MODULE MOD_Lulcc_Initialize
    use MOD_Const_Physical
    use MOD_Vars_TimeInvariants
    use MOD_Vars_TimeVariables
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    USE MOD_LandPFT
-   USE MOD_Vars_PFTimeInvars
-   USE MOD_Vars_PFTimeVars
+   USE MOD_Vars_PFTimeInvariants
+   USE MOD_Vars_PFTimeVariables
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvars
-   USE MOD_Vars_PCTimeVars
+   USE MOD_Vars_PCTimeInvariants
+   USE MOD_Vars_PCTimeVariables
 #endif
    USE MOD_Const_LC
    USE MOD_Const_PFT
@@ -70,10 +70,11 @@ MODULE MOD_Lulcc_Initialize
    use MOD_CoLMDebug
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   USE MOD_SoilFunction
+      USE MOD_Hydro_SoilFunction
 #endif
    USE MOD_Mapping_Grid2Pset
 #ifdef LATERAL_FLOW
+      USE MOD_Mesh
    USE MOD_LandHRU
    USE MOD_LandPatch
 #endif
@@ -82,16 +83,15 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LAIReadin
    USE MOD_NitrifReadin
 #ifdef BGC
+   USE MOD_NitrifReadin
    USE MOD_NdepReadin
    USE MOD_FireReadin
 #endif
    USE MOD_OrbCoszen
-#ifdef USE_DEPTH_TO_BEDROCK
    use MOD_DBedrockReadin
-#endif
    use MOD_SrfdataRestart
    USE MOD_HtopReadin
-   USE MOD_IniTimeVar
+   USE MOD_IniTimeVariable
    USE MOD_LakeDepthReadin
    USE MOD_PercentagesPFTReadin
    USE MOD_SoilParametersReadin
@@ -179,7 +179,7 @@ MODULE MOD_Lulcc_Initialize
    year = idate(1)
    jday = idate(2)
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
@@ -188,10 +188,10 @@ MODULE MOD_Lulcc_Initialize
    CALL mesh_free_mem
    CALL landelm%forc_free_mem
    CALL landpatch%forc_free_mem
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    CALL landpft%forc_free_mem
 #endif
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    CALL landpc%forc_free_mem
 #endif
 #ifdef URBAN_MODEL
@@ -210,12 +210,12 @@ MODULE MOD_Lulcc_Initialize
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
    call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
-#ifdef PC_CLASSIFICATION
+#ifdef LULC_IGBP_PC
    call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , year)
    CALL map_patch_to_pc
 #endif
@@ -259,26 +259,26 @@ MODULE MOD_Lulcc_Initialize
 
       call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef PFT_CLASSIFICATION
+#ifdef LULC_IGBP_PFT
       pftclass = landpft%settyp
 #endif
 
    ENDIF
 
-#if (defined PFT_CLASSIFICATION || defined PC_CLASSIFICATION)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pct_readin (dir_landdata, year)
 #endif
 
    ! ------------------------------------------
    ! 1.1 Ponding water
    ! ------------------------------------------
-#ifdef USE_DEPTH_TO_BEDROCK
-   CALL dbedrock_readin (dir_landdata)
-#endif
+   IF(DEF_USE_BEDROCK)THEN
+      CALL dbedrock_readin (dir_landdata)
+   ENDIF
 
    IF (p_is_worker) THEN
       IF (numpatch > 0) THEN
-         dpond(:) = 0._r8
+         wdsrf(:) = 0._r8
       ENDIF
    ENDIF
    ! ------------------------------------------
@@ -392,11 +392,11 @@ MODULE MOD_Lulcc_Initialize
    rij_kro_beta  = 0.6_r8
    rij_kro_gamma = 0.6_r8
    rij_kro_delta = 0.85_r8
-#ifdef NITRIF
-   nfix_timeconst = 10._r8
-#else
-   nfix_timeconst = 0._r8
-#endif
+   if(DEF_USE_NITRIF)then
+      nfix_timeconst = 10._r8
+   else
+      nfix_timeconst = 0._r8
+   end if
    organic_max        = 130
    d_con_g21          = 0.1759_r8
    d_con_g22          = 0.00117_r8
@@ -610,13 +610,13 @@ MODULE MOD_Lulcc_Initialize
    if (p_is_worker) then
 
       do i = 1, numpatch
-            IF (DEF_USE_SOILINI) THEN
-         do nsl = 1, nl_soil
-            t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
-         enddo
-            ELSE
-         t_soisno(1:,i) = 283.
-            ENDIF
+         IF (DEF_USE_SOILINI) THEN
+            do nsl = 1, nl_soil
+               t_soisno(nsl,i) = soil_t(min(nl_soil_ini,nsl),i)
+            enddo
+         ELSE
+            t_soisno(1:,i) = 283.
+         ENDIF
       enddo
 
       tlai(:)=0.0; tsai(:)=0.0; green(:)=0.0; fveg(:)=0.0
@@ -631,7 +631,7 @@ MODULE MOD_Lulcc_Initialize
    end if
 #else
 
-   IF (DEF_LAI_CLIM) then
+   IF (DEF_LAI_MONTHLY) then
       ! 08/03/2019, yuan: read global LAI/SAI data
       CALL julian2monthday (year, jday, month, mday)
       CALL LAI_readin (year, month, dir_landdata)
@@ -651,11 +651,9 @@ MODULE MOD_Lulcc_Initialize
 
 #ifdef BGC
    CALL NDEP_readin(year, dir_landdata, .true., .false.)
-   print*,'after NDEP readin'
-#ifdef NITRIF
-   CALL NITRIF_readin (month, dir_landdata)
-   print*,'after NITRIF readin'
-#endif
+   if(DEF_USE_NITRIF)then
+      CALL NITRIF_readin (month, dir_landdata)
+   end if
 
 #ifdef CROP
    CALL CROP_readin (dir_landdata)
@@ -680,11 +678,10 @@ MODULE MOD_Lulcc_Initialize
       end do
    end if
 #endif
+   if(DEF_USE_FIRE)then
+      CALL Fire_readin (year,dir_landdata)
+   end if
 #endif
-#endif
-#ifdef Fire
-   CALL Fire_readin (year,dir_landdata)
-   print*,'after Fire readin'
 #endif
 
    ! ..............................................................................
@@ -714,27 +711,29 @@ MODULE MOD_Lulcc_Initialize
          dz_soisno(1:nl_soil ,i) = dz_soi(1:nl_soil)
       enddo
 
+      zc_soimm = z_soi * 1000.
+      zi_soimm(0) = 0.
+      zi_soimm(1:nl_soil) = zi_soi * 1000.
+
       do i = 1, numpatch
          m = patchclass(i)
 
          IF (use_wtd) THEN
             zwtmm = zwt(i) * 1000.
-            zc_soimm = z_soi  * 1000.
-            zi_soimm(0) = 0.
-            zi_soimm(1:nl_soil) = zi_soi * 1000.
+         ENDIF
+
 #ifdef Campbell_SOIL_MODEL
-            vliq_r(:) = 0.
-            prms(1,1:nl_soil) = bsw(1:nl_soil,i)
+         vliq_r(:) = 0.
+         prms(1,1:nl_soil) = bsw(1:nl_soil,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-               vliq_r(:) = theta_r(1:nl_soil,i)
-            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
-            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
-            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
-            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
-            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
+         vliq_r(:) = theta_r(1:nl_soil,i)
+         prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,i)
+         prms(2,1:nl_soil) = n_vgm    (1:nl_soil,i)
+         prms(3,1:nl_soil) = L_vgm    (1:nl_soil,i)
+         prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,i)
+         prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,i)
 #endif
-         ENDIF
 
          CALL iniTimeVar(i, patchtype(i)&
             ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
@@ -743,9 +742,9 @@ MODULE MOD_Lulcc_Initialize
             ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
             ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
             ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&
-#ifdef PLANT_HYDRAULIC_STRESS
+!Plant hydraulic variables
             ,vegwp(1:,i),gs0sun(i),gs0sha(i)&
-#endif
+!end plant hydraulic variables
             ,t_grnd(i),tleaf(i),ldew(i),ldew_rain(i),ldew_snow(i),sag(i),scv(i)&
             ,snowdp(i),fveg(i),fsno(i),sigf(i),green(i),lai(i),sai(i),coszen(i)&
             ,snw_rds(:,i),mss_bcpho(:,i),mss_bcphi(:,i),mss_ocpho(:,i),mss_ocphi(:,i)&
@@ -766,7 +765,6 @@ MODULE MOD_Lulcc_Initialize
             ,altmax(i) , altmax_lastyear(i), altmax_lastyear_indx(i), lag_npp(i) &
             ,sminn_vr(:,i), sminn(i), smin_no3_vr  (:,i), smin_nh4_vr       (:,i)&
             ,prec10(i), prec60(i), prec365 (i), prec_today(i), prec_daily(:,i), tsoi17(i), rh30(i), accumnstep(i) , skip_balance_check(i) &
-#ifdef SASU
    !------------------------SASU variables-----------------------
             ,decomp0_cpools_vr        (:,:,i), decomp0_npools_vr        (:,:,i) &
             ,I_met_c_vr_acc             (:,i), I_cel_c_vr_acc             (:,i), I_lig_c_vr_acc             (:,i), I_cwd_c_vr_acc             (:,i) &
@@ -783,12 +781,11 @@ MODULE MOD_Lulcc_Initialize
             ,AKX_met_exit_n_vr_acc      (:,i), AKX_cel_exit_n_vr_acc      (:,i), AKX_lig_exit_n_vr_acc      (:,i), AKX_cwd_exit_n_vr_acc      (:,i) &
             ,AKX_soil1_exit_n_vr_acc    (:,i), AKX_soil2_exit_n_vr_acc    (:,i), AKX_soil3_exit_n_vr_acc    (:,i) &
             ,diagVX_n_vr_acc          (:,:,i), upperVX_n_vr_acc         (:,:,i), lowerVX_n_vr_acc         (:,:,i) &
-#endif
    !------------------------------------------------------------
 #endif
-               ! for SOIL INIT of water, temperature, snow depth
-               ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
-               ! for SOIL Water INIT by using water table depth
+            ! for SOIL INIT of water, temperature, snow depth
+            ,use_soilini, nl_soil_ini, soil_z, soil_t(1:,i), soil_w(1:,i), snow_d(i) &
+            ! for SOIL Water INIT by using water table depth
             ,use_wtd, zwtmm, zc_soimm, zi_soimm, vliq_r, nprms, prms)
 
 #ifdef URBAN_MODEL
@@ -894,8 +891,8 @@ MODULE MOD_Lulcc_Initialize
          DO i = 1, numhru
             ps = hru_patch%substt(i)
             pe = hru_patch%subend(i)
-            dpond_hru(i) = sum(dpond(ps:pe) * hru_patch%subfrc(ps:pe))
-            dpond_hru(i) = dpond_hru(i) / 1.0e3 ! mm to m
+            wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
+            wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
       ENDIF
    ENDIF
