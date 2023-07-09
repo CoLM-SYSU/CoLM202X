@@ -20,7 +20,8 @@ MODULE MOD_Aerosol
   !-----------------------------------------------------------------------
 
     logical,  parameter :: use_extrasnowlayers = .false.
-    real(r8), parameter :: snw_rds_min = 54.526_r8  ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
+    real(r8), parameter :: snw_rds_min = 54.526_r8          ! minimum allowed snow effective radius (also "fresh snow" value) [microns]
+    real(r8), parameter :: fresh_snw_rds_max = 204.526_r8   ! maximum warm fresh snow effective radius [microns]
 
     character(len=256)  :: file_aerosol
 

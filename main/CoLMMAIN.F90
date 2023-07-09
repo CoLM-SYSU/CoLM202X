@@ -1294,7 +1294,7 @@ ENDIF
             CALL albland (ipatch, patchtype,deltim,&
                  soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                  chil,rho,tau,fveg,green,lai,sai,coszen,&
-                 wt,fsno,scv,scvold,sag,ssw,pg_snow,t_grnd,t_soisno_,dz_soisno_,&
+                 wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno_,dz_soisno_,&
                  snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                  mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
                  mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
