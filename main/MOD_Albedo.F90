@@ -33,7 +33,7 @@ MODULE MOD_Albedo
   SUBROUTINE albland (ipatch, patchtype, deltim,&
                       soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
                       chil,rho,tau,fveg,green,lai,sai,coszen,&
-                      wt,fsno,scv,scvold,sag,ssw,pg_snow,t_grnd,t_soisno,dz_soisno,&
+                      wt,fsno,scv,scvold,sag,ssw,pg_snow,forc_t,t_grnd,t_soisno,dz_soisno,&
                       snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                       mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
                       mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
@@ -129,6 +129,7 @@ MODULE MOD_Albedo
       scv,       &! snow cover, water equivalent [mm]
       scvold,    &! snow cover for previous time step [mm]
       pg_snow,   &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+      forc_t,    &! atmospheric temperature [K]
       t_grnd      ! ground surface temperature [K]
 
  REAL(r8), intent(in) :: &
@@ -307,7 +308,7 @@ ENDIF
            do_capsnow      ,fsno           ,scv            ,&
            wliq_soisno (:0),wice_soisno(:0),&
            t_soisno    (:1),t_grnd         ,&
-           snw_rds         )
+           forc_t          ,snw_rds         )
 
 ! ----------------------------------------------------------------------
 
