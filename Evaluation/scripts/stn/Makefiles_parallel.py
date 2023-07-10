@@ -188,10 +188,10 @@ class Makefiles_parallel:
         print("deal with simulation data")
         print(" ")
         print(" ") 
-        #if self.Sim_SpRes=='01min':
-        #    num_cores=1
+        if self.Sim_SpRes=='01min':
+            num_cores=1
         # Increase timeout (tune this number to suit your use case).
-        timeout=99999
+        timeout=9999999
         Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
        
         VarFiles=(f'{self.casedir}/tmp/sim/sim_*.nc')
@@ -204,7 +204,7 @@ class Makefiles_parallel:
         #shutil.rmtree(f'{self.casedir}/tmp/sim/sim_*.nc',ignore_errors=True)
 
         with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc',chunks={'time': 12}) as simx:
-            Parallel(n_jobs=num_cores)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
+            Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
 
         #os.remove(f'{self.casedir}/tmp/sim/sim.nc')
         #for ii in range((minyear),(maxyear)+1):
