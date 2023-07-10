@@ -7,6 +7,8 @@ import sys
 import shutil 
 from dask.diagnostics import ProgressBar
 from joblib import Parallel, delayed
+os.environ['PYTHONWARNINGS']='ignore::FutureWarning'
+
 # Check the platform
 if not sys.platform.startswith('win'):
     import xesmf as xe
@@ -35,14 +37,14 @@ class Makefiles_parallel:
         self.Sim_DataGroupby         =  info.Sim_DataGroupby
         self.Sim_Suffix              =  info.Sim_Suffix
         self.Sim_Prefix              =  info.Sim_Prefix
-        self.Sim_GeoRes               =  info.Sim_GeoRes
+        self.Sim_GeoRes              =  info.Sim_GeoRes
         self.Sim_Syear               =  info.Sim_Syear
         self.Sim_Eyear               =  info.Sim_Eyear
 
         self.obs_source              =  info.obs_source
         self.Obs_GeoRes              =  info.Obs_GeoRes
         self.Obs_TimRes              =  info.Obs_TimRes
-        self.OBSDIR                  =  info.OBSDIR
+        self.Obs_Dir                  =  info.Obs_Dir
         self.Obs_Syear               =  info.Obs_Syear
         self.Obs_Eyear               =  info.Obs_Eyear
         self.Obs_DataGroupby         =  info.Obs_DataGroupby
@@ -62,20 +64,20 @@ class Makefiles_parallel:
         for key in self.variables.keys():
             if self.Obs_DataGroupby == 'Year':
                 if (self.obs_source=='GIEMS_v2_2020') :
-                    VarFiles = os.path.join(self.OBSDIR, f'GIEMS_v2_2020_{key}_15min_{ii}.nc')
+                    VarFiles = os.path.join(self.Obs_Dir, f'GIEMS_v2_2020_{key}_15min_{ii}.nc')
                 elif (self.obs_source=='GLEAM'):
-                    VarFiles = os.path.join(self.OBSDIR, 'daily', f'{key}_{ii}_GLEAM_v3.7a.nc')
+                    VarFiles = os.path.join(self.Obs_Dir, 'daily', f'{key}_{ii}_GLEAM_v3.7a.nc')
                 elif (self.obs_source=='GLDAS'):
                     print('not ready yet')
                     sys.exit(1)
                 elif ((self.obs_source=='ERA5-Land')and(key=='ro')):
-                    VarFiles = os.path.join(self.OBSDIR, f'ERA5LAND_runoff_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
+                    VarFiles = os.path.join(self.Obs_Dir, f'ERA5LAND_runoff_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
                 elif ((self.obs_source=='Yuan_etal')and(key=='lai')):
-                    VarFiles = os.path.join(self.OBSDIR, f'lai_8-day_30s_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
+                    VarFiles = os.path.join(self.Obs_Dir, f'lai_8-day_30s_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
                 obsx0 = xr.open_dataset(VarFiles)
             else:
                 print ('The Obs_DataGroupby is not Year-->combine it to Year')
-                VarFiles = os.path.join(self.OBSDIR, f'{self.Obs_Suffix}{ii}*{self.Obs_Prefix}.nc')
+                VarFiles = os.path.join(self.Obs_Dir, f'{self.Obs_Suffix}{ii}*{self.Obs_Prefix}.nc')
                 obsx0= xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
                                    preprocess=lambda obsx: obsx[f'{key}'].astype('float32'))
             obsx0['lon'] = xr.where(obsx0.lon > 180, obsx0.lon - 360, obsx0.lon)
@@ -154,6 +156,7 @@ class Makefiles_parallel:
 
         else:
             VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}*{self.Sim_Prefix}.nc')
+            print(VarFiles)
             simx0=xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
                                    preprocess=lambda simx0: simx0[list(self.variables.values())].astype('float64'))
             
@@ -217,6 +220,7 @@ class Makefiles_parallel:
         print("Create directory!")
         print(" ")
         print(" ")
+        timeout=9999999
         #remove tmp directory if exist
         shutil.rmtree(f'{self.casedir}/tmp/sim',ignore_errors=True)
         shutil.rmtree(f'{self.casedir}/tmp/obs',ignore_errors=True)
@@ -243,8 +247,8 @@ class Makefiles_parallel:
         print("deal with observation data")
         print(" ")
         print(" ")
-        
-        Parallel(n_jobs=num_cores)(delayed(self.make_obs_combine_parallel)(i) for i in range((minyear),(maxyear)+1))
+
+        Parallel(n_jobs=num_cores, timeout=timeout)(delayed(self.make_obs_combine_parallel)(i) for i in range((minyear),(maxyear)+1))
         for key in self.variables.keys():
             VarFiles=(f'{self.casedir}/tmp/obs/'+f'obs_{key}_remap_*.nc')
             with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 30}) as ds1: #,parallel=True,autoclose=True
@@ -268,7 +272,9 @@ class Makefiles_parallel:
         print(" ") 
         #if self.Sim_GeoRes=='01min':
         #    num_cores=1
-        Parallel(n_jobs=num_cores)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
+
+
+        Parallel(n_jobs=num_cores, timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
         for variable_value in self.variables.values():
             VarFiles=f'{self.casedir}/tmp/sim/'+f'sim_{variable_value}_remap_*.nc'
             with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 30}) as ds1: #,parallel=True,autoclose=True
