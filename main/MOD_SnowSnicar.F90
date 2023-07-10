@@ -2400,7 +2400,7 @@ contains
                             do_capsnow     , frac_sno       , h2osno          , &
                             h2osno_liq     , h2osno_ice     , &
                             t_soisno       , t_grnd         , &
-                            snw_rds        )
+                            forc_t         , snw_rds        )
     !
     ! !DESCRIPTION:
     ! Updates the snow effective grain size (radius).
@@ -2460,6 +2460,7 @@ contains
 
     real(r8) , intent(in)   ::  t_soisno         ( maxsnl+1:1 ) ! soil and snow temperature (col,lyr) [K]
     real(r8) , intent(in)   ::  t_grnd                          ! ground temperature (col) [K]
+    real(r8) , intent(in)   ::  forc_t                          ! Atmospheric temperature (col) [K]
 
     real(r8) , intent(inout)  ::  snw_rds        ( maxsnl+1:0 ) ! effective grain radius (col,lyr) [microns, m-6]
 
@@ -2493,6 +2494,7 @@ contains
     real(r8) :: rhos            ! snow density [kg m-3]
     real(r8) :: h2osno_lyr      ! liquid + solid H2O in snow layer [kg m-2]
     real(r8) :: cdz(maxsnl+1:0) ! column average layer thickness [m]
+    real(r8) :: snw_rds_fresh   ! fresh snow radius [microns]
 
     real(r8) :: snot_top        ! temperature in top snow layer (col) [K]
     real(r8) :: dTdz_top        ! temperature gradient in top layer (col) [K m-1]
@@ -2670,8 +2672,11 @@ contains
                frc_oldsnow = 1._r8 - frc_refrz - frc_newsnow
             endif
 
+            ! temperature dependent fresh grain size
+            snw_rds_fresh = FreshSnowRadius (forc_t)
+
             ! mass-weighted mean of fresh snow, old snow, and re-frozen snow effective radius
-            snw_rds(i) = (snw_rds(i)+dr)*frc_oldsnow + snw_rds_min*frc_newsnow + snw_rds_refrz*frc_refrz
+            snw_rds(i) = (snw_rds(i)+dr)*frc_oldsnow + snw_rds_fresh*frc_newsnow + snw_rds_refrz*frc_refrz
             !
             !**********  5. CHECK BOUNDARIES   ***********
             !
@@ -2941,5 +2946,51 @@ contains
 
   end subroutine SnowAge_init
   !-----------------------------------------------------------------------
+
+
+  real(r8) function FreshSnowRadius (forc_t)
+    !
+    ! !DESCRIPTION:
+    ! Returns fresh snow grain radius, which is linearly dependent on temperature.
+    ! This is implemented to remedy an outstanding bias that SNICAR has in initial
+    ! grain size. See e.g. Sandells et al, 2017 for a discussion (10.5194/tc-11-229-2017).
+    !
+    ! Yang et al. (2017), 10.1016/j.jqsrt.2016.03.033
+    !  discusses grain size observations, which suggest a temperature dependence.
+    !
+    ! !REVISION HISTORY:
+    ! Author: Leo VanKampenhout
+    !
+    ! !USES:
+    USE MOD_Const_Physical, only: tfrz
+    use MOD_Aerosol, only: fresh_snw_rds_max
+
+    ! !ARGUMENTS:
+    real(r8), intent(in) :: forc_t         ! atmospheric temperature (Kelvin)
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+    real(r8), parameter :: tmin = tfrz - 30._r8       ! start of linear ramp
+    real(r8), parameter :: tmax = tfrz - 0._r8        ! end of linear ramp
+    real(r8), parameter :: gs_min = snw_rds_min       ! minimum value
+    real(r8)            :: gs_max                     ! maximum value
+
+       if ( fresh_snw_rds_max <= snw_rds_min )then
+           FreshSnowRadius = snw_rds_min
+       else
+           gs_max = fresh_snw_rds_max
+
+           if (forc_t < tmin) then
+               FreshSnowRadius = gs_min
+           else if (forc_t > tmax) then
+               FreshSnowRadius = gs_max
+           else
+               FreshSnowRadius = (tmax-forc_t)/(tmax-tmin)*gs_min + &
+                                 (forc_t-tmin)/(tmax-tmin)*gs_max
+           end if
+       end if
+
+  end function FreshSnowRadius
+
 
 END MODULE MOD_SnowSnicar
