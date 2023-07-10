@@ -10,6 +10,7 @@ SUBROUTINE CoLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          &
+           wfc,                                                     &
            bsw,                                                     &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
@@ -207,8 +208,9 @@ SUBROUTINE CoLMMAIN ( &
         wf_gravels(nl_soil),  & ! gravimetric fraction of gravels
         wf_sand   (nl_soil),  & ! gravimetric fraction of sand
         porsl(nl_soil)     ,  & ! fraction of soil that is voids [-]
-        psi0(nl_soil)      ,  & ! minimum soil suction [mm]
-        bsw(nl_soil)       ,  & ! clapp and hornbereger "b" parameter [-]
+        wfc  (nl_soil)       ,  & ! field capacity
+        psi0 (nl_soil)      ,  & ! minimum soil suction [mm]
+        bsw  (nl_soil)       ,  & ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r  (1:nl_soil), & ! residual water content (cm3/cm3) in vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
@@ -673,6 +675,7 @@ ENDIF
            dewmx             ,capr              ,cnfac             ,vf_quartz         ,&
            vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
            wf_sand           ,csol              ,porsl             ,psi0              ,&
+           wfc                                                                       ,&  
 #ifdef Campbell_SOIL_MODEL
            bsw               ,                                                         &
 #endif
