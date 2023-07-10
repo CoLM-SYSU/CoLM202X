@@ -5,7 +5,7 @@ __release__ = "0.1"
 __date__ = "Mar 2023"
 import shutil 
 import sys
-from Geo_information import Inundation,Evapotranspiration,Transpiration,Interception,SoilEvaporation,Runoff,SoilMoisture,LAI
+from Geo_information import get_general_info
 from Makefiles_parallel import Makefiles_parallel
 from Validation import Validation
 def strtobool (val):
@@ -104,65 +104,35 @@ if __name__=='__main__':
     
     print("-------------------------------------Caution-----------------------------------")
     print("Please make sure the time axis of the simulation data is consistent with the time axis of the validation data!")
-    print("--------------------------------------------=-----------------------------------")
-
-    input("Press Enter to continue...")
+    #input("Press Enter to continue...")
     print("...............................................................................")
-    namelist = read_namelist('namelist_geo.txt')
-    if(namelist['General']['Run_Inundation']):
-        p1=Inundation(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
-    if (namelist['General']['Run_Evapotranspiration']):
-        p1=Evapotranspiration(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-        p3.make_plot_index()
-    if (namelist['General']['Run_Transpiration']):
-        p1=Transpiration(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
-    if (namelist['General']['Run_Interception']):
-        p1=Interception(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
-    if (namelist['General']['Run_SoilEvaporation']):
-        p1=SoilEvaporation(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
-    if (namelist['General']['Run_SoilMoisture']):
-        p1=SoilMoisture(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-	    p3.make_plot_index()
-    if (namelist['General']['Run_Runoff']):
-        p1=Runoff(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
-    if (namelist['General']['Run_LAI']):
-        p1=LAI(namelist)
-        p2=Makefiles_parallel(p1)
-        p2.Makefiles_parallel()
-        p3=Validation(p1)
-        p3.make_validation()
-		p3.make_plot_index()
+    argv                      = sys.argv
+    nml                       = str(argv[1])
+    namelist                  = read_namelist(f'{nml}')
 
+    def run_validation(module_name, namelist):
+        if namelist['General'][module_name]:
+            print("Start running %s module..." % module_name)
+            module=get_general_info(module_name,namelist)
+            print(module.Obs_Dir)
+
+            makefiles = Makefiles_parallel(module)
+            makefiles.Makefiles_parallel()
+
+            validation = Validation(module)
+            validation.make_validation()
+            validation.make_plot_index()
+
+    modules = [
+        'Inundation',
+        'Evapotranspiration',
+        'Transpiration',
+        'Interception',
+        'SoilEvaporation',
+        'SoilMoisture',
+        'Runoff',
+        'LAI'
+    ]
+
+    for module in modules:
+        run_validation(module, namelist)

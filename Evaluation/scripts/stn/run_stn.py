@@ -4,18 +4,11 @@ __version__ = "0.1"
 __release__ = "0.1"
 __date__ = "Mar 2023"
 import sys
-from Station_information import FLUXNET
-from Station_information import StreamFlow
-from Station_information import SoilMoisture
-from Station_information import Transpiration
-from Station_information import Evapotranspiration
-from Station_information import LAI
-from Station_information import Altimetry
-from Station_information import Dam
+import sys
+from Station_information import FLUXNET, StreamFlow, SoilMoisture, Transpiration, Evapotranspiration, LAI, Altimetry, Dam
+from Makefiles_parallel import Makefiles_parallel
+from Validation import Validation
 
-#from Station_information import Snow
-from Makefiles_parallel  import Makefiles_parallel
-from Validation          import Validation
 def strtobool (val):
     """Convert a string representation of truth to true (1) or false (0).
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
@@ -96,11 +89,6 @@ def read_namelist(file_path):
             or not isinstance(namelist['General']['Max_lat'], float) or not isinstance(namelist['General']['Min_lon'], float) or not isinstance(namelist['General']['Max_lon'], float)):
             print('Error: the Min_year or Max_lat or Min_lat or Max_lat or Min_lon or Max_lon type is not float!')
             sys.exit(1)
-        #if namelist['General']['Run_FLUXNET'] type is not bool, report error and exit
-        if not isinstance(namelist['General']['Run_FLUXNET'], bool):
-            print('Error: the Run_FLUXNET type is not bool!')
-            sys.exit(1)
-            
 
     except KeyError:
         print('Error: the namelist is not complete!')
@@ -108,8 +96,20 @@ def read_namelist(file_path):
     return namelist
 
 if __name__=='__main__':
-    namelist = read_namelist('namelist_stn.txt')
-    if  (namelist['General']['Run_FLUXNET']):
+    print("Welcome to the stn module of the validation system!")
+    print("This module is used to validate the station information of the model output data")
+    print("===============================================================================")
+    print("Start running stn module...")
+    
+    print("-------------------------------------Caution-----------------------------------")
+    print("Please make sure the time axis of the simulation data is consistent with the time axis of the validation data!")
+    #input("Press Enter to continue...")
+    print("...............................................................................")
+    argv                      = sys.argv
+    nml                       = str(argv[1])
+    namelist                  = read_namelist(f'{nml}')
+
+    if  (namelist['General']['FLUXNET']):
         p1=FLUXNET(namelist)
         p1.makelist()
         ppp1=Makefiles_parallel(namelist,p1)
@@ -118,8 +118,8 @@ if __name__=='__main__':
         k.make_validation_P()
         k.make_plot_index()
     
-    if  (namelist['General']['Run_StreamFlow']):
-        if namelist['General']['compare_res']=="Day" or namelist['General']['compare_res']=="Month":
+    if  (namelist['General']['StreamFlow']):
+        if namelist['General']['compare_res'] in ["Day", "Month"]:
             pp1=StreamFlow(namelist)
             pp1.makelist()
             ppp1=Makefiles_parallel(namelist,pp1)
@@ -130,8 +130,8 @@ if __name__=='__main__':
         else:
             print("Caution: the compare_res is not Day or Month! SoilMoisture validation is not run!")
 
-    if  (namelist['General']['Run_SoilMoisture']):
-        if namelist['General']['compare_res']=="Day" or namelist['General']['compare_res']=="Month":
+    if  (namelist['General']['SoilMoisture']):
+        if namelist['General']['compare_res'] in ["Day", "Month"]:
             pp2=SoilMoisture(namelist)
             pp2.makelist()
             ppp1=Makefiles_parallel(namelist,pp2)
@@ -142,7 +142,7 @@ if __name__=='__main__':
         else:
             print("Caution: the compare_res is not Day or Month! SoilMoisture validation is not run!")
 
-    if  (namelist['General']['Run_Transpiration']):
+    if  (namelist['General']['Transpiration']):
         if namelist['General']['compare_res']=="Day":
             pp3 =Transpiration(namelist)
             pp3.makelist()
@@ -154,8 +154,8 @@ if __name__=='__main__':
         else:
             print("Caution: the compare_res is not Day! Transpiration validation is not run!")
         
-    if  (namelist['General']['Run_Evapotranspiration']):
-        if namelist['General']['compare_res']=="Day" or namelist['General']['compare_res']=="Month":
+    if  (namelist['General']['Evapotranspiration']):
+        if namelist['General']['compare_res'] in ["Day", "Month"]:
             pp3 =Evapotranspiration(namelist)
             pp3.makelist()
             ppp1=Makefiles_parallel(namelist,pp3)
@@ -166,8 +166,8 @@ if __name__=='__main__':
         else:
             print("Caution: the compare_res is not Day! Evapotranspiration validation is not run!")
 
-    if  (namelist['General']['Run_LAI']):
-        if namelist['General']['compare_res']=="Day" or namelist['General']['compare_res']=="Month":
+    if  (namelist['General']['LAI']):
+        if namelist['General']['compare_res'] in ["Day", "Month"]:
             pp3 =LAI(namelist)
             pp3.makelist()
             ppp1=Makefiles_parallel(namelist,pp3)
@@ -178,27 +178,29 @@ if __name__=='__main__':
         else:
             print("Caution: the compare_res is not Day or Month! LAI validation is not run!")
 
-    if  (namelist['General']['Run_Altimetry']):
+    if  (namelist['General']['Altimetry']):
         if namelist['General']['compare_res']=="Day":
             pp3 =Altimetry(namelist)
             pp3.makelist()
-            #ppp1=Makefiles_parallel(namelist,pp3)
-            #ppp1.makefiles_parallel()
-            #k3  =Validation(pp3.casedir, pp3.variables,pp3.metrics,pp3.Pltstn,pp3.Max_lat,pp3.Min_lat,pp3.Max_lon,pp3.Min_lon)
-            #k3.make_validation_P()
-            #k3.make_plot_index()
+            ppp1=Makefiles_parallel(namelist,pp3)
+            ppp1.makefiles_parallel()
+            k3  =Validation(pp3.casedir, pp3.variables,pp3.metrics,pp3.Pltstn,pp3.Max_lat,pp3.Min_lat,pp3.Max_lon,pp3.Min_lon)
+            k3.make_validation_P()
+            k3.make_plot_index()
         else:
             print("Caution: the compare_res is not Day ! Altimetry validation is not run!")
     
-    if  (namelist['General']['Run_Dam']):
-        if namelist['General']['compare_res']=="Day"  or namelist['General']['compare_res']=="Month" :
+    if  (namelist['General']['Dam']):
+        if namelist['General']['compare_res'] in ["Day", "Month"]:
             pp3 =Dam(namelist)
             pp3.makelist()
-            #ppp1=Makefiles_parallel(namelist,pp3)
-            #ppp1.makefiles_parallel()
-            #k3  =Validation(pp3.casedir, pp3.variables,pp3.metrics,pp3.Pltstn,pp3.Max_lat,pp3.Min_lat,pp3.Max_lon,pp3.Min_lon)
-            #k3.make_validation_P()
-            #k3.make_plot_index()
+            ppp1=Makefiles_parallel(namelist,pp3)
+            ppp1.makefiles_parallel()
+            k3  =Validation(pp3.casedir, pp3.variables,pp3.metrics,pp3.Pltstn,pp3.Max_lat,pp3.Min_lat,pp3.Max_lon,pp3.Min_lon)
+            k3.make_validation_P()
+            k3.make_plot_index()
+        else:
+            print("Caution: the compare_res is not Day or Month! Dam validation is not run!")
 
     
 
