@@ -324,6 +324,7 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_BGCPFTFluxes
   PUBLIC :: deallocate_1D_BGCPFTFluxes
+  PUBLIC :: set_1D_BGCPFTFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -981,6 +982,333 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
 
   END SUBROUTINE deallocate_1D_BGCPFTFluxes
 
+  SUBROUTINE set_1D_BGCPFTFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM PFT 1d [numpft] variables
+  ! --------------------------------------------------------------------
+
+     USE MOD_Precision
+     USE MOD_SPMD_Task
+     USE MOD_LandPFT
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+     IF (p_is_worker) THEN
+        IF (numpft > 0) THEN
+
+! bgc variables
+           leafc_xfer_to_leafc_p                (:) = Values
+           frootc_xfer_to_frootc_p              (:) = Values
+           livestemc_xfer_to_livestemc_p        (:) = Values
+           deadstemc_xfer_to_deadstemc_p        (:) = Values
+           livecrootc_xfer_to_livecrootc_p      (:) = Values
+           deadcrootc_xfer_to_deadcrootc_p      (:) = Values
+           grainc_xfer_to_grainc_p              (:) = Values
+
+           leafc_storage_to_xfer_p              (:) = Values
+           frootc_storage_to_xfer_p             (:) = Values
+           livestemc_storage_to_xfer_p          (:) = Values
+           deadstemc_storage_to_xfer_p          (:) = Values
+           livecrootc_storage_to_xfer_p         (:) = Values
+           deadcrootc_storage_to_xfer_p         (:) = Values
+           grainc_storage_to_xfer_p             (:) = Values
+           gresp_storage_to_xfer_p              (:) = Values
+
+           leafc_to_litter_p                    (:) = Values
+           frootc_to_litter_p                   (:) = Values
+           grainc_to_food_p                     (:) = Values
+           grainc_to_seed_p                     (:) = Values
+           crop_seedc_to_leaf_p                 (:) = Values
+           livestemc_to_litter_p                (:) = Values
+           livestemc_to_deadstemc_p             (:) = Values
+           livecrootc_to_deadcrootc_p           (:) = Values
+
+           m_leafc_to_litter_p                  (:) = Values
+           m_frootc_to_litter_p                 (:) = Values
+           m_livestemc_to_litter_p              (:) = Values
+           m_deadstemc_to_litter_p              (:) = Values
+           m_livecrootc_to_litter_p             (:) = Values
+           m_deadcrootc_to_litter_p             (:) = Values
+
+           m_leafc_storage_to_litter_p          (:) = Values
+           m_frootc_storage_to_litter_p         (:) = Values
+           m_livestemc_storage_to_litter_p      (:) = Values
+           m_deadstemc_storage_to_litter_p      (:) = Values
+           m_livecrootc_storage_to_litter_p     (:) = Values
+           m_deadcrootc_storage_to_litter_p     (:) = Values
+           m_gresp_storage_to_litter_p          (:) = Values
+
+           m_leafc_xfer_to_litter_p             (:) = Values
+           m_frootc_xfer_to_litter_p            (:) = Values
+           m_livestemc_xfer_to_litter_p         (:) = Values
+           m_deadstemc_xfer_to_litter_p         (:) = Values
+           m_livecrootc_xfer_to_litter_p        (:) = Values
+           m_deadcrootc_xfer_to_litter_p        (:) = Values
+           m_gresp_xfer_to_litter_p             (:) = Values
+
+           m_leafc_to_fire_p                    (:) = Values
+           m_frootc_to_fire_p                   (:) = Values
+           m_livestemc_to_fire_p                (:) = Values
+           m_deadstemc_to_fire_p                (:) = Values
+           m_livecrootc_to_fire_p               (:) = Values
+           m_deadcrootc_to_fire_p               (:) = Values
+
+           m_leafc_storage_to_fire_p            (:) = Values
+           m_frootc_storage_to_fire_p           (:) = Values
+           m_livestemc_storage_to_fire_p        (:) = Values
+           m_deadstemc_storage_to_fire_p        (:) = Values
+           m_livecrootc_storage_to_fire_p       (:) = Values
+           m_deadcrootc_storage_to_fire_p       (:) = Values
+           m_gresp_storage_to_fire_p            (:) = Values
+
+           m_leafc_xfer_to_fire_p               (:) = Values
+           m_frootc_xfer_to_fire_p              (:) = Values
+           m_livestemc_xfer_to_fire_p           (:) = Values
+           m_deadstemc_xfer_to_fire_p           (:) = Values
+           m_livecrootc_xfer_to_fire_p          (:) = Values
+           m_deadcrootc_xfer_to_fire_p          (:) = Values
+           m_gresp_xfer_to_fire_p               (:) = Values
+
+           m_livestemc_to_deadstemc_fire_p      (:) = Values
+           m_livecrootc_to_deadcrootc_fire_p    (:) = Values
+
+           m_leafc_to_litter_fire_p             (:) = Values
+           m_frootc_to_litter_fire_p            (:) = Values
+           m_livestemc_to_litter_fire_p         (:) = Values
+           m_deadstemc_to_litter_fire_p         (:) = Values
+           m_livecrootc_to_litter_fire_p        (:) = Values
+           m_deadcrootc_to_litter_fire_p        (:) = Values
+
+           m_leafc_storage_to_litter_fire_p     (:) = Values
+           m_frootc_storage_to_litter_fire_p    (:) = Values
+           m_livestemc_storage_to_litter_fire_p (:) = Values
+           m_deadstemc_storage_to_litter_fire_p (:) = Values
+           m_livecrootc_storage_to_litter_fire_p(:) = Values
+           m_deadcrootc_storage_to_litter_fire_p(:) = Values
+           m_gresp_storage_to_litter_fire_p     (:) = Values
+
+           m_leafc_xfer_to_litter_fire_p        (:) = Values
+           m_frootc_xfer_to_litter_fire_p       (:) = Values
+           m_livestemc_xfer_to_litter_fire_p    (:) = Values
+           m_deadstemc_xfer_to_litter_fire_p    (:) = Values
+           m_livecrootc_xfer_to_litter_fire_p   (:) = Values
+           m_deadcrootc_xfer_to_litter_fire_p   (:) = Values
+           m_gresp_xfer_to_litter_fire_p        (:) = Values
+
+           cpool_to_xsmrpool_p          (:) = Values
+           cpool_to_gresp_storage_p     (:) = Values
+           cpool_to_leafc_p             (:) = Values
+           cpool_to_leafc_storage_p     (:) = Values
+           cpool_to_frootc_p            (:) = Values
+           cpool_to_frootc_storage_p    (:) = Values
+           cpool_to_livestemc_p         (:) = Values
+           cpool_to_livestemc_storage_p (:) = Values
+           cpool_to_deadstemc_p         (:) = Values
+           cpool_to_deadstemc_storage_p (:) = Values
+           cpool_to_livecrootc_p        (:) = Values
+           cpool_to_livecrootc_storage_p(:) = Values
+           cpool_to_deadcrootc_p        (:) = Values
+           cpool_to_deadcrootc_storage_p(:) = Values
+           cpool_to_grainc_p            (:) = Values
+           cpool_to_grainc_storage_p    (:) = Values
+
+           leaf_xsmr_p                  (:) = Values
+           froot_xsmr_p                 (:) = Values
+           livestem_xsmr_p              (:) = Values
+           livecroot_xsmr_p             (:) = Values
+           grain_xsmr_p                 (:) = Values
+
+           cpool_leaf_gr_p                      (:) = Values
+           cpool_froot_gr_p                     (:) = Values
+           cpool_livestem_gr_p                  (:) = Values
+           cpool_deadstem_gr_p                  (:) = Values
+           cpool_livecroot_gr_p                 (:) = Values
+           cpool_deadcroot_gr_p                 (:) = Values
+           cpool_grain_gr_p                     (:) = Values
+
+           cpool_leaf_storage_gr_p              (:) = Values
+           cpool_froot_storage_gr_p             (:) = Values
+           cpool_livestem_storage_gr_p          (:) = Values
+           cpool_deadstem_storage_gr_p          (:) = Values
+           cpool_livecroot_storage_gr_p         (:) = Values
+           cpool_deadcroot_storage_gr_p         (:) = Values
+           cpool_grain_storage_gr_p             (:) = Values
+
+           transfer_leaf_gr_p                   (:) = Values
+           transfer_froot_gr_p                  (:) = Values
+           transfer_livestem_gr_p               (:) = Values
+           transfer_deadstem_gr_p               (:) = Values
+           transfer_livecroot_gr_p              (:) = Values
+           transfer_deadcroot_gr_p              (:) = Values
+           transfer_grain_gr_p                  (:) = Values
+
+           xsmrpool_to_atm_p                    (:) = Values
+
+           cropprod1c_loss_p                    (:) = Values
+
+           plant_ndemand_p              (:) = Values
+
+           leafn_xfer_to_leafn_p                (:) = Values
+           frootn_xfer_to_frootn_p              (:) = Values
+           livestemn_xfer_to_livestemn_p        (:) = Values
+           deadstemn_xfer_to_deadstemn_p        (:) = Values
+           livecrootn_xfer_to_livecrootn_p      (:) = Values
+           deadcrootn_xfer_to_deadcrootn_p      (:) = Values
+           grainn_xfer_to_grainn_p              (:) = Values
+
+           leafn_storage_to_xfer_p              (:) = Values
+           frootn_storage_to_xfer_p             (:) = Values
+           livestemn_storage_to_xfer_p          (:) = Values
+           deadstemn_storage_to_xfer_p          (:) = Values
+           livecrootn_storage_to_xfer_p         (:) = Values
+           deadcrootn_storage_to_xfer_p         (:) = Values
+           grainn_storage_to_xfer_p             (:) = Values
+
+           leafn_to_litter_p                    (:) = Values
+           frootn_to_litter_p                   (:) = Values
+           grainn_to_food_p                     (:) = Values
+           grainn_to_seed_p                     (:) = Values
+           crop_seedn_to_leaf_p                 (:) = Values
+           livestemn_to_litter_p                (:) = Values
+           livestemn_to_deadstemn_p             (:) = Values
+           livecrootn_to_deadcrootn_p           (:) = Values
+
+           leafn_to_retransn_p                  (:) = Values
+           frootn_to_retransn_p                 (:) = Values
+           livestemn_to_retransn_p              (:) = Values
+           livecrootn_to_retransn_p             (:) = Values
+           retransn_to_npool_p                  (:) = Values
+           free_retransn_to_npool_p             (:) = Values
+
+           m_leafn_to_litter_p                  (:) = Values
+           m_frootn_to_litter_p                 (:) = Values
+           m_livestemn_to_litter_p              (:) = Values
+           m_deadstemn_to_litter_p              (:) = Values
+           m_livecrootn_to_litter_p             (:) = Values
+           m_deadcrootn_to_litter_p             (:) = Values
+           m_retransn_to_litter_p               (:) = Values
+
+           m_leafn_storage_to_litter_p          (:) = Values
+           m_frootn_storage_to_litter_p         (:) = Values
+           m_livestemn_storage_to_litter_p      (:) = Values
+           m_deadstemn_storage_to_litter_p      (:) = Values
+           m_livecrootn_storage_to_litter_p     (:) = Values
+           m_deadcrootn_storage_to_litter_p     (:) = Values
+
+           m_leafn_xfer_to_litter_p             (:) = Values
+           m_frootn_xfer_to_litter_p            (:) = Values
+           m_livestemn_xfer_to_litter_p         (:) = Values
+           m_deadstemn_xfer_to_litter_p         (:) = Values
+           m_livecrootn_xfer_to_litter_p        (:) = Values
+           m_deadcrootn_xfer_to_litter_p        (:) = Values
+
+           m_leafn_to_fire_p                    (:) = Values
+           m_frootn_to_fire_p                   (:) = Values
+           m_livestemn_to_fire_p                (:) = Values
+           m_deadstemn_to_fire_p                (:) = Values
+           m_livecrootn_to_fire_p               (:) = Values
+           m_deadcrootn_to_fire_p               (:) = Values
+
+           m_leafn_storage_to_fire_p            (:) = Values
+           m_frootn_storage_to_fire_p           (:) = Values
+           m_livestemn_storage_to_fire_p        (:) = Values
+           m_deadstemn_storage_to_fire_p        (:) = Values
+           m_livecrootn_storage_to_fire_p       (:) = Values
+           m_deadcrootn_storage_to_fire_p       (:) = Values
+
+           m_leafn_xfer_to_fire_p               (:) = Values
+           m_frootn_xfer_to_fire_p              (:) = Values
+           m_livestemn_xfer_to_fire_p           (:) = Values
+           m_deadstemn_xfer_to_fire_p           (:) = Values
+           m_livecrootn_xfer_to_fire_p          (:) = Values
+           m_deadcrootn_xfer_to_fire_p          (:) = Values
+
+           m_livestemn_to_deadstemn_fire_p      (:) = Values
+           m_livecrootn_to_deadcrootn_fire_p    (:) = Values
+
+           m_retransn_to_fire_p                 (:) = Values
+
+           m_leafn_to_litter_fire_p             (:) = Values
+           m_frootn_to_litter_fire_p            (:) = Values
+           m_livestemn_to_litter_fire_p         (:) = Values
+           m_deadstemn_to_litter_fire_p         (:) = Values
+           m_livecrootn_to_litter_fire_p        (:) = Values
+           m_deadcrootn_to_litter_fire_p        (:) = Values
+
+           m_leafn_storage_to_litter_fire_p     (:) = Values
+           m_frootn_storage_to_litter_fire_p    (:) = Values
+           m_livestemn_storage_to_litter_fire_p (:) = Values
+           m_deadstemn_storage_to_litter_fire_p (:) = Values
+           m_livecrootn_storage_to_litter_fire_p(:) = Values
+           m_deadcrootn_storage_to_litter_fire_p(:) = Values
+
+           m_leafn_xfer_to_litter_fire_p        (:) = Values
+           m_frootn_xfer_to_litter_fire_p       (:) = Values
+           m_livestemn_xfer_to_litter_fire_p    (:) = Values
+           m_deadstemn_xfer_to_litter_fire_p    (:) = Values
+           m_livecrootn_xfer_to_litter_fire_p   (:) = Values
+           m_deadcrootn_xfer_to_litter_fire_p   (:) = Values
+
+           m_retransn_to_litter_fire_p          (:) = Values
+
+           npool_to_leafn_p                     (:) = Values
+           npool_to_leafn_storage_p             (:) = Values
+           npool_to_frootn_p                    (:) = Values
+           npool_to_frootn_storage_p            (:) = Values
+           npool_to_livestemn_p                 (:) = Values
+           npool_to_livestemn_storage_p         (:) = Values
+           npool_to_deadstemn_p                 (:) = Values
+           npool_to_deadstemn_storage_p         (:) = Values
+           npool_to_livecrootn_p                (:) = Values
+           npool_to_livecrootn_storage_p        (:) = Values
+           npool_to_deadcrootn_p                (:) = Values
+           npool_to_deadcrootn_storage_p        (:) = Values
+           npool_to_grainn_p                    (:) = Values
+           npool_to_grainn_storage_p            (:) = Values
+
+           respcsun_p     (:) = Values!sunlit leaf respiration
+           respcsha_p     (:) = Values!shaded leaf respiration
+           leaf_mr_p      (:) = Values!leaf maintenance respiration
+           froot_mr_p     (:) = Values!fine root maintenance respiration
+           livestem_mr_p  (:) = Values!live stem maintenance respiration
+           livecroot_mr_p (:) = Values!live coarse root maintenance respiration
+           grain_mr_p     (:) = Values!grain maintenance respiration
+
+           soil_change_p  (:) = Values
+
+           psn_to_cpool_p               (:) = Values
+           gpp_p                        (:) = Values
+           availc_p                     (:) = Values
+           avail_retransn_p             (:) = Values
+           xsmrpool_recover_p           (:) = Values
+           excess_cflux_p               (:) = Values
+           sminn_to_npool_p             (:) = Values
+
+           plant_calloc_p               (:) = Values
+           plant_nalloc_p               (:) = Values
+           leaf_curmr_p                 (:) = Values
+           froot_curmr_p                (:) = Values
+           livestem_curmr_p             (:) = Values
+           livecroot_curmr_p            (:) = Values
+           grain_curmr_p                (:) = Values
+
+           fire_closs_p                 (:) = Values
+           fire_nloss_p                 (:) = Values
+           wood_harvestc_p              (:) = Values
+           wood_harvestn_p              (:) = Values
+           grainc_to_cropprodc_p        (:) = Values
+           grainn_to_cropprodn_p        (:) = Values
+           hrv_xsmrpool_to_atm_p        (:) = Values
+           fert_p                       (:) = Values
+           soyfixn_p                    (:) = Values
+
+        ENDIF
+     ENDIF
+
+!--------
+
+  END SUBROUTINE set_1D_BGCPFTFluxes
 #endif
 
 END MODULE MOD_BGC_Vars_1DPFTFluxes

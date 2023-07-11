@@ -29,6 +29,7 @@ MODULE MOD_Hydro_Vars_1DFluxes
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_HydroFluxes
    PUBLIC :: deallocate_1D_HydroFluxes
+   PUBLIC :: set_1D_HydroFluxes
 
 CONTAINS 
 
@@ -82,6 +83,37 @@ CONTAINS
 
   END SUBROUTINE deallocate_1D_HydroFluxes
 
+  SUBROUTINE set_1D_HydroFluxes
+
+     USE MOD_SPMD_Task
+     USE MOD_Mesh,      only : numelm
+     USE MOD_LandHRU,   only : numhru
+     USE MOD_LandPatch, only : numpatch
+     IMPLICIT NONE
+
+     INTEGER :: numbasin
+
+     numbasin = numelm
+
+     IF (p_is_worker) THEN
+        IF (numpatch > 0) THEN
+           rsubs_pch (:) = 0._r8
+        ENDIF
+        IF (numbasin > 0) THEN
+           rsubs_bsn      (:) = 0._r8
+           riverheight_ta (:) = 0._r8
+           rivermomtem_ta (:) = 0._r8
+           riverveloct_ta (:) = 0._r8
+        ENDIF
+        IF (numhru > 0) THEN
+           rsubs_hru    (:) = 0._r8
+           wdsrf_hru_ta (:) = 0._r8
+           momtm_hru_ta (:) = 0._r8
+           veloc_hru_ta (:) = 0._r8
+        ENDIF
+     ENDIF
+
+  END SUBROUTINE set_1D_HydroFluxes
 
 END MODULE MOD_Hydro_Vars_1DFluxes
 #endif

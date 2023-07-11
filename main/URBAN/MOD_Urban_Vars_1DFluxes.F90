@@ -35,6 +35,7 @@ MODULE MOD_Urban_Vars_1DFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_UrbanFluxes
   PUBLIC :: deallocate_1D_UrbanFluxes
+  PUBLIC :: set_1D_UrbanFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -108,6 +109,41 @@ CONTAINS
       ENDIF
 
   END SUBROUTINE deallocate_1D_UrbanFluxes
+
+  SUBROUTINE set_1D_UrbanFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CLM 1d [numurban] variables
+  ! --------------------------------------------------------------------
+
+     USE MOD_Precision
+     USE MOD_SPMD_Task
+     USE MOD_LandUrban
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+     IF (p_is_worker) THEN
+        IF (numurban > 0) THEN
+          !sabroof        (:) = Values
+          !sabwsun        (:) = Values
+          !sabwsha        (:) = Values
+          !sabgimp        (:) = Values
+          !sabgper        (:) = Values
+           fsen_roof      (:) = Values
+           fsen_wsun      (:) = Values
+           fsen_wsha      (:) = Values
+           fsen_gimp      (:) = Values
+           fsen_gper      (:) = Values
+           fsen_urbl      (:) = Values
+
+           lfevp_roof     (:) = Values
+           lfevp_gimp     (:) = Values
+           lfevp_gper     (:) = Values
+           lfevp_urbl     (:) = Values
+         ENDIF
+      ENDIF
+
+  END SUBROUTINE set_1D_UrbanFluxes
 
 END MODULE MOD_Urban_Vars_1DFluxes
 #endif

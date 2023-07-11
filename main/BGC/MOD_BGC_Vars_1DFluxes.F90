@@ -152,6 +152,7 @@ MODULE MOD_BGC_Vars_1DFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_BGCFluxes
   PUBLIC :: deallocate_1D_BGCFluxes
+  PUBLIC :: set_1D_BGCFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -464,6 +465,162 @@ MODULE MOD_BGC_Vars_1DFluxes
      end if
 
    END SUBROUTINE deallocate_1D_BGCFluxes
+
+  SUBROUTINE set_1D_BGCFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM 1d [numpatch] variables
+  ! --------------------------------------------------------------------
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+
+      if (p_is_worker) then
+
+         if (numpatch > 0) then
+
+! bgc variables
+! ecosystem carbon flux
+            gpp                        (:)   = Values
+            gpp_enftemp                (:)   = Values !1
+            gpp_enfboreal              (:)   = Values !2
+            gpp_dnfboreal              (:)   = Values !3
+            gpp_ebftrop                (:)   = Values !4
+            gpp_ebftemp                (:)   = Values !5
+            gpp_dbftrop                (:)   = Values !6
+            gpp_dbftemp                (:)   = Values !7
+            gpp_dbfboreal              (:)   = Values !8
+            gpp_ebstemp                (:)   = Values !9
+            gpp_dbstemp                (:)   = Values !10
+            gpp_dbsboreal              (:)   = Values !11
+            gpp_c3arcgrass             (:)   = Values !12
+            gpp_c3grass                (:)   = Values !13
+            gpp_c4grass                (:)   = Values !14
+            leafc_enftemp              (:)   = Values !1
+            leafc_enfboreal            (:)   = Values !2
+            leafc_dnfboreal            (:)   = Values !3
+            leafc_ebftrop              (:)   = Values !4
+            leafc_ebftemp              (:)   = Values !5
+            leafc_dbftrop              (:)   = Values !6
+            leafc_dbftemp              (:)   = Values !7
+            leafc_dbfboreal            (:)   = Values !8
+            leafc_ebstemp              (:)   = Values !9
+            leafc_dbstemp              (:)   = Values !10
+            leafc_dbsboreal            (:)   = Values !11
+            leafc_c3arcgrass           (:)   = Values !12
+            leafc_c3grass              (:)   = Values !13
+            leafc_c4grass              (:)   = Values !14
+            ar                         (:)   = Values
+            cwdprod                    (:)   = Values
+            cwddecomp                  (:)   = Values
+            hr                         (:)   = Values
+            er                         (:)   = Values
+            fire_closs                 (:)   = Values
+            fire_nloss                 (:)   = Values
+            hrv_xsmrpool_to_atm        (:)   = Values
+            wood_harvestc              (:)   = Values
+            wood_harvestn              (:)   = Values
+            grainc_to_cropprodc        (:)   = Values
+            grainc_to_seed             (:)   = Values
+            grainn_to_cropprodn        (:)   = Values
+            cropprod1c_loss            (:)   = Values
+
+
+! decomposition carbon fluxes
+            decomp_cpools_sourcesink   (:,:,:) = Values
+            decomp_ctransfer_vr        (:,:,:) = Values
+            decomp_hr_vr               (:,:,:) = Values
+            decomp_hr                  (:)     = Values
+            phr_vr                     (:,: )  = Values
+            m_decomp_cpools_to_fire_vr (:,:,:) = Values
+            decomp_cpools_transport_tendency(:,:,:) = Values
+            som_c_leached              (:)   = Values
+
+! vegetation to decomposition carbon fluxes
+            phenology_to_met_c       (:,:)   = Values
+            phenology_to_cel_c       (:,:)   = Values
+            phenology_to_lig_c       (:,:)   = Values
+            gap_mortality_to_met_c   (:,:)   = Values
+            gap_mortality_to_cel_c   (:,:)   = Values
+            gap_mortality_to_lig_c   (:,:)   = Values
+            gap_mortality_to_cwdc    (:,:)   = Values
+            fire_mortality_to_met_c  (:,:)   = Values
+            fire_mortality_to_cel_c  (:,:)   = Values
+            fire_mortality_to_lig_c  (:,:)   = Values
+            fire_mortality_to_cwdc   (:,:)   = Values
+
+! decomposition nitrogen fluxes
+            decomp_npools_sourcesink   (:,:,:) = Values
+            decomp_ntransfer_vr        (:,:,:) = Values
+            decomp_sminn_flux_vr       (:,:,:) = Values
+            sminn_to_denit_decomp_vr   (:,:,:) = Values
+            m_decomp_npools_to_fire_vr (:,:,:) = Values
+            decomp_npools_transport_tendency(:,:,:) = Values
+            som_n_leached            (:)     = Values
+
+! vegetation to decomposition nitrogen fluxes
+            phenology_to_met_n       (:,:)   = Values
+            phenology_to_cel_n       (:,:)   = Values
+            phenology_to_lig_n       (:,:)   = Values
+            gap_mortality_to_met_n   (:,:)   = Values
+            gap_mortality_to_cel_n   (:,:)   = Values
+            gap_mortality_to_lig_n   (:,:)   = Values
+            gap_mortality_to_cwdn    (:,:)   = Values
+            fire_mortality_to_met_n  (:,:)   = Values
+            fire_mortality_to_cel_n  (:,:)   = Values
+            fire_mortality_to_lig_n  (:,:)   = Values
+            fire_mortality_to_cwdn   (:,:)   = Values
+
+            sminn_leached_vr         (:,:)   = Values
+            smin_no3_leached_vr      (:,:)   = Values
+            smin_no3_runoff_vr       (:,:)   = Values
+            net_nmin_vr              (:,:)   = Values
+            gross_nmin_vr            (:,:)   = Values
+            net_nmin                 (:)     = Values
+            gross_nmin               (:)     = Values
+            plant_ndemand            (:)     = Values
+            actual_immob_vr          (:,:)   = Values
+            actual_immob_nh4_vr      (:,:)   = Values
+            actual_immob_no3_vr      (:,:)   = Values
+            potential_immob_vr       (:,:)   = Values
+            pmnf_decomp              (:,:,:) = Values
+            p_decomp_cpool_loss      (:,:,:) = Values
+            sminn_to_plant           (:)     = Values
+            sminn_to_plant_vr        (:,:)   = Values
+            smin_nh4_to_plant_vr     (:,:)   = Values
+            smin_no3_to_plant_vr     (:,:)   = Values
+            supplement_to_sminn_vr   (:,:)   = Values
+            sminn_to_plant_fun_vr    (:,:)   = Values
+            sminn_to_plant_fun_nh4_vr(:,:)   = Values
+            sminn_to_plant_fun_no3_vr(:,:)   = Values
+            sminn_to_denit_excess_vr (:,:)   = Values
+            f_nit_vr                 (:,:)   = Values
+            f_denit_vr               (:,:)   = Values
+            f_n2o_nit_vr             (:,:)   = Values
+            f_n2o_denit_vr           (:,:)   = Values
+            pot_f_nit_vr             (:,:)   = Values
+            pot_f_denit_vr           (:,:)   = Values
+            n2_n2o_ratio_denit_vr    (:,:)   = Values
+            ndep_to_sminn            (:)     = Values
+            ffix_to_sminn            (:)     = Values
+            nfix_to_sminn            (:)     = Values
+            somc_fire                (:)     = Values
+            supplement_to_sminn      (:)     = Values
+            fert_to_sminn            (:)     = Values
+            soyfixn_to_sminn         (:)     = Values
+            denit                    (:)     = Values
+            sminn_leached            (:)     = Values
+            f_n2o_nit                (:)     = Values
+            smin_no3_leached         (:)     = Values
+            smin_no3_runoff          (:)     = Values
+         end if
+      end if
+
+   END SUBROUTINE set_1D_BGCFluxes
 
 #endif
 END MODULE MOD_BGC_Vars_1DFluxes

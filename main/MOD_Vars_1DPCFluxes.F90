@@ -35,6 +35,7 @@ MODULE MOD_Vars_1DPCFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_PCFluxes
   PUBLIC :: deallocate_1D_PCFluxes
+  PUBLIC :: set_1D_PCFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -107,6 +108,42 @@ MODULE MOD_Vars_1DPCFluxes
      ENDIF
 
   END SUBROUTINE deallocate_1D_PCFluxes
+
+  SUBROUTINE set_1D_PCFluxes (Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM 1d [numpc] variables
+  ! --------------------------------------------------------------------
+
+     USE MOD_SPMD_Task
+     USE MOD_LandPC
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     IMPLICIT NONE
+     REAL(r8),intent(in) :: Values
+     REAL(r8),intent(in) :: Nan
+
+     IF (p_is_worker) THEN
+        IF (numpc > 0) THEN
+
+           fsenl_c     (:,:)  = Values ! sensible heat from leaves [W/m2]
+           fevpl_c     (:,:)  = Values ! evaporation+transpiration from leaves [mm/s]
+           etr_c       (:,:)  = Values ! transpiration rate [mm/s]
+           fseng_c     (:,:)  = Values ! sensible heat flux from ground [W/m2]
+           fevpg_c     (:,:)  = Values ! evaporation heat flux from ground [mm/s]
+           parsun_c    (:,:)  = Values ! solar absorbed by sunlit vegetation [W/m2]
+           parsha_c    (:,:)  = Values ! solar absorbed by shaded vegetation [W/m2]
+           sabvsun_c   (:,:)  = Values ! solar absorbed by sunlit vegetation [W/m2]
+           sabvsha_c   (:,:)  = Values ! solar absorbed by shaded vegetation [W/m2]
+           qintr_c     (:,:)  = Values ! interception (mm h2o/s)
+           qintr_rain_c(:,:)  = Values ! rainfall interception (mm h2o/s)
+           qintr_snow_c(:,:)  = Values ! snowfall interception (mm h2o/s)
+           assim_c     (:,:)  = Values ! canopy assimilation rate (mol m-2 s-1)
+           respc_c     (:,:)  = Values ! canopy respiration (mol m-2 s-1)
+
+        ENDIF
+     ENDIF
+
+  END SUBROUTINE set_1D_PCFluxes
 
 END MODULE MOD_Vars_1DPCFluxes
 

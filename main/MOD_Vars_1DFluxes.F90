@@ -79,6 +79,7 @@ MODULE MOD_Vars_1DFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_Fluxes
   PUBLIC :: deallocate_1D_Fluxes
+  PUBLIC :: init_1D_Fluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -260,6 +261,107 @@ MODULE MOD_Vars_1DFluxes
 #endif
 
    END SUBROUTINE deallocate_1D_Fluxes
+
+  SUBROUTINE init_1D_Fluxes
+
+   USE MOD_Vars_Global, only : spval
+   IMPLICIT NONE
+
+   real(r8),parameter :: Values = 0._r8
+
+   CALL set_1D_Fluxes      (Values, spval)
+
+#ifdef LULC_IGBP_PFT
+   CALL set_1D_PFTFluxes   (Values, spval)
+#endif
+
+#ifdef LULC_IGBP_PC
+   CALL set_1D_PCFluxes    (Values, spval)
+#endif
+
+#ifdef BGC
+   CALL set_1D_BGCFluxes   (Values, spval)
+#endif
+
+#ifdef LATERAL_FLOW
+   CALL set_1D_HydroFluxes (Values, spval)
+#endif
+
+#ifdef URBAN_MODEL
+   CALL set_1D_UrbanFluxes (Values, spval)
+#endif
+
+  END SUBROUTINE 
+
+  SUBROUTINE set_1D_Fluxes (Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM 1d [numpatch] variables
+  ! --------------------------------------------------------------------
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
+     IMPLICIT NONE
+     real(r8) ,intent(in) :: Values
+     real(r8) ,intent(in) :: Nan
+
+      if (p_is_worker) then
+
+         if (numpatch > 0) then
+
+            taux   (:)  = Values ! wind stress: E-W [kg/m/s2]
+            tauy   (:)  = Values  ! wind stress: N-S [kg/m/s2]
+            fsena  (:)  = Values  ! sensible heat from canopy height to atmosphere [W/m2]
+            lfevpa (:)  = Values  ! latent heat flux from canopy height to atmosphere [W/m2]
+            fevpa  (:)  = Values  ! evapotranspiration from canopy to atmosphere [mm/s]
+            fsenl  (:)  = Values  ! sensible heat from leaves [W/m2]
+            fevpl  (:)  = Values  ! evaporation+transpiration from leaves [mm/s]
+            etr    (:)  = Values  ! transpiration rate [mm/s]
+            fseng  (:)  = Values  ! sensible heat flux from ground [W/m2]
+            fevpg  (:)  = Values  ! evaporation heat flux from ground [mm/s]
+            fgrnd  (:)  = Values  ! ground heat flux [W/m2]
+            sabvsun(:)  = Values  ! solar absorbed by sunlit vegetation [W/m2]
+            sabvsha(:)  = Values  ! solar absorbed by shaded vegetation [W/m2]
+            sabg   (:)  = Values  ! solar absorbed by ground  [W/m2]
+            sr     (:)  = Values  ! incident direct beam vis solar radiation (W/m2)
+            solvd  (:)  = Values  ! incident direct beam vis solar radiation (W/m2)
+            solvi  (:)  = Values  ! incident diffuse beam vis solar radiation (W/m2)
+            solnd  (:)  = Values  ! incident direct beam nir solar radiation (W/m2)
+            solni  (:)  = Values  ! incident diffuse beam nir solar radiation (W/m2)
+            srvd   (:)  = Values  ! reflected direct beam vis solar radiation (W/m2)
+            srvi   (:)  = Values  ! reflected diffuse beam vis solar radiation (W/m2)
+            srnd   (:)  = Values  ! reflected direct beam nir solar radiation (W/m2)
+            srni   (:)  = Values  ! reflected diffuse beam nir solar radiation (W/m2)
+            solvdln(:)  = Values  ! incident direct beam vis solar radiation at local noon(W/m2)
+            solviln(:)  = Values  ! incident diffuse beam vis solar radiation at local noon(W/m2)
+            solndln(:)  = Values  ! incident direct beam nir solar radiation at local noon(W/m2)
+            solniln(:)  = Values  ! incident diffuse beam nir solar radiation at local noon(W/m2)
+            srvdln (:)  = Values  ! reflected direct beam vis solar radiation at local noon(W/m2)
+            srviln (:)  = Values  ! reflected diffuse beam vis solar radiation at local noon(W/m2)
+            srndln (:)  = Values  ! reflected direct beam nir solar radiation at local noon(W/m2)
+            srniln (:)  = Values  ! reflected diffuse beam nir solar radiation at local noon(W/m2)
+            olrg   (:)  = Values  ! outgoing long-wave radiation from ground+canopy [W/m2]
+            rnet   (:)  = Values  ! net radiation by surface [W/m2]
+            xerr   (:)  = Values  ! the error of water banace [mm/s]
+            zerr   (:)  = Values  ! the error of energy balance [W/m2]
+
+            rsur   (:)  = Values  ! surface runoff (mm h2o/s)
+            rsub   (:)  = Values  ! subsurface runoff (mm h2o/s)
+            rnof   (:)  = Values  ! total runoff (mm h2o/s)
+            qintr  (:)  = Values  ! interception (mm h2o/s)
+            qinfl  (:)  = Values  ! inflitration (mm h2o/s)
+            qdrip  (:)  = Values  ! throughfall (mm h2o/s)
+            assim  (:)  = Values  ! canopy assimilation rate (mol m-2 s-1)
+            respc  (:)  = Values  ! canopy respiration (mol m-2 s-1)
+
+            qcharge(:)  = Values  ! groundwater recharge [mm/s]
+
+            oroflag(:)  = Values  !
+
+         end if
+      end if
+
+   END SUBROUTINE set_1D_Fluxes
 
 END MODULE MOD_Vars_1DFluxes
 ! ---------- EOP ------------
