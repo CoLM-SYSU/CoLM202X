@@ -584,8 +584,13 @@ SUBROUTINE UrbanCoLMMAIN ( &
         pg_snow    ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
         pgper_rain ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
         pgper_snow ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        pgimp_rain ,&! rainfall onto ground including canopy runoff [kg/(m2 s)]
+        pgimp_snow ,&! snowfall onto ground including canopy runoff [kg/(m2 s)]
+        pg_rain_lake,&!rainfall onto lake [kg/(m2 s)]
+        pg_snow_lake,&!snowfall onto lake [kg/(m2 s)]
         etrgper    ,&! etr for pervious ground
-        fracveg      ! fraction of fveg/fgper
+        fveg_gper  ,&! fraction of fveg/fgper
+        fveg_gimp    ! fraction of fveg/fgimp
 
    REAL(r8) :: &
         errw_rsub    ! the possible subsurface runoff deficit after PHS is included
@@ -792,10 +797,27 @@ SUBROUTINE UrbanCoLMMAIN ( &
       pg_snow = prc_snow + prl_snow
 
       ! for urban hydrology input, only for pervious ground
-      fracveg = fveg/((1-froof)*fgper)
-      fracveg = min(fracveg, 1.)
-      pgper_rain = pgper_rain*fracveg + pg_rain*(1-fracveg)
-      pgper_snow = pgper_snow*fracveg + pg_snow*(1-fracveg)
+      IF (fgper > 0) THEN
+         fveg_gper = fveg/((1-froof)*fgper)
+      ELSE
+         fveg_gper = 0.
+      ENDIF
+
+      IF (fgper < 1) THEN
+         fveg_gimp = (fveg-(1-froof)*fgper)/((1-froof)*(1-fgper))
+      ELSE
+         fveg_gimp = 0.
+      ENDIF
+
+      IF (fveg_gper .le. 1) THEN
+         pgper_rain = pgper_rain*fveg_gper + pg_rain*(1-fveg_gper)
+         pgper_snow = pgper_snow*fveg_gper + pg_snow*(1-fveg_gper)
+         pgimp_rain = pg_rain
+         pgimp_snow = pg_snow
+      ELSE
+         pgimp_rain = pgper_rain*fveg_gimp + pg_rain*(1-fveg_gimp)
+         pgimp_snow = pgper_snow*fveg_gimp + pg_snow*(1-fveg_gimp)
+      ENDIF
 
 !----------------------------------------------------------------------
 ! [3] Initilize new snow nodes for snowfall / sleet
@@ -813,7 +835,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
                     wliq_roofsno(:0),wice_roofsno(:0),fioldr(:0),&
                     snlr,sag_roof,scv_roof,snowdp_roof,fsno_roof)
 
-      CALL newsnow (patchtype,maxsnl,deltim,tgimp,pg_rain,pg_snow,bifall,&
+      CALL newsnow (patchtype,maxsnl,deltim,tgimp,pgimp_rain,pgimp_snow,bifall,&
                     t_precip,zi_gimpsno(:0),z_gimpsno(:0),dz_gimpsno(:0),t_gimpsno(:0),&
                     wliq_gimpsno(:0),wice_gimpsno(:0),fioldi(:0),&
                     snli,sag_gimp,scv_gimp,snowdp_gimp,fsno_gimp)
@@ -827,7 +849,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
            ! "in" arguments
            ! ---------------
            maxsnl        ,nl_lake       ,deltim          ,dz_lake         ,&
-           pg_rain       ,pg_snow       ,t_precip        ,bifall          ,&
+           pg_rain_lake  ,pg_snow_lake  ,t_precip        ,bifall          ,&
 
            ! "inout" arguments
            ! ------------------
@@ -944,8 +966,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
         ipatch               ,patchtype            ,lbr                  ,lbi                  ,&
         lbp                  ,lbl                  ,snll                 ,deltim               ,&
         ! forcing
-        pg_rain              ,pgper_rain           ,pg_snow                                    ,&
-        ! surface parameters and status
+        pg_rain              ,pgper_rain           ,pgimp_rain           ,pg_snow              ,&
+        pg_rain_lake         ,pg_snow_lake                                                     ,&
         froof                ,fgper                ,flake                ,bsw                  ,&
         porsl                ,psi0                 ,hksati               ,wtfact               ,&
         pondmx               ,ssi                  ,wimp                 ,smpmin               ,&
