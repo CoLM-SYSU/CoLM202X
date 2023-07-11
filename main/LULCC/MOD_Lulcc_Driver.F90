@@ -37,6 +37,7 @@ MODULE MOD_Lulcc_Driver
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeVariables
+   USE MOD_Lulcc_TMatrix
 
    IMPLICIT NONE
 
@@ -67,17 +68,21 @@ MODULE MOD_Lulcc_Driver
    IF (p_is_master) THEN
       print *, ">>> LULCC: simple method for variable recovery..."
    ENDIF
-   CALL REST_LulccTimeVariables
+   !CALL REST_LulccTimeVariables
 
    ! conserved method for variable revocery
-   !print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
-   !CALL READ_LulccTMatrix()
-   !CALL LulccEnergyConserve()
+   IF (p_is_master) THEN
+      print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+   ENDIF
+   CALL allocate_LulccTMatrix()
+   CALL READ_LulccTMatrix(idate(1))
+   CALL LulccEnergyConserve()
    !CALL LulccWaterConserve()
 
    ! deallocate Lulcc memory
    CALL deallocate_LulccTimeInvariants()
    CALL deallocate_LulccTimeVariables()
+   CALL deallocate_LulccTMatrix()
 
    ! write out state variables
    CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
