@@ -24,6 +24,7 @@ class Makefiles_parallel:
         self.Eyear                   =  namelist['General']['Eyear']
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
+        self.num_cores               =  namelist['General']['num_cores']
 
         self.casedir                 =  stn_info.casedir
         self.Sim_Dir                 =  stn_info.Sim_Dir
@@ -35,7 +36,8 @@ class Makefiles_parallel:
         self.Sim_Suffix              =  stn_info.Sim_Suffix
         self.Sim_Prefix              =  stn_info.Sim_Prefix
         self.Sim_TimRes              =  stn_info.Sim_TimRes
-        
+        self.Sim_SpRes               =  stn_info.Sim_SpRes
+
     def make_obs_parallel(self,station_list,i):
         if (self.obs_source=='GRDC'):
             if (self.compare_res == 'Month'):
@@ -102,13 +104,12 @@ class Makefiles_parallel:
 
         simx2=simx1.sel(time=slice(f'{startx}-01-01',f'{endx}-12-31'))
         simx2.to_netcdf(f"{self.casedir}/tmp/sim/sim_{station_list['ID'][ik]}"+f"_{station_list['use_Syear'][ik]}"+f"_{station_list['use_Eyear'][ik]}.nc",engine='netcdf4')
-        del simx1,simx2,startx,endx,ik
+        del simx1,simx2,startx,endx,ik,simx,station_list
 
     def make_sim_combine_parallel(self,ii):
         VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}*{self.Sim_Prefix}.nc')
         print(VarFiles)
-        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False) as combined: #,parallel=True,autoclose=True
-            dfx=combined[list(self.variables.values())]
+        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 12},preprocess=lambda dfx: dfx[list(self.variables.values())].astype('float32')) as dfx:         
             num=len(dfx['time'])
 
             if (self.Sim_TimRes=="Hour"):
@@ -135,8 +136,8 @@ class Makefiles_parallel:
             with ProgressBar():
                 delayed_obj.compute()
             print(f'Year {ii}: Files Combined')
-            del  dfx,cropped_ds,mask_lon,mask_lat,delayed_obj,num
-        del VarFiles,combined
+            del  cropped_ds,mask_lon,mask_lat,delayed_obj,num,dfx
+        del VarFiles
 
     def makefiles_parallel(self):
         print("=======================================")
@@ -166,7 +167,7 @@ class Makefiles_parallel:
         minyear=min(station_list['use_Syear'].values[:])
         maxyear=max(station_list['use_Eyear'].values[:])
         
-        num_cores = os.cpu_count()  ##用来计算现在可以获得多少cpu核心。 也可以用multipocessing.cpu_count(),或者随意设定<=cpu核心数的数值
+        num_cores = self.num_cores #os.cpu_count()  ##用来计算现在可以获得多少cpu核心。 也可以用multipocessing.cpu_count(),或者随意设定<=cpu核心数的数值
 
         #deal with observation data
         print("=======================================")
@@ -186,11 +187,15 @@ class Makefiles_parallel:
         print("=======================================")
         print("deal with simulation data")
         print(" ")
-        print(" ")  
-        Parallel(n_jobs=num_cores)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
+        print(" ") 
+        if self.Sim_SpRes=='01min':
+            num_cores=1
+        # Increase timeout (tune this number to suit your use case).
+        timeout=9999999
+        Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
        
         VarFiles=(f'{self.casedir}/tmp/sim/sim_*.nc')
-        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time") as ds1: #,parallel=True,autoclose=True
+        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 12}) as ds1: #,parallel=True,autoclose=True
             delayed_obj=ds1.to_netcdf(f'{self.casedir}/tmp/sim/sim.nc', compute=False)
             with ProgressBar():
                 delayed_obj.compute()
@@ -198,13 +203,13 @@ class Makefiles_parallel:
         #delete VarFiles if exist
         #shutil.rmtree(f'{self.casedir}/tmp/sim/sim_*.nc',ignore_errors=True)
 
-        with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc') as simx:
-            Parallel(n_jobs=num_cores)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
+        with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc',chunks={'time': 12}) as simx:
+            Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
 
-        os.remove(f'{self.casedir}/tmp/sim/sim.nc')
-        for ii in range((minyear),(maxyear)+1):
-            os.remove(f'{self.casedir}/tmp/sim/sim_{ii}.nc')
-        del simx
+        #os.remove(f'{self.casedir}/tmp/sim/sim.nc')
+        #for ii in range((minyear),(maxyear)+1):
+        #    os.remove(f'{self.casedir}/tmp/sim/sim_{ii}.nc')
+        #del simx
         print ('simulation data prepared!')
         print("=======================================")
         print(" ")

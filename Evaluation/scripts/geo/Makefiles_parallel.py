@@ -7,6 +7,8 @@ import sys
 import shutil 
 from dask.diagnostics import ProgressBar
 from joblib import Parallel, delayed
+os.environ['PYTHONWARNINGS']='ignore::FutureWarning'
+
 # Check the platform
 if not sys.platform.startswith('win'):
     import xesmf as xe
@@ -35,14 +37,14 @@ class Makefiles_parallel:
         self.Sim_DataGroupby         =  info.Sim_DataGroupby
         self.Sim_Suffix              =  info.Sim_Suffix
         self.Sim_Prefix              =  info.Sim_Prefix
-        self.Sim_GeoRes               =  info.Sim_GeoRes
+        self.Sim_GeoRes              =  info.Sim_GeoRes
         self.Sim_Syear               =  info.Sim_Syear
         self.Sim_Eyear               =  info.Sim_Eyear
 
         self.obs_source              =  info.obs_source
         self.Obs_GeoRes              =  info.Obs_GeoRes
         self.Obs_TimRes              =  info.Obs_TimRes
-        self.OBSDIR                  =  info.OBSDIR
+        self.Obs_Dir                  =  info.Obs_Dir
         self.Obs_Syear               =  info.Obs_Syear
         self.Obs_Eyear               =  info.Obs_Eyear
         self.Obs_DataGroupby         =  info.Obs_DataGroupby
@@ -62,20 +64,20 @@ class Makefiles_parallel:
         for key in self.variables.keys():
             if self.Obs_DataGroupby == 'Year':
                 if (self.obs_source=='GIEMS_v2_2020') :
-                    VarFiles=f'{self.OBSDIR}/GIEMS_v2_2020_{key}_15min_{ii}.nc'
+                    VarFiles = os.path.join(self.Obs_Dir, f'GIEMS_v2_2020_{key}_15min_{ii}.nc')
                 elif (self.obs_source=='GLEAM'):
-                    VarFiles=f'{self.OBSDIR}/daily/{key}_{ii}_GLEAM_v3.7a.nc' ###check here_2018_GLEAM_v3.7a.nc
+                    VarFiles = os.path.join(self.Obs_Dir, 'daily', f'{key}_{ii}_GLEAM_v3.7a.nc')
                 elif (self.obs_source=='GLDAS'):
                     print('not ready yet')
                     sys.exit(1)
                 elif ((self.obs_source=='ERA5-Land')and(key=='ro')):
-                    VarFiles=f'{self.OBSDIR}/ERA5LAND_runoff_{ii}.nc4' ###check here_2018_GLEAM_v3.7a.nc
+                    VarFiles = os.path.join(self.Obs_Dir, f'ERA5LAND_runoff_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
                 elif ((self.obs_source=='Yuan_etal')and(key=='lai')):
-                    VarFiles=f'{self.OBSDIR}/lai_8-day_30s_{ii}.nc4' ###check here_2018_GLEAM_v3.7a.nc
+                    VarFiles = os.path.join(self.Obs_Dir, f'lai_8-day_30s_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
                 obsx0 = xr.open_dataset(VarFiles)
             else:
                 print ('The Obs_DataGroupby is not Year-->combine it to Year')
-                VarFiles=(f'{self.OBSDIR}/{self.Obs_Suffix}{ii}*{self.Obs_Prefix}.nc')
+                VarFiles = os.path.join(self.Obs_Dir, f'{self.Obs_Suffix}{ii}*{self.Obs_Prefix}.nc')
                 obsx0= xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
                                    preprocess=lambda obsx: obsx[f'{key}'].astype('float32'))
             obsx0['lon'] = xr.where(obsx0.lon > 180, obsx0.lon - 360, obsx0.lon)
@@ -146,35 +148,6 @@ class Makefiles_parallel:
             obsx.to_netcdf(out_file)
             print(f"Done with Year {ii}")
 
-            '''
-            with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
-                                   preprocess=lambda obsx: obsx[f'{key}'].astype('float32'),decode_cf=False) as obsx:
-                num=len(obsx['time'])
-                if (self.Sim_TimRes=="Hour"):
-                    obsx['time'] = pd.date_range(f"{ii}-01-01", freq="H", periods=num)
-                elif (self.Sim_TimRes=="Day"):
-                    obsx['time'] = pd.date_range(f"{ii}-01-01", freq="D", periods=num)
-                elif (self.Sim_TimRes=="Month"):
-                    obsx['time'] = pd.date_range(f"{ii}-01-01", freq="M", periods=num)
-                if (self.compare_Tres =="Month"):
-                    obsx=obsx.resample(time='1M').mean() 
-                elif (self.compare_Tres =="Day"):
-                    obsx=obsx.resample(time='1D').mean() 
-                elif (self.compare_Tres =="Hour"):
-                    obsx=obsx.resample(time='1H').mean() 
-                else:
-                    sys.exit(1)   
-                dfx         = obsx.sel(time=slice(f'{ii}-01-01T00:00:00',f'{ii}-12-31T23:00:00')) 
-                mask_lon    = (dfx.lon >= self.Min_lon) & (dfx.lon <= self.Max_lon)
-                mask_lat    = (dfx.lat >= self.Min_lat) & (dfx.lat <= self.Max_lat)
-                cropped_ds  = dfx.where(mask_lon & mask_lat, drop=True)
-                delayed_obj = cropped_ds.to_netcdf(f'{self.casedir}/tmp/obs/'+f'obs_{key}_{ii}.nc', compute=False)
-                with ProgressBar():
-                    delayed_obj.compute()
-                del  dfx,cropped_ds,mask_lon,mask_lat,delayed_obj
-            del obsx
-            '''
-
     def make_sim_combine_parallel(self,ii):
 
         if self.Sim_DataGroupby == 'Year':
@@ -183,9 +156,11 @@ class Makefiles_parallel:
 
         else:
             VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}*{self.Sim_Prefix}.nc')
+            print(VarFiles)
             simx0=xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
-                                   preprocess=lambda simx0: simx0[list(self.variables.values())].astype('float32'))
-        simx0['lon'] = xr.where(simx0.lon > 180, simx0.lon - 360, simx0.lon)
+                                   preprocess=lambda simx0: simx0[list(self.variables.values())].astype('float64'))
+            
+        simx0['lon'] = (simx0['lon'] + 180) % 360 - 180.0
         lon_new = xr.DataArray(
                 data=np.arange(self.Min_lon+self.res/2, self.Max_lon, self.res),
                 dims=('lon',),
@@ -212,7 +187,6 @@ class Makefiles_parallel:
                 # Perform the remapping
             simx = regridder(simx0)
         else:
-            simx0 = simx0[f'{key}'] #['fldfrc']
             simx = simx0.interp(coords=new_grid.coords) 
 
 
@@ -240,75 +214,13 @@ class Makefiles_parallel:
             out_file = f'{self.casedir}/tmp/sim/'+f'sim_{variable_value}_remap_{ii}.nc'
             simxvar.to_netcdf(out_file)
         print(f"Done with Year {ii}")
-        '''
-        print(VarFiles)
-        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 30},
-                               preprocess=lambda dfx: dfx[list(self.variables.values())].astype('float32'),decode_cf=False) as dfx:         #combined: #,parallel=True,autoclose=True
-            #dfx=combined[list(self.variables.values())]
-            num=len(dfx['time'])
-            if (self.Sim_TimRes=="Hour"):
-                dfx['time'] = pd.date_range(f"{ii}-01-01", freq="H", periods=num)
-            elif (self.Sim_TimRes=="Day"):
-                dfx['time'] = pd.date_range(f"{ii}-01-01", freq="D", periods=num)
-            elif (self.Sim_TimRes=="Month"):
-                dfx['time'] = pd.date_range(f"{ii}-01-01", freq="M", periods=num)
-
-            if (self.compare_Tres =="Month"):
-                dfx=dfx.resample(time='1M').mean() 
-            elif (self.compare_Tres =="Day"):
-                dfx=dfx.resample(time='1D').mean() 
-            elif (self.compare_Tres =="Hour"):
-                dfx=dfx.resample(time='1H').mean() 
-            else:
-                sys.exit(1)     
-                
-            dfx=dfx.sel(time=slice(f'{ii}-01-01',f'{ii}-12-31'))
-            #mask_lon = (dfx.lon >= self.Min_lon) & (dfx.lon <= self.Max_lon)
-            #mask_lat = (dfx.lat >= self.Min_lat) & (dfx.lat <= self.Max_lat)
-            #cropped_ds = dfx.where(mask_lon & mask_lat, drop=True)
-
-            lon_new = xr.DataArray(
-                data=np.arange(self.Min_lon+self.res/2, self.Max_lon, self.res),
-                dims=('lon',),
-                coords={'lon': np.arange(self.Min_lon+self.res/2, self.Max_lon, self.res)},
-                attrs={'units': 'degrees_east', 'long_name': 'longitude'}
-                )
-            lat_new = xr.DataArray(
-                data=np.arange(self.Min_lat+self.res/2, self.Max_lat, self.res),
-                dims=('lat',),
-                coords={'lat': np.arange(self.Min_lat+self.res/2, self.Max_lat, self.res)},
-                attrs={'units': 'degrees_north', 'long_name': 'latitude'}
-                )
-            new_grid = xr.Dataset({'lon': lon_new, 'lat': lat_new})
-
-            if not sys.platform.startswith('win'):
-                # Create the regridder
-                regridder = xe.Regridder(dfx, new_grid, 'bilinear', periodic=True, reuse_weights=True)
-                # Perform the remapping
-                output_data = regridder(dfx)
-            else:
-                with xr.open_dataset(VarFiles) as ds:    
-                    dfx = ds[f'{key}'] #['fldfrc']
-                    output_data=dfx.interp(coords=new_grid.coords) 
-
-            # Save the output dataset to a netcdf file
-            out_file = f'{self.casedir}/tmp/obs/'+f'obs_{key}_remap_{ii}.nc'
-            output_data.to_netcdf(out_file)
-
-        
-            delayed_obj=cropped_ds.to_netcdf(f'{self.casedir}/tmp/sim/'+f'sim_{ii}.nc', compute=False)
-            with ProgressBar():
-                delayed_obj.compute()
-            print(f'Year {ii}: Files Combined')
-            del  cropped_ds,mask_lon,mask_lat,delayed_obj,num
-        del VarFiles,dfx
-        '''
-
+    
     def Makefiles_parallel(self):
         print("=======================================")
         print("Create directory!")
         print(" ")
         print(" ")
+        timeout=9999999
         #remove tmp directory if exist
         shutil.rmtree(f'{self.casedir}/tmp/sim',ignore_errors=True)
         shutil.rmtree(f'{self.casedir}/tmp/obs',ignore_errors=True)
@@ -335,8 +247,8 @@ class Makefiles_parallel:
         print("deal with observation data")
         print(" ")
         print(" ")
-        
-        Parallel(n_jobs=num_cores)(delayed(self.make_obs_combine_parallel)(i) for i in range((minyear),(maxyear)+1))
+
+        Parallel(n_jobs=num_cores, timeout=timeout)(delayed(self.make_obs_combine_parallel)(i) for i in range((minyear),(maxyear)+1))
         for key in self.variables.keys():
             VarFiles=(f'{self.casedir}/tmp/obs/'+f'obs_{key}_remap_*.nc')
             with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 30}) as ds1: #,parallel=True,autoclose=True
@@ -360,7 +272,9 @@ class Makefiles_parallel:
         print(" ") 
         #if self.Sim_GeoRes=='01min':
         #    num_cores=1
-        Parallel(n_jobs=num_cores)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
+
+
+        Parallel(n_jobs=num_cores, timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
         for variable_value in self.variables.values():
             VarFiles=f'{self.casedir}/tmp/sim/'+f'sim_{variable_value}_remap_*.nc'
             with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 30}) as ds1: #,parallel=True,autoclose=True
