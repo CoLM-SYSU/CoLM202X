@@ -795,6 +795,8 @@ SUBROUTINE UrbanCoLMMAIN ( &
       ! without vegetation canopy
       pg_rain = prc_rain + prl_rain
       pg_snow = prc_snow + prl_snow
+      pg_rain_lake = prc_rain + prl_rain
+      pg_snow_lake = prc_snow + prl_snow
 
       ! for urban hydrology input, only for pervious ground
       IF (fgper > 0) THEN
