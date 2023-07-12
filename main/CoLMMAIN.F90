@@ -78,7 +78,7 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,         &
            lfevpa,       fsenl,        fevpl,        etr,           &
            fseng,        fevpg,        olrg,         fgrnd,         &
-           trad,         tref,         qref,         rsur,          &
+           trad,rss      tref,         qref,         rsur,          &
            rnof,         qintr,        qinfl,        qdrip,         &
            rst,          assim,        respc,        sabvsun,       &
            sabvsha,      sabg,         sr,           solvd,         &
@@ -409,6 +409,7 @@ SUBROUTINE CoLMMAIN ( &
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
         trad        ,&! radiative temperature [K]
+        rss         ,&! soil resistance [m/s]        
         rsur        ,&! surface runoff (mm h2o/s)
         rnof        ,&! total runoff (mm h2o/s)
         qintr       ,&! interception (mm h2o/s)
@@ -716,7 +717,8 @@ ENDIF
            fseng             ,fevpg             ,olrg              ,fgrnd             ,&
            rootr             ,qseva             ,qsdew             ,qsubl             ,&
            qfros             ,sm                ,tref              ,qref              ,&
-           trad              ,rst               ,assim             ,respc             ,&
+           trad,rss          ,rst               ,assim             ,respc             ,&
+           
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&

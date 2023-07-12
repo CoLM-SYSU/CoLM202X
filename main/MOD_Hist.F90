@@ -590,6 +590,11 @@ contains
             a_trad, f_trad, file_hist, 'f_trad', itime_in_file, sumarea, filter, &
             'radiative temperature of surface','kelvin')
 
+         ! soil resistance [m/s]
+         call flux_map_and_write_2d ( DEF_hist_vars%rss, &
+            a_rss, f_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
+            'soil resistance','m/s')
+
          ! 2 m height air temperature [kelvin]
          call flux_map_and_write_2d ( DEF_hist_vars%tref, &
             a_tref, f_tref, file_hist, 'f_tref', itime_in_file, sumarea, filter, &

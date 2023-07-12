@@ -183,6 +183,7 @@ CONTAINS
                      ! Additional variables required by reginal model (WRF & RSM)
                      ! ---------------------------------------------------------
          trad,                   &! radiative temperature of surface [K]
+         !rss,                    &! soil resistance [m/s]
          tref,                   &! 2 m height air temperature [kelvin]
          qref,                   &! 2 m height air specific humidity
          rst,                    &! canopy stomatal resistance (s/m)

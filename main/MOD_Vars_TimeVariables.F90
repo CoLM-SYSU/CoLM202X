@@ -770,6 +770,7 @@ MODULE MOD_Vars_TimeVariables
      REAL(r8), allocatable :: ssno   (:,:,:,:) ! snow layer absorption [-]
 
      real(r8), allocatable :: trad         (:) ! radiative temperature of surface [K]
+     real(r8), allocatable :: rss          (:) ! radiative temperature of surface [K]
      real(r8), allocatable :: tref         (:) ! 2 m height air temperature [kelvin]
      real(r8), allocatable :: qref         (:) ! 2 m height air specific humidity
      real(r8), allocatable :: rst          (:) ! canopy stomatal resistance (s/m)
@@ -895,6 +896,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (ssno         (2,2,maxsnl+1:1,numpatch))
 
            allocate (trad                        (numpatch))
+           allocate (rss                         (numpatch))
            allocate (tref                        (numpatch))
            allocate (qref                        (numpatch))
            allocate (rst                         (numpatch))
@@ -1029,6 +1031,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (ssno                   )
 
            deallocate (trad                   )
+           deallocate (rss                    )
            deallocate (tref                   )
            deallocate (qref                   )
            deallocate (rst                    )
@@ -1215,6 +1218,7 @@ MODULE MOD_Vars_TimeVariables
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM)
      call ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) ! radiative temperature of surface [K]
+     call ncio_write_vector (file_restart, 'rss  ', 'patch', landpatch, rss  , compress) ! soil surface resistance [m/s]
      call ncio_write_vector (file_restart, 'tref ', 'patch', landpatch, tref , compress) ! 2 m height air temperature [kelvin]
      call ncio_write_vector (file_restart, 'qref ', 'patch', landpatch, qref , compress) ! 2 m height air specific humidity
      call ncio_write_vector (file_restart, 'rst  ', 'patch', landpatch, rst  , compress) ! canopy stomatal resistance (s/m)
@@ -1358,6 +1362,7 @@ MODULE MOD_Vars_TimeVariables
 
      ! Additional variables required by reginal model (such as WRF ) RSM)
      call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) ! radiative temperature of surface [K]
+     call ncio_read_vector (file_restart, 'rss  ', landpatch, rss  ) ! soil surface resistance [m/s]
      call ncio_read_vector (file_restart, 'tref ', landpatch, tref ) ! 2 m height air temperature [kelvin]
      call ncio_read_vector (file_restart, 'qref ', landpatch, qref ) ! 2 m height air specific humidity
      call ncio_read_vector (file_restart, 'rst  ', landpatch, rst  ) ! canopy stomatal resistance (s/m)

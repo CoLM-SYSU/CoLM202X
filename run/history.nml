@@ -23,7 +23,7 @@
    DEF_hist_vars%fevpl        = .true. 
    DEF_hist_vars%etr          = .true. 
    DEF_hist_vars%fseng        = .true. 
-   DEF_hist_vars%fevpg        = .true. 
+   DEF_hist_vars%fevpg        = .true.
    DEF_hist_vars%fgrnd        = .true. 
    DEF_hist_vars%sabvsun      = .true. 
    DEF_hist_vars%sabvsha      = .true. 
@@ -57,6 +57,7 @@
    DEF_hist_vars%emis         = .true. 
    DEF_hist_vars%z0m          = .true. 
    DEF_hist_vars%trad         = .true. 
+   DEF_hist_vars%rss          = .true.
    DEF_hist_vars%tref         = .true. 
    DEF_hist_vars%qref         = .true. 
 

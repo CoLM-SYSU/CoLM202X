@@ -1,0 +1,67 @@
+&nl_colm
+   
+   DEF_CASE_NAME = 'AU-Stp-test'
+   
+   SITE_lon_location = 133.3502
+   SITE_lat_location = -17.1507
+
+   ! Please define land classification in include/define.h
+   SITE_landtype = 10
+   
+   ! surface data from SITE.
+   SITE_fsrfdata = '/stu01/xuqch3/colm_model/data/Sample_Site_Surfacedata_AU-Stp.nc'
+   ! path to surface database
+   DEF_dir_rawdata = '/tera07/CLMrawdata/'
+
+   ! true  : surface data from SITE
+   ! false : surface data is retrieved from database.
+   USE_SITE_pctpfts         = .false.
+   USE_SITE_pctcrop         = .false.
+   USE_SITE_htop            = .false.
+   USE_SITE_LAI             = .false. 
+   USE_SITE_lakedepth       = .false.
+   USE_SITE_soilreflectance = .false.
+   USE_SITE_soilparameters  = .false.
+
+   DEF_simulation_time%greenwich     = .true.
+   DEF_simulation_time%start_year    = 2013
+   DEF_simulation_time%start_month   = 1
+   DEF_simulation_time%start_day     = 1
+   DEF_simulation_time%start_sec     = 0
+   DEF_simulation_time%end_year      = 2015
+   DEF_simulation_time%end_month     = 12
+   DEF_simulation_time%end_day       = 31
+   DEF_simulation_time%end_sec       = 86400
+   DEF_simulation_time%spinup_year   = 2013
+   DEF_simulation_time%spinup_month  = 12
+   DEF_simulation_time%spinup_day    = 31 
+   DEF_simulation_time%spinup_sec    = 86400
+   DEF_simulation_time%spinup_repeat = 1
+
+   DEF_simulation_time%timestep     = 1800.
+   
+   DEF_dir_output = '/work/liuz21/cases/GRA/'
+   ! DEF_dir_restart  = '/work/liuz21/cases/GRA/AU-Stp-test/restart/'
+  
+   ! LAI setting
+   DEF_LAI_MONTHLY = .false.
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme = 1 ! 1:CoLM2014; 2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   
+   ! ----- forcing -----
+   DEF_forcing_namelist = '/home/liuz21/CoLM202X_liu/run/forcing/ERA5LAND.nml'
+
+   ! ----- history -----
+   DEF_hist_lon_res = 1.
+   DEF_hist_lat_res = 1. 
+   DEF_WRST_FREQ = 'YEARLY'   ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH'  ! history in one file: DAY/MONTH/YEAR
+   DEF_REST_COMPRESS_LEVEL = 0
+   DEF_HIST_COMPRESS_LEVEL = 0
+   
+   DEF_hist_vars_namelist = '/home/liuz21/CoLM202X_liu/run/history.nml'
+   DEF_hist_vars_turnon_all = .true.
+
+/

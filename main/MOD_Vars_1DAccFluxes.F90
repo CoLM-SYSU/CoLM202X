@@ -79,6 +79,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_emis (:)
    real(r8), allocatable :: a_z0m  (:)
    real(r8), allocatable :: a_trad (:)
+   real(r8), allocatable :: a_rss  (:)
    real(r8), allocatable :: a_tref (:)
    real(r8), allocatable :: a_qref (:)
    real(r8), allocatable :: a_rain (:)
@@ -391,6 +392,7 @@ contains
             allocate (a_emis      (numpatch))
             allocate (a_z0m       (numpatch))
             allocate (a_trad      (numpatch))
+            allocate (a_rss       (numpatch))
             allocate (a_tref      (numpatch))
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
@@ -704,6 +706,7 @@ contains
             deallocate (a_emis      )
             deallocate (a_z0m       )
             deallocate (a_trad      )
+            deallocate (a_rss       )
             deallocate (a_tref      )
             deallocate (a_qref      )
             deallocate (a_rain      )
@@ -1023,6 +1026,7 @@ contains
             a_emis      (:) = spval
             a_z0m       (:) = spval
             a_trad      (:) = spval
+            a_rss       (:) = spval
             a_tref      (:) = spval
             a_qref      (:) = spval
             a_rain      (:) = spval
@@ -1282,7 +1286,6 @@ contains
       ! Local Variables
 
       real(r8), allocatable :: r_trad  (:)
-
       real(r8), allocatable :: r_ustar (:)
       real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
@@ -1399,6 +1402,7 @@ contains
             call acc1d (r_trad , a_trad   )
             deallocate (r_trad )
 
+            call acc1d (rss    , a_rss    )
             call acc1d (tref   , a_tref   )
             call acc1d (qref   , a_qref   )
 

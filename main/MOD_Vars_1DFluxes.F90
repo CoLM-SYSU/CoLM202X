@@ -37,6 +37,7 @@ MODULE MOD_Vars_1DFluxes
   REAL(r8), allocatable :: etr    (:) !transpiration rate [mm/s]
   REAL(r8), allocatable :: fseng  (:) !sensible heat flux from ground [W/m2]
   REAL(r8), allocatable :: fevpg  (:) !evaporation heat flux from ground [mm/s]
+  !REAL(r8), allocatable :: rss    (:) !evaporation heat flux from ground [mm/s]
   REAL(r8), allocatable :: fgrnd  (:) !ground heat flux [W/m2]
   REAL(r8), allocatable :: sabvsun(:) !solar absorbed by sunlit vegetation [W/m2]
   REAL(r8), allocatable :: sabvsha(:) !solar absorbed by shaded vegetation [W/m2]
@@ -62,7 +63,6 @@ MODULE MOD_Vars_1DFluxes
   REAL(r8), allocatable :: rnet   (:) !net radiation by surface [W/m2]
   REAL(r8), allocatable :: xerr   (:) !the error of water banace [mm/s]
   REAL(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
-
   REAL(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
   REAL(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
   REAL(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
@@ -112,6 +112,7 @@ MODULE MOD_Vars_1DFluxes
             allocate ( etr    (numpatch) )  ! transpiration rate [mm/s]
             allocate ( fseng  (numpatch) )  ! sensible heat flux from ground [W/m2]
             allocate ( fevpg  (numpatch) )  ! evaporation heat flux from ground [mm/s]
+            !allocate ( rss    (numpatch) )  ! evaporation heat flux from ground [mm/s]
             allocate ( fgrnd  (numpatch) )  ! ground heat flux [W/m2]
             allocate ( sabvsun(numpatch) )  ! solar absorbed by sunlit vegetation [W/m2]
             allocate ( sabvsha(numpatch) )  ! solar absorbed by shaded vegetation [W/m2]
@@ -137,7 +138,6 @@ MODULE MOD_Vars_1DFluxes
             allocate ( rnet   (numpatch) )  ! net radiation by surface [W/m2]
             allocate ( xerr   (numpatch) )  ! the error of water banace [mm/s]
             allocate ( zerr   (numpatch) )  ! the error of energy balance [W/m2]
-
             allocate ( rsur   (numpatch) )  ! surface runoff (mm h2o/s)
             allocate ( rsub   (numpatch) )  ! subsurface runoff (mm h2o/s)
             allocate ( rnof   (numpatch) )  ! total runoff (mm h2o/s)
@@ -197,6 +197,7 @@ MODULE MOD_Vars_1DFluxes
            deallocate ( etr     )  ! transpiration rate [mm/s]
            deallocate ( fseng   )  ! sensible heat flux from ground [W/m2]
            deallocate ( fevpg   )  ! evaporation heat flux from ground [mm/s]
+          ! deallocate ( rss     )  ! evaporation heat flux from ground [mm/s]
            deallocate ( fgrnd   )  ! ground heat flux [W/m2]
            deallocate ( sabvsun )  ! solar absorbed by sunlit vegetation [W/m2]
            deallocate ( sabvsha )  ! solar absorbed by shaded vegetation [W/m2]
@@ -222,7 +223,6 @@ MODULE MOD_Vars_1DFluxes
            deallocate ( rnet    )  ! net radiation by surface [W/m2]
            deallocate ( xerr    )  ! the error of water banace [mm/s]
            deallocate ( zerr    )  ! the error of energy balance [W/m2]
-
            deallocate ( rsur    )  ! surface runoff (mm h2o/s)
            deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
            deallocate ( rnof    )  ! total runoff (mm h2o/s)

@@ -1,19 +1,19 @@
 ! 1. Spatial structure:
 !    Select one of the following options.
-#define GRIDBASED
+#undef GRIDBASED
 #undef CATCHMENT
 #undef UNSTRUCTURED
-#undef SinglePoint
+#define SinglePoint
 
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef LULC_USGS
-#undef LULC_IGBP
-#define LULC_IGBP_PFT
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
-#define URBAN_MODEL
+#undef URBAN_MODEL
 #undef URBAN_LCZ
 
 ! 3. If defined, debug information is output.
@@ -49,13 +49,13 @@
 #undef CaMa_Flood
 
 ! 8. If defined, BGC model is used.
-#define BGC
+#undef BGC
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
 ! 8.1 If defined, CROP model is used
-#define CROP
+#undef CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
@@ -100,3 +100,17 @@
 
 ! 12. If defined, open Land use and land cover change mode.
 #undef LULCC
+! 13. soil resistance
+#define RSS_SL14
+#undef RSS_SZ09
+#undef RSS_TR13
+#undef Soilbeta
+#undef Sellers
+! 14. gas diffusivity models
+#define BBC
+#undef P_WLR
+#undef MI_WLR
+#undef MA_WLR
+#undef M_Q
+#undef POE
+

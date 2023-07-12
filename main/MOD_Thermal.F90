@@ -63,7 +63,8 @@ MODULE MOD_Thermal
                       fseng       ,fevpg       ,olrg        ,fgrnd      ,&
                       rootr       ,qseva       ,qsdew       ,qsubl      ,&
                       qfros       ,sm          ,tref        ,qref       ,&
-                      trad        ,rst         ,assim       ,respc      ,&
+                      trad,rss    ,rst         ,assim       ,respc      ,&
+                  
                       errore      ,emis        ,z0m         ,zol        ,&
                       rib         ,ustar       ,qstar       ,tstar      ,&
                       fm          ,fh          ,fq          ,pg_rain    ,&
@@ -107,6 +108,7 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperature
   USE MOD_GroundTemperature
   USE MOD_Qsadv
+  USE MOD_SoilSurfaceResistance
   
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
@@ -122,7 +124,6 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperaturePC
 #endif
 
-  USE MOD_SoilSurfaceResistance
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
@@ -319,11 +320,10 @@ use MOD_SPMD_Task
         tref,        &! 2 m height air temperature [kelvin]
         qref,        &! 2 m height air specific humidity
         trad,        &! radiative temperature [K]
-
+        rss,         &! soil resistance
         rst,         &! stomatal resistance (s m-1)
         assim,       &! assimilation
         respc,       &! respiration
-
         ! additional variables required by coupling with WRF or RSM model
         emis,        &! averaged bulk surface emissivity
         z0m,         &! effective roughness [m]
@@ -348,7 +348,7 @@ use MOD_SPMD_Task
        dqgdT,        &! d(qg)/dT
        dlrad,        &! downward longwave radiation blow the canopy [W/m2]
        eg,           &! water vapor pressure at temperature T [pa]
-       rss,          &! bare soil resistance for evaporation
+       !rss,          &! bare soil resistance for evaporation
        egsmax,       &! max. evaporation which soil can provide at one time step
        egidif,       &! the excess of evaporation over "egsmax"
        emg,          &! ground emissivity (0.97 for snow,
@@ -461,7 +461,7 @@ use MOD_SPMD_Task
       qref   = 0.;  rst    = 2.0e4
       assim  = 0.;  respc  = 0.
       hprl   = 0.
-
+      !rss    = 0.
       emis   = 0.;  z0m    = 0.
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
@@ -489,8 +489,9 @@ use MOD_SPMD_Task
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
 !=======================================================================
-
+      rss  = 1.e-4
       qred = 1.
+      
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
       IF (patchtype<=1) THEN            !soil ground
@@ -521,11 +522,13 @@ use MOD_SPMD_Task
       IF (qsatg > forc_q .and. forc_q > qred*qsatg) THEN
         qg = forc_q; dqgdT = 0.
       ENDIF
+      
       CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
                    dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
 
-     
+      write(*,*) rss
 
+      
 !=======================================================================
 ! [3] Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
