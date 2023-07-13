@@ -88,6 +88,7 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_2d) :: f_emis     ! averaged bulk surface emissivity
    type(block_data_real8_2d) :: f_z0m      ! effective roughness [m]
    type(block_data_real8_2d) :: f_trad     ! radiative temperature of surface [K]
+   type(block_data_real8_2d) :: f_rss      ! soil surface resistance [m/s]
    type(block_data_real8_2d) :: f_tref     ! 2 m height air temperature [kelvin]
    type(block_data_real8_2d) :: f_qref     ! 2 m height air specific humidity [kg/kg]
 
@@ -237,6 +238,7 @@ CONTAINS
          call allocate_block_data (grid, f_emis    )  ! averaged bulk surface emissivity
          call allocate_block_data (grid, f_z0m     )  ! effective roughness [m]
          call allocate_block_data (grid, f_trad    )  ! radiative temperature of surface [K]
+         call allocate_block_data (grid, f_rss     )  ! radiative temperature of surface [K]
          call allocate_block_data (grid, f_tref    )  ! 2 m height air temperature [kelvin]
          call allocate_block_data (grid, f_qref    )  ! 2 m height air specific humidity [kg/kg]
 

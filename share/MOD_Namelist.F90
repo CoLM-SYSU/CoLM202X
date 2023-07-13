@@ -340,6 +340,7 @@ MODULE MOD_Namelist
       LOGICAL :: emis         = .true.
       LOGICAL :: z0m          = .true.
       LOGICAL :: trad         = .true.
+      LOGICAL :: rss          = .true.
       LOGICAL :: tref         = .true.
       LOGICAL :: qref         = .true.
 #ifdef URBAN_MODEL
@@ -1171,6 +1172,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%emis        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%z0m         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rss         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
 #ifdef URBAN_MODEL

@@ -11,6 +11,7 @@ SUBROUTINE CoLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          &
+           wfc,                                                     &
            bsw,                                                     &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
@@ -78,7 +79,7 @@ SUBROUTINE CoLMMAIN ( &
            taux,         tauy,         fsena,        fevpa,         &
            lfevpa,       fsenl,        fevpl,        etr,           &
            fseng,        fevpg,        olrg,         fgrnd,         &
-           trad,         tref,         qref,         rsur,          &
+           trad,rss      tref,         qref,         rsur,          &
            rnof,         qintr,        qinfl,        qdrip,         &
            rst,          assim,        respc,        sabvsun,       &
            sabvsha,      sabg,         sr,           solvd,         &
@@ -207,9 +208,16 @@ SUBROUTINE CoLMMAIN ( &
         vf_sand   (nl_soil),  & ! volumetric fraction of sand
         wf_gravels(nl_soil),  & ! gravimetric fraction of gravels
         wf_sand   (nl_soil),  & ! gravimetric fraction of sand
+<<<<<<< HEAD
+        porsl(nl_soil)     ,  & ! fraction of soil that is voids [-]
+        wfc  (nl_soil)       ,  & ! field capacity
+        psi0 (nl_soil)      ,  & ! minimum soil suction [mm]
+        bsw  (nl_soil)       ,  & ! clapp and hornbereger "b" parameter [-]
+=======
         porsl     (nl_soil),  & ! fraction of soil that is voids [-]
         psi0      (nl_soil),  & ! minimum soil suction [mm]
         bsw       (nl_soil),  & ! clapp and hornbereger "b" parameter [-]
+>>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r  (1:nl_soil), & ! residual water content (cm3/cm3) in vanGenuchten_Mualem_SOIL_MODEL
         alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
@@ -408,6 +416,7 @@ SUBROUTINE CoLMMAIN ( &
         tref        ,&! 2 m height air temperature [K]
         qref        ,&! 2 m height air specific humidity
         trad        ,&! radiative temperature [K]
+        rss         ,&! soil resistance [m/s]        
         rsur        ,&! surface runoff (mm h2o/s)
         rnof        ,&! total runoff (mm h2o/s)
         qintr       ,&! interception (mm h2o/s)
@@ -672,6 +681,7 @@ ENDIF
            dewmx             ,capr              ,cnfac             ,vf_quartz         ,&
            vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
            wf_sand           ,csol              ,porsl             ,psi0              ,&
+           wfc                                                                       ,&  
 #ifdef Campbell_SOIL_MODEL
            bsw               ,                                                         &
 #endif
@@ -712,7 +722,8 @@ ENDIF
            fseng             ,fevpg             ,olrg              ,fgrnd             ,&
            rootr             ,qseva             ,qsdew             ,qsubl             ,&
            qfros             ,sm                ,tref              ,qref              ,&
-           trad              ,rst               ,assim             ,respc             ,&
+           trad,rss          ,rst               ,assim             ,respc             ,&
+           
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&

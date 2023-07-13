@@ -380,6 +380,12 @@ contains
          a_trad, file_hist, 'f_trad', itime_in_file, filter, &
          'radiative temperature of surface','kelvin')
 
+      ! soil surface resistance [m/s]
+      call aggregate_to_vector_and_write_2d ( DEF_hist_vars%rss, &
+         a_rss, file_hist, 'f_rss', itime_in_file, filter, &
+         'soil surface resistance','m/s')
+
+
       ! 2 m height air temperature [kelvin]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%tref, &
          a_tref, file_hist, 'f_tref', itime_in_file, filter, &
