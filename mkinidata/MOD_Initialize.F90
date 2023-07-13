@@ -18,7 +18,7 @@ MODULE MOD_Initialize
 
 
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
-         idate, lc_year, greenwich)
+         idate, lc_year, greenwich, lulcc_call)
 
       ! ======================================================================
       ! initialization routine for land surface model.
@@ -99,6 +99,7 @@ MODULE MOD_Initialize
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
       integer, intent(in)    :: lc_year    ! year, land cover year
       logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
+      logical, optional, intent(in) :: lulcc_call   ! whether it is a lulcc CALL
 
       ! ------------------------ local variables -----------------------------
       real(r8) :: rlon, rlat
@@ -831,7 +832,7 @@ MODULE MOD_Initialize
       call check_TimeVariables ()
 #endif
 
-      IF (year == DEF_simulation_time%start_year) THEN
+      IF ( .not. present(lulcc_call) ) THEN
          ! only be called in runing MKINI, LULCC will be executed later
          CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
       ENDIF
@@ -846,7 +847,7 @@ MODULE MOD_Initialize
       ! --------------------------------------------------
       ! Deallocates memory for CoLM 1d [numpatch] variables
       ! --------------------------------------------------
-      IF (year == DEF_simulation_time%start_year) THEN
+      IF ( .not. present(lulcc_call) ) THEN
          ! only be called in runing MKINI, LULCC will be executed later
          CALL deallocate_TimeInvariants
          CALL deallocate_TimeVariables
