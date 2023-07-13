@@ -49,13 +49,13 @@
 #undef CaMa_Flood
 
 ! 8. If defined, BGC model is used.
-#undef BGC
+#define BGC
 !    Conflicts :  only used when LULC_IGBP_PFT is defined.
 #ifndef LULC_IGBP_PFT
 #undef BGC
 #endif
 ! 8.1 If defined, CROP model is used
-#undef CROP
+#define CROP
 !    Conflicts : only used when BGC is defined
 #ifndef BGC
 #undef CROP
@@ -100,17 +100,3 @@
 
 ! 12. If defined, open Land use and land cover change mode.
 #undef LULCC
-! 13. soil resistance
-#define RSS_SL14
-#undef RSS_SZ09
-#undef RSS_TR13
-#undef Soilbeta
-#undef Sellers
-! 14. gas diffusivity models
-#define BBC
-#undef P_WLR
-#undef MI_WLR
-#undef MA_WLR
-#undef M_Q
-#undef POE
-
