@@ -176,7 +176,7 @@ PROGRAM CoLM
    edate(1) = e_year; edate(2) = e_julian; edate(3) = e_seconds
    pdate(1) = p_year; pdate(2) = p_julian; pdate(3) = p_seconds
 
-   CALL Init_GlovalVars
+   CALL Init_GlobalVars
    CAll Init_LC_Const
    CAll Init_PFT_Const
 
@@ -259,7 +259,7 @@ PROGRAM CoLM
 
    ! Initialize meteorological forcing data module
    call allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, sdate)
+   CALL forcing_init (dir_forcing, deltim, sdate, lc_year)
    call allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
@@ -435,7 +435,7 @@ PROGRAM CoLM
                            idate,greenwich)
 
          CALL allocate_1D_Forcing
-         CALL forcing_init (dir_forcing, deltim, idate)
+         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
          CALL deallocate_acc_fluxes
          call hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
          CALL allocate_1D_Fluxes

@@ -131,8 +131,8 @@ OBJS_BASIC =    \
 				 MOD_FireReadin.o               \
 				 MOD_OrbCoszen.o                \
 				 MOD_3DCanopyRadiation.o        \
-				 MOD_SnowSnicar.o               \
 				 MOD_Aerosol.o                  \
+				 MOD_SnowSnicar.o               \
 				 MOD_Albedo.o                   \
 				 MOD_SnowFraction.o             \
 				 MOD_Urban_LAIReadin.o          \

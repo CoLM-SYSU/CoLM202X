@@ -85,7 +85,7 @@ class StreamFlow:
                 sys.exit(1) 
 
         #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['StreamFlowLIST']['OBSDIR']    , namelist['StreamFlowLIST']['Pltstn']
+        del  namelist['StreamFlowLIST']['OBSDIR']    , namelist['StreamFlowLIST']['Pltstn'],namelist['StreamFlowLIST']['Sim_Syear'] , namelist['StreamFlowLIST']['Sim_Eyear']
         del  namelist['StreamFlowLIST']['Sim_Dir']   , namelist['StreamFlowLIST']['Sim_TimRes']  , namelist['StreamFlowLIST']['Sim_DataGroupby']
         del  namelist['StreamFlowLIST']['Sim_Suffix'], namelist['StreamFlowLIST']['Sim_Prefix']  , namelist['StreamFlowLIST']['Sim_SpRes']
         del  namelist['StreamFlowLIST']['Min_UpArea'], namelist['StreamFlowLIST']['Max_UpArea']  , namelist['StreamFlowLIST']['Obs_source']
@@ -173,9 +173,11 @@ class StreamFlow:
                 lat0=np.arange(89.875,-90,-0.25)
                 lon0=np.arange(-179.875,180,0.25)
             elif self.Sim_SpRes=="01min":
-                exit()
+                lat0=np.arange(89.9916666666666600,-90,-0.0166666666666667)
+                lon0=np.arange(-179.9916666666666742,180,0.0166666666666667)
             elif self.Sim_SpRes=="05min":
-                exit()
+                lat0=np.arange(89.9583333333333286,-90,-0.0833333333333333)
+                lon0=np.arange(-179.9583333333333428,180,0.0833333333333333)
             elif self.Sim_SpRes=="06min":
                 lat0=np.arange(89.95,-90,-0.1)
                 lon0=np.arange(-179.95,180,0.1)

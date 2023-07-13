@@ -62,7 +62,7 @@ class metrics:
         apb=100.0*k1.sum(dim='time')/(o.sum(dim='time'))
         return apb
 
-    def rmse(self,s,o):
+    def RMSE(self,s,o):
         """
         Root Mean Squared Error
         input:
@@ -144,7 +144,7 @@ class metrics:
       
         return corr
 
-    def corrlation_R2(self,s,o):
+    def correlation_R2(self,s,o):
         """
         correlation coefficient R2
         input:
@@ -219,10 +219,9 @@ class metrics:
             ia: index of agreement
         """
         _tmp1 = ((o-s)**2).sum(dim='time')
-        _tmp2 =((np.abs(s-o.mean(dim='time'))+np.abs(o-o.mean(dim='time')))**2)
+        _tmp2 =((np.abs(s-o.mean(dim='time'))+np.abs(o-o.mean(dim='time')))**2).sum(dim='time')
         ia = 1 - _tmp1/_tmp2
-        #ia = 1 -(((o-s)**2).sum(dim='time'))/(np.sum((np.abs(s-np.mean(o))+np.abs(o-np.mean(o)))**2))
-        return ia
+        return ia.squeeze()
 
     def kappa_coeff(self,s,o):
         s = (s).astype(int)

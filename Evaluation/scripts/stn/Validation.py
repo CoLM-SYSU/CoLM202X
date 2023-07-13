@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import shutil
 import pandas as pd
 import pandas as pd
 import os, sys
@@ -28,6 +29,7 @@ class Validation:
         print("=======================================")
         print(" ")
         print(" ")  
+
     def make_validation(self):
         #read station information
         stnlist  =f"{self.casedir}/selected_list.txt"
@@ -139,7 +141,7 @@ class Validation:
             print(" ")
             print(" ")  
             print(f"send {key} validation to {self.casedir}/{key}_metric.csv")
-            station_list.to_csv(f'{self.casedir}/{key}_metric.csv',index=False)
+            station_list.to_csv(f'{self.casedir}/output/{key}_metric.csv',index=False)
 
     def plot_stn(self,sim,obs,ID,key,RMSE,KGESS,correlation):
         from pylab import rcParams
@@ -184,7 +186,6 @@ class Validation:
         plt.tight_layout()
         plt.savefig(f'{self.casedir}/tmp/plt/{key}_{ID}_timeseries.png')
         plt.close(fig)
-
 
     def plot_stn_map(self, stn_lon, stn_lat, metric, cmap, norm, ticks,key,varname):
         from pylab import rcParams
@@ -231,14 +232,14 @@ class Validation:
         cb = fig.colorbar(cs, cax=cbaxes, ticks=ticks, orientation='horizontal', spacing='uniform')
         cb.solids.set_edgecolor("face")
         cb.set_label('%s'%(varname), position=(0.5, 1.5), labelpad=-35)
-        plt.savefig(f'{self.casedir}/{key}_{varname}_validation.png',  format='png',dpi=400)
+        plt.savefig(f'{self.casedir}/output/{key}_{varname}_validation.png',  format='png',dpi=400)
         plt.close()
 
     def make_plot_index(self):
         # read the data
         # loop the keys in self.variables
         for key in self.variables.keys():
-            df = pd.read_csv(f'{self.casedir}/{key}_metric.csv', header=0)
+            df = pd.read_csv(f'{self.casedir}/output/{key}_metric.csv', header=0)
             print(df.keys())
             # loop the keys in self.variables to get the metric output
             for metric in self.metrics.keys():
@@ -409,10 +410,14 @@ class Validation:
             self.plot_stn(sim.squeeze(),obs.squeeze(),station_list['ID'][iik],key, float(row['RMSE']),float(row['KGESS']),float(row['correlation']))
         return row
         # return station_list
+  
     def make_validation_P(self):
         stnlist  =f"{self.casedir}/selected_list.txt"
         station_list = pd.read_csv(stnlist,header=0)
         num_cores = os.cpu_count()  ##用来计算现在可以获得多少cpu核心。 也可以用multipocessing.cpu_count(),或者随意设定<=cpu核心数的数值
+        shutil.rmtree(f'{self.casedir}/output',ignore_errors=True)
+        #creat tmp directory
+        os.makedirs(f'{self.casedir}/output', exist_ok=True)
 
         # loop the keys in self.variables
         for key in self.variables.keys():
@@ -426,5 +431,5 @@ class Validation:
             print("=======================================")
             print(" ")
             print(" ")  
-            print(f"send {key} validation to {self.casedir}/{key}_metric.csv")
-            station_list.to_csv(f'{self.casedir}/{key}_metric.csv',index=False)
+            print(f"send {key} validation to {self.casedir}/output/{key}_metric.csv")
+            station_list.to_csv(f'{self.casedir}/output/{key}_metric.csv',index=False)

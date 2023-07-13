@@ -64,7 +64,7 @@ module MOD_Forcing
 contains
 
    !--------------------------------
-   subroutine forcing_init (dir_forcing, deltatime, idate)
+   subroutine forcing_init (dir_forcing, deltatime, idate, lc_year)
 
       use MOD_SPMD_Task
       USE MOD_Namelist
@@ -84,9 +84,10 @@ contains
       character(len=*), intent(in) :: dir_forcing
       real(r8), intent(in) :: deltatime  ! model time step
       integer,  intent(in) :: idate(3)
+      INTEGER, intent(in) :: lc_year    ! which year of land cover data used
 
       ! Local variables
-      CHARACTER(len=256) :: filename, lndname
+      CHARACTER(len=256) :: filename, lndname, cyear
       type(timestamp)    :: mtstamp
       integer            :: ivar, year, month, day, time_i
       REAL(r8)           :: missing_value
@@ -172,7 +173,8 @@ contains
 
       IF (DEF_USE_Forcing_Downscaling) THEN
 
-         lndname = trim(DEF_dir_landdata) // '/topography/topography_patches.nc'
+         write(cyear,'(i4.4)') lc_year
+         lndname = trim(DEF_dir_landdata) // '/topography/'//trim(cyear)//'/topography_patches.nc'
          call ncio_read_vector (lndname, 'topography_patches', landpatch, forc_topo)
 
          IF (p_is_worker) THEN
