@@ -242,6 +242,9 @@ MODULE MOD_Albedo
       ssha(:,:) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk    = 1.e-3
+      IF (lai+sai<1e-6) THEN
+	 thermk = 0.
+      ENDIF
       extkb     = 1.
       extkd     = 0.718
 
@@ -317,7 +320,7 @@ ENDIF
          RETURN  !only do albedo when coszen > 0
       ENDIF
 
-      czen=max(coszen,0.001)
+      czen=max(coszen,0.01)
 
 ! ----------------------------------------------------------------------
 ! 2. get albedo over land
