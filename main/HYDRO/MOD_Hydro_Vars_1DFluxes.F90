@@ -47,19 +47,19 @@ CONTAINS
 
      IF (p_is_worker) THEN
         IF (numpatch > 0) THEN
-           allocate (rsubs_pch (numpatch))
+           allocate (rsubs_pch (numpatch)) ; rsubs_pch (:) = spval
         ENDIF
         IF (numbasin > 0) THEN
-           allocate (rsubs_bsn      (numbasin))
-           allocate (riverheight_ta (numbasin))
-           allocate (rivermomtem_ta (numbasin))
-           allocate (riverveloct_ta (numbasin))
+           allocate (rsubs_bsn      (numbasin)) ; rsubs_bsn      (:) = spval
+           allocate (riverheight_ta (numbasin)) ; riverheight_ta (:) = spval
+           allocate (rivermomtem_ta (numbasin)) ; rivermomtem_ta (:) = spval
+           allocate (riverveloct_ta (numbasin)) ; riverveloct_ta (:) = spval
         ENDIF
         IF (numhru > 0) THEN
-           allocate (rsubs_hru    (numhru))
-           allocate (wdsrf_hru_ta (numhru))
-           allocate (momtm_hru_ta (numhru))
-           allocate (veloc_hru_ta (numhru))
+           allocate (rsubs_hru    (numhru)) ; rsubs_hru    (:) = spval
+           allocate (wdsrf_hru_ta (numhru)) ; wdsrf_hru_ta (:) = spval
+           allocate (momtm_hru_ta (numhru)) ; momtm_hru_ta (:) = spval
+           allocate (veloc_hru_ta (numhru)) ; veloc_hru_ta (:) = spval
         ENDIF
      ENDIF
 

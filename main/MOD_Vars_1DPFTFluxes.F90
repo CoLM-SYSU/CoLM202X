@@ -63,22 +63,22 @@ MODULE MOD_Vars_1DPFTFluxes
      IF (p_is_worker) THEN
         IF (numpft > 0) THEN
 
-           allocate (taux_p    (numpft))    !wind stress: E-W [kg/m/s2]
-           allocate (tauy_p    (numpft))    !wind stress: N-S [kg/m/s2]
-           allocate (fsenl_p   (numpft))    !sensible heat from leaves [W/m2]
-           allocate (fevpl_p   (numpft))    !evaporation+transpiration from leaves [mm/s]
-           allocate (etr_p     (numpft))    !transpiration rate [mm/s]
-           allocate (fseng_p   (numpft))    !sensible heat flux from ground [W/m2]
-           allocate (fevpg_p   (numpft))    !evaporation heat flux from ground [mm/s]
-           allocate (parsun_p  (numpft))    !solar absorbed by sunlit vegetation [W/m2]
-           allocate (parsha_p  (numpft))    !solar absorbed by shaded vegetation [W/m2]
-           allocate (sabvsun_p (numpft))    !solar absorbed by sunlit vegetation [W/m2]
-           allocate (sabvsha_p (numpft))    !solar absorbed by shaded vegetation [W/m2]
-           allocate (qintr_p   (numpft))    !interception (mm h2o/s)
-           allocate (qintr_rain_p (numpft)) !rainfall interception (mm h2o/s)
-           allocate (qintr_snow_p (numpft)) !snowfall interception (mm h2o/s)
-           allocate (assim_p   (numpft))    !canopy assimilation rate (mol m-2 s-1)
-           allocate (respc_p   (numpft))    !canopy respiration (mol m-2 s-1)
+           allocate (taux_p    (numpft))    ; taux_p    (:) = spval   !wind stress: E-W [kg/m/s2]
+           allocate (tauy_p    (numpft))    ; tauy_p    (:) = spval   !wind stress: N-S [kg/m/s2]
+           allocate (fsenl_p   (numpft))    ; fsenl_p   (:) = spval   !sensible heat from leaves [W/m2]
+           allocate (fevpl_p   (numpft))    ; fevpl_p   (:) = spval   !evaporation+transpiration from leaves [mm/s]
+           allocate (etr_p     (numpft))    ; etr_p     (:) = spval   !transpiration rate [mm/s]
+           allocate (fseng_p   (numpft))    ; fseng_p   (:) = spval   !sensible heat flux from ground [W/m2]
+           allocate (fevpg_p   (numpft))    ; fevpg_p   (:) = spval   !evaporation heat flux from ground [mm/s]
+           allocate (parsun_p  (numpft))    ; parsun_p  (:) = spval   !solar absorbed by sunlit vegetation [W/m2]
+           allocate (parsha_p  (numpft))    ; parsha_p  (:) = spval   !solar absorbed by shaded vegetation [W/m2]
+           allocate (sabvsun_p (numpft))    ; sabvsun_p (:) = spval   !solar absorbed by sunlit vegetation [W/m2]
+           allocate (sabvsha_p (numpft))    ; sabvsha_p (:) = spval   !solar absorbed by shaded vegetation [W/m2]
+           allocate (qintr_p   (numpft))    ; qintr_p   (:) = spval   !interception (mm h2o/s)
+           allocate (qintr_rain_p (numpft)) ; qintr_rain_p (:) = spval!rainfall interception (mm h2o/s)
+           allocate (qintr_snow_p (numpft)) ; qintr_snow_p (:) = spval!snowfall interception (mm h2o/s)
+           allocate (assim_p   (numpft))    ; assim_p   (:) = spval   !canopy assimilation rate (mol m-2 s-1)
+           allocate (respc_p   (numpft))    ; respc_p   (:) = spval   !canopy respiration (mol m-2 s-1)
 
         ENDIF
      ENDIF
