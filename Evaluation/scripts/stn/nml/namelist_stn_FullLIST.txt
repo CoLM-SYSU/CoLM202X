@@ -1,9 +1,9 @@
 &General
-  casename=cama
+  casename=test1
   casedir=/tera04/zhwei/colm/CoLM202X/Evaluation/cases
   compare_res = Month 
-  Syear=2000               #must be integer
-  Eyear=2010               #must be integer
+  Syear=2001               #must be integer
+  Eyear=2003               #must be integer
   Min_year=1.0 
   Max_lat=90.0 
   Min_lat=-90.0
@@ -41,19 +41,21 @@ nBiasScore=False       # Bias Score from ILAMB
 nRMSEScore=False       # RMSE Score from ILAMB
 /
 
-&FLUXNETLIST
-  Sim_Dir         =  /tera04/zhwei/colm/cases/test_org_GSWP3/output/
-  Sim_TimRes      =  Day         #Day or Month
+&FLUXNET_LIST
+  Sim_Dir         =  /tera04/wein/history_IGBP_noURBAN/
+  Sim_TimRes      =  Month         #Day or Month
   Sim_DataGroupby =  Month      ###YearMonth
-  Sim_Suffix      =  test_org_GSWP3_2D_Fluxes_
+  Sim_SpRes       =  30min
+  Sim_Suffix      =  gridbased_GSWP3_IGBP_noURBAN_2001-2010_hist_
   Sim_Prefix      =  
-  Sim_Syear       =  1996
-  Sim_Eyear       =  2006
+  Sim_Syear       =  2001
+  Sim_Eyear       =  2005
 
   Obs_source      = FLUXNET
-  OBSDIR          = /tera03/zhwei/Validation_Data/stn_obs/FLUXNET/FLUXNET_PLUMBER2
+  Obs_Dir         = /tera03/zhwei/Validation_Data/stn_obs/FLUXNET/FLUXNET_PLUMBER2
   FULLLIST        = /tera03/zhwei/Validation_Data/stn_obs/FLUXNET/FLUXNET_PLUMBER2/list/LIST_FLUXNET_PLUMBER2_FULL.csv
   Pltstn          = True
+
   Qle_cor         = f_lfevpa   #surface_upward_latent_heat_flux;Latent heat flux from surface; units = "W/m2"
   #GPP            = -9999      #gross_primary_productivity_of_carbon; Gross Primary Productivity using Lloyd-Taylor method (nighttime partitioning); units = "umol/m2/s"
   #Resp           = -9999      #Ecosystem respiration (observed) derived from Fc; units = "umol/m2/s"
@@ -78,8 +80,8 @@ nRMSEScore=False       # RMSE Score from ILAMB
 /
 
 
-&StreamFlowLIST
-  Sim_Dir         = /tera07/zhwei/For_BaiFan/cama/case_gswp3/
+&StreamFlow_LIST
+  Sim_Dir         =  /tera07/zhwei/For_BaiFan/cama/case_gswp3/
   Sim_TimRes      =  Day         #Day or Month
   Sim_DataGroupby =  Year         ###YearMonth
   Sim_Suffix      =  o_outflw
@@ -88,16 +90,16 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Syear       =  1950
   Sim_Eyear       =  2020
 
-  Obs_source      = GRDC
-  OBSDIR          = /tera03/zhwei/Validation_Data/stn_obs/StreamFlow/GRDC
-  Max_UpArea      = 50000000000.0  #km2, upstream area
-  Min_UpArea      = 1000.0  #km2, upstream area
-  Pltstn          = True
-  discharge       = outflw       
+  Obs_source      =  GRDC
+  Obs_Dir         =  /tera03/zhwei/Validation_Data/stn_obs/StreamFlow/GRDC
+  Max_UpArea      =  50000000000.0  #km2, upstream area
+  Min_UpArea      =  1000.0  #km2, upstream area
+  Pltstn          =  True
+  discharge       =  outflw       
 /
 
 
-&SoilMoistureLIST
+&Soil_Moisture_LIST
   Sim_Dir         =  /tera04/zhwei/colm/cases/test_org_GSWP3/output/
   Sim_TimRes      =  Day           #Day or Month
   Sim_DataGroupby =  Day          #Year or Month or Day
@@ -108,14 +110,12 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2016
   
   Obs_source      =  ismn
-  OBSDIR          =  /tera03/zhwei/Validation_Data/stn_obs/SoilMoisture/ismn/
+  Obs_Dir          =  /tera03/zhwei/Validation_Data/stn_obs/SoilMoisture/ismn/
   sm_surf         =  H2OSOI
   Pltstn          =  True
 /
 
-
-
-&LAILIST
+&LAI_LIST
   Sim_Dir         =  /tera04/zhwei/colm/cases/test_org_GSWP3/output/
   Sim_TimRes      =  Day      #Day or Month
   Sim_DataGroupby =  Day      ###YearMonth
@@ -126,12 +126,12 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2016
 
   Obs_source      =  Yuan2022
-  OBSDIR          =  /tera03/zhwei/Validation_Data/stn_obs/LAI/Yuan2022/
+  Obs_Dir          =  /tera03/zhwei/Validation_Data/stn_obs/LAI/Yuan2022/
   Pltstn          =  True
   lai             =  TLAI       
 /
 
-&TranspirationLIST
+&Transpiration_LIST
   Sim_Dir         =  /tera04/zhwei/colm/cases/test_org_GSWP3/output/
   Sim_TimRes      =  Day           #Day or Month
   Sim_DataGroupby =  Day          #Year or Month or Day
@@ -142,13 +142,13 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2015
 
   Obs_source      =  GLEAM_hybird
-  OBSDIR          =  /tera03/zhwei/Validation_Data/stn_obs/Transpiration/GLEAM_hybird/
+  Obs_Dir          =  /tera03/zhwei/Validation_Data/stn_obs/Transpiration/GLEAM_hybird/
   Pltstn          =  True
   et              =  QVEGT # observation variable name (left), simulation variable name (right) check the validation code: unit converted  mm/s to mm/day for QVEGT
 /
 
 
-&EvapotranspirationLIST
+&Evapotranspiration_LIST
   Sim_Dir         =  /tera04/zhwei/colm/cases/test_org_GSWP3/output/
   Sim_TimRes      =  Day           #Day or Month
   Sim_DataGroupby =  Day          #Year or Month or Day
@@ -159,12 +159,12 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2015
 
   Obs_source      =  GLEAM_hybird_PLUMBER2
-  OBSDIR          =  /tera03/zhwei/Validation_Data/stn_obs/Evapotranspiration/GLEAM_hybird_PLUMBER2/
+  Obs_Dir          =  /tera03/zhwei/Validation_Data/stn_obs/Evapotranspiration/GLEAM_hybird_PLUMBER2/
   Pltstn          =  True
   et              =  f_fevpa # observation variable name (left), simulation variable name (right) check the validation code: unit converted  mm/s to mm/day for QVEGT
 /
 
-&AltimetryLIST
+&Altimetry_LIST
   Sim_Dir         = /tera07/zhwei/For_BaiFan/cama/case_gswp3/
   Sim_TimRes      =  Day         #Day or Month
   Sim_DataGroupby =  Year         ###YearMonth
@@ -175,12 +175,12 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2020
 
   Obs_source      = HydroWeb_2.0
-  OBSDIR          = /tera03/zhwei/Validation_Data/stn_obs/Altimetry/HydroWeb_2.0
+  Obs_Dir          = /tera03/zhwei/Validation_Data/stn_obs/Altimetry/HydroWeb_2.0
   Pltstn          = True
   height          = sfcelv       
 /
 
-&DamLIST
+&Dam_LIST
   Sim_Dir         = /tera07/zhwei/For_BaiFan/cama/case_gswp3/
   Sim_TimRes      =  Day         #Day or Month
   Sim_DataGroupby =  Year         ###YearMonth
@@ -191,10 +191,26 @@ nRMSEScore=False       # RMSE Score from ILAMB
   Sim_Eyear       =  2020
 
   Obs_source      = ResOpsUS
-  OBSDIR          = /tera03/zhwei/Validation_Data/stn_obs/Dam/ResOpsUS/time_series_all/
+  Obs_Dir          = /tera03/zhwei/Validation_Data/stn_obs/Dam/ResOpsUS/time_series_all/
   Pltstn          = True
   sto             = damin
   inflow          = inflow
   outflow         = outflow
   evap            = evap
+/
+
+&Methane_LIST
+  Sim_Dir         = /tera07/zhwei/For_BaiFan/cama/case_gswp3/
+  Sim_TimRes      =  Day         #Day or Month
+  Sim_DataGroupby =  Year         ###YearMonth
+  Sim_Suffix      =  FCH4_F_ANN_monthly_wetland_tier
+  Sim_Prefix      =  
+  Sim_SpRes       =  15min
+  Sim_Syear       =  1950
+  Sim_Eyear       =  2020
+
+  Obs_source      = FluxnetANN
+  Obs_Dir         = /tera03/zhwei/Validation_Data/stn_obs/Methane
+  Pltstn          = True
+  FCH4            = ****
 /
