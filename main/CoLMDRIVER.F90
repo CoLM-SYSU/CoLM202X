@@ -130,7 +130,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
 
       ! additional diagnostic variables for output
-        laisun(i),       laisha(i),       rootr(1:,i),                      &
+        laisun(i),       laisha(i),       rootr(1:,i),     rss(i),          &
         rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
         assimsun_out(i), etrsun_out(i),   assimsha_out(i), etrsha_out(i),   &
       ! -------------------------------
@@ -140,7 +140,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         taux(i),         tauy(i),         fsena(i),        fevpa(i),        &
         lfevpa(i),       fsenl(i),        fevpl(i),        etr(i),          &
         fseng(i),        fevpg(i),        olrg(i),         fgrnd(i),        &
-        trad(i),rss(i),  tref(i),         qref(i),         rsur(i),         &
+        trad(i),         tref(i),         qref(i),         rsur(i),         &
         rnof(i),         qintr(i),        qinfl(i),        qdrip(i),        &
         rst(i),          assim(i),        respc(i),        sabvsun(i),      &
         sabvsha(i),      sabg(i),         sr(i),           solvd(i),        &
@@ -266,7 +266,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
 
       ! additional diagnostic variables for output
-        laisun(i)       ,laisha(i)                                         ,&
+        laisun(i)       ,laisha(i)       ,rss(i)                           ,&
         rstfacsun_out(i),h2osoi(1:,i)    ,wat(i)                           ,&
 
       ! FLUXES
@@ -276,7 +276,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         fsen_roof(u)    ,fsen_wsun(u)    ,fsen_wsha(u)    ,fsen_gimp(u)    ,&
         fsen_gper(u)    ,fsen_urbl(u)    ,t_roof(u)       ,t_wall(u)       ,&
         lfevp_roof(u)   ,lfevp_gimp(u)   ,lfevp_gper(u)   ,lfevp_urbl(u)   ,&
-        trad(i),rss(i)  ,tref(i)         ,&!tmax(i)       ,tmin(i)         ,&
+        trad(i)         ,tref(i)         ,&!tmax(i)       ,tmin(i)         ,&
         qref(i)         ,rsur(i)         ,rnof(i)         ,qintr(i)        ,&
         qinfl(i)        ,qdrip(i)        ,rst(i)          ,assim(i)        ,&
         respc(i)        ,sabvsun(i)      ,sabvsha(i)      ,sabg(i)         ,&

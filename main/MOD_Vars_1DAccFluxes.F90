@@ -46,6 +46,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_gssun (:)
    real(r8), allocatable :: a_gssha (:)
+   real(r8), allocatable :: a_rss   (:)
    real(r8), allocatable :: a_wdsrf  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
@@ -79,7 +80,6 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_emis (:)
    real(r8), allocatable :: a_z0m  (:)
    real(r8), allocatable :: a_trad (:)
-   real(r8), allocatable :: a_rss  (:)
    real(r8), allocatable :: a_tref (:)
    real(r8), allocatable :: a_qref (:)
    real(r8), allocatable :: a_rain (:)
@@ -357,6 +357,7 @@ contains
             allocate (a_rstfacsha (numpatch))
             allocate (a_gssun     (numpatch))
             allocate (a_gssha     (numpatch))
+            allocate (a_rss       (numpatch))
             allocate (a_wdsrf     (numpatch))
 
             allocate (a_zwt       (numpatch))
@@ -392,7 +393,6 @@ contains
             allocate (a_emis      (numpatch))
             allocate (a_z0m       (numpatch))
             allocate (a_trad      (numpatch))
-            allocate (a_rss       (numpatch))
             allocate (a_tref      (numpatch))
             allocate (a_qref      (numpatch))
             allocate (a_rain      (numpatch))
@@ -669,8 +669,9 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
-            deallocate (a_gssun )
-            deallocate (a_gssha )
+            deallocate (a_gssun     )
+            deallocate (a_gssha     )
+            deallocate (a_rss       )
             deallocate (a_wdsrf     )
 
             deallocate (a_zwt       )
@@ -679,10 +680,10 @@ contains
             deallocate (a_assim     )
             deallocate (a_respc     )
 
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
+            deallocate (a_assimsun  ) !1
+            deallocate (a_assimsha  ) !1
+            deallocate (a_etrsun    ) !1
+            deallocate (a_etrsha    ) !1
 
             deallocate (a_qcharge   )
 
@@ -706,7 +707,6 @@ contains
             deallocate (a_emis      )
             deallocate (a_z0m       )
             deallocate (a_trad      )
-            deallocate (a_rss       )
             deallocate (a_tref      )
             deallocate (a_qref      )
             deallocate (a_rain      )
@@ -992,6 +992,7 @@ contains
             a_rstfacsha(:) = spval
             a_gssun   (:) = spval
             a_gssha   (:) = spval
+            a_rss     (:) = spval
 
             a_wdsrf   (:) = spval
             a_zwt     (:) = spval
@@ -1026,7 +1027,6 @@ contains
             a_emis      (:) = spval
             a_z0m       (:) = spval
             a_trad      (:) = spval
-            a_rss       (:) = spval
             a_tref      (:) = spval
             a_qref      (:) = spval
             a_rain      (:) = spval
@@ -1361,6 +1361,7 @@ contains
             call acc1d (rstfacsha_out , a_rstfacsha )
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
+            call acc1d (rss    , a_rss    )
 
             call acc1d (wdsrf  , a_wdsrf  )
             call acc1d (zwt    , a_zwt    )
@@ -1402,7 +1403,6 @@ contains
             call acc1d (r_trad , a_trad   )
             deallocate (r_trad )
 
-            call acc1d (rss    , a_rss    )
             call acc1d (tref   , a_tref   )
             call acc1d (qref   , a_qref   )
 

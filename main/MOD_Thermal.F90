@@ -23,7 +23,7 @@ MODULE MOD_Thermal
                       dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
                       vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
                       wf_sand     ,csol        ,porsl       ,psi0       ,&
-                      wfc         ,                                      &                  
+                      wfc         ,                                      &
 #ifdef Campbell_SOIL_MODEL
                       bsw         ,                                      &
 #endif
@@ -35,7 +35,7 @@ MODULE MOD_Thermal
                       BA_alpha    ,BA_beta                              ,&
                       lai         ,laisun      ,laisha                  ,&
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
-                      rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                      rootfr      ,rstfacsun_out,rstfacsha_out,rss      ,&
                       gssun_out   ,gssha_out   ,&
                       assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
 ! photosynthesis and plant hydraulic variables
@@ -63,8 +63,8 @@ MODULE MOD_Thermal
                       fseng       ,fevpg       ,olrg        ,fgrnd      ,&
                       rootr       ,qseva       ,qsdew       ,qsubl      ,&
                       qfros       ,sm          ,tref        ,qref       ,&
-                      trad,rss    ,rst         ,assim       ,respc      ,&
-                  
+                      trad        ,rst         ,assim       ,respc      ,&
+
                       errore      ,emis        ,z0m         ,zol        ,&
                       rib         ,ustar       ,qstar       ,tstar      ,&
                       fm          ,fh          ,fq          ,pg_rain    ,&
@@ -109,7 +109,7 @@ MODULE MOD_Thermal
   USE MOD_GroundTemperature
   USE MOD_Qsadv
   USE MOD_SoilSurfaceResistance
-  
+
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
@@ -320,7 +320,7 @@ USE MOD_SPMD_Task
         tref,        &! 2 m height air temperature [kelvin]
         qref,        &! 2 m height air specific humidity
         trad,        &! radiative temperature [K]
-        rss,         &! soil resistance
+        rss,         &! soil surface resistance
         rst,         &! stomatal resistance (s m-1)
         assim,       &! assimilation
         respc,       &! respiration
@@ -348,7 +348,6 @@ USE MOD_SPMD_Task
        dqgdT,        &! d(qg)/dT
        dlrad,        &! downward longwave radiation blow the canopy [W/m2]
        eg,           &! water vapor pressure at temperature T [pa]
-       !rss,          &! bare soil resistance for evaporation
        egsmax,       &! max. evaporation which soil can provide at one time step
        egidif,       &! the excess of evaporation over "egsmax"
        emg,          &! ground emissivity (0.97 for snow,
@@ -461,7 +460,6 @@ USE MOD_SPMD_Task
       qref   = 0.;  rst    = 2.0e4
       assim  = 0.;  respc  = 0.
       hprl   = 0.
-      !rss    = 0.
       emis   = 0.;  z0m    = 0.
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
@@ -491,7 +489,7 @@ USE MOD_SPMD_Task
 !=======================================================================
       rss  = 1.e-4
       qred = 1.
-      
+
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
       IF (patchtype<=1) THEN            !soil ground
@@ -522,13 +520,13 @@ USE MOD_SPMD_Task
       IF (qsatg > forc_q .and. forc_q > qred*qsatg) THEN
         qg = forc_q; dqgdT = 0.
       ENDIF
-      
+
       CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+                  dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
 
       !write(*,*) rss
 
-      
+
 !=======================================================================
 ! [3] Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
@@ -589,14 +587,9 @@ IF (patchtype == 0) THEN
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-<<<<<<< HEAD
                  sigf       ,etrc       ,t_grnd    ,qg,rss     ,dqgdT      ,&
-                 emg        ,tleaf      ,ldew, ldew_rain, ldew_snow      ,taux       ,tauy       ,&
-=======
-                 sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
->>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
@@ -721,14 +714,9 @@ IF (patchtype == 0) THEN
                  thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
-<<<<<<< HEAD
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss    ,dqgdT      ,&
-                 emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i)  ,ldew_snow_p(i)  ,taux_p(i)  ,tauy_p(i)  ,&
-=======
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
+                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
                  taux_p(i)  ,tauy_p(i)  ,&
->>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
                  tref_p(i)  ,qref_p(i)  ,rst_p(i)   ,assim_p(i) ,respc_p(i) ,&
                  fsenl_p(i) ,fevpl_p(i) ,etr_p(i)   ,dlrad_p(i) ,ulrad_p(i) ,&
@@ -955,38 +943,6 @@ IF (patchtype == 0) THEN
 
       IF (lai+sai > 1e-6) THEN
 
-<<<<<<< HEAD
-         CALL LeafTempPC (ipatch,N_PFT  ,deltim        ,csoilc        ,dewmx         ,&
-           htvp          ,pcfrac(:,pc)  ,canlay(:)     ,htop_c(:,pc)  ,hbot_c(:,pc)  ,&
-           lai_c(:,pc)   ,sai_c(:,pc)   ,sqrtdi_p(:)   ,effcon_p(:)   ,vmax25_p(:)   ,&
-           slti_p(:)     ,hlti_p(:)     ,shti_p(:)     ,hhti_p(:)     ,trda_p(:)     ,&
-           trdm_p(:)     ,trop_p(:)     ,gradm_p(:)    ,binter_p(:)   ,extkn_p(:)    ,&
-           extkb_c(:,pc) ,extkd_c(:,pc) ,forc_hgt_u    ,forc_hgt_t    ,forc_hgt_q    ,&
-           forc_us       ,forc_vs       ,thm           ,th            ,thv           ,&
-           forc_q        ,forc_psrf     ,forc_rhoair   ,parsun_c(:,pc),parsha_c(:,pc),&
-           fsun_c(:)     ,sabv_c(:)     ,frl           ,thermk_c(:,pc),fshade_c(:,pc),&
-           rstfacsun_c(:)            ,rstfacsha_c(:)            ,&
-           gssun_c(:) ,gssha_c(:) ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
-           ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
-           etrc_c(:)     ,t_grnd        ,qg,rss        ,dqgdT         ,emg           ,&
-           z0m_c(:,pc)   ,tleaf_c(:,pc) ,ldew_c(:,pc)  ,ldew_rain_c(:,pc)  ,ldew_snow_c(:,pc)  ,taux          ,tauy          ,&
-           fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
-           tref          ,qref          ,rst_c(:,pc)   ,assim_c(:,pc) ,respc_c(:,pc) ,&
-           fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
-           z0m           ,zol           ,rib           ,ustar         ,qstar         ,&
-           tstar         ,fm            ,fh            ,fq            ,rootfr_p(:,:) ,&
-           kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
-           psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)      ,vegwp_c(:,:,pc),&
-           gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&
-           assimsun_c(:)             ,etrsun_c(:)      ,assimsha_c(:) ,etrsha_c(:),&
-!Ozone stress variables                 
-           o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
-           lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
-!End ozone stress variables                 
-           forc_hpbl                                                                  ,&
-           qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp           ,&
-           hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                )
-=======
          CALL LeafTempPC ( ipatch,N_PFT  ,deltim        ,csoilc        ,dewmx         ,&
             htvp          ,pcfrac(:,pc)  ,canlay(:)     ,htop_c(:,pc)  ,hbot_c(:,pc)  ,&
             lai_c(:,pc)   ,sai_c(:,pc)   ,sqrtdi_p(:)   ,effcon_p(:)   ,vmax25_p(:)   ,&
@@ -999,7 +955,7 @@ IF (patchtype == 0) THEN
             rstfacsun_c(:)               ,rstfacsha_c(:)                              ,&
             gssun_c(:) ,gssha_c(:) ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
             ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
-            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
+            etrc_c(:)     ,t_grnd        ,qg,rss        ,dqgdT         ,emg           ,&
             z0m_c(:,pc),tleaf_c(:,pc),ldew_c(:,pc),ldew_rain_c(:,pc),ldew_snow_c(:,pc),&
             taux          ,tauy          ,&
             fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
@@ -1018,7 +974,6 @@ IF (patchtype == 0) THEN
             forc_hpbl                                                                  ,&
             qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp            ,&
             hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                  )
->>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
       ELSE
          laisun_c    (:)    = 0.
          laisha_c    (:)    = 0.
@@ -1136,14 +1091,9 @@ ELSE
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-<<<<<<< HEAD
                  sigf       ,etrc       ,t_grnd    ,qg,rss     ,dqgdT      ,&
-                 emg        ,tleaf      ,ldew,ldew_rain,ldew_snow      ,taux       ,tauy       ,&
-=======
-                 sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
->>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
                  tref       ,qref       ,rst       ,assim      ,respc      ,&
                  fsenl      ,fevpl      ,etr       ,dlrad      ,ulrad      ,&
