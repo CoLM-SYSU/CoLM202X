@@ -119,7 +119,7 @@ MODULE MOD_Lulcc_Initialize
    CALL deallocate_TimeVariables
 
    CALL initialize (casename,dir_landdata,dir_restart,&
-                    idate,year,greenwich)
+                    idate,year,greenwich,lulcc_call=.true.)
 
  END SUBROUTINE LulccInitialize
 
