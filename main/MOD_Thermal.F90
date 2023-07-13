@@ -526,7 +526,7 @@ use MOD_SPMD_Task
       CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
                    dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
 
-      write(*,*) rss
+      !write(*,*) rss
 
       
 !=======================================================================
