@@ -1161,11 +1161,12 @@ CONTAINS
       ! because we don't consider water balance for lake currently.
       !fevpa  = fevpa *(1-flake) + fevpa_lake *flake
 
-      fsenl  = fsenl *(1-flake)
-      fevpl  = fevpl *(1-flake)
-      etr    = etr   *(1-flake)
-      assim  = assim *(1-flake)
-      respc  = respc *(1-flake)
+      ! 07/11/2023, yuan: don't not consider lake fraction cover
+      !fsenl  = fsenl *(1-flake)
+      !fevpl  = fevpl *(1-flake)
+      !etr    = etr   *(1-flake)
+      !assim  = assim *(1-flake)
+      !respc  = respc *(1-flake)
 
       ! ground heat flux
       IF ( doveg ) THEN
