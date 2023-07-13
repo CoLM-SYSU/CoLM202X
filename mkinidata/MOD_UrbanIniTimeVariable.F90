@@ -108,7 +108,7 @@ CONTAINS
      ! urban surface albedo
      CALL alburban (ipatch,froof,fgper,flake,hwr,hroof,&
                     alb_roof,alb_wall,alb_gimp,alb_gper,&
-                    rho,tau,fveg,hveg,lai,sai,coszen,fwsun,tlake,&
+                    rho,tau,fveg,hveg,lai,sai,max(0.01,coszen),fwsun,tlake,&
                     fsno_roof,fsno_gimp,fsno_gper,fsno_lake,&
                     scv_roof,scv_gimp,scv_gper,scv_lake,&
                     sag_roof,sag_gimp,sag_gper,sag_lake,&
