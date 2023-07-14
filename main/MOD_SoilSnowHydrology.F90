@@ -286,7 +286,7 @@ MODULE MOD_SoilSnowHydrology
       end if
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-      - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof-errw_rsub)*deltim
 
       if(lb >= 1)then
          err_solver = err_solver-(qsdew+qfros-qsubl)*deltim

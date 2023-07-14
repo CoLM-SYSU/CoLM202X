@@ -141,7 +141,7 @@ CONTAINS
          dtime(NVAR)    = DEF_forcing%CBL_dtime
          offset(NVAR)   = DEF_forcing%CBL_offset
       endif
-   end subroutine init_user_specified_forcing 
+   end subroutine init_user_specified_forcing
 
    ! ----------------
    FUNCTION metfilename(year, month, day, var_i)
@@ -562,7 +562,7 @@ CONTAINS
       case ('POINT')
          metfilename = '/'//trim(fprefix(1))
       end select
-   if (DEF_USE_CBL_HEIGHT) then 
+   if (DEF_USE_CBL_HEIGHT) then
       select case (var_i)
       case (9)
          metfilename = '/'//trim(fprefix(9))//'_'//trim(yearstr)//'_'//trim(monthstr)//'_boundary_layer_height.nc4'
@@ -672,8 +672,10 @@ CONTAINS
                      if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
-                     if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
-                        40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
+                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled program, because there is
+                     ! no data of forcn(5), temporarily comment the code below
+                     ! if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
+                     !    40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
                      if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &
                         40.0*forcn(6)%blk(ib,jb)%val(i,j)/abs(forcn(6)%blk(ib,jb)%val(i,j))
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &
