@@ -103,6 +103,8 @@ if __name__=='__main__':
     
     print("-------------------------------------Caution-----------------------------------")
     print("Please make sure the time axis of the simulation data is consistent with the time axis of the validation data!")
+    print("Please make sure the unit of the simulation is consistent with the unit of the validation data!")
+
     #input("Press Enter to continue...")
     print("...............................................................................")
     argv                      = sys.argv

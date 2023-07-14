@@ -147,7 +147,8 @@ OBJS_BASIC =    \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
 				 MOD_IniTimeVariable.o          \
-				 MOD_UrbanIniTimeVariable.o
+				 MOD_UrbanIniTimeVariable.o     \
+				 MOD_Initialize.o
 
 
 $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
@@ -156,7 +157,6 @@ $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})
 
 OBJS_MKINIDATA = \
-				  MOD_Initialize.o   \
 				  CoLMINI.o
 
 $(OBJS_MKINIDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}

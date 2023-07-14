@@ -903,7 +903,6 @@ IF (patchtype == 0) THEN
             rstfacsha_c(p) = rstfac_c(p)
 
          ELSE
-            tleaf_c(p,pc)     = forc_t
             laisun_c(p)       = 0.
             laisha_c(p)       = 0.
             ldew_rain_c(p,pc) = 0.
@@ -912,12 +911,6 @@ IF (patchtype == 0) THEN
             rootr_c(:,p)      = 0.
             rstfacsun_c(p)    = 0.
             rstfacsha_c(p)    = 0.
-            rst_c(p,pc)       = 2.0e4
-            assim_c(p,pc)     = 0.
-            respc_c(p,pc)     = 0.
-            fsenl_c(p,pc)     = 0.
-            fevpl_c(p,pc)     = 0.
-            etr_c(p,pc)       = 0.
 
             IF(DEF_USE_PLANTHYDRAULICS)THEN
                vegwp_c (:,p,pc)  = -2.5e4
@@ -925,6 +918,16 @@ IF (patchtype == 0) THEN
          ENDIF
 
       ENDDO
+      ! initialization
+      tleaf_c (:,pc) = forc_t  !???
+      rst_c   (:,pc) = 2.0e4
+      assim_c (:,pc) = 0.
+      respc_c (:,pc) = 0.
+      fsenl_c (:,pc) = 0.
+      fevpl_c (:,pc) = 0.
+      etr_c   (:,pc) = 0.
+      z0m_c   (:,pc) = (1.-fsno)*zlnd + fsno*zsno
+
 
       IF (lai+sai > 1e-6) THEN
 

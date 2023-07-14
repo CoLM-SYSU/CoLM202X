@@ -121,7 +121,13 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    IF (DEF_LAI_MONTHLY) THEN
       ! monthly average LAI
       ! if use lai change, LAI data of simulation start year and end year will be made
-      ! if not use lai change, only make LAI data of defined lc year
+      ! if do not use lai change, only make LAI data of defined lc year
+#ifdef LULCC
+      ! 07/2023, NOTE: if defined LULCC, only one year (lc_year) lai processed.
+      start_year = lc_year
+      end_year   = lc_year
+      ntime      = 12
+#else
       IF (DEF_LAI_CHANGE_YEARLY) THEN
          start_year = DEF_simulation_time%start_year
          end_year   = DEF_simulation_time%end_year
@@ -131,6 +137,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          end_year   = lc_year
          ntime      = 12
       ENDIF
+#endif
    ! 8-day LAI
    ELSE
       start_year = DEF_simulation_time%start_year
@@ -441,7 +448,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      IF (sumarea > 0) THEN
                         LAI_pfts(ip) = sum(lai_pft_one(p,:) * pct_pft_one(p,:) * area_one) / sumarea
                      ELSE
-                        LAI_pfts(ip) = LAI_patches(ipatch)
+                        ! 07/2023, yuan: bug may exist below
+                        !LAI_pfts(ip) = LAI_patches(ipatch)
+                        LAI_pfts(ip) = 0.
                      ENDIF
                   ENDDO
 #ifdef CROP
@@ -557,7 +566,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      IF (sumarea > 0) THEN
                         SAI_pfts(ip) = sum(sai_pft_one(p,:) * pct_pft_one(p,:) * area_one) / sumarea
                      ELSE
-                        SAI_pfts(ip) = SAI_patches(ipatch)
+                        ! 07/2023, yuan: bug may exist below
+                        !SAI_pfts(ip) = SAI_patches(ipatch)
+                        SAI_pfts(ip) = 0.
                      ENDIF
                   ENDDO
 #ifdef CROP
@@ -726,7 +737,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      IF (sumarea > 0) THEN
                         LAI_pcs(ipft,ipc) = sum(lai_pft_one(ipft,:) * pct_pft_one(ipft,:) * area_one) / sumarea
                      ELSE
-                        LAI_pcs(ipft,ipc) = LAI_patches(ipatch)
+                        ! 07/2023, yuan: bug may exist below
+                        !LAI_pcs(ipft,ipc) = LAI_patches(ipatch)
+                        LAI_pcs(ipft,ipc) = 0.
                      ENDIF
                   ENDDO
                ENDIF
@@ -816,7 +829,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      IF (sumarea > 0) THEN
                         SAI_pcs(ipft,ipc) = sum(sai_pft_one(ipft,:) * pct_pft_one(ipft,:) * area_one) / sumarea
                      ELSE
-                        SAI_pcs(ipft,ipc) = SAI_patches(ipatch)
+                        ! 07/2023, yuan: bug may exist below
+                        !SAI_pcs(ipft,ipc) = SAI_patches(ipatch)
+                        SAI_pcs(ipft,ipc) = 0.
                      ENDIF
                   ENDDO
                ENDIF

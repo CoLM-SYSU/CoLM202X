@@ -1,10 +1,10 @@
 #include <define.h>
 
 SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, lc_year)
-   
+
    ! ----------------------------------------------------------------------
    ! Percentage of Plant Function Types
-   ! 
+   !
    ! Original from Hua Yuan's OpenMP version.
    !
    ! REVISIONS:

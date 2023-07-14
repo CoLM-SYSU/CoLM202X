@@ -1415,6 +1415,7 @@ MODULE MOD_Urban_Flux
      faiv    = fc(3)*(1. - exp(-0.5*lsai))
      lambda  = fcover(0) + faiv*htop/hroof
      displa  = hroof * (1 + 4.43**(-lambda)*(lambda - 1))
+     displa  = min(0.95*hroof, displa)
      z0m     = (hroof - displa) * &
                exp( -(0.5*1.2/vonkar/vonkar*(1-displa/hroof)*(fai+faiv*htop/hroof))**(-0.5) )
 

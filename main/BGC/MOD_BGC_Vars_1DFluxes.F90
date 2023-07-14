@@ -152,6 +152,7 @@ MODULE MOD_BGC_Vars_1DFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_BGCFluxes
   PUBLIC :: deallocate_1D_BGCFluxes
+  PUBLIC :: set_1D_BGCFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -178,138 +179,138 @@ MODULE MOD_BGC_Vars_1DFluxes
 
 ! bgc variables
 ! ecosystem carbon flux
-            allocate (gpp                        (numpatch))
-            allocate (gpp_enftemp                (numpatch)) !1
-            allocate (gpp_enfboreal              (numpatch)) !2
-            allocate (gpp_dnfboreal              (numpatch)) !3
-            allocate (gpp_ebftrop                (numpatch)) !4
-            allocate (gpp_ebftemp                (numpatch)) !5
-            allocate (gpp_dbftrop                (numpatch)) !6
-            allocate (gpp_dbftemp                (numpatch)) !7
-            allocate (gpp_dbfboreal              (numpatch)) !8
-            allocate (gpp_ebstemp                (numpatch)) !9
-            allocate (gpp_dbstemp                (numpatch)) !10
-            allocate (gpp_dbsboreal              (numpatch)) !11
-            allocate (gpp_c3arcgrass             (numpatch)) !12
-            allocate (gpp_c3grass                (numpatch)) !13
-            allocate (gpp_c4grass                (numpatch)) !14
-            allocate (leafc_enftemp              (numpatch)) !1
-            allocate (leafc_enfboreal            (numpatch)) !2
-            allocate (leafc_dnfboreal            (numpatch)) !3
-            allocate (leafc_ebftrop              (numpatch)) !4
-            allocate (leafc_ebftemp              (numpatch)) !5
-            allocate (leafc_dbftrop              (numpatch)) !6
-            allocate (leafc_dbftemp              (numpatch)) !7
-            allocate (leafc_dbfboreal            (numpatch)) !8
-            allocate (leafc_ebstemp              (numpatch)) !9
-            allocate (leafc_dbstemp              (numpatch)) !10
-            allocate (leafc_dbsboreal            (numpatch)) !11
-            allocate (leafc_c3arcgrass           (numpatch)) !12
-            allocate (leafc_c3grass              (numpatch)) !13
-            allocate (leafc_c4grass              (numpatch)) !14
-            allocate (ar                         (numpatch))
-            allocate (cwdprod                    (numpatch))
-            allocate (cwddecomp                  (numpatch))
-            allocate (hr                         (numpatch))
-            allocate (er                         (numpatch))
-            allocate (fire_closs                 (numpatch))
-            allocate (fire_nloss                 (numpatch))
-            allocate (hrv_xsmrpool_to_atm        (numpatch))
-            allocate (wood_harvestc              (numpatch))
-            allocate (wood_harvestn              (numpatch))
-            allocate (grainc_to_cropprodc        (numpatch))
-            allocate (grainc_to_seed             (numpatch))
-            allocate (grainn_to_cropprodn        (numpatch))
-            allocate (cropprod1c_loss            (numpatch))
+            allocate (gpp                        (numpatch)) ; gpp                        (:) = spval
+            allocate (gpp_enftemp                (numpatch)) ; gpp_enftemp                (:) = spval
+            allocate (gpp_enfboreal              (numpatch)) ; gpp_enfboreal              (:) = spval
+            allocate (gpp_dnfboreal              (numpatch)) ; gpp_dnfboreal              (:) = spval
+            allocate (gpp_ebftrop                (numpatch)) ; gpp_ebftrop                (:) = spval
+            allocate (gpp_ebftemp                (numpatch)) ; gpp_ebftemp                (:) = spval
+            allocate (gpp_dbftrop                (numpatch)) ; gpp_dbftrop                (:) = spval
+            allocate (gpp_dbftemp                (numpatch)) ; gpp_dbftemp                (:) = spval
+            allocate (gpp_dbfboreal              (numpatch)) ; gpp_dbfboreal              (:) = spval
+            allocate (gpp_ebstemp                (numpatch)) ; gpp_ebstemp                (:) = spval
+            allocate (gpp_dbstemp                (numpatch)) ; gpp_dbstemp                (:) = spval
+            allocate (gpp_dbsboreal              (numpatch)) ; gpp_dbsboreal              (:) = spval
+            allocate (gpp_c3arcgrass             (numpatch)) ; gpp_c3arcgrass             (:) = spval
+            allocate (gpp_c3grass                (numpatch)) ; gpp_c3grass                (:) = spval
+            allocate (gpp_c4grass                (numpatch)) ; gpp_c4grass                (:) = spval
+            allocate (leafc_enftemp              (numpatch)) ; leafc_enftemp              (:) = spval
+            allocate (leafc_enfboreal            (numpatch)) ; leafc_enfboreal            (:) = spval
+            allocate (leafc_dnfboreal            (numpatch)) ; leafc_dnfboreal            (:) = spval
+            allocate (leafc_ebftrop              (numpatch)) ; leafc_ebftrop              (:) = spval
+            allocate (leafc_ebftemp              (numpatch)) ; leafc_ebftemp              (:) = spval
+            allocate (leafc_dbftrop              (numpatch)) ; leafc_dbftrop              (:) = spval
+            allocate (leafc_dbftemp              (numpatch)) ; leafc_dbftemp              (:) = spval
+            allocate (leafc_dbfboreal            (numpatch)) ; leafc_dbfboreal            (:) = spval
+            allocate (leafc_ebstemp              (numpatch)) ; leafc_ebstemp              (:) = spval
+            allocate (leafc_dbstemp              (numpatch)) ; leafc_dbstemp              (:) = spval
+            allocate (leafc_dbsboreal            (numpatch)) ; leafc_dbsboreal            (:) = spval
+            allocate (leafc_c3arcgrass           (numpatch)) ; leafc_c3arcgrass           (:) = spval
+            allocate (leafc_c3grass              (numpatch)) ; leafc_c3grass              (:) = spval
+            allocate (leafc_c4grass              (numpatch)) ; leafc_c4grass              (:) = spval
+            allocate (ar                         (numpatch)) ; ar                         (:) = spval
+            allocate (cwdprod                    (numpatch)) ; cwdprod                    (:) = spval
+            allocate (cwddecomp                  (numpatch)) ; cwddecomp                  (:) = spval
+            allocate (hr                         (numpatch)) ; hr                         (:) = spval
+            allocate (er                         (numpatch)) ; er                         (:) = spval
+            allocate (fire_closs                 (numpatch)) ; fire_closs                 (:) = spval
+            allocate (fire_nloss                 (numpatch)) ; fire_nloss                 (:) = spval
+            allocate (hrv_xsmrpool_to_atm        (numpatch)) ; hrv_xsmrpool_to_atm        (:) = spval
+            allocate (wood_harvestc              (numpatch)) ; wood_harvestc              (:) = spval
+            allocate (wood_harvestn              (numpatch)) ; wood_harvestn              (:) = spval
+            allocate (grainc_to_cropprodc        (numpatch)) ; grainc_to_cropprodc        (:) = spval
+            allocate (grainc_to_seed             (numpatch)) ; grainc_to_seed             (:) = spval
+            allocate (grainn_to_cropprodn        (numpatch)) ; grainn_to_cropprodn        (:) = spval
+            allocate (cropprod1c_loss            (numpatch)) ; cropprod1c_loss            (:) = spval
 
 
 ! decomposition carbon fluxes
-            allocate (decomp_cpools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
-            allocate (decomp_ctransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch))
-            allocate (decomp_hr_vr               (nl_soil_full,ndecomp_transitions,numpatch))
-            allocate (decomp_hr                  (numpatch))
-            allocate (phr_vr                     (nl_soil_full,numpatch))
-            allocate (m_decomp_cpools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
-            allocate (decomp_cpools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
-            allocate (som_c_leached              (numpatch))
+            allocate (decomp_cpools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch)); decomp_cpools_sourcesink   (:,:,:) = spval
+            allocate (decomp_ctransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch)); decomp_ctransfer_vr  (:,:,:) = spval
+            allocate (decomp_hr_vr               (nl_soil_full,ndecomp_transitions,numpatch)); decomp_hr_vr         (:,:,:) = spval
+            allocate (decomp_hr                  (numpatch)) ; decomp_hr                  (:) = spval
+            allocate (phr_vr                     (nl_soil_full,numpatch)); phr_vr                     (:,:) = spval
+            allocate (m_decomp_cpools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch)); m_decomp_cpools_to_fire_vr (:,:,:) = spval
+            allocate (decomp_cpools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch)); decomp_cpools_transport_tendency(:,:,:) = spval
+            allocate (som_c_leached              (numpatch)) ; som_c_leached              (:) = spval
 
 ! vegetation to decomposition carbon fluxes
-            allocate (phenology_to_met_c       (nl_soil,numpatch))
-            allocate (phenology_to_cel_c       (nl_soil,numpatch))
-            allocate (phenology_to_lig_c       (nl_soil,numpatch))
-            allocate (gap_mortality_to_met_c   (nl_soil,numpatch))
-            allocate (gap_mortality_to_cel_c   (nl_soil,numpatch))
-            allocate (gap_mortality_to_lig_c   (nl_soil,numpatch))
-            allocate (gap_mortality_to_cwdc    (nl_soil,numpatch))
-            allocate (fire_mortality_to_met_c  (nl_soil,numpatch))
-            allocate (fire_mortality_to_cel_c  (nl_soil,numpatch))
-            allocate (fire_mortality_to_lig_c  (nl_soil,numpatch))
-            allocate (fire_mortality_to_cwdc   (nl_soil,numpatch))
+            allocate (phenology_to_met_c       (nl_soil,numpatch)); phenology_to_met_c       (:,:) = spval
+            allocate (phenology_to_cel_c       (nl_soil,numpatch)); phenology_to_cel_c       (:,:) = spval
+            allocate (phenology_to_lig_c       (nl_soil,numpatch)); phenology_to_lig_c       (:,:) = spval
+            allocate (gap_mortality_to_met_c   (nl_soil,numpatch)); gap_mortality_to_met_c   (:,:) = spval
+            allocate (gap_mortality_to_cel_c   (nl_soil,numpatch)); gap_mortality_to_cel_c   (:,:) = spval
+            allocate (gap_mortality_to_lig_c   (nl_soil,numpatch)); gap_mortality_to_lig_c   (:,:) = spval
+            allocate (gap_mortality_to_cwdc    (nl_soil,numpatch)); gap_mortality_to_cwdc    (:,:) = spval
+            allocate (fire_mortality_to_met_c  (nl_soil,numpatch)); fire_mortality_to_met_c  (:,:) = spval
+            allocate (fire_mortality_to_cel_c  (nl_soil,numpatch)); fire_mortality_to_cel_c  (:,:) = spval
+            allocate (fire_mortality_to_lig_c  (nl_soil,numpatch)); fire_mortality_to_lig_c  (:,:) = spval
+            allocate (fire_mortality_to_cwdc   (nl_soil,numpatch)); fire_mortality_to_cwdc   (:,:) = spval
 
 ! decomposition nitrogen fluxes
-            allocate (decomp_npools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch))
-            allocate (decomp_ntransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch))
-            allocate (decomp_sminn_flux_vr       (nl_soil_full,ndecomp_transitions,numpatch))
-            allocate (sminn_to_denit_decomp_vr   (nl_soil_full,ndecomp_transitions,numpatch))
-            allocate (m_decomp_npools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch))
-            allocate (decomp_npools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch))
-            allocate (som_n_leached            (numpatch))
+            allocate (decomp_npools_sourcesink   (nl_soil_full,ndecomp_pools,numpatch)); decomp_npools_sourcesink      (:,:,:) = spval
+            allocate (decomp_ntransfer_vr        (nl_soil_full,ndecomp_transitions,numpatch)); decomp_ntransfer_vr     (:,:,:) = spval
+            allocate (decomp_sminn_flux_vr       (nl_soil_full,ndecomp_transitions,numpatch)); decomp_sminn_flux_vr    (:,:,:) = spval
+            allocate (sminn_to_denit_decomp_vr   (nl_soil_full,ndecomp_transitions,numpatch)); sminn_to_denit_decomp_vr(:,:,:) = spval
+            allocate (m_decomp_npools_to_fire_vr (nl_soil_full,ndecomp_pools,numpatch)); m_decomp_npools_to_fire_vr    (:,:,:) = spval
+            allocate (decomp_npools_transport_tendency(nl_soil_full,ndecomp_pools,numpatch)); decomp_npools_transport_tendency(:,:,:) = spval
+            allocate (som_n_leached            (numpatch)) ; som_n_leached            (:) = spval
 
 ! vegetation to decomposition nitrogen fluxes
-            allocate (phenology_to_met_n       (nl_soil,numpatch))
-            allocate (phenology_to_cel_n       (nl_soil,numpatch))
-            allocate (phenology_to_lig_n       (nl_soil,numpatch))
-            allocate (gap_mortality_to_met_n   (nl_soil,numpatch))
-            allocate (gap_mortality_to_cel_n   (nl_soil,numpatch))
-            allocate (gap_mortality_to_lig_n   (nl_soil,numpatch))
-            allocate (gap_mortality_to_cwdn    (nl_soil,numpatch))
-            allocate (fire_mortality_to_met_n  (nl_soil,numpatch))
-            allocate (fire_mortality_to_cel_n  (nl_soil,numpatch))
-            allocate (fire_mortality_to_lig_n  (nl_soil,numpatch))
-            allocate (fire_mortality_to_cwdn   (nl_soil,numpatch))
+            allocate (phenology_to_met_n       (nl_soil,numpatch)); phenology_to_met_n       (:,:) = spval
+            allocate (phenology_to_cel_n       (nl_soil,numpatch)); phenology_to_cel_n       (:,:) = spval
+            allocate (phenology_to_lig_n       (nl_soil,numpatch)); phenology_to_lig_n       (:,:) = spval
+            allocate (gap_mortality_to_met_n   (nl_soil,numpatch)); gap_mortality_to_met_n   (:,:) = spval
+            allocate (gap_mortality_to_cel_n   (nl_soil,numpatch)); gap_mortality_to_cel_n   (:,:) = spval
+            allocate (gap_mortality_to_lig_n   (nl_soil,numpatch)); gap_mortality_to_lig_n   (:,:) = spval
+            allocate (gap_mortality_to_cwdn    (nl_soil,numpatch)); gap_mortality_to_cwdn    (:,:) = spval
+            allocate (fire_mortality_to_met_n  (nl_soil,numpatch)); fire_mortality_to_met_n  (:,:) = spval
+            allocate (fire_mortality_to_cel_n  (nl_soil,numpatch)); fire_mortality_to_cel_n  (:,:) = spval
+            allocate (fire_mortality_to_lig_n  (nl_soil,numpatch)); fire_mortality_to_lig_n  (:,:) = spval
+            allocate (fire_mortality_to_cwdn   (nl_soil,numpatch)); fire_mortality_to_cwdn   (:,:) = spval
 
-            allocate (sminn_leached_vr         (nl_soil,numpatch))
-            allocate (smin_no3_leached_vr      (nl_soil,numpatch))
-            allocate (smin_no3_runoff_vr       (nl_soil,numpatch))
-            allocate (net_nmin_vr              (nl_soil,numpatch))
-            allocate (gross_nmin_vr            (nl_soil,numpatch))
-            allocate (net_nmin                 (numpatch))
-            allocate (gross_nmin               (numpatch))
-            allocate (plant_ndemand            (numpatch))
-            allocate (actual_immob_vr          (nl_soil,numpatch))
-            allocate (actual_immob_nh4_vr      (nl_soil,numpatch))
-            allocate (actual_immob_no3_vr      (nl_soil,numpatch))
-            allocate (potential_immob_vr       (nl_soil,numpatch))
-            allocate (pmnf_decomp              (nl_soil,ndecomp_transitions,numpatch))
-            allocate (p_decomp_cpool_loss      (nl_soil,ndecomp_transitions,numpatch))
-            allocate (sminn_to_plant           (numpatch))
-            allocate (sminn_to_plant_vr        (nl_soil,numpatch))
-            allocate (smin_nh4_to_plant_vr     (nl_soil,numpatch))
-            allocate (smin_no3_to_plant_vr     (nl_soil,numpatch))
-            allocate (supplement_to_sminn_vr   (nl_soil,numpatch))
-            allocate (sminn_to_plant_fun_vr    (nl_soil,numpatch))
-            allocate (sminn_to_plant_fun_nh4_vr(nl_soil,numpatch))
-            allocate (sminn_to_plant_fun_no3_vr(nl_soil,numpatch))
-            allocate (sminn_to_denit_excess_vr (nl_soil,numpatch))
-            allocate (f_nit_vr                 (nl_soil,numpatch))
-            allocate (f_denit_vr               (nl_soil,numpatch))
-            allocate (f_n2o_nit_vr             (nl_soil,numpatch))
-            allocate (f_n2o_denit_vr           (nl_soil,numpatch))
-            allocate (pot_f_nit_vr             (nl_soil,numpatch))
-            allocate (pot_f_denit_vr           (nl_soil,numpatch))
-            allocate (n2_n2o_ratio_denit_vr    (nl_soil,numpatch))
-            allocate (ndep_to_sminn            (numpatch))
-            allocate (ffix_to_sminn            (numpatch))
-            allocate (nfix_to_sminn            (numpatch))
-            allocate (somc_fire                (numpatch))
-            allocate (supplement_to_sminn      (numpatch))
-            allocate (fert_to_sminn            (numpatch))
-            allocate (soyfixn_to_sminn         (numpatch))
-            allocate (denit                    (numpatch))
-            allocate (sminn_leached            (numpatch))
-            allocate (f_n2o_nit                (numpatch))
-            allocate (smin_no3_leached         (numpatch))
-            allocate (smin_no3_runoff          (numpatch))
+            allocate (sminn_leached_vr         (nl_soil,numpatch)); sminn_leached_vr         (:,:) = spval
+            allocate (smin_no3_leached_vr      (nl_soil,numpatch)); smin_no3_leached_vr      (:,:) = spval
+            allocate (smin_no3_runoff_vr       (nl_soil,numpatch)); smin_no3_runoff_vr       (:,:) = spval
+            allocate (net_nmin_vr              (nl_soil,numpatch)); net_nmin_vr              (:,:) = spval
+            allocate (gross_nmin_vr            (nl_soil,numpatch)); gross_nmin_vr            (:,:) = spval
+            allocate (net_nmin                 (numpatch)) ; net_nmin                 (:) = spval
+            allocate (gross_nmin               (numpatch)) ; gross_nmin               (:) = spval
+            allocate (plant_ndemand            (numpatch)) ; plant_ndemand            (:) = spval
+            allocate (actual_immob_vr          (nl_soil,numpatch)); actual_immob_vr          (:,:) = spval
+            allocate (actual_immob_nh4_vr      (nl_soil,numpatch)); actual_immob_nh4_vr      (:,:) = spval
+            allocate (actual_immob_no3_vr      (nl_soil,numpatch)); actual_immob_no3_vr      (:,:) = spval
+            allocate (potential_immob_vr       (nl_soil,numpatch)); potential_immob_vr       (:,:) = spval
+            allocate (pmnf_decomp              (nl_soil,ndecomp_transitions,numpatch)); pmnf_decomp              (:,:,:) = spval
+            allocate (p_decomp_cpool_loss      (nl_soil,ndecomp_transitions,numpatch)); p_decomp_cpool_loss      (:,:,:) = spval
+            allocate (sminn_to_plant           (numpatch)) ; sminn_to_plant           (:) = spval
+            allocate (sminn_to_plant_vr        (nl_soil,numpatch)); sminn_to_plant_vr        (:,:) = spval
+            allocate (smin_nh4_to_plant_vr     (nl_soil,numpatch)); smin_nh4_to_plant_vr     (:,:) = spval
+            allocate (smin_no3_to_plant_vr     (nl_soil,numpatch)); smin_no3_to_plant_vr     (:,:) = spval
+            allocate (supplement_to_sminn_vr   (nl_soil,numpatch)); supplement_to_sminn_vr   (:,:) = spval
+            allocate (sminn_to_plant_fun_vr    (nl_soil,numpatch)); sminn_to_plant_fun_vr    (:,:) = spval
+            allocate (sminn_to_plant_fun_nh4_vr(nl_soil,numpatch)); sminn_to_plant_fun_nh4_vr(:,:) = spval
+            allocate (sminn_to_plant_fun_no3_vr(nl_soil,numpatch)); sminn_to_plant_fun_no3_vr(:,:) = spval
+            allocate (sminn_to_denit_excess_vr (nl_soil,numpatch)); sminn_to_denit_excess_vr (:,:) = spval
+            allocate (f_nit_vr                 (nl_soil,numpatch)); f_nit_vr                 (:,:) = spval
+            allocate (f_denit_vr               (nl_soil,numpatch)); f_denit_vr               (:,:) = spval
+            allocate (f_n2o_nit_vr             (nl_soil,numpatch)); f_n2o_nit_vr             (:,:) = spval
+            allocate (f_n2o_denit_vr           (nl_soil,numpatch)); f_n2o_denit_vr           (:,:) = spval
+            allocate (pot_f_nit_vr             (nl_soil,numpatch)); pot_f_nit_vr             (:,:) = spval
+            allocate (pot_f_denit_vr           (nl_soil,numpatch)); pot_f_denit_vr           (:,:) = spval
+            allocate (n2_n2o_ratio_denit_vr    (nl_soil,numpatch)); n2_n2o_ratio_denit_vr    (:,:) = spval
+            allocate (ndep_to_sminn            (numpatch)) ; ndep_to_sminn            (:) = spval
+            allocate (ffix_to_sminn            (numpatch)) ; ffix_to_sminn            (:) = spval
+            allocate (nfix_to_sminn            (numpatch)) ; nfix_to_sminn            (:) = spval
+            allocate (somc_fire                (numpatch)) ; somc_fire                (:) = spval
+            allocate (supplement_to_sminn      (numpatch)) ; supplement_to_sminn      (:) = spval
+            allocate (fert_to_sminn            (numpatch)) ; fert_to_sminn            (:) = spval
+            allocate (soyfixn_to_sminn         (numpatch)) ; soyfixn_to_sminn         (:) = spval
+            allocate (denit                    (numpatch)) ; denit                    (:) = spval
+            allocate (sminn_leached            (numpatch)) ; sminn_leached            (:) = spval
+            allocate (f_n2o_nit                (numpatch)) ; f_n2o_nit                (:) = spval
+            allocate (smin_no3_leached         (numpatch)) ; smin_no3_leached         (:) = spval
+            allocate (smin_no3_runoff          (numpatch)) ; smin_no3_runoff          (:) = spval
          end if
       end if
 
@@ -464,6 +465,162 @@ MODULE MOD_BGC_Vars_1DFluxes
      end if
 
    END SUBROUTINE deallocate_1D_BGCFluxes
+
+  SUBROUTINE set_1D_BGCFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM 1d [numpatch] variables
+  ! --------------------------------------------------------------------
+     USE MOD_Precision
+     USE MOD_Vars_Global
+     USE MOD_SPMD_Task
+     USE MOD_LandPatch
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+
+      if (p_is_worker) then
+
+         if (numpatch > 0) then
+
+! bgc variables
+! ecosystem carbon flux
+            gpp                        (:)   = Values
+            gpp_enftemp                (:)   = Values !1
+            gpp_enfboreal              (:)   = Values !2
+            gpp_dnfboreal              (:)   = Values !3
+            gpp_ebftrop                (:)   = Values !4
+            gpp_ebftemp                (:)   = Values !5
+            gpp_dbftrop                (:)   = Values !6
+            gpp_dbftemp                (:)   = Values !7
+            gpp_dbfboreal              (:)   = Values !8
+            gpp_ebstemp                (:)   = Values !9
+            gpp_dbstemp                (:)   = Values !10
+            gpp_dbsboreal              (:)   = Values !11
+            gpp_c3arcgrass             (:)   = Values !12
+            gpp_c3grass                (:)   = Values !13
+            gpp_c4grass                (:)   = Values !14
+            leafc_enftemp              (:)   = Values !1
+            leafc_enfboreal            (:)   = Values !2
+            leafc_dnfboreal            (:)   = Values !3
+            leafc_ebftrop              (:)   = Values !4
+            leafc_ebftemp              (:)   = Values !5
+            leafc_dbftrop              (:)   = Values !6
+            leafc_dbftemp              (:)   = Values !7
+            leafc_dbfboreal            (:)   = Values !8
+            leafc_ebstemp              (:)   = Values !9
+            leafc_dbstemp              (:)   = Values !10
+            leafc_dbsboreal            (:)   = Values !11
+            leafc_c3arcgrass           (:)   = Values !12
+            leafc_c3grass              (:)   = Values !13
+            leafc_c4grass              (:)   = Values !14
+            ar                         (:)   = Values
+            cwdprod                    (:)   = Values
+            cwddecomp                  (:)   = Values
+            hr                         (:)   = Values
+            er                         (:)   = Values
+            fire_closs                 (:)   = Values
+            fire_nloss                 (:)   = Values
+            hrv_xsmrpool_to_atm        (:)   = Values
+            wood_harvestc              (:)   = Values
+            wood_harvestn              (:)   = Values
+            grainc_to_cropprodc        (:)   = Values
+            grainc_to_seed             (:)   = Values
+            grainn_to_cropprodn        (:)   = Values
+            cropprod1c_loss            (:)   = Values
+
+
+! decomposition carbon fluxes
+            decomp_cpools_sourcesink   (:,:,:) = Values
+            decomp_ctransfer_vr        (:,:,:) = Values
+            decomp_hr_vr               (:,:,:) = Values
+            decomp_hr                  (:)     = Values
+            phr_vr                     (:,: )  = Values
+            m_decomp_cpools_to_fire_vr (:,:,:) = Values
+            decomp_cpools_transport_tendency(:,:,:) = Values
+            som_c_leached              (:)   = Values
+
+! vegetation to decomposition carbon fluxes
+            phenology_to_met_c       (:,:)   = Values
+            phenology_to_cel_c       (:,:)   = Values
+            phenology_to_lig_c       (:,:)   = Values
+            gap_mortality_to_met_c   (:,:)   = Values
+            gap_mortality_to_cel_c   (:,:)   = Values
+            gap_mortality_to_lig_c   (:,:)   = Values
+            gap_mortality_to_cwdc    (:,:)   = Values
+            fire_mortality_to_met_c  (:,:)   = Values
+            fire_mortality_to_cel_c  (:,:)   = Values
+            fire_mortality_to_lig_c  (:,:)   = Values
+            fire_mortality_to_cwdc   (:,:)   = Values
+
+! decomposition nitrogen fluxes
+            decomp_npools_sourcesink   (:,:,:) = Values
+            decomp_ntransfer_vr        (:,:,:) = Values
+            decomp_sminn_flux_vr       (:,:,:) = Values
+            sminn_to_denit_decomp_vr   (:,:,:) = Values
+            m_decomp_npools_to_fire_vr (:,:,:) = Values
+            decomp_npools_transport_tendency(:,:,:) = Values
+            som_n_leached            (:)     = Values
+
+! vegetation to decomposition nitrogen fluxes
+            phenology_to_met_n       (:,:)   = Values
+            phenology_to_cel_n       (:,:)   = Values
+            phenology_to_lig_n       (:,:)   = Values
+            gap_mortality_to_met_n   (:,:)   = Values
+            gap_mortality_to_cel_n   (:,:)   = Values
+            gap_mortality_to_lig_n   (:,:)   = Values
+            gap_mortality_to_cwdn    (:,:)   = Values
+            fire_mortality_to_met_n  (:,:)   = Values
+            fire_mortality_to_cel_n  (:,:)   = Values
+            fire_mortality_to_lig_n  (:,:)   = Values
+            fire_mortality_to_cwdn   (:,:)   = Values
+
+            sminn_leached_vr         (:,:)   = Values
+            smin_no3_leached_vr      (:,:)   = Values
+            smin_no3_runoff_vr       (:,:)   = Values
+            net_nmin_vr              (:,:)   = Values
+            gross_nmin_vr            (:,:)   = Values
+            net_nmin                 (:)     = Values
+            gross_nmin               (:)     = Values
+            plant_ndemand            (:)     = Values
+            actual_immob_vr          (:,:)   = Values
+            actual_immob_nh4_vr      (:,:)   = Values
+            actual_immob_no3_vr      (:,:)   = Values
+            potential_immob_vr       (:,:)   = Values
+            pmnf_decomp              (:,:,:) = Values
+            p_decomp_cpool_loss      (:,:,:) = Values
+            sminn_to_plant           (:)     = Values
+            sminn_to_plant_vr        (:,:)   = Values
+            smin_nh4_to_plant_vr     (:,:)   = Values
+            smin_no3_to_plant_vr     (:,:)   = Values
+            supplement_to_sminn_vr   (:,:)   = Values
+            sminn_to_plant_fun_vr    (:,:)   = Values
+            sminn_to_plant_fun_nh4_vr(:,:)   = Values
+            sminn_to_plant_fun_no3_vr(:,:)   = Values
+            sminn_to_denit_excess_vr (:,:)   = Values
+            f_nit_vr                 (:,:)   = Values
+            f_denit_vr               (:,:)   = Values
+            f_n2o_nit_vr             (:,:)   = Values
+            f_n2o_denit_vr           (:,:)   = Values
+            pot_f_nit_vr             (:,:)   = Values
+            pot_f_denit_vr           (:,:)   = Values
+            n2_n2o_ratio_denit_vr    (:,:)   = Values
+            ndep_to_sminn            (:)     = Values
+            ffix_to_sminn            (:)     = Values
+            nfix_to_sminn            (:)     = Values
+            somc_fire                (:)     = Values
+            supplement_to_sminn      (:)     = Values
+            fert_to_sminn            (:)     = Values
+            soyfixn_to_sminn         (:)     = Values
+            denit                    (:)     = Values
+            sminn_leached            (:)     = Values
+            f_n2o_nit                (:)     = Values
+            smin_no3_leached         (:)     = Values
+            smin_no3_runoff          (:)     = Values
+         end if
+      end if
+
+   END SUBROUTINE set_1D_BGCFluxes
 
 #endif
 END MODULE MOD_BGC_Vars_1DFluxes

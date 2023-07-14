@@ -15,7 +15,8 @@ CONTAINS
         ipatch         ,patchtype      ,lbr            ,lbi            ,&
         lbp            ,lbl            ,snll           ,deltim         ,&
         ! forcing
-        pg_rain        ,pgper_rain     ,pg_snow                        ,&
+        pg_rain        ,pgper_rain     ,pgimp_rain     ,pg_snow        ,&
+        pg_rain_lake   ,pg_snow_lake                                   ,&
         ! surface parameters or status
         froof          ,fgper          ,flake          ,bsw            ,&
         porsl          ,psi0           ,hksati         ,wtfact         ,&
@@ -77,8 +78,11 @@ CONTAINS
   REAL(r8), intent(in) :: &
         deltim           ,&! time step (s)
         pg_rain          ,&! rainfall after removal of interception (mm h2o/s)
-        pg_snow          ,&! rainfall after removal of interception (mm h2o/s)
+        pg_snow          ,&! snowfall after removal of interception (mm h2o/s)
         pgper_rain       ,&! rainfall after removal of interception (mm h2o/s)
+        pgimp_rain       ,&! rainfall after removal of interception (mm h2o/s)
+        pg_rain_lake     ,&! rainfall onto lake (mm h2o/s)
+        pg_snow_lake     ,&! snowfall onto lake (mm h2o/s)
         froof            ,&! roof fractional cover [-]
         fgper            ,&! weith of impervious ground [-]
         flake            ,&! lake fractional cover [-]
@@ -265,10 +269,10 @@ CONTAINS
       ! ================================================
 
       IF (lbi >= 1) THEN
-         gwat = pg_rain + sm_gimp - qseva_gimp
+         gwat = pgimp_rain + sm_gimp - qseva_gimp
       ELSE
          CALL snowwater (lbi,deltim,ssi,wimp,&
-                         pg_rain,qseva_gimp,qsdew_gimp,qsubl_gimp,qfros_gimp,&
+                         pgimp_rain,qseva_gimp,qsdew_gimp,qsubl_gimp,qfros_gimp,&
                          dz_gimpsno(lbi:0),wice_gimpsno(lbi:0),wliq_gimpsno(lbi:0),gwat)
       ENDIF
 
@@ -301,8 +305,8 @@ CONTAINS
            ! "in" snowater_lake arguments
            ! ---------------------------
            maxsnl       ,nl_soil      ,nl_lake         ,deltim          ,&
-           ssi          ,wimp         ,porsl           ,pg_rain         ,&
-           pg_snow      ,dz_lake      ,imelt_lake(:0)  ,fioldl(:0)      ,&
+           ssi          ,wimp         ,porsl           ,pg_rain_lake    ,&
+           pg_snow_lake ,dz_lake      ,imelt_lake(:0)  ,fioldl(:0)      ,&
            qseva_lake   ,qsubl_lake   ,qsdew_lake      ,qfros_lake      ,&
 
            ! "inout" snowater_lake arguments
@@ -323,7 +327,7 @@ CONTAINS
       ! this unreasonable assumption should be updated in the future version
       a  = (sum(wliq_lakesno(snll+1:))-w_old)/deltim
       aa = qseva_lake-(qsubl_lake-qsdew_lake)
-      rsur_lake = max(0., pg_rain - aa - a)
+      rsur_lake = max(0., pg_rain_lake - aa - a)
       rnof_lake = rsur_lake
 
       ! Set zero to the empty node

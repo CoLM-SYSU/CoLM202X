@@ -333,6 +333,26 @@ PROGRAM CoLM
          CALL AerosolDepReadin (jdate)
       ENDIF
 
+#ifdef BGC
+      if(DEF_USE_NITRIF) then
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         if(mday .eq. 1)then
+            CALL NITRIF_readin(month, dir_landdata)
+         end if
+      end if
+      if(idate(2) .eq. 1)then
+         isread = .true.
+      else
+         isread = .false.
+      end if
+      CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
+      if(DEF_USE_FIRE)then
+         if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
+            CALL Fire_readin(idate(1), dir_landdata)
+         end if
+      end if
+#endif
+
       ! Calendar for NEXT time step
       ! ----------------------------------------------------------------------
       CALL TICKTIME (deltim,idate)
@@ -395,26 +415,6 @@ PROGRAM CoLM
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
          ENDIF
       ENDIF
-#endif
-
-#ifdef BGC
-      if(DEF_USE_NITRIF) then
-         CALL julian2monthday (idate(1), idate(2), month, mday)
-         if(mday .eq. 1)then
-            CALL NITRIF_readin(month, dir_landdata)
-         end if
-      end if
-      if(idate(2) .eq. 1)then
-         isread = .true.
-      else
-         isread = .false.
-      end if
-      CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
-      if(DEF_USE_FIRE)then
-         if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
-            CALL Fire_readin(idate(1), dir_landdata)
-         end if
-      end if
 #endif
 
 #if(defined CaMa_Flood)
