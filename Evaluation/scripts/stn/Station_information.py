@@ -24,37 +24,37 @@ class StreamFlow:
         self.casename                =  namelist['General']['casename']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+'/StreamFlow/'
 
-        self.Sim_Dir                 =  namelist['StreamFlowLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['StreamFlowLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['StreamFlowLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['StreamFlowLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['StreamFlowLIST']['Sim_Prefix']
-        self.Sim_SpRes               =  namelist['StreamFlowLIST']['Sim_SpRes']
-        self.sim_Syear               =  namelist['StreamFlowLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['StreamFlowLIST']['Sim_Eyear']
+        self.Sim_Dir                 =  namelist['StreamFlow_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['StreamFlow_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['StreamFlow_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['StreamFlow_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['StreamFlow_LIST']['Sim_Prefix']
+        self.Sim_SpRes               =  namelist['StreamFlow_LIST']['Sim_SpRes']
+        self.sim_Syear               =  namelist['StreamFlow_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['StreamFlow_LIST']['Sim_Eyear']
 
-        #self.FULLLIST                =  namelist['StreamFlowLIST']['FULLLIST'] 
-        self.obs_source              =  namelist['StreamFlowLIST']['Obs_source']
-        self.OBSDIR                  =  namelist['StreamFlowLIST']['OBSDIR'] 
-        self.Pltstn                  =  namelist['StreamFlowLIST']['Pltstn']
-        self.Max_UpArea              =  namelist['StreamFlowLIST']['Max_UpArea']
-        self.Min_UpArea              =  namelist['StreamFlowLIST']['Min_UpArea']
+        #self.FULLLIST                =  namelist['StreamFlow_LIST']['FULLLIST'] 
+        self.obs_source              =  namelist['StreamFlow_LIST']['Obs_source']
+        self.Obs_Dir                  =  namelist['StreamFlow_LIST']['Obs_Dir'] 
+        self.Pltstn                  =  namelist['StreamFlow_LIST']['Pltstn']
+        self.Max_UpArea              =  namelist['StreamFlow_LIST']['Max_UpArea']
+        self.Min_UpArea              =  namelist['StreamFlow_LIST']['Min_UpArea']
         if (self.obs_source=='GRDC'):
             if ((namelist['General']['compare_res']=="Hour")):
                 print('compare_res="Hour", the compare_res should be "Day","Month" or longer ')
                 sys.exit(1) 
         elif (self.obs_source=='GSIM'): 
-          #  self.OBSDIR             =  f"./StreamFlow/GSIM"
+          #  self.Obs_Dir             =  f"./StreamFlow/GSIM"
             if (namelist['General']['compare_res']=="Hour")|(namelist['General']['compare_res']=="Day"):
                 print(' the compare_res should be "Month" or longer ')
                 sys.exit(1) 
         elif (self.obs_source=='Dai_Trenberth'):
-         #   self.OBSDIR             =  f"./StreamFlow/Dai_Trenberth"
+         #   self.Obs_Dir             =  f"./StreamFlow/Dai_Trenberth"
             if (namelist['General']['compare_res']=="Hour")|(namelist['General']['compare_res']=="Day"):
                 print(' the compare_res should be "Month" or longer ')
                 sys.exit(1) 
         elif (self.obs_source=='Hylke'):
-        #    self.OBSDIR             =  f"./StreamFlow/Hylke"
+        #    self.Obs_Dir             =  f"./StreamFlow/Hylke"
             if (namelist['General']['compare_res']=="Hour")|(namelist['General']['compare_res']=="Day"):
                 print(' the compare_res should be "Month" or longer ')
                 sys.exit(1) 
@@ -62,14 +62,14 @@ class StreamFlow:
             print('The source is not exist.')
             sys.exit(1)
 
-        if (namelist['StreamFlowLIST']['Sim_TimRes'] =="Month"):
+        if (namelist['StreamFlow_LIST']['Sim_TimRes'] =="Month"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Month" but compare_res="Hour", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
             elif (namelist['General']['compare_res'] =="Day"):
                 print('Sim_TimRes="Month" but compare_res="Day", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['StreamFlowLIST']['Sim_TimRes']=="Year"):
+        elif (namelist['StreamFlow_LIST']['Sim_TimRes']=="Year"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Year" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
@@ -79,24 +79,24 @@ class StreamFlow:
             elif (namelist['General']['compare_res']=="Month"):
                 print('Sim_TimRes="Year" but compare_res="Month", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['StreamFlowLIST']['Sim_TimRes']=="Day"):
+        elif (namelist['StreamFlow_LIST']['Sim_TimRes']=="Day"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Day" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
 
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['StreamFlowLIST']['OBSDIR']    , namelist['StreamFlowLIST']['Pltstn'],namelist['StreamFlowLIST']['Sim_Syear'] , namelist['StreamFlowLIST']['Sim_Eyear']
-        del  namelist['StreamFlowLIST']['Sim_Dir']   , namelist['StreamFlowLIST']['Sim_TimRes']  , namelist['StreamFlowLIST']['Sim_DataGroupby']
-        del  namelist['StreamFlowLIST']['Sim_Suffix'], namelist['StreamFlowLIST']['Sim_Prefix']  , namelist['StreamFlowLIST']['Sim_SpRes']
-        del  namelist['StreamFlowLIST']['Min_UpArea'], namelist['StreamFlowLIST']['Max_UpArea']  , namelist['StreamFlowLIST']['Obs_source']
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['StreamFlow_LIST']['Obs_Dir']    , namelist['StreamFlow_LIST']['Pltstn'],namelist['StreamFlow_LIST']['Sim_Syear'] , namelist['StreamFlow_LIST']['Sim_Eyear']
+        del  namelist['StreamFlow_LIST']['Sim_Dir']   , namelist['StreamFlow_LIST']['Sim_TimRes']  , namelist['StreamFlow_LIST']['Sim_DataGroupby']
+        del  namelist['StreamFlow_LIST']['Sim_Suffix'], namelist['StreamFlow_LIST']['Sim_Prefix']  , namelist['StreamFlow_LIST']['Sim_SpRes']
+        del  namelist['StreamFlow_LIST']['Min_UpArea'], namelist['StreamFlow_LIST']['Max_UpArea']  , namelist['StreamFlow_LIST']['Obs_source']
                  
-        self.variables               =  namelist['StreamFlowLIST']
+        self.variables               =  namelist['StreamFlow_LIST']
         print(self.variables)
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
 
         if len(self.variables) == 0:
-            print("Error: StreamFlowLIST is empty!")
+            print("Error: StreamFlow_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -117,7 +117,7 @@ class StreamFlow:
         output  =  f"{self.casedir}/selected_list.txt"
         
         if (self.obs_source=='GRDC'):
-            self.FULLLIST                =  f"{self.OBSDIR}/list/GRDC_alloc_{self.Sim_SpRes}.txt"
+            self.FULLLIST                =  f"{self.Obs_Dir}/list/GRDC_alloc_{self.Sim_SpRes}.txt"
             print(self.FULLLIST)
             station_list                 =  pd.read_csv(f"{self.FULLLIST}",delimiter=r"\s+",header=0)
 
@@ -129,8 +129,8 @@ class StreamFlow:
 
             if (self.compare_res == 'Month'):
                 for i in range(len(station_list['ID'])):
-                    if(os.path.exists('%s/GRDC_Month/%s_Q_Month.nc'%(self.OBSDIR,station_list['ID'][i]))):
-                        with xr.open_dataset('%s/GRDC_Month/%s_Q_Month.nc'%(self.OBSDIR,station_list['ID'][i])) as df:
+                    if(os.path.exists('%s/GRDC_Month/%s_Q_Month.nc'%(self.Obs_Dir,station_list['ID'][i]))):
+                        with xr.open_dataset('%s/GRDC_Month/%s_Q_Month.nc'%(self.Obs_Dir,station_list['ID'][i])) as df:
                                 station_list['obs_Syear'].values[i]=df["time.year"].values[0]
                                 station_list['obs_Eyear'].values[i]=df["time.year"].values[-1]
                                 station_list['use_Syear'].values[i]=max(station_list['obs_Syear'].values[i],self.sim_Syear,self.Syear)
@@ -148,8 +148,8 @@ class StreamFlow:
                                     print(f"Station ID : {station_list['ID'].values[i]} is selected")
             elif (self.compare_res == 'Day'):
                 for i in range(len(station_list['ID'])):
-                    if(os.path.exists('%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.OBSDIR,station_list['ID'][i]))):
-                        with xr.open_dataset('%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.OBSDIR,station_list['ID'][i])) as df:
+                    if(os.path.exists('%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.Obs_Dir,station_list['ID'][i]))):
+                        with xr.open_dataset('%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.Obs_Dir,station_list['ID'][i])) as df:
                                 station_list['obs_Syear'].values[i]=df["time.year"].values[0]
                                 station_list['obs_Eyear'].values[i]=df["time.year"].values[-1]
                                 station_list['use_Syear'].values[i]=max(station_list['obs_Syear'].values[i],self.sim_Syear,self.Syear)
@@ -237,7 +237,7 @@ class SoilMoisture:
         self.sim_Eyear               =  namelist['SoilMoistureLIST']['Sim_Eyear']
 
         self.obs_source              =  namelist['SoilMoistureLIST']['Obs_source']
-        self.OBSDIR                  =  namelist['SoilMoistureLIST']['OBSDIR'] 
+        self.Obs_Dir                  =  namelist['SoilMoistureLIST']['Obs_Dir'] 
         self.Pltstn                  =  namelist['SoilMoistureLIST']['Pltstn']
 
         if (namelist['SoilMoistureLIST']['Sim_TimRes'] =="Month"):
@@ -262,8 +262,8 @@ class SoilMoisture:
                 print('Sim_TimRes="Day" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
 
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['SoilMoistureLIST']['OBSDIR']    , namelist['SoilMoistureLIST']['Pltstn'] 
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['SoilMoistureLIST']['Obs_Dir']    , namelist['SoilMoistureLIST']['Pltstn'] 
         del  namelist['SoilMoistureLIST']['Sim_Dir']   , namelist['SoilMoistureLIST']['Sim_TimRes'], namelist['SoilMoistureLIST']['Sim_DataGroupby']
         del  namelist['SoilMoistureLIST']['Sim_Suffix'], namelist['SoilMoistureLIST']['Sim_Prefix'], namelist['SoilMoistureLIST']['Sim_SpRes']
         del  namelist['SoilMoistureLIST']['Sim_Syear'] , namelist['SoilMoistureLIST']['Sim_Eyear'],  namelist['SoilMoistureLIST']['Obs_source']  
@@ -302,7 +302,7 @@ class SoilMoisture:
             self.FULLLIST =  f"{self.casedir}/scratch/ismn_{self.Sim_SpRes}_surf.txt"
 
             # Get a list of all NetCDF files in the folder
-            nc_files = [f for f in os.listdir(self.OBSDIR) if f.endswith('.nc')]
+            nc_files = [f for f in os.listdir(self.Obs_Dir) if f.endswith('.nc')]
 
             # Create an empty list to store the lon-lat and time information
             data = []
@@ -310,7 +310,7 @@ class SoilMoisture:
             # Loop through each NetCDF file in the folder
             for file_name in nc_files:
                 # Open the NetCDF file using xarray
-                ds = xr.open_dataset(os.path.join(self.OBSDIR, file_name))
+                ds = xr.open_dataset(os.path.join(self.Obs_Dir, file_name))
                 for varname in ds.variables:
                     # Check if the variable name contains "sm_0cm_6cm" or "sm_0cm_5cm"
                     if "sm_0cm_6cm" in varname or "sm_0cm_5cm" in varname or "sm_0cm_7cm" in varname or "sm_0cm_10cm" in varname:
@@ -390,36 +390,36 @@ class Transpiration:
         self.casename                =  namelist['General']['casename']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+'/Transpiration/'
 
-        self.Sim_Dir                 =  namelist['TranspirationLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['TranspirationLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['TranspirationLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['TranspirationLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['TranspirationLIST']['Sim_Prefix']
-        self.Sim_SpRes               =  namelist['TranspirationLIST']['Sim_SpRes']
-        self.sim_Syear               =  namelist['TranspirationLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['TranspirationLIST']['Sim_Eyear']
+        self.Sim_Dir                 =  namelist['Transpiration_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['Transpiration_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['Transpiration_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['Transpiration_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['Transpiration_LIST']['Sim_Prefix']
+        self.Sim_SpRes               =  namelist['Transpiration_LIST']['Sim_SpRes']
+        self.sim_Syear               =  namelist['Transpiration_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['Transpiration_LIST']['Sim_Eyear']
 
-        self.obs_source              =  namelist['TranspirationLIST']['Obs_source']
-        self.OBSDIR                  =  namelist['TranspirationLIST']['OBSDIR'] 
-        self.Pltstn                  =  namelist['TranspirationLIST']['Pltstn']
+        self.obs_source              =  namelist['Transpiration_LIST']['Obs_source']
+        self.Obs_Dir                  =  namelist['Transpiration_LIST']['Obs_Dir'] 
+        self.Pltstn                  =  namelist['Transpiration_LIST']['Pltstn']
 
         if (namelist['General']['compare_res'] !="Day"):
             print('the compare_res should be "Day"!')
             sys.exit(1)
-        if (namelist['TranspirationLIST']['Sim_TimRes'] =="Month" or namelist['TranspirationLIST']['Sim_TimRes']=="Year"):
+        if (namelist['Transpiration_LIST']['Sim_TimRes'] =="Month" or namelist['Transpiration_LIST']['Sim_TimRes']=="Year"):
             print('Sim_TimRes="Month" but compare_res="Day", the Sim_TimRes should be "Day" or "Hour"!')
             sys.exit(1) 
       
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['TranspirationLIST']['OBSDIR']    , namelist['TranspirationLIST']['Pltstn'] 
-        del  namelist['TranspirationLIST']['Sim_Dir']   , namelist['TranspirationLIST']['Sim_TimRes'], namelist['TranspirationLIST']['Sim_DataGroupby']
-        del  namelist['TranspirationLIST']['Sim_Suffix'], namelist['TranspirationLIST']['Sim_Prefix'], namelist['TranspirationLIST']['Sim_SpRes']
-        del  namelist['TranspirationLIST']['Sim_Syear'] , namelist['TranspirationLIST']['Sim_Eyear'] , namelist['TranspirationLIST']['Obs_source']   
-        self.variables               =  namelist['TranspirationLIST']
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['Transpiration_LIST']['Obs_Dir']    , namelist['Transpiration_LIST']['Pltstn'] 
+        del  namelist['Transpiration_LIST']['Sim_Dir']   , namelist['Transpiration_LIST']['Sim_TimRes'], namelist['Transpiration_LIST']['Sim_DataGroupby']
+        del  namelist['Transpiration_LIST']['Sim_Suffix'], namelist['Transpiration_LIST']['Sim_Prefix'], namelist['Transpiration_LIST']['Sim_SpRes']
+        del  namelist['Transpiration_LIST']['Sim_Syear'] , namelist['Transpiration_LIST']['Sim_Eyear'] , namelist['Transpiration_LIST']['Obs_source']   
+        self.variables               =  namelist['Transpiration_LIST']
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: TranspirationLIST is empty!")
+            print("Error: Transpiration_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -439,7 +439,7 @@ class Transpiration:
             self.FULLLIST =  f"{self.casedir}/GLEAM_hybird_{self.Sim_SpRes}.txt"
             self.nl       =   f"{self.casedir}/selected_list.txt"
             # Get a list of all NetCDF files in the folder
-            nc_files = [f for f in os.listdir(self.OBSDIR) if f.endswith('.nc')]
+            nc_files = [f for f in os.listdir(self.Obs_Dir) if f.endswith('.nc')]
 
             # Create an empty list to store the lon-lat and time information
             data = []
@@ -447,7 +447,7 @@ class Transpiration:
             # Loop through each NetCDF file in the folder
             for file_name in nc_files:
                 # Open the NetCDF file using xarray
-                ds = xr.open_dataset(os.path.join(self.OBSDIR, file_name))
+                ds = xr.open_dataset(os.path.join(self.Obs_Dir, file_name))
                 # Get the lon-lat information from the NetCDF file
                 lon = ds['lon'].values
                 lat = ds['lat'].values
@@ -518,28 +518,30 @@ class FLUXNET:
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
 
-        self.Sim_Dir                 =  namelist['FLUXNETLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['FLUXNETLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['FLUXNETLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['FLUXNETLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['FLUXNETLIST']['Sim_Prefix']
-        self.sim_Syear               =  namelist['FLUXNETLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['FLUXNETLIST']['Sim_Eyear']
+        self.Sim_Dir                 =  namelist['FLUXNET_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['FLUXNET_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['FLUXNET_LIST']['Sim_DataGroupby']
+        self.Sim_SpRes               =  namelist['FLUXNET_LIST']['Sim_SpRes']
 
-        self.FULLLIST                =  namelist['FLUXNETLIST']['FULLLIST'] 
-        self.OBSDIR                  =  namelist['FLUXNETLIST']['OBSDIR'] 
-        self.obs_source              =  namelist['FLUXNETLIST']['Obs_source']
-        self.Pltstn                  =  namelist['FLUXNETLIST']['Pltstn']
+        self.Sim_Suffix              =  namelist['FLUXNET_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['FLUXNET_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['FLUXNET_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['FLUXNET_LIST']['Sim_Eyear']
+
+        self.FULLLIST                =  namelist['FLUXNET_LIST']['FULLLIST'] 
+        self.Obs_Dir                 =  namelist['FLUXNET_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['FLUXNET_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['FLUXNET_LIST']['Pltstn']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/{self.obs_source}/'
 
-        if (namelist['FLUXNETLIST']['Sim_TimRes'] =="Month"):
+        if (namelist['FLUXNET_LIST']['Sim_TimRes'] =="Month"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Month" but compare_res="Hour", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
             elif (namelist['General']['compare_res'] =="Day"):
                 print('Sim_TimRes="Month" but compare_res="Day", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['FLUXNETLIST']['Sim_TimRes']=="Year"):
+        elif (namelist['FLUXNET_LIST']['Sim_TimRes']=="Year"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Year" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
@@ -549,22 +551,22 @@ class FLUXNET:
             elif (namelist['General']['compare_res']=="Month"):
                 print('Sim_TimRes="Year" but compare_res="Month", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['FLUXNETLIST']['Sim_TimRes']=="Day"):
+        elif (namelist['FLUXNET_LIST']['Sim_TimRes']=="Day"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Day" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
 
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['FLUXNETLIST']['FULLLIST']  , namelist['FLUXNETLIST']['OBSDIR']      , namelist['FLUXNETLIST']['Pltstn']
-        del  namelist['FLUXNETLIST']['Sim_Dir']   , namelist['FLUXNETLIST']['Sim_TimRes']  , namelist['FLUXNETLIST']['Sim_DataGroupby']
-        del  namelist['FLUXNETLIST']['Sim_Suffix'], namelist['FLUXNETLIST']['Sim_Prefix']  , namelist['FLUXNETLIST']['Obs_source']
-
-        self.variables               =  namelist['FLUXNETLIST']
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['FLUXNET_LIST']['FULLLIST']  , namelist['FLUXNET_LIST']['Obs_Dir']      , namelist['FLUXNET_LIST']['Pltstn']
+        del  namelist['FLUXNET_LIST']['Sim_Dir']   , namelist['FLUXNET_LIST']['Sim_TimRes']  , namelist['FLUXNET_LIST']['Sim_DataGroupby']
+        del  namelist['FLUXNET_LIST']['Sim_Suffix'], namelist['FLUXNET_LIST']['Sim_Prefix']  , namelist['FLUXNET_LIST']['Obs_source']
+        del  namelist['FLUXNET_LIST']['Sim_SpRes']
+        self.variables               =  namelist['FLUXNET_LIST']
 
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: FLUXNETLIST is empty!")
+            print("Error: FLUXNET_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -616,7 +618,7 @@ class FLUXNET:
 
 class Evapotranspiration:
     def __init__(self,namelist):
-        self.name = 'FLUXNET'
+        self.name = 'Evapotranspiration'
         self.version = '0.1'
         self.release = '0.1'
         self.date    = 'Mar 2023'
@@ -631,28 +633,28 @@ class Evapotranspiration:
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
 
-        self.Sim_Dir                 =  namelist['EvapotranspirationLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['EvapotranspirationLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['EvapotranspirationLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['EvapotranspirationLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['EvapotranspirationLIST']['Sim_Prefix']
-        self.sim_Syear               =  namelist['EvapotranspirationLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['EvapotranspirationLIST']['Sim_Eyear']
-        self.Sim_SpRes               =  namelist['EvapotranspirationLIST']['Sim_SpRes']
+        self.Sim_Dir                 =  namelist['Evapotranspiration_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['Evapotranspiration_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['Evapotranspiration_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['Evapotranspiration_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['Evapotranspiration_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['Evapotranspiration_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['Evapotranspiration_LIST']['Sim_Eyear']
+        self.Sim_SpRes               =  namelist['Evapotranspiration_LIST']['Sim_SpRes']
 
-        self.OBSDIR                  =  namelist['EvapotranspirationLIST']['OBSDIR'] 
-        self.obs_source              =  namelist['EvapotranspirationLIST']['Obs_source']
-        self.Pltstn                  =  namelist['EvapotranspirationLIST']['Pltstn']
+        self.Obs_Dir                  =  namelist['Evapotranspiration_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['Evapotranspiration_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['Evapotranspiration_LIST']['Pltstn']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/Evapotranspiration/{self.obs_source}/'
 
-        if (namelist['EvapotranspirationLIST']['Sim_TimRes'] =="Month"):
+        if (namelist['Evapotranspiration_LIST']['Sim_TimRes'] =="Month"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Month" but compare_res="Hour", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
             elif (namelist['General']['compare_res'] =="Day"):
                 print('Sim_TimRes="Month" but compare_res="Day", the compare_res should be "Month" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['EvapotranspirationLIST']['Sim_TimRes']=="Year"):
+        elif (namelist['Evapotranspiration_LIST']['Sim_TimRes']=="Year"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Year" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
@@ -662,23 +664,23 @@ class Evapotranspiration:
             elif (namelist['General']['compare_res']=="Month"):
                 print('Sim_TimRes="Year" but compare_res="Month", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
-        elif (namelist['EvapotranspirationLIST']['Sim_TimRes']=="Day"):
+        elif (namelist['Evapotranspiration_LIST']['Sim_TimRes']=="Day"):
             if (namelist['General']['compare_res']=="Hour"):
                 print('Sim_TimRes="Day" but compare_res="Hour", the compare_res should be "Year" or longer than Sim_TimRes!')
                 sys.exit(1) 
 
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['EvapotranspirationLIST']['OBSDIR']      , namelist['EvapotranspirationLIST']['Pltstn']    , namelist['EvapotranspirationLIST']['Sim_SpRes']
-        del  namelist['EvapotranspirationLIST']['Sim_Dir']   , namelist['EvapotranspirationLIST']['Sim_TimRes']  , namelist['EvapotranspirationLIST']['Sim_DataGroupby']
-        del  namelist['EvapotranspirationLIST']['Sim_Suffix'], namelist['EvapotranspirationLIST']['Sim_Prefix']  , namelist['EvapotranspirationLIST']['Obs_source']
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['Evapotranspiration_LIST']['Obs_Dir']      , namelist['Evapotranspiration_LIST']['Pltstn']    , namelist['Evapotranspiration_LIST']['Sim_SpRes']
+        del  namelist['Evapotranspiration_LIST']['Sim_Dir']   , namelist['Evapotranspiration_LIST']['Sim_TimRes']  , namelist['Evapotranspiration_LIST']['Sim_DataGroupby']
+        del  namelist['Evapotranspiration_LIST']['Sim_Suffix'], namelist['Evapotranspiration_LIST']['Sim_Prefix']  , namelist['Evapotranspiration_LIST']['Obs_source']
 
-        self.variables               =  namelist['EvapotranspirationLIST']
+        self.variables               =  namelist['Evapotranspiration_LIST']
         print(self.variables)
 
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: EvapotranspirationLIST is empty!")
+            print("Error: Evapotranspiration_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -698,14 +700,14 @@ class Evapotranspiration:
             self.FULLLIST =  f"{self.casedir}/scratch/{self.obs_source}_{self.Sim_SpRes}.txt"
 
             # Get a list of all NetCDF files in the folder
-            nc_files = [f for f in os.listdir(self.OBSDIR) if f.endswith('.nc')]
+            nc_files = [f for f in os.listdir(self.Obs_Dir) if f.endswith('.nc')]
 
             # Create an empty list to store the lon-lat and time information
             data = []
             # Loop through each NetCDF file in the folder
             for file_name in nc_files:
                 # Open the NetCDF file using xarray
-                ds = xr.open_dataset(os.path.join(self.OBSDIR, file_name))
+                ds = xr.open_dataset(os.path.join(self.Obs_Dir, file_name))
                 # Get the lon-lat information from the NetCDF file
                 lon = ds['lon']#.values 
                 lat = ds['lat']#.values 
@@ -781,18 +783,18 @@ class LAI:
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
 
-        self.Sim_Dir                 =  namelist['LAILIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['LAILIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['LAILIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['LAILIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['LAILIST']['Sim_Prefix']
-        self.sim_Syear               =  namelist['LAILIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['LAILIST']['Sim_Eyear']
-        self.Sim_SpRes               =  namelist['LAILIST']['Sim_SpRes']
+        self.Sim_Dir                 =  namelist['LAI_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['LAI_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['LAI_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['LAI_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['LAI_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['LAI_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['LAI_LIST']['Sim_Eyear']
+        self.Sim_SpRes               =  namelist['LAI_LIST']['Sim_SpRes']
 
-        self.OBSDIR                  =  namelist['LAILIST']['OBSDIR'] 
-        self.obs_source              =  namelist['LAILIST']['Obs_source']
-        self.Pltstn                  =  namelist['LAILIST']['Pltstn']
+        self.Obs_Dir                  =  namelist['LAI_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['LAI_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['LAI_LIST']['Pltstn']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/LAI/{self.obs_source}/'
         
         if (self.obs_source=='Yuan2022'):
@@ -800,19 +802,19 @@ class LAI:
                 print('compare_res="Hour", the compare_res should be "Day","Month" ')
                 sys.exit(1) 
             
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['LAILIST']['OBSDIR']      , namelist['LAILIST']['Pltstn']    , namelist['LAILIST']['Sim_SpRes']
-        del  namelist['LAILIST']['Sim_Dir']     , namelist['LAILIST']['Sim_TimRes']  , namelist['LAILIST']['Sim_DataGroupby']
-        del  namelist['LAILIST']['Sim_Suffix']  , namelist['LAILIST']['Sim_Prefix']  , namelist['LAILIST']['Obs_source']
-        del  namelist['LAILIST']['Sim_Syear']   , namelist['LAILIST']['Sim_Eyear']  
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['LAI_LIST']['Obs_Dir']      , namelist['LAI_LIST']['Pltstn']    , namelist['LAI_LIST']['Sim_SpRes']
+        del  namelist['LAI_LIST']['Sim_Dir']     , namelist['LAI_LIST']['Sim_TimRes']  , namelist['LAI_LIST']['Sim_DataGroupby']
+        del  namelist['LAI_LIST']['Sim_Suffix']  , namelist['LAI_LIST']['Sim_Prefix']  , namelist['LAI_LIST']['Obs_source']
+        del  namelist['LAI_LIST']['Sim_Syear']   , namelist['LAI_LIST']['Sim_Eyear']  
 
-        self.variables               =  namelist['LAILIST']
+        self.variables               =  namelist['LAI_LIST']
         print(self.variables)
 
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: LAILIST is empty!")
+            print("Error: LAI_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -833,7 +835,7 @@ class LAI:
             data = []
             if (self.compare_res=="Day"):
                 file_name = 'lai_8-day_500.nc'
-                with xr.open_dataset(os.path.join(self.OBSDIR, file_name)) as ds:
+                with xr.open_dataset(os.path.join(self.Obs_Dir, file_name)) as ds:
                     for ii in range(len(ds['site'])):
                         print(ds['lai'][:,ii])
                         k=ds['lai'][:,ii].squeeze()
@@ -859,7 +861,7 @@ class LAI:
                 print('save list done')
             elif (self.compare_res=="Month"):
                 file_name = 'lai_monthly_500.nc'
-                with xr.open_dataset(os.path.join(self.OBSDIR, file_name)) as ds:
+                with xr.open_dataset(os.path.join(self.Obs_Dir, file_name)) as ds:
                     for ii in range(len(ds['site'])):
                         print(ds['lai'][:,ii])
                         k=ds['lai'][:,ii].squeeze()
@@ -926,32 +928,32 @@ class Altimetry:
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
 
-        self.Sim_Dir                 =  namelist['AltimetryLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['AltimetryLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['AltimetryLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['AltimetryLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['AltimetryLIST']['Sim_Prefix']
-        self.sim_Syear               =  namelist['AltimetryLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['AltimetryLIST']['Sim_Eyear']
-        self.Sim_SpRes               =  namelist['AltimetryLIST']['Sim_SpRes']
+        self.Sim_Dir                 =  namelist['Altimetry_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['Altimetry_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['Altimetry_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['Altimetry_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['Altimetry_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['Altimetry_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['Altimetry_LIST']['Sim_Eyear']
+        self.Sim_SpRes               =  namelist['Altimetry_LIST']['Sim_SpRes']
 
-        self.OBSDIR                  =  namelist['AltimetryLIST']['OBSDIR'] 
-        self.obs_source              =  namelist['AltimetryLIST']['Obs_source']
-        self.Pltstn                  =  namelist['AltimetryLIST']['Pltstn']
+        self.Obs_Dir                  =  namelist['Altimetry_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['Altimetry_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['Altimetry_LIST']['Pltstn']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/Altimetry/{self.obs_source}/'
 
-        #remove namelist['FLUXNETLIST']['FULLLIST'],namelist['FLUXNETLIST']['OBSDIR'] , then self.variables is variables list
-        del  namelist['AltimetryLIST']['OBSDIR']      , namelist['AltimetryLIST']['Pltstn']    , namelist['AltimetryLIST']['Sim_SpRes']
-        del  namelist['AltimetryLIST']['Sim_Dir']   , namelist['AltimetryLIST']['Sim_TimRes']  , namelist['AltimetryLIST']['Sim_DataGroupby']
-        del  namelist['AltimetryLIST']['Sim_Suffix'], namelist['AltimetryLIST']['Sim_Prefix']  , namelist['AltimetryLIST']['Obs_source']
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['Altimetry_LIST']['Obs_Dir']      , namelist['Altimetry_LIST']['Pltstn']    , namelist['Altimetry_LIST']['Sim_SpRes']
+        del  namelist['Altimetry_LIST']['Sim_Dir']   , namelist['Altimetry_LIST']['Sim_TimRes']  , namelist['Altimetry_LIST']['Sim_DataGroupby']
+        del  namelist['Altimetry_LIST']['Sim_Suffix'], namelist['Altimetry_LIST']['Sim_Prefix']  , namelist['Altimetry_LIST']['Obs_source']
 
-        self.variables               =  namelist['AltimetryLIST']
+        self.variables               =  namelist['Altimetry_LIST']
         print(self.variables)
 
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: AltimetryLIST is empty!")
+            print("Error: Altimetry_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -967,7 +969,7 @@ class Altimetry:
         if (self.obs_source=='HydroWeb_2.0'):
             #creat tmp directory
             os.makedirs(self.casedir+'/scratch', exist_ok=True)
-            self.FULLLIST                =  f"{self.OBSDIR}/HydroWeb_VS"
+            self.FULLLIST                =  f"{self.Obs_Dir}/HydroWeb_VS"
             print(self.FULLLIST)
             station_list                 =  pd.read_csv(f"{self.FULLLIST}",delimiter=',',header=0)
             station_list['ID']=station_list['identifier']
@@ -983,10 +985,10 @@ class Altimetry:
             # Create an empty list to store the lon-lat and time information
             data = []
             for i in range(len(station_list['ID'])):
-                if(os.path.exists(f"{self.OBSDIR}/hydroprd_{station_list['ID'][i]}.txt")):
+                if(os.path.exists(f"{self.Obs_Dir}/hydroprd_{station_list['ID'][i]}.txt")):
                     station_list['ID'].values[i]=f"hydroprd_{station_list['ID'][i]}"
                      # read the dataset and specify column names, ignore lines starting with #
-                    df = pd.read_csv((f"{self.OBSDIR}/{station_list['ID'][i]}.txt"), header=None, names=['date', 'time', 'height', 'uncertainty'], delim_whitespace=True, comment='#')
+                    df = pd.read_csv((f"{self.Obs_Dir}/{station_list['ID'][i]}.txt"), header=None, names=['date', 'time', 'height', 'uncertainty'], delim_whitespace=True, comment='#')
                     # combine date and time columns into a single datetime column
                     df['datetime'] = pd.to_datetime(df['date'] + ' ' + df['time'])
                     # set datetime column as index and drop date and time columns
@@ -1037,32 +1039,32 @@ class Dam:
         self.compare_res             =  namelist['General']['compare_res']
         self.casename                =  namelist['General']['casename']
 
-        self.Sim_Dir                 =  namelist['DamLIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist['DamLIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist['DamLIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist['DamLIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist['DamLIST']['Sim_Prefix']
-        self.sim_Syear               =  namelist['DamLIST']['Sim_Syear']
-        self.sim_Eyear               =  namelist['DamLIST']['Sim_Eyear']
-        self.Sim_SpRes               =  namelist['DamLIST']['Sim_SpRes']
+        self.Sim_Dir                 =  namelist['Dam_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['Dam_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['Dam_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['Dam_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['Dam_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['Dam_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['Dam_LIST']['Sim_Eyear']
+        self.Sim_SpRes               =  namelist['Dam_LIST']['Sim_SpRes']
 
-        self.OBSDIR                  =  namelist['DamLIST']['OBSDIR'] 
-        self.obs_source              =  namelist['DamLIST']['Obs_source']
-        self.Pltstn                  =  namelist['DamLIST']['Pltstn']
+        self.Obs_Dir                  =  namelist['Dam_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['Dam_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['Dam_LIST']['Pltstn']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/Dam/{self.obs_source}/'
 
-        del  namelist['DamLIST']['OBSDIR'], namelist['DamLIST']['Pltstn']    , namelist['DamLIST']['Sim_SpRes']
-        del  namelist['DamLIST']['Sim_Dir']   , namelist['DamLIST']['Sim_TimRes']  , namelist['DamLIST']['Sim_DataGroupby']
-        del  namelist['DamLIST']['Sim_Suffix'], namelist['DamLIST']['Sim_Prefix']  , namelist['DamLIST']['Obs_source']
-        del  namelist['DamLIST']['Sim_Syear'], namelist['DamLIST']['Sim_Eyear']   
+        del  namelist['Dam_LIST']['Obs_Dir'], namelist['Dam_LIST']['Pltstn']    , namelist['Dam_LIST']['Sim_SpRes']
+        del  namelist['Dam_LIST']['Sim_Dir']   , namelist['Dam_LIST']['Sim_TimRes']  , namelist['Dam_LIST']['Sim_DataGroupby']
+        del  namelist['Dam_LIST']['Sim_Suffix'], namelist['Dam_LIST']['Sim_Prefix']  , namelist['Dam_LIST']['Obs_source']
+        del  namelist['Dam_LIST']['Sim_Syear'], namelist['Dam_LIST']['Sim_Eyear']   
 
-        self.variables               =  namelist['DamLIST']
+        self.variables               =  namelist['Dam_LIST']
         print(self.variables)
 
         #select the key values are string in self.variables, and save them in self.variables
         self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
         if len(self.variables) == 0:
-            print("Error: DamLIST is empty!")
+            print("Error: Dam_LIST is empty!")
             sys.exit()
         #select the key values are True in namelist['metrics'], and save them in self.metrics
         self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
@@ -1077,7 +1079,7 @@ class Dam:
         
         if (self.obs_source=='ResOpsUS'):
             os.makedirs(self.casedir+'/scratch', exist_ok=True)
-            self.FULLLIST                =  f"{self.OBSDIR}/../../dam_params_glb_{self.Sim_SpRes}.csv"
+            self.FULLLIST                =  f"{self.Obs_Dir}/../../dam_params_glb_{self.Sim_SpRes}.csv"
             print(self.FULLLIST)
             station_list = pd.read_csv(self.FULLLIST, skiprows=1, header=0,delimiter=",",)
             print(station_list)
@@ -1091,10 +1093,10 @@ class Dam:
             station_list['lat']=station_list['DamLat'].astype(float)
             data = []
             for i in range(len(station_list['GRAND_ID'])):
-                if(os.path.exists(f"{self.OBSDIR}/ResOpsUS_{station_list['GRAND_ID'][i]}.csv")):
+                if(os.path.exists(f"{self.Obs_Dir}/ResOpsUS_{station_list['GRAND_ID'][i]}.csv")):
                     station_list['ID'].values[i]=f"ResOpsUS_{station_list['GRAND_ID'][i]}"
                      # read the dataset and specify column names, ignore lines starting with #
-                    df = pd.read_csv((f"{self.OBSDIR}/{station_list['ID'][i]}.csv"), header=0)
+                    df = pd.read_csv((f"{self.Obs_Dir}/{station_list['ID'][i]}.csv"), header=0)
                     df['datetime'] = pd.to_datetime(df['date'])
 
                     storage=df['storage'].values.reshape(len(df['storage']))
@@ -1173,6 +1175,123 @@ class Dam:
             # print(data_select)
             data_select.to_csv(f"{self.casedir}/selected_list.txt",index=False)
 
+class Methane:
+    def __init__(self,namelist):
+        self.name = 'Methane'
+        self.version = '0.1'
+        self.release = '0.1'
+        self.date    = 'Mar 2023'
+        self.author  = "Zhongwang Wei / zhongwang007@gmail.com"
+        self.Minimum_lenghth         =  namelist['General']['Min_year']
+        self.Max_lat                 =  namelist['General']['Max_lat']
+        self.Min_lat                 =  namelist['General']['Min_lat']
+        self.Max_lon                 =  namelist['General']['Max_lon']
+        self.Min_lon                 =  namelist['General']['Min_lon']
+        self.Syear                   =  namelist['General']['Syear']
+        self.Eyear                   =  namelist['General']['Eyear']
+        self.compare_res             =  namelist['General']['compare_res']
+        self.casename                =  namelist['General']['casename']
 
+        self.Sim_Dir                 =  namelist['Methane_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist['Methane_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist['Methane_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist['Methane_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist['Methane_LIST']['Sim_Prefix']
+        self.sim_Syear               =  namelist['Methane_LIST']['Sim_Syear']
+        self.sim_Eyear               =  namelist['Methane_LIST']['Sim_Eyear']
+        self.Sim_SpRes               =  namelist['Methane_LIST']['Sim_SpRes']
+
+        self.Obs_Dir                  =  namelist['Methane_LIST']['Obs_Dir'] 
+        self.obs_source              =  namelist['Methane_LIST']['Obs_source']
+        self.Pltstn                  =  namelist['Methane_LIST']['Pltstn']
+        self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/Methane/{self.obs_source}/'
+        
+        if (self.obs_source=='Yuan2022'):
+            if ((namelist['General']['compare_res']=="Hour") or (namelist['General']['compare_res']=="Year") ):
+                print('compare_res="Hour", the compare_res should be "Day","Month" ')
+                sys.exit(1) 
+            
+        #remove namelist['FLUXNET_LIST']['FULLLIST'],namelist['FLUXNET_LIST']['Obs_Dir'] , then self.variables is variables list
+        del  namelist['Methane_LIST']['Obs_Dir']      , namelist['Methane_LIST']['Pltstn']    , namelist['Methane_LIST']['Sim_SpRes']
+        del  namelist['Methane_LIST']['Sim_Dir']     , namelist['Methane_LIST']['Sim_TimRes']  , namelist['Methane_LIST']['Sim_DataGroupby']
+        del  namelist['Methane_LIST']['Sim_Suffix']  , namelist['Methane_LIST']['Sim_Prefix']  , namelist['Methane_LIST']['Obs_source']
+        del  namelist['Methane_LIST']['Sim_Syear']   , namelist['Methane_LIST']['Sim_Eyear']  
+
+        self.variables               =  namelist['Methane_LIST']
+        print(self.variables)
+
+        #select the key values are string in self.variables, and save them in self.variables
+        self.variables = {k: v for k, v in self.variables.items() if isinstance(v, str)}
+        if len(self.variables) == 0:
+            print("Error: Methane_LIST is empty!")
+            sys.exit()
+        #select the key values are True in namelist['metrics'], and save them in self.metrics
+        self.metrics = {k: v for k, v in namelist['metrics'].items() if v == True}
+
+    def makelist(self):
+        #creat directory if not exist
+        if not os.path.isdir(self.casedir):
+            #print('The directory is not present. Creating a new one..')
+            os.makedirs(self.casedir)
+        else:
+            print('Be caution: The directory is exist.')
+
+        if (self.obs_source=='Yuan2022'):
+            #creat tmp directory
+            os.makedirs(self.casedir+'/scratch', exist_ok=True)
+            self.FULLLIST =  f"{self.casedir}/scratch/{self.obs_source}_{self.compare_res}.txt"
+            # Create an empty list to store the lon-lat and time information
+            data = []
+            if  (self.compare_res=="Month"):
+                file_name = 'FCH4_F_ANN_monthly_wetland_tier1.nc'
+                with xr.open_dataset(os.path.join(self.Obs_Dir, file_name)) as ds:
+                    for ii in range(len(ds['FCH4'].shape[1])):
+                        print(ds['FCH4'][:,ii])
+                        k=ds['FCH4'][:,ii].squeeze()
+                        lon = ds['lon'][ii].values#.values 
+                        lat = ds['lat'][ii].values#.values 
+                        k.to_netcdf(f"{self.casedir}/scratch/FCH4_{ii}.nc")
+
+                        # Get the time information from the NetCDF file
+                        time = ds['time']
+                        SYear = pd.to_datetime(time.values[0]).year
+                        SMon = pd.to_datetime(time.values[0]).month
+                        EYear = pd.to_datetime(time.values[-1]).year
+                        EMon = pd.to_datetime(time.values[-1]).month
+                        sitename=ii
+                        # Append the data to the list
+                        data.append([sitename, float(lon), float(lat), SYear,SMon, EYear, EMon])
+                        # Close the NetCDF file
+                    ds.close()
+                # Convert the list of data into a pandas DataFrame
+                df = pd.DataFrame(data, columns=['sitename', 'lon', 'lat', 'SYear', 'SMon', 'EYear', 'EMon'])
+                # Save the pandas DataFrame to a CSV file
+                df.to_csv(self.FULLLIST,index=False)
+                print('save list done')
+        
+        station_list                 = pd.read_csv(f"{self.FULLLIST}",header=0)
+        print(station_list)
+        station_list['Flag']     =[False] * len(station_list['lon'])  
+        station_list['use_Syear']=[-9999] * len(station_list['lon'])   
+        station_list['use_Eyear']=[-9999] * len(station_list['lon'])
+        station_list['obs_Syear']=station_list['SYear']
+        station_list['obs_Eyear']=station_list['EYear']
+        station_list['ID']       =station_list['sitename']
+        for i in range(len(station_list['lon'])):
+            station_list['use_Syear'].values[i]=max(station_list['obs_Syear'].values[i],self.sim_Syear,self.Syear)
+            station_list['use_Eyear'].values[i]=min(station_list['obs_Eyear'].values[i],self.sim_Eyear,self.Eyear)
+            if ((station_list['use_Eyear'].values[i]-station_list['use_Syear'].values[i]>=self.Minimum_lenghth) &\
+                                (station_list['lon'].values[i]>=self.Min_lon) &\
+                                (station_list['lon'].values[i]<=self.Max_lon) &\
+                                (station_list['lat'].values[i]>=self.Min_lat) &\
+                                (station_list['lat'].values[i]<=self.Max_lat) 
+                                ): 
+                station_list['Flag'].values[i]=True
+
+        
+        ind = station_list[station_list['Flag']==True].index
+        data_select = station_list.loc[ind]
+        # print(data_select)
+        data_select.to_csv(f"{self.casedir}/selected_list.txt",index=False)
 
 
