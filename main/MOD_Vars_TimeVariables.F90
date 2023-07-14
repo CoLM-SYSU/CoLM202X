@@ -753,6 +753,7 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
      real(r8), allocatable :: wat          (:) ! total water storage [mm]
      real(r8), allocatable :: wdsrf        (:) ! depth of surface water [mm]
+     real(r8), allocatable :: rss          (:) ! soil surface resistance [m/s]
 
      real(r8), allocatable :: t_lake     (:,:) ! lake layer teperature [K]
      real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
@@ -770,7 +771,6 @@ MODULE MOD_Vars_TimeVariables
      REAL(r8), allocatable :: ssno   (:,:,:,:) ! snow layer absorption [-]
 
      real(r8), allocatable :: trad         (:) ! radiative temperature of surface [K]
-     real(r8), allocatable :: rss          (:) ! radiative temperature of surface [K]
      real(r8), allocatable :: tref         (:) ! 2 m height air temperature [kelvin]
      real(r8), allocatable :: qref         (:) ! 2 m height air specific humidity
      real(r8), allocatable :: rst          (:) ! canopy stomatal resistance (s/m)
@@ -879,6 +879,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (wa                          (numpatch))
            allocate (wat                         (numpatch))
            allocate (wdsrf                       (numpatch))
+           allocate (rss                         (numpatch))
 
            allocate (t_lake              (nl_lake,numpatch))!new lake scheme
            allocate (lake_icefrac        (nl_lake,numpatch))!new lake scheme
@@ -896,7 +897,6 @@ MODULE MOD_Vars_TimeVariables
            allocate (ssno         (2,2,maxsnl+1:1,numpatch))
 
            allocate (trad                        (numpatch))
-           allocate (rss                         (numpatch))
            allocate (tref                        (numpatch))
            allocate (qref                        (numpatch))
            allocate (rst                         (numpatch))
@@ -1014,6 +1014,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (wa                     )
            deallocate (wat                    )
            deallocate (wdsrf                  )
+           deallocate (rss                    )
 
            deallocate (t_lake                 ) ! new lake scheme
            deallocate (lake_icefrac           ) ! new lake scheme
@@ -1031,7 +1032,6 @@ MODULE MOD_Vars_TimeVariables
            deallocate (ssno                   )
 
            deallocate (trad                   )
-           deallocate (rss                    )
            deallocate (tref                   )
            deallocate (qref                   )
            deallocate (rst                    )
@@ -1201,6 +1201,7 @@ MODULE MOD_Vars_TimeVariables
      call ncio_write_vector (file_restart, 'zwt     '   , 'patch', landpatch, zwt       , compress)                    ! the depth to water table [m]
      call ncio_write_vector (file_restart, 'wa      '   , 'patch', landpatch, wa        , compress)                    ! water storage in aquifer [mm]
      call ncio_write_vector (file_restart, 'wdsrf   '   , 'patch', landpatch, wdsrf     , compress)                    ! depth of surface water [mm]
+     call ncio_write_vector (file_restart, 'rss     '   , 'patch', landpatch, rss       , compress)                    ! soil surface resistance [m/s]
 
      call ncio_write_vector (file_restart, 't_lake  '   , 'lake', nl_lake, 'patch', landpatch, t_lake      , compress) !
      call ncio_write_vector (file_restart, 'lake_icefrc', 'lake', nl_lake, 'patch', landpatch, lake_icefrac, compress) !
@@ -1218,7 +1219,6 @@ MODULE MOD_Vars_TimeVariables
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM)
      call ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) ! radiative temperature of surface [K]
-     call ncio_write_vector (file_restart, 'rss  ', 'patch', landpatch, rss  , compress) ! soil surface resistance [m/s]
      call ncio_write_vector (file_restart, 'tref ', 'patch', landpatch, tref , compress) ! 2 m height air temperature [kelvin]
      call ncio_write_vector (file_restart, 'qref ', 'patch', landpatch, qref , compress) ! 2 m height air specific humidity
      call ncio_write_vector (file_restart, 'rst  ', 'patch', landpatch, rst  , compress) ! canopy stomatal resistance (s/m)
@@ -1344,6 +1344,7 @@ MODULE MOD_Vars_TimeVariables
      call ncio_read_vector (file_restart, 'zwt     '   , landpatch, zwt        ) ! the depth to water table [m]
      call ncio_read_vector (file_restart, 'wa      '   , landpatch, wa         ) ! water storage in aquifer [mm]
      call ncio_read_vector (file_restart, 'wdsrf   '   , landpatch, wdsrf      ) ! depth of surface water [mm]
+     call ncio_read_vector (file_restart, 'rss     '   , landpatch, rss        ) ! soil surface resistance [m/s]
 
      call ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      call ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
@@ -1362,7 +1363,6 @@ MODULE MOD_Vars_TimeVariables
 
      ! Additional variables required by reginal model (such as WRF ) RSM)
      call ncio_read_vector (file_restart, 'trad ', landpatch, trad ) ! radiative temperature of surface [K]
-     call ncio_read_vector (file_restart, 'rss  ', landpatch, rss  ) ! soil surface resistance [m/s]
      call ncio_read_vector (file_restart, 'tref ', landpatch, tref ) ! 2 m height air temperature [kelvin]
      call ncio_read_vector (file_restart, 'qref ', landpatch, qref ) ! 2 m height air specific humidity
      call ncio_read_vector (file_restart, 'rst  ', landpatch, rst  ) ! canopy stomatal resistance (s/m)

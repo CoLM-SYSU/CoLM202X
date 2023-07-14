@@ -31,14 +31,9 @@ MODULE MOD_LeafTemperaturePC
               frl     ,thermk  ,fshade  ,rstfacsun,       rstfacsha,&
               gssun   ,gssha   ,po2m    ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,&
-<<<<<<< HEAD
               sigf    ,etrc    ,tg      ,qg,rss  ,dqgdT   ,emg     ,&
-               z0mpc   ,tl      ,ldew, ldew_rain,ldew_snow    ,taux    ,tauy    ,fseng   ,&
-=======
-              sigf    ,etrc    ,tg      ,qg      ,dqgdT   ,emg     ,&
               z0mpc   ,tl      ,ldew    ,ldew_rain       ,ldew_snow,&
               taux    ,tauy    ,fseng   ,&
->>>>>>> f4e9f09417d98e02f70a7714481609f8e0986063
               fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
               rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
@@ -1110,13 +1105,13 @@ MODULE MOD_LeafTemperaturePC
                 ENDIF
 
                 cgh(i) = 1. / rd(i)
-                IF (i == botlay) THEN        
+                IF (i == botlay) THEN
                    IF (qg < qaf(botlay)) THEN
                       cgw(i) = 1. / rd(i) !dew case. no soil resistance
                    ELSE
                       cgw(i) = 1. / (rd(i) + rss)
                    ENDIF
-                ELSE   
+                ELSE
                 cgw(i) = 1. / rd(i)
                 ENDIF
              ENDIF
