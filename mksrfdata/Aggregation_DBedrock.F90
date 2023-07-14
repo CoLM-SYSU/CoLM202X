@@ -20,7 +20,7 @@ SUBROUTINE Aggregation_DBedrock ( &
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
-   USE MOD_CoLMDebug
+   USE MOD_RangeCheck
    USE MOD_AggregationRequestData
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
@@ -99,7 +99,7 @@ SUBROUTINE Aggregation_DBedrock ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('dbedrock_patches ', dbedrock_patches, -9999.0)
 #endif
 

@@ -1239,7 +1239,7 @@ ENDIF
          errore = errore - (t_soisno(j)-t_soisno_bef(j))/fact(j)
       ENDDO
 
-#if (defined CoLMDEBUG)
+#if (defined RangeCheck)
       IF (abs(errore) > .5) THEN
       write(6,*) 'THERMAL.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl

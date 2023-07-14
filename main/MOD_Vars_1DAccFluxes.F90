@@ -1271,7 +1271,6 @@ contains
       use MOD_FrictionVelocity
       USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
-      use MOD_CoLMDebug
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
       USE MOD_Hydro_Hist, only : accumulate_fluxes_basin

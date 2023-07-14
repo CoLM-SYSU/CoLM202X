@@ -20,8 +20,8 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
    USE MOD_AggregationRequestData
 
@@ -153,7 +153,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
 #endif
 
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('PCT_PFTs ', pct_pfts)
 #endif
 
@@ -257,7 +257,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('PCT_PCs ', pct_pcs)
 #endif
 

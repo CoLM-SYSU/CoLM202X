@@ -837,6 +837,13 @@ CONTAINS
          if (ilon == ilon_e) exit
       end do
 
+      DO ilon = 2, this%ginfo%nlon
+         IF ((this%ginfo%lon_c(ilon) < this%ginfo%lon_c(ilon-1)) &
+            .and. (this%ginfo%lon_c(ilon) < 0)) THEN
+            this%ginfo%lon_c(ilon) = this%ginfo%lon_c(ilon) + 360.0
+         ENDIF
+      ENDDO
+
       IF (allocated(this%xsegs)) deallocate(this%xsegs)
       allocate (this%xsegs (this%nxseg))
 

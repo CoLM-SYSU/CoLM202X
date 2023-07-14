@@ -19,8 +19,8 @@ SUBROUTINE Aggregation_Topography ( &
    USE MOD_LandPatch
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
    USE MOD_AggregationRequestData
    USE MOD_Utils
@@ -105,7 +105,7 @@ SUBROUTINE Aggregation_Topography ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('topography_patches ', topography_patches)
 #endif
 

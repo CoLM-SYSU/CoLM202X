@@ -25,8 +25,8 @@ MODULE MOD_PercentagesPFTReadin
       use MOD_SPMD_Task
       USE MOD_NetCDFVector
       USE MOD_LandPatch
-#ifdef CoLMDEBUG
-      USE MOD_CoLMDebug
+#ifdef RangeCheck
+      USE MOD_RangeCheck
 #endif
 #ifdef LULC_IGBP_PFT
       use MOD_LandPFT
@@ -64,7 +64,7 @@ MODULE MOD_PercentagesPFTReadin
 #endif
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       IF (p_is_worker) THEN
          npatch = count(landpatch%settyp == 1)
          allocate (sumpct (npatch))
@@ -95,7 +95,7 @@ MODULE MOD_PercentagesPFTReadin
       pcfrac(:,1) = SITE_pctpfts
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       IF (p_is_worker) THEN
          allocate (sumpct (numpc))
          sumpct = sum(pcfrac,dim=1)
