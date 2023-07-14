@@ -106,7 +106,7 @@ CONTAINS
    ! ------ SUBROUTINE ------
    subroutine srfdata_map_and_write ( &
          vsrfdata, settyp, typindex, m_srf, spv, filename, dataname, &
-         compress, write_mode)
+         compress, write_mode, lastdimname, lastdimvalue)
 
       use MOD_SPMD_Task
       use MOD_Namelist
@@ -129,6 +129,9 @@ CONTAINS
       integer, intent(in) :: compress
 
       character (len=*), intent(in), optional :: write_mode
+      
+      character (len=*), intent(in), optional :: lastdimname
+      integer, intent(in), optional :: lastdimvalue
 
       ! Local variables
       type(block_data_real8_3d) :: wdata, sumwt
@@ -141,6 +144,7 @@ CONTAINS
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
       LOGICAL :: fexists
+      integer :: ilastdim 
 
       IF (present(write_mode)) THEN
          wmode = trim(write_mode)
@@ -262,9 +266,16 @@ CONTAINS
                CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
 
                call ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
+
             ENDIF
 
-            call ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+            IF (present(lastdimname) .and. present(lastdimvalue)) THEN
+               CALL ncio_write_lastdim (filename, lastdimname, lastdimvalue, ilastdim)
+               call ncio_write_serial_time (filename, dataname, ilastdim, vdata, &
+                  'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+            ELSE
+               call ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
+            ENDIF
 
             CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
 
@@ -325,8 +336,14 @@ CONTAINS
                   CALL srf_write_grid_info   (fileblock, gdiag, iblk, jblk)
                ENDIF
 
-               call ncio_write_serial (fileblock, dataname, &
-                  wdata%blk(iblk,jblk)%val, 'TypeIndex', 'lon', 'lat', compress)
+               IF (present(lastdimname) .and. present(lastdimvalue)) THEN
+                  CALL ncio_write_lastdim (fileblock, lastdimname, lastdimvalue, ilastdim)
+                  call ncio_write_serial_time (fileblock, dataname, ilastdim, wdata%blk(iblk,jblk)%val, &
+                     'TypeIndex', 'lon', 'lat', trim(lastdimname), compress)
+               ELSE
+                  call ncio_write_serial (fileblock, dataname, &
+                     wdata%blk(iblk,jblk)%val, 'TypeIndex', 'lon', 'lat', compress)
+               ENDIF
 
                CALL ncio_put_attr (fileblock, dataname, 'missing_value', spv)
 

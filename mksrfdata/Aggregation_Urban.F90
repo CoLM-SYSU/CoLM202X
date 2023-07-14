@@ -18,7 +18,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
-   USE MOD_CoLMDebug
    USE MOD_AggregationRequestData
    USE MOD_5x5DataReadin
    USE MOD_DataType
@@ -207,8 +206,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
-   CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
-      -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
+   ! CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
+   !    -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 
 #ifdef USEMPI

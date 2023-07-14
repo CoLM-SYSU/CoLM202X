@@ -62,8 +62,8 @@ MODULE MOD_Initialize
       use MOD_DataType
       use MOD_NetCDFSerial
       use MOD_NetCDFBlock
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
+#ifdef RangeCheck
+      use MOD_RangeCheck
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       USE MOD_Hydro_SoilFunction
@@ -390,7 +390,7 @@ MODULE MOD_Initialize
       ! 1.6 Write out as a restart file [histTimeConst]
       ! ...............................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeInvariants ()
 #endif
 
@@ -580,7 +580,7 @@ MODULE MOD_Initialize
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          CALL LAI_readin (year, Julian_8day, dir_landdata)
       ENDIF
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('LAI ', tlai)
       CALL check_vector_data ('SAI ', tsai)
 #endif
@@ -828,7 +828,7 @@ MODULE MOD_Initialize
       ! 2.6 Write out the model variables for restart run [histTimeVar]
       ! ...............................................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeVariables ()
 #endif
 
