@@ -46,6 +46,7 @@ MODULE MOD_LAIReadin
 #ifdef LULC_IGBP_PC
       USE MOD_LandPC
       USE MOD_Vars_PCTimeVariables
+      USE MOD_Vars_PCTimeInvariants
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
@@ -60,7 +61,7 @@ MODULE MOD_LAIReadin
       integer :: iyear, itime
       character(LEN=256) :: cyear, ctime
       character(LEN=256) :: landdir, lndname
-      integer :: m, npatch
+      integer :: m, npatch, pc
 
 #ifdef LULC_USGS
       real(r8), dimension(24), parameter :: &   ! Maximum fractional cover of vegetation [-]
@@ -225,6 +226,13 @@ MODULE MOD_LAIReadin
 #ifdef URBAN_MODEL
                IF (m == URBAN) CYCLE
 #endif
+               IF (patchtypes(landpatch%settyp(npatch)) == 0) THEN
+                  pc = patch2pc(npatch)
+
+                  tlai(npatch) = sum(tlai_c(:,pc)*pcfrac(:,pc))
+                  tsai(npatch) = sum(tsai_c(:,pc)*pcfrac(:,pc))
+               ENDIF
+
                fveg (npatch)  = fveg0(m)
                green(npatch) = 1.
             end do
