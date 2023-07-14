@@ -31,7 +31,7 @@ PROGRAM CoLM
    use MOD_Forcing
    use MOD_Hist
    use MOD_TimeManager
-   use MOD_CoLMDebug
+   use MOD_RangeCheck
 
    use MOD_Block
    use MOD_Pixel
@@ -450,7 +450,7 @@ PROGRAM CoLM
 #endif
       endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeVariables ()
 #endif
 
