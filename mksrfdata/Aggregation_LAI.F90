@@ -121,8 +121,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    IF (DEF_LAI_MONTHLY) THEN
       ! monthly average LAI
       ! if use lai change, LAI data of simulation start year and end year will be made
-      ! if not use lai change, only make LAI data of defined lc year
+      ! if do not use lai change, only make LAI data of defined lc year
 #ifdef LULCC
+      ! 07/2023, NOTE: if defined LULCC, only one year (lc_year) lai processed.
       start_year = lc_year
       end_year   = lc_year
       ntime      = 12
