@@ -224,7 +224,7 @@ CONTAINS
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsun,     &
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
-        etrsha      
+        etrsha
 
   REAL(r8), intent(out) :: &
         rst,        &! stomatal resistance
@@ -500,7 +500,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Evaluate stability-dependent variables using moz from prior iteration
          IF (rd_opt == 3) THEN
-            if (DEF_USE_CBL_HEIGHT) then	
+            if (DEF_USE_CBL_HEIGHT) then
               CALL moninobukm_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, &
                                     displasink,z0mv, hpbl, ustar,fh2m,fq2m, &
                                     htop,fmtop,fm,fh,fq,fht,fqt,phih)
@@ -514,7 +514,7 @@ CONTAINS
             rah = 1./(vonkar/(fh-fht)*ustar)
             raw = 1./(vonkar/(fq-fqt)*ustar)
          ELSE
-            if (DEF_USE_CBL_HEIGHT) then	
+            if (DEF_USE_CBL_HEIGHT) then
                CALL moninobuk_leddy(hu,ht,hq,displa,z0mv,z0hv,z0qv,obu,um, hpbl, &
                                     ustar,fh2m,fq2m,fm10m,fm,fh,fq)
             else
@@ -625,10 +625,15 @@ CONTAINS
             rssha = 2.e4; assimsha = 0.; respcsha = 0.
             gssun = 0._r8
             gssha = 0._r8
-            etr    = 0.
-            etrsun = 0._r8
-            etrsha = 0._r8
-            rootr  = 0.
+
+            ! 07/2023, yuan: a bug for imbalanced water, rootr only change
+            ! in DEF_USE_PLANTHYDRAULICS case in this routine.
+            if(DEF_USE_PLANTHYDRAULICS) then
+               etr    = 0.
+               etrsun = 0._r8
+               etrsha = 0._r8
+               rootr  = 0.
+            ENDIF
          ENDIF
 
 ! above stomatal resistances are for the canopy, the stomatal rsistances
@@ -687,7 +692,7 @@ CONTAINS
          etr = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) + laisha/(rb+rssha) ) &
              * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
-        !NOTE, yuan: need some revision below. if undef PHS and WUEdiag, there may be problem.
+         !NOTE, yuan: need some revision below. if undef PHS and WUEdiag, there may be problem.
          etrsun = rhoair * (1.-fwet) * delta &
              * ( laisun/(rb+rssun) ) * ( (wtaq0 + wtgq0)*qsatl - wtaq0*qm - wtgq0*qg )
          etrsha = rhoair * (1.-fwet) * delta &
@@ -875,7 +880,7 @@ CONTAINS
        etr     = etr     +     etr_dtl*dtl(it-1)
       if(DEF_USE_PLANTHYDRAULICS) then
          if(abs(etr0) .ge. 1.e-15)then
-             rootr  = rootr * etr / etr0
+             rootr = rootr * etr / etr0
          else
              rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
          end if
