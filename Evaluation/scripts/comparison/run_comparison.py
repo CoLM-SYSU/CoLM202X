@@ -97,10 +97,10 @@ def read_namelist(file_path):
     return namelist
 
 if __name__=='__main__':
-    print("Welcome to the comparison module of the validation system!")
+    print("Welcome to the Geo module of the validation system!")
     print("This module is used to validate the Geo information of the model output data")
     print("===============================================================================")
-    print("Start running comparison module...")
+    print("Start running Geo module...")
     
     print("-------------------------------------Caution-----------------------------------")
     print("Please make sure the time axis of the simulation data is consistent with the time axis of the validation data!")
