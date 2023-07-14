@@ -170,15 +170,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
 !   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
 
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+#endif
+
 #ifdef LULC_USGS
    soildir = '/soil_USGS/'
 #else
    soildir = '/soil_IGBP/'
 #endif
 
-#ifdef SrfdataDiag
-   INTEGER :: typpatch(N_land_classification+1), ityp
-#endif
    write(cyear,'(i4.4)') lc_year
    landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
