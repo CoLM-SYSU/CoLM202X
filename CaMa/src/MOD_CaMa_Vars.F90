@@ -549,7 +549,6 @@ contains
       USE MOD_DataType
       USE MOD_LandPatch
       USE MOD_Mapping_Pset2Grid
-      USE MOD_CoLMDebug
       USE MOD_Vars_TimeInvariants, ONLY : patchtype
       USE MOD_Forcing, ONLY : forcmask
 
@@ -699,7 +698,6 @@ contains
       USE MOD_DataType
       USE MOD_LandPatch
       USE MOD_Mapping_Pset2Grid
-      USE MOD_CoLMDebug
       USE MOD_Vars_TimeInvariants, ONLY : patchtype
       USE MOD_Grid
 

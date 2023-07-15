@@ -39,7 +39,6 @@ CONTAINS
       USE MOD_NetCDFSerial
       USE MOD_Mesh
       USE MOD_LandHRU
-      USE MOD_CoLMDebug
       IMPLICIT NONE
 
       ! Local Variables

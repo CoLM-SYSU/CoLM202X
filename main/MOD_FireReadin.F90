@@ -35,9 +35,6 @@ MODULE MOD_FireReadin
       use MOD_LandPatch
       use MOD_Vars_TimeInvariants, only: abm_lf, gdp_lf, peatf_lf
       use MOD_Vars_TimeVariables,  only: hdm_lf
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
-#endif
 
       USE MOD_Vars_Global
       USE MOD_Const_LC

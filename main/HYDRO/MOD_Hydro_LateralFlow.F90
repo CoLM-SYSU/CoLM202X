@@ -56,7 +56,7 @@ CONTAINS
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_Vars_TimeVariables
 
-      USE MOD_CoLMDebug
+      USE MOD_RangeCheck
       IMPLICIT NONE
 
       REAL(r8), intent(in) :: deltime
@@ -125,7 +125,7 @@ CONTAINS
 
       ENDIF
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       if (p_is_worker .and. (p_iam_worker == 0)) then
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
       end if

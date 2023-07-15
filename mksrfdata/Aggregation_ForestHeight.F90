@@ -24,8 +24,8 @@ SUBROUTINE Aggregation_ForestHeight ( &
    use MOD_LandPatch
    use MOD_NetCDFVector
    use MOD_NetCDFBlock
-#ifdef CoLMDEBUG
-   use MOD_CoLMDebug
+#ifdef RangeCheck
+   use MOD_RangeCheck
 #endif
    use MOD_AggregationRequestData
    USE MOD_Utils
@@ -138,7 +138,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    call check_vector_data ('htop_patches ', tree_height_patches)
 #endif
 
@@ -202,7 +202,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('HTOP_patches ', htop_patches)
 #endif
 
@@ -288,7 +288,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pfts    ', htop_pfts   )
 #endif
@@ -301,7 +301,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
 #ifdef SrfdataDiag
    typpatch = (/(ityp, ityp = 0, N_land_classification)/)
-   lndname  = trim(dir_model_landdata) // '/diag/htop_patch.nc'
+   lndname  = trim(dir_model_landdata) // '/diag/htop_patch_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (htop_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'htop', compress = 1, write_mode = 'one')
 #endif
@@ -389,7 +389,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
    CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('HTOP_patches ', htop_patches)
    CALL check_vector_data ('HTOP_pcs     ', htop_pcs    )
 #endif

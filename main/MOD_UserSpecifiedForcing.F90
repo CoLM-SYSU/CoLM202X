@@ -672,8 +672,8 @@ CONTAINS
                      if (forcn(4)%blk(ib,jb)%val(i,j) < 0.0)   forcn(4)%blk(ib,jb)%val(i,j) = 0.0
                      if (forcn(7)%blk(ib,jb)%val(i,j) < 0.0)   forcn(7)%blk(ib,jb)%val(i,j) = 0.0
                      ! 12th grade of Typhoon 32.7-36.9 m/s
-                     ! TODO: This is a problem when running a GNU-compiled program, because there is no data of forcn(5)
-                     ! Temporarily comment the code
+                     ! NOTE by Wenzong: This is a problem when running a GNU-compiled program, because there is
+                     ! no data of forcn(5), temporarily comment the code below
                      ! if (abs(forcn(5)%blk(ib,jb)%val(i,j)) > 40.0) forcn(5)%blk(ib,jb)%val(i,j) = &
                      !    40.0*forcn(5)%blk(ib,jb)%val(i,j)/abs(forcn(5)%blk(ib,jb)%val(i,j))
                      if (abs(forcn(6)%blk(ib,jb)%val(i,j)) > 40.0) forcn(6)%blk(ib,jb)%val(i,j) = &

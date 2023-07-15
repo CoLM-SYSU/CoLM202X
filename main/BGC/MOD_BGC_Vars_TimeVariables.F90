@@ -256,7 +256,7 @@ SAVE
       public :: deallocate_BGCTimeVariables
       public :: READ_BGCTimeVariables
       public :: WRITE_BGCTimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       public :: check_BGCTimeVariables
 #endif
 
@@ -947,8 +947,8 @@ SAVE
      use MOD_Namelist
      use MOD_SPMD_Task
      use MOD_NetCDFVector
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -1077,18 +1077,18 @@ SAVE
      call ncio_read_vector (file_restart, 'fertnitro_sugarcane' , landpatch, fertnitro_sugarcane)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      call check_BGCTimeVariables
 #endif
 
   end subroutine READ_BGCTimeVariables
 
   !---------------------------------------
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   SUBROUTINE check_BGCTimeVariables ()
 
      use MOD_SPMD_Task
-     use MOD_CoLMDebug
+     use MOD_RangeCheck
      use MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU
 
      IMPLICIT NONE

@@ -40,7 +40,7 @@ CONTAINS
       USE MOD_NetCDFSerial
       USE MOD_NetCDFBlock
       USE MOD_LandPatch
-      USE MOD_CoLMDebug
+      USE MOD_RangeCheck
       IMPLICIT NONE
 
       type(timestamp), intent(in) :: time
@@ -65,7 +65,7 @@ CONTAINS
       if (itime .gt. 2920)itime = itime - 8 ! for the leap year
 
       CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime, f_lnfm)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_block_data ('lightning', f_lnfm)
 #endif
 
@@ -80,7 +80,7 @@ CONTAINS
 
       USE MOD_TimeManager
       USE MOD_NetCDFBlock
-      USE MOD_CoLMDebug
+      USE MOD_RangeCheck
       IMPLICIT NONE
 
       type(timestamp), intent(in) :: time
@@ -99,12 +99,12 @@ CONTAINS
       IF (itime_next /= itime) THEN
          itime_next = min(itime_next,2920)
          CALL ncio_read_block_time (file_lightning, 'lnfm', grid_lightning, itime_next, f_lnfm)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
          CALL check_block_data ('lightning', f_lnfm)
 #endif
 
          call mg2p_lnfm%map_aweighted (f_lnfm, lnfm)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
          call check_vector_data ('lightning', lnfm)
 #endif
       ENDIF

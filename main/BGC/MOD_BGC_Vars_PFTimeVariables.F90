@@ -352,7 +352,7 @@ MODULE MOD_BGC_Vars_PFTimeVariables
   PUBLIC :: deallocate_BGCPFTimeVariables
   PUBLIC :: READ_BGCPFTimeVariables
   PUBLIC :: WRITE_BGCPFTimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   PUBLIC :: check_BGCPFTimeVariables
 #endif
 
@@ -2077,10 +2077,10 @@ CONTAINS
 
    END SUBROUTINE deallocate_BGCPFTimeVariables
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    SUBROUTINE check_BGCPFTimeVariables
 
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       use MOD_SPMD_Task
       IMPLICIT NONE
 

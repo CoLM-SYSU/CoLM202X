@@ -29,7 +29,7 @@ MODULE MOD_Vars_PFTimeInvariants
   PUBLIC :: READ_PFTimeInvariants
   PUBLIC :: WRITE_PFTimeInvariants
   PUBLIC :: deallocate_PFTimeInvariants
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
   PUBLIC :: check_PFTimeInvariants
 #endif
 
@@ -119,10 +119,10 @@ MODULE MOD_Vars_PFTimeInvariants
 
   END SUBROUTINE deallocate_PFTimeInvariants
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
   SUBROUTINE check_PFTimeInvariants ()
 
-     use MOD_CoLMDebug
+     use MOD_RangeCheck
      IMPLICIT NONE
 
      call check_vector_data ('pftfrac', pftfrac) !
@@ -161,7 +161,7 @@ MODULE MOD_Vars_PCTimeInvariants
   PUBLIC :: READ_PCTimeInvariants
   PUBLIC :: WRITE_PCTimeInvariants
   PUBLIC :: deallocate_PCTimeInvariants
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
   PUBLIC :: check_PCTimeInvariants
 #endif
 
@@ -252,10 +252,10 @@ MODULE MOD_Vars_PCTimeInvariants
 
   END SUBROUTINE deallocate_PCTimeInvariants
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
   SUBROUTINE check_PCTimeInvariants ()
 
-     use MOD_CoLMDebug
+     use MOD_RangeCheck
      IMPLICIT NONE
 
      call check_vector_data ('pcfrc ', pcfrac) !
@@ -466,8 +466,8 @@ MODULE MOD_Vars_TimeInvariants
      use MOD_SPMD_Task
      use MOD_NetCDFVector
      use MOD_NetCDFSerial
-#ifdef CoLMDEBUG
-     USE MOD_CoLMDebug
+#ifdef RangeCheck 
+     USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -570,7 +570,7 @@ MODULE MOD_Vars_TimeInvariants
      CALL READ_UrbanTimeInvariants (file_restart)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
      call check_TimeInvariants ()
 #endif
 
@@ -805,12 +805,12 @@ MODULE MOD_Vars_TimeInvariants
 #endif
   END SUBROUTINE deallocate_TimeInvariants
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    !---------------------------------------
    SUBROUTINE check_TimeInvariants ()
 
       use MOD_SPMD_Task
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       use MOD_Namelist, only : DEF_USE_BEDROCK
 
       IMPLICIT NONE

@@ -31,22 +31,24 @@ class Makefiles_parallel:
         self.obs_source              =  stn_info.obs_source 
         self.variables               =  stn_info.variables
         self.metrics                 =  stn_info.metrics
-        self.OBSDIR                  =  stn_info.OBSDIR
+        self.Obs_Dir                 =  stn_info.Obs_Dir
         self.Pltstn                  =  stn_info.Pltstn
         self.Sim_Suffix              =  stn_info.Sim_Suffix
         self.Sim_Prefix              =  stn_info.Sim_Prefix
         self.Sim_TimRes              =  stn_info.Sim_TimRes
         self.Sim_SpRes               =  stn_info.Sim_SpRes
+  
+
 
     def make_obs_parallel(self,station_list,i):
         if (self.obs_source=='GRDC'):
             if (self.compare_res == 'Month'):
-                stn='%s/GRDC_Month/%s_Q_Month.nc'%(self.OBSDIR,station_list['ID'][i])
+                stn='%s/GRDC_Month/%s_Q_Month.nc'%(self.Obs_Dir,station_list['ID'][i])
             elif (self.compare_res == 'Day'):
-                stn='%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.OBSDIR,station_list['ID'][i])
+                stn='%s/GRDC_Day/%s_Q_Day.Cmd.nc'%(self.Obs_Dir,station_list['ID'][i])
         elif (self.obs_source=='FLUXNET'):
-            stn1=xr.open_dataset(f"{self.OBSDIR}"+"/flux/"+f"{station_list['filename'][i]}")
-            stn2=xr.open_dataset(f"{self.OBSDIR}"+"/met/"+f"{station_list['filename'][i]}"[0:-7]+f"Met.nc")
+            stn1=xr.open_dataset(f"{self.Obs_Dir}"+"/flux/"+f"{station_list['filename'][i]}")
+            stn2=xr.open_dataset(f"{self.Obs_Dir}"+"/met/"+f"{station_list['filename'][i]}"[0:-7]+f"Met.nc")
             df = xr.merge([stn2,stn1], compat='override')
             if 'Qle_cor' not in df.data_vars and 'Qle' in df.data_vars:
                 df = df.rename({'Qle': 'Qle_cor'})
@@ -55,7 +57,7 @@ class Makefiles_parallel:
         elif (self.obs_source=='ismn'):
             stn=f'{self.casedir}/scratch/'+station_list['ID'][i]+'.nc'
         elif (self.obs_source=='GLEAM_hybird'):
-            stn=os.path.join(self.OBSDIR,station_list['ID'][i])+'.nc'
+            stn=os.path.join(self.Obs_Dir,station_list['ID'][i])+'.nc'
         elif (self.obs_source=='GLEAM_hybird_PLUMBER2'):
             stn=f'{self.casedir}/scratch/'+station_list['ID'][i]+'.nc'
         elif (self.obs_source=='Yuan2022'):
@@ -64,10 +66,12 @@ class Makefiles_parallel:
             stn=f'{self.casedir}/scratch/'+station_list['ID'][i]+'.nc'
         elif (self.obs_source=='ResOpsUS'):
             stn=f'{self.casedir}/scratch/'+station_list['ID'][i]+'.nc'
+        print(stn)
         with xr.open_dataset(stn) as df:
             startx=int(station_list['use_Syear'].values[i])
             endx  =int(station_list['use_Eyear'].values[i])
-            dfx = df[self.variables.keys()]  
+            dfx = df[self.variables.keys()] 
+
             dfx1=dfx.sel(time=slice(f'{startx}-01-01',f'{endx}-12-31')) 
             if (self.compare_res == 'Month'):
                 dfx2=dfx1.resample(time='1M').mean()
@@ -92,24 +96,24 @@ class Makefiles_parallel:
             merged_ds.to_netcdf(f'{self.casedir}/tmp/obs/'+f"obs_{station_list['ID'][i]}"+f"_{station_list['use_Syear'][i]}"+f"_{station_list['use_Eyear'][i]}.nc",engine='netcdf4')
             del startx,endx,dfx,dfx1,dfx2,ds,orig_ds_reindexed,merged_ds,time_index
 
+
     def make_sim_parallel(self,simx,station_list,ik):
         startx=int(station_list['use_Syear'].values[ik])
-        endx  =int(station_list['use_Eyear'].values[ik])    
+        endx  =int(station_list['use_Eyear'].values[ik])   
         if (self.obs_source=='GRDC'):
             simx1=simx.sel(lat=[station_list['lat_cama'].values[ik]], lon=[station_list['lon_cama'].values[ik]], method="nearest")
         elif (self.obs_source=='ResOpsUS'):
             simx1=simx.sel(lat=[station_list['lat_cama'].values[ik]], lon=[station_list['lon_cama'].values[ik]], method="nearest")
         else:
             simx1=simx.sel(lat=[station_list['lat'].values[ik]], lon=[station_list['lon'].values[ik]], method="nearest")
-
-        simx2=simx1.sel(time=slice(f'{startx}-01-01',f'{endx}-12-31'))
+        simx2=simx1.sel(time=slice(f'{startx}-01-01T00:00:00',f'{endx}-12-31T23:59:59'))
         simx2.to_netcdf(f"{self.casedir}/tmp/sim/sim_{station_list['ID'][ik]}"+f"_{station_list['use_Syear'][ik]}"+f"_{station_list['use_Eyear'][ik]}.nc",engine='netcdf4')
         del simx1,simx2,startx,endx,ik,simx,station_list
 
     def make_sim_combine_parallel(self,ii):
         VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}*{self.Sim_Prefix}.nc')
         print(VarFiles)
-        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,chunks={'time': 12},preprocess=lambda dfx: dfx[list(self.variables.values())].astype('float32')) as dfx:         
+        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",decode_times=False,preprocess=lambda dfx: dfx[list(self.variables.values())].astype('float32')) as dfx:         
             num=len(dfx['time'])
 
             if (self.Sim_TimRes=="Hour"):
@@ -127,7 +131,7 @@ class Makefiles_parallel:
                 dfx=dfx.resample(time='1H').mean() 
             else:
                 sys.exit(1)     
-                
+
             dfx=dfx.sel(time=slice(f'{ii}-01-01',f'{ii}-12-31'))
             mask_lon = (dfx.lon >= self.Min_lon) & (dfx.lon <= self.Max_lon)
             mask_lat = (dfx.lat >= self.Min_lat) & (dfx.lat <= self.Max_lat)
@@ -193,23 +197,26 @@ class Makefiles_parallel:
         # Increase timeout (tune this number to suit your use case).
         timeout=9999999
         Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
-       
+        print('test')
         VarFiles=(f'{self.casedir}/tmp/sim/sim_*.nc')
-        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time",chunks={'time': 12}) as ds1: #,parallel=True,autoclose=True
+        print(VarFiles)
+        with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time") as ds1: #,parallel=True,autoclose=True
             delayed_obj=ds1.to_netcdf(f'{self.casedir}/tmp/sim/sim.nc', compute=False)
             with ProgressBar():
                 delayed_obj.compute()
         del ds1
+        print('done')
         #delete VarFiles if exist
         #shutil.rmtree(f'{self.casedir}/tmp/sim/sim_*.nc',ignore_errors=True)
 
-        with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc',chunks={'time': 12}) as simx:
+        with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc') as simx:
             Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
+        print('done2')
 
-        #os.remove(f'{self.casedir}/tmp/sim/sim.nc')
-        #for ii in range((minyear),(maxyear)+1):
-        #    os.remove(f'{self.casedir}/tmp/sim/sim_{ii}.nc')
-        #del simx
+        os.remove(f'{self.casedir}/tmp/sim/sim.nc')
+        for ii in range((minyear),(maxyear)+1):
+            os.remove(f'{self.casedir}/tmp/sim/sim_{ii}.nc')
+        del simx
         print ('simulation data prepared!')
         print("=======================================")
         print(" ")

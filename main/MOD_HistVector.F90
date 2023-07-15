@@ -44,7 +44,6 @@ contains
       use MOD_Vars_1DAccFluxes
       use mod_landpatch
       use MOD_LandPatch
-      use MOD_CoLMDebug
       use MOD_Vars_Global, only: spval
       USE MOD_Vars_TimeInvariants, only : patchtype
       USE MOD_Forcing, only : forcmask

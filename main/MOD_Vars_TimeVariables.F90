@@ -65,7 +65,7 @@ MODULE MOD_Vars_PFTimeVariables
   PUBLIC :: deallocate_PFTimeVariables
   PUBLIC :: READ_PFTimeVariables
   PUBLIC :: WRITE_PFTimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   PUBLIC :: check_PFTimeVariables
 #endif
 
@@ -293,10 +293,10 @@ CONTAINS
 
    END SUBROUTINE deallocate_PFTimeVariables
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    SUBROUTINE check_PFTimeVariables
 
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       use MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
 
       IMPLICIT NONE
@@ -404,7 +404,7 @@ MODULE MOD_Vars_PCTimeVariables
   PUBLIC :: deallocate_PCTimeVariables
   PUBLIC :: READ_PCTimeVariables
   PUBLIC :: WRITE_PCTimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   PUBLIC :: check_PCTimeVariables
 #endif
 
@@ -617,10 +617,10 @@ CONTAINS
 
    END SUBROUTINE deallocate_PCTimeVariables
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    SUBROUTINE check_PCTimeVariables
 
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
       IMPLICIT NONE
 
@@ -791,7 +791,7 @@ MODULE MOD_Vars_TimeVariables
      public :: deallocate_TimeVariables
      public :: READ_TimeVariables
      public :: WRITE_TimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      public :: check_TimeVariables
 #endif
 
@@ -1269,8 +1269,8 @@ MODULE MOD_Vars_TimeVariables
      use MOD_Namelist
      use MOD_SPMD_Task
      use MOD_NetCDFVector
-#ifdef CoLMDEBUG
-     USE MOD_CoLMDebug
+#ifdef RangeCheck
+     USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -1402,7 +1402,7 @@ MODULE MOD_Vars_TimeVariables
      CALL READ_UrbanTimeVariables (file_restart)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      call check_TimeVariables
 #endif
 
@@ -1413,11 +1413,11 @@ MODULE MOD_Vars_TimeVariables
   end subroutine READ_TimeVariables
 
   !---------------------------------------
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   SUBROUTINE check_TimeVariables ()
 
      use MOD_SPMD_Task
-     use MOD_CoLMDebug
+     use MOD_RangeCheck
      use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
 
      IMPLICIT NONE
