@@ -1210,7 +1210,12 @@ contains
              onset_counter_p(m) = 0._r8
              leafc_xfer_p(m) = 0._r8
              leafn_xfer_p(m) = leafc_xfer_p(m) / leafcn(ivt)
+             if(DEF_USE_FERT)then
+                fert_p(m) = 0._r8
+             end if
           end if ! croplive
+       else
+          fert_p(m) = 0._r8
        end if
     end do ! prognostic crops loop
 

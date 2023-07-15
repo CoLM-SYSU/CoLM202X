@@ -1271,7 +1271,6 @@ contains
       use MOD_FrictionVelocity
       USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
-      use MOD_CoLMDebug
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
       USE MOD_Hydro_Hist, only : accumulate_fluxes_basin
@@ -1677,7 +1676,7 @@ contains
             allocate (r_fm10m (numpatch))
 
             do i = 1, numpatch
-               
+
                IF (DEF_forcing%has_missing_value) THEN
                   IF (.not. forcmask(i)) cycle
                ENDIF
@@ -1738,10 +1737,10 @@ contains
                   hpbl = forc_hpbl(i)
                   call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
-		         else
+               else
                   call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
-		         endif
+               endif
 
                ! bug found by chen qiying 2013/07/01
                r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)

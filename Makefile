@@ -41,7 +41,7 @@ OBJS_SHARED =    \
 				  MOD_Mesh.o                   \
 				  MOD_Pixelset.o               \
 				  MOD_NetCDFVector.o           \
-				  MOD_CoLMDebug.o              \
+				  MOD_RangeCheck.o             \
 				  MOD_Mapping_Grid2Pset.o      \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
@@ -147,7 +147,8 @@ OBJS_BASIC =    \
 				 MOD_HtopReadin.o               \
 				 MOD_UrbanReadin.o              \
 				 MOD_IniTimeVariable.o          \
-				 MOD_UrbanIniTimeVariable.o
+				 MOD_UrbanIniTimeVariable.o     \
+				 MOD_Initialize.o
 
 
 $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
@@ -156,7 +157,6 @@ $(OBJS_BASIC) : %.o : %.F90 ${HEADER}
 OBJS_BASIC_T = $(addprefix .bld/,${OBJS_BASIC})
 
 OBJS_MKINIDATA = \
-				  MOD_Initialize.o   \
 				  CoLMINI.o
 
 $(OBJS_MKINIDATA) : %.o : %.F90 ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC}

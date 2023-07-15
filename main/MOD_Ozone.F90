@@ -196,7 +196,7 @@ Module MOD_Ozone
      USE MOD_NetCDFSerial
      USE MOD_NetCDFBlock
      USE MOD_LandPatch
-     USE MOD_CoLMDebug
+     USE MOD_RangeCheck
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -228,7 +228,7 @@ Module MOD_Ozone
      itime = mday
 
      CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, itime, f_ozone)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      CALL check_block_data ('Ozone', f_ozone)
 #endif
 
@@ -244,7 +244,7 @@ Module MOD_Ozone
      USE MOD_TimeManager
      USE MOD_Namelist
      USE MOD_NetCDFBlock
-     USE MOD_CoLMDebug
+     USE MOD_RangeCheck
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -276,13 +276,13 @@ Module MOD_Ozone
 
      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
         CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
         CALL check_block_data ('Ozone', f_ozone)
 #endif         
       
         call mg2p_ozone%map_aweighted (f_ozone, forc_ozone) 
         forc_ozone = forc_ozone * 1.e-9 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
         call check_vector_data ('Ozone', forc_ozone)
 #endif         
      ENDIF

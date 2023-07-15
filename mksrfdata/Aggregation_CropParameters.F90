@@ -17,8 +17,8 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
 
    USE MOD_AggregationRequestData
@@ -145,7 +145,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('plant date value for rice2 '//trim(c3), plantdate_rice2_patches)
 #endif
 
@@ -282,7 +282,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    if(p_is_worker)then
       CALL check_vector_data ('plantdate_pfts value '//trim(c4), plantdate_pfts)
    endif
@@ -414,7 +414,7 @@ SUBROUTINE Aggregation_CropParameters (gridcrop, dir_rawdata, dir_model_landdata
          ! ---------------------------------------------------
    ENDDO
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    if(p_is_worker)then
       CALL check_vector_data ('fert nitro value '//trim(c4), fertnitro_pfts)
    endif

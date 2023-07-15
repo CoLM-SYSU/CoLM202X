@@ -102,6 +102,7 @@ MODULE MOD_NetCDFSerial
    END INTERFACE ncio_write_serial
 
    PUBLIC :: ncio_write_time
+   PUBLIC :: ncio_write_lastdim
 
    INTERFACE ncio_write_serial_time
       MODULE procedure ncio_write_serial_real8_1d_time
@@ -1777,6 +1778,60 @@ CONTAINS
 
    END SUBROUTINE ncio_write_time
 
+   !------------------------------
+   SUBROUTINE ncio_write_lastdim (filename, lastname, lastvalue, ilast)
+
+      IMPLICIT NONE
+
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: lastname 
+      INTEGER, intent(in)  :: lastvalue
+      INTEGER, intent(out) :: ilast
+
+      ! Local variables
+      INTEGER :: ncid, varid, dimid, dimlen, status
+      INTEGER, allocatable :: lastvalue_f(:)
+
+      CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
+      
+      status = nf90_inq_varid(ncid, trim(lastname), varid)
+
+      IF (status == NF90_NOERR) THEN
+         CALL nccheck( nf90_inq_dimid(ncid, trim(lastname), dimid) )
+         CALL nccheck( nf90_inquire_dimension(ncid, dimid, len = dimlen) )
+
+         ilast = 1
+         IF (dimlen > 0) THEN
+            allocate (lastvalue_f (dimlen))
+            CALL nccheck( nf90_get_var(ncid, varid, lastvalue_f) )
+
+            DO while (ilast <= dimlen)
+               IF (lastvalue == lastvalue_f(ilast)) exit
+               ilast = ilast + 1
+            ENDDO
+
+            deallocate(lastvalue_f)
+         ENDIF
+      ELSE
+         status = nf90_inq_dimid(ncid, trim(lastname), dimid)
+         IF (status /= NF90_NOERR) THEN
+            CALL nccheck( nf90_redef(ncid) )
+            CALL nccheck( nf90_def_dim(ncid, trim(lastname), NF90_UNLIMITED, dimid) )
+            CALL nccheck( nf90_enddef(ncid) )
+         ENDIF
+
+         CALL nccheck( nf90_redef(ncid) )
+         CALL nccheck( nf90_def_var(ncid, trim(lastname), NF90_INT, (/dimid/), varid) )
+         CALL nccheck( nf90_enddef(ncid) )
+
+         ilast = 1
+      ENDIF
+
+      CALL nccheck( nf90_put_var(ncid, varid, lastvalue, (/ilast/)) )
+      
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_write_lastdim
 
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_1d_time ( &

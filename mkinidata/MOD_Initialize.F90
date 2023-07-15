@@ -18,7 +18,7 @@ MODULE MOD_Initialize
 
 
    SUBROUTINE initialize (casename, dir_landdata, dir_restart, &
-         idate, lc_year, greenwich)
+         idate, lc_year, greenwich, lulcc_call)
 
       ! ======================================================================
       ! initialization routine for land surface model.
@@ -62,8 +62,8 @@ MODULE MOD_Initialize
       use MOD_DataType
       use MOD_NetCDFSerial
       use MOD_NetCDFBlock
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
+#ifdef RangeCheck
+      use MOD_RangeCheck
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       USE MOD_Hydro_SoilFunction
@@ -99,6 +99,7 @@ MODULE MOD_Initialize
       integer, intent(inout) :: idate(3)   ! year, julian day, seconds of the starting time
       integer, intent(in)    :: lc_year    ! year, land cover year
       logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
+      logical, optional, intent(in) :: lulcc_call   ! whether it is a lulcc CALL
 
       ! ------------------------ local variables -----------------------------
       real(r8) :: rlon, rlat
@@ -389,7 +390,7 @@ MODULE MOD_Initialize
       ! 1.6 Write out as a restart file [histTimeConst]
       ! ...............................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeInvariants ()
 #endif
 
@@ -579,7 +580,7 @@ MODULE MOD_Initialize
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          CALL LAI_readin (year, Julian_8day, dir_landdata)
       ENDIF
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('LAI ', tlai)
       CALL check_vector_data ('SAI ', tsai)
 #endif
@@ -827,10 +828,15 @@ MODULE MOD_Initialize
       ! 2.6 Write out the model variables for restart run [histTimeVar]
       ! ...............................................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeVariables ()
 #endif
-      CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
+
+      IF ( .not. present(lulcc_call) ) THEN
+         ! only be called in runing MKINI, LULCC will be executed later
+         CALL WRITE_TimeVariables (idate, lc_year, casename, dir_restart)
+      ENDIF
+
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -841,8 +847,11 @@ MODULE MOD_Initialize
       ! --------------------------------------------------
       ! Deallocates memory for CoLM 1d [numpatch] variables
       ! --------------------------------------------------
-      CALL deallocate_TimeInvariants
-      CALL deallocate_TimeVariables
+      IF ( .not. present(lulcc_call) ) THEN
+         ! only be called in runing MKINI, LULCC will be executed later
+         CALL deallocate_TimeInvariants
+         CALL deallocate_TimeVariables
+      ENDIF
 
       IF (allocated(z_soisno )) deallocate (z_soisno )
       IF (allocated(dz_soisno)) deallocate (dz_soisno)
