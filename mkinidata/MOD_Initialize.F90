@@ -580,10 +580,8 @@ MODULE MOD_Initialize
       CALL check_vector_data ('SAI ', tsai)
 #endif
 
-#ifdef BGC
-
 #ifdef CROP
-         CALL CROP_readin (dir_landdata)
+         CALL CROP_readin ()
          if (p_is_worker) then
             do i = 1, numpatch
                if(patchtype(i) .eq.  0)then
@@ -603,7 +601,6 @@ MODULE MOD_Initialize
                end if
             end do
          end if
-#endif
 #endif
 #endif
 

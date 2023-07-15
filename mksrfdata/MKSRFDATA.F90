@@ -193,6 +193,10 @@ PROGRAM MKSRFDATA
 #ifdef LULC_IGBP_PC
    CALL gpatch%define_by_name ('colm_500m')
 #endif
+#if (defined CROP)
+   ! define grid for crop parameters
+   CALL gcrop%define_by_ndims (720,360)
+#endif
 
    ! define grid for land characteristics
    CALL gridlai%define_by_name ('colm_500m')
@@ -225,6 +229,9 @@ PROGRAM MKSRFDATA
    CALL pixel%assimilate_grid (grid_urban_500m)
    CALL pixel%assimilate_grid (grid_urban_5km )
 #endif
+#if (defined CROP)
+   CALL pixel%assimilate_grid (gcrop )
+#endif
 
    CALL pixel%assimilate_grid (gtopo)
 
@@ -245,6 +252,9 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (gurban         )
    CALL pixel%map_to_grid (grid_urban_500m)
    CALL pixel%map_to_grid (grid_urban_5km )
+#endif
+#if (defined CROP)
+   CALL pixel%map_to_grid (gcrop )
 #endif
 
    CALL pixel%map_to_grid (gtopo)
