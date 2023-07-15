@@ -880,20 +880,6 @@ CONTAINS
 
 #ifdef URBAN_MODEL
          DEF_URBAN_RUN = .true.
-
-#if (defined LULC_USGS)
-         write(*,*) '                  *****                  '
-         write(*,*) 'Fatal ERROR: URBAN model is not supported for LULC_USGS at present. STOP! '
-         STOP
-#endif
-         IF (DEF_USE_SNICAR) THEN
-            write(*,*) '                  *****                  '
-            write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
-            write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
-            DEF_USE_SNICAR = .false.
-         ENDIF
-
-         !TODO: need to test PHS, LAI_CHANGE
 #else
          IF (DEF_URBAN_RUN) then
             write(*,*) '                  *****                  '

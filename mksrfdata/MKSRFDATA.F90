@@ -286,7 +286,11 @@ PROGRAM MKSRFDATA
 #ifdef GRIDBASED
    IF (.not. read_mesh_from_file) THEN
       !TODO: distinguish USGS and IGBP land cover
+#ifndef LULC_USGS
       CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtype_update.nc', 'landtype')
+#else
+      CALL mesh_filter (gpatch, trim(DEF_dir_rawdata)//'/landtypes/landtype-usgs-update.nc', 'landtype')
+#endif
    ENDIF
 #endif
 

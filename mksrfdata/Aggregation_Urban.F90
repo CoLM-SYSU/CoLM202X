@@ -481,6 +481,10 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             reg_typid_one(:) = 30
          ENDIF
 
+         IF (any(reg_typid_one==0)) THEN
+            WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
+         ENDIF
+
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
@@ -751,6 +755,10 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! same for above, assign reg id for RG_-45_65_-50_70
          IF (all(reg_typid_one==0)) THEN
             reg_typid_one(:) = 30
+         ENDIF
+
+         IF (any(reg_typid_one==0)) THEN
+            WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
          ENDIF
 
          ! loop for each finer grid to aggregate data
