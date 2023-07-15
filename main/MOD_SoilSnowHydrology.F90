@@ -157,7 +157,7 @@ MODULE MOD_SoilSnowHydrology
        dzmm(1:nl_soil)   , &! layer thickness (mm)
        zimm(0:nl_soil)      ! interface level below a "z" level (mm)
 
-  real(r8) :: err_solver, w_sum, tmp
+  real(r8) :: err_solver, w_sum
 #if(defined CaMa_Flood)
   real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
@@ -190,9 +190,6 @@ MODULE MOD_SoilSnowHydrology
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:)) + sum(wice_soisno(1:)) + wa
-      !for debug only, yuan.
-      !print *, "water before surface runoff:", w_sum
-      !print *, "soilwater====>", wliq_soisno
 
       ! porosity of soil, partitial volume of ice and liquid
       do j = 1, nl_soil
@@ -257,8 +254,6 @@ MODULE MOD_SoilSnowHydrology
       dzmm(1:) = dz_soisno(1:)*1000.
       zimm(0:) = zi_soisno(0:)*1000.
 
-      tmp = sum(wliq_soisno(1:)) + sum(wice_soisno(1:)) + wa
-      !print *, "water before soilwater:", tmp, "qinfl:", qinfl
       call soilwater(patchtype,nl_soil,deltim,wimp,smpmin,&
                      qinfl,etr,z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
                      t_soisno(1:),vol_liq,vol_ice,smp,hk,icefrac,eff_porosity,&
@@ -269,8 +264,6 @@ MODULE MOD_SoilSnowHydrology
       do j= 1, nl_soil
          wliq_soisno(j) = wliq_soisno(j)+dwat(j)*dzmm(j)
       enddo
-      tmp = sum(wliq_soisno(1:)) + sum(wice_soisno(1:)) + wa + (qcharge+etr-qinfl)*deltim
-     ! print *, "water after soilwater:", tmp
 
 !=======================================================================
 ! [4] subsurface runoff and the corrections
@@ -285,9 +278,6 @@ MODULE MOD_SoilSnowHydrology
       ! total runoff (mm/s)
       rnof = rsubst + rsur
 
-      tmp = sum(wliq_soisno(1:)) + sum(wice_soisno(1:)) + wa + (etr-qinfl+rsubst)*deltim
-      !print *, "water after subsurface runoff:", tmp
-      !print *, "soilwater====>", wliq_soisno
 
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
@@ -297,7 +287,7 @@ MODULE MOD_SoilSnowHydrology
       end if
 
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa) - w_sum &
-      - (gwat-etr-rnof-errw_rsub)*deltim
+                 - (gwat-etr-rnof-errw_rsub)*deltim
 
       if(lb >= 1)then
          err_solver = err_solver-(qsdew+qfros-qsubl)*deltim
