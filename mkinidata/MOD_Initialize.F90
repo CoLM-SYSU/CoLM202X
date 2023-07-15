@@ -77,11 +77,6 @@ MODULE MOD_Initialize
       USE MOD_CropReadin
       USE MOD_LAIEmpirical
       USE MOD_LAIReadin
-#ifdef BGC
-      USE MOD_NitrifReadin
-      USE MOD_NdepReadin
-      USE MOD_FireReadin
-#endif
       USE MOD_OrbCoszen
       use MOD_DBedrockReadin
       USE MOD_HtopReadin
@@ -586,10 +581,6 @@ MODULE MOD_Initialize
 #endif
 
 #ifdef BGC
-         CALL NDEP_readin(year, dir_landdata, .true., .false.)
-         if(DEF_USE_NITRIF)then
-            CALL NITRIF_readin (month, dir_landdata)
-         end if
 
 #ifdef CROP
          CALL CROP_readin (dir_landdata)
@@ -613,9 +604,6 @@ MODULE MOD_Initialize
             end do
          end if
 #endif
-         if(DEF_USE_FIRE)then
-            CALL Fire_readin (year,dir_landdata)
-         end if
 #endif
 #endif
 

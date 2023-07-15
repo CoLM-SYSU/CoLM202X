@@ -87,7 +87,7 @@ PROGRAM MKSRFDATA
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gridlai, gnitrif, gndep, gfire, gtopo
+   TYPE (grid_type) :: gridlai, gtopo
    TYPE (grid_type) :: grid_urban_5km, grid_urban_500m
 
    INTEGER   :: lc_year
@@ -193,16 +193,6 @@ PROGRAM MKSRFDATA
 #ifdef LULC_IGBP_PC
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef BGC
-#if (defined CROP)
-   ! define grid for crop parameters
-   CALL gcrop%define_by_ndims (720,360)
-#endif
-   ! define grid for crop parameters
-   CALL gfire%define_by_ndims (720,360)
-   CALL gnitrif%define_by_name ('nitrif_2deg')
-   CALL gndep%define_by_name ('nitrif_2deg')
-#endif
 
    ! define grid for land characteristics
    CALL gridlai%define_by_name ('colm_500m')
@@ -236,17 +226,6 @@ PROGRAM MKSRFDATA
    CALL pixel%assimilate_grid (grid_urban_5km )
 #endif
 
-#ifdef BGC
-#if (defined CROP)
-   CALL pixel%assimilate_grid (gcrop )
-#endif
-   CALL pixel%assimilate_grid (gfire )
-
-   CALL pixel%assimilate_grid (gnitrif)
-
-   CALL pixel%assimilate_grid (gndep)
-#endif
-
    CALL pixel%assimilate_grid (gtopo)
 
    ! map pixels to grid coordinates
@@ -266,15 +245,6 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (gurban         )
    CALL pixel%map_to_grid (grid_urban_500m)
    CALL pixel%map_to_grid (grid_urban_5km )
-#endif
-
-#ifdef BGC
-#if (defined CROP)
-   CALL pixel%map_to_grid (gcrop )
-#endif
-   CALL pixel%map_to_grid (gfire )
-   CALL pixel%map_to_grid (gnitrif)
-   CALL pixel%map_to_grid (gndep)
 #endif
 
    CALL pixel%map_to_grid (gtopo)
@@ -355,19 +325,6 @@ PROGRAM MKSRFDATA
 #endif
 
    CALL srfdata_diag_init (dir_landdata)
-#endif
-
-#ifdef BGC
-   call Aggregation_NDeposition     (gndep  , dir_rawdata, dir_landdata)
-#if (defined CROP)
-   call Aggregation_CropParameters  (gcrop  , dir_rawdata, dir_landdata)
-#endif
-   if(DEF_USE_FIRE)then
-      call Aggregation_Fire            (gfire  , dir_rawdata, dir_landdata)
-   end if
-   if(DEF_USE_NITRIF)then
-     call Aggregation_NitrifParameters (gnitrif, dir_rawdata, dir_landdata)
-   end if
 #endif
 
    !TODO: for lulcc, need to run for each year and SAVE to different subdirs
