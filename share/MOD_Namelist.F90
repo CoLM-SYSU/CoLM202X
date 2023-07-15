@@ -72,6 +72,7 @@ MODULE MOD_Namelist
 
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
+   CHARACTER(len=256) :: DEF_dir_runtime  = 'path/to/runtime/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
    CHARACTER(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
 
@@ -275,7 +276,7 @@ MODULE MOD_Namelist
    !Soy nitrogen fixation
    LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
    !Fire module
-   LOGICAL            :: DEF_USE_FIRE = .false.
+   LOGICAL            :: DEF_USE_FIRE = .true.
 
 
    ! ----- history variables -----
@@ -644,6 +645,7 @@ CONTAINS
          DEF_PIO_groupsize,               &
          DEF_simulation_time,             &
          DEF_dir_rawdata,                 &
+         DEF_dir_runtime,                 &
          DEF_dir_output,                  &
          DEF_file_mesh,                   &
          DEF_GRIDBASED_lon_res,           &
@@ -855,8 +857,8 @@ CONTAINS
 
 ! ----- SNICAR model ------
 
-         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
-         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+         DEF_file_snowoptics = trim(DEF_dir_runtime)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+         DEF_file_snowaging  = trim(DEF_dir_runtime)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
 
          IF (.not. DEF_USE_SNICAR) THEN
             IF (DEF_Aerosol_Readin) THEN
@@ -947,6 +949,7 @@ CONTAINS
       CALL mpi_bcast (DEF_simulation_time%timestep,     1, mpi_real8,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_runtime,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_output,   256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_forcing,  256, mpi_character, p_root, p_comm_glb, p_err)
 

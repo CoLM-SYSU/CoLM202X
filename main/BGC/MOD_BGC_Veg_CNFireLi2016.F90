@@ -163,6 +163,7 @@ contains
     trotr1(i) = 0._r8
     trotr2(i) = 0._r8
 
+    ! Warning : ivt is not initialized.
     ! For non-crop -- natural vegetation and bare-soil
     if( isnatveg(ivt) .or. isbare(ivt) )then
        if (btran2  <=  1._r8 ) then
