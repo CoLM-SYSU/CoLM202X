@@ -124,14 +124,44 @@ if __name__=='__main__':
             validation.make_plot_index()
 
     modules = [
-        'Inundation',
-        'Evapotranspiration',
-        'Transpiration',
-        'Interception',
-        'SoilEvaporation',
-        'SoilMoisture',
-        'Runoff',
-        'LAI'
+            'Biomass',
+            'LAI',
+            'BurnedArea',
+            'Global_Net_Ecosystem_Carbon_Balance',
+            'Gross_Primary_Productivity',
+            'Ecosystem_Respiration',
+            'Soil_Carbon',
+            'Nitrogen_Fixation',
+
+            'Evapotranspiration',
+            'Transpiration',
+            'Interception',
+            'Soil_Evaporation',
+            'Soil_Moisture',
+            'Runoff',
+            'Inundation',
+            'Latent_Heat',
+            'Sensible_Heat',
+            'Terrestrial_Water_Storage_Anomaly',
+            'Snow_Water_Equivalent',
+            'Permafrost_LIST',
+
+            'Albedo',
+            'Surface_Upward_SW_Radiation',
+            'Surface_Upward_LW_Radiation',
+            'Surface_Net_SW_Radiation',
+            'Surface_Net_LW_Radiation',
+            'Surface_Net_Radiation',
+            'Ground_Heat_Flux',
+
+            'Diurnal_Temperature_Range',
+            'Diurnal_Max_Temperature',
+            'Diurnal_Min_Temperature',
+            'Surface_Downward_SW_Radiation',
+            'Surface_Downward_LW_Radiation',
+            'Surface_Relative_Humidity',
+            'Precipitation',
+            'Surface_Air_Temperature'
     ]
 
     for module in modules:

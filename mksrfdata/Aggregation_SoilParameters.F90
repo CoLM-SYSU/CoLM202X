@@ -31,8 +31,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
    USE MOD_AggregationRequestData
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
    USE MOD_Utils
 #ifdef SinglePoint
@@ -165,6 +165,10 @@ SUBROUTINE Aggregation_SoilParameters ( &
    real(r8)             :: xc(nc),xv(nv),xb(nb),diagc(nc),diagv(nv),diagb(nb),qtfc(nc),qtfv(nv),qtfb(nb)
    real(r8),allocatable :: fjacc(:,:),fvecc(:),fjacv(:,:),fvecv(:),fjacb(:,:),fvecb(:)
    integer isiter                         ! flags to tell whether the iteration is completed, 1=Yes, 0=No
+
+#ifdef SrfdataDiag
+   INTEGER :: typpatch(N_land_classification+1), ityp
+#endif
 
    external SW_CB_dist                    ! the objective function to be fitted for Campbell SW retention curve
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
@@ -303,7 +307,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('vf_quartz_mineral_s lev '//trim(c), vf_quartz_mineral_s_patches)
 #endif
 
@@ -465,7 +469,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('vf_gravels_s lev '//trim(c), vf_gravels_s_patches)
       CALL check_vector_data ('vf_sand_s lev '//trim(c), vf_sand_s_patches)
       CALL check_vector_data ('vf_om_s lev '//trim(c), vf_om_s_patches)
@@ -598,7 +602,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('wf_gravels_s lev '//trim(c), wf_gravels_s_patches)
 #endif
 
@@ -660,7 +664,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('wf_sand_s lev '//trim(c), wf_sand_s_patches)
 #endif
 
@@ -723,7 +727,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('L VGM lev '//trim(c), L_vgm_patches)
 #endif
 
@@ -872,7 +876,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('theta_r lev '//trim(c), theta_r_patches)
       CALL check_vector_data ('alpha VGM lev '//trim(c), alpha_vgm_patches)
       CALL check_vector_data ('n VGM lev '//trim(c), n_vgm_patches)
@@ -1055,7 +1059,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('theta_s lev '//trim(c), theta_s_patches)
       CALL check_vector_data ('psi_s lev '//trim(c), psi_s_patches)
       CALL check_vector_data ('lambda lev '//trim(c), lambda_patches)
@@ -1150,7 +1154,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('k_s lev '//trim(c), k_s_patches)
 #endif
 
@@ -1209,7 +1213,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('csol lev '//trim(c), csol_patches)
 #endif
 
@@ -1268,7 +1272,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('tksatu lev '//trim(c), tksatu_patches)
 #endif
 
@@ -1327,7 +1331,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('tksatf lev '//trim(c), tksatf_patches)
 #endif
 
@@ -1386,7 +1390,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('tkdry lev '//trim(c), tkdry_patches)
 #endif
 
@@ -1445,7 +1449,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('k_solids lev '//trim(c), k_solids_patches)
 #endif
 
@@ -1505,7 +1509,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('OM_density_s lev '//trim(c), OM_density_s_patches)
 #endif
 
@@ -1566,7 +1570,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('BD_all_s lev '//trim(c), BD_all_s_patches)
 #endif
 

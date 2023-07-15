@@ -39,9 +39,6 @@ MODULE MOD_SoilParametersReadin
       USE MOD_NetCDFVector
       use MOD_LandPatch
       use MOD_Vars_TimeInvariants
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
-#endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
 #endif

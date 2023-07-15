@@ -60,7 +60,7 @@ MODULE MOD_LeafInterception
    REAL(r8)  :: thru_rain, thru_snow
    REAL(r8)  :: xsc_rain, xsc_snow
 
-   REAL(r8)  :: fvegc           !vegetation fraction
+   REAL(r8)  :: fvegc          !vegetation fraction
    REAL(r8)  :: FT             !The temperature factor for snow unloading
    REAL(r8)  :: FV             !The wind factor for snow unloading
    REAL(r8)  :: ICEDRIP        ! snow unloading
@@ -74,8 +74,8 @@ MODULE MOD_LeafInterception
 contains
 
    SUBROUTINE LEAF_interception_CoLM2014 (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tair,tleaf,&
-                               prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
+                                          prc_rain,prc_snow,prl_rain,prl_snow,&
+                                          ldew,ldew_rain,ldew_snow,z0m,hu,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
    !DESCRIPTION
    !===========
       ! Calculation of  interception and drainage of precipitation
@@ -206,9 +206,8 @@ contains
 
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
-            !       tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
-            !                - (satcap-ldew) * xs
+            tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
+                     - (satcap-ldew) * xs
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
 
@@ -252,12 +251,23 @@ contains
 #endif
 
       ELSE
-         ldew = 0.
-         pg_rain = prc_rain + prl_rain
-         pg_snow = prc_snow + prl_snow
-         qintr   = 0.
+         ! 07/15/2023, yuan: #bug found for ldew value reset.
+         !NOTE: this bug should exist in other interception schemes @Zhongwang.
+         IF (ldew > 0.) THEN
+            IF (tleaf > tfrz) THEN
+               pg_rain = prc_rain + prl_rain + ldew
+               pg_snow = prc_snow + prl_snow
+            ELSE
+               pg_rain = prc_rain + prl_rain
+               pg_snow = prc_snow + prl_snow + ldew
+            ENDIF
+         ENDIF
+
+         ldew  = 0.
+         qintr = 0.
          qintr_rain = 0.
          qintr_snow = 0.
+
       ENDIF
 
    END SUBROUTINE LEAF_interception_CoLM2014

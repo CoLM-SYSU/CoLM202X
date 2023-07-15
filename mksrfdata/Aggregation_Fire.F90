@@ -17,8 +17,8 @@ SUBROUTINE Aggregation_Fire (gfire, dir_rawdata, dir_model_landdata)
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
 
    USE MOD_AggregationRequestData
@@ -138,7 +138,7 @@ SUBROUTINE Aggregation_Fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('hdm value ', hdm_patches)
 #endif
 
@@ -196,7 +196,7 @@ SUBROUTINE Aggregation_Fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('abm value ', abm_patches)
 #endif
 
@@ -252,7 +252,7 @@ SUBROUTINE Aggregation_Fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('peatf value ', peatf_patches)
 #endif
 
@@ -308,7 +308,7 @@ SUBROUTINE Aggregation_Fire (gfire, dir_rawdata, dir_model_landdata)
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('gdp value ', gdp_patches)
 #endif
 

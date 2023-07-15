@@ -58,11 +58,9 @@ CONTAINS
       USE MOD_Namelist
       USE MOD_NetCDFSerial
       USE MOD_Mesh
-      USE MOD_CoLMDebug
       USE MOD_Hydro_SurfaceNetwork
       USE MOD_DataType
       USE MOD_Utils
-      USE MOD_CoLMDebug
       IMPLICIT NONE
 
       ! Local Variables

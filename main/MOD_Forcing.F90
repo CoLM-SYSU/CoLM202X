@@ -230,7 +230,7 @@ contains
       use MOD_Mesh
       use MOD_LandPatch
       use MOD_Mapping_Grid2Pset
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       use MOD_UserSpecifiedForcing
       USE MOD_ForcingDownscaling, only : rair, cpair, downscale_forcings
 
@@ -569,7 +569,7 @@ contains
 
       ENDIF
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -612,7 +612,7 @@ contains
       USE MOD_Namelist
       use MOD_DataType
       use MOD_NetCDFBlock
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
       implicit none
 
       integer, intent(in) :: idate(3)

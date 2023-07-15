@@ -8,25 +8,25 @@ import shutil
 from joblib import Parallel, delayed
 
 def remove_unused_variables(modname, namelist):
-    del namelist[modname+'LIST']['Obs_Dir']
-    del namelist[modname+'LIST']['figplot']
-    del namelist[modname+'LIST']['Obs_GeoRes']
-    del namelist[modname+'LIST']['Sim_Dir']
-    del namelist[modname+'LIST']['Sim_TimRes']
-    del namelist[modname+'LIST']['Sim_DataGroupby']
-    del namelist[modname+'LIST']['Sim_Suffix']
-    del namelist[modname+'LIST']['Sim_Prefix']
-    del namelist[modname+'LIST']['Sim_GeoRes']
-    del namelist[modname+'LIST']['Obs_source']
-    del namelist[modname+'LIST']['Sim_Syear']
-    del namelist[modname+'LIST']['Sim_Eyear']
-    del namelist[modname+'LIST']['Obs_Syear']
-    del namelist[modname+'LIST']['Obs_Eyear']
-    del namelist[modname+'LIST']['Obs_DataGroupby']
-    del namelist[modname+'LIST']['Obs_Suffix']
-    del namelist[modname+'LIST']['Obs_Prefix']
-    del namelist[modname+'LIST']['Obs_TimRes']
-    variables = namelist[modname+'LIST']
+    del namelist[modname+'_LIST']['Obs_Dir']
+    del namelist[modname+'_LIST']['figplot']
+    del namelist[modname+'_LIST']['Obs_GeoRes']
+    del namelist[modname+'_LIST']['Sim_Dir']
+    del namelist[modname+'_LIST']['Sim_TimRes']
+    del namelist[modname+'_LIST']['Sim_DataGroupby']
+    del namelist[modname+'_LIST']['Sim_Suffix']
+    del namelist[modname+'_LIST']['Sim_Prefix']
+    del namelist[modname+'_LIST']['Sim_GeoRes']
+    del namelist[modname+'_LIST']['Obs_source']
+    del namelist[modname+'_LIST']['Sim_Syear']
+    del namelist[modname+'_LIST']['Sim_Eyear']
+    del namelist[modname+'_LIST']['Obs_Syear']
+    del namelist[modname+'_LIST']['Obs_Eyear']
+    del namelist[modname+'_LIST']['Obs_DataGroupby']
+    del namelist[modname+'_LIST']['Obs_Suffix']
+    del namelist[modname+'_LIST']['Obs_Prefix']
+    del namelist[modname+'_LIST']['Obs_TimRes']
+    variables = namelist[modname+'_LIST']
     variables = {k: v for k, v in variables.items() if isinstance(v, str)}
     if len(variables) == 0:
         print(f"Error: {modname}LIST is empty!")
@@ -94,23 +94,25 @@ class get_general_info:
         self.compare_Tres            =  namelist['General']['compare_Tres']
         self.compare_Gres            =  namelist['General']['compare_Gres']
         self.casename                =  namelist['General']['casename']
-        self.Sim_Dir                 =  namelist[vanme+'LIST']['Sim_Dir']
-        self.Sim_TimRes              =  namelist[vanme+'LIST']['Sim_TimRes']
-        self.Sim_DataGroupby         =  namelist[vanme+'LIST']['Sim_DataGroupby']
-        self.Sim_Suffix              =  namelist[vanme+'LIST']['Sim_Suffix']
-        self.Sim_Prefix              =  namelist[vanme+'LIST']['Sim_Prefix']
-        self.Sim_GeoRes              =  namelist[vanme+'LIST']['Sim_GeoRes']
-        self.Sim_Syear               =  namelist[vanme+'LIST']['Sim_Syear']
-        self.Sim_Eyear               =  namelist[vanme+'LIST']['Sim_Eyear']
+        self.Sim_Dir                 =  namelist[vanme+'_LIST']['Sim_Dir']
+        self.Sim_TimRes              =  namelist[vanme+'_LIST']['Sim_TimRes']
+        self.Sim_DataGroupby         =  namelist[vanme+'_LIST']['Sim_DataGroupby']
+        self.Sim_Suffix              =  namelist[vanme+'_LIST']['Sim_Suffix']
+        self.Sim_Prefix              =  namelist[vanme+'_LIST']['Sim_Prefix']
+        self.Sim_GeoRes              =  namelist[vanme+'_LIST']['Sim_GeoRes']
+        self.Sim_Syear               =  namelist[vanme+'_LIST']['Sim_Syear']
+        self.Sim_Eyear               =  namelist[vanme+'_LIST']['Sim_Eyear']
 
-        self.obs_source              =  namelist[vanme+'LIST']['Obs_source']
-        self.Obs_TimRes              =  namelist[vanme+'LIST']['Obs_TimRes']
-        self.Obs_GeoRes              =  namelist[vanme+'LIST']['Obs_GeoRes']
-        self.Obs_Dir                  =  namelist[vanme+'LIST']['Obs_Dir'] 
-        self.Obs_Syear               =  namelist[vanme+'LIST']['Obs_Syear'] 
-        self.Obs_Eyear               =  namelist[vanme+'LIST']['Obs_Eyear'] 
-        self.Obs_DataGroupby         =  namelist[vanme+'LIST']['Obs_DataGroupby']
-        self.figplot                 =  namelist[vanme+'LIST']['figplot']
+        self.obs_source              =  namelist[vanme+'_LIST']['Obs_source']
+        self.Obs_TimRes              =  namelist[vanme+'_LIST']['Obs_TimRes']
+        self.Obs_GeoRes              =  namelist[vanme+'_LIST']['Obs_GeoRes']
+        self.Obs_Dir                  =  namelist[vanme+'_LIST']['Obs_Dir'] 
+        self.Obs_Syear               =  namelist[vanme+'_LIST']['Obs_Syear'] 
+        self.Obs_Eyear               =  namelist[vanme+'_LIST']['Obs_Eyear'] 
+        self.Obs_DataGroupby         =  namelist[vanme+'_LIST']['Obs_DataGroupby']
+        self.Obs_Suffix              =  namelist[vanme+'_LIST']['Obs_Suffix']
+        self.Obs_Prefix              =  namelist[vanme+'_LIST']['Obs_Prefix']
+        self.figplot                 =  namelist[vanme+'_LIST']['figplot']
         self.casedir                 =  os.path.join(namelist['General']['casedir'], namelist['General']['casename'])+f'/{vanme}/{self.obs_source}/'
         self.use_Syear=max(self.Obs_Syear,self.Sim_Syear,self.Syear)
         self.use_Eyear=min(self.Obs_Eyear,self.Sim_Eyear,self.Eyear)
@@ -120,13 +122,16 @@ class get_general_info:
         self.variables=remove_unused_variables(vanme,namelist)
         self.metrics = select_metrics(namelist)
 
-        if self.Sim_DataGroupby=='single':
+        if self.Sim_DataGroupby=='Single':
             k1=list(self.variables.values())
             split_year(self,self.Sim_TimRes, k1, self.Sim_Dir,self.Sim_Suffix,self.Sim_Prefix)
             self.Sim_Dir=self.casedir+'/scratch'
-            
-        if self.Obs_DataGroupby=='single':
+            self.Sim_DataGroupby='Year'
+
+        if self.Obs_DataGroupby=='Single':
             k1=list(self.variables.keys())
             split_year(self,self.Obs_TimRes, k1, self.Obs_Dir,self.Obs_Suffix,self.Obs_Prefix)
             self.Obs_Dir=self.casedir+'/scratch'
+            self.Obs_DataGroupby='Year'
+
 

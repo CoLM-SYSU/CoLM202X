@@ -100,6 +100,7 @@ MODULE MOD_Vars_Global
    real(r8) :: dz_soi(1:nl_soil)       !soil node thickness [m]
 
    real(r8), parameter :: spval   = -1.e36_r8  !missing value
+   integer , parameter :: spval_i4= -9999      !missing value
    real(r8), parameter :: PI      = 4*atan(1.) !pi value
    real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 

@@ -48,6 +48,8 @@ class Makefiles_parallel:
         self.Obs_Syear               =  info.Obs_Syear
         self.Obs_Eyear               =  info.Obs_Eyear
         self.Obs_DataGroupby         =  info.Obs_DataGroupby
+        self.Obs_Suffix              =  info.Obs_Suffix
+        self.Obs_Prefix              =  info.Obs_Prefix
         self.figplot                 =  info.figplot
         self.casedir                 =  info.casedir
         self.variables               =  info.variables
@@ -74,6 +76,8 @@ class Makefiles_parallel:
                     VarFiles = os.path.join(self.Obs_Dir, f'ERA5LAND_runoff_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
                 elif ((self.obs_source=='Yuan_etal')and(key=='lai')):
                     VarFiles = os.path.join(self.Obs_Dir, f'lai_8-day_30s_{ii}.nc4') ###check here_2018_GLEAM_v3.7a.nc
+                else
+                    VarFile = os.path.join(self.Obs_Dir, f'{self.Obs_Suffix}{ii}{self.Obs_Prefix}.nc')
                 obsx0 = xr.open_dataset(VarFiles)
             else:
                 print ('The Obs_DataGroupby is not Year-->combine it to Year')
@@ -149,7 +153,6 @@ class Makefiles_parallel:
             print(f"Done with Year {ii}")
 
     def make_sim_combine_parallel(self,ii):
-
         if self.Sim_DataGroupby == 'Year':
             VarFiles=(f'{self.Sim_Dir}/{self.Sim_Suffix}{ii}{self.Sim_Prefix}.nc')
             simx0= xr.open_dataset(VarFiles)
