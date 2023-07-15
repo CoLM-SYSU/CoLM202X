@@ -547,7 +547,7 @@ CONTAINS
       snofrz (:) = 0.
       ssw = min(1.,1.e-3*wliq_soisno(1)/dz_soisno(1))
       CALL albland (ipatch,patchtype,1800.,soil_s_v_alb,soil_d_v_alb,soil_s_n_alb,soil_d_n_alb,&
-                    chil,rho,tau,fveg,green,lai,sai,max(0.001,coszen),&
+                    chil,rho,tau,fveg,green,lai,sai,max(0.01,coszen),&
                     wt,fsno,scv,scv,sag,ssw,pg_snow,273.15,t_grnd,t_soisno(:1),dz_soisno(:1),&
                     snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                     mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&

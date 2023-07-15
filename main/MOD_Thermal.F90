@@ -67,7 +67,7 @@ MODULE MOD_Thermal
                       rib         ,ustar       ,qstar       ,tstar      ,&
                       fm          ,fh          ,fq          ,pg_rain    ,&
                       pg_snow     ,t_precip    ,qintr_rain  ,qintr_snow ,&
-                      snofrz      ,sabg_lyr                              )
+                      snofrz      ,sabg_lyr    ,cvsoil                   )
 
 !=======================================================================
 ! this is the main subroutine to execute the calculation
@@ -262,7 +262,7 @@ USE MOD_SPMD_Task
         wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
         smp(1:nl_soil)         ,&! soil matrix potential [mm]
         hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
-
+        cvsoil(1:nl_soil)      ,&! heat capacity [J/(m2 K)]
         ldew,        &! depth of water on foliage [kg/(m2 s)]
         ldew_rain,   &! depth of rain on foliage [kg/(m2 s)]
         ldew_snow,   &! depth of rain on foliage [kg/(m2 s)]
@@ -1137,7 +1137,7 @@ ENDIF
                       sigf,dz_soisno,z_soisno,zi_soisno,&
                       t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                       frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
-                      imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
+                      imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip,cvsoil)
 
 !=======================================================================
 ! [6] Correct fluxes to present soil temperature
