@@ -42,15 +42,15 @@ nRMSEScore=False       # RMSE Score from ILAMB
 /
 
 &FLUXNET_LIST
-  Sim_Dir         =  /tera04/wein/history_IGBP_noURBAN/
+  Sim_Dir         =  /tera02/wein/cases/CoLM2014/output/
   Sim_TimRes      =  Month         #Day or Month
   Sim_DataGroupby =  Month      ###YearMonth
   Sim_SpRes       =  30min
-  Sim_Suffix      =  gridbased_GSWP3_IGBP_noURBAN_2001-2010_hist_
+  Sim_Suffix      =  CoLM2014.clm2.h0.
   Sim_Prefix      =  
   Sim_Syear       =  2001
   Sim_Eyear       =  2005
-
+  
   Obs_source      = FLUXNET
   Obs_Dir         = /tera03/zhwei/Validation_Data/stn_obs/FLUXNET/FLUXNET_PLUMBER2
   FULLLIST        = /tera03/zhwei/Validation_Data/stn_obs/FLUXNET/FLUXNET_PLUMBER2/list/LIST_FLUXNET_PLUMBER2_FULL.csv
