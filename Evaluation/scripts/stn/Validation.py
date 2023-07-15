@@ -9,6 +9,8 @@ import xarray as xr
 from metrics import metrics
 from joblib import Parallel, delayed
 from matplotlib import colors
+os.environ['PYTHONWARNINGS']='ignore::FutureWarning'
+os.environ['PYTHONWARNINGS']='ignore::RuntimeWarning'
 
 class Validation:
     def __init__(self,casedir,varlist,metrics,Pltstn,Max_lat,Min_lat,Max_lon,Min_lon):

@@ -100,6 +100,7 @@ class Makefiles_parallel:
     def make_sim_parallel(self,simx,station_list,ik):
         startx=int(station_list['use_Syear'].values[ik])
         endx  =int(station_list['use_Eyear'].values[ik])   
+        simx['lon'] = xr.where(simx.lon < 0, simx.lon + 360, simx.lon)
         if (self.obs_source=='GRDC'):
             simx1=simx.sel(lat=[station_list['lat_cama'].values[ik]], lon=[station_list['lon_cama'].values[ik]], method="nearest")
         elif (self.obs_source=='ResOpsUS'):
@@ -197,7 +198,6 @@ class Makefiles_parallel:
         # Increase timeout (tune this number to suit your use case).
         timeout=9999999
         Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_combine_parallel)(ii) for ii in range((minyear),(maxyear)+1))
-        print('test')
         VarFiles=(f'{self.casedir}/tmp/sim/sim_*.nc')
         print(VarFiles)
         with xr.open_mfdataset(VarFiles, combine='nested',concat_dim="time") as ds1: #,parallel=True,autoclose=True
@@ -205,13 +205,11 @@ class Makefiles_parallel:
             with ProgressBar():
                 delayed_obj.compute()
         del ds1
-        print('done')
         #delete VarFiles if exist
         #shutil.rmtree(f'{self.casedir}/tmp/sim/sim_*.nc',ignore_errors=True)
 
         with xr.open_dataset(f'{self.casedir}/tmp/sim/sim.nc') as simx:
             Parallel(n_jobs=num_cores,timeout=timeout)(delayed(self.make_sim_parallel)(simx,station_list,ik) for ik in range(len(station_list['ID'])))
-        print('done2')
 
         os.remove(f'{self.casedir}/tmp/sim/sim.nc')
         for ii in range((minyear),(maxyear)+1):
