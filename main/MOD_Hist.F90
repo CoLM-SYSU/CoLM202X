@@ -145,7 +145,6 @@ contains
       use MOD_LandPatch
       use MOD_Mapping_Pset2Grid
       use MOD_Vars_2DFluxes
-      use MOD_CoLMDebug
       use MOD_Vars_Global, only : spval
       USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
 #ifdef URBAN_MODEL

@@ -53,7 +53,6 @@ CONTAINS
       USE MOD_NetCDFSerial
       USE MOD_Mesh
       USE MOD_LandElm
-      USE MOD_CoLMDebug
       USE MOD_Hydro_SurfaceNetwork
       USE MOD_Utils
       IMPLICIT NONE

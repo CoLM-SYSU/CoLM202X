@@ -39,7 +39,6 @@ CONTAINS
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_RiverNetwork
       USE MOD_Const_Physical, only : grav
-      USE MOD_CoLMDebug
       IMPLICIT NONE
 
       REAL(r8), intent(in) :: dt

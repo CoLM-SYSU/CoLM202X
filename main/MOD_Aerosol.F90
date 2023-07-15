@@ -331,7 +331,9 @@ CONTAINS
      USE MOD_NetCDFBlock
      USE MOD_Namelist
      USE MOD_Vars_1DForcing
-     USE MOD_CoLMDebug
+#ifdef RangeCheck 
+     USE MOD_RangeCheck
+#endif
      IMPLICIT NONE
 
      integer, intent(in) :: idate(3)
@@ -416,7 +418,7 @@ CONTAINS
      CALL ncio_read_block_time (file_aerosol, 'DSTX04DD', grid_aerosol, itime, f_aerdep)
      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(14,:))
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck 
      CALL check_block_data  ('aerosol', f_aerdep)
      CALL check_vector_data ('aerosol', forc_aerdep)
 #endif

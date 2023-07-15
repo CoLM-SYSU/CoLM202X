@@ -183,8 +183,8 @@ SAVE
      use MOD_SPMD_Task
      use MOD_NetCDFVector
      use MOD_NetCDFSerial
-#ifdef CoLMDEBUG
-     USE MOD_CoLMDebug
+#ifdef RangeCheck
+     USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -294,7 +294,7 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'sf', sf)
      call ncio_read_bcast_serial (file_restart, 'sf_no3', sf_no3)
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      call check_BGCTimeInvariants ()
 #endif
 
@@ -482,12 +482,12 @@ SAVE
 
   END SUBROUTINE deallocate_BGCTimeInvariants
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    !---------------------------------------
    SUBROUTINE check_BGCTimeInvariants ()
 
       use MOD_SPMD_Task
-      use MOD_CoLMDebug
+      use MOD_RangeCheck
 
       IMPLICIT NONE
 

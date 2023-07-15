@@ -102,54 +102,54 @@ MODULE MOD_Vars_1DFluxes
 
          if (numpatch > 0) then
 
-            allocate ( taux   (numpatch) )  ! wind stress: E-W [kg/m/s2]
-            allocate ( tauy   (numpatch) )  ! wind stress: N-S [kg/m/s2]
-            allocate ( fsena  (numpatch) )  ! sensible heat from canopy height to atmosphere [W/m2]
-            allocate ( lfevpa (numpatch) )  ! latent heat flux from canopy height to atmosphere [W/m2]
-            allocate ( fevpa  (numpatch) )  ! evapotranspiration from canopy to atmosphere [mm/s]
-            allocate ( fsenl  (numpatch) )  ! sensible heat from leaves [W/m2]
-            allocate ( fevpl  (numpatch) )  ! evaporation+transpiration from leaves [mm/s]
-            allocate ( etr    (numpatch) )  ! transpiration rate [mm/s]
-            allocate ( fseng  (numpatch) )  ! sensible heat flux from ground [W/m2]
-            allocate ( fevpg  (numpatch) )  ! evaporation heat flux from ground [mm/s]
-            allocate ( fgrnd  (numpatch) )  ! ground heat flux [W/m2]
-            allocate ( sabvsun(numpatch) )  ! solar absorbed by sunlit vegetation [W/m2]
-            allocate ( sabvsha(numpatch) )  ! solar absorbed by shaded vegetation [W/m2]
-            allocate ( sabg   (numpatch) )  ! solar absorbed by ground  [W/m2]
-            allocate ( sr     (numpatch) )  ! incident direct beam vis solar radiation (W/m2)
-            allocate ( solvd  (numpatch) )  ! incident direct beam vis solar radiation (W/m2)
-            allocate ( solvi  (numpatch) )  ! incident diffuse beam vis solar radiation (W/m2)
-            allocate ( solnd  (numpatch) )  ! incident direct beam nir solar radiation (W/m2)
-            allocate ( solni  (numpatch) )  ! incident diffuse beam nir solar radiation (W/m2)
-            allocate ( srvd   (numpatch) )  ! reflected direct beam vis solar radiation (W/m2)
-            allocate ( srvi   (numpatch) )  ! reflected diffuse beam vis solar radiation (W/m2)
-            allocate ( srnd   (numpatch) )  ! reflected direct beam nir solar radiation (W/m2)
-            allocate ( srni   (numpatch) )  ! reflected diffuse beam nir solar radiation (W/m2)
-            allocate ( solvdln(numpatch) )  ! incident direct beam vis solar radiation at local noon(W/m2)
-            allocate ( solviln(numpatch) )  ! incident diffuse beam vis solar radiation at local noon(W/m2)
-            allocate ( solndln(numpatch) )  ! incident direct beam nir solar radiation at local noon(W/m2)
-            allocate ( solniln(numpatch) )  ! incident diffuse beam nir solar radiation at local noon(W/m2)
-            allocate ( srvdln (numpatch) )  ! reflected direct beam vis solar radiation at local noon(W/m2)
-            allocate ( srviln (numpatch) )  ! reflected diffuse beam vis solar radiation at local noon(W/m2)
-            allocate ( srndln (numpatch) )  ! reflected direct beam nir solar radiation at local noon(W/m2)
-            allocate ( srniln (numpatch) )  ! reflected diffuse beam nir solar radiation at local noon(W/m2)
-            allocate ( olrg   (numpatch) )  ! outgoing long-wave radiation from ground+canopy [W/m2]
-            allocate ( rnet   (numpatch) )  ! net radiation by surface [W/m2]
-            allocate ( xerr   (numpatch) )  ! the error of water banace [mm/s]
-            allocate ( zerr   (numpatch) )  ! the error of energy balance [W/m2]
+            allocate ( taux   (numpatch) )  ; taux   (:) = spval ! wind stress: E-W [kg/m/s2]
+            allocate ( tauy   (numpatch) )  ; tauy   (:) = spval ! wind stress: N-S [kg/m/s2]
+            allocate ( fsena  (numpatch) )  ; fsena  (:) = spval ! sensible heat from canopy height to atmosphere [W/m2]
+            allocate ( lfevpa (numpatch) )  ; lfevpa (:) = spval ! latent heat flux from canopy height to atmosphere [W/m2]
+            allocate ( fevpa  (numpatch) )  ; fevpa  (:) = spval ! evapotranspiration from canopy to atmosphere [mm/s]
+            allocate ( fsenl  (numpatch) )  ; fsenl  (:) = spval ! sensible heat from leaves [W/m2]
+            allocate ( fevpl  (numpatch) )  ; fevpl  (:) = spval ! evaporation+transpiration from leaves [mm/s]
+            allocate ( etr    (numpatch) )  ; etr    (:) = spval ! transpiration rate [mm/s]
+            allocate ( fseng  (numpatch) )  ; fseng  (:) = spval ! sensible heat flux from ground [W/m2]
+            allocate ( fevpg  (numpatch) )  ; fevpg  (:) = spval ! evaporation heat flux from ground [mm/s]
+            allocate ( fgrnd  (numpatch) )  ; fgrnd  (:) = spval ! ground heat flux [W/m2]
+            allocate ( sabvsun(numpatch) )  ; sabvsun(:) = spval ! solar absorbed by sunlit vegetation [W/m2]
+            allocate ( sabvsha(numpatch) )  ; sabvsha(:) = spval ! solar absorbed by shaded vegetation [W/m2]
+            allocate ( sabg   (numpatch) )  ; sabg   (:) = spval ! solar absorbed by ground  [W/m2]
+            allocate ( sr     (numpatch) )  ; sr     (:) = spval ! incident direct beam vis solar radiation (W/m2)
+            allocate ( solvd  (numpatch) )  ; solvd  (:) = spval ! incident direct beam vis solar radiation (W/m2)
+            allocate ( solvi  (numpatch) )  ; solvi  (:) = spval ! incident diffuse beam vis solar radiation (W/m2)
+            allocate ( solnd  (numpatch) )  ; solnd  (:) = spval ! incident direct beam nir solar radiation (W/m2)
+            allocate ( solni  (numpatch) )  ; solni  (:) = spval ! incident diffuse beam nir solar radiation (W/m2)
+            allocate ( srvd   (numpatch) )  ; srvd   (:) = spval ! reflected direct beam vis solar radiation (W/m2)
+            allocate ( srvi   (numpatch) )  ; srvi   (:) = spval ! reflected diffuse beam vis solar radiation (W/m2)
+            allocate ( srnd   (numpatch) )  ; srnd   (:) = spval ! reflected direct beam nir solar radiation (W/m2)
+            allocate ( srni   (numpatch) )  ; srni   (:) = spval ! reflected diffuse beam nir solar radiation (W/m2)
+            allocate ( solvdln(numpatch) )  ; solvdln(:) = spval ! incident direct beam vis solar radiation at local noon(W/m2)
+            allocate ( solviln(numpatch) )  ; solviln(:) = spval ! incident diffuse beam vis solar radiation at local noon(W/m2)
+            allocate ( solndln(numpatch) )  ; solndln(:) = spval ! incident direct beam nir solar radiation at local noon(W/m2)
+            allocate ( solniln(numpatch) )  ; solniln(:) = spval ! incident diffuse beam nir solar radiation at local noon(W/m2)
+            allocate ( srvdln (numpatch) )  ; srvdln (:) = spval ! reflected direct beam vis solar radiation at local noon(W/m2)
+            allocate ( srviln (numpatch) )  ; srviln (:) = spval ! reflected diffuse beam vis solar radiation at local noon(W/m2)
+            allocate ( srndln (numpatch) )  ; srndln (:) = spval ! reflected direct beam nir solar radiation at local noon(W/m2)
+            allocate ( srniln (numpatch) )  ; srniln (:) = spval ! reflected diffuse beam nir solar radiation at local noon(W/m2)
+            allocate ( olrg   (numpatch) )  ; olrg   (:) = spval ! outgoing long-wave radiation from ground+canopy [W/m2]
+            allocate ( rnet   (numpatch) )  ; rnet   (:) = spval ! net radiation by surface [W/m2]
+            allocate ( xerr   (numpatch) )  ; xerr   (:) = spval ! the error of water banace [mm/s]
+            allocate ( zerr   (numpatch) )  ; zerr   (:) = spval ! the error of energy balance [W/m2]
 
-            allocate ( rsur   (numpatch) )  ! surface runoff (mm h2o/s)
-            allocate ( rsub   (numpatch) )  ! subsurface runoff (mm h2o/s)
-            allocate ( rnof   (numpatch) )  ! total runoff (mm h2o/s)
-            allocate ( qintr  (numpatch) )  ! interception (mm h2o/s)
-            allocate ( qinfl  (numpatch) )  ! inflitration (mm h2o/s)
-            allocate ( qdrip  (numpatch) )  ! throughfall (mm h2o/s)
-            allocate ( assim  (numpatch) )  ! canopy assimilation rate (mol m-2 s-1)
-            allocate ( respc  (numpatch) )  ! canopy respiration (mol m-2 s-1)
+            allocate ( rsur   (numpatch) )  ; rsur   (:) = spval ! surface runoff (mm h2o/s)
+            allocate ( rsub   (numpatch) )  ; rsub   (:) = spval ! subsurface runoff (mm h2o/s)
+            allocate ( rnof   (numpatch) )  ; rnof   (:) = spval ! total runoff (mm h2o/s)
+            allocate ( qintr  (numpatch) )  ; qintr  (:) = spval ! interception (mm h2o/s)
+            allocate ( qinfl  (numpatch) )  ; qinfl  (:) = spval ! inflitration (mm h2o/s)
+            allocate ( qdrip  (numpatch) )  ; qdrip  (:) = spval ! throughfall (mm h2o/s)
+            allocate ( assim  (numpatch) )  ; assim  (:) = spval ! canopy assimilation rate (mol m-2 s-1)
+            allocate ( respc  (numpatch) )  ; respc  (:) = spval ! canopy respiration (mol m-2 s-1)
 
-            allocate ( qcharge(numpatch) )  ! groundwater recharge [mm/s]
+            allocate ( qcharge(numpatch) )  ; qcharge(:) = spval ! groundwater recharge [mm/s]
 
-            allocate ( oroflag(numpatch) )  !
+            allocate ( oroflag(numpatch) )  ; oroflag(:) = spval_i4 !
 
          end if
       end if

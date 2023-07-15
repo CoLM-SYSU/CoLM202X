@@ -34,9 +34,6 @@ MODULE MOD_CropReadin
       use MOD_LandPatch
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
-#endif
 
       USE MOD_Vars_Global
       USE MOD_Const_LC

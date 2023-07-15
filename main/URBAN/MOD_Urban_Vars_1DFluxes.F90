@@ -35,6 +35,7 @@ MODULE MOD_Urban_Vars_1DFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_UrbanFluxes
   PUBLIC :: deallocate_1D_UrbanFluxes
+  PUBLIC :: set_1D_UrbanFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -52,6 +53,7 @@ CONTAINS
      USE MOD_Precision
      USE MOD_SPMD_Task
      USE MOD_LandUrban
+     USE MOD_Vars_Global, only : spval
      IMPLICIT NONE
 
      IF (p_is_worker) THEN
@@ -61,17 +63,17 @@ CONTAINS
           !allocate (sabwsha        (numurban))
           !allocate (sabgimp        (numurban))
           !allocate (sabgper        (numurban))
-           allocate (fsen_roof      (numurban))
-           allocate (fsen_wsun      (numurban))
-           allocate (fsen_wsha      (numurban))
-           allocate (fsen_gimp      (numurban))
-           allocate (fsen_gper      (numurban))
-           allocate (fsen_urbl      (numurban))
+           allocate (fsen_roof      (numurban)) ; fsen_roof      (:) = spval
+           allocate (fsen_wsun      (numurban)) ; fsen_wsun      (:) = spval
+           allocate (fsen_wsha      (numurban)) ; fsen_wsha      (:) = spval
+           allocate (fsen_gimp      (numurban)) ; fsen_gimp      (:) = spval
+           allocate (fsen_gper      (numurban)) ; fsen_gper      (:) = spval
+           allocate (fsen_urbl      (numurban)) ; fsen_urbl      (:) = spval
 
-           allocate (lfevp_roof     (numurban))
-           allocate (lfevp_gimp     (numurban))
-           allocate (lfevp_gper     (numurban))
-           allocate (lfevp_urbl     (numurban))
+           allocate (lfevp_roof     (numurban)) ; lfevp_roof     (:) = spval
+           allocate (lfevp_gimp     (numurban)) ; lfevp_gimp     (:) = spval
+           allocate (lfevp_gper     (numurban)) ; lfevp_gper     (:) = spval
+           allocate (lfevp_urbl     (numurban)) ; lfevp_urbl     (:) = spval
          ENDIF
       ENDIF
 
@@ -108,6 +110,41 @@ CONTAINS
       ENDIF
 
   END SUBROUTINE deallocate_1D_UrbanFluxes
+
+  SUBROUTINE set_1D_UrbanFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CLM 1d [numurban] variables
+  ! --------------------------------------------------------------------
+
+     USE MOD_Precision
+     USE MOD_SPMD_Task
+     USE MOD_LandUrban
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+     IF (p_is_worker) THEN
+        IF (numurban > 0) THEN
+          !sabroof        (:) = Values
+          !sabwsun        (:) = Values
+          !sabwsha        (:) = Values
+          !sabgimp        (:) = Values
+          !sabgper        (:) = Values
+           fsen_roof      (:) = Values
+           fsen_wsun      (:) = Values
+           fsen_wsha      (:) = Values
+           fsen_gimp      (:) = Values
+           fsen_gper      (:) = Values
+           fsen_urbl      (:) = Values
+
+           lfevp_roof     (:) = Values
+           lfevp_gimp     (:) = Values
+           lfevp_gper     (:) = Values
+           lfevp_urbl     (:) = Values
+         ENDIF
+      ENDIF
+
+  END SUBROUTINE set_1D_UrbanFluxes
 
 END MODULE MOD_Urban_Vars_1DFluxes
 #endif

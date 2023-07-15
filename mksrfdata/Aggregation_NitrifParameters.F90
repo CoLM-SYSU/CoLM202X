@@ -16,8 +16,8 @@ SUBROUTINE Aggregation_NitrifParameters (gridnitrif, dir_rawdata, dir_model_land
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
    USE MOD_NetCDFVector
-#ifdef CoLMDEBUG 
-   USE MOD_CoLMDebug
+#ifdef RangeCheck 
+   USE MOD_RangeCheck
 #endif
 
    USE MOD_AggregationRequestData
@@ -141,7 +141,7 @@ DO nsl = 1, 20
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
          CALL check_vector_data ('CONC_O2_UNSAT value '//trim(c3), CONC_O2_UNSAT_patches)
 #endif
 
@@ -250,7 +250,7 @@ DO nsl = 1, 25
          CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
          CALL check_vector_data ('O2_DECOMP_DEPTH_UNSAT value '//trim(c3), O2_DECOMP_DEPTH_UNSAT_patches)
 #endif
 

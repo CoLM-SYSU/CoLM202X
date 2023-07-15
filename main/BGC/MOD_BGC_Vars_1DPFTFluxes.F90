@@ -324,6 +324,7 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_1D_BGCPFTFluxes
   PUBLIC :: deallocate_1D_BGCPFTFluxes
+  PUBLIC :: set_1D_BGCPFTFluxes
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -347,310 +348,310 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
         IF (numpft > 0) THEN
 
 ! bgc variables
-           allocate (leafc_xfer_to_leafc_p                (numpft))
-           allocate (frootc_xfer_to_frootc_p              (numpft))
-           allocate (livestemc_xfer_to_livestemc_p        (numpft))
-           allocate (deadstemc_xfer_to_deadstemc_p        (numpft))
-           allocate (livecrootc_xfer_to_livecrootc_p      (numpft))
-           allocate (deadcrootc_xfer_to_deadcrootc_p      (numpft))
-           allocate (grainc_xfer_to_grainc_p              (numpft))
+           allocate (leafc_xfer_to_leafc_p                (numpft)) ; leafc_xfer_to_leafc_p                (:) = spval
+           allocate (frootc_xfer_to_frootc_p              (numpft)) ; frootc_xfer_to_frootc_p              (:) = spval
+           allocate (livestemc_xfer_to_livestemc_p        (numpft)) ; livestemc_xfer_to_livestemc_p        (:) = spval
+           allocate (deadstemc_xfer_to_deadstemc_p        (numpft)) ; deadstemc_xfer_to_deadstemc_p        (:) = spval
+           allocate (livecrootc_xfer_to_livecrootc_p      (numpft)) ; livecrootc_xfer_to_livecrootc_p      (:) = spval
+           allocate (deadcrootc_xfer_to_deadcrootc_p      (numpft)) ; deadcrootc_xfer_to_deadcrootc_p      (:) = spval
+           allocate (grainc_xfer_to_grainc_p              (numpft)) ; grainc_xfer_to_grainc_p              (:) = spval
 
-           allocate (leafc_storage_to_xfer_p              (numpft))
-           allocate (frootc_storage_to_xfer_p             (numpft))
-           allocate (livestemc_storage_to_xfer_p          (numpft))
-           allocate (deadstemc_storage_to_xfer_p          (numpft))
-           allocate (livecrootc_storage_to_xfer_p         (numpft))
-           allocate (deadcrootc_storage_to_xfer_p         (numpft))
-           allocate (grainc_storage_to_xfer_p             (numpft))
-           allocate (gresp_storage_to_xfer_p              (numpft))
+           allocate (leafc_storage_to_xfer_p              (numpft)) ; leafc_storage_to_xfer_p              (:) = spval
+           allocate (frootc_storage_to_xfer_p             (numpft)) ; frootc_storage_to_xfer_p             (:) = spval
+           allocate (livestemc_storage_to_xfer_p          (numpft)) ; livestemc_storage_to_xfer_p          (:) = spval
+           allocate (deadstemc_storage_to_xfer_p          (numpft)) ; deadstemc_storage_to_xfer_p          (:) = spval
+           allocate (livecrootc_storage_to_xfer_p         (numpft)) ; livecrootc_storage_to_xfer_p         (:) = spval
+           allocate (deadcrootc_storage_to_xfer_p         (numpft)) ; deadcrootc_storage_to_xfer_p         (:) = spval
+           allocate (grainc_storage_to_xfer_p             (numpft)) ; grainc_storage_to_xfer_p             (:) = spval
+           allocate (gresp_storage_to_xfer_p              (numpft)) ; gresp_storage_to_xfer_p              (:) = spval
 
-           allocate (leafc_to_litter_p                    (numpft))
-           allocate (frootc_to_litter_p                   (numpft))
-           allocate (grainc_to_food_p                     (numpft))
-           allocate (grainc_to_seed_p                     (numpft))
-           allocate (crop_seedc_to_leaf_p                 (numpft))
-           allocate (livestemc_to_litter_p                (numpft))
-           allocate (livestemc_to_deadstemc_p             (numpft))
-           allocate (livecrootc_to_deadcrootc_p           (numpft))
+           allocate (leafc_to_litter_p                    (numpft)) ; leafc_to_litter_p                    (:) = spval
+           allocate (frootc_to_litter_p                   (numpft)) ; frootc_to_litter_p                   (:) = spval
+           allocate (grainc_to_food_p                     (numpft)) ; grainc_to_food_p                     (:) = spval
+           allocate (grainc_to_seed_p                     (numpft)) ; grainc_to_seed_p                     (:) = spval
+           allocate (crop_seedc_to_leaf_p                 (numpft)) ; crop_seedc_to_leaf_p                 (:) = spval
+           allocate (livestemc_to_litter_p                (numpft)) ; livestemc_to_litter_p                (:) = spval
+           allocate (livestemc_to_deadstemc_p             (numpft)) ; livestemc_to_deadstemc_p             (:) = spval
+           allocate (livecrootc_to_deadcrootc_p           (numpft)) ; livecrootc_to_deadcrootc_p           (:) = spval
 
-           allocate (m_leafc_to_litter_p                  (numpft))
-           allocate (m_frootc_to_litter_p                 (numpft))
-           allocate (m_livestemc_to_litter_p              (numpft))
-           allocate (m_deadstemc_to_litter_p              (numpft))
-           allocate (m_livecrootc_to_litter_p             (numpft))
-           allocate (m_deadcrootc_to_litter_p             (numpft))
+           allocate (m_leafc_to_litter_p                  (numpft)) ; m_leafc_to_litter_p                  (:) = spval
+           allocate (m_frootc_to_litter_p                 (numpft)) ; m_frootc_to_litter_p                 (:) = spval
+           allocate (m_livestemc_to_litter_p              (numpft)) ; m_livestemc_to_litter_p              (:) = spval
+           allocate (m_deadstemc_to_litter_p              (numpft)) ; m_deadstemc_to_litter_p              (:) = spval
+           allocate (m_livecrootc_to_litter_p             (numpft)) ; m_livecrootc_to_litter_p             (:) = spval
+           allocate (m_deadcrootc_to_litter_p             (numpft)) ; m_deadcrootc_to_litter_p             (:) = spval
 
-           allocate (m_leafc_storage_to_litter_p          (numpft))
-           allocate (m_frootc_storage_to_litter_p         (numpft))
-           allocate (m_livestemc_storage_to_litter_p      (numpft))
-           allocate (m_deadstemc_storage_to_litter_p      (numpft))
-           allocate (m_livecrootc_storage_to_litter_p     (numpft))
-           allocate (m_deadcrootc_storage_to_litter_p     (numpft))
-           allocate (m_gresp_storage_to_litter_p          (numpft))
+           allocate (m_leafc_storage_to_litter_p          (numpft)) ; m_leafc_storage_to_litter_p          (:) = spval
+           allocate (m_frootc_storage_to_litter_p         (numpft)) ; m_frootc_storage_to_litter_p         (:) = spval
+           allocate (m_livestemc_storage_to_litter_p      (numpft)) ; m_livestemc_storage_to_litter_p      (:) = spval
+           allocate (m_deadstemc_storage_to_litter_p      (numpft)) ; m_deadstemc_storage_to_litter_p      (:) = spval
+           allocate (m_livecrootc_storage_to_litter_p     (numpft)) ; m_livecrootc_storage_to_litter_p     (:) = spval
+           allocate (m_deadcrootc_storage_to_litter_p     (numpft)) ; m_deadcrootc_storage_to_litter_p     (:) = spval
+           allocate (m_gresp_storage_to_litter_p          (numpft)) ; m_gresp_storage_to_litter_p          (:) = spval
 
-           allocate (m_leafc_xfer_to_litter_p             (numpft))
-           allocate (m_frootc_xfer_to_litter_p            (numpft))
-           allocate (m_livestemc_xfer_to_litter_p         (numpft))
-           allocate (m_deadstemc_xfer_to_litter_p         (numpft))
-           allocate (m_livecrootc_xfer_to_litter_p        (numpft))
-           allocate (m_deadcrootc_xfer_to_litter_p        (numpft))
-           allocate (m_gresp_xfer_to_litter_p             (numpft))
+           allocate (m_leafc_xfer_to_litter_p             (numpft)) ; m_leafc_xfer_to_litter_p             (:) = spval
+           allocate (m_frootc_xfer_to_litter_p            (numpft)) ; m_frootc_xfer_to_litter_p            (:) = spval
+           allocate (m_livestemc_xfer_to_litter_p         (numpft)) ; m_livestemc_xfer_to_litter_p         (:) = spval
+           allocate (m_deadstemc_xfer_to_litter_p         (numpft)) ; m_deadstemc_xfer_to_litter_p         (:) = spval
+           allocate (m_livecrootc_xfer_to_litter_p        (numpft)) ; m_livecrootc_xfer_to_litter_p        (:) = spval
+           allocate (m_deadcrootc_xfer_to_litter_p        (numpft)) ; m_deadcrootc_xfer_to_litter_p        (:) = spval
+           allocate (m_gresp_xfer_to_litter_p             (numpft)) ; m_gresp_xfer_to_litter_p             (:) = spval
 
-           allocate (m_leafc_to_fire_p                    (numpft))
-           allocate (m_frootc_to_fire_p                   (numpft))
-           allocate (m_livestemc_to_fire_p                (numpft))
-           allocate (m_deadstemc_to_fire_p                (numpft))
-           allocate (m_livecrootc_to_fire_p               (numpft))
-           allocate (m_deadcrootc_to_fire_p               (numpft))
+           allocate (m_leafc_to_fire_p                    (numpft)) ; m_leafc_to_fire_p                    (:) = spval
+           allocate (m_frootc_to_fire_p                   (numpft)) ; m_frootc_to_fire_p                   (:) = spval
+           allocate (m_livestemc_to_fire_p                (numpft)) ; m_livestemc_to_fire_p                (:) = spval
+           allocate (m_deadstemc_to_fire_p                (numpft)) ; m_deadstemc_to_fire_p                (:) = spval
+           allocate (m_livecrootc_to_fire_p               (numpft)) ; m_livecrootc_to_fire_p               (:) = spval
+           allocate (m_deadcrootc_to_fire_p               (numpft)) ; m_deadcrootc_to_fire_p               (:) = spval
 
-           allocate (m_leafc_storage_to_fire_p            (numpft))
-           allocate (m_frootc_storage_to_fire_p           (numpft))
-           allocate (m_livestemc_storage_to_fire_p        (numpft))
-           allocate (m_deadstemc_storage_to_fire_p        (numpft))
-           allocate (m_livecrootc_storage_to_fire_p       (numpft))
-           allocate (m_deadcrootc_storage_to_fire_p       (numpft))
-           allocate (m_gresp_storage_to_fire_p            (numpft))
+           allocate (m_leafc_storage_to_fire_p            (numpft)) ; m_leafc_storage_to_fire_p            (:) = spval
+           allocate (m_frootc_storage_to_fire_p           (numpft)) ; m_frootc_storage_to_fire_p           (:) = spval
+           allocate (m_livestemc_storage_to_fire_p        (numpft)) ; m_livestemc_storage_to_fire_p        (:) = spval
+           allocate (m_deadstemc_storage_to_fire_p        (numpft)) ; m_deadstemc_storage_to_fire_p        (:) = spval
+           allocate (m_livecrootc_storage_to_fire_p       (numpft)) ; m_livecrootc_storage_to_fire_p       (:) = spval
+           allocate (m_deadcrootc_storage_to_fire_p       (numpft)) ; m_deadcrootc_storage_to_fire_p       (:) = spval
+           allocate (m_gresp_storage_to_fire_p            (numpft)) ; m_gresp_storage_to_fire_p            (:) = spval
 
-           allocate (m_leafc_xfer_to_fire_p               (numpft))
-           allocate (m_frootc_xfer_to_fire_p              (numpft))
-           allocate (m_livestemc_xfer_to_fire_p           (numpft))
-           allocate (m_deadstemc_xfer_to_fire_p           (numpft))
-           allocate (m_livecrootc_xfer_to_fire_p          (numpft))
-           allocate (m_deadcrootc_xfer_to_fire_p          (numpft))
-           allocate (m_gresp_xfer_to_fire_p               (numpft))
+           allocate (m_leafc_xfer_to_fire_p               (numpft)) ; m_leafc_xfer_to_fire_p               (:) = spval
+           allocate (m_frootc_xfer_to_fire_p              (numpft)) ; m_frootc_xfer_to_fire_p              (:) = spval
+           allocate (m_livestemc_xfer_to_fire_p           (numpft)) ; m_livestemc_xfer_to_fire_p           (:) = spval
+           allocate (m_deadstemc_xfer_to_fire_p           (numpft)) ; m_deadstemc_xfer_to_fire_p           (:) = spval
+           allocate (m_livecrootc_xfer_to_fire_p          (numpft)) ; m_livecrootc_xfer_to_fire_p          (:) = spval
+           allocate (m_deadcrootc_xfer_to_fire_p          (numpft)) ; m_deadcrootc_xfer_to_fire_p          (:) = spval
+           allocate (m_gresp_xfer_to_fire_p               (numpft)) ; m_gresp_xfer_to_fire_p               (:) = spval
 
-           allocate (m_livestemc_to_deadstemc_fire_p      (numpft))
-           allocate (m_livecrootc_to_deadcrootc_fire_p    (numpft))
+           allocate (m_livestemc_to_deadstemc_fire_p      (numpft)) ; m_livestemc_to_deadstemc_fire_p      (:) = spval
+           allocate (m_livecrootc_to_deadcrootc_fire_p    (numpft)) ; m_livecrootc_to_deadcrootc_fire_p    (:) = spval
 
-           allocate (m_leafc_to_litter_fire_p             (numpft))
-           allocate (m_frootc_to_litter_fire_p            (numpft))
-           allocate (m_livestemc_to_litter_fire_p         (numpft))
-           allocate (m_deadstemc_to_litter_fire_p         (numpft))
-           allocate (m_livecrootc_to_litter_fire_p        (numpft))
-           allocate (m_deadcrootc_to_litter_fire_p        (numpft))
+           allocate (m_leafc_to_litter_fire_p             (numpft)) ; m_leafc_to_litter_fire_p             (:) = spval
+           allocate (m_frootc_to_litter_fire_p            (numpft)) ; m_frootc_to_litter_fire_p            (:) = spval
+           allocate (m_livestemc_to_litter_fire_p         (numpft)) ; m_livestemc_to_litter_fire_p         (:) = spval
+           allocate (m_deadstemc_to_litter_fire_p         (numpft)) ; m_deadstemc_to_litter_fire_p         (:) = spval
+           allocate (m_livecrootc_to_litter_fire_p        (numpft)) ; m_livecrootc_to_litter_fire_p        (:) = spval
+           allocate (m_deadcrootc_to_litter_fire_p        (numpft)) ; m_deadcrootc_to_litter_fire_p        (:) = spval
 
-           allocate (m_leafc_storage_to_litter_fire_p     (numpft))
-           allocate (m_frootc_storage_to_litter_fire_p    (numpft))
-           allocate (m_livestemc_storage_to_litter_fire_p (numpft))
-           allocate (m_deadstemc_storage_to_litter_fire_p (numpft))
-           allocate (m_livecrootc_storage_to_litter_fire_p(numpft))
-           allocate (m_deadcrootc_storage_to_litter_fire_p(numpft))
-           allocate (m_gresp_storage_to_litter_fire_p     (numpft))
+           allocate (m_leafc_storage_to_litter_fire_p     (numpft)) ; m_leafc_storage_to_litter_fire_p     (:) = spval
+           allocate (m_frootc_storage_to_litter_fire_p    (numpft)) ; m_frootc_storage_to_litter_fire_p    (:) = spval
+           allocate (m_livestemc_storage_to_litter_fire_p (numpft)) ; m_livestemc_storage_to_litter_fire_p (:) = spval
+           allocate (m_deadstemc_storage_to_litter_fire_p (numpft)) ; m_deadstemc_storage_to_litter_fire_p (:) = spval
+           allocate (m_livecrootc_storage_to_litter_fire_p(numpft)) ; m_livecrootc_storage_to_litter_fire_p(:) = spval
+           allocate (m_deadcrootc_storage_to_litter_fire_p(numpft)) ; m_deadcrootc_storage_to_litter_fire_p(:) = spval
+           allocate (m_gresp_storage_to_litter_fire_p     (numpft)) ; m_gresp_storage_to_litter_fire_p     (:) = spval
 
-           allocate (m_leafc_xfer_to_litter_fire_p        (numpft))
-           allocate (m_frootc_xfer_to_litter_fire_p       (numpft))
-           allocate (m_livestemc_xfer_to_litter_fire_p    (numpft))
-           allocate (m_deadstemc_xfer_to_litter_fire_p    (numpft))
-           allocate (m_livecrootc_xfer_to_litter_fire_p   (numpft))
-           allocate (m_deadcrootc_xfer_to_litter_fire_p   (numpft))
-           allocate (m_gresp_xfer_to_litter_fire_p        (numpft))
+           allocate (m_leafc_xfer_to_litter_fire_p        (numpft)) ; m_leafc_xfer_to_litter_fire_p        (:) = spval
+           allocate (m_frootc_xfer_to_litter_fire_p       (numpft)) ; m_frootc_xfer_to_litter_fire_p       (:) = spval
+           allocate (m_livestemc_xfer_to_litter_fire_p    (numpft)) ; m_livestemc_xfer_to_litter_fire_p    (:) = spval
+           allocate (m_deadstemc_xfer_to_litter_fire_p    (numpft)) ; m_deadstemc_xfer_to_litter_fire_p    (:) = spval
+           allocate (m_livecrootc_xfer_to_litter_fire_p   (numpft)) ; m_livecrootc_xfer_to_litter_fire_p   (:) = spval
+           allocate (m_deadcrootc_xfer_to_litter_fire_p   (numpft)) ; m_deadcrootc_xfer_to_litter_fire_p   (:) = spval
+           allocate (m_gresp_xfer_to_litter_fire_p        (numpft)) ; m_gresp_xfer_to_litter_fire_p        (:) = spval
 
-           allocate (cpool_to_xsmrpool_p          (numpft))
-           allocate (cpool_to_gresp_storage_p     (numpft))
-           allocate (cpool_to_leafc_p             (numpft))
-           allocate (cpool_to_leafc_storage_p     (numpft))
-           allocate (cpool_to_frootc_p            (numpft))
-           allocate (cpool_to_frootc_storage_p    (numpft))
-           allocate (cpool_to_livestemc_p         (numpft))
-           allocate (cpool_to_livestemc_storage_p (numpft))
-           allocate (cpool_to_deadstemc_p         (numpft))
-           allocate (cpool_to_deadstemc_storage_p (numpft))
-           allocate (cpool_to_livecrootc_p        (numpft))
-           allocate (cpool_to_livecrootc_storage_p(numpft))
-           allocate (cpool_to_deadcrootc_p        (numpft))
-           allocate (cpool_to_deadcrootc_storage_p(numpft))
-           allocate (cpool_to_grainc_p            (numpft))
-           allocate (cpool_to_grainc_storage_p    (numpft))
+           allocate (cpool_to_xsmrpool_p          (numpft)) ; cpool_to_xsmrpool_p          (:) = spval
+           allocate (cpool_to_gresp_storage_p     (numpft)) ; cpool_to_gresp_storage_p     (:) = spval
+           allocate (cpool_to_leafc_p             (numpft)) ; cpool_to_leafc_p             (:) = spval
+           allocate (cpool_to_leafc_storage_p     (numpft)) ; cpool_to_leafc_storage_p     (:) = spval
+           allocate (cpool_to_frootc_p            (numpft)) ; cpool_to_frootc_p            (:) = spval
+           allocate (cpool_to_frootc_storage_p    (numpft)) ; cpool_to_frootc_storage_p    (:) = spval
+           allocate (cpool_to_livestemc_p         (numpft)) ; cpool_to_livestemc_p         (:) = spval
+           allocate (cpool_to_livestemc_storage_p (numpft)) ; cpool_to_livestemc_storage_p (:) = spval
+           allocate (cpool_to_deadstemc_p         (numpft)) ; cpool_to_deadstemc_p         (:) = spval
+           allocate (cpool_to_deadstemc_storage_p (numpft)) ; cpool_to_deadstemc_storage_p (:) = spval
+           allocate (cpool_to_livecrootc_p        (numpft)) ; cpool_to_livecrootc_p        (:) = spval
+           allocate (cpool_to_livecrootc_storage_p(numpft)) ; cpool_to_livecrootc_storage_p(:) = spval
+           allocate (cpool_to_deadcrootc_p        (numpft)) ; cpool_to_deadcrootc_p        (:) = spval
+           allocate (cpool_to_deadcrootc_storage_p(numpft)) ; cpool_to_deadcrootc_storage_p(:) = spval
+           allocate (cpool_to_grainc_p            (numpft)) ; cpool_to_grainc_p            (:) = spval
+           allocate (cpool_to_grainc_storage_p    (numpft)) ; cpool_to_grainc_storage_p    (:) = spval
 
-           allocate (leaf_xsmr_p                  (numpft))
-           allocate (froot_xsmr_p                 (numpft))
-           allocate (livestem_xsmr_p              (numpft))
-           allocate (livecroot_xsmr_p             (numpft))
-           allocate (grain_xsmr_p                 (numpft))
+           allocate (leaf_xsmr_p                  (numpft)) ; leaf_xsmr_p                  (:) = spval
+           allocate (froot_xsmr_p                 (numpft)) ; froot_xsmr_p                 (:) = spval
+           allocate (livestem_xsmr_p              (numpft)) ; livestem_xsmr_p              (:) = spval
+           allocate (livecroot_xsmr_p             (numpft)) ; livecroot_xsmr_p             (:) = spval
+           allocate (grain_xsmr_p                 (numpft)) ; grain_xsmr_p                 (:) = spval
 
-           allocate (cpool_leaf_gr_p                      (numpft))
-           allocate (cpool_froot_gr_p                     (numpft))
-           allocate (cpool_livestem_gr_p                  (numpft))
-           allocate (cpool_deadstem_gr_p                  (numpft))
-           allocate (cpool_livecroot_gr_p                 (numpft))
-           allocate (cpool_deadcroot_gr_p                 (numpft))
-           allocate (cpool_grain_gr_p                     (numpft))
+           allocate (cpool_leaf_gr_p                      (numpft)) ; cpool_leaf_gr_p                      (:) = spval
+           allocate (cpool_froot_gr_p                     (numpft)) ; cpool_froot_gr_p                     (:) = spval
+           allocate (cpool_livestem_gr_p                  (numpft)) ; cpool_livestem_gr_p                  (:) = spval
+           allocate (cpool_deadstem_gr_p                  (numpft)) ; cpool_deadstem_gr_p                  (:) = spval
+           allocate (cpool_livecroot_gr_p                 (numpft)) ; cpool_livecroot_gr_p                 (:) = spval
+           allocate (cpool_deadcroot_gr_p                 (numpft)) ; cpool_deadcroot_gr_p                 (:) = spval
+           allocate (cpool_grain_gr_p                     (numpft)) ; cpool_grain_gr_p                     (:) = spval
 
-           allocate (cpool_leaf_storage_gr_p              (numpft))
-           allocate (cpool_froot_storage_gr_p             (numpft))
-           allocate (cpool_livestem_storage_gr_p          (numpft))
-           allocate (cpool_deadstem_storage_gr_p          (numpft))
-           allocate (cpool_livecroot_storage_gr_p         (numpft))
-           allocate (cpool_deadcroot_storage_gr_p         (numpft))
-           allocate (cpool_grain_storage_gr_p             (numpft))
+           allocate (cpool_leaf_storage_gr_p              (numpft)) ; cpool_leaf_storage_gr_p              (:) = spval
+           allocate (cpool_froot_storage_gr_p             (numpft)) ; cpool_froot_storage_gr_p             (:) = spval
+           allocate (cpool_livestem_storage_gr_p          (numpft)) ; cpool_livestem_storage_gr_p          (:) = spval
+           allocate (cpool_deadstem_storage_gr_p          (numpft)) ; cpool_deadstem_storage_gr_p          (:) = spval
+           allocate (cpool_livecroot_storage_gr_p         (numpft)) ; cpool_livecroot_storage_gr_p         (:) = spval
+           allocate (cpool_deadcroot_storage_gr_p         (numpft)) ; cpool_deadcroot_storage_gr_p         (:) = spval
+           allocate (cpool_grain_storage_gr_p             (numpft)) ; cpool_grain_storage_gr_p             (:) = spval
 
-           allocate (transfer_leaf_gr_p                   (numpft))
-           allocate (transfer_froot_gr_p                  (numpft))
-           allocate (transfer_livestem_gr_p               (numpft))
-           allocate (transfer_deadstem_gr_p               (numpft))
-           allocate (transfer_livecroot_gr_p              (numpft))
-           allocate (transfer_deadcroot_gr_p              (numpft))
-           allocate (transfer_grain_gr_p                  (numpft))
+           allocate (transfer_leaf_gr_p                   (numpft)) ; transfer_leaf_gr_p                   (:) = spval
+           allocate (transfer_froot_gr_p                  (numpft)) ; transfer_froot_gr_p                  (:) = spval
+           allocate (transfer_livestem_gr_p               (numpft)) ; transfer_livestem_gr_p               (:) = spval
+           allocate (transfer_deadstem_gr_p               (numpft)) ; transfer_deadstem_gr_p               (:) = spval
+           allocate (transfer_livecroot_gr_p              (numpft)) ; transfer_livecroot_gr_p              (:) = spval
+           allocate (transfer_deadcroot_gr_p              (numpft)) ; transfer_deadcroot_gr_p              (:) = spval
+           allocate (transfer_grain_gr_p                  (numpft)) ; transfer_grain_gr_p                  (:) = spval
 
-           allocate (xsmrpool_to_atm_p                    (numpft))
+           allocate (xsmrpool_to_atm_p                    (numpft)) ; xsmrpool_to_atm_p                    (:) = spval
 
-           allocate (cropprod1c_loss_p                    (numpft))
+           allocate (cropprod1c_loss_p                    (numpft)) ; cropprod1c_loss_p                    (:) = spval
 
-           allocate (plant_ndemand_p              (numpft))
+           allocate (plant_ndemand_p              (numpft)) ; plant_ndemand_p              (:) = spval
 
-           allocate (leafn_xfer_to_leafn_p                (numpft))
-           allocate (frootn_xfer_to_frootn_p              (numpft))
-           allocate (livestemn_xfer_to_livestemn_p        (numpft))
-           allocate (deadstemn_xfer_to_deadstemn_p        (numpft))
-           allocate (livecrootn_xfer_to_livecrootn_p      (numpft))
-           allocate (deadcrootn_xfer_to_deadcrootn_p      (numpft))
-           allocate (grainn_xfer_to_grainn_p              (numpft))
+           allocate (leafn_xfer_to_leafn_p                (numpft)) ; leafn_xfer_to_leafn_p                (:) = spval
+           allocate (frootn_xfer_to_frootn_p              (numpft)) ; frootn_xfer_to_frootn_p              (:) = spval
+           allocate (livestemn_xfer_to_livestemn_p        (numpft)) ; livestemn_xfer_to_livestemn_p        (:) = spval
+           allocate (deadstemn_xfer_to_deadstemn_p        (numpft)) ; deadstemn_xfer_to_deadstemn_p        (:) = spval
+           allocate (livecrootn_xfer_to_livecrootn_p      (numpft)) ; livecrootn_xfer_to_livecrootn_p      (:) = spval
+           allocate (deadcrootn_xfer_to_deadcrootn_p      (numpft)) ; deadcrootn_xfer_to_deadcrootn_p      (:) = spval
+           allocate (grainn_xfer_to_grainn_p              (numpft)) ; grainn_xfer_to_grainn_p              (:) = spval
 
-           allocate (leafn_storage_to_xfer_p              (numpft))
-           allocate (frootn_storage_to_xfer_p             (numpft))
-           allocate (livestemn_storage_to_xfer_p          (numpft))
-           allocate (deadstemn_storage_to_xfer_p          (numpft))
-           allocate (livecrootn_storage_to_xfer_p         (numpft))
-           allocate (deadcrootn_storage_to_xfer_p         (numpft))
-           allocate (grainn_storage_to_xfer_p             (numpft))
+           allocate (leafn_storage_to_xfer_p              (numpft)) ; leafn_storage_to_xfer_p              (:) = spval
+           allocate (frootn_storage_to_xfer_p             (numpft)) ; frootn_storage_to_xfer_p             (:) = spval
+           allocate (livestemn_storage_to_xfer_p          (numpft)) ; livestemn_storage_to_xfer_p          (:) = spval
+           allocate (deadstemn_storage_to_xfer_p          (numpft)) ; deadstemn_storage_to_xfer_p          (:) = spval
+           allocate (livecrootn_storage_to_xfer_p         (numpft)) ; livecrootn_storage_to_xfer_p         (:) = spval
+           allocate (deadcrootn_storage_to_xfer_p         (numpft)) ; deadcrootn_storage_to_xfer_p         (:) = spval
+           allocate (grainn_storage_to_xfer_p             (numpft)) ; grainn_storage_to_xfer_p             (:) = spval
 
-           allocate (leafn_to_litter_p                    (numpft))
-           allocate (frootn_to_litter_p                   (numpft))
-           allocate (grainn_to_food_p                     (numpft))
-           allocate (grainn_to_seed_p                     (numpft))
-           allocate (crop_seedn_to_leaf_p                 (numpft))
-           allocate (livestemn_to_litter_p                (numpft))
-           allocate (livestemn_to_deadstemn_p             (numpft))
-           allocate (livecrootn_to_deadcrootn_p           (numpft))
+           allocate (leafn_to_litter_p                    (numpft)) ; leafn_to_litter_p                    (:) = spval
+           allocate (frootn_to_litter_p                   (numpft)) ; frootn_to_litter_p                   (:) = spval
+           allocate (grainn_to_food_p                     (numpft)) ; grainn_to_food_p                     (:) = spval
+           allocate (grainn_to_seed_p                     (numpft)) ; grainn_to_seed_p                     (:) = spval
+           allocate (crop_seedn_to_leaf_p                 (numpft)) ; crop_seedn_to_leaf_p                 (:) = spval
+           allocate (livestemn_to_litter_p                (numpft)) ; livestemn_to_litter_p                (:) = spval
+           allocate (livestemn_to_deadstemn_p             (numpft)) ; livestemn_to_deadstemn_p             (:) = spval
+           allocate (livecrootn_to_deadcrootn_p           (numpft)) ; livecrootn_to_deadcrootn_p           (:) = spval
 
-           allocate (leafn_to_retransn_p                  (numpft))
-           allocate (frootn_to_retransn_p                 (numpft))
-           allocate (livestemn_to_retransn_p              (numpft))
-           allocate (livecrootn_to_retransn_p             (numpft))
-           allocate (retransn_to_npool_p                  (numpft))
-           allocate (free_retransn_to_npool_p             (numpft))
+           allocate (leafn_to_retransn_p                  (numpft)) ; leafn_to_retransn_p                  (:) = spval
+           allocate (frootn_to_retransn_p                 (numpft)) ; frootn_to_retransn_p                 (:) = spval
+           allocate (livestemn_to_retransn_p              (numpft)) ; livestemn_to_retransn_p              (:) = spval
+           allocate (livecrootn_to_retransn_p             (numpft)) ; livecrootn_to_retransn_p             (:) = spval
+           allocate (retransn_to_npool_p                  (numpft)) ; retransn_to_npool_p                  (:) = spval
+           allocate (free_retransn_to_npool_p             (numpft)) ; free_retransn_to_npool_p             (:) = spval
 
-           allocate (m_leafn_to_litter_p                  (numpft))
-           allocate (m_frootn_to_litter_p                 (numpft))
-           allocate (m_livestemn_to_litter_p              (numpft))
-           allocate (m_deadstemn_to_litter_p              (numpft))
-           allocate (m_livecrootn_to_litter_p             (numpft))
-           allocate (m_deadcrootn_to_litter_p             (numpft))
-           allocate (m_retransn_to_litter_p               (numpft))
+           allocate (m_leafn_to_litter_p                  (numpft)) ; m_leafn_to_litter_p                  (:) = spval
+           allocate (m_frootn_to_litter_p                 (numpft)) ; m_frootn_to_litter_p                 (:) = spval
+           allocate (m_livestemn_to_litter_p              (numpft)) ; m_livestemn_to_litter_p              (:) = spval
+           allocate (m_deadstemn_to_litter_p              (numpft)) ; m_deadstemn_to_litter_p              (:) = spval
+           allocate (m_livecrootn_to_litter_p             (numpft)) ; m_livecrootn_to_litter_p             (:) = spval
+           allocate (m_deadcrootn_to_litter_p             (numpft)) ; m_deadcrootn_to_litter_p             (:) = spval
+           allocate (m_retransn_to_litter_p               (numpft)) ; m_retransn_to_litter_p               (:) = spval
 
-           allocate (m_leafn_storage_to_litter_p          (numpft))
-           allocate (m_frootn_storage_to_litter_p         (numpft))
-           allocate (m_livestemn_storage_to_litter_p      (numpft))
-           allocate (m_deadstemn_storage_to_litter_p      (numpft))
-           allocate (m_livecrootn_storage_to_litter_p     (numpft))
-           allocate (m_deadcrootn_storage_to_litter_p     (numpft))
+           allocate (m_leafn_storage_to_litter_p          (numpft)) ; m_leafn_storage_to_litter_p          (:) = spval
+           allocate (m_frootn_storage_to_litter_p         (numpft)) ; m_frootn_storage_to_litter_p         (:) = spval
+           allocate (m_livestemn_storage_to_litter_p      (numpft)) ; m_livestemn_storage_to_litter_p      (:) = spval
+           allocate (m_deadstemn_storage_to_litter_p      (numpft)) ; m_deadstemn_storage_to_litter_p      (:) = spval
+           allocate (m_livecrootn_storage_to_litter_p     (numpft)) ; m_livecrootn_storage_to_litter_p     (:) = spval
+           allocate (m_deadcrootn_storage_to_litter_p     (numpft)) ; m_deadcrootn_storage_to_litter_p     (:) = spval
 
-           allocate (m_leafn_xfer_to_litter_p             (numpft))
-           allocate (m_frootn_xfer_to_litter_p            (numpft))
-           allocate (m_livestemn_xfer_to_litter_p         (numpft))
-           allocate (m_deadstemn_xfer_to_litter_p         (numpft))
-           allocate (m_livecrootn_xfer_to_litter_p        (numpft))
-           allocate (m_deadcrootn_xfer_to_litter_p        (numpft))
+           allocate (m_leafn_xfer_to_litter_p             (numpft)) ; m_leafn_xfer_to_litter_p             (:) = spval
+           allocate (m_frootn_xfer_to_litter_p            (numpft)) ; m_frootn_xfer_to_litter_p            (:) = spval
+           allocate (m_livestemn_xfer_to_litter_p         (numpft)) ; m_livestemn_xfer_to_litter_p         (:) = spval
+           allocate (m_deadstemn_xfer_to_litter_p         (numpft)) ; m_deadstemn_xfer_to_litter_p         (:) = spval
+           allocate (m_livecrootn_xfer_to_litter_p        (numpft)) ; m_livecrootn_xfer_to_litter_p        (:) = spval
+           allocate (m_deadcrootn_xfer_to_litter_p        (numpft)) ; m_deadcrootn_xfer_to_litter_p        (:) = spval
 
-           allocate (m_leafn_to_fire_p                    (numpft))
-           allocate (m_frootn_to_fire_p                   (numpft))
-           allocate (m_livestemn_to_fire_p                (numpft))
-           allocate (m_deadstemn_to_fire_p                (numpft))
-           allocate (m_livecrootn_to_fire_p               (numpft))
-           allocate (m_deadcrootn_to_fire_p               (numpft))
+           allocate (m_leafn_to_fire_p                    (numpft)) ; m_leafn_to_fire_p                    (:) = spval
+           allocate (m_frootn_to_fire_p                   (numpft)) ; m_frootn_to_fire_p                   (:) = spval
+           allocate (m_livestemn_to_fire_p                (numpft)) ; m_livestemn_to_fire_p                (:) = spval
+           allocate (m_deadstemn_to_fire_p                (numpft)) ; m_deadstemn_to_fire_p                (:) = spval
+           allocate (m_livecrootn_to_fire_p               (numpft)) ; m_livecrootn_to_fire_p               (:) = spval
+           allocate (m_deadcrootn_to_fire_p               (numpft)) ; m_deadcrootn_to_fire_p               (:) = spval
 
-           allocate (m_leafn_storage_to_fire_p            (numpft))
-           allocate (m_frootn_storage_to_fire_p           (numpft))
-           allocate (m_livestemn_storage_to_fire_p        (numpft))
-           allocate (m_deadstemn_storage_to_fire_p        (numpft))
-           allocate (m_livecrootn_storage_to_fire_p       (numpft))
-           allocate (m_deadcrootn_storage_to_fire_p       (numpft))
+           allocate (m_leafn_storage_to_fire_p            (numpft)) ; m_leafn_storage_to_fire_p            (:) = spval
+           allocate (m_frootn_storage_to_fire_p           (numpft)) ; m_frootn_storage_to_fire_p           (:) = spval
+           allocate (m_livestemn_storage_to_fire_p        (numpft)) ; m_livestemn_storage_to_fire_p        (:) = spval
+           allocate (m_deadstemn_storage_to_fire_p        (numpft)) ; m_deadstemn_storage_to_fire_p        (:) = spval
+           allocate (m_livecrootn_storage_to_fire_p       (numpft)) ; m_livecrootn_storage_to_fire_p       (:) = spval
+           allocate (m_deadcrootn_storage_to_fire_p       (numpft)) ; m_deadcrootn_storage_to_fire_p       (:) = spval
 
-           allocate (m_leafn_xfer_to_fire_p               (numpft))
-           allocate (m_frootn_xfer_to_fire_p              (numpft))
-           allocate (m_livestemn_xfer_to_fire_p           (numpft))
-           allocate (m_deadstemn_xfer_to_fire_p           (numpft))
-           allocate (m_livecrootn_xfer_to_fire_p          (numpft))
-           allocate (m_deadcrootn_xfer_to_fire_p          (numpft))
+           allocate (m_leafn_xfer_to_fire_p               (numpft)) ; m_leafn_xfer_to_fire_p               (:) = spval
+           allocate (m_frootn_xfer_to_fire_p              (numpft)) ; m_frootn_xfer_to_fire_p              (:) = spval
+           allocate (m_livestemn_xfer_to_fire_p           (numpft)) ; m_livestemn_xfer_to_fire_p           (:) = spval
+           allocate (m_deadstemn_xfer_to_fire_p           (numpft)) ; m_deadstemn_xfer_to_fire_p           (:) = spval
+           allocate (m_livecrootn_xfer_to_fire_p          (numpft)) ; m_livecrootn_xfer_to_fire_p          (:) = spval
+           allocate (m_deadcrootn_xfer_to_fire_p          (numpft)) ; m_deadcrootn_xfer_to_fire_p          (:) = spval
 
-           allocate (m_livestemn_to_deadstemn_fire_p      (numpft))
-           allocate (m_livecrootn_to_deadcrootn_fire_p    (numpft))
+           allocate (m_livestemn_to_deadstemn_fire_p      (numpft)) ; m_livestemn_to_deadstemn_fire_p      (:) = spval
+           allocate (m_livecrootn_to_deadcrootn_fire_p    (numpft)) ; m_livecrootn_to_deadcrootn_fire_p    (:) = spval
 
-           allocate (m_retransn_to_fire_p                 (numpft))
+           allocate (m_retransn_to_fire_p                 (numpft)) ; m_retransn_to_fire_p                 (:) = spval
 
-           allocate (m_leafn_to_litter_fire_p             (numpft))
-           allocate (m_frootn_to_litter_fire_p            (numpft))
-           allocate (m_livestemn_to_litter_fire_p         (numpft))
-           allocate (m_deadstemn_to_litter_fire_p         (numpft))
-           allocate (m_livecrootn_to_litter_fire_p        (numpft))
-           allocate (m_deadcrootn_to_litter_fire_p        (numpft))
+           allocate (m_leafn_to_litter_fire_p             (numpft)) ; m_leafn_to_litter_fire_p             (:) = spval
+           allocate (m_frootn_to_litter_fire_p            (numpft)) ; m_frootn_to_litter_fire_p            (:) = spval
+           allocate (m_livestemn_to_litter_fire_p         (numpft)) ; m_livestemn_to_litter_fire_p         (:) = spval
+           allocate (m_deadstemn_to_litter_fire_p         (numpft)) ; m_deadstemn_to_litter_fire_p         (:) = spval
+           allocate (m_livecrootn_to_litter_fire_p        (numpft)) ; m_livecrootn_to_litter_fire_p        (:) = spval
+           allocate (m_deadcrootn_to_litter_fire_p        (numpft)) ; m_deadcrootn_to_litter_fire_p        (:) = spval
 
-           allocate (m_leafn_storage_to_litter_fire_p     (numpft))
-           allocate (m_frootn_storage_to_litter_fire_p    (numpft))
-           allocate (m_livestemn_storage_to_litter_fire_p (numpft))
-           allocate (m_deadstemn_storage_to_litter_fire_p (numpft))
-           allocate (m_livecrootn_storage_to_litter_fire_p(numpft))
-           allocate (m_deadcrootn_storage_to_litter_fire_p(numpft))
+           allocate (m_leafn_storage_to_litter_fire_p     (numpft)) ; m_leafn_storage_to_litter_fire_p     (:) = spval
+           allocate (m_frootn_storage_to_litter_fire_p    (numpft)) ; m_frootn_storage_to_litter_fire_p    (:) = spval
+           allocate (m_livestemn_storage_to_litter_fire_p (numpft)) ; m_livestemn_storage_to_litter_fire_p (:) = spval
+           allocate (m_deadstemn_storage_to_litter_fire_p (numpft)) ; m_deadstemn_storage_to_litter_fire_p (:) = spval
+           allocate (m_livecrootn_storage_to_litter_fire_p(numpft)) ; m_livecrootn_storage_to_litter_fire_p(:) = spval
+           allocate (m_deadcrootn_storage_to_litter_fire_p(numpft)) ; m_deadcrootn_storage_to_litter_fire_p(:) = spval
 
-           allocate (m_leafn_xfer_to_litter_fire_p        (numpft))
-           allocate (m_frootn_xfer_to_litter_fire_p       (numpft))
-           allocate (m_livestemn_xfer_to_litter_fire_p    (numpft))
-           allocate (m_deadstemn_xfer_to_litter_fire_p    (numpft))
-           allocate (m_livecrootn_xfer_to_litter_fire_p   (numpft))
-           allocate (m_deadcrootn_xfer_to_litter_fire_p   (numpft))
+           allocate (m_leafn_xfer_to_litter_fire_p        (numpft)) ; m_leafn_xfer_to_litter_fire_p        (:) = spval
+           allocate (m_frootn_xfer_to_litter_fire_p       (numpft)) ; m_frootn_xfer_to_litter_fire_p       (:) = spval
+           allocate (m_livestemn_xfer_to_litter_fire_p    (numpft)) ; m_livestemn_xfer_to_litter_fire_p    (:) = spval
+           allocate (m_deadstemn_xfer_to_litter_fire_p    (numpft)) ; m_deadstemn_xfer_to_litter_fire_p    (:) = spval
+           allocate (m_livecrootn_xfer_to_litter_fire_p   (numpft)) ; m_livecrootn_xfer_to_litter_fire_p   (:) = spval
+           allocate (m_deadcrootn_xfer_to_litter_fire_p   (numpft)) ; m_deadcrootn_xfer_to_litter_fire_p   (:) = spval
 
-           allocate (m_retransn_to_litter_fire_p          (numpft))
+           allocate (m_retransn_to_litter_fire_p          (numpft)) ; m_retransn_to_litter_fire_p          (:) = spval
 
-           allocate (npool_to_leafn_p                     (numpft))
-           allocate (npool_to_leafn_storage_p             (numpft))
-           allocate (npool_to_frootn_p                    (numpft))
-           allocate (npool_to_frootn_storage_p            (numpft))
-           allocate (npool_to_livestemn_p                 (numpft))
-           allocate (npool_to_livestemn_storage_p         (numpft))
-           allocate (npool_to_deadstemn_p                 (numpft))
-           allocate (npool_to_deadstemn_storage_p         (numpft))
-           allocate (npool_to_livecrootn_p                (numpft))
-           allocate (npool_to_livecrootn_storage_p        (numpft))
-           allocate (npool_to_deadcrootn_p                (numpft))
-           allocate (npool_to_deadcrootn_storage_p        (numpft))
-           allocate (npool_to_grainn_p                    (numpft))
-           allocate (npool_to_grainn_storage_p            (numpft))
+           allocate (npool_to_leafn_p                     (numpft)) ; npool_to_leafn_p                     (:) = spval
+           allocate (npool_to_leafn_storage_p             (numpft)) ; npool_to_leafn_storage_p             (:) = spval
+           allocate (npool_to_frootn_p                    (numpft)) ; npool_to_frootn_p                    (:) = spval
+           allocate (npool_to_frootn_storage_p            (numpft)) ; npool_to_frootn_storage_p            (:) = spval
+           allocate (npool_to_livestemn_p                 (numpft)) ; npool_to_livestemn_p                 (:) = spval
+           allocate (npool_to_livestemn_storage_p         (numpft)) ; npool_to_livestemn_storage_p         (:) = spval
+           allocate (npool_to_deadstemn_p                 (numpft)) ; npool_to_deadstemn_p                 (:) = spval
+           allocate (npool_to_deadstemn_storage_p         (numpft)) ; npool_to_deadstemn_storage_p         (:) = spval
+           allocate (npool_to_livecrootn_p                (numpft)) ; npool_to_livecrootn_p                (:) = spval
+           allocate (npool_to_livecrootn_storage_p        (numpft)) ; npool_to_livecrootn_storage_p        (:) = spval
+           allocate (npool_to_deadcrootn_p                (numpft)) ; npool_to_deadcrootn_p                (:) = spval
+           allocate (npool_to_deadcrootn_storage_p        (numpft)) ; npool_to_deadcrootn_storage_p        (:) = spval
+           allocate (npool_to_grainn_p                    (numpft)) ; npool_to_grainn_p                    (:) = spval
+           allocate (npool_to_grainn_storage_p            (numpft)) ; npool_to_grainn_storage_p            (:) = spval
 
-           allocate (respcsun_p     (numpft)) !sunlit leaf respiration
-           allocate (respcsha_p     (numpft)) !shaded leaf respiration
-           allocate (leaf_mr_p      (numpft)) !leaf maintenance respiration
-           allocate (froot_mr_p     (numpft)) !fine root maintenance respiration
-           allocate (livestem_mr_p  (numpft)) !live stem maintenance respiration
-           allocate (livecroot_mr_p (numpft)) !live coarse root maintenance respiration
-           allocate (grain_mr_p     (numpft)) !grain maintenance respiration
+           allocate (respcsun_p     (numpft)) ; respcsun_p     (:) = spval
+           allocate (respcsha_p     (numpft)) ; respcsha_p     (:) = spval
+           allocate (leaf_mr_p      (numpft)) ; leaf_mr_p      (:) = spval
+           allocate (froot_mr_p     (numpft)) ; froot_mr_p     (:) = spval
+           allocate (livestem_mr_p  (numpft)) ; livestem_mr_p  (:) = spval
+           allocate (livecroot_mr_p (numpft)) ; livecroot_mr_p (:) = spval
+           allocate (grain_mr_p     (numpft)) ; grain_mr_p     (:) = spval
 
-           allocate (soil_change_p  (numpft))
+           allocate (soil_change_p  (numpft)) ; soil_change_p  (:) = spval
 
-           allocate (psn_to_cpool_p               (numpft))
-           allocate (gpp_p                        (numpft))
-           allocate (availc_p                     (numpft))
-           allocate (avail_retransn_p             (numpft))
-           allocate (xsmrpool_recover_p           (numpft))
-           allocate (excess_cflux_p               (numpft))
-           allocate (sminn_to_npool_p             (numpft))
+           allocate (psn_to_cpool_p               (numpft)) ; psn_to_cpool_p               (:) = spval
+           allocate (gpp_p                        (numpft)) ; gpp_p                        (:) = spval
+           allocate (availc_p                     (numpft)) ; availc_p                     (:) = spval
+           allocate (avail_retransn_p             (numpft)) ; avail_retransn_p             (:) = spval
+           allocate (xsmrpool_recover_p           (numpft)) ; xsmrpool_recover_p           (:) = spval
+           allocate (excess_cflux_p               (numpft)) ; excess_cflux_p               (:) = spval
+           allocate (sminn_to_npool_p             (numpft)) ; sminn_to_npool_p             (:) = spval
 
-           allocate (plant_calloc_p               (numpft))
-           allocate (plant_nalloc_p               (numpft))
-           allocate (leaf_curmr_p                 (numpft))
-           allocate (froot_curmr_p                (numpft))
-           allocate (livestem_curmr_p             (numpft))
-           allocate (livecroot_curmr_p            (numpft))
-           allocate (grain_curmr_p                (numpft))
+           allocate (plant_calloc_p               (numpft)) ; plant_calloc_p               (:) = spval
+           allocate (plant_nalloc_p               (numpft)) ; plant_nalloc_p               (:) = spval
+           allocate (leaf_curmr_p                 (numpft)) ; leaf_curmr_p                 (:) = spval
+           allocate (froot_curmr_p                (numpft)) ; froot_curmr_p                (:) = spval
+           allocate (livestem_curmr_p             (numpft)) ; livestem_curmr_p             (:) = spval
+           allocate (livecroot_curmr_p            (numpft)) ; livecroot_curmr_p            (:) = spval
+           allocate (grain_curmr_p                (numpft)) ; grain_curmr_p                (:) = spval
 
-           allocate (fire_closs_p                 (numpft))
-           allocate (fire_nloss_p                 (numpft))
-           allocate (wood_harvestc_p              (numpft))
-           allocate (wood_harvestn_p              (numpft))
-           allocate (grainc_to_cropprodc_p        (numpft))
-           allocate (grainn_to_cropprodn_p        (numpft))
-           allocate (hrv_xsmrpool_to_atm_p        (numpft))
-           allocate (fert_p                       (numpft))
-           allocate (soyfixn_p                    (numpft))
+           allocate (fire_closs_p                 (numpft)) ; fire_closs_p                 (:) = spval
+           allocate (fire_nloss_p                 (numpft)) ; fire_nloss_p                 (:) = spval
+           allocate (wood_harvestc_p              (numpft)) ; wood_harvestc_p              (:) = spval
+           allocate (wood_harvestn_p              (numpft)) ; wood_harvestn_p              (:) = spval
+           allocate (grainc_to_cropprodc_p        (numpft)) ; grainc_to_cropprodc_p        (:) = spval
+           allocate (grainn_to_cropprodn_p        (numpft)) ; grainn_to_cropprodn_p        (:) = spval
+           allocate (hrv_xsmrpool_to_atm_p        (numpft)) ; hrv_xsmrpool_to_atm_p        (:) = spval
+           allocate (fert_p                       (numpft)) ; fert_p                       (:) = spval
+           allocate (soyfixn_p                    (numpft)) ; soyfixn_p                    (:) = spval
 
         ENDIF
      ENDIF
@@ -981,6 +982,333 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
 
   END SUBROUTINE deallocate_1D_BGCPFTFluxes
 
+  SUBROUTINE set_1D_BGCPFTFluxes(Values, Nan)
+  ! --------------------------------------------------------------------
+  ! Allocates memory for CoLM PFT 1d [numpft] variables
+  ! --------------------------------------------------------------------
+
+     USE MOD_Precision
+     USE MOD_SPMD_Task
+     USE MOD_LandPFT
+     IMPLICIT NONE
+     REAL(r8),INTENT(in) :: Values
+     REAL(r8),INTENT(in) :: Nan
+
+     IF (p_is_worker) THEN
+        IF (numpft > 0) THEN
+
+! bgc variables
+           leafc_xfer_to_leafc_p                (:) = Values
+           frootc_xfer_to_frootc_p              (:) = Values
+           livestemc_xfer_to_livestemc_p        (:) = Values
+           deadstemc_xfer_to_deadstemc_p        (:) = Values
+           livecrootc_xfer_to_livecrootc_p      (:) = Values
+           deadcrootc_xfer_to_deadcrootc_p      (:) = Values
+           grainc_xfer_to_grainc_p              (:) = Values
+
+           leafc_storage_to_xfer_p              (:) = Values
+           frootc_storage_to_xfer_p             (:) = Values
+           livestemc_storage_to_xfer_p          (:) = Values
+           deadstemc_storage_to_xfer_p          (:) = Values
+           livecrootc_storage_to_xfer_p         (:) = Values
+           deadcrootc_storage_to_xfer_p         (:) = Values
+           grainc_storage_to_xfer_p             (:) = Values
+           gresp_storage_to_xfer_p              (:) = Values
+
+           leafc_to_litter_p                    (:) = Values
+           frootc_to_litter_p                   (:) = Values
+           grainc_to_food_p                     (:) = Values
+           grainc_to_seed_p                     (:) = Values
+           crop_seedc_to_leaf_p                 (:) = Values
+           livestemc_to_litter_p                (:) = Values
+           livestemc_to_deadstemc_p             (:) = Values
+           livecrootc_to_deadcrootc_p           (:) = Values
+
+           m_leafc_to_litter_p                  (:) = Values
+           m_frootc_to_litter_p                 (:) = Values
+           m_livestemc_to_litter_p              (:) = Values
+           m_deadstemc_to_litter_p              (:) = Values
+           m_livecrootc_to_litter_p             (:) = Values
+           m_deadcrootc_to_litter_p             (:) = Values
+
+           m_leafc_storage_to_litter_p          (:) = Values
+           m_frootc_storage_to_litter_p         (:) = Values
+           m_livestemc_storage_to_litter_p      (:) = Values
+           m_deadstemc_storage_to_litter_p      (:) = Values
+           m_livecrootc_storage_to_litter_p     (:) = Values
+           m_deadcrootc_storage_to_litter_p     (:) = Values
+           m_gresp_storage_to_litter_p          (:) = Values
+
+           m_leafc_xfer_to_litter_p             (:) = Values
+           m_frootc_xfer_to_litter_p            (:) = Values
+           m_livestemc_xfer_to_litter_p         (:) = Values
+           m_deadstemc_xfer_to_litter_p         (:) = Values
+           m_livecrootc_xfer_to_litter_p        (:) = Values
+           m_deadcrootc_xfer_to_litter_p        (:) = Values
+           m_gresp_xfer_to_litter_p             (:) = Values
+
+           m_leafc_to_fire_p                    (:) = Values
+           m_frootc_to_fire_p                   (:) = Values
+           m_livestemc_to_fire_p                (:) = Values
+           m_deadstemc_to_fire_p                (:) = Values
+           m_livecrootc_to_fire_p               (:) = Values
+           m_deadcrootc_to_fire_p               (:) = Values
+
+           m_leafc_storage_to_fire_p            (:) = Values
+           m_frootc_storage_to_fire_p           (:) = Values
+           m_livestemc_storage_to_fire_p        (:) = Values
+           m_deadstemc_storage_to_fire_p        (:) = Values
+           m_livecrootc_storage_to_fire_p       (:) = Values
+           m_deadcrootc_storage_to_fire_p       (:) = Values
+           m_gresp_storage_to_fire_p            (:) = Values
+
+           m_leafc_xfer_to_fire_p               (:) = Values
+           m_frootc_xfer_to_fire_p              (:) = Values
+           m_livestemc_xfer_to_fire_p           (:) = Values
+           m_deadstemc_xfer_to_fire_p           (:) = Values
+           m_livecrootc_xfer_to_fire_p          (:) = Values
+           m_deadcrootc_xfer_to_fire_p          (:) = Values
+           m_gresp_xfer_to_fire_p               (:) = Values
+
+           m_livestemc_to_deadstemc_fire_p      (:) = Values
+           m_livecrootc_to_deadcrootc_fire_p    (:) = Values
+
+           m_leafc_to_litter_fire_p             (:) = Values
+           m_frootc_to_litter_fire_p            (:) = Values
+           m_livestemc_to_litter_fire_p         (:) = Values
+           m_deadstemc_to_litter_fire_p         (:) = Values
+           m_livecrootc_to_litter_fire_p        (:) = Values
+           m_deadcrootc_to_litter_fire_p        (:) = Values
+
+           m_leafc_storage_to_litter_fire_p     (:) = Values
+           m_frootc_storage_to_litter_fire_p    (:) = Values
+           m_livestemc_storage_to_litter_fire_p (:) = Values
+           m_deadstemc_storage_to_litter_fire_p (:) = Values
+           m_livecrootc_storage_to_litter_fire_p(:) = Values
+           m_deadcrootc_storage_to_litter_fire_p(:) = Values
+           m_gresp_storage_to_litter_fire_p     (:) = Values
+
+           m_leafc_xfer_to_litter_fire_p        (:) = Values
+           m_frootc_xfer_to_litter_fire_p       (:) = Values
+           m_livestemc_xfer_to_litter_fire_p    (:) = Values
+           m_deadstemc_xfer_to_litter_fire_p    (:) = Values
+           m_livecrootc_xfer_to_litter_fire_p   (:) = Values
+           m_deadcrootc_xfer_to_litter_fire_p   (:) = Values
+           m_gresp_xfer_to_litter_fire_p        (:) = Values
+
+           cpool_to_xsmrpool_p          (:) = Values
+           cpool_to_gresp_storage_p     (:) = Values
+           cpool_to_leafc_p             (:) = Values
+           cpool_to_leafc_storage_p     (:) = Values
+           cpool_to_frootc_p            (:) = Values
+           cpool_to_frootc_storage_p    (:) = Values
+           cpool_to_livestemc_p         (:) = Values
+           cpool_to_livestemc_storage_p (:) = Values
+           cpool_to_deadstemc_p         (:) = Values
+           cpool_to_deadstemc_storage_p (:) = Values
+           cpool_to_livecrootc_p        (:) = Values
+           cpool_to_livecrootc_storage_p(:) = Values
+           cpool_to_deadcrootc_p        (:) = Values
+           cpool_to_deadcrootc_storage_p(:) = Values
+           cpool_to_grainc_p            (:) = Values
+           cpool_to_grainc_storage_p    (:) = Values
+
+           leaf_xsmr_p                  (:) = Values
+           froot_xsmr_p                 (:) = Values
+           livestem_xsmr_p              (:) = Values
+           livecroot_xsmr_p             (:) = Values
+           grain_xsmr_p                 (:) = Values
+
+           cpool_leaf_gr_p                      (:) = Values
+           cpool_froot_gr_p                     (:) = Values
+           cpool_livestem_gr_p                  (:) = Values
+           cpool_deadstem_gr_p                  (:) = Values
+           cpool_livecroot_gr_p                 (:) = Values
+           cpool_deadcroot_gr_p                 (:) = Values
+           cpool_grain_gr_p                     (:) = Values
+
+           cpool_leaf_storage_gr_p              (:) = Values
+           cpool_froot_storage_gr_p             (:) = Values
+           cpool_livestem_storage_gr_p          (:) = Values
+           cpool_deadstem_storage_gr_p          (:) = Values
+           cpool_livecroot_storage_gr_p         (:) = Values
+           cpool_deadcroot_storage_gr_p         (:) = Values
+           cpool_grain_storage_gr_p             (:) = Values
+
+           transfer_leaf_gr_p                   (:) = Values
+           transfer_froot_gr_p                  (:) = Values
+           transfer_livestem_gr_p               (:) = Values
+           transfer_deadstem_gr_p               (:) = Values
+           transfer_livecroot_gr_p              (:) = Values
+           transfer_deadcroot_gr_p              (:) = Values
+           transfer_grain_gr_p                  (:) = Values
+
+           xsmrpool_to_atm_p                    (:) = Values
+
+           cropprod1c_loss_p                    (:) = Values
+
+           plant_ndemand_p              (:) = Values
+
+           leafn_xfer_to_leafn_p                (:) = Values
+           frootn_xfer_to_frootn_p              (:) = Values
+           livestemn_xfer_to_livestemn_p        (:) = Values
+           deadstemn_xfer_to_deadstemn_p        (:) = Values
+           livecrootn_xfer_to_livecrootn_p      (:) = Values
+           deadcrootn_xfer_to_deadcrootn_p      (:) = Values
+           grainn_xfer_to_grainn_p              (:) = Values
+
+           leafn_storage_to_xfer_p              (:) = Values
+           frootn_storage_to_xfer_p             (:) = Values
+           livestemn_storage_to_xfer_p          (:) = Values
+           deadstemn_storage_to_xfer_p          (:) = Values
+           livecrootn_storage_to_xfer_p         (:) = Values
+           deadcrootn_storage_to_xfer_p         (:) = Values
+           grainn_storage_to_xfer_p             (:) = Values
+
+           leafn_to_litter_p                    (:) = Values
+           frootn_to_litter_p                   (:) = Values
+           grainn_to_food_p                     (:) = Values
+           grainn_to_seed_p                     (:) = Values
+           crop_seedn_to_leaf_p                 (:) = Values
+           livestemn_to_litter_p                (:) = Values
+           livestemn_to_deadstemn_p             (:) = Values
+           livecrootn_to_deadcrootn_p           (:) = Values
+
+           leafn_to_retransn_p                  (:) = Values
+           frootn_to_retransn_p                 (:) = Values
+           livestemn_to_retransn_p              (:) = Values
+           livecrootn_to_retransn_p             (:) = Values
+           retransn_to_npool_p                  (:) = Values
+           free_retransn_to_npool_p             (:) = Values
+
+           m_leafn_to_litter_p                  (:) = Values
+           m_frootn_to_litter_p                 (:) = Values
+           m_livestemn_to_litter_p              (:) = Values
+           m_deadstemn_to_litter_p              (:) = Values
+           m_livecrootn_to_litter_p             (:) = Values
+           m_deadcrootn_to_litter_p             (:) = Values
+           m_retransn_to_litter_p               (:) = Values
+
+           m_leafn_storage_to_litter_p          (:) = Values
+           m_frootn_storage_to_litter_p         (:) = Values
+           m_livestemn_storage_to_litter_p      (:) = Values
+           m_deadstemn_storage_to_litter_p      (:) = Values
+           m_livecrootn_storage_to_litter_p     (:) = Values
+           m_deadcrootn_storage_to_litter_p     (:) = Values
+
+           m_leafn_xfer_to_litter_p             (:) = Values
+           m_frootn_xfer_to_litter_p            (:) = Values
+           m_livestemn_xfer_to_litter_p         (:) = Values
+           m_deadstemn_xfer_to_litter_p         (:) = Values
+           m_livecrootn_xfer_to_litter_p        (:) = Values
+           m_deadcrootn_xfer_to_litter_p        (:) = Values
+
+           m_leafn_to_fire_p                    (:) = Values
+           m_frootn_to_fire_p                   (:) = Values
+           m_livestemn_to_fire_p                (:) = Values
+           m_deadstemn_to_fire_p                (:) = Values
+           m_livecrootn_to_fire_p               (:) = Values
+           m_deadcrootn_to_fire_p               (:) = Values
+
+           m_leafn_storage_to_fire_p            (:) = Values
+           m_frootn_storage_to_fire_p           (:) = Values
+           m_livestemn_storage_to_fire_p        (:) = Values
+           m_deadstemn_storage_to_fire_p        (:) = Values
+           m_livecrootn_storage_to_fire_p       (:) = Values
+           m_deadcrootn_storage_to_fire_p       (:) = Values
+
+           m_leafn_xfer_to_fire_p               (:) = Values
+           m_frootn_xfer_to_fire_p              (:) = Values
+           m_livestemn_xfer_to_fire_p           (:) = Values
+           m_deadstemn_xfer_to_fire_p           (:) = Values
+           m_livecrootn_xfer_to_fire_p          (:) = Values
+           m_deadcrootn_xfer_to_fire_p          (:) = Values
+
+           m_livestemn_to_deadstemn_fire_p      (:) = Values
+           m_livecrootn_to_deadcrootn_fire_p    (:) = Values
+
+           m_retransn_to_fire_p                 (:) = Values
+
+           m_leafn_to_litter_fire_p             (:) = Values
+           m_frootn_to_litter_fire_p            (:) = Values
+           m_livestemn_to_litter_fire_p         (:) = Values
+           m_deadstemn_to_litter_fire_p         (:) = Values
+           m_livecrootn_to_litter_fire_p        (:) = Values
+           m_deadcrootn_to_litter_fire_p        (:) = Values
+
+           m_leafn_storage_to_litter_fire_p     (:) = Values
+           m_frootn_storage_to_litter_fire_p    (:) = Values
+           m_livestemn_storage_to_litter_fire_p (:) = Values
+           m_deadstemn_storage_to_litter_fire_p (:) = Values
+           m_livecrootn_storage_to_litter_fire_p(:) = Values
+           m_deadcrootn_storage_to_litter_fire_p(:) = Values
+
+           m_leafn_xfer_to_litter_fire_p        (:) = Values
+           m_frootn_xfer_to_litter_fire_p       (:) = Values
+           m_livestemn_xfer_to_litter_fire_p    (:) = Values
+           m_deadstemn_xfer_to_litter_fire_p    (:) = Values
+           m_livecrootn_xfer_to_litter_fire_p   (:) = Values
+           m_deadcrootn_xfer_to_litter_fire_p   (:) = Values
+
+           m_retransn_to_litter_fire_p          (:) = Values
+
+           npool_to_leafn_p                     (:) = Values
+           npool_to_leafn_storage_p             (:) = Values
+           npool_to_frootn_p                    (:) = Values
+           npool_to_frootn_storage_p            (:) = Values
+           npool_to_livestemn_p                 (:) = Values
+           npool_to_livestemn_storage_p         (:) = Values
+           npool_to_deadstemn_p                 (:) = Values
+           npool_to_deadstemn_storage_p         (:) = Values
+           npool_to_livecrootn_p                (:) = Values
+           npool_to_livecrootn_storage_p        (:) = Values
+           npool_to_deadcrootn_p                (:) = Values
+           npool_to_deadcrootn_storage_p        (:) = Values
+           npool_to_grainn_p                    (:) = Values
+           npool_to_grainn_storage_p            (:) = Values
+
+           respcsun_p     (:) = Values!sunlit leaf respiration
+           respcsha_p     (:) = Values!shaded leaf respiration
+           leaf_mr_p      (:) = Values!leaf maintenance respiration
+           froot_mr_p     (:) = Values!fine root maintenance respiration
+           livestem_mr_p  (:) = Values!live stem maintenance respiration
+           livecroot_mr_p (:) = Values!live coarse root maintenance respiration
+           grain_mr_p     (:) = Values!grain maintenance respiration
+
+           soil_change_p  (:) = Values
+
+           psn_to_cpool_p               (:) = Values
+           gpp_p                        (:) = Values
+           availc_p                     (:) = Values
+           avail_retransn_p             (:) = Values
+           xsmrpool_recover_p           (:) = Values
+           excess_cflux_p               (:) = Values
+           sminn_to_npool_p             (:) = Values
+
+           plant_calloc_p               (:) = Values
+           plant_nalloc_p               (:) = Values
+           leaf_curmr_p                 (:) = Values
+           froot_curmr_p                (:) = Values
+           livestem_curmr_p             (:) = Values
+           livecroot_curmr_p            (:) = Values
+           grain_curmr_p                (:) = Values
+
+           fire_closs_p                 (:) = Values
+           fire_nloss_p                 (:) = Values
+           wood_harvestc_p              (:) = Values
+           wood_harvestn_p              (:) = Values
+           grainc_to_cropprodc_p        (:) = Values
+           grainn_to_cropprodn_p        (:) = Values
+           hrv_xsmrpool_to_atm_p        (:) = Values
+           fert_p                       (:) = Values
+           soyfixn_p                    (:) = Values
+
+        ENDIF
+     ENDIF
+
+!--------
+
+  END SUBROUTINE set_1D_BGCPFTFluxes
 #endif
 
 END MODULE MOD_BGC_Vars_1DPFTFluxes
