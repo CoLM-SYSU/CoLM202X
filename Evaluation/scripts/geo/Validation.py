@@ -12,6 +12,8 @@ import sys
 import shutil
 import numpy as np
 import xarray as xr
+os.environ['PYTHONWARNINGS']='ignore::FutureWarning'
+os.environ['PYTHONWARNINGS']='ignore::RuntimeWarning'
 
 class Validation(metrics):
     def __init__(self, info):
