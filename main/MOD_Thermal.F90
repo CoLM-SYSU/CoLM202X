@@ -320,7 +320,7 @@ USE MOD_SPMD_Task
         tref,        &! 2 m height air temperature [kelvin]
         qref,        &! 2 m height air specific humidity
         trad,        &! radiative temperature [K]
-        rss,         &! soil surface resistance
+        rss,         &! bare soil resistance for evaporation [s/m]
         rst,         &! stomatal resistance (s m-1)
         assim,       &! assimilation
         respc,       &! respiration

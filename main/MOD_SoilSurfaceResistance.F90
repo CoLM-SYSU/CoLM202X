@@ -19,12 +19,12 @@ MODULE MOD_SoilSurfaceResistance
 
    !TODO@Zhuo: need complement below
    ! soil-gas diffusivity schemes:
-   ! 1: BBC (Buckingham-Burdine-Campbell), Moldrup et al., 1999.
-   ! 2: P_WLR ...
-   ! 3: MI_WLR
-   ! 4: MA_WLR
-   ! 5: M_Q
-   ! 6: POE
+   ! 1: BBC (Buckingham-Burdine-Campbell Model), Moldrup et al., 1999.
+   ! 2: P_WLR (Penman Water Linear Reduction Model), Moldrup et al., 2000
+   ! 3: MI_WLR (Millington Water Linear Reduction Model), Moldrup et al., 2000
+   ! 4: MA_WLR (Marshal Water Linear Reduction Model), Moldrup et al., 2000
+   ! 5: M_Q, Millington and Quirk, 1961
+   ! 6: 3POE (Three-Porosity-Encased), Moldrup et al., 2005
    integer, parameter :: soil_gas_diffusivity_scheme = 1
 
 
@@ -72,24 +72,24 @@ CONTAINS
 !-----------------------Local Variables------------------------------
 
    REAL(r8) :: &
-        wx,               & ! soil wetness   
-        vol_liq,          & ! soil water content by volume [m3/m3]
-        smp_node,         & ! matrix potential [mm]
+        wx,               & ! patitial volume of ice and water of surface layer   
+        vol_liq,          & ! water content by volume [m3/m3]
+        smp_node,         & ! matrix potential [m]
         eff_porosity,     & ! effective porosity = porosity - vol_ice
-        aird,             & ! air free pore space 
+        aird,             & ! “air-dry” soil moisture value 
         d0,               & ! water vapor diffusivity in open air [m2/s]
         eps,              & ! air filled pore space
         dg,               & ! gaseous diffusivity [m2/s]
         dsl,              & ! soil dry surface layer thickness [m]
         dw,               & ! aqueous diffusivity [m2/s]
-        hk,               & ! hydraulic conductivity [mm h2o/s]
+        hk,               & ! hydraulic conductivity [m h2o/s]
         rg_1,             & ! inverse of vapor diffusion resistance [m/s]
         rw_1,             & ! inverse of volatilization resistance [m/s]
         rss_1,            & ! inverse of soil surface resistance [m/s]
         tao,              & ! tortuosity of the vapor flow paths through the soil matrix
-        eps100,           & ! the air-filled porosity (cm3 soil-air cm−3 soil) at − 1000 mm of water matric potential
-        fac,              & ! wx/porsl 
-        fac_fc,           & ! wx/wfc
+        eps100,           & ! air-filled porosity (cm3 soil-air cm−3 soil) at −1000 mm of water matric potential
+        fac,              & ! temporal variable for calculating wx/porsl 
+        fac_fc,           & ! temporal variable for calculating wx/wfc
         B                   ! bunsen solubility coefficient
        
         !TODO@Zhuo Liu:  need descriptions for vars.
@@ -133,7 +133,7 @@ CONTAINS
    case (5)
       tao = eps**(4._r8/3._r8)*(eps/porsl(1))**(2.0_r8)
 
-   ! 6: POE
+   ! 6: 3POE
    case (6)
       eps100 = porsl(1) - porsl(1)*(psi0(1)/-1000.)**(1./bsw(1))
       tao    = porsl(1)*porsl(1)*(eps/porsl(1))**(2.+log(eps100**0.25_r8)/log(eps100/porsl(1)))
@@ -170,7 +170,7 @@ CONTAINS
       rss_1       = rg_1 +rw_1
       rss         = 1.0/rss_1
      
-   ! beta scheme
+   ! LP92 beta scheme
    case (4)
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
