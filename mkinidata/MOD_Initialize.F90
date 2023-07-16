@@ -74,7 +74,9 @@ MODULE MOD_Initialize
       USE MOD_LandHRU
       USE MOD_LandPatch
 #endif
+#ifdef CROP
       USE MOD_CropReadin
+#endif
       USE MOD_LAIEmpirical
       USE MOD_LAIReadin
       USE MOD_OrbCoszen
