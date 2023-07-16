@@ -305,10 +305,10 @@ CONTAINS
 
      IF (DEF_Aerosol_Clim) THEN
         ! climatology data
-        file_aerosol = trim(DEF_dir_rawdata) // '/aerosol/aerosoldep_monthly_2000_mean_0.9x1.25_c090529.nc'
+        file_aerosol = trim(DEF_dir_runtime) // '/aerosol/aerosoldep_monthly_2000_mean_0.9x1.25_c090529.nc'
      ELSE
         ! yearly change data
-        file_aerosol = trim(DEF_dir_rawdata) // '/aerosol/aerosoldep_monthly_1849-2001_0.9x1.25_c090529.nc'
+        file_aerosol = trim(DEF_dir_runtime) // '/aerosol/aerosoldep_monthly_1849-2001_0.9x1.25_c090529.nc'
      ENDIF
 
      CALL ncio_read_bcast_serial (file_aerosol, 'lat', lat)

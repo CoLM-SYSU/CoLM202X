@@ -66,10 +66,6 @@ OBJS_SHARED_T = $(addprefix .bld/,${OBJS_SHARED})
 OBJS_MKSRFDATA = \
 				  Aggregation_PercentagesPFT.o      \
 				  Aggregation_LAI.o                 \
-				  Aggregation_NDeposition.o         \
-				  Aggregation_Fire.o                \
-				  Aggregation_CropParameters.o      \
-				  Aggregation_NitrifParameters.o    \
 				  Aggregation_SoilBrightness.o      \
 				  Aggregation_LakeDepth.o           \
 				  Aggregation_ForestHeight.o        \
@@ -126,9 +122,9 @@ OBJS_BASIC =    \
 				 MOD_LAIEmpirical.o             \
 				 MOD_LAIReadin.o                \
 				 MOD_CropReadin.o               \
-				 MOD_NitrifReadin.o             \
-				 MOD_NdepReadin.o               \
-				 MOD_FireReadin.o               \
+				 MOD_NitrifData.o               \
+				 MOD_NdepData.o                 \
+				 MOD_FireData.o                 \
 				 MOD_OrbCoszen.o                \
 				 MOD_3DCanopyRadiation.o        \
 				 MOD_Aerosol.o                  \

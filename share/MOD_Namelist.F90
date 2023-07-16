@@ -72,6 +72,7 @@ MODULE MOD_Namelist
 
    ! ----- directories -----
    CHARACTER(len=256) :: DEF_dir_rawdata  = 'path/to/rawdata/'
+   CHARACTER(len=256) :: DEF_dir_runtime  = 'path/to/runtime/'
    CHARACTER(len=256) :: DEF_dir_output   = 'path/to/output/data'
    CHARACTER(len=256) :: DEF_dir_forcing  = 'path/to/forcing/data'
 
@@ -275,7 +276,7 @@ MODULE MOD_Namelist
    !Soy nitrogen fixation
    LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
    !Fire module
-   LOGICAL            :: DEF_USE_FIRE = .false.
+   LOGICAL            :: DEF_USE_FIRE = .true.
 
 
    ! ----- history variables -----
@@ -645,6 +646,7 @@ CONTAINS
          DEF_PIO_groupsize,               &
          DEF_simulation_time,             &
          DEF_dir_rawdata,                 &
+         DEF_dir_runtime,                 &
          DEF_dir_output,                  &
          DEF_file_mesh,                   &
          DEF_GRIDBASED_lon_res,           &
@@ -779,93 +781,103 @@ CONTAINS
          DEF_HIST_mode = 'one'
 #endif
 
+
+! ===============================================================
 ! ----- Macros&Namelist conflicts and dependency management -----
+! ===============================================================
 
 
-! ----- SOIL model related ------
+! ----- SOIL model related ------ Macros&Namelist conflicts and dependency management
 #if (defined vanGenuchten_Mualem_SOIL_MODEL)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Note: DEF_USE_VARIABLY_SATURATED_FLOW is automaticlly set to .true.  '
+         write(*,*) 'when using vanGenuchten_Mualem_SOIL_MODEL. '
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
 
 
-! ----- subgrid type related ------
+! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not.DEF_LAI_MONTHLY) THEN
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: 8-day LAI data is not supported for '
             write(*,*) 'LULC_IGBP_PFT and LULC_IGBP_PC.'
-            write(*,*) 'Changed to monthly data.'
+            write(*,*) 'Changed to monthly data, set DEF_LAI_MONTHLY = .true.'
             DEF_LAI_MONTHLY = .true.
          ENDIF
 #endif
 
 
-! ----- BGC and CROP model related ------
+! ----- BGC and CROP model related ------ Macros&Namelist conflicts and dependency management
 
 #ifndef BGC
          IF(DEF_USE_LAIFEEDBACK)then
             DEF_USE_LAIFEEDBACK = .false.
-            write(*,*) 'Warning: LAI feedback is not supported for BGC off. '
-            write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off'
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: LAI feedback is not supported for BGC off.'
+            write(*,*) 'DEF_USE_LAIFEEDBACK is set to false automatically when BGC is turned off.'
          ENDIF
-#endif
-#ifndef BGC
+
          IF(DEF_USE_SASU)then
             DEF_USE_SASU = .false.
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: Semi-Analytic Spin-up is on when BGC is off.'
-            write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off'
+            write(*,*) 'DEF_USE_SASU is set to false automatically when BGC is turned off.'
          ENDIF
+
          IF(DEF_USE_PN)then
             DEF_USE_PN = .false.
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: Punctuated nitrogen addition spin up is on when BGC is off.'
-            write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off'
+            write(*,*) 'DEF_USE_PN is set to false automatically when BGC is turned off.'
+         ENDIF
+
+         IF(DEF_USE_NITRIF)then
+            DEF_USE_NITRIF = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
+            write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off.'
+         ENDIF
+
+         IF(DEF_USE_FIRE)then
+            DEF_USE_FIRE = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: Fire model is on when BGC is off.'
+            write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off.'
          ENDIF
 #endif
 
 #ifndef CROP
          IF(DEF_USE_FERT)then
             DEF_USE_FERT = .false.
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: Fertilization is on when CROP is off.'
-            write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off'
+            write(*,*) 'DEF_USE_FERT is set to false automatically when CROP is turned off.'
          ENDIF
-#endif
 
-#ifndef BGC
-         IF(DEF_USE_NITRIF)then
-            DEF_USE_NITRIF = .false.
-            write(*,*) 'Warning: Nitrification-Denitrification is on when BGC is off.'
-            write(*,*) 'DEF_USE_NITRIF is set to false automatically when BGC is turned off'
-         ENDIF
-#endif
-
-#ifndef CROP
          IF(DEF_USE_CNSOYFIXN)then
             DEF_USE_CNSOYFIXN = .false.
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
-            write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off'
+            write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off.'
          ENDIF
 #endif
 
-#ifndef BGC
-         IF(DEF_USE_FIRE)then
-            DEF_USE_FIRE = .false.
-            write(*,*) 'Warning: Fire model is on when BGC is off.'
-            write(*,*) 'DEF_USE_FIRE is set to false automatically when BGC is turned off'
-         ENDIF
-#endif
          IF(.not. DEF_USE_OZONESTRESS)then
             IF(DEF_USE_OZONEDATA)then
                DEF_USE_OZONEDATA = .false.
-               write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off. '
+               write(*,*) '                  *****                  '
+               write(*,*) 'Warning: DEF_USE_OZONEDATA is not supported for OZONESTRESS off.'
                write(*,*) 'DEF_USE_OZONEDATA is set to false automatically.'
             ENDIF
          ENDIF
 
 
-! ----- SNICAR model ------
+! ----- SNICAR model ------ Macros&Namelist conflicts and dependency management
 
-         DEF_file_snowoptics = trim(DEF_dir_rawdata)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
-         DEF_file_snowaging  = trim(DEF_dir_rawdata)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
+         DEF_file_snowoptics = trim(DEF_dir_runtime)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
+         DEF_file_snowaging  = trim(DEF_dir_runtime)//'/snicar/snicar_drdt_bst_fit_60_c070416.nc'
 
          IF (.not. DEF_USE_SNICAR) THEN
             IF (DEF_Aerosol_Readin) THEN
@@ -877,24 +889,15 @@ CONTAINS
          ENDIF
 
 
-! ----- Urban model conflicts and dependency management -----
+! ----- Urban model ----- Macros&Namelist conflicts and dependency management
 
 #ifdef URBAN_MODEL
          DEF_URBAN_RUN = .true.
 
-#if (defined LULC_USGS)
-         write(*,*) '                  *****                  '
-         write(*,*) 'Fatal ERROR: URBAN model is not supported for LULC_USGS at present. STOP! '
-         STOP
-#endif
          IF (DEF_USE_SNICAR) THEN
             write(*,*) '                  *****                  '
-            write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
-            write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
-            DEF_USE_SNICAR = .false.
+            write(*,*) 'Note: SNICAR is not applied for URBAN model, but for other land covers. '
          ENDIF
-
-         !TODO: need to test PHS, LAI_CHANGE
 #else
          IF (DEF_URBAN_RUN) then
             write(*,*) '                  *****                  '
@@ -906,7 +909,7 @@ CONTAINS
 #endif
 
 
-! ----- LULCC conflicts and dependency management -----
+! ----- LULCC ----- Macros&Namelist conflicts and dependency management
 
 #ifdef LULCC
 
@@ -929,17 +932,22 @@ CONTAINS
             DEF_LAI_CHANGE_YEARLY = .true.
          ENDIF
 
-         !TODO: need to test IGBP, PFT, PC and URBAN
-
-#else
-
-
-         !TODO: Complement if needed
+#if (defined LULC_IGBP_PC || defined URBAN)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
+         write(*,*) 'It will coming soon. '
+         STOP
+#endif
 
 #endif
 
 
+! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
+
+
+
 ! -----END Macros&Namelist conflicts and dependency management -----
+! ===============================================================
 
 
       ENDIF
@@ -977,6 +985,7 @@ CONTAINS
       CALL mpi_bcast (DEF_simulation_time%timestep,     1, mpi_real8,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_runtime,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_output,   256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_forcing,  256, mpi_character, p_root, p_comm_glb, p_err)
 
