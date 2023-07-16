@@ -152,8 +152,8 @@ MODULE MOD_Namelist
    INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
    ! ----- Model settings -----
-   LOGICAL :: DEF_LANDONLY = .true.
-   LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE = .false.
+   LOGICAL :: DEF_LANDONLY                    = .true.
+   LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE      = .false.
    LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
    LOGICAL :: DEF_USE_BEDROCK                 = .false.
    LOGICAL :: DEF_USE_OZONESTRESS             = .false.
@@ -783,9 +783,13 @@ CONTAINS
 ! ----- Macros&Namelist conflicts and dependency management -----
 
 
+! ----- SOIL model related ------
 #if (defined vanGenuchten_Mualem_SOIL_MODEL)
          DEF_USE_VARIABLY_SATURATED_FLOW = .true.
 #endif
+
+
+! ----- subgrid type related ------
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not.DEF_LAI_MONTHLY) THEN
@@ -795,6 +799,9 @@ CONTAINS
             DEF_LAI_MONTHLY = .true.
          ENDIF
 #endif
+
+
+! ----- BGC and CROP model related ------
 
 #ifndef BGC
          IF(DEF_USE_LAIFEEDBACK)then
@@ -855,6 +862,7 @@ CONTAINS
             ENDIF
          ENDIF
 
+
 ! ----- SNICAR model ------
 
          DEF_file_snowoptics = trim(DEF_dir_runtime)//'/snicar/snicar_optics_5bnd_mam_c211006.nc'
@@ -863,22 +871,34 @@ CONTAINS
          IF (.not. DEF_USE_SNICAR) THEN
             IF (DEF_Aerosol_Readin) THEN
                DEF_Aerosol_Readin = .false.
+               write(*,*) '                  *****                  '
                write(*,*) 'Warning: DEF_Aerosol_Readin is not needed for DEF_USE_SNICAR off. '
                write(*,*) 'DEF_Aerosol_Readin is set to false automatically.'
             ENDIF
          ENDIF
 
+
 ! ----- Urban model conflicts and dependency management -----
+
 #ifdef URBAN_MODEL
          DEF_URBAN_RUN = .true.
 
+#if (defined LULC_USGS)
+         write(*,*) '                  *****                  '
+         write(*,*) 'Fatal ERROR: URBAN model is not supported for LULC_USGS at present. STOP! '
+         STOP
+#endif
          IF (DEF_USE_SNICAR) THEN
+            write(*,*) '                  *****                  '
             write(*,*) 'Warning: SNICAR is not well supported for URBAN model. '
             write(*,*) 'DEF_USE_SNICAR is set to false automatically.'
             DEF_USE_SNICAR = .false.
          ENDIF
+
+         !TODO: need to test PHS, LAI_CHANGE
 #else
          IF (DEF_URBAN_RUN) then
+            write(*,*) '                  *****                  '
             write(*,*) 'Note: The Urban model is not opened. IF you want to run Urban model '
             write(*,*) 'please #define URBAN_MODEL in define.h. otherwise DEF_URBAN_RUN will '
             write(*,*) 'be set to false automatically.'
@@ -888,25 +908,34 @@ CONTAINS
 
 
 ! ----- LULCC conflicts and dependency management -----
+
 #ifdef LULCC
 
 #if (defined LULC_USGS || defined BGC)
-         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS|BGC at present. STOP! '
+         write(*,*) '                  *****                  '
+         write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
          STOP
 #endif
          IF (.not.DEF_LAI_MONTHLY) THEN
+            write(*,*) '                  *****                  '
             write(*,*) 'Note: When LULCC is opened, DEF_LAI_MONTHLY '
             write(*,*) 'will be set to true automatically.'
             DEF_LAI_MONTHLY = .true.
          ENDIF
 
          IF (.not.DEF_LAI_CHANGE_YEARLY) THEN
+            write(*,*) '                  *****                  '
             write(*,*) 'Note: When LULCC is opened, DEF_LAI_CHANGE_YEARLY '
             write(*,*) 'will be set to true automatically.'
             DEF_LAI_CHANGE_YEARLY = .true.
          ENDIF
+
+         !TODO: need to test IGBP, PFT, PC and URBAN
+
 #else
-         !TODO: Complement IF needed
+
+
+         !TODO: Complement if needed
 
 #endif
 

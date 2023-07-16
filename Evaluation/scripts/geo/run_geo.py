@@ -32,6 +32,7 @@ def read_namelist(file_path):
         dict: A dictionary containing the keys and values from the namelist.
     """
     namelist = {}
+    
     current_dict = None
 
     with open(file_path, 'r') as f:
@@ -165,4 +166,7 @@ if __name__=='__main__':
     ]
 
     for module in modules:
-        run_validation(module, namelist)
+        if module not in namelist['General']:
+            pass
+        else:
+            run_validation(module, namelist)
