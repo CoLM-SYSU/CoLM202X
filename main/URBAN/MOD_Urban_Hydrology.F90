@@ -318,9 +318,9 @@ CONTAINS
 ! SNICAR model variables
            ,forc_aer    ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&
-           mss_dst1     , mss_dst2    ,mss_dst3        ,mss_dst4         &
+           mss_dst1     , mss_dst2    ,mss_dst3        ,mss_dst4        ,&
 ! END SNICAR model variables
-           )
+           urban_call=.true.)
 
       ! We assume the land water bodies have zero extra liquid water capacity
       ! (i.e.,constant capacity), all excess liquid water are put into the runoff,

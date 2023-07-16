@@ -29,7 +29,7 @@ CONTAINS
               parsha  ,sabv    ,frl     ,fsun    ,thermk  ,&
               rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
-              zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
+              zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg,rss  ,&
               dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow   ,taux    ,tauy    ,&
               fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
@@ -180,6 +180,7 @@ CONTAINS
         tg,         &! ground surface temperature [K]
         qg,         &! specific humidity at ground surface [kg/kg]
         dqgdT,      &! temperature derivative of "qg"
+        rss,        &! bare soil resistance for evaporation
         emg          ! vegetation emissivity
 
   REAL(r8), intent(in) :: &
@@ -654,7 +655,11 @@ CONTAINS
          cfh = (lai + sai) / rb
 
          caw = 1. / raw
-         cgw = 1. / rd
+         IF (qg < qaf) THEN
+            cgw = 1. / rd !dew case. no soil resistance   
+         ELSE 
+            cgw = 1. / (rd + rss)
+         ENDIF   
          cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
             ( laisun/(rb+rssun) + laisha/(rb+rssha) )
 
@@ -782,7 +787,7 @@ CONTAINS
 
 ! update co2 partial pressure within canopy air
          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-         gdh2o = 1.0/rd  * tprcor/thm                     !mol m-2 s-1
+         gdh2o = 1.0/(rd+rss)  * tprcor/thm                     !mol m-2 s-1
          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
             (assimsun + assimsha  - respcsun -respcsha - rsoil)
 

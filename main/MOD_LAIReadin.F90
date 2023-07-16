@@ -230,7 +230,7 @@ MODULE MOD_LAIReadin
                   tsai(npatch) = sum(tsai_c(:,pc)*pcfrac(:,pc))
                ENDIF
 
-               fveg (npatch)  = fveg0(m)
+               fveg (npatch) = fveg0(m)
                green(npatch) = 1.
             end do
          ENDIF

@@ -620,9 +620,9 @@ contains
                ENDDO
             end if
          end if
-         
+
          call mp2g_hist_urb%map (vectmp_urb, sumarea_urb, spv = spval, msk = filter_urb)
-         
+
          ! sensible heat from building roof [W/m2]
          call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_roof, &
             a_senroof, f_senroof, file_hist, 'f_fsenroof', itime_in_file, sumarea_urb, filter_urb, &
@@ -765,6 +765,11 @@ contains
          call flux_map_and_write_2d ( DEF_hist_vars%gssha, &
              a_gssha, f_gssha, file_hist, 'f_gssha', itime_in_file, sumarea, filter, &
              'Ecosystem level canopy conductance on shaded canopy','mol m-2 s-1')
+
+         ! soil resistance [m/s]
+         call flux_map_and_write_2d ( DEF_hist_vars%rss, &
+             a_rss, f_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
+             'soil surface resistance','m/s')
 
 #ifdef BGC
          ! leaf carbon display pool

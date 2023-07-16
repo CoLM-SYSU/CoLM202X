@@ -46,6 +46,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rstfacsha (:)
    real(r8), allocatable :: a_gssun (:)
    real(r8), allocatable :: a_gssha (:)
+   real(r8), allocatable :: a_rss   (:)
    real(r8), allocatable :: a_wdsrf  (:)
    real(r8), allocatable :: a_zwt    (:)
    real(r8), allocatable :: a_wa     (:)
@@ -356,6 +357,7 @@ contains
             allocate (a_rstfacsha (numpatch))
             allocate (a_gssun     (numpatch))
             allocate (a_gssha     (numpatch))
+            allocate (a_rss       (numpatch))
             allocate (a_wdsrf     (numpatch))
 
             allocate (a_zwt       (numpatch))
@@ -667,8 +669,9 @@ contains
             deallocate (a_qdrip     )
             deallocate (a_rstfacsun )
             deallocate (a_rstfacsha )
-            deallocate (a_gssun )
-            deallocate (a_gssha )
+            deallocate (a_gssun     )
+            deallocate (a_gssha     )
+            deallocate (a_rss       )
             deallocate (a_wdsrf     )
 
             deallocate (a_zwt       )
@@ -677,10 +680,10 @@ contains
             deallocate (a_assim     )
             deallocate (a_respc     )
 
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
+            deallocate (a_assimsun  ) !1
+            deallocate (a_assimsha  ) !1
+            deallocate (a_etrsun    ) !1
+            deallocate (a_etrsha    ) !1
 
             deallocate (a_qcharge   )
 
@@ -989,6 +992,7 @@ contains
             a_rstfacsha(:) = spval
             a_gssun   (:) = spval
             a_gssha   (:) = spval
+            a_rss     (:) = spval
 
             a_wdsrf   (:) = spval
             a_zwt     (:) = spval
@@ -1281,7 +1285,6 @@ contains
       ! Local Variables
 
       real(r8), allocatable :: r_trad  (:)
-
       real(r8), allocatable :: r_ustar (:)
       real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
@@ -1357,6 +1360,7 @@ contains
             call acc1d (rstfacsha_out , a_rstfacsha )
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
+            call acc1d (rss    , a_rss    )
 
             call acc1d (wdsrf  , a_wdsrf  )
             call acc1d (zwt    , a_zwt    )

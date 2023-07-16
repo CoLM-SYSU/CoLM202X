@@ -31,7 +31,7 @@ MODULE MOD_LeafTemperaturePC
               frl     ,thermk  ,fshade  ,rstfacsun,       rstfacsha,&
               gssun   ,gssha   ,po2m    ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,&
-              sigf    ,etrc    ,tg      ,qg      ,dqgdT   ,emg     ,&
+              sigf    ,etrc    ,tg      ,qg,rss  ,dqgdT   ,emg     ,&
               z0mpc   ,tl      ,ldew    ,ldew_rain       ,ldew_snow,&
               taux    ,tauy    ,fseng   ,&
               fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
@@ -183,6 +183,7 @@ MODULE MOD_LeafTemperaturePC
         tg,         &! ground surface temperature [K]
         qg,         &! specific humidity at ground surface [kg/kg]
         dqgdT,      &! temperature derivative of "qg"
+        rss,        &! bare soil resistance for evaporation
         emg          ! vegetation emissivity
 
   real(r8), intent(in) :: &
@@ -1104,7 +1105,15 @@ MODULE MOD_LeafTemperaturePC
                 ENDIF
 
                 cgh(i) = 1. / rd(i)
+                IF (i == botlay) THEN
+                   IF (qg < qaf(botlay)) THEN
+                      cgw(i) = 1. / rd(i) !dew case. no soil resistance
+                   ELSE
+                      cgw(i) = 1. / (rd(i) + rss)
+                   ENDIF
+                ELSE
                 cgw(i) = 1. / rd(i)
+                ENDIF
              ENDIF
           ENDDO
 
@@ -1477,7 +1486,7 @@ MODULE MOD_LeafTemperaturePC
           ! level vegetation should have different gdh2o, i.e.,
           ! different rd(layer) values.
           gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-          gdh2o = 1.0/rd(botlay) * tprcor/thm              !mol m-2 s-1
+          gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm              !mol m-2 s-1
 
           pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
                   sum(fcover*(assimsun + assimsha - respcsun - respcsha - rsoil))
