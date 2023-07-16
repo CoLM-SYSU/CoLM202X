@@ -31,7 +31,7 @@ PROGRAM CoLM
    use MOD_Forcing
    use MOD_Hist
    use MOD_TimeManager
-   use MOD_CoLMDebug
+   use MOD_RangeCheck
 
    use MOD_Block
    use MOD_Pixel
@@ -68,19 +68,16 @@ PROGRAM CoLM
    USE MOD_Hydro_LateralFlow
 #endif
 
-#ifdef BGC
-   USE MOD_LightningData, only: init_lightning_data, update_lightning_data
-   USE MOD_FireReadin, only: Fire_readin
-#endif
-
    USE MOD_Ozone, only: init_ozone_data, update_ozone_data
 
    use MOD_SrfdataRestart
    USE MOD_LAIReadin
 
 #ifdef BGC
-   USE MOD_NitrifReadin
-   USE MOD_NdepReadin
+   USE MOD_NitrifData
+   USE MOD_NdepData
+   USE MOD_FireData
+   USE MOD_LightningData
 #endif
 
 #ifdef LULCC
@@ -119,13 +116,12 @@ PROGRAM CoLM
    integer :: e_year, e_month, e_day, e_seconds, e_julian
    integer :: p_year, p_month, p_day, p_seconds, p_julian
    integer :: lc_year, lai_year
-   integer :: month, mday, month_p, mday_p
+   integer :: month, mday, year_p, month_p, mday_p
    integer :: spinup_repeat, istep
 
    type(timestamp) :: ststamp, itstamp, etstamp, ptstamp
 
    integer*8 :: start_time, end_time, c_per_sec, time_used
-   logical isread
 
 #ifdef USEMPI
    call spmd_init ()
@@ -273,7 +269,7 @@ PROGRAM CoLM
 #endif
 
    IF(DEF_USE_OZONEDATA)THEN
-      CALL init_Ozone_data (itstamp,sdate)
+      CALL init_Ozone_data (sdate)
    ENDIF
 
    ! Initialize aerosol deposition forcing data
@@ -282,8 +278,15 @@ PROGRAM CoLM
    ENDIF
 
 #ifdef BGC
-   IF(DEF_USE_FIRE)THEN
-      CALL init_lightning_data (itstamp,sdate)
+   IF (DEF_USE_NITRIF) then
+      CALL init_nitrif_data (sdate)
+   ENDIF
+
+   CALL init_ndep_data (sdate(1))
+
+   IF (DEF_USE_FIRE) THEN
+      CALL init_fire_data (sdate(1))
+      CALL init_lightning_data (sdate)
    ENDIF
 #endif
 
@@ -302,6 +305,8 @@ PROGRAM CoLM
    TIMELOOP : DO while (itstamp < etstamp)
 
       CALL julian2monthday (jdate(1), jdate(2), month_p, mday_p)
+
+      year_p = jdate(1)
 
       if (p_is_master) then
          IF (itstamp < ptstamp) THEN
@@ -339,6 +344,26 @@ PROGRAM CoLM
       itstamp = itstamp + int(deltim)
       jdate = idate
       CALL adj2begin(jdate)
+
+      CALL julian2monthday (jdate(1), jdate(2), month, mday)
+
+#ifdef BGC
+      if(DEF_USE_NITRIF) then
+         IF (month /= month_p) THEN
+            CALL update_nitrif_data (month)
+         end if
+      end if
+      
+      IF (jdate(1) /= year_p) THEN
+         CALL update_ndep_data (idate(1), iswrite = .true.)
+      ENDIF
+
+      if(DEF_USE_FIRE)then
+         IF (jdate(1) /= year_p) THEN
+            CALL update_hdm_data (idate(1))
+         end if
+      end if
+#endif
 
       ! lateral flow
 #if (defined LATERAL_FLOW)
@@ -379,7 +404,6 @@ PROGRAM CoLM
       ENDIF
 
       IF (DEF_LAI_MONTHLY) THEN
-         CALL julian2monthday (jdate(1), jdate(2), month, mday)
          IF (month /= month_p) THEN
                CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
@@ -395,26 +419,6 @@ PROGRAM CoLM
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
          ENDIF
       ENDIF
-#endif
-
-#ifdef BGC
-      if(DEF_USE_NITRIF) then
-         CALL julian2monthday (idate(1), idate(2), month, mday)
-         if(mday .eq. 1)then
-            CALL NITRIF_readin(month, dir_landdata)
-         end if
-      end if
-      if(idate(2) .eq. 1)then
-         isread = .true.
-      else
-         isread = .false.
-      end if
-      CALL NDEP_readin(idate(1), dir_landdata, isread, .true.)
-      if(DEF_USE_FIRE)then
-         if(idate(2)  .eq. 1 .and. idate(3) .eq. 1800)then
-            CALL Fire_readin(idate(1), dir_landdata)
-         end if
-      end if
 #endif
 
 #if(defined CaMa_Flood)
@@ -450,7 +454,7 @@ PROGRAM CoLM
 #endif
       endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeVariables ()
 #endif
 

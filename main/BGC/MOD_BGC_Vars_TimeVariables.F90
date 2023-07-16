@@ -256,7 +256,7 @@ SAVE
       public :: deallocate_BGCTimeVariables
       public :: READ_BGCTimeVariables
       public :: WRITE_BGCTimeVariables
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       public :: check_BGCTimeVariables
 #endif
 
@@ -800,7 +800,8 @@ SAVE
      call ncio_create_file_vector (file_restart, landpatch)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'patch')
 
-     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',     nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil',      nl_soil)
+     CALL ncio_define_dimension_vector (file_restart, landpatch, 'soil_full', nl_soil_full)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'ndecomp_pools', ndecomp_pools)
      CALL ncio_define_dimension_vector (file_restart, landpatch, 'doy' , 365)
 
@@ -819,17 +820,17 @@ SAVE
      call ncio_write_vector (file_restart, 'sminn                ', 'patch', landpatch, sminn                )
      call ncio_write_vector (file_restart, 'ndep                 ', 'patch', landpatch, ndep                 )
 
-     call ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                    'patch', landpatch,     decomp_cpools_vr(1:nl_soil,:,:))
-     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ctrunc_vr(1:nl_soil,:))
+     call ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
+                                                                    'patch', landpatch,     decomp_cpools_vr)
+     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ctrunc_vr)
 
      call ncio_write_vector (file_restart, 'altmax               ', 'patch', landpatch, altmax               )
      call ncio_write_vector (file_restart, 'altmax_lastyear      ', 'patch', landpatch, altmax_lastyear      )
      call ncio_write_vector (file_restart, 'altmax_lastyear_indx ', 'patch', landpatch, altmax_lastyear_indx )
 
-     call ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil'  ,   nl_soil, 'ndecomp_pools', ndecomp_pools, &
-                                                                    'patch', landpatch,     decomp_npools_vr(1:nl_soil,:,:))
-     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ntrunc_vr(1:nl_soil,:))
+     call ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
+                                                                    'patch', landpatch,     decomp_npools_vr)
+     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
      call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil'  ,   nl_soil, 'patch', landpatch, sminn_vr    )
      call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_no3_vr )
      call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
@@ -947,8 +948,8 @@ SAVE
      use MOD_Namelist
      use MOD_SPMD_Task
      use MOD_NetCDFVector
-#ifdef CoLMDEBUG
-   USE MOD_CoLMDebug
+#ifdef RangeCheck
+   USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
      USE MOD_Vars_Global
@@ -972,14 +973,14 @@ SAVE
      call ncio_read_vector (file_restart, 'sminn                ', landpatch, sminn                )
      call ncio_read_vector (file_restart, 'ndep                 ', landpatch, ndep                 )
 
-     call ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil, ndecomp_pools, landpatch, decomp_cpools_vr)
+     call ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr)
      call ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
 
      call ncio_read_vector (file_restart, 'altmax               ', landpatch, altmax               )
      call ncio_read_vector (file_restart, 'altmax_lastyear      ', landpatch, altmax_lastyear      )
      call ncio_read_vector (file_restart, 'altmax_lastyear_indx ', landpatch, altmax_lastyear_indx )
 
-     call ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil, ndecomp_pools, landpatch, decomp_npools_vr)
+     call ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
      call ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
      call ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
      call ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
@@ -1077,18 +1078,18 @@ SAVE
      call ncio_read_vector (file_restart, 'fertnitro_sugarcane' , landpatch, fertnitro_sugarcane)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      call check_BGCTimeVariables
 #endif
 
   end subroutine READ_BGCTimeVariables
 
   !---------------------------------------
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
   SUBROUTINE check_BGCTimeVariables ()
 
      use MOD_SPMD_Task
-     use MOD_CoLMDebug
+     use MOD_RangeCheck
      use MOD_Namelist, only : DEF_USE_NITRIF, DEF_USE_SASU
 
      IMPLICIT NONE

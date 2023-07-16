@@ -18,7 +18,6 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_NetCDFSerial
    USE MOD_NetCDFVector
    USE MOD_NetCDFBlock
-   USE MOD_CoLMDebug
    USE MOD_AggregationRequestData
    USE MOD_5x5DataReadin
    USE MOD_DataType
@@ -207,8 +206,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #ifdef SrfdataDiag
    typindex = (/(ityp, ityp = 1, N_URB)/)
    landname  = trim(dir_srfdata) // '/diag/LUCY_country_id.nc'
-   CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
-      -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
+   ! CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
+   !    -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
 
 #ifdef USEMPI
@@ -482,6 +481,10 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
             reg_typid_one(:) = 30
          ENDIF
 
+         IF (any(reg_typid_one==0)) THEN
+            WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
+         ENDIF
+
          where (wt_roof_one <= 0)
             wt_roof_one = ncar_wt(urb_typidx,reg_typid_one)
          END where
@@ -752,6 +755,10 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ! same for above, assign reg id for RG_-45_65_-50_70
          IF (all(reg_typid_one==0)) THEN
             reg_typid_one(:) = 30
+         ENDIF
+
+         IF (any(reg_typid_one==0)) THEN
+            WHERE(reg_typid_one==0) reg_typid_one =  num_max_frequency(reg_typid_one)
          ENDIF
 
          ! loop for each finer grid to aggregate data

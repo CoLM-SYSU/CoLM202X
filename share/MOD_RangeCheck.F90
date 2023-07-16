@@ -1,20 +1,20 @@
 #include <define.h>
 
-MODULE MOD_CoLMDebug
+MODULE MOD_RangeCheck
 
    !-----------------------------------------------------------------------
    ! DESCRIPTION:
    !
    !    Subroutines show the range of values in block data or vector data.
-   !    
+   !
    !    Notice that:
    !    1. "check_block_data"  can only be called by IO     processes.
    !    2. "check_vector_data" can only be called by worker processes.
-   ! 
+   !
    ! Created by Shupeng Zhang, May 2023
    !-----------------------------------------------------------------------
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    IMPLICIT NONE
 
    interface check_block_data
@@ -32,7 +32,7 @@ MODULE MOD_CoLMDebug
 CONTAINS
 
    ! ----------
-   SUBROUTINE check_block_data_real8_2d (varname, gdata, spv_in)
+   SUBROUTINE check_block_data_real8_2d (varname, gdata, spv_in, largevalue)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -43,6 +43,7 @@ CONTAINS
       CHARACTER(len=*), intent(in)   :: varname
       TYPE(block_data_real8_2d), intent(in) :: gdata
       REAL(r8), intent(in), optional :: spv_in
+      REAL(r8), intent(in), optional :: largevalue
 
       ! Local variables
       REAL(r8) :: gmin, gmax, spv
@@ -50,6 +51,7 @@ CONTAINS
       LOGICAL,  allocatable :: msk2(:,:)
       INTEGER :: iblkme, ib, jb, ix, iy
       LOGICAL :: has_nan
+      character(len=256) :: wfmt, ss, info
 
       IF (p_is_io) THEN
 
@@ -58,12 +60,12 @@ CONTAINS
          ELSE
             spv = -1.0e36_r8
          ENDIF
-            
+
          gmin = spv
          gmax = spv
 
          has_nan = .false.
-         DO iblkme = 1, gblock%nblkme 
+         DO iblkme = 1, gblock%nblkme
             ib = gblock%xblkme(iblkme)
             jb = gblock%yblkme(iblkme)
 
@@ -111,13 +113,13 @@ CONTAINS
 
          IF (p_iam_io == p_root) THEN
             IF (any(gmin_all /= spv)) THEN
-               gmin = minval(gmin_all, mask = (gmin_all /= spv)) 
+               gmin = minval(gmin_all, mask = (gmin_all /= spv))
             ELSE
                gmin = spv
             ENDIF
 
             IF (any(gmax_all /= spv)) THEN
-               gmax = maxval(gmax_all, mask = (gmax_all /= spv)) 
+               gmax = maxval(gmax_all, mask = (gmax_all /= spv))
             ELSE
                gmax = spv
             ENDIF
@@ -125,24 +127,33 @@ CONTAINS
             deallocate (gmin_all)
             deallocate (gmax_all)
          ENDIF
-#endif 
-         IF (p_iam_io == p_root) THEN 
+#endif
+         IF (p_iam_io == p_root) THEN
+
+            info = ''
+
             IF (has_nan) THEN
-               write(*,101) varname, gmin, gmax
-               101 format('Check block data:', A20, ' is in (', e20.10, ',', e20.10, ', with NAN)')
-            ELSE
-               write(*,102) varname, gmin, gmax
-               102 format('Check block data:', A20, ' is in (', e20.10, ',', e20.10, ')')
+               info = trim(info) // ' with NAN'
             ENDIF
+
+            IF (present(largevalue)) THEN
+               IF (max(abs(gmin),abs(gmax)) > largevalue) THEN
+                  write(ss,'(e12.2)') largevalue
+                  info = trim(info) // ' with value > ' // trim(ss)
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check block data:', A20, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, gmin, gmax, trim(info)
          ENDIF
 
       ENDIF
 
    END SUBROUTINE check_block_data_real8_2d
 
-   
+
    ! ----------
-   SUBROUTINE check_vector_data_real8_1d (varname, vdata, spv_in)
+   SUBROUTINE check_vector_data_real8_1d (varname, vdata, spv_in, largevalue)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -151,12 +162,14 @@ CONTAINS
       CHARACTER(len=*), intent(in)   :: varname
       REAL(r8), intent(in)           :: vdata(:)
       REAL(r8), intent(in), optional :: spv_in
+      REAL(r8), intent(in), optional :: largevalue
 
       ! Local variables
       REAL(r8) :: vmin, vmax, spv
       REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
       INTEGER  :: i
       LOGICAL  :: has_nan
+      character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -165,7 +178,7 @@ CONTAINS
          ELSE
             spv = -1.0e36_r8
          ENDIF
-            
+
          IF (any(vdata /= spv)) THEN
             vmin = minval(vdata, mask = vdata /= spv)
             vmax = maxval(vdata, mask = vdata /= spv)
@@ -173,7 +186,7 @@ CONTAINS
             vmin = spv
             vmax = spv
          ENDIF
-         
+
          has_nan = .false.
          DO i = 1, size(vdata)
             has_nan = has_nan .or. isnan(vdata(i))
@@ -194,13 +207,13 @@ CONTAINS
 
          IF (p_iam_worker == p_root) THEN
             IF (any(vmin_all /= spv)) THEN
-               vmin = minval(vmin_all, mask = (vmin_all /= spv)) 
+               vmin = minval(vmin_all, mask = (vmin_all /= spv))
             ELSE
                vmin = spv
             ENDIF
 
             IF (any(vmax_all /= spv)) THEN
-               vmax = maxval(vmax_all, mask = (vmax_all /= spv)) 
+               vmax = maxval(vmax_all, mask = (vmax_all /= spv))
             ELSE
                vmax = spv
             ENDIF
@@ -208,16 +221,26 @@ CONTAINS
             deallocate (vmin_all)
             deallocate (vmax_all)
          ENDIF
-#endif 
+#endif
 
          IF (p_iam_worker == p_root) THEN
+
+            info = ''
+
             IF (has_nan) THEN
-               write(*,103) varname, vmin, vmax
-               103 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ', with NAN)')
-            ELSE
-               write(*,104) varname, vmin, vmax
-               104 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')')
+               info = trim(info) // ' with NAN'
             ENDIF
+
+            IF (present(largevalue)) THEN
+               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
+                  write(ss,'(e12.2)') largevalue
+                  info = trim(info) // ' with value > ' // trim(ss)
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, vmin, vmax, trim(info)
+
          ENDIF
 
       ENDIF
@@ -225,7 +248,7 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_1d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_2d (varname, vdata, spv_in)
+   SUBROUTINE check_vector_data_real8_2d (varname, vdata, spv_in, largevalue)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -234,12 +257,14 @@ CONTAINS
       CHARACTER(len=*), intent(in)   :: varname
       REAL(r8), intent(in)           :: vdata(:,:)
       REAL(r8), intent(in), optional :: spv_in
+      REAL(r8), intent(in), optional :: largevalue
 
       ! Local variables
       REAL(r8) :: vmin, vmax, spv
       REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
       INTEGER  :: i, j
       LOGICAL  :: has_nan
+      character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -248,7 +273,7 @@ CONTAINS
          ELSE
             spv = -1.0e36_r8
          ENDIF
-            
+
          IF (any(vdata /= spv)) THEN
             vmin = minval(vdata, mask = vdata /= spv)
             vmax = maxval(vdata, mask = vdata /= spv)
@@ -279,13 +304,13 @@ CONTAINS
 
          IF (p_iam_worker == p_root) THEN
             IF (any(vmin_all /= spv)) THEN
-               vmin = minval(vmin_all, mask = (vmin_all /= spv)) 
+               vmin = minval(vmin_all, mask = (vmin_all /= spv))
             ELSE
                vmin = spv
             ENDIF
 
             IF (any(vmax_all /= spv)) THEN
-               vmax = maxval(vmax_all, mask = (vmax_all /= spv)) 
+               vmax = maxval(vmax_all, mask = (vmax_all /= spv))
             ELSE
                vmax = spv
             ENDIF
@@ -293,16 +318,26 @@ CONTAINS
             deallocate (vmin_all)
             deallocate (vmax_all)
          ENDIF
-#endif 
+#endif
 
          IF (p_iam_worker == p_root) THEN
+
+            info = ''
+
             IF (has_nan) THEN
-               write(*,105) varname, vmin, vmax
-               105 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ', with NAN)')
-            ELSE
-               write(*,106) varname, vmin, vmax
-               106 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')')
+               info = trim(info) // ' with NAN'
             ENDIF
+
+            IF (present(largevalue)) THEN
+               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
+                  write(ss,'(e12.2)') largevalue
+                  info = trim(info) // ' with value > ' // trim(ss)
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, vmin, vmax, trim(info)
+
          ENDIF
 
       ENDIF
@@ -310,7 +345,7 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_2d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_3d (varname, vdata, spv_in)
+   SUBROUTINE check_vector_data_real8_3d (varname, vdata, spv_in, largevalue)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -319,12 +354,14 @@ CONTAINS
       CHARACTER(len=*), intent(in)   :: varname
       REAL(r8), intent(in)           :: vdata(:,:,:)
       REAL(r8), intent(in), optional :: spv_in
+      REAL(r8), intent(in), optional :: largevalue
 
       ! Local variables
       REAL(r8) :: vmin, vmax, spv
       REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
       INTEGER  :: i, j, k
       LOGICAL  :: has_nan
+      character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -333,7 +370,7 @@ CONTAINS
          ELSE
             spv = -1.0e36_r8
          ENDIF
-            
+
          IF (any(vdata /= spv)) THEN
             vmin = minval(vdata, mask = vdata /= spv)
             vmax = maxval(vdata, mask = vdata /= spv)
@@ -367,30 +404,40 @@ CONTAINS
 
          IF (p_iam_worker == p_root) THEN
             IF (any(vmin_all /= spv)) THEN
-               vmin = minval(vmin_all, mask = (vmin_all /= spv)) 
+               vmin = minval(vmin_all, mask = (vmin_all /= spv))
             ELSE
                vmin = spv
             ENDIF
 
             IF (any(vmax_all /= spv)) THEN
-               vmax = maxval(vmax_all, mask = (vmax_all /= spv)) 
+               vmax = maxval(vmax_all, mask = (vmax_all /= spv))
             ELSE
                vmax = spv
             ENDIF
 
             deallocate (vmin_all)
             deallocate (vmax_all)
-         ENDIF 
-#endif 
+         ENDIF
+#endif
 
          IF (p_iam_worker == p_root) THEN
+
+            info = ''
+
             IF (has_nan) THEN
-               write(*,107) varname, vmin, vmax
-               107 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ', with NAN)')
-            ELSE
-               write(*,108) varname, vmin, vmax
-               108 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')')
+               info = trim(info) // ' with NAN'
             ENDIF
+
+            IF (present(largevalue)) THEN
+               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
+                  write(ss,'(e12.2)') largevalue
+                  info = trim(info) // ' with value > ' // trim(ss)
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, vmin, vmax, trim(info)
+
          ENDIF
 
       ENDIF
@@ -398,7 +445,7 @@ CONTAINS
    END SUBROUTINE check_vector_data_real8_3d
 
    ! ----------
-   SUBROUTINE check_vector_data_real8_4d (varname, vdata, spv_in)
+   SUBROUTINE check_vector_data_real8_4d (varname, vdata, spv_in, largevalue)
 
       USE MOD_Precision
       USE MOD_SPMD_Task
@@ -407,12 +454,14 @@ CONTAINS
       CHARACTER(len=*), intent(in)   :: varname
       REAL(r8), intent(in)           :: vdata(:,:,:,:)
       REAL(r8), intent(in), optional :: spv_in
+      REAL(r8), intent(in), optional :: largevalue
 
       ! Local variables
       REAL(r8) :: vmin, vmax, spv
       REAL(r8), allocatable :: vmin_all(:), vmax_all(:)
       INTEGER  :: i, j, k, l
       LOGICAL  :: has_nan
+      character(len=256) :: wfmt, ss, info
 
       IF (p_is_worker) THEN
 
@@ -421,7 +470,7 @@ CONTAINS
          ELSE
             spv = -1.0e36_r8
          ENDIF
-            
+
          IF (any(vdata /= spv)) THEN
             vmin = minval(vdata, mask = vdata /= spv)
             vmax = maxval(vdata, mask = vdata /= spv)
@@ -457,30 +506,40 @@ CONTAINS
 
          IF (p_iam_worker == p_root) THEN
             IF (any(vmin_all /= spv)) THEN
-               vmin = minval(vmin_all, mask = (vmin_all /= spv)) 
+               vmin = minval(vmin_all, mask = (vmin_all /= spv))
             ELSE
                vmin = spv
             ENDIF
 
             IF (any(vmax_all /= spv)) THEN
-               vmax = maxval(vmax_all, mask = (vmax_all /= spv)) 
+               vmax = maxval(vmax_all, mask = (vmax_all /= spv))
             ELSE
                vmax = spv
             ENDIF
 
             deallocate (vmin_all)
             deallocate (vmax_all)
-         ENDIF 
-#endif 
+         ENDIF
+#endif
 
          IF (p_iam_worker == p_root) THEN
+
+            info = ''
+
             IF (has_nan) THEN
-               write(*,107) varname, vmin, vmax
-               107 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ', with NAN)')
-            ELSE
-               write(*,108) varname, vmin, vmax
-               108 format('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')')
+               info = trim(info) // ' with NAN'
             ENDIF
+
+            IF (present(largevalue)) THEN
+               IF (max(abs(vmin),abs(vmax)) > largevalue) THEN
+                  write(ss,'(e12.2)') largevalue
+                  info = trim(info) // ' with value > ' // trim(ss)
+               ENDIF
+            ENDIF
+
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            write(*,wfmt) varname, vmin, vmax, info
+
          ENDIF
 
       ENDIF
@@ -516,7 +575,7 @@ CONTAINS
             vmin = minval(vdata)
             vmax = maxval(vdata)
          ENDIF
-         
+
 #ifdef USEMPI
          IF (p_iam_worker == p_root) THEN
             allocate (vmin_all (0:p_np_worker-1))
@@ -531,25 +590,25 @@ CONTAINS
          IF (p_iam_worker == p_root) THEN
             IF (present(spv_in)) THEN
                IF (any(vmin_all /= spv_in)) THEN
-                  vmin = minval(vmin_all, mask = (vmin_all /= spv_in)) 
+                  vmin = minval(vmin_all, mask = (vmin_all /= spv_in))
                ELSE
                   vmin = spv_in
                ENDIF
 
                IF (any(vmax_all /= spv_in)) THEN
-                  vmax = maxval(vmax_all, mask = (vmax_all /= spv_in)) 
+                  vmax = maxval(vmax_all, mask = (vmax_all /= spv_in))
                ELSE
                   vmax = spv_in
                ENDIF
             ELSE
-               vmin = minval(vmin_all) 
-               vmax = maxval(vmax_all) 
+               vmin = minval(vmin_all)
+               vmax = maxval(vmax_all)
             ENDIF
 
             deallocate (vmin_all)
             deallocate (vmax_all)
          ENDIF
-#endif 
+#endif
 
          IF (p_iam_worker == p_root) THEN
             write(*,104) varname, vmin, vmax
@@ -562,4 +621,4 @@ CONTAINS
 
 #endif
 
-END MODULE MOD_CoLMDebug
+END MODULE MOD_RangeCheck

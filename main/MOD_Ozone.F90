@@ -182,7 +182,7 @@ Module MOD_Ozone
   end subroutine CalcOzoneStress
 
 
-  SUBROUTINE init_ozone_data (time, idate)
+  SUBROUTINE init_ozone_data (idate)
       
    !----------------------
    ! DESCTIPTION:
@@ -196,11 +196,10 @@ Module MOD_Ozone
      USE MOD_NetCDFSerial
      USE MOD_NetCDFBlock
      USE MOD_LandPatch
-     USE MOD_CoLMDebug
+     USE MOD_RangeCheck
      IMPLICIT NONE
       
-     type(timestamp), intent(in) :: time
-     integer,         intent(in) :: idate(3)
+     integer, intent(in) :: idate(3)
 
      ! Local Variables
      REAL(r8), allocatable :: lat(:), lon(:)
@@ -214,7 +213,7 @@ Module MOD_Ozone
      if(idate(1) .gt. 2021)iyear = 2021
      write(syear,"(I4.4)")  iyear
      write(smonth,"(I2.2)") month
-     file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
+     file_ozone = trim(DEF_dir_runtime) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
 
      CALL ncio_read_bcast_serial (file_ozone, 'latitude', lat)
      CALL ncio_read_bcast_serial (file_ozone, 'longitude', lon)
@@ -228,7 +227,7 @@ Module MOD_Ozone
      itime = mday
 
      CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, itime, f_ozone)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
      CALL check_block_data ('Ozone', f_ozone)
 #endif
 
@@ -244,7 +243,7 @@ Module MOD_Ozone
      USE MOD_TimeManager
      USE MOD_Namelist
      USE MOD_NetCDFBlock
-     USE MOD_CoLMDebug
+     USE MOD_RangeCheck
      IMPLICIT NONE
       
      type(timestamp), intent(in) :: time
@@ -271,18 +270,18 @@ Module MOD_Ozone
      if(imonth_next /= imonth)then
         write(syear,"(I4.4)")  iyear
         write(smonth,"(I2.2)") month
-        file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
+        file_ozone = trim(DEF_dir_runtime) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
      end if
 
      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
         CALL ncio_read_block_time (file_ozone, 'O3', grid_ozone, iday_next, f_ozone)
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
         CALL check_block_data ('Ozone', f_ozone)
 #endif         
       
         call mg2p_ozone%map_aweighted (f_ozone, forc_ozone) 
         forc_ozone = forc_ozone * 1.e-9 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
         call check_vector_data ('Ozone', forc_ozone)
 #endif         
      ENDIF

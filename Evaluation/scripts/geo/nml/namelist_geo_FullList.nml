@@ -33,8 +33,6 @@
     Soil_Moisture=False
     Runoff=False
     Inundation=False
-    Latent_Heat=True
-    Sensible_Heat=True
     Terrestrial_Water_Storage_Anomaly=False
     Snow_Water_Equivalent=False
     Permafrost_LIST=False
@@ -48,6 +46,8 @@
     Surface_Net_LW_Radiation=False
     Surface_Net_Radiation=True
     Ground_Heat_Flux=False
+    Latent_Heat=True
+    Sensible_Heat=True
   #****************************************************************
 
   #*******************         Forcings      **********************
@@ -67,6 +67,8 @@
 
   #========================other_setttings=======================
   num_cores=10 #-1 # how many core will be used in Parallel computing
+
+  
 /
 
 
@@ -459,54 +461,6 @@ nRMSEScore=True        # RMSE Score from ILAMB
   fldfrc          =  fldfrc       
 /
 
-&Latent_Heat_LIST
-  Sim_Dir         =  /tera04/wein/history_USGS_noURBAN/
-  Sim_TimRes      =  Month           #Day or Month
-  Sim_DataGroupby =  Month          #Year or Month or Day
-  Sim_Suffix      =  gridbased_GSWP3_USGS_noURBAN_2001-2010_hist_
-  Sim_Prefix      =  
-  Sim_GeoRes      =  30min
-  Sim_Syear       =  2001
-  Sim_Eyear       =  2010
-
-
-  Obs_source      =  FLUXCOM
-  Obs_Dir         =  /tera03/zhwei/Validation_Data/geo_obs/Latent_Heat/FLUXCOM
-  Obs_TimRes      =  Month          # Day or Month or Year
-  Obs_GeoRes      =  30min          # 0 min means "fldmean"
-  Obs_DataGroupby =  Single
-  Obs_Suffix      =  le
-  Obs_Prefix      =  
-  Obs_Syear       =  1980
-  Obs_Eyear       =  2014
-
-  figplot         =  True
-  le              =  f_lfevpa 
-/
-
-&Sensible_Heat_LIST
-  Sim_Dir         =  /tera04/wein/history_USGS_noURBAN/
-  Sim_TimRes      =  Month           #Day or Month
-  Sim_DataGroupby =  Month          #Year or Month or Day
-  Sim_Suffix      =  gridbased_GSWP3_USGS_noURBAN_2001-2010_hist_
-  Sim_Prefix      =  
-  Sim_GeoRes      =  30min
-  Sim_Syear       =  2001
-  Sim_Eyear       =  2010
-
-  Obs_source      =  FLUXCOM
-  Obs_Dir         =  /tera03/zhwei/Validation_Data/geo_obs/Sensible_Heat/FLUXCOM
-  Obs_TimRes      =  Month          # Day or Month or Year
-  Obs_GeoRes      =  30min          # 0 min means "fldmean"
-  Obs_DataGroupby =  Single
-  Obs_Suffix      =  sh
-  Obs_Prefix      =  
-  Obs_Syear       =  1980
-  Obs_Eyear       =  2014
-
-  figplot         =  True
-  sh              =  f_fsena 
-/
 
 &Terrestrial_Water_Storage_Anomaly_LIST
   Sim_Dir         =  /tera04/wein/CLM5/
@@ -757,6 +711,56 @@ nRMSEScore=True        # RMSE Score from ILAMB
   figplot         =  True
 
   hfdsl           =  ****   
+/
+
+
+&Latent_Heat_LIST
+  Sim_Dir         =  /tera04/wein/history_USGS_noURBAN/
+  Sim_TimRes      =  Month           #Day or Month
+  Sim_DataGroupby =  Month          #Year or Month or Day
+  Sim_Suffix      =  gridbased_GSWP3_USGS_noURBAN_2001-2010_hist_
+  Sim_Prefix      =  
+  Sim_GeoRes      =  30min
+  Sim_Syear       =  2001
+  Sim_Eyear       =  2010
+
+
+  Obs_source      =  FLUXCOM
+  Obs_Dir         =  /tera03/zhwei/Validation_Data/geo_obs/Latent_Heat/FLUXCOM
+  Obs_TimRes      =  Month          # Day or Month or Year
+  Obs_GeoRes      =  30min          # 0 min means "fldmean"
+  Obs_DataGroupby =  Single
+  Obs_Suffix      =  le
+  Obs_Prefix      =  
+  Obs_Syear       =  1980
+  Obs_Eyear       =  2014
+
+  figplot         =  True
+  le              =  f_lfevpa 
+/
+
+&Sensible_Heat_LIST
+  Sim_Dir         =  /tera04/wein/history_USGS_noURBAN/
+  Sim_TimRes      =  Month           #Day or Month
+  Sim_DataGroupby =  Month          #Year or Month or Day
+  Sim_Suffix      =  gridbased_GSWP3_USGS_noURBAN_2001-2010_hist_
+  Sim_Prefix      =  
+  Sim_GeoRes      =  30min
+  Sim_Syear       =  2001
+  Sim_Eyear       =  2010
+
+  Obs_source      =  FLUXCOM
+  Obs_Dir         =  /tera03/zhwei/Validation_Data/geo_obs/Sensible_Heat/FLUXCOM
+  Obs_TimRes      =  Month          # Day or Month or Year
+  Obs_GeoRes      =  30min          # 0 min means "fldmean"
+  Obs_DataGroupby =  Single
+  Obs_Suffix      =  sh
+  Obs_Prefix      =  
+  Obs_Syear       =  1980
+  Obs_Eyear       =  2014
+
+  figplot         =  True
+  sh              =  f_fsena 
 /
 ###################################################################################
 

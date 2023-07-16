@@ -62,8 +62,8 @@ MODULE MOD_Initialize
       use MOD_DataType
       use MOD_NetCDFSerial
       use MOD_NetCDFBlock
-#ifdef CoLMDEBUG
-      use MOD_CoLMDebug
+#ifdef RangeCheck
+      use MOD_RangeCheck
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
       USE MOD_Hydro_SoilFunction
@@ -74,14 +74,11 @@ MODULE MOD_Initialize
       USE MOD_LandHRU
       USE MOD_LandPatch
 #endif
+#ifdef CROP
       USE MOD_CropReadin
+#endif
       USE MOD_LAIEmpirical
       USE MOD_LAIReadin
-#ifdef BGC
-      USE MOD_NitrifReadin
-      USE MOD_NdepReadin
-      USE MOD_FireReadin
-#endif
       USE MOD_OrbCoszen
       use MOD_DBedrockReadin
       USE MOD_HtopReadin
@@ -390,7 +387,7 @@ MODULE MOD_Initialize
       ! 1.6 Write out as a restart file [histTimeConst]
       ! ...............................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeInvariants ()
 #endif
 
@@ -580,19 +577,13 @@ MODULE MOD_Initialize
          Julian_8day = int(calendarday(idate)-1)/8*8 + 1
          CALL LAI_readin (year, Julian_8day, dir_landdata)
       ENDIF
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       CALL check_vector_data ('LAI ', tlai)
       CALL check_vector_data ('SAI ', tsai)
 #endif
 
-#ifdef BGC
-         CALL NDEP_readin(year, dir_landdata, .true., .false.)
-         if(DEF_USE_NITRIF)then
-            CALL NITRIF_readin (month, dir_landdata)
-         end if
-
 #ifdef CROP
-         CALL CROP_readin (dir_landdata)
+         CALL CROP_readin ()
          if (p_is_worker) then
             do i = 1, numpatch
                if(patchtype(i) .eq.  0)then
@@ -611,10 +602,6 @@ MODULE MOD_Initialize
                   end do
                end if
             end do
-         end if
-#endif
-         if(DEF_USE_FIRE)then
-            CALL Fire_readin (year,dir_landdata)
          end if
 #endif
 #endif
@@ -828,7 +815,7 @@ MODULE MOD_Initialize
       ! 2.6 Write out the model variables for restart run [histTimeVar]
       ! ...............................................................
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
       call check_TimeVariables ()
 #endif
 
