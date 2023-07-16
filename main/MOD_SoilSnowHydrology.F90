@@ -168,7 +168,7 @@ MODULE MOD_SoilSnowHydrology
       if (lb>=1)then
          gwat = pg_rain + sm - qseva
       else
-         IF (.not. DEF_USE_SNICAR) THEN
+         IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
             call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
@@ -277,6 +277,7 @@ MODULE MOD_SoilSnowHydrology
 
       ! total runoff (mm/s)
       rnof = rsubst + rsur
+
 
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
@@ -528,7 +529,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          gwat = pg_rain + sm + qsdew
       else
 
-         IF (.not. DEF_USE_SNICAR) THEN
+         IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
             call snowwater (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),gwat)
