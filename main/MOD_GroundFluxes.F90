@@ -219,6 +219,9 @@ MODULE MOD_GroundFluxes
            raiw   = rhoair/raw !dew case. no soil resistance
         ELSE
            raiw   = rhoair/(raw+rss)
+#ifdef soilbeta                
+           raiw   = rss*rhoair/raw
+#endif
         END IF   
         cgrnds = raih
         cgrndl = raiw*dqgdT

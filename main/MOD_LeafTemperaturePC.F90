@@ -1110,6 +1110,9 @@ MODULE MOD_LeafTemperaturePC
                       cgw(i) = 1. / rd(i) !dew case. no soil resistance
                    ELSE
                       cgw(i) = 1. / (rd(i) + rss)
+#if defsoilbeta
+                      cgw(i) = rss/ rd(i)
+#endif
                    ENDIF
                 ELSE
                 cgw(i) = 1. / rd(i)
@@ -1487,7 +1490,9 @@ MODULE MOD_LeafTemperaturePC
           ! different rd(layer) values.
           gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
           gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm              !mol m-2 s-1
-
+#if defsoilbeta
+          gdh2o = rss/rd(botlay) * tprcor/thm              !mol m-2 s-1
+#endif
           pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
                   sum(fcover*(assimsun + assimsha - respcsun - respcsha - rsoil))
 

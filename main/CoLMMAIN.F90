@@ -381,7 +381,7 @@ SUBROUTINE CoLMMAIN ( &
         gssun_out   ,&! sunlit stomata conductance
         gssha_out   ,&! shaded stomata conductance
         wat         ,&! total water storage
-        rss         ,&! soil surface resistance [m/s]
+        rss         ,&! soil surface resistance [s/m]
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 

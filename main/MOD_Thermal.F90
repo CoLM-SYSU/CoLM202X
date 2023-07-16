@@ -487,7 +487,7 @@ USE MOD_SPMD_Task
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
 !=======================================================================
-      rss  = 1.e-4
+      rss  = 0.
       qred = 1.
 
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
@@ -522,9 +522,10 @@ USE MOD_SPMD_Task
       ENDIF
 
       CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                  dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
-
-      !write(*,*) rss
+                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+      ! If the beta scheme is used, the rss is not soil resistance 
+      ! but soil wetness relative to field capacity [0-1]
+      write(*,*) rss
 
 
 !=======================================================================

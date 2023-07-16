@@ -770,7 +770,7 @@ contains
          ! soil resistance [m/s]
          call flux_map_and_write_2d ( DEF_hist_vars%rss, &
              a_rss, f_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
-             'soil surface resistance','m/s')
+             'soil surface resistance','s/m')
 
 #ifdef BGC
          ! leaf carbon display pool

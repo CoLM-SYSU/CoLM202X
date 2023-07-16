@@ -659,6 +659,10 @@ CONTAINS
             cgw = 1. / rd !dew case. no soil resistance   
          ELSE 
             cgw = 1. / (rd + rss)
+#ifdef soilbeta
+            cgw = rss / rd           
+#endif
+
          ENDIF   
          cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
             ( laisun/(rb+rssun) + laisha/(rb+rssha) )
@@ -787,7 +791,10 @@ CONTAINS
 
 ! update co2 partial pressure within canopy air
          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-         gdh2o = 1.0/(rd+rss)  * tprcor/thm                     !mol m-2 s-1
+         gdh2o = 1.0/(rd+rss)  * tprcor/thm               !mol m-2 s-1
+#ifdef soilbeta
+         gdh2o = rss/rd  * tprcor/thm                     !mol m-2 s-1
+#endif 
          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
             (assimsun + assimsha  - respcsun -respcsha - rsoil)
 
