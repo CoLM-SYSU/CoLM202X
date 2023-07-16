@@ -238,7 +238,7 @@ CONTAINS
                ENDIF
             ENDIF
 
-            wfmt = "('Check block data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
 
          ENDIF
@@ -335,7 +335,7 @@ CONTAINS
                ENDIF
             ENDIF
 
-            wfmt = "('Check block data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
 
          ENDIF
@@ -435,7 +435,7 @@ CONTAINS
                ENDIF
             ENDIF
 
-            wfmt = "('Check block data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
 
          ENDIF
@@ -537,7 +537,7 @@ CONTAINS
                ENDIF
             ENDIF
 
-            wfmt = "('Check block data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
+            wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, info
 
          ENDIF
