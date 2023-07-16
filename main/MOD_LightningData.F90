@@ -26,12 +26,12 @@ MODULE MOD_LightningData
 CONTAINS
 
    ! ----------
-   SUBROUTINE init_lightning_data (time, idate)
+   SUBROUTINE init_lightning_data (idate)
 
    !----------------------
    ! DESCTIPTION:
-   ! open ozone netcdf file from DEF_dir_rawdata, read latitude and longitude info.
-   ! Initialize Ozone data read in.
+   ! open lightning netcdf file from DEF_dir_rawdata, read latitude and longitude info.
+   ! Initialize lightning data read in.
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -43,14 +43,13 @@ CONTAINS
       USE MOD_RangeCheck
       IMPLICIT NONE
 
-      type(timestamp), intent(in) :: time
-      integer,         intent(in) :: idate(3)
+      integer, intent(in) :: idate(3)
 
       ! Local Variables
       REAL(r8), allocatable :: lat(:), lon(:)
       INTEGER :: itime
 
-      file_lightning = trim(DEF_dir_rawdata) // '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
+      file_lightning = trim(DEF_dir_runtime) // '/fire/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc'
 
       CALL ncio_read_bcast_serial (file_lightning, 'lat', lat)
       CALL ncio_read_bcast_serial (file_lightning, 'lon', lon)
@@ -76,7 +75,7 @@ CONTAINS
 
    !----------------------
    ! DESCTIPTION:
-   ! read ozone data during simulation
+   ! read lightning data during simulation
 
       USE MOD_TimeManager
       USE MOD_NetCDFBlock

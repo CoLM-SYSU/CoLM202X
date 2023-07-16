@@ -159,8 +159,8 @@ CONTAINS
                     + forc_soll*ssun(2,1) + forc_solld*ssun(2,2)
             sabvsha = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2) &
                     + forc_soll*ssha(2,1) + forc_solld*ssha(2,2)
-            sabvg   = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
-                    + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
+            sabvg   = forc_sols *(1.-alb(1,1)) + forc_solsd*(1.-alb(1,2)) &
+                    + forc_soll *(1.-alb(2,1)) + forc_solld*(1.-alb(2,2))
             sabg    = sabvg - sabvsun - sabvsha
 
             IF (patchtype == 0) THEN
@@ -192,11 +192,20 @@ CONTAINS
          ENDIF
 
          IF (DEF_USE_SNICAR) THEN
-            ! normalization
-            IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)-ssun(1,1)-ssha(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
-            IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)-ssun(1,2)-ssha(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))
-            IF(sum(ssno(2,1,:))>0.) ssno(2,1,:) = (1-alb(2,1)-ssun(2,1)-ssha(2,1)) * ssno(2,1,:)/sum(ssno(2,1,:))
-            IF(sum(ssno(2,2,:))>0.) ssno(2,2,:) = (1-alb(2,2)-ssun(2,2)-ssha(2,2)) * ssno(2,2,:)/sum(ssno(2,2,:))
+
+            IF (patchtype < 4) THEN        !non lake and ocean
+               ! normalization
+               IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)-ssun(1,1)-ssha(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
+               IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)-ssun(1,2)-ssha(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))
+               IF(sum(ssno(2,1,:))>0.) ssno(2,1,:) = (1-alb(2,1)-ssun(2,1)-ssha(2,1)) * ssno(2,1,:)/sum(ssno(2,1,:))
+               IF(sum(ssno(2,2,:))>0.) ssno(2,2,:) = (1-alb(2,2)-ssun(2,2)-ssha(2,2)) * ssno(2,2,:)/sum(ssno(2,2,:))
+            ELSE                           !lake case
+               ! normalization
+               IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
+               IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))
+               IF(sum(ssno(2,1,:))>0.) ssno(2,1,:) = (1-alb(2,1)) * ssno(2,1,:)/sum(ssno(2,1,:))
+               IF(sum(ssno(2,2,:))>0.) ssno(2,2,:) = (1-alb(2,2)) * ssno(2,2,:)/sum(ssno(2,2,:))
+            ENDIF
 
             ! snow layer absorption
             sabg_lyr(:) = forc_sols*ssno(1,1,:) + forc_solsd*ssno(1,2,:) &

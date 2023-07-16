@@ -255,12 +255,15 @@ contains
          !NOTE: this bug should exist in other interception schemes @Zhongwang.
          IF (ldew > 0.) THEN
             IF (tleaf > tfrz) THEN
-               pg_rain = prc_rain + prl_rain + ldew
+               pg_rain = prc_rain + prl_rain + ldew/deltim
                pg_snow = prc_snow + prl_snow
             ELSE
                pg_rain = prc_rain + prl_rain
-               pg_snow = prc_snow + prl_snow + ldew
+               pg_snow = prc_snow + prl_snow + ldew/deltim
             ENDIF
+         ELSE
+            pg_rain = prc_rain + prl_rain
+            pg_snow = prc_snow + prl_snow
          ENDIF
 
          ldew  = 0.
