@@ -24,7 +24,8 @@
    
    DEF_simulation_time%spinup_repeat = 2
    
-   DEF_dir_rawdata  = '/tera07/CLMrawdata/'
+   DEF_dir_rawdata  = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime  = '/tera07/CoLMruntime/'
    DEF_dir_output   = '/tera05/zhangsp/cases'
    
    ! for GRIDBASED
@@ -36,6 +37,7 @@
 
    ! LAI setting
    DEF_LAI_MONTHLY = .true.
+   DEF_LAI_CHANGE_YEARLY = .false.
    
    ! Model settings
    DEF_LANDONLY = .true.

@@ -563,7 +563,7 @@ CONTAINS
       fsno   = 0.
       ldew_rain  = 0.
       ldew_snow  = 0.
-      ldew  = 0.
+      ldew   = 0.
       scv    = 0.
       sag    = 0.
       snowdp = 0.
