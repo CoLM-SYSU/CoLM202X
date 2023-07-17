@@ -507,7 +507,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      INTEGER , allocatable, dimension(:) :: locpxl
      INTEGER i, j, np, np_, ip, ip_, pc, pc_, u, u_
      INTEGER ps, ps_, pe, pe_
-     INTEGER numpxl, ipxl
+     INTEGER numpxl, ipxl, ipft
 
      IF (p_is_worker) THEN
         ! allocate with numelm
@@ -597,9 +597,13 @@ MODULE MOD_LuLcc_Vars_TimeVariables
                     fveg          (np) = fveg_          (np_)
                     fsno          (np) = fsno_          (np_)
                     sigf          (np) = sigf_          (np_)
+                    IF (lai(np)+sai(np)>1e-6) THEN
+                       sigf(np) = 1-fsno(np)
+                    ENDIF
                     green         (np) = green_         (np_)
-                    lai           (np) = lai_           (np_)
-                    sai           (np) = sai_           (np_)
+                    ! Note: may not read lai and sai since LAIReadin was put after LULCC
+                    ! lai           (np) = lai_           (np_)
+                    ! sai           (np) = sai_           (np_)
                     coszen        (np) = coszen_        (np_)
                     alb       (:,:,np) = alb_       (:,:,np_)
                     ssun      (:,:,np) = ssun_      (:,:,np_)
@@ -670,12 +674,19 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     tleaf_c    (:,pc) = tleaf_c_    (:,pc_)
                     ldew_c     (:,pc) = ldew_c_     (:,pc_)
                     sigf_c     (:,pc) = sigf_c_     (:,pc_)
-                    lai_c      (:,pc) = lai_c_      (:,pc_)
-                    sai_c      (:,pc) = sai_c_      (:,pc_)
+                    DO ipft = 0,N_PFT-1
+                        IF (lai_c(ipft,pc)+sai_c(ipft,pc)>1e-6) THEN
+                            sigf_c(ipft,pc) = 1
+                        ENDIF
+                    ENDDO
+                    ! Note: may not read lai and sai since LAIReadin was put after LULCC
+                    ! lai_c      (:,pc) = lai_c_      (:,pc_)
+                    ! sai_c      (:,pc) = sai_c_      (:,pc_)
                     ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc_)
                     ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc_)
                     thermk_c   (:,pc) = thermk_c_   (:,pc_)
-                    fshade_c   (:,pc) = fshade_c_   (:,pc_)
+                    ! Note: should use initialize value because pcfrac(:,pc) change next year
+                    ! fshade_c   (:,pc) = fshade_c_   (:,pc_)
                     extkb_c    (:,pc) = extkb_c_    (:,pc_)
                     extkd_c    (:,pc) = extkd_c_    (:,pc_)
 ENDIF

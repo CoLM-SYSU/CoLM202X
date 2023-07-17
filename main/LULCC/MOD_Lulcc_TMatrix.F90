@@ -60,7 +60,7 @@ MODULE MOD_Lulcc_TMatrix
       USE MOD_5x5DataReadin
       USE MOD_Namelist, only : DEF_dir_rawdata
 #ifdef CoLMDEBUG
-      USE MOD_CoLMDebug
+      USE MOD_RangeCheck
 #endif
       USE MOD_AggregationRequestData
       USE MOD_Utils
@@ -114,8 +114,6 @@ MODULE MOD_Lulcc_TMatrix
 
       IF (p_is_worker) THEN
    
-#ifdef LULC_IGBP
-
          DO ipatch = 1, numpatch
 
             CALL aggregation_request_data (landpatch, ipatch, gpatch, area = area_one, &
@@ -137,7 +135,6 @@ MODULE MOD_Lulcc_TMatrix
             ENDDO
 
          ENDDO
-#endif
 
 
 #ifdef USEMPI
@@ -150,6 +147,10 @@ MODULE MOD_Lulcc_TMatrix
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
+#endif
+
+#ifdef CoLMDEBUG
+   CALL check_vector_data ('lccpct_patches ', lccpct_patches)
 #endif
 
    END SUBROUTINE READ_LulccTMatrix

@@ -168,7 +168,8 @@ MODULE MOD_Albedo
  INTEGER         &!
       iw,        &! wavelength (1=visible, 2=near-infrared)
       id,        &! 1=direct, 2=diffuse
-      k           ! looping indx
+      k,         &! looping indx
+      ipft
 
  REAL(r8)        &!
       age,       &! factor to reduce visible snow alb due to snow age [-]
@@ -243,7 +244,7 @@ MODULE MOD_Albedo
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk    = 1.e-3
       IF (lai+sai<1e-6) THEN
-	 thermk = 0.
+         thermk = 0.
       ENDIF
       extkb     = 1.
       extkd     = 0.718
@@ -264,6 +265,14 @@ IF (patchtype == 0) THEN
       ssha_p(:,:,ps:pe) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_p(ps:pe)   = 1.e-3
+      IF (lai+sai<1e-6) THEN
+         thermk_p(ps:pe) = 0.
+         thermk = 0.
+      ENDIF
+
+      IF (lai+sai>1e-6) THEN
+         thermk = 1e-3
+      ENDIF
       extkb_p(ps:pe)    = 1.
       extkd_p(ps:pe)    = 0.718
 #endif
@@ -274,6 +283,11 @@ IF (patchtype == 0) THEN
       ssha_c(:,:,:,pc) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_c(:,pc)   = 1.e-3
+      DO ipft = 0, N_PFT-1
+         IF ( (lai_c(ipft,pc) + sai_c(ipft,pc))<1e-6 ) THEN
+            thermk_c(ipft,pc) = 0.
+         ENDIF
+      ENDDO
       !fshade_c(:,pc)   = pcfrac(:,pc)
       !fshade_c(0,pc)   = 0.
       extkb_c(:,pc)    = 1.
