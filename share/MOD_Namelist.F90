@@ -84,10 +84,7 @@ MODULE MOD_Namelist
    REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
    REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
-#ifdef CATCHMENT
-   LOGICAL :: Catchment_data_in_ONE_file = .false.
-   CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/catchment/data'
-#endif
+   CHARACTER(len=256) :: DEF_CatchmentMesh_data = 'path/to/catchment/data'
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
 
@@ -651,8 +648,7 @@ CONTAINS
          DEF_GRIDBASED_lon_res,           &
          DEF_GRIDBASED_lat_res,           &
 #ifdef CATCHMENT
-         Catchment_data_in_ONE_file,      &
-         DEF_path_Catchment_data,         &
+         DEF_CatchmentMesh_data,          &
 #endif
          DEF_file_mesh_filter,            &
 
@@ -993,8 +989,7 @@ CONTAINS
 #endif
 
 #ifdef CATCHMENT
-      call mpi_bcast (Catchment_data_in_ONE_file, 1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_path_Catchment_data,   256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_CatchmentMesh_data, 256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)

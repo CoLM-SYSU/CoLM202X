@@ -1,15 +1,15 @@
 ! 1. Spatial structure:
 !    Select one of the following options.
-#define GRIDBASED
-#undef CATCHMENT
+#undef GRIDBASED
+#define CATCHMENT
 #undef UNSTRUCTURED
 #undef SinglePoint
 
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef LULC_USGS
-#undef LULC_IGBP
-#define LULC_IGBP_PFT
+#define LULC_IGBP
+#undef LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
@@ -35,7 +35,7 @@
 #define  Campbell_SOIL_MODEL
 #undef   vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
-#undef  LATERAL_FLOW
+#define LATERAL_FLOW
 !    Conflicts :
 #ifndef CATCHMENT
 #undef LATERAL_FLOW

@@ -122,19 +122,21 @@ CONTAINS
 
       if (p_is_worker) then
 
-         ! a temporary numpatch with max urban patch
-         numpatch_ = numpatch + count(landpatch%settyp == URBAN) * (N_URB-1)
+         IF (numpatch > 0) THEN
+            ! a temporary numpatch with max urban patch
+            numpatch_ = numpatch + count(landpatch%settyp == URBAN) * (N_URB-1)
 
-         allocate (eindex_(numpatch_))
-         allocate (ipxstt_(numpatch_))
-         allocate (ipxend_(numpatch_))
-         allocate (settyp_(numpatch_))
-         allocate (ielm_  (numpatch_))
+            allocate (eindex_(numpatch_))
+            allocate (ipxstt_(numpatch_))
+            allocate (ipxend_(numpatch_))
+            allocate (settyp_(numpatch_))
+            allocate (ielm_  (numpatch_))
 
-         ! max urban patch number
-         numurban_ = count(landpatch%settyp == URBAN) * N_URB
-         IF (numurban_ > 0) THEN
-            allocate (urbclass(numurban_))
+            ! max urban patch number
+            numurban_ = count(landpatch%settyp == URBAN) * N_URB
+            IF (numurban_ > 0) THEN
+               allocate (urbclass(numurban_))
+            ENDIF
          ENDIF
 
          jpatch = 0
@@ -225,26 +227,28 @@ CONTAINS
 
          numpatch = jpatch
 
-         ! update landpath with new patch number
-         ! all urban type patch are included
-         IF (allocated (landpatch%eindex)) deallocate (landpatch%eindex)
-         IF (allocated (landpatch%ipxstt)) deallocate (landpatch%ipxstt)
-         IF (allocated (landpatch%ipxend)) deallocate (landpatch%ipxend)
-         IF (allocated (landpatch%settyp)) deallocate (landpatch%settyp)
-         IF (allocated (landpatch%ielm  )) deallocate (landpatch%ielm  )
+         IF (numpatch > 0) THEN
+            ! update landpath with new patch number
+            ! all urban type patch are included
+            IF (allocated (landpatch%eindex)) deallocate (landpatch%eindex)
+            IF (allocated (landpatch%ipxstt)) deallocate (landpatch%ipxstt)
+            IF (allocated (landpatch%ipxend)) deallocate (landpatch%ipxend)
+            IF (allocated (landpatch%settyp)) deallocate (landpatch%settyp)
+            IF (allocated (landpatch%ielm  )) deallocate (landpatch%ielm  )
 
-         allocate (landpatch%eindex (numpatch))
-         allocate (landpatch%ipxstt (numpatch))
-         allocate (landpatch%ipxend (numpatch))
-         allocate (landpatch%settyp (numpatch))
-         allocate (landpatch%ielm   (numpatch))
+            allocate (landpatch%eindex (numpatch))
+            allocate (landpatch%ipxstt (numpatch))
+            allocate (landpatch%ipxend (numpatch))
+            allocate (landpatch%settyp (numpatch))
+            allocate (landpatch%ielm   (numpatch))
 
-         ! update all information of landpatch
-         landpatch%eindex = eindex_(1:jpatch)
-         landpatch%ipxstt = ipxstt_(1:jpatch)
-         landpatch%ipxend = ipxend_(1:jpatch)
-         landpatch%settyp = settyp_(1:jpatch)
-         landpatch%ielm   = ielm_  (1:jpatch)
+            ! update all information of landpatch
+            landpatch%eindex = eindex_(1:jpatch)
+            landpatch%ipxstt = ipxstt_(1:jpatch)
+            landpatch%ipxend = ipxend_(1:jpatch)
+            landpatch%settyp = settyp_(1:jpatch)
+            landpatch%ielm   = ielm_  (1:jpatch)
+         ENDIF
 
          ! update urban patch number
          IF (numpatch > 0) THEN
