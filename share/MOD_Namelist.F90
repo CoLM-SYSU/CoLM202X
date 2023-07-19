@@ -946,7 +946,7 @@ CONTAINS
 #if (defined LULC_IGBP_PC || defined URBAN)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
-         write(*,*) 'It will coming soon. '
+         write(*,*) 'It is coming soon. '
          STOP
 #endif
 

@@ -815,13 +815,13 @@ IF (patchtype == 0) THEN
             vegwp(j) = sum( vegwp_p(j,ps:pe)*pftfrac(ps:pe) )
          ENDDO
 
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
             ENDDO
          ENDIF
       ELSE
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
             ENDDO
@@ -1014,14 +1014,14 @@ IF (patchtype == 0) THEN
          ENDDO
 
       ! loop for each soil layer
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
             ENDDO
          ENDIF
       ELSE
       ! loop for each soil layer
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
             ENDDO
