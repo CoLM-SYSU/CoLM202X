@@ -19,12 +19,12 @@ MODULE MOD_SoilSurfaceResistance
 
    !TODO@Zhuo: need complement below
    ! soil-gas diffusivity schemes:
-   ! 1: BBC (Buckingham-Burdine-Campbell), Moldrup et al., 1999.
-   ! 2: P_WLR ...
-   ! 3: MI_WLR
-   ! 4: MA_WLR
-   ! 5: M_Q
-   ! 6: POE
+   ! 1: BBC (Buckingham-Burdine-Campbell Model), Moldrup et al., 1999.
+   ! 2: P_WLR (Penman Water Linear Reduction Model), Moldrup et al., 2000
+   ! 3: MI_WLR (Millington Water Linear Reduction Model), Moldrup et al., 2000
+   ! 4: MA_WLR (Marshal Water Linear Reduction Model), Moldrup et al., 2000
+   ! 5: M_Q, Millington and Quirk, 1961
+   ! 6: 3POE (Three-Porosity-Encased), Moldrup et al., 2005
    integer, parameter :: soil_gas_diffusivity_scheme = 1
 
 
@@ -56,43 +56,44 @@ CONTAINS
    real(r8), intent(in) :: &
         porsl           (1:nl_soil), &! soil porosity [-]
         bsw             (1:nl_soil), &! Clapp-Hornberger "B"
-        psi0            (1:nl_soil), &! saturated soil suction (mm) (NEGATIVE)
-        dz_soisno       (1:nl_soil), &! layer thickness (m)
-        t_soisno        (1:nl_soil), &! soil/snow skin temperature (K)
-        wliq_soisno     (1:nl_soil), &! liquid water (kg/m2)
+        psi0            (1:nl_soil), &! saturated soil suction [mm] (NEGATIVE)
+        dz_soisno       (1:nl_soil), &! layer thickness [m]
+        t_soisno        (1:nl_soil), &! soil/snow skin temperature [K]
+        wliq_soisno     (1:nl_soil), &! liquid water [kg/m2]
         wice_soisno     (1:nl_soil), &! ice lens [kg/m2]
-        hksati          (1:nl_soil), &! hydraulic conductivity at saturation (mm h2o/s)
-        wfc             (1:nl_soil), &! fc
-        qg,                          &! ground specific humidity [kg/kg]
-        fsno,                        &! snow cover
+        hksati          (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s] 
+        wfc             (1:nl_soil), &! field capacity
+        qg,                          &! ground specific humidity [kg/kg]      
+        fsno,                        &! snow cover 
         forc_rhoair                   ! density air [kg/m**3]
    real(r8), intent(out) :: &
-        rss                           ! soil surface resistance(m/s)
+        rss                           ! soil surface resistance [s/m]
 
 !-----------------------Local Variables------------------------------
 
    REAL(r8) :: &
-        wx,               & ! soil wetness
-        vol_liq,          & ! vol_liq
-        smp_node,         & ! matrix potential
+        wx,               & ! patitial volume of ice and water of surface layer   
+        vol_liq,          & ! water content by volume [m3/m3]
+        smp_node,         & ! matrix potential [m]
         eff_porosity,     & ! effective porosity = porosity - vol_ice
-        aird,             & ! air free pore space
-        d0,               & ! molecular diffusivity of water vapor in air (m2/s)
+        aird,             & ! “air-dry” soil moisture value 
+        d0,               & ! water vapor diffusivity in open air [m2/s]
         eps,              & ! air filled pore space
-        dg,               & ! d0*(tortuosity of the vapor flow paths through the soil matrix)
-        dsl,              & ! soil dry surface layer thickness
-        dw,               & ! aqueous diffusivity (m2/s)
-        hk,               & ! hydraulic conductivity
+        dg,               & ! gaseous diffusivity [m2/s]
+        dsl,              & ! soil dry surface layer thickness [m]
+        dw,               & ! aqueous diffusivity [m2/s]
+        hk,               & ! hydraulic conductivity [m h2o/s]
+        rg_1,             & ! inverse of vapor diffusion resistance [m/s]
+        rw_1,             & ! inverse of volatilization resistance [m/s]
+        rss_1,            & ! inverse of soil surface resistance [m/s]
+        tao,              & ! tortuosity of the vapor flow paths through the soil matrix
+        eps100,           & ! air-filled porosity (cm3 soil-air cm−3 soil) at −1000 mm of water matric potential
+        fac,              & ! temporal variable for calculating wx/porsl 
+        fac_fc,           & ! temporal variable for calculating wx/wfc
+        B                   ! bunsen solubility coefficient
+       
         !TODO@Zhuo Liu:  need descriptions for vars.
         ! if it is a temporal varialbe, add descriptions like 'temporal variable for calculating ***'
-        d1,               & !
-        beta,             & !
-        tao,              & !
-        eps100,           & !
-        fac,              & !
-        fac_fc,           & !
-        B                   ! liquid water density / water vapor density
-
 !-----------------------End Variables list---------------------------
 
 
@@ -106,7 +107,7 @@ CONTAINS
 
    !calculate diffusivity (dg, dw) and air free pore space
    aird = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
-   d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75 ![Bitelli et al., JH, 08]
+   d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75
    eps  = porsl(1) - aird
 
 
@@ -132,7 +133,7 @@ CONTAINS
    case (5)
       tao = eps**(4._r8/3._r8)*(eps/porsl(1))**(2.0_r8)
 
-   ! 6: POE
+   ! 6: 3POE
    case (6)
       eps100 = porsl(1) - porsl(1)*(psi0(1)/-1000.)**(1./bsw(1))
       tao    = porsl(1)*porsl(1)*(eps/porsl(1))**(2.+log(eps100**0.25_r8)/log(eps100/porsl(1)))
@@ -145,16 +146,15 @@ CONTAINS
 
    select case (DEF_RSS_SCHEME)
 
-   ! calculate dsl by SL14
+   ! calculate rss by SL14
    case (1)
       dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*eff_porosity - vol_liq)) &
                         /max(1.e-6_r8,(0.8*porsl(1)- aird)) ! SL14
 
       dsl = max(dsl,0._r8)
       dsl = min(dsl,0.2_r8)
-      rss = dsl/dg + 20._r8
 
-   ! calculate dsl by SZ09
+   ! calculate rss by SZ09   
    case (2)
       dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/eff_porosity)**5) - 1._r8)/ (exp(1._r8) - 1._r8)
       dsl = min(dsl,0.2_r8)
@@ -162,16 +162,15 @@ CONTAINS
 
       rss = dsl/dg
 
-   ! calculate dsl by TR13
+   ! calculate rss by TR13
    case (3)
-      B   = denh2o/(qg*forc_rhoair)                       ! Eq.(12)
-      d1  = (B*vol_liq*dw +eps*dg)/(B*vol_liq+eps)        ! Eq.(9)
-      dsl = dz_soisno(1)*(1._r8/(2._r8*(B*vol_liq+eps)))  ! Eq.(10)
-      dsl = min(dsl,0.2_r8)
-      dsl = max(dsl,0._r8)
-      rss = dsl/d1
-
-   ! beta scheme
+      B           = denh2o/(qg*forc_rhoair)                       ! Eq.(12)
+      rg_1        = 2.0_r8*dg*eps/dz_soisno(1)
+      rw_1        = 2.0_r8*dw*B*vol_liq/dz_soisno(1)
+      rss_1       = rg_1 +rw_1
+      rss         = 1.0/rss_1
+     
+   ! LP92 beta scheme
    case (4)
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
@@ -182,14 +181,14 @@ CONTAINS
          fac_fc = min(1._r8, wx/wfc(1))
          fac_fc = max(fac_fc,0.001_r8)
          ! modify soil beta by snow cover. soilbeta for snow surface is one
-         beta = (1._r8-fsno) &
+         rss  = (1._r8-fsno) &
                               *0.25_r8*(1._r8 - cos(fac_fc*3.1415926))**2._r8
       ELSE   ! when water content of ths top layer is more than that at F.C.
-         beta = 1._r8
+         rss  = 1._r8
       ENDIF
 
       ! raw = 50m/s NOTE: raw = 50m/s
-      rss = 50._r8 * (1._r8/beta - 1._r8)
+      ! rss = 50._r8 * (1._r8/beta - 1._r8)
 
    ! Sellers 1992
    case (5)
