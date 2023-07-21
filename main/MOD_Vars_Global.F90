@@ -41,11 +41,8 @@ MODULE MOD_Vars_Global
    integer, parameter :: N_CFT     = 64
 #endif
 
-#ifdef URBAN_LCZ
-   integer, parameter :: N_URB     = 10
-#else
-   integer, parameter :: N_URB     = 3
-#endif
+   integer, parameter :: LCZ_URB   = 10
+   integer, parameter :: NCAR_URB  =  3
 
    ! vertical layer number
    integer, parameter :: maxsnl    = -5
