@@ -151,14 +151,13 @@ MODULE MOD_Namelist
    ! 2: Read a global soil color map from CLM
    INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
-   !TODO@Zhuo: need complement
    ! Options for soil surface resistance schemes
    ! 0: NONE soil surface resistance
    ! 1: SL14, Swenson and Lawrence (2014)
    ! 2: SZ09, Sakaguchi and Zeng (2009)
    ! 3: TR13, Tang and Riley (2013)
    ! 4: LP92, Lee and Pielke (1992)
-   ! 5: Sellers, Sellers et al (1992)
+   ! 5: S92,  Sellers et al (1992)
    INTEGER :: DEF_RSS_SCHEME = 1
 
    ! ----- Model settings -----

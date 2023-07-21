@@ -128,8 +128,8 @@ MODULE MOD_Thermal
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
 #endif
-USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+  USE MOD_SPMD_Task
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_RSS_SCHEME
 
   IMPLICIT NONE
 
@@ -521,11 +521,13 @@ USE MOD_SPMD_Task
         qg = forc_q; dqgdT = 0.
       ENDIF
 
-      CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
-      ! If the beta scheme is used, the rss is not soil resistance 
-      ! but soil wetness relative to field capacity [0-1]
-      write(*,*) rss
+      IF (DEF_RSS_SCHEME > 0) THEN
+         !NOTE: If the beta scheme is used, the rss is not soil resistance
+         ! but soil wetness relative to field capacity [0-1]
+         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
+                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+         write(*,*) rss
+      ENDIF
 
 
 !=======================================================================
