@@ -684,7 +684,7 @@ MODULE MOD_Lake
 !*[2] pre-processing for the calcilation of the surface temperature and fluxes
 ! ======================================================================
 
-      IF (.not. DEF_USE_SNICAR .or. urban_call) THEN
+      IF (.not. DEF_USE_SNICAR .or. present(urban_call)) THEN
          if (snl == 0) then
             ! calculate the nir fraction of absorbed solar.
             betaprime = (forc_soll+forc_solld)/max(1.e-5,forc_sols+forc_soll+forc_solsd+forc_solld)
@@ -914,7 +914,7 @@ MODULE MOD_Lake
       fgrnd1 = betaprime*sabg + forc_frl - olrg - fseng - htvp*fevpg
 
       ! January 12, 2023 by Yongjiu Dai
-      IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+      IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
          hs = sabg_lyr(lb) + forc_frl - olrg - fseng - htvp*fevpg
          dhsdT = 0.0
       ENDIF
@@ -1018,7 +1018,7 @@ MODULE MOD_Lake
 
       ! Set up solar source terms (phix)
       ! Modified January 12, 2023 by Yongjiu Dai
-      IF (.not. DEF_USE_SNICAR .or. urban_call) THEN
+      IF (.not. DEF_USE_SNICAR .or. present(urban_call)) THEN
          if ((t_grnd > tfrz .and. t_lake(1) > tfrz .and. snl == 0)) then      !no snow cover, unfrozen layer lakes
             do j = 1, nl_lake
                ! extinction coefficient from surface data (1/m), if no eta from surface data,
@@ -1145,7 +1145,7 @@ MODULE MOD_Lake
          end if
       end do
 
-      IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+      IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
          if (lb <= 0) then                        ! snow covered
             do j = lb, 1
                if (j == lb) then                  ! top snow layer
@@ -1313,7 +1313,7 @@ MODULE MOD_Lake
       imelt_soisno(:) = 0
       imelt_lake(:) = 0
 
-      IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+      IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
          wice_soisno_bef(lb:0) = wice_soisno(lb:0)
       ENDIF
 
@@ -1388,7 +1388,7 @@ MODULE MOD_Lake
       end do
       !------------------------------------------------------------
 
-      IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+      IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
          !for SNICAR: layer freezing mass flux (positive):
          DO j = lb, 0
             IF (imelt_soisno(j)==2 .and. j<1) THEN
@@ -1533,23 +1533,23 @@ MODULE MOD_Lake
   subroutine snowwater_lake ( &
              ! "in" arguments
              ! ---------------------------
-             maxsnl      , nl_soil   , nl_lake ,&
-             deltim      , ssi         , wimp      , porsl   ,&
-             pg_rain     , pg_snow     , dz_lake   , imelt   ,&
-             fiold       , qseva       , qsubl     , qsdew   , qfros ,&
+             maxsnl      , nl_soil     , nl_lake   , deltim       ,&
+             ssi         , wimp        , porsl     , pg_rain      ,&
+             pg_snow     , dz_lake     , imelt     , fiold        ,&
+             qseva       , qsubl       , qsdew     , qfros        ,&
 
              ! "inout" arguments
              ! ---------------------------
-             z_soisno    , dz_soisno   , zi_soisno , t_soisno ,&
+             z_soisno    , dz_soisno   , zi_soisno , t_soisno     ,&
              wice_soisno , wliq_soisno , t_lake    , lake_icefrac ,&
-             fseng       , fgrnd       , snl       , scv ,&
-             snowdp      , sm            &
+             fseng       , fgrnd       , snl       , scv          ,&
+             snowdp      , sm          ,&
 ! SNICAR model variables
-             ,forc_aer,&
-             mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, &
-             mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4,  &
+             forc_aer    ,&
+             mss_bcpho   , mss_bcphi   , mss_ocpho , mss_ocphi    ,&
+             mss_dst1    , mss_dst2    , mss_dst3  , mss_dst4     ,&
 ! END SNICAR model variables
-             urban_call)
+             urban_call  )
 
 !-----------------------------------------------------------------------------------------------
 ! Calculation of Lake Hydrology. Lake water mass is kept constant. The soil is simply maintained at
@@ -1662,7 +1662,7 @@ MODULE MOD_Lake
       ! ----------------------------------------------------------
       if (snl < 0) then
          lb = snl + 1
-         IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+         IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
             call snowwater_SNICAR (lb,deltim,ssi,wimp,&
                          pg_rain,qseva,qsdew,qsubl,qfros,&
                          dz_soisno(lb:0),wice_soisno(lb:0),wliq_soisno(lb:0),qout_snowb,    &
@@ -1683,7 +1683,7 @@ MODULE MOD_Lake
 
          ! Combine thin snow elements
          lb = maxsnl + 1
-         IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+         IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
             call snowlayerscombine_SNICAR (lb, snl,&
                                  z_soisno(lb:1),dz_soisno(lb:1),zi_soisno(lb-1:0),&
                                  wliq_soisno(lb:1),wice_soisno(lb:1), t_soisno(lb:1),scv,snowdp, &
@@ -1698,7 +1698,7 @@ MODULE MOD_Lake
 
          ! Divide thick snow elements
          if (snl < 0) then
-            IF (DEF_USE_SNICAR .and. .not. urban_call) THEN
+            IF (DEF_USE_SNICAR .and. .not. present(urban_call)) THEN
                call snowlayersdivide_SNICAR (lb,snl,z_soisno(lb:0),dz_soisno(lb:0),zi_soisno(lb-1:0),&
                                  wliq_soisno(lb:0),wice_soisno(lb:0),t_soisno(lb:0)     ,&
                                  mss_bcpho(lb:0), mss_bcphi(lb:0), mss_ocpho(lb:0), mss_ocphi(lb:0),&
