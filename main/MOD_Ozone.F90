@@ -182,7 +182,7 @@ Module MOD_Ozone
   end subroutine CalcOzoneStress
 
 
-  SUBROUTINE init_ozone_data (time, idate)
+  SUBROUTINE init_ozone_data (idate)
       
    !----------------------
    ! DESCTIPTION:
@@ -199,8 +199,7 @@ Module MOD_Ozone
      USE MOD_RangeCheck
      IMPLICIT NONE
       
-     type(timestamp), intent(in) :: time
-     integer,         intent(in) :: idate(3)
+     integer, intent(in) :: idate(3)
 
      ! Local Variables
      REAL(r8), allocatable :: lat(:), lon(:)
@@ -214,7 +213,7 @@ Module MOD_Ozone
      if(idate(1) .gt. 2021)iyear = 2021
      write(syear,"(I4.4)")  iyear
      write(smonth,"(I2.2)") month
-     file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
+     file_ozone = trim(DEF_dir_runtime) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
 
      CALL ncio_read_bcast_serial (file_ozone, 'latitude', lat)
      CALL ncio_read_bcast_serial (file_ozone, 'longitude', lon)
@@ -271,7 +270,7 @@ Module MOD_Ozone
      if(imonth_next /= imonth)then
         write(syear,"(I4.4)")  iyear
         write(smonth,"(I2.2)") month
-        file_ozone = trim(DEF_dir_rawdata) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
+        file_ozone = trim(DEF_dir_runtime) // '/Ozone/China/'//trim(syear)//trim(smonth)//'_O3_v2.nc'
      end if
 
      IF (iday_next /= iday .and. .not.(month .eq. 2 .and. iday_next .eq. 29 .and. .not.(isleapyear(iyear)))) THEN
