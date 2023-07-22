@@ -11,7 +11,8 @@
    ! surface data from SITE.
    SITE_fsrfdata = '/tera06/zhangsp/cases/SinglePoint/srfdata_DingHuShan.nc'
    ! path to surface database
-   DEF_dir_rawdata = '/tera05/zhangsp/data/CLMrawdata_igbp/'
+   DEF_dir_rawdata = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime = '/tera07/CoLMruntime/'
 
    ! true  : surface data from SITE
    ! false : surface data is retrieved from database.
@@ -49,7 +50,7 @@
    DEF_Interception_scheme = 1 ! 1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
    
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/current/run/forcing/POINT.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/TPMFD.nml'
 
    ! ----- history -----
    DEF_hist_lon_res = 1.

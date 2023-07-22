@@ -271,7 +271,8 @@ contains
          ! loop for variables
          do ivar = 1, NVAR
 
-            if (tintalgo(ivar) == 'NULL') cycle
+            if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
+            if (trim(tintalgo(ivar)) == 'NULL') cycle
 
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]

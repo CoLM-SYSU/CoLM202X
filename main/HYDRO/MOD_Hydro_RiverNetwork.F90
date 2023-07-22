@@ -13,7 +13,7 @@ MODULE MOD_Hydro_RiverNetwork
    USE MOD_Precision
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
-   
+
    ! -- river parameters --
    REAL(r8), allocatable :: riverlen  (:)
    REAL(r8), allocatable :: riverelv  (:)
@@ -89,10 +89,11 @@ CONTAINS
 
       numbasin = numelm
 
-      river_file = DEF_path_Catchment_data 
+      river_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (river_file, 'river_downstream', riverdown)
+         
+         CALL ncio_read_serial (river_file, 'basin_downstream', riverdown)
          CALL ncio_read_serial (river_file, 'river_length'   ,  riverlen )
          CALL ncio_read_serial (river_file, 'river_elevation',  riverelv )
          CALL ncio_read_serial (river_file, 'river_depth    ',  riverdpth)
@@ -209,6 +210,14 @@ CONTAINS
 #endif
 
       ENDIF 
+
+      IF (p_is_worker) THEN
+         DO ibasin = 1, numbasin
+            IF (lake_id(ibasin) > 0) THEN
+               riverlen(ibasin) = 0.
+            ENDIF
+         ENDDO
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -424,12 +433,14 @@ CONTAINS
             allocate (riverwdth (numbasin))
 
             DO ibasin = 1, numbasin
-               riverarea(ibasin) = surface_network(ibasin)%area(1)
-               riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
+               IF (lake_id(ibasin) <= 0) THEN
+                  riverarea(ibasin) = surface_network(ibasin)%area(1)
+                  riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
-               ! modify height above nearest drainage data to consider river depth
-               surface_network(ibasin)%hand(1) = &
-                  surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+                  ! modify height above nearest drainage data to consider river depth
+                  surface_network(ibasin)%hand(1) = &
+                     surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+               ENDIF
             ENDDO
 
          ENDIF
@@ -479,6 +490,8 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      IF (p_is_master) write(*,'(A)') 'Read river network information done.'
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
