@@ -32,7 +32,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
  SUBROUTINE SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
 
   !=======================================================================
   ! !DESCRIPTION:
@@ -62,7 +62,6 @@ CONTAINS
         wliq_soisno     (1:nl_soil), &! liquid water [kg/m2]
         wice_soisno     (1:nl_soil), &! ice lens [kg/m2]
         hksati          (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s] 
-        wfc             (1:nl_soil), &! field capacity
         qg,                          &! ground specific humidity [kg/kg]      
         fsno,                        &! snow cover 
         forc_rhoair                   ! density air [kg/m**3]
@@ -83,6 +82,7 @@ CONTAINS
         dsl,              & ! soil dry surface layer thickness [m]
         dw,               & ! aqueous diffusivity [m2/s]
         hk,               & ! hydraulic conductivity [m h2o/s]
+        wfc,              & ! field capacity of the first layer soil
         rg_1,             & ! inverse of vapor diffusion resistance [m/s]
         rw_1,             & ! inverse of volatilization resistance [m/s]
         rss_1,            & ! inverse of soil surface resistance [m/s]
@@ -104,13 +104,12 @@ CONTAINS
 
    !eff_porosity not calculated til SoilHydrolog
    eff_porosity = max(0.01_r8,porsl(1)-min(porsl(1), wice_soisno(1)/(dz_soisno(1)*denice)))
-
+   
    !calculate diffusivity (dg, dw) and air free pore space
    aird = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
    d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75
    eps  = porsl(1) - aird
-
-
+   
    select case (soil_gas_diffusivity_scheme)
 
    ! 1: BBC
@@ -153,6 +152,8 @@ CONTAINS
 
       dsl = max(dsl,0._r8)
       dsl = min(dsl,0.2_r8)
+      
+      rss = dsl/dg
 
    ! calculate rss by SZ09   
    case (2)
@@ -175,10 +176,10 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-
+      wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
       !! Lee and Pielke 1992 beta
-      IF (wx < wfc(1) ) THEN  !when water content of ths top layer is less than that at F.C.
-         fac_fc = min(1._r8, wx/wfc(1))
+      IF (wx < wfc ) THEN  !when water content of ths top layer is less than that at F.C.
+         fac_fc = min(1._r8, wx/wfc)
          fac_fc = max(fac_fc,0.001_r8)
          ! modify soil beta by snow cover. soilbeta for snow surface is one
          rss  = (1._r8-fsno) &
@@ -186,7 +187,7 @@ CONTAINS
       ELSE   ! when water content of ths top layer is more than that at F.C.
          rss  = 1._r8
       ENDIF
-
+      ! write(*,*) wfc,porsl(1),psi0(1),bsw(1)
       ! raw = 50m/s NOTE: raw = 50m/s
       ! rss = 50._r8 * (1._r8/beta - 1._r8)
 
@@ -201,6 +202,7 @@ CONTAINS
    endselect
 
    rss = min(1.e6_r8,rss)
+   write(*,*) porsl(1)
 
  END Subroutine SoilSurfaceResistance
 

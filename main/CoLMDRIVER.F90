@@ -71,7 +71,6 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
         wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
         bsw(1:,i),                                                          &
-        wfc(1:,i),                                                          &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
         sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
