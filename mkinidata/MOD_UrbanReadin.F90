@@ -37,7 +37,7 @@ MODULE MOD_UrbanReadin
       USE MOD_NetCDFSerial
       USE MOD_LandPatch
       USE MOD_LandUrban
-      USE UrbanLCZ_Const
+      USE MOD_Urban_Const_LCZ
 
       IMPLICIT NONE
 
@@ -74,7 +74,7 @@ MODULE MOD_UrbanReadin
 
       allocate (lucyid    (numurban))
 
-IF ((DEF_URBAN_type_scheme == 1) THEN
+IF (DEF_URBAN_type_scheme == 1) THEN
 
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
@@ -232,7 +232,7 @@ ELSE IF (DEF_URBAN_type_scheme == 2) THEN
 
             DO ulev = 1, nl_soil
                cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
-               tk_gimp(:,u) = tkperroad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
+               tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
             ENDDO
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
