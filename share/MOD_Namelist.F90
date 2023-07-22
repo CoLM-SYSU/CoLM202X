@@ -151,6 +151,15 @@ MODULE MOD_Namelist
    ! 2: Read a global soil color map from CLM
    INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
+   ! Options for soil surface resistance schemes
+   ! 0: NONE soil surface resistance
+   ! 1: SL14, Swenson and Lawrence (2014)
+   ! 2: SZ09, Sakaguchi and Zeng (2009)
+   ! 3: TR13, Tang and Riley (2013)
+   ! 4: LP92, Lee and Pielke (1992)
+   ! 5: S92,  Sellers et al (1992)
+   INTEGER :: DEF_RSS_SCHEME = 1
+
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY                    = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE      = .false.
@@ -341,6 +350,7 @@ MODULE MOD_Namelist
       LOGICAL :: emis         = .true.
       LOGICAL :: z0m          = .true.
       LOGICAL :: trad         = .true.
+      LOGICAL :: rss          = .true.
       LOGICAL :: tref         = .true.
       LOGICAL :: qref         = .true.
 #ifdef URBAN_MODEL
@@ -677,6 +687,7 @@ CONTAINS
          DEF_THERMAL_CONDUCTIVITY_SCHEME, &
          DEF_USE_SUPERCOOL_WATER,         &
          DEF_SOIL_REFL_SCHEME,            &
+         DEF_RSS_SCHEME,                  &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -1033,6 +1044,8 @@ CONTAINS
 
       ! 06/2023, added by hua yuan
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
+      ! 07/2023, added by zhuo liu
+      CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1209,6 +1222,7 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%emis        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%z0m         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%trad        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%rss         ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tref        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qref        ,  set_defaults)
 #ifdef URBAN_MODEL

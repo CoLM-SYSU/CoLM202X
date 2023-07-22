@@ -11,34 +11,34 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 !
 !=======================================================================
 
- use MOD_Precision
- use MOD_Const_Physical, only: tfrz, rgas, vonkar
+ USE MOD_Precision
+ USE MOD_Const_Physical, only: tfrz, rgas, vonkar
  USE MOD_Const_LC
  USE MOD_Vars_Global
- use MOD_Vars_TimeInvariants
- use MOD_Vars_TimeVariables
- use MOD_Vars_1DForcing
- use MOD_Vars_1DFluxes
+ USE MOD_Vars_TimeInvariants
+ USE MOD_Vars_TimeVariables
+ USE MOD_Vars_1DForcing
+ USE MOD_Vars_1DFluxes
  USE MOD_LandPatch, only: numpatch
  USE MOD_LandUrban, only: patch2urban
- USE MOD_Namelist, only : DEF_forcing, DEF_URBAN_RUN
- USE MOD_Forcing, only : forcmask
- use omp_lib
+ USE MOD_Namelist, only: DEF_forcing, DEF_URBAN_RUN
+ USE MOD_Forcing, only: forcmask
+ USE omp_lib
 #ifdef CaMa_Flood
  ! get flood variables: inundation depth[mm], inundation fraction [0-1],
  ! inundation evaporation [mm/s], inundation re-infiltration[mm/s]
- use MOD_CaMa_Vars, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
+ USE MOD_CaMa_Vars, only : flddepth_cama,fldfrc_cama,fevpg_fld,finfg_fld
 #endif
  IMPLICIT NONE
 
-  integer,  INTENT(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
-  real(r8), INTENT(in) :: deltim   ! seconds in a time-step
+  integer,  intent(in) :: idate(3) ! model calendar for next time step (year, julian day, seconds)
+  real(r8), intent(in) :: deltim   ! seconds in a time-step
 
-  logical,  INTENT(in) :: dolai    ! true if time for time-varying vegetation paramter
-  logical,  INTENT(in) :: doalb    ! true if time for surface albedo calculation
-  logical,  INTENT(in) :: dosst    ! true if time for update sst/ice/snow
+  logical,  intent(in) :: dolai    ! true if time for time-varying vegetation paramter
+  logical,  intent(in) :: doalb    ! true if time for surface albedo calculation
+  logical,  intent(in) :: dosst    ! true if time for update sst/ice/snow
 
-  real(r8), INTENT(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
+  real(r8), intent(inout) :: oro(numpatch)  ! ocean(0)/seaice(2)/ flag
 
   integer :: i, m, u
 
@@ -52,16 +52,16 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
   DO i = 1, numpatch
 
      IF (DEF_forcing%has_missing_value) THEN
-        IF (.not. forcmask(i)) cycle
+        IF (.not. forcmask(i)) CYCLE
      ENDIF
 
      m = patchclass(i)
 
+     ! For non urban patch or slab urban
      IF (.not.DEF_URBAN_RUN .or. m.ne.URBAN) THEN
 
-        !IF (DEF_URBAN_RUN) CYCLE  !fortest only
-
-      ! For non urban patches or slab urban
+        !                ***** Call CoLM main program *****
+        !
         CALL CoLMMAIN (i,idate,           coszen(i),       deltim,          &
         patchlonr(i),    patchlatr(i),    patchclass(i),   patchtype(i),    &
         doalb,           dolai,           dosst,           oro(i),          &
@@ -71,7 +71,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         vf_quartz(1:,i), vf_gravels(1:,i),vf_om(1:,i),     vf_sand(1:,i),   &
         wf_gravels(1:,i),wf_sand(1:,i),   porsl(1:,i),     psi0(1:,i),      &
         bsw(1:,i),                                                          &
-
+        wfc(1:,i),                                                          &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
         theta_r(1:,i),   alpha_vgm(1:,i), n_vgm(1:,i),     L_vgm(1:,i),     &
         sc_vgm (1:,i),   fc_vgm   (1:,i),                                   &
@@ -130,10 +130,9 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         mss_dst1(:,i),   mss_dst2(:,i),   mss_dst3(:,i),   mss_dst4(:,i),   &
 
       ! additional diagnostic variables for output
-        laisun(i),       laisha(i),       rootr(1:,i),                      &
+        laisun(i),       laisha(i),       rootr(1:,i),     rss(i),          &
         rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
         assimsun_out(i), etrsun_out(i),   assimsha_out(i), etrsha_out(i),   &
-      ! -------------------------------
         h2osoi(1:,i),    wat(i),          &
 
       ! FLUXES
@@ -162,11 +161,16 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         fm(i),           fh(i),           fq(i)                             )
      ENDIF
 
+
 #if(defined BGC)
-     if(patchtype(i) .eq. 0)then
+     IF(patchtype(i) .eq. 0)THEN
+
+        !                ***** Call CoLM BGC model *****
+        !
         CALL bgc_driver (i,idate(1:3),deltim, patchlatr(i)*180/PI,patchlonr(i)*180/PI)
-     end if
+     END IF
 #endif
+
 
 #ifdef URBAN_MODEL
      ! For urban model and urban patches
@@ -175,6 +179,8 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         u = patch2urban(i)
         !print *, "patch:", i, "urban:", u  !fortest only
 
+        !              ***** Call CoLM urban model *****
+        !
         CALL UrbanCoLMMAIN ( &
       ! MODEL RUNNING PARAMETERS
         i               ,idate           ,coszen(i)       ,deltim          ,&
@@ -220,6 +226,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         forc_frl(i)     ,forc_hgt_u(i)   ,forc_hgt_t(i)   ,forc_hgt_q(i)   ,&
         forc_rhoair(i)  ,Fhac(u)         ,Fwst(u)         ,Fach(u)         ,&
         Fahe(u)         ,Fhah(u)         ,vehc(u)         ,meta(u)         ,&
+
       ! LAND SURFACE VARIABLES REQUIRED FOR RESTART
         z_sno_roof  (maxsnl+1:,u)        ,z_sno_gimp  (maxsnl+1:,u)        ,&
         z_sno_gper  (maxsnl+1:,u)        ,z_sno_lake  (maxsnl+1:,u)        ,&
@@ -266,7 +273,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
 
       ! additional diagnostic variables for output
-        laisun(i)       ,laisha(i)                                         ,&
+        laisun(i)       ,laisha(i)       ,rss(i)                           ,&
         rstfacsun_out(i),h2osoi(1:,i)    ,wat(i)                           ,&
 
       ! FLUXES

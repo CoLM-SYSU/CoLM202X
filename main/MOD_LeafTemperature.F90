@@ -4,7 +4,7 @@ MODULE MOD_LeafTemperature
 
 !-----------------------------------------------------------------------
 USE MOD_Precision
-USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+USE MOD_Namelist, ONLY: DEF_Interception_scheme, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_RSS_SCHEME
 USE MOD_SPMD_Task
 
 IMPLICIT NONE
@@ -29,7 +29,7 @@ CONTAINS
               parsha  ,sabv    ,frl     ,fsun    ,thermk  ,&
               rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
-              zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
+              zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg,rss  ,&
               dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow   ,taux    ,tauy    ,&
               fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
@@ -180,6 +180,7 @@ CONTAINS
         tg,         &! ground surface temperature [K]
         qg,         &! specific humidity at ground surface [kg/kg]
         dqgdT,      &! temperature derivative of "qg"
+        rss,        &! soil surface resistance [s/m]
         emg          ! vegetation emissivity
 
   REAL(r8), intent(in) :: &
@@ -654,7 +655,15 @@ CONTAINS
          cfh = (lai + sai) / rb
 
          caw = 1. / raw
-         cgw = 1. / rd
+         IF (qg < qaf) THEN
+            cgw = 1. / rd !dew case. no soil resistance   
+         ELSE
+            IF (DEF_RSS_SCHEME .eq. 4) THEN
+               cgw = rss / rd    
+            ELSE
+               cgw = 1. / (rd + rss)
+            END IF
+         END IF   
          cfw = (1.-delta*(1.-fwet))*(lai+sai)/rb + (1.-fwet)*delta* &
             ( laisun/(rb+rssun) + laisha/(rb+rssha) )
 
@@ -782,7 +791,11 @@ CONTAINS
 
 ! update co2 partial pressure within canopy air
          gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-         gdh2o = 1.0/rd  * tprcor/thm                     !mol m-2 s-1
+         IF (DEF_RSS_SCHEME .eq. 4) THEN              
+             gdh2o = rss/rd  * tprcor/thm                 !mol m-2 s-1
+         ELSE
+             gdh2o = 1.0/(rd+rss)  * tprcor/thm               !mol m-2 s-1
+         END IF
          pco2a = pco2m - 1.37*psrf/max(0.446,gah2o) * &
             (assimsun + assimsha  - respcsun -respcsha - rsoil)
 

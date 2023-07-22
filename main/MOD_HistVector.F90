@@ -5,7 +5,7 @@ module MOD_HistVector
 
    !----------------------------------------------------------------------------
    ! DESCRIPTION:
-   ! 
+   !
    !     Write out vectorized model results to history files.
    !
    ! Created by Shupeng Zhang, May 2023

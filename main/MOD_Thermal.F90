@@ -23,6 +23,7 @@ MODULE MOD_Thermal
                       dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
                       vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
                       wf_sand     ,csol        ,porsl       ,psi0       ,&
+                      wfc         ,                                      &
 #ifdef Campbell_SOIL_MODEL
                       bsw         ,                                      &
 #endif
@@ -34,7 +35,7 @@ MODULE MOD_Thermal
                       BA_alpha    ,BA_beta                              ,&
                       lai         ,laisun      ,laisha                  ,&
                       sai         ,htop        ,hbot        ,sqrtdi     ,&
-                      rootfr      ,rstfacsun_out   ,rstfacsha_out       ,&
+                      rootfr      ,rstfacsun_out,rstfacsha_out,rss      ,&
                       gssun_out   ,gssha_out   ,&
                       assimsun_out,etrsun_out  ,assimsha_out,etrsha_out ,&
 ! photosynthesis and plant hydraulic variables
@@ -63,6 +64,7 @@ MODULE MOD_Thermal
                       rootr       ,qseva       ,qsdew       ,qsubl      ,&
                       qfros       ,sm          ,tref        ,qref       ,&
                       trad        ,rst         ,assim       ,respc      ,&
+
                       errore      ,emis        ,z0m         ,zol        ,&
                       rib         ,ustar       ,qstar       ,tstar      ,&
                       fm          ,fh          ,fq          ,pg_rain    ,&
@@ -106,6 +108,8 @@ MODULE MOD_Thermal
   USE MOD_LeafTemperature
   USE MOD_GroundTemperature
   USE MOD_Qsadv
+  USE MOD_SoilSurfaceResistance
+
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
@@ -119,11 +123,13 @@ MODULE MOD_Thermal
   USE MOD_Vars_1DPCFluxes
   USE MOD_LeafTemperaturePC
 #endif
+
+
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
 #endif
-USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+  USE MOD_SPMD_Task
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_RSS_SCHEME
 
   IMPLICIT NONE
 
@@ -153,6 +159,7 @@ USE MOD_SPMD_Task
         wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
         wf_sand   (1:nl_soil), &! gravimetric fraction of sand
         csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
+        wfc       (1:nl_soil), &! field capacity
         porsl     (1:nl_soil), &! soil porosity [-]
         psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
@@ -313,11 +320,10 @@ USE MOD_SPMD_Task
         tref,        &! 2 m height air temperature [kelvin]
         qref,        &! 2 m height air specific humidity
         trad,        &! radiative temperature [K]
-
+        rss,         &! bare soil resistance for evaporation [s/m]
         rst,         &! stomatal resistance (s m-1)
         assim,       &! assimilation
         respc,       &! respiration
-
         ! additional variables required by coupling with WRF or RSM model
         emis,        &! averaged bulk surface emissivity
         z0m,         &! effective roughness [m]
@@ -454,7 +460,6 @@ USE MOD_SPMD_Task
       qref   = 0.;  rst    = 2.0e4
       assim  = 0.;  respc  = 0.
       hprl   = 0.
-
       emis   = 0.;  z0m    = 0.
       zol    = 0.;  rib    = 0.
       ustar  = 0.;  qstar  = 0.
@@ -482,8 +487,9 @@ USE MOD_SPMD_Task
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
 !=======================================================================
-
+      rss  = 0.
       qred = 1.
+
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
 
       IF (patchtype<=1) THEN            !soil ground
@@ -515,6 +521,15 @@ USE MOD_SPMD_Task
         qg = forc_q; dqgdT = 0.
       ENDIF
 
+      IF (DEF_RSS_SCHEME > 0) THEN
+         !NOTE: If the beta scheme is used, the rss is not soil resistance
+         ! but soil wetness relative to field capacity [0-1]
+         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
+                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+         write(*,*) rss
+      ENDIF
+
+
 !=======================================================================
 ! [3] Compute sensible and latent fluxes and their derivatives with respect
 !     to ground temperature using ground temperatures from previous time step.
@@ -528,7 +543,7 @@ IF (patchtype == 0) THEN
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                          forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          taux,tauy,fseng,fevpg,tref,qref, &
                          z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
@@ -575,7 +590,7 @@ IF (patchtype == 0) THEN
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-                 sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
+                 sigf       ,etrc       ,t_grnd    ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&
@@ -652,7 +667,7 @@ IF (patchtype == 0) THEN
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                          forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          taux,tauy,fseng,fevpg,tref,qref, &
                          z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
@@ -702,7 +717,7 @@ IF (patchtype == 0) THEN
                  thermk_p(i),rstfacsun_p(i)         ,rstfacsha_p(i)         ,&
                  gssun_p(i) ,gssha_p(i) ,forc_po2m  ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd       ,zsno       ,fsno       ,&
-                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg         ,dqgdT      ,&
+                 sigf_p(i)  ,etrc_p(i)  ,t_grnd     ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf_p(i) ,ldew_p(i)  ,ldew_rain_p(i),ldew_snow_p(i),&
                  taux_p(i)  ,tauy_p(i)  ,&
                  fseng_p(i) ,fevpg_p(i) ,cgrnd_p(i) ,cgrndl_p(i),cgrnds_p(i),&
@@ -727,7 +742,7 @@ IF (patchtype == 0) THEN
             CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                                forc_hpbl, &
                                forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                               ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                               ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                                fsno,cgrnd_p(i),cgrndl_p(i),cgrnds_p(i), &
                                taux_p(i),tauy_p(i),fseng_p(i),fevpg_p(i),tref_p(i),qref_p(i), &
             z0m_p(i),z0h_g,zol_p(i),rib_p(i),ustar_p(i),qstar_p(i),tstar_p(i),fm_p(i),fh_p(i),fq_p(i))
@@ -802,13 +817,13 @@ IF (patchtype == 0) THEN
             vegwp(j) = sum( vegwp_p(j,ps:pe)*pftfrac(ps:pe) )
          ENDDO
 
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_p(j,ps:pe)*pftfrac(ps:pe))
             ENDDO
          ENDIF
       ELSE
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_p(j,ps:pe)*etr_p(ps:pe)*pftfrac(ps:pe)) / etr
             ENDDO
@@ -858,7 +873,7 @@ IF (patchtype == 0) THEN
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                          forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          taux,tauy,fseng,fevpg,tref,qref, &
                          z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
@@ -943,7 +958,7 @@ IF (patchtype == 0) THEN
             rstfacsun_c(:)               ,rstfacsha_c(:)                              ,&
             gssun_c(:) ,gssha_c(:) ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
             ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
-            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
+            etrc_c(:)     ,t_grnd        ,qg,rss        ,dqgdT         ,emg           ,&
             z0m_c(:,pc),tleaf_c(:,pc),ldew_c(:,pc),ldew_rain_c(:,pc),ldew_snow_c(:,pc),&
             taux          ,tauy          ,&
             fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
@@ -1001,14 +1016,14 @@ IF (patchtype == 0) THEN
          ENDDO
 
       ! loop for each soil layer
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
             ENDDO
          ENDIF
       ELSE
       ! loop for each soil layer
-         IF (etr > 0.) THEN
+         IF (abs(etr) > 0.) THEN
             DO j = 1, nl_soil
                rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
             ENDDO
@@ -1032,7 +1047,7 @@ ELSE
       CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
                          forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
+                         ur,thm,th,thv,t_grnd,qg,rss,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
                          taux,tauy,fseng,fevpg,tref,qref, &
                          z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
@@ -1079,7 +1094,7 @@ ELSE
                  thermk     ,rstfacsun_out         ,rstfacsha_out          ,&
                  gssun_out  ,gssha_out  ,forc_po2m ,forc_pco2m ,z0h_g      ,&
                  obu_g      ,ustar_g    ,zlnd      ,zsno       ,fsno       ,&
-                 sigf       ,etrc       ,t_grnd    ,qg         ,dqgdT      ,&
+                 sigf       ,etrc       ,t_grnd    ,qg,rss     ,dqgdT      ,&
                  emg        ,tleaf      ,ldew      ,ldew_rain  ,ldew_snow  ,&
                  taux       ,tauy       ,&
                  fseng      ,fevpg      ,cgrnd     ,cgrndl     ,cgrnds     ,&

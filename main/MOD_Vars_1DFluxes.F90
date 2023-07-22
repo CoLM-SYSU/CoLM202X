@@ -62,7 +62,6 @@ MODULE MOD_Vars_1DFluxes
   REAL(r8), allocatable :: rnet   (:) !net radiation by surface [W/m2]
   REAL(r8), allocatable :: xerr   (:) !the error of water banace [mm/s]
   REAL(r8), allocatable :: zerr   (:) !the error of energy balance [W/m2]
-
   REAL(r8), allocatable :: rsur   (:) !surface runoff (mm h2o/s)
   REAL(r8), allocatable :: rsub   (:) !subsurface runoff (mm h2o/s)
   REAL(r8), allocatable :: rnof   (:) !total runoff (mm h2o/s)
@@ -222,7 +221,6 @@ MODULE MOD_Vars_1DFluxes
            deallocate ( rnet    )  ! net radiation by surface [W/m2]
            deallocate ( xerr    )  ! the error of water banace [mm/s]
            deallocate ( zerr    )  ! the error of energy balance [W/m2]
-
            deallocate ( rsur    )  ! surface runoff (mm h2o/s)
            deallocate ( rsub    )  ! subsurface runoff (mm h2o/s)
            deallocate ( rnof    )  ! total runoff (mm h2o/s)
