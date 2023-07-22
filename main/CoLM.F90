@@ -365,11 +365,6 @@ PROGRAM CoLM
       end if
 #endif
 
-      ! lateral flow
-#if (defined LATERAL_FLOW)
-      CALL lateral_flow (deltim)
-#endif
-
       ! Call colm driver
       ! ----------------------------------------------------------------------
       IF (p_is_worker) THEN
@@ -421,8 +416,12 @@ PROGRAM CoLM
       ENDIF
 #endif
 
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+
 #if(defined CaMa_Flood)
-   call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file
