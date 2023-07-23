@@ -75,7 +75,9 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_soil_BA_alpha          (:)
    REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
 
-   REAL(r8) :: SITE_dbedrock = 1
+   REAL(r8) :: SITE_dbedrock = 0.
+   
+   REAL(r8) :: SITE_topography = 0.
 
 CONTAINS
 
@@ -94,7 +96,7 @@ CONTAINS
 
 #if (defined LULC_IGBP_PFT)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
-         CALL ncio_read_serial (fsrfdata, 'pfttyp ', SITE_pfttyp )
+         CALL ncio_read_serial (fsrfdata, 'pfttyp', SITE_pfttyp )
          ! otherwise, retrieve from database by MOD_LandPFT.F90
       ENDIF
 #endif
@@ -126,6 +128,7 @@ CONTAINS
 
       IF ((.not. mksrfdata) .or. USE_SITE_LAI) THEN
          ! otherwise, retrieve from database by Aggregation_LAI.F90
+         CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (DEF_LAI_MONTHLY) THEN
             CALL ncio_read_serial (fsrfdata, 'LAI_pfts_monthly', SITE_LAI_pfts_monthly)
@@ -133,11 +136,9 @@ CONTAINS
          ENDIF
 #else
          IF (DEF_LAI_MONTHLY) THEN
-            CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
             CALL ncio_read_serial (fsrfdata, 'LAI_monthly', SITE_LAI_monthly)
             CALL ncio_read_serial (fsrfdata, 'SAI_monthly', SITE_SAI_monthly)
          ELSE
-            CALL ncio_read_serial (fsrfdata, 'LAI_year', SITE_LAI_year)
             CALL ncio_read_serial (fsrfdata, 'LAI_8day', SITE_LAI_8day)
          ENDIF
 #endif
@@ -185,11 +186,16 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'soil_BA_beta          ', SITE_soil_BA_beta          )
       ENDIF
 
-      IF(DEF_USE_BEDROCK)THEN
+      IF (DEF_USE_BEDROCK) THEN
          IF ((.not. mksrfdata) .or. USE_SITE_dbedrock) THEN
             ! otherwise, retrieve from database by Aggregation_DBedrock.F90
             CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
          ENDIF
+      ENDIF
+         
+      IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
+         ! otherwise, retrieve from database by Aggregation_Topography.F90
+         CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
       ENDIF
 
    END SUBROUTINE read_surface_data_single
@@ -222,11 +228,11 @@ CONTAINS
 #if (defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
+      
+      CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
       IF (DEF_LAI_MONTHLY) THEN
-         CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
          CALL ncio_define_dimension (fsrfdata, 'month', 12)
       ELSE
-         CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
          CALL ncio_define_dimension (fsrfdata, 'J8day', 46)
       ENDIF
 
@@ -260,6 +266,7 @@ CONTAINS
 #endif
 
       source = datasource(USE_SITE_LAI)
+      CALL ncio_write_serial (fsrfdata, 'LAI_year', SITE_LAI_year, 'LAI_year')
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (DEF_LAI_MONTHLY) THEN
          CALL ncio_write_serial (fsrfdata, 'LAI_pfts_monthly', SITE_LAI_pfts_monthly, 'pft', 'month', 'LAI_year')
@@ -269,13 +276,11 @@ CONTAINS
       ENDIF
 #else
       IF (DEF_LAI_MONTHLY) THEN
-         CALL ncio_write_serial (fsrfdata, 'LAI_year',    SITE_LAI_year, 'LAI_year')
          CALL ncio_write_serial (fsrfdata, 'LAI_monthly', SITE_LAI_monthly, 'month', 'LAI_year')
          CALL ncio_write_serial (fsrfdata, 'SAI_monthly', SITE_SAI_monthly, 'month', 'LAI_year')
          CALL ncio_put_attr     (fsrfdata, 'LAI_monthly', 'source', source)
          CALL ncio_put_attr     (fsrfdata, 'SAI_monthly', 'source', source)
       ELSE
-         CALL ncio_write_serial (fsrfdata, 'LAI_year', SITE_LAI_year, 'LAI_year')
          CALL ncio_write_serial (fsrfdata, 'LAI_8day', SITE_LAI_8day, 'J8day', 'LAI_year')
          CALL ncio_put_attr     (fsrfdata, 'LAI_8day', 'source', source)
       ENDIF
@@ -348,6 +353,9 @@ CONTAINS
          CALL ncio_write_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
          CALL ncio_put_attr     (fsrfdata, 'depth_to_bedrock', 'source', datasource(USE_SITE_dbedrock))
       ENDIF
+
+      CALL ncio_write_serial (fsrfdata, 'elevation', SITE_topography)
+      CALL ncio_put_attr     (fsrfdata, 'elevation', 'source', datasource(USE_SITE_topography))
 
    END SUBROUTINE write_surface_data_single
 

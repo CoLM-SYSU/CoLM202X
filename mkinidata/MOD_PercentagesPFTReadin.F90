@@ -36,6 +36,9 @@ MODULE MOD_PercentagesPFTReadin
       use MOD_LandPC
       use MOD_Vars_PCTimeInvariants, only : pcfrac
 #endif
+#ifdef SinglePoint
+      USE MOD_SingleSrfdata
+#endif
       IMPLICIT NONE
 
       INTEGER, intent(in) :: lc_year
@@ -60,7 +63,11 @@ MODULE MOD_PercentagesPFTReadin
       call ncio_read_vector (lndname, 'pct_crops', landpatch, pctcrop)
 #else
       allocate (pctcrop (numpatch))
-      pctcrop = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+      IF (SITE_landtype == 12) THEN
+         pctcrop = pack(SITE_pctcrop, SITE_pctcrop > 0.)
+      ELSE
+         pctcrop = 0.
+      ENDIF
 #endif
 #endif
 

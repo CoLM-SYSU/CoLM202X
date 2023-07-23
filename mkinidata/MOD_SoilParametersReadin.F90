@@ -438,12 +438,10 @@ MODULE MOD_SoilParametersReadin
       IF (DEF_SOIL_REFL_SCHEME .eq. 2) THEN
 
 #ifdef SinglePoint
-         IF (USE_SITE_soilreflectance) THEN
-            soil_s_v_alb(:) = SITE_soil_s_v_alb
-            soil_d_v_alb(:) = SITE_soil_d_v_alb
-            soil_s_n_alb(:) = SITE_soil_s_n_alb
-            soil_d_n_alb(:) = SITE_soil_d_n_alb
-         ENDIF
+         soil_s_v_alb(:) = SITE_soil_s_v_alb
+         soil_d_v_alb(:) = SITE_soil_d_v_alb
+         soil_s_n_alb(:) = SITE_soil_s_n_alb
+         soil_d_n_alb(:) = SITE_soil_d_n_alb
 #else
          ! (1) Read in the albedo of visible of the saturated soil
          lndname = trim(landdir)//'/soil_s_v_alb_patches.nc'

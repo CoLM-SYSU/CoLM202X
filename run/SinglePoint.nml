@@ -23,6 +23,7 @@
    USE_SITE_lakedepth       = .false.
    USE_SITE_soilreflectance = .false.
    USE_SITE_soilparameters  = .false.
+   USE_SITE_topography      = .false.
 
    DEF_simulation_time%greenwich     = .TRUE.
    DEF_simulation_time%start_year    = 2013
@@ -50,13 +51,13 @@
    DEF_Interception_scheme = 1 ! 1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
    
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/TPMFD.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/POINT.nml'
 
    ! ----- history -----
    DEF_hist_lon_res = 1.
    DEF_hist_lat_res = 1. 
    DEF_WRST_FREQ = 'YEARLY'   ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'TIMESTEP'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'YEAR'  ! history in one file: DAY/MONTH/YEAR
    DEF_REST_COMPRESS_LEVEL = 0
    DEF_HIST_COMPRESS_LEVEL = 0
