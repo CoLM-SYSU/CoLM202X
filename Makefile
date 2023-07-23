@@ -31,6 +31,7 @@ OBJS_SHARED =    \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
 				  MOD_NetCDFSerial.o           \
+				  MOD_SingleSrfdata.o          \
 				  MOD_Block.o                  \
 				  MOD_Grid.o                   \
 				  MOD_Pixel.o                  \
@@ -46,7 +47,6 @@ OBJS_SHARED =    \
 				  MOD_Mapping_Pset2Grid.o      \
 				  MOD_AggregationRequestData.o \
 				  MOD_PixelsetShadow.o         \
-				  MOD_SingleSrfdata.o          \
 				  MOD_LandElm.o                \
 				  MOD_LandHRU.o                \
 				  MOD_LandPatch.o              \

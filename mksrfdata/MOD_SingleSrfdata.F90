@@ -16,6 +16,11 @@ MODULE MOD_SingleSrfdata
    USE MOD_Namelist
    IMPLICIT NONE
    SAVE
+   
+   REAL(r8) :: SITE_lon_location = 0.
+   REAL(r8) :: SITE_lat_location = 0.
+
+   INTEGER  :: SITE_landtype = 1
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    REAL(r8), allocatable :: SITE_pfttyp  (:)
@@ -93,6 +98,15 @@ CONTAINS
 
       ! Local Variables
       INTEGER :: iyear, itime
+      
+      CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
+      CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+   
+      DEF_domain%edges = floor(SITE_lat_location)
+      DEF_domain%edgen = DEF_domain%edges + 1.0
+      DEF_domain%edgew = floor(SITE_lon_location)
+      DEF_domain%edgee = DEF_domain%edgew + 1.0
 
 #if (defined LULC_IGBP_PFT)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
@@ -238,7 +252,7 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
-      CALL ncio_write_serial (fsrfdata, 'landtype',  SITE_landtype)
+      CALL ncio_write_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
 
 #if (defined LULC_IGBP_PFT)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')

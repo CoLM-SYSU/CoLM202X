@@ -120,6 +120,9 @@ CONTAINS
       USE MOD_Utils
       USE MOD_DataType
       USE MOD_CatchmentDataReadin
+#ifdef SinglePoint
+      USE MOD_SingleSrfdata
+#endif
 
       IMPLICIT NONE
 
