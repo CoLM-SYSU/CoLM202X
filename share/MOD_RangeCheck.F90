@@ -560,6 +560,7 @@ CONTAINS
       ! Local variables
       INTEGER :: vmin, vmax
       INTEGER, allocatable :: vmin_all(:), vmax_all(:)
+      character(len=256) :: wfmt
 
       IF (p_is_worker) THEN
 
@@ -611,8 +612,8 @@ CONTAINS
 #endif
 
          IF (p_iam_worker == p_root) THEN
-            write(*,104) varname, vmin, vmax
-            104 format('Check vector data:', A25, ' is in (', I12, ',', I12, ')')
+            wfmt = "('Check vector data:', A25, ' is in (', I0, ',', I0, ')'"
+            write(*,wfmt) varname, vmin, vmax
          ENDIF
 
       ENDIF

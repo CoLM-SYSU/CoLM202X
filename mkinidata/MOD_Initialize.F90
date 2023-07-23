@@ -495,36 +495,31 @@ MODULE MOD_Initialize
       ENDIF
 
       ! for SOIL Water INIT by using water table depth
-      IF (DEF_USE_WaterTable_INIT) THEN
-
-         fwtd = DEF_file_water_table_depth
-         IF (p_is_master) THEN
-            inquire (file=trim(fwtd), exist=use_wtd)
-            IF (use_wtd) THEN
-               write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
-                  // ' to initialize soil water content: ', trim(fwtd)
-            ENDIF
+      fwtd = trim(DEF_dir_runtime) // 'wtd.nc'
+      IF (p_is_master) THEN
+         inquire (file=trim(fwtd), exist=use_wtd)
+         IF (use_wtd) THEN
+            write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
+               // ' to initialize soil water content: ', trim(fwtd)
          ENDIF
+      ENDIF
 #ifdef USEMPI
-         call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
+      call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
 
-         IF (use_wtd) THEN
+      IF (use_wtd) THEN
 
-            CALL julian2monthday (idate(1), idate(2), month, mday)
-            call gwtd%define_from_file (fwtd)
+         CALL julian2monthday (idate(1), idate(2), month, mday)
+         call gwtd%define_from_file (fwtd)
 
-            if (p_is_io) then
-               call allocate_block_data (gwtd, wtd_xy)
-               call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
-            ENDIF
-
-            call m_wtd2p%build (gwtd, landpatch)
-            call m_wtd2p%map_aweighted (wtd_xy, zwt)
-
+         if (p_is_io) then
+            call allocate_block_data (gwtd, wtd_xy)
+            call ncio_read_block_time (fwtd, 'wtd', gwtd, month, wtd_xy)
          ENDIF
-      ELSE
-         use_wtd = .false.
+
+         call m_wtd2p%build (gwtd, landpatch)
+         call m_wtd2p%map_aweighted (wtd_xy, zwt)
+
       ENDIF
 
       ! ...................
