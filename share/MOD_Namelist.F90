@@ -33,10 +33,7 @@ MODULE MOD_Namelist
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
-   REAL(r8) :: SITE_lon_location = 0.
-   REAL(r8) :: SITE_lat_location = 0.
-
-   INTEGER  :: SITE_landtype = 1
+   
    CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
    LOGICAL  :: USE_SITE_pctpfts         = .true.
@@ -622,10 +619,7 @@ CONTAINS
          DEF_CASE_NAME,           &
          DEF_domain,              &
 #ifdef SinglePoint
-         SITE_lon_location,        &
-         SITE_lat_location,        &
          SITE_fsrfdata,            &
-         SITE_landtype,            &
          USE_SITE_pctpfts,         &
          USE_SITE_pctcrop,         &
          USE_SITE_htop,            &
@@ -761,14 +755,8 @@ CONTAINS
          CALL system('mkdir -p ' // trim(adjustl(DEF_dir_history )))
 
 #ifdef SinglePoint
-         DEF_domain%edges = floor(SITE_lat_location)
-         DEF_domain%edgen = DEF_domain%edges + 1.0
-         DEF_domain%edgew = floor(SITE_lon_location)
-         DEF_domain%edgee = DEF_domain%edgew + 1.0
-
          DEF_nx_blocks = 360
          DEF_ny_blocks = 180
-
          DEF_HIST_mode = 'one'
 #endif
 

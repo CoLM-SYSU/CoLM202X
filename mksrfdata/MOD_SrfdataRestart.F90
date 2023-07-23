@@ -394,7 +394,7 @@ CONTAINS
       INTEGER :: nsend, nrecv
       INTEGER, allocatable :: rbuff(:), iworker(:), sbuff(:)
       LOGICAL, allocatable :: msk(:)
-      LOGICAL :: fexists
+      LOGICAL :: fexists, fexists_any
 
       write(cyear,'(i4.4)') lc_year
 #ifdef USEMPI
@@ -411,6 +411,8 @@ CONTAINS
 
          pixelset%nset = 0
 
+         fexists_any = .false.
+
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
@@ -423,7 +425,21 @@ CONTAINS
                pixelset%nset = pixelset%nset + nset
             ENDIF
 
+            fexists_any = fexists_any .or. fexists
+
          ENDDO
+
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, fexists_any, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. fexists_any) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
 
          IF (pixelset%nset > 0) THEN
 
