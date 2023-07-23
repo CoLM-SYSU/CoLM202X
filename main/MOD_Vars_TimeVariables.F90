@@ -1424,17 +1424,17 @@ MODULE MOD_Vars_TimeVariables
         write(*,'(/,A27)') 'Checking Time Variables ...'
      end if
 
-     call check_vector_data ('z_sno       ', z_sno )      ! node depth [m]
-     call check_vector_data ('dz_sno      ', dz_sno)      ! interface depth [m]
-     call check_vector_data ('t_soisno    ', t_soisno   ) ! soil temperature [K]
-     call check_vector_data ('wliq_soisno ', wliq_soisno) ! liquid water in layers [kg/m2]
-     call check_vector_data ('wice_soisno ', wice_soisno) ! ice lens in layers [kg/m2]
-     call check_vector_data ('smp         ', smp        ) ! soil matrix potential [mm]
-     call check_vector_data ('hk          ', hk         ) ! hydraulic conductivity [mm h2o/s]
+     call check_vector_data ('z_sno       [m]    ', z_sno )      ! node depth [m]
+     call check_vector_data ('dz_sno      [m]    ', dz_sno)      ! interface depth [m]
+     call check_vector_data ('t_soisno    [K]    ', t_soisno   ) ! soil temperature [K]
+     call check_vector_data ('wliq_soisno [kg/m2]', wliq_soisno) ! liquid water in layers [kg/m2]
+     call check_vector_data ('wice_soisno [kg/m2]', wice_soisno) ! ice lens in layers [kg/m2]
+     call check_vector_data ('smp         [mm]   ', smp        ) ! soil matrix potential [mm]
+     call check_vector_data ('hk          [mm/s] ', hk         ) ! hydraulic conductivity [mm h2o/s]
      if(DEF_USE_PLANTHYDRAULICS)then
-        call check_vector_data ('vegwp       ', vegwp      ) ! vegetation water potential [mm]
-        call check_vector_data ('gs0sun      ', gs0sun     ) ! working copy of sunlit stomata conductance
-        call check_vector_data ('gs0sha      ', gs0sha     ) ! working copy of shalit stomata conductance
+        call check_vector_data ('vegwp       [m]    ', vegwp      ) ! vegetation water potential [mm]
+        call check_vector_data ('gs0sun      []     ', gs0sun     ) ! working copy of sunlit stomata conductance
+        call check_vector_data ('gs0sha      []     ', gs0sha     ) ! working copy of shalit stomata conductance
      end if
      IF(DEF_USE_OZONESTRESS)THEN
         call check_vector_data ('o3coefv_sun', o3coefv_sun)
@@ -1445,36 +1445,36 @@ MODULE MOD_Vars_TimeVariables
         call check_vector_data ('o3uptakesun', o3uptakesun)
         call check_vector_data ('o3uptakesha', o3uptakesha)
      ENDIF
-     call check_vector_data ('t_grnd      ', t_grnd     ) ! ground surface temperature [K]
-     call check_vector_data ('tleaf       ', tleaf      ) ! leaf temperature [K]
-     call check_vector_data ('ldew        ', ldew       ) ! depth of water on foliage [mm]
-     call check_vector_data ('ldew_rain   ', ldew_rain  ) ! depth of rain on foliage [mm]
-     call check_vector_data ('ldew_snow   ', ldew_snow  ) ! depth of snow on foliage [mm]
-     call check_vector_data ('sag         ', sag        ) ! non dimensional snow age [-]
-     call check_vector_data ('scv         ', scv        ) ! snow cover, water equivalent [mm]
-     call check_vector_data ('snowdp      ', snowdp     ) ! snow depth [meter]
-     call check_vector_data ('fveg        ', fveg       ) ! fraction of vegetation cover
-     call check_vector_data ('fsno        ', fsno       ) ! fraction of snow cover on ground
-     call check_vector_data ('sigf        ', sigf       ) ! fraction of veg cover, excluding snow-covered veg [-]
-     call check_vector_data ('green       ', green      ) ! leaf greenness
-     call check_vector_data ('lai         ', lai        ) ! leaf area index
-     call check_vector_data ('tlai        ', tlai       ) ! leaf area index
-     call check_vector_data ('sai         ', sai        ) ! stem area index
-     call check_vector_data ('tsai        ', tsai       ) ! stem area index
-     call check_vector_data ('coszen      ', coszen     ) ! cosine of solar zenith angle
-     call check_vector_data ('alb         ', alb        ) ! averaged albedo [-]
-     call check_vector_data ('ssun        ', ssun       ) ! sunlit canopy absorption for solar radiation (0-1)
-     call check_vector_data ('ssha        ', ssha       ) ! shaded canopy absorption for solar radiation (0-1)
-     call check_vector_data ('thermk      ', thermk     ) ! canopy gap fraction for tir radiation
-     call check_vector_data ('extkb       ', extkb      ) ! (k, g(mu)/mu) direct solar extinction coefficient
-     call check_vector_data ('extkd       ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
-     call check_vector_data ('zwt         ', zwt        ) ! the depth to water table [m]
-     call check_vector_data ('wa          ', wa         ) ! water storage in aquifer [mm]
-     call check_vector_data ('wdsrf       ', wdsrf      ) ! depth of surface water [mm]
+     call check_vector_data ('t_grnd      [K]    ', t_grnd     ) ! ground surface temperature [K]
+     call check_vector_data ('tleaf       [K]    ', tleaf      ) ! leaf temperature [K]
+     call check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
+     call check_vector_data ('ldew_rain   [mm]   ', ldew_rain  ) ! depth of rain on foliage [mm]
+     call check_vector_data ('ldew_snow   [mm]   ', ldew_snow  ) ! depth of snow on foliage [mm]
+     call check_vector_data ('sag         [-]    ', sag        ) ! non dimensional snow age [-]
+     call check_vector_data ('scv         [mm]   ', scv        ) ! snow cover, water equivalent [mm]
+     call check_vector_data ('snowdp      [m]    ', snowdp     ) ! snow depth [meter]
+     call check_vector_data ('fveg        [-]    ', fveg       ) ! fraction of vegetation cover
+     call check_vector_data ('fsno        [-]    ', fsno       ) ! fraction of snow cover on ground
+     call check_vector_data ('sigf        [-]    ', sigf       ) ! fraction of veg cover, excluding snow-covered veg [-]
+     call check_vector_data ('green       [-]    ', green      ) ! leaf greenness
+     call check_vector_data ('lai         [-]    ', lai        ) ! leaf area index
+     call check_vector_data ('tlai        [-]    ', tlai       ) ! leaf area index
+     call check_vector_data ('sai         [-]    ', sai        ) ! stem area index
+     call check_vector_data ('tsai        [-]    ', tsai       ) ! stem area index
+     call check_vector_data ('coszen      [-]    ', coszen     ) ! cosine of solar zenith angle
+     call check_vector_data ('alb         [-]    ', alb        ) ! averaged albedo [-]
+     call check_vector_data ('ssun        [-]    ', ssun       ) ! sunlit canopy absorption for solar radiation (0-1)
+     call check_vector_data ('ssha        [-]    ', ssha       ) ! shaded canopy absorption for solar radiation (0-1)
+     call check_vector_data ('thermk      [-]    ', thermk     ) ! canopy gap fraction for tir radiation
+     call check_vector_data ('extkb       [-]    ', extkb      ) ! (k, g(mu)/mu) direct solar extinction coefficient
+     call check_vector_data ('extkd       [-]    ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
+     call check_vector_data ('zwt         [m]    ', zwt        ) ! the depth to water table [m]
+     call check_vector_data ('wa          [mm]   ', wa         ) ! water storage in aquifer [mm]
+     call check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
 
-     call check_vector_data ('t_lake      ', t_lake      )!
-     call check_vector_data ('lake_icefrc ', lake_icefrac)!
-     call check_vector_data ('savedtke1   ', savedtke1   )!
+     call check_vector_data ('t_lake      [K]    ', t_lake      )!
+     call check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
+     call check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
 
 #if (defined LULC_IGBP_PFT)
      CALL check_PFTimeVariables

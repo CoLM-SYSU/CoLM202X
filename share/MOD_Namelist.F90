@@ -172,9 +172,6 @@ MODULE MOD_Namelist
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
 
-   LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
-   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
-
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
 
@@ -702,9 +699,6 @@ CONTAINS
          DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
 
-         DEF_USE_WaterTable_INIT,         &
-         DEF_file_water_table_depth,      &
-
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
 
@@ -1053,9 +1047,6 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
-
-      call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)

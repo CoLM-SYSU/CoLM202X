@@ -114,13 +114,30 @@ MODULE MOD_NetCDFSerial
 CONTAINS
 
    ! ----
-   SUBROUTINE nccheck (status)
+   SUBROUTINE nccheck (status, filename, varname)
+      
+      USE MOD_SPMD_Task
+      IMPLICIT NONE 
+
       INTEGER, INTENT(IN) :: status
+      CHARACTER(len=*), INTENT(IN), optional :: filename
+      CHARACTER(len=*), INTENT(IN), optional :: varname
+
+      character(len=256) :: ss
 
       IF (status /= NF90_NOERR) THEN
-         print *, trim(nf90_strerror(status))
+         ss = ''
+         IF (present(filename)) ss = trim(ss) // trim(filename)
+         IF (present(varname))  ss = trim(ss) // trim(varname)
+         write(*,'(A,I0,X,A)') 'Netcdf error: ', trim(nf90_strerror(status)), trim(ss)
+
+#ifdef USEMPI
+         CALL mpi_abort (p_comm_glb, p_err)
+#else
          stop 2
+#endif
       ENDIF
+
    END SUBROUTINE nccheck
 
    ! ----

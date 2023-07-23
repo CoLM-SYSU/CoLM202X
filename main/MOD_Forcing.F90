@@ -576,16 +576,16 @@ contains
 #endif
       if (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
-      call check_vector_data ('Forcing t     ', forc_t    )
-      call check_vector_data ('Forcing q     ', forc_q    )
-      call check_vector_data ('Forcing prc   ', forc_prc  )
-      call check_vector_data ('Forcing psrf  ', forc_psrf )
-      call check_vector_data ('Forcing prl   ', forc_prl  )
-      call check_vector_data ('Forcing sols  ', forc_sols )
-      call check_vector_data ('Forcing soll  ', forc_soll )
-      call check_vector_data ('Forcing solsd ', forc_solsd)
-      call check_vector_data ('Forcing solld ', forc_solld)
-      call check_vector_data ('Forcing frl   ', forc_frl  )
+      call check_vector_data ('Forcing t     [kelvin]', forc_t    )
+      call check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
+      call check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
+      call check_vector_data ('Forcing psrf  [pa]    ', forc_psrf )
+      call check_vector_data ('Forcing prl   [mm/s]  ', forc_prl  )
+      call check_vector_data ('Forcing sols  [W/m2]  ', forc_sols )
+      call check_vector_data ('Forcing soll  [W/m2]  ', forc_soll )
+      call check_vector_data ('Forcing solsd [W/m2]  ', forc_solsd)
+      call check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
+      call check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
       endif

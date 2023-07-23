@@ -1342,7 +1342,13 @@ contains
             call acc1d (sabg    , a_sabg   )
             call acc1d (olrg    , a_olrg   )
 
-            rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+            IF (DEF_forcing%has_missing_value) THEN
+               WHERE (forcmask)
+                  rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               END WHERE 
+            ELSE
+               rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+            ENDIF
             call acc1d (rnet    , a_rnet   )
 
             call acc1d (xerr   , a_xerr   )
@@ -1393,6 +1399,9 @@ contains
 
             allocate (r_trad (numpatch))
             do i = 1, numpatch
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask(i)) cycle
+               ENDIF
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
