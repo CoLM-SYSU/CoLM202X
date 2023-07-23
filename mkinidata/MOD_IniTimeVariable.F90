@@ -224,17 +224,17 @@ CONTAINS
         col_sminnbegnb        , &
         decomp_cpools_vr          (nl_soil_full,ndecomp_pools), &
         decomp_cpools             (ndecomp_pools)             , &
-        ctrunc_vr                 (nl_soil_full)              , &
+        ctrunc_vr                 (nl_soil)              , &
         ctrunc_veg            , &
         ctrunc_soil           , &
-        altmax                                                , &
+        altmax                , &
         altmax_lastyear       , &
         lag_npp
    INTEGER, intent(out) :: altmax_lastyear_indx
    REAL(r8),intent(out) ::      &
         decomp_npools_vr          (nl_soil_full,ndecomp_pools), &
         decomp_npools             (ndecomp_pools)             , &
-        ntrunc_vr                 (nl_soil_full)              , &
+        ntrunc_vr                 (nl_soil)              , &
         ntrunc_veg            , &
         ntrunc_soil           , &
         sminn_vr                  (nl_soil)                   , &
