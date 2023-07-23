@@ -129,7 +129,7 @@ CONTAINS
          ss = ''
          IF (present(filename)) ss = trim(ss) // trim(filename)
          IF (present(varname))  ss = trim(ss) // trim(varname)
-         write(*,'(A,I0,X,A)') 'Netcdf error: ', trim(nf90_strerror(status)), trim(ss)
+         write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))// ' ' //trim(ss)
 
 #ifdef USEMPI
          CALL mpi_abort (p_comm_glb, p_err)

@@ -10,7 +10,7 @@ MODULE MOD_Hydro_LateralFlow
    !   Lateral flows in CoLM include
    !   1. Surface flow over hillslopes; 
    !   2. Routing flow in rivers;
-   !   3. Ground water lateral flow. 
+   !   3. Groundwater (subsurface) lateral flow. 
    !
    !   Water exchanges between
    !   1. surface flow and rivers;
@@ -133,7 +133,6 @@ CONTAINS
       CALL check_vector_data ('River Velocity        ', riverveloct)
       CALL check_vector_data ('Surface Water Depth   ', wdsrf_hru)
       CALL check_vector_data ('Surface Water Velocity', veloc_hru)
-
 #endif
 
    END SUBROUTINE lateral_flow

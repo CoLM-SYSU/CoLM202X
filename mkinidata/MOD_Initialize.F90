@@ -416,7 +416,7 @@ MODULE MOD_Initialize
 
       IF (p_is_master) THEN
          IF(.not. greenwich)THEN
-            print *, ".........greenwich false"
+            write(*,*) char(27)//"[1;31m"//"Notice: greenwich false, local time is used."//char(27)//"[0m"
          ENDIF
       ENDIF
 
