@@ -46,7 +46,8 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_lakedepth       = .true.
    LOGICAL  :: USE_SITE_soilreflectance = .true.
    LOGICAL  :: USE_SITE_soilparameters  = .true.
-   LOGICAL  :: USE_SITE_dbedrock = .true.
+   LOGICAL  :: USE_SITE_dbedrock        = .true.
+   LOGICAL  :: USE_SITE_topography      = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -621,10 +622,10 @@ CONTAINS
          DEF_CASE_NAME,           &
          DEF_domain,              &
 #ifdef SinglePoint
-         SITE_lon_location,       &
-         SITE_lat_location,       &
-         SITE_fsrfdata,           &
-         SITE_landtype,           &
+         SITE_lon_location,        &
+         SITE_lat_location,        &
+         SITE_fsrfdata,            &
+         SITE_landtype,            &
          USE_SITE_pctpfts,         &
          USE_SITE_pctcrop,         &
          USE_SITE_htop,            &
@@ -632,7 +633,8 @@ CONTAINS
          USE_SITE_lakedepth,       &
          USE_SITE_soilreflectance, &
          USE_SITE_soilparameters,  &
-         USE_SITE_dbedrock,       &
+         USE_SITE_dbedrock,        &
+         USE_SITE_topography,      &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &

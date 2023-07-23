@@ -612,7 +612,7 @@ CONTAINS
 #endif
 
          IF (p_iam_worker == p_root) THEN
-            wfmt = "('Check vector data:', A25, ' is in (', I0, ',', I0, ')'"
+            wfmt = "('Check vector data:', A25, ' is in (', I20, ',', I20, ')')"
             write(*,wfmt) varname, vmin, vmax
          ENDIF
 

@@ -351,7 +351,7 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   IF(DEF_USE_BEDROCK)THEN
+   IF (DEF_USE_BEDROCK) THEN
       CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
    ENDIF
 
