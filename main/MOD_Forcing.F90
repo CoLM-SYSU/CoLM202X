@@ -276,7 +276,7 @@ contains
 
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
-            if ( .NOT. (tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar)) ) then
+            if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
                write(6, *) "the data required is out of range! stop!"; stop
             end if
 
@@ -831,7 +831,7 @@ contains
       integer,         intent(out) :: mday
       integer,         intent(out) :: time_i
 
-      integer :: i, day, sec
+      integer :: i, day, sec, ntime
       integer :: months(0:12)
 
       year = mtstamp%year
@@ -839,20 +839,22 @@ contains
       sec  = mtstamp%sec
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-         time_i = 0
-         DO i = 1, size(forctime)
-            IF (mtstamp < forctime(i)) THEN
-               time_i = i - 1
-               exit
-            ENDIF
-         ENDDO
-         IF (time_i <= 0) THEN
+        
+         ntime  = size(forctime)
+         time_i = 1
+
+         IF ((mtstamp < forctime(1)) .or. (forctime(ntime) < mtstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
+            write(*,*) 'Need ', mtstamp, ', Forc start ', forctime(1), ', Forc END', forctime(ntime)
             stop
          ELSE
+            DO WHILE (.not. (mtstamp < forctime(time_i+1)))
+               time_i = time_i + 1
+            ENDDO
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
+         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF

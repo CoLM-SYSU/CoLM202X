@@ -23,7 +23,7 @@ MODULE MOD_SingleSrfdata
    INTEGER  :: SITE_landtype = 1
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   REAL(r8), allocatable :: SITE_pfttyp  (:)
+   INTEGER,  allocatable :: SITE_pfttyp  (:)
    REAL(r8), allocatable :: SITE_pctpfts (:)
 #endif
 
