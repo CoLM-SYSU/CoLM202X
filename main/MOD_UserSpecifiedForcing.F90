@@ -331,9 +331,9 @@ CONTAINS
          case (4)
             metfilename = trim(metfilename) //'_mean_total_precipitation_rate.nc4'
          case (5)
-            metfilename = trim(metfilename) //'_100m_u_component_of_wind.nc4'
+            metfilename = trim(metfilename) //'_10m_u_component_of_wind.nc4'
          case (6)
-            metfilename = trim(metfilename) //'_100m_v_component_of_wind.nc4'
+            metfilename = trim(metfilename) //'_10m_v_component_of_wind.nc4'
          case (7)
             metfilename = trim(metfilename) //'_mean_surface_downward_short_wave_radiation_flux.nc4'
          case (8)
@@ -776,7 +776,7 @@ CONTAINS
 
                   case ('TPMFD') ! TPMFD forcing
 
-                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600./1000. ! convert to m/s
+                     forcn(4)%blk(ib,jb)%val(i,j)=forcn(4)%blk(ib,jb)%val(i,j)/3600.! convert to mm/s
                      forcn(3)%blk(ib,jb)%val(i,j)=forcn(3)%blk(ib,jb)%val(i,j)*100. ! convert to pa
 
                      call qsadv (forcn(1)%blk(ib,jb)%val(i,j), forcn(3)%blk(ib,jb)%val(i,j), &

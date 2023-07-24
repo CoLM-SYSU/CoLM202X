@@ -359,7 +359,7 @@ MODULE MOD_SimpleOcean
          tstar = vonkar/fh*dth
          qstar = vonkar/fq*dqh
 
-         thvstar=tstar+0.61*th*qstar
+         thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zol=zldis*vonkar*grav*thvstar/(ustar**2*thv)
          if(zol >= 0.) then       ! stable
            zol = min(2.,max(zol,1.e-6))

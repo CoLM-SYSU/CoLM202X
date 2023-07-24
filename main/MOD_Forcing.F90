@@ -271,11 +271,12 @@ contains
          ! loop for variables
          do ivar = 1, NVAR
 
-            if (tintalgo(ivar) == 'NULL') cycle
+            if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
+            if (trim(tintalgo(ivar)) == 'NULL') cycle
 
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
-            if ( .NOT. (tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar)) ) then
+            if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
                write(6, *) "the data required is out of range! stop!"; stop
             end if
 
@@ -575,16 +576,16 @@ contains
 #endif
       if (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
-      call check_vector_data ('Forcing t     ', forc_t    )
-      call check_vector_data ('Forcing q     ', forc_q    )
-      call check_vector_data ('Forcing prc   ', forc_prc  )
-      call check_vector_data ('Forcing psrf  ', forc_psrf )
-      call check_vector_data ('Forcing prl   ', forc_prl  )
-      call check_vector_data ('Forcing sols  ', forc_sols )
-      call check_vector_data ('Forcing soll  ', forc_soll )
-      call check_vector_data ('Forcing solsd ', forc_solsd)
-      call check_vector_data ('Forcing solld ', forc_solld)
-      call check_vector_data ('Forcing frl   ', forc_frl  )
+      call check_vector_data ('Forcing t     [kelvin]', forc_t    )
+      call check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
+      call check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
+      call check_vector_data ('Forcing psrf  [pa]    ', forc_psrf )
+      call check_vector_data ('Forcing prl   [mm/s]  ', forc_prl  )
+      call check_vector_data ('Forcing sols  [W/m2]  ', forc_sols )
+      call check_vector_data ('Forcing soll  [W/m2]  ', forc_soll )
+      call check_vector_data ('Forcing solsd [W/m2]  ', forc_solsd)
+      call check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
+      call check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
       endif
@@ -830,7 +831,7 @@ contains
       integer,         intent(out) :: mday
       integer,         intent(out) :: time_i
 
-      integer :: i, day, sec
+      integer :: i, day, sec, ntime
       integer :: months(0:12)
 
       year = mtstamp%year
@@ -838,20 +839,22 @@ contains
       sec  = mtstamp%sec
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-         time_i = 0
-         DO i = 1, size(forctime)
-            IF (mtstamp < forctime(i)) THEN
-               time_i = i - 1
-               exit
-            ENDIF
-         ENDDO
-         IF (time_i <= 0) THEN
+        
+         ntime  = size(forctime)
+         time_i = 1
+
+         IF ((mtstamp < forctime(1)) .or. (forctime(ntime) < mtstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
+            write(*,*) 'Need ', mtstamp, ', Forc start ', forctime(1), ', Forc END', forctime(ntime)
             stop
          ELSE
+            DO WHILE (.not. (mtstamp < forctime(time_i+1)))
+               time_i = time_i + 1
+            ENDDO
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
+         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF
