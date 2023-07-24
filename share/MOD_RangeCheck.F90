@@ -150,11 +150,11 @@ CONTAINS
             IF (len_trim(info) > 0) THEN
 #ifdef USEMPI
                CALL mpi_abort (p_comm_glb, p_err)
-#ELSE
+#else
                STOP
-#ENDIF
+#endif
             ENDIF
-#ENDIF
+#endif
 
          ENDIF
 
@@ -256,11 +256,11 @@ CONTAINS
             IF (len_trim(info) > 0) THEN
 #ifdef USEMPI
                CALL mpi_abort (p_comm_glb, p_err)
-#ELSE
+#else
                STOP
-#ENDIF
+#endif
             ENDIF
-#ENDIF
+#endif
 
          ENDIF
 
@@ -363,11 +363,11 @@ CONTAINS
             IF (len_trim(info) > 0) THEN
 #ifdef USEMPI
                CALL mpi_abort (p_comm_glb, p_err)
-#ELSE
+#else
                STOP
-#ENDIF
+#endif
             ENDIF
-#ENDIF
+#endif
 
          ENDIF
 
@@ -473,11 +473,11 @@ CONTAINS
             IF (len_trim(info) > 0) THEN
 #ifdef USEMPI
                CALL mpi_abort (p_comm_glb, p_err)
-#ELSE
+#else
                STOP
-#ENDIF
+#endif
             ENDIF
-#ENDIF
+#endif
 
          ENDIF
 
@@ -585,11 +585,11 @@ CONTAINS
             IF (len_trim(info) > 0) THEN
 #ifdef USEMPI
                CALL mpi_abort (p_comm_glb, p_err)
-#ELSE
+#else
                STOP
-#ENDIF
+#endif
             ENDIF
-#ENDIF
+#endif
 
          ENDIF
 
