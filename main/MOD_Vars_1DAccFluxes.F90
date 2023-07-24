@@ -1361,7 +1361,7 @@ contains
             IF (DEF_forcing%has_missing_value) THEN
                WHERE (forcmask)
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
-               END WHERE 
+               END WHERE
             ELSE
                rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
             ENDIF
@@ -1768,7 +1768,8 @@ contains
 
                beta = 1.
                zii = 1000.
-               thvstar=r_tstar_e+0.61*th*r_qstar_e
+
+               thvstar=r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e
                ur = sqrt(us*us+vs*vs)
                if(r_zol_e >= 0.)then
                   um = max(ur,0.1)

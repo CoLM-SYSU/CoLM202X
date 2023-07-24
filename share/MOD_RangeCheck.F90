@@ -145,6 +145,17 @@ CONTAINS
 
             wfmt = "('Check block  data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, gmin, gmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
+
          ENDIF
 
       ENDIF
@@ -240,6 +251,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -337,6 +358,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -437,6 +468,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -539,6 +580,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, info
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
