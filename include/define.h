@@ -1,9 +1,9 @@
 ! 1. Spatial structure:
 !    Select one of the following options.
 #undef GRIDBASED
-#undef CATCHMENT
+#define CATCHMENT
 #undef UNSTRUCTURED
-#define SinglePoint
+#undef SinglePoint
 
 ! 2. Land TYPE classification :
 !    Select one of the following options.
