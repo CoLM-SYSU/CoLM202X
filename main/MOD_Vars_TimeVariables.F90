@@ -89,39 +89,39 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (numpft > 0) THEN
-            allocate (tleaf_p      (numpft)) !leaf temperature [K]
-            allocate (ldew_p       (numpft)) !depth of water on foliage [mm]
-            allocate (ldew_rain_p  (numpft)) !depth of rain on foliage [mm]
-            allocate (ldew_snow_p  (numpft)) !depth of snow on foliage [mm]
-            allocate (sigf_p       (numpft)) !fraction of veg cover, excluding snow-covered veg [-]
-            allocate (tlai_p       (numpft)) !leaf area index
-            allocate (lai_p        (numpft)) !leaf area index
-            allocate (laisun_p     (numpft)) !leaf area index
-            allocate (laisha_p     (numpft)) !leaf area index
-            allocate (tsai_p       (numpft)) !stem area index
-            allocate (sai_p        (numpft)) !stem area index
-            allocate (ssun_p   (2,2,numpft)) !sunlit canopy absorption for solar radiation (0-1)
-            allocate (ssha_p   (2,2,numpft)) !shaded canopy absorption for solar radiation (0-1)
-            allocate (thermk_p     (numpft)) !canopy gap fraction for tir radiation
-            allocate (extkb_p      (numpft)) !(k, g(mu)/mu) direct solar extinction coefficient
-            allocate (extkd_p      (numpft)) !diffuse and scattered diffuse PAR extinction coefficient
-            allocate (tref_p       (numpft)) !2 m height air temperature [kelvin]
-            allocate (qref_p       (numpft)) !2 m height air specific humidity
-            allocate (rst_p        (numpft)) !canopy stomatal resistance (s/m)
-            allocate (z0m_p        (numpft)) !effective roughness [m]
-! Plant Hydraulic variables
-            allocate (vegwp_p      (1:nvegwcs,numpft))
-            allocate (gs0sun_p     (numpft))
-            allocate (gs0sha_p     (numpft))
+            allocate (tleaf_p      (numpft)) ; tleaf_p      (:) = spval !leaf temperature [K]
+            allocate (ldew_p       (numpft)) ; ldew_p       (:) = spval !depth of water on foliage [mm]
+            allocate (ldew_rain_p  (numpft)) ; ldew_rain_p  (:) = spval !depth of rain on foliage [mm]
+            allocate (ldew_snow_p  (numpft)) ; ldew_snow_p  (:) = spval !depth of snow on foliage [mm]
+            allocate (sigf_p       (numpft)) ; sigf_p       (:) = spval !fraction of veg cover, excluding snow-covered veg [-]
+            allocate (tlai_p       (numpft)) ; tlai_p       (:) = spval !leaf area index
+            allocate (lai_p        (numpft)) ; lai_p        (:) = spval !leaf area index
+            allocate (laisun_p     (numpft)) ; laisun_p     (:) = spval !leaf area index
+            allocate (laisha_p     (numpft)) ; laisha_p     (:) = spval !leaf area index
+            allocate (tsai_p       (numpft)) ; tsai_p       (:) = spval !stem area index
+            allocate (sai_p        (numpft)) ; sai_p        (:) = spval !stem area index
+            allocate (ssun_p   (2,2,numpft)) ; ssun_p   (:,:,:) = spval !sunlit canopy absorption for solar radiation (0-1)
+            allocate (ssha_p   (2,2,numpft)) ; ssha_p   (:,:,:) = spval !shaded canopy absorption for solar radiation (0-1)
+            allocate (thermk_p     (numpft)) ; thermk_p     (:) = spval !canopy gap fraction for tir radiation
+            allocate (extkb_p      (numpft)) ; extkb_p      (:) = spval !(k, g(mu)/mu) direct solar extinction coefficient
+            allocate (extkd_p      (numpft)) ; extkd_p      (:) = spval !diffuse and scattered diffuse PAR extinction coefficient
+            allocate (tref_p       (numpft)) ; tref_p       (:) = spval !2 m height air temperature [kelvin]
+            allocate (qref_p       (numpft)) ; qref_p       (:) = spval !2 m height air specific humidity
+            allocate (rst_p        (numpft)) ; rst_p        (:) = spval !canopy stomatal resistance (s/m)
+            allocate (z0m_p        (numpft)) ; z0m_p        (:) = spval !effective roughness [m]
+! Plant Hydraulic variables; draulic variables
+            allocate (vegwp_p(1:nvegwcs,numpft)); vegwp_p (:,:) = spval
+            allocate (gs0sun_p     (numpft)); gs0sun_p      (:) = spval
+            allocate (gs0sha_p     (numpft)); gs0sha_p      (:) = spval
 ! end plant hydraulic variables
 ! Allocate Ozone Stress Variables
-            allocate (o3coefv_sun_p(numpft)) !Ozone stress factor for photosynthesis on sunlit leaf
-            allocate (o3coefv_sha_p(numpft)) !Ozone stress factor for photosynthesis on shaded leaf
-            allocate (o3coefg_sun_p(numpft)) !Ozone stress factor for stomata on sunlit leaf
-            allocate (o3coefg_sha_p(numpft)) !Ozone stress factor for stomata on shaded leaf
-            allocate (lai_old_p    (numpft)) !lai in last time step
-            allocate (o3uptakesun_p(numpft)) !Ozone does, sunlit leaf (mmol O3/m^2)
-            allocate (o3uptakesha_p(numpft)) !Ozone does, shaded leaf (mmol O3/m^2)
+            allocate (o3coefv_sun_p(numpft)) ; o3coefv_sun_p(:) = spval !Ozone stress factor for photosynthesis on sunlit leaf
+            allocate (o3coefv_sha_p(numpft)) ; o3coefv_sha_p(:) = spval !Ozone stress factor for photosynthesis on shaded leaf
+            allocate (o3coefg_sun_p(numpft)) ; o3coefg_sun_p(:) = spval !Ozone stress factor for stomata on sunlit leaf
+            allocate (o3coefg_sha_p(numpft)) ; o3coefg_sha_p(:) = spval !Ozone stress factor for stomata on shaded leaf
+            allocate (lai_old_p    (numpft)) ; lai_old_p    (:) = spval !lai in last time step
+            allocate (o3uptakesun_p(numpft)) ; o3uptakesun_p(:) = spval !Ozone does, sunlit leaf (mmol O3/m^2)
+            allocate (o3uptakesha_p(numpft)) ; o3uptakesha_p(:) = spval !Ozone does, shaded leaf (mmol O3/m^2)
 ! End allocate Ozone Stress Variables
          ENDIF
       ENDIF
@@ -428,36 +428,36 @@ CONTAINS
 
       IF (p_is_worker) THEN
          IF (numpc > 0) THEN
-            allocate (tleaf_c    (0:N_PFT-1,numpc)) !leaf temperature [K]
-            allocate (ldew_c     (0:N_PFT-1,numpc)) !depth of water on foliage [mm]
-            allocate (ldew_rain_c(0:N_PFT-1,numpc)) !depth of rain on foliage [mm]
-            allocate (ldew_snow_c(0:N_PFT-1,numpc)) !depth of snow on foliage [mm]
-            allocate (sigf_c     (0:N_PFT-1,numpc)) !fraction of veg cover, excluding snow-covered veg [-]
-            allocate (tlai_c     (0:N_PFT-1,numpc)) !leaf area index
-            allocate (lai_c      (0:N_PFT-1,numpc)) !leaf area index
-            allocate (tsai_c     (0:N_PFT-1,numpc)) !stem area index
-            allocate (sai_c      (0:N_PFT-1,numpc)) !stem area index
-            allocate (ssun_c (2,2,0:N_PFT-1,numpc)) !sunlit canopy absorption for solar radiation (0-1)
-            allocate (ssha_c (2,2,0:N_PFT-1,numpc)) !shaded canopy absorption for solar radiation (0-1)
-            allocate (thermk_c   (0:N_PFT-1,numpc)) !canopy gap fraction for tir radiation
-            allocate (fshade_c   (0:N_PFT-1,numpc)) !canopy gap fraction for tir radiation
-            allocate (extkb_c    (0:N_PFT-1,numpc)) !(k, g(mu)/mu) direct solar extinction coefficient
-            allocate (extkd_c    (0:N_PFT-1,numpc)) !diffuse and scattered diffuse PAR extinction coefficient
-            allocate (rst_c      (0:N_PFT-1,numpc)) !canopy stomatal resistance (s/m)
-            allocate (z0m_c      (0:N_PFT-1,numpc)) !effective roughness [m]
-!Plant Hydraulic parameters
-            allocate (vegwp_c    (1:nvegwcs,0:N_PFT-1,numpc))
-            allocate (gs0sun_c   (0:N_PFT-1,numpc))
-            allocate (gs0sha_c   (0:N_PFT-1,numpc))
+            allocate (tleaf_c    (0:N_PFT-1,numpc))   ; tleaf_c      (:,:) = spval      !leaf temperature [K]
+            allocate (ldew_c     (0:N_PFT-1,numpc))   ; ldew_c       (:,:) = spval      !depth of water on foliage [mm]
+            allocate (ldew_rain_c(0:N_PFT-1,numpc))   ; ldew_rain_c  (:,:) = spval      !depth of rain on foliage [mm]
+            allocate (ldew_snow_c(0:N_PFT-1,numpc))   ; ldew_snow_c  (:,:) = spval      !depth of snow on foliage [mm]
+            allocate (sigf_c     (0:N_PFT-1,numpc))   ; sigf_c       (:,:) = spval      !fraction of veg cover, excluding snow-covered veg [-]
+            allocate (tlai_c     (0:N_PFT-1,numpc))   ; tlai_c       (:,:) = spval      !leaf area index
+            allocate (lai_c      (0:N_PFT-1,numpc))   ; lai_c        (:,:) = spval      !leaf area index
+            allocate (tsai_c     (0:N_PFT-1,numpc))   ; tsai_c       (:,:) = spval      !stem area index
+            allocate (sai_c      (0:N_PFT-1,numpc))   ; sai_c        (:,:) = spval      !stem area index
+            allocate (ssun_c (2,2,0:N_PFT-1,numpc))   ; ssun_c     (2,2,:) = spval      !sunlit canopy absorption for solar radiation (0-1)
+            allocate (ssha_c (2,2,0:N_PFT-1,numpc))   ; ssha_c     (2,2,:) = spval      !shaded canopy absorption for solar radiation (0-1)
+            allocate (thermk_c   (0:N_PFT-1,numpc))   ; thermk_c     (:,:) = spval      !canopy gap fraction for tir radiation
+            allocate (fshade_c   (0:N_PFT-1,numpc))   ; fshade_c     (:,:) = spval      !canopy gap fraction for tir radiation
+            allocate (extkb_c    (0:N_PFT-1,numpc))   ; extkb_c      (:,:) = spval      !(k, g(mu)/mu) direct solar extinction coefficient
+            allocate (extkd_c    (0:N_PFT-1,numpc))   ; extkd_c      (:,:) = spval      !diffuse and scattered diffuse PAR extinction coefficient
+            allocate (rst_c      (0:N_PFT-1,numpc))   ; rst_c        (:,:) = spval      !canopy stomatal resistance (s/m)
+            allocate (z0m_c      (0:N_PFT-1,numpc))   ; z0m_c        (:,:) = spval      !effective roughness [m]
+!Plant Hydraulic parameters; raulic parameters
+            allocate (vegwp_c(1:nvegwcs,0:N_PFT-1,numpc)); vegwp_c (:,:,:) = spval
+            allocate (gs0sun_c   (0:N_PFT-1,numpc))   ; gs0sun_c     (:,:) = spval      
+            allocate (gs0sha_c   (0:N_PFT-1,numpc))   ; gs0sha_c     (:,:) = spval      
 !end plant hydraulic parameters
 !Ozone Stress Variables
-            allocate (o3coefv_sun_c(0:N_PFT-1,numpc)) !Ozone stress factor for photosynthesis on sunlit leaf
-            allocate (o3coefv_sha_c(0:N_PFT-1,numpc)) !Ozone stress factor for photosynthesis on shaded leaf
-            allocate (o3coefg_sun_c(0:N_PFT-1,numpc)) !Ozone stress factor for stomata on sunlit leaf
-            allocate (o3coefg_sha_c(0:N_PFT-1,numpc)) !Ozone stress factor for stomata on shaded leaf
-            allocate (lai_old_c    (0:N_PFT-1,numpc)) !lai in last time step
-            allocate (o3uptakesun_c(0:N_PFT-1,numpc)) !Ozone does, sunlit leaf (mmol O3/m^2)
-            allocate (o3uptakesha_c(0:N_PFT-1,numpc)) !Ozone does, shaded leaf (mmol O3/m^2)
+            allocate (o3coefv_sun_c(0:N_PFT-1,numpc)) ; o3coefv_sun_c(:,:) = spval      !Ozone stress factor for photosynthesis on sunlit leaf
+            allocate (o3coefv_sha_c(0:N_PFT-1,numpc)) ; o3coefv_sha_c(:,:) = spval      !Ozone stress factor for photosynthesis on shaded leaf
+            allocate (o3coefg_sun_c(0:N_PFT-1,numpc)) ; o3coefg_sun_c(:,:) = spval      !Ozone stress factor for stomata on sunlit leaf
+            allocate (o3coefg_sha_c(0:N_PFT-1,numpc)) ; o3coefg_sha_c(:,:) = spval      !Ozone stress factor for stomata on shaded leaf
+            allocate (lai_old_c    (0:N_PFT-1,numpc)) ; lai_old_c    (:,:) = spval      !lai in last time step
+            allocate (o3uptakesun_c(0:N_PFT-1,numpc)) ; o3uptakesun_c(:,:) = spval      !Ozone does, sunlit leaf (mmol O3/m^2)
+            allocate (o3uptakesha_c(0:N_PFT-1,numpc)) ; o3uptakesha_c(:,:) = spval      !Ozone does, shaded leaf (mmol O3/m^2)
 !End Ozone Stress Variables
          ENDIF
       ENDIF
@@ -817,98 +817,98 @@ MODULE MOD_Vars_TimeVariables
 
         if (numpatch > 0) then
 
-           allocate (z_sno      (maxsnl+1:0,      numpatch))
-           allocate (dz_sno     (maxsnl+1:0,      numpatch))
-           allocate (t_soisno   (maxsnl+1:nl_soil,numpatch))
-           allocate (wliq_soisno(maxsnl+1:nl_soil,numpatch))
-           allocate (wice_soisno(maxsnl+1:nl_soil,numpatch))
-           allocate (smp               (1:nl_soil,numpatch))
-           allocate (hk                (1:nl_soil,numpatch))
-           allocate (h2osoi            (1:nl_soil,numpatch))
-           allocate (rootr             (1:nl_soil,numpatch))
+           allocate (z_sno      (maxsnl+1:0,      numpatch)); z_sno       (:,:) = spval
+           allocate (dz_sno     (maxsnl+1:0,      numpatch)); dz_sno      (:,:) = spval
+           allocate (t_soisno   (maxsnl+1:nl_soil,numpatch)); t_soisno    (:,:) = spval
+           allocate (wliq_soisno(maxsnl+1:nl_soil,numpatch)); wliq_soisno (:,:) = spval
+           allocate (wice_soisno(maxsnl+1:nl_soil,numpatch)); wice_soisno (:,:) = spval
+           allocate (smp               (1:nl_soil,numpatch)); smp         (:,:) = spval
+           allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
+           allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
+           allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
 !Plant Hydraulic variables
-           allocate (vegwp             (1:nvegwcs,numpatch))
-           allocate (gs0sun                      (numpatch))
-           allocate (gs0sha                      (numpatch))
+           allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
+           allocate (gs0sun                      (numpatch)); gs0sun        (:) = spval
+           allocate (gs0sha                      (numpatch)); gs0sha        (:) = spval
 !end plant hydraulic variables
 !Ozone Stress variables
-           allocate (o3coefv_sun                 (numpatch)) ! Ozone stress factor for photosynthesis on sunlit leaf
-           allocate (o3coefv_sha                 (numpatch)) ! Ozone stress factor for photosynthesis on shaded leaf
-           allocate (o3coefg_sun                 (numpatch)) ! Ozone stress factor for stomata on sunlit leaf
-           allocate (o3coefg_sha                 (numpatch)) ! Ozone stress factor for stomata on shaded leaf
-           allocate (lai_old                     (numpatch)) ! lai in last time step
-           allocate (o3uptakesun                 (numpatch)) ! Ozone does, sunlit leaf (mmol O3/m^2)
-           allocate (o3uptakesha                 (numpatch)) ! Ozone does, shaded leaf (mmol O3/m^2)
+           allocate (o3coefv_sun                 (numpatch)); o3coefv_sun   (:) = spval
+           allocate (o3coefv_sha                 (numpatch)); o3coefv_sha   (:) = spval
+           allocate (o3coefg_sun                 (numpatch)); o3coefg_sun   (:) = spval
+           allocate (o3coefg_sha                 (numpatch)); o3coefg_sha   (:) = spval
+           allocate (lai_old                     (numpatch)); lai_old       (:) = spval
+           allocate (o3uptakesun                 (numpatch)); o3uptakesun   (:) = spval
+           allocate (o3uptakesha                 (numpatch)); o3uptakesha   (:) = spval
 !End ozone stress variables
-           allocate (rstfacsun_out               (numpatch))
-           allocate (rstfacsha_out               (numpatch))
-           allocate (gssun_out                   (numpatch))
-           allocate (gssha_out                   (numpatch))
-           allocate (assimsun_out                (numpatch))
-           allocate (assimsha_out                (numpatch))
-           allocate (etrsun_out                  (numpatch))
-           allocate (etrsha_out                  (numpatch))
+           allocate (rstfacsun_out               (numpatch)); rstfacsun_out (:) = spval
+           allocate (rstfacsha_out               (numpatch)); rstfacsha_out (:) = spval
+           allocate (gssun_out                   (numpatch)); gssun_out     (:) = spval
+           allocate (gssha_out                   (numpatch)); gssha_out     (:) = spval
+           allocate (assimsun_out                (numpatch)); assimsun_out  (:) = spval
+           allocate (assimsha_out                (numpatch)); assimsha_out  (:) = spval
+           allocate (etrsun_out                  (numpatch)); etrsun_out    (:) = spval
+           allocate (etrsha_out                  (numpatch)); etrsha_out    (:) = spval
 
-           allocate (t_grnd                      (numpatch))
-           allocate (tleaf                       (numpatch))
-           allocate (ldew                        (numpatch))
-           allocate (ldew_rain                   (numpatch))
-           allocate (ldew_snow                   (numpatch))
-           allocate (sag                         (numpatch))
-           allocate (scv                         (numpatch))
-           allocate (snowdp                      (numpatch))
-           allocate (fveg                        (numpatch))
-           allocate (fsno                        (numpatch))
-           allocate (sigf                        (numpatch))
-           allocate (green                       (numpatch))
-           allocate (tlai                        (numpatch))
-           allocate (lai                         (numpatch))
-           allocate (laisun                      (numpatch))
-           allocate (laisha                      (numpatch))
-           allocate (tsai                        (numpatch))
-           allocate (sai                         (numpatch))
-           allocate (coszen                      (numpatch))
-           allocate (alb                     (2,2,numpatch))
-           allocate (ssun                    (2,2,numpatch))
-           allocate (ssha                    (2,2,numpatch))
-           allocate (thermk                      (numpatch))
-           allocate (extkb                       (numpatch))
-           allocate (extkd                       (numpatch))
-           allocate (zwt                         (numpatch))
-           allocate (wa                          (numpatch))
-           allocate (wat                         (numpatch))
-           allocate (wdsrf                       (numpatch))
+           allocate (t_grnd                      (numpatch)); t_grnd        (:) = spval
+           allocate (tleaf                       (numpatch)); tleaf         (:) = spval
+           allocate (ldew                        (numpatch)); ldew          (:) = spval
+           allocate (ldew_rain                   (numpatch)); ldew_rain     (:) = spval
+           allocate (ldew_snow                   (numpatch)); ldew_snow     (:) = spval
+           allocate (sag                         (numpatch)); sag           (:) = spval
+           allocate (scv                         (numpatch)); scv           (:) = spval
+           allocate (snowdp                      (numpatch)); snowdp        (:) = spval
+           allocate (fveg                        (numpatch)); fveg          (:) = spval
+           allocate (fsno                        (numpatch)); fsno          (:) = spval
+           allocate (sigf                        (numpatch)); sigf          (:) = spval
+           allocate (green                       (numpatch)); green         (:) = spval
+           allocate (tlai                        (numpatch)); tlai          (:) = spval
+           allocate (lai                         (numpatch)); lai           (:) = spval
+           allocate (laisun                      (numpatch)); laisun        (:) = spval
+           allocate (laisha                      (numpatch)); laisha        (:) = spval
+           allocate (tsai                        (numpatch)); tsai          (:) = spval
+           allocate (sai                         (numpatch)); sai           (:) = spval
+           allocate (coszen                      (numpatch)); coszen        (:) = spval
+           allocate (alb                     (2,2,numpatch)); alb       (:,:,:) = spval
+           allocate (ssun                    (2,2,numpatch)); ssun      (:,:,:) = spval
+           allocate (ssha                    (2,2,numpatch)); ssha      (:,:,:) = spval
+           allocate (thermk                      (numpatch)); thermk        (:) = spval
+           allocate (extkb                       (numpatch)); extkb         (:) = spval
+           allocate (extkd                       (numpatch)); extkd         (:) = spval
+           allocate (zwt                         (numpatch)); zwt           (:) = spval
+           allocate (wa                          (numpatch)); wa            (:) = spval
+           allocate (wat                         (numpatch)); wat           (:) = spval
+           allocate (wdsrf                       (numpatch)); wdsrf         (:) = spval
 
-           allocate (t_lake              (nl_lake,numpatch))!new lake scheme
-           allocate (lake_icefrac        (nl_lake,numpatch))!new lake scheme
-           allocate (savedtke1                   (numpatch))!new lake scheme
+           allocate (t_lake              (nl_lake,numpatch)); t_lake      (:,:) = spval
+           allocate (lake_icefrac        (nl_lake,numpatch)); lake_icefrac(:,:) = spval
+           allocate (savedtke1                   (numpatch)); savedtke1     (:) = spval
 
-           allocate (snw_rds          (maxsnl+1:0,numpatch))
-           allocate (mss_bcpho        (maxsnl+1:0,numpatch))
-           allocate (mss_bcphi        (maxsnl+1:0,numpatch))
-           allocate (mss_ocpho        (maxsnl+1:0,numpatch))
-           allocate (mss_ocphi        (maxsnl+1:0,numpatch))
-           allocate (mss_dst1         (maxsnl+1:0,numpatch))
-           allocate (mss_dst2         (maxsnl+1:0,numpatch))
-           allocate (mss_dst3         (maxsnl+1:0,numpatch))
-           allocate (mss_dst4         (maxsnl+1:0,numpatch))
-           allocate (ssno         (2,2,maxsnl+1:1,numpatch))
+           allocate (snw_rds          (maxsnl+1:0,numpatch)); snw_rds     (:,:) = spval
+           allocate (mss_bcpho        (maxsnl+1:0,numpatch)); mss_bcpho   (:,:) = spval
+           allocate (mss_bcphi        (maxsnl+1:0,numpatch)); mss_bcphi   (:,:) = spval
+           allocate (mss_ocpho        (maxsnl+1:0,numpatch)); mss_ocpho   (:,:) = spval
+           allocate (mss_ocphi        (maxsnl+1:0,numpatch)); mss_ocphi   (:,:) = spval
+           allocate (mss_dst1         (maxsnl+1:0,numpatch)); mss_dst1    (:,:) = spval
+           allocate (mss_dst2         (maxsnl+1:0,numpatch)); mss_dst2    (:,:) = spval
+           allocate (mss_dst3         (maxsnl+1:0,numpatch)); mss_dst3    (:,:) = spval
+           allocate (mss_dst4         (maxsnl+1:0,numpatch)); mss_dst4    (:,:) = spval
+           allocate (ssno         (2,2,maxsnl+1:1,numpatch)); ssno    (:,:,:,:) = spval
 
-           allocate (trad                        (numpatch))
-           allocate (tref                        (numpatch))
-           allocate (qref                        (numpatch))
-           allocate (rst                         (numpatch))
-           allocate (emis                        (numpatch))
-           allocate (z0m                         (numpatch))
-           allocate (displa                      (numpatch))
-           allocate (zol                         (numpatch))
-           allocate (rib                         (numpatch))
-           allocate (ustar                       (numpatch))
-           allocate (qstar                       (numpatch))
-           allocate (tstar                       (numpatch))
-           allocate (fm                          (numpatch))
-           allocate (fh                          (numpatch))
-           allocate (fq                          (numpatch))
+           allocate (trad                        (numpatch)); trad          (:) = spval
+           allocate (tref                        (numpatch)); tref          (:) = spval
+           allocate (qref                        (numpatch)); qref          (:) = spval
+           allocate (rst                         (numpatch)); rst           (:) = spval
+           allocate (emis                        (numpatch)); emis          (:) = spval
+           allocate (z0m                         (numpatch)); z0m           (:) = spval
+           allocate (displa                      (numpatch)); displa        (:) = spval
+           allocate (zol                         (numpatch)); zol           (:) = spval
+           allocate (rib                         (numpatch)); rib           (:) = spval
+           allocate (ustar                       (numpatch)); ustar         (:) = spval
+           allocate (qstar                       (numpatch)); qstar         (:) = spval
+           allocate (tstar                       (numpatch)); tstar         (:) = spval
+           allocate (fm                          (numpatch)); fm            (:) = spval
+           allocate (fh                          (numpatch)); fh            (:) = spval
+           allocate (fq                          (numpatch)); fq            (:) = spval
 
         end if
   end if

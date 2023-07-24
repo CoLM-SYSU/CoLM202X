@@ -142,7 +142,7 @@ SAVE
   ! --------------------------------------------------------------------
 
      use MOD_Precision
-     use MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools
+     use MOD_Vars_Global, only: nl_soil, ndecomp_transitions, ndecomp_pools, spval_i4, spval
      use MOD_SPMD_Task
      use MOD_LandPatch, only : numpatch
      IMPLICIT NONE
@@ -151,20 +151,20 @@ SAVE
 
      if (numpatch > 0) then
 ! bgc varaibles
-     allocate (donor_pool        (ndecomp_transitions))
-     allocate (receiver_pool     (ndecomp_transitions))
-     allocate (floating_cn_ratio (ndecomp_pools))
-     allocate (initial_cn_ratio  (ndecomp_pools))
-     allocate (rf_decomp         (nl_soil,ndecomp_transitions,numpatch))
-     allocate (pathfrac_decomp   (nl_soil,ndecomp_transitions,numpatch))
-     allocate (is_cwd            (ndecomp_pools)) ! True => is a coarse woody debris pool
-     allocate (is_litter         (ndecomp_pools)) ! True => is a litter pool
-     allocate (is_soil           (ndecomp_pools)) ! True => is a soil pool
-     allocate (gdp_lf            (numpatch))
-     allocate (abm_lf            (numpatch))
-     allocate (peatf_lf          (numpatch))
-     allocate (cmb_cmplt_fact    (2))
-     allocate (rice2pdt          (numpatch))
+     allocate (donor_pool        (ndecomp_transitions))                  ; donor_pool         (:) = spval_i4
+     allocate (receiver_pool     (ndecomp_transitions))                  ; receiver_pool      (:) = spval_i4
+     allocate (floating_cn_ratio (ndecomp_pools))                        ; floating_cn_ratio  (:) = .false.
+     allocate (initial_cn_ratio  (ndecomp_pools))                        ; initial_cn_ratio   (:) = spval
+     allocate (rf_decomp         (nl_soil,ndecomp_transitions,numpatch)) ; rf_decomp      (:,:,:) = spval
+     allocate (pathfrac_decomp   (nl_soil,ndecomp_transitions,numpatch)) ; pathfrac_decomp(:,:,:) = spval
+     allocate (is_cwd            (ndecomp_pools))                        ; is_cwd             (:) = .false. ! True => is a coarse woody debris pool
+     allocate (is_litter         (ndecomp_pools))                        ; is_litter          (:) = .false. ! True => is a litter pool
+     allocate (is_soil           (ndecomp_pools))                        ; is_soil            (:) = .false. ! True => is a soil pool
+     allocate (gdp_lf            (numpatch))                             ; gdp_lf             (:) = spval
+     allocate (abm_lf            (numpatch))                             ; abm_lf             (:) = spval
+     allocate (peatf_lf          (numpatch))                             ; peatf_lf           (:) = spval
+     allocate (cmb_cmplt_fact    (2))                                    ; cmb_cmplt_fact     (:) = spval
+     allocate (rice2pdt          (numpatch))                             ; rice2pdt           (:) = spval_i4
 
 ! end bgc variables
   end if
