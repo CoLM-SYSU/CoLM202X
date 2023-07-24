@@ -213,9 +213,9 @@ SAVE
      call ncio_read_bcast_serial (file_restart, 'is_litter      ', is_litter      )
      call ncio_read_bcast_serial (file_restart, 'is_soil        ', is_soil        )
 
-     call ncio_read_vector       (file_restart, 'gdp_lf         ', landpatch, gdp_lf        )
-     call ncio_read_vector       (file_restart, 'abm_lf         ', landpatch, abm_lf        )
-     call ncio_read_vector       (file_restart, 'peatf_lf       ', landpatch, peatf_lf      )
+!     call ncio_read_vector       (file_restart, 'gdp_lf         ', landpatch, gdp_lf        )
+!     call ncio_read_vector       (file_restart, 'abm_lf         ', landpatch, abm_lf        )
+!     call ncio_read_vector       (file_restart, 'peatf_lf       ', landpatch, peatf_lf      )
      call ncio_read_bcast_serial (file_restart, 'cmb_cmplt_fact ', cmb_cmplt_fact )
      call ncio_read_vector       (file_restart, 'rice2pdt       ', landpatch, rice2pdt      )
 
@@ -337,9 +337,9 @@ SAVE
                           'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, rf_decomp      , compress)
      call ncio_write_vector       (file_restart, 'pathfrac_decomp', 'soil'   , nl_soil  , &
                           'ndecomp_transitions', ndecomp_transitions,'patch', landpatch, pathfrac_decomp, compress)
-     call ncio_write_vector       (file_restart, 'gdp_lf         ',  'patch', landpatch, gdp_lf         , compress)
-     call ncio_write_vector       (file_restart, 'abm_lf         ',  'patch', landpatch, abm_lf         , compress)
-     call ncio_write_vector       (file_restart, 'peatf_lf       ',  'patch', landpatch, peatf_lf       , compress)
+!     call ncio_write_vector       (file_restart, 'gdp_lf         ',  'patch', landpatch, gdp_lf         , compress)
+!     call ncio_write_vector       (file_restart, 'abm_lf         ',  'patch', landpatch, abm_lf         , compress)
+!     call ncio_write_vector       (file_restart, 'peatf_lf       ',  'patch', landpatch, peatf_lf       , compress)
      call ncio_write_vector       (file_restart, 'rice2pdt       ',  'patch', landpatch, rice2pdt       , compress)
 
      if (p_is_master) then

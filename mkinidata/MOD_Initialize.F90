@@ -655,7 +655,7 @@ MODULE MOD_Initialize
             CALL iniTimeVar(i, patchtype(i)&
                ,porsl(1:,i),psi0(1:,i),hksati(1:,i)&
                ,soil_s_v_alb(i),soil_d_v_alb(i),soil_s_n_alb(i),soil_d_n_alb(i)&
-               ,z0m(i),zlnd,chil(m),rho(1:,1:,m),tau(1:,1:,m)&
+               ,z0m(i),zlnd,htop(i),z0mr(m),chil(m),rho(1:,1:,m),tau(1:,1:,m)&
                ,z_soisno(maxsnl+1:,i),dz_soisno(maxsnl+1:,i)&
                ,t_soisno(maxsnl+1:,i),wliq_soisno(maxsnl+1:,i),wice_soisno(maxsnl+1:,i)&
                ,smp(1:,i),hk(1:,i),zwt(i),wa(i)&

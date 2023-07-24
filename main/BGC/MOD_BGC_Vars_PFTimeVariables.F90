@@ -741,7 +741,7 @@ CONTAINS
      call ncio_read_vector (file_restart, 'gresp_storage_p        ', landpft, gresp_storage_p       )
      call ncio_read_vector (file_restart, 'gresp_xfer_p           ', landpft, gresp_xfer_p          )
      call ncio_read_vector (file_restart, 'cpool_p                ', landpft, cpool_p               )
-     call ncio_read_vector (file_restart, 'totvegc_p              ', landpft, totvegc_p             )
+!     call ncio_read_vector (file_restart, 'totvegc_p              ', landpft, totvegc_p             )
      call ncio_read_vector (file_restart, 'cropprod1c_p           ', landpft, cropprod1c_p          )
 
      call ncio_read_vector (file_restart, 'leafn_p                ', landpft, leafn_p               )
@@ -767,7 +767,7 @@ CONTAINS
      call ncio_read_vector (file_restart, 'grainn_xfer_p          ', landpft, grainn_xfer_p         )
      call ncio_read_vector (file_restart, 'cropseedn_deficit_p    ', landpft, cropseedn_deficit_p   )
      call ncio_read_vector (file_restart, 'retransn_p             ', landpft, retransn_p            )
-     call ncio_read_vector (file_restart, 'totvegn_p              ', landpft, totvegn_p             )
+!     call ncio_read_vector (file_restart, 'totvegn_p              ', landpft, totvegn_p             )
 
      call ncio_read_vector (file_restart, 'harvdate_p             ', landpft, harvdate_p            )
 
@@ -1192,8 +1192,8 @@ CONTAINS
      gresp_xfer_p          , compress)
      call ncio_write_vector (file_restart, 'cpool_p                ', 'pft', landpft, &
      cpool_p               , compress)
-     call ncio_write_vector (file_restart, 'totvegc_p              ', 'pft', landpft, &
-     totvegc_p             , compress)
+!     call ncio_write_vector (file_restart, 'totvegc_p              ', 'pft', landpft, &
+!     totvegc_p             , compress)
      call ncio_write_vector (file_restart, 'cropprod1c_p           ', 'pft', landpft, &
      cropprod1c_p          , compress)
 
@@ -1243,8 +1243,8 @@ CONTAINS
      cropseedn_deficit_p   , compress)
      call ncio_write_vector (file_restart, 'retransn_p             ', 'pft', landpft, &
      retransn_p            , compress)
-     call ncio_write_vector (file_restart, 'totvegn_p              ', 'pft', landpft, &
-     totvegn_p             , compress)
+!     call ncio_write_vector (file_restart, 'totvegn_p              ', 'pft', landpft, &
+!     totvegn_p             , compress)
 
      call ncio_write_vector (file_restart, 'harvdate_p             ', 'pft', landpft, &
      harvdate_p            , compress)

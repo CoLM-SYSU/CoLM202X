@@ -223,9 +223,6 @@ CONTAINS
       srni  = solni*alb(2,2)
       sr    = srvd + srvi + srnd + srni
 
-      !print *, "solar radiation balance check:", forc_sols+forc_soll+forc_solsd+forc_solld-&
-      !   sabg-sabvsun-sabvsha-sr
-
       ! calculate the local secs
       radpsec = pi/12./3600.
       IF ( isgreenwich ) THEN
