@@ -408,7 +408,7 @@ PROGRAM CoLM
       ELSE
          ! Update every 8 days (time interval of the MODIS LAI data)
          Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-         if(Julian_8day /= Julian_8day_p)then
+         if ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) then
             CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
             ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)

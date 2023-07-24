@@ -1,7 +1,7 @@
 &nl_colm_forcing
 
    ! ----- forcing -----
-   DEF_dir_forcing  = '/tera05/zhangsp/ISMN/forcing_from_era5land/'
+   DEF_dir_forcing  = '/tera06/zhwei/CoLM_Forcing/PLUMBER2/Forcing/'
 
    DEF_forcing%dataset           = 'POINT' 
    DEF_forcing%solarin_all_band  = .true.  
@@ -15,14 +15,14 @@
    DEF_forcing%endyr             = 2020     ! end year of forcing data
    DEF_forcing%endmo             = 12       ! end month of forcing data
    
-   DEF_forcing%fprefix(1) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(2) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(3) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(4) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(5) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(6) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(7) = 'DingHuShan.nc'
-   DEF_forcing%fprefix(8) = 'DingHuShan.nc'
+   DEF_forcing%fprefix(1) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(2) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(3) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(4) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(5) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(6) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(7) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
+   DEF_forcing%fprefix(8) = 'CN-Dan_2004-2005_FLUXNET2015_Met.nc'
    
    DEF_forcing%vname    = 'Tair' 'Qair' 'Psurf' 'Precip' 'NULL' 'Wind' 'SWdown' 'LWdown' 
    DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
