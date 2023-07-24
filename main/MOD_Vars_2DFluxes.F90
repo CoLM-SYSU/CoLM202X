@@ -117,7 +117,7 @@ MODULE MOD_Vars_2DFluxes
 
    !---------------------------------------------------------------------
    type(block_data_real8_2d) :: f_ustar   ! u* in similarity theory [m/s]
-   type(block_data_real8_2d) :: f_tstar   ! t* in similarity theory [kg/kg]
+   type(block_data_real8_2d) :: f_tstar   ! t* in similarity theory [K]
    type(block_data_real8_2d) :: f_qstar   ! q* in similarity theory [kg/kg]
    type(block_data_real8_2d) :: f_zol     ! dimensionless height (z/L) used in Monin-Obukhov theory
    type(block_data_real8_2d) :: f_rib     ! bulk Richardson number in surface layer
@@ -268,7 +268,7 @@ CONTAINS
 
          !---------------------------------------------------------------------
          call allocate_block_data (grid, f_ustar)  ! u* in similarity theory [m/s]
-         call allocate_block_data (grid, f_tstar)  ! t* in similarity theory [kg/kg]
+         call allocate_block_data (grid, f_tstar)  ! t* in similarity theory [K]
          call allocate_block_data (grid, f_qstar)  ! q* in similarity theory [kg/kg]
          call allocate_block_data (grid, f_zol  )  ! dimensionless height (z/L) used in Monin-Obukhov theory
          call allocate_block_data (grid, f_rib  )  ! bulk Richardson number in surface layer
