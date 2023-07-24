@@ -1,9 +1,9 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'DingHuShan'         
+   DEF_CASE_NAME = 'CN_Dan'         
    
    ! surface data from SITE.
-   SITE_fsrfdata = '/tera06/zhangsp/cases/SinglePoint/DingHuShan/landdata/srfdata.nc'
+   SITE_fsrfdata = '/tera06/zhwei/CoLM_Forcing/PLUMBER2/Srfdata/CN-Dan_2004-2005_FLUXNET2015_Srf.nc'
    ! path to surface database
    DEF_dir_rawdata = '/tera07/CoLMrawdata/'
    DEF_dir_runtime = '/tera07/CoLMruntime/'
@@ -20,15 +20,15 @@
    USE_SITE_topography      = .false.
 
    DEF_simulation_time%greenwich     = .false.
-   DEF_simulation_time%start_year    = 2013
+   DEF_simulation_time%start_year    = 2004
    DEF_simulation_time%start_month   = 1
-   DEF_simulation_time%start_day     = 2
-   DEF_simulation_time%start_sec     = 1800
-   DEF_simulation_time%end_year      = 2013
+   DEF_simulation_time%start_day     = 1
+   DEF_simulation_time%start_sec     = 0
+   DEF_simulation_time%end_year      = 2005
    DEF_simulation_time%end_month     = 12
    DEF_simulation_time%end_day       = 31
    DEF_simulation_time%end_sec       = 86400
-   DEF_simulation_time%spinup_year   = 2013
+   DEF_simulation_time%spinup_year   = 2004
    DEF_simulation_time%spinup_month  = 1
    DEF_simulation_time%spinup_day    = 31
    DEF_simulation_time%spinup_sec    = 86400
@@ -56,7 +56,7 @@
    DEF_REST_COMPRESS_LEVEL = 0
    DEF_HIST_COMPRESS_LEVEL = 0
    
-   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/current/run/history.nml'
+   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
    DEF_hist_vars_turnon_all = .true.
 
 /
