@@ -620,8 +620,8 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          !TODO: can be removed as CLMDRIVER.F90 yuan@
-         allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) )
-         allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) )
+         allocate ( z_soisno (maxsnl+1:nl_soil,numpatch) ); z_soisno (:,:) = spval
+         allocate ( dz_soisno(maxsnl+1:nl_soil,numpatch) ); dz_soisno(:,:) = spval
 
          do i = 1, numpatch
             z_soisno (1:nl_soil ,i) = z_soi (1:nl_soil)
