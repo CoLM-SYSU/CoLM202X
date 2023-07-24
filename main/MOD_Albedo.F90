@@ -241,7 +241,11 @@ MODULE MOD_Albedo
       ssun(:,:) = 0.
       ssha(:,:) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
+      ! for nighttime longwave calculations.
       !thermk    = 1.e-3
+      IF (lai+sai < 1.e-6) THEN
+         thermk = 1.e-3
+      ENDIF
       extkb     = 1.
       extkd     = 0.718
 
@@ -261,6 +265,7 @@ IF (patchtype == 0) THEN
       ssha_p(:,:,ps:pe) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_p(ps:pe)   = 1.e-3
+      WHERE (lai_p(ps:pe)+sai_p(ps:pe) < 1.e-6) thermk_p(ps:pe) = 1.e-3
       extkb_p(ps:pe)    = 1.
       extkd_p(ps:pe)    = 0.718
 #endif
@@ -271,6 +276,7 @@ IF (patchtype == 0) THEN
       ssha_c(:,:,:,pc) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_c(:,pc)   = 1.e-3
+      WHERE (lai_c(:,pc)+sai_c(:,pc) < 1.e-6) thermk_c(:,pc) = 1.e-3
       !fshade_c(:,pc)   = pcfrac(:,pc)
       !fshade_c(0,pc)   = 0.
       extkb_c(:,pc)    = 1.
