@@ -245,7 +245,7 @@ ENDIF
       ENDIF
 
       ! read the population data of total 5x5 region
-      CALL read_5x5_data_time (landdir, suffix, grid_urban_500m, "POP", pop_i, pop)
+      CALL read_5x5_data_time (landdir, suffix, grid_urban_500m, "POP_DEN", pop_i, pop)
 
 #ifdef USEMPI
       CALL aggregation_data_daemon (grid_urban_500m, data_r8_2d_in1 = pop)
@@ -454,7 +454,7 @@ ENDIF
    ! a new arry with region id was used for look-up-table (urban_reg)
 IF (DEF_URBAN_type_scheme == 1) THEN
    ! only used when urban patch have nan data of building height and fraction
-   landname = TRIM(dir_rawdata)//'urban/urban_properties.nc'
+   landname = TRIM(dir_rawdata)//'urban/NCAR_urban_properties.nc'
 
    CALL ncio_read_bcast_serial (landname,  "WTLUNIT_ROOF"       , ncar_wt )
    CALL ncio_read_bcast_serial (landname,  "HT_ROOF"            , ncar_ht )
@@ -466,16 +466,16 @@ ENDIF
       CALL allocate_block_data (grid_urban_500m, wtrf)
       CALL allocate_block_data (grid_urban_500m, htrf)
 
-      landdir = TRIM(dir_rawdata)//'urban/'
-      suffix  = 'URB'//trim(c5year)
+      landdir = TRIM(dir_rawdata)//'urban_type/'
+      suffix  = 'URBTYP'
       CALL read_5x5_data (landdir, suffix, grid_urban_500m, "REGION_ID", reg_typid)
 
       landdir = TRIM(dir_rawdata)//'/urban/'
-      suffix  = 'URB'//trim(c5year)
-      CALL read_5x5_data (landdir, suffix, grid_urban_500m, "WTLUNIT_ROOF", wtrf)
+      suffix  = 'URBSRF'//trim(c5year)
+      CALL read_5x5_data (landdir, suffix, grid_urban_500m, "PCT_ROOF", wtrf)
 
       landdir = TRIM(dir_rawdata)//'/urban/'
-      suffix  = 'URB'//trim(c5year)
+      suffix  = 'URBSRF'//trim(c5year)
       CALL read_5x5_data (landdir, suffix, grid_urban_500m, "HT_ROOF", htrf)
 
 #ifdef USEMPI
@@ -605,12 +605,12 @@ ENDIF
 
    DO iy = start_year, end_year
       write(iyear,'(i4.4)') iy
-      landsrfdir = trim(dir_srfdata) // '/urban/' // trim(cyear) // '/LAI'
+      landsrfdir = trim(dir_srfdata) // '/urban/' // trim(iyear) // '/LAI'
       CALL system('mkdir -p ' // trim(adjustl(landsrfdir)))
 
       ! allocate and read grided LSAI raw data
       landdir = TRIM(dir_rawdata)//'/urban_lai_5x5/'
-      suffix  = 'UrbLAI_v5_'//trim(iyear)
+      suffix  = 'UrbLAI_'//trim(iyear)
       ! loop for month
       DO imonth = 1, 12
 
@@ -659,12 +659,12 @@ ENDIF
          ENDIF
 
       ! output
-         landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/LAI/urban_LAI_'//trim(cmonth)//'.nc'
+         landname = trim(dir_srfdata) // '/urban/'//trim(iyear)//'/LAI/urban_LAI_'//trim(cmonth)//'.nc'
          CALL ncio_create_file_vector (landname, landurban)
          CALL ncio_define_dimension_vector (landname, landurban, 'urban')
          CALL ncio_write_vector (landname, 'TREE_LAI', 'urban', landurban, lai_urb, 1)
 
-         landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/LAI/urban_SAI_'//trim(cmonth)//'.nc'
+         landname = trim(dir_srfdata) // '/urban/'//trim(iyear)//'/LAI/urban_SAI_'//trim(cmonth)//'.nc'
          CALL ncio_create_file_vector (landname, landurban)
          CALL ncio_define_dimension_vector (landname, landurban, 'urban')
          CALL ncio_write_vector (landname, 'TREE_SAI', 'urban', landurban, sai_urb, 1)
@@ -696,7 +696,7 @@ ENDIF
 
 IF (DEF_URBAN_type_scheme == 1) THEN
    ! look up table of NCAR urban properties (using look-up tables)
-   landname = TRIM(dir_rawdata)//'urban/urban_properties.nc'
+   landname = TRIM(dir_rawdata)//'urban/NCAR_urban_properties.nc'
 
    CALL ncio_read_bcast_serial (landname,  "CANYON_HWR"    , hwrcan   )
    CALL ncio_read_bcast_serial (landname,  "WTROAD_PERV"   , wtrd     )

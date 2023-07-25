@@ -167,7 +167,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
                END where
 ELSE IF(DEF_URBAN_type_scheme == 2) THEN
                ! Same for NCAR, fill the gap LCZ class of urban patch if LCZ data is non-urban
-               where (ibuff > 10)
+               where (ibuff > 10 .or. ibuff == 0)
                   ibuff = 9
                END where
 ENDIF

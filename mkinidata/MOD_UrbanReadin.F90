@@ -72,15 +72,15 @@ MODULE MOD_UrbanReadin
       REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
       REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
 
+      write(cyear,'(i4.4)') lc_year
+
       allocate (lucyid    (numurban))
 
 IF (DEF_URBAN_type_scheme == 1) THEN
-
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
 
       ! READ in urban data
-      write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
       CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
@@ -207,12 +207,12 @@ ELSE IF (DEF_URBAN_type_scheme == 2) THEN
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
 
             DO ns = 1,2
-                DO nr = 1,2
-                   alb_roof(ns,nr,u) = albroof_lcz    (landurban%settyp(u)) !albedo of roof
-                   alb_wall(ns,nr,u) = albwall_lcz    (landurban%settyp(u)) !albedo of walls
-                   alb_gimp(ns,nr,u) = albimproad_lcz (landurban%settyp(u)) !albedo of impervious
-                   alb_gper(ns,nr,u) = albperroad_lcz (landurban%settyp(u)) !albedo of pervious road
-                ENDDO
+               DO nr = 1,2
+                  alb_roof(ns,nr,u) = albroof_lcz    (landurban%settyp(u)) !albedo of roof
+                  alb_wall(ns,nr,u) = albwall_lcz    (landurban%settyp(u)) !albedo of walls
+                  alb_gimp(ns,nr,u) = albimproad_lcz (landurban%settyp(u)) !albedo of impervious
+                  alb_gper(ns,nr,u) = albperroad_lcz (landurban%settyp(u)) !albedo of pervious road
+               ENDDO
             ENDDO
 
             em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
