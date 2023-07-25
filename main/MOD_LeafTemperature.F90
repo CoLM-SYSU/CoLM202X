@@ -1487,7 +1487,6 @@ CONTAINS
      CALL kfindroots(ztop,zbot,(ztop+zbot)/2., &
         ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
-     !print *, roots, rootn
      IF (rootn == 0) THEN !no root
         kint = kint + fkint(ktop, ztop, zbot, htop, hbot, &
            z0h, obu, ustar, fac, alpha, bee, fc)

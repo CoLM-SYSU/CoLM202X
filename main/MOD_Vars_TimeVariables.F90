@@ -150,8 +150,8 @@ CONTAINS
       call ncio_read_vector (file_restart, 'sigf_p   ', landpft, sigf_p     ) !
       call ncio_read_vector (file_restart, 'tlai_p   ', landpft, tlai_p     ) !
       call ncio_read_vector (file_restart, 'lai_p    ', landpft, lai_p      ) !
-      call ncio_read_vector (file_restart, 'laisun_p ', landpft, laisun_p   ) !
-      call ncio_read_vector (file_restart, 'laisha_p ', landpft, laisha_p   ) !
+!      call ncio_read_vector (file_restart, 'laisun_p ', landpft, laisun_p   ) !
+!      call ncio_read_vector (file_restart, 'laisha_p ', landpft, laisha_p   ) !
       call ncio_read_vector (file_restart, 'tsai_p   ', landpft, tsai_p     ) !
       call ncio_read_vector (file_restart, 'sai_p    ', landpft, sai_p      ) !
       call ncio_read_vector (file_restart, 'ssun_p   ', 2,2, landpft, ssun_p) !
@@ -210,8 +210,8 @@ CONTAINS
      call ncio_write_vector (file_restart, 'sigf_p   ', 'pft', landpft, sigf_p   , compress) !
      call ncio_write_vector (file_restart, 'tlai_p   ', 'pft', landpft, tlai_p   , compress) !
      call ncio_write_vector (file_restart, 'lai_p    ', 'pft', landpft, lai_p    , compress) !
-     call ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !
-     call ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !
+!     call ncio_write_vector (file_restart, 'laisun_p ', 'pft', landpft, laisun_p , compress) !
+!     call ncio_write_vector (file_restart, 'laisha_p ', 'pft', landpft, laisha_p , compress) !
      call ncio_write_vector (file_restart, 'tsai_p   ', 'pft', landpft, tsai_p   , compress) !
      call ncio_write_vector (file_restart, 'sai_p    ', 'pft', landpft, sai_p    , compress) !
      call ncio_write_vector (file_restart, 'ssun_p   ', 'band', 2, 'rtyp', 2, 'pft', landpft, ssun_p, compress) !
