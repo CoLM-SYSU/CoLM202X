@@ -70,12 +70,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER, allocatable :: sbuff(:), rbuff(:)
+      logical :: any_file_exists 
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (pixelset%nset))
          ENDIF
       ENDIF
+
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -88,6 +91,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:) = defval
             ENDIF
@@ -108,6 +112,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -164,12 +179,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       INTEGER(1), allocatable :: sbuff(:), rbuff(:)
+      logical :: any_file_exists 
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (pixelset%nset))
          ENDIF
       ENDIF
+
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -182,6 +200,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                IF (defval) THEN
                   sbuff(:) = 1
@@ -206,6 +225,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -263,12 +293,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:), rbuff(:)
+      logical :: any_file_exists 
          
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (pixelset%nset))
          ENDIF
       ENDIF
+      
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -281,6 +314,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:) = defval
             ENDIF
@@ -301,6 +335,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -359,12 +404,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:), rbuff(:,:)
+      logical :: any_file_exists 
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (ndim1, pixelset%nset))
          ENDIF
       ENDIF
+
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -377,6 +425,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:,:) = defval
             ENDIF
@@ -397,6 +446,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -455,12 +515,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:), rbuff(:,:,:)
+      logical :: any_file_exists 
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (ndim1,ndim2, pixelset%nset))
          ENDIF
       ENDIF
+
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -473,6 +536,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:,:,:) = defval
             ENDIF
@@ -493,6 +557,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI
@@ -551,12 +626,15 @@ CONTAINS
       INTEGER :: iblkgrp, iblk, jblk, istt, iend
       CHARACTER(len=256) :: fileblock
       REAL(r8), allocatable :: sbuff(:,:,:,:), rbuff(:,:,:,:)
+      logical :: any_file_exists 
 
       IF (p_is_worker) THEN
          IF ((pixelset%nset > 0) .and. (.not. allocated(rdata))) THEN
             allocate (rdata (ndim1,ndim2,ndim3, pixelset%nset))
          ENDIF
       ENDIF
+
+      any_file_exists = .false.
 
       IF (p_is_io) THEN
 
@@ -569,6 +647,7 @@ CONTAINS
 
             IF (ncio_var_exist(fileblock,dataname)) THEN 
                CALL ncio_read_serial (fileblock, dataname, sbuff)
+               any_file_exists = .true.
             ELSEIF (present(defval)) THEN
                sbuff(:,:,:,:) = defval
             ENDIF
@@ -589,6 +668,17 @@ CONTAINS
 
          ENDDO
 
+#ifdef USEMPI
+         CALL mpi_allreduce (MPI_IN_PLACE, any_file_exists, 1, MPI_LOGICAL, MPI_LOR, p_comm_io, p_err)
+#endif
+         IF (.not. any_file_exists) THEN
+            write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
+#ifdef USEMPI
+            CALL mpi_abort (p_comm_glb, p_err)
+#else
+            STOP
+#endif
+         ENDIF
       ENDIF
 
 #ifdef USEMPI

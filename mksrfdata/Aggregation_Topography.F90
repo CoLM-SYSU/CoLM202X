@@ -62,7 +62,9 @@ SUBROUTINE Aggregation_Topography ( &
 #endif
 
 #ifdef SinglePoint
-   RETURN
+   IF (USE_SITE_topography) THEN
+      RETURN
+   ENDIF
 #endif
 
    lndname = trim(dir_rawdata)//'/elevation.nc'
@@ -109,6 +111,7 @@ SUBROUTINE Aggregation_Topography ( &
    CALL check_vector_data ('topography_patches ', topography_patches)
 #endif
 
+#ifndef SinglePoint
    lndname = trim(landdir)//'/topography_patches.nc'
    CALL ncio_create_file_vector (lndname, landpatch)
    CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
@@ -119,6 +122,9 @@ SUBROUTINE Aggregation_Topography ( &
    lndname  = trim(dir_model_landdata) // '/diag/topo_' // trim(cyear) // '.nc'
    CALL srfdata_map_and_write (topography_patches, landpatch%settyp, typpatch, m_patch2diag, &
       -1.0e36_r8, lndname, 'topography', compress = 0, write_mode = 'one')
+#endif
+#else
+   SITE_topography = topography_patches(1)
 #endif
 
    IF (p_is_worker) THEN

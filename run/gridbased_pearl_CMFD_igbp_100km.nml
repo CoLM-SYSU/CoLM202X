@@ -8,7 +8,7 @@
    DEF_domain%edgee = 115.0      
    
    DEF_simulation_time%greenwich    = .TRUE.
-   DEF_simulation_time%start_year   = 2000
+   DEF_simulation_time%start_year   = 2001
    DEF_simulation_time%start_month  = 1
    DEF_simulation_time%start_day    = 1
    DEF_simulation_time%start_sec    = 0
@@ -47,10 +47,8 @@
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
 
-   DEF_file_water_table_depth = '/tera05/zhangsp/data/wtd_fan/wtd_fan2020_3600x1800.nc'
-   
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/current/run/forcing/CMFD.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/CMFD.nml'
 
    ! ----- history -----
    DEF_hist_grid_as_forcing = .false.
