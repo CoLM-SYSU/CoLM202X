@@ -268,7 +268,7 @@ MODULE MOD_Namelist
    !Soy nitrogen fixation
    LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
    !Fire module
-   LOGICAL            :: DEF_USE_FIRE = .true.
+   LOGICAL            :: DEF_USE_FIRE = .false.
 
 
    ! ----- history variables -----

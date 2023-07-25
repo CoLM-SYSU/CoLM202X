@@ -822,7 +822,9 @@ SAVE
 
      call ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                     'patch', landpatch,     decomp_cpools_vr)
-     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ctrunc_vr)
+     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ctrunc_vr)
+     call ncio_write_vector (file_restart, 'ctrunc_veg           ', 'patch', landpatch, ctrunc_veg           )
+     call ncio_write_vector (file_restart, 'ctrunc_soil          ', 'patch', landpatch, ctrunc_soil          )
 
      call ncio_write_vector (file_restart, 'altmax               ', 'patch', landpatch, altmax               )
      call ncio_write_vector (file_restart, 'altmax_lastyear      ', 'patch', landpatch, altmax_lastyear      )
@@ -830,10 +832,12 @@ SAVE
 
      call ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                     'patch', landpatch,     decomp_npools_vr)
-     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
-     call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil'  ,   nl_soil, 'patch', landpatch, sminn_vr    )
-     call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_no3_vr )
-     call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
+     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
+     call ncio_write_vector (file_restart, 'ntrunc_veg           ', 'patch', landpatch, ntrunc_veg           )
+     call ncio_write_vector (file_restart, 'ntrunc_soil          ', 'patch', landpatch, ntrunc_soil          )
+     call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil' ,   nl_soil, 'patch', landpatch, sminn_vr    )
+     call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_no3_vr )
+     call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
 
      if(DEF_USE_NITRIF)then
         call ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
@@ -975,6 +979,8 @@ SAVE
 
      call ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr)
      call ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
+     call ncio_read_vector (file_restart, 'ctrunc_veg           ', landpatch, ctrunc_veg           )
+     call ncio_read_vector (file_restart, 'ctrunc_soil          ', landpatch, ctrunc_soil          )
 
      call ncio_read_vector (file_restart, 'altmax               ', landpatch, altmax               )
      call ncio_read_vector (file_restart, 'altmax_lastyear      ', landpatch, altmax_lastyear      )
@@ -982,6 +988,8 @@ SAVE
 
      call ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
      call ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
+     call ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg           )
+     call ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil          )
      call ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
      call ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
      call ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )
