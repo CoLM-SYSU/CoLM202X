@@ -182,7 +182,7 @@ CONTAINS
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
 
-         thvstar=tstar+0.61*th*qstar
+         thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
          IF (zeta >= 0.) THEN     !stable
            zeta = min(2.,max(zeta,1.e-6))

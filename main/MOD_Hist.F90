@@ -3037,10 +3037,10 @@ contains
             a_ustar, f_ustar, file_hist, 'f_ustar', itime_in_file, sumarea, filter, &
             'u* in similarity theory','m/s')
 
-         ! t* in similarity theory [kg/kg]
+         ! t* in similarity theory [K]
          call flux_map_and_write_2d ( DEF_hist_vars%tstar, &
             a_tstar, f_tstar, file_hist, 'f_tstar', itime_in_file, sumarea, filter, &
-            't* in similarity theory','kg/kg')
+            't* in similarity theory','K')
 
          ! q* in similarity theory [kg/kg]
          call flux_map_and_write_2d ( DEF_hist_vars%qstar, &

@@ -101,7 +101,7 @@ contains
        ! patch-level wood to column-level CWD (uncombusted wood)
     if(DEF_USE_FIRE)then
        do j = 1, nl_soil
-          decomp_npools_vr(j,i_cwd,i) = decomp_npools_vr(j,i_cwd,i) + &
+          decomp_npools_vr(j,i_cwd,i) = decomp_npools_vr(j,i_cwd,i) &
                                       + fire_mortality_to_cwdn(j,i) * deltim
 
        ! patch-level wood to column-level litter (uncombusted wood)

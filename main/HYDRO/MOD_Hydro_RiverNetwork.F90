@@ -13,14 +13,15 @@ MODULE MOD_Hydro_RiverNetwork
    USE MOD_Precision
    USE MOD_Vars_Global, only : spval
    IMPLICIT NONE
-   
+
    ! -- river parameters --
    REAL(r8), allocatable :: riverlen  (:)
    REAL(r8), allocatable :: riverelv  (:)
    REAL(r8), allocatable :: riverarea (:)
    REAL(r8), allocatable :: riverwdth (:)
    REAL(r8), allocatable :: riverdpth (:)
-   
+   REAL(r8), allocatable :: elvbasin  (:)
+
    INTEGER, allocatable :: riverdown  (:)  
 
    ! address of downstream river 
@@ -89,13 +90,15 @@ CONTAINS
 
       numbasin = numelm
 
-      river_file = DEF_path_Catchment_data 
+      river_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (river_file, 'river_downstream', riverdown)
+         
+         CALL ncio_read_serial (river_file, 'basin_downstream', riverdown)
          CALL ncio_read_serial (river_file, 'river_length'   ,  riverlen )
          CALL ncio_read_serial (river_file, 'river_elevation',  riverelv )
          CALL ncio_read_serial (river_file, 'river_depth    ',  riverdpth)
+         CALL ncio_read_serial (river_file, 'basin_elva'     ,  elvbasin )
 
          riverlen = riverlen * 1.e3 ! km to m
       ENDIF
@@ -154,6 +157,12 @@ CONTAINS
                CALL mpi_send (rcache, nrecv, MPI_REAL8, &
                   idest, mpi_tag_data, p_comm_glb, p_err) 
 
+               DO irecv = 1, nrecv
+                  rcache(irecv) = elvbasin(bindex(irecv))
+               ENDDO
+               CALL mpi_send (rcache, nrecv, MPI_REAL8, &
+                  idest, mpi_tag_data, p_comm_glb, p_err) 
+
                deallocate (bindex)
                deallocate (icache)
                deallocate (rcache)
@@ -196,6 +205,10 @@ CONTAINS
             allocate (riverdpth (numbasin))
             CALL mpi_recv (riverdpth, numbasin, MPI_REAL8, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+
+            allocate (elvbasin (numbasin))
+            CALL mpi_recv (elvbasin, numbasin, MPI_REAL8, &
+               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #else
          IF (numbasin > 0) THEN
@@ -204,11 +217,20 @@ CONTAINS
             riverlen  = riverlen (bindex)
             riverelv  = riverelv (bindex)
             riverdpth = riverdpth(bindex)
+            elvbasin  = elvbasin (bindex)
 
          ENDIF
 #endif
 
       ENDIF 
+
+      IF (p_is_worker) THEN
+         DO ibasin = 1, numbasin
+            IF (lake_id(ibasin) > 0) THEN
+               riverlen(ibasin) = 0.
+            ENDIF
+         ENDDO
+      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -424,12 +446,14 @@ CONTAINS
             allocate (riverwdth (numbasin))
 
             DO ibasin = 1, numbasin
-               riverarea(ibasin) = surface_network(ibasin)%area(1)
-               riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
+               IF (lake_id(ibasin) <= 0) THEN
+                  riverarea(ibasin) = surface_network(ibasin)%area(1)
+                  riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
-               ! modify height above nearest drainage data to consider river depth
-               surface_network(ibasin)%hand(1) = &
-                  surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+                  ! modify height above nearest drainage data to consider river depth
+                  surface_network(ibasin)%hand(1) = &
+                     surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+               ENDIF
             ENDDO
 
          ENDIF
@@ -479,6 +503,8 @@ CONTAINS
       ENDIF
 
 #ifdef USEMPI
+      CALL mpi_barrier (p_comm_glb, p_err)
+      IF (p_is_master) write(*,'(A)') 'Read river network information done.'
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
@@ -730,6 +756,7 @@ CONTAINS
       IF (allocated(riverarea)) deallocate(riverarea)
       IF (allocated(riverwdth)) deallocate(riverwdth)
       IF (allocated(riverdpth)) deallocate(riverdpth)
+      IF (allocated(elvbasin )) deallocate(elvbasin )
       
       IF (allocated(riverdown )) deallocate(riverdown )
       IF (allocated(addrdown  )) deallocate(addrdown  )

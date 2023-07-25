@@ -36,6 +36,7 @@ CONTAINS
   SUBROUTINE allocate_1D_HydroFluxes
 
      USE MOD_SPMD_Task
+     USE MOD_Vars_Global, only : spval
      USE MOD_Mesh,      only : numelm
      USE MOD_LandHRU,   only : numhru
      USE MOD_LandPatch, only : numpatch
