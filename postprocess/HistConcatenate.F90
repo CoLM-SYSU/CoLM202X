@@ -525,7 +525,7 @@ program hist_concatenate
       'u* in similarity theory','m/s')
 
    call hist_concatenate_var_2d (filehist, 'f_tstar  ', timelen, compress, &
-      't* in similarity theory','kg/kg')
+      't* in similarity theory','K')
 
    call hist_concatenate_var_2d (filehist, 'f_qstar  ', timelen, compress, &
       'q* in similarity theory')

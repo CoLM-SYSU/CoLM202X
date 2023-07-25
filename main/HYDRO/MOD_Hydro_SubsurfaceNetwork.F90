@@ -93,7 +93,7 @@ CONTAINS
 
       numbasin = numelm
 
-      ssrf_file = DEF_path_Catchment_data 
+      ssrf_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
          CALL ncio_read_serial (ssrf_file, 'basin_num_neighbour', nnball  )
@@ -336,7 +336,7 @@ CONTAINS
             recvaddr(iwork)%ndata = ndata
             IF (ndata > 0) THEN
                allocate (recvaddr(iwork)%bindx (ndata))
-               recvaddr(iwork)%bindx = pack(idxinq, mask)
+               recvaddr(iwork)%bindx = pack(idxinq(1:nnbinq), mask)
             ENDIF
          ENDDO
 
@@ -464,8 +464,11 @@ CONTAINS
             allocate (area_b(numbasin))
             allocate (elva_b(numbasin))
             DO ibasin = 1, numbasin
-               area_b(ibasin) = sum(surface_network(ibasin)%area)
-               elva_b(ibasin) = sum(surface_network(ibasin)%area * surface_network(ibasin)%elva) / area_b(ibasin)
+               IF (lake_id(ibasin) <= 0) THEN
+                  area_b(ibasin) = sum(surface_network(ibasin)%area)
+                  elva_b(ibasin) = &
+                     sum(surface_network(ibasin)%area * surface_network(ibasin)%elva) / area_b(ibasin)
+               ENDIF
             ENDDO
          ENDIF
          

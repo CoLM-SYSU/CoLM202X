@@ -335,7 +335,7 @@ PROGRAM MKSRFDATA
 #ifdef GRIDBASED
    CALL gdiag%define_by_copy (gridmesh)
 #else
-   CALL gdiag%define_by_ndims(720,360)
+   CALL gdiag%define_by_ndims(3600,1800)
 #endif
 
    CALL srfdata_diag_init (dir_landdata)
@@ -351,7 +351,7 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   IF(DEF_USE_BEDROCK)THEN
+   IF (DEF_USE_BEDROCK) THEN
       CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
    ENDIF
 
