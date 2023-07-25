@@ -1302,7 +1302,7 @@ contains
       !---------------------------------------------------------------------
       integer  ib, jb, i, j
       real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
-	  real(r8) hpbl ! atmospheric boundary layer height [m]
+      real(r8) hpbl ! atmospheric boundary layer height [m]
       real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf
       real(r8) obu,fh2m,fq2m
       real(r8) um,thvstar,beta,zii,wc,wc2
@@ -1325,9 +1325,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
-			if (DEF_USE_CBL_HEIGHT) then
-              call acc1d (forc_hpbl , a_hpbl )
-		    endif
+            if (DEF_USE_CBL_HEIGHT) then
+               call acc1d (forc_hpbl , a_hpbl)
+            endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1348,59 +1348,62 @@ contains
             rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
             call acc1d (rnet    , a_rnet   )
 
-            call acc1d (xerr   , a_xerr   )
-            call acc1d (zerr   , a_zerr   )
-            call acc1d (rsur   , a_rsur   )
-            call acc1d (rsub   , a_rsub   )
-            call acc1d (rnof   , a_rnof   )
-            call acc1d (qintr  , a_qintr  )
-            call acc1d (qinfl  , a_qinfl  )
-            call acc1d (qdrip  , a_qdrip  )
+            call acc1d (xerr    , a_xerr   )
+            call acc1d (zerr    , a_zerr   )
+            call acc1d (rsur    , a_rsur   )
+            call acc1d (rsub    , a_rsub   )
+            call acc1d (rnof    , a_rnof   )
+            call acc1d (qintr   , a_qintr  )
+            call acc1d (qinfl   , a_qinfl  )
+            call acc1d (qdrip   , a_qdrip  )
+
             call acc1d (rstfacsun_out , a_rstfacsun )
             call acc1d (rstfacsha_out , a_rstfacsha )
-            call acc1d (gssun_out     , a_gssun )
-            call acc1d (gssha_out     , a_gssha )
-            call acc1d (rss    , a_rss    )
 
-            call acc1d (wdsrf  , a_wdsrf  )
-            call acc1d (zwt    , a_zwt    )
-            call acc1d (wa     , a_wa     )
-            call acc1d (wat    , a_wat    )
-            call acc1d (assim  , a_assim  )
-            call acc1d (respc  , a_respc  )
-            call acc1d (assimsun_out  , a_assimsun      )
-            call acc1d (assimsha_out  , a_assimsha      )
-            call acc1d (etrsun_out    , a_etrsun        )
-            call acc1d (etrsha_out    , a_etrsha        )
+            call acc1d (gssun_out     , a_gssun     )
+            call acc1d (gssha_out     , a_gssha     )
 
-            call acc1d (qcharge, a_qcharge)
+            call acc1d (rss     , a_rss    )
+            call acc1d (wdsrf   , a_wdsrf  )
+            call acc1d (zwt     , a_zwt    )
+            call acc1d (wa      , a_wa     )
+            call acc1d (wat     , a_wat    )
+            call acc1d (assim   , a_assim  )
+            call acc1d (respc   , a_respc  )
 
-            call acc1d (t_grnd , a_t_grnd )
-            call acc1d (tleaf  , a_tleaf  )
-            call acc1d (ldew_rain, a_ldew_rain)
-            call acc1d (ldew_snow, a_ldew_snow)
-            call acc1d (ldew   , a_ldew   )
-            call acc1d (scv    , a_scv    )
-            call acc1d (snowdp , a_snowdp )
-            call acc1d (fsno   , a_fsno   )
-            call acc1d (sigf   , a_sigf   )
-            call acc1d (green  , a_green  )
-            call acc1d (lai    , a_lai    )
-            call acc1d (laisun , a_laisun )
-            call acc1d (laisha , a_laisha )
-            call acc1d (sai    , a_sai    )
+            call acc1d (assimsun_out  , a_assimsun  )
+            call acc1d (assimsha_out  , a_assimsha  )
+            call acc1d (etrsun_out    , a_etrsun    )
+            call acc1d (etrsha_out    , a_etrsha    )
 
-            call acc3d (alb    , a_alb    )
+            call acc1d (qcharge   , a_qcharge   )
 
-            call acc1d (emis   , a_emis   )
-            call acc1d (z0m    , a_z0m    )
+            call acc1d (t_grnd    , a_t_grnd    )
+            call acc1d (tleaf     , a_tleaf     )
+            call acc1d (ldew_rain , a_ldew_rain )
+            call acc1d (ldew_snow , a_ldew_snow )
+            call acc1d (ldew      , a_ldew      )
+            call acc1d (scv       , a_scv       )
+            call acc1d (snowdp    , a_snowdp    )
+            call acc1d (fsno      , a_fsno      )
+            call acc1d (sigf      , a_sigf      )
+            call acc1d (green     , a_green     )
+            call acc1d (lai       , a_lai       )
+            call acc1d (laisun    , a_laisun    )
+            call acc1d (laisha    , a_laisha    )
+            call acc1d (sai       , a_sai       )
+
+            call acc3d (alb       , a_alb       )
+
+            call acc1d (emis      , a_emis      )
+            call acc1d (z0m       , a_z0m       )
 
             allocate (r_trad (numpatch))
             do i = 1, numpatch
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
-            deallocate (r_trad )
+            deallocate (r_trad            )
 
             call acc1d (tref   , a_tref   )
             call acc1d (qref   , a_qref   )
@@ -1538,7 +1541,7 @@ contains
             call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
-            call acc1d (fertnitro_sugarcane, a_fertnitro_sugarcane  )
+            call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
@@ -1553,31 +1556,31 @@ contains
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then
-               call acc1d (abm_lf             ,   a_abm                )
-               call acc1d (gdp_lf             ,   a_gdp                )
-               call acc1d (peatf_lf           ,   a_peatf              )
-               call acc1d (hdm_lf             ,   a_hdm                )
-               call acc1d (lnfm               ,   a_lnfm               )
+               call acc1d (abm_lf          ,   a_abm                )
+               call acc1d (gdp_lf          ,   a_gdp                )
+               call acc1d (peatf_lf        ,   a_peatf              )
+               call acc1d (hdm_lf          ,   a_hdm                )
+               call acc1d (lnfm            ,   a_lnfm               )
             end if
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
-               call acc1d (forc_ozone         ,   a_ozone              )
+               call acc1d (forc_ozone      ,   a_ozone              )
             ENDIF
 
-            call acc2d (t_soisno   , a_t_soisno   )
-            call acc2d (wliq_soisno, a_wliq_soisno)
-            call acc2d (wice_soisno, a_wice_soisno)
+            call acc2d (t_soisno   , a_t_soisno      )
+            call acc2d (wliq_soisno, a_wliq_soisno   )
+            call acc2d (wice_soisno, a_wice_soisno   )
 
-            call acc2d (h2osoi     , a_h2osoi     )
-            call acc2d (rootr      , a_rootr      )
-            call acc2d (BD_all     , a_BD_all      )
-            call acc2d (wfc        , a_wfc         )
-            call acc2d (OM_density , a_OM_density  )
+            call acc2d (h2osoi     , a_h2osoi        )
+            call acc2d (rootr      , a_rootr         )
+            call acc2d (BD_all     , a_BD_all        )
+            call acc2d (wfc        , a_wfc           )
+            call acc2d (OM_density , a_OM_density    )
             if(DEF_USE_PLANTHYDRAULICS)then
-               call acc2d (vegwp      , a_vegwp      )
+               call acc2d (vegwp    , a_vegwp        )
             end if
-            call acc2d (t_lake      , a_t_lake      )
-            call acc2d (lake_icefrac, a_lake_icefrac)
+            call acc2d (t_lake      , a_t_lake       )
+            call acc2d (lake_icefrac, a_lake_icefrac )
 #ifdef BGC
             do i = 1, numpatch
                do j = 1, nl_soil
@@ -1666,7 +1669,7 @@ contains
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
             allocate (r_ustar (numpatch))
-            allocate (r_ustar2 (numpatch)) !Shaofeng, 2023.05.20
+            allocate (r_ustar2(numpatch)) !Shaofeng, 2023.05.20
             allocate (r_tstar (numpatch))
             allocate (r_qstar (numpatch))
             allocate (r_zol   (numpatch))
@@ -1769,7 +1772,7 @@ contains
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
-            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
+            deallocate (r_ustar2) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )

@@ -17,7 +17,6 @@ MODULE MOD_SoilSurfaceResistance
 
    PUBLIC :: SoilSurfaceResistance
 
-   !TODO@Zhuo: need complement below
    ! soil-gas diffusivity schemes:
    ! 1: BBC (Buckingham-Burdine-Campbell Model), Moldrup et al., 1999.
    ! 2: P_WLR (Penman Water Linear Reduction Model), Moldrup et al., 2000
@@ -71,11 +70,11 @@ CONTAINS
 !-----------------------Local Variables------------------------------
 
    REAL(r8) :: &
-        wx,               & ! patitial volume of ice and water of surface layer   
+        wx,               & ! patitial volume of ice and water of surface layer
         vol_liq,          & ! water content by volume [m3/m3]
         smp_node,         & ! matrix potential [m]
         eff_porosity,     & ! effective porosity = porosity - vol_ice
-        aird,             & ! “air-dry” soil moisture value 
+        aird,             & ! “air-dry” soil moisture value
         d0,               & ! water vapor diffusivity in open air [m2/s]
         eps,              & ! air filled pore space
         dg,               & ! gaseous diffusivity [m2/s]
@@ -88,12 +87,10 @@ CONTAINS
         rss_1,            & ! inverse of soil surface resistance [m/s]
         tao,              & ! tortuosity of the vapor flow paths through the soil matrix
         eps100,           & ! air-filled porosity (cm3 soil-air cm−3 soil) at −1000 mm of water matric potential
-        fac,              & ! temporal variable for calculating wx/porsl 
+        fac,              & ! temporal variable for calculating wx/porsl
         fac_fc,           & ! temporal variable for calculating wx/wfc
         B                   ! bunsen solubility coefficient
-       
-        !TODO@Zhuo Liu:  need descriptions for vars.
-        ! if it is a temporal varialbe, add descriptions like 'temporal variable for calculating ***'
+
 !-----------------------End Variables list---------------------------
 
 
@@ -147,17 +144,17 @@ CONTAINS
 
    ! calculate rss by SL14
    case (1)
-      dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*eff_porosity - vol_liq)) &
-                        /max(1.e-6_r8,(0.8*porsl(1)- aird)) ! SL14
+      dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*porsl(1) - vol_liq)) &
+                        /max(1.e-6_r8,(0.8*porsl(1)- aird))
 
       dsl = max(dsl,0._r8)
       dsl = min(dsl,0.2_r8)
       
       rss = dsl/dg
 
-   ! calculate rss by SZ09   
+   ! calculate rss by SZ09
    case (2)
-      dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/eff_porosity)**5) - 1._r8)/ (exp(1._r8) - 1._r8)
+      dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/porsl(1))**5) - 1._r8)/ (exp(1._r8) - 1._r8)
       dsl = min(dsl,0.2_r8)
       dsl = max(dsl,0._r8)
 
@@ -165,44 +162,44 @@ CONTAINS
 
    ! calculate rss by TR13
    case (3)
-      B           = denh2o/(qg*forc_rhoair)                       ! Eq.(12)
+      B           = denh2o/(qg*forc_rhoair)             ! Eq.(12)
       rg_1        = 2.0_r8*dg*eps/dz_soisno(1)
       rw_1        = 2.0_r8*dw*B*vol_liq/dz_soisno(1)
-      rss_1       = rg_1 +rw_1
+      rss_1       = rg_1 + rw_1
       rss         = 1.0/rss_1
-     
+
    ! LP92 beta scheme
    case (4)
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-      wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
-      !! Lee and Pielke 1992 beta
+      wfc = porsl(1)*(0.1/(86400.*hksati(1)))**(1./(2.*bsw(1)+3.))
+      write(*,*) wfc
+      ! CoLM
+      ! wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
+      ! Lee and Pielke 1992 beta
       IF (wx < wfc ) THEN  !when water content of ths top layer is less than that at F.C.
          fac_fc = min(1._r8, wx/wfc)
          fac_fc = max(fac_fc,0.001_r8)
          ! modify soil beta by snow cover. soilbeta for snow surface is one
-         rss  = (1._r8-fsno) &
-                              *0.25_r8*(1._r8 - cos(fac_fc*3.1415926))**2._r8
+         rss  = (1._r8-fsno)*0.25_r8*(1._r8 - cos(fac_fc*3.1415926))**2._r8
       ELSE   ! when water content of ths top layer is more than that at F.C.
          rss  = 1._r8
       ENDIF
-      ! write(*,*) wfc,porsl(1),psi0(1),bsw(1)
       ! raw = 50m/s NOTE: raw = 50m/s
       ! rss = 50._r8 * (1._r8/beta - 1._r8)
 
-   ! Sellers 1992
+
+   ! Sellers, 1992
    case (5)
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-      !! Lee and Pielke 1992 beta
       rss = (1-fsno)*exp(8.206-4.255*fac)
 
    endselect
 
    rss = min(1.e6_r8,rss)
-   write(*,*) porsl(1)
 
  END Subroutine SoilSurfaceResistance
 
