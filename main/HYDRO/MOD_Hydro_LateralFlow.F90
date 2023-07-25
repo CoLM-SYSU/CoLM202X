@@ -21,12 +21,12 @@ MODULE MOD_Hydro_LateralFlow
    
    USE MOD_Precision
    USE MOD_SPMD_Task
-   USE MOD_Hydro_RiverNetwork
+   USE MOD_Hydro_RiverLakeNetwork
    USE MOD_Hydro_SubsurfaceNetwork
    USE MOD_Hydro_SurfaceNetwork
    USE MOD_Hydro_SurfaceFlow
    USE MOD_Hydro_SubsurfaceFlow
-   USE MOD_Hydro_RiverFlow
+   USE MOD_Hydro_RiverLakeFlow
    IMPLICIT NONE 
 
    INTEGER, parameter :: nsubstep = 20

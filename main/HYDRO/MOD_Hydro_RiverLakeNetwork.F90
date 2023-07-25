@@ -1,7 +1,7 @@
 #include <define.h>
 
 #ifdef LATERAL_FLOW
-MODULE MOD_Hydro_RiverNetwork
+MODULE MOD_Hydro_RiverLakeNetwork
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! 
@@ -20,12 +20,16 @@ MODULE MOD_Hydro_RiverNetwork
    REAL(r8), allocatable :: riverarea (:)
    REAL(r8), allocatable :: riverwdth (:)
    REAL(r8), allocatable :: riverdpth (:)
-   REAL(r8), allocatable :: elvbasin  (:)
+
+   REAL(r8), allocatable :: basinelv  (:)
+   REAL(r8), allocatable :: bedelv    (:)
 
    INTEGER, allocatable :: riverdown  (:)  
 
    ! address of downstream river 
-   ! > 0 on this process; 0 on other processes; -1 not found
+   ! > 0 : catchment on this process;   0 : catchment on other processes; 
+   ! -1  : not found, including river mouth, out of domain, inland depression.
+   ! -2  : lake
    INTEGER, allocatable :: addrdown (:)
 
    REAL(r8), allocatable :: riverlen_ds  (:)
@@ -98,7 +102,7 @@ CONTAINS
          CALL ncio_read_serial (river_file, 'river_length'   ,  riverlen )
          CALL ncio_read_serial (river_file, 'river_elevation',  riverelv )
          CALL ncio_read_serial (river_file, 'river_depth    ',  riverdpth)
-         CALL ncio_read_serial (river_file, 'basin_elva'     ,  elvbasin )
+         CALL ncio_read_serial (river_file, 'basin_elva'     ,  basinelv )
 
          riverlen = riverlen * 1.e3 ! km to m
       ENDIF
@@ -158,7 +162,7 @@ CONTAINS
                   idest, mpi_tag_data, p_comm_glb, p_err) 
 
                DO irecv = 1, nrecv
-                  rcache(irecv) = elvbasin(bindex(irecv))
+                  rcache(irecv) = basinelv(bindex(irecv))
                ENDDO
                CALL mpi_send (rcache, nrecv, MPI_REAL8, &
                   idest, mpi_tag_data, p_comm_glb, p_err) 
@@ -206,8 +210,8 @@ CONTAINS
             CALL mpi_recv (riverdpth, numbasin, MPI_REAL8, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
-            allocate (elvbasin (numbasin))
-            CALL mpi_recv (elvbasin, numbasin, MPI_REAL8, &
+            allocate (basinelv (numbasin))
+            CALL mpi_recv (basinelv, numbasin, MPI_REAL8, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #else
@@ -217,20 +221,12 @@ CONTAINS
             riverlen  = riverlen (bindex)
             riverelv  = riverelv (bindex)
             riverdpth = riverdpth(bindex)
-            elvbasin  = elvbasin (bindex)
+            basinelv  = basinelv (bindex)
 
          ENDIF
 #endif
 
       ENDIF 
-
-      IF (p_is_worker) THEN
-         DO ibasin = 1, numbasin
-            IF (lake_id(ibasin) > 0) THEN
-               riverlen(ibasin) = 0.
-            ENDIF
-         ENDDO
-      ENDIF
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -258,7 +254,7 @@ CONTAINS
          allocate (exchange_w (0:p_np_worker-1))
          DO iworker = 0, p_np_worker-1
             IF (ndata_w(iworker) > 0) THEN
-               allocate (exchange_w(iworker)%val (4,ndata_w(iworker)))
+               allocate (exchange_w(iworker)%val (5,ndata_w(iworker)))
             ENDIF
          ENDDO
 
@@ -271,10 +267,10 @@ CONTAINS
                ndata_w(ifrom) = ndata_w(ifrom) + 1
                ndata_w(ito)   = ndata_w(ito)   + 1
 
-               exchange_w(ifrom)%val(:,ndata_w(ifrom)) = &
-                  (/addrbasin(1,ibasin), ibasin, addrbasin(2,ibasin), riverdown(ibasin)/)
-               exchange_w(ito)%val(:,ndata_w(ito)) = &
-                  (/addrbasin(1,ibasin), ibasin, addrbasin(2,ibasin), riverdown(ibasin)/)
+               exchange_w(ifrom)%val(:,ndata_w(ifrom)) = (/addrbasin(1,ibasin), ibasin, &
+                  addrbasin(2,ibasin), riverdown(ibasin), lake_id(riverdown(ibasin))/)
+               exchange_w(ito)%val(:,ndata_w(ito)) = (/addrbasin(1,ibasin), ibasin, &
+                  addrbasin(2,ibasin), riverdown(ibasin), lake_id(riverdown(ibasin))/)
             ENDIF
          ENDDO
 
@@ -293,8 +289,8 @@ CONTAINS
 #ifdef USEMPI
          CALL mpi_recv (ndata, 1, MPI_INTEGER, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
          IF (ndata > 0) THEN
-            allocate (exchange(4,ndata))
-            CALL mpi_recv (exchange, 4*ndata, MPI_INTEGER, &
+            allocate (exchange(5,ndata))
+            CALL mpi_recv (exchange, 5*ndata, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
          ENDIF
 #endif
@@ -367,6 +363,12 @@ CONTAINS
                      
                      iloc2 = find_in_sorted_list1 (exchange(2,idata), numbasin, basin_sorted)
                      river_dn%iloc(iloc1) = order(iloc2)
+            
+                     IF (exchange(5,idata) <= 0) THEN
+                        addrdown(river_dn%iloc(iloc1)) = 0
+                     ELSE
+                        addrdown(river_dn%iloc(iloc1)) = -2
+                     ENDIF
                   ENDIF
                ENDDO
 
@@ -432,34 +434,10 @@ CONTAINS
                ENDIF
             ENDIF
 
-            addrdown(river_dn%iloc) = 0
-
 #endif
          ENDIF
       ENDIF
-
-      IF (p_is_worker) THEN
-
-         IF (numbasin > 0) THEN
-
-            allocate (riverarea (numbasin))
-            allocate (riverwdth (numbasin))
-
-            DO ibasin = 1, numbasin
-               IF (lake_id(ibasin) <= 0) THEN
-                  riverarea(ibasin) = surface_network(ibasin)%area(1)
-                  riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
-
-                  ! modify height above nearest drainage data to consider river depth
-                  surface_network(ibasin)%hand(1) = &
-                     surface_network(ibasin)%hand(1) + riverdpth(ibasin)
-               ENDIF
-            ENDDO
-
-         ENDIF
-
-      ENDIF
-
+      
       IF (allocated(bindex      )) deallocate(bindex      )
       IF (allocated(addrbasin   )) deallocate(addrbasin   )
       IF (allocated(ndata_w     )) deallocate(ndata_w     )
@@ -468,17 +446,39 @@ CONTAINS
       IF (allocated(basin_sorted)) deallocate(basin_sorted)
       IF (allocated(order       )) deallocate(order       )
 
+
       IF (p_is_worker) THEN
+
          IF (numbasin > 0) THEN
-            allocate (riverlen_ds  (numbasin))
-            allocate (riverelv_ds  (numbasin))
-            allocate (riverfac_ds  (numbasin))
+
+            allocate (riverarea   (numbasin))
+            allocate (riverwdth   (numbasin))
+            allocate (bedelv      (numbasin))
+            allocate (riverlen_ds (numbasin))
+            allocate (riverelv_ds (numbasin))
+            allocate (riverfac_ds (numbasin))
 
             DO ibasin = 1, numbasin
+               IF (lake_id(ibasin) == 0) THEN
+                  riverarea(ibasin) = surface_network(ibasin)%area(1)
+                  riverwdth(ibasin) = riverarea(ibasin) / riverlen(ibasin)
+
+                  ! modify height above nearest drainage data to consider river depth
+                  surface_network(ibasin)%hand(1) = &
+                     surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+
+                  bedelv(ibasin) = riverelv(ibasin) - riverdpth(ibasin)
+               ELSEIF (lake_id(ibasin) > 0) THEN
+                  riverlen(ibasin) = 0.
+                  bedelv  (ibasin) = basinelv(ibasin) - riverdpth(ibasin)
+               ENDIF
+
                IF (addrdown(ibasin) > 0) THEN
                   riverlen_ds (ibasin) = riverlen (addrdown(ibasin)) 
                   riverelv_ds (ibasin) = riverelv (addrdown(ibasin)) 
                   riverfac_ds (ibasin) = (riverwdth(ibasin) + riverwdth(addrdown(ibasin))) * 0.5
+               ELSEIF (addrdown(ibasin) == -2) THEN ! downstream is lake.
+                  riverfac_ds(ibasin) = riverwdth(ibasin)
                ELSE
                   riverlen_ds (ibasin) = spval
                   riverelv_ds (ibasin) = spval
@@ -496,6 +496,8 @@ CONTAINS
          DO ibasin = 1, numbasin
             IF (addrdown(ibasin) == 0) THEN
                riverfac_ds(ibasin) = (riverwdth(ibasin) + riverfac_ds(ibasin)) * 0.5
+            ELSEIF (addrdown(ibasin) == -2) THEN ! downstream is lake.
+               riverfac_ds(ibasin) = riverwdth(ibasin)
             ENDIF
          ENDDO
 #endif
@@ -756,7 +758,7 @@ CONTAINS
       IF (allocated(riverarea)) deallocate(riverarea)
       IF (allocated(riverwdth)) deallocate(riverwdth)
       IF (allocated(riverdpth)) deallocate(riverdpth)
-      IF (allocated(elvbasin )) deallocate(elvbasin )
+      IF (allocated(basinelv )) deallocate(basinelv )
       
       IF (allocated(riverdown )) deallocate(riverdown )
       IF (allocated(addrdown  )) deallocate(addrdown  )
@@ -782,5 +784,5 @@ CONTAINS
 
    END SUBROUTINE river_sendrecv_free_mem
 
-END MODULE MOD_Hydro_RiverNetwork
+END MODULE MOD_Hydro_RiverLakeNetwork
 #endif

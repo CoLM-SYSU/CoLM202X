@@ -40,7 +40,7 @@ CONTAINS
       USE MOD_Vars_1DFluxes
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_SurfaceNetwork
-      USE MOD_Hydro_RiverNetwork
+      USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Const_Physical, only : grav
 
       IMPLICIT NONE

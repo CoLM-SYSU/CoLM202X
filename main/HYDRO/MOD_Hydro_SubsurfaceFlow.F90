@@ -34,7 +34,7 @@ CONTAINS
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DFluxes
       USE MOD_Hydro_SurfaceNetwork
-      USE MOD_Hydro_RiverNetwork
+      USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Hydro_SubsurfaceNetwork
       USE MOD_Const_Physical,  only : denice, denh2o
       USE MOD_Vars_Global,     only : pi, nl_soil, zi_soi
