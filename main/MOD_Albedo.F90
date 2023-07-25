@@ -1202,7 +1202,6 @@ ENDIF
             ssha_p(:,:,i) = 0.
             tran_p(:,1,i) = 1.
             tran_p(:,2,i) = 1.
-            thermk_p  (i) = 1.
          ENDIF
       ENDDO
 
