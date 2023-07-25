@@ -216,7 +216,7 @@ contains
          write(*,*) 'Warning : Please use one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for history frequency.'
       end select
 
-      if (lwrite)  then
+      if (lwrite) then
 
          call julian2monthday(idate(1), idate(2), month, day)
 
@@ -347,12 +347,12 @@ contains
             a_snow, f_xy_snow, file_hist, 'f_xy_snow', itime_in_file, sumarea, filter, &
             'snow','mm/s')
 
-		 if (DEF_USE_CBL_HEIGHT) then
+         if (DEF_USE_CBL_HEIGHT) then
          ! atmospheric boundary layer height [m]
            call flux_map_and_write_2d ( DEF_hist_vars%xy_hpbl, &
               a_hpbl, f_xy_hpbl, file_hist, 'f_xy_hpbl', itime_in_file, sumarea, filter, &
               'boundary layer height','m')
-		 endif
+         endif
 
          ! ------------------------------------------------------------------------------------------
          ! Mapping the fluxes and state variables at patch [numpatch] to grid
@@ -620,9 +620,9 @@ contains
                ENDDO
             end if
          end if
-         
+
          call mp2g_hist_urb%map (vectmp_urb, sumarea_urb, spv = spval, msk = filter_urb)
-         
+
          ! sensible heat from building roof [W/m2]
          call flux_map_and_write_urb_2d ( DEF_hist_vars%fsen_roof, &
             a_senroof, f_senroof, file_hist, 'f_fsenroof', itime_in_file, sumarea_urb, filter_urb, &

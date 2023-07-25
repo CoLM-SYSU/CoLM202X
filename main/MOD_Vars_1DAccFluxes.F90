@@ -178,7 +178,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_gpp_c3arcgrass     (:) !12
    real(r8), allocatable :: a_gpp_c3grass        (:) !13
    real(r8), allocatable :: a_gpp_c4grass        (:) !14
-   real(r8), allocatable :: a_leafc_enftemp        (:) !1
+   real(r8), allocatable :: a_leafc_enftemp      (:) !1
    real(r8), allocatable :: a_leafc_enfboreal    (:) !2
    real(r8), allocatable :: a_leafc_dnfboreal    (:) !3
    real(r8), allocatable :: a_leafc_ebftrop      (:) !4
@@ -365,10 +365,10 @@ contains
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
-            allocate (a_assimsun        (numpatch)) !1
-            allocate (a_assimsha        (numpatch)) !1
-            allocate (a_etrsun        (numpatch)) !1
-            allocate (a_etrsha        (numpatch)) !1
+            allocate (a_assimsun  (numpatch)) !1
+            allocate (a_assimsha  (numpatch)) !1
+            allocate (a_etrsun    (numpatch)) !1
+            allocate (a_etrsha    (numpatch)) !1
 
             allocate (a_qcharge   (numpatch))
 
@@ -618,7 +618,7 @@ contains
 
          end if
       end if
-         
+
       IF (p_is_worker) THEN
 #if (defined CROP)
          CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
@@ -686,10 +686,10 @@ contains
             deallocate (a_assim     )
             deallocate (a_respc     )
 
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
+            deallocate (a_assimsun  ) !1
+            deallocate (a_assimsha  ) !1
+            deallocate (a_etrsun    ) !1
+            deallocate (a_etrsha    ) !1
 
             deallocate (a_qcharge   )
 
@@ -949,7 +949,7 @@ contains
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       USE MOD_LandUrban, only : numurban
-      use MOD_Vars_Global,    only : spval
+      use MOD_Vars_Global, only : spval
       implicit none
 
       if (p_is_worker) then
@@ -1294,7 +1294,7 @@ contains
       real(r8), allocatable :: r_trad  (:)
 
       real(r8), allocatable :: r_ustar (:)
-      real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
+      real(r8), allocatable :: r_ustar2(:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
       real(r8), allocatable :: r_qstar (:)
       real(r8), allocatable :: r_zol   (:)
@@ -1338,9 +1338,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
-			if (DEF_USE_CBL_HEIGHT) then
-              call acc1d (forc_hpbl , a_hpbl )
-		    endif
+            if (DEF_USE_CBL_HEIGHT) then
+               call acc1d (forc_hpbl , a_hpbl)
+            endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1367,51 +1367,53 @@ contains
             ENDIF
             call acc1d (rnet    , a_rnet   )
 
-            call acc1d (xerr   , a_xerr   )
-            call acc1d (zerr   , a_zerr   )
-            call acc1d (rsur   , a_rsur   )
-            call acc1d (rsub   , a_rsub   )
-            call acc1d (rnof   , a_rnof   )
-            call acc1d (qintr  , a_qintr  )
-            call acc1d (qinfl  , a_qinfl  )
-            call acc1d (qdrip  , a_qdrip  )
+            call acc1d (xerr    , a_xerr   )
+            call acc1d (zerr    , a_zerr   )
+            call acc1d (rsur    , a_rsur   )
+            call acc1d (rsub    , a_rsub   )
+            call acc1d (rnof    , a_rnof   )
+            call acc1d (qintr   , a_qintr  )
+            call acc1d (qinfl   , a_qinfl  )
+            call acc1d (qdrip   , a_qdrip  )
+
             call acc1d (rstfacsun_out , a_rstfacsun )
             call acc1d (rstfacsha_out , a_rstfacsha )
-            call acc1d (gssun_out     , a_gssun )
-            call acc1d (gssha_out     , a_gssha )
+            call acc1d (gssun_out     , a_gssun     )
+            call acc1d (gssha_out     , a_gssha     )
 
-            call acc1d (wdsrf  , a_wdsrf  )
-            call acc1d (zwt    , a_zwt    )
-            call acc1d (wa     , a_wa     )
-            call acc1d (wat    , a_wat    )
-            call acc1d (assim  , a_assim  )
-            call acc1d (respc  , a_respc  )
-            call acc1d (assimsun_out  , a_assimsun      )
-            call acc1d (assimsha_out  , a_assimsha      )
-            call acc1d (etrsun_out    , a_etrsun        )
-            call acc1d (etrsha_out    , a_etrsha        )
+            call acc1d (wdsrf   , a_wdsrf  )
+            call acc1d (zwt     , a_zwt    )
+            call acc1d (wa      , a_wa     )
+            call acc1d (wat     , a_wat    )
+            call acc1d (assim   , a_assim  )
+            call acc1d (respc   , a_respc  )
 
-            call acc1d (qcharge, a_qcharge)
+            call acc1d (assimsun_out  , a_assimsun  )
+            call acc1d (assimsha_out  , a_assimsha  )
+            call acc1d (etrsun_out    , a_etrsun    )
+            call acc1d (etrsha_out    , a_etrsha    )
 
-            call acc1d (t_grnd , a_t_grnd )
-            call acc1d (tleaf  , a_tleaf  )
-            call acc1d (ldew_rain, a_ldew_rain)
-            call acc1d (ldew_snow, a_ldew_snow)
-            call acc1d (ldew   , a_ldew   )
-            call acc1d (scv    , a_scv    )
-            call acc1d (snowdp , a_snowdp )
-            call acc1d (fsno   , a_fsno   )
-            call acc1d (sigf   , a_sigf   )
-            call acc1d (green  , a_green  )
-            call acc1d (lai    , a_lai    )
-            call acc1d (laisun , a_laisun )
-            call acc1d (laisha , a_laisha )
-            call acc1d (sai    , a_sai    )
+            call acc1d (qcharge   , a_qcharge   )
 
-            call acc3d (alb    , a_alb    )
+            call acc1d (t_grnd    , a_t_grnd    )
+            call acc1d (tleaf     , a_tleaf     )
+            call acc1d (ldew_rain , a_ldew_rain )
+            call acc1d (ldew_snow , a_ldew_snow )
+            call acc1d (ldew      , a_ldew      )
+            call acc1d (scv       , a_scv       )
+            call acc1d (snowdp    , a_snowdp    )
+            call acc1d (fsno      , a_fsno      )
+            call acc1d (sigf      , a_sigf      )
+            call acc1d (green     , a_green     )
+            call acc1d (lai       , a_lai       )
+            call acc1d (laisun    , a_laisun    )
+            call acc1d (laisha    , a_laisha    )
+            call acc1d (sai       , a_sai       )
 
-            call acc1d (emis   , a_emis   )
-            call acc1d (z0m    , a_z0m    )
+            call acc3d (alb       , a_alb       )
+
+            call acc1d (emis      , a_emis      )
+            call acc1d (z0m       , a_z0m       )
 
             allocate (r_trad (numpatch))
             do i = 1, numpatch
@@ -1421,7 +1423,7 @@ contains
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
-            deallocate (r_trad )
+            deallocate (r_trad            )
 
             call acc1d (tref   , a_tref   )
             call acc1d (qref   , a_qref   )
@@ -1559,7 +1561,7 @@ contains
             call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
-            call acc1d (fertnitro_sugarcane, a_fertnitro_sugarcane  )
+            call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
@@ -1574,31 +1576,31 @@ contains
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then
-               call acc1d (abm_lf             ,   a_abm                )
-               call acc1d (gdp_lf             ,   a_gdp                )
-               call acc1d (peatf_lf           ,   a_peatf              )
-               call acc1d (hdm_lf             ,   a_hdm                )
-               call acc1d (lnfm               ,   a_lnfm               )
+               call acc1d (abm_lf          ,   a_abm                )
+               call acc1d (gdp_lf          ,   a_gdp                )
+               call acc1d (peatf_lf        ,   a_peatf              )
+               call acc1d (hdm_lf          ,   a_hdm                )
+               call acc1d (lnfm            ,   a_lnfm               )
             end if
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
-               call acc1d (forc_ozone         ,   a_ozone              )
+               call acc1d (forc_ozone      ,   a_ozone              )
             ENDIF
 
-            call acc2d (t_soisno   , a_t_soisno   )
-            call acc2d (wliq_soisno, a_wliq_soisno)
-            call acc2d (wice_soisno, a_wice_soisno)
+            call acc2d (t_soisno   , a_t_soisno      )
+            call acc2d (wliq_soisno, a_wliq_soisno   )
+            call acc2d (wice_soisno, a_wice_soisno   )
 
-            call acc2d (h2osoi     , a_h2osoi     )
-            call acc2d (rootr      , a_rootr      )
-            call acc2d (BD_all     , a_BD_all      )
-            call acc2d (wfc        , a_wfc         )
-            call acc2d (OM_density , a_OM_density  )
+            call acc2d (h2osoi     , a_h2osoi        )
+            call acc2d (rootr      , a_rootr         )
+            call acc2d (BD_all     , a_BD_all        )
+            call acc2d (wfc        , a_wfc           )
+            call acc2d (OM_density , a_OM_density    )
             if(DEF_USE_PLANTHYDRAULICS)then
-               call acc2d (vegwp      , a_vegwp      )
+               call acc2d (vegwp    , a_vegwp        )
             end if
-            call acc2d (t_lake      , a_t_lake      )
-            call acc2d (lake_icefrac, a_lake_icefrac)
+            call acc2d (t_lake      , a_t_lake       )
+            call acc2d (lake_icefrac, a_lake_icefrac )
 #ifdef BGC
             do i = 1, numpatch
                do j = 1, nl_soil
@@ -1686,7 +1688,7 @@ contains
             call acc2d (decomp_vr_tmp, a_cwdn_vr     )
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
-            allocate (r_ustar  (numpatch));  r_ustar (:) = spval 
+            allocate (r_ustar  (numpatch));  r_ustar (:) = spval
             allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20
             allocate (r_tstar  (numpatch));  r_tstar (:) = spval
             allocate (r_qstar  (numpatch));  r_qstar (:) = spval
@@ -1774,12 +1776,12 @@ contains
                if(r_zol_e >= 0.)then
                   um = max(ur,0.1)
                else
-                 if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-                    zii = max(5.*hgt_u,hpbl)
-                 endif !//TODO: Shaofeng, 2023.05.18
-                 wc = (-grav*r_ustar_e*thvstar*zii/thv)**(1./3.)
-                 wc2 = beta*beta*(wc*wc)
-                 um = max(0.1,sqrt(ur*ur+wc2))
+                  if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                     zii = max(5.*hgt_u,hpbl)
+                  endif !//TODO: Shaofeng, 2023.05.18
+                  wc = (-grav*r_ustar_e*thvstar*zii/thv)**(1./3.)
+                  wc2 = beta*beta*(wc*wc)
+                  um = max(0.1,sqrt(ur*ur+wc2))
                endif
 
                obu = zldis/r_zol_e
@@ -1790,7 +1792,7 @@ contains
                   call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
                     obu,um,r_ustar2_e,fh2m,fq2m,r_fm10m_e,r_fm_e,r_fh_e,r_fq_e) !Shaofeng, 2023.05.20
                endif
-                  
+
                ! bug found by chen qiying 2013/07/01
                r_rib_e = r_zol_e /vonkar * r_ustar_e**2 / (vonkar/r_fh_e*um**2)
                r_rib_e = min(5.,r_rib_e)
@@ -1805,7 +1807,7 @@ contains
                r_tstar (istt:iend) = r_tstar_e
                r_qstar (istt:iend) = r_qstar_e
                r_zol   (istt:iend) = r_zol_e
-               r_rib   (istt:iend) = r_rib_e 
+               r_rib   (istt:iend) = r_rib_e
                r_fm    (istt:iend) = r_fm_e
                r_fh    (istt:iend) = r_fh_e
                r_fq    (istt:iend) = r_fq_e
@@ -1831,7 +1833,7 @@ contains
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
-            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
+            deallocate (r_ustar2) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )
