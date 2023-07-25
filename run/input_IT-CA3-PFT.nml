@@ -22,8 +22,8 @@
  DEF_simulation_time%greenwich     = .FALSE.
  DEF_simulation_time%start_year    = 2012
  DEF_simulation_time%start_month   = 1
- DEF_simulation_time%start_day     = 214
- DEF_simulation_time%start_sec     = 0
+ DEF_simulation_time%start_day     = 1
+ DEF_simulation_time%start_sec     = 1800
  DEF_simulation_time%end_year      = 2013
  DEF_simulation_time%end_month     = 12
  DEF_simulation_time%end_day       = 31
