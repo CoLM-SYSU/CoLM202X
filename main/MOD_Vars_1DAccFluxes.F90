@@ -223,6 +223,11 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_cropprodc(:)
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
+
+   real(r8), allocatable :: a_irrig_rate         (:)        
+   real(r8), allocatable :: a_deficit_irrig      (:)      
+   real(r8), allocatable :: a_sum_irrig          (:)          
+   real(r8), allocatable :: a_sum_irrig_count    (:) 
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
    real(r8), allocatable :: a_abm                (:)
@@ -536,6 +541,11 @@ contains
             allocate (a_grainc_to_cropprodc(numpatch))
             allocate (a_grainc_to_seed     (numpatch))
             allocate (a_fert_to_sminn      (numpatch))
+
+            allocate (a_irrig_rate         (numpatch))
+            allocate (a_deficit_irrig      (numpatch))
+            allocate (a_sum_irrig          (numpatch))
+            allocate (a_sum_irrig_count    (numpatch))
 #endif
             allocate (a_ndep_to_sminn      (numpatch))
 
@@ -850,6 +860,11 @@ contains
             deallocate (a_grainc_to_cropprodc)
             deallocate (a_grainc_to_seed     )
             deallocate (a_fert_to_sminn      )
+
+            deallocate (a_irrig_rate         )
+            deallocate (a_deficit_irrig      )
+            deallocate (a_sum_irrig          )
+            deallocate (a_sum_irrig_count    )
 #endif
             deallocate (a_ndep_to_sminn      )
 
@@ -1169,6 +1184,10 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
+            a_irrig_rate         (:) = spval     
+            a_deficit_irrig      (:) = spval  
+            a_sum_irrig          (:) = spval      
+            a_sum_irrig_count    (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
 
@@ -1269,7 +1288,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF, DEF_USE_IRRIGATION
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
@@ -1381,6 +1400,7 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
+            lai = laisun + laisha
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
@@ -1546,6 +1566,11 @@ contains
             call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
+
+            call acc1d (irrig_rate         ,   a_irrig_rate         )
+            a_deficit_irrig = deficit_irrig
+            a_sum_irrig = sum_irrig
+            a_sum_irrig_count = sum_irrig_count
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

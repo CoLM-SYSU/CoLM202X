@@ -13,7 +13,7 @@
 #undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
-#define URBAN_MODEL
+#undef URBAN_MODEL
 #undef URBAN_LCZ
 
 ! 3. If defined, debug information is output.

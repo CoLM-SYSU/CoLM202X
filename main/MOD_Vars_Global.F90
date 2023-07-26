@@ -104,6 +104,14 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: PI      = 4*atan(1.) !pi value
    real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 
+   integer , parameter :: irrig_start_time = 21600           ! local time of irrigation start
+   integer , parameter :: irrig_max_depth  = 10              ! max irrigation depth
+   real(r8), parameter :: irrig_threshold_fraction  = 1._r8  ! irrigation thershold
+   real(r8), parameter :: irrig_min_cphase = 1._r8           ! crop phenology when begin irrigation
+   real(r8), parameter :: irrig_max_cphase = 3._r8           ! crop phenology when end irrigation
+   integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time 
+
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 

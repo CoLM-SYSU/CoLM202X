@@ -75,6 +75,11 @@ MODULE MOD_BGC_Vars_2DFluxes
    type(block_data_real8_2d) :: f_grainc_to_seed     ! 2D grid: grain to crop seed carbon (gC m-2 s-1)
    type(block_data_real8_2d) :: f_fert_to_sminn      ! 2D grid: fertilization (gN m-2 s-1)
    type(block_data_real8_2d) :: f_plantdate          ! 2D grid: planting date
+
+   type(block_data_real8_2d) :: f_irrig_rate         ! 2D grid: irrigation rate (mm/s)
+   type(block_data_real8_2d) :: f_deficit_irrig      ! 2D grid: need irrigation amounts (kg/m2)
+   type(block_data_real8_2d) :: f_sum_irrig          ! 2D grid: total irrigation amounts at growing season (kg/m2)
+   type(block_data_real8_2d) :: f_sum_irrig_count    ! 2D grid: total irrigation times at growing season (-)
 #endif
    type(block_data_real8_2d) :: f_ndep_to_sminn      ! 2D grid: nitrogen deposition (gN m-2 s-1)
 
@@ -240,6 +245,11 @@ CONTAINS
          call allocate_block_data (grid, f_grainc_to_seed     )  ! grain to crop seed
          call allocate_block_data (grid, f_fert_to_sminn      )  ! grain to crop seed
          call allocate_block_data (grid, f_plantdate          )  ! planting date
+
+         call allocate_block_data (grid, f_irrig_rate         ) 
+         call allocate_block_data (grid, f_deficit_irrig      )  
+         call allocate_block_data (grid, f_sum_irrig          )  
+         call allocate_block_data (grid, f_sum_irrig_count    )  
 #endif
          call allocate_block_data (grid, f_ndep_to_sminn      )  ! grain to crop seed
 

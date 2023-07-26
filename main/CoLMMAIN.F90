@@ -136,7 +136,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz, denh2o, denice
-  USE MOD_Vars_TimeVariables, only: tlai, tsai
+  USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
@@ -162,7 +162,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
   USE MOD_Vars_1DFluxes, only : rsub
-  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS
+  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    !get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
@@ -852,10 +852,10 @@ ENDIF
 #endif
 
 #ifndef LATERAL_FLOW
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub+irrig_rate(ipatch))*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub+irrig_rate(ipatch))*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -978,7 +978,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb=scv+sum(wice_soisno(1:)+wliq_soisno(1:))
-      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
+      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof+irrig_rate(ipatch))*deltim
       xerr=errorw/deltim
 
 !======================================================================
