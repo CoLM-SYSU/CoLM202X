@@ -251,6 +251,7 @@ contains
       integer  :: dtLB, dtUB
       real(r8) :: cosz
       INTEGER  :: year, month, mday
+      logical  :: has_u,has_v
 
       real solar, frl, prcp, tm, us, vs, pres, qm
       real(r8) :: pco2m
@@ -268,9 +269,13 @@ contains
          call adj2end(id)
          mtstamp = id
 
+         has_u = .true.
+         has_v = .true.
          ! loop for variables
          do ivar = 1, NVAR
 
+            IF (ivar == 5 .and. trim(vname(ivar)) == 'NULL') has_u = .false.
+            IF (ivar == 6 .and. trim(vname(ivar)) == 'NULL') has_v = .false.
             if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
             if (trim(tintalgo(ivar)) == 'NULL') cycle
 
@@ -340,43 +345,25 @@ contains
          call block_data_copy (forcn(2), forc_xy_q      )
          call block_data_copy (forcn(3), forc_xy_psrf   )
          call block_data_copy (forcn(3), forc_xy_pbot   )
+         call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
+         call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
          call block_data_copy (forcn(7), forc_xy_solarin)
          call block_data_copy (forcn(8), forc_xy_frl    )
          if (DEF_USE_CBL_HEIGHT) then
             call block_data_copy (forcn(9), forc_xy_hpbl    )
          endif
 
-         if (trim(DEF_forcing%dataset) == 'POINT') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+         if (has_u .and. has_v) then
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'ERA5LAND') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'ERA5') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'CRUJRA') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'JRA55') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-
-         ELSE
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+         ELSEif (has_u) then
+            call block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
+            call block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSEif (has_v) then
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSE
+            write(6, *) "At least one of the wind components must be provided! stop!"; stop
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -570,7 +557,7 @@ contains
 
       ENDIF
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
@@ -839,7 +826,7 @@ contains
       sec  = mtstamp%sec
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-        
+
          ntime  = size(forctime)
          time_i = 1
 

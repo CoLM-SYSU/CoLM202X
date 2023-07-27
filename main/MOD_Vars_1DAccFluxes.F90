@@ -1763,7 +1763,7 @@ contains
                th  = tm*(100000./psrf)**(rgas/cpair)
                thv = th*(1.+0.61*qm)
 
-               r_zol_e = zldis*vonkar*grav * (r_tstar_e+0.61*th*r_qstar_e) &
+               r_zol_e = zldis*vonkar*grav * (r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e) &
                   / (r_ustar_e**2*thv)
 
                if(r_zol_e >= 0.)then   !stable
