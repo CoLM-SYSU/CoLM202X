@@ -214,7 +214,7 @@ endif
 OBJS_MAIN = \
 				MOD_Hydro_SurfaceNetwork.o                \
 				MOD_Hydro_RiverLakeNetwork.o              \
-				MOD_Hydro_SubsurfaceNetwork.o             \
+				MOD_Hydro_BasinNeighbour.o             \
 				MOD_Hydro_SurfaceFlow.o                   \
 				MOD_Hydro_SubsurfaceFlow.o                \
 				MOD_Hydro_RiverLakeFlow.o                 \

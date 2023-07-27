@@ -268,14 +268,15 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
 
-   real(r8), allocatable :: a_ustar(:)
-   real(r8), allocatable :: a_tstar(:)
-   real(r8), allocatable :: a_qstar(:)
-   real(r8), allocatable :: a_zol  (:)
-   real(r8), allocatable :: a_rib  (:)
-   real(r8), allocatable :: a_fm   (:)
-   real(r8), allocatable :: a_fh   (:)
-   real(r8), allocatable :: a_fq   (:)
+   real(r8), allocatable :: a_ustar (:)
+   real(r8), allocatable :: a_ustar2(:)
+   real(r8), allocatable :: a_tstar (:)
+   real(r8), allocatable :: a_qstar (:)
+   real(r8), allocatable :: a_zol   (:)
+   real(r8), allocatable :: a_rib   (:)
+   real(r8), allocatable :: a_fm    (:)
+   real(r8), allocatable :: a_fh    (:)
+   real(r8), allocatable :: a_fq    (:)
 
    real(r8), allocatable :: a_us10m(:)
    real(r8), allocatable :: a_vs10m(:)
@@ -584,6 +585,7 @@ contains
 #endif
 
             allocate (a_ustar     (numpatch))
+            allocate (a_ustar2    (numpatch))
             allocate (a_tstar     (numpatch))
             allocate (a_qstar     (numpatch))
             allocate (a_zol       (numpatch))
@@ -906,6 +908,7 @@ contains
 #endif
 
             deallocate (a_ustar     )
+            deallocate (a_ustar2    )
             deallocate (a_tstar     )
             deallocate (a_qstar     )
             deallocate (a_zol       )
@@ -1222,6 +1225,7 @@ contains
 #endif
 
             a_ustar (:) = spval
+            a_ustar2(:) = spval
             a_tstar (:) = spval
             a_qstar (:) = spval
             a_zol   (:) = spval
@@ -1794,11 +1798,11 @@ contains
                endif
 
                ! bug found by chen qiying 2013/07/01
-               r_rib_e = r_zol_e /vonkar * r_ustar_e**2 / (vonkar/r_fh_e*um**2)
+               r_rib_e = r_zol_e /vonkar * r_ustar2_e**2 / (vonkar/r_fh_e*um**2)
                r_rib_e = min(5.,r_rib_e)
 
-               r_us10m_e = us/um * r_ustar_e /vonkar * r_fm10m_e
-               r_vs10m_e = vs/um * r_ustar_e /vonkar * r_fm10m_e
+               r_us10m_e = us/um * r_ustar2_e /vonkar * r_fm10m_e
+               r_vs10m_e = vs/um * r_ustar2_e /vonkar * r_fm10m_e
 
                ! Assign values from element (gridcell in latitude-longitude mesh) to patches.
                ! Notice that all values on patches in an element are equal.
@@ -1819,14 +1823,15 @@ contains
 
             end do
 
-            call acc1d (r_ustar, a_ustar)
-            call acc1d (r_tstar, a_tstar)
-            call acc1d (r_qstar, a_qstar)
-            call acc1d (r_zol  , a_zol  )
-            call acc1d (r_rib  , a_rib  )
-            call acc1d (r_fm   , a_fm   )
-            call acc1d (r_fh   , a_fh   )
-            call acc1d (r_fq   , a_fq   )
+            call acc1d (r_ustar , a_ustar )
+            call acc1d (r_ustar2, a_ustar2)
+            call acc1d (r_tstar , a_tstar )
+            call acc1d (r_qstar , a_qstar )
+            call acc1d (r_zol   , a_zol   )
+            call acc1d (r_rib   , a_rib   )
+            call acc1d (r_fm    , a_fm    )
+            call acc1d (r_fh    , a_fh    )
+            call acc1d (r_fq    , a_fq    )
 
             call acc1d (r_us10m, a_us10m)
             call acc1d (r_vs10m, a_vs10m)

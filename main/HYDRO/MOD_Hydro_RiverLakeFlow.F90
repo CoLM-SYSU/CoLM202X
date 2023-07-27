@@ -29,7 +29,7 @@ MODULE MOD_Hydro_RiverLakeFlow
 CONTAINS
    
    ! ---------
-   SUBROUTINE river_flow (dt)
+   SUBROUTINE river_lake_flow (dt)
 
       USE MOD_SPMD_Task
       USE MOD_Mesh
@@ -46,13 +46,11 @@ CONTAINS
       ! Local Variables
       INTEGER :: nriver
       INTEGER :: istt, iend, i, j
-      REAL(r8), allocatable :: height_riv(:)
-      REAL(r8), allocatable :: veloct_riv(:)
-      REAL(r8), allocatable :: momtem_riv(:)
+      REAL(r8), allocatable :: momen_riv (:)
       
-      REAL(r8), allocatable :: height_riv_ds(:)
-      REAL(r8), allocatable :: veloct_riv_ds(:)
-      REAL(r8), allocatable :: momtem_riv_ds(:)
+      REAL(r8), allocatable :: wdsrf_bsn_ds(:)
+      REAL(r8), allocatable :: veloc_riv_ds (:)
+      REAL(r8), allocatable :: momen_riv_ds (:)
 
       REAL(r8), allocatable :: hflux_fc(:)
       REAL(r8), allocatable :: mflux_fc(:)
@@ -62,7 +60,7 @@ CONTAINS
       REAL(r8), allocatable :: sum_mflux_riv(:)
       REAL(r8), allocatable :: sum_zgrad_riv(:)
       
-      REAL(r8) :: veloct_fc, height_fc, momtem_fc, zsurf_fc
+      REAL(r8) :: veloct_fc, height_fc, momen_fc, zsurf_fc
       REAL(r8) :: bedelv_fc, height_up, height_dn
       REAL(r8) :: vwave_up, vwave_dn, hflux_up, hflux_dn, mflux_up, mflux_dn
       REAL(r8) :: loss, friction
@@ -75,36 +73,17 @@ CONTAINS
          nriver = numelm
 
          IF (nriver > 0) THEN
-            allocate (height_riv (nriver))
-            allocate (veloct_riv (nriver))
-            allocate (momtem_riv (nriver))
-            
-            allocate (height_riv_ds (nriver))
-            allocate (veloct_riv_ds (nriver))
-            allocate (momtem_riv_ds (nriver))
-            
-            allocate (hflux_fc (nriver))
-            allocate (mflux_fc (nriver))
-            allocate (zgrad_dn (nriver))
-            
+            allocate (momen_riv     (nriver))
+            allocate (wdsrf_bsn_ds  (nriver))
+            allocate (veloc_riv_ds  (nriver))
+            allocate (momen_riv_ds  (nriver))
+            allocate (hflux_fc      (nriver))
+            allocate (mflux_fc      (nriver))
+            allocate (zgrad_dn      (nriver))
             allocate (sum_hflux_riv (nriver))
             allocate (sum_mflux_riv (nriver))
             allocate (sum_zgrad_riv (nriver))
          ENDIF
-
-         DO i = 1, nriver
-            istt = hru_patch%substt(basin_hru%substt(i))
-            iend = hru_patch%subend(basin_hru%substt(i))
-            height_riv(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
-            height_riv(i) = height_riv(i) / 1.0e3 ! mm to m
-         ENDDO
-
-         DO i = 1, nriver
-            veloct_riv(i) = riverveloct(i)
-            ! IF water is increased, momentum is not increased.
-            ! IF water is decreased, momentum is also decreased.
-            momtem_riv(i) = min(riverheight(i), height_riv(i)) * veloct_riv(i)
-         ENDDO
 
          dt_res = dt
          DO WHILE (dt_res > 0)
@@ -115,94 +94,104 @@ CONTAINS
                sum_zgrad_riv(i) = 0.
                
                IF (addrdown(i) > 0) THEN
-                  height_riv_ds(i) = height_riv(addrdown(i))
-                  veloct_riv_ds(i) = veloct_riv(addrdown(i))
-                  momtem_riv_ds(i) = momtem_riv(addrdown(i))
+                  wdsrf_bsn_ds(i) = wdsrf_bsn(addrdown(i))
+                  veloc_riv_ds(i) = veloc_riv(addrdown(i))
+                  momen_riv_ds(i) = momen_riv(addrdown(i))
                ELSE
-                  height_riv_ds(i) = 0
-                  veloct_riv_ds(i) = 0
-                  momtem_riv_ds(i) = 0
+                  wdsrf_bsn_ds(i) = 0
+                  veloc_riv_ds(i) = 0
+                  momen_riv_ds(i) = 0
                ENDIF
             ENDDO 
 #ifdef USEMPI
             CALL river_data_exchange (SEND_DATA_DOWN_TO_UP, accum = .false., &
-               vec_send1 = height_riv, vec_recv1 = height_riv_ds, &
-               vec_send2 = veloct_riv, vec_recv2 = veloct_riv_ds, &
-               vec_send3 = momtem_riv, vec_recv3 = momtem_riv_ds)
+               vec_send1 = wdsrf_bsn, vec_recv1 = wdsrf_bsn_ds, &
+               vec_send2 = veloc_riv, vec_recv2 = veloc_riv_ds, &
+               vec_send3 = momen_riv, vec_recv3 = momen_riv_ds )
 #endif
                
             dt_this = dt_res
 
             DO i = 1, nriver
-               IF (addrdown(i) >= 0) THEN
-
-                  IF ((height_riv(i) < RIVERMIN) .and. (height_riv_ds(i) < RIVERMIN)) THEN
-                     hflux_fc(i) = 0
-                     mflux_fc(i) = 0
-                     zgrad_dn(i) = 0
-                     cycle
-                  ENDIF
+               IF (riverdown(i) >= 0) THEN
                   
+                  ! velocity in lakes is assumed to be 0.
+                  IF (lake_id(i) > 0) THEN
+                     veloc_riv(i) = 0.
+                  ENDIF
+                  ! velocity in lakes or ocean is assumed to be 0.
+                  IF (to_lake(i) .or. (riverdown(i) == 0)) THEN
+                     veloc_riv_ds(i) = 0.
+                  ENDIF
+
+                  IF (riverdown(i) > 0) THEN
+                     ! both elements are dry.
+                     IF ((wdsrf_bsn(i) < RIVERMIN) .and. (wdsrf_bsn_ds(i) < RIVERMIN)) THEN
+                        hflux_fc(i) = 0
+                        mflux_fc(i) = 0
+                        zgrad_dn(i) = 0
+                        cycle
+                     ENDIF
+                  ENDIF
+
                   ! reconstruction of height of water near interface
-                  bedelv_fc = max(riverelv(i), riverelv_ds(i))
-                  height_up = max(0., height_riv(i)   +riverelv(i)   -bedelv_fc) 
-                  height_dn = max(0., height_riv_ds(i)+riverelv_ds(i)-bedelv_fc) 
+                  IF (riverdown(i) > 0) THEN
+                     bedelv_fc = max(bedelv(i), bedelv_ds(i))
+                     height_up = max(0., wdsrf_bsn(i)   +bedelv(i)   -bedelv_fc) 
+                     height_dn = max(0., wdsrf_bsn_ds(i)+bedelv_ds(i)-bedelv_fc) 
+                  ELSEIF (riverdown(i) == 0) THEN ! for river mouth
+                     bedelv_fc = bedelv(i)
+                     height_up = wdsrf_bsn(i) 
+                     ! sea level is assumed to be 0. and sea bed is assumed to be negative infinity.
+                     height_dn = max(0., - bedelv_fc) 
+                  ENDIF
 
                   ! velocity at river downstream face (middle region in Riemann problem)
-                  veloct_fc = 0.5 * (veloct_riv(i) + veloct_riv_ds(i)) & 
+                  veloct_fc = 0.5 * (veloc_riv(i) + veloc_riv_ds(i)) & 
                      + sqrt(grav * height_up) - sqrt(grav * height_dn)
 
                   ! height of water at downstream face (middle region in Riemann problem)
                   height_fc = 1/grav * (0.5*(sqrt(grav*height_up) + sqrt(grav*height_dn)) &
-                     + 0.25 * (veloct_riv(i) - veloct_riv_ds(i))) ** 2
+                     + 0.25 * (veloc_riv(i) - veloc_riv_ds(i))) ** 2
 
                   IF (height_up > 0) THEN
-                     vwave_up = min(veloct_riv(i)-sqrt(grav*height_up), veloct_fc-sqrt(grav*height_fc))
+                     vwave_up = min(veloc_riv(i)-sqrt(grav*height_up), veloct_fc-sqrt(grav*height_fc))
                   ELSE
-                     vwave_up = veloct_riv_ds(i) - 2.0 * sqrt(grav*height_dn)
+                     vwave_up = veloc_riv_ds(i) - 2.0 * sqrt(grav*height_dn)
                   ENDIF
 
                   IF (height_dn > 0) THEN
-                     vwave_dn = max(veloct_riv_ds(i)+sqrt(grav*height_dn), veloct_fc+sqrt(grav*height_fc))
+                     vwave_dn = max(veloc_riv_ds(i)+sqrt(grav*height_dn), veloct_fc+sqrt(grav*height_fc))
                   ELSE
-                     vwave_dn = veloct_riv(i) + 2.0 * sqrt(grav*height_up)
+                     vwave_dn = veloc_riv(i) + 2.0 * sqrt(grav*height_up)
                   ENDIF
 
-                  hflux_up = veloct_riv(i)    * height_up
-                  hflux_dn = veloct_riv_ds(i) * height_dn
-                  mflux_up = veloct_riv(i)**2    * height_up + 0.5*grav * height_up**2 
-                  mflux_dn = veloct_riv_ds(i)**2 * height_dn + 0.5*grav * height_dn**2 
+                  hflux_up = veloc_riv(i)    * height_up
+                  hflux_dn = veloc_riv_ds(i) * height_dn
+                  mflux_up = veloc_riv(i)**2    * height_up + 0.5*grav * height_up**2 
+                  mflux_dn = veloc_riv_ds(i)**2 * height_dn + 0.5*grav * height_dn**2 
 
                   IF (vwave_up >= 0.) THEN
-                     hflux_fc(i) = riverfac_ds(i) * hflux_up
-                     mflux_fc(i) = riverfac_ds(i) * mflux_up
+                     hflux_fc(i) = outletwth(i) * hflux_up
+                     mflux_fc(i) = outletwth(i) * mflux_up
                   ELSEIF (vwave_dn <= 0.) THEN
-                     hflux_fc(i) = riverfac_ds(i) * hflux_dn
-                     mflux_fc(i) = riverfac_ds(i) * mflux_dn
+                     hflux_fc(i) = outletwth(i) * hflux_dn
+                     mflux_fc(i) = outletwth(i) * mflux_dn
                   ELSE
-                     hflux_fc(i) = riverfac_ds(i) * (vwave_dn*hflux_up - vwave_up*hflux_dn &
+                     hflux_fc(i) = outletwth(i) * (vwave_dn*hflux_up - vwave_up*hflux_dn &
                         + vwave_up*vwave_dn*(height_dn-height_up)) / (vwave_dn-vwave_up)
-                     mflux_fc(i) = riverfac_ds(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
+                     mflux_fc(i) = outletwth(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
                         + vwave_up*vwave_dn*(hflux_dn-hflux_up)) / (vwave_dn-vwave_up)
                   ENDIF
                
-                  sum_zgrad_riv(i) = sum_zgrad_riv(i) + riverfac_ds(i) * 0.5*grav * height_up**2
+                  sum_zgrad_riv(i) = sum_zgrad_riv(i) + outletwth(i) * 0.5*grav * height_up**2
 
-                  zgrad_dn(i) = riverfac_ds(i) * 0.5*grav * height_dn**2
+                  zgrad_dn(i) = outletwth(i) * 0.5*grav * height_dn**2
                   
-               ELSE
-                  IF (riverdown(i) == 0) THEN
-                     ! river mouth
-                     veloct_fc = max(0., veloct_riv(i))
-                     hflux_fc(i) = height_riv(i) * veloct_fc * riverwdth(i)
-                     mflux_fc(i) = momtem_riv(i) * veloct_fc * riverwdth(i)
-                     zgrad_dn(i) = 0
-                  ELSE 
-                     ! inland depression
-                     hflux_fc(i) = 0
-                     mflux_fc(i) = 0
-                     zgrad_dn(i) = 0
-                  ENDIF
+               ELSE ! inland depression
+                  hflux_fc(i) = 0
+                  mflux_fc(i) = 0
+                  zgrad_dn(i) = 0
                ENDIF
 
                sum_hflux_riv(i) = sum_hflux_riv(i) + hflux_fc(i)
@@ -229,21 +218,21 @@ CONTAINS
 
             DO i = 1, nriver
                ! constraint 1: CFL condition
-               IF ((veloct_riv(i) /= 0.) .or. (height_riv(i) > 0.)) THEN
-                  dt_this = min(dt_this, riverlen(i)/(abs(veloct_riv(i))+sqrt(grav*height_riv(i)))*0.8)
+               IF ((veloc_riv(i) /= 0.) .or. (wdsrf_bsn(i) > 0.)) THEN
+                  dt_this = min(dt_this, riverlen(i)/(abs(veloc_riv(i))+sqrt(grav*wdsrf_bsn(i)))*0.8)
                ENDIF
 
                ! constraint 2: Avoid negative values of water
                loss = sum_hflux_riv(i) / riverarea(i)
                IF (loss > 0) THEN
-                  dt_this = min(dt_this, height_riv(i) / loss)
+                  dt_this = min(dt_this, wdsrf_bsn(i) / loss)
                ENDIF
 
                ! constraint 3: Avoid change of flow direction
-               IF ((abs(veloct_riv(i)) > 0.1) &
-                  .and. (veloct_riv(i) * (sum_mflux_riv(i)-sum_zgrad_riv(i)) > 0)) THEN
+               IF ((abs(veloc_riv(i)) > 0.1) &
+                  .and. (veloc_riv(i) * (sum_mflux_riv(i)-sum_zgrad_riv(i)) > 0)) THEN
                   dt_this = min(dt_this, &
-                     abs(momtem_riv(i) * riverarea(i) / (sum_mflux_riv(i)-sum_zgrad_riv(i))))
+                     abs(momen_riv(i) * riverarea(i) / (sum_mflux_riv(i)-sum_zgrad_riv(i))))
                ENDIF
             ENDDO 
 
@@ -253,66 +242,50 @@ CONTAINS
 
             DO i = 1, nriver
 
-               height_riv(i) = height_riv(i) - sum_hflux_riv(i) / riverarea(i) * dt_this
+               wdsrf_bsn(i) = wdsrf_bsn(i) - sum_hflux_riv(i) / riverarea(i) * dt_this
 
-               IF (height_riv(i) < RIVERMIN) THEN
-                  momtem_riv(i) = 0
-                  veloct_riv(i) = 0
+               IF (wdsrf_bsn(i) < RIVERMIN) THEN
+                  momen_riv(i) = 0
+                  veloc_riv(i) = 0
                ELSE
-                  friction = grav * nmanning_riv**2 / height_riv(i)**(7.0/3.0) * abs(momtem_riv(i))
-                  momtem_riv(i) = (momtem_riv(i) &
+                  friction = grav * nmanning_riv**2 / wdsrf_bsn(i)**(7.0/3.0) * abs(momen_riv(i))
+                  momen_riv(i) = (momen_riv(i) &
                      - (sum_mflux_riv(i) - sum_zgrad_riv(i)) / riverarea(i) * dt_this) &
                      / (1 + friction * dt_this) 
-                  veloct_riv(i) = momtem_riv(i) / height_riv(i)
+                  veloc_riv(i) = momen_riv(i) / wdsrf_bsn(i)
                ENDIF
             
                ! inland depression
                IF (riverdown(i) < 0) THEN
-                  momtem_riv(i) = min(0., momtem_riv(i))
-                  veloct_riv(i) = min(0., veloct_riv(i))
+                  momen_riv(i) = min(0., momen_riv(i))
+                  veloc_riv(i) = min(0., veloc_riv(i))
                ENDIF
 
             ENDDO
 
             IF (nriver > 0) THEN
-               riverheight_ta(:) = riverheight_ta(:) + height_riv(:) * dt_this
-               rivermomtem_ta(:) = rivermomtem_ta(:) + momtem_riv(:) * dt_this
+               wdsrf_bsn_ta(:) = wdsrf_bsn_ta(:) + wdsrf_bsn(:) * dt_this
+               momen_riv_ta(:) = momen_riv_ta(:) + momen_riv(:) * dt_this
             ENDIF
 
             dt_res = dt_res - dt_this
 
          ENDDO
 
-         DO i = 1, nriver
-         
-            riverheight(i) = height_riv(i)
-            riverveloct(i) = veloct_riv(i)
-
-            istt = hru_patch%substt(basin_hru%substt(i))
-            iend = hru_patch%subend(basin_hru%substt(i))
-            wdsrf(istt:iend) = height_riv(i) * 1.0e3 ! m to mm
-
-         ENDDO
-            
-         IF (allocated(height_riv)) deallocate(height_riv)
-         IF (allocated(veloct_riv)) deallocate(veloct_riv)
-         IF (allocated(momtem_riv)) deallocate(momtem_riv)
-
-         IF (allocated(height_riv_ds)) deallocate(height_riv_ds)
-         IF (allocated(veloct_riv_ds)) deallocate(veloct_riv_ds)
-         IF (allocated(momtem_riv_ds)) deallocate(momtem_riv_ds)
-
-         IF (allocated(hflux_fc)) deallocate(hflux_fc)
-         IF (allocated(mflux_fc)) deallocate(mflux_fc)
-         IF (allocated(zgrad_dn)) deallocate(zgrad_dn)
-
+         IF (allocated(momen_riv    )) deallocate(momen_riv    )
+         IF (allocated(wdsrf_bsn_ds )) deallocate(wdsrf_bsn_ds )
+         IF (allocated(veloc_riv_ds )) deallocate(veloc_riv_ds )
+         IF (allocated(momen_riv_ds )) deallocate(momen_riv_ds )
+         IF (allocated(hflux_fc     )) deallocate(hflux_fc     )
+         IF (allocated(mflux_fc     )) deallocate(mflux_fc     )
+         IF (allocated(zgrad_dn     )) deallocate(zgrad_dn     )
          IF (allocated(sum_hflux_riv)) deallocate(sum_hflux_riv)
          IF (allocated(sum_mflux_riv)) deallocate(sum_mflux_riv)
          IF (allocated(sum_zgrad_riv)) deallocate(sum_zgrad_riv)
 
       ENDIF
 
-   END SUBROUTINE river_flow
+   END SUBROUTINE river_lake_flow
    
 END MODULE MOD_Hydro_RiverLakeFlow
 #endif
