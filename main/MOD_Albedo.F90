@@ -442,7 +442,6 @@ IF (patchtype == 0) THEN
          alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 #endif
 
-
 #ifdef LULC_IGBP_PFT
          CALL twostream_wrap (ipatch, czen, albg, &
                               albv, tran, ssun, ssha)
@@ -453,7 +452,10 @@ IF (patchtype == 0) THEN
          CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
          alb(:,:) = albv(:,:)
 #endif
-      ELSE
+
+ELSE  !other patchtypes (/=0)
+
+#if(defined LULC_USGS)
          IF (lai > 1e-6) THEN
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
@@ -461,6 +463,14 @@ IF (patchtype == 0) THEN
             albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
             alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
          ENDIF
+#else
+         CALL twostream (chil,rho,tau,green,lai,sai,&
+                         czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
+
+         albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
+         alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+#endif
+
 ENDIF
       ENDIF
 
