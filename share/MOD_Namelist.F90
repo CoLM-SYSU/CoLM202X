@@ -153,7 +153,7 @@ MODULE MOD_Namelist
    ! 3: TR13, Tang and Riley (2013)
    ! 4: LP92, Lee and Pielke (1992)
    ! 5: S92,  Sellers et al (1992)
-   INTEGER :: DEF_RSS_SCHEME = 4
+   INTEGER :: DEF_RSS_SCHEME = 1
 
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY                    = .true.

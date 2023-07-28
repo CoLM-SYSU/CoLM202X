@@ -144,7 +144,7 @@ CONTAINS
 
    ! calculate rss by SL14
    case (1)
-      dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*porsl(1) - vol_liq)) &
+      dsl = dz_soisno(1)*max(1.e-6_r8,(0.8*eff_porosity - vol_liq)) &
                         /max(1.e-6_r8,(0.8*porsl(1)- aird))
 
       dsl = max(dsl,0._r8)
@@ -196,7 +196,7 @@ CONTAINS
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
       rss = (1-fsno)*exp(8.206-4.255*fac)
-
+      rss = (1-fsno)*exp(8.206-6.0*fac)
    endselect
 
    rss = min(1.e6_r8,rss)
