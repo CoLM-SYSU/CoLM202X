@@ -195,7 +195,7 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-      rss = (1-fsno)*exp(8.206-4.255*fac)
+      !rss = (1-fsno)*exp(8.206-4.255*fac)
       rss = (1-fsno)*exp(8.206-6.0*fac)
    endselect
 
