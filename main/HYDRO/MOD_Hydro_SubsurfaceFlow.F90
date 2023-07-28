@@ -34,8 +34,8 @@ CONTAINS
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DFluxes
       USE MOD_Hydro_SurfaceNetwork
-      USE MOD_Hydro_RiverNetwork
-      USE MOD_Hydro_SubsurfaceNetwork
+      USE MOD_Hydro_RiverLakeNetwork
+      USE MOD_Hydro_BasinNeighbour
       USE MOD_Const_Physical,  only : denice, denh2o
       USE MOD_Vars_Global,     only : pi, nl_soil, zi_soi
       USE MOD_Hydro_SoilWater, only : soilwater_aquifer_exchange
@@ -255,8 +255,8 @@ CONTAINS
             
             rsubs_riv = - rsubs_h(1) * hrus%area(1)/sum(hrus%area) * 1.0e3 ! (positive = out of soil column) 
 
-            IF (rsubs_h(1)*deltime > riverheight(ibasin)*riverarea(ibasin)) THEN 
-               alp = riverheight(ibasin)*riverarea(ibasin) / (rsubs_h(1)*deltime)
+            IF (rsubs_h(1)*deltime > wdsrf_bsn(ibasin)*riverarea(ibasin)) THEN 
+               alp = wdsrf_bsn(ibasin)*riverarea(ibasin) / (rsubs_h(1)*deltime)
                rsubs_riv  = rsubs_riv  * alp
                rsubs_h(1) = rsubs_h(1) * alp
                DO i = 2, nhru
@@ -399,94 +399,98 @@ CONTAINS
          
          DO ipatch = 1, numpatch
 
+            IF (patchtype(ipatch) <= 2) THEN 
 #if(defined CoLMDEBUG)
-            ! For water balance check, the sum of water in soil column before the calcultion
-            w_sum_before = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
-               + wa(ipatch) + wdsrf(ipatch)
+               ! For water balance check, the sum of water in soil column before the calcultion
+               w_sum_before = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
+                  + wa(ipatch) + wdsrf(ipatch)
 #endif
 
-            exwater = rsub(ipatch) * deltime
+               exwater = rsub(ipatch) * deltime
 
 #ifdef Campbell_SOIL_MODEL
-            vl_r(1:nl_soil) = 0._r8
-            prms(1,:) = bsw(1:nl_soil,ipatch)
+               vl_r(1:nl_soil) = 0._r8
+               prms(1,:) = bsw(1:nl_soil,ipatch)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-            vl_r  (1:nl_soil) = theta_r  (1:nl_soil,ipatch)
-            prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,ipatch)
-            prms(2,1:nl_soil) = n_vgm    (1:nl_soil,ipatch)
-            prms(3,1:nl_soil) = L_vgm    (1:nl_soil,ipatch)
-            prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,ipatch)
-            prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,ipatch)
+               vl_r  (1:nl_soil) = theta_r  (1:nl_soil,ipatch)
+               prms(1,1:nl_soil) = alpha_vgm(1:nl_soil,ipatch)
+               prms(2,1:nl_soil) = n_vgm    (1:nl_soil,ipatch)
+               prms(3,1:nl_soil) = L_vgm    (1:nl_soil,ipatch)
+               prms(4,1:nl_soil) = sc_vgm   (1:nl_soil,ipatch)
+               prms(5,1:nl_soil) = fc_vgm   (1:nl_soil,ipatch)
 #endif
 
-            DO ilev = 1, nl_soil
-               vol_ice(ilev) = wice_soisno(ilev,ipatch)/denice*1000. / sp_dz(ilev)
-               vol_ice(ilev) = min(vol_ice(ilev), porsl(ilev,ipatch))
+               DO ilev = 1, nl_soil
+                  vol_ice(ilev) = wice_soisno(ilev,ipatch)/denice*1000. / sp_dz(ilev)
+                  vol_ice(ilev) = min(vol_ice(ilev), porsl(ilev,ipatch))
 
-               eff_porosity(ilev) = max(wimp, porsl(ilev,ipatch)-vol_ice(ilev))
-               is_permeable(ilev) = eff_porosity(ilev) > max(wimp, vl_r(ilev))
-               IF (is_permeable(ilev)) THEN
-                  vol_liq(ilev) = wliq_soisno(ilev,ipatch)/denh2o*1000. / sp_dz(ilev)
-                  vol_liq(ilev) = min(eff_porosity(ilev), max(0., vol_liq(ilev)))
-                  wresi(ilev) = wliq_soisno(ilev,ipatch) - sp_dz(ilev)*vol_liq(ilev)/1000. * denh2o
-               ENDIF
-            ENDDO
-
-            zwtmm = zwt(ipatch) * 1000. ! m -> mm
-            izwt  = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
-            
-            IF (izwt <= nl_soil) THEN
-               IF (is_permeable(izwt)) THEN
-                  vol_liq(izwt) = (wliq_soisno(izwt,ipatch)/denh2o*1000.0 &
-                     - eff_porosity(izwt)*(sp_zi(izwt)-zwtmm)) / (zwtmm - sp_zi(izwt-1))
-
-                  IF (vol_liq(izwt) < 0.) THEN
-                     zwtmm = sp_zi(izwt)
-                     vol_liq(izwt) = wliq_soisno(izwt,ipatch)/denh2o*1000.0 / (sp_zi(izwt)-sp_zi(izwt-1))
+                  eff_porosity(ilev) = max(wimp, porsl(ilev,ipatch)-vol_ice(ilev))
+                  is_permeable(ilev) = eff_porosity(ilev) > max(wimp, vl_r(ilev))
+                  IF (is_permeable(ilev)) THEN
+                     vol_liq(ilev) = wliq_soisno(ilev,ipatch)/denh2o*1000. / sp_dz(ilev)
+                     vol_liq(ilev) = min(eff_porosity(ilev), max(0., vol_liq(ilev)))
+                     wresi(ilev) = wliq_soisno(ilev,ipatch) - sp_dz(ilev)*vol_liq(ilev)/1000. * denh2o
                   ENDIF
+               ENDDO
 
-                  vol_liq(izwt) = max(0., min(eff_porosity(izwt), vol_liq(izwt)))
-                  wresi(izwt) = wliq_soisno(izwt,ipatch) - (eff_porosity(izwt)*(sp_zi(izwt)-zwtmm) &
-                     + vol_liq(izwt)*(zwtmm-sp_zi(izwt-1))) /1000. * denh2o
-               ENDIF
-            ENDIF
+               zwtmm = zwt(ipatch) * 1000. ! m -> mm
+               izwt  = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
 
-            CALL soilwater_aquifer_exchange ( &
-               nl_soil, exwater, sp_zi, is_permeable, porsl(:,ipatch), vl_r, psi0(:,ipatch), &
-               hksati(:,ipatch), nprms, prms,   porsl(nl_soil,ipatch), wdsrf(ipatch), &
-               vol_liq, zwtmm, wa(ipatch), izwt)
-      
-            ! update the mass of liquid water
-            DO ilev = nl_soil, 1, -1
-               IF (is_permeable(ilev)) THEN
-                  IF (zwtmm < sp_zi(ilev)) THEN
-                     IF (zwtmm >= sp_zi(ilev-1)) THEN
-                        wliq_soisno(ilev,ipatch) = ((eff_porosity(ilev)*(sp_zi(ilev)-zwtmm))  &
-                           + vol_liq(ilev)*(zwtmm-sp_zi(ilev-1)))/1000.0 * denh2o
-                     ELSE
-                        wliq_soisno(ilev,ipatch) = denh2o * eff_porosity(ilev)*sp_dz(ilev)/1000.0
+               IF (izwt <= nl_soil) THEN
+                  IF (is_permeable(izwt)) THEN
+                     vol_liq(izwt) = (wliq_soisno(izwt,ipatch)/denh2o*1000.0 &
+                        - eff_porosity(izwt)*(sp_zi(izwt)-zwtmm)) / (zwtmm - sp_zi(izwt-1))
+
+                     IF (vol_liq(izwt) < 0.) THEN
+                        zwtmm = sp_zi(izwt)
+                        vol_liq(izwt) = wliq_soisno(izwt,ipatch)/denh2o*1000.0 / (sp_zi(izwt)-sp_zi(izwt-1))
                      ENDIF
-                  ELSE
-                     wliq_soisno(ilev,ipatch) = denh2o * vol_liq(ilev)*sp_dz(ilev)/1000.0
+
+                     vol_liq(izwt) = max(0., min(eff_porosity(izwt), vol_liq(izwt)))
+                     wresi(izwt) = wliq_soisno(izwt,ipatch) - (eff_porosity(izwt)*(sp_zi(izwt)-zwtmm) &
+                        + vol_liq(izwt)*(zwtmm-sp_zi(izwt-1))) /1000. * denh2o
                   ENDIF
-
-                  wliq_soisno(ilev,ipatch) = wliq_soisno(ilev,ipatch) + wresi(ilev)
                ENDIF
-            ENDDO
 
-            zwt(ipatch) = zwtmm/1000.0
+               CALL soilwater_aquifer_exchange ( &
+                  nl_soil, exwater, sp_zi, is_permeable, porsl(:,ipatch), vl_r, psi0(:,ipatch), &
+                  hksati(:,ipatch), nprms, prms,   porsl(nl_soil,ipatch), wdsrf(ipatch), &
+                  vol_liq, zwtmm, wa(ipatch), izwt)
+
+               ! update the mass of liquid water
+               DO ilev = nl_soil, 1, -1
+                  IF (is_permeable(ilev)) THEN
+                     IF (zwtmm < sp_zi(ilev)) THEN
+                        IF (zwtmm >= sp_zi(ilev-1)) THEN
+                           wliq_soisno(ilev,ipatch) = ((eff_porosity(ilev)*(sp_zi(ilev)-zwtmm))  &
+                              + vol_liq(ilev)*(zwtmm-sp_zi(ilev-1)))/1000.0 * denh2o
+                        ELSE
+                           wliq_soisno(ilev,ipatch) = denh2o * eff_porosity(ilev)*sp_dz(ilev)/1000.0
+                        ENDIF
+                     ELSE
+                        wliq_soisno(ilev,ipatch) = denh2o * vol_liq(ilev)*sp_dz(ilev)/1000.0
+                     ENDIF
+
+                     wliq_soisno(ilev,ipatch) = wliq_soisno(ilev,ipatch) + wresi(ilev)
+                  ENDIF
+               ENDDO
+
+               zwt(ipatch) = zwtmm/1000.0
 
 #if(defined CoLMDEBUG)
-            ! For water balance check, the sum of water in soil column after the calcultion
-            w_sum_after = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
-               + wa(ipatch) + wdsrf(ipatch)
-            errblc = w_sum_after - w_sum_before + exwater
+               ! For water balance check, the sum of water in soil column after the calcultion
+               w_sum_after = sum(wliq_soisno(1:nl_soil,ipatch)) + sum(wice_soisno(1:nl_soil,ipatch)) &
+                  + wa(ipatch) + wdsrf(ipatch)
+               errblc = w_sum_after - w_sum_before + exwater
 
-            if(abs(errblc) > 1.e-3)then
-               write(6,'(A,E20.5)') 'Warning (Subsurface Runoff): water balance violation', errblc
-            endif
+               if(abs(errblc) > 1.e-3)then
+                  write(6,'(A,E20.5)') 'Warning (Subsurface Runoff): water balance violation', errblc
+               endif
 #endif
+            ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies
+               wdsrf(ipatch) = max(wdsrf(ipatch) - rsub(ipatch)*deltime, 0.)
+            ENDIF
 
          ENDDO
       ENDIF

@@ -213,11 +213,11 @@ endif
 
 OBJS_MAIN = \
 				MOD_Hydro_SurfaceNetwork.o                \
-				MOD_Hydro_RiverNetwork.o                  \
-				MOD_Hydro_SubsurfaceNetwork.o             \
+				MOD_Hydro_RiverLakeNetwork.o              \
+				MOD_Hydro_BasinNeighbour.o             \
 				MOD_Hydro_SurfaceFlow.o                   \
 				MOD_Hydro_SubsurfaceFlow.o                \
-				MOD_Hydro_RiverFlow.o                     \
+				MOD_Hydro_RiverLakeFlow.o                 \
 				MOD_Hydro_Hist.o                          \
 				MOD_Hydro_LateralFlow.o                   \
 				MOD_BGC_CNCStateUpdate1.o                 \

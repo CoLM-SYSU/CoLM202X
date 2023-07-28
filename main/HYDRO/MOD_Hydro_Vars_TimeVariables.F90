@@ -14,10 +14,12 @@ MODULE MOD_Hydro_Vars_TimeVariables
    IMPLICIT NONE
 
    ! -- state variables --
-   REAL(r8), allocatable :: riverheight (:) ! river height   [m]
-   REAL(r8), allocatable :: riverveloct (:) ! river velocity [m/s]
-   REAL(r8), allocatable :: wdsrf_hru   (:) ! surface water depth [m]
-   REAL(r8), allocatable :: veloc_hru   (:) ! surface water velocity [m/s]
+   REAL(r8), allocatable :: wdsrf_bsn (:) ! river or lake water depth [m]
+   REAL(r8), allocatable :: veloc_riv (:) ! river velocity [m/s]
+   REAL(r8), allocatable :: momen_riv (:) ! unit river momentum [m^2/s]
+   REAL(r8), allocatable :: wdsrf_hru (:) ! surface water depth [m]
+   REAL(r8), allocatable :: veloc_hru (:) ! surface water velocity [m/s]
+   REAL(r8), allocatable :: momen_hru (:) ! unit surface water momentum [m^2/s]
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_HydroTimeVariables
@@ -41,13 +43,15 @@ CONTAINS
 
      IF (p_is_worker) THEN
         IF (numbasin > 0) THEN
-           allocate (riverheight (numbasin))
-           allocate (riverveloct (numbasin))
+           allocate (wdsrf_bsn (numbasin))
+           allocate (veloc_riv (numbasin))
+           allocate (momen_riv (numbasin))
         ENDIF
 
         IF (numhru > 0) THEN
            allocate (wdsrf_hru (numhru))
            allocate (veloc_hru (numhru))
+           allocate (momen_hru (numhru))
         ENDIF
      ENDIF
 
@@ -67,8 +71,8 @@ CONTAINS
 
      numbasin = numelm
 
-     CALL vector_read_basin (file_restart, riverheight, numbasin, 'riverheight', elm_data_address)
-     CALL vector_read_basin (file_restart, riverveloct, numbasin, 'riverveloct', elm_data_address)
+     CALL vector_read_basin (file_restart, wdsrf_bsn, numbasin, 'wdsrf_bsn', elm_data_address)
+     CALL vector_read_basin (file_restart, veloc_riv, numbasin, 'veloc_riv', elm_data_address)
 
      CALL vector_read_basin (file_restart, wdsrf_hru, numhru, 'wdsrf_hru', hru_data_address)
      CALL vector_read_basin (file_restart, veloc_hru, numhru, 'veloc_hru', hru_data_address)
@@ -109,10 +113,10 @@ CONTAINS
      ENDIF
 
      CALL vector_write_basin (&
-        file_restart, riverheight, numbasin, totalnumelm, 'riverheight', 'basin', elm_data_address)
+        file_restart, wdsrf_bsn, numbasin, totalnumelm, 'wdsrf_bsn', 'basin', elm_data_address)
 
      CALL vector_write_basin (&
-        file_restart, riverveloct, numbasin, totalnumelm, 'riverveloct', 'basin', elm_data_address)
+        file_restart, veloc_riv, numbasin, totalnumelm, 'veloc_riv', 'basin', elm_data_address)
 
      CALL vector_write_basin (&
         file_restart, wdsrf_hru, numhru, totalnumhru, 'wdsrf_hru', 'hydrounit', hru_data_address)
@@ -126,11 +130,13 @@ CONTAINS
 
      IMPLICIT NONE
 
-     IF (allocated(riverheight)) deallocate(riverheight)
-     IF (allocated(riverveloct)) deallocate(riverveloct)
+     IF (allocated(wdsrf_bsn)) deallocate(wdsrf_bsn)
+     IF (allocated(veloc_riv)) deallocate(veloc_riv)
+     IF (allocated(momen_riv)) deallocate(momen_riv)
 
      IF (allocated(wdsrf_hru)) deallocate(wdsrf_hru)
      IF (allocated(veloc_hru)) deallocate(veloc_hru)
+     IF (allocated(momen_hru)) deallocate(momen_hru)
 
   END SUBROUTINE deallocate_HydroTimeVariables
 

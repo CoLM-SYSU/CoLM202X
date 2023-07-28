@@ -1,11 +1,11 @@
 #include <define.h>
 
 #ifdef LATERAL_FLOW
-MODULE MOD_Hydro_SubsurfaceNetwork
+MODULE MOD_Hydro_BasinNeighbour
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! 
-   !    Subsurface networks: data and communication subroutines.
+   !    Basin Neighbours : data and communication subroutines.
    !
    ! Created by Shupeng Zhang, May 2023
    !--------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ MODULE MOD_Hydro_SubsurfaceNetwork
 CONTAINS
    
    ! ----------
-   SUBROUTINE subsurface_network_init ()
+   SUBROUTINE basin_neighbour_init ()
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -54,6 +54,7 @@ CONTAINS
       USE MOD_Mesh
       USE MOD_LandElm
       USE MOD_Hydro_SurfaceNetwork
+      USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Utils
       IMPLICIT NONE
 
@@ -200,7 +201,7 @@ CONTAINS
          rcache2 = lenbdall
 
          DO ibasin = 1, numbasin
-            nnball   (ibasin)   = icache1   (bindex(ibasin))
+            nnball   (ibasin)   = icache1 (bindex(ibasin))
             idxnball (:,ibasin) = icache2 (:,bindex(ibasin))
             lenbdall (:,ibasin) = rcache2 (:,bindex(ibasin))
          ENDDO
@@ -498,7 +499,7 @@ CONTAINS
          
       ENDIF
 
-   END SUBROUTINE subsurface_network_init
+   END SUBROUTINE basin_neighbour_init
 
    ! ----------
    SUBROUTINE retrieve_neighbour_data (vec_in, nbdata)
@@ -622,7 +623,7 @@ CONTAINS
    END SUBROUTINE allocate_neighbour_data 
 
    ! ----------
-   SUBROUTINE subsurface_network_final ()
+   SUBROUTINE basin_neighbour_final ()
 
       IMPLICIT NONE
       INTEGER :: i
@@ -655,7 +656,7 @@ CONTAINS
       IF (allocated(recvaddr)) deallocate(recvaddr)
       IF (allocated(sendaddr)) deallocate(sendaddr)
 
-   END SUBROUTINE subsurface_network_final
+   END SUBROUTINE basin_neighbour_final
 
-END MODULE MOD_Hydro_SubsurfaceNetwork
+END MODULE MOD_Hydro_BasinNeighbour
 #endif
