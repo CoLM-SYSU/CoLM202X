@@ -21,7 +21,8 @@ SUBROUTINE CoLMMAIN ( &
            BA_alpha,     BA_beta,                                   &
            rootfr,       lakedepth,    dz_lake,                     &
 #if(defined CaMa_Flood)
-           !add flood depth, flood fraction, flood evaporation and flood re-infiltration
+           ! add flood depth, flood fraction, flood evaporation and
+           ! flood re-infiltration
            flddepth,     fldfrc,       fevpg_fld,    qinfl_fld,     &
 #endif
 
@@ -165,9 +166,9 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
-   !get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
-   USE MOD_CaMa_colmCaMa,only:get_fldevp
-   USE YOS_CMF_INPUT,      only: LWINFILT,LWEVAP
+   ! get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
+   USE MOD_CaMa_colmCaMa, only: get_fldevp
+   USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
 
   IMPLICIT NONE
@@ -372,13 +373,13 @@ SUBROUTINE CoLMMAIN ( &
 
 ! additional diagnostic variables for output
   real(r8), intent(out) :: &
-        laisun      ,&! sunlit leaf area index
-        laisha      ,&! shaded leaf area index
-        rstfacsun_out,&! factor of soil water stress
-        rstfacsha_out,&! factor of soil water stress
-        gssun_out   ,&! sunlit stomata conductance
-        gssha_out   ,&! shaded stomata conductance
-        wat         ,&! total water storage
+        laisun        ,&! sunlit leaf area index
+        laisha        ,&! shaded leaf area index
+        rstfacsun_out ,&! factor of soil water stress
+        rstfacsha_out ,&! factor of soil water stress
+        gssun_out     ,&! sunlit stomata conductance
+        gssha_out     ,&! shaded stomata conductance
+        wat           ,&! total water storage
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
         h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
@@ -618,7 +619,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 IF (patchtype == 0) THEN
 
 #if(defined LULC_USGS || defined LULC_IGBP)
-      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,forc_t, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
@@ -638,7 +639,7 @@ IF (patchtype == 0) THEN
 #endif
 
 ELSE
-      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,tref, tleaf,&
+      CALL LEAF_interception_wrap (deltim,dewmx,forc_us,forc_vs,chil,sigf,lai,sai,forc_t, tleaf,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 ENDIF
@@ -686,15 +687,15 @@ ENDIF
            rootfr            ,rstfacsun_out     ,rstfacsha_out     ,&
            gssun_out         ,gssha_out         ,&
            assimsun_out      ,etrsun_out        ,assimsha_out      ,etrsha_out        ,&
-! -----------------------
+
            effcon            ,&
            vmax25            ,hksati            ,smp               ,hk                ,&
            kmax_sun          ,kmax_sha          ,kmax_xyl          ,kmax_root         ,&
            psi50_sun         ,psi50_sha         ,psi50_xyl         ,psi50_root        ,&
            ck                ,vegwp             ,gs0sun            ,gs0sha            ,&
-        !Ozone stress variables
+           !Ozone stress variables
            lai_old           ,o3uptakesun       ,o3uptakesha       ,forc_ozone        ,&
-        !End ozone stress variables
+           !End ozone stress variables
            slti              ,hlti              ,shti              ,hhti              ,&
            trda              ,trdm              ,trop              ,gradm             ,&
            binter            ,extkn             ,forc_hgt_u        ,forc_hgt_t        ,&
@@ -868,7 +869,7 @@ ENDIF
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
-      END IF
+      ENDIF
 #endif
 
 !======================================================================
@@ -1097,7 +1098,6 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      wdsrf = max(wdsrf - rsub(ipatch) * deltim, 0.)
       rnof = rsur + rsub(ipatch)
 #endif
 
@@ -1360,7 +1360,7 @@ ENDIF
        qcharge = 0.
        IF (DEF_USE_PLANTHYDRAULICS)THEN
           vegwp = -2.5e4
-       END IF
+       ENDIF
     ENDIF
 
     h2osoi = wliq_soisno(1:)/(dz_soisno(1:)*denh2o) + wice_soisno(1:)/(dz_soisno(1:)*denice)

@@ -251,6 +251,7 @@ contains
       integer  :: dtLB, dtUB
       real(r8) :: cosz
       INTEGER  :: year, month, mday
+      logical  :: has_u,has_v
 
       real solar, frl, prcp, tm, us, vs, pres, qm
       real(r8) :: pco2m
@@ -268,14 +269,19 @@ contains
          call adj2end(id)
          mtstamp = id
 
+         has_u = .true.
+         has_v = .true.
          ! loop for variables
          do ivar = 1, NVAR
 
-            if (tintalgo(ivar) == 'NULL') cycle
+            IF (ivar == 5 .and. trim(vname(ivar)) == 'NULL') has_u = .false.
+            IF (ivar == 6 .and. trim(vname(ivar)) == 'NULL') has_v = .false.
+            if (trim(vname(ivar)) == 'NULL') cycle     ! no data, cycle
+            if (trim(tintalgo(ivar)) == 'NULL') cycle
 
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
-            if ( .NOT. (tstamp_LB(ivar)<=mtstamp .AND. mtstamp<=tstamp_UB(ivar)) ) then
+            if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
                write(6, *) "the data required is out of range! stop!"; stop
             end if
 
@@ -339,43 +345,25 @@ contains
          call block_data_copy (forcn(2), forc_xy_q      )
          call block_data_copy (forcn(3), forc_xy_psrf   )
          call block_data_copy (forcn(3), forc_xy_pbot   )
+         call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
+         call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
          call block_data_copy (forcn(7), forc_xy_solarin)
          call block_data_copy (forcn(8), forc_xy_frl    )
          if (DEF_USE_CBL_HEIGHT) then
             call block_data_copy (forcn(9), forc_xy_hpbl    )
          endif
 
-         if (trim(DEF_forcing%dataset) == 'POINT') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+         if (has_u .and. has_v) then
             call block_data_copy (forcn(5), forc_xy_us )
             call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'ERA5LAND') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'ERA5') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'CRUJRA') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-         ELSEif (trim(DEF_forcing%dataset) == 'JRA55') then
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
-            call block_data_copy (forcn(5), forc_xy_us )
-            call block_data_copy (forcn(6), forc_xy_vs )
-
-         ELSE
-            call block_data_copy (forcn(4), forc_xy_prl, sca = 2/3._r8)
-            call block_data_copy (forcn(4), forc_xy_prc, sca = 1/3._r8)
+         ELSEif (has_u) then
+            call block_data_copy (forcn(5), forc_xy_us , sca = 1/sqrt(2.0_r8))
+            call block_data_copy (forcn(5), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSEif (has_v) then
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
+         ELSE
+            write(6, *) "At least one of the wind components must be provided! stop!"; stop
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -569,22 +557,22 @@ contains
 
       ENDIF
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
 #ifdef USEMPI
       call mpi_barrier (p_comm_glb, p_err)
 #endif
       if (p_is_master) write(*,'(/, A20)') 'Checking forcing ...'
 
-      call check_vector_data ('Forcing t     ', forc_t    )
-      call check_vector_data ('Forcing q     ', forc_q    )
-      call check_vector_data ('Forcing prc   ', forc_prc  )
-      call check_vector_data ('Forcing psrf  ', forc_psrf )
-      call check_vector_data ('Forcing prl   ', forc_prl  )
-      call check_vector_data ('Forcing sols  ', forc_sols )
-      call check_vector_data ('Forcing soll  ', forc_soll )
-      call check_vector_data ('Forcing solsd ', forc_solsd)
-      call check_vector_data ('Forcing solld ', forc_solld)
-      call check_vector_data ('Forcing frl   ', forc_frl  )
+      call check_vector_data ('Forcing t     [kelvin]', forc_t    )
+      call check_vector_data ('Forcing q     [kg/kg] ', forc_q    )
+      call check_vector_data ('Forcing prc   [mm/s]  ', forc_prc  )
+      call check_vector_data ('Forcing psrf  [pa]    ', forc_psrf )
+      call check_vector_data ('Forcing prl   [mm/s]  ', forc_prl  )
+      call check_vector_data ('Forcing sols  [W/m2]  ', forc_sols )
+      call check_vector_data ('Forcing soll  [W/m2]  ', forc_soll )
+      call check_vector_data ('Forcing solsd [W/m2]  ', forc_solsd)
+      call check_vector_data ('Forcing solld [W/m2]  ', forc_solld)
+      call check_vector_data ('Forcing frl   [W/m2]  ', forc_frl  )
       if (DEF_USE_CBL_HEIGHT) then
         call check_vector_data ('Forcing hpbl  ', forc_hpbl )
       endif
@@ -830,7 +818,7 @@ contains
       integer,         intent(out) :: mday
       integer,         intent(out) :: time_i
 
-      integer :: i, day, sec
+      integer :: i, day, sec, ntime
       integer :: months(0:12)
 
       year = mtstamp%year
@@ -838,20 +826,22 @@ contains
       sec  = mtstamp%sec
 
       IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-         time_i = 0
-         DO i = 1, size(forctime)
-            IF (mtstamp < forctime(i)) THEN
-               time_i = i - 1
-               exit
-            ENDIF
-         ENDDO
-         IF (time_i <= 0) THEN
+
+         ntime  = size(forctime)
+         time_i = 1
+
+         IF ((mtstamp < forctime(1)) .or. (forctime(ntime) < mtstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
+            write(*,*) 'Need ', mtstamp, ', Forc start ', forctime(1), ', Forc END', forctime(ntime)
             stop
          ELSE
+            DO WHILE (.not. (mtstamp < forctime(time_i+1)))
+               time_i = time_i + 1
+            ENDDO
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
+         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF

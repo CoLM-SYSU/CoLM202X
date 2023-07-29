@@ -18,10 +18,12 @@ MODULE MOD_LeafInterception
 
 !REVISION HISTORY
 !----------------
+   ! 2023.06 ?   Yuan Hua and Shupeng Zhang @ SYSU
    ! 2023.02.23  Zhongwang Wei @ SYSU
    ! 2021.12.12  Zhongwang Wei @ SYSU
    ! 2020.10.21  Zhongwang Wei @ SYSU
-
+   !---2014.04     Yongjiu Dai
+   !---2002.08.31  Yongjiu Dai
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
    USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_IRRIGATION

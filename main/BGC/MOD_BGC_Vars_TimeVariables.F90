@@ -286,238 +286,238 @@ SAVE
      if (numpatch > 0) then
 
 ! bgc variables
-        allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch))
-        allocate (decomp_cpools                (ndecomp_pools,numpatch))
-        allocate (ctrunc_vr                    (nl_soil,numpatch))
-        allocate (ctrunc_veg                   (numpatch))
-        allocate (ctrunc_soil                  (numpatch))
-        allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch))
+        allocate (decomp_cpools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_cpools_vr  (:,:,:) = spval 
+        allocate (decomp_cpools                (ndecomp_pools,numpatch))              ; decomp_cpools       (:,:) = spval
+        allocate (ctrunc_vr                    (nl_soil,numpatch))                    ; ctrunc_vr           (:,:) = spval
+        allocate (ctrunc_veg                   (numpatch))                            ; ctrunc_veg            (:) = spval
+        allocate (ctrunc_soil                  (numpatch))                            ; ctrunc_soil           (:) = spval
+        allocate (decomp_k                     (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_k          (:,:,:) = spval
 
-        allocate (t_scalar                     (nl_soil,numpatch))
-        allocate (w_scalar                     (nl_soil,numpatch))
-        allocate (o_scalar                     (nl_soil,numpatch))
-        allocate (depth_scalar                 (nl_soil,numpatch))
+        allocate (t_scalar                     (nl_soil,numpatch))                    ; t_scalar            (:,:) = spval
+        allocate (w_scalar                     (nl_soil,numpatch))                    ; w_scalar            (:,:) = spval
+        allocate (o_scalar                     (nl_soil,numpatch))                    ; o_scalar            (:,:) = spval
+        allocate (depth_scalar                 (nl_soil,numpatch))                    ; depth_scalar        (:,:) = spval
 
-        allocate (som_adv_coef                 (nl_soil_full,numpatch))
-        allocate (som_diffus_coef              (nl_soil_full,numpatch))
+        allocate (som_adv_coef                 (nl_soil_full,numpatch))               ; som_adv_coef        (:,:) = spval
+        allocate (som_diffus_coef              (nl_soil_full,numpatch))               ; som_diffus_coef     (:,:) = spval
 
-        allocate (altmax                       (numpatch))
-        allocate (altmax_lastyear              (numpatch))
-        allocate (altmax_lastyear_indx         (numpatch))
+        allocate (altmax                       (numpatch))                            ; altmax                (:) = spval
+        allocate (altmax_lastyear              (numpatch))                            ; altmax_lastyear       (:) = spval
+        allocate (altmax_lastyear_indx         (numpatch))                            ; altmax_lastyear_indx  (:) = spval_i4
 
-        allocate (totlitc                      (numpatch))
-        allocate (totvegc                      (numpatch))
-        allocate (totsomc                      (numpatch))
-        allocate (totcwdc                      (numpatch))
-        allocate (totcolc                      (numpatch))
-        allocate (col_begcb                    (numpatch))
-        allocate (col_endcb                    (numpatch))
-        allocate (col_vegbegcb                 (numpatch))
-        allocate (col_vegendcb                 (numpatch))
-        allocate (col_soilbegcb                (numpatch))
-        allocate (col_soilendcb                (numpatch))
+        allocate (totlitc                      (numpatch))                            ; totlitc               (:) = spval
+        allocate (totvegc                      (numpatch))                            ; totvegc               (:) = spval
+        allocate (totsomc                      (numpatch))                            ; totsomc               (:) = spval
+        allocate (totcwdc                      (numpatch))                            ; totcwdc               (:) = spval
+        allocate (totcolc                      (numpatch))                            ; totcolc               (:) = spval
+        allocate (col_begcb                    (numpatch))                            ; col_begcb             (:) = spval
+        allocate (col_endcb                    (numpatch))                            ; col_endcb             (:) = spval
+        allocate (col_vegbegcb                 (numpatch))                            ; col_vegbegcb          (:) = spval
+        allocate (col_vegendcb                 (numpatch))                            ; col_vegendcb          (:) = spval
+        allocate (col_soilbegcb                (numpatch))                            ; col_soilbegcb         (:) = spval
+        allocate (col_soilendcb                (numpatch))                            ; col_soilendcb         (:) = spval
 
-        allocate (totlitn                      (numpatch))
-        allocate (totvegn                      (numpatch))
-        allocate (totsomn                      (numpatch))
-        allocate (totcwdn                      (numpatch))
-        allocate (totcoln                      (numpatch))
-        allocate (col_begnb                    (numpatch))
-        allocate (col_endnb                    (numpatch))
-        allocate (col_vegbegnb                 (numpatch))
-        allocate (col_vegendnb                 (numpatch))
-        allocate (col_soilbegnb                (numpatch))
-        allocate (col_soilendnb                (numpatch))
-        allocate (col_sminnbegnb               (numpatch))
-        allocate (col_sminnendnb               (numpatch))
+        allocate (totlitn                      (numpatch))                            ; totlitn               (:) = spval
+        allocate (totvegn                      (numpatch))                            ; totvegn               (:) = spval
+        allocate (totsomn                      (numpatch))                            ; totsomn               (:) = spval
+        allocate (totcwdn                      (numpatch))                            ; totcwdn               (:) = spval
+        allocate (totcoln                      (numpatch))                            ; totcoln               (:) = spval
+        allocate (col_begnb                    (numpatch))                            ; col_begnb             (:) = spval
+        allocate (col_endnb                    (numpatch))                            ; col_endnb             (:) = spval
+        allocate (col_vegbegnb                 (numpatch))                            ; col_vegbegnb          (:) = spval
+        allocate (col_vegendnb                 (numpatch))                            ; col_vegendnb          (:) = spval
+        allocate (col_soilbegnb                (numpatch))                            ; col_soilbegnb         (:) = spval
+        allocate (col_soilendnb                (numpatch))                            ; col_soilendnb         (:) = spval
+        allocate (col_sminnbegnb               (numpatch))                            ; col_sminnbegnb        (:) = spval
+        allocate (col_sminnendnb               (numpatch))                            ; col_sminnendnb        (:) = spval
 
-        allocate (leafc                        (numpatch))
-        allocate (leafc_storage                (numpatch))
-        allocate (leafc_xfer                   (numpatch))
-        allocate (frootc                       (numpatch))
-        allocate (frootc_storage               (numpatch))
-        allocate (frootc_xfer                  (numpatch))
-        allocate (livestemc                    (numpatch))
-        allocate (livestemc_storage            (numpatch))
-        allocate (livestemc_xfer               (numpatch))
-        allocate (deadstemc                    (numpatch))
-        allocate (deadstemc_storage            (numpatch))
-        allocate (deadstemc_xfer               (numpatch))
-        allocate (livecrootc                   (numpatch))
-        allocate (livecrootc_storage           (numpatch))
-        allocate (livecrootc_xfer              (numpatch))
-        allocate (deadcrootc                   (numpatch))
-        allocate (deadcrootc_storage           (numpatch))
-        allocate (deadcrootc_xfer              (numpatch))
-        allocate (grainc                       (numpatch))
-        allocate (grainc_storage               (numpatch))
-        allocate (grainc_xfer                  (numpatch))
-        allocate (xsmrpool                     (numpatch))
-        allocate (downreg                      (numpatch))
-        allocate (cropprod1c                   (numpatch))
-        allocate (cropseedc_deficit            (numpatch))
+        allocate (leafc                        (numpatch))                            ; leafc                 (:) = spval
+        allocate (leafc_storage                (numpatch))                            ; leafc_storage         (:) = spval
+        allocate (leafc_xfer                   (numpatch))                            ; leafc_xfer            (:) = spval
+        allocate (frootc                       (numpatch))                            ; frootc                (:) = spval
+        allocate (frootc_storage               (numpatch))                            ; frootc_storage        (:) = spval
+        allocate (frootc_xfer                  (numpatch))                            ; frootc_xfer           (:) = spval
+        allocate (livestemc                    (numpatch))                            ; livestemc             (:) = spval
+        allocate (livestemc_storage            (numpatch))                            ; livestemc_storage     (:) = spval
+        allocate (livestemc_xfer               (numpatch))                            ; livestemc_xfer        (:) = spval
+        allocate (deadstemc                    (numpatch))                            ; deadstemc             (:) = spval
+        allocate (deadstemc_storage            (numpatch))                            ; deadstemc_storage     (:) = spval
+        allocate (deadstemc_xfer               (numpatch))                            ; deadstemc_xfer        (:) = spval
+        allocate (livecrootc                   (numpatch))                            ; livecrootc            (:) = spval
+        allocate (livecrootc_storage           (numpatch))                            ; livecrootc_storage    (:) = spval
+        allocate (livecrootc_xfer              (numpatch))                            ; livecrootc_xfer       (:) = spval
+        allocate (deadcrootc                   (numpatch))                            ; deadcrootc            (:) = spval
+        allocate (deadcrootc_storage           (numpatch))                            ; deadcrootc_storage    (:) = spval
+        allocate (deadcrootc_xfer              (numpatch))                            ; deadcrootc_xfer       (:) = spval
+        allocate (grainc                       (numpatch))                            ; grainc                (:) = spval
+        allocate (grainc_storage               (numpatch))                            ; grainc_storage        (:) = spval
+        allocate (grainc_xfer                  (numpatch))                            ; grainc_xfer           (:) = spval
+        allocate (xsmrpool                     (numpatch))                            ; xsmrpool              (:) = spval
+        allocate (downreg                      (numpatch))                            ; downreg               (:) = spval
+        allocate (cropprod1c                   (numpatch))                            ; cropprod1c            (:) = spval
+        allocate (cropseedc_deficit            (numpatch))                            ; cropseedc_deficit     (:) = spval
 
-        allocate (leafn                        (numpatch))
-        allocate (leafn_storage                (numpatch))
-        allocate (leafn_xfer                   (numpatch))
-        allocate (frootn                       (numpatch))
-        allocate (frootn_storage               (numpatch))
-        allocate (frootn_xfer                  (numpatch))
-        allocate (livestemn                    (numpatch))
-        allocate (livestemn_storage            (numpatch))
-        allocate (livestemn_xfer               (numpatch))
-        allocate (deadstemn                    (numpatch))
-        allocate (deadstemn_storage            (numpatch))
-        allocate (deadstemn_xfer               (numpatch))
-        allocate (livecrootn                   (numpatch))
-        allocate (livecrootn_storage           (numpatch))
-        allocate (livecrootn_xfer              (numpatch))
-        allocate (deadcrootn                   (numpatch))
-        allocate (deadcrootn_storage           (numpatch))
-        allocate (deadcrootn_xfer              (numpatch))
-        allocate (grainn                       (numpatch))
-        allocate (grainn_storage               (numpatch))
-        allocate (grainn_xfer                  (numpatch))
-        allocate (retransn                     (numpatch))
+        allocate (leafn                        (numpatch))                            ; leafn                 (:) = spval
+        allocate (leafn_storage                (numpatch))                            ; leafn_storage         (:) = spval
+        allocate (leafn_xfer                   (numpatch))                            ; leafn_xfer            (:) = spval
+        allocate (frootn                       (numpatch))                            ; frootn                (:) = spval
+        allocate (frootn_storage               (numpatch))                            ; frootn_storage        (:) = spval
+        allocate (frootn_xfer                  (numpatch))                            ; frootn_xfer           (:) = spval
+        allocate (livestemn                    (numpatch))                            ; livestemn             (:) = spval
+        allocate (livestemn_storage            (numpatch))                            ; livestemn_storage     (:) = spval
+        allocate (livestemn_xfer               (numpatch))                            ; livestemn_xfer        (:) = spval
+        allocate (deadstemn                    (numpatch))                            ; deadstemn             (:) = spval
+        allocate (deadstemn_storage            (numpatch))                            ; deadstemn_storage     (:) = spval
+        allocate (deadstemn_xfer               (numpatch))                            ; deadstemn_xfer        (:) = spval
+        allocate (livecrootn                   (numpatch))                            ; livecrootn            (:) = spval
+        allocate (livecrootn_storage           (numpatch))                            ; livecrootn_storage    (:) = spval
+        allocate (livecrootn_xfer              (numpatch))                            ; livecrootn_xfer       (:) = spval
+        allocate (deadcrootn                   (numpatch))                            ; deadcrootn            (:) = spval
+        allocate (deadcrootn_storage           (numpatch))                            ; deadcrootn_storage    (:) = spval
+        allocate (deadcrootn_xfer              (numpatch))                            ; deadcrootn_xfer       (:) = spval
+        allocate (grainn                       (numpatch))                            ; grainn                (:) = spval
+        allocate (grainn_storage               (numpatch))                            ; grainn_storage        (:) = spval
+        allocate (grainn_xfer                  (numpatch))                            ; grainn_xfer           (:) = spval
+        allocate (retransn                     (numpatch))                            ; retransn              (:) = spval
 
-        allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch))
-        allocate (decomp_npools                (ndecomp_pools,numpatch))
-        allocate (ntrunc_vr                    (nl_soil,numpatch))
-        allocate (ntrunc_veg                   (numpatch))
-        allocate (ntrunc_soil                  (numpatch))
-        allocate (sminn_vr                     (nl_soil,numpatch))
-        allocate (smin_no3_vr                  (nl_soil,numpatch))
-        allocate (smin_nh4_vr                  (nl_soil,numpatch))
-        allocate (sminn                        (numpatch))
-        allocate (ndep                         (numpatch))
+        allocate (decomp_npools_vr             (nl_soil_full,ndecomp_pools,numpatch)) ; decomp_npools_vr  (:,:,:) = spval
+        allocate (decomp_npools                (ndecomp_pools,numpatch))              ; decomp_npools       (:,:) = spval
+        allocate (ntrunc_vr                    (nl_soil,numpatch))                    ; ntrunc_vr           (:,:) = spval
+        allocate (ntrunc_veg                   (numpatch))                            ; ntrunc_veg            (:) = spval
+        allocate (ntrunc_soil                  (numpatch))                            ; ntrunc_soil           (:) = spval
+        allocate (sminn_vr                     (nl_soil,numpatch))                    ; sminn_vr            (:,:) = spval
+        allocate (smin_no3_vr                  (nl_soil,numpatch))                    ; smin_no3_vr         (:,:) = spval
+        allocate (smin_nh4_vr                  (nl_soil,numpatch))                    ; smin_nh4_vr         (:,:) = spval
+        allocate (sminn                        (numpatch))                            ; sminn                 (:) = spval
+        allocate (ndep                         (numpatch))                            ; ndep                  (:) = spval
 
-        allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))
-        allocate (tconc_o2_unsat               (nl_soil,numpatch))
+        allocate (to2_decomp_depth_unsat       (nl_soil,numpatch))                    ; to2_decomp_depth_unsat (:,:) = spval
+        allocate (tconc_o2_unsat               (nl_soil,numpatch))                    ; tconc_o2_unsat         (:,:) = spval
 
-        allocate (ndep_prof                    (nl_soil,numpatch))
-        allocate (nfixation_prof               (nl_soil,numpatch))
+        allocate (ndep_prof                    (nl_soil,numpatch))                    ; ndep_prof           (:,:) = spval
+        allocate (nfixation_prof               (nl_soil,numpatch))                    ; nfixation_prof      (:,:) = spval
 
-        allocate (cn_decomp_pools              (nl_soil,ndecomp_pools,numpatch))
-        allocate (fpi_vr                       (nl_soil,numpatch))
-        allocate (fpi                          (numpatch))
-        allocate (fpg                          (numpatch))
+        allocate (cn_decomp_pools              (nl_soil,ndecomp_pools,numpatch))      ; cn_decomp_pools   (:,:,:) = spval
+        allocate (fpi_vr                       (nl_soil,numpatch))                    ; fpi_vr              (:,:) = spval
+        allocate (fpi                          (numpatch))                            ; fpi                   (:) = spval
+        allocate (fpg                          (numpatch))                            ; fpg                   (:) = spval
 
-        allocate (cropf                        (numpatch))
-        allocate (lfwt                         (numpatch))
-        allocate (fuelc                        (numpatch))
-        allocate (fuelc_crop                   (numpatch))
-        allocate (fsr                          (numpatch))
-        allocate (fd                           (numpatch))
-        allocate (rootc                        (numpatch))
-        allocate (lgdp                         (numpatch))
-        allocate (lgdp1                        (numpatch))
-        allocate (lpop                         (numpatch))
-        allocate (wtlf                         (numpatch))
-        allocate (trotr1                       (numpatch))
-        allocate (trotr2                       (numpatch))
-        allocate (hdm_lf                       (numpatch))
-        allocate (lnfm                         (numpatch))
-        allocate (baf_crop                     (numpatch))
-        allocate (baf_peatf                    (numpatch))
-        allocate (farea_burned                 (numpatch))
-        allocate (nfire                        (numpatch))
-        allocate (fsat                         (numpatch))
-        allocate (prec10                       (numpatch)) ! 10-day running mean of total      precipitation [mm/s]
-        allocate (prec60                       (numpatch)) ! 60-day running mean of total      precipitation [mm/s]
-        allocate (prec365                      (numpatch)) ! 365-day running mean of tota     l precipitation [mm/s]
-        allocate (prec_today                   (numpatch)) ! today's daily precipitation      [mm/day]
-        allocate (prec_daily               (365,numpatch)) ! daily total precipitation      [mm/day]
-        allocate (wf2                          (numpatch))
-        allocate (tsoi17                       (numpatch))
-        allocate (rh30                         (numpatch)) ! 30-day running mean of relative humidity
-        allocate (accumnstep                   (numpatch)) ! 30-day running mean of relative humidity
-
-        allocate (dayl                         (numpatch))
-        allocate (prev_dayl                    (numpatch))
+        allocate (cropf                        (numpatch))                            ; cropf                 (:) = spval
+        allocate (lfwt                         (numpatch))                            ; lfwt                  (:) = spval
+        allocate (fuelc                        (numpatch))                            ; fuelc                 (:) = spval
+        allocate (fuelc_crop                   (numpatch))                            ; fuelc_crop            (:) = spval
+        allocate (fsr                          (numpatch))                            ; fsr                   (:) = spval
+        allocate (fd                           (numpatch))                            ; fd                    (:) = spval
+        allocate (rootc                        (numpatch))                            ; rootc                 (:) = spval
+        allocate (lgdp                         (numpatch))                            ; lgdp                  (:) = spval
+        allocate (lgdp1                        (numpatch))                            ; lgdp1                 (:) = spval
+        allocate (lpop                         (numpatch))                            ; lpop                  (:) = spval
+        allocate (wtlf                         (numpatch))                            ; wtlf                  (:) = spval
+        allocate (trotr1                       (numpatch))                            ; trotr1                (:) = spval
+        allocate (trotr2                       (numpatch))                            ; trotr2                (:) = spval
+        allocate (hdm_lf                       (numpatch))                            ; hdm_lf                (:) = spval
+        allocate (lnfm                         (numpatch))                            ; lnfm                  (:) = spval
+        allocate (baf_crop                     (numpatch))                            ; baf_crop              (:) = spval
+        allocate (baf_peatf                    (numpatch))                            ; baf_peatf             (:) = spval
+        allocate (farea_burned                 (numpatch))                            ; farea_burned          (:) = spval
+        allocate (nfire                        (numpatch))                            ; nfire                 (:) = spval
+        allocate (fsat                         (numpatch))                            ; fsat                  (:) = spval
+        allocate (prec10                       (numpatch))                            ; prec10                (:) = spval
+        allocate (prec60                       (numpatch))                            ; prec60                (:) = spval
+        allocate (prec365                      (numpatch))                            ; prec365               (:) = spval
+        allocate (prec_today                   (numpatch))                            ; prec_today            (:) = spval
+        allocate (prec_daily               (365,numpatch))                            ; prec_daily          (:,:) = spval! daily total precipitation      [mm/day]
+        allocate (wf2                          (numpatch))                            ; wf2                   (:) = spval
+        allocate (tsoi17                       (numpatch))                            ; tsoi17                (:) = spval
+        allocate (rh30                         (numpatch))                            ; rh30                  (:) = spval
+        allocate (accumnstep                   (numpatch))                            ; accumnstep            (:) = spval
+                            ; 
+        allocate (dayl                         (numpatch))                            ; dayl                  (:) = spval
+        allocate (prev_dayl                    (numpatch))                            ; prev_dayl             (:) = spval
 
 !---------------------------SASU variables--------------------------------------
-        allocate (decomp0_cpools_vr            (nl_soil,ndecomp_pools,numpatch))
-        allocate (I_met_c_vr_acc               (nl_soil,numpatch))
-        allocate (I_cel_c_vr_acc               (nl_soil,numpatch))
-        allocate (I_lig_c_vr_acc               (nl_soil,numpatch))
-        allocate (I_cwd_c_vr_acc               (nl_soil,numpatch))
-        allocate (AKX_met_to_soil1_c_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_cel_to_soil1_c_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_lig_to_soil2_c_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_soil1_to_soil2_c_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_cwd_to_cel_c_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_cwd_to_lig_c_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil1_to_soil3_c_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil2_to_soil1_c_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil2_to_soil3_c_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil3_to_soil1_c_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_met_exit_c_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_cel_exit_c_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_lig_exit_c_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_cwd_exit_c_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_soil1_exit_c_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil2_exit_c_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil3_exit_c_vr_acc      (nl_soil,numpatch))
+        allocate (decomp0_cpools_vr            (nl_soil,ndecomp_pools,numpatch))      ; decomp0_cpools_vr          (:,:,:) = spval
+        allocate (I_met_c_vr_acc               (nl_soil,numpatch))                    ; I_met_c_vr_acc               (:,:) = spval
+        allocate (I_cel_c_vr_acc               (nl_soil,numpatch))                    ; I_cel_c_vr_acc               (:,:) = spval
+        allocate (I_lig_c_vr_acc               (nl_soil,numpatch))                    ; I_lig_c_vr_acc               (:,:) = spval
+        allocate (I_cwd_c_vr_acc               (nl_soil,numpatch))                    ; I_cwd_c_vr_acc               (:,:) = spval
+        allocate (AKX_met_to_soil1_c_vr_acc    (nl_soil,numpatch))                    ; AKX_met_to_soil1_c_vr_acc    (:,:) = spval
+        allocate (AKX_cel_to_soil1_c_vr_acc    (nl_soil,numpatch))                    ; AKX_cel_to_soil1_c_vr_acc    (:,:) = spval
+        allocate (AKX_lig_to_soil2_c_vr_acc    (nl_soil,numpatch))                    ; AKX_lig_to_soil2_c_vr_acc    (:,:) = spval
+        allocate (AKX_soil1_to_soil2_c_vr_acc  (nl_soil,numpatch))                    ; AKX_soil1_to_soil2_c_vr_acc  (:,:) = spval
+        allocate (AKX_cwd_to_cel_c_vr_acc      (nl_soil,numpatch))                    ; AKX_cwd_to_cel_c_vr_acc      (:,:) = spval
+        allocate (AKX_cwd_to_lig_c_vr_acc      (nl_soil,numpatch))                    ; AKX_cwd_to_lig_c_vr_acc      (:,:) = spval
+        allocate (AKX_soil1_to_soil3_c_vr_acc  (nl_soil,numpatch))                    ; AKX_soil1_to_soil3_c_vr_acc  (:,:) = spval
+        allocate (AKX_soil2_to_soil1_c_vr_acc  (nl_soil,numpatch))                    ; AKX_soil2_to_soil1_c_vr_acc  (:,:) = spval
+        allocate (AKX_soil2_to_soil3_c_vr_acc  (nl_soil,numpatch))                    ; AKX_soil2_to_soil3_c_vr_acc  (:,:) = spval
+        allocate (AKX_soil3_to_soil1_c_vr_acc  (nl_soil,numpatch))                    ; AKX_soil3_to_soil1_c_vr_acc  (:,:) = spval
+        allocate (AKX_met_exit_c_vr_acc        (nl_soil,numpatch))                    ; AKX_met_exit_c_vr_acc        (:,:) = spval
+        allocate (AKX_cel_exit_c_vr_acc        (nl_soil,numpatch))                    ; AKX_cel_exit_c_vr_acc        (:,:) = spval
+        allocate (AKX_lig_exit_c_vr_acc        (nl_soil,numpatch))                    ; AKX_lig_exit_c_vr_acc        (:,:) = spval
+        allocate (AKX_cwd_exit_c_vr_acc        (nl_soil,numpatch))                    ; AKX_cwd_exit_c_vr_acc        (:,:) = spval
+        allocate (AKX_soil1_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil1_exit_c_vr_acc      (:,:) = spval
+        allocate (AKX_soil2_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil2_exit_c_vr_acc      (:,:) = spval
+        allocate (AKX_soil3_exit_c_vr_acc      (nl_soil,numpatch))                    ; AKX_soil3_exit_c_vr_acc      (:,:) = spval
 
-        allocate (decomp0_npools_vr            (nl_soil,ndecomp_pools,numpatch))
-        allocate (I_met_n_vr_acc               (nl_soil,numpatch))
-        allocate (I_cel_n_vr_acc               (nl_soil,numpatch))
-        allocate (I_lig_n_vr_acc               (nl_soil,numpatch))
-        allocate (I_cwd_n_vr_acc               (nl_soil,numpatch))
-        allocate (AKX_met_to_soil1_n_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_cel_to_soil1_n_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_lig_to_soil2_n_vr_acc    (nl_soil,numpatch))
-        allocate (AKX_soil1_to_soil2_n_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_cwd_to_cel_n_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_cwd_to_lig_n_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil1_to_soil3_n_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil2_to_soil1_n_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil2_to_soil3_n_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_soil3_to_soil1_n_vr_acc  (nl_soil,numpatch))
-        allocate (AKX_met_exit_n_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_cel_exit_n_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_lig_exit_n_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_cwd_exit_n_vr_acc        (nl_soil,numpatch))
-        allocate (AKX_soil1_exit_n_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil2_exit_n_vr_acc      (nl_soil,numpatch))
-        allocate (AKX_soil3_exit_n_vr_acc      (nl_soil,numpatch))
+        allocate (decomp0_npools_vr            (nl_soil,ndecomp_pools,numpatch))      ; decomp0_npools_vr          (:,:,:) = spval
+        allocate (I_met_n_vr_acc               (nl_soil,numpatch))                    ; I_met_n_vr_acc               (:,:) = spval
+        allocate (I_cel_n_vr_acc               (nl_soil,numpatch))                    ; I_cel_n_vr_acc               (:,:) = spval
+        allocate (I_lig_n_vr_acc               (nl_soil,numpatch))                    ; I_lig_n_vr_acc               (:,:) = spval
+        allocate (I_cwd_n_vr_acc               (nl_soil,numpatch))                    ; I_cwd_n_vr_acc               (:,:) = spval
+        allocate (AKX_met_to_soil1_n_vr_acc    (nl_soil,numpatch))                    ; AKX_met_to_soil1_n_vr_acc    (:,:) = spval
+        allocate (AKX_cel_to_soil1_n_vr_acc    (nl_soil,numpatch))                    ; AKX_cel_to_soil1_n_vr_acc    (:,:) = spval
+        allocate (AKX_lig_to_soil2_n_vr_acc    (nl_soil,numpatch))                    ; AKX_lig_to_soil2_n_vr_acc    (:,:) = spval
+        allocate (AKX_soil1_to_soil2_n_vr_acc  (nl_soil,numpatch))                    ; AKX_soil1_to_soil2_n_vr_acc  (:,:) = spval
+        allocate (AKX_cwd_to_cel_n_vr_acc      (nl_soil,numpatch))                    ; AKX_cwd_to_cel_n_vr_acc      (:,:) = spval
+        allocate (AKX_cwd_to_lig_n_vr_acc      (nl_soil,numpatch))                    ; AKX_cwd_to_lig_n_vr_acc      (:,:) = spval
+        allocate (AKX_soil1_to_soil3_n_vr_acc  (nl_soil,numpatch))                    ; AKX_soil1_to_soil3_n_vr_acc  (:,:) = spval
+        allocate (AKX_soil2_to_soil1_n_vr_acc  (nl_soil,numpatch))                    ; AKX_soil2_to_soil1_n_vr_acc  (:,:) = spval
+        allocate (AKX_soil2_to_soil3_n_vr_acc  (nl_soil,numpatch))                    ; AKX_soil2_to_soil3_n_vr_acc  (:,:) = spval
+        allocate (AKX_soil3_to_soil1_n_vr_acc  (nl_soil,numpatch))                    ; AKX_soil3_to_soil1_n_vr_acc  (:,:) = spval
+        allocate (AKX_met_exit_n_vr_acc        (nl_soil,numpatch))                    ; AKX_met_exit_n_vr_acc        (:,:) = spval
+        allocate (AKX_cel_exit_n_vr_acc        (nl_soil,numpatch))                    ; AKX_cel_exit_n_vr_acc        (:,:) = spval
+        allocate (AKX_lig_exit_n_vr_acc        (nl_soil,numpatch))                    ; AKX_lig_exit_n_vr_acc        (:,:) = spval
+        allocate (AKX_cwd_exit_n_vr_acc        (nl_soil,numpatch))                    ; AKX_cwd_exit_n_vr_acc        (:,:) = spval
+        allocate (AKX_soil1_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil1_exit_n_vr_acc      (:,:) = spval
+        allocate (AKX_soil2_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil2_exit_n_vr_acc      (:,:) = spval
+        allocate (AKX_soil3_exit_n_vr_acc      (nl_soil,numpatch))                    ; AKX_soil3_exit_n_vr_acc      (:,:) = spval
 
-        allocate (diagVX_c_vr_acc              (nl_soil,ndecomp_pools,numpatch))
-        allocate (upperVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))
-        allocate (lowerVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))
-        allocate (diagVX_n_vr_acc              (nl_soil,ndecomp_pools,numpatch))
-        allocate (upperVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))
-        allocate (lowerVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))
+        allocate (diagVX_c_vr_acc              (nl_soil,ndecomp_pools,numpatch))      ; diagVX_c_vr_acc            (:,:,:) = spval
+        allocate (upperVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; upperVX_c_vr_acc           (:,:,:) = spval
+        allocate (lowerVX_c_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; lowerVX_c_vr_acc           (:,:,:) = spval
+        allocate (diagVX_n_vr_acc              (nl_soil,ndecomp_pools,numpatch))      ; diagVX_n_vr_acc            (:,:,:) = spval
+        allocate (upperVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; upperVX_n_vr_acc           (:,:,:) = spval
+        allocate (lowerVX_n_vr_acc             (nl_soil,ndecomp_pools,numpatch))      ; lowerVX_n_vr_acc           (:,:,:) = spval
 
 !---------------------------------------------------------------------------
-        allocate (skip_balance_check           (numpatch))
+        allocate (skip_balance_check           (numpatch))                            ; skip_balance_check             (:) = .false.
 
 #ifdef CROP
-        allocate (cphase                       (numpatch)) ! 30-day running mean of relative humidity
-        allocate (vf                    (numpatch))
-        allocate (gddmaturity           (numpatch))
-        allocate (gddplant              (numpatch))
-        allocate (hui                   (numpatch))
-        allocate (huiswheat             (numpatch))
-        allocate (pdcorn                (numpatch))
-        allocate (pdswheat              (numpatch))
-        allocate (pdwwheat              (numpatch))
-        allocate (pdsoybean             (numpatch))
-        allocate (pdcotton              (numpatch))
-        allocate (pdrice1               (numpatch))
-        allocate (pdrice2               (numpatch))
-        allocate (plantdate             (numpatch))
-        allocate (pdsugarcane           (numpatch))
-        allocate (fertnitro_corn        (numpatch))
-        allocate (fertnitro_swheat      (numpatch))
-        allocate (fertnitro_wwheat      (numpatch))
-        allocate (fertnitro_soybean     (numpatch))
-        allocate (fertnitro_cotton      (numpatch))
-        allocate (fertnitro_rice1       (numpatch))
-        allocate (fertnitro_rice2       (numpatch))
-        allocate (fertnitro_sugarcane   (numpatch))
+        allocate (cphase                       (numpatch))                            ; cphase                (:) = spval ! 30-day running mean of relative humidity
+        allocate (vf                           (numpatch))                            ; vf                    (:) = spval
+        allocate (gddmaturity                  (numpatch))                            ; gddmaturity           (:) = spval
+        allocate (gddplant                     (numpatch))                            ; gddplant              (:) = spval
+        allocate (hui                          (numpatch))                            ; hui                   (:) = spval
+        allocate (huiswheat                    (numpatch))                            ; huiswheat             (:) = spval
+        allocate (pdcorn                       (numpatch))                            ; pdcorn                (:) = spval
+        allocate (pdswheat                     (numpatch))                            ; pdswheat              (:) = spval
+        allocate (pdwwheat                     (numpatch))                            ; pdwwheat              (:) = spval
+        allocate (pdsoybean                    (numpatch))                            ; pdsoybean             (:) = spval
+        allocate (pdcotton                     (numpatch))                            ; pdcotton              (:) = spval
+        allocate (pdrice1                      (numpatch))                            ; pdrice1               (:) = spval
+        allocate (pdrice2                      (numpatch))                            ; pdrice2               (:) = spval
+        allocate (plantdate                    (numpatch))                            ; plantdate             (:) = spval
+        allocate (pdsugarcane                  (numpatch))                            ; pdsugarcane           (:) = spval
+        allocate (fertnitro_corn               (numpatch))                            ; fertnitro_corn        (:) = spval
+        allocate (fertnitro_swheat             (numpatch))                            ; fertnitro_swheat      (:) = spval
+        allocate (fertnitro_wwheat             (numpatch))                            ; fertnitro_wwheat      (:) = spval
+        allocate (fertnitro_soybean            (numpatch))                            ; fertnitro_soybean     (:) = spval
+        allocate (fertnitro_cotton             (numpatch))                            ; fertnitro_cotton      (:) = spval
+        allocate (fertnitro_rice1              (numpatch))                            ; fertnitro_rice1       (:) = spval
+        allocate (fertnitro_rice2              (numpatch))                            ; fertnitro_rice2       (:) = spval
+        allocate (fertnitro_sugarcane          (numpatch))                            ; fertnitro_sugarcane   (:) = spval
 #endif
-        allocate (lag_npp               (numpatch))
+        allocate (lag_npp                      (numpatch))                            ; lag_npp               (:) = spval
      end if
   end if
 
@@ -822,7 +822,9 @@ SAVE
 
      call ncio_write_vector (file_restart, 'decomp_cpools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                     'patch', landpatch,     decomp_cpools_vr)
-     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ctrunc_vr)
+     call ncio_write_vector (file_restart, 'ctrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ctrunc_vr)
+     call ncio_write_vector (file_restart, 'ctrunc_veg           ', 'patch', landpatch, ctrunc_veg           )
+     call ncio_write_vector (file_restart, 'ctrunc_soil          ', 'patch', landpatch, ctrunc_soil          )
 
      call ncio_write_vector (file_restart, 'altmax               ', 'patch', landpatch, altmax               )
      call ncio_write_vector (file_restart, 'altmax_lastyear      ', 'patch', landpatch, altmax_lastyear      )
@@ -830,10 +832,12 @@ SAVE
 
      call ncio_write_vector (file_restart, 'decomp_npools_vr     ', 'soil_full', nl_soil_full, 'ndecomp_pools', ndecomp_pools, &
                                                                     'patch', landpatch,     decomp_npools_vr)
-     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil'  ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
-     call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil'  ,   nl_soil, 'patch', landpatch, sminn_vr    )
-     call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_no3_vr )
-     call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil'  ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
+     call ncio_write_vector (file_restart, 'ntrunc_vr            ', 'soil' ,   nl_soil, 'patch', landpatch, ntrunc_vr   )
+     call ncio_write_vector (file_restart, 'ntrunc_veg           ', 'patch', landpatch, ntrunc_veg           )
+     call ncio_write_vector (file_restart, 'ntrunc_soil          ', 'patch', landpatch, ntrunc_soil          )
+     call ncio_write_vector (file_restart, 'sminn_vr             ', 'soil' ,   nl_soil, 'patch', landpatch, sminn_vr    )
+     call ncio_write_vector (file_restart, 'smin_no3_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_no3_vr )
+     call ncio_write_vector (file_restart, 'smin_nh4_vr          ', 'soil' ,   nl_soil, 'patch', landpatch, smin_nh4_vr )
 
      if(DEF_USE_NITRIF)then
         call ncio_write_vector (file_restart, 'tCONC_O2_UNSAT       ', 'soil'  ,   nl_soil, 'patch', landpatch, tconc_o2_unsat)
@@ -975,6 +979,8 @@ SAVE
 
      call ncio_read_vector (file_restart, 'decomp_cpools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_cpools_vr)
      call ncio_read_vector (file_restart, 'ctrunc_vr            ',   nl_soil, landpatch, ctrunc_vr            )
+     call ncio_read_vector (file_restart, 'ctrunc_veg           ', landpatch, ctrunc_veg           )
+     call ncio_read_vector (file_restart, 'ctrunc_soil          ', landpatch, ctrunc_soil          )
 
      call ncio_read_vector (file_restart, 'altmax               ', landpatch, altmax               )
      call ncio_read_vector (file_restart, 'altmax_lastyear      ', landpatch, altmax_lastyear      )
@@ -982,6 +988,8 @@ SAVE
 
      call ncio_read_vector (file_restart, 'decomp_npools_vr     ',   nl_soil_full, ndecomp_pools, landpatch, decomp_npools_vr)
      call ncio_read_vector (file_restart, 'ntrunc_vr            ',   nl_soil, landpatch, ntrunc_vr            )
+     call ncio_read_vector (file_restart, 'ntrunc_veg           ', landpatch, ntrunc_veg           )
+     call ncio_read_vector (file_restart, 'ntrunc_soil          ', landpatch, ntrunc_soil          )
      call ncio_read_vector (file_restart, 'sminn_vr             ',   nl_soil, landpatch, sminn_vr             )
      call ncio_read_vector (file_restart, 'smin_no3_vr          ',   nl_soil, landpatch, smin_no3_vr          )
      call ncio_read_vector (file_restart, 'smin_nh4_vr          ',   nl_soil, landpatch, smin_nh4_vr          )

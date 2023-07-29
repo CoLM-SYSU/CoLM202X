@@ -114,13 +114,28 @@ MODULE MOD_NetCDFSerial
 CONTAINS
 
    ! ----
-   SUBROUTINE nccheck (status)
+   SUBROUTINE nccheck (status, trace)
+      
+      USE MOD_SPMD_Task
+      IMPLICIT NONE 
+
       INTEGER, INTENT(IN) :: status
+      CHARACTER(len=*), INTENT(IN), optional :: trace
 
       IF (status /= NF90_NOERR) THEN
-         print *, trim(nf90_strerror(status))
+         IF (present(trace)) then
+            write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))// ' ' //trim(trace)
+         ELSE
+            write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))
+         ENDIF
+
+#ifdef USEMPI
+         CALL mpi_abort (p_comm_glb, p_err)
+#else
          stop 2
+#endif
       ENDIF
+
    END SUBROUTINE nccheck
 
    ! ----
@@ -1719,7 +1734,7 @@ CONTAINS
    END SUBROUTINE ncio_write_serial_real8_5d
 
    !------------------------------
-   SUBROUTINE ncio_write_time (filename, dataname, time_component, itime)
+   SUBROUTINE ncio_write_time (filename, dataname, time_component, itime, adjust)
 
       USE MOD_TimeManager
       IMPLICIT NONE
@@ -1729,12 +1744,27 @@ CONTAINS
       INTEGER, intent(in)  :: time_component(3)
       INTEGER, intent(out) :: itime
 
+      character(len=*), intent(in), optional :: adjust
+
       ! Local variables
       INTEGER, allocatable :: time_file(:)
       INTEGER :: ncid, varid, time_id, status
       INTEGER :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
+      
+      IF (present(adjust)) THEN
+         select case (trim(adjustl(adjust)))
+         case ('HOURLY')
+            minutes = minutes - 30
+         case ('DAILY')
+            minutes = minutes - 720
+         case ('MONTHLY')
+            minutes = minutes - 21600
+         case ('YEARLY')
+            minutes = minutes - 262800
+         END select 
+      ENDIF
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)

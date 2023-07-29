@@ -173,7 +173,7 @@ SUBROUTINE colm_CaMa_init
          END SELECT
       end do
    ENDIF
-   
+
       !Broadcast the variables to all the processors
       CALL mpi_bcast (NX      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in x-direction of CaMa-Flood
       CALL mpi_bcast (NY      ,   1, MPI_INTEGER,   p_root, p_comm_glb, p_err) ! number of grid points in y-direction of CaMa-Flood
@@ -391,7 +391,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
                                         !  and humidity profiles of surface boundary layer,see MOD_FrictionVelocity.F90
    !REVISION HISTORY
    !----------------
-   ! 2023.05.05  Shaofeng Liu @ SYSU: 
+   ! 2023.05.05  Shaofeng Liu @ SYSU:
    !             add option to call moninobuk_leddy, the LargeEddy
    !             surface turbulence scheme (LZD2022); make a proper update of um.
    ! 2020.10.01  Zhongwang Wei @ SYSU
@@ -411,7 +411,7 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
    REAL(r8), INTENT(in)  :: qm      ! specific humidity at agcm reference height [kg/kg]
    REAL(r8), INTENT(in)  :: rhoair  ! density air [kg/m3]
    REAL(r8), INTENT(in)  :: psrf    ! atmosphere pressure at the surface [pa] [not used]
-   REAL(r8), INTENT(in)  :: tssea   ! inundation surface temperature [K]-->set to tgrnd 
+   REAL(r8), INTENT(in)  :: tssea   ! inundation surface temperature [K]-->set to tgrnd
    REAL(r8), INTENT(in)  :: hpbl    ! atmospheric boundary layer height [m]
    REAL(r8), INTENT(out) :: taux    ! wind stress: E-W [kg/m/s**2]
    REAL(r8), INTENT(out) :: tauy    ! wind stress: N-S [kg/m/s**2]
@@ -542,11 +542,11 @@ SUBROUTINE get_fldevp (hu,ht,hq,us,vs,tm,qm,rhoair,psrf,tssea,&
       CALL moninobuk(hu,ht,hq,displax,z0mg,z0hg,z0qg,obu,um,&
                      ustar,fh2m,fq2m,fm10m,fm,fh,fq)
    endif
-   !get qstar and tstar 
+   !get qstar and tstar
    tstar = vonkar/fh*dth
    qstar = vonkar/fq*dqh
 
-   thvstar=tstar+0.61*th*qstar
+   thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
    zol=zldis*vonkar*grav*thvstar/(ustar**2*thv) !z/L
    IF(zol >= 0.) THEN       ! stable
    zol = min(2.,max(zol,1.e-6))

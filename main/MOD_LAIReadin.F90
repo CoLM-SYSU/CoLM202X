@@ -146,11 +146,18 @@ MODULE MOD_LAIReadin
 
 #ifdef SinglePoint
       !TODO: how to add time parameter in single point case
-      IF (DEF_LAI_MONTHLY) THEN
-         tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
-         tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
-         tlai(:)   = sum (SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
-         tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+      IF (.not. DEF_USE_LAIFEEDBACK)THEN
+         IF (DEF_LAI_MONTHLY) THEN
+            tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
+            tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
+            tlai(:)   = sum (SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+            tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         ENDIF
+      ELSE
+         IF (DEF_LAI_MONTHLY) THEN
+            tsai_p(:) = pack(SITE_SAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
+            tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
+         ENDIF
       ENDIF
 #else
 

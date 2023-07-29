@@ -175,16 +175,24 @@ CONTAINS
       TYPE(timestamp), intent(in) :: tstamp1
       TYPE(timestamp), intent(in) :: tstamp2
 
+      INTEGER(kind=4) :: idate1(3), idate2(3)
       INTEGER(kind=4) :: ts1, ts2
 
-      ts1 = tstamp1%year*1000 + tstamp1%day
-      ts2 = tstamp2%year*1000 + tstamp2%day
+      idate1 = (/tstamp1%year, tstamp1%day, tstamp1%sec/)
+      idate2 = (/tstamp2%year, tstamp2%day, tstamp2%sec/)
+
+      
+      CALL adj2end(idate1)
+      CALL adj2end(idate2)
+
+      ts1 = idate1(1)*1000 + idate1(2)
+      ts2 = idate2(1)*1000 + idate2(2)
 
       lessthan = .false.
 
       IF (ts1 < ts2) lessthan = .true.
 
-      IF (ts1==ts2 .AND. tstamp1%sec<tstamp2%sec) THEN
+      IF (ts1==ts2 .AND. idate1(3)<idate2(3)) THEN
          lessthan = .true.
       ENDIF
 
