@@ -40,7 +40,10 @@ CONTAINS
 
       CALL surface_network_init    ()
       CALL river_lake_network_init ()
-      CALL basin_neighbour_init ()
+      CALL basin_neighbour_init    ()
+
+      wdsrf_bsn_prev(:) = wdsrf_bsn(:)
+      wdsrf_hru_prev(:) = wdsrf_hru(:)
 
    END SUBROUTINE lateral_flow_init
 
@@ -72,32 +75,6 @@ CONTAINS
          nriver = numelm
          nbasin = numelm
 
-         ! update water depth in basin by aggregating water depths in patches
-         DO i = 1, nbasin
-            IF (lake_id(i) == 0) THEN
-               ! river : refers to the first HRU in a basin
-               ihru = basin_hru%substt(i) 
-               istt = hru_patch%substt(ihru)
-               iend = hru_patch%subend(ihru)
-               wdsrf_this = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
-               wdsrf_this = wdsrf_this / 1.0e3 ! mm to m
-            ELSEIF (lake_id(i) > 0) THEN
-               ! lake : the whole lake is an element 
-               istt = elm_patch%substt(i)
-               iend = elm_patch%subend(i)
-               totalvolume = sum(wdsrf(istt:iend)/1.0e3 * lakes(i)%area0) ! mm to m
-               wdsrf_this  = lakes(i)%surface(totalvolume)
-            ENDIF
-
-            ! momentum is less or equal than the momentum at last time step.
-            momen_riv(i) = min(wdsrf_bsn(i), wdsrf_this) * veloc_riv(i)
-
-            wdsrf_bsn(i) = wdsrf_this
-
-            wdsrf_bsn_ta(i) = 0
-            momen_riv_ta(i) = 0
-         ENDDO
-            
          ! update water depth in HRU by aggregating water depths in patches
          DO i = 1, numhru
             ibasin = landhru%ielm(i)
@@ -118,6 +95,21 @@ CONTAINS
             momen_hru_ta(i) = 0
          ENDDO
 
+         ! update water depth in basin by aggregating water depths in patches
+         DO i = 1, nbasin
+            ! momentum is less or equal than the momentum at last time step.
+            IF (lake_id(i) == 0) THEN
+               ! river 
+               istt = basin_hru%substt(i)
+               iend = basin_hru%subend(i)
+               wdsrf_this = minval(surface_network%hand + wdsrf_hru(istt:iend))
+               momen_riv(i) = min(wdsrf_bsn(i), wdsrf_this) * veloc_riv(i)
+            ENDIF
+
+            wdsrf_bsn_ta(i) = 0
+            momen_riv_ta(i) = 0
+         ENDDO
+
          IF (numpatch > 0) THEN
             allocate (wdsrf_p (numpatch))
             wdsrf_p = wdsrf
@@ -127,22 +119,8 @@ CONTAINS
             ! (1) Surface flow over hillslopes.
             CALL surface_flow (deltime/nsubstep)
 
-            ! update river water depth
-            DO i = 1, nbasin
-               IF (lake_id(i) == 0) THEN
-                  wdsrf_bsn(i) = wdsrf_hru(basin_hru%substt(i))
-               ENDIF
-            ENDDO
-
             ! (2) River and Lake flow.
             CALL river_lake_flow (deltime/nsubstep)
-            
-            ! update river water depth
-            DO i = 1, nbasin
-               IF (lake_id(i) == 0) THEN
-                  wdsrf_hru(basin_hru%substt(i)) = wdsrf_bsn(i)
-               ENDIF
-            ENDDO
          ENDDO
 
          IF (nriver > 0) THEN

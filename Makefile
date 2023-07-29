@@ -385,6 +385,8 @@ endif
 # ------ Target 5: static libs --------
 .PHONY: lib
 lib :
+	@echo ''
+	@echo 'making CoLM static library >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	mkdir -p lib
 	cd lib && find ../.bld -name "*.o" ! -name "CoLM.o" ! -name "MKSRFDATA.o" ! -name "CoLMINI.o" -exec ln -sf {} ./ \;
 	cd lib && ar rc libcolm.a *.o && ranlib libcolm.a

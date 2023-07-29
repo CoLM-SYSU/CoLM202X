@@ -130,7 +130,7 @@ CONTAINS
                'index of hydrological units inside basin')
          endif
 
-         call ncio_write_time (file_hist_basin, 'time', idate, itime_in_file)
+         call ncio_write_time (file_hist_basin, 'time', idate, itime_in_file, DEF_HIST_FREQ)
 
       ENDIF
 

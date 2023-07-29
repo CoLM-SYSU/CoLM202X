@@ -14,7 +14,7 @@ MODULE MOD_Hydro_BasinNeighbour
    USE MOD_DataType
    IMPLICIT NONE
    
-   ! -- ssrf parameters --
+   ! -- neighbour parameters --
    INTEGER, allocatable :: num_nb (:)
 
    TYPE(pointer_int32_1d), allocatable :: idxbsn_nb (:)
@@ -29,19 +29,19 @@ MODULE MOD_Hydro_BasinNeighbour
    REAL(r8), allocatable :: area_b(:)
    REAL(r8), allocatable :: elva_b(:)
 
-   ! -- ssrf variables --
+   ! -- neighbour variables --
    TYPE(pointer_real8_1d), allocatable :: theta_a_nb (:)
    TYPE(pointer_real8_1d), allocatable :: zwt_nb     (:)
    TYPE(pointer_real8_1d), allocatable :: Ks_nb      (:)
 
-   TYPE ssrf_sendrecv_type
+   TYPE neighbour_sendrecv_type
       INTEGER :: ndata
       INTEGER, allocatable :: bindx (:)
       INTEGER, allocatable :: ibsn  (:)
-   END TYPE ssrf_sendrecv_type
+   END TYPE neighbour_sendrecv_type
 
-   TYPE(ssrf_sendrecv_type), allocatable :: recvaddr(:)
-   TYPE(ssrf_sendrecv_type), allocatable :: sendaddr(:)
+   TYPE(neighbour_sendrecv_type), allocatable :: recvaddr(:)
+   TYPE(neighbour_sendrecv_type), allocatable :: sendaddr(:)
 
 CONTAINS
    
@@ -59,7 +59,7 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      CHARACTER(len=256) :: ssrf_file
+      CHARACTER(len=256) :: neighbour_file
 
       INTEGER :: numbasin, ibasin
       INTEGER :: iwork, mesg(2), isrc, idest
@@ -94,12 +94,12 @@ CONTAINS
 
       numbasin = numelm
 
-      ssrf_file = DEF_CatchmentMesh_data 
+      neighbour_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (ssrf_file, 'basin_num_neighbour', nnball  )
-         CALL ncio_read_serial (ssrf_file, 'basin_idx_neighbour', idxnball)
-         CALL ncio_read_serial (ssrf_file, 'basin_len_border'   , lenbdall)
+         CALL ncio_read_serial (neighbour_file, 'basin_num_neighbour', nnball  )
+         CALL ncio_read_serial (neighbour_file, 'basin_idx_neighbour', idxnball)
+         CALL ncio_read_serial (neighbour_file, 'basin_len_border'   , lenbdall)
 
          maxnnb = size(idxnball,1)
 
@@ -497,6 +497,47 @@ CONTAINS
          IF (allocated(rlon_nb)) deallocate(rlon_nb)
          IF (allocated(rlat_nb)) deallocate(rlat_nb)
          
+      ENDIF
+
+      If (p_is_worker) THEN
+
+         DO ibasin = 1, numbasin
+            IF (lake_id(ibasin) == 0) THEN
+               IF ((to_lake(ibasin)) .or. (riverdown(ibasin) <= 0)) THEN
+                  ! river to lake, ocean or inland depression
+                  outletwth(ibasin) = riverwth(ibasin)
+               ELSE
+                  ! river to river
+                  outletwth(ibasin) = (riverwth(ibasin) + riverwth_ds(ibasin)) * 0.5
+               ENDIF
+            ELSEIF (lake_id(ibasin) /= 0) THEN
+               IF ((.not. to_lake(ibasin)) .and. (riverdown(ibasin) /= 0)) THEN
+                  IF (riverdown(ibasin) > 0) THEN
+                     ! lake to river
+                     outletwth(ibasin) = riverwth_ds(ibasin)
+                  ELSEIF (riverdown(ibasin) == 0) THEN
+                     ! lake to ocean
+                     outletwth(ibasin) = riverwth_ds(ibasin)
+                  ELSEIF (riverdown(ibasin) == -1) THEN
+                     ! lake is inland depression
+                     outletwth(ibasin) = 0
+                  ENDIF
+               ELSEIF (to_lake(ibasin) .or. (riverdown(ibasin) == 0)) THEN
+                  ! lake to lake .or. lake catchment to lake .or. lake to ocean
+                  inb = findloc(idxbsn_nb(ibasin)%val, riverdown(ibasin), dim=1)
+                  IF (inb <= 0) THEN
+                     write(*,*) 'BasinNeighbour: can not find lake downstream neighbour.', lake_id(ibasin)
+#ifdef USEMPI
+                     CALL mpi_abort (p_comm_glb, p_err)
+#else
+                     STOP
+#endif
+                  ELSE
+                     outletwth(ibasin) = lenbdr_nb(ibasin)%val(inb)
+                  ENDIF
+               ENDIF
+            ENDIF
+         ENDDO
       ENDIF
 
    END SUBROUTINE basin_neighbour_init

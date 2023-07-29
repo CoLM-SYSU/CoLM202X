@@ -3646,7 +3646,7 @@ ENDIF
                call ncio_write_serial (filename, 'lon_e', hist_concat%ginfo%lon_e, 'lon')
 #endif
             endif
-            call ncio_write_time (filename, dataname, time, itime)
+            call ncio_write_time (filename, dataname, time, itime, DEF_HIST_FREQ)
 
          ENDIF
 
@@ -3669,7 +3669,7 @@ ENDIF
                   call hist_write_grid_info  (fileblock, grid, iblk, jblk)
                end if
 
-               call ncio_write_time (fileblock, dataname, time, itime)
+               call ncio_write_time (fileblock, dataname, time, itime, DEF_HIST_FREQ)
 
             end do
 
