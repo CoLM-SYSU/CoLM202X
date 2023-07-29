@@ -250,6 +250,7 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
+				MOD_Irrigation.o 						  \
 				MOD_BGC_driver.o                          \
 				MOD_Vars_2DFluxes.o                       \
 				MOD_Vars_2DForcing.o                      \

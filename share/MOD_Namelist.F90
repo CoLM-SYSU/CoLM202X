@@ -107,6 +107,9 @@ MODULE MOD_Namelist
    ! 05/2023, add by Xingjie Lu: use for updating LAI with leaf carbon
    LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
 
+   ! use irrigation
+   LOGICAL :: DEF_USE_IRRIGATION = .true.
+
    ! 06/2023, add by hua yuan and wenzong dong
    ! ------ Land use and land cover (LULC) related -------
 
@@ -510,6 +513,12 @@ MODULE MOD_Namelist
       LOGICAL :: fertnitro_rice1    = .true.
       LOGICAL :: fertnitro_rice2    = .true.
       LOGICAL :: fertnitro_sugarcane= .true.
+      
+      LOGICAL :: irrig_rate         = .true.
+      LOGICAL :: deficit_irrig      = .true.
+      LOGICAL :: sum_irrig          = .true.
+      LOGICAL :: sum_irrig_count    = .true.
+
 #endif
       LOGICAL :: ndep_to_sminn      = .true.
       LOGICAL :: CONC_O2_UNSAT      = .true.
@@ -652,6 +661,7 @@ CONTAINS
 
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
+         DEF_USE_IRRIGATION,              &   ! use irrigation
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -842,6 +852,13 @@ CONTAINS
             write(*,*) 'Warning: Soy nitrogen fixation is on when CROP is off.'
             write(*,*) 'DEF_USE_CNSOYFIXN is set to false automatically when CROP is turned off.'
          ENDIF
+
+         if(DEF_USE_IRRIGATION)then
+            DEF_USE_IRRIGATION = .false.
+            write(*,*) '                  *****                  '
+            write(*,*) 'Warning: irrigation is on when CROP is off.'
+            write(*,*) 'DEF_USE_IRRIGATION is set to false automatically when CROP is turned off.'
+         ENDIF               
 #endif
 
          IF(.not. DEF_USE_OZONESTRESS)then
@@ -1344,6 +1361,12 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_irrigated_trop_soybean, set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprodc_unmanagedcrop         , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%fert_to_sminn                   , set_defaults)
+      if(DEF_USE_IRRIGATION)then
+         CALL sync_hist_vars_one (DEF_hist_vars%irrig_rate                      , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%deficit_irrig                   , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig                       , set_defaults)
+         CALL sync_hist_vars_one (DEF_hist_vars%sum_irrig_count                 , set_defaults)
+      endif
 #endif
       CALL sync_hist_vars_one (DEF_hist_vars%ndep_to_sminn                   , set_defaults)
       if(DEF_USE_FIRE)then

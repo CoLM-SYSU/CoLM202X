@@ -1086,11 +1086,24 @@ contains
              a_grainc_to_seed, f_grainc_to_seed, file_hist, 'f_grainc_to_seed', itime_in_file, sumarea, filter, &
              'grain to crop seed carbon','gC/m2/s')
 
-         ! grain to crop seed carbon
-         call flux_map_and_write_2d ( DEF_hist_vars%fert_to_sminn, &
-             a_fert_to_sminn, f_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumarea, filter, &
-             'fertilization','gN/m2/s')
-
+         if(DEF_USE_IRRIGATION)then
+            ! irrigation rate mm/s in 4h is averaged to the given time resolution mm/s
+            call flux_map_and_write_2d ( DEF_hist_vars%irrig_rate, &
+               a_irrig_rate, f_irrig_rate, file_hist, 'f_irrig_rate', itime_in_file, sumarea, filter, &
+               'irrigation rate mm/s in 4h is averaged to the given time resolution mm/s','mm/s')
+            !  still need irrigation amounts
+            call flux_map_and_write_2d ( DEF_hist_vars%deficit_irrig, &
+               a_deficit_irrig, f_deficit_irrig, file_hist, 'f_deficit_irrig', itime_in_file, sumarea, filter, &
+               'still need irrigation amounts','kg/m2')
+            !  total irrigation amounts at growing season
+            call flux_map_and_write_2d ( DEF_hist_vars%sum_irrig, &
+               a_sum_irrig, f_sum_irrig, file_hist, 'f_sum_irrig', itime_in_file, sumarea, filter, &
+               'total irrigation amounts at growing season','kg/m2')
+            ! total irrigation times at growing season
+            call flux_map_and_write_2d ( DEF_hist_vars%sum_irrig_count, &
+               a_sum_irrig_count, f_sum_irrig_count, file_hist, 'f_sum_irrig_count', itime_in_file, sumarea, filter, &
+               'total irrigation times at growing season','-')
+         end if
 #endif
 
          ! grain to crop seed carbon

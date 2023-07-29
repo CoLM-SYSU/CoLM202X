@@ -26,7 +26,7 @@
 
 
     use MOD_Precision
-    use MOD_Namelist, only : DEF_USE_SASU, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE
+    use MOD_Namelist, only : DEF_USE_SASU, DEF_USE_NITRIF, DEF_USE_CNSOYFIXN, DEF_USE_FIRE, DEF_USE_IRRIGATION
     use MOD_Const_Physical, only : tfrz, denh2o, denice
     use MOD_Vars_PFTimeInvariants, only: pftfrac
     use MOD_LandPFT, only: patch_pft_s, patch_pft_e
@@ -63,6 +63,7 @@
     use MOD_BGC_Veg_CNNDynamics, only: CNNFixation
 #ifdef CROP
     use MOD_BGC_Veg_CNNDynamics, only: CNNFert, CNSoyfix
+    use MOD_Irrigation, only: CalIrrigationNeeded
 #endif
     use MOD_TimeManager
     use MOD_Vars_Global, only: nl_soil, nl_soil_full, ndecomp_pools, ndecomp_pools_vr, ndecomp_transitions, npcropmin, &
@@ -114,6 +115,10 @@
 #endif
     call CNGResp(i, ps, pe, npcropmin)
 
+    if(DEF_USE_IRRIGATION)then
+      call CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
+    end if
+
     ! update vegetation pools from phenology, allocation and nitrogen uptake
     ! update soil N pools from decomposition and nitrogen competition
     call CStateUpdate1(i, ps, pe, deltim, nl_soil, ndecomp_transitions, npcropmin)
@@ -127,7 +132,6 @@
     call CNGapMortality(i, ps, pe, nl_soil,npcropmin)
     call CStateUpdate2(i, ps, pe, deltim, nl_soil)
     call NStateUpdate2(i, ps, pe, deltim, nl_soil, dz_soi)
-
 
     if(DEF_USE_FIRE)then
        ! update vegetation and fire pools from fire
