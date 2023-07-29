@@ -23,6 +23,8 @@ MODULE MOD_Hydro_RiverLakeNetwork
 
    REAL(r8), allocatable :: basinelv  (:)
    REAL(r8), allocatable :: bedelv    (:)
+   
+   REAL(r8), allocatable :: wtsrfelv  (:)
 
    INTEGER, allocatable :: riverdown  (:)  
    logical, allocatable :: to_lake (:)
@@ -33,7 +35,7 @@ MODULE MOD_Hydro_RiverLakeNetwork
    INTEGER, allocatable :: addrdown (:)
 
    REAL(r8), allocatable :: riverlen_ds  (:)
-   REAL(r8), allocatable :: riverelv_ds  (:)
+   REAL(r8), allocatable :: wtsrfelv_ds  (:)
    REAL(r8), allocatable :: riverwth_ds  (:)
    REAL(r8), allocatable :: bedelv_ds    (:)
    
@@ -504,6 +506,16 @@ CONTAINS
       IF (allocated(basin_sorted)) deallocate(basin_sorted)
       IF (allocated(order       )) deallocate(order       )
 
+      IF (p_is_worker) THEN
+         IF (numbasin > 0) allocate (wtsrfelv(numbasin))
+         WHERE (lake_id > 0)
+            wtsrfelv = basinelv
+         ELSEWHERE (lake_id == 0) 
+            wtsrfelv = riverelv
+         ELSEWHERE
+            wtsrfelv = spval
+         END WHERE
+      ENDIF
 
       IF (p_is_worker) THEN
 
@@ -515,7 +527,7 @@ CONTAINS
             allocate (riverwth    (numbasin))
             allocate (bedelv      (numbasin))
             allocate (riverlen_ds (numbasin))
-            allocate (riverelv_ds (numbasin))
+            allocate (wtsrfelv_ds (numbasin))
             allocate (riverwth_ds (numbasin))
             allocate (bedelv_ds   (numbasin))
             allocate (outletwth   (numbasin))
@@ -528,13 +540,17 @@ CONTAINS
                   riverwth (ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
                   ! modify height above nearest drainage data to consider river depth
-                  surface_network(ibasin)%hand(1) = &
-                     surface_network(ibasin)%hand(1) + riverdpth(ibasin)
+                  IF (surface_network(ibasin)%nhru > 1) THEN
+                     surface_network(ibasin)%hand(2:) = &
+                        surface_network(ibasin)%hand(2:) + riverdpth(ibasin)
+                  ENDIF
 
-                  bedelv(ibasin) = riverelv(ibasin) - riverdpth(ibasin)
+                  bedelv(ibasin) = wtsrfelv(ibasin) - riverdpth(ibasin)
 
                ELSEIF (lake_id(ibasin) > 0) THEN
                
+                  wtsrfelv(ibasin) = basinelv(ibasin)
+
                   istt = elm_patch%substt(ibasin)
                   iend = elm_patch%subend(ibasin)
 
@@ -594,12 +610,12 @@ CONTAINS
          DO ibasin = 1, numbasin
             IF (addrdown(ibasin) > 0) THEN
                riverlen_ds (ibasin) = riverlen (addrdown(ibasin)) 
-               riverelv_ds (ibasin) = riverelv (addrdown(ibasin)) 
+               wtsrfelv_ds (ibasin) = wtsrfelv (addrdown(ibasin)) 
                riverwth_ds (ibasin) = riverwth (addrdown(ibasin))
                bedelv_ds   (ibasin) = bedelv   (addrdown(ibasin))
             ELSE
                riverlen_ds (ibasin) = spval
-               riverelv_ds (ibasin) = spval
+               wtsrfelv_ds (ibasin) = spval
                riverwth_ds (ibasin) = spval
                bedelv_ds   (ibasin) = spval
             ENDIF
@@ -608,21 +624,17 @@ CONTAINS
 #ifdef USEMPI
          CALL river_data_exchange (SEND_DATA_DOWN_TO_UP, accum = .false., &
             vec_send1 = riverlen, vec_recv1 = riverlen_ds, &
-            vec_send2 = riverelv, vec_recv2 = riverelv_ds, &
+            vec_send2 = wtsrfelv, vec_recv2 = wtsrfelv_ds, &
             vec_send3 = riverwth, vec_recv3 = riverwth_ds, &
             vec_send4 = bedelv  , vec_recv4 = bedelv_ds  )
 #endif
 
          DO ibasin = 1, numbasin
-            IF (riverdown(ibasin) > 0) THEN
-               IF (to_lake(ibasin)) THEN
-                  outletwth(ibasin) = riverwth(ibasin)
-               ELSE
-                  outletwth(ibasin) = (riverwth(ibasin) + riverwth_ds(ibasin)) * 0.5
-               ENDIF
+            IF (lake_id(ibasin) < 0) THEN
+               bedelv(ibasin) = wtsrfelv_ds(ibasin)
             ENDIF
          ENDDO
-         
+
       ENDIF
 
 #ifdef USEMPI
@@ -935,12 +947,13 @@ CONTAINS
       IF (allocated(riverwth )) deallocate(riverwth )
       IF (allocated(riverdpth)) deallocate(riverdpth)
       IF (allocated(basinelv )) deallocate(basinelv )
+      IF (allocated(wtsrfelv )) deallocate(wtsrfelv )
       IF (allocated(riverdown)) deallocate(riverdown)
       IF (allocated(addrdown )) deallocate(addrdown )
       IF (allocated(to_lake  )) deallocate(to_lake  )
 
       IF (allocated(riverlen_ds))  deallocate(riverlen_ds)
-      IF (allocated(riverelv_ds))  deallocate(riverelv_ds)
+      IF (allocated(wtsrfelv_ds))  deallocate(wtsrfelv_ds)
       IF (allocated(riverwth_ds))  deallocate(riverwth_ds)
       IF (allocated(bedelv_ds  ))  deallocate(bedelv_ds  )
       IF (allocated(outletwth  ))  deallocate(outletwth  )

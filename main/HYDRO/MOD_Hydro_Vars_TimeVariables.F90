@@ -21,6 +21,9 @@ MODULE MOD_Hydro_Vars_TimeVariables
    REAL(r8), allocatable :: veloc_hru (:) ! surface water velocity [m/s]
    REAL(r8), allocatable :: momen_hru (:) ! unit surface water momentum [m^2/s]
 
+   REAL(r8), allocatable :: wdsrf_bsn_prev (:) ! river or lake water depth at previous time step [m]
+   REAL(r8), allocatable :: wdsrf_hru_prev (:) ! surface water depth at previous time step [m]
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_HydroTimeVariables
    PUBLIC :: deallocate_HydroTimeVariables
@@ -46,12 +49,14 @@ CONTAINS
            allocate (wdsrf_bsn (numbasin))
            allocate (veloc_riv (numbasin))
            allocate (momen_riv (numbasin))
+           allocate (wdsrf_bsn_prev (numbasin))
         ENDIF
 
         IF (numhru > 0) THEN
            allocate (wdsrf_hru (numhru))
            allocate (veloc_hru (numhru))
            allocate (momen_hru (numhru))
+           allocate (wdsrf_hru_prev (numhru))
         ENDIF
      ENDIF
 
@@ -137,6 +142,9 @@ CONTAINS
      IF (allocated(wdsrf_hru)) deallocate(wdsrf_hru)
      IF (allocated(veloc_hru)) deallocate(veloc_hru)
      IF (allocated(momen_hru)) deallocate(momen_hru)
+     
+     IF (allocated(wdsrf_bsn_prev)) deallocate(wdsrf_bsn_prev)
+     IF (allocated(wdsrf_hru_prev)) deallocate(wdsrf_hru_prev)
 
   END SUBROUTINE deallocate_HydroTimeVariables
 
