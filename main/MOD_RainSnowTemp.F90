@@ -184,7 +184,7 @@ MODULE MOD_RainSnowTemp
    end if
 
    forc_wind = sqrt(forc_us**2 + forc_vs**2)
-   if ((forc_wind) > 0.1 ) then
+   if (forc_wind > 0.1) then
    ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
    ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive to wind - Andrew Slater, 2016
       bifall = bifall + (266.861 * ((1.0 + TANH(forc_wind/5.0))/2.0)**8.8)
