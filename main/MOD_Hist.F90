@@ -282,7 +282,11 @@ contains
          ! ---------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                vectmp(:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -359,7 +363,11 @@ contains
          ! ------------------------------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                vectmp (:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -2899,7 +2907,11 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype <= 3
+ENDIF
                vectmp (:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -2931,7 +2943,11 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype <= 2
+ENDIF
                vectmp(:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -2971,7 +2987,11 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+ENDIF
                vectmp(:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
@@ -3017,7 +3037,11 @@ contains
          ! --------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                vectmp(:) = 1.
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask

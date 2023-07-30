@@ -33,7 +33,7 @@ MODULE MOD_Namelist
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
-   
+
    CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
    LOGICAL  :: USE_SITE_pctpfts         = .true.
@@ -120,6 +120,7 @@ MODULE MOD_Namelist
 
    ! ------ Urban model related -------
    INTEGER :: DEF_URBAN_type_scheme = 1
+   LOGICAL :: DEF_URBAN_ONLY   = .false.
    logical :: DEF_URBAN_RUN    = .false.
    LOGICAL :: DEF_URBAN_BEM    = .true.
    LOGICAL :: DEF_URBAN_TREE   = .true.
@@ -656,6 +657,7 @@ CONTAINS
          DEF_LULCC_SCHEME,                &
 
          DEF_URBAN_type_scheme,           &
+         DEF_URBAN_ONLY,                  &
          DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
          DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
          DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
@@ -999,6 +1001,7 @@ CONTAINS
 
       CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_URBAN_ONLY,      1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)

@@ -57,6 +57,11 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 
      m = patchclass(i)
 
+     IF (m/=URBAN .and. DEF_URBAN_ONLY) THEN
+        forcmask(i) = .false.
+        CYCLE
+     ENDIF
+
      ! For non urban patch or slab urban
      IF (.not.DEF_URBAN_RUN .or. m.ne.URBAN) THEN
 
