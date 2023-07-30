@@ -21,6 +21,7 @@ MODULE MOD_Hydro_LateralFlow
    
    USE MOD_Precision
    USE MOD_SPMD_Task
+   USE MOD_Hydro_Vars_TimeVariables
    USE MOD_Hydro_RiverLakeNetwork
    USE MOD_Hydro_BasinNeighbour
    USE MOD_Hydro_SurfaceNetwork
@@ -42,8 +43,10 @@ CONTAINS
       CALL river_lake_network_init ()
       CALL basin_neighbour_init    ()
 
-      wdsrf_bsn_prev(:) = wdsrf_bsn(:)
-      wdsrf_hru_prev(:) = wdsrf_hru(:)
+      IF (p_is_worker) THEN
+         wdsrf_bsn_prev(:) = wdsrf_bsn(:)
+         wdsrf_hru_prev(:) = wdsrf_hru(:)
+      ENDIF
 
    END SUBROUTINE lateral_flow_init
 
@@ -66,49 +69,25 @@ CONTAINS
       REAL(r8), intent(in) :: deltime
 
       ! Local Variables
-      INTEGER  :: nbasin, nriver, ibasin, ihru, i, j, istt, iend, istep
-      real(r8) :: wdsrf_this, totalvolume
+      INTEGER  :: nbasin, ibasin, ihru, i, j, istt, iend, istep
       real(r8), allocatable :: wdsrf_p (:)
 
       IF (p_is_worker) THEN
 
-         nriver = numelm
          nbasin = numelm
 
          ! update water depth in HRU by aggregating water depths in patches
          DO i = 1, numhru
-            ibasin = landhru%ielm(i)
-            IF (lake_id(ibasin) <= 0) THEN
-
-               istt = hru_patch%substt(i)
-               iend = hru_patch%subend(i)
-               wdsrf_this = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
-               wdsrf_this = wdsrf_this / 1.0e3 ! mm to m
-
-               ! momentum is less or equal than the momentum at last time step.
-               momen_hru(i) = min(wdsrf_hru(i), wdsrf_this) * veloc_hru(i)
-
-               wdsrf_hru(i) = wdsrf_this
-            ENDIF
-
-            wdsrf_hru_ta(i) = 0
-            momen_hru_ta(i) = 0
+            istt = hru_patch%substt(i)
+            iend = hru_patch%subend(i)
+            wdsrf_hru(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
+            wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
 
-         ! update water depth in basin by aggregating water depths in patches
-         DO i = 1, nbasin
-            ! momentum is less or equal than the momentum at last time step.
-            IF (lake_id(i) == 0) THEN
-               ! river 
-               istt = basin_hru%substt(i)
-               iend = basin_hru%subend(i)
-               wdsrf_this = minval(surface_network%hand + wdsrf_hru(istt:iend))
-               momen_riv(i) = min(wdsrf_bsn(i), wdsrf_this) * veloc_riv(i)
-            ENDIF
-
-            wdsrf_bsn_ta(i) = 0
-            momen_riv_ta(i) = 0
-         ENDDO
+         wdsrf_hru_ta(:) = 0
+         momen_hru_ta(:) = 0
+         wdsrf_bsn_ta(:) = 0
+         momen_riv_ta(:) = 0
 
          IF (numpatch > 0) THEN
             allocate (wdsrf_p (numpatch))
@@ -116,14 +95,16 @@ CONTAINS
          ENDIF
 
          DO istep = 1, nsubstep
+
             ! (1) Surface flow over hillslopes.
             CALL surface_flow (deltime/nsubstep)
-
+         
             ! (2) River and Lake flow.
             CALL river_lake_flow (deltime/nsubstep)
+         
          ENDDO
 
-         IF (nriver > 0) THEN
+         IF (nbasin > 0) THEN
             wdsrf_bsn_ta(:) = wdsrf_bsn_ta(:) / deltime
             momen_riv_ta(:) = momen_riv_ta(:) / deltime
 
@@ -145,25 +126,11 @@ CONTAINS
             END where
          ENDIF
 
-         ! hydrounit to patch
+         ! update surface water depth on patches
          DO i = 1, numhru
-            ibasin = landhru%ielm(i)
-            IF (lake_id(ibasin) <= 0) THEN
-               istt = hru_patch%substt(i)
-               iend = hru_patch%subend(i)
-               wdsrf(istt:iend) = wdsrf_hru(i) * 1.0e3 ! m to mm
-            ENDIF
-         ENDDO
-
-         DO i = 1, nbasin
-            IF (lake_id(i) > 0) THEN ! for lakes
-               istt = elm_patch%substt(i)
-               iend = elm_patch%subend(i)
-               DO j = 1, lakes(i)%nsub
-                  wdsrf(j+istt-1) = max(wdsrf_bsn(i) - (lakes(i)%depth(1) - lakedepth(j+istt-1)), 0.)
-                  wdsrf(j+istt-1) = wdsrf(j+istt-1) * 1.0e3 ! m to mm
-               ENDDO
-            ENDIF
+            istt = hru_patch%substt(i)
+            iend = hru_patch%subend(i)
+            wdsrf(istt:iend) = wdsrf_hru(i) * 1.0e3 ! m to mm
          ENDDO
             
          IF (numpatch > 0) THEN
@@ -196,7 +163,7 @@ CONTAINS
 
       CALL surface_network_final    ()
       CALL river_lake_network_final ()
-      CALL basin_neighbour_final ()
+      CALL basin_neighbour_final    ()
 
    END SUBROUTINE lateral_flow_final
 

@@ -44,9 +44,10 @@ MODULE MOD_Hydro_RiverLakeNetwork
    ! -- lake data type --
    TYPE :: lake_info_type
       INTEGER :: nsub
-      REAL(r8), allocatable :: area0 (:)
-      REAL(r8), allocatable :: area  (:)
-      REAL(r8), allocatable :: depth (:)
+      REAL(r8), allocatable :: area0  (:)
+      REAL(r8), allocatable :: area   (:)
+      REAL(r8), allocatable :: depth0 (:)
+      REAL(r8), allocatable :: depth  (:)
       REAL(r8), allocatable :: dep_vol_curve (:)
    CONTAINS 
       procedure, PUBLIC :: surface => retrieve_lake_surface_from_volume
@@ -559,9 +560,10 @@ CONTAINS
                   nsublake = iend - istt + 1
                   lakes(ibasin)%nsub = nsublake
 
-                  allocate (lakes(ibasin)%area0 (nsublake))
-                  allocate (lakes(ibasin)%area  (nsublake))
-                  allocate (lakes(ibasin)%depth (nsublake))
+                  allocate (lakes(ibasin)%area0  (nsublake))
+                  allocate (lakes(ibasin)%area   (nsublake))
+                  allocate (lakes(ibasin)%depth0 (nsublake))
+                  allocate (lakes(ibasin)%depth  (nsublake))
 
                   DO i = 1, nsublake
                      ipatch = i + istt - 1
@@ -574,10 +576,12 @@ CONTAINS
                      ENDDO
                   ENDDO 
 
-                  ! area data in patch order
+                  ! area data in HRU order
                   lakes(ibasin)%area0 = lakes(ibasin)%area
 
-                  lakes(ibasin)%depth = lakedepth(istt:iend)
+                  lakes(ibasin)%depth  = lakedepth(istt:iend)
+                  ! depth data in HRU order
+                  lakes(ibasin)%depth0 = lakes(ibasin)%depth
 
                   allocate (order (1:nsublake))
                   order = (/(i, i = 1, nsublake)/)
@@ -962,6 +966,7 @@ CONTAINS
          DO ilake = 1, size(lakes)
             IF (allocated(lakes(ilake)%area0        )) deallocate(lakes(ilake)%area0        )
             IF (allocated(lakes(ilake)%area         )) deallocate(lakes(ilake)%area         )
+            IF (allocated(lakes(ilake)%depth0       )) deallocate(lakes(ilake)%depth0       )
             IF (allocated(lakes(ilake)%depth        )) deallocate(lakes(ilake)%depth        )
             IF (allocated(lakes(ilake)%dep_vol_curve)) deallocate(lakes(ilake)%dep_vol_curve)
          ENDDO

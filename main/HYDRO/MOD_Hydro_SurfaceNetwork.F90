@@ -257,10 +257,9 @@ CONTAINS
          DO ibasin = 1, numbasin
                
             nhru = count(indxhru(:,ibasin) >= 0)
-            
-            IF (nhru > 0) THEN
+            surface_network(ibasin)%nhru = nhru
 
-               surface_network(ibasin)%nhru = nhru
+            IF (nhru > 0) THEN
 
                allocate (surface_network(ibasin)%indx  (nhru))
                allocate (surface_network(ibasin)%area  (nhru))
