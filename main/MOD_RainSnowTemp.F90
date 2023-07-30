@@ -20,8 +20,8 @@ MODULE MOD_RainSnowTemp
 
 
    SUBROUTINE rain_snow_temp (itypwat,&
-                            forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
-                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
+              forc_t,forc_q,forc_psrf,forc_prc,forc_prl,forc_us,forc_vs,tcrit,&
+              prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
 !=======================================================================
 ! define the rate of rainfall and snowfall and precipitation water temp
@@ -43,6 +43,8 @@ MODULE MOD_RainSnowTemp
    real(r8), INTENT(in) :: forc_psrf  ! atmosphere pressure at the surface [pa]
    real(r8), INTENT(in) :: forc_prc   ! convective precipitation [mm/s]
    real(r8), INTENT(in) :: forc_prl   ! large scale precipitation [mm/s]
+   real(r8), INTENT(in) :: forc_us    ! wind speed in eastward direction [m/s]
+   real(r8), INTENT(in) :: forc_vs    ! wind speed in northward direction [m/s]
 
    real(r8), INTENT(in) :: tcrit      ! critical temp. to determine rain or snow
 
@@ -60,6 +62,9 @@ MODULE MOD_RainSnowTemp
    real(r8) :: all_rain_t_c ! Temperature at which precip falls entirely as snow (deg C)
 
    logical :: glaciers    ! true: glacier column
+   real(r8) :: t_for_bifall_degC  ! temperature to use in bifall equation (deg C)
+   real(r8) :: forc_wind  ! wind speed [m/s]
+
 !-----------------------------------------------------------------------
 
 ! wet-bulb temperature
@@ -108,6 +113,32 @@ MODULE MOD_RainSnowTemp
           flfall = min(1.0_r8, max(0.0_r8,(forc_t - all_snow_t)*frac_rain_slope))
           bifall = min(169.0_r8, 50. + 1.7*(max(0.0, forc_t-tfrz+15.))**1.5)
 
+! new scheme for "bifall" from CLM5.0
+          if (forc_t > tfrz + 2.0) then
+             bifall = 50.0 + 1.7*(17.0)**1.5
+          else if (forc_t > tfrz - 15.0) then
+             bifall = 50.0 + 1.7*(forc_t - tfrz + 15.0)**1.5
+          else
+             ! Andrew Slater: A temp of about -15C gives the nicest
+             ! "blower" powder, but as you get colder the flake size decreases so
+             ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic winters
+             if (forc_t > tfrz - 57.55) then
+                t_for_bifall_degC = (forc_t-tfrz)
+             else
+                ! Below -57.55 deg C, the following function starts to decrease with
+                ! decreasing temperatures. Limit the function to avoid this turning over.
+                t_for_bifall_degC = -57.55
+             end if
+             bifall = -(50.0/15.0 + 0.0333*15.0)*t_for_bifall_degC - 0.0333*t_for_bifall_degC**2
+          end if
+
+          forc_wind = sqrt(forc_us**2 + forc_vs**2)
+          if ((forc_wind) > 0.1 ) then
+          ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
+          ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive to wind - Andrew Slater, 2016
+             bifall = bifall + (266.861 * ((1.0 + TANH(forc_wind/5.0))/2.0)**8.8)
+          end if
+
        ELSE
           ! the upper limit of air temperature is set for snowfall, this cut-off
           ! was selected based on Fig. 1, Plate 3-1, of Snow Hydrology (1956).
@@ -120,6 +151,32 @@ MODULE MOD_RainSnowTemp
           else
              flfall = max(0.0, -54.632+0.2*forc_t)
              bifall = 50. + 1.7*(max(0.0, forc_t-tfrz+15.))**1.5
+          end if
+
+! new scheme for "bifall" from CLM5.0
+          if (forc_t > tfrz + 2.0) then
+             bifall = 50.0 + 1.7*(17.0)**1.5
+          else if (forc_t > tfrz - 15.0) then
+             bifall = 50.0 + 1.7*(forc_t - tfrz + 15.0)**1.5
+          else 
+             ! Andrew Slater: A temp of about -15C gives the nicest
+             ! "blower" powder, but as you get colder the flake size decreases so
+             ! density goes up. e.g. the smaller snow crystals from the Arctic and Antarctic winters
+             if (forc_t > tfrz - 57.55) then
+                t_for_bifall_degC = (forc_t-tfrz)
+             else
+                ! Below -57.55 deg C, the following function starts to decrease with
+                ! decreasing temperatures. Limit the function to avoid this turning over.
+                t_for_bifall_degC = -57.55
+             end if
+             bifall = -(50.0/15.0 + 0.0333*15.0)*t_for_bifall_degC - 0.0333*t_for_bifall_degC**2
+          end if
+
+          forc_wind = sqrt(forc_us**2 + forc_vs**2)
+          if ((forc_wind) > 0.1 ) then
+          ! Density offset for wind-driven compaction, initial ideas based on Liston et. al (2007) J. Glaciology,
+          ! 53(181), 241-255. Modified for a continuous wind impact and slightly more sensitive to wind - Andrew Slater, 2016
+             bifall = bifall + (266.861 * ((1.0 + TANH(forc_wind/5.0))/2.0)**8.8)
           end if
 
        ENDIF
