@@ -447,8 +447,8 @@ CONTAINS
             allocate (z0m_c      (0:N_PFT-1,numpc))   ; z0m_c        (:,:) = spval      !effective roughness [m]
 !Plant Hydraulic parameters; raulic parameters
             allocate (vegwp_c(1:nvegwcs,0:N_PFT-1,numpc)); vegwp_c (:,:,:) = spval
-            allocate (gs0sun_c   (0:N_PFT-1,numpc))   ; gs0sun_c     (:,:) = spval      
-            allocate (gs0sha_c   (0:N_PFT-1,numpc))   ; gs0sha_c     (:,:) = spval      
+            allocate (gs0sun_c   (0:N_PFT-1,numpc))   ; gs0sun_c     (:,:) = spval
+            allocate (gs0sha_c   (0:N_PFT-1,numpc))   ; gs0sha_c     (:,:) = spval
 !end plant hydraulic parameters
 !Ozone Stress Variables
             allocate (o3coefv_sun_c(0:N_PFT-1,numpc)) ; o3coefv_sun_c(:,:) = spval      !Ozone stress factor for photosynthesis on sunlit leaf
