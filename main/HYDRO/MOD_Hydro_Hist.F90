@@ -130,7 +130,7 @@ CONTAINS
                'index of hydrological units inside basin')
          endif
 
-         call ncio_write_time (file_hist_basin, 'time', idate, itime_in_file)
+         call ncio_write_time (file_hist_basin, 'time', idate, itime_in_file, DEF_HIST_FREQ)
 
       ENDIF
 
@@ -141,7 +141,7 @@ CONTAINS
       END where
 
       CALL vector_write_basin (&
-         file_hist_basin, a_height_riv, numbasin, totalnumelm, 'riverheight', 'basin', elm_data_address, &
+         file_hist_basin, a_height_riv, numbasin, totalnumelm, 'wdsrf_bsn', 'basin', elm_data_address, &
          DEF_hist_vars%riv_height, itime_in_file, 'River Height', 'm')
 
       where(a_veloct_riv /= spval)
@@ -149,7 +149,7 @@ CONTAINS
       END where
 
       CALL vector_write_basin (&
-         file_hist_basin, a_veloct_riv, numbasin, totalnumelm, 'riverveloct', 'basin', elm_data_address, &
+         file_hist_basin, a_veloct_riv, numbasin, totalnumelm, 'veloc_riv', 'basin', elm_data_address, &
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
       where(a_wdsrf_hru /= spval)
@@ -235,8 +235,8 @@ CONTAINS
          numbasin = numelm
 
          IF (numbasin > 0) THEN
-            CALL acc1d_basin (riverheight_ta, a_height_riv)
-            CALL acc1d_basin (riverveloct_ta, a_veloct_riv)
+            CALL acc1d_basin (wdsrf_bsn_ta, a_height_riv)
+            CALL acc1d_basin (veloc_riv_ta, a_veloct_riv)
             CALL acc1d_basin (rsubs_bsn     , a_rsubs_bsn )
          ENDIF
 

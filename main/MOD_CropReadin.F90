@@ -51,7 +51,8 @@ MODULE MOD_CropReadin
 
       ! Local variables
       REAL(r8), allocatable :: lat(:), lon(:)
-      integer :: cft, npatch, ipft
+      real(r8) :: missing_value
+      integer  :: cft, npatch, ipft
       CHARACTER(LEN=2) :: cx
       ! READ in crops
       
@@ -62,16 +63,26 @@ MODULE MOD_CropReadin
 
       CALL grid_crop%define_by_center (lat, lon)
 
-      call mg2patch_crop%build (grid_crop, landpatch)
-      call mg2pft_crop%build   (grid_crop, landpft)
-
-      IF (allocated(lon)) deallocate(lon)
-      IF (allocated(lat)) deallocate(lat)
-
-      
       IF (p_is_io) THEN
          CALL allocate_block_data  (grid_crop, f_xy_crop)
       ENDIF
+      
+      ! missing value
+      IF (p_is_master) THEN
+         CALL ncio_get_attr (file_crop, 'pdrice2', 'missing_value', missing_value)
+      ENDIF
+#ifdef USEMPI
+      CALL mpi_bcast (missing_value, 1, MPI_REAL8, p_root, p_comm_glb, p_err)
+#endif
+      IF (p_is_io) THEN
+         CALL ncio_read_block (file_crop, 'pdrice2', grid_crop, f_xy_crop)
+      ENDIF
+
+      call mg2patch_crop%build (grid_crop, landpatch, f_xy_crop, missing_value)
+      call mg2pft_crop%build   (grid_crop, landpft,   f_xy_crop, missing_value)
+
+      IF (allocated(lon)) deallocate(lon)
+      IF (allocated(lat)) deallocate(lat)
       
       IF (p_is_worker) THEN
          IF (numpatch > 0)  allocate(pdrice2_tmp   (numpatch))
@@ -89,7 +100,11 @@ MODULE MOD_CropReadin
 
       IF (p_is_worker) then
          DO npatch = 1, numpatch
-            pdrice2 (npatch) = int(pdrice2_tmp (npatch))
+            IF (pdrice2_tmp(npatch) /= spval) THEN
+               pdrice2 (npatch) = int(pdrice2_tmp (npatch))
+            ELSE
+               pdrice2 (npatch) = 0
+            ENDIF
          ENDDO
       ENDIF
 

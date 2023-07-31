@@ -28,7 +28,7 @@ MODULE MOD_Hydro_SurfaceNetwork
 
    ! -- Instance --
    TYPE(surface_network_info_type), pointer :: surface_network (:)
-   
+      
 CONTAINS
    
    ! ----------
@@ -38,13 +38,15 @@ CONTAINS
       USE MOD_Namelist
       USE MOD_NetCDFSerial
       USE MOD_Mesh
+      USE MOD_Pixel
       USE MOD_LandHRU
+      USE MOD_Utils
       IMPLICIT NONE
 
       ! Local Variables
       CHARACTER(len=256) :: surface_network_file
 
-      INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, i, j
+      INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, ihru, i, j, ipxl
       INTEGER :: iworker, mesg(2), nrecv, irecv, isrc, idest
    
       INTEGER , allocatable :: indxhru (:,:)
@@ -65,7 +67,7 @@ CONTAINS
 
       numbasin = numelm
 
-      surface_network_file = DEF_path_Catchment_data 
+      surface_network_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
          CALL ncio_read_serial (surface_network_file, 'hydrounit_index',      indxhru)
@@ -253,39 +255,42 @@ CONTAINS
          ENDIF
 
          DO ibasin = 1, numbasin
-
+               
             nhru = count(indxhru(:,ibasin) >= 0)
             surface_network(ibasin)%nhru = nhru
 
-            allocate (surface_network(ibasin)%indx  (nhru))
-            allocate (surface_network(ibasin)%area  (nhru))
-            allocate (surface_network(ibasin)%hand  (nhru))
-            allocate (surface_network(ibasin)%elva  (nhru))
-            allocate (surface_network(ibasin)%plen  (nhru))
-            allocate (surface_network(ibasin)%flen  (nhru))
-            allocate (surface_network(ibasin)%inext (nhru))
-            
-            surface_network(ibasin)%indx = indxhru(1:nhru,ibasin) 
-            surface_network(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
-            surface_network(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
-            surface_network(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
-            surface_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
-            surface_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
+            IF (nhru > 0) THEN
 
-            allocate (surface_network(ibasin)%ihru (nhru))
-            istt = basin_hru%substt(ibasin)
-            iend = basin_hru%subend(ibasin)
-            surface_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
+               allocate (surface_network(ibasin)%indx  (nhru))
+               allocate (surface_network(ibasin)%area  (nhru))
+               allocate (surface_network(ibasin)%hand  (nhru))
+               allocate (surface_network(ibasin)%elva  (nhru))
+               allocate (surface_network(ibasin)%plen  (nhru))
+               allocate (surface_network(ibasin)%flen  (nhru))
+               allocate (surface_network(ibasin)%inext (nhru))
 
-            DO i = 1, nhru
-               IF (nexthru(i,ibasin) >= 0) THEN
-                  j = findloc(indxhru(1:nhru,ibasin), nexthru(i,ibasin), dim=1)
-                  surface_network(ibasin)%inext(i) = j 
-               ELSE
-                  surface_network(ibasin)%inext(i) = -1
-               ENDIF
-            ENDDO
+               surface_network(ibasin)%indx = indxhru(1:nhru,ibasin) 
+               surface_network(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
+               surface_network(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
+               surface_network(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
+               surface_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
+               surface_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
 
+               allocate (surface_network(ibasin)%ihru (nhru))
+               istt = basin_hru%substt(ibasin)
+               iend = basin_hru%subend(ibasin)
+               surface_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
+
+               DO i = 1, nhru
+                  IF (nexthru(i,ibasin) >= 0) THEN
+                     j = findloc(indxhru(1:nhru,ibasin), nexthru(i,ibasin), dim=1)
+                     surface_network(ibasin)%inext(i) = j 
+                  ELSE
+                     surface_network(ibasin)%inext(i) = -1
+                  ENDIF
+               ENDDO
+
+            ENDIF
          ENDDO
 
       ENDIF 
@@ -299,7 +304,8 @@ CONTAINS
       IF (allocated(nexthru)) deallocate(nexthru)
 
 #ifdef USEMPI
-      IF (p_is_master) write(*,'(/,A,/)') 'Read drainage network information done.'
+      CALL mpi_barrier (p_comm_glb, p_err)
+      IF (p_is_master) write(*,'(A)') 'Read surface network information done.'
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       

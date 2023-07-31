@@ -39,6 +39,6 @@
 
 
    DEF_forcing%vname    = 'temp' 'shum' 'pres' 'prcp' 'NULL' 'wind' 'srad' 'lrad'
-   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'linear' 'linear' 'coszen' 'linear'
+   DEF_forcing%tintalgo = 'linear' 'linear' 'linear' 'nearest' 'NULL' 'linear' 'coszen' 'linear'
 
 /

@@ -1533,23 +1533,23 @@ MODULE MOD_Lake
   subroutine snowwater_lake ( &
              ! "in" arguments
              ! ---------------------------
-             maxsnl      , nl_soil   , nl_lake ,&
-             deltim      , ssi         , wimp      , porsl   ,&
-             pg_rain     , pg_snow     , dz_lake   , imelt   ,&
-             fiold       , qseva       , qsubl     , qsdew   , qfros ,&
+             maxsnl      , nl_soil     , nl_lake   , deltim       ,&
+             ssi         , wimp        , porsl     , pg_rain      ,&
+             pg_snow     , dz_lake     , imelt     , fiold        ,&
+             qseva       , qsubl       , qsdew     , qfros        ,&
 
              ! "inout" arguments
              ! ---------------------------
-             z_soisno    , dz_soisno   , zi_soisno , t_soisno ,&
+             z_soisno    , dz_soisno   , zi_soisno , t_soisno     ,&
              wice_soisno , wliq_soisno , t_lake    , lake_icefrac ,&
-             fseng       , fgrnd       , snl       , scv ,&
-             snowdp      , sm            &
+             fseng       , fgrnd       , snl       , scv          ,&
+             snowdp      , sm          ,&
 ! SNICAR model variables
-             ,forc_aer,&
-             mss_bcpho, mss_bcphi, mss_ocpho, mss_ocphi, &
-             mss_dst1,  mss_dst2,  mss_dst3,  mss_dst4,  &
+             forc_aer    ,&
+             mss_bcpho   , mss_bcphi   , mss_ocpho , mss_ocphi    ,&
+             mss_dst1    , mss_dst2    , mss_dst3  , mss_dst4     ,&
 ! END SNICAR model variables
-             urban_call)
+             urban_call  )
 
 !-----------------------------------------------------------------------------------------------
 ! Calculation of Lake Hydrology. Lake water mass is kept constant. The soil is simply maintained at

@@ -1,17 +1,12 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'DingHuShan'         
-   
-   SITE_lon_location = 112.55
-   SITE_lat_location = 23.15
-
-   ! Please define land classification in include/define.h
-   SITE_landtype = 2
+   DEF_CASE_NAME = 'CN_Dan'         
    
    ! surface data from SITE.
-   SITE_fsrfdata = '/tera06/zhangsp/cases/SinglePoint/srfdata_DingHuShan.nc'
+   SITE_fsrfdata = '/tera06/zhwei/CoLM_Forcing/PLUMBER2/Srfdata/CN-Dan_2004-2005_FLUXNET2015_Srf.nc'
    ! path to surface database
-   DEF_dir_rawdata = '/tera05/zhangsp/data/CLMrawdata_igbp/'
+   DEF_dir_rawdata = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime = '/tera07/CoLMruntime/'
 
    ! true  : surface data from SITE
    ! false : surface data is retrieved from database.
@@ -22,17 +17,18 @@
    USE_SITE_lakedepth       = .false.
    USE_SITE_soilreflectance = .false.
    USE_SITE_soilparameters  = .false.
+   USE_SITE_topography      = .false.
 
-   DEF_simulation_time%greenwich     = .TRUE.
-   DEF_simulation_time%start_year    = 2013
+   DEF_simulation_time%greenwich     = .false.
+   DEF_simulation_time%start_year    = 2004
    DEF_simulation_time%start_month   = 1
-   DEF_simulation_time%start_day     = 2
+   DEF_simulation_time%start_day     = 1
    DEF_simulation_time%start_sec     = 0
-   DEF_simulation_time%end_year      = 2013
+   DEF_simulation_time%end_year      = 2005
    DEF_simulation_time%end_month     = 12
    DEF_simulation_time%end_day       = 31
    DEF_simulation_time%end_sec       = 86400
-   DEF_simulation_time%spinup_year   = 2013
+   DEF_simulation_time%spinup_year   = 2004
    DEF_simulation_time%spinup_month  = 1
    DEF_simulation_time%spinup_day    = 31
    DEF_simulation_time%spinup_sec    = 86400
@@ -49,18 +45,18 @@
    DEF_Interception_scheme = 1 ! 1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
    
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/current/run/forcing/POINT.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/POINT.nml'
 
    ! ----- history -----
    DEF_hist_lon_res = 1.
    DEF_hist_lat_res = 1. 
    DEF_WRST_FREQ = 'YEARLY'   ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_FREQ = 'TIMESTEP'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'DAILY'    ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_groupby = 'YEAR'  ! history in one file: DAY/MONTH/YEAR
    DEF_REST_COMPRESS_LEVEL = 0
    DEF_HIST_COMPRESS_LEVEL = 0
    
-   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/current/run/history.nml'
+   DEF_hist_vars_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
    DEF_hist_vars_turnon_all = .true.
 
 /
