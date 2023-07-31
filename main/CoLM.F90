@@ -365,11 +365,6 @@ PROGRAM CoLM
       ENDIF
 #endif
 
-      ! lateral flow
-#if (defined LATERAL_FLOW)
-      CALL lateral_flow (deltim)
-#endif
-
 
       ! Call colm driver
       ! ----------------------------------------------------------------------
@@ -406,7 +401,7 @@ PROGRAM CoLM
       ENDIF
 
       IF (DEF_LAI_MONTHLY) THEN
-         IF (month /= month_p) THEN
+         IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
             CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
             CALL UrbanLAI_readin(lai_year, month, dir_landdata)
@@ -415,7 +410,7 @@ PROGRAM CoLM
       ELSE
          ! Update every 8 days (time interval of the MODIS LAI data)
          Julian_8day = int(calendarday(jdate)-1)/8*8 + 1
-         IF(Julian_8day /= Julian_8day_p)THEN
+         if ((itstamp < etstamp) .and. (Julian_8day /= Julian_8day_p)) then
             CALL LAI_readin (jdate(1), Julian_8day, dir_landdata)
             ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
@@ -423,8 +418,12 @@ PROGRAM CoLM
       ENDIF
 #endif
 
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+
 #if(defined CaMa_Flood)
-   CALL colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
 #endif
 
       ! Write out the model variables for restart run and the histroy file

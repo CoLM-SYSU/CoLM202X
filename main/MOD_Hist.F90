@@ -3035,12 +3035,17 @@ contains
          ! u* in similarity theory [m/s]
          call flux_map_and_write_2d ( DEF_hist_vars%ustar, &
             a_ustar, f_ustar, file_hist, 'f_ustar', itime_in_file, sumarea, filter, &
-            'u* in similarity theory','m/s')
+            'u* in similarity theory based on patch','m/s')
 
-         ! t* in similarity theory [kg/kg]
+         ! u* in similarity theory [m/s]
+         call flux_map_and_write_2d ( DEF_hist_vars%ustar2, &
+            a_ustar2, f_ustar2, file_hist, 'f_ustar2', itime_in_file, sumarea, filter, &
+            'u* in similarity theory based on grid','m/s')
+
+         ! t* in similarity theory [K]
          call flux_map_and_write_2d ( DEF_hist_vars%tstar, &
             a_tstar, f_tstar, file_hist, 'f_tstar', itime_in_file, sumarea, filter, &
-            't* in similarity theory','kg/kg')
+            't* in similarity theory','K')
 
          ! q* in similarity theory [kg/kg]
          call flux_map_and_write_2d ( DEF_hist_vars%qstar, &
@@ -3646,7 +3651,7 @@ ENDIF
                call ncio_write_serial (filename, 'lon_e', hist_concat%ginfo%lon_e, 'lon')
 #endif
             endif
-            call ncio_write_time (filename, dataname, time, itime)
+            call ncio_write_time (filename, dataname, time, itime, DEF_HIST_FREQ)
 
          ENDIF
 
@@ -3669,7 +3674,7 @@ ENDIF
                   call hist_write_grid_info  (fileblock, grid, iblk, jblk)
                end if
 
-               call ncio_write_time (fileblock, dataname, time, itime)
+               call ncio_write_time (fileblock, dataname, time, itime, DEF_HIST_FREQ)
 
             end do
 

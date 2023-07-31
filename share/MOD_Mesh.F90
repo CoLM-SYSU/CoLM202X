@@ -120,6 +120,9 @@ CONTAINS
       USE MOD_Utils
       USE MOD_DataType
       USE MOD_CatchmentDataReadin
+#ifdef SinglePoint
+      USE MOD_SingleSrfdata
+#endif
 
       IMPLICIT NONE
 
@@ -195,8 +198,7 @@ CONTAINS
 #endif
 
 #ifdef CATCHMENT
-      CALL catchment_data_read (DEF_path_Catchment_data, 'icatchment2d', gridmesh, datamesh, &
-         catchment_data_in_one_file, spv = -1)
+      CALL catchment_data_read (DEF_CatchmentMesh_data, 'icatchment2d', gridmesh, datamesh, spv = -1)
 #endif
 
 #ifdef UNSTRUCTURED

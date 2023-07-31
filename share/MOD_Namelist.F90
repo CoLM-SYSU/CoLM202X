@@ -33,10 +33,7 @@ MODULE MOD_Namelist
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
-   REAL(r8) :: SITE_lon_location = 0.
-   REAL(r8) :: SITE_lat_location = 0.
-
-   INTEGER  :: SITE_landtype = 1
+   
    CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
    LOGICAL  :: USE_SITE_pctpfts         = .true.
@@ -46,7 +43,8 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_lakedepth       = .true.
    LOGICAL  :: USE_SITE_soilreflectance = .true.
    LOGICAL  :: USE_SITE_soilparameters  = .true.
-   LOGICAL  :: USE_SITE_dbedrock = .true.
+   LOGICAL  :: USE_SITE_dbedrock        = .true.
+   LOGICAL  :: USE_SITE_topography      = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -84,10 +82,7 @@ MODULE MOD_Namelist
    REAL(r8) :: DEF_GRIDBASED_lon_res = 0.5
    REAL(r8) :: DEF_GRIDBASED_lat_res = 0.5
 
-#ifdef CATCHMENT
-   LOGICAL :: Catchment_data_in_ONE_file = .false.
-   CHARACTER(len=256) :: DEF_path_Catchment_data = 'path/to/catchment/data'
-#endif
+   CHARACTER(len=256) :: DEF_CatchmentMesh_data = 'path/to/catchment/data'
 
    CHARACTER(len=256) :: DEF_file_mesh_filter = 'path/to/mesh/filter'
 
@@ -183,9 +178,6 @@ MODULE MOD_Namelist
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
    CHARACTER(len=256) :: DEF_file_soil_init = 'null'
-
-   LOGICAL            :: DEF_USE_WaterTable_INIT    = .false.
-   CHARACTER(len=256) :: DEF_file_water_table_depth = 'path/to/wtd'
 
    CHARACTER(len=256) :: DEF_file_snowoptics = 'null'
    CHARACTER(len=256) :: DEF_file_snowaging  = 'null'
@@ -285,7 +277,7 @@ MODULE MOD_Namelist
    !Soy nitrogen fixation
    LOGICAL            :: DEF_USE_CNSOYFIXN = .true.
    !Fire module
-   LOGICAL            :: DEF_USE_FIRE = .true.
+   LOGICAL            :: DEF_USE_FIRE = .false.
 
 
    ! ----- history variables -----
@@ -579,6 +571,7 @@ MODULE MOD_Namelist
 #endif
 
       LOGICAL :: ustar        = .true.
+      LOGICAL :: ustar2       = .true.
       LOGICAL :: tstar        = .true.
       LOGICAL :: qstar        = .true.
       LOGICAL :: zol          = .true.
@@ -637,10 +630,7 @@ CONTAINS
          DEF_CASE_NAME,           &
          DEF_domain,              &
 #ifdef SinglePoint
-         SITE_lon_location,       &
-         SITE_lat_location,       &
-         SITE_fsrfdata,           &
-         SITE_landtype,           &
+         SITE_fsrfdata,            &
          USE_SITE_pctpfts,         &
          USE_SITE_pctcrop,         &
          USE_SITE_htop,            &
@@ -648,7 +638,8 @@ CONTAINS
          USE_SITE_lakedepth,       &
          USE_SITE_soilreflectance, &
          USE_SITE_soilparameters,  &
-         USE_SITE_dbedrock,       &
+         USE_SITE_dbedrock,        &
+         USE_SITE_topography,      &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -661,8 +652,7 @@ CONTAINS
          DEF_GRIDBASED_lon_res,           &
          DEF_GRIDBASED_lat_res,           &
 #ifdef CATCHMENT
-         Catchment_data_in_ONE_file,      &
-         DEF_path_Catchment_data,         &
+         DEF_CatchmentMesh_data,          &
 #endif
          DEF_file_mesh_filter,            &
 
@@ -716,9 +706,6 @@ CONTAINS
 
          DEF_USE_SOIL_INIT,               &
          DEF_file_soil_init,              &
-
-         DEF_USE_WaterTable_INIT,         &
-         DEF_file_water_table_depth,      &
 
          DEF_file_snowoptics,             &
          DEF_file_snowaging ,             &
@@ -780,14 +767,8 @@ CONTAINS
          CALL system('mkdir -p ' // trim(adjustl(DEF_dir_history )))
 
 #ifdef SinglePoint
-         DEF_domain%edges = floor(SITE_lat_location)
-         DEF_domain%edgen = DEF_domain%edges + 1.0
-         DEF_domain%edgew = floor(SITE_lon_location)
-         DEF_domain%edgee = DEF_domain%edgew + 1.0
-
          DEF_nx_blocks = 360
          DEF_ny_blocks = 180
-
          DEF_HIST_mode = 'one'
 #endif
 
@@ -1010,8 +991,7 @@ CONTAINS
 #endif
 
 #ifdef CATCHMENT
-      call mpi_bcast (Catchment_data_in_ONE_file, 1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_path_Catchment_data,   256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_CatchmentMesh_data, 256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
       CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
@@ -1071,9 +1051,6 @@ CONTAINS
 
       call mpi_bcast (DEF_USE_SOIL_INIT,    1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_soil_init, 256, mpi_character, p_root, p_comm_glb, p_err)
-
-      call mpi_bcast (DEF_USE_WaterTable_INIT,      1, mpi_logical,   p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_file_water_table_depth, 256, mpi_character, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_USE_SNICAR,        1, mpi_logical,   p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_file_snowoptics, 256, mpi_character, p_root, p_comm_glb, p_err)
@@ -1432,6 +1409,7 @@ CONTAINS
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%ustar       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ustar2      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zol         ,  set_defaults)

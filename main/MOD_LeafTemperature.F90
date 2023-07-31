@@ -809,7 +809,7 @@ CONTAINS
          tstar = vonkar/(fh-fht)*dth
          qstar = vonkar/(fq-fqt)*dqh
 
-         thvstar = tstar + 0.61*th*qstar
+         thvstar = tstar*(1.+0.61*qm)+0.61*th*qstar
          zeta = zldis*vonkar*grav*thvstar / (ustar**2*thv)
          IF(zeta .ge. 0.)THEN                             !stable
             zeta = min(2.,max(zeta,1.e-6))
@@ -1500,7 +1500,6 @@ CONTAINS
      CALL kfindroots(ztop,zbot,(ztop+zbot)/2., &
         ktop, htop, hbot, obu, ustar, fac, alpha, roots, rootn)
 
-     !print *, roots, rootn
      IF (rootn == 0) THEN !no root
         kint = kint + fkint(ktop, ztop, zbot, htop, hbot, &
            z0h, obu, ustar, fac, alpha, bee, fc)

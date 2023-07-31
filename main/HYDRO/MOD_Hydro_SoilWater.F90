@@ -102,7 +102,7 @@ contains
 
       real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity
       real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture
-      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential
+      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm, negative]
       real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
 
       integer,  intent(in) :: nprm      ! number of parameters included in soil function
@@ -133,7 +133,7 @@ contains
                - (zwtmm-sp_zi(ilev-1)) * (sp_zi(ilev)-sp_zc(ilev))/(sp_zi(ilev)-sp_zi(ilev-1))
             vliq_up = soil_vliq_from_psi (smp_up, porsl(ilev), vl_r(ilev), psi_s(ilev), &
                nprm, prms(:,ilev))
-            wliq(ilev) = vliq(ilev) * (zwtmm-sp_zi(ilev-1)) + porsl(ilev)*(sp_zi(ilev)-zwtmm)
+            wliq(ilev) = vliq_up * (zwtmm-sp_zi(ilev-1)) + porsl(ilev)*(sp_zi(ilev)-zwtmm)
             vliq(ilev) = wliq(ilev) / (sp_zi(ilev)-sp_zi(ilev-1))
             smp(ilev) = soil_psi_from_vliq (vliq(ilev), porsl(ilev), vl_r(ilev), psi_s(ilev), &
                nprm, prms(:,ilev))
@@ -155,7 +155,7 @@ contains
 
    END SUBROUTINE get_water_equilibrium_state
 
-   !-----------------------------------------------------------------------------
+   ! --- soil water movement ---
    subroutine soil_water_vertical_movement (         &
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
@@ -173,41 +173,41 @@ contains
       implicit none
 
       integer,  intent(in) :: nlev    ! number of levels
-      real(r8), intent(in) :: dt      ! time step (day)
+      real(r8), intent(in) :: dt      ! time step (second)
 
-      real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level
-      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level
+      real(r8), intent(in) :: sp_zc (1:nlev)  ! soil parameter : centers of level    (mm)
+      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level (mm)
 
       logical,  intent(in) :: is_permeable (1:nlev)
 
-      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity
-      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture
-      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential
-      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity
+      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity (mm^3/mm^3)
+      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture (mm^3/mm^3)
+      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential (mm)
+      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity (mm/s)
 
       integer,  intent(in) :: nprm      ! number of parameters included in soil function
       real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
-      real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer
+      real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
 
-      REAL(r8), intent(in) :: rain           ! rain fall on ponding layer
-      REAL(r8), intent(in) :: etr            ! transpiration rate
-      REAL(r8), intent(in) :: rootr(1:nlev)  ! root fractions
+      REAL(r8), intent(in) :: rain          ! rain fall on ponding layer (mm/s)
+      REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
+      REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
 
-      REAL(r8), intent(in)  :: rsubst      ! subsurface runoff
-      REAL(r8), intent(out) :: qinfl       ! infiltration into soil
+      REAL(r8), intent(in)  :: rsubst ! subsurface runoff (mm/s)
+      REAL(r8), intent(out) :: qinfl  ! infiltration into soil (mm/s)
 
-      real(r8), intent(inout) :: ss_dp ! soil water state : depth of ponding water
-      real(r8), intent(inout) :: zwt   ! location of water table
-      real(r8), intent(inout) :: wa    ! water in aquifer
-      real(r8), intent(inout) :: ss_vliq(1:nlev) ! soil water state : volume content of liquid water
+      real(r8), intent(inout) :: ss_dp ! soil water state : depth of ponding water (mm)
+      real(r8), intent(inout) :: zwt   ! location of water table (mm)
+      real(r8), intent(inout) :: wa    ! water deficit in aquifer (negative, mm)
+      real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water (mm^3/mm^3)
 
-      REAL(r8), intent(out) :: smp(1:nlev)
-      REAL(r8), intent(out) :: hk (1:nlev)
+      REAL(r8), intent(out) :: smp(1:nlev) ! soil matrix potential (mm)
+      REAL(r8), intent(out) :: hk (1:nlev) ! hydraulic conductivity (mm/s)
 
       ! Local variables
       integer  :: lb, ub, ilev, izwt
-      REAL(r8) :: sumroot, deficit, wcharge
+      REAL(r8) :: sumroot, deficit, wexchange
       REAL(r8) :: dp_m1, psi, vliq, zwtp, air
       LOGICAL  :: is_sat
 
@@ -290,90 +290,10 @@ contains
       ENDDO
 
       ! Exchange water with aquifer
-      wcharge = rsubst * dt + deficit
-      IF (wcharge > 0.) THEN
-         ! remove water from aquifer
-         DO WHILE (wcharge > 0.)
-            IF (izwt <= nlev) THEN
-               IF (is_permeable(izwt)) THEN
-
-                  call get_zwt_from_wa ( &
-                     porsl(izwt), vl_r(izwt), psi_s(izwt), hksat(izwt), &
-                     nprm, prms(:,izwt), tol_v, tol_z, &
-                     -wcharge, zwt, zwtp)
-
-                  IF (zwtp < sp_zi(izwt)) THEN
-                     ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                        + porsl(izwt)*(zwtp-zwt) - wcharge) / (zwtp - sp_zi(izwt-1))
-                     wcharge = 0.
-                     zwt = zwtp
-                  ELSE
-                     psi  = psi_s(izwt) - (zwtp - 0.5*(sp_zi(izwt) + zwt))
-                     vliq = soil_vliq_from_psi (psi, &
-                        porsl(izwt), vl_r(izwt), psi_s(izwt), nprm, prms(:,izwt))
-                     IF (wcharge > (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)) THEN
-                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                           + vliq * (sp_zi(izwt)-zwt)) / sp_dz(izwt)
-                        wcharge = wcharge - (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)
-                     ELSE
-                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
-                           + porsl(izwt)*(sp_zi(izwt)-zwt) - wcharge) / sp_dz(izwt)
-                        wcharge = 0.
-                     ENDIF
-
-                     zwt  = sp_zi(izwt)
-                     izwt = izwt + 1
-                  ENDIF
-
-               ELSE
-                  zwt  = sp_zi(izwt)
-                  izwt = izwt + 1
-               ENDIF
-            ELSE
-               call get_zwt_from_wa ( &
-                  porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
-                  nprm, prms(:,nlev), tol_v, tol_z, &
-                  wa-wcharge, sp_zi(nlev), zwt)
-               wa = wa - wcharge
-               wcharge = 0.
-            ENDIF
-         ENDDO
-      ELSEIF (wcharge < 0.) THEN
-         ! increase water in aquifer
-         DO WHILE (wcharge < 0.)
-            IF (izwt > nlev) THEN
-               IF (wa <= wcharge) THEN
-                  wa = wa - wcharge
-                  wcharge = 0.
-               ELSE
-                  wcharge = wcharge - wa
-                  wa = 0.
-                  izwt = nlev
-                  zwt  = sp_zi(nlev)
-               ENDIF
-            ELSEIF (izwt >= 1) THEN
-               IF (is_permeable(izwt)) THEN
-                  air = (porsl(izwt)-ss_vliq(izwt)) * (zwt-sp_zi(izwt-1))
-                  IF (air > -wcharge) THEN
-                     ss_vliq(izwt) = ss_vliq(izwt) - wcharge / (zwt-sp_zi(izwt-1))
-                     wcharge = 0.
-                  ELSE
-                     ss_vliq(izwt) = porsl(izwt)
-                     wcharge = wcharge + air
-                     izwt = izwt - 1
-                     zwt  = sp_zi(izwt)
-                  ENDIF
-               ELSE
-                  izwt = izwt - 1
-                  zwt  = sp_zi(izwt)
-               ENDIF
-            ELSE
-               ss_dp = ss_dp - wcharge
-               wcharge = 0.
-               izwt = 1
-            ENDIF
-         ENDDO
-      ENDIF
+      wexchange = rsubst * dt + deficit
+      CALL soilwater_aquifer_exchange ( &
+         nlev, wexchange, sp_zi, is_permeable, porsl, vl_r, psi_s, hksat, &
+         nprm, prms, porsl_wa, ss_dp, ss_vliq, zwt, wa, izwt)
 
       ! water table location
       ss_wt(:) = 0._r8
@@ -518,8 +438,142 @@ contains
 
    end subroutine soil_water_vertical_movement
 
+   ! --- water exchange between soil water and aquifer ---
+   SUBROUTINE soilwater_aquifer_exchange ( &
+         nlev, exwater, sp_zi, is_permeable, porsl, vl_r, psi_s, hksat, &
+         nprm, prms, porsl_wa, ss_dp, ss_vliq, zwt, wa, izwt)
+      
+      IMPLICIT NONE
 
-   !-----------------------------------------------------------------------------
+      integer,  intent(in) :: nlev
+
+      real(r8), intent(in) :: exwater ! total water exchange [mm]
+      
+      real(r8), intent(in) :: sp_zi (0:nlev)  ! soil parameter : interfaces of level [mm]
+
+      logical,  intent(in) :: is_permeable (1:nlev)
+      real(r8), intent(in) :: porsl (1:nlev)  ! soil porosity [mm^3/mm^3]
+      real(r8), intent(in) :: vl_r  (1:nlev)  ! residual soil moisture [mm^3/mm^3]
+      real(r8), intent(in) :: psi_s (1:nlev)  ! saturated capillary potential [mm]
+      real(r8), intent(in) :: hksat (1:nlev)  ! saturated hydraulic conductivity [mm/s]
+
+      integer,  intent(in) :: nprm      ! number of parameters included in soil function
+      real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
+
+      real(r8), intent(in) :: porsl_wa       ! soil porosity in aquifer [mm^3/mm^3]
+      
+      real(r8), intent(inout) :: ss_dp           ! depth of ponding water [mm]
+      real(r8), intent(inout) :: ss_vliq(1:nlev) ! volume content of liquid water [mm^3/mm^3]
+      real(r8), intent(inout) :: zwt             ! location of water table [mm]
+      real(r8), intent(inout) :: wa              ! water in aquifer [mm, negative]
+
+      integer,  intent(out)   :: izwt
+
+      ! Local variables
+      real(r8) :: sp_dz(1:nlev)
+      real(r8) :: reswater, zwtp, psi, vliq, air
+      real(r8) :: tol_v, tol_z
+
+      sp_dz(1:nlev) = sp_zi(1:nlev) - sp_zi(0:nlev-1)
+
+      ! tolerances
+      tol_z = tol_richards / sqrt(real(nlev,r8)) * 0.5_r8 * 1800._r8
+      tol_v = tol_z / maxval(sp_dz)
+
+      ! water table location
+      izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
+
+      reswater = exwater 
+
+      IF (reswater > 0.) THEN
+
+         ! remove water from aquifer
+         DO WHILE (reswater > 0.)
+            IF (izwt <= nlev) THEN
+               IF (is_permeable(izwt)) THEN
+
+                  call get_zwt_from_wa ( &
+                     porsl(izwt), vl_r(izwt), psi_s(izwt), hksat(izwt), &
+                     nprm, prms(:,izwt), tol_v, tol_z, -reswater, zwt, zwtp)
+
+                  IF (zwtp < sp_zi(izwt)) THEN
+                     ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
+                        + porsl(izwt)*(zwtp-zwt) - reswater) / (zwtp - sp_zi(izwt-1))
+                     reswater = 0.
+                     zwt = zwtp
+                  ELSE
+                     psi  = psi_s(izwt) - (zwtp - 0.5*(sp_zi(izwt) + zwt))
+                     vliq = soil_vliq_from_psi (psi, &
+                        porsl(izwt), vl_r(izwt), psi_s(izwt), nprm, prms(:,izwt))
+                     IF (reswater > (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)) THEN
+                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
+                           + vliq * (sp_zi(izwt)-zwt)) / sp_dz(izwt)
+                        reswater = reswater - (porsl(izwt)-vliq) * (sp_zi(izwt)-zwt)
+                     ELSE
+                        ss_vliq(izwt) = (ss_vliq(izwt)*(zwt-sp_zi(izwt-1))  &
+                           + porsl(izwt)*(sp_zi(izwt)-zwt) - reswater) / sp_dz(izwt)
+                        reswater = 0.
+                     ENDIF
+
+                     zwt  = sp_zi(izwt)
+                     izwt = izwt + 1
+                  ENDIF
+
+               ELSE
+                  zwt  = sp_zi(izwt)
+                  izwt = izwt + 1
+               ENDIF
+            ELSE
+               call get_zwt_from_wa ( &
+                  porsl_wa, vl_r(nlev), psi_s(nlev), hksat(nlev), &
+                  nprm, prms(:,nlev), tol_v, tol_z, wa-reswater, sp_zi(nlev), zwt)
+               wa = wa - reswater
+               reswater = 0.
+            ENDIF
+         ENDDO
+
+      ELSEIF (reswater < 0.) THEN
+
+         ! increase water in aquifer
+         DO WHILE (reswater < 0.)
+            IF (izwt > nlev) THEN
+               IF (wa <= reswater) THEN
+                  wa = wa - reswater
+                  reswater = 0.
+               ELSE
+                  reswater = reswater - wa
+                  wa = 0.
+                  izwt = nlev
+                  zwt  = sp_zi(nlev)
+               ENDIF
+            ELSEIF (izwt >= 1) THEN
+               IF (is_permeable(izwt)) THEN
+                  air = (porsl(izwt)-ss_vliq(izwt)) * (zwt-sp_zi(izwt-1))
+                  IF (air > -reswater) THEN
+                     ss_vliq(izwt) = ss_vliq(izwt) - reswater / (zwt-sp_zi(izwt-1))
+                     reswater = 0.
+                  ELSE
+                     ss_vliq(izwt) = porsl(izwt)
+                     reswater = reswater + air
+                     izwt = izwt - 1
+                     zwt  = sp_zi(izwt)
+                  ENDIF
+               ELSE
+                  izwt = izwt - 1
+                  zwt  = sp_zi(izwt)
+               ENDIF
+            ELSE
+               ss_dp = ss_dp - reswater
+               reswater = 0.
+               izwt = 1
+            ENDIF
+         ENDDO
+
+      ENDIF
+
+   END SUBROUTINE soilwater_aquifer_exchange
+
+   ! ---- Richards equation solver ----
    subroutine Richards_solver ( &
          lb, ub, dt, sp_zc, sp_zi, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
@@ -533,31 +587,31 @@ contains
 
       integer,  intent(in) :: lb, ub      ! lower and upper boundary
 
-      real(r8), intent(in) :: dt          ! time step (day)
+      real(r8), intent(in) :: dt          ! time step (second)
 
-      real(r8), intent(in) :: sp_zc   (lb:ub)   ! soil parameter : centers of level
-      real(r8), intent(in) :: sp_zi (lb-1:ub)   ! soil parameter : interfaces of level
+      real(r8), intent(in) :: sp_zc   (lb:ub)   ! soil parameter : centers of level (mm)
+      real(r8), intent(in) :: sp_zi (lb-1:ub)   ! soil parameter : interfaces of level (mm)
 
-      real(r8), intent(in) :: vl_s  (lb:ub)  ! soil porosity
-      real(r8), intent(in) :: vl_r  (lb:ub)  ! residual soil moisture
-      real(r8), intent(in) :: psi_s (lb:ub)  ! saturated capillary potential
-      real(r8), intent(in) :: hksat (lb:ub)  ! saturated hydraulic conductivity
+      real(r8), intent(in) :: vl_s  (lb:ub)  ! soil porosity (mm^3/mm^3)
+      real(r8), intent(in) :: vl_r  (lb:ub)  ! residual soil moisture (mm^3/mm^3)
+      real(r8), intent(in) :: psi_s (lb:ub)  ! saturated capillary potential (mm,negative)
+      real(r8), intent(in) :: hksat (lb:ub)  ! saturated hydraulic conductivity (mm/s)
 
       integer,  intent(in) :: nprm        ! number of parameters included in soil function
       real(r8), intent(in) :: prms(nprm,lb:ub)  ! parameters included in soil function
 
-      real(r8), intent(in) :: vl_s_wa        ! soil porosity in aquifer
+      real(r8), intent(in) :: vl_s_wa        ! soil porosity in aquifer (mm^3/mm^3)
 
       integer,  intent(in) :: ubc_typ  ! upper boundary condition type
       real(r8), intent(in) :: ubc_val  ! value of upper boundary condition
       integer,  intent(in) :: lbc_typ  ! lower boundary condition type
       real(r8), intent(in) :: lbc_val  ! value of lower boundary condition
 
-      real(r8), intent(inout) :: ss_dp    ! soil water state : depth of ponding water
-      real(r8), intent(inout) :: waquifer ! water in aquifer
+      real(r8), intent(inout) :: ss_dp    ! soil water state : depth of ponding water (mm)
+      real(r8), intent(inout) :: waquifer ! water deficit in aquifer (mm, negative)
       real(r8), intent(inout) :: ss_vl   (lb:ub) ! soil water state : volume content of liquid water
-      real(r8), intent(inout) :: ss_wt   (lb:ub) ! soil water state : location of water table
-      real(r8), intent(out)   :: ss_q  (lb-1:ub) ! soil water state : flux between levels
+      real(r8), intent(inout) :: ss_wt   (lb:ub) ! soil water state : location of water table (mm)
+      real(r8), intent(out)   :: ss_q  (lb-1:ub) ! soil water state : flux between levels (mm/s)
 
       real(r8), intent(in) :: tol_q    ! tolerence for flux
       real(r8), intent(in) :: tol_z    ! tolerence for locations
@@ -565,50 +619,50 @@ contains
       real(r8), intent(in) :: tol_p    ! tolerence for potential head
 
       ! Local variables
-      real(r8) :: zwt             ! location of water table
-      real(r8) :: sp_dz (lb:ub)   ! thickness of level (cm)
+      real(r8) :: zwt             ! location of water table (mm)
+      real(r8) :: sp_dz (lb:ub)   ! thickness of level (mm)
       real(r8) :: ss_wf (lb:ub)   ! soil water state : location of wetting front
 
       logical :: is_sat (lb:ub)   ! whether a level is saturated or not at this time step
       logical :: has_wf (lb:ub)   ! whether a wetting front is present or not
       logical :: has_wt (lb:ub)   ! whether a water table is present or not
 
-      real(r8) :: infl_max        ! maximum infiltration rate (cm/day)
+      real(r8) :: infl_max        ! maximum infiltration rate (mm/s)
 
-      real(r8) :: psi (lb:ub)     ! water pressure head in unsaturated soil (cm)
-      real(r8) :: hk  (lb:ub)     ! hydraulic conductivity in unsaturated soil (cm/day)
+      real(r8) :: psi (lb:ub)     ! water pressure head in unsaturated soil (mm)
+      real(r8) :: hk  (lb:ub)     ! hydraulic conductivity in unsaturated soil (mm/s)
 
-      real(r8) :: psi_pb (lb:ub)  ! perturbed water pressure head (cm)
-      real(r8) :: hk_pb  (lb:ub)  ! perturbed hydraulic conductivity (cm/day)
+      real(r8) :: psi_pb (lb:ub)  ! perturbed water pressure head (mm)
+      real(r8) :: hk_pb  (lb:ub)  ! perturbed hydraulic conductivity (mm/s)
 
-      real(r8) :: q_this(lb-1:ub) ! water flux between levels (cm/day)
-      real(r8) :: q_wf    (lb:ub) ! water flux at wetting front (cm/day)
-      real(r8) :: q_wt    (lb:ub) ! water flux at water table (cm/day)
+      real(r8) :: q_this(lb-1:ub) ! water flux between levels (mm/s)
+      real(r8) :: q_wf    (lb:ub) ! water flux at wetting front (mm/s)
+      real(r8) :: q_wt    (lb:ub) ! water flux at water table (mm/s)
 
-      real(r8) :: dp_m1           ! depth of ponding water at previous time step (cm)
-      real(r8) :: wf_m1 (lb:ub)   ! location of wetting front at previous time step (cm)
-      real(r8) :: vl_m1 (lb:ub)   ! volumetric water content at previous time step (cm/cm)
-      real(r8) :: wt_m1 (lb:ub)   ! location of water table at previous time step (cm)
+      real(r8) :: dp_m1           ! depth of ponding water at previous time step (mm)
+      real(r8) :: wf_m1 (lb:ub)   ! location of wetting front at previous time step (mm)
+      real(r8) :: vl_m1 (lb:ub)   ! volumetric water content at previous time step (mm/mm)
+      real(r8) :: wt_m1 (lb:ub)   ! location of water table at previous time step (mm)
       real(r8) :: waquifer_m1     ! water deficit in aquifer at previous time step
 
-      real(r8) :: q_0  (lb-1:ub)  ! initial value of water flux between levels (cm/day)
-      real(r8) :: q_wf_0 (lb:ub)  ! initial value of water flux at wetting front (cm/day)
-      real(r8) :: q_wt_0 (lb:ub)  ! initial value of water flux at water table (cm/day)
+      real(r8) :: q_0  (lb-1:ub)  ! initial value of water flux between levels (mm/s)
+      real(r8) :: q_wf_0 (lb:ub)  ! initial value of water flux at wetting front (mm/s)
+      real(r8) :: q_wt_0 (lb:ub)  ! initial value of water flux at water table (mm/s)
 
-      real(r8) :: dp_pb           ! perturbed depth of ponding water (cm)
-      real(r8) :: vl_pb (lb:ub)   ! perturbed volumetric water content (cm/cm)
-      real(r8) :: wf_pb (lb:ub)   ! perturbed location of wetting front (cm)
-      real(r8) :: wt_pb (lb:ub)   ! perturbed location of water table (cm)
+      real(r8) :: dp_pb           ! perturbed depth of ponding water (mm)
+      real(r8) :: vl_pb (lb:ub)   ! perturbed volumetric water content (mm/mm)
+      real(r8) :: wf_pb (lb:ub)   ! perturbed location of wetting front (mm)
+      real(r8) :: wt_pb (lb:ub)   ! perturbed location of water table (mm)
       real(r8) :: zwt_pb, waquifer_pb
 
-      real(r8) :: q_pb  (lb-1:ub) ! perturbed water flux between levels (cm/day)
-      real(r8) :: q_wf_pb (lb:ub) ! perturbed water flux at wetting front (cm/day)
-      real(r8) :: q_wt_pb (lb:ub) ! perturbed water flux at water table (cm/day)
+      real(r8) :: q_pb  (lb-1:ub) ! perturbed water flux between levels (mm/s)
+      real(r8) :: q_wf_pb (lb:ub) ! perturbed water flux at wetting front (mm/s)
+      real(r8) :: q_wt_pb (lb:ub) ! perturbed water flux at water table (mm/s)
 
-      real(r8) :: blc        (lb-1:ub+1)  ! mass balance (cm water)
+      real(r8) :: blc        (lb-1:ub+1)  ! mass balance (mm water)
       logical  :: is_solvable
       logical  :: lev_update (lb-1:ub+1)  ! whether a level is updated or not
-      real(r8) :: blc_pb     (lb-1:ub+1)  ! perturbed mass balance (cm water)
+      real(r8) :: blc_pb     (lb-1:ub+1)  ! perturbed mass balance (mm water)
       logical  :: vact       (lb-1:ub+1)  ! whether a level is active or not
       integer  :: jsbl (lb:ub) ! which variable of wf,vl,wt inside each level is active
 
@@ -726,14 +780,6 @@ contains
                      tol_q, tol_z, tol_v)
 
                end if
-
-#if (defined SoilWaterDebug)
-               ! if (iter == max_iters_richards) then
-               !    write(*,*) 'Warning : Richards_solver : not converged.'
-               !    write(*, 100) dt_this, iter, f2_norm(iter)/dt_this, tol_richards
-               !    100 format (' ', ES11.4, ' ', I12, '  ', ES12.4, '  (', ES11.4,')')
-               ! end if
-#endif
 
                dt_done = dt_done + dt_this
 
@@ -976,7 +1022,7 @@ contains
    end subroutine Richards_solver
 
 
-   !-------------------------------------------------------------------------------------------------
+   ! ---- water balance ----
    subroutine water_balance ( &
          lb, ub, dz, dt, is_sat, vl_s, q, &
          ubc_typ, ubc_val, lbc_typ, lbc_val, &
@@ -1068,7 +1114,7 @@ contains
 
    end subroutine water_balance
 
-   !--------------------------------------------------------------------
+   ! ---- initialize sublevel structure ----
    subroutine initialize_sublevel_structure ( &
          lb, ub, dz, zbtm, &
          vl_s, vl_r, psi_s, hksat, nprm, prms, &
