@@ -24,8 +24,8 @@ MODULE MOD_Hydro_LateralFlow
    USE MOD_Hydro_Vars_TimeVariables
    USE MOD_Hydro_RiverLakeNetwork
    USE MOD_Hydro_BasinNeighbour
-   USE MOD_Hydro_SurfaceNetwork
-   USE MOD_Hydro_SurfaceFlow
+   USE MOD_Hydro_HillslopeNetwork
+   USE MOD_Hydro_HillslopeFlow
    USE MOD_Hydro_SubsurfaceFlow
    USE MOD_Hydro_RiverLakeFlow
    IMPLICIT NONE 
@@ -39,7 +39,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      CALL surface_network_init    ()
+      CALL hillslope_network_init  ()
       CALL river_lake_network_init ()
       CALL basin_neighbour_init    ()
 
@@ -76,7 +76,11 @@ CONTAINS
 
          nbasin = numelm
 
-         ! update water depth in HRU by aggregating water depths in patches
+         ! a) The smallest unit in surface lateral flow (including hillslope flow and river-lake flow)
+         !    is HRU and the main prognostic variable is "wdsrf_hru" (surface water depth).
+         ! b) "wdsrf_hru" is updated by aggregating water depths in patches.
+         ! c) Water surface in a basin ("wdsrf_bsn", defined as the lowest surface water in the basin) 
+         ! is derived from "wdsrf_hru".
          DO i = 1, numhru
             istt = hru_patch%substt(i)
             iend = hru_patch%subend(i)
@@ -97,7 +101,7 @@ CONTAINS
          DO istep = 1, nsubstep
 
             ! (1) Surface flow over hillslopes.
-            CALL surface_flow (deltime/nsubstep)
+            CALL hillslope_flow (deltime/nsubstep)
          
             ! (2) River and Lake flow.
             CALL river_lake_flow (deltime/nsubstep)
@@ -148,10 +152,10 @@ CONTAINS
       if (p_is_worker .and. (p_iam_worker == 0)) then
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
       end if
-      CALL check_vector_data ('River Height          ', wdsrf_bsn)
-      CALL check_vector_data ('River Velocity        ', veloc_riv)
-      CALL check_vector_data ('Surface Water Depth   ', wdsrf_hru)
-      CALL check_vector_data ('Surface Water Velocity', veloc_hru)
+      CALL check_vector_data ('Basin Water Depth ', wdsrf_bsn)
+      CALL check_vector_data ('River Velocity    ', veloc_riv)
+      CALL check_vector_data ('HRU Water Depth   ', wdsrf_hru)
+      CALL check_vector_data ('HRU Water Velocity', veloc_hru)
 #endif
 
    END SUBROUTINE lateral_flow
@@ -161,7 +165,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      CALL surface_network_final    ()
+      CALL hillslope_network_final  ()
       CALL river_lake_network_final ()
       CALL basin_neighbour_final    ()
 
