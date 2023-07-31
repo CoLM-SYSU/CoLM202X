@@ -117,7 +117,7 @@ MODULE MOD_RainSnowTemp
       if(t_hydro > 5.0)then
          flfall = 1.0      ! fraction of liquid water within falling precip
       else if (t_hydro >= -5.0)then
-         flfall = max(0.0, 1.0 - 1.0/(1.0+2.50286*0.125006**t_hydro))             
+         flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))             
       else
          flfall = 0.0
       endif
