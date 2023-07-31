@@ -562,6 +562,7 @@ MODULE MOD_Namelist
 #endif
 
       LOGICAL :: ustar        = .true.
+      LOGICAL :: ustar2       = .true.
       LOGICAL :: tstar        = .true.
       LOGICAL :: qstar        = .true.
       LOGICAL :: zol          = .true.
@@ -1397,6 +1398,7 @@ CONTAINS
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%ustar       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ustar2      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zol         ,  set_defaults)

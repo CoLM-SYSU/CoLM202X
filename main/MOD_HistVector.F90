@@ -82,7 +82,7 @@ contains
 #endif
          endif
 
-         call ncio_write_time (file_hist, 'time', idate, itime_in_file)
+         call ncio_write_time (file_hist, 'time', idate, itime_in_file, DEF_HIST_FREQ)
 
       ENDIF
 

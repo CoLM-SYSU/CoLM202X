@@ -570,7 +570,7 @@ SUBROUTINE CoLMMAIN ( &
                      solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
       CALL rain_snow_temp (patchtype, &
-                           forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
+                           forc_t,forc_q,forc_psrf,forc_prc,forc_prl,forc_us,forc_vs,tcrit,&
                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
       forc_rain = prc_rain + prl_rain
@@ -1099,7 +1099,6 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      wdsrf = max(wdsrf - rsub(ipatch) * deltim, 0.)
       rnof = rsur + rsub(ipatch)
 #endif
 

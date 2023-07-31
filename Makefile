@@ -8,7 +8,7 @@ VPATH = include : share : mksrfdata : mkinidata : main : main/HYDRO : main/BGC :
 
 # ********** Targets ALL **********
 .PHONY: all
-all : mkdir_build mksrfdata.x mkinidata.x colm.x postprocess.x
+all : mkdir_build mksrfdata.x mkinidata.x colm.x postprocess.x lib
 	@echo ''
 	@echo '*******************************************************'
 	@echo '*                                                     *'
@@ -213,11 +213,11 @@ endif
 
 OBJS_MAIN = \
 				MOD_Hydro_SurfaceNetwork.o                \
-				MOD_Hydro_RiverNetwork.o                  \
-				MOD_Hydro_SubsurfaceNetwork.o             \
+				MOD_Hydro_RiverLakeNetwork.o              \
+				MOD_Hydro_BasinNeighbour.o             \
 				MOD_Hydro_SurfaceFlow.o                   \
 				MOD_Hydro_SubsurfaceFlow.o                \
-				MOD_Hydro_RiverFlow.o                     \
+				MOD_Hydro_RiverLakeFlow.o                 \
 				MOD_Hydro_Hist.o                          \
 				MOD_Hydro_LateralFlow.o                   \
 				MOD_BGC_CNCStateUpdate1.o                 \
@@ -382,10 +382,22 @@ postprocess.x : mkdir_build hist_concatenate.x srfdata_concatenate.x post_vector
 endif
 # --- End of Target 4 postprocess ------
 
+# ------ Target 5: static libs --------
+.PHONY: lib
+lib :
+	@echo ''
+	@echo 'making CoLM static library >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
+	mkdir -p lib
+	cd lib && find ../.bld -name "*.o" ! -name "CoLM.o" ! -name "MKSRFDATA.o" ! -name "CoLMINI.o" -exec ln -sf {} ./ \;
+	cd lib && ar rc libcolm.a *.o && ranlib libcolm.a
+	ln -sf lib/libcolm.a ./libcolm.a
+# ------End of Target 5: static libs --------
 
 .PHONY: clean
 clean :
 	rm -rf .bld
+	rm -rf lib libcolm.a
 	rm -f run/mksrfdata.x run/mkinidata.x run/colm.x
 	rm -f run/hist_concatenate.x run/srfdata_concatenate.x run/post_vector2grid.x
 	rm -f CaMa/src/*.o CaMa/src/*.mod CaMa/src/*.a
+

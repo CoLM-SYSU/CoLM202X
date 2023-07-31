@@ -29,9 +29,6 @@ MODULE MOD_Hydro_SurfaceNetwork
    ! -- Instance --
    TYPE(surface_network_info_type), pointer :: surface_network (:)
       
-   ! -- lake information --
-   INTEGER, allocatable :: lake_id (:)
-   
 CONTAINS
    
    ! ----------
@@ -73,7 +70,6 @@ CONTAINS
       surface_network_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (surface_network_file, 'lake_id',              lake_id)
          CALL ncio_read_serial (surface_network_file, 'hydrounit_index',      indxhru)
          CALL ncio_read_serial (surface_network_file, 'hydrounit_area',       areahru)
          CALL ncio_read_serial (surface_network_file, 'hydrounit_hand',       handhru)
@@ -106,12 +102,6 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                idest = isrc
-
-               DO irecv = 1, nrecv
-                  icache(1,irecv) = lake_id(basinindex(irecv))
-               ENDDO
-               CALL mpi_send (icache(1,:), nrecv, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
 
                DO irecv = 1, nrecv
                   icache(:,irecv) = indxhru(:,basinindex(irecv))
@@ -173,11 +163,6 @@ CONTAINS
             ENDDO
 
             DO ibasin = 1, numbasin
-               icache(1,ibasin) = lake_id(basinindex(ibasin))
-            ENDDO
-            lake_id = icache(1,:)
-
-            DO ibasin = 1, numbasin
                icache(:,ibasin) = indxhru(:,basinindex(ibasin))
             ENDDO
             indxhru = icache
@@ -235,10 +220,6 @@ CONTAINS
             CALL mpi_send (basinindex, numbasin, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_glb, p_err) 
 
-            allocate (lake_id (numbasin))
-            CALL mpi_recv (lake_id, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
             allocate (indxhru (maxnumhru,numbasin))
             CALL mpi_recv (indxhru, maxnumhru*numbasin, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
@@ -274,10 +255,11 @@ CONTAINS
          ENDIF
 
          DO ibasin = 1, numbasin
-            IF (lake_id(ibasin) <= 0) THEN
+               
+            nhru = count(indxhru(:,ibasin) >= 0)
+            surface_network(ibasin)%nhru = nhru
 
-               nhru = count(indxhru(:,ibasin) >= 0)
-               surface_network(ibasin)%nhru = nhru
+            IF (nhru > 0) THEN
 
                allocate (surface_network(ibasin)%indx  (nhru))
                allocate (surface_network(ibasin)%area  (nhru))
@@ -308,25 +290,6 @@ CONTAINS
                   ENDIF
                ENDDO
 
-            ELSE
-               istt = basin_hru%substt(ibasin)
-               iend = basin_hru%subend(ibasin)
-
-               nhru = iend - istt + 1
-               surface_network(ibasin)%nhru = nhru
-
-               allocate (surface_network(ibasin)%area (nhru))
-
-               DO i = 1, nhru
-                  ihru = i + istt - 1
-                  surface_network(ibasin)%area(i) = 0
-                  DO ipxl = landhru%ipxstt(ihru), landhru%ipxend(ihru)
-                     surface_network(ibasin)%area(i) = surface_network(ibasin)%area(i) &
-                        + areaquad ( &
-                        pixel%lat_s(mesh(ibasin)%ilat(ipxl)), pixel%lat_n(mesh(ibasin)%ilat(ipxl)), &
-                        pixel%lon_w(mesh(ibasin)%ilon(ipxl)), pixel%lon_e(mesh(ibasin)%ilon(ipxl)) )
-                  ENDDO
-               ENDDO 
             ENDIF
          ENDDO
 
@@ -370,8 +333,6 @@ CONTAINS
 
          deallocate(surface_network)
       ENDIF
-
-      IF (allocated(lake_id)) deallocate(lake_id)
 
    END SUBROUTINE surface_network_final
 

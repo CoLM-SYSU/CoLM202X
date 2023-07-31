@@ -39,6 +39,7 @@ MODULE MOD_Utils
    interface quicksort
       MODULE procedure quicksort_int32
       MODULE procedure quicksort_int64
+      MODULE procedure quicksort_real8
    END interface quicksort
 
    PUBLIC :: quickselect
@@ -732,6 +733,57 @@ CONTAINS
       ENDIF
 
    END SUBROUTINE quicksort_int64
+
+   !-----------------------------------------------------
+   recursive SUBROUTINE quicksort_real8 (nA, A, order)
+
+      USE MOD_Precision
+      IMPLICIT NONE
+
+      INTEGER,  intent(in) :: nA
+      real(r8), intent(inout) :: A     (nA)
+      INTEGER,  intent(inout) :: order (nA)
+
+      ! Local variables
+      real(r8) :: pivot, temp
+      integer  :: left,  right, marker, itemp
+
+      IF (nA > 1) THEN
+
+         pivot = A (nA/2)
+         left  = 0
+         right = nA + 1
+
+         DO while (left < right)
+            right = right - 1
+            DO while (A(right) > pivot)
+               right = right - 1
+            ENDDO
+
+            left = left + 1
+            DO while (A(left) < pivot)
+               left = left + 1
+            ENDDO
+
+            IF (left < right) THEN
+               temp     = A(left)
+               A(left)  = A(right)
+               A(right) = temp
+
+               itemp        = order(left)
+               order(left)  = order(right)
+               order(right) = itemp
+            ENDIF
+         ENDDO
+
+         marker = right
+
+         CALL quicksort_real8 (marker,    A(1:marker),    order(1:marker))
+         CALL quicksort_real8 (nA-marker, A(marker+1:nA), order(marker+1:nA))
+
+      ENDIF
+
+   END SUBROUTINE quicksort_real8
 
    !-----------------------------------------------------
    recursive FUNCTION quickselect (nA, A, k) result(selected)

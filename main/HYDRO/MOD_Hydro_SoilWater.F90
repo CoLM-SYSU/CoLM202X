@@ -133,7 +133,7 @@ contains
                - (zwtmm-sp_zi(ilev-1)) * (sp_zi(ilev)-sp_zc(ilev))/(sp_zi(ilev)-sp_zi(ilev-1))
             vliq_up = soil_vliq_from_psi (smp_up, porsl(ilev), vl_r(ilev), psi_s(ilev), &
                nprm, prms(:,ilev))
-            wliq(ilev) = vliq(ilev) * (zwtmm-sp_zi(ilev-1)) + porsl(ilev)*(sp_zi(ilev)-zwtmm)
+            wliq(ilev) = vliq_up * (zwtmm-sp_zi(ilev-1)) + porsl(ilev)*(sp_zi(ilev)-zwtmm)
             vliq(ilev) = wliq(ilev) / (sp_zi(ilev)-sp_zi(ilev-1))
             smp(ilev) = soil_psi_from_vliq (vliq(ilev), porsl(ilev), vl_r(ilev), psi_s(ilev), &
                nprm, prms(:,ilev))
