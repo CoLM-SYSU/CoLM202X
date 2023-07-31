@@ -26,7 +26,9 @@ MODULE MOD_Hydro_RiverLakeNetwork
    
    REAL(r8), allocatable :: wtsrfelv  (:)
 
-   INTEGER, allocatable :: riverdown  (:)  
+   ! index of downstream river 
+   ! > 0 : other catchment;   0 : river mouth; -1 : inland depression
+   INTEGER, allocatable :: riverdown  (:) 
    logical, allocatable :: to_lake (:)
 
    ! address of downstream river 
@@ -44,10 +46,12 @@ MODULE MOD_Hydro_RiverLakeNetwork
    ! -- lake data type --
    TYPE :: lake_info_type
       INTEGER :: nsub
-      REAL(r8), allocatable :: area0  (:)
-      REAL(r8), allocatable :: area   (:)
-      REAL(r8), allocatable :: depth0 (:)
-      REAL(r8), allocatable :: depth  (:)
+      REAL(r8), allocatable :: area0  (:) ! area data in HRU order
+      REAL(r8), allocatable :: area   (:) ! area data in the order from deepest to shallowest HRU
+      REAL(r8), allocatable :: depth0 (:) ! depth data in HRU order
+      REAL(r8), allocatable :: depth  (:) ! depth data in the order from deepest to shallowest HRU
+      ! a curve describing the relationship between depth of water from lake bottom and total water volume
+      ! the i-th value corresponds to the volume when water depth is at i-th depth
       REAL(r8), allocatable :: dep_vol_curve (:)
    CONTAINS 
       procedure, PUBLIC :: surface => retrieve_lake_surface_from_volume
@@ -89,7 +93,7 @@ CONTAINS
       USE MOD_Pixel
       USE MOD_LandElm
       USE MOD_LandPatch
-      USE MOD_Hydro_SurfaceNetwork
+      USE MOD_Hydro_HillslopeNetwork
       USE MOD_DataType
       USE MOD_Utils
       USE MOD_Vars_TimeInvariants, only : lakedepth
@@ -508,25 +512,14 @@ CONTAINS
       IF (allocated(order       )) deallocate(order       )
 
       IF (p_is_worker) THEN
-         IF (numbasin > 0) allocate (wtsrfelv(numbasin))
-         WHERE (lake_id > 0)
-            wtsrfelv = basinelv
-         ELSEWHERE (lake_id == 0) 
-            wtsrfelv = riverelv
-         ELSEWHERE
-            wtsrfelv = spval
-         END WHERE
-      ENDIF
-
-      IF (p_is_worker) THEN
 
          IF (numbasin > 0) THEN
 
-            allocate (lakes (numbasin))
-
+            allocate (lakes       (numbasin))
             allocate (riverarea   (numbasin))
             allocate (riverwth    (numbasin))
             allocate (bedelv      (numbasin))
+            allocate (wtsrfelv    (numbasin))
             allocate (riverlen_ds (numbasin))
             allocate (wtsrfelv_ds (numbasin))
             allocate (riverwth_ds (numbasin))
@@ -537,16 +530,17 @@ CONTAINS
 
                IF (lake_id(ibasin) == 0) THEN
 
-                  riverarea(ibasin) = surface_network(ibasin)%area(1)
+                  riverarea(ibasin) = hillslope_network(ibasin)%area(1)
                   riverwth (ibasin) = riverarea(ibasin) / riverlen(ibasin)
 
                   ! modify height above nearest drainage data to consider river depth
-                  IF (surface_network(ibasin)%nhru > 1) THEN
-                     surface_network(ibasin)%hand(2:) = &
-                        surface_network(ibasin)%hand(2:) + riverdpth(ibasin)
+                  IF (hillslope_network(ibasin)%nhru > 1) THEN
+                     hillslope_network(ibasin)%hand(2:) = &
+                        hillslope_network(ibasin)%hand(2:) + riverdpth(ibasin)
                   ENDIF
 
-                  bedelv(ibasin) = wtsrfelv(ibasin) - riverdpth(ibasin)
+                  wtsrfelv(ibasin) = riverelv(ibasin)
+                  bedelv  (ibasin) = riverelv(ibasin) - riverdpth(ibasin)
 
                ELSEIF (lake_id(ibasin) > 0) THEN
                
@@ -570,7 +564,7 @@ CONTAINS
                      lakes(ibasin)%area(i) = 0
                      DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
                         lakes(ibasin)%area(i) = lakes(ibasin)%area(i) &
-                           + areaquad ( &
+                           + 1.0e6 * areaquad ( &
                            pixel%lat_s(mesh(ibasin)%ilat(ipxl)), pixel%lat_n(mesh(ibasin)%ilat(ipxl)), &
                            pixel%lon_w(mesh(ibasin)%ilon(ipxl)), pixel%lon_e(mesh(ibasin)%ilon(ipxl)) )
                      ENDDO
@@ -579,7 +573,7 @@ CONTAINS
                   ! area data in HRU order
                   lakes(ibasin)%area0 = lakes(ibasin)%area
 
-                  lakes(ibasin)%depth  = lakedepth(istt:iend)
+                  lakes(ibasin)%depth = lakedepth(istt:iend)
                   ! depth data in HRU order
                   lakes(ibasin)%depth0 = lakes(ibasin)%depth
 
@@ -661,6 +655,11 @@ CONTAINS
       ! Local Variables
       integer :: i
 
+      IF (volume <= 0) THEN
+         surface = 0
+         RETURN
+      ENDIF
+
       IF (this%nsub == 1) then
          surface = volume / this%area(1)
       ELSE
@@ -685,6 +684,11 @@ CONTAINS
       class(lake_info_type) :: this
       real(r8), intent(in)  :: surface 
       real(r8) :: volume 
+
+      IF (surface <= 0) THEN
+         volume = 0
+         RETURN
+      ENDIF
       
       IF (this%nsub == 1) then
          volume = this%area(1) * surface 
