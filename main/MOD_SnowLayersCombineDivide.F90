@@ -33,14 +33,14 @@ MODULE MOD_SnowLayersCombineDivide
 
 !=======================================================================
 ! Original author: Yongjiu Dai, September 15, 1999
-! Revision: Yongjiu Dai, /07/31/2003. Updated with the compaction due to overburden and 
-!                                     wind drift (scheme from CLM5.0)
+! Revision: Yongjiu Dai, /07/31/2023
 ! 
-! three of metamorphisms of changing snow characteristics are implemented,
-! i.e., destructive, overburden, and melt. The treatments of the former two
-! are from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution due to
+! Four of metamorphisms of changing snow characteristics are implemented,
+! i.e., destructive, overburden, melt and wind drift. The treatments of the destructive compaction 
+! was from SNTHERM.89 and SNTHERM.99 (1991, 1999). The contribution due to
 ! melt metamorphism is simply taken as a ratio of snow ice fraction after
-! the melting versus before the melting.
+! the melting versus before the melting. The treatments of the overburden comaction and the drifing compaction 
+! were borrowed from CLM5.0 which based on Vionnet et al. (2012) and van Kampenhout et al (2017).
 !
 !=======================================================================
 
@@ -50,9 +50,9 @@ MODULE MOD_SnowLayersCombineDivide
 
 !-------------------------- Dummy argument -----------------------------
 
-  integer,  INTENT(in) :: lb          ! lower bound of array
+  integer, INTENT(in) :: lb           ! lower bound of array
   real(r8), INTENT(in) :: deltim      ! seconds i a time step [second]
-  integer,  INTENT(in) :: imelt(lb:0) ! signifies if node in melting (imelt = 1)
+  integer, INTENT(in) :: imelt(lb:0)  ! signifies if node in melting (imelt = 1)
   real(r8), INTENT(in) :: fiold(lb:0) ! fraction of ice relative to the total water content at the previous time step
   real(r8), INTENT(in) :: t_soisno(lb:0)    ! nodal temperature [K]
   real(r8), INTENT(in) :: wice_soisno(lb:0) ! ice lens [kg/m2]
@@ -63,7 +63,7 @@ MODULE MOD_SnowLayersCombineDivide
   real(r8), INTENT(inout) :: dz_soisno(lb:0) ! layer thickness [m]
 
 !----------------------- local variables ------------------------------
-  integer j            ! Numeber of doing loop
+  integer j  ! Numeber of doing loop
 
   real(r8), parameter ::  c1 = 2.777e-7  ! [m2/(kg s)]
   real(r8), parameter ::  c2 = 23.0e-3   ! [m3/kg]
@@ -104,7 +104,7 @@ MODULE MOD_SnowLayersCombineDivide
 
     do j = lb, 0
        wx = wice_soisno(j) + wliq_soisno(j)
-       void = 1.- (wice_soisno(j)/denice + wliq_soisno(j)/denh2o)/dz_soisno(j)
+       void = 1.0-(wice_soisno(j)/denice + wliq_soisno(j)/denh2o)/dz_soisno(j)
 
 ! Disallow compaction for water saturated node and lower ice lens node.
        if(void <= 0.001 .or. wice_soisno(j) <= .1)then
@@ -124,7 +124,7 @@ MODULE MOD_SnowLayersCombineDivide
 
        dexpf = exp(-c4*td)
 
-! Settling as a result of destructive metamorphism
+! Compaction due to destructive metamorphism
        ddz1 = -c3*dexpf
        if(bi > dm) ddz1 = ddz1*exp(-46.0e-3*(bi-dm))
 
@@ -140,14 +140,14 @@ MODULE MOD_SnowLayersCombineDivide
 
 ! Compaction occurring during melt
        if(imelt(j) == 1)then
-          ddz3 = - 1./deltim * max(0.,(fiold(j) - fi)/fiold(j))
+          ddz3 = - 1.0/deltim * max(0.0,(fiold(j) - fi)/fiold(j))
        else
-          ddz3 = 0.
+          ddz3 = 0.0
        endif
 
 ! Compaction occurring due to wind drift
       forc_wind = sqrt(forc_us**2+forc_vs**2)
-      call winddriftcompaction( bi,forc_wind,dz_soisno(j),zpseudo,mobile,ddz4)
+      call winddriftcompaction( bi,forc_wind,dz_soisno(j),zpseudo,mobile,ddz4 )
 
 ! Time rate of fractional change in dz (units of s-1)
       pdzdtc = ddz1 + ddz2 + ddz3 + ddz4
