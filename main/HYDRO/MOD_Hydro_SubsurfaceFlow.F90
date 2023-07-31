@@ -33,7 +33,7 @@ CONTAINS
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_TimeInvariants
       USE MOD_Vars_1DFluxes
-      USE MOD_Hydro_SurfaceNetwork
+      USE MOD_Hydro_HillslopeNetwork
       USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Hydro_BasinNeighbour
       USE MOD_Const_Physical,  only : denice, denh2o
@@ -47,7 +47,7 @@ CONTAINS
       ! Local Variables
       INTEGER :: numbasin, nhru, ibasin, i, i0, j, ihru, ipatch, ps, pe, ilev
 
-      TYPE(surface_network_info_type), pointer :: hrus
+      TYPE(hillslope_network_info_type), pointer :: hrus
 
       REAL(r8), allocatable :: theta_a_h (:) 
       REAL(r8), allocatable :: zwt_h     (:) 
@@ -58,6 +58,7 @@ CONTAINS
 
       logical  :: j_is_river
       REAL(r8) :: theta_s_h, air_h, icefrac, imped, delp
+      real(r8) :: sumwt, sumarea, zwt_mean
       REAL(r8) :: zsubs_h_up, zsubs_h_dn
       REAL(r8) :: slope, bdamp, Ks_fc, Ks_in
       REAL(r8) :: ca, cb
@@ -113,7 +114,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
 
-            hrus => surface_network(ibasin)
+            hrus => hillslope_network(ibasin)
             
             theta_a_bsn (ibasin) = 0.
             zwt_bsn     (ibasin) = 0.
@@ -135,28 +136,34 @@ CONTAINS
             DO i = 1, nhru
                
                IF (hrus%indx(i) == 0) CYCLE ! river
+               IF (hrus%awat(i) == 0) CYCLE ! only land ice or water body in this HRU
 
                ps = hru_patch%substt(hrus%ihru(i))
                pe = hru_patch%subend(hrus%ihru(i))
 
                theta_s_h = 0
                DO ipatch = ps, pe
-                  theta_s_h = theta_s_h + hru_patch%subfrc(ipatch) &
-                     * sum(porsl(1:nl_soil,ipatch) * dz_soi(1:nl_soil) &
-                      - wice_soisno(1:nl_soil,ipatch)/denice) / sum(dz_soi(1:nl_soil)) 
+                  IF (patchtype(ipatch) <= 2) THEN
+                     theta_s_h = theta_s_h + hru_patch%subfrc(ipatch) &
+                        * sum(porsl(1:nl_soil,ipatch) * dz_soi(1:nl_soil) &
+                        - wice_soisno(1:nl_soil,ipatch)/denice) / sum(dz_soi(1:nl_soil)) 
+                  ENDIF 
                ENDDO
 
                IF (theta_s_h > 0.) THEN
                   
-                  zwt_h(i) = sum(zwt(ps:pe) * hru_patch%subfrc(ps:pe))
-
-                  air_h = 0.
+                  air_h    = 0.
+                  zwt_h(i) = 0.
                   DO ipatch = ps, pe
-                     air_h = air_h + hru_patch%subfrc(ipatch) &
-                        * (sum( porsl(1:nl_soil,ipatch) * dz_soi(1:nl_soil) &
-                        - wliq_soisno(1:nl_soil,ipatch)/denh2o &
-                        - wice_soisno(1:nl_soil,ipatch)/denice ) - wa(ipatch)/1.0e3)
-                     air_h = max(0., air_h)
+                     IF (patchtype(ipatch) <= 2) THEN
+                        air_h = air_h + hru_patch%subfrc(ipatch) &
+                           * (sum( porsl(1:nl_soil,ipatch) * dz_soi(1:nl_soil) &
+                           - wliq_soisno(1:nl_soil,ipatch)/denh2o &
+                           - wice_soisno(1:nl_soil,ipatch)/denice ) - wa(ipatch)/1.0e3)
+                        air_h = max(0., air_h)
+                        
+                        zwt_h(i) = zwt_h(i) + zwt(ipatch) * hru_patch%subfrc(ipatch)
+                     ENDIF
                   ENDDO
 
                   IF ((air_h <= 0.) .or. (zwt_h(i) <= 0.)) THEN
@@ -172,12 +179,14 @@ CONTAINS
 
                   Ks_h(i) = 0.
                   DO ipatch = ps, pe
-                     DO ilev = 1, nl_soil
-                        icefrac = min(1., wice_soisno(ilev,ipatch)/denice/dz_soi(ilev)/porsl(ilev,ipatch))
-                        imped   = 10.**(-e_ice*icefrac)
-                        Ks_h(i) = Ks_h(i) + hru_patch%subfrc(ipatch) &
-                           * hksati(ilev,ipatch)/1.0e3 * imped * dz_soi(ilev)/zi_soi(nl_soil) 
-                     ENDDO
+                     IF (patchtype(ipatch) <= 2) THEN
+                        DO ilev = 1, nl_soil
+                           icefrac = min(1., wice_soisno(ilev,ipatch)/denice/dz_soi(ilev)/porsl(ilev,ipatch))
+                           imped   = 10.**(-e_ice*icefrac)
+                           Ks_h(i) = Ks_h(i) + hru_patch%subfrc(ipatch) &
+                              * hksati(ilev,ipatch)/1.0e3 * imped * dz_soi(ilev)/zi_soi(nl_soil) 
+                        ENDDO
+                     ENDIF
                   ENDDO
                ELSE
                   ! Frozen soil.
@@ -241,18 +250,18 @@ CONTAINS
                   ENDIF
                ENDIF
 
-               ca = hrus%flen(i) * Ks_fc / theta_a_h(i) / delp / hrus%area(i) * deltime
+               ca = hrus%flen(i) * Ks_fc / theta_a_h(i) / delp / hrus%awat(i) * deltime
 
                IF (.not. j_is_river) THEN
-                  cb = hrus%flen(i) * Ks_fc / theta_a_h(j) / delp / hrus%area(j) * deltime
+                  cb = hrus%flen(i) * Ks_fc / theta_a_h(j) / delp / hrus%awat(j) * deltime
                ELSE
-                  cb = hrus%flen(i) * Ks_fc / delp / hrus%area(j) * deltime
+                  cb = hrus%flen(i) * Ks_fc / delp / hrus%awat(j) * deltime
                ENDIF
                
                rsubs_fc(i) = (zsubs_h_up - zsubs_h_dn) * hrus%flen(i) * Ks_fc / (1+ca+cb) / delp
 
-               rsubs_h(i) = rsubs_h(i) + rsubs_fc(i) / hrus%area(i)
-               rsubs_h(j) = rsubs_h(j) - rsubs_fc(i) / hrus%area(j)
+               rsubs_h(i) = rsubs_h(i) + rsubs_fc(i) / hrus%awat(i)
+               rsubs_h(j) = rsubs_h(j) - rsubs_fc(i) / hrus%awat(j)
                
             ENDDO
             
@@ -263,7 +272,7 @@ CONTAINS
                   rsubs_h(1) = rsubs_h(1) * alp
                   DO i = 2, nhru
                      IF (hrus%inext(i) == 1) THEN
-                        rsubs_h(i) = rsubs_h(i) - (1.0-alp)*rsubs_fc(i)/hrus%area(i)
+                        rsubs_h(i) = rsubs_h(i) - (1.0-alp)*rsubs_fc(i)/hrus%awat(i)
                      ENDIF
                   ENDDO
                ENDIF
@@ -275,7 +284,11 @@ CONTAINS
                
                ps = hru_patch%substt(hrus%ihru(i))
                pe = hru_patch%subend(hrus%ihru(i))
-               rsub(ps:pe) = rsub(ps:pe) + rsubs_h(i) * 1.e3 ! (positive = out of soil column) 
+               DO ipatch = ps, pe
+                  IF (patchtype(ipatch) <= 2) THEN 
+                     rsub(ipatch) = rsub(ipatch) + rsubs_h(i) * 1.e3 ! (positive = out of soil column) 
+                  ENDIF
+               ENDDO
             ENDDO
             
             DO i = 1, nhru
@@ -291,24 +304,27 @@ CONTAINS
                      Ks_in = raniso * Ks_h(i) * ((1.5-zwt_h(i)) + bdamp)
                   ENDIF
 
-                  rsubs_pch(ps:pe) = &
-                     - Ks_in * (zwt(ps:pe) - sum(zwt(ps:pe)*hru_patch%subfrc(ps:pe))) *6.0*pi/hrus%area(i)
-               
-                  ! Update total subsurface lateral flow (2): Between patches
-                  rsub(ps:pe) = rsub(ps:pe) + rsubs_pch(ps:pe) * 1.e3 ! m/s to mm/s
+                  sumwt = sum(hru_patch%subfrc(ps:pe), mask = patchtype(ps:pe) <= 2)
+                  IF (sumwt > 0) THEN
+                     zwt_mean = sum(zwt(ps:pe)*hru_patch%subfrc(ps:pe), mask = patchtype(ps:pe) <= 2) / sumwt
 
+                     DO ipatch = ps, pe
+                        IF (patchtype(ipatch) <= 2) THEN
+                           rsubs_pch(ipatch) = - Ks_in * (zwt(ipatch) - zwt_mean) *6.0*pi/hrus%awat(i)
+                           ! Update total subsurface lateral flow (2): Between patches
+                           rsub(ipatch) = rsub(ipatch) + rsubs_pch(ipatch) * 1.e3 ! m/s to mm/s
+                        ENDIF
+                     ENDDO
+                  ENDIF
                ENDIF
             ENDDO
 
-            IF (hrus%indx(1) == 0) THEN
-               i0 = 2 ! excluding river HRU
-            ELSE
-               i0 = 1
+            sumarea = sum(hrus%awat)
+            IF (sumarea > 0) THEN
+               theta_a_bsn (ibasin) = sum(theta_a_h * hrus%awat) / sumarea
+               zwt_bsn     (ibasin) = sum(zwt_h     * hrus%awat) / sumarea
+               Ks_bsn      (ibasin) = sum(Ks_h      * hrus%awat) / sumarea
             ENDIF
-            
-            theta_a_bsn (ibasin) = sum(theta_a_h(i0:) * hrus%area(i0:)) / sum(hrus%area(i0:))
-            zwt_bsn     (ibasin) = sum(zwt_h    (i0:) * hrus%area(i0:)) / sum(hrus%area(i0:))
-            Ks_bsn      (ibasin) = sum(Ks_h     (i0:) * hrus%area(i0:)) / sum(hrus%area(i0:))
 
             deallocate (theta_a_h)
             deallocate (zwt_h    )
@@ -325,7 +341,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
             
-            hrus => surface_network(ibasin)
+            hrus => hillslope_network(ibasin)
                
             iam_watb = .false.
             IF (lake_id(ibasin) > 0) THEN
@@ -335,6 +351,8 @@ CONTAINS
             ENDIF
             
             DO jnb = 1, basinneighbour(ibasin)%nnb
+
+               IF (basinneighbour(ibasin)%bindex(jnb) == -9) CYCLE ! skip ocean neighbour
 
                nb_is_watb = basinneighbour(ibasin)%iswatb(jnb)
 
@@ -392,7 +410,7 @@ CONTAINS
                lenbdr = basinneighbour(ibasin)%lenbdr(jnb)
 
                ! from Fan et al., JGR 112(D10125)
-               slope = basinneighbour(ibasin)%slope(jnb)
+               slope = abs(basinneighbour(ibasin)%slope(jnb))
                IF (slope > 0.16) THEN
                   bdamp = 4.8
                ELSE
@@ -561,7 +579,19 @@ CONTAINS
                endif
 #endif
             ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies
-               wdsrf(ipatch) = max(wdsrf(ipatch) - rsub(ipatch)*deltime, 0.)
+               IF (wa(ipatch) < 0) THEN
+                  wa(ipatch) = wa(ipatch) - rsub(ipatch)*deltime
+                  IF (wa(ipatch) > 0) THEN
+                     wdsrf(ipatch) = wa(ipatch) 
+                     wa(ipatch) = 0
+                  ENDIF
+               ELSE
+                  wdsrf(ipatch) = wdsrf(ipatch) - rsub(ipatch)*deltime
+                  IF (wdsrf(ipatch) < 0) THEN
+                     wa(ipatch) = wdsrf(ipatch) 
+                     wdsrf(ipatch) = 0
+                  ENDIF
+               ENDIF
             ENDIF
 
          ENDDO

@@ -37,6 +37,7 @@ CONTAINS
 #if(defined CaMa_Flood)
         flddepth       ,fldfrc         ,qinfl_fld                      ,&
 #endif
+        forc_us        ,forc_vs                                        ,&
 ! SNICAR model variables
         forc_aer       ,&
         mss_bcpho      ,mss_bcphi      ,mss_ocpho      ,mss_ocphi      ,&
@@ -125,6 +126,9 @@ CONTAINS
   real(r8), INTENT(in)    :: fldfrc    ! inundation water depth   [0-1]
   real(r8), INTENT(out)   :: qinfl_fld ! grid averaged inundation water input from top (mm/s)
 #endif
+
+  real(r8), intent(in) :: forc_us
+  real(r8), intent(in) :: forc_vs
 
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023)
@@ -314,7 +318,7 @@ CONTAINS
            z_lakesno    ,dz_lakesno   ,zi_lakesno      ,t_lakesno       ,&
            wice_lakesno ,wliq_lakesno ,t_lake          ,lake_icefrac    ,&
            dfseng       ,dfgrnd       ,snll            ,scv_lake        ,&
-           snowdp_lake  ,sm_lake                                         &
+           snowdp_lake  ,sm_lake      ,forc_us         ,forc_vs          &
 ! SNICAR model variables
            ,forc_aer    ,&
            mss_bcpho    ,mss_bcphi    ,mss_ocpho       ,mss_ocphi       ,&

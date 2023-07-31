@@ -1543,7 +1543,7 @@ MODULE MOD_Lake
              z_soisno    , dz_soisno   , zi_soisno , t_soisno     ,&
              wice_soisno , wliq_soisno , t_lake    , lake_icefrac ,&
              fseng       , fgrnd       , snl       , scv          ,&
-             snowdp      , sm          ,&
+             snowdp      , sm          , forc_us   , forc_vs      ,&
 ! SNICAR model variables
              forc_aer    ,&
              mss_bcpho   , mss_bcphi   , mss_ocpho , mss_ocphi    ,&
@@ -1616,6 +1616,9 @@ MODULE MOD_Lake
   real(r8), INTENT(inout) :: snowdp ! snow height (m)
   real(r8), INTENT(inout) :: sm     ! rate of snow melt (mm H2O /s)
 
+  real(r8), intent(in) :: forc_us
+  real(r8), intent(in) :: forc_vs
+
 ! SNICAR model variables
 ! Aerosol Fluxes (Jan. 07, 2023 by Yongjiu Dai)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
@@ -1679,7 +1682,7 @@ MODULE MOD_Lake
          lb = snl + 1
          call snowcompaction (lb,deltim, &
                               imelt(lb:0),fiold(lb:0),t_soisno(lb:0),&
-                              wliq_soisno(lb:0),wice_soisno(lb:0),dz_soisno(lb:0))
+                              wliq_soisno(lb:0),wice_soisno(lb:0),forc_us,forc_vs,dz_soisno(lb:0))
 
          ! Combine thin snow elements
          lb = maxsnl + 1
