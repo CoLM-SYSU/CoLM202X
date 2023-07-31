@@ -902,7 +902,7 @@ CONTAINS
       USE MOD_Precision
       IMPLICIT NONE
 
-      REAL(r8) :: area
+      REAL(r8) :: area ! in km^2
       REAL(r8), parameter :: re = 6.37122e3 ! kilometer
       REAL(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
       REAL(r8), intent(in) :: lats, latn, lonw, lone
