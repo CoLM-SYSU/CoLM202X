@@ -639,7 +639,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
                            solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                            solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
-      CALL rain_snow_temp (patchtype,forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
+      CALL rain_snow_temp (patchtype,forc_t,forc_q,forc_psrf,forc_prc,forc_prl,forc_us,forc_vs,tcrit,&
                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
       forc_rain = prc_rain + prl_rain
@@ -989,6 +989,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
 #if(defined CaMa_Flood)
         flddepth             ,fldfrc               ,qinfl_fld                                  ,&
 #endif
+        forc_us              ,forc_vs                                                          ,&
 
 ! SNICAR model variables
         forc_aer             ,&
@@ -1010,7 +1011,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          lbr  = snlr + 1   ! lower bound of array
          CALL snowcompaction (lbr,deltim,&
                          imeltr(lbr:0),fioldr(lbr:0),t_roofsno(lbr:0),&
-                         wliq_roofsno(lbr:0),wice_roofsno(lbr:0),dz_roofsno(lbr:0))
+                         wliq_roofsno(lbr:0),wice_roofsno(lbr:0),forc_us,forc_vs,dz_roofsno(lbr:0))
 
          ! Combine thin snow elements
          lbr = maxsnl + 1
@@ -1047,7 +1048,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          lbi  = snli + 1   ! lower bound of array
          CALL snowcompaction (lbi,deltim,&
                          imelti(lbi:0),fioldi(lbi:0),t_gimpsno(lbi:0),&
-                         wliq_gimpsno(lbi:0),wice_gimpsno(lbi:0),dz_gimpsno(lbi:0))
+                         wliq_gimpsno(lbi:0),wice_gimpsno(lbi:0),forc_us,forc_vs,dz_gimpsno(lbi:0))
 
          ! Combine thin snow elements
          lbi = maxsnl + 1
@@ -1084,7 +1085,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
          lbp  = snlp + 1   ! lower bound of array
          CALL snowcompaction (lbp,deltim,&
                          imeltp(lbp:0),fioldp(lbp:0),t_gpersno(lbp:0),&
-                         wliq_gpersno(lbp:0),wice_gpersno(lbp:0),dz_gpersno(lbp:0))
+                         wliq_gpersno(lbp:0),wice_gpersno(lbp:0),forc_us,forc_vs,dz_gpersno(lbp:0))
 
          ! Combine thin snow elements
          lbp = maxsnl + 1

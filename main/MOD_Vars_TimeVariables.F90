@@ -437,8 +437,8 @@ CONTAINS
             allocate (lai_c      (0:N_PFT-1,numpc))   ; lai_c        (:,:) = spval      !leaf area index
             allocate (tsai_c     (0:N_PFT-1,numpc))   ; tsai_c       (:,:) = spval      !stem area index
             allocate (sai_c      (0:N_PFT-1,numpc))   ; sai_c        (:,:) = spval      !stem area index
-            allocate (ssun_c (2,2,0:N_PFT-1,numpc))   ; ssun_c     (2,2,:) = spval      !sunlit canopy absorption for solar radiation (0-1)
-            allocate (ssha_c (2,2,0:N_PFT-1,numpc))   ; ssha_c     (2,2,:) = spval      !shaded canopy absorption for solar radiation (0-1)
+            allocate (ssun_c (2,2,0:N_PFT-1,numpc))   ; ssun_c   (:,:,:,:) = spval      !sunlit canopy absorption for solar radiation (0-1)
+            allocate (ssha_c (2,2,0:N_PFT-1,numpc))   ; ssha_c   (:,:,:,:) = spval      !shaded canopy absorption for solar radiation (0-1)
             allocate (thermk_c   (0:N_PFT-1,numpc))   ; thermk_c     (:,:) = spval      !canopy gap fraction for tir radiation
             allocate (fshade_c   (0:N_PFT-1,numpc))   ; fshade_c     (:,:) = spval      !canopy gap fraction for tir radiation
             allocate (extkb_c    (0:N_PFT-1,numpc))   ; extkb_c      (:,:) = spval      !(k, g(mu)/mu) direct solar extinction coefficient

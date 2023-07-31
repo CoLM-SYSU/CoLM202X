@@ -402,7 +402,7 @@ PROGRAM CoLM
 
       IF (DEF_LAI_MONTHLY) THEN
          IF ((itstamp < etstamp) .and. (month /= month_p)) THEN
-               CALL LAI_readin (lai_year, month, dir_landdata)
+            CALL LAI_readin (lai_year, month, dir_landdata)
 #ifdef URBAN_MODEL
             CALL UrbanLAI_readin(lai_year, month, dir_landdata)
 #endif

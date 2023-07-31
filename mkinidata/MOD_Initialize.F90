@@ -790,8 +790,8 @@ MODULE MOD_Initialize
 #endif
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
-            riverheight(:) = 0
-            riverveloct(:) = 0
+            wdsrf_bsn(:) = 0
+            veloc_riv(:) = 0
          ENDIF
 
          IF (numhru > 0) THEN
