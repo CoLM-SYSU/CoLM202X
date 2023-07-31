@@ -140,9 +140,11 @@ contains
             call mg2p_forc_elm%build (gforc, landelm)
          ENDIF
 
-         IF (numpatch > 0) THEN
-            allocate (patchmask(numpatch))
-            patchmask(:) = .true.
+         IF (p_is_worker) THEN
+            IF (numpatch > 0) THEN
+               allocate (patchmask(numpatch))
+               patchmask(:) = .true.
+            ENDIF
          ENDIF
       ELSE
          mtstamp = idate
