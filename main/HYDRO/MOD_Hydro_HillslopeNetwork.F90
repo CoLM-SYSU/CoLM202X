@@ -1,7 +1,7 @@
 #include <define.h>
 
 #ifdef LATERAL_FLOW
-MODULE MOD_Hydro_SurfaceNetwork
+MODULE MOD_Hydro_HillslopeNetwork
    !--------------------------------------------------------------------------------
    ! DESCRIPTION:
    ! 
@@ -14,28 +14,26 @@ MODULE MOD_Hydro_SurfaceNetwork
    IMPLICIT NONE
    
    ! -- data type --
-   TYPE :: surface_network_info_type
+   TYPE :: hillslope_network_info_type
       INTEGER :: nhru
-      INTEGER , pointer :: ihru (:)
-      INTEGER , pointer :: indx (:)
-      REAL(r8), pointer :: area (:)
-      REAL(r8), pointer :: hand (:)
-      REAL(r8), pointer :: elva (:)
-      REAL(r8), pointer :: plen (:)
-      REAL(r8), pointer :: flen (:)
-      INTEGER , pointer :: inext(:)
-   END TYPE surface_network_info_type
+      INTEGER , pointer :: ihru (:) ! location of HRU in global vector "landhru"
+      INTEGER , pointer :: indx (:) ! index of HRU
+      REAL(r8), pointer :: area (:) ! area of HRU [m^2]
+      REAL(r8), pointer :: awat (:) ! water area only including (patchtype <= 2) [m^2]
+      REAL(r8), pointer :: hand (:) ! height above nearest drainage [m]
+      REAL(r8), pointer :: elva (:) ! elevation [m]
+      REAL(r8), pointer :: plen (:) ! average drainage path length to downstream HRU [m]
+      REAL(r8), pointer :: flen (:) ! interface length between this and downstream HRU [m]
+      INTEGER , pointer :: inext(:) ! location of next HRU in this basin
+   END TYPE hillslope_network_info_type
 
    ! -- Instance --
-   TYPE(surface_network_info_type), pointer :: surface_network (:)
+   TYPE(hillslope_network_info_type), pointer :: hillslope_network (:)
       
-   ! -- lake information --
-   INTEGER, allocatable :: lake_id (:)
-   
 CONTAINS
    
    ! ----------
-   SUBROUTINE surface_network_init ()
+   SUBROUTINE hillslope_network_init ()
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -43,13 +41,15 @@ CONTAINS
       USE MOD_Mesh
       USE MOD_Pixel
       USE MOD_LandHRU
+      USE MOD_LandPatch
+      USE MOD_Vars_TimeInvariants, only : patchtype
       USE MOD_Utils
       IMPLICIT NONE
 
       ! Local Variables
-      CHARACTER(len=256) :: surface_network_file
+      CHARACTER(len=256) :: hillslope_network_file
 
-      INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, ihru, i, j, ipxl
+      INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, ihru, ipatch, ps, pe, i, j, ipxl
       INTEGER :: iworker, mesg(2), nrecv, irecv, isrc, idest
    
       INTEGER , allocatable :: indxhru (:,:)
@@ -70,17 +70,16 @@ CONTAINS
 
       numbasin = numelm
 
-      surface_network_file = DEF_CatchmentMesh_data 
+      hillslope_network_file = DEF_CatchmentMesh_data 
 
       IF (p_is_master) THEN
-         CALL ncio_read_serial (surface_network_file, 'lake_id',              lake_id)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_index',      indxhru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_area',       areahru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_hand',       handhru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_elva',       elvahru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_pathlen',    plenhru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_facelen',    lfachru)
-         CALL ncio_read_serial (surface_network_file, 'hydrounit_downstream', nexthru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_index',      indxhru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_area',       areahru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_hand',       handhru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_elva',       elvahru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_pathlen',    plenhru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_facelen',    lfachru)
+         CALL ncio_read_serial (hillslope_network_file, 'hydrounit_downstream', nexthru)
       ENDIF
 
       IF (p_is_master) maxnumhru = size(indxhru,1) 
@@ -106,12 +105,6 @@ CONTAINS
                   isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
 
                idest = isrc
-
-               DO irecv = 1, nrecv
-                  icache(1,irecv) = lake_id(basinindex(irecv))
-               ENDDO
-               CALL mpi_send (icache(1,:), nrecv, MPI_INTEGER, &
-                  idest, mpi_tag_data, p_comm_glb, p_err) 
 
                DO irecv = 1, nrecv
                   icache(:,irecv) = indxhru(:,basinindex(irecv))
@@ -173,11 +166,6 @@ CONTAINS
             ENDDO
 
             DO ibasin = 1, numbasin
-               icache(1,ibasin) = lake_id(basinindex(ibasin))
-            ENDDO
-            lake_id = icache(1,:)
-
-            DO ibasin = 1, numbasin
                icache(:,ibasin) = indxhru(:,basinindex(ibasin))
             ENDDO
             indxhru = icache
@@ -235,10 +223,6 @@ CONTAINS
             CALL mpi_send (basinindex, numbasin, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_glb, p_err) 
 
-            allocate (lake_id (numbasin))
-            CALL mpi_recv (lake_id, numbasin, MPI_INTEGER, &
-               p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
-
             allocate (indxhru (maxnumhru,numbasin))
             CALL mpi_recv (indxhru, maxnumhru*numbasin, MPI_INTEGER, &
                p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
@@ -270,63 +254,62 @@ CONTAINS
 #endif
 
          IF (numbasin > 0) THEN
-            allocate( surface_network (numbasin))
+            allocate( hillslope_network (numbasin))
          ENDIF
 
          DO ibasin = 1, numbasin
-            IF (lake_id(ibasin) <= 0) THEN
+               
+            nhru = count(indxhru(:,ibasin) >= 0)
+            hillslope_network(ibasin)%nhru = nhru
 
-               nhru = count(indxhru(:,ibasin) >= 0)
-               surface_network(ibasin)%nhru = nhru
+            IF (nhru > 0) THEN
 
-               allocate (surface_network(ibasin)%indx  (nhru))
-               allocate (surface_network(ibasin)%area  (nhru))
-               allocate (surface_network(ibasin)%hand  (nhru))
-               allocate (surface_network(ibasin)%elva  (nhru))
-               allocate (surface_network(ibasin)%plen  (nhru))
-               allocate (surface_network(ibasin)%flen  (nhru))
-               allocate (surface_network(ibasin)%inext (nhru))
+               allocate (hillslope_network(ibasin)%ihru  (nhru))
+               allocate (hillslope_network(ibasin)%indx  (nhru))
+               allocate (hillslope_network(ibasin)%area  (nhru))
+               allocate (hillslope_network(ibasin)%awat  (nhru))
+               allocate (hillslope_network(ibasin)%hand  (nhru))
+               allocate (hillslope_network(ibasin)%elva  (nhru))
+               allocate (hillslope_network(ibasin)%plen  (nhru))
+               allocate (hillslope_network(ibasin)%flen  (nhru))
+               allocate (hillslope_network(ibasin)%inext (nhru))
 
-               surface_network(ibasin)%indx = indxhru(1:nhru,ibasin) 
-               surface_network(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
-               surface_network(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
-               surface_network(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
-               surface_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
-               surface_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
+               hillslope_network(ibasin)%indx = indxhru(1:nhru,ibasin) 
+               hillslope_network(ibasin)%area = areahru(1:nhru,ibasin) * 1.0e6 ! km^2 to m^2
+               hillslope_network(ibasin)%hand = handhru(1:nhru,ibasin)         ! m
+               hillslope_network(ibasin)%elva = elvahru(1:nhru,ibasin)         ! m
+               hillslope_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
+               hillslope_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
 
-               allocate (surface_network(ibasin)%ihru (nhru))
                istt = basin_hru%substt(ibasin)
                iend = basin_hru%subend(ibasin)
-               surface_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
+               hillslope_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
 
                DO i = 1, nhru
                   IF (nexthru(i,ibasin) >= 0) THEN
                      j = findloc(indxhru(1:nhru,ibasin), nexthru(i,ibasin), dim=1)
-                     surface_network(ibasin)%inext(i) = j 
+                     hillslope_network(ibasin)%inext(i) = j 
                   ELSE
-                     surface_network(ibasin)%inext(i) = -1
+                     hillslope_network(ibasin)%inext(i) = -1
                   ENDIF
                ENDDO
 
-            ELSE
-               istt = basin_hru%substt(ibasin)
-               iend = basin_hru%subend(ibasin)
-
-               nhru = iend - istt + 1
-               surface_network(ibasin)%nhru = nhru
-
-               allocate (surface_network(ibasin)%area (nhru))
-
                DO i = 1, nhru
-                  ihru = i + istt - 1
-                  surface_network(ibasin)%area(i) = 0
-                  DO ipxl = landhru%ipxstt(ihru), landhru%ipxend(ihru)
-                     surface_network(ibasin)%area(i) = surface_network(ibasin)%area(i) &
-                        + areaquad ( &
-                        pixel%lat_s(mesh(ibasin)%ilat(ipxl)), pixel%lat_n(mesh(ibasin)%ilat(ipxl)), &
-                        pixel%lon_w(mesh(ibasin)%ilon(ipxl)), pixel%lon_e(mesh(ibasin)%ilon(ipxl)) )
+                  hillslope_network(ibasin)%awat(i) = 0
+                  ps = hru_patch%substt(i+istt-1)
+                  pe = hru_patch%subend(i+iend-1)
+                  DO ipatch = ps, pe
+                     IF (patchtype(ipatch) <= 2) THEN
+                        DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
+                           hillslope_network(ibasin)%awat(i) = hillslope_network(ibasin)%awat(i) &
+                              + 1.0e6 * areaquad ( &
+                              pixel%lat_s(mesh(ibasin)%ilat(ipxl)), pixel%lat_n(mesh(ibasin)%ilat(ipxl)), &
+                              pixel%lon_w(mesh(ibasin)%ilon(ipxl)), pixel%lon_e(mesh(ibasin)%ilon(ipxl)) )
+                        ENDDO
+                     ENDIF
                   ENDDO
-               ENDDO 
+               ENDDO
+
             ENDIF
          ENDDO
 
@@ -346,34 +329,33 @@ CONTAINS
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
       
-   END SUBROUTINE surface_network_init
+   END SUBROUTINE hillslope_network_init
    
    ! ----------
-   SUBROUTINE surface_network_final ()
+   SUBROUTINE hillslope_network_final ()
 
       IMPLICIT NONE
 
       ! Local Variables
       INTEGER :: ibasin
 
-      IF (associated(surface_network)) THEN
-         DO ibasin = 1, size(surface_network)
-            IF (associated(surface_network(ibasin)%ihru )) deallocate(surface_network(ibasin)%ihru )
-            IF (associated(surface_network(ibasin)%indx )) deallocate(surface_network(ibasin)%indx )
-            IF (associated(surface_network(ibasin)%area )) deallocate(surface_network(ibasin)%area )
-            IF (associated(surface_network(ibasin)%hand )) deallocate(surface_network(ibasin)%hand )
-            IF (associated(surface_network(ibasin)%elva )) deallocate(surface_network(ibasin)%elva )
-            IF (associated(surface_network(ibasin)%plen )) deallocate(surface_network(ibasin)%plen )
-            IF (associated(surface_network(ibasin)%flen )) deallocate(surface_network(ibasin)%flen )
-            IF (associated(surface_network(ibasin)%inext)) deallocate(surface_network(ibasin)%inext)
+      IF (associated(hillslope_network)) THEN
+         DO ibasin = 1, size(hillslope_network)
+            IF (associated(hillslope_network(ibasin)%ihru )) deallocate(hillslope_network(ibasin)%ihru )
+            IF (associated(hillslope_network(ibasin)%indx )) deallocate(hillslope_network(ibasin)%indx )
+            IF (associated(hillslope_network(ibasin)%area )) deallocate(hillslope_network(ibasin)%area )
+            IF (associated(hillslope_network(ibasin)%awat )) deallocate(hillslope_network(ibasin)%awat )
+            IF (associated(hillslope_network(ibasin)%hand )) deallocate(hillslope_network(ibasin)%hand )
+            IF (associated(hillslope_network(ibasin)%elva )) deallocate(hillslope_network(ibasin)%elva )
+            IF (associated(hillslope_network(ibasin)%plen )) deallocate(hillslope_network(ibasin)%plen )
+            IF (associated(hillslope_network(ibasin)%flen )) deallocate(hillslope_network(ibasin)%flen )
+            IF (associated(hillslope_network(ibasin)%inext)) deallocate(hillslope_network(ibasin)%inext)
          ENDDO
 
-         deallocate(surface_network)
+         deallocate(hillslope_network)
       ENDIF
 
-      IF (allocated(lake_id)) deallocate(lake_id)
+   END SUBROUTINE hillslope_network_final
 
-   END SUBROUTINE surface_network_final
-
-END MODULE MOD_Hydro_SurfaceNetwork
+END MODULE MOD_Hydro_HillslopeNetwork
 #endif
