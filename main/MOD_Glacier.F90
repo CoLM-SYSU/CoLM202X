@@ -988,9 +988,9 @@
                     sm          ,scv         ,snowdp    ,imelt   ,&
                     fiold       ,snl         ,qseva     ,qsdew   ,&
                     qsubl       ,qfros       ,rsur      ,rnof    ,&
-                    ssi         ,wimp        ,&
+                    ssi         ,wimp        ,forc_us   ,forc_vs ,&
                     ! SNICAR
-                    forc_us     ,forc_vs     ,forc_aer ,&
+                    forc_aer    ,&
                     mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
                     mss_dst1    ,mss_dst2    ,mss_dst3  ,mss_dst4 )
 
@@ -1038,6 +1038,7 @@
 
   real(r8), intent(in) :: forc_us
   real(r8), intent(in) :: forc_vs
+
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
 
