@@ -82,7 +82,7 @@ contains
 #endif
          endif
 
-         call ncio_write_time (file_hist, 'time', idate, itime_in_file)
+         call ncio_write_time (file_hist, 'time', idate, itime_in_file, DEF_HIST_FREQ)
 
       ENDIF
 
@@ -857,10 +857,10 @@ contains
          a_ustar, file_hist, 'f_ustar', itime_in_file, filter, &
          'u* in similarity theory','m/s')
 
-      ! t* in similarity theory [kg/kg]
+      ! t* in similarity theory [K]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%tstar, &
          a_tstar, file_hist, 'f_tstar', itime_in_file, filter, &
-         't* in similarity theory','kg/kg')
+         't* in similarity theory','K')
 
       ! q* in similarity theory [kg/kg]
       call aggregate_to_vector_and_write_2d ( DEF_hist_vars%qstar, &

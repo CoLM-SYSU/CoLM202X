@@ -35,12 +35,14 @@ CONTAINS
       USE MOD_SPMD_Task
       USE MOD_Mesh
       USE MOD_LandElm
+      USE MOD_LandHRU
       USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_Vars_1DFluxes
+      USE MOD_Hydro_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_SurfaceNetwork
-      USE MOD_Hydro_RiverNetwork
+      USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Const_Physical, only : grav
 
       IMPLICIT NONE
@@ -53,14 +55,14 @@ CONTAINS
       TYPE(surface_network_info_type), pointer :: hrus
 
       REAL(r8), allocatable :: wdsrf_h (:) ! [m]
-      REAL(r8), allocatable :: momtm_h (:) ! [m^2/s]
+      REAL(r8), allocatable :: momen_h (:) ! [m^2/s]
       REAL(r8), allocatable :: veloc_h (:) ! [m/s]
 
       REAL(r8), allocatable :: sum_hflux_h (:) 
       REAL(r8), allocatable :: sum_mflux_h (:) 
       REAL(r8), allocatable :: sum_zgrad_h (:) 
       
-      REAL(r8) :: wdsrf_fc, veloc_fc, hflux_fc, mflux_fc
+      REAL(r8) :: hand_fc,  wdsrf_fc, veloc_fc, hflux_fc, mflux_fc
       REAL(r8) :: wdsrf_up, wdsrf_dn, vwave_up, vwave_dn
       REAL(r8) :: hflux_up, hflux_dn, mflux_up, mflux_dn
       
@@ -75,25 +77,27 @@ CONTAINS
 
          DO ibasin = 1, numbasin
 
+            istt = basin_hru%substt(ibasin)
+            iend = basin_hru%subend(ibasin)
+
+            IF (lake_id(ibasin) > 0) THEN
+               veloc_hru(istt:iend) = 0
+               momen_hru(istt:iend) = 0
+               CYCLE ! skip lakes
+            ELSE
+               DO i = istt, iend
+                  ! momentum is less or equal than the momentum at last time step.
+                  momen_hru(i) = min(wdsrf_hru_prev(i), wdsrf_hru(i)) * veloc_hru(i)
+               ENDDO
+            ENDIF
+
             hrus => surface_network(ibasin)
 
             nhru = hrus%nhru
-            IF (nhru <= 1) THEN
-               istt = hru_patch%substt(hrus%ihru(1))
-               iend = hru_patch%subend(hrus%ihru(1))
-
-               wdsrf_hru(hrus%ihru(1)) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend)) / 1.0e3
-               veloc_hru(hrus%ihru(1)) = 0. 
-
-               wdsrf_hru_ta(hrus%ihru(1)) = wdsrf_hru_ta(hrus%ihru(1)) + wdsrf_hru(hrus%ihru(1)) * dt
-               momtm_hru_ta(hrus%ihru(1)) = 0.
-               
-               cycle
-            ENDIF
 
             allocate (wdsrf_h (nhru))
             allocate (veloc_h (nhru))
-            allocate (momtm_h (nhru))
+            allocate (momen_h (nhru))
 
             allocate (sum_hflux_h (nhru))
             allocate (sum_mflux_h (nhru))
@@ -103,26 +107,15 @@ CONTAINS
 
             ! patch to hydrounit 
             DO i = 1, nhru
-               istt = hru_patch%substt(hrus%ihru(i))
-               iend = hru_patch%subend(hrus%ihru(i))
-              
-               wdsrf_h(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
-               wdsrf_h(i) = wdsrf_h(i) / 1.0e3 ! mm to m
-            ENDDO
-
-            DO i = 1, nhru
-
-               veloc_h(i) = veloc_hru (hrus%ihru(i))
-
-               IF (wdsrf_hru(hrus%ihru(i)) > wdsrf_h(i)) THEN
-                  ! IF surface water is decreased, momentum is also decreased.
-                  momtm_h(i) = wdsrf_h(i) * veloc_h(i)
+               wdsrf_h(i) = wdsrf_hru(hrus%ihru(i)) 
+               momen_h(i) = momen_hru(hrus%ihru(i)) 
+               IF (wdsrf_h(i) > 0) THEN
+                  veloc_h(i) = momen_h(i) / wdsrf_h(i)
                ELSE
-                  ! IF surface water is increased, momentum is not increased.
-                  momtm_h(i) = wdsrf_hru(hrus%ihru(i)) * veloc_h(i)
+                  veloc_h(i) = 0
                ENDIF
             ENDDO
-               
+
             dt_res = dt 
             DO WHILE (dt_res > 0)
 
@@ -134,18 +127,19 @@ CONTAINS
 
                dt_this = dt_res
 
-               DO i = 2, nhru
+               DO i = 1, nhru
 
                   j = hrus%inext(i)
+                  IF (j <= 0) CYCLE
 
                   IF ((wdsrf_h(i) < PONDMIN) .and. (wdsrf_h(j) < PONDMIN)) THEN
                      cycle
                   ENDIF
 
                   ! reconstruction of height of water near interface
-                  wdsrf_up = wdsrf_h(i)
-                  wdsrf_dn = wdsrf_h(j) - hrus%hand(j) - hrus%hand(i)
-                  wdsrf_dn = max(0., wdsrf_dn)
+                  hand_fc  = min(hrus%hand(i), hrus%hand(j))
+                  wdsrf_up = max(0., hrus%hand(i)+wdsrf_h(i) - hand_fc)
+                  wdsrf_dn = max(0., hrus%hand(j)+wdsrf_h(j) - hand_fc)
 
                   ! velocity at hydrounit downstream face
                   veloc_fc = 0.5 * (veloc_h(i) + veloc_h(j)) &
@@ -198,7 +192,7 @@ CONTAINS
 
                DO i = 1, nhru
                   ! constraint 1: CFL condition
-                  IF (i > 1) then
+                  IF (hrus%inext(i) > 0) then
                      IF ((veloc_h(i) /= 0.) .or. (wdsrf_h(i) > 0.)) THEN
                         dt_this = min(dt_this, hrus%plen(i)/(abs(veloc_h(i)) + sqrt(grav*wdsrf_h(i)))*0.8)
                      ENDIF
@@ -222,7 +216,7 @@ CONTAINS
                   IF ((abs(veloc_h(i)) > 0.1) &
                      .and. (veloc_h(i) * (sum_mflux_h(i) - sum_zgrad_h(i)) > 0)) THEN
                      dt_this = min(dt_this, ac * &
-                        abs(momtm_h(i) * hrus%area(i) / (sum_mflux_h(i) - sum_zgrad_h(i))))
+                        abs(momen_h(i) * hrus%area(i) / (sum_mflux_h(i) - sum_zgrad_h(i))))
                   ENDIF
                ENDDO 
 
@@ -231,27 +225,27 @@ CONTAINS
                   wdsrf_h(i) = max(0., wdsrf_h(i) - rsurf_h(i) * dt_this)
 
                   IF (wdsrf_h(i) < PONDMIN) THEN
-                     momtm_h(i) = 0
+                     momen_h(i) = 0
                      veloc_h(i) = 0
                   ELSE
-                     friction = grav * nmanning_hslp**2 * abs(momtm_h(i)) / wdsrf_h(i)**(7.0/3.0) 
-                     momtm_h(i) = (momtm_h(i) - (sum_mflux_h(i) - sum_zgrad_h(i)) / hrus%area(i) * dt_this) &
+                     friction = grav * nmanning_hslp**2 * abs(momen_h(i)) / wdsrf_h(i)**(7.0/3.0) 
+                     momen_h(i) = (momen_h(i) - (sum_mflux_h(i) - sum_zgrad_h(i)) / hrus%area(i) * dt_this) &
                         / (1 + friction * dt_this) 
-                     veloc_h(i) = momtm_h(i) / wdsrf_h(i)
+                     veloc_h(i) = momen_h(i) / wdsrf_h(i)
 
-                     IF (i == 1) THEN
+                     IF (hrus%inext(i) <= 0) THEN
                         veloc_h(i) = min(veloc_h(i), 0.)
-                        momtm_h(i) = min(momtm_h(i), 0.)
+                        momen_h(i) = min(momen_h(i), 0.)
                      ENDIF
 
                      IF (all(hrus%inext /= i)) THEN
                         veloc_h(i) = max(veloc_h(i), 0.)
-                        momtm_h(i) = max(momtm_h(i), 0.)
+                        momen_h(i) = max(momen_h(i), 0.)
                      ENDIF
                   ENDIF
 
                   wdsrf_hru_ta(hrus%ihru(i)) = wdsrf_hru_ta(hrus%ihru(i)) + wdsrf_h(i) * dt_this
-                  momtm_hru_ta(hrus%ihru(i)) = momtm_hru_ta(hrus%ihru(i)) + momtm_h(i) * dt_this
+                  momen_hru_ta(hrus%ihru(i)) = momen_hru_ta(hrus%ihru(i)) + momen_h(i) * dt_this
                ENDDO
 
                dt_res = dt_res - dt_this
@@ -264,16 +258,9 @@ CONTAINS
                veloc_hru(hrus%ihru(i)) = veloc_h(i)
             ENDDO
 
-            ! hydrounit to patch
-            DO i = 1, nhru
-               istt = hru_patch%substt(hrus%ihru(i))
-               iend = hru_patch%subend(hrus%ihru(i))
-               wdsrf(istt:iend) = wdsrf_h(i) * 1.0e3 ! m to mm
-            ENDDO
-
             deallocate (wdsrf_h)
             deallocate (veloc_h)
-            deallocate (momtm_h)
+            deallocate (momen_h)
 
             deallocate (sum_hflux_h)
             deallocate (sum_mflux_h)
@@ -282,6 +269,8 @@ CONTAINS
             deallocate (rsurf_h)
 
          ENDDO
+
+         wdsrf_hru_prev(:) = wdsrf_hru(:)
 
       ENDIF
 

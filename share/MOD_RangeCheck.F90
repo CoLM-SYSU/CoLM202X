@@ -143,8 +143,19 @@ CONTAINS
                ENDIF
             ENDIF
 
-            wfmt = "('Check block data:', A20, ' is in (', e20.10, ',', e20.10, ')', A)"
+            wfmt = "('Check block  data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, gmin, gmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
+
          ENDIF
 
       ENDIF
@@ -240,6 +251,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -337,6 +358,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -437,6 +468,16 @@ CONTAINS
 
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, trim(info)
+
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
 
          ENDIF
 
@@ -540,6 +581,16 @@ CONTAINS
             wfmt = "('Check vector data:', A25, ' is in (', e20.10, ',', e20.10, ')', A)"
             write(*,wfmt) varname, vmin, vmax, info
 
+#if(defined CoLMDEBUG)
+            IF (len_trim(info) > 0) THEN
+#ifdef USEMPI
+               CALL mpi_abort (p_comm_glb, p_err)
+#else
+               STOP
+#endif
+            ENDIF
+#endif
+
          ENDIF
 
       ENDIF
@@ -560,6 +611,7 @@ CONTAINS
       ! Local variables
       INTEGER :: vmin, vmax
       INTEGER, allocatable :: vmin_all(:), vmax_all(:)
+      character(len=256) :: wfmt
 
       IF (p_is_worker) THEN
 
@@ -611,8 +663,8 @@ CONTAINS
 #endif
 
          IF (p_iam_worker == p_root) THEN
-            write(*,104) varname, vmin, vmax
-            104 format('Check vector data:', A25, ' is in (', I12, ',', I12, ')')
+            wfmt = "('Check vector data:', A25, ' is in (', I20, ',', I20, ')')"
+            write(*,wfmt) varname, vmin, vmax
          ENDIF
 
       ENDIF

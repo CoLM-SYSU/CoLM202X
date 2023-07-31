@@ -323,6 +323,9 @@ CONTAINS
       USE MOD_SPMD_Task
       USE MOD_Namelist
       USE MOD_Utils
+#ifdef SinglePoint
+      USE MOD_SingleSrfdata
+#endif
       IMPLICIT NONE
 
       class (block_type) :: this

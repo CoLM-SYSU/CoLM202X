@@ -25,6 +25,7 @@ module MOD_5x5DataReadin
    ! Created by Shupeng Zhang, May 2023
    !-----------------------------------------------------------------------
 
+   USE MOD_NetCDFSerial, only : nccheck
    implicit none
 
    INTEGER, parameter :: N_PFT_modis = 16
@@ -39,18 +40,6 @@ module MOD_5x5DataReadin
    PUBLIC :: read_5x5_data_pft_time
 
 contains
-
-   ! ----
-   SUBROUTINE nccheck (status)
-      USE netcdf
-
-      INTEGER, INTENT(IN) :: status
-
-      IF (status /= NF90_NOERR) THEN
-         print *, trim(nf90_strerror(status))
-         stop 2
-      ENDIF
-   END SUBROUTINE nccheck
 
    ! -----
    subroutine this_block_and_move_to_next ( &

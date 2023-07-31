@@ -367,8 +367,8 @@ CONTAINS
       IF (p_is_io) THEN
                      
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename))
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname))
          
          start3 = (/1, 1, itime/)
          count3 = (/1, 1, 1/)

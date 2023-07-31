@@ -241,9 +241,10 @@ MODULE MOD_Albedo
       ssun(:,:) = 0.
       ssha(:,:) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
+      ! for nighttime longwave calculations.
       !thermk    = 1.e-3
-      IF (lai+sai<1e-6) THEN
-	 thermk = 0.
+      IF (lai+sai <= 1.e-6) THEN
+         thermk = 1.e-3
       ENDIF
       extkb     = 1.
       extkd     = 0.718
@@ -264,6 +265,7 @@ IF (patchtype == 0) THEN
       ssha_p(:,:,ps:pe) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_p(ps:pe)   = 1.e-3
+      WHERE (lai_p(ps:pe)+sai_p(ps:pe) <= 1.e-6) thermk_p(ps:pe) = 1.e-3
       extkb_p(ps:pe)    = 1.
       extkd_p(ps:pe)    = 0.718
 #endif
@@ -274,6 +276,7 @@ IF (patchtype == 0) THEN
       ssha_c(:,:,:,pc) = 0.
       ! 07/06/2023, yuan: use the values of previous timestep.
       !thermk_c(:,pc)   = 1.e-3
+      WHERE (lai_c(:,pc)+sai_c(:,pc) <= 1.e-6) thermk_c(:,pc) = 1.e-3
       !fshade_c(:,pc)   = pcfrac(:,pc)
       !fshade_c(0,pc)   = 0.
       extkb_c(:,pc)    = 1.
@@ -419,46 +422,36 @@ ENDIF
 ! ----------------------------------------------------------------------
       IF (lai+sai > 1e-6) THEN
 
-IF (patchtype == 0) THEN
+         IF (patchtype == 0) THEN
 
-#if(defined LULC_USGS)
-         IF (lai > 1e-6) THEN
+#if (defined LULC_USGS || defined LULC_IGBP)
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
             alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
-         ENDIF
 #endif
-
-#if(defined LULC_IGBP)
-         CALL twostream (chil,rho,tau,green,lai,sai,&
-                         czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
-
-         albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
-         alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
-#endif
-
 
 #ifdef LULC_IGBP_PFT
-         CALL twostream_wrap (ipatch, czen, albg, &
-                              albv, tran, ssun, ssha)
-         alb(:,:) = albv(:,:)
+            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+            alb(:,:) = albv(:,:)
 #endif
 
 #ifdef LULC_IGBP_PC
-         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
-         alb(:,:) = albv(:,:)
+            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
+            alb(:,:) = albv(:,:)
 #endif
-      ELSE
-         IF (lai > 1e-6) THEN
+
+         ELSE  !other patchtypes (/=0)
+
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
             albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
             alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+
          ENDIF
-ENDIF
+
       ENDIF
 
 !-----------------------------------------------------------------------
@@ -602,6 +595,8 @@ ENDIF
       power3 = min( 50., power3 )
       power3 = max( 1.e-5, power3 )
       thermk = exp(-power3)
+
+      IF (lsai <= 1e-6) RETURN
 
       DO iw = 1, 2    ! WAVE_BAND_LOOP
 
