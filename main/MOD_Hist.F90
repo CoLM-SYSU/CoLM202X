@@ -156,7 +156,7 @@ contains
 #ifdef LATERAL_FLOW
       USE MOD_Hydro_Hist
 #endif
-      USE MOD_Forcing, only : forcmask
+      USE MOD_Forcing, only : forcmask, patchmask
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
@@ -291,6 +291,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -372,6 +374,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2916,6 +2920,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2952,6 +2958,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2996,6 +3004,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3046,6 +3056,8 @@ ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
