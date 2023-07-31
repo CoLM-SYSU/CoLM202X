@@ -116,8 +116,9 @@ MODULE MOD_Vars_2DFluxes
    type(block_data_real8_3d) :: f_lake_icefrac ! lake ice fraction cover [0-1]
 
    !---------------------------------------------------------------------
-   type(block_data_real8_2d) :: f_ustar   ! u* in similarity theory [m/s]
-   type(block_data_real8_2d) :: f_tstar   ! t* in similarity theory [kg/kg]
+   type(block_data_real8_2d) :: f_ustar   ! u* in similarity theory based on patch [m/s]
+   type(block_data_real8_2d) :: f_ustar2  ! u* in similarity theory based on grid  [m/s]
+   type(block_data_real8_2d) :: f_tstar   ! t* in similarity theory [K]
    type(block_data_real8_2d) :: f_qstar   ! q* in similarity theory [kg/kg]
    type(block_data_real8_2d) :: f_zol     ! dimensionless height (z/L) used in Monin-Obukhov theory
    type(block_data_real8_2d) :: f_rib     ! bulk Richardson number in surface layer
@@ -267,17 +268,18 @@ CONTAINS
          call allocate_block_data (grid, f_lake_icefrac, nl_lake)  ! lake ice fraction cover [0-1]
 
          !---------------------------------------------------------------------
-         call allocate_block_data (grid, f_ustar)  ! u* in similarity theory [m/s]
-         call allocate_block_data (grid, f_tstar)  ! t* in similarity theory [kg/kg]
-         call allocate_block_data (grid, f_qstar)  ! q* in similarity theory [kg/kg]
-         call allocate_block_data (grid, f_zol  )  ! dimensionless height (z/L) used in Monin-Obukhov theory
-         call allocate_block_data (grid, f_rib  )  ! bulk Richardson number in surface layer
-         call allocate_block_data (grid, f_fm   )  ! integral of profile function for momentum
-         call allocate_block_data (grid, f_fh   )  ! integral of profile function for heat
-         call allocate_block_data (grid, f_fq   )  ! integral of profile function for moisture
-         call allocate_block_data (grid, f_us10m)  ! 10m u-velocity [m/s]
-         call allocate_block_data (grid, f_vs10m)  ! 10m v-velocity [m/s]
-         call allocate_block_data (grid, f_fm10m)  ! integral of profile function for momentum at 10m [-]
+         call allocate_block_data (grid, f_ustar )  ! u* in similarity theory based on patch [m/s]
+         call allocate_block_data (grid, f_ustar2)  ! u* in similarity theory based on grid  [m/s]
+         call allocate_block_data (grid, f_tstar )  ! t* in similarity theory [K]
+         call allocate_block_data (grid, f_qstar )  ! q* in similarity theory [kg/kg]
+         call allocate_block_data (grid, f_zol   )  ! dimensionless height (z/L) used in Monin-Obukhov theory
+         call allocate_block_data (grid, f_rib   )  ! bulk Richardson number in surface layer
+         call allocate_block_data (grid, f_fm    )  ! integral of profile function for momentum
+         call allocate_block_data (grid, f_fh    )  ! integral of profile function for heat
+         call allocate_block_data (grid, f_fq    )  ! integral of profile function for moisture
+         call allocate_block_data (grid, f_us10m )  ! 10m u-velocity [m/s]
+         call allocate_block_data (grid, f_vs10m )  ! 10m v-velocity [m/s]
+         call allocate_block_data (grid, f_fm10m )  ! integral of profile function for momentum at 10m [-]
 
          !---------------------------------------------------------------------
          call allocate_block_data (grid, f_xy_us     )  ! wind in eastward direction [m/s]

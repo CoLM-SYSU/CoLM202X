@@ -41,6 +41,7 @@ CONTAINS
 
       USE MOD_Precision
       USE MOD_SPMD_Task
+      USE MOD_NetcdfSerial
       USE MOD_Utils
       USE MOD_Block
       USE MOD_Grid
@@ -54,11 +55,10 @@ CONTAINS
       IMPLICIT NONE
 
       ! Local Variables
-      INTEGER :: maxhrutype
       TYPE (block_data_int32_2d) :: hrudata
-      INTEGER :: ie, iblkme, iblk, jblk, npxl, ipxl
+      INTEGER :: iwork, ncat, nhru, ie, typsgn, npxl, ipxl
+      integer, allocatable :: numhru_all_g(:), catnum(:), lakeid(:)
       INTEGER, allocatable :: types(:), order(:), ibuff(:)
-      INTEGER, allocatable :: eindex_tmp(:), settyp_tmp(:), ipxstt_tmp(:), ipxend_tmp(:), ielm_tmp(:)
       INTEGER :: nhru_glb
 
 #ifdef USEMPI
@@ -68,61 +68,84 @@ CONTAINS
       IF (p_is_master) THEN
          write(*,'(A)') 'Making land hydro units :'
       ENDIF
-
-      IF (p_is_io) THEN
-         CALL allocate_block_data (ghru, hrudata)
+      
+      IF (p_is_master) THEN
+         call ncio_read_serial (DEF_CatchmentMesh_data, 'basin_numhru', numhru_all_g)
+         call ncio_read_serial (DEF_CatchmentMesh_data, 'lake_id', lakeid)
       ENDIF
 
-      CALL catchment_data_read (DEF_path_catchment_data, 'ihydrounit2d', ghru, hrudata, &
-         catchment_data_in_one_file)
+#ifdef USEMPI
+      IF (p_is_master) THEN
+         DO iwork = 0, p_np_worker-1
 
-      IF (p_is_io) THEN
-         maxhrutype = -1
-         DO iblkme = 1, gblock%nblkme
-            iblk = gblock%xblkme(iblkme)
-            jblk = gblock%yblkme(iblkme)
-            IF (allocated(hrudata%blk(iblk,jblk)%val)) THEN
-               maxhrutype = max(maxhrutype, maxval(hrudata%blk(iblk,jblk)%val))
+            call mpi_recv (ncat, 1, MPI_INTEGER4, p_address_worker(iwork), mpi_tag_size, &
+               p_comm_glb, p_stat, p_err)
+
+            IF (ncat > 0) THEN
+               allocate (catnum(ncat))
+               allocate (ibuff (ncat))
+
+               call mpi_recv (catnum, ncat, MPI_INTEGER4, p_address_worker(iwork), mpi_tag_data, &
+                  p_comm_glb, p_stat, p_err)
+
+               nhru = sum(numhru_all_g(catnum))
+               call mpi_send (nhru, 1, MPI_INTEGER4, &
+                  p_address_worker(iwork), mpi_tag_size, p_comm_glb, p_err) 
+
+               ibuff = lakeid(catnum)
+               call mpi_send (ibuff, ncat, MPI_INTEGER4, &
+                  p_address_worker(iwork), mpi_tag_data, p_comm_glb, p_err) 
+
+               deallocate(catnum)
+               deallocate(ibuff )
             ENDIF
          ENDDO
-
-         maxhrutype = maxhrutype + 1 ! index starting from 0
       ENDIF
+
+      IF (p_is_worker) THEN
+         call mpi_send (numelm, 1, MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_err) 
+         IF (numelm > 0) THEN
+            allocate (lakeid (numelm))
+            call mpi_send (landelm%eindex, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_err) 
+            call mpi_recv (numhru, 1,      MPI_INTEGER4, p_root, mpi_tag_size, p_comm_glb, p_stat, p_err)
+            call mpi_recv (lakeid, numelm, MPI_INTEGER4, p_root, mpi_tag_data, p_comm_glb, p_stat, p_err)
+         ENDIF
+      ENDIF
+#else
+      numhru = sum(numhru_all_g)
+#endif
+
+      IF (p_is_master) THEN
+         IF (allocated(numhru_all_g)) deallocate(numhru_all_g)
+      ENDIF
+
+      IF (p_is_io) CALL allocate_block_data (ghru, hrudata)
+      CALL catchment_data_read (DEF_CatchmentMesh_data, 'ihydrounit2d', ghru, hrudata)
 
 #ifdef USEMPI
       IF (p_is_io) THEN
-         CALL mpi_allreduce (MPI_IN_PLACE, maxhrutype, 1, MPI_INTEGER, MPI_MAX, p_comm_io, p_err)
-         
-         IF (p_iam_io == 0) THEN
-            call mpi_send (maxhrutype, 1, MPI_INTEGER, p_root, mpi_tag_mesg, p_comm_glb, p_err) 
-         ENDIF
-      ENDIF
-      IF (p_is_master) THEN
-         call mpi_recv (maxhrutype, 1, MPI_INTEGER, p_address_io(0), &
-            mpi_tag_mesg, p_comm_glb, p_stat, p_err)
-      ENDIF
-      
-      CALL mpi_bcast (maxhrutype, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
-#endif
-
-#ifdef USEMPI
-      IF (p_is_io) THEN 
          CALL aggregation_data_daemon (ghru, data_i4_2d_in1 = hrudata)
       ENDIF
 #endif
 
       IF (p_is_worker) THEN
 
-         allocate (eindex_tmp (numelm*maxhrutype))
-         allocate (ipxstt_tmp (numelm*maxhrutype))
-         allocate (ipxend_tmp (numelm*maxhrutype))
-         allocate (settyp_tmp (numelm*maxhrutype))
-         allocate (ielm_tmp   (numelm*maxhrutype))
+         allocate (landhru%eindex (numhru))
+         allocate (landhru%settyp (numhru))
+         allocate (landhru%ipxstt (numhru))
+         allocate (landhru%ipxend (numhru))
+         allocate (landhru%ielm   (numhru))
 
          numhru = 0
 
          DO ie = 1, numelm
-         
+
+            IF (lakeid(ie) > 0) THEN
+               typsgn = -1
+            ELSE
+               typsgn = 1
+            ENDIF
+
             npxl = mesh(ie)%npxl 
             
             allocate (types (1:npxl))
@@ -143,45 +166,27 @@ CONTAINS
             DO ipxl = 1, npxl
                IF (ipxl == 1) THEN
                   numhru = numhru + 1 
-                  eindex_tmp (numhru) = mesh(ie)%indx
-                  settyp_tmp (numhru) = types(ipxl)
-                  ipxstt_tmp (numhru) = ipxl
-                  ielm_tmp   (numhru) = ie
+                  landhru%eindex (numhru) = mesh(ie)%indx
+                  landhru%settyp (numhru) = types(ipxl) * typsgn
+                  landhru%ipxstt (numhru) = ipxl
+                  landhru%ielm   (numhru) = ie
                ELSEIF (types(ipxl) /= types(ipxl-1)) THEN
-                  ipxend_tmp(numhru) = ipxl - 1
+                  landhru%ipxend(numhru) = ipxl - 1
 
                   numhru = numhru + 1
-                  eindex_tmp (numhru) = mesh(ie)%indx
-                  settyp_tmp (numhru) = types(ipxl)
-                  ipxstt_tmp (numhru) = ipxl
-                  ielm_tmp   (numhru) = ie
+                  landhru%eindex (numhru) = mesh(ie)%indx
+                  landhru%settyp (numhru) = types(ipxl) * typsgn
+                  landhru%ipxstt (numhru) = ipxl
+                  landhru%ielm   (numhru) = ie
                ENDIF
             ENDDO
-            ipxend_tmp(numhru) = npxl
+            landhru%ipxend(numhru) = npxl
             
             deallocate (ibuff)
             deallocate (types)
             deallocate (order)
 
          ENDDO
-
-         allocate (landhru%eindex (numhru))
-         allocate (landhru%settyp (numhru))
-         allocate (landhru%ipxstt (numhru))
-         allocate (landhru%ipxend (numhru))
-         allocate (landhru%ielm   (numhru))
-         
-         landhru%eindex = eindex_tmp (1:numhru)  
-         landhru%settyp = settyp_tmp (1:numhru)  
-         landhru%ipxstt = ipxstt_tmp (1:numhru)
-         landhru%ipxend = ipxend_tmp (1:numhru)
-         landhru%ielm   = ielm_tmp   (1:numhru)  
-
-         deallocate (settyp_tmp)
-         deallocate (ipxstt_tmp)
-         deallocate (ipxend_tmp)
-         deallocate (eindex_tmp)
-         deallocate (ielm_tmp  )
 
 #ifdef USEMPI
          CALL aggregation_worker_done ()
@@ -203,6 +208,8 @@ CONTAINS
 #else
       write(*,'(A,I12,A)') 'Total: ', numhru, ' hydro units.'
 #endif
+
+      IF (allocated(lakeid)) deallocate(lakeid)
 
    END SUBROUTINE landhru_build
    

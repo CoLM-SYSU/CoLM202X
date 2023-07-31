@@ -480,7 +480,9 @@ CONTAINS
 
                ENDDO
 
-               pfilter(iset) = any(msk)
+               IF (present(pfilter)) THEN
+                  pfilter(iset) = any(msk)
+               ENDIF
 
                ng0 = gfrom(iset)%ng
                gfrom(iset)%ng = count(msk)

@@ -500,7 +500,7 @@
          z0hg = z0mg/exp(0.13 * (ustar*z0mg/1.5e-5)**0.45)
          z0qg = z0hg
 
-         thvstar=tstar+0.61*th*qstar
+         thvstar=tstar*(1.+0.61*qm)+0.61*th*qstar
          zeta=zldis*vonkar*grav*thvstar/(ustar**2*thv)
          if(zeta >= 0.) then     !stable
            zeta = min(2.,max(zeta,1.e-6))
@@ -866,7 +866,7 @@
                     sm          ,scv         ,snowdp    ,imelt   ,&
                     fiold       ,snl         ,qseva     ,qsdew   ,&
                     qsubl       ,qfros       ,rsur      ,rnof    ,&
-                    ssi         ,wimp    )
+                    ssi         ,wimp        ,forc_us   ,forc_vs )
 
 !=======================================================================
   use MOD_Precision
@@ -892,6 +892,10 @@
        qsubl     , &! sublimation rate from snow pack (mm h2o /s) [+]
        qfros     , &! surface dew added to snow pack (mm h2o /s) [+]
        fiold(maxsnl+1:nl_ice)  ! fraction of ice relative to the total water
+
+  real(r8), INTENT(in) :: &
+       forc_us,  &
+       forc_vs
 
   integer, INTENT(in) :: imelt(maxsnl+1:nl_ice)  ! flag for: melting=1, freezing=2, nothing happended=0
   integer, INTENT(inout) :: snl ! lower bound of array
@@ -951,7 +955,7 @@
          lb  = snl + 1   ! lower bound of array
          call snowcompaction (lb,deltim,&
                          imelt(lb:0),fiold(lb:0),t_icesno(lb:0),&
-                         wliq_icesno(lb:0),wice_icesno(lb:0),dz_icesno(lb:0))
+                         wliq_icesno(lb:0),wice_icesno(lb:0),forc_us,forc_vs,dz_icesno(lb:0))
 
          ! Combine thin snow elements
          lb = maxsnl + 1
@@ -984,7 +988,7 @@
                     sm          ,scv         ,snowdp    ,imelt   ,&
                     fiold       ,snl         ,qseva     ,qsdew   ,&
                     qsubl       ,qfros       ,rsur      ,rnof    ,&
-                    ssi         ,wimp        ,&
+                    ssi         ,wimp        ,forc_us   ,forc_vs ,&
                     ! SNICAR
                     forc_aer    ,&
                     mss_bcpho   ,mss_bcphi   ,mss_ocpho,mss_ocphi,&
@@ -1031,6 +1035,9 @@
   real(r8), INTENT(out) :: &
        rsur      , &! surface runoff (mm h2o/s)
        rnof         ! total runoff (mm h2o/s)
+
+  real(r8), intent(in) :: forc_us
+  real(r8), intent(in) :: forc_vs
 
 ! Aerosol Fluxes (Jan. 07, 2023)
   real(r8), intent(in) :: forc_aer ( 14 )  ! aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
@@ -1091,7 +1098,7 @@
          lb  = snl + 1   ! lower bound of array
          call snowcompaction (lb,deltim,&
                          imelt(lb:0),fiold(lb:0),t_icesno(lb:0),&
-                         wliq_icesno(lb:0),wice_icesno(lb:0),dz_icesno(lb:0))
+                         wliq_icesno(lb:0),wice_icesno(lb:0),forc_us,forc_vs,dz_icesno(lb:0))
 
          ! Combine thin snow elements
          lb = maxsnl + 1
