@@ -22,10 +22,11 @@ module MOD_BGC_Veg_CNVegStructUpdate
                                 nswitchgrass, nirrig_switchgrass, noveg
 
   use MOD_Vars_PFTimeVariables, only: lai_p, tlai_p, tsai_p, leafc_p, deadstemc_p, harvdate_p
+  use MOD_Vars_TimeVariables, only: lai, tlai
 #ifdef CROP
   use MOD_BGC_Vars_PFTimeVariables, only: peaklai_p
 #endif
-  use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
   use MOD_BGC_Vars_TimeVariables, only: farea_burned
   use MOD_Const_PFT, only : dsladlai, slatop, laimx, woody
   !CLM5
@@ -72,6 +73,7 @@ contains
     
       ! patch loop
 
+    lai (i) = 0._r8
     do m = ps, pe
        ivt = pftclass(m)
        if (ivt /= noveg) then
@@ -140,8 +142,9 @@ contains
 
        ! NOTE: The following snow burial code is duplicated in SatellitePhenologyMod.
        ! Changes in one place should be accompanied by similar changes in the other.
-
+       lai(i) = lai(i) + lai_p(m) * pftfrac(m)
     end do
+    tlai(i) = lai(i) 
 
   end subroutine CNVegStructUpdate
 

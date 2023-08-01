@@ -439,50 +439,52 @@ CONTAINS
 
       IF (p_is_worker) THEN
 
-         IF ((this%nset > 0) .and. (count(mask) < this%nset)) THEN
+         IF (this%nset > 0) THEN
+            IF (count(mask) < this%nset) THEN
 
-            allocate (eindex1(this%nset))
-            allocate (ipxstt1(this%nset))
-            allocate (ipxend1(this%nset))
-            allocate (settyp1(this%nset))
-            allocate (ielm1  (this%nset))
+               allocate (eindex1(this%nset))
+               allocate (ipxstt1(this%nset))
+               allocate (ipxend1(this%nset))
+               allocate (settyp1(this%nset))
+               allocate (ielm1  (this%nset))
 
-            eindex1 = this%eindex
-            ipxstt1 = this%ipxstt
-            ipxend1 = this%ipxend
-            settyp1 = this%settyp
-            ielm1   = this%ielm
+               eindex1 = this%eindex
+               ipxstt1 = this%ipxstt
+               ipxend1 = this%ipxend
+               settyp1 = this%settyp
+               ielm1   = this%ielm
 
-            deallocate (this%eindex)
-            deallocate (this%ipxstt)
-            deallocate (this%ipxend)
-            deallocate (this%settyp)
-            deallocate (this%ielm  )
+               deallocate (this%eindex)
+               deallocate (this%ipxstt)
+               deallocate (this%ipxend)
+               deallocate (this%settyp)
+               deallocate (this%ielm  )
 
-            this%nset = count(mask)
+               this%nset = count(mask)
 
-            IF (this%nset > 0) THEN
+               IF (this%nset > 0) THEN
 
-               allocate (this%eindex(this%nset))
-               allocate (this%ipxstt(this%nset))
-               allocate (this%ipxend(this%nset))
-               allocate (this%settyp(this%nset))
-               allocate (this%ielm  (this%nset))
+                  allocate (this%eindex(this%nset))
+                  allocate (this%ipxstt(this%nset))
+                  allocate (this%ipxend(this%nset))
+                  allocate (this%settyp(this%nset))
+                  allocate (this%ielm  (this%nset))
 
-               this%eindex = pack(eindex1, mask)
-               this%ipxstt = pack(ipxstt1, mask)
-               this%ipxend = pack(ipxend1, mask)
-               this%settyp = pack(settyp1, mask)
-               this%ielm   = pack(ielm1  , mask)
+                  this%eindex = pack(eindex1, mask)
+                  this%ipxstt = pack(ipxstt1, mask)
+                  this%ipxend = pack(ipxend1, mask)
+                  this%settyp = pack(settyp1, mask)
+                  this%ielm   = pack(ielm1  , mask)
+
+               ENDIF
+
+               deallocate (eindex1)
+               deallocate (ipxstt1)
+               deallocate (ipxend1)
+               deallocate (settyp1)
+               deallocate (ielm1  )
 
             ENDIF
-
-            deallocate (eindex1)
-            deallocate (ipxstt1)
-            deallocate (ipxend1)
-            deallocate (settyp1)
-            deallocate (ielm1  )
-
          ENDIF
 
       ENDIF

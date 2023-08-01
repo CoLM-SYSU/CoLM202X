@@ -29,7 +29,7 @@ MODULE MOD_CatchmentDataReadin
 CONTAINS
 
    ! -----
-   SUBROUTINE catchment_data_read (path_hydro, dataname, grid, rdata, in_one_file, spv)
+   SUBROUTINE catchment_data_read (file_meshdata_in, dataname, grid, rdata, spv)
 
       USE MOD_SPMD_Task
       USE MOD_Block
@@ -39,19 +39,19 @@ CONTAINS
       USE MOD_NetCDFSerial
       IMPLICIT NONE
 
-      CHARACTER (len=*), intent(in) :: path_hydro
+      CHARACTER (len=*), intent(in) :: file_meshdata_in
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
       TYPE (block_data_int32_2d), intent(inout) :: rdata
-      LOGICAL, intent(in) :: in_one_file
       INTEGER, intent(in), optional :: spv
 
       ! Local Variables
+      LOGICAL :: in_one_file
       INTEGER :: nlat, nlon, ilon
       INTEGER :: iblkme, iblk, jblk, isouth, inorth, iwest, ieast, ibox, jbox
       INTEGER :: xdsp, ydsp, i0, i1, j0, j1, il0, il1, jl0, jl1
       INTEGER :: i0min, i1max, if0, if1, jf0, jf1, i0next, i1next
-      CHARACTER(len=256) :: file_hydro
+      CHARACTER(len=256) :: file_mesh, path_mesh
       CHARACTER(len=3)   :: pre1
       CHARACTER(len=4)   :: pre2
       INTEGER,  allocatable :: dcache(:,:)
@@ -64,12 +64,14 @@ CONTAINS
          ENDIF
       ENDIF 
 
+      in_one_file = ncio_var_exist (file_meshdata_in, dataname)
+
       IF (in_one_file) THEN
 
-         file_hydro = path_hydro
+         file_mesh = file_meshdata_in
 
-         CALL ncio_read_bcast_serial (file_hydro, 'latitude',  latitude)
-         CALL ncio_read_bcast_serial (file_hydro, 'longitude', longitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'latitude',  latitude)
+         CALL ncio_read_bcast_serial (file_mesh, 'longitude', longitude)
 
          IF (p_is_io) THEN
 
@@ -132,7 +134,7 @@ CONTAINS
                   il0 = i0 - grid%xdsp(iblk); IF (il0 <= 0) il0 = il0 + grid%nlon
                   il1 = i1 - grid%xdsp(iblk); IF (il1 <= 0) il1 = il1 + grid%nlon
 
-                  CALL ncio_read_part_serial (file_hydro, dataname, (/jf0,if0/), (/jf1,if1/), dcache)
+                  CALL ncio_read_part_serial (file_mesh, dataname, (/jf0,if0/), (/jf1,if1/), dcache)
                   dcache = transpose(dcache)
                   rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
                ENDIF
@@ -153,7 +155,7 @@ CONTAINS
                      il0 = i0 - grid%xdsp(iblk); IF (il0 <= 0) il0 = il0 + grid%nlon
                      il1 = i1 - grid%xdsp(iblk); IF (il1 <= 0) il1 = il1 + grid%nlon
 
-                     CALL ncio_read_part_serial (file_hydro, dataname, &
+                     CALL ncio_read_part_serial (file_mesh, dataname, &
                         (/jf0,if0/), (/jf1,if1/), dcache)
                      dcache = transpose(dcache)
                      rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
@@ -166,6 +168,9 @@ CONTAINS
       ELSE
 
          IF (p_is_io) THEN
+
+            ! remove suffix ".nc"
+            path_mesh = file_meshdata_in(1:len_trim(file_meshdata_in)-3)
 
             DO iblkme = 1, gblock%nblkme 
                iblk = gblock%xblkme(iblkme)
@@ -228,11 +233,11 @@ CONTAINS
                      write (pre2,'(A1,I3.3)') 'e', (ibox-37)*5
                   ENDIF
 
-                  file_hydro = trim(path_hydro) // '/' // trim(pre1) // trim(pre2) // '.nc'
+                  file_mesh = trim(path_mesh) // '/' // trim(pre1) // trim(pre2) // '.nc'
 
-                  inquire(file=file_hydro, exist=fexists)
+                  inquire(file=file_mesh, exist=fexists)
                   IF (fexists) THEN
-                     CALL ncio_read_part_serial (file_hydro, dataname, (/j0,i0/), (/j1,i1/), dcache)
+                     CALL ncio_read_part_serial (file_mesh, dataname, (/j0,i0/), (/j1,i1/), dcache)
                      dcache = transpose(dcache)
                      rdata%blk(iblk,jblk)%val(il0:il1,jl0:jl1) = dcache
                   ENDIF

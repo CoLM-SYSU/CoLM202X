@@ -178,7 +178,7 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_gpp_c3arcgrass     (:) !12
    real(r8), allocatable :: a_gpp_c3grass        (:) !13
    real(r8), allocatable :: a_gpp_c4grass        (:) !14
-   real(r8), allocatable :: a_leafc_enftemp        (:) !1
+   real(r8), allocatable :: a_leafc_enftemp      (:) !1
    real(r8), allocatable :: a_leafc_enfboreal    (:) !2
    real(r8), allocatable :: a_leafc_dnfboreal    (:) !3
    real(r8), allocatable :: a_leafc_ebftrop      (:) !4
@@ -273,14 +273,15 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
 
-   real(r8), allocatable :: a_ustar(:)
-   real(r8), allocatable :: a_tstar(:)
-   real(r8), allocatable :: a_qstar(:)
-   real(r8), allocatable :: a_zol  (:)
-   real(r8), allocatable :: a_rib  (:)
-   real(r8), allocatable :: a_fm   (:)
-   real(r8), allocatable :: a_fh   (:)
-   real(r8), allocatable :: a_fq   (:)
+   real(r8), allocatable :: a_ustar (:)
+   real(r8), allocatable :: a_ustar2(:)
+   real(r8), allocatable :: a_tstar (:)
+   real(r8), allocatable :: a_qstar (:)
+   real(r8), allocatable :: a_zol   (:)
+   real(r8), allocatable :: a_rib   (:)
+   real(r8), allocatable :: a_fm    (:)
+   real(r8), allocatable :: a_fh    (:)
+   real(r8), allocatable :: a_fq    (:)
 
    real(r8), allocatable :: a_us10m(:)
    real(r8), allocatable :: a_vs10m(:)
@@ -314,7 +315,8 @@ contains
    subroutine allocate_acc_fluxes
 
       use MOD_SPMD_Task
-      use MOD_LandPatch, only : numpatch
+      USE MOD_LandElm
+      use MOD_LandPatch
       USE MOD_LandUrban, only : numurban
       USE MOD_Vars_Global
       implicit none
@@ -369,10 +371,10 @@ contains
             allocate (a_assim     (numpatch))
             allocate (a_respc     (numpatch))
 
-            allocate (a_assimsun        (numpatch)) !1
-            allocate (a_assimsha        (numpatch)) !1
-            allocate (a_etrsun        (numpatch)) !1
-            allocate (a_etrsha        (numpatch)) !1
+            allocate (a_assimsun  (numpatch)) !1
+            allocate (a_assimsha  (numpatch)) !1
+            allocate (a_etrsun    (numpatch)) !1
+            allocate (a_etrsha    (numpatch)) !1
 
             allocate (a_qcharge   (numpatch))
 
@@ -593,6 +595,7 @@ contains
 #endif
 
             allocate (a_ustar     (numpatch))
+            allocate (a_ustar2    (numpatch))
             allocate (a_tstar     (numpatch))
             allocate (a_qstar     (numpatch))
             allocate (a_zol       (numpatch))
@@ -627,6 +630,14 @@ contains
 
          end if
       end if
+
+      IF (p_is_worker) THEN
+#if (defined CROP)
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true., shadowfrac = pctcrop)
+#else
+         CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+#endif
+      ENDIF
 
    end subroutine allocate_acc_fluxes
 
@@ -687,10 +698,10 @@ contains
             deallocate (a_assim     )
             deallocate (a_respc     )
 
-            deallocate (a_assimsun        ) !1
-            deallocate (a_assimsha        ) !1
-            deallocate (a_etrsun        ) !1
-            deallocate (a_etrsha        ) !1
+            deallocate (a_assimsun  ) !1
+            deallocate (a_assimsha  ) !1
+            deallocate (a_etrsun    ) !1
+            deallocate (a_etrsha    ) !1
 
             deallocate (a_qcharge   )
 
@@ -912,6 +923,7 @@ contains
 #endif
 
             deallocate (a_ustar     )
+            deallocate (a_ustar2    )
             deallocate (a_tstar     )
             deallocate (a_qstar     )
             deallocate (a_zol       )
@@ -955,7 +967,7 @@ contains
       use MOD_SPMD_Task
       use MOD_LandPatch, only : numpatch
       USE MOD_LandUrban, only : numurban
-      use MOD_Vars_Global,    only : spval
+      use MOD_Vars_Global, only : spval
       implicit none
 
       if (p_is_worker) then
@@ -1232,6 +1244,7 @@ contains
 #endif
 
             a_ustar (:) = spval
+            a_ustar2(:) = spval
             a_tstar (:) = spval
             a_qstar (:) = spval
             a_zol   (:) = spval
@@ -1280,8 +1293,10 @@ contains
       use MOD_Precision
       use MOD_SPMD_Task
       USE mod_forcing, only : forcmask
-      use MOD_LandPatch,     only : numpatch
-      USE MOD_LandUrban,     only : numurban
+      USE MOD_Mesh,    only : numelm
+      USE MOD_LandElm
+      use MOD_LandPatch,      only : numpatch, elm_patch
+      USE MOD_LandUrban,      only : numurban
       use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
@@ -1302,7 +1317,7 @@ contains
       real(r8), allocatable :: r_trad  (:)
 
       real(r8), allocatable :: r_ustar (:)
-      real(r8), allocatable :: r_ustar2 (:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
+      real(r8), allocatable :: r_ustar2(:) !define a temporary for estimating us10m only, output should be r_ustar. Shaofeng, 2023.05.20
       real(r8), allocatable :: r_tstar (:)
       real(r8), allocatable :: r_qstar (:)
       real(r8), allocatable :: r_zol   (:)
@@ -1315,11 +1330,16 @@ contains
       real(r8), allocatable :: r_vs10m (:)
       real(r8), allocatable :: r_fm10m (:)
 
+      logical,  allocatable :: patchmask (:)
+
       !---------------------------------------------------------------------
-      integer  ib, jb, i, j
+      integer  ib, jb, i, j, ielm, istt, iend
+      real(r8) sumwt
       real(r8) rhoair,thm,th,thv,ur,displa_av,zldis,hgt_u,hgt_t,hgt_q
-	  real(r8) hpbl ! atmospheric boundary layer height [m]
-      real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf
+      real(r8) hpbl ! atmospheric boundary layer height [m]
+      real(r8) z0m_av,z0h_av,z0q_av,us,vs,tm,qm,psrf,taux_e,tauy_e,fsena_e,fevpa_e
+      real(r8) r_ustar_e, r_tstar_e, r_qstar_e, r_zol_e, r_ustar2_e, r_fm10m_e
+      real(r8) r_fm_e, r_fh_e, r_fq_e, r_rib_e, r_us10m_e, r_vs10m_e
       real(r8) obu,fh2m,fq2m
       real(r8) um,thvstar,beta,zii,wc,wc2
 
@@ -1341,9 +1361,9 @@ contains
             call acc1d (forc_soll,  a_solarin)
             call acc1d (forc_solsd, a_solarin)
             call acc1d (forc_solld, a_solarin)
-			if (DEF_USE_CBL_HEIGHT) then
-              call acc1d (forc_hpbl , a_hpbl )
-		    endif
+            if (DEF_USE_CBL_HEIGHT) then
+               call acc1d (forc_hpbl , a_hpbl)
+            endif
 
             call acc1d (taux    , a_taux   )
             call acc1d (tauy    , a_tauy   )
@@ -1361,19 +1381,27 @@ contains
             call acc1d (sabg    , a_sabg   )
             call acc1d (olrg    , a_olrg   )
 
-            rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+            IF (DEF_forcing%has_missing_value) THEN
+               WHERE (forcmask)
+                  rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               END WHERE
+            ELSE
+               rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+            ENDIF
             call acc1d (rnet    , a_rnet   )
 
-            call acc1d (xerr   , a_xerr   )
-            call acc1d (zerr   , a_zerr   )
-            call acc1d (rsur   , a_rsur   )
-            call acc1d (rsub   , a_rsub   )
-            call acc1d (rnof   , a_rnof   )
-            call acc1d (qintr  , a_qintr  )
-            call acc1d (qinfl  , a_qinfl  )
-            call acc1d (qdrip  , a_qdrip  )
+            call acc1d (xerr    , a_xerr   )
+            call acc1d (zerr    , a_zerr   )
+            call acc1d (rsur    , a_rsur   )
+            call acc1d (rsub    , a_rsub   )
+            call acc1d (rnof    , a_rnof   )
+            call acc1d (qintr   , a_qintr  )
+            call acc1d (qinfl   , a_qinfl  )
+            call acc1d (qdrip   , a_qdrip  )
+
             call acc1d (rstfacsun_out , a_rstfacsun )
             call acc1d (rstfacsha_out , a_rstfacsha )
+
             call acc1d (gssun_out     , a_gssun )
             call acc1d (gssha_out     , a_gssha )
 
@@ -1413,10 +1441,13 @@ contains
 
             allocate (r_trad (numpatch))
             do i = 1, numpatch
+               IF (DEF_forcing%has_missing_value) THEN
+                  IF (.not. forcmask(i)) cycle
+               ENDIF
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
-            deallocate (r_trad )
+            deallocate (r_trad            )
 
             call acc1d (tref   , a_tref   )
             call acc1d (qref   , a_qref   )
@@ -1554,7 +1585,7 @@ contains
             call acc1d (fertnitro_cotton   ,   a_fertnitro_cotton   )
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
-            call acc1d (fertnitro_sugarcane, a_fertnitro_sugarcane  )
+            call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
@@ -1574,31 +1605,31 @@ contains
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then
-               call acc1d (abm_lf             ,   a_abm                )
-               call acc1d (gdp_lf             ,   a_gdp                )
-               call acc1d (peatf_lf           ,   a_peatf              )
-               call acc1d (hdm_lf             ,   a_hdm                )
-               call acc1d (lnfm               ,   a_lnfm               )
+               call acc1d (abm_lf          ,   a_abm                )
+               call acc1d (gdp_lf          ,   a_gdp                )
+               call acc1d (peatf_lf        ,   a_peatf              )
+               call acc1d (hdm_lf          ,   a_hdm                )
+               call acc1d (lnfm            ,   a_lnfm               )
             end if
 #endif
             IF(DEF_USE_OZONESTRESS)THEN
-               call acc1d (forc_ozone         ,   a_ozone              )
+               call acc1d (forc_ozone      ,   a_ozone              )
             ENDIF
 
-            call acc2d (t_soisno   , a_t_soisno   )
-            call acc2d (wliq_soisno, a_wliq_soisno)
-            call acc2d (wice_soisno, a_wice_soisno)
+            call acc2d (t_soisno   , a_t_soisno      )
+            call acc2d (wliq_soisno, a_wliq_soisno   )
+            call acc2d (wice_soisno, a_wice_soisno   )
 
-            call acc2d (h2osoi     , a_h2osoi     )
-            call acc2d (rootr      , a_rootr      )
-            call acc2d (BD_all     , a_BD_all      )
-            call acc2d (wfc        , a_wfc         )
-            call acc2d (OM_density , a_OM_density  )
+            call acc2d (h2osoi     , a_h2osoi        )
+            call acc2d (rootr      , a_rootr         )
+            call acc2d (BD_all     , a_BD_all        )
+            call acc2d (wfc        , a_wfc           )
+            call acc2d (OM_density , a_OM_density    )
             if(DEF_USE_PLANTHYDRAULICS)then
-               call acc2d (vegwp      , a_vegwp      )
+               call acc2d (vegwp    , a_vegwp        )
             end if
-            call acc2d (t_lake      , a_t_lake      )
-            call acc2d (lake_icefrac, a_lake_icefrac)
+            call acc2d (t_lake      , a_t_lake       )
+            call acc2d (lake_icefrac, a_lake_icefrac )
 #ifdef BGC
             do i = 1, numpatch
                do j = 1, nl_soil
@@ -1686,111 +1717,153 @@ contains
             call acc2d (decomp_vr_tmp, a_cwdn_vr     )
             call acc2d (sminn_vr     , a_sminn_vr    )
 #endif
-            allocate (r_ustar (numpatch))
-            allocate (r_ustar2 (numpatch)) !Shaofeng, 2023.05.20
-            allocate (r_tstar (numpatch))
-            allocate (r_qstar (numpatch))
-            allocate (r_zol   (numpatch))
-            allocate (r_rib   (numpatch))
-            allocate (r_fm    (numpatch))
-            allocate (r_fh    (numpatch))
-            allocate (r_fq    (numpatch))
+            allocate (r_ustar  (numpatch));  r_ustar (:) = spval
+            allocate (r_ustar2 (numpatch));  r_ustar2(:) = spval !Shaofeng, 2023.05.20
+            allocate (r_tstar  (numpatch));  r_tstar (:) = spval
+            allocate (r_qstar  (numpatch));  r_qstar (:) = spval
+            allocate (r_zol    (numpatch));  r_zol   (:) = spval
+            allocate (r_rib    (numpatch));  r_rib   (:) = spval
+            allocate (r_fm     (numpatch));  r_fm    (:) = spval
+            allocate (r_fh     (numpatch));  r_fh    (:) = spval
+            allocate (r_fq     (numpatch));  r_fq    (:) = spval
+            allocate (r_us10m  (numpatch));  r_us10m (:) = spval
+            allocate (r_vs10m  (numpatch));  r_vs10m (:) = spval
+            allocate (r_fm10m  (numpatch));  r_fm10m (:) = spval
 
-            allocate (r_us10m (numpatch))
-            allocate (r_vs10m (numpatch))
-            allocate (r_fm10m (numpatch))
+            DO ielm = 1, numelm
 
-            do i = 1, numpatch
+               istt = elm_patch%substt(ielm)
+               iend = elm_patch%subend(ielm)
+
+               allocate (patchmask (istt:iend))
+               patchmask(:) = .true.
 
                IF (DEF_forcing%has_missing_value) THEN
-                  IF (.not. forcmask(i)) cycle
+                  patchmask = forcmask(istt:iend)
                ENDIF
 
-               z0m_av = z0m(i)
-               z0h_av = z0m(i)
-               z0q_av = z0m(i)
+               IF (.not. any(patchmask)) THEN
+                  deallocate(patchmask)
+                  CYCLE
+               ENDIF
+
+               sumwt = sum(elm_patch%subfrc(istt:iend), mask = patchmask)
+
+               ! Aggregate variables from patches to element (gridcell in latitude-longitude mesh)
+               z0m_av  = sum(z0m        (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               hgt_u   = sum(forc_hgt_u (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               hgt_t   = sum(forc_hgt_t (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               hgt_q   = sum(forc_hgt_q (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               us      = sum(forc_us    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               vs      = sum(forc_vs    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               tm      = sum(forc_t     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               qm      = sum(forc_q     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               psrf    = sum(forc_psrf  (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               taux_e  = sum(taux       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                  hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               ENDIF
+
+               z0h_av = z0m_av
+               z0q_av = z0m_av
 
                displa_av = 2./3.*z0m_av/0.07
 
-               hgt_u = max(forc_hgt_u(i), 5.+displa_av)
-               hgt_t = max(forc_hgt_t(i), 5.+displa_av)
-               hgt_q = max(forc_hgt_q(i), 5.+displa_av)
+               hgt_u = max(hgt_u, 5.+displa_av)
+               hgt_t = max(hgt_t, 5.+displa_av)
+               hgt_q = max(hgt_q, 5.+displa_av)
+
                zldis = hgt_u-displa_av
 
-               us = forc_us(i)
-               vs = forc_vs(i)
-               tm = forc_t (i)
-               qm = forc_q (i)
-               psrf = forc_psrf(i)
                rhoair = (psrf - 0.378*qm*psrf/(0.622+0.378*qm)) / (rgas*tm)
 
-               r_ustar(i) = sqrt(max(1.e-6,sqrt(taux(i)**2+tauy(i)**2))/rhoair)
-               r_tstar(i) = -fsena(i)/(rhoair*r_ustar(i))/cpair
-               r_qstar(i) = -fevpa(i)/(rhoair*r_ustar(i))
+               r_ustar_e = sqrt(max(1.e-6,sqrt(taux_e**2+tauy_e**2))/rhoair)
+               r_tstar_e = -fsena_e/(rhoair*r_ustar_e)/cpair
+               r_qstar_e = -fevpa_e/(rhoair*r_ustar_e)
 
                thm = tm + 0.0098*hgt_t
                th  = tm*(100000./psrf)**(rgas/cpair)
                thv = th*(1.+0.61*qm)
 
-               r_zol(i) = zldis*vonkar*grav * (r_tstar(i)+0.61*th*r_qstar(i)) &
-                  / (r_ustar(i)**2*thv)
+               r_zol_e = zldis*vonkar*grav * (r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e) &
+                  / (r_ustar_e**2*thv)
 
-               if(r_zol(i) >= 0.)then   !stable
-                  r_zol(i) = min(2.,max(r_zol(i),1.e-6))
+               if(r_zol_e >= 0.)then   !stable
+                  r_zol_e = min(2.,max(r_zol_e,1.e-6))
                else                       !unstable
-                  r_zol(i) = max(-100.,min(r_zol(i),-1.e-6))
+                  r_zol_e = max(-100.,min(r_zol_e,-1.e-6))
                endif
 
                beta = 1.
                zii = 1000.
-               thvstar=r_tstar(i)+0.61*th*r_qstar(i)
+
+               thvstar=r_tstar_e*(1.+0.61*qm)+0.61*th*r_qstar_e
                ur = sqrt(us*us+vs*vs)
-               if(r_zol(i) >= 0.)then
+               if(r_zol_e >= 0.)then
                   um = max(ur,0.1)
                else
-                 if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-                  hpbl = forc_hpbl(i)
-                  zii = max(5.*hgt_u,hpbl)
-                 endif !//TODO: Shaofeng, 2023.05.18
-                  wc = (-grav*r_ustar(i)*thvstar*zii/thv)**(1./3.)
+                  if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
+                     zii = max(5.*hgt_u,hpbl)
+                  endif !//TODO: Shaofeng, 2023.05.18
+                  wc = (-grav*r_ustar_e*thvstar*zii/thv)**(1./3.)
                   wc2 = beta*beta*(wc*wc)
                   um = max(0.1,sqrt(ur*ur+wc2))
                endif
 
-               obu = zldis/r_zol(i)
+               obu = zldis/r_zol_e
                if (DEF_USE_CBL_HEIGHT) then
-                  hpbl = forc_hpbl(i)
                   call moninobuk_leddy(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                    obu,um, hpbl, r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+                     obu,um, hpbl, r_ustar2_e,fh2m,fq2m,r_fm10m_e,r_fm_e,r_fh_e,r_fq_e) !Shaofeng, 2023.05.20
                else
                   call moninobuk(hgt_u,hgt_t,hgt_q,displa_av,z0m_av,z0h_av,z0q_av,&
-                    obu,um,r_ustar2(i),fh2m,fq2m,r_fm10m(i),r_fm(i),r_fh(i),r_fq(i)) !Shaofeng, 2023.05.20
+                    obu,um,r_ustar2_e,fh2m,fq2m,r_fm10m_e,r_fm_e,r_fh_e,r_fq_e) !Shaofeng, 2023.05.20
                endif
 
                ! bug found by chen qiying 2013/07/01
-               r_rib(i) = r_zol(i) /vonkar * r_ustar(i)**2 / (vonkar/r_fh(i)*um**2)
-               r_rib(i) = min(5.,r_rib(i))
+               r_rib_e = r_zol_e /vonkar * r_ustar2_e**2 / (vonkar/r_fh_e*um**2)
+               r_rib_e = min(5.,r_rib_e)
 
-               r_us10m(i) = us/um * r_ustar(i) /vonkar * r_fm10m(i)
-               r_vs10m(i) = vs/um * r_ustar(i) /vonkar * r_fm10m(i)
+               r_us10m_e = us/um * r_ustar2_e /vonkar * r_fm10m_e
+               r_vs10m_e = vs/um * r_ustar2_e /vonkar * r_fm10m_e
+
+               ! Assign values from element (gridcell in latitude-longitude mesh) to patches.
+               ! Notice that all values on patches in an element are equal.
+               r_ustar (istt:iend) = r_ustar_e
+               r_ustar2(istt:iend) = r_ustar2_e
+               r_tstar (istt:iend) = r_tstar_e
+               r_qstar (istt:iend) = r_qstar_e
+               r_zol   (istt:iend) = r_zol_e
+               r_rib   (istt:iend) = r_rib_e
+               r_fm    (istt:iend) = r_fm_e
+               r_fh    (istt:iend) = r_fh_e
+               r_fq    (istt:iend) = r_fq_e
+               r_us10m (istt:iend) = r_us10m_e
+               r_vs10m (istt:iend) = r_vs10m_e
+               r_fm10m (istt:iend) = r_fm10m_e
+
+               deallocate(patchmask)
 
             end do
 
-            call acc1d (r_ustar, a_ustar)
-            call acc1d (r_tstar, a_tstar)
-            call acc1d (r_qstar, a_qstar)
-            call acc1d (r_zol  , a_zol  )
-            call acc1d (r_rib  , a_rib  )
-            call acc1d (r_fm   , a_fm   )
-            call acc1d (r_fh   , a_fh   )
-            call acc1d (r_fq   , a_fq   )
+            call acc1d (r_ustar , a_ustar )
+            call acc1d (r_ustar2, a_ustar2)
+            call acc1d (r_tstar , a_tstar )
+            call acc1d (r_qstar , a_qstar )
+            call acc1d (r_zol   , a_zol   )
+            call acc1d (r_rib   , a_rib   )
+            call acc1d (r_fm    , a_fm    )
+            call acc1d (r_fh    , a_fh    )
+            call acc1d (r_fq    , a_fq    )
 
             call acc1d (r_us10m, a_us10m)
             call acc1d (r_vs10m, a_vs10m)
             call acc1d (r_fm10m, a_fm10m)
 
             deallocate (r_ustar )
-            deallocate (r_ustar2 ) !Shaofeng, 2023.05.20
+            deallocate (r_ustar2) !Shaofeng, 2023.05.20
             deallocate (r_tstar )
             deallocate (r_qstar )
             deallocate (r_zol   )

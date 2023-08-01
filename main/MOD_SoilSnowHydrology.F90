@@ -395,20 +395,26 @@ MODULE MOD_SoilSnowHydrology
 ! END SNICAR model variables
              )
 
-!=======================================================================
-! this is the main subroutine to execute the calculation of
-! hydrological processes
+!===================================================================================
+! this is the main subroutine to execute the calculation of soil water processes
 !
 ! Original author : Yongjiu Dai, /09/1999/, /08/2002/, /04/2014/
 !
-! FLOW DIAGRAM FOR WATER.F90
+! Modified by Shupeng Zhang /07/2023/ to use Variably Saturated Flow algorithm
+!    Reference :
+!    Dai, Y., Zhang, S., Yuan, H., & Wei, N. (2019).
+!    Modeling Variably Saturated Flow in Stratified Soils
+!      With Explicit Tracking of Wetting Front and Water Table Locations.
+!    Water Resources Research. doi:10.1029/2019wr025368
+!
+! FLOW DIAGRAM FOR WATER_VSF.F90
 !
 ! WATER ===> snowwater
-!            surfacerunoff
-!            soilwater
-!            subsurfacerunoff
+!            surfacerunoff     [caculated by lateral flow when defined Lateral_Flow]
+!            subsurfacerunoff  [caculated by lateral flow when defined Lateral_Flow]
+!            soilwater         [Variably Saturated Flow algorithm]
 !
-!=======================================================================
+!===================================================================================
 
   use MOD_Precision
   USE MOD_Hydro_SoilWater
@@ -461,9 +467,9 @@ MODULE MOD_SoilSnowHydrology
         qsubl            , &! sublimation rate from snow pack (mm h2o /s) [+]
         qfros               ! surface dew added to snow pack (mm h2o /s) [+]
 #if(defined CaMa_Flood)
-real(r8), INTENT(inout) :: flddepth ! inundation water input from top (mm/s)
-real(r8), INTENT(in) :: fldfrc ! inundation water input from top (mm/s)
-real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
+  real(r8), INTENT(inout) :: flddepth  ! inundation water input from top (mm/s)
+  real(r8), INTENT(in)    :: fldfrc    ! inundation water input from top (mm/s)
+  real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
@@ -507,16 +513,15 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
        gwat              , &! net water input from top (mm/s)
        drainmax          , &! drainage max (mm h2o/s)
        rsubst            , &! subsurface runoff (mm h2o/s)
-       vol_liq(1:nl_soil), &! partitial volume of liquid water in layer
-       vol_ice(1:nl_soil), &! partitial volume of ice lens in layer
+       vol_liq(1:nl_soil), &! partial volume of liquid water in layer
+       vol_ice(1:nl_soil), &! partial volume of ice lens in layer
        icefrac(1:nl_soil)   ! ice fraction (-)
 
   real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
   REAL(r8) :: qraing
 
-  INTEGER  :: nlev
   REAL(r8) :: zwtmm
-  REAL(r8) :: sp_zc(1:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil) ! in cm
+  REAL(r8) :: sp_zc(1:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil) ! in mm
   LOGICAL  :: is_permeable(1:nl_soil)
   REAL(r8) :: dzsum, dz
   REAL(r8) :: icefracsum, fracice_rsub, imped
@@ -536,10 +541,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   real(r8) :: gfld,qinfl_all,rsur_fld, qinfl_fld_subgrid! inundation water input from top (mm/s)
 #endif
 
-      nlev = nl_soil
-
 #ifdef Campbell_SOIL_MODEL
-      theta_r(1:nlev) = 0._r8
+      theta_r(1:nl_soil) = 0._r8
 #endif
 
 !=======================================================================
@@ -572,7 +575,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   if(patchtype<=1)then   ! soil ground only
 
       ! For water balance check, the sum of water in soil column before the calcultion
-      w_sum = sum(wliq_soisno(1:nlev)) + sum(wice_soisno(1:nlev)) + wa + wdsrf
+      w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
 
       ! Renew the ice and liquid mass due to condensation
       if(lb >= 1)then
@@ -581,9 +584,13 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
       end if
 
-      wresi(1:nlev) = 0.
+      ! Due to the increase in volume after freezing, the total volume of water and 
+      ! ice may exceed the porosity of the soil. This excess water is temporarily 
+      ! stored in "wresi". After calculating the movement of soil water, "wresi"
+      ! is added back to "wliq_soisno".
+      wresi(1:nl_soil) = 0.
       ! porosity of soil, partitial volume of ice and liquid
-      do j = 1, nlev
+      do j = 1, nl_soil
          vol_ice(j) = min(porsl(j), wice_soisno(j)/(dz_soisno(j)*denice))
          if(porsl(j) < 1.e-6)then
             icefrac(j) = 0.
@@ -594,8 +601,8 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          eff_porosity(j) = max(wimp, porsl(j)-vol_ice(j))
          is_permeable(j) = eff_porosity(j) > max(wimp, theta_r(j))
          IF (is_permeable(j)) THEN
-            vol_liq(j) = min(eff_porosity(j), wliq_soisno(j)/(dz_soisno(j)*denh2o))
-            vol_liq(j) = max(0., vol_liq(j))
+            vol_liq(j) = wliq_soisno(j)/(dz_soisno(j)*denh2o)
+            vol_liq(j) = min(eff_porosity(j), max(0., vol_liq(j)))
             wresi(j) = wliq_soisno(j) - dz_soisno(j) * denh2o * vol_liq(j)
          ENDIF
       enddo
@@ -604,47 +611,47 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
 #ifndef LATERAL_FLOW
       if (gwat > 0.) then
-      call surfacerunoff (nlev,wtfact,wimp,porsl,psi0,hksati,&
-                          z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                          eff_porosity,icefrac,zwt,gwat,rsur)
+         call surfacerunoff (nl_soil,wtfact,wimp,porsl,psi0,hksati,&
+                             z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+                             eff_porosity,icefrac,zwt,gwat,rsur)
       else
-           rsur = 0.
+         rsur = 0.
       endif
 
       ! infiltration into surface soil layer
       qraing = gwat - rsur
 #else
-      ! for lateral flow, "rsur" is calculated in hydro/mod_surface_flow.F90
+      ! for lateral flow, "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
       ! and is removed from surface water there.
       qraing = gwat
 #endif
 
 #if(defined CaMa_Flood)
       IF (LWINFILT) then
-            ! \ re-infiltration [mm/s] calculation.
-            ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
-            ! the re-infiltration will not be calculated.
+         ! \ re-infiltration [mm/s] calculation.
+         ! if surface runoff is ocurred (rsur != 0.), flood depth <1.e-6  and flood frction <0.05,
+         ! the re-infiltration will not be calculated.
          IF ((flddepth .GT. 1.e-6).and.(fldfrc .GT. 0.05) .and. (patchtype == 0) ) then
- !           write(6,*) 'flddepth=',flddepth,'fldfrc=',fldfrc
+            !           write(6,*) 'flddepth=',flddepth,'fldfrc=',fldfrc
             gfld=flddepth/deltim ! [mm/s]
             ! surface runoff from inundation, this should not be added to the surface runoff from soil
             ! otherwise, the surface runoff will be double counted.
             ! only the re-infiltration is added to water balance calculation.
             CALL surfacerunoff (nl_soil,1.0,wimp,porsl,psi0,hksati,&
-                       z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
-                       eff_porosity,icefrac,zwt,gfld,rsur_fld)
+               z_soisno(1:),dz_soisno(1:),zi_soisno(0:),&
+               eff_porosity,icefrac,zwt,gfld,rsur_fld)
             ! infiltration into surface soil layer
             qinfl_fld_subgrid = gfld - rsur_fld !assume the re-infiltration is occured in whole patch area.
-!            write(6,*) 'gfld=',gfld,'   qinfl_fld_subgrid=',qinfl_fld_subgrid
+            !            write(6,*) 'gfld=',gfld,'   qinfl_fld_subgrid=',qinfl_fld_subgrid
          ELSE
             qinfl_fld_subgrid=0.0d0
             gfld=0.0d0
             rsur_fld=0.0d0
 
          ENDIF
-            qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
-            qraing=qinfl_fld+qraing ! [mm/s] total infiltration in grid.
-            flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
+         qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
+         qraing=qinfl_fld+qraing ! [mm/s] total infiltration in grid.
+         flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
       ENDIF
 #endif
 !=======================================================================
@@ -653,11 +660,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 
       ! convert length units from m to mm
       zwtmm = zwt * 1000.0
-      sp_zc(1:nlev) = z_soisno (1:nlev) * 1000.0   ! from meter to mm
-      sp_zi(0:nlev) = zi_soisno(0:nlev) * 1000.0   ! from meter to mm
+      sp_zc(1:nl_soil) = z_soisno (1:nl_soil) * 1000.0   ! from meter to mm
+      sp_zi(0:nl_soil) = zi_soisno(0:nl_soil) * 1000.0   ! from meter to mm
 
       ! check consistancy between water table location and liquid water content
-      DO j = 1, nlev
+      DO j = 1, nl_soil
          IF ((vol_liq(j) < eff_porosity(j)-1.e-6) .and. (zwtmm <= sp_zi(j-1))) THEN
             zwtmm = sp_zi(j)
          ENDIF
@@ -666,10 +673,10 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
 #ifndef LATERAL_FLOW
       !-- Topographic runoff  ----------------------------------------------------------
       imped = 1.0
-      IF (zwtmm < sp_zi(nlev)) THEN
+      IF (zwtmm < sp_zi(nl_soil)) THEN
          dzsum = 0.
          icefracsum = 0.
-         do j = nlev, 1, -1
+         do j = nl_soil, 1, -1
             sp_dz(j) = sp_zi(j) - sp_zi(j-1)
             IF (zwtmm < sp_zi(j)) THEN
                dz = min(sp_dz(j), sp_zi(j)-zwtmm)
@@ -685,25 +692,29 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       ENDIF
 
       rsub(ipatch) = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
+      rsubst = rsub(ipatch)
+#else
+      ! for lateral flow:
+      ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
+      rsubst = 0
 #endif
 
-      ! for lateral flow:
-      ! "rsub" is calculated in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
-      rsubst = rsub(ipatch)
 
 #ifdef Campbell_SOIL_MODEL
-      prms(1,:) = bsw(1:nlev)
+      prms(1,:) = bsw(1:nl_soil)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-      prms(1,1:nlev) = alpha_vgm(1:nlev)
-      prms(2,1:nlev) = n_vgm    (1:nlev)
-      prms(3,1:nlev) = L_vgm    (1:nlev)
-      prms(4,1:nlev) = sc_vgm   (1:nlev)
-      prms(5,1:nlev) = fc_vgm   (1:nlev)
+      prms(1,1:nl_soil) = alpha_vgm(1:nl_soil)
+      prms(2,1:nl_soil) = n_vgm    (1:nl_soil)
+      prms(3,1:nl_soil) = L_vgm    (1:nl_soil)
+      prms(4,1:nl_soil) = sc_vgm   (1:nl_soil)
+      prms(5,1:nl_soil) = fc_vgm   (1:nl_soil)
 #endif
 
-      IF (zwtmm < sp_zi(nlev)) THEN
-         DO j = nlev, 1, -1
+      ! update "vol_liq" in the level containing water table
+      ! "vol_liq" in this level refers to volume content in unsaturated part
+      IF (zwtmm < sp_zi(nl_soil)) THEN
+         DO j = nl_soil, 1, -1
             IF ((zwtmm >= sp_zi(j-1)) .and. (zwtmm < sp_zi(j))) THEN
 
                IF ((zwtmm > sp_zi(j-1)) .and. (is_permeable(j))) THEN
@@ -715,7 +726,7 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
                   ENDIF
 
                   vol_liq(j) = max(0., min(eff_porosity(j), vol_liq(j)))
-                  wresi(j) = wliq_soisno(j) - eff_porosity(j)*(sp_zi(j)-zwtmm) &
+                  wresi(j) = wliq_soisno(j)*1000.0/denh2o - eff_porosity(j)*(sp_zi(j)-zwtmm) &
                      - vol_liq(j) * (zwtmm - sp_zi(j-1))
                ENDIF
 
@@ -727,14 +738,14 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
       wdsrf = max(0., wdsrf)
 
       CALL soil_water_vertical_movement ( &
-         nlev, deltim, sp_zc(1:nlev), sp_zi (0:nlev), is_permeable(1:nlev), &
-         eff_porosity(1:nlev), theta_r (1:nlev), psi0 (1:nlev), hksati(1:nlev), nprms, prms(:,1:nlev), &
-         porsl(nlev), &
-         qraing, etr, rootr(1:nlev), rsubst, qinfl, &
-         wdsrf, zwtmm, wa, vol_liq(1:nlev), smp(1:nlev), hk(1:nlev))
+         nl_soil, deltim, sp_zc(1:nl_soil), sp_zi(0:nl_soil), is_permeable(1:nl_soil),    &
+         eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
+         nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
+         qraing, etr, rootr(1:nl_soil), rsubst, qinfl, &
+         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil))
 
       ! update the mass of liquid water
-      DO j = nlev, 1, -1
+      DO j = nl_soil, 1, -1
          IF (is_permeable(j)) THEN
             IF (zwtmm < sp_zi(j)) THEN
                IF (zwtmm >= sp_zi(j-1)) THEN
@@ -774,17 +785,17 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          err_solver = err_solver - (qfros-qseva-qsubl)*deltim
       endif
 #if(defined CaMa_Flood)
-   IF (LWINFILT) THEN
+      IF (LWINFILT) THEN
          err_solver = err_solver-(gfld-rsur_fld)*fldfrc*deltim
-   ENDIF
+      ENDIF
 #endif
 #if(defined CoLMDEBUG)
-     if(abs(err_solver) > 1.e-3)then
-        write(6,*) 'Warning: water balance violation after all soilwater calculation', err_solver
-     endif
-     IF (any(wliq_soisno < -1.e-3)) THEN
-        write(*,*) 'Warning: negative', wliq_soisno(1:nlev)
-     ENDIF
+      if(abs(err_solver) > 1.e-3)then
+         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver
+      endif
+      IF (any(wliq_soisno < -1.e-3)) THEN
+         write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)
+      ENDIF
 #endif
 
 !=======================================================================
@@ -794,9 +805,11 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   else
       if(patchtype==2)then        ! WETLAND
          qinfl = 0.
+#ifndef LATERAL_FLOW
          rsur = max(0.,gwat)
-         rsubst = 0.
-         rnof = 0.
+         rsub(ipatch) = 0
+#endif
+         rnof = rsur + rsub(ipatch)
          do j = 1, nl_soil
             if(t_soisno(j)>tfrz)then
                wice_soisno(j) = 0.0
@@ -805,10 +818,12 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
          enddo
       endif
       if(patchtype==3)then        ! LAND ICE
-         rsur = max(0.0,gwat)
          qinfl = 0.
-         rsubst = 0.
-         rnof = rsur
+#ifndef LATERAL_FLOW
+         rsur = max(0.0,gwat)
+         rsub(ipatch) = 0
+#endif
+         rnof = rsur + rsub(ipatch)
          wice_soisno(1:nl_soil) = dz_soisno(1:nl_soil)*1000.
          wliq_soisno(1:nl_soil) = 0.0
       endif
@@ -820,7 +835,6 @@ real(r8), INTENT(out) :: qinfl_fld ! inundation water input from top (mm/s)
   endif
 
   errw_rsub = 0.
-!-----------------------------------------------------------------------
 
   end subroutine WATER_VSF
 
