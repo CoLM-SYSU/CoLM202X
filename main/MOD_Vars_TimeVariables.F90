@@ -932,11 +932,11 @@ MODULE MOD_Vars_TimeVariables
            allocate (fh                          (numpatch)); fh            (:) = spval
            allocate (fq                          (numpatch)); fq            (:) = spval
            
-           allocate (irrig_rate                  (numpatch)); irrig_rate    (:) = spval
-           allocate (deficit_irrig               (numpatch)); deficit_irrig (:) = spval
-           allocate (sum_irrig                   (numpatch)); sum_irrig     (:) = spval
-           allocate (sum_irrig_count             (numpatch)); sum_irrig_count   (:) = spval
-           allocate (n_irrig_steps_left          (numpatch)); n_irrig_steps_left(:) = spval
+           allocate (irrig_rate                  (numpatch)); irrig_rate    (:) = 0._r8
+           allocate (deficit_irrig               (numpatch)); deficit_irrig (:) = 0._r8
+           allocate (sum_irrig                   (numpatch)); sum_irrig     (:) = 0._r8
+           allocate (sum_irrig_count             (numpatch)); sum_irrig_count   (:) = 0._r8
+           allocate (n_irrig_steps_left          (numpatch)); n_irrig_steps_left(:) = 0
 
         end if
   end if
