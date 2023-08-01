@@ -1366,7 +1366,7 @@ contains
                WHERE (forcmask)
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
-            !ELSE
+            ELSE
                WHERE(patchmask)
                  rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
