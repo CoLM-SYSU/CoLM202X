@@ -3279,6 +3279,11 @@ contains
          where (acc_vec /= spval)  acc_vec = acc_vec / nac
          CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'patch', 'time')
+         IF (itime_in_file == 1) then
+            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+            CALL ncio_put_attr (file_hist, varname, 'units', units)
+            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+         ENDIF
 #endif
       end select 
 
@@ -3320,6 +3325,11 @@ contains
          where (acc_vec /= spval)  acc_vec = acc_vec / nac
          CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'urban', 'time')
+         IF (itime_in_file == 1) then
+            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+            CALL ncio_put_attr (file_hist, varname, 'units', units)
+            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+         ENDIF
 #endif
       end select 
 
@@ -3370,6 +3380,11 @@ contains
          call ncio_define_dimension (file_hist, dim1name, ndim1)
          CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, 'patch', 'time')
+         IF (itime_in_file == 1) then
+            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+            CALL ncio_put_attr (file_hist, varname, 'units', units)
+            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+         ENDIF
 #endif
       end select 
 
@@ -3417,6 +3432,11 @@ contains
          call ncio_define_dimension (file_hist, dim2name, ndim2)
          CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             dim1name, dim2name, 'patch', 'time')
+         IF (itime_in_file == 1) then
+            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+            CALL ncio_put_attr (file_hist, varname, 'units', units)
+            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+         ENDIF
 #endif
       end select 
 
@@ -3459,6 +3479,11 @@ contains
          END WHERE
          CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
             'patch', 'time')
+         IF (itime_in_file == 1) then
+            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
+            CALL ncio_put_attr (file_hist, varname, 'units', units)
+            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
+         ENDIF
 #endif
       end select 
 
