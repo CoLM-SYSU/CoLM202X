@@ -178,7 +178,7 @@ CONTAINS
          call ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
       ENDIF
       IF(DEF_USE_IRRIGATION)THEN
-         call ncio_read_vector (file_restart,'irrig_method_p', landpft,irrig_method_p, defval = 0)
+         call ncio_read_vector (file_restart,'irrig_method_p', landpft,irrig_method_p, defval = 1)
       ENDIF
       
 
