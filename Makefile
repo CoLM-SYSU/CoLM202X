@@ -212,10 +212,10 @@ OBJS_CAMA_T = $(addprefix .bld/,${OBJECTS_CAMA})
 endif
 
 OBJS_MAIN = \
-				MOD_Hydro_SurfaceNetwork.o                \
+				MOD_Hydro_HillslopeNetwork.o              \
 				MOD_Hydro_RiverLakeNetwork.o              \
-				MOD_Hydro_BasinNeighbour.o             \
-				MOD_Hydro_SurfaceFlow.o                   \
+				MOD_Hydro_BasinNeighbour.o                \
+				MOD_Hydro_HillslopeFlow.o                 \
 				MOD_Hydro_SubsurfaceFlow.o                \
 				MOD_Hydro_RiverLakeFlow.o                 \
 				MOD_Hydro_Hist.o                          \
