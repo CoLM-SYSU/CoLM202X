@@ -114,7 +114,7 @@ CONTAINS
       DEF_domain%edgee = DEF_domain%edgew + 1.0
 
       IF (.not. isgreenwich) THEN
-         RefLongitude = SITE_lon_location 
+         LocalLongitude = SITE_lon_location 
       ENDIF
 
 #if (defined LULC_IGBP_PFT)
