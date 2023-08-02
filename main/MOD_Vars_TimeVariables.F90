@@ -841,7 +841,6 @@ MODULE MOD_Vars_TimeVariables
            allocate (o3uptakesun                 (numpatch)); o3uptakesun   (:) = spval
            allocate (o3uptakesha                 (numpatch)); o3uptakesha   (:) = spval
 !End ozone stress variables
-
            allocate (rstfacsun_out               (numpatch)); rstfacsun_out (:) = spval
            allocate (rstfacsha_out               (numpatch)); rstfacsha_out (:) = spval
            allocate (gssun_out                   (numpatch)); gssun_out     (:) = spval
@@ -881,7 +880,6 @@ MODULE MOD_Vars_TimeVariables
            allocate (wat                         (numpatch)); wat           (:) = spval
            allocate (wdsrf                       (numpatch)); wdsrf         (:) = spval
            allocate (rss                         (numpatch)); rss           (:) = spval
-
            allocate (t_lake              (nl_lake,numpatch)); t_lake      (:,:) = spval
            allocate (lake_icefrac        (nl_lake,numpatch)); lake_icefrac(:,:) = spval
            allocate (savedtke1                   (numpatch)); savedtke1     (:) = spval
@@ -1477,7 +1475,7 @@ MODULE MOD_Vars_TimeVariables
      call check_vector_data ('zwt         [m]    ', zwt        ) ! the depth to water table [m]
      call check_vector_data ('wa          [mm]   ', wa         ) ! water storage in aquifer [mm]
      call check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
-
+     call check_vector_data ('rss         [s/m]  ', rss       ) ! depth of surface water [mm]
      call check_vector_data ('t_lake      [K]    ', t_lake      )!
      call check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
      call check_vector_data ('savedtke1   [W/m K]', savedtke1   )!

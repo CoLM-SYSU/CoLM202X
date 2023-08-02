@@ -164,7 +164,7 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_OZONEDATA               = .false.
 
    ! .true. for running SNICAR model
-   logical :: DEF_USE_SNICAR                  = .true.
+   logical :: DEF_USE_SNICAR                  = .false.
 
    ! .true. read aerosol deposition data from file or .false. set in the code
    logical :: DEF_Aerosol_Readin              = .true.

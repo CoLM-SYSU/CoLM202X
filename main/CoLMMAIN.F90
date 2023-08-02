@@ -11,7 +11,6 @@ SUBROUTINE CoLMMAIN ( &
            soil_s_v_alb, soil_d_v_alb, soil_s_n_alb, soil_d_n_alb,  &
            vf_quartz,    vf_gravels,   vf_om,        vf_sand,       &
            wf_gravels,   wf_sand,      porsl,        psi0,          &
-           wfc,                                                     &
            bsw,                                                     &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
            theta_r,      alpha_vgm,    n_vgm,        L_vgm,         &
@@ -211,7 +210,6 @@ SUBROUTINE CoLMMAIN ( &
         wf_gravels(nl_soil),  & ! gravimetric fraction of gravels
         wf_sand   (nl_soil),  & ! gravimetric fraction of sand
         porsl     (nl_soil),  & ! fraction of soil that is voids [-]
-        wfc       (nl_soil),  & ! field capacity
         psi0      (nl_soil),  & ! minimum soil suction [mm]
         bsw       (nl_soil),  & ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
@@ -677,7 +675,6 @@ ENDIF
            dewmx             ,capr              ,cnfac             ,vf_quartz         ,&
            vf_gravels        ,vf_om             ,vf_sand           ,wf_gravels        ,&
            wf_sand           ,csol              ,porsl             ,psi0              ,&
-           wfc                                                                        ,&
 #ifdef Campbell_SOIL_MODEL
            bsw               ,&
 #endif
@@ -787,7 +784,7 @@ ENDIF
          lb  = snl + 1   !lower bound of array
          CALL snowcompaction (lb,deltim,&
                          imelt(lb:0),fiold(lb:0),t_soisno(lb:0),&
-                         wliq_soisno(lb:0),wice_soisno(lb:0),dz_soisno(lb:0))
+                         wliq_soisno(lb:0),wice_soisno(lb:0),forc_us,forc_vs,dz_soisno(lb:0))
 
          ! Combine thin snow elements
          lb = maxsnl + 1
@@ -960,7 +957,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    sm          ,scv         ,snowdp     ,imelt       ,&
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
-                   ssi         ,wimp                                 ,&
+                   ssi         ,wimp        ,forc_us    ,forc_vs     ,&
                    ! SNICAR
                    forc_aer    ,&
                    mss_bcpho   ,mss_bcphi   ,mss_ocpho  ,mss_ocphi   ,&
@@ -972,7 +969,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    sm          ,scv         ,snowdp     ,imelt       ,&
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
-                   ssi         ,wimp                                  )
+                   ssi         ,wimp        ,forc_us    ,forc_vs     )
       ENDIF
 
 
@@ -1084,7 +1081,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            z_soisno     ,dz_soisno    ,zi_soisno       ,t_soisno        ,&
            wice_soisno  ,wliq_soisno  ,t_lake          ,lake_icefrac    ,&
            fseng        ,fgrnd        ,snl             ,scv             ,&
-           snowdp       ,sm            &
+           snowdp       ,sm           ,forc_us         ,forc_vs          &
 
 ! SNICAR model variables
            ,forc_aer    ,&

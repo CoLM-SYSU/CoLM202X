@@ -23,7 +23,6 @@ MODULE MOD_Thermal
                       dewmx       ,capr        ,cnfac       ,vf_quartz  ,&
                       vf_gravels  ,vf_om       ,vf_sand     ,wf_gravels ,&
                       wf_sand     ,csol        ,porsl       ,psi0       ,&
-                      wfc         ,                                      &
 #ifdef Campbell_SOIL_MODEL
                       bsw         ,                                      &
 #endif
@@ -159,7 +158,6 @@ MODULE MOD_Thermal
         wf_gravels(1:nl_soil), &! gravimetric fraction of gravels
         wf_sand   (1:nl_soil), &! gravimetric fraction of sand
         csol      (1:nl_soil), &! heat capacity of soil solids [J/(m3 K)]
-        wfc       (1:nl_soil), &! field capacity
         porsl     (1:nl_soil), &! soil porosity [-]
         psi0      (1:nl_soil), &! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
@@ -525,7 +523,7 @@ MODULE MOD_Thermal
          !NOTE: If the beta scheme is used, the rss is not soil resistance
          ! but soil wetness relative to field capacity [0-1]
          CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,wfc,qg,rss)
+                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
          write(*,*) rss
       ENDIF
 
