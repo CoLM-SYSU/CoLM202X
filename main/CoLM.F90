@@ -426,7 +426,7 @@ PROGRAM CoLM
 
       ! Write out the model variables for restart run and the histroy file
       ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
+      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
 #ifdef LULCC
       ! DO land USE and land cover change simulation

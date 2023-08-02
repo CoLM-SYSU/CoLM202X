@@ -61,6 +61,10 @@ contains
 
       IF (HistForm == 'Gridded') THEN
          CALL hist_gridded_init (dir_hist)
+#ifdef SinglePoint
+      ELSEIF (HistForm == 'Single') THEN
+         CALL hist_single_init  ()
+#endif
       ENDIF
 
 #ifdef LATERAL_FLOW
@@ -76,6 +80,10 @@ contains
 
       call deallocate_acc_fluxes ()
 
+#ifdef SinglePoint
+      CALL hist_single_final ()
+#endif
+
 #ifdef LATERAL_FLOW
       CALL hist_basin_final ()
 #endif
@@ -83,7 +91,7 @@ contains
    end subroutine hist_final
 
    !---------------------------------------
-   SUBROUTINE hist_out (idate, deltim, itstamp, ptstamp, &
+   SUBROUTINE hist_out (idate, deltim, itstamp, etstamp, ptstamp, &
          dir_hist, site)
 
       !=======================================================================
@@ -116,6 +124,7 @@ contains
       integer,  INTENT(in) :: idate(3)
       real(r8), INTENT(in) :: deltim
       type(timestamp), intent(in) :: itstamp
+      type(timestamp), intent(in) :: etstamp
       type(timestamp), intent(in) :: ptstamp
 
       character(LEN=*), intent(in) :: dir_hist
@@ -132,7 +141,6 @@ contains
       integer :: month, day
       integer :: days_month(1:12)
       character(len=10) :: cdate
-      character(len=256) :: groupby
 
       type(block_data_real8_2d) :: sumarea
       type(block_data_real8_2d) :: sumarea_urb
@@ -175,14 +183,27 @@ contains
          days_month = (/31,28,31,30,31,30,31,31,30,31,30,31/)
          if (isleapyear(idate(1))) days_month(2) = 29
 
-         groupby = DEF_HIST_groupby
-
-         if ( trim(groupby) == 'YEAR' ) then
+         if ( trim(DEF_HIST_groupby) == 'YEAR' ) then
             write(cdate,'(i4.4)') idate(1)
-         elseif ( trim(groupby) == 'MONTH' ) then
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofyear(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
+         elseif ( trim(DEF_HIST_groupby) == 'MONTH' ) then
             write(cdate,'(i4.4,"-",i2.2)') idate(1), month
-         elseif ( trim(groupby) == 'DAY' ) then
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofmonth(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
+         elseif ( trim(DEF_HIST_groupby) == 'DAY' ) then
             write(cdate,'(i4.4,"-",i2.2,"-",i2.2)') idate(1), month, day
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofday(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
          else
             write(*,*) 'Warning : Please use one of DAY/MONTH/YEAR for history group.'
          end if
@@ -3245,6 +3266,12 @@ contains
 
          call FLUSH_acc_fluxes ()
 
+#ifdef SinglePoint
+         IF (USE_SITE_HistWriteBack .and. memory_to_disk) THEN
+            itime_mem = 0
+         ENDIF
+#endif
+
       end if
 
    END SUBROUTINE hist_out
@@ -3281,14 +3308,8 @@ contains
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_2d ( &
+            acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
       end select
 
@@ -3327,14 +3348,8 @@ contains
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'urban', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_urb_2d ( &
+            acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
       end select
 
@@ -3381,15 +3396,8 @@ contains
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         call ncio_define_dimension (file_hist, dim1name, ndim1)
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, 'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_3d (acc_vec, file_hist, varname, itime_in_file, &
+            dim1name, ndim1, longname, units)
 #endif
       end select
 
@@ -3432,16 +3440,8 @@ contains
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         call ncio_define_dimension (file_hist, dim1name, ndim1)
-         call ncio_define_dimension (file_hist, dim2name, ndim2)
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, dim2name, 'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_4d (acc_vec, file_hist, varname, itime_in_file, &
+            dim1name, ndim1, dim2name, ndim2, longname, units)
 #endif
       end select
 
@@ -3479,16 +3479,7 @@ contains
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where ((acc_vec /= spval) .and. (nac_ln > 0))
-            acc_vec = acc_vec / nac_ln
-         END WHERE
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_ln (acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
       end select
 
