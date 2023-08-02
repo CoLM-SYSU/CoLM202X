@@ -12,6 +12,7 @@ MODULE MOD_Vars_Global
 !
 ! !USES:
    USE MOD_Precision
+   USE MOD_Namelist
    IMPLICIT NONE
    SAVE
 
@@ -41,8 +42,8 @@ MODULE MOD_Vars_Global
    integer, parameter :: N_CFT     = 64
 #endif
 
-   integer, parameter :: LCZ_URB   = 10
-   integer, parameter :: NCAR_URB  =  3
+   ! urban type number
+   INTEGER :: N_URB
 
    ! vertical layer number
    integer, parameter :: maxsnl    = -5
@@ -111,6 +112,12 @@ CONTAINS
       IMPLICIT NONE
 
       integer :: nsl
+
+IF (DEF_URBAN_type_scheme == 1) THEN
+      N_URB = 3
+ELSE IF(DEF_URBAN_type_scheme == 2) THEN
+      N_URB = 10
+ENDIF
 
       DO nsl = 1, nl_soil
          z_soi(nsl) = 0.025*(exp(0.5*(nsl-0.5))-1.)  !node depths

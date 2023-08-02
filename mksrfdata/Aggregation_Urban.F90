@@ -24,7 +24,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    USE MOD_Namelist
    USE MOD_Utils, only: num_max_frequency
    USE MOD_LandUrban
-   USE MOD_Vars_Global, only: NCAR_URB, LCZ_URB
+   USE MOD_Vars_Global, only: N_URB
    USE MOD_Urban_Const_LCZ, only: wtroof_lcz, htroof_lcz
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
@@ -141,18 +141,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    INTEGER :: iurban, urb_typidx, urb_regidx
    INTEGER :: pop_i, imonth, start_year, end_year
    INTEGER :: ipxstt, ipxend, ipxl, il, iy
-   INTEGER :: N_URB
 
    ! for surface data diag
 #ifdef SrfdataDiag
    INTEGER  :: ityp
    INTEGER, allocatable, dimension(:) :: typindex
-
-IF (DEF_URBAN_type_scheme == 1) THEN
-   N_URB = NCAR_URB
-ELSE IF(DEF_URBAN_type_scheme == 2) THEN
-   N_URB = LCZ_URB
-ENDIF
 
    allocate( typindex(N_URB) )
 #endif

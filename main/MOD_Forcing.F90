@@ -34,7 +34,6 @@ module MOD_Forcing
    type (mapping_grid2pset_type) :: mg2p_forc
 
    LOGICAL, allocatable :: forcmask (:)
-   LOGICAL, allocatable :: patchmask(:)
 
    ! for Forcing_Downscaling
    type (mapping_grid2pset_type) :: mg2p_forc_elm
@@ -138,13 +137,6 @@ contains
          call mg2p_forc%build (gforc, landpatch)
          IF (DEF_USE_Forcing_Downscaling) THEN
             call mg2p_forc_elm%build (gforc, landelm)
-         ENDIF
-
-         IF (p_is_worker) THEN
-            IF (numpatch > 0) THEN
-               allocate (patchmask(numpatch))
-               patchmask(:) = .true.
-            ENDIF
          ENDIF
       ELSE
          mtstamp = idate

@@ -29,7 +29,7 @@ MODULE MOD_Vars_PFTimeInvariants
   PUBLIC :: READ_PFTimeInvariants
   PUBLIC :: WRITE_PFTimeInvariants
   PUBLIC :: deallocate_PFTimeInvariants
-#ifdef RangeCheck 
+#ifdef RangeCheck
   PUBLIC :: check_PFTimeInvariants
 #endif
 
@@ -119,7 +119,7 @@ MODULE MOD_Vars_PFTimeInvariants
 
   END SUBROUTINE deallocate_PFTimeInvariants
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
   SUBROUTINE check_PFTimeInvariants ()
 
      use MOD_RangeCheck
@@ -161,7 +161,7 @@ MODULE MOD_Vars_PCTimeInvariants
   PUBLIC :: READ_PCTimeInvariants
   PUBLIC :: WRITE_PCTimeInvariants
   PUBLIC :: deallocate_PCTimeInvariants
-#ifdef RangeCheck 
+#ifdef RangeCheck
   PUBLIC :: check_PCTimeInvariants
 #endif
 
@@ -252,7 +252,7 @@ MODULE MOD_Vars_PCTimeInvariants
 
   END SUBROUTINE deallocate_PCTimeInvariants
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
   SUBROUTINE check_PCTimeInvariants ()
 
      use MOD_RangeCheck
@@ -295,6 +295,7 @@ MODULE MOD_Vars_TimeInvariants
 ! surface classification and soil information
   INTEGER,  allocatable :: patchclass     (:)  !index of land cover type of the patches at the fraction > 0
   INTEGER,  allocatable :: patchtype      (:)  !land water type
+  LOGICAL,  allocatable :: patchmask      (:)  !patch mask
 
   REAL(r8), allocatable :: patchlatr      (:)  !latitude in radians
   REAL(r8), allocatable :: patchlonr      (:)  !longitude in radians
@@ -389,6 +390,7 @@ MODULE MOD_Vars_TimeInvariants
 
            allocate (patchclass           (numpatch))
            allocate (patchtype            (numpatch))
+           allocate (patchmask            (numpatch))
 
            allocate (patchlonr            (numpatch))
            allocate (patchlatr            (numpatch))
@@ -466,7 +468,7 @@ MODULE MOD_Vars_TimeInvariants
      use MOD_SPMD_Task
      use MOD_NetCDFVector
      use MOD_NetCDFSerial
-#ifdef RangeCheck 
+#ifdef RangeCheck
      USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
@@ -481,6 +483,7 @@ MODULE MOD_Vars_TimeInvariants
      ! Local variables
      character(LEN=256) :: file_restart, cyear
 
+     patchtype(:) = .true.
 
      write(cyear,'(i4.4)') lc_year
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
@@ -570,7 +573,7 @@ MODULE MOD_Vars_TimeInvariants
      CALL READ_UrbanTimeInvariants (file_restart)
 #endif
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
      call check_TimeInvariants ()
 #endif
 
@@ -738,6 +741,7 @@ MODULE MOD_Vars_TimeInvariants
 
            deallocate (patchclass     )
            deallocate (patchtype      )
+           deallocate (patchmask      )
 
            deallocate (patchlonr      )
            deallocate (patchlatr      )

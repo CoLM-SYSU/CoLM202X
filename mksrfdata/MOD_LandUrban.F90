@@ -15,7 +15,7 @@ MODULE MOD_LandUrban
 
    USE MOD_Grid
    USE MOD_Pixelset
-   USE MOD_Vars_Global, only: NCAR_URB, LCZ_URB, URBAN
+   USE MOD_Vars_Global, only: N_URB, URBAN
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -77,7 +77,6 @@ CONTAINS
       INTEGER :: nurb_glb, npatch_glb
 
       ! local vars for landpath and landurban
-      INTEGER :: N_URB
       INTEGER :: numpatch_
       INTEGER, allocatable :: eindex_(:)
       INTEGER, allocatable :: ipxstt_(:)
@@ -122,12 +121,6 @@ ENDIF
       end if
 
       if (p_is_worker) then
-
-IF (DEF_URBAN_type_scheme == 1) THEN
-         N_URB = NCAR_URB
-ELSE IF(DEF_URBAN_type_scheme == 2) THEN
-         N_URB = LCZ_URB
-ENDIF
 
          IF (numpatch > 0) THEN
             ! a temporary numpatch with max urban patch

@@ -119,6 +119,9 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LULCC_SCHEME = 1
 
    ! ------ Urban model related -------
+   ! Options for urban type scheme
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
    INTEGER :: DEF_URBAN_type_scheme = 1
    LOGICAL :: DEF_URBAN_ONLY   = .false.
    logical :: DEF_URBAN_RUN    = .false.
