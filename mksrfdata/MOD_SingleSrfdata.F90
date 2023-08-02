@@ -89,8 +89,11 @@ CONTAINS
    ! -----
    SUBROUTINE read_surface_data_single (fsrfdata, mksrfdata)
 
+      USE MOD_TimeManager
       USE MOD_NetCDFSerial
       USE MOD_Namelist
+      USE MOD_Utils
+      USE MOD_Vars_Global, only : PI
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: fsrfdata
@@ -101,12 +104,23 @@ CONTAINS
       
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      
+#ifdef LULC_USGS
+      CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
+
+      CALL normalize_longitude (SITE_lon_location)
    
       DEF_domain%edges = floor(SITE_lat_location)
       DEF_domain%edgen = DEF_domain%edges + 1.0
       DEF_domain%edgew = floor(SITE_lon_location)
       DEF_domain%edgee = DEF_domain%edgew + 1.0
+
+      IF (.not. isgreenwich) THEN
+         RefLongitude = SITE_lon_location 
+      ENDIF
 
 #if (defined LULC_IGBP_PFT)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
@@ -252,7 +266,12 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
+
+#ifdef LULC_USGS
+      CALL ncio_write_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_write_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
 
 #if (defined LULC_IGBP_PFT)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')

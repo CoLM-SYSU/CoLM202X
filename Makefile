@@ -99,13 +99,11 @@ OBJS_BASIC =    \
 				 MOD_Hydro_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
-				 MOD_BGC_Vars_2DFluxes.o        \
 				 MOD_BGC_Vars_PFTimeVariables.o \
 				 MOD_BGC_Vars_TimeInvariants.o  \
 				 MOD_BGC_Vars_TimeVariables.o   \
 				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
-				 MOD_Urban_Vars_2DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
 				 MOD_Const_PFT.o                \
@@ -251,7 +249,6 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
 				MOD_BGC_driver.o                          \
-				MOD_Vars_2DFluxes.o                       \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
@@ -281,7 +278,9 @@ OBJS_MAIN = \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \
 				MOD_CaMa_Vars.o                           \
+				MOD_HistGridded.o                         \
 				MOD_HistVector.o                          \
+				MOD_HistSingle.o                          \
 				MOD_Hist.o                                \
 				MOD_LightningData.o                       \
 				MOD_CaMa_colmCaMa.o                       \
