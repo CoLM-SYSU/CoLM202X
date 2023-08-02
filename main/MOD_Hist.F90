@@ -14,11 +14,11 @@ module MOD_Hist
    !
    ! TODO...(need complement)
    !----------------------------------------------------------------------------
-      
+
    use MOD_Vars_1DAccFluxes
    use MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
-   
+
    use MOD_HistGridded
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    use MOD_HistVector
@@ -34,7 +34,7 @@ module MOD_Hist
    public :: hist_out
    public :: hist_final
 
-   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single' 
+   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single'
 
 !--------------------------------------------------------------------------
 contains
@@ -190,9 +190,9 @@ contains
 #if(defined CaMa_Flood)
          ! add variables to write cama-flood output.
          ! file name of cama-flood output
-         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' 
+         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
          ! write CaMa-Flood output
-         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         
+         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
 #endif
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
@@ -731,8 +731,8 @@ contains
              'Ecosystem level canopy conductance on shaded canopy','mol m-2 s-1')
 
          ! soil resistance [m/s]
-         call flux_map_and_write_2d ( DEF_hist_vars%rss, &
-             a_rss, f_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
+         call write_history_variable_2d ( DEF_hist_vars%rss, &
+             a_rss, file_hist, 'f_rss', itime_in_file, sumarea, filter, &
              'soil surface resistance','s/m')
 
 #ifdef BGC
@@ -1972,7 +1972,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2002,7 +2002,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2543,7 +2543,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2573,7 +2573,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2921,7 +2921,7 @@ contains
 #endif
          ! --------------------------------------------------------------------
          ! Temperature and water (excluding land water bodies and ocean patches)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
@@ -2955,7 +2955,7 @@ contains
 
          ! --------------------------------------------------------------------
          ! additial diagnostic variables for output (vegetated land only <=2)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
@@ -3290,7 +3290,7 @@ contains
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
          ENDIF
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_2d
 
@@ -3336,7 +3336,7 @@ contains
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
          ENDIF
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_urb_2d
 #endif
@@ -3391,7 +3391,7 @@ contains
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
          ENDIF
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_3d
 
@@ -3443,7 +3443,7 @@ contains
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
          ENDIF
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_4d
 
@@ -3490,7 +3490,7 @@ contains
             CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
          ENDIF
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_ln
 
@@ -3515,7 +3515,7 @@ contains
       case ('Single')
          CALL hist_single_write_time  (filename, dataname, time, itime)
 #endif
-      end select 
+      end select
 
    end subroutine hist_write_time
 
