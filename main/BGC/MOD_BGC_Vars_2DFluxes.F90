@@ -340,11 +340,11 @@ CONTAINS
             call allocate_block_data (grid, f_hdm                 )
             call allocate_block_data (grid, f_lnfm                )
          end if
-
       end if
 
 
    END SUBROUTINE allocate_2D_BGCFluxes
 
 #endif
+
 END MODULE MOD_BGC_Vars_2DFluxes
