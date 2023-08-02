@@ -60,7 +60,7 @@ MODULE MOD_TimeManager
    END INTERFACE
 
    LOGICAL, SAVE :: isgreenwich
-   real(r8),SAVE :: RefLongitude = 0. ! reference longitude in radian
+   real(r8),SAVE :: LocalLongitude = 0.
    public get_calday
 
 CONTAINS
@@ -430,7 +430,7 @@ CONTAINS
       INTEGER  maxday
       REAL(r8) tdiff
 
-      tdiff = RefLongitude/15.*3600.
+      tdiff = LocalLongitude/15.*3600.
       idate(3) = idate(3) - int(tdiff)
 
       IF (idate(3) < 0) THEN

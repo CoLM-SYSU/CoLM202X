@@ -81,9 +81,9 @@ MODULE MOD_RainSnowTemp
 
       if(t_precip - tfrz > 3.0)then
          flfall = 1.0      ! fraction of liquid water within falling precip
-      else if ((t_precip-tfrz >= -2.0) .and. (t_precip - tfrz <= 3.0))then
-         flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-t_frz+4.))))   !Figure 5c of Behrangi et al. (2018)
-         !*        flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip+3.97)))) !Equation 1 of Wang et al. (2019)
+      else if (t_precip >= tfrz -2.0)then
+         flfall = max(0.0, 1.0 - 1.0/(1.0+5.00e-5*exp(2.0*(t_precip-tfrz+4.))))   !Figure 5c of Behrangi et al. (2018)
+         !*        flfall = max(0.0, 1.0 - 1.0/(1.0+6.99e-5*exp(2.0*(t_precip-tfrz+3.97)))) !Equation 1 of Wang et al. (2019)
       else
          flfall = 0.0
       endif
