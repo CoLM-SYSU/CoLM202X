@@ -45,6 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_soilparameters  = .true.
    LOGICAL  :: USE_SITE_dbedrock        = .true.
    LOGICAL  :: USE_SITE_topography      = .true.
+   logical  :: USE_SITE_HistWriteBack   = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -630,6 +631,7 @@ CONTAINS
          USE_SITE_soilparameters,  &
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
+         USE_SITE_HistWriteBack,   &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &

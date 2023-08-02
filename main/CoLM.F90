@@ -26,7 +26,6 @@ PROGRAM CoLM
    USE MOD_Vars_1DForcing
    USE MOD_Vars_2DForcing
    USE MOD_Vars_1DFluxes
-   USE MOD_Vars_2DFluxes
    USE MOD_Vars_1DAccFluxes
    USE MOD_Forcing
    USE MOD_Hist
@@ -259,8 +258,7 @@ PROGRAM CoLM
    CALL allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
-   CALL hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
-   CALL allocate_2D_Fluxes (ghist)
+   CALL hist_init (dir_hist)
    CALL allocate_1D_Fluxes ()
 
 
@@ -428,7 +426,7 @@ PROGRAM CoLM
 
       ! Write out the model variables for restart run and the histroy file
       ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
+      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
 #ifdef LULCC
       ! DO land USE and land cover change simulation
