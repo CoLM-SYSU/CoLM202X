@@ -118,7 +118,8 @@ contains
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only : forcmask
+      USE MOD_Forcing, only : forcmask, patchmask
+
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
@@ -250,10 +251,16 @@ contains
          ! ---------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -328,10 +335,16 @@ contains
          ! ------------------------------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2943,10 +2956,16 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype <= 3
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2977,10 +2996,16 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype <= 2
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3021,10 +3046,16 @@ contains
          ! --------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3069,10 +3100,16 @@ contains
          ! --------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+IF (DEF_URBAN_ONLY) THEN
+               filter(:) = patchtype == 1
+ELSE
                filter(:) = patchtype < 99
+ENDIF
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 

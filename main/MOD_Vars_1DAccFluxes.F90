@@ -1273,7 +1273,7 @@ contains
 
       use MOD_Precision
       use MOD_SPMD_Task
-      USE mod_forcing, only : forcmask
+      USE mod_forcing, only : forcmask, patchmask
       USE MOD_Mesh,    only : numelm
       USE MOD_LandElm
       use MOD_LandPatch,      only : numpatch, elm_patch
@@ -1311,7 +1311,7 @@ contains
       real(r8), allocatable :: r_vs10m (:)
       real(r8), allocatable :: r_fm10m (:)
 
-      logical,  allocatable :: patchmask (:)
+      logical,  allocatable :: elmmask (:)
 
       !---------------------------------------------------------------------
       integer  ib, jb, i, j, ielm, istt, iend
@@ -1367,7 +1367,9 @@ contains
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
             ELSE
-               rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               WHERE(patchmask)
+                 rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               END WHERE
             ENDIF
             call acc1d (rnet    , a_rnet   )
 
@@ -1424,6 +1426,8 @@ contains
                IF (DEF_forcing%has_missing_value) THEN
                   IF (.not. forcmask(i)) cycle
                ENDIF
+
+               IF (.not. patchmask(i)) CYCLE
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
@@ -1710,36 +1714,38 @@ contains
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
 
-               allocate (patchmask (istt:iend))
-               patchmask(:) = .true.
+               allocate (elmmask (istt:iend))
+               elmmask(:) = .true.
+
+               elmmask(:) = patchmask(istt:iend)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  patchmask = forcmask(istt:iend)
+                  elmmask = forcmask(istt:iend)
                ENDIF
 
-               IF (.not. any(patchmask)) THEN
-                  deallocate(patchmask)
+               IF (.not. any(elmmask)) THEN
+                  deallocate(elmmask)
                   CYCLE
                ENDIF
 
-               sumwt = sum(elm_patch%subfrc(istt:iend), mask = patchmask)
+               sumwt = sum(elm_patch%subfrc(istt:iend), mask = elmmask)
 
                ! Aggregate variables from patches to element (gridcell in latitude-longitude mesh)
-               z0m_av  = sum(z0m        (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_u   = sum(forc_hgt_u (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_t   = sum(forc_hgt_t (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_q   = sum(forc_hgt_q (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               us      = sum(forc_us    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               vs      = sum(forc_vs    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               tm      = sum(forc_t     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               qm      = sum(forc_q     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               psrf    = sum(forc_psrf  (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               taux_e  = sum(taux       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               z0m_av  = sum(z0m        (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               hgt_u   = sum(forc_hgt_u (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               hgt_t   = sum(forc_hgt_t (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               hgt_q   = sum(forc_hgt_q (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               us      = sum(forc_us    (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               vs      = sum(forc_vs    (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               tm      = sum(forc_t     (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               qm      = sum(forc_q     (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               psrf    = sum(forc_psrf  (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               taux_e  = sum(taux       (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
+               fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
                if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-                  hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+                  hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = elmmask) / sumwt
                ENDIF
 
                z0h_av = z0m_av
@@ -1819,7 +1825,7 @@ contains
                r_vs10m (istt:iend) = r_vs10m_e
                r_fm10m (istt:iend) = r_fm10m_e
 
-               deallocate(patchmask)
+               deallocate(elmmask)
 
             end do
 
