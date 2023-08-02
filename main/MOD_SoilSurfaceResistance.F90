@@ -192,7 +192,7 @@ CONTAINS
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
      !rss = exp(8.206-4.255*fac)   ! origial scheme of Sellers, 1992
-      rss = exp(8.206-6.0*fac)     !TODO@zhuo add reference or description
+      rss = exp(8.206-6.0*fac)     ! adjusted to decrease rss for wet soil according to noahmp version
    ENDSELECT
 
    rss = min(1.e6_r8,rss)
