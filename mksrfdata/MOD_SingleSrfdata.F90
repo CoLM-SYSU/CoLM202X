@@ -101,7 +101,12 @@ CONTAINS
       
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+      
+#ifdef LULC_USGS
+      CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
    
       DEF_domain%edges = floor(SITE_lat_location)
       DEF_domain%edgen = DEF_domain%edges + 1.0
@@ -252,7 +257,12 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
+
+#ifdef LULC_USGS
+      CALL ncio_write_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_write_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
 
 #if (defined LULC_IGBP_PFT)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')
