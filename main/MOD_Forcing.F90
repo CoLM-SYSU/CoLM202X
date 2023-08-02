@@ -331,7 +331,7 @@ contains
                         ilon = gforc%xdsp(ib) + i
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        calday = calendarday(mtstamp, gforc%rlon(ilon)*180.0_r8/pi)
+                        calday = calendarday(mtstamp)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
                         forcn(ivar)%blk(ib,jb)%val(i,j) = &
@@ -431,7 +431,7 @@ contains
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-                        calday = calendarday(idate,  gforc%rlon(ilon)*180.0_r8/pi)
+                        calday = calendarday(idate)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
                         cloud = (1160.*sunang-a)/(963.*sunang)
@@ -1230,7 +1230,7 @@ contains
                      ilon = gforc%xdsp(ib) + i
                      if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                     calday = calendarday(tstamp, gforc%rlon(ilon)*180.0_r8/pi)
+                     calday = calendarday(tstamp)
                      cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                      cosz = max(0.001, cosz)
                      avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
