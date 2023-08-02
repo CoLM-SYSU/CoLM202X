@@ -484,6 +484,7 @@ MODULE MOD_Thermal
 
 !=======================================================================
 ! [2] specific humidity and its derivative at ground surface
+!     calculate soil surface resistance
 !=======================================================================
       rss  = 0.
       qred = 1.
@@ -519,11 +520,15 @@ MODULE MOD_Thermal
         qg = forc_q; dqgdT = 0.
       ENDIF
 
+      ! calculate soil surface resistance
       IF (DEF_RSS_SCHEME > 0) THEN
          !NOTE: If the beta scheme is used, the rss is not soil resistance
-         ! but soil wetness relative to field capacity [0-1]
+         !      but soil wetness relative to field capacity [0-1]
          CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
+                      dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
+
+         ! modify soil beta by snow cover. rss for snow surface is one.
+         rss = (1.-fsno)*rss
          write(*,*) rss
       ENDIF
 
