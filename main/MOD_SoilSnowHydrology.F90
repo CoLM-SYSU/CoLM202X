@@ -174,7 +174,6 @@ MODULE MOD_SoilSnowHydrology
    real(r8) :: qflx_irrig_paddy
 #endif
 
-
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
 !=======================================================================
@@ -525,6 +524,14 @@ MODULE MOD_SoilSnowHydrology
   REAL(r8) :: dzsum, dz
   REAL(r8) :: icefracsum, fracice_rsub, imped
 
+#ifdef CROP
+   integer  :: ps, pe
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
+#endif
+
 #ifdef Campbell_SOIL_MODEL
   real(r8) :: theta_r(1:nl_soil)
 #endif
@@ -566,6 +573,15 @@ MODULE MOD_SoilSnowHydrology
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
          ENDIF
       endif
+
+#ifdef CROP
+      if(DEF_USE_IRRIGATION)then
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+      end if
+#endif
 
 !=======================================================================
 ! [2] surface runoff and infiltration
