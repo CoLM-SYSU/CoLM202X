@@ -483,13 +483,12 @@ MODULE MOD_Vars_TimeInvariants
      ! Local variables
      character(LEN=256) :: file_restart, cyear
 
-     patchtype(:) = .true.
-
      write(cyear,'(i4.4)') lc_year
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_const' // '_lc' // trim(cyear) // '.nc'
 
      call ncio_read_vector (file_restart, 'patchclass',   landpatch, patchclass)          !
      call ncio_read_vector (file_restart, 'patchtype' ,   landpatch, patchtype )          !
+     call ncio_read_vector (file_restart, 'patchmask' ,   landpatch, patchmask )          !
 
      call ncio_read_vector (file_restart, 'patchlonr' ,   landpatch, patchlonr )          !
      call ncio_read_vector (file_restart, 'patchlatr' ,   landpatch, patchlatr )          !
@@ -534,8 +533,8 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'hbot' ,    landpatch, hbot)                    !
 
      IF(DEF_USE_BEDROCK)THEN
-        call ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)            !
-        call ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)            !
+        call ncio_read_vector (file_restart, 'debdrock' ,    landpatch, dbedrock)         !
+        call ncio_read_vector (file_restart, 'ibedrock' ,    landpatch, ibedrock)         !
      ENDIF
 
      call ncio_read_bcast_serial (file_restart, 'zlnd  ', zlnd  ) ! roughness length for soil [m]
@@ -631,6 +630,7 @@ MODULE MOD_Vars_TimeInvariants
 
      call ncio_write_vector (file_restart, 'patchclass', 'patch', landpatch, patchclass)                            !
      call ncio_write_vector (file_restart, 'patchtype' , 'patch', landpatch, patchtype )                            !
+     call ncio_write_vector (file_restart, 'patchmask' , 'patch', landpatch, patchmask )                            !
 
      call ncio_write_vector (file_restart, 'patchlonr' , 'patch', landpatch, patchlonr )                            !
      call ncio_write_vector (file_restart, 'patchlatr' , 'patch', landpatch, patchlatr )                            !
@@ -677,8 +677,8 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_write_vector (file_restart, 'hbot' , 'patch', landpatch, hbot)                                       !
 
      IF(DEF_USE_BEDROCK)THEN
-        call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                               !
-        call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                               !
+        call ncio_write_vector (file_restart, 'debdrock' , 'patch', landpatch, dbedrock)                            !
+        call ncio_write_vector (file_restart, 'ibedrock' , 'patch', landpatch, ibedrock)                            !
      ENDIF
 
      if (p_is_master) then
