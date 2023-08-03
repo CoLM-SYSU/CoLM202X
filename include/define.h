@@ -21,10 +21,10 @@
 ! 3.1 If defined, range of variables is checked.
 #define RangeCheck
 ! 3.1 If defined, surface data in vector is mapped to gridded data for checking.
-#define SrfdataDiag
+#undef SrfdataDiag
 
 ! 4. If defined, MPI parallelization is enabled.
-#define  USEMPI
+#define USEMPI
 !    Conflict: not used when defined SingPoint.
 #if (defined SinglePoint)
 #undef USEMPI
@@ -32,8 +32,8 @@
 
 ! 5. Hydrological process options.
 ! 5.1 Two soil hydraulic models can be used.
-#define  Campbell_SOIL_MODEL
-#undef   vanGenuchten_Mualem_SOIL_MODEL
+#undef   Campbell_SOIL_MODEL
+#define  vanGenuchten_Mualem_SOIL_MODEL
 ! 5.2 If defined, lateral flow is modeled.
 #define LATERAL_FLOW
 !    Conflicts :

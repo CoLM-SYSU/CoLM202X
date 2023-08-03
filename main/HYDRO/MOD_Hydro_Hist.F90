@@ -136,49 +136,61 @@ CONTAINS
 
       numbasin = numelm
 
-      where(a_height_riv /= spval)
-         a_height_riv = a_height_riv / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_height_riv /= spval)
+            a_height_riv = a_height_riv / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_height_riv, numbasin, totalnumelm, 'wdsrf_bsn', 'basin', elm_data_address, &
          DEF_hist_vars%riv_height, itime_in_file, 'River Height', 'm')
 
-      where(a_veloct_riv /= spval)
-         a_veloct_riv = a_veloct_riv / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_veloct_riv /= spval)
+            a_veloct_riv = a_veloct_riv / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_veloct_riv, numbasin, totalnumelm, 'veloc_riv', 'basin', elm_data_address, &
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
-      where(a_wdsrf_hru /= spval)
-         a_wdsrf_hru = a_wdsrf_hru / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_wdsrf_hru /= spval)
+            a_wdsrf_hru = a_wdsrf_hru / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_wdsrf_hru, numhru, totalnumhru, 'wdsrf_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%wdsrf_hru, itime_in_file, 'Depth of Surface Water in Hydro unit', 'm')
 
-      where(a_veloc_hru /= spval)
-         a_veloc_hru = a_veloc_hru / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_veloc_hru /= spval)
+            a_veloc_hru = a_veloc_hru / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address, &
          DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
-      where(a_rsubs_bsn /= spval)
-         a_rsubs_bsn = a_rsubs_bsn / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_rsubs_bsn /= spval)
+            a_rsubs_bsn = a_rsubs_bsn / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_rsubs_bsn, numbasin, totalnumelm, 'rsubs_bsn', 'basin', elm_data_address, &
          DEF_hist_vars%rsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
 
-      where(a_rsubs_hru /= spval)
-         a_rsubs_hru = a_rsubs_hru / nac_basin
-      END where
+      IF (p_is_worker) THEN
+         where(a_rsubs_hru /= spval)
+            a_rsubs_hru = a_rsubs_hru / nac_basin
+         END where
+      ENDIF
 
       CALL vector_write_basin (&
          file_hist_basin, a_rsubs_hru, numhru, totalnumhru, 'rsubs_hru', 'hydrounit', hru_data_address, &
