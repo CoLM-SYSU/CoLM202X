@@ -198,6 +198,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
+#ifndef SinglePoint
    ! output
    landname = trim(landsrfdir)//'/LUCY_country_id.nc'
    CALL ncio_create_file_vector (landname, landurban)
@@ -210,6 +211,10 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    ! CALL srfdata_map_and_write (LUCY_coun*1.0, landurban%settyp, typindex, m_urb2diag, &
    !    -1.0e36_r8, landname, 'LUCY_id_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
+#else
+   SITE_lucyid(:) = LUCY_coun
+#endif
+
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -272,6 +277,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
+#ifndef SinglePoint
    ! output
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/POP.nc'
    CALL ncio_create_file_vector (landname, landurban)
@@ -284,6 +290,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    CALL srfdata_map_and_write (pop_den, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'POP_DEN_'//trim(cyear), compress = 0, write_mode = 'one')
 #endif
+#else
+   IF (.not. USE_SITE_urban_paras) THEN
+      SITE_popden(:) = pop_den
+   ENDIF
+#endif
+
 
 #ifdef USEMPI
    CALL mpi_barrier (p_comm_glb, p_err)
@@ -350,6 +362,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
+#ifndef SinglePoint
    ! output
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/PCT_Tree.nc'
    CALL ncio_create_file_vector (landname, landurban)
@@ -371,6 +384,12 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    landname  = trim(dir_srfdata) // '/diag/htop_urb.nc'
    CALL srfdata_map_and_write (htop_urb, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'URBAN_TREE_TOP_'//trim(cyear), compress = 0, write_mode = 'one')
+#endif
+#else
+   IF (.not. USE_SITE_urban_paras) THEN
+      SITE_fveg_urb(:) = pct_tree
+      SITE_htop_urb(:) = htop_urb
+   ENDIF
 #endif
 
 #ifdef USEMPI
@@ -421,6 +440,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 #endif
    ENDIF
 
+#ifndef SinglePoint
    ! output
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/PCT_Water.nc'
    CALL ncio_create_file_vector (landname, landurban)
@@ -432,6 +452,11 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
    landname  = trim(dir_srfdata) // '/diag/PCT_Water.nc'
    CALL srfdata_map_and_write (pct_urbwt, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'PCT_Water_'//trim(cyear), compress = 0, write_mode = 'one')
+#endif
+#else
+   IF (.not. USE_SITE_urban_paras) THEN
+      SITE_flake_urb(:) = pct_urbwt
+   ENDIF
 #endif
 
 #ifdef USEMPI
@@ -535,6 +560,7 @@ ENDIF
 #endif
    ENDIF
 
+#ifndef SinglePoint
    ! output
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/WT_ROOF.nc'
    CALL ncio_create_file_vector (landname, landurban)
@@ -556,6 +582,12 @@ ENDIF
    landname  = trim(dir_srfdata) // '/diag/wt_roof.nc'
    CALL srfdata_map_and_write (wt_roof, landurban%settyp, typindex, m_urb2diag, &
       -1.0e36_r8, landname, 'WT_ROOF_'//trim(cyear), compress = 0, write_mode = 'one')
+#endif
+#else
+   IF (.not. USE_SITE_urban_paras) THEN
+      SITE_froof(:) = wt_roof
+      SITE_hroof(:) = ht_roof
+   ENDIF
 #endif
 
 #ifdef USEMPI
@@ -595,6 +627,14 @@ ENDIF
       lai_urb(:) = 0.
       sai_urb(:) = 0.
    ENDIF
+
+#ifdef SinglePoint
+   allocate (SITE_LAI_year (start_year:end_year))
+   SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
+
+   allocate (SITE_LAI_monthly (12,start_year:end_year))
+   allocate (SITE_SAI_monthly (12,start_year:end_year))
+#endif
 
    DO iy = start_year, end_year
       write(iyear,'(i4.4)') iy
@@ -651,7 +691,8 @@ ENDIF
 #endif
          ENDIF
 
-      ! output
+#ifndef SinglePoint
+         ! output
          landname = trim(dir_srfdata) // '/urban/'//trim(iyear)//'/LAI/urban_LAI_'//trim(cmonth)//'.nc'
          CALL ncio_create_file_vector (landname, landurban)
          CALL ncio_define_dimension_vector (landname, landurban, 'urban')
@@ -672,6 +713,10 @@ ENDIF
          landname  = trim(dir_srfdata) // '/diag/Urban_Tree_SAI_' // trim(iyear) // '.nc'
          CALL srfdata_map_and_write (sai_urb, landurban%settyp, typindex, m_urb2diag, &
             -1.0e36_r8, landname, 'TREE_SAI_'//trim(cmonth), compress = 0, write_mode = 'one')
+#endif
+#else
+         SITE_LAI_monthly(imonth,iy) = lai_urb(1)
+         SITE_SAI_monthly(imonth,iy) = sai_urb(1)
 #endif
 
 #ifdef USEMPI
@@ -880,6 +925,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
 #endif
    ENDIF
 
+#ifndef SinglePoint
    !output
    write(cyear,'(i4.4)') lc_year
    landname = trim(dir_srfdata) // '/urban/'//trim(cyear)//'/urban.nc'
@@ -933,6 +979,35 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       !    -1.0e36_r8, landname, 'CV_IMPROAD_'//trim(clay), compress = 0, write_mode = 'one')
    ENDDO
    deallocate(typindex)
+#endif
+#else
+
+   SITE_em_roof  (:) = em_roof
+   SITE_em_wall  (:) = em_wall
+   SITE_em_gimp  (:) = em_imrd
+   SITE_em_gper  (:) = em_perd
+   SITE_t_roommax(:) = tb_max
+   SITE_t_roommin(:) = tb_min
+   SITE_thickroof(:) = th_roof
+   SITE_thickwall(:) = th_wall
+
+   SITE_cv_roof  (:,:) = cv_roof
+   SITE_cv_wall  (:,:) = cv_wall
+   SITE_cv_gimp  (:,:) = cv_imrd
+   SITE_tk_roof  (:,:) = tk_roof
+   SITE_tk_wall  (:,:) = tk_wall
+   SITE_tk_gimp  (:,:) = tk_imrd
+
+   SITE_alb_roof (:,:,:) = alb_roof
+   SITE_alb_wall (:,:,:) = alb_wall
+   SITE_alb_gimp (:,:,:) = alb_imrd
+   SITE_alb_gper (:,:,:) = alb_perd
+
+   IF (.not. USE_SITE_urban_paras) THEN
+      SITE_hwr  (:) = hwr_can
+      SITE_fgper(:) = wt_rd
+      SITE_fgimp(:) = 1 - SITE_fgper
+   ENDIF
 #endif
 
 #ifdef RangeCheck

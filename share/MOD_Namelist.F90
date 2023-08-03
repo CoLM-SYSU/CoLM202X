@@ -46,6 +46,12 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_dbedrock        = .true.
    LOGICAL  :: USE_SITE_topography      = .true.
    logical  :: USE_SITE_HistWriteBack   = .true.
+
+#ifdef URBAN_MODEL
+   LOGICAL  :: USE_SITE_urban_paras            = .true.
+   LOGICAL  :: USE_SITE_building_thermal_paras = .false.
+   LOGICAL  :: USE_SITE_urban_LAI              = .false.
+#endif
 #endif
 
    ! ----- simulation time type -----

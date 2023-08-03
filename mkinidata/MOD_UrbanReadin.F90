@@ -52,11 +52,6 @@ MODULE MOD_UrbanReadin
 
       REAL(r8) :: thick_roof, thick_wall
 
-#ifdef USE_POINT_DATA
-#ifdef USE_OBS_PARA
-      REAL(r8) :: rfwt, rfht, tpct, wpct, hw_point, htop_point, prwt
-#endif
-#endif
       ! parameters for LUCY
       INTEGER , allocatable :: lucyid(:)          ! LUCY region id
       REAL(r8), allocatable :: popden(:)          ! population density [person/km2]
@@ -107,21 +102,6 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
 ENDIF
-
-!TODO: add point case
-#ifdef SinglePoint
-      lndname = trim(dir_atmdata)//'/'//trim(nam_atmdata)
-      print*, lndname
-      CALL ncio_read_bcast_serial (landname, "impervious_area_fraction" , prwt    ) ! imperivous area fraciton to total surface
-      CALL ncio_read_bcast_serial (landname, "tree_area_fraction"       , fveg_urb) ! urban tree percentage
-      CALL ncio_read_bcast_serial (landname, "water_area_fraction"      , flake   ) ! urban lake precentage
-      CALL ncio_read_bcast_serial (landname, "roof_area_fraction"       , froof   ) ! roof fractional cover
-      CALL ncio_read_bcast_serial (landname, "building_mean_height"     , hroof   ) ! average building height
-      CALL ncio_read_bcast_serial (landname, "tree_mean_height"         , htop_urb) ! urban tree crown top
-      CALL ncio_read_bcast_serial (landname, "canyon_height_width_ratio", hwr     ) ! average building height to their distance
-
-      wtperroad    (1,1,:) = 1 - (prwt-rfwt)/(1-rfwt-wpct) !1. - prwt
-#endif
 
       !TODO: Variables distinguish between time-varying and time-invariant variables
       ! write(cyear,'(i4.4)') lc_year

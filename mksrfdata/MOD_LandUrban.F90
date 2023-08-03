@@ -16,6 +16,10 @@ MODULE MOD_LandUrban
    USE MOD_Grid
    USE MOD_Pixelset
    USE MOD_Vars_Global, only: N_URB, URBAN
+#ifdef SinglePoint
+   USE MOD_SingleSrfdata
+#endif
+
    IMPLICIT NONE
 
    ! ---- Instance ----
@@ -296,6 +300,11 @@ ENDIF
       CALL mpi_barrier (p_comm_glb, p_err)
 #else
       write(*,'(A,I12,A)') 'Total: ', numurban, ' urban tiles.'
+#endif
+
+#ifdef SinglePoint
+      allocate  (SITE_urbtyp(numurban))
+      SITE_urbtyp(:) = landurban%settyp
 #endif
 
 #if (defined CROP)
