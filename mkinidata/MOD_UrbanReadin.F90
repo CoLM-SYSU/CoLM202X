@@ -37,9 +37,7 @@ MODULE MOD_UrbanReadin
       USE MOD_NetCDFSerial
       USE MOD_LandPatch
       USE MOD_LandUrban
-#ifdef URBAN_LCZ
-      USE UrbanLCZ_Const
-#endif
+      USE MOD_Urban_Const_LCZ
 
       IMPLICIT NONE
 
@@ -74,15 +72,15 @@ MODULE MOD_UrbanReadin
       REAL(r8), allocatable :: thickroof     (:)  ! thickness of roof [m]
       REAL(r8), allocatable :: thickwall     (:)  ! thickness of wall [m]
 
+      write(cyear,'(i4.4)') lc_year
+
       allocate (lucyid    (numurban))
 
-#ifndef URBAN_LCZ
-
+IF (DEF_URBAN_type_scheme == 1) THEN
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
 
       ! READ in urban data
-      write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
       CALL ncio_read_vector (lndname, 'CANYON_HWR  '  , landurban, hwr    ) ! average building height to their distance
@@ -108,7 +106,7 @@ MODULE MOD_UrbanReadin
       CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof) ! thermal conductivity of roof [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
-#endif
+ENDIF
 
 !TODO: add point case
 #ifdef SinglePoint
@@ -158,12 +156,12 @@ MODULE MOD_UrbanReadin
       dir_rawdata = DEF_dir_rawdata
       lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'
       print*, lndname
-      CALL ncio_read_bcast_serial (lndname,  "vehicle"    , lvehicle     )
-      CALL ncio_read_bcast_serial (lndname,  "weekendday" , lweek_holiday)
-      CALL ncio_read_bcast_serial (lndname,  "weekendhour", lweh_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "weekdayhour", lwdh_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "metabolism" , lhum_prof    )
-      CALL ncio_read_bcast_serial (lndname,  "holiday"    , lfix_holiday )
+      CALL ncio_read_bcast_serial (lndname,  "NUMS_VEHC"             , lvehicle     )
+      CALL ncio_read_bcast_serial (lndname,  "WEEKEND_DAY"           , lweek_holiday)
+      CALL ncio_read_bcast_serial (lndname,  "TraffProf_24hr_holiday", lweh_prof    )
+      CALL ncio_read_bcast_serial (lndname,  "TraffProf_24hr_work"   , lwdh_prof    )
+      CALL ncio_read_bcast_serial (lndname,  "HumMetabolic_24hr"     , lhum_prof    )
+      CALL ncio_read_bcast_serial (lndname,  "FIXED_HOLIDAY"         , lfix_holiday )
 
       IF (p_is_worker) THEN
 
@@ -191,7 +189,7 @@ MODULE MOD_UrbanReadin
                fix_holiday  (:,u) = 0.
             ENDIF
 
-#ifndef URBAN_LCZ
+IF (DEF_URBAN_type_scheme == 1) THEN
             thick_roof = thickroof (u) !thickness of roof [m]
             thick_wall = thickwall (u) !thickness of wall [m]
 
@@ -203,18 +201,18 @@ MODULE MOD_UrbanReadin
                t_roommax(u) = 373.16
                t_roommin(u) = 180.00
             ENDIF
-#else
+ELSE IF (DEF_URBAN_type_scheme == 2) THEN
             ! read in LCZ constants
             hwr  (u) = canyonhwr_lcz (landurban%settyp(u)) !average building height to their distance
             fgper(u) = wtperroad_lcz (landurban%settyp(u)) !pervious fraction to ground area
 
             DO ns = 1,2
-                DO nr = 1,2
-                   alb_roof(ns,nr,u) = albroof_lcz    (landurban%settyp(u)) !albedo of roof
-                   alb_wall(ns,nr,u) = albwall_lcz    (landurban%settyp(u)) !albedo of walls
-                   alb_gimp(ns,nr,u) = albimproad_lcz (landurban%settyp(u)) !albedo of impervious
-                   alb_gper(ns,nr,u) = albperroad_lcz (landurban%settyp(u)) !albedo of pervious road
-                ENDDO
+               DO nr = 1,2
+                  alb_roof(ns,nr,u) = albroof_lcz    (landurban%settyp(u)) !albedo of roof
+                  alb_wall(ns,nr,u) = albwall_lcz    (landurban%settyp(u)) !albedo of walls
+                  alb_gimp(ns,nr,u) = albimproad_lcz (landurban%settyp(u)) !albedo of impervious
+                  alb_gper(ns,nr,u) = albperroad_lcz (landurban%settyp(u)) !albedo of pervious road
+               ENDDO
             ENDDO
 
             em_roof(u) = emroof_lcz    (landurban%settyp(u)) !emissivity of roof
@@ -234,7 +232,7 @@ MODULE MOD_UrbanReadin
 
             DO ulev = 1, nl_soil
                cv_gimp(:,u) = cvimproad_lcz (landurban%settyp(u)) !heat capacity of impervious [J/(m2 K)]
-               tk_gimp(:,u) = tkperroad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
+               tk_gimp(:,u) = tkimproad_lcz (landurban%settyp(u)) !thermal conductivity of impervious [W/m-K]
             ENDDO
 
             thick_roof = thickroof_lcz (landurban%settyp(u)) !thickness of roof [m]
@@ -247,7 +245,7 @@ MODULE MOD_UrbanReadin
                t_roommax(u) = 373.16                !maximum temperature of inner room [K]
                t_roommin(u) = 180.00                !minimum temperature of inner room [K]
             ENDIF
-#endif
+ENDIF
 
             IF (DEF_URBAN_WATER) THEN
                flake(u) = flake(u)/100. !urban water fractional cover

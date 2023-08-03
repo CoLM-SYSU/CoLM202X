@@ -14,11 +14,11 @@ module MOD_Hist
    !
    ! TODO...(need complement)
    !----------------------------------------------------------------------------
-      
+
    use MOD_Vars_1DAccFluxes
    use MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
-   
+
    use MOD_HistGridded
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    use MOD_HistVector
@@ -34,7 +34,7 @@ module MOD_Hist
    public :: hist_out
    public :: hist_final
 
-   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single' 
+   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single'
 
 !--------------------------------------------------------------------------
 contains
@@ -107,18 +107,19 @@ contains
       use MOD_DataType
       use MOD_LandPatch
       use MOD_Mapping_Pset2Grid
-      USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
+      USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
 #ifdef LULC_IGBP_PFT
       USE MOD_Vars_PFTimeInvariants, only: pftclass
-      USE MOD_LandPFT, only : patch_pft_s
+      USE MOD_LandPFT, only: patch_pft_s
 #endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only : forcmask
+      USE MOD_Forcing, only: forcmask
+
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
@@ -211,9 +212,9 @@ contains
 #if(defined CaMa_Flood)
          ! add variables to write cama-flood output.
          ! file name of cama-flood output
-         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' 
+         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
          ! write CaMa-Flood output
-         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         
+         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
 #endif
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
@@ -246,14 +247,18 @@ contains
          ENDIF
 
          ! ---------------------------------------------------
-         ! Meteorological forcing
+         ! Meteorological forcing and patch mask filter applying.
          ! ---------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -328,10 +333,14 @@ contains
          ! ------------------------------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -1988,7 +1997,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2018,7 +2027,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2559,7 +2568,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2589,7 +2598,7 @@ contains
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2937,16 +2946,20 @@ contains
 #endif
          ! --------------------------------------------------------------------
          ! Temperature and water (excluding land water bodies and ocean patches)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype <= 3
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2971,16 +2984,20 @@ contains
 
          ! --------------------------------------------------------------------
          ! additial diagnostic variables for output (vegetated land only <=2)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype <= 2
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3021,10 +3038,14 @@ contains
          ! --------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3069,10 +3090,14 @@ contains
          ! --------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3306,7 +3331,7 @@ contains
          CALL single_write_2d ( &
             acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_2d
 
@@ -3346,7 +3371,7 @@ contains
          CALL single_write_urb_2d ( &
             acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_urb_2d
 #endif
@@ -3394,7 +3419,7 @@ contains
          CALL single_write_3d (acc_vec, file_hist, varname, itime_in_file, &
             dim1name, ndim1, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_3d
 
@@ -3438,7 +3463,7 @@ contains
          CALL single_write_4d (acc_vec, file_hist, varname, itime_in_file, &
             dim1name, ndim1, dim2name, ndim2, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_4d
 
@@ -3476,7 +3501,7 @@ contains
       case ('Single')
          CALL single_write_ln (acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_ln
 
@@ -3501,7 +3526,7 @@ contains
       case ('Single')
          CALL hist_single_write_time  (filename, dataname, time, itime)
 #endif
-      end select 
+      end select
 
    end subroutine hist_write_time
 
