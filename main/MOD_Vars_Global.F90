@@ -43,7 +43,7 @@ MODULE MOD_Vars_Global
 #endif
 
    ! urban type number
-   INTEGER :: N_URB
+   integer :: N_URB
 
    ! vertical layer number
    integer, parameter :: maxsnl    = -5

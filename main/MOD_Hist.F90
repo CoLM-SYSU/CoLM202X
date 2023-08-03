@@ -14,11 +14,11 @@ module MOD_Hist
    !
    ! TODO...(need complement)
    !----------------------------------------------------------------------------
-      
+
    use MOD_Vars_1DAccFluxes
    use MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
-   
+
    use MOD_HistGridded
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    use MOD_HistVector
@@ -34,7 +34,7 @@ module MOD_Hist
    public :: hist_out
    public :: hist_final
 
-   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single' 
+   character(len=10) :: HistForm ! 'Gridded', 'Vector', 'Single'
 
 !--------------------------------------------------------------------------
 contains
@@ -61,6 +61,10 @@ contains
 
       IF (HistForm == 'Gridded') THEN
          CALL hist_gridded_init (dir_hist)
+#ifdef SinglePoint
+      ELSEIF (HistForm == 'Single') THEN
+         CALL hist_single_init  ()
+#endif
       ENDIF
 
 #ifdef LATERAL_FLOW
@@ -76,6 +80,10 @@ contains
 
       call deallocate_acc_fluxes ()
 
+#ifdef SinglePoint
+      CALL hist_single_final ()
+#endif
+
 #ifdef LATERAL_FLOW
       CALL hist_basin_final ()
 #endif
@@ -83,7 +91,7 @@ contains
    end subroutine hist_final
 
    !---------------------------------------
-   SUBROUTINE hist_out (idate, deltim, itstamp, ptstamp, &
+   SUBROUTINE hist_out (idate, deltim, itstamp, etstamp, ptstamp, &
          dir_hist, site)
 
       !=======================================================================
@@ -99,24 +107,25 @@ contains
       use MOD_DataType
       use MOD_LandPatch
       use MOD_Mapping_Pset2Grid
-      USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
+      USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
 #ifdef LULC_IGBP_PFT
       USE MOD_Vars_PFTimeInvariants, only: pftclass
-      USE MOD_LandPFT, only : patch_pft_s
+      USE MOD_LandPFT, only: patch_pft_s
 #endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only : forcmask, patchmask
+      USE MOD_Forcing, only: forcmask
 
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
       real(r8), INTENT(in) :: deltim
       type(timestamp), intent(in) :: itstamp
+      type(timestamp), intent(in) :: etstamp
       type(timestamp), intent(in) :: ptstamp
 
       character(LEN=*), intent(in) :: dir_hist
@@ -133,7 +142,6 @@ contains
       integer :: month, day
       integer :: days_month(1:12)
       character(len=10) :: cdate
-      character(len=256) :: groupby
 
       type(block_data_real8_2d) :: sumarea
       type(block_data_real8_2d) :: sumarea_urb
@@ -176,14 +184,27 @@ contains
          days_month = (/31,28,31,30,31,30,31,31,30,31,30,31/)
          if (isleapyear(idate(1))) days_month(2) = 29
 
-         groupby = DEF_HIST_groupby
-
-         if ( trim(groupby) == 'YEAR' ) then
+         if ( trim(DEF_HIST_groupby) == 'YEAR' ) then
             write(cdate,'(i4.4)') idate(1)
-         elseif ( trim(groupby) == 'MONTH' ) then
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofyear(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
+         elseif ( trim(DEF_HIST_groupby) == 'MONTH' ) then
             write(cdate,'(i4.4,"-",i2.2)') idate(1), month
-         elseif ( trim(groupby) == 'DAY' ) then
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofmonth(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
+         elseif ( trim(DEF_HIST_groupby) == 'DAY' ) then
             write(cdate,'(i4.4,"-",i2.2,"-",i2.2)') idate(1), month, day
+#ifdef SinglePoint
+            IF (USE_SITE_HistWriteBack) THEN
+               memory_to_disk = isendofday(idate,deltim) .or. (.not. (itstamp < etstamp))
+            ENDIF
+#endif
          else
             write(*,*) 'Warning : Please use one of DAY/MONTH/YEAR for history group.'
          end if
@@ -191,9 +212,9 @@ contains
 #if(defined CaMa_Flood)
          ! add variables to write cama-flood output.
          ! file name of cama-flood output
-         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc' 
+         file_hist_cama = trim(dir_hist) // '/' // trim(site) //'_hist_cama_'//trim(cdate)//'.nc'
          ! write CaMa-Flood output
-         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)         
+         call hist_write_cama_time (file_hist_cama, 'time', idate, itime_in_file_cama)
 #endif
 
          file_hist = trim(dir_hist) // '/' // trim(site) //'_hist_'//trim(cdate)//'.nc'
@@ -226,15 +247,13 @@ contains
          ENDIF
 
          ! ---------------------------------------------------
-         ! Meteorological forcing
+         ! Meteorological forcing and patch mask filter applying.
          ! ---------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = patchtype < 99
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -314,11 +333,9 @@ ENDIF
          ! ------------------------------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = patchtype < 99
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -1980,7 +1997,7 @@ ENDIF
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2010,7 +2027,7 @@ ENDIF
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2551,7 +2568,7 @@ ENDIF
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2581,7 +2598,7 @@ ENDIF
                end do
             end if
          end if
-         
+
          IF (HistForm == 'Gridded') THEN
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
@@ -2929,17 +2946,15 @@ ENDIF
 #endif
          ! --------------------------------------------------------------------
          ! Temperature and water (excluding land water bodies and ocean patches)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = patchtype <= 3
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -2969,17 +2984,15 @@ ENDIF
 
          ! --------------------------------------------------------------------
          ! additial diagnostic variables for output (vegetated land only <=2)
-         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3; 
+         ! [soil => 0; urban and built-up => 1; wetland => 2; land ice => 3;
          !  land water bodies => 4; ocean => 99]
          ! --------------------------------------------------------------------
 
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = patchtype <= 2
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -3025,11 +3038,9 @@ ENDIF
          ! --------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = (patchtype <= 2) .or. (patchtype == 4)
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -3079,11 +3090,9 @@ ENDIF
          ! --------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
-IF (DEF_URBAN_ONLY) THEN
-               filter(:) = patchtype == 1
-ELSE
+
                filter(:) = patchtype < 99
-ENDIF
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
@@ -3277,6 +3286,12 @@ ENDIF
 
          call FLUSH_acc_fluxes ()
 
+#ifdef SinglePoint
+         IF (USE_SITE_HistWriteBack .and. memory_to_disk) THEN
+            itime_mem = 0
+         ENDIF
+#endif
+
       end if
 
    END SUBROUTINE hist_out
@@ -3313,16 +3328,10 @@ ENDIF
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_2d ( &
+            acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_2d
 
@@ -3359,16 +3368,10 @@ ENDIF
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'urban', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_urb_2d ( &
+            acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_urb_2d
 #endif
@@ -3413,17 +3416,10 @@ ENDIF
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         call ncio_define_dimension (file_hist, dim1name, ndim1)
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, 'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_3d (acc_vec, file_hist, varname, itime_in_file, &
+            dim1name, ndim1, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_3d
 
@@ -3464,18 +3460,10 @@ ENDIF
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where (acc_vec /= spval)  acc_vec = acc_vec / nac
-         call ncio_define_dimension (file_hist, dim1name, ndim1)
-         call ncio_define_dimension (file_hist, dim2name, ndim2)
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            dim1name, dim2name, 'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_4d (acc_vec, file_hist, varname, itime_in_file, &
+            dim1name, ndim1, dim2name, ndim2, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_4d
 
@@ -3511,18 +3499,9 @@ ENDIF
 #endif
 #ifdef SinglePoint
       case ('Single')
-         where ((acc_vec /= spval) .and. (nac_ln > 0))
-            acc_vec = acc_vec / nac_ln
-         END WHERE
-         CALL ncio_write_serial_time (file_hist, varname, itime_in_file, acc_vec, &
-            'patch', 'time')
-         IF (itime_in_file == 1) then
-            CALL ncio_put_attr (file_hist, varname, 'long_name', longname)
-            CALL ncio_put_attr (file_hist, varname, 'units', units)
-            CALL ncio_put_attr (file_hist, varname, 'missing_value', spval)
-         ENDIF
+         CALL single_write_ln (acc_vec, file_hist, varname, itime_in_file, longname, units)
 #endif
-      end select 
+      end select
 
    end subroutine write_history_variable_ln
 
@@ -3547,7 +3526,7 @@ ENDIF
       case ('Single')
          CALL hist_single_write_time  (filename, dataname, time, itime)
 #endif
-      end select 
+      end select
 
    end subroutine hist_write_time
 
