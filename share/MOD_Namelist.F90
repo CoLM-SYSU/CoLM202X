@@ -513,6 +513,14 @@ MODULE MOD_Namelist
       LOGICAL :: fertnitro_rice1    = .true.
       LOGICAL :: fertnitro_rice2    = .true.
       LOGICAL :: fertnitro_sugarcane= .true.
+      LOGICAL :: irrig_method_corn     = .true.
+      LOGICAL :: irrig_method_swheat   = .true.
+      LOGICAL :: irrig_method_wwheat   = .true.
+      LOGICAL :: irrig_method_soybean  = .true.
+      LOGICAL :: irrig_method_cotton   = .true.
+      LOGICAL :: irrig_method_rice1    = .true.
+      LOGICAL :: irrig_method_rice2    = .true.
+      LOGICAL :: irrig_method_sugarcane= .true.
       
       LOGICAL :: irrig_rate         = .true.
       LOGICAL :: deficit_irrig      = .true.

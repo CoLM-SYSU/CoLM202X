@@ -168,8 +168,8 @@ MODULE MOD_SoilSnowHydrology
   real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
 
-#ifdef CROP
    integer  :: ps, pe
+#ifdef CROP
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood

@@ -240,7 +240,7 @@ contains
 
         do m = ps, pe 
             ivt = pftclass(m)
-            if ((ivt >= npcropmin) .and. (irrig_crop(m)) .and. &
+            if ((ivt >= npcropmin) .and. (irrig_crop(ivt)) .and. &
                 (cphase_p(m) >= irrig_min_cphase) .and. (cphase_p(m)<irrig_max_cphase)) then
                 call gmt2local(idate, dlon, ldate)
                 seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim

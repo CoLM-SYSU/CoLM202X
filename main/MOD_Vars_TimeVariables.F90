@@ -806,6 +806,15 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: sum_irrig           (:) ! total irrigation amount (kg/m2)
      real(r8), allocatable :: sum_irrig_count     (:) ! total irrigation times (-)
      integer , allocatable :: n_irrig_steps_left  (:)! left steps for once irrigation (-)
+
+     integer , allocatable :: irrig_method_corn      (:) ! irrigation method for corn (0-3)
+     integer , allocatable :: irrig_method_swheat    (:) ! irrigation method for spring wheat (0-3)
+     integer , allocatable :: irrig_method_wwheat    (:) ! irrigation method for winter wheat (0-3)
+     integer , allocatable :: irrig_method_soybean   (:) ! irrigation method for soybean (0-3)
+     integer , allocatable :: irrig_method_cotton    (:) ! irrigation method for cotton (0-3)
+     integer , allocatable :: irrig_method_rice1     (:) ! irrigation method for rice1 (0-3)
+     integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
+     integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
      ! PUBLIC MEMBER FUNCTIONS:
      public :: allocate_TimeVariables
      public :: deallocate_TimeVariables
@@ -932,11 +941,19 @@ MODULE MOD_Vars_TimeVariables
            allocate (fh                          (numpatch)); fh            (:) = spval
            allocate (fq                          (numpatch)); fq            (:) = spval
            
-           allocate (irrig_rate                  (numpatch)); irrig_rate    (:) = spval
-           allocate (deficit_irrig               (numpatch)); deficit_irrig (:) = spval
-           allocate (sum_irrig                   (numpatch)); sum_irrig     (:) = spval
-           allocate (sum_irrig_count             (numpatch)); sum_irrig_count   (:) = spval
-           allocate (n_irrig_steps_left          (numpatch)); n_irrig_steps_left(:) = spval
+           allocate ( irrig_rate                 (numpatch)); irrig_rate             (:) = spval
+           allocate ( deficit_irrig              (numpatch)); deficit_irrig          (:) = spval
+           allocate ( sum_irrig                  (numpatch)); sum_irrig              (:) = spval
+           allocate ( sum_irrig_count            (numpatch)); sum_irrig_count        (:) = spval
+           allocate ( n_irrig_steps_left         (numpatch)); n_irrig_steps_left     (:) = spval_i4
+           allocate ( irrig_method_corn          (numpatch)); irrig_method_corn      (:) = spval_i4
+           allocate ( irrig_method_swheat        (numpatch)); irrig_method_swheat    (:) = spval_i4
+           allocate ( irrig_method_wwheat        (numpatch)); irrig_method_wwheat    (:) = spval_i4
+           allocate ( irrig_method_soybean       (numpatch)); irrig_method_soybean   (:) = spval_i4
+           allocate ( irrig_method_cotton        (numpatch)); irrig_method_cotton    (:) = spval_i4
+           allocate ( irrig_method_rice1         (numpatch)); irrig_method_rice1     (:) = spval_i4
+           allocate ( irrig_method_rice2         (numpatch)); irrig_method_rice2     (:) = spval_i4
+           allocate ( irrig_method_sugarcane     (numpatch)); irrig_method_sugarcane (:) = spval_i4
 
         end if
   end if
@@ -1078,6 +1095,14 @@ MODULE MOD_Vars_TimeVariables
            deallocate (sum_irrig_count        )
            deallocate (n_irrig_steps_left     )
 
+           deallocate ( irrig_method_corn     )
+           deallocate ( irrig_method_swheat   )
+           deallocate ( irrig_method_wwheat   )
+           deallocate ( irrig_method_soybean  )
+           deallocate ( irrig_method_cotton   )
+           deallocate ( irrig_method_rice1    )
+           deallocate ( irrig_method_rice2    )
+           deallocate ( irrig_method_sugarcane)
         end if
      end if
 
@@ -1264,11 +1289,19 @@ MODULE MOD_Vars_TimeVariables
      call ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) ! integral of profile function for moisture
 
      if(DEF_USE_IRRIGATION)then
-      call ncio_write_vector (file_restart, 'irrig_rate'     , 'patch', landpatch, irrig_rate        , compress)
-      call ncio_write_vector (file_restart, 'deficit_irrig'  , 'patch', landpatch, deficit_irrig     , compress)
-      call ncio_write_vector (file_restart, 'sum_irrig'      , 'patch', landpatch, sum_irrig         , compress)
-      call ncio_write_vector (file_restart, 'sum_irrig_count', 'patch', landpatch, sum_irrig_count   , compress)
-      call ncio_write_vector (file_restart, 'n_irrig_steps_left' , 'patch', landpatch, n_irrig_steps_left, compress)
+      call ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
+      call ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
+      call ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
+      call ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
+      call ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
      end if
 
 #if (defined LULC_IGBP_PFT)
@@ -1415,11 +1448,19 @@ MODULE MOD_Vars_TimeVariables
      call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) ! integral of profile function for moisture
 
      if(DEF_USE_IRRIGATION)then
-      call ncio_read_vector (file_restart, 'irrig_rate'      , landpatch, irrig_rate)
-      call ncio_read_vector (file_restart, 'deficit_irrig'   , landpatch, deficit_irrig)
-      call ncio_read_vector (file_restart, 'sum_irrig'       , landpatch, sum_irrig)
-      call ncio_read_vector (file_restart, 'sum_irrig_count' , landpatch, sum_irrig_count)
-      call ncio_read_vector (file_restart, 'n_irrig_steps_left' , landpatch, n_irrig_steps_left)
+      call ncio_read_vector (file_restart, 'irrig_rate            ' , landpatch, irrig_rate            )
+      call ncio_read_vector (file_restart, 'deficit_irrig         ' , landpatch, deficit_irrig         )
+      call ncio_read_vector (file_restart, 'sum_irrig             ' , landpatch, sum_irrig             )
+      call ncio_read_vector (file_restart, 'sum_irrig_count       ' , landpatch, sum_irrig_count       )
+      call ncio_read_vector (file_restart, 'n_irrig_steps_left    ' , landpatch, n_irrig_steps_left    )
+      call ncio_read_vector (file_restart, 'irrig_method_corn     ' , landpatch, irrig_method_corn     )
+      call ncio_read_vector (file_restart, 'irrig_method_swheat   ' , landpatch, irrig_method_swheat   )
+      call ncio_read_vector (file_restart, 'irrig_method_wwheat   ' , landpatch, irrig_method_wwheat   )
+      call ncio_read_vector (file_restart, 'irrig_method_soybean  ' , landpatch, irrig_method_soybean  )
+      call ncio_read_vector (file_restart, 'irrig_method_cotton   ' , landpatch, irrig_method_cotton   )
+      call ncio_read_vector (file_restart, 'irrig_method_rice1    ' , landpatch, irrig_method_rice1    )
+      call ncio_read_vector (file_restart, 'irrig_method_rice2    ' , landpatch, irrig_method_rice2    )
+      call ncio_read_vector (file_restart, 'irrig_method_sugarcane' , landpatch, irrig_method_sugarcane)
      end if
 
 #if (defined LULC_IGBP_PFT)
@@ -1528,11 +1569,19 @@ MODULE MOD_Vars_TimeVariables
      call check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
      
      if(DEF_USE_IRRIGATION)then
-      call check_vector_data ('irrig_rate'         , irrig_rate        )
-      call check_vector_data ('deficit_irrig'      , deficit_irrig     )
-      call check_vector_data ('sum_irrig'          , sum_irrig         )
-      call check_vector_data ('sum_irrig_count'    , sum_irrig_count   )
-      call check_vector_data ('n_irrig_steps_left' , n_irrig_steps_left)
+      call check_vector_data ('irrig_rate            ' , irrig_rate            )
+      call check_vector_data ('deficit_irrig         ' , deficit_irrig         )
+      call check_vector_data ('sum_irrig             ' , sum_irrig             )
+      call check_vector_data ('sum_irrig_count       ' , sum_irrig_count       )
+      call check_vector_data ('n_irrig_steps_left    ' , n_irrig_steps_left    )
+      call check_vector_data ('irrig_method_corn     ' , irrig_method_corn     )
+      call check_vector_data ('irrig_method_swheat   ' , irrig_method_swheat   )
+      call check_vector_data ('irrig_method_wwheat   ' , irrig_method_wwheat   )
+      call check_vector_data ('irrig_method_soybean  ' , irrig_method_soybean  )
+      call check_vector_data ('irrig_method_cotton   ' , irrig_method_cotton   )
+      call check_vector_data ('irrig_method_rice1    ' , irrig_method_rice1    )
+      call check_vector_data ('irrig_method_rice2    ' , irrig_method_rice2    )
+      call check_vector_data ('irrig_method_sugarcane' , irrig_method_sugarcane)
      end if
 
 #if (defined LULC_IGBP_PFT)

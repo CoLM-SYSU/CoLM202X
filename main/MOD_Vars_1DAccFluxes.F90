@@ -212,6 +212,14 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fertnitro_rice1       (:)
    real(r8), allocatable :: a_fertnitro_rice2       (:)
    real(r8), allocatable :: a_fertnitro_sugarcane   (:)
+   real(r8), allocatable :: a_irrig_method_corn        (:)
+   real(r8), allocatable :: a_irrig_method_swheat      (:)
+   real(r8), allocatable :: a_irrig_method_wwheat      (:)
+   real(r8), allocatable :: a_irrig_method_soybean     (:)
+   real(r8), allocatable :: a_irrig_method_cotton      (:)
+   real(r8), allocatable :: a_irrig_method_rice1       (:)
+   real(r8), allocatable :: a_irrig_method_rice2       (:)
+   real(r8), allocatable :: a_irrig_method_sugarcane   (:)
    real(r8), allocatable :: a_cphase             (:)
    real(r8), allocatable :: a_gddplant           (:)
    real(r8), allocatable :: a_gddmaturity        (:)
@@ -532,6 +540,14 @@ contains
             allocate (a_fertnitro_rice1    (numpatch))
             allocate (a_fertnitro_rice2    (numpatch))
             allocate (a_fertnitro_sugarcane(numpatch))
+            allocate (a_irrig_method_corn     (numpatch))
+            allocate (a_irrig_method_swheat   (numpatch))
+            allocate (a_irrig_method_wwheat   (numpatch))
+            allocate (a_irrig_method_soybean  (numpatch))
+            allocate (a_irrig_method_cotton   (numpatch))
+            allocate (a_irrig_method_rice1    (numpatch))
+            allocate (a_irrig_method_rice2    (numpatch))
+            allocate (a_irrig_method_sugarcane(numpatch))
             allocate (a_cphase             (numpatch))
             allocate (a_hui                (numpatch))
             allocate (a_gddmaturity        (numpatch))
@@ -860,6 +876,14 @@ contains
             deallocate (a_fertnitro_rice1    )
             deallocate (a_fertnitro_rice2    )
             deallocate (a_fertnitro_sugarcane)
+            deallocate (a_irrig_method_corn     )
+            deallocate (a_irrig_method_swheat   )
+            deallocate (a_irrig_method_wwheat   )
+            deallocate (a_irrig_method_soybean  )
+            deallocate (a_irrig_method_cotton   )
+            deallocate (a_irrig_method_rice1    )
+            deallocate (a_irrig_method_rice2    )
+            deallocate (a_irrig_method_sugarcane)
             deallocate (a_cphase             )
             deallocate (a_hui                )
             deallocate (a_vf                 )
@@ -1185,6 +1209,14 @@ contains
             a_fertnitro_rice1    (:) = spval
             a_fertnitro_rice2    (:) = spval
             a_fertnitro_sugarcane(:) = spval
+            a_irrig_method_corn     (:) = spval
+            a_irrig_method_swheat   (:) = spval
+            a_irrig_method_wwheat   (:) = spval
+            a_irrig_method_soybean  (:) = spval
+            a_irrig_method_cotton   (:) = spval
+            a_irrig_method_rice1    (:) = spval
+            a_irrig_method_rice2    (:) = spval
+            a_irrig_method_sugarcane(:) = spval
             a_cphase             (:) = spval
             a_vf                 (:) = spval
             a_gddmaturity        (:) = spval
@@ -1586,6 +1618,14 @@ contains
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
             call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
+            call acc1d (dble(irrig_method_corn     ),   a_irrig_method_corn     )
+            call acc1d (dble(irrig_method_swheat   ),   a_irrig_method_swheat   )
+            call acc1d (dble(irrig_method_wwheat   ),   a_irrig_method_wwheat   )
+            call acc1d (dble(irrig_method_soybean  ),   a_irrig_method_soybean  )
+            call acc1d (dble(irrig_method_cotton   ),   a_irrig_method_cotton   )
+            call acc1d (dble(irrig_method_rice1    ),   a_irrig_method_rice1    )
+            call acc1d (dble(irrig_method_rice2    ),   a_irrig_method_rice2    )
+            call acc1d (dble(irrig_method_sugarcane),   a_irrig_method_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
