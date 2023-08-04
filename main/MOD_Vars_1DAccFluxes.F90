@@ -268,14 +268,15 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: decomp_vr_tmp (:,:)
 #endif
 
-   real(r8), allocatable :: a_ustar(:)
-   real(r8), allocatable :: a_tstar(:)
-   real(r8), allocatable :: a_qstar(:)
-   real(r8), allocatable :: a_zol  (:)
-   real(r8), allocatable :: a_rib  (:)
-   real(r8), allocatable :: a_fm   (:)
-   real(r8), allocatable :: a_fh   (:)
-   real(r8), allocatable :: a_fq   (:)
+   real(r8), allocatable :: a_ustar (:)
+   real(r8), allocatable :: a_ustar2(:)
+   real(r8), allocatable :: a_tstar (:)
+   real(r8), allocatable :: a_qstar (:)
+   real(r8), allocatable :: a_zol   (:)
+   real(r8), allocatable :: a_rib   (:)
+   real(r8), allocatable :: a_fm    (:)
+   real(r8), allocatable :: a_fh    (:)
+   real(r8), allocatable :: a_fq    (:)
 
    real(r8), allocatable :: a_us10m(:)
    real(r8), allocatable :: a_vs10m(:)
@@ -311,7 +312,7 @@ contains
       use MOD_SPMD_Task
       USE MOD_LandElm
       use MOD_LandPatch
-      USE MOD_LandUrban, only : numurban
+      USE MOD_LandUrban, only: numurban
       USE MOD_Vars_Global
       implicit none
 
@@ -584,6 +585,7 @@ contains
 #endif
 
             allocate (a_ustar     (numpatch))
+            allocate (a_ustar2    (numpatch))
             allocate (a_tstar     (numpatch))
             allocate (a_qstar     (numpatch))
             allocate (a_zol       (numpatch))
@@ -906,6 +908,7 @@ contains
 #endif
 
             deallocate (a_ustar     )
+            deallocate (a_ustar2    )
             deallocate (a_tstar     )
             deallocate (a_qstar     )
             deallocate (a_zol       )
@@ -1222,6 +1225,7 @@ contains
 #endif
 
             a_ustar (:) = spval
+            a_ustar2(:) = spval
             a_tstar (:) = spval
             a_qstar (:) = spval
             a_zol   (:) = spval
@@ -1269,12 +1273,12 @@ contains
 
       use MOD_Precision
       use MOD_SPMD_Task
-      USE mod_forcing, only : forcmask
-      USE MOD_Mesh,    only : numelm
+      USE mod_forcing, only: forcmask
+      USE MOD_Mesh,    only: numelm
       USE MOD_LandElm
-      use MOD_LandPatch,      only : numpatch, elm_patch
-      USE MOD_LandUrban,      only : numurban
-      use MOD_Const_Physical, only : vonkar, stefnc, cpair, rgas, grav
+      use MOD_LandPatch,      only: numpatch, elm_patch
+      USE MOD_LandUrban,      only: numurban
+      use MOD_Const_Physical, only: vonkar, stefnc, cpair, rgas, grav
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
       use MOD_Vars_1DForcing
@@ -1284,7 +1288,7 @@ contains
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
-      USE MOD_Hydro_Hist, only : accumulate_fluxes_basin
+      USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
 #endif
 
       IMPLICIT NONE
@@ -1307,7 +1311,7 @@ contains
       real(r8), allocatable :: r_vs10m (:)
       real(r8), allocatable :: r_fm10m (:)
 
-      logical,  allocatable :: patchmask (:)
+      logical,  allocatable :: filter  (:)
 
       !---------------------------------------------------------------------
       integer  ib, jb, i, j, ielm, istt, iend
@@ -1363,7 +1367,9 @@ contains
                   rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
                END WHERE
             ELSE
-               rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               WHERE(patchmask)
+                 rnet = sabg + sabvsun + sabvsha - olrg + forc_frl
+               END WHERE
             ENDIF
             call acc1d (rnet    , a_rnet   )
 
@@ -1420,6 +1426,8 @@ contains
                IF (DEF_forcing%has_missing_value) THEN
                   IF (.not. forcmask(i)) cycle
                ENDIF
+
+               IF (.not. patchmask(i)) CYCLE
                r_trad(i) = (olrg(i)/stefnc)**0.25
             end do
             call acc1d (r_trad , a_trad   )
@@ -1706,36 +1714,39 @@ contains
                istt = elm_patch%substt(ielm)
                iend = elm_patch%subend(ielm)
 
-               allocate (patchmask (istt:iend))
-               patchmask(:) = .true.
+               allocate (filter (istt:iend))
+               filter(:) = .true.
+
+               filter(:) = patchmask(istt:iend)
 
                IF (DEF_forcing%has_missing_value) THEN
-                  patchmask = forcmask(istt:iend)
+                  WHERE (.not. forcmask(istt:iend)) filter = .false.
+                  filter = filter .and. forcmask(istt:iend)
                ENDIF
 
-               IF (.not. any(patchmask)) THEN
-                  deallocate(patchmask)
+               IF (.not. any(filter)) THEN
+                  deallocate(filter)
                   CYCLE
                ENDIF
 
-               sumwt = sum(elm_patch%subfrc(istt:iend), mask = patchmask)
+               sumwt = sum(elm_patch%subfrc(istt:iend), mask = filter)
 
                ! Aggregate variables from patches to element (gridcell in latitude-longitude mesh)
-               z0m_av  = sum(z0m        (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_u   = sum(forc_hgt_u (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_t   = sum(forc_hgt_t (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               hgt_q   = sum(forc_hgt_q (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               us      = sum(forc_us    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               vs      = sum(forc_vs    (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               tm      = sum(forc_t     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               qm      = sum(forc_q     (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               psrf    = sum(forc_psrf  (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               taux_e  = sum(taux       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
-               fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+               z0m_av  = sum(z0m        (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               hgt_u   = sum(forc_hgt_u (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               hgt_t   = sum(forc_hgt_t (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               hgt_q   = sum(forc_hgt_q (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               us      = sum(forc_us    (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               vs      = sum(forc_vs    (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               tm      = sum(forc_t     (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               qm      = sum(forc_q     (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               psrf    = sum(forc_psrf  (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               taux_e  = sum(taux       (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               tauy_e  = sum(tauy       (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               fsena_e = sum(fsena      (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
+               fevpa_e = sum(fevpa      (istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
                if (DEF_USE_CBL_HEIGHT) then !//TODO: Shaofeng, 2023.05.18
-                  hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = patchmask) / sumwt
+                  hpbl = sum(forc_hpbl(istt:iend) * elm_patch%subfrc(istt:iend), mask = filter) / sumwt
                ENDIF
 
                z0h_av = z0m_av
@@ -1794,11 +1805,11 @@ contains
                endif
 
                ! bug found by chen qiying 2013/07/01
-               r_rib_e = r_zol_e /vonkar * r_ustar_e**2 / (vonkar/r_fh_e*um**2)
+               r_rib_e = r_zol_e /vonkar * r_ustar2_e**2 / (vonkar/r_fh_e*um**2)
                r_rib_e = min(5.,r_rib_e)
 
-               r_us10m_e = us/um * r_ustar_e /vonkar * r_fm10m_e
-               r_vs10m_e = vs/um * r_ustar_e /vonkar * r_fm10m_e
+               r_us10m_e = us/um * r_ustar2_e /vonkar * r_fm10m_e
+               r_vs10m_e = vs/um * r_ustar2_e /vonkar * r_fm10m_e
 
                ! Assign values from element (gridcell in latitude-longitude mesh) to patches.
                ! Notice that all values on patches in an element are equal.
@@ -1815,18 +1826,19 @@ contains
                r_vs10m (istt:iend) = r_vs10m_e
                r_fm10m (istt:iend) = r_fm10m_e
 
-               deallocate(patchmask)
+               deallocate(filter)
 
             end do
 
-            call acc1d (r_ustar, a_ustar)
-            call acc1d (r_tstar, a_tstar)
-            call acc1d (r_qstar, a_qstar)
-            call acc1d (r_zol  , a_zol  )
-            call acc1d (r_rib  , a_rib  )
-            call acc1d (r_fm   , a_fm   )
-            call acc1d (r_fh   , a_fh   )
-            call acc1d (r_fq   , a_fq   )
+            call acc1d (r_ustar , a_ustar )
+            call acc1d (r_ustar2, a_ustar2)
+            call acc1d (r_tstar , a_tstar )
+            call acc1d (r_qstar , a_qstar )
+            call acc1d (r_zol   , a_zol   )
+            call acc1d (r_rib   , a_rib   )
+            call acc1d (r_fm    , a_fm    )
+            call acc1d (r_fh    , a_fh    )
+            call acc1d (r_fq    , a_fq    )
 
             call acc1d (r_us10m, a_us10m)
             call acc1d (r_vs10m, a_vs10m)

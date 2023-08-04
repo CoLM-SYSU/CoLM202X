@@ -173,9 +173,21 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          patchclass = landpatch%settyp
+         patchmask  = .true.
 
          DO ipatch = 1, numpatch
-            patchtype(ipatch) = patchtypes(patchclass(ipatch))
+
+            m = patchclass(ipatch)
+            patchtype(ipatch) = patchtypes(m)
+
+            !     ***** patch mask setting *****
+            ! ---------------------------------------
+
+            IF (DEF_URBAN_ONLY .and. m.ne.URBAN) THEN
+               patchmask(ipatch) = .false.
+               CYCLE
+            ENDIF
+
          ENDDO
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)
@@ -785,8 +797,8 @@ MODULE MOD_Initialize
 #endif
       IF (p_is_worker) THEN
          IF (numelm > 0) THEN
-            riverheight(:) = 0
-            riverveloct(:) = 0
+            wdsrf_bsn(:) = 0
+            veloc_riv(:) = 0
          ENDIF
 
          IF (numhru > 0) THEN

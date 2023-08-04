@@ -105,6 +105,7 @@ MODULE MOD_NetCDFSerial
    PUBLIC :: ncio_write_lastdim
 
    INTERFACE ncio_write_serial_time
+      MODULE procedure ncio_write_serial_real8_0d_time
       MODULE procedure ncio_write_serial_real8_1d_time
       MODULE procedure ncio_write_serial_real8_2d_time
       MODULE procedure ncio_write_serial_real8_3d_time
@@ -1734,7 +1735,7 @@ CONTAINS
    END SUBROUTINE ncio_write_serial_real8_5d
 
    !------------------------------
-   SUBROUTINE ncio_write_time (filename, dataname, time_component, itime)
+   SUBROUTINE ncio_write_time (filename, dataname, time_component, itime, adjust)
 
       USE MOD_TimeManager
       IMPLICIT NONE
@@ -1744,12 +1745,27 @@ CONTAINS
       INTEGER, intent(in)  :: time_component(3)
       INTEGER, intent(out) :: itime
 
+      character(len=*), intent(in), optional :: adjust
+
       ! Local variables
       INTEGER, allocatable :: time_file(:)
       INTEGER :: ncid, varid, time_id, status
       INTEGER :: timelen, minutes
 
       minutes = minutes_since_1900 (time_component(1), time_component(2), time_component(3))
+      
+      IF (present(adjust)) THEN
+         select case (trim(adjustl(adjust)))
+         case ('HOURLY')
+            minutes = minutes - 30
+         case ('DAILY')
+            minutes = minutes - 720
+         case ('MONTHLY')
+            minutes = minutes - 21600
+         case ('YEARLY')
+            minutes = minutes - 262800
+         END select 
+      ENDIF
 
       CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
       status = nf90_inq_varid(ncid, trim(dataname), varid)
@@ -1847,6 +1863,46 @@ CONTAINS
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_write_lastdim
+
+   !----------------------------------------------------------------------------
+   SUBROUTINE ncio_write_serial_real8_0d_time ( &
+         filename, dataname, itime, wdata, dim1name)
+
+      USE netcdf
+      USE MOD_Precision
+      IMPLICIT NONE
+
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: dataname
+      INTEGER,  intent(in) :: itime
+      REAL(r8), intent(in) :: wdata
+
+      CHARACTER(len=*), intent(in), optional :: dim1name
+
+      ! Local variables
+      INTEGER :: ncid, varid, dimid, status
+
+      CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
+      status = nf90_inq_varid(ncid, trim(dataname), varid)
+      IF (status /= NF90_NOERR) THEN
+         IF (.not. present(dim1name)) THEN
+            write(*,*) 'Warning: no dimension name for ', trim(dataname)
+            RETURN
+         ENDIF
+
+         CALL nccheck (nf90_inq_dimid(ncid, trim(dim1name), dimid))
+
+         CALL nccheck (nf90_redef(ncid))
+         CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_DOUBLE, dimid, varid))
+
+         CALL nccheck (nf90_enddef(ncid))
+      ENDIF
+
+      CALL nccheck( nf90_put_var(ncid, varid, wdata, start = (/itime/)) )
+
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_write_serial_real8_0d_time
 
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_1d_time ( &

@@ -45,6 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_soilparameters  = .true.
    LOGICAL  :: USE_SITE_dbedrock        = .true.
    LOGICAL  :: USE_SITE_topography      = .true.
+   logical  :: USE_SITE_HistWriteBack   = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -126,7 +127,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LULCC_SCHEME = 1
 
    ! ------ Urban model related -------
-   !INTEGER :: DEF_URBAN_type_scheme = 1
+   ! Options for urban type scheme
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
+   INTEGER :: DEF_URBAN_type_scheme = 1
+   LOGICAL :: DEF_URBAN_ONLY   = .false.
    logical :: DEF_URBAN_RUN    = .false.
    LOGICAL :: DEF_URBAN_BEM    = .true.
    LOGICAL :: DEF_URBAN_TREE   = .true.
@@ -568,6 +573,7 @@ MODULE MOD_Namelist
 #endif
 
       LOGICAL :: ustar        = .true.
+      LOGICAL :: ustar2       = .true.
       LOGICAL :: tstar        = .true.
       LOGICAL :: qstar        = .true.
       LOGICAL :: zol          = .true.
@@ -636,6 +642,7 @@ CONTAINS
          USE_SITE_soilparameters,  &
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
+         USE_SITE_HistWriteBack,   &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -667,7 +674,8 @@ CONTAINS
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
 
-        !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_type_scheme,           &
+         DEF_URBAN_ONLY,                  &
          DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
          DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
          DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
@@ -1027,8 +1035,9 @@ CONTAINS
       CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_URBAN_ONLY,      1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1424,6 +1433,7 @@ CONTAINS
 #endif
 
       CALL sync_hist_vars_one (DEF_hist_vars%ustar       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%ustar2      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%tstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qstar       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%zol         ,  set_defaults)

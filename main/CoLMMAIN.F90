@@ -212,8 +212,8 @@ SUBROUTINE CoLMMAIN ( &
         alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter
-        sc_vgm   (1:nl_soil), &
-        fc_vgm   (1:nl_soil), &
+        sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
@@ -565,7 +565,7 @@ SUBROUTINE CoLMMAIN ( &
                      solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
       CALL rain_snow_temp (patchtype, &
-                           forc_t,forc_q,forc_psrf,forc_prc,forc_prl,tcrit,&
+                           forc_t,forc_q,forc_psrf,forc_prc,forc_prl,forc_us,forc_vs,tcrit,&
                            prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
       forc_rain = prc_rain + prl_rain
@@ -771,7 +771,7 @@ ENDIF
          lb  = snl + 1   !lower bound of array
          CALL snowcompaction (lb,deltim,&
                          imelt(lb:0),fiold(lb:0),t_soisno(lb:0),&
-                         wliq_soisno(lb:0),wice_soisno(lb:0),dz_soisno(lb:0))
+                         wliq_soisno(lb:0),wice_soisno(lb:0),forc_us,forc_vs,dz_soisno(lb:0))
 
          ! Combine thin snow elements
          lb = maxsnl + 1
@@ -846,7 +846,7 @@ ENDIF
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub)*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -944,7 +944,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    sm          ,scv         ,snowdp     ,imelt       ,&
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
-                   ssi         ,wimp                                 ,&
+                   ssi         ,wimp        ,forc_us    ,forc_vs     ,&
                    ! SNICAR
                    forc_aer    ,&
                    mss_bcpho   ,mss_bcphi   ,mss_ocpho  ,mss_ocphi   ,&
@@ -956,7 +956,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    sm          ,scv         ,snowdp     ,imelt       ,&
                    fiold       ,snl         ,qseva      ,qsdew       ,&
                    qsubl       ,qfros       ,rsur       ,rnof        ,&
-                   ssi         ,wimp                                  )
+                   ssi         ,wimp        ,forc_us    ,forc_vs     )
       ENDIF
 
 
@@ -1068,7 +1068,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            z_soisno     ,dz_soisno    ,zi_soisno       ,t_soisno        ,&
            wice_soisno  ,wliq_soisno  ,t_lake          ,lake_icefrac    ,&
            fseng        ,fgrnd        ,snl             ,scv             ,&
-           snowdp       ,sm            &
+           snowdp       ,sm           ,forc_us         ,forc_vs          &
 
 ! SNICAR model variables
            ,forc_aer    ,&
@@ -1088,8 +1088,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      wdsrf = max(wdsrf - rsub(ipatch) * deltim, 0.)
-      rnof = rsur + rsub(ipatch)
+      ! rnof = rsur + rsub(ipatch)
+      ! wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
+      ! wdsrf = max(0., wdsrf)
 #endif
 
       ! Set zero to the empty node

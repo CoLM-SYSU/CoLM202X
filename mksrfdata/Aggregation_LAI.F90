@@ -19,6 +19,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_SPMD_Task
+   USE MOD_TimeManager
    USE MOD_Grid
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
@@ -54,6 +55,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! local variables:
    ! ----------------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname
+
+   integer :: simulation_lai_year_start, simulation_lai_year_end
+   integer :: idate(3)
 
    TYPE (block_data_real8_2d) :: LAI          ! plant leaf area index (m2/m2)
    REAL(r8), allocatable :: LAI_patches(:), lai_one(:), area_one(:)
@@ -109,6 +113,26 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 #endif
 
+   idate(1) = DEF_simulation_time%start_year
+   IF (.not. isgreenwich) THEN
+      idate(3) = DEF_simulation_time%start_sec
+      CALL monthday2julian (idate(1), &
+         DEF_simulation_time%start_month, DEF_simulation_time%start_day, idate(2))
+      CALL localtime2gmt(idate)
+   ENDIF
+
+   simulation_lai_year_start = idate(1)
+
+   idate(1) = DEF_simulation_time%end_year
+   IF (.not. isgreenwich) THEN
+      idate(3) = DEF_simulation_time%end_sec
+      CALL monthday2julian (idate(1), &
+         DEF_simulation_time%end_month, DEF_simulation_time%end_day, idate(2))
+      CALL localtime2gmt(idate)
+   ENDIF
+
+   simulation_lai_year_end = idate(1)
+
    ! ................................................
    ! ... global plant leaf area index
    ! ................................................
@@ -126,8 +150,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
       ntime      = 12
 #else
       IF (DEF_LAI_CHANGE_YEARLY) THEN
-         start_year = DEF_simulation_time%start_year
-         end_year   = DEF_simulation_time%end_year
+         start_year = simulation_lai_year_start
+         end_year   = simulation_lai_year_end
          ntime      = 12
       ELSE
          start_year = lc_year
@@ -137,8 +161,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
    ! 8-day LAI
    ELSE
-      start_year = DEF_simulation_time%start_year
-      end_year   = DEF_simulation_time%end_year
+      start_year = simulation_lai_year_start
+      end_year   = simulation_lai_year_end
       ntime      = 46
    ENDIF
 
@@ -366,8 +390,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! if use lai change, LAI data of simulation start year and end year will be made
    ! if not use lai change, only make LAI data of defined lc year
    IF (DEF_LAI_CHANGE_YEARLY) THEN
-      start_year = DEF_simulation_time%start_year
-      end_year   = DEF_simulation_time%end_year
+      start_year = simulation_lai_year_start
+      end_year   = simulation_lai_year_end
       ntime      = 12
    ELSE
       start_year = lc_year

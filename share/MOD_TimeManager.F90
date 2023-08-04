@@ -60,6 +60,7 @@ MODULE MOD_TimeManager
    END INTERFACE
 
    LOGICAL, SAVE :: isgreenwich
+   real(r8),SAVE :: LocalLongitude = 0.
    public get_calday
 
 CONTAINS
@@ -421,16 +422,15 @@ CONTAINS
 
    END SUBROUTINE adj2end
 
-   SUBROUTINE localtime2gmt(idate, long)
+   SUBROUTINE localtime2gmt(idate)
 
       IMPLICIT NONE
       INTEGER, intent(inout) :: idate(3)
-      REAL(r8),intent(in)    :: long
 
       INTEGER  maxday
       REAL(r8) tdiff
 
-      tdiff = long/15.*3600.
+      tdiff = LocalLongitude/15.*3600.
       idate(3) = idate(3) - int(tdiff)
 
       IF (idate(3) < 0) THEN
@@ -495,25 +495,17 @@ CONTAINS
 
    END SUBROUTINE ticktime
 
-   REAL(r8) FUNCTION calendarday_date(date, long)
+   REAL(r8) FUNCTION calendarday_date(date)
 
       IMPLICIT NONE
       INTEGER, intent(in) :: date(3)
-      REAL(r8),optional   :: long
 
       INTEGER idate(3)
-      REAL(r8) longitude
 
       idate(:) = date(:)
 
-      IF (.NOT. present(long)) THEN
-         longitude = 0._r8
-      ELSE
-         longitude = long
-      ENDIF
-
       IF ( .not. isgreenwich ) THEN
-         CALL localtime2gmt(idate, longitude)
+         CALL localtime2gmt(idate)
       ENDIF
 
       calendarday_date = float(idate(2)) + float(idate(3))/86400.
@@ -521,26 +513,19 @@ CONTAINS
 
    END FUNCTION calendarday_date
 
-   REAL(r8) FUNCTION calendarday_stamp(stamp, long)
+   REAL(r8) FUNCTION calendarday_stamp(stamp)
 
       IMPLICIT NONE
       TYPE(timestamp), intent(in) :: stamp
-      REAL(r8),        optional   :: long
 
       INTEGER idate(3)
-      REAL(r8) longitude
 
       idate(1) = stamp%year
       idate(2) = stamp%day
       idate(3) = stamp%sec
 
-      IF (.NOT. present(long)) THEN
-         longitude = 0._r8
-      ELSE
-         longitude = long
-      ENDIF
       IF ( .not. isgreenwich ) THEN
-         CALL localtime2gmt(idate, longitude)
+         CALL localtime2gmt(idate)
       ENDIF
 
       calendarday_stamp = float(idate(2)) + float(idate(3))/86400.
