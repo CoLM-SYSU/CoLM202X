@@ -1763,7 +1763,7 @@ subroutine SW_CB_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatc,
 
 end subroutine SW_CB_dist
 
-subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter )
+subroutine SW_VG_dist ( m, n, x, fvec, fjac, ldfjac, iflag, xdat, npoint, ydatv, nptf, phi, isiter)
 
 !=================================================================
 ! DESCRIPTION:

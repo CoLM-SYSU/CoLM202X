@@ -421,7 +421,6 @@ ENDIF
 ! 4. canopy albedos : two stream approximation
 ! ----------------------------------------------------------------------
       IF (lai+sai > 1e-6) THEN
-
          IF (patchtype == 0) THEN
 
 #if (defined LULC_USGS || defined LULC_IGBP)
@@ -431,19 +430,7 @@ ENDIF
             albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
             alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 #endif
-
-#ifdef LULC_IGBP_PFT
-            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
-            alb(:,:) = albv(:,:)
-#endif
-
-#ifdef LULC_IGBP_PC
-            CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
-            alb(:,:) = albv(:,:)
-#endif
-
          ELSE  !other patchtypes (/=0)
-
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
@@ -451,8 +438,20 @@ ENDIF
             alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 
          ENDIF
-
       ENDIF
+
+      IF (patchtype == 0) THEN
+#ifdef LULC_IGBP_PFT
+         CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
+         alb(:,:) = albv(:,:)
+#endif
+
+#ifdef LULC_IGBP_PC
+         CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
+         alb(:,:) = albv(:,:)
+#endif
+      ENDIF
+
 
 !-----------------------------------------------------------------------
 

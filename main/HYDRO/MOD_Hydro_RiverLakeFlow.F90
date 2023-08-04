@@ -23,8 +23,10 @@ MODULE MOD_Hydro_RiverLakeFlow
    USE MOD_Precision
    IMPLICIT NONE
    
-   REAL(r8), parameter :: RIVERMIN  = 1.e-4 
    REAL(r8), parameter :: nmanning_riv = 0.03
+   
+   REAL(r8), parameter :: RIVERMIN  = 1.e-4_r8 
+   REAL(r8), parameter :: VOLUMEMIN = 1.e-4_r8
    
 CONTAINS
    
@@ -86,7 +88,7 @@ CONTAINS
                totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
                   mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
 
-               IF (totalvolume < 1.0e-4) THEN
+               IF (totalvolume < VOLUMEMIN) THEN
                   wdsrf_bsn(i) = 0
                ENDIF
             ELSEIF (lake_id(i) > 0) THEN
@@ -260,8 +262,12 @@ CONTAINS
 
                ! constraint 2: Avoid negative values of water
                IF (sum_hflux_riv(i) > 0) THEN
-                  IF (lake_id(i) <= 0) THEN
-                     ! for river or lake catchment
+                  IF (lake_id(i) == 0) THEN
+                     ! for river 
+                     totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                        mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
+                  ELSEIF (lake_id(i) < 0) THEN
+                     ! for lake catchment
                      totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
                         mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
                   ELSEIF (lake_id(i) > 0) THEN
@@ -296,8 +302,8 @@ CONTAINS
                   allocate (mask (hillslope_network(i)%nhru))
                   
                   dvol = sum_hflux_riv(i) * dt_this
-                  IF (dvol > 0.) THEN
-                     DO WHILE (dvol > 0.)
+                  IF (dvol > VOLUMEMIN) THEN
+                     DO WHILE (dvol > VOLUMEMIN)
                         mask  = hillslope_network(i)%hand < wdsrf_bsn(i)
                         nextl = maxval(hillslope_network(i)%hand, mask = mask)
                         nexta = sum   (hillslope_network(i)%area, mask = mask) 
@@ -318,8 +324,8 @@ CONTAINS
                            ENDIF
                         ENDDO
                      ENDDO
-                  ELSEIF (dvol < 0.) THEN
-                     DO WHILE (dvol < 0.)
+                  ELSEIF (dvol < -VOLUMEMIN) THEN
+                     DO WHILE (dvol < -VOLUMEMIN)
                         mask  = hillslope_network(i)%hand + wdsrf_hru(istt:iend) > wdsrf_bsn(i)
                         nexta = sum(hillslope_network(i)%area, mask = (.not. mask)) 
                         IF (any(mask)) THEN
@@ -345,6 +351,12 @@ CONTAINS
                            ENDIF
                         ENDDO
                      ENDDO
+                  ENDIF
+               
+                  totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                     mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
+                  IF (totalvolume < VOLUMEMIN) THEN
+                     wdsrf_bsn(i) = 0
                   ENDIF
 
                   deallocate(mask)

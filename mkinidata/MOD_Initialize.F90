@@ -178,9 +178,21 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          patchclass = landpatch%settyp
+         patchmask  = .true.
 
          DO ipatch = 1, numpatch
-            patchtype(ipatch) = patchtypes(patchclass(ipatch))
+
+            m = patchclass(ipatch)
+            patchtype(ipatch) = patchtypes(m)
+
+            !     ***** patch mask setting *****
+            ! ---------------------------------------
+
+            IF (DEF_URBAN_ONLY .and. m.ne.URBAN) THEN
+               patchmask(ipatch) = .false.
+               CYCLE
+            ENDIF
+
          ENDDO
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)

@@ -1,15 +1,11 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'heihe_lf'         
+   DEF_CASE_NAME = 'heihe'         
    
    DEF_domain%edges = 35.0
    DEF_domain%edgen = 45.0      
    DEF_domain%edgew = 97.0   
    DEF_domain%edgee = 102.0      
-   
-   DEF_nx_blocks = 30
-   DEF_ny_blocks = 30
-   DEF_PIO_groupsize = 50
    
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2001
@@ -28,21 +24,15 @@
    
    DEF_simulation_time%spinup_repeat = 2 
    
-   DEF_dir_rawdata  = '/tera05/zhangsp/data/CLMrawdata_hydro/'
-   DEF_dir_output   = '/tera05/zhangsp/cases'
+   DEF_dir_rawdata = '/tera07/CoLMrawdata/'
+   DEF_dir_runtime = '/tera07/CoLMruntime/'
+   DEF_dir_output  = '/tera05/zhangsp/cases'
    
    ! for CATCHMENT
-   Catchment_data_in_ONE_file = .true.
-   DEF_path_catchment_data = '/tera04/zhangsp/hillslope/output/heihe.nc'
+   DEF_CatchmentMesh_data = '/tera04/zhangsp/hillslope/output/heihe_100km2.nc'
 
-   ! LAI setting
-   DEF_LAI_CLIM = .false.
-
-   ! Canopy DEF Interception scheme selection
-   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/current/run/forcing/ERA5LAND.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/ERA5LAND.nml'
 
    ! ----- history -----
    DEF_HISTORY_IN_VECTOR = .false.
@@ -57,7 +47,6 @@
    DEF_REST_COMPRESS_LEVEL = 1
    DEF_HIST_COMPRESS_LEVEL = 1
    
-   DEF_hist_vars_turnon_all = .false.
-   DEF_hist_vars_namelist   = '/tera04/zhangsp/CoLM202X/current/run/history.nml'
+   DEF_hist_vars_turnon_all = .true.
    
 /
