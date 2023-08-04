@@ -49,7 +49,7 @@ MODULE MOD_Thermal
                       trda        ,trdm        ,trop        ,gradm      ,&
                       binter      ,extkn       ,forc_hgt_u  ,forc_hgt_t ,&
                       forc_hgt_q  ,forc_us     ,forc_vs     ,forc_t     ,&
-                      forc_q, forc_rhoair, forc_psrf, forc_pco2m, &
+                      forc_q      ,forc_rhoair ,forc_psrf   ,forc_pco2m ,&
                       forc_hpbl                                         ,&
                       forc_po2m   ,coszen      ,parsun      ,parsha     ,&
                       sabvsun     ,sabvsha     ,sabg        ,frl        ,&
@@ -79,17 +79,17 @@ MODULE MOD_Thermal
 !
 ! THERMAL ===> qsadv
 !              groundfluxes
-!              eroot                      |dewfraction
-!              LeafTemp   |               |qsadv
-!              LeafTempPC |  ---------->  |moninobukini
-!                                         |moninobuk
-!                                         |MOD_AssimStomataConductance
+!              eroot                             |dewfraction
+!              LeafTemperature   |               |qsadv
+!              LeafTemperaturePC |  ---------->  |moninobukini
+!                                                |moninobuk
+!                                                |MOD_AssimStomataConductance
 !
-!              groundTem     ---------->   meltf
+!              groundTem            ---------->   meltf
 !
 !
 ! REVISIONS:
-! Hua Yuan, 12/2019: added initial codes for PFT and Plant Community (PC)
+! Hua Yuan, 08/2019: added initial codes for PFT and Plant Community (PC)
 !                    vegetation classification processes
 ! Nan Wei,  01/2021: added variables passing of plant hydraulics and precipitation sensible heat
 !                    with canopy and ground for PFT and Plant Community (PC)
@@ -104,26 +104,21 @@ MODULE MOD_Thermal
   USE MOD_Eroot
   USE MOD_GroundFluxes
   USE MOD_LeafTemperature
+  USE MOD_LeafTemperaturePC
   USE MOD_GroundTemperature
   USE MOD_Qsadv
-#ifdef LULC_IGBP_PFT
-  USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+  USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
+  USE MOD_Vars_TimeInvariants, only: patchclass
   USE MOD_Vars_PFTimeInvariants
   USE MOD_Vars_PFTimeVariables
   USE MOD_Vars_1DPFTFluxes
 #endif
-#ifdef LULC_IGBP_PC
-  USE MOD_LandPC
-  USE MOD_Vars_PCTimeInvariants
-  USE MOD_Vars_PCTimeVariables
-  USE MOD_Vars_1DPCFluxes
-  USE MOD_LeafTemperaturePC
-#endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
   USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
 #endif
-USE MOD_SPMD_Task
-  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS
+  USE MOD_SPMD_Task
+  USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS,DEF_USE_PFT,DEF_USE_PC
 
   IMPLICIT NONE
 
@@ -385,7 +380,7 @@ USE MOD_SPMD_Task
 
   integer p, ps, pe, pc
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   real(r8), allocatable :: rootr_p     (:,:)
   real(r8), allocatable :: etrc_p        (:)
   real(r8), allocatable :: rstfac_p      (:)
@@ -413,25 +408,6 @@ USE MOD_SPMD_Task
   real(r8), allocatable :: etrsun_p      (:)
   real(r8), allocatable :: assimsha_p    (:)
   real(r8), allocatable :: etrsha_p      (:)
-#endif
-
-#ifdef LULC_IGBP_PC
-  real(r8) :: rootr_c (nl_soil,0:N_PFT-1)
-  real(r8) :: etrc_c          (0:N_PFT-1)
-  real(r8) :: rstfac_c        (0:N_PFT-1)
-  real(r8) :: rstfacsun_c     (0:N_PFT-1)
-  real(r8) :: rstfacsha_c     (0:N_PFT-1)
-  real(r8) :: gssun_c         (0:N_PFT-1)
-  real(r8) :: gssha_c         (0:N_PFT-1)
-  real(r8) :: laisun_c        (0:N_PFT-1)
-  real(r8) :: laisha_c        (0:N_PFT-1)
-  real(r8) :: fsun_c          (0:N_PFT-1)
-  real(r8) :: sabv_c          (0:N_PFT-1)
-  real(r8) :: hprl_c          (0:N_PFT-1)
-  real(r8) :: assimsun_c      (0:N_PFT-1)
-  real(r8) :: etrsun_c        (0:N_PFT-1)
-  real(r8) :: assimsha_c      (0:N_PFT-1)
-  real(r8) :: etrsha_c        (0:N_PFT-1)
 #endif
 
 !=======================================================================
@@ -525,8 +501,7 @@ IF (patchtype == 0) THEN
 !=======================================================================
 !=======================================================================
 #if(defined LULC_USGS || defined LULC_IGBP)
-      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
-                         forc_hpbl, &
+      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -564,7 +539,7 @@ IF (patchtype == 0) THEN
          rstfacsun_out = rstfac
          rstfacsha_out = rstfac
 
-         CALL LeafTemp (ipatch,1,deltim ,csoilc    ,dewmx      ,htvp       ,&
+         CALL LeafTemperature(ipatch,1,deltim,csoilc,dewmx     ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
                  effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
                  hhti       ,trda       ,trdm      ,trop       ,gradm      ,&
@@ -615,7 +590,7 @@ IF (patchtype == 0) THEN
 
 
 !=======================================================================
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
@@ -629,6 +604,7 @@ IF (patchtype == 0) THEN
       allocate ( gssha_p          (ps:pe) )
       allocate ( fsun_p           (ps:pe) )
       allocate ( sabv_p           (ps:pe) )
+IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
       allocate ( cgrnd_p          (ps:pe) )
       allocate ( cgrnds_p         (ps:pe) )
       allocate ( cgrndl_p         (ps:pe) )
@@ -642,6 +618,7 @@ IF (patchtype == 0) THEN
       allocate ( fm_p             (ps:pe) )
       allocate ( fh_p             (ps:pe) )
       allocate ( fq_p             (ps:pe) )
+ENDIF
       allocate ( hprl_p           (ps:pe) )
       allocate ( assimsun_p       (ps:pe) )
       allocate ( etrsun_p         (ps:pe) )
@@ -649,8 +626,7 @@ IF (patchtype == 0) THEN
       allocate ( etrsha_p         (ps:pe) )
 
       ! always DO CALL groundfluxes
-      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
-                         forc_hpbl, &
+      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -665,6 +641,7 @@ IF (patchtype == 0) THEN
 
       sabv_p(ps:pe) = sabvsun_p(ps:pe) + sabvsha_p(ps:pe)
       sabv = sabvsun + sabvsha
+
       DO i = ps, pe
          p = pftclass(i)
 
@@ -686,12 +663,21 @@ IF (patchtype == 0) THEN
 
             IF (coszen<=0.0 .or. sabv_p(i)<1.) fsun_p(i) = 0.5
 
-            laisun_p(i) = lai_p(i)*fsun_p(i)
-            laisha_p(i) = lai_p(i)*(1-fsun_p(i))
+            laisun_p(i)    = lai_p(i)*fsun_p(i)
+            laisha_p(i)    = lai_p(i)*(1-fsun_p(i))
             rstfacsun_p(i) = rstfac_p(i)
             rstfacsha_p(i) = rstfac_p(i)
+         ENDIF
+      ENDDO
 
-            CALL LeafTemp (ipatch,p,deltim,csoilc   ,dewmx      ,htvp       ,&
+
+IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
+
+      DO i = ps, pe
+         p = pftclass(i)
+         IF (lai_p(i)+sai_p(i) > 1e-6) THEN
+
+            CALL LeafTemperature(ipatch,p,deltim,csoilc,dewmx   ,htvp       ,&
                  lai_p(i)   ,sai_p(i)   ,htop_p(i)  ,hbot_p(i)  ,sqrtdi_p(p),&
                  effcon_p(p),vmax25_p(p),slti_p(p)  ,hlti_p(p)  ,shti_p(p)  ,&
                  hhti_p(p)  ,trda_p(p)  ,trdm_p(p)  ,trop_p(p)  ,gradm_p(p) ,&
@@ -724,13 +710,13 @@ IF (patchtype == 0) THEN
 
          ELSE
 
-            CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
-                               forc_hpbl, &
+            CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                                forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                                ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                                fsno,cgrnd_p(i),cgrndl_p(i),cgrnds_p(i), &
                                taux_p(i),tauy_p(i),fseng_p(i),fevpg_p(i),tref_p(i),qref_p(i), &
-            z0m_p(i),z0h_g,zol_p(i),rib_p(i),ustar_p(i),qstar_p(i),tstar_p(i),fm_p(i),fh_p(i),fq_p(i))
+                               z0m_p(i),z0h_g,zol_p(i),rib_p(i),ustar_p(i),&
+                               qstar_p(i),tstar_p(i),fm_p(i),fh_p(i),fq_p(i))
 
             tleaf_p      (i) = forc_t
             laisun_p     (i) = 0.
@@ -763,39 +749,119 @@ IF (patchtype == 0) THEN
          ENDIF
       ENDDO
 
-      laisun    = sum( laisun_p    (ps:pe)*pftfrac(ps:pe) )
-      laisha    = sum( laisha_p    (ps:pe)*pftfrac(ps:pe) )
-      dlrad     = sum( dlrad_p     (ps:pe)*pftfrac(ps:pe) )
-      ulrad     = sum( ulrad_p     (ps:pe)*pftfrac(ps:pe) )
-      tleaf     = sum( tleaf_p     (ps:pe)*pftfrac(ps:pe) )
-      ldew_rain = sum( ldew_rain_p (ps:pe)*pftfrac(ps:pe) )
-      ldew_snow = sum( ldew_snow_p (ps:pe)*pftfrac(ps:pe) )
-      ldew      = sum( ldew_p      (ps:pe)*pftfrac(ps:pe) )
-      tref      = sum( tref_p      (ps:pe)*pftfrac(ps:pe) )
-      qref      = sum( qref_p      (ps:pe)*pftfrac(ps:pe) )
+ENDIF
+
+
+IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
+
+      ! initialization
+      tleaf_p (ps:pe) = forc_t  !???
+      rst_p   (ps:pe) = 2.0e4
+      assim_p (ps:pe) = 0.
+      respc_p (ps:pe) = 0.
+      fsenl_p (ps:pe) = 0.
+      fevpl_p (ps:pe) = 0.
+      etr_p   (ps:pe) = 0.
+      hprl_p  (ps:pe) = 0.
+      z0m_p   (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
+
+      IF (lai+sai > 1e-6) THEN
+
+         CALL LeafTemperaturePC (ipatch,ps,pe  ,deltim        ,csoilc             ,dewmx              ,&
+            htvp            ,pftclass(ps:pe)   ,pftfrac(ps:pe),htop_p(ps:pe)      ,hbot_p(ps:pe)      ,&
+            lai_p(ps:pe)    ,sai_p(ps:pe)      ,&
+            extkb_p(ps:pe)  ,extkd_p(ps:pe)    ,forc_hgt_u    ,forc_hgt_t         ,forc_hgt_q         ,&
+            forc_us         ,forc_vs           ,thm           ,th                 ,thv                ,&
+            forc_q          ,forc_psrf         ,forc_rhoair   ,parsun_p(ps:pe)    ,parsha_p(ps:pe)    ,&
+            fsun_p(:)       ,sabv_p(:)         ,frl           ,thermk_p(ps:pe)    ,fshade_p(ps:pe)    ,&
+            rstfacsun_p(:)  ,rstfacsha_p(:)    ,&
+            gssun_p(:)      ,gssha_p(:)        ,forc_po2m     ,forc_pco2m         ,z0h_g       ,obu_g ,&
+            ustar_g         ,zlnd              ,zsno          ,fsno               ,sigf_p(ps:pe)      ,&
+            etrc_p(:)       ,t_grnd            ,qg            ,dqgdT              ,emg                ,&
+            z0m_p(ps:pe)    ,tleaf_p(ps:pe)    ,ldew_p(ps:pe) ,ldew_rain_p(ps:pe) ,ldew_snow_p(ps:pe) ,&
+            taux            ,tauy              ,&
+            fseng           ,fevpg             ,cgrnd         ,cgrndl             ,cgrnds             ,&
+            tref            ,qref              ,rst_p(ps:pe)  ,assim_p(ps:pe)     ,respc_p(ps:pe)     ,&
+            fsenl_p(ps:pe)  ,fevpl_p(ps:pe)    ,etr_p(ps:pe)  ,dlrad              ,ulrad              ,&
+            z0m             ,zol               ,rib           ,ustar              ,qstar              ,&
+            tstar           ,fm                ,fh            ,fq                 ,vegwp_p(:,ps:pe)   ,&
+            gs0sun_p(ps:pe) ,gs0sha_p(ps:pe)   ,&
+            assimsun_p(:)   ,etrsun_p(:)       ,assimsha_p(:) ,etrsha_p(:)        ,&
+!Ozone stress variables
+            o3coefv_sun_p(ps:pe) ,o3coefv_sha_p(ps:pe) ,o3coefg_sun_p(ps:pe) ,o3coefg_sha_p(ps:pe) ,&
+            lai_old_p(ps:pe)     ,o3uptakesun_p(ps:pe) ,o3uptakesha_p(ps:pe) ,forc_ozone           ,&
+!End ozone stress variables
+            forc_hpbl                                                                  ,&
+            qintr_rain_p(ps:pe) ,qintr_snow_p(ps:pe) ,t_precip  ,hprl_p(:)   ,smp      ,&
+            hk(1:)              ,hksati(1:)          ,rootr_p(:,:)                                  )
+
+      ELSE
+         laisun_p    (ps:pe) = 0.
+         laisha_p    (ps:pe) = 0.
+         tleaf_p     (ps:pe) = forc_t
+         ldew_rain_p (ps:pe) = 0.
+         ldew_snow_p (ps:pe) = 0.
+         ldew_p      (ps:pe) = 0.
+         rst_p       (ps:pe) = 2.0e4
+         assim_p     (ps:pe) = 0.
+         respc_p     (ps:pe) = 0.
+         fsenl_p     (ps:pe) = 0.
+         fevpl_p     (ps:pe) = 0.
+         etr_p       (ps:pe) = 0.
+         hprl_p      (ps:pe) = 0.
+         z0m_p       (ps:pe) = (1.-fsno)*zlnd + fsno*zsno
+
+         IF(DEF_USE_PLANTHYDRAULICS)THEN
+            vegwp_p (:,ps:pe) = -2.5e4
+         ENDIF
+      ENDIF
+
+ENDIF
+
+      laisun        = sum( laisun_p    (ps:pe)*pftfrac(ps:pe) )
+      laisha        = sum( laisha_p    (ps:pe)*pftfrac(ps:pe) )
+      tleaf         = sum( tleaf_p     (ps:pe)*pftfrac(ps:pe) )
+      ldew_rain     = sum( ldew_rain_p (ps:pe)*pftfrac(ps:pe) )
+      ldew_snow     = sum( ldew_snow_p (ps:pe)*pftfrac(ps:pe) )
+      ldew          = sum( ldew_p      (ps:pe)*pftfrac(ps:pe) )
       ! may have problem with rst, but the same for LC
-      rst       = sum( rst_p       (ps:pe)*pftfrac(ps:pe) )
-      assim     = sum( assim_p     (ps:pe)*pftfrac(ps:pe) )
-      respc     = sum( respc_p     (ps:pe)*pftfrac(ps:pe) )
-      taux      = sum( taux_p      (ps:pe)*pftfrac(ps:pe) )
-      tauy      = sum( tauy_p      (ps:pe)*pftfrac(ps:pe) )
-      fseng     = sum( fseng_p     (ps:pe)*pftfrac(ps:pe) )
-      fevpg     = sum( fevpg_p     (ps:pe)*pftfrac(ps:pe) )
-      cgrnd     = sum( cgrnd_p     (ps:pe)*pftfrac(ps:pe) )
-      cgrndl    = sum( cgrndl_p    (ps:pe)*pftfrac(ps:pe) )
-      cgrnds    = sum( cgrnds_p    (ps:pe)*pftfrac(ps:pe) )
-      fsenl     = sum( fsenl_p     (ps:pe)*pftfrac(ps:pe) )
-      fevpl     = sum( fevpl_p     (ps:pe)*pftfrac(ps:pe) )
-      etr       = sum( etr_p       (ps:pe)*pftfrac(ps:pe) )
-      z0m       = sum( z0m_p       (ps:pe)*pftfrac(ps:pe) )
-      zol       = sum( zol_p       (ps:pe)*pftfrac(ps:pe) )
-      rib       = sum( rib_p       (ps:pe)*pftfrac(ps:pe) )
-      ustar     = sum( ustar_p     (ps:pe)*pftfrac(ps:pe) )
-      qstar     = sum( qstar_p     (ps:pe)*pftfrac(ps:pe) )
-      tstar     = sum( tstar_p     (ps:pe)*pftfrac(ps:pe) )
-      fm        = sum( fm_p        (ps:pe)*pftfrac(ps:pe) )
-      fh        = sum( fh_p        (ps:pe)*pftfrac(ps:pe) )
-      fq        = sum( fq_p        (ps:pe)*pftfrac(ps:pe) )
+      rst           = sum( rst_p       (ps:pe)*pftfrac(ps:pe) )
+      assim         = sum( assim_p     (ps:pe)*pftfrac(ps:pe) )
+      respc         = sum( respc_p     (ps:pe)*pftfrac(ps:pe) )
+      fsenl         = sum( fsenl_p     (ps:pe)*pftfrac(ps:pe) )
+      fevpl         = sum( fevpl_p     (ps:pe)*pftfrac(ps:pe) )
+      etr           = sum( etr_p       (ps:pe)*pftfrac(ps:pe) )
+IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
+      dlrad         = sum( dlrad_p     (ps:pe)*pftfrac(ps:pe) )
+      ulrad         = sum( ulrad_p     (ps:pe)*pftfrac(ps:pe) )
+      tref          = sum( tref_p      (ps:pe)*pftfrac(ps:pe) )
+      qref          = sum( qref_p      (ps:pe)*pftfrac(ps:pe) )
+      taux          = sum( taux_p      (ps:pe)*pftfrac(ps:pe) )
+      tauy          = sum( tauy_p      (ps:pe)*pftfrac(ps:pe) )
+      fseng         = sum( fseng_p     (ps:pe)*pftfrac(ps:pe) )
+      fevpg         = sum( fevpg_p     (ps:pe)*pftfrac(ps:pe) )
+      cgrnd         = sum( cgrnd_p     (ps:pe)*pftfrac(ps:pe) )
+      cgrndl        = sum( cgrndl_p    (ps:pe)*pftfrac(ps:pe) )
+      cgrnds        = sum( cgrnds_p    (ps:pe)*pftfrac(ps:pe) )
+      z0m           = sum( z0m_p       (ps:pe)*pftfrac(ps:pe) )
+      zol           = sum( zol_p       (ps:pe)*pftfrac(ps:pe) )
+      rib           = sum( rib_p       (ps:pe)*pftfrac(ps:pe) )
+      ustar         = sum( ustar_p     (ps:pe)*pftfrac(ps:pe) )
+      qstar         = sum( qstar_p     (ps:pe)*pftfrac(ps:pe) )
+      tstar         = sum( tstar_p     (ps:pe)*pftfrac(ps:pe) )
+      fm            = sum( fm_p        (ps:pe)*pftfrac(ps:pe) )
+      fh            = sum( fh_p        (ps:pe)*pftfrac(ps:pe) )
+      fq            = sum( fq_p        (ps:pe)*pftfrac(ps:pe) )
+ENDIF
+      rstfacsun_out = sum( rstfacsun_p (ps:pe)*pftfrac(ps:pe) )
+      rstfacsha_out = sum( rstfacsha_p (ps:pe)*pftfrac(ps:pe) )
+      gssun_out     = sum( gssun_p     (ps:pe)*pftfrac(ps:pe) )
+      gssha_out     = sum( gssha_p     (ps:pe)*pftfrac(ps:pe) )
+      assimsun_out  = sum( assimsun_p  (ps:pe)*pftfrac(ps:pe) )
+      etrsun_out    = sum( etrsun_p    (ps:pe)*pftfrac(ps:pe) )
+      assimsha_out  = sum( assimsha_p  (ps:pe)*pftfrac(ps:pe) )
+      etrsha_out    = sum( etrsha_p    (ps:pe)*pftfrac(ps:pe) )
+      hprl          = sum( hprl_p      (ps:pe)*pftfrac(ps:pe) )
 
       IF(DEF_USE_PLANTHYDRAULICS)THEN
          DO j = 1, nvegwcs
@@ -815,23 +881,16 @@ IF (patchtype == 0) THEN
          ENDIF
       ENDIF
 
-      rstfacsun_out = sum( rstfacsun_p (ps:pe) * pftfrac(ps:pe) )
-      rstfacsha_out = sum( rstfacsha_p (ps:pe) * pftfrac(ps:pe) )
-      gssun_out     = sum( gssun_p     (ps:pe) * pftfrac(ps:pe) )
-      gssha_out     = sum( gssha_p     (ps:pe) * pftfrac(ps:pe) )
-      assimsun_out  = sum( assimsun_p  (ps:pe) * pftfrac(ps:pe) )
-      etrsun_out    = sum( etrsun_p    (ps:pe) * pftfrac(ps:pe) )
-      assimsha_out  = sum( assimsha_p  (ps:pe) * pftfrac(ps:pe) )
-      etrsha_out    = sum( etrsha_p    (ps:pe) * pftfrac(ps:pe) )
-      hprl          = sum( hprl_p      (ps:pe) * pftfrac(ps:pe) )
-
       deallocate ( rootr_p     )
       deallocate ( etrc_p      )
       deallocate ( rstfac_p    )
       deallocate ( rstfacsun_p )
       deallocate ( rstfacsha_p )
+      deallocate ( gssun_p     )
+      deallocate ( gssha_p     )
       deallocate ( fsun_p      )
       deallocate ( sabv_p      )
+IF (DEF_USE_PFT .or. patchclass(ipatch)==CROPLAND) THEN
       deallocate ( cgrnd_p     )
       deallocate ( cgrnds_p    )
       deallocate ( cgrndl_p    )
@@ -845,192 +904,18 @@ IF (patchtype == 0) THEN
       deallocate ( fm_p        )
       deallocate ( fh_p        )
       deallocate ( fq_p        )
+ENDIF
       deallocate ( hprl_p      )
-
-#endif
-
-!=======================================================================
-#ifdef LULC_IGBP_PC
-
-      pc = patch2pc(ipatch)
-
-      ! always DO CALL groundfluxes first
-      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
-                         forc_hpbl, &
-                         forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
-                         ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
-                         fsno,cgrnd,cgrndl,cgrnds, &
-                         taux,tauy,fseng,fevpg,tref,qref, &
-                         z0m_g,z0h_g,zol_g,rib_g,ustar_g,qstar_g,tstar_g,fm_g,fh_g,fq_g)
-
-      ! SAVE variables for bareground case
-      obu_g = forc_hgt_u / zol_g
-
-
-!=======================================================================
-! [4] Canopy temperature, fluxes from the canopy
-!=======================================================================
-
-      sabv_c(:) = sabvsun_c(:,pc) + sabvsha_c(:,pc)
-      sabv = sabvsun + sabvsha
-      hprl_c(:) = 0.
-
-      DO p = 0, N_PFT-1
-
-         IF (lai_c(p,pc)+sai_c(p,pc) > 1e-6) THEN
-
-            ! soil water strees factor on stomatal resistance
-            CALL eroot (nl_soil,trsmx0,porsl,&
-#ifdef Campbell_SOIL_MODEL
-               bsw,&
-#endif
-#ifdef vanGenuchten_Mualem_SOIL_MODEL
-               theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
-#endif
-               psi0,rootfr_p(:,p),&
-               dz_soisno,t_soisno,wliq_soisno,rootr_c(:,p),etrc_c(p),rstfac_c(p))
-
-            ! fraction of sunlit and shaded leaves of canopy
-            fsun_c(p) = ( 1. - exp(-min(extkb_c(p,pc)*lai_c(p,pc),40.))) &
-                      / max( min(extkb_c(p,pc)*lai_c(p,pc),40.), 1.e-6 )
-
-            ! 01/06/2020, yuan: change to 0.5
-            IF (coszen<=0.0 .or. sabv_c(p)<1.) fsun_c(p) = 0.5
-
-            laisun_c(p) = lai_c(p,pc)*fsun_c(p)
-            laisha_c(p) = lai_c(p,pc)*(1-fsun_c(p))
-            rstfacsun_c(p) = rstfac_c(p)
-            rstfacsha_c(p) = rstfac_c(p)
-
-         ELSE
-            laisun_c(p)       = 0.
-            laisha_c(p)       = 0.
-            ldew_rain_c(p,pc) = 0.
-            ldew_snow_c(p,pc) = 0.
-            ldew_c(p,pc)      = 0.
-            rootr_c(:,p)      = 0.
-            rstfacsun_c(p)    = 0.
-            rstfacsha_c(p)    = 0.
-
-            IF(DEF_USE_PLANTHYDRAULICS)THEN
-               vegwp_c (:,p,pc)  = -2.5e4
-            ENDIF
-         ENDIF
-
-      ENDDO
-      ! initialization
-      tleaf_c (:,pc) = forc_t  !???
-      rst_c   (:,pc) = 2.0e4
-      assim_c (:,pc) = 0.
-      respc_c (:,pc) = 0.
-      fsenl_c (:,pc) = 0.
-      fevpl_c (:,pc) = 0.
-      etr_c   (:,pc) = 0.
-      z0m_c   (:,pc) = (1.-fsno)*zlnd + fsno*zsno
-
-
-      IF (lai+sai > 1e-6) THEN
-
-         CALL LeafTempPC ( ipatch,N_PFT  ,deltim        ,csoilc        ,dewmx         ,&
-            htvp          ,pcfrac(:,pc)  ,canlay(:)     ,htop_c(:,pc)  ,hbot_c(:,pc)  ,&
-            lai_c(:,pc)   ,sai_c(:,pc)   ,sqrtdi_p(:)   ,effcon_p(:)   ,vmax25_p(:)   ,&
-            slti_p(:)     ,hlti_p(:)     ,shti_p(:)     ,hhti_p(:)     ,trda_p(:)     ,&
-            trdm_p(:)     ,trop_p(:)     ,gradm_p(:)    ,binter_p(:)   ,extkn_p(:)    ,&
-            extkb_c(:,pc) ,extkd_c(:,pc) ,forc_hgt_u    ,forc_hgt_t    ,forc_hgt_q    ,&
-            forc_us       ,forc_vs       ,thm           ,th            ,thv           ,&
-            forc_q        ,forc_psrf     ,forc_rhoair   ,parsun_c(:,pc),parsha_c(:,pc),&
-            fsun_c(:)     ,sabv_c(:)     ,frl           ,thermk_c(:,pc),fshade_c(:,pc),&
-            rstfacsun_c(:)               ,rstfacsha_c(:)                              ,&
-            gssun_c(:) ,gssha_c(:) ,forc_po2m     ,forc_pco2m    ,z0h_g         ,obu_g,&
-            ustar_g       ,zlnd          ,zsno          ,fsno          ,sigf_c(:,pc)  ,&
-            etrc_c(:)     ,t_grnd        ,qg            ,dqgdT         ,emg           ,&
-            z0m_c(:,pc),tleaf_c(:,pc),ldew_c(:,pc),ldew_rain_c(:,pc),ldew_snow_c(:,pc),&
-            taux          ,tauy          ,&
-            fseng         ,fevpg         ,cgrnd         ,cgrndl        ,cgrnds        ,&
-            tref          ,qref          ,rst_c(:,pc)   ,assim_c(:,pc) ,respc_c(:,pc) ,&
-            fsenl_c(:,pc) ,fevpl_c(:,pc) ,etr_c(:,pc)   ,dlrad         ,ulrad         ,&
-            z0m           ,zol           ,rib           ,ustar         ,qstar         ,&
-            tstar         ,fm            ,fh            ,fq            ,rootfr_p(:,:) ,&
-            kmax_sun_p(:) ,kmax_sha_p(:) ,kmax_xyl_p(:) ,kmax_root_p(:),psi50_sun_p(:),&
-            psi50_sha_p(:),psi50_xyl_p(:),psi50_root_p(:),ck_p(:)     ,vegwp_c(:,:,pc),&
-            gs0sun_c(:,pc),gs0sha_c(:,pc)                                             ,&
-            assimsun_c(:) ,etrsun_c(:)   ,assimsha_c(:) ,etrsha_c(:)                  ,&
-!Ozone stress variables
-            o3coefv_sun_c(:,pc) ,o3coefv_sha_c(:,pc) ,o3coefg_sun_c(:,pc) ,o3coefg_sha_c(:,pc), &
-            lai_old_c(:,pc), o3uptakesun_c(:,pc), o3uptakesha_c(:,pc),forc_ozone,  &
-!End ozone stress variables
-            forc_hpbl                                                                  ,&
-            qintr_rain_c(:,pc),qintr_snow_c(:,pc),t_precip,hprl_c(:)   ,smp            ,&
-            hk(1:)        ,hksati(1:)    ,rootr_c(:,:)                                  )
-      ELSE
-         laisun_c    (:)    = 0.
-         laisha_c    (:)    = 0.
-         tleaf_c     (:,pc) = forc_t
-         ldew_rain_c (:,pc) = 0.
-         ldew_snow_c (:,pc) = 0.
-         ldew_c      (:,pc) = 0.
-         rst_c       (:,pc) = 2.0e4
-         assim_c     (:,pc) = 0.
-         respc_c     (:,pc) = 0.
-         fsenl_c     (:,pc) = 0.
-         fevpl_c     (:,pc) = 0.
-         etr_c       (:,pc) = 0.
-         hprl_c      (:)    = 0.
-
-         IF(DEF_USE_PLANTHYDRAULICS)THEN
-            vegwp_c (:,:,pc) = -2.5e4
-         ENDIF
-      ENDIF
-
-      laisun    = sum( laisun_c    (:)   *pcfrac(:,pc) )
-      laisha    = sum( laisha_c    (:)   *pcfrac(:,pc) )
-      tleaf     = sum( tleaf_c     (:,pc)*pcfrac(:,pc) )
-      ldew_rain = sum( ldew_rain_c (:,pc)*pcfrac(:,pc) )
-      ldew_snow = sum( ldew_snow_c (:,pc)*pcfrac(:,pc) )
-      ldew      = sum( ldew_c      (:,pc)*pcfrac(:,pc) )
-      rst       = sum( rst_c       (:,pc)*pcfrac(:,pc) )
-      assim     = sum( assim_c     (:,pc)*pcfrac(:,pc) )
-      respc     = sum( respc_c     (:,pc)*pcfrac(:,pc) )
-      fsenl     = sum( fsenl_c     (:,pc)*pcfrac(:,pc) )
-      fevpl     = sum( fevpl_c     (:,pc)*pcfrac(:,pc) )
-      etr       = sum( etr_c       (:,pc)*pcfrac(:,pc) )
-
-      IF(DEF_USE_PLANTHYDRAULICS)THEN
-         DO j = 1, nvegwcs
-            vegwp(j) = sum( vegwp_c(j,:,pc)*pcfrac(:,pc) )
-         ENDDO
-
-      ! loop for each soil layer
-         IF (abs(etr) > 0.) THEN
-            DO j = 1, nl_soil
-               rootr(j) = sum(rootr_c(j,:)*pcfrac(:,pc))
-            ENDDO
-         ENDIF
-      ELSE
-      ! loop for each soil layer
-         IF (abs(etr) > 0.) THEN
-            DO j = 1, nl_soil
-               rootr(j) = sum(rootr_c(j,:)*etr_c(:,pc)*pcfrac(:,pc)) / etr
-            ENDDO
-         ENDIF
-      ENDIF
-
-      rstfacsun_out = sum( rstfacsun_c(:) * pcfrac(:,pc) )
-      rstfacsha_out = sum( rstfacsha_c(:) * pcfrac(:,pc) )
-      gssun_out     = sum( gssun_c    (:) * pcfrac(:,pc) )
-      gssha_out     = sum( gssha_c    (:) * pcfrac(:,pc) )
-      assimsun_out  = sum( assimsun_c (:) * pcfrac(:,pc) )
-      etrsun_out    = sum( etrsun_c   (:) * pcfrac(:,pc) )
-      assimsha_out  = sum( assimsha_c (:) * pcfrac(:,pc) )
-      etrsha_out    = sum( etrsha_c   (:) * pcfrac(:,pc) )
-      hprl          = sum( hprl_c     (:) * pcfrac(:,pc) )
+      deallocate ( assimsun_p  )
+      deallocate ( etrsun_p    )
+      deallocate ( assimsha_p  )
+      deallocate ( etrsha_p    )
 
 #endif
 
 ! For patchtype/=0, not a soil patch
 ELSE
-      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q, &
-                         forc_hpbl, &
+      CALL groundfluxes (zlnd,zsno,forc_hgt_u,forc_hgt_t,forc_hgt_q,forc_hpbl, &
                          forc_us,forc_vs,forc_t,forc_q,forc_rhoair,forc_psrf, &
                          ur,thm,th,thv,t_grnd,qg,dqgdT,htvp, &
                          fsno,cgrnd,cgrndl,cgrnds, &
@@ -1068,7 +953,7 @@ ELSE
          rstfacsun_out = rstfac
          rstfacsha_out = rstfac
 
-         CALL LeafTemp (ipatch,1,deltim ,csoilc    ,dewmx      ,htvp       ,&
+         CALL LeafTemperature(ipatch,1,deltim,csoilc,dewmx     ,htvp       ,&
                  lai        ,sai        ,htop      ,hbot       ,sqrtdi     ,&
                  effcon     ,vmax25     ,slti      ,hlti       ,shti       ,&
                  hhti       ,trda       ,trdm      ,trop       ,gradm      ,&

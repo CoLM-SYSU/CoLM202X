@@ -23,13 +23,10 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
   INTEGER, allocatable :: patchclass_    (:)  !index of land cover type
   INTEGER, allocatable :: patchtype_     (:)  !land water type
 
-  ! for LULC_IGBP_PFT
+  ! for LULC_IGBP_PFT and LULC_IGBP_PC
   INTEGER, allocatable :: pftclass_      (:)  !PFT type
   INTEGER, allocatable :: patch_pft_s_   (:)  !start PFT index of a patch
   INTEGER, allocatable :: patch_pft_e_   (:)  !end PFT index of a patch
-
-  ! for LULC_IGBP_PC
-  INTEGER, allocatable :: patch2pc_      (:)  !projection from patch to PC
 
   ! for Urban model
   INTEGER, allocatable :: urbclass_      (:)  !urban TYPE
@@ -58,11 +55,8 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
      USE MOD_Vars_Global
      USE MOD_LandPatch
      USE MOD_Mesh
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
      USE MOD_LandUrban
@@ -88,17 +82,11 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
            allocate (patchclass_                (numpatch))
            allocate (patchtype_                 (numpatch))
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft > 0) THEN
               allocate (pftclass_                 (numpft))
               allocate (patch_pft_s_            (numpatch))
               allocate (patch_pft_e_            (numpatch))
-           ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-           IF (numpc > 0) THEN
-              allocate (patch2pc_               (numpatch))
            ENDIF
 #endif
 
@@ -123,12 +111,9 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
      USE MOD_Landpatch
      USE MOD_Landelm
      USE MOD_Mesh
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_Vars_PFTimeInvariants
      USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
      USE MOD_LandUrban
@@ -145,19 +130,12 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
            patchclass_       (:) = patchclass       (:)
            patchtype_        (:) = patchtype        (:)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft > 0) THEN
               numpft_            = numpft
               pftclass_      (:) = pftclass         (:)
               patch_pft_s_   (:) = patch_pft_s      (:)
               patch_pft_e_   (:) = patch_pft_e      (:)
-           ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-           IF (numpc > 0) THEN
-              numpc_             = numpc
-              patch2pc_      (:) = patch2pc         (:)
            ENDIF
 #endif
 
@@ -186,17 +164,11 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
            deallocate    (patchclass_   )
            deallocate    (patchtype_    )
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft_ > 0) THEN
               deallocate (pftclass_     )
               deallocate (patch_pft_s_  )
               deallocate (patch_pft_e_  )
-           ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-           IF (numpc_ > 0) THEN
-              deallocate (patch2pc_     )
            ENDIF
 #endif
 

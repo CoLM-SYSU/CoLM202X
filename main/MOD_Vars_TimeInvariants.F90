@@ -4,7 +4,7 @@
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 MODULE MOD_Vars_PFTimeInvariants
 ! -----------------------------------------------------------------
 ! !DESCRIPTION:
@@ -18,7 +18,7 @@ MODULE MOD_Vars_PFTimeInvariants
   IMPLICIT NONE
   SAVE
 
-  ! for LULC_IGBP_PFT
+  ! for LULC_IGBP_PFT and LULC_IGBP_PC
   INTEGER , allocatable :: pftclass    (:)    !PFT type
   REAL(r8), allocatable :: pftfrac     (:)    !PFT fractional cover
   REAL(r8), allocatable :: htop_p      (:)    !canopy top height [m]
@@ -29,7 +29,7 @@ MODULE MOD_Vars_PFTimeInvariants
   PUBLIC :: READ_PFTimeInvariants
   PUBLIC :: WRITE_PFTimeInvariants
   PUBLIC :: deallocate_PFTimeInvariants
-#ifdef RangeCheck 
+#ifdef RangeCheck
   PUBLIC :: check_PFTimeInvariants
 #endif
 
@@ -119,7 +119,7 @@ MODULE MOD_Vars_PFTimeInvariants
 
   END SUBROUTINE deallocate_PFTimeInvariants
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
   SUBROUTINE check_PFTimeInvariants ()
 
      use MOD_RangeCheck
@@ -136,151 +136,14 @@ END MODULE MOD_Vars_PFTimeInvariants
 #endif
 
 
-
-#ifdef LULC_IGBP_PC
-MODULE MOD_Vars_PCTimeInvariants
-! -----------------------------------------------------------------
-! !DESCRIPTION:
-! Define Plant Community time invariables
-!
-! Added by Hua Yuan, 08/2019
-! -----------------------------------------------------------------
-
-  USE MOD_Precision
-  USE MOD_Vars_Global
-  IMPLICIT NONE
-  SAVE
-
-  ! for LULC_IGBP_PC
-  REAL(r8), allocatable :: pcfrac(:,:)    !PC fractional cover
-  REAL(r8), allocatable :: htop_c(:,:)    !canopy top height [m]
-  REAL(r8), allocatable :: hbot_c(:,:)    !canopy bottom height [m]
-
-! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_PCTimeInvariants
-  PUBLIC :: READ_PCTimeInvariants
-  PUBLIC :: WRITE_PCTimeInvariants
-  PUBLIC :: deallocate_PCTimeInvariants
-#ifdef RangeCheck 
-  PUBLIC :: check_PCTimeInvariants
-#endif
-
-! PRIVATE MEMBER FUNCTIONS:
-
-!-----------------------------------------------------------------------
-
-  CONTAINS
-
-!-----------------------------------------------------------------------
-
-  SUBROUTINE allocate_PCTimeInvariants
-  ! --------------------------------------------------------------------
-  ! Allocates memory for CoLM Plant Community (PC) [numpc] variables
-  ! --------------------------------------------------------------------
-
-     USE MOD_Precision
-     USE MOD_SPMD_Task
-     USE MOD_LandPC
-     USE MOD_Vars_Global
-     IMPLICIT NONE
-
-     IF (p_is_worker) THEN
-
-        IF (numpc > 0) THEN
-           allocate (pcfrac   (0:N_PFT-1,numpc))
-           allocate (htop_c   (0:N_PFT-1,numpc))
-           allocate (hbot_c   (0:N_PFT-1,numpc))
-        ENDIF
-     ENDIF
-
-  END SUBROUTINE allocate_PCTimeInvariants
-
-  SUBROUTINE READ_PCTimeInvariants (file_restart)
-
-     use MOD_NetCDFVector
-     USE MOD_Vars_Global
-     USE MOD_LandPC
-     IMPLICIT NONE
-
-     character(LEN=*), intent(in) :: file_restart
-
-     call ncio_read_vector (file_restart, 'pcfrac', N_PFT, landpc, pcfrac) !
-     call ncio_read_vector (file_restart, 'htop_c', N_PFT, landpc, htop_c) !
-     call ncio_read_vector (file_restart, 'hbot_c', N_PFT, landpc, hbot_c) !
-
-  end subroutine READ_PCTimeInvariants
-
-  SUBROUTINE WRITE_PCTimeInvariants (file_restart)
-
-     use MOD_NetCDFVector
-     use MOD_LandPC
-     USE MOD_Namelist
-     USE MOD_Vars_Global
-     IMPLICIT NONE
-
-     ! Local variables
-     character(len=*), intent(in) :: file_restart
-     integer :: compress
-
-     compress = DEF_REST_COMPRESS_LEVEL
-
-     call ncio_create_file_vector (file_restart, landpc)
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'pc')
-     CALL ncio_define_dimension_vector (file_restart, landpc, 'pft', N_PFT)
-
-     call ncio_write_vector (file_restart, 'pcfrac', 'pft', N_PFT, 'pc', landpc, pcfrac, compress) !
-     call ncio_write_vector (file_restart, 'htop_c', 'pft', N_PFT, 'pc', landpc, htop_c, compress) !
-     call ncio_write_vector (file_restart, 'hbot_c', 'pft', N_PFT, 'pc', landpc, hbot_c, compress) !
-
-  end subroutine WRITE_PCTimeInvariants
-
-  SUBROUTINE deallocate_PCTimeInvariants
-! --------------------------------------------------
-! Deallocates memory for CoLM Plant Community (PC) variables
-! --------------------------------------------------
-
-     USE MOD_SPMD_Task
-     USE MOD_LandPC
-
-     IF (p_is_worker) THEN
-        IF (numpc > 0) THEN
-           deallocate (pcfrac   )
-           deallocate (htop_c   )
-           deallocate (hbot_c   )
-        ENDIF
-     ENDIF
-
-  END SUBROUTINE deallocate_PCTimeInvariants
-
-#ifdef RangeCheck 
-  SUBROUTINE check_PCTimeInvariants ()
-
-     use MOD_RangeCheck
-     IMPLICIT NONE
-
-     call check_vector_data ('pcfrc ', pcfrac) !
-     call check_vector_data ('htop_c', htop_c) !
-     call check_vector_data ('hbot_c', hbot_c) !
-
-  end subroutine check_PCTimeInvariants
-#endif
-
-END MODULE MOD_Vars_PCTimeInvariants
-#endif
-
-
-
 MODULE MOD_Vars_TimeInvariants
 ! -------------------------------
 ! Created by Yongjiu Dai, 03/2014
 ! -------------------------------
 
-  use MOD_Precision
-#ifdef LULC_IGBP_PFT
+  USE MOD_Precision
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_Vars_PFTimeInvariants
-#endif
-#ifdef LULC_IGBP_PC
-  USE MOD_Vars_PCTimeInvariants
 #endif
 #ifdef BGC
   USE MOD_BGC_Vars_TimeInvariants
@@ -435,12 +298,8 @@ MODULE MOD_Vars_TimeInvariants
            allocate (ibedrock             (numpatch))
      end if
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      CALL allocate_PFTimeInvariants
-#endif
-
-#ifdef LULC_IGBP_PC
-     CALL allocate_PCTimeInvariants
 #endif
 
 #ifdef BGC
@@ -466,7 +325,7 @@ MODULE MOD_Vars_TimeInvariants
      use MOD_SPMD_Task
      use MOD_NetCDFVector
      use MOD_NetCDFSerial
-#ifdef RangeCheck 
+#ifdef RangeCheck
      USE MOD_RangeCheck
 #endif
      USE MOD_LandPatch
@@ -550,14 +409,9 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_bcast_serial (file_restart, 'trsmx0', trsmx0) ! max transpiration for moist soil+100% veg.  [mm/s]
      call ncio_read_bcast_serial (file_restart, 'tcrit ', tcrit ) ! critical temp. to determine rain or snow
 
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' // '_lc' // trim(cyear) // '.nc'
      CALL READ_PFTimeInvariants (file_restart)
-#endif
-
-#if (defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' // '_lc' // trim(cyear) // '.nc'
-     CALL READ_PCTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
@@ -570,7 +424,7 @@ MODULE MOD_Vars_TimeInvariants
      CALL READ_UrbanTimeInvariants (file_restart)
 #endif
 
-#ifdef RangeCheck 
+#ifdef RangeCheck
      call check_TimeInvariants ()
 #endif
 
@@ -699,14 +553,9 @@ MODULE MOD_Vars_TimeInvariants
 
      end if
 
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pft_const' //'_lc'// trim(cyear) // '.nc'
      CALL WRITE_PFTimeInvariants (file_restart)
-#endif
-
-#if (defined LULC_IGBP_PC)
-     file_restart = trim(dir_restart) // '/' // trim(casename) //'_restart_pc_const' //'_lc'// trim(cyear) // '.nc'
-     CALL WRITE_PCTimeInvariants (file_restart)
 #endif
 
 #if (defined BGC)
@@ -788,12 +637,8 @@ MODULE MOD_Vars_TimeInvariants
         end if
      end if
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      CALL deallocate_PFTimeInvariants
-#endif
-
-#ifdef LULC_IGBP_PC
-     CALL deallocate_PCTimeInvariants
 #endif
 
 #ifdef BGC
@@ -887,12 +732,8 @@ MODULE MOD_Vars_TimeInvariants
         write(*,'(A7,E20.10)') 'tcrit ', tcrit  ! critical temp. to determine rain or snow
      end if
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      CALL check_PFTimeInvariants
-#endif
-
-#ifdef LULC_IGBP_PC
-     CALL check_PCTimeInvariants
 #endif
 
 #ifdef BGC

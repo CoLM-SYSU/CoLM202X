@@ -22,7 +22,7 @@ module MOD_Hist
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_Vars_PFTimeInvariants, only: pftclass
    USE MOD_LandPFT, only : patch_pft_s
 #endif

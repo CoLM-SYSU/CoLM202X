@@ -44,17 +44,11 @@ CONTAINS
    USE MOD_Vars_Global
    USE MOD_Namelist, only: DEF_USE_SNICAR
    USE MOD_TimeManager, only: isgreenwich
-#ifdef LULC_IGBP_PFT
-   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
    USE MOD_Vars_1DPFTFluxes
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvariants
-   USE MOD_Vars_PCTimeVariables
-   USE MOD_Vars_1DPCFluxes
 #endif
 
    IMPLICIT NONE
@@ -130,22 +124,13 @@ CONTAINS
       sabg_lyr(:) = 0.
 
       IF (patchtype == 0) THEN
-
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          sabvsun_p(ps:pe) = 0.
          sabvsha_p(ps:pe) = 0.
          parsun_p(ps:pe)  = 0.
          parsha_p(ps:pe)  = 0.
-#endif
-
-#ifdef LULC_IGBP_PC
-         pc = patch2pc(ipatch)
-         sabvsun_c(:,pc) = 0.
-         sabvsha_c(:,pc) = 0.
-         parsun_c(:,pc)  = 0.
-         parsha_c(:,pc)  = 0.
 #endif
       ENDIF
 
@@ -164,8 +149,7 @@ CONTAINS
             sabg    = sabvg - sabvsun - sabvsha
 
             IF (patchtype == 0) THEN
-
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
@@ -173,16 +157,6 @@ CONTAINS
                sabvsha_p(ps:pe) = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe) &
                                 + forc_soll*ssha_p(2,1,ps:pe) + forc_solld*ssha_p(2,2,ps:pe)
 #endif
-
-#ifdef LULC_IGBP_PC
-               parsun_c(:,pc)  = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc)
-               parsha_c(:,pc)  = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc)
-               sabvsun_c(:,pc) = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc) &
-                               + forc_soll*ssun_c(2,1,:,pc) + forc_solld*ssun_c(2,2,:,pc)
-               sabvsha_c(:,pc) = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc) &
-                               + forc_soll*ssha_c(2,1,:,pc) + forc_solld*ssha_c(2,2,:,pc)
-#endif
-
             ENDIF
 
          ELSE               !lake or ocean

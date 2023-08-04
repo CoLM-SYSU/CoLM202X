@@ -42,7 +42,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
   REAL(r8), allocatable :: t_lake_      (:,:)  !lake layer teperature [K]
   REAL(r8), allocatable :: lake_icefrac_(:,:)  !lake mass fraction of lake layer that is frozen
 
-  ! for LULC_IGBP_PFT
+  ! for LULC_IGBP_PFT and LULC_IGBP_PC
   REAL(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
   REAL(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
   REAL(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
@@ -51,21 +51,9 @@ MODULE MOD_LuLcc_Vars_TimeVariables
   REAL(r8), allocatable :: ssun_p_    (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
   REAL(r8), allocatable :: ssha_p_    (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
   REAL(r8), allocatable :: thermk_p_      (:)  !canopy gap fraction for tir radiation
+  REAL(r8), allocatable :: fshade_p_      (:)  !canopy shade fraction for tir radiation
   REAL(r8), allocatable :: extkb_p_       (:)  !(k, g(mu)/mu) direct solar extinction coefficient
   REAL(r8), allocatable :: extkd_p_       (:)  !diffuse and scattered diffuse PAR extinction coefficient
-
-  ! for LULC_IGBP_PC
-  REAL(r8), allocatable :: tleaf_c_     (:,:)  !leaf temperature [K]
-  REAL(r8), allocatable :: ldew_c_      (:,:)  !depth of water on foliage [mm]
-  REAL(r8), allocatable :: sigf_c_      (:,:)  !fraction of veg cover, excluding snow-covered veg [-]
-  REAL(r8), allocatable :: lai_c_       (:,:)  !leaf area index
-  REAL(r8), allocatable :: sai_c_       (:,:)  !stem area index
-  REAL(r8), allocatable :: ssun_c_  (:,:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: ssha_c_  (:,:,:,:)  !shaded canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: thermk_c_    (:,:)  !canopy gap fraction for tir radiation
-  REAL(r8), allocatable :: fshade_c_    (:,:)  !canopy gap fraction for tir radiation
-  REAL(r8), allocatable :: extkb_c_     (:,:)  !(k, g(mu)/mu) direct solar extinction coefficient
-  REAL(r8), allocatable :: extkd_c_     (:,:)  !diffuse and scattered diffuse PAR extinction coefficient
 
   ! for URBAN_MODEL
   REAL(r8), allocatable :: fwsun_         (:)  !sunlit fraction of walls [-]
@@ -166,13 +154,9 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      USE MOD_Precision
      USE MOD_Vars_Global
      USE MOD_LandPatch
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_Vars_PFTimeVariables
      USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVariables
-     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
      USE MOD_Urban_Vars_TimeVariables
@@ -214,7 +198,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
            allocate (lake_icefrac_         (nl_lake,numpatch))
         ENDIF
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
         IF (numpft > 0) THEN
            allocate (tleaf_p_                        (numpft))
            allocate (ldew_p_                         (numpft))
@@ -224,24 +208,9 @@ MODULE MOD_LuLcc_Vars_TimeVariables
            allocate (ssun_p_                     (2,2,numpft))
            allocate (ssha_p_                     (2,2,numpft))
            allocate (thermk_p_                       (numpft))
+           allocate (fshade_p_                       (numpft))
            allocate (extkb_p_                        (numpft))
            allocate (extkd_p_                        (numpft))
-        ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-        IF (numpc > 0) THEN
-           allocate (tleaf_c_               (0:N_PFT-1,numpc))
-           allocate (ldew_c_                (0:N_PFT-1,numpc))
-           allocate (sigf_c_                (0:N_PFT-1,numpc))
-           allocate (lai_c_                 (0:N_PFT-1,numpc))
-           allocate (sai_c_                 (0:N_PFT-1,numpc))
-           allocate (ssun_c_            (2,2,0:N_PFT-1,numpc))
-           allocate (ssha_c_            (2,2,0:N_PFT-1,numpc))
-           allocate (thermk_c_              (0:N_PFT-1,numpc))
-           allocate (fshade_c_              (0:N_PFT-1,numpc))
-           allocate (extkb_c_               (0:N_PFT-1,numpc))
-           allocate (extkd_c_               (0:N_PFT-1,numpc))
         ENDIF
 #endif
 
@@ -327,11 +296,8 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      use MOD_SPMD_Task
      USE MOD_Vars_Global
      USE MOD_Vars_TimeVariables
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef URBAN_MODEL
      USE MOD_Urban_Vars_TimeVariables
@@ -370,7 +336,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
          t_lake_       = t_lake
          lake_icefrac_ = lake_icefrac
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          tleaf_p_      = tleaf_p
          ldew_p_       = ldew_p
          sigf_p_       = sigf_p
@@ -379,22 +345,9 @@ MODULE MOD_LuLcc_Vars_TimeVariables
          ssun_p_       = ssun_p
          ssha_p_       = ssha_p
          thermk_p_     = thermk_p
+         fshade_p_     = fshade_p
          extkb_p_      = extkb_p
          extkd_p_      = extkd_p
-#endif
-
-#ifdef LULC_IGBP_PC
-         tleaf_c_      = tleaf_c
-         ldew_c_       = ldew_c
-         sigf_c_       = sigf_c
-         lai_c_        = lai_c
-         sai_c_        = sai_c
-         ssun_c_       = ssun_c
-         ssha_c_       = ssha_c
-         thermk_c_     = thermk_c
-         fshade_c_     = fshade_c
-         extkb_c_      = extkb_c
-         extkd_c_      = extkd_c
 #endif
 
 #ifdef URBAN_MODEL
@@ -483,14 +436,10 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      USE MOD_Vars_TimeInvariants
      USE MOD_Vars_TimeVariables
      USE MOD_LuLcc_Vars_TimeInvariants
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_Vars_PFTimeInvariants
      USE MOD_Vars_PFTimeVariables
      USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-     USE MOD_Vars_PCTimeVariables
-     USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
      USE MOD_Urban_Vars_TimeVariables
@@ -610,13 +559,13 @@ MODULE MOD_LuLcc_Vars_TimeVariables
                     t_lake      (:,np) = t_lake_      (:,np_)
                     lake_icefrac(:,np) = lake_icefrac_(:,np_)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     ip = patch_pft_s (np )
                     ip_= patch_pft_s_(np_)
 
                     IF (ip.le.0 .or. ip_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PFT!"
+                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PFT|LULC_IGBP_PC!"
                        STOP
                     ENDIF
 
@@ -643,38 +592,13 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                        ssun_p (:,:,ip) = ssun_p_ (:,:,ip_)
                        ssha_p (:,:,ip) = ssha_p_ (:,:,ip_)
                        thermk_p   (ip) = thermk_p_   (ip_)
+                       fshade_p   (ip) = fshade_p_   (ip_)
                        extkb_p    (ip) = extkb_p_    (ip_)
                        extkd_p    (ip) = extkd_p_    (ip_)
 
                        ip = ip + 1
                        ip_= ip_+ 1
                     ENDDO
-ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
-
-                    pc = patch2pc (np )
-                    pc_= patch2pc_(np_)
-
-                    IF (pc.le.0 .or. pc_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PC!"
-                       STOP
-                    ENDIF
-
-                    ! for the same patch TYPE
-                    tleaf_c    (:,pc) = tleaf_c_    (:,pc_)
-                    ldew_c     (:,pc) = ldew_c_     (:,pc_)
-                    sigf_c     (:,pc) = sigf_c_     (:,pc_)
-                    lai_c      (:,pc) = lai_c_      (:,pc_)
-                    sai_c      (:,pc) = sai_c_      (:,pc_)
-                    ssun_c (:,:,:,pc) = ssun_c_ (:,:,:,pc_)
-                    ssha_c (:,:,:,pc) = ssha_c_ (:,:,:,pc_)
-                    thermk_c   (:,pc) = thermk_c_   (:,pc_)
-                    fshade_c   (:,pc) = fshade_c_   (:,pc_)
-                    extkb_c    (:,pc) = extkb_c_    (:,pc_)
-                    extkd_c    (:,pc) = extkd_c_    (:,pc_)
 ENDIF
 #endif
 
@@ -830,7 +754,7 @@ ENDIF
            deallocate (lake_icefrac_ )
         ENDIF
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
         IF (numpft_ > 0) THEN
            deallocate (tleaf_p_      )
            deallocate (ldew_p_       )
@@ -840,24 +764,9 @@ ENDIF
            deallocate (ssun_p_       )
            deallocate (ssha_p_       )
            deallocate (thermk_p_     )
+           deallocate (fshade_p_     )
            deallocate (extkb_p_      )
            deallocate (extkd_p_      )
-        ENDIF
-#endif
-
-#ifdef LULC_IGBP_PC
-        IF (numpc_ > 0) THEN
-           deallocate (tleaf_c_      )
-           deallocate (ldew_c_       )
-           deallocate (sigf_c_       )
-           deallocate (lai_c_        )
-           deallocate (sai_c_        )
-           deallocate (ssun_c_       )
-           deallocate (ssha_c_       )
-           deallocate (thermk_c_     )
-           deallocate (fshade_c_     )
-           deallocate (extkb_c_      )
-           deallocate (extkd_c_      )
         ENDIF
 #endif
 

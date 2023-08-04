@@ -52,7 +52,6 @@ OBJS_SHARED =    \
 				  MOD_LandPatch.o              \
 				  MOD_LandUrban.o              \
 				  MOD_LandPFT.o                \
-				  MOD_LandPC.o                 \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
@@ -112,7 +111,6 @@ OBJS_BASIC =    \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
-				 MOD_Vars_1DPCFluxes.o          \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
 				 MOD_Hydro_SoilFunction.o       \
