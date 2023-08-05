@@ -88,7 +88,7 @@ MODULE MOD_SoilParametersReadin
       write(cyear,'(i4.4)') lc_year
       landdir = trim(dir_landdata) // '/soil/' // trim(cyear)
 
-      write(*,*) 'soil parameter readin',landdir
+      ! write(*,*) 'soil parameter readin',landdir
       if (p_is_worker) then
 
          if (numpatch > 0) then

@@ -1,5 +1,4 @@
 #include <define.h>
-#ifdef URBAN_LCZ
 MODULE MOD_Urban_Const_LCZ
 
   ! -----------------------------------------------------------------------
@@ -63,7 +62,7 @@ MODULE MOD_Urban_Const_LCZ
       = (/0.25, 0.2 , 0.2 , 0.25, 0.25, 0.25, 0.2 , 0.25, 0.25, 0.2 /)
 
    ! albeodo of impervious road [-]
-   REAL(r8), parameter, dimension(10)  :: albroad_lcz &
+   REAL(r8), parameter, dimension(10)  :: albimproad_lcz &
       = (/0.15, 0.15, 0.18, 0.20, 0.20, 0.21, 0.24, 0.17, 0.23, 0.21/)
 
    ! albeodo of pervious road [-]
@@ -115,4 +114,3 @@ MODULE MOD_Urban_Const_LCZ
    !TODO:AHE coding
 
 END MODULE MOD_Urban_Const_LCZ
-#endif

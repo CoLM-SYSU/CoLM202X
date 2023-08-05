@@ -107,18 +107,19 @@ contains
       use MOD_DataType
       use MOD_LandPatch
       use MOD_Mapping_Pset2Grid
-      USE MOD_Vars_TimeInvariants, only : patchtype, patchclass
+      USE MOD_Vars_TimeInvariants, only: patchtype, patchclass, patchmask
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
 #ifdef LULC_IGBP_PFT
       USE MOD_Vars_PFTimeInvariants, only: pftclass
-      USE MOD_LandPFT, only : patch_pft_s
+      USE MOD_LandPFT, only: patch_pft_s
 #endif
 #if(defined CaMa_Flood)
       use MOD_CaMa_Vars !defination of CaMa variables
 #endif
-      USE MOD_Forcing, only : forcmask
+      USE MOD_Forcing, only: forcmask
+
       IMPLICIT NONE
 
       integer,  INTENT(in) :: idate(3)
@@ -246,14 +247,18 @@ contains
          ENDIF
 
          ! ---------------------------------------------------
-         ! Meteorological forcing
+         ! Meteorological forcing and patch mask filter applying.
          ! ---------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -328,10 +333,14 @@ contains
          ! ------------------------------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2948,10 +2957,14 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype <= 3
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -2982,10 +2995,14 @@ contains
 
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype <= 2
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3026,10 +3043,14 @@ contains
          ! --------------------------------------------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = (patchtype <= 2) .or. (patchtype == 4)
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
@@ -3074,10 +3095,14 @@ contains
          ! --------------------------------
          if (p_is_worker) then
             if (numpatch > 0) then
+
                filter(:) = patchtype < 99
+
                IF (DEF_forcing%has_missing_value) THEN
                   filter = filter .and. forcmask
                ENDIF
+
+               filter = filter .and. patchmask
             end if
          end if
 
