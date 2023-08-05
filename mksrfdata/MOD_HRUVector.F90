@@ -106,7 +106,7 @@ CONTAINS
 #else
          nhru_bsn_glb(elm_data_address(0)%val) = nhru_bsn
          IF (sum(nhru_bsn) > 0) THEN
-            allocate(hru_data_address(p_itis_worker(isrc))%val (sum(nhru_bsn)))
+            allocate(hru_data_address(0)%val (sum(nhru_bsn)))
          ENDIF
 #endif
       ENDIF

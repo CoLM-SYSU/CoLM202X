@@ -23,10 +23,10 @@ mkdir_build :
 
 OBJS_SHARED =    \
 				  MOD_Precision.o              \
-				  MOD_Vars_Global.o            \
-				  MOD_Const_Physical.o         \
 				  MOD_SPMD_Task.o              \
 				  MOD_Namelist.o               \
+				  MOD_Vars_Global.o            \
+				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
@@ -56,7 +56,8 @@ OBJS_SHARED =    \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
-				  MOD_HRUVector.o
+				  MOD_HRUVector.o              \
+				  MOD_Urban_Const_LCZ.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
@@ -102,7 +103,6 @@ OBJS_BASIC =    \
 				 MOD_BGC_Vars_PFTimeVariables.o \
 				 MOD_BGC_Vars_TimeInvariants.o  \
 				 MOD_BGC_Vars_TimeVariables.o   \
-				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\

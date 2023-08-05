@@ -41,6 +41,8 @@ MODULE MOD_Mapping_Grid2Pset
       procedure, PRIVATE :: map_aweighted_3d => map_g2p_aweighted_3d
       generic, PUBLIC :: map_aweighted => map_aweighted_2d, map_aweighted_3d
 
+      procedure, PUBLIC :: map_max_frenquency_2d => map_g2p_max_frequency_2d 
+
       final :: mapping_grid2pset_free_mem
 
    END TYPE mapping_grid2pset_type
@@ -757,6 +759,102 @@ CONTAINS
 
    END SUBROUTINE map_g2p_aweighted_3d
 
+   !-----------------------------------------------------
+   SUBROUTINE map_g2p_max_frequency_2d (this, gdata, pdata)
+
+      USE MOD_Precision
+      USE MOD_Grid
+      USE MOD_Pixelset
+      USE MOD_DataType
+      USE MOD_SPMD_Task
+      USE MOD_Vars_Global, only : spval
+      IMPLICIT NONE
+
+      class (mapping_grid2pset_type) :: this
+
+      TYPE(block_data_int32_2d), intent(in) :: gdata
+      integer, intent(out) :: pdata(:)
+
+      ! Local variables
+      INTEGER :: iproc, idest, isrc
+      INTEGER :: ig, ilon, ilat, xblk, yblk, xloc, yloc, iloc, iset
+
+      integer, allocatable :: gbuff(:)
+      TYPE(pointer_int32_1d), allocatable :: pbuff(:)
+
+      IF (p_is_io) THEN
+
+         DO iproc = 0, p_np_worker-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (gbuff (this%glist(iproc)%ng))
+
+               DO ig = 1, this%glist(iproc)%ng
+                  ilon = this%glist(iproc)%ilon(ig)
+                  ilat = this%glist(iproc)%ilat(ig)
+                  xblk = this%grid%xblk (ilon)
+                  yblk = this%grid%yblk (ilat)
+                  xloc = this%grid%xloc (ilon)
+                  yloc = this%grid%yloc (ilat)
+
+                  gbuff(ig) = gdata%blk(xblk,yblk)%val(xloc,yloc)
+
+               ENDDO
+
+#ifdef USEMPI
+               idest = p_address_worker(iproc)
+               CALL mpi_send (gbuff, this%glist(iproc)%ng, MPI_INTEGER, &
+                  idest, mpi_tag_data, p_comm_glb, p_err)
+
+               deallocate (gbuff)
+#endif
+            ENDIF
+         ENDDO
+
+      ENDIF
+
+      IF (p_is_worker) THEN
+
+         allocate (pbuff (0:p_np_io-1))
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+
+               allocate (pbuff(iproc)%val (this%glist(iproc)%ng))
+
+#ifdef USEMPI
+               isrc = p_address_io(iproc)
+               CALL mpi_recv (pbuff(iproc)%val, this%glist(iproc)%ng, MPI_INTEGER, &
+                  isrc, mpi_tag_data, p_comm_glb, p_stat, p_err)
+#else
+               pbuff(0)%val = gbuff
+               deallocate (gbuff)
+#endif
+            ENDIF
+         ENDDO
+
+         DO iset = 1, this%npset
+            IF (allocated(this%gweight(iset)%val)) THEN
+               ig = maxloc(this%gweight(iset)%val, dim=1)
+               iproc = this%address(iset)%val(1,ig)
+               iloc  = this%address(iset)%val(2,ig)
+               pdata(iset) = pbuff(iproc)%val(iloc)
+            ELSE
+               pdata(iset) = -9999
+            ENDIF
+         ENDDO
+
+         DO iproc = 0, p_np_io-1
+            IF (this%glist(iproc)%ng > 0) THEN
+               deallocate (pbuff(iproc)%val)
+            ENDIF
+         ENDDO
+
+         deallocate (pbuff)
+
+      ENDIF
+
+   END SUBROUTINE map_g2p_max_frequency_2d
    !-----------------------------------------------------
    SUBROUTINE mapping_grid2pset_free_mem (this)
 
