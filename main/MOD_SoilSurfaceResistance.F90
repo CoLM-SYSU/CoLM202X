@@ -191,8 +191,8 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-     !rss = exp(8.206-4.255*fac)   ! origial scheme of Sellers, 1992
-      rss = exp(8.206-6.0*fac)     ! adjusted to decrease rss for wet soil according to noahmp version
+     !rss = exp(8.206-4.255*fac)   ! Sellers (1992) original
+      rss = exp(8.206-6.0*fac)     ! Sellers (1992) adjusted to decrease rss for wet soil according to noahmp v5
    ENDSELECT
 
    rss = min(1.e6_r8,rss)
