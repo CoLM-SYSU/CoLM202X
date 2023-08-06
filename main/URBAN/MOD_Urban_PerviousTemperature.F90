@@ -58,7 +58,7 @@ CONTAINS
   IMPLICIT NONE
 
   integer, intent(in)  :: lb                          !lower bound of array
-  integer, intent(in)  :: patchtype                   !land water type (0=soil,1=urban or built-up,2=wetland,
+  integer, intent(in)  :: patchtype                   !land patch type (0=soil,1=urban or built-up,2=wetland,
                                                       !3=land ice, 4=deep lake, 5=shallow lake)
   real(r8), intent(in) :: deltim                      !seconds in a time step [second]
   real(r8), intent(in) :: capr                        !tuning factor to turn first layer T into surface T

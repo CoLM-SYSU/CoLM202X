@@ -21,7 +21,7 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
   INTEGER              :: numpc_
   INTEGER              :: numurban_
   INTEGER, allocatable :: patchclass_    (:)  !index of land cover type
-  INTEGER, allocatable :: patchtype_     (:)  !land water type
+  INTEGER, allocatable :: patchtype_     (:)  !land patch type
 
   ! for LULC_IGBP_PFT and LULC_IGBP_PC
   INTEGER, allocatable :: pftclass_      (:)  !PFT type

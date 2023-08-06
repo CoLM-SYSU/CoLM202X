@@ -183,8 +183,8 @@ SUBROUTINE CoLMMAIN ( &
         patchlatr     ! latitude in radians
 
   integer, intent(in) :: &
-        patchclass  ,&! land cover type of USGS classification or others
-        patchtype     ! land water type (0=soil, 1=urban and built-up,
+        patchclass  ,&! land patch class of USGS classification or others
+        patchtype     ! land patch type (0=soil, 1=urban and built-up,
                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 ! Parameters
 ! ----------------------
@@ -213,7 +213,7 @@ SUBROUTINE CoLMMAIN ( &
         n_vgm    (1:nl_soil), & ! a shape parameter
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter
         sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]

@@ -75,9 +75,9 @@ CONTAINS
 #ifdef SinglePoint
       IF (USE_SITE_pctpfts) THEN
 #ifndef CROP
-         IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+         IF (patchtypes(landpatch%settyp(1)) == 0) THEN
 #else
-         IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+         IF (patchtypes(landpatch%settyp(1)) == 0 .and. landpatch%settyp(1)/=CROPLAND) THEN
 #endif
             numpft = count(SITE_pctpfts > 0.)
 #ifdef CROP
@@ -106,9 +106,9 @@ CONTAINS
             allocate(pft2patch (numpft))
 
 #ifndef CROP
-            IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+            IF (patchtypes(landpatch%settyp(1)) == 0) THEN
 #else
-            IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+            IF (patchtypes(landpatch%settyp(1)) == 0 .and. landpatch%settyp(1)/=CROPLAND) THEN
 #endif
                landpft%settyp = pack(SITE_pfttyp, SITE_pctpfts > 0.)
 

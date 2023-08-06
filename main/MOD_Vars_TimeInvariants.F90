@@ -156,7 +156,7 @@ MODULE MOD_Vars_TimeInvariants
 ! -----------------------------------------------------------------
 ! surface classification and soil information
   INTEGER,  allocatable :: patchclass     (:)  !index of land cover type of the patches at the fraction > 0
-  INTEGER,  allocatable :: patchtype      (:)  !land water type
+  INTEGER,  allocatable :: patchtype      (:)  !land patch type
   LOGICAL,  allocatable :: patchmask      (:)  !patch mask
 
   REAL(r8), allocatable :: patchlatr      (:)  !latitude in radians
@@ -184,12 +184,12 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
   REAL(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  REAL(r8), allocatable :: theta_r      (:,:)  ! residual moisture content [-]
-  REAL(r8), allocatable :: alpha_vgm    (:,:)  ! a parameter corresponding approximately to the inverse of the air-entry value
-  REAL(r8), allocatable :: L_vgm        (:,:)  ! pore-connectivity parameter [dimensionless]
-  REAL(r8), allocatable :: n_vgm        (:,:)  ! a shape parameter [dimensionless]
-  REAL(r8), allocatable :: sc_vgm       (:,:)  ! saturation at the air entry value in the classical vanGenuchten model [-]
-  REAL(r8), allocatable :: fc_vgm       (:,:)  ! a scaling factor by using air entry value in the Mualem model [-]
+  REAL(r8), allocatable :: theta_r      (:,:)  !residual moisture content [-]
+  REAL(r8), allocatable :: alpha_vgm    (:,:)  !a parameter corresponding approximately to the inverse of the air-entry value
+  REAL(r8), allocatable :: L_vgm        (:,:)  !pore-connectivity parameter [dimensionless]
+  REAL(r8), allocatable :: n_vgm        (:,:)  !a shape parameter [dimensionless]
+  REAL(r8), allocatable :: sc_vgm       (:,:)  !saturation at the air entry value in the classical vanGenuchten model [-]
+  REAL(r8), allocatable :: fc_vgm       (:,:)  !a scaling factor by using air entry value in the Mualem model [-]
 #endif
   REAL(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
   REAL(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]

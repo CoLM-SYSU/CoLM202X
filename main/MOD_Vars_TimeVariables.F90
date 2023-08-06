@@ -386,9 +386,9 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
      real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
      real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
-     real(r8), allocatable :: rootr(:,:)       ! water exchange between soil and root. Positive: soil->root [?]
+     real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
 !Plant Hydraulic variables
-     real(r8), allocatable :: vegwp(:,:)       ! vegetation water potential [mm]
+     real(r8), allocatable :: vegwp      (:,:) ! vegetation water potential [mm]
      real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
      real(r8), allocatable :: gs0sha       (:) ! working copy of shalit stomata conductance
 !END plant hydraulic variables
@@ -407,10 +407,10 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: gssha_out    (:) ! stomata conductance on shaded leaf
      real(r8), allocatable :: t_grnd       (:) ! ground surface temperature [K]
 
-     real(r8), allocatable :: assimsun_out (:) !
-     real(r8), allocatable :: assimsha_out (:) !
-     real(r8), allocatable :: etrsun_out   (:) !
-     real(r8), allocatable :: etrsha_out   (:) !
+     real(r8), allocatable :: assimsun_out (:) ! diagnostic sunlit leaf assim value for output
+     real(r8), allocatable :: assimsha_out (:) ! diagnostic sunlit leaf etr value for output
+     real(r8), allocatable :: etrsun_out   (:) ! diagnostic shaded leaf assim for output
+     real(r8), allocatable :: etrsha_out   (:) ! diagnostic shaded leaf etr for output
 
      real(r8), allocatable :: tleaf        (:) ! leaf temperature [K]
      real(r8), allocatable :: ldew         (:) ! depth of water on foliage [mm]

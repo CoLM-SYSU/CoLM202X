@@ -73,7 +73,7 @@ MODULE MOD_SoilSnowHydrology
 !-----------------------Argument---------- ------------------------------
   integer, INTENT(in) :: &
         ipatch           ,& ! patch index
-        patchtype           ! land water type (0=soil, 1=urban or built-up, 2=wetland,
+        patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                             ! 3=land ice, 4=land water bodies, 99=ocean
 
   integer, INTENT(in) :: &
@@ -404,7 +404,7 @@ MODULE MOD_SoilSnowHydrology
 !-----------------------Argument---------- ------------------------------
   integer, INTENT(in) :: &
         ipatch           ,& ! patch index
-        patchtype           ! land water type (0=soil, 1=urban or built-up, 2=wetland,
+        patchtype           ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                             ! 3=land ice, 4=land water bodies, 99=ocean
 
   integer, INTENT(in) :: &
@@ -424,12 +424,12 @@ MODULE MOD_SoilSnowHydrology
         bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil), & ! residual moisture content [-] 
+        theta_r  (1:nl_soil), & ! residual moisture content [-]
         alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter [dimensionless]
         sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
@@ -562,8 +562,8 @@ MODULE MOD_SoilSnowHydrology
          wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
       end if
 
-      ! Due to the increase in volume after freezing, the total volume of water and 
-      ! ice may exceed the porosity of the soil. This excess water is temporarily 
+      ! Due to the increase in volume after freezing, the total volume of water and
+      ! ice may exceed the porosity of the soil. This excess water is temporarily
       ! stored in "wresi". After calculating the movement of soil water, "wresi"
       ! is added back to "wliq_soisno".
       wresi(1:nl_soil) = 0.
@@ -747,7 +747,7 @@ MODULE MOD_SoilSnowHydrology
         rsur = rsur + (wdsrf - pondmx) / deltim
         wdsrf = pondmx
      ENDIF
-      
+
      ! total runoff (mm/s)
      rnof = rsub(ipatch) + rsur
 #endif
@@ -1506,7 +1506,7 @@ MODULE MOD_SoilSnowHydrology
 
     IMPLICIT NONE
 
-    INTEGER , intent(in) :: patchtype ! land water type
+    INTEGER , intent(in) :: patchtype ! land patch type
     integer , INTENT(in) :: nl_soil   ! number of soil layers
     real(r8), INTENT(in) :: deltim    ! land model time step (sec)
     real(r8), INTENT(in) :: wimp      ! water impremeable if porosity less than wimp
