@@ -59,7 +59,9 @@ MODULE MOD_Vars_PFTimeVariables
   real(r8), allocatable :: o3uptakesun_p(:) !Ozone does, sunlit leaf (mmol O3/m^2)
   real(r8), allocatable :: o3uptakesha_p(:) !Ozone does, shaded leaf (mmol O3/m^2)
 !End Ozone Stress Variables
-
+!  irrigation variables
+  integer,allocatable :: irrig_method_p(:) ! irrigation method
+!  end irrigation variables
 ! PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: allocate_PFTimeVariables
   PUBLIC :: deallocate_PFTimeVariables
@@ -123,6 +125,8 @@ CONTAINS
             allocate (o3uptakesun_p(numpft)) ; o3uptakesun_p(:) = spval !Ozone does, sunlit leaf (mmol O3/m^2)
             allocate (o3uptakesha_p(numpft)) ; o3uptakesha_p(:) = spval !Ozone does, shaded leaf (mmol O3/m^2)
 ! End allocate Ozone Stress Variables
+            allocate (irrig_method_p(numpft))! irrigation method
+            
          ENDIF
       ENDIF
 
@@ -134,7 +138,7 @@ CONTAINS
 
    SUBROUTINE READ_PFTimeVariables (file_restart)
 
-      USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+      USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
       use MOD_NetCDFVector
       USE MOD_LandPFT
       USE MOD_Vars_Global
@@ -173,6 +177,10 @@ CONTAINS
          call ncio_read_vector (file_restart, 'o3uptakesun_p', landpft, o3uptakesun_p, defval = 0._r8)
          call ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
       ENDIF
+      IF(DEF_USE_IRRIGATION)THEN
+         call ncio_read_vector (file_restart,'irrig_method_p', landpft,irrig_method_p, defval = 0)
+      ENDIF
+      
 
 #ifdef BGC
       CALL read_BGCPFTimeVariables (file_restart)
@@ -182,7 +190,7 @@ CONTAINS
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
      USE MOD_LandPFT
      use MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -233,6 +241,9 @@ CONTAINS
         call ncio_write_vector (file_restart, 'o3uptakesun_p', 'pft', landpft, o3uptakesun_p, compress)
         call ncio_write_vector (file_restart, 'o3uptakesha_p', 'pft', landpft, o3uptakesha_p, compress)
      ENDIF
+      IF(DEF_USE_IRRIGATION)THEN
+         call ncio_write_vector (file_restart,'irrig_method_p','pft', landpft, irrig_method_p, compress)
+      ENDIF
 
 #ifdef BGC
       CALL WRITE_BGCPFTimeVariables (file_restart)
@@ -283,6 +294,7 @@ CONTAINS
             deallocate (lai_old_p     ) !lai in last time step
             deallocate (o3uptakesun_p ) !Ozone does, sunlit leaf (mmol O3/m^2)
             deallocate (o3uptakesha_p ) !Ozone does, shaded leaf (mmol O3/m^2)
+            deallocate (irrig_method_p)
 ! Ozone Stress variables
          ENDIF
       ENDIF
@@ -297,7 +309,7 @@ CONTAINS
    SUBROUTINE check_PFTimeVariables
 
       use MOD_RangeCheck
-      use MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+      use MOD_Namelist, only : DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
 
       IMPLICIT NONE
 
@@ -334,6 +346,9 @@ CONTAINS
          call check_vector_data ('lai_old_p    ', lai_old_p    )
          call check_vector_data ('o3uptakesun_p', o3uptakesun_p)
          call check_vector_data ('o3uptakesha_p', o3uptakesha_p)
+      ENDIF
+      IF(DEF_USE_IRRIGATION)THEN
+         call check_vector_data ('irrig_method_p', irrig_method_p)
       ENDIF
 
 #ifdef BGC
@@ -568,6 +583,7 @@ CONTAINS
          call ncio_write_vector (file_restart, 'o3uptakesha_c', 'pft' , N_PFT  , 'pc' , landpc, o3uptakesha_c, compress) !Ozone does, shaded leaf (mmol O3/m^2)
       ENDIF
 
+
    END SUBROUTINE WRITE_PCTimeVariables
 
 
@@ -784,7 +800,21 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: fm           (:) ! integral of profile function for momentum
      real(r8), allocatable :: fh           (:) ! integral of profile function for heat
      real(r8), allocatable :: fq           (:) ! integral of profile function for moisture
+     
+     real(r8), allocatable :: irrig_rate          (:) ! irrigation rate (mm s-1)
+     real(r8), allocatable :: deficit_irrig       (:) ! irrigation amount (kg/m2)
+     real(r8), allocatable :: sum_irrig           (:) ! total irrigation amount (kg/m2)
+     real(r8), allocatable :: sum_irrig_count     (:) ! total irrigation times (-)
+     integer , allocatable :: n_irrig_steps_left  (:)! left steps for once irrigation (-)
 
+     integer , allocatable :: irrig_method_corn      (:) ! irrigation method for corn (0-3)
+     integer , allocatable :: irrig_method_swheat    (:) ! irrigation method for spring wheat (0-3)
+     integer , allocatable :: irrig_method_wwheat    (:) ! irrigation method for winter wheat (0-3)
+     integer , allocatable :: irrig_method_soybean   (:) ! irrigation method for soybean (0-3)
+     integer , allocatable :: irrig_method_cotton    (:) ! irrigation method for cotton (0-3)
+     integer , allocatable :: irrig_method_rice1     (:) ! irrigation method for rice1 (0-3)
+     integer , allocatable :: irrig_method_rice2     (:) ! irrigation method for rice2 (0-3)
+     integer , allocatable :: irrig_method_sugarcane (:) ! irrigation method for sugarcane (0-3)
      ! PUBLIC MEMBER FUNCTIONS:
      public :: allocate_TimeVariables
      public :: deallocate_TimeVariables
@@ -840,6 +870,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (o3uptakesun                 (numpatch)); o3uptakesun   (:) = spval
            allocate (o3uptakesha                 (numpatch)); o3uptakesha   (:) = spval
 !End ozone stress variables
+
            allocate (rstfacsun_out               (numpatch)); rstfacsun_out (:) = spval
            allocate (rstfacsha_out               (numpatch)); rstfacsha_out (:) = spval
            allocate (gssun_out                   (numpatch)); gssun_out     (:) = spval
@@ -909,6 +940,20 @@ MODULE MOD_Vars_TimeVariables
            allocate (fm                          (numpatch)); fm            (:) = spval
            allocate (fh                          (numpatch)); fh            (:) = spval
            allocate (fq                          (numpatch)); fq            (:) = spval
+           
+           allocate ( irrig_rate                 (numpatch)); irrig_rate             (:) = spval
+           allocate ( deficit_irrig              (numpatch)); deficit_irrig          (:) = spval
+           allocate ( sum_irrig                  (numpatch)); sum_irrig              (:) = spval
+           allocate ( sum_irrig_count            (numpatch)); sum_irrig_count        (:) = spval
+           allocate ( n_irrig_steps_left         (numpatch)); n_irrig_steps_left     (:) = spval_i4
+           allocate ( irrig_method_corn          (numpatch)); irrig_method_corn      (:) = spval_i4
+           allocate ( irrig_method_swheat        (numpatch)); irrig_method_swheat    (:) = spval_i4
+           allocate ( irrig_method_wwheat        (numpatch)); irrig_method_wwheat    (:) = spval_i4
+           allocate ( irrig_method_soybean       (numpatch)); irrig_method_soybean   (:) = spval_i4
+           allocate ( irrig_method_cotton        (numpatch)); irrig_method_cotton    (:) = spval_i4
+           allocate ( irrig_method_rice1         (numpatch)); irrig_method_rice1     (:) = spval_i4
+           allocate ( irrig_method_rice2         (numpatch)); irrig_method_rice2     (:) = spval_i4
+           allocate ( irrig_method_sugarcane     (numpatch)); irrig_method_sugarcane (:) = spval_i4
 
         end if
   end if
@@ -1044,6 +1089,20 @@ MODULE MOD_Vars_TimeVariables
            deallocate (fh                     )
            deallocate (fq                     )
 
+           deallocate (irrig_rate             )
+           deallocate (deficit_irrig          )
+           deallocate (sum_irrig              )
+           deallocate (sum_irrig_count        )
+           deallocate (n_irrig_steps_left     )
+
+           deallocate ( irrig_method_corn     )
+           deallocate ( irrig_method_swheat   )
+           deallocate ( irrig_method_wwheat   )
+           deallocate ( irrig_method_soybean  )
+           deallocate ( irrig_method_cotton   )
+           deallocate ( irrig_method_rice1    )
+           deallocate ( irrig_method_rice2    )
+           deallocate ( irrig_method_sugarcane)
         end if
      end if
 
@@ -1112,7 +1171,7 @@ MODULE MOD_Vars_TimeVariables
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+     use MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
      USE MOD_LandPatch
      use MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -1228,6 +1287,22 @@ MODULE MOD_Vars_TimeVariables
      call ncio_write_vector (file_restart, 'fm   ', 'patch', landpatch, fm   , compress) ! integral of profile function for momentum
      call ncio_write_vector (file_restart, 'fh   ', 'patch', landpatch, fh   , compress) ! integral of profile function for heat
      call ncio_write_vector (file_restart, 'fq   ', 'patch', landpatch, fq   , compress) ! integral of profile function for moisture
+
+     if(DEF_USE_IRRIGATION)then
+      call ncio_write_vector (file_restart, 'irrig_rate            ' , 'patch',landpatch,irrig_rate            , compress)
+      call ncio_write_vector (file_restart, 'deficit_irrig         ' , 'patch',landpatch,deficit_irrig         , compress)
+      call ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
+      call ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
+      call ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_soybean  ' , 'patch',landpatch,irrig_method_soybean  , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_cotton   ' , 'patch',landpatch,irrig_method_cotton   , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_rice1    ' , 'patch',landpatch,irrig_method_rice1    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_rice2    ' , 'patch',landpatch,irrig_method_rice2    , compress)
+      call ncio_write_vector (file_restart, 'irrig_method_sugarcane' , 'patch',landpatch,irrig_method_sugarcane, compress)
+     end if
 
 #if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
@@ -1372,6 +1447,22 @@ MODULE MOD_Vars_TimeVariables
      call ncio_read_vector (file_restart, 'fh   ', landpatch, fh   ) ! integral of profile function for heat
      call ncio_read_vector (file_restart, 'fq   ', landpatch, fq   ) ! integral of profile function for moisture
 
+     if(DEF_USE_IRRIGATION)then
+      call ncio_read_vector (file_restart, 'irrig_rate            ' , landpatch, irrig_rate            )
+      call ncio_read_vector (file_restart, 'deficit_irrig         ' , landpatch, deficit_irrig         )
+      call ncio_read_vector (file_restart, 'sum_irrig             ' , landpatch, sum_irrig             )
+      call ncio_read_vector (file_restart, 'sum_irrig_count       ' , landpatch, sum_irrig_count       )
+      call ncio_read_vector (file_restart, 'n_irrig_steps_left    ' , landpatch, n_irrig_steps_left    )
+      call ncio_read_vector (file_restart, 'irrig_method_corn     ' , landpatch, irrig_method_corn     )
+      call ncio_read_vector (file_restart, 'irrig_method_swheat   ' , landpatch, irrig_method_swheat   )
+      call ncio_read_vector (file_restart, 'irrig_method_wwheat   ' , landpatch, irrig_method_wwheat   )
+      call ncio_read_vector (file_restart, 'irrig_method_soybean  ' , landpatch, irrig_method_soybean  )
+      call ncio_read_vector (file_restart, 'irrig_method_cotton   ' , landpatch, irrig_method_cotton   )
+      call ncio_read_vector (file_restart, 'irrig_method_rice1    ' , landpatch, irrig_method_rice1    )
+      call ncio_read_vector (file_restart, 'irrig_method_rice2    ' , landpatch, irrig_method_rice2    )
+      call ncio_read_vector (file_restart, 'irrig_method_sugarcane' , landpatch, irrig_method_sugarcane)
+     end if
+
 #if (defined LULC_IGBP_PFT)
      file_restart = trim(dir_restart)// '/' // trim(site) //'_restart_pft_'//trim(cdate)//'_lc'//trim(cyear)//'.nc'
      CALL READ_PFTimeVariables (file_restart)
@@ -1413,7 +1504,7 @@ MODULE MOD_Vars_TimeVariables
 
      use MOD_SPMD_Task
      use MOD_RangeCheck
-     use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+     use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
 
      IMPLICIT NONE
 
@@ -1445,6 +1536,7 @@ MODULE MOD_Vars_TimeVariables
         call check_vector_data ('o3uptakesun', o3uptakesun)
         call check_vector_data ('o3uptakesha', o3uptakesha)
      ENDIF
+
      call check_vector_data ('t_grnd      [K]    ', t_grnd     ) ! ground surface temperature [K]
      call check_vector_data ('tleaf       [K]    ', tleaf      ) ! leaf temperature [K]
      call check_vector_data ('ldew        [mm]   ', ldew       ) ! depth of water on foliage [mm]
@@ -1475,6 +1567,22 @@ MODULE MOD_Vars_TimeVariables
      call check_vector_data ('t_lake      [K]    ', t_lake      )!
      call check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
      call check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
+     
+     if(DEF_USE_IRRIGATION)then
+      call check_vector_data ('irrig_rate            ' , irrig_rate            )
+      call check_vector_data ('deficit_irrig         ' , deficit_irrig         )
+      call check_vector_data ('sum_irrig             ' , sum_irrig             )
+      call check_vector_data ('sum_irrig_count       ' , sum_irrig_count       )
+      call check_vector_data ('n_irrig_steps_left    ' , n_irrig_steps_left    )
+      call check_vector_data ('irrig_method_corn     ' , irrig_method_corn     )
+      call check_vector_data ('irrig_method_swheat   ' , irrig_method_swheat   )
+      call check_vector_data ('irrig_method_wwheat   ' , irrig_method_wwheat   )
+      call check_vector_data ('irrig_method_soybean  ' , irrig_method_soybean  )
+      call check_vector_data ('irrig_method_cotton   ' , irrig_method_cotton   )
+      call check_vector_data ('irrig_method_rice1    ' , irrig_method_rice1    )
+      call check_vector_data ('irrig_method_rice2    ' , irrig_method_rice2    )
+      call check_vector_data ('irrig_method_sugarcane' , irrig_method_sugarcane)
+     end if
 
 #if (defined LULC_IGBP_PFT)
      CALL check_PFTimeVariables

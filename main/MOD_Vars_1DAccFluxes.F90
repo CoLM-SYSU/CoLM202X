@@ -212,6 +212,14 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_fertnitro_rice1       (:)
    real(r8), allocatable :: a_fertnitro_rice2       (:)
    real(r8), allocatable :: a_fertnitro_sugarcane   (:)
+   real(r8), allocatable :: a_irrig_method_corn        (:)
+   real(r8), allocatable :: a_irrig_method_swheat      (:)
+   real(r8), allocatable :: a_irrig_method_wwheat      (:)
+   real(r8), allocatable :: a_irrig_method_soybean     (:)
+   real(r8), allocatable :: a_irrig_method_cotton      (:)
+   real(r8), allocatable :: a_irrig_method_rice1       (:)
+   real(r8), allocatable :: a_irrig_method_rice2       (:)
+   real(r8), allocatable :: a_irrig_method_sugarcane   (:)
    real(r8), allocatable :: a_cphase             (:)
    real(r8), allocatable :: a_gddplant           (:)
    real(r8), allocatable :: a_gddmaturity        (:)
@@ -223,6 +231,11 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_cropprodc(:)
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
+
+   real(r8), allocatable :: a_irrig_rate         (:)        
+   real(r8), allocatable :: a_deficit_irrig      (:)      
+   real(r8), allocatable :: a_sum_irrig          (:)          
+   real(r8), allocatable :: a_sum_irrig_count    (:) 
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
    real(r8), allocatable :: a_abm                (:)
@@ -527,6 +540,14 @@ contains
             allocate (a_fertnitro_rice1    (numpatch))
             allocate (a_fertnitro_rice2    (numpatch))
             allocate (a_fertnitro_sugarcane(numpatch))
+            allocate (a_irrig_method_corn     (numpatch))
+            allocate (a_irrig_method_swheat   (numpatch))
+            allocate (a_irrig_method_wwheat   (numpatch))
+            allocate (a_irrig_method_soybean  (numpatch))
+            allocate (a_irrig_method_cotton   (numpatch))
+            allocate (a_irrig_method_rice1    (numpatch))
+            allocate (a_irrig_method_rice2    (numpatch))
+            allocate (a_irrig_method_sugarcane(numpatch))
             allocate (a_cphase             (numpatch))
             allocate (a_hui                (numpatch))
             allocate (a_gddmaturity        (numpatch))
@@ -538,6 +559,11 @@ contains
             allocate (a_grainc_to_cropprodc(numpatch))
             allocate (a_grainc_to_seed     (numpatch))
             allocate (a_fert_to_sminn      (numpatch))
+
+            allocate (a_irrig_rate         (numpatch))
+            allocate (a_deficit_irrig      (numpatch))
+            allocate (a_sum_irrig          (numpatch))
+            allocate (a_sum_irrig_count    (numpatch))
 #endif
             allocate (a_ndep_to_sminn      (numpatch))
 
@@ -850,6 +876,14 @@ contains
             deallocate (a_fertnitro_rice1    )
             deallocate (a_fertnitro_rice2    )
             deallocate (a_fertnitro_sugarcane)
+            deallocate (a_irrig_method_corn     )
+            deallocate (a_irrig_method_swheat   )
+            deallocate (a_irrig_method_wwheat   )
+            deallocate (a_irrig_method_soybean  )
+            deallocate (a_irrig_method_cotton   )
+            deallocate (a_irrig_method_rice1    )
+            deallocate (a_irrig_method_rice2    )
+            deallocate (a_irrig_method_sugarcane)
             deallocate (a_cphase             )
             deallocate (a_hui                )
             deallocate (a_vf                 )
@@ -861,6 +895,11 @@ contains
             deallocate (a_grainc_to_cropprodc)
             deallocate (a_grainc_to_seed     )
             deallocate (a_fert_to_sminn      )
+
+            deallocate (a_irrig_rate         )
+            deallocate (a_deficit_irrig      )
+            deallocate (a_sum_irrig          )
+            deallocate (a_sum_irrig_count    )
 #endif
             deallocate (a_ndep_to_sminn      )
 
@@ -1170,6 +1209,14 @@ contains
             a_fertnitro_rice1    (:) = spval
             a_fertnitro_rice2    (:) = spval
             a_fertnitro_sugarcane(:) = spval
+            a_irrig_method_corn     (:) = spval
+            a_irrig_method_swheat   (:) = spval
+            a_irrig_method_wwheat   (:) = spval
+            a_irrig_method_soybean  (:) = spval
+            a_irrig_method_cotton   (:) = spval
+            a_irrig_method_rice1    (:) = spval
+            a_irrig_method_rice2    (:) = spval
+            a_irrig_method_sugarcane(:) = spval
             a_cphase             (:) = spval
             a_vf                 (:) = spval
             a_gddmaturity        (:) = spval
@@ -1181,6 +1228,10 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
+            a_irrig_rate         (:) = spval     
+            a_deficit_irrig      (:) = spval  
+            a_sum_irrig          (:) = spval      
+            a_sum_irrig_count    (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
 
@@ -1284,7 +1335,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF, DEF_USE_IRRIGATION
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
@@ -1384,42 +1435,43 @@ contains
 
             call acc1d (rstfacsun_out , a_rstfacsun )
             call acc1d (rstfacsha_out , a_rstfacsha )
-            call acc1d (gssun_out     , a_gssun     )
-            call acc1d (gssha_out     , a_gssha     )
 
-            call acc1d (wdsrf   , a_wdsrf  )
-            call acc1d (zwt     , a_zwt    )
-            call acc1d (wa      , a_wa     )
-            call acc1d (wat     , a_wat    )
-            call acc1d (assim   , a_assim  )
-            call acc1d (respc   , a_respc  )
+            call acc1d (gssun_out     , a_gssun )
+            call acc1d (gssha_out     , a_gssha )
 
-            call acc1d (assimsun_out  , a_assimsun  )
-            call acc1d (assimsha_out  , a_assimsha  )
-            call acc1d (etrsun_out    , a_etrsun    )
-            call acc1d (etrsha_out    , a_etrsha    )
+            call acc1d (wdsrf  , a_wdsrf  )
+            call acc1d (zwt    , a_zwt    )
+            call acc1d (wa     , a_wa     )
+            call acc1d (wat    , a_wat    )
+            call acc1d (assim  , a_assim  )
+            call acc1d (respc  , a_respc  )
+            call acc1d (assimsun_out  , a_assimsun      )
+            call acc1d (assimsha_out  , a_assimsha      )
+            call acc1d (etrsun_out    , a_etrsun        )
+            call acc1d (etrsha_out    , a_etrsha        )
 
-            call acc1d (qcharge   , a_qcharge   )
+            call acc1d (qcharge, a_qcharge)
 
-            call acc1d (t_grnd    , a_t_grnd    )
-            call acc1d (tleaf     , a_tleaf     )
-            call acc1d (ldew_rain , a_ldew_rain )
-            call acc1d (ldew_snow , a_ldew_snow )
-            call acc1d (ldew      , a_ldew      )
-            call acc1d (scv       , a_scv       )
-            call acc1d (snowdp    , a_snowdp    )
-            call acc1d (fsno      , a_fsno      )
-            call acc1d (sigf      , a_sigf      )
-            call acc1d (green     , a_green     )
-            call acc1d (lai       , a_lai       )
-            call acc1d (laisun    , a_laisun    )
-            call acc1d (laisha    , a_laisha    )
-            call acc1d (sai       , a_sai       )
+            call acc1d (t_grnd , a_t_grnd )
+            call acc1d (tleaf  , a_tleaf  )
+            call acc1d (ldew_rain, a_ldew_rain)
+            call acc1d (ldew_snow, a_ldew_snow)
+            call acc1d (ldew   , a_ldew   )
+            call acc1d (scv    , a_scv    )
+            call acc1d (snowdp , a_snowdp )
+            call acc1d (fsno   , a_fsno   )
+            call acc1d (sigf   , a_sigf   )
+            call acc1d (green  , a_green  )
+            lai = laisun + laisha
+            call acc1d (lai    , a_lai    )
+            call acc1d (laisun , a_laisun )
+            call acc1d (laisha , a_laisha )
+            call acc1d (sai    , a_sai    )
 
-            call acc3d (alb       , a_alb       )
+            call acc3d (alb    , a_alb    )
 
-            call acc1d (emis      , a_emis      )
-            call acc1d (z0m       , a_z0m       )
+            call acc1d (emis   , a_emis   )
+            call acc1d (z0m    , a_z0m    )
 
             allocate (r_trad (numpatch)) ; r_trad(:) = spval
             do i = 1, numpatch
@@ -1570,6 +1622,14 @@ contains
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
             call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
+            call acc1d (dble(irrig_method_corn     ),   a_irrig_method_corn     )
+            call acc1d (dble(irrig_method_swheat   ),   a_irrig_method_swheat   )
+            call acc1d (dble(irrig_method_wwheat   ),   a_irrig_method_wwheat   )
+            call acc1d (dble(irrig_method_soybean  ),   a_irrig_method_soybean  )
+            call acc1d (dble(irrig_method_cotton   ),   a_irrig_method_cotton   )
+            call acc1d (dble(irrig_method_rice1    ),   a_irrig_method_rice1    )
+            call acc1d (dble(irrig_method_rice2    ),   a_irrig_method_rice2    )
+            call acc1d (dble(irrig_method_sugarcane),   a_irrig_method_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )
@@ -1581,6 +1641,11 @@ contains
             call acc1d (grainc_to_cropprodc,   a_grainc_to_cropprodc)
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
+
+            call acc1d (irrig_rate         ,   a_irrig_rate         )
+            a_deficit_irrig = deficit_irrig
+            a_sum_irrig = sum_irrig
+            a_sum_irrig_count = sum_irrig_count
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

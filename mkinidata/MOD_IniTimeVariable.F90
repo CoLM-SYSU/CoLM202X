@@ -90,6 +90,7 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_Hydro_SoilWater
    USE MOD_SnowFraction
+   USE MOD_SPMD_Task
 
    IMPLICIT NONE
 
@@ -363,9 +364,11 @@ CONTAINS
          scv    = snowdp*rhosno_ini
          z0m    = htop * z0mr
 #ifdef LULC_IGBP_PFT
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         if(ps .ne. -1)then ! for vegetation if(patchtype == 0)
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         end if
 #endif
 
          ! 08/02/2019, yuan: NOTE! need to be changed in future
@@ -414,7 +417,9 @@ CONTAINS
 #ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         if(ps .ne. -1)then ! for vegetation if(patchtype == 0)
+            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         end if
 #endif
 
          ! snow temperature and water content
@@ -823,6 +828,7 @@ CONTAINS
          tref_min_inst_p          (ps:pe) = spval
          tref_max_inst_p          (ps:pe) = spval
          latbaset_p               (ps:pe) = spval
+         fert_p                   (ps:pe) = 0._r8
 #endif
    
          if(DEF_USE_LAIFEEDBACK)then
