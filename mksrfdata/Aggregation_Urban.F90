@@ -187,7 +187,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ! loop for each urban patch to get the LUCY id of all fine grid
       ! of iurban patch, then assign the most frequence id to this urban patch
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_5km, &
+         CALL aggregation_request_data (landurban, iurban, zip = .true., grid_urban_5km, &
             data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
          ! the most frequence id to this urban patch
          LUCY_coun(iurban) = num_max_frequency (LUCY_reg_one)
@@ -250,8 +250,8 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       DO iurban = 1, numurban
          ! request all fine grid data and area of the iurban urban patch
          ! a one dimension vector will be returned
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
-            data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., &
+            area = area_one, data_r8_2d_in1 = pop, data_r8_2d_out1 = pop_one)
 
          where (pop_one < 0)
             area_one = 0
@@ -315,7 +315,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       ! loop for urban patch to aggregate tree cover and height data with area-weighted average
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., area = area_one, &
             data_r8_2d_in1 = gfcc_tc, data_r8_2d_out1 = gfcc_tc_one, &
             data_r8_2d_in2 = gedi_th, data_r8_2d_out2 = gedi_th_one)
 
@@ -390,7 +390,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       pct_urbwt (:) = 0.
       ! loop for urban patch to aggregate water cover data with area-weighted average
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., area = area_one, &
             data_r8_2d_in1 = gl30_wt, data_r8_2d_out1 = gl30_wt_one)
 
          where (gl30_wt_one < 0)
@@ -465,7 +465,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       ! loop for urban patch to aggregate building height and fraction data with area-weighted average
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., area = area_one, &
             data_i4_2d_in1 = reg_typid, data_i4_2d_out1 = reg_typid_one, &
             data_r8_2d_in1 = wtrf, data_r8_2d_out1 = wt_roof_one, &
             data_r8_2d_in2 = htrf, data_r8_2d_out2 = ht_roof_one)
@@ -597,7 +597,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
             ! loop for urban patch to aggregate LSAI data
             DO iurban = 1, numurban
-               CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+               CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., area = area_one, &
                   data_r8_2d_in1 = gfcc_tc, data_r8_2d_out1 = gfcc_tc_one, &
                   data_r8_2d_in2 = ulai   , data_r8_2d_out2 = ulai_one   , &
                   data_r8_2d_in3 = usai   , data_r8_2d_out3 = slai_one   )
@@ -740,15 +740,15 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
 
       ! loop for each urban patch to aggregate NCAR urban morphological and thermal paras with area-weighted average
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, area = area_one, &
+         CALL aggregation_request_data (landurban, iurban, grid_urban_500m, zip = .true., area = area_one, &
                                         data_i4_2d_in2 = reg_typid, data_i4_2d_out2 = reg_typid_one)
 
          ! urban region and type id for look-up-table
          urb_typidx = landurban%settyp(iurban)
          !urb_regidx = urban_reg(iurban)
 
-         ipxstt = landurban%ipxstt(iurban)
-         ipxend = landurban%ipxend(iurban)
+         ! ipxstt = landurban%ipxstt(iurban)
+         ! ipxend = landurban%ipxend(iurban)
 
          sumarea = sum(area_one)
 
@@ -762,7 +762,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
          ENDIF
 
          ! loop for each finer grid to aggregate data
-         DO ipxl = ipxstt, ipxend
+         DO ipxl = 1, size(area_one) ! ipxstt, ipxend
 
             urb_regidx = reg_typid_one(ipxl)
             area_urb(urb_typidx,iurban) = area_urb(urb_typidx,iurban) + area_one(ipxl)

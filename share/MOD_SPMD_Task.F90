@@ -273,4 +273,20 @@ CONTAINS
 
 #endif
 
+   ! -- STOP all processes --
+   SUBROUTINE CoLM_stop (mesg)
+
+      IMPLICIT NONE
+      character(len=*), optional :: mesg
+
+      IF (present(mesg)) write(*,*) trim(mesg)
+
+#ifdef USEMPI
+      CALL mpi_abort (p_comm_glb, p_err)
+#else
+      STOP
+#endif
+
+   END SUBROUTINE CoLM_stop
+
 END MODULE MOD_SPMD_Task

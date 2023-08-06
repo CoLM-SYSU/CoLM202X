@@ -125,7 +125,7 @@ SUBROUTINE Aggregation_LakeDepth ( &
 #ifdef LULC_IGBP_PC
          IF(L==17)THEN  ! LAND WATER BODIES (17)
 #endif
-            CALL aggregation_request_data (landpatch, ipatch, gland, &
+            CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
                data_r8_2d_in1 = lakedepth, data_r8_2d_out1 = lakedepth_one)
             lakedepth_patches (ipatch) = median (lakedepth_one, size(lakedepth_one))
          ELSE

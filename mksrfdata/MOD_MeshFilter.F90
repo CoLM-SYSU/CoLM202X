@@ -90,7 +90,7 @@ CONTAINS
    
          jelm = 0
          DO ielm = 1, numelm
-            CALL aggregation_request_data (landelm, ielm, gridf, &
+            CALL aggregation_request_data (landelm, ielm, gridf, zip = .false., &
                data_i4_2d_in1 = datafilter, data_i4_2d_out1 = ifilter, &
                filledvalue_i4 = -1)
    

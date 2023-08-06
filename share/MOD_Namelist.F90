@@ -898,7 +898,7 @@ CONTAINS
 #if (defined LULC_USGS || defined BGC)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
-         STOP
+         CALL CoLM_stop ()
 #endif
          IF (.not.DEF_LAI_MONTHLY) THEN
             write(*,*) '                  *****                  '
@@ -918,7 +918,7 @@ CONTAINS
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          write(*,*) 'It is coming soon. '
-         STOP
+         CALL CoLM_stop ()
 #endif
 
 #endif

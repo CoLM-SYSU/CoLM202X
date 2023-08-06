@@ -218,7 +218,7 @@ contains
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
                // trim(thisvar%varname) // ' should be ' // trim(varname) 
-            STOP
+            CALL CoLM_stop ()
          ENDIF
          
          thisvar%v2d(:,itime_mem) = acc_vec(:)
@@ -276,7 +276,7 @@ contains
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
                // trim(thisvar%varname) // ' should be ' // trim(varname) 
-            STOP
+            CALL CoLM_stop ()
          ENDIF
          
          thisvar%v2d(:,itime_mem) = acc_vec
@@ -337,7 +337,7 @@ contains
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
                // trim(thisvar%varname) // ' should be ' // trim(varname) 
-            STOP
+            CALL CoLM_stop ()
          ENDIF
          
          thisvar%v2d(:,itime_mem) = acc_vec
@@ -396,7 +396,7 @@ contains
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
                // trim(thisvar%varname) // ' should be ' // trim(varname) 
-            STOP
+            CALL CoLM_stop ()
          ENDIF
          
          thisvar%v3d(:,:,itime_mem) = acc_vec
@@ -461,7 +461,7 @@ contains
          IF (thisvar%varname /= varname) THEN
             write(*,*) 'Warning: history variable in memory is wrong: ' &
                // trim(thisvar%varname) // ' should be ' // trim(varname) 
-            STOP
+            CALL CoLM_stop ()
          ENDIF
          
          thisvar%v4d(:,:,:,itime_mem) = acc_vec
