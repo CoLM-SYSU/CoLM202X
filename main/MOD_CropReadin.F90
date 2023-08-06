@@ -169,7 +169,7 @@ MODULE MOD_CropReadin
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   fertnitro_p(ipft) = fertnitro_tmp(ipft)
                   if(fertnitro_p(ipft) <= 0._r8) then
-                     fertnitro_p(ipft) = -99999999._r8
+                     fertnitro_p(ipft) = 0._r8
                   end if
                endif
             end do
@@ -202,20 +202,9 @@ MODULE MOD_CropReadin
          irrig_method_p(:) = -99999999
       ENDIF
 
-!      maxvalue = - 999
-!      minvalue = 999
       DO cft = 1, N_CFT
          IF (p_is_io) THEN
             CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
-!            if(cft .eq. 1)then
-!               DO iblkme = 1, gblock%nblkme
-!                  iblk = gblock%xblkme(iblkme)
-!                  jblk = gblock%yblkme(iblkme)
-!                  maxvalue=amax1(maxval(f_xy_irrig%blk(iblk,jblk)%val(:,:)),maxvalue)
-!                  minvalue=amin1(minval(f_xy_irrig%blk(iblk,jblk)%val(:,:)),minvalue)
-!               end do
-!               print*,'maxval,minval',maxvalue,minvalue
-!            end if
          ENDIF
 
          call mg2pft_irrig%map_max_frenquency_2d (f_xy_irrig, irrig_method_tmp)
@@ -226,12 +215,10 @@ MODULE MOD_CropReadin
                IF(landpft%settyp(ipft) .eq. cft + 14)THEN
                   irrig_method_p(ipft) = irrig_method_tmp(ipft)
                   if(irrig_method_p(ipft) < 0) then
-!                     print*,'negataive irrigmethod',p_iam_glb,ipft,pftclass(ipft),irrig_method_p(ipft)
                      irrig_method_p(ipft) = -99999999
                   end if
                endif
             end do
-!            if(cft .eq. N_CFT)print*,'irrig_method',maxval(irrig_method_p),minval(irrig_method_p)
          ENDIF
       ENDDO
 

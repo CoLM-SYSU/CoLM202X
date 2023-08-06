@@ -828,6 +828,7 @@ CONTAINS
          tref_min_inst_p          (ps:pe) = spval
          tref_max_inst_p          (ps:pe) = spval
          latbaset_p               (ps:pe) = spval
+         fert_p                   (ps:pe) = 0._r8
 #endif
    
          if(DEF_USE_LAIFEEDBACK)then

@@ -109,7 +109,7 @@ contains
 
 !   calculate wilting point and field capacity
         do j = 1, nl_soil
-            if (t_soisno(i,j)>tfrz .and. porsl(i,j)>=1.e-6) then         
+            if (t_soisno(j,i)>tfrz .and. porsl(j,i)>=1.e-6) then         
 #ifdef Campbell_SOIL_MODEL
                 smpswc = -1.5e5
                 smpsfc = -3.3e3

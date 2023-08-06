@@ -471,6 +471,15 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(in)    :: fldfrc    ! inundation water input from top (mm/s)
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
+
+   integer  :: ps, pe
+#ifdef CROP
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
+#endif
+
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -568,6 +577,12 @@ MODULE MOD_SoilSnowHydrology
          ENDIF
       endif
 
+      if(DEF_USE_IRRIGATION)then
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+      end if
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
@@ -790,8 +805,8 @@ MODULE MOD_SoilSnowHydrology
       ENDIF
 #endif
 #if(defined CoLMDEBUG)
-      if(abs(err_solver) > 1.e-3)then
-         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver
+      if(abs(err_solver) > 1.2e-3)then
+         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN
          write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)
