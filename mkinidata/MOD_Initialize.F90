@@ -610,6 +610,13 @@ MODULE MOD_Initialize
                end if
             end do
          end if
+      if(DEF_USE_IRRIGATION)then
+         irrig_rate(:) = 0._r8
+         deficit_irrig(:) = 0._r8
+         sum_irrig(:) = 0._r8        
+         sum_irrig_count(:) = 0._r8
+         n_irrig_steps_left(:) = 0
+      end if
 #endif
 #endif
 
