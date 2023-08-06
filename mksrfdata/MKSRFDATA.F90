@@ -87,7 +87,7 @@ PROGRAM MKSRFDATA
    REAL(r8) :: edges  ! southern edge of grid (degrees)
    REAL(r8) :: edgew  ! western edge of grid (degrees)
 
-   TYPE (grid_type) :: gridlai, gtopo
+   TYPE (grid_type) :: gsoil, gridlai, gtopo
    TYPE (grid_type) :: grid_urban_5km, grid_urban_500m
 
    INTEGER   :: lc_year
@@ -198,7 +198,10 @@ PROGRAM MKSRFDATA
    CALL gcrop%define_by_ndims (720,360)
 #endif
 
-   ! define grid for land characteristics
+   ! define grid for soil parameters raw data
+   CALL gsoil%define_by_name ('colm_500m')
+
+   ! define grid for LAI raw data
    CALL gridlai%define_by_name ('colm_500m')
 
    ! define grid for topography
@@ -222,6 +225,7 @@ PROGRAM MKSRFDATA
    CALL pixel%assimilate_grid (ghru)
 #endif
    CALL pixel%assimilate_grid (gpatch)
+   CALL pixel%assimilate_grid (gsoil)
    CALL pixel%assimilate_grid (gridlai)
 
 #ifdef URBAN_MODEL
@@ -246,6 +250,7 @@ PROGRAM MKSRFDATA
    CALL pixel%map_to_grid (ghru)
 #endif
    CALL pixel%map_to_grid (gpatch)
+   CALL pixel%map_to_grid (gsoil)
    CALL pixel%map_to_grid (gridlai)
 
 #ifdef URBAN_MODEL
@@ -347,7 +352,7 @@ PROGRAM MKSRFDATA
 
    CALL Aggregation_LakeDepth       (gpatch , dir_rawdata, dir_landdata, lc_year)
 
-   CALL Aggregation_SoilParameters  (gpatch , dir_rawdata, dir_landdata, lc_year)
+   CALL Aggregation_SoilParameters  (gsoil,   dir_rawdata, dir_landdata, lc_year)
 
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 

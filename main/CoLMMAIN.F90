@@ -171,6 +171,7 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_CaMa_colmCaMa, only: get_fldevp
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
+   USE MOD_SPMD_Task
 
   IMPLICIT NONE
 
@@ -866,7 +867,7 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
-         STOP
+         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
