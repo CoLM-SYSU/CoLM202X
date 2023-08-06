@@ -1534,9 +1534,11 @@ contains
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
 
+#ifdef CROP
       if(DEF_USE_IRRIGATION)then
          call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
       end if
+#endif
 
       if (DEF_Interception_scheme==1) THEN
          DO i = ps, pe
