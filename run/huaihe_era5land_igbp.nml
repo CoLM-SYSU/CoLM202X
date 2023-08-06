@@ -7,6 +7,8 @@
    DEF_domain%edgew = 114.0   
    DEF_domain%edgee = 120.0      
    
+   DEF_PIO_groupsize = 40
+   
    DEF_simulation_time%greenwich    = .TRUE.
    DEF_simulation_time%start_year   = 2001
    DEF_simulation_time%start_month  = 1
@@ -31,12 +33,8 @@
    ! for CATCHMENT
    DEF_CatchmentMesh_data = '/tera04/zhangsp/hillslope/output/huaihe_100km2.nc'
 
-   ! LAI setting
-   DEF_LAI_MONTHLY = .true.
-   DEF_LAI_CHANGE_YEARLY = .false.
-
    ! ----- forcing -----
-   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/CRUJRA.nml'
+   DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/ERA5LAND.nml'
 
    ! ----- history -----
    DEF_HISTORY_IN_VECTOR = .false.
@@ -51,7 +49,6 @@
    DEF_REST_COMPRESS_LEVEL = 1
    DEF_HIST_COMPRESS_LEVEL = 1
    
-   DEF_hist_vars_turnon_all = .false.
-   DEF_hist_vars_namelist   = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/history.nml'
+   DEF_hist_vars_turnon_all = .true.
    
 /
