@@ -151,7 +151,7 @@ ENDIF
                ipxstt = landpatch%ipxstt(ipatch)
                ipxend = landpatch%ipxend(ipatch)
 
-               CALL aggregation_request_data (landpatch, ipatch, gurban, &
+               CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
 IF (DEF_URBAN_type_scheme == 1) THEN
