@@ -49,6 +49,6 @@
    DEF_REST_COMPRESS_LEVEL = 1
    DEF_HIST_COMPRESS_LEVEL = 1
    
-   DEF_hist_vars_turnon_all = .true.
+   DEF_hist_vars_out_default = .true.
    
 /

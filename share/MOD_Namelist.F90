@@ -193,7 +193,7 @@ MODULE MOD_Namelist
    INTEGER :: DEF_HIST_COMPRESS_LEVEL = 1
 
    CHARACTER(len=256) :: DEF_hist_vars_namelist = 'null'
-   LOGICAL :: DEF_hist_vars_turnon_all = .true.
+   LOGICAL :: DEF_hist_vars_out_default = .true.
 
    ! ----- forcing -----
    CHARACTER(len=256) :: DEF_forcing_namelist = 'null'
@@ -723,7 +723,7 @@ CONTAINS
          DEF_REST_COMPRESS_LEVEL,         &
          DEF_HIST_COMPRESS_LEVEL,         &
          DEF_hist_vars_namelist,          &
-         DEF_hist_vars_turnon_all
+         DEF_hist_vars_out_default
 
       namelist /nl_colm_forcing/ DEF_dir_forcing, DEF_forcing
       namelist /nl_colm_history/ DEF_hist_vars
@@ -1452,7 +1452,7 @@ CONTAINS
 
       IF (p_is_master) THEN
          IF (set_defaults) THEN
-            onoff = DEF_hist_vars_turnon_all
+            onoff = DEF_hist_vars_out_default
          ENDIF
       ENDIF
 
