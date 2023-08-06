@@ -100,20 +100,20 @@ CONTAINS
       ! allocate and read the grided LCZ/NCAR urban type
       if (p_is_io) then
 
-         dir_urban = trim(DEF_dir_rawdata) // '/urban'
+         dir_urban = trim(DEF_dir_rawdata) // '/urban_type'
 
          CALL allocate_block_data (gurban, data_urb_class)
          CALL flush_block_data (data_urb_class, 0)
 
-         write(cyear,'(i4.4)') int(lc_year/5)*5
-         suffix = 'URB'//trim(cyear)
-#ifdef URBAN_LCZ
-         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ', data_urb_class)
-#else
+         !write(cyear,'(i4.4)') int(lc_year/5)*5
+         suffix = 'URBTYP'
+IF (DEF_URBAN_type_scheme == 1) THEN
          ! NOTE!!!
          ! region id is assigned in aggreagation_urban.F90 now
          CALL read_5x5_data (dir_urban, suffix, gurban, 'URBAN_DENSITY_CLASS', data_urb_class)
-#endif
+ELSE IF (DEF_URBAN_type_scheme == 2) THEN
+         CALL read_5x5_data (dir_urban, suffix, gurban, 'LCZ_DOM', data_urb_class)
+ENDIF
 
 #ifdef USEMPI
          CALL aggregation_data_daemon (gurban, data_i4_2d_in1 = data_urb_class)
@@ -154,18 +154,18 @@ CONTAINS
                CALL aggregation_request_data (landpatch, ipatch, gurban, zip = .false., &
                   data_i4_2d_in1 = data_urb_class, data_i4_2d_out1 = ibuff)
 
-#ifndef URBAN_LCZ
+IF (DEF_URBAN_type_scheme == 1) THEN
                ! Some urban patches and NCAR data are inconsistent (NCAR has no urban ID),
                ! so the these points are assigned by the 3(medium density), or can define by ueser
                where (ibuff < 1 .or. ibuff > 3)
                   ibuff = 3
                END where
-#else
+ELSE IF(DEF_URBAN_type_scheme == 2) THEN
                ! Same for NCAR, fill the gap LCZ class of urban patch if LCZ data is non-urban
-               where (ibuff > 10)
+               where (ibuff > 10 .or. ibuff == 0)
                   ibuff = 9
                END where
-#endif
+ENDIF
 
                npxl = ipxend - ipxstt + 1
 
