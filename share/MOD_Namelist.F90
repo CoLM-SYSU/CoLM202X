@@ -109,7 +109,7 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
 
    ! use irrigation
-   LOGICAL :: DEF_USE_IRRIGATION = .true.
+   LOGICAL :: DEF_USE_IRRIGATION = .false.
 
    ! 06/2023, add by hua yuan and wenzong dong
    ! ------ Land use and land cover (LULC) related -------
@@ -1025,6 +1025,7 @@ CONTAINS
 
       ! 05/2023, added by Xingjie lu
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_IRRIGATION ,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
