@@ -1421,7 +1421,7 @@ contains
             call acc1d (emis      , a_emis      )
             call acc1d (z0m       , a_z0m       )
 
-            allocate (r_trad (numpatch))
+            allocate (r_trad (numpatch)) ; r_trad(:) = spval
             do i = 1, numpatch
                IF (DEF_forcing%has_missing_value) THEN
                   IF (.not. forcmask(i)) cycle
