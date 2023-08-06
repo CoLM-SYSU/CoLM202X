@@ -45,6 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_soilparameters  = .true.
    LOGICAL  :: USE_SITE_dbedrock        = .true.
    LOGICAL  :: USE_SITE_topography      = .true.
+   logical  :: USE_SITE_HistWriteBack   = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -94,6 +95,16 @@ MODULE MOD_Namelist
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
 
+   ! ----- Subgrid scheme -----
+   logical :: DEF_USE_USGS = .false.
+   logical :: DEF_USE_IGBP = .false.
+   logical :: DEF_USE_LCT  = .false.
+   logical :: DEF_USE_PFT  = .false.
+   logical :: DEF_USE_PC   = .false.
+   logical :: DEF_SOLO_PFT = .false.
+   logical :: DEF_FAST_PC  = .false.
+   CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
+
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
@@ -119,7 +130,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LULCC_SCHEME = 1
 
    ! ------ Urban model related -------
-   !INTEGER :: DEF_URBAN_type_scheme = 1
+   ! Options for urban type scheme
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
+   INTEGER :: DEF_URBAN_type_scheme = 1
+   LOGICAL :: DEF_URBAN_ONLY   = .false.
    logical :: DEF_URBAN_RUN    = .false.
    LOGICAL :: DEF_URBAN_BEM    = .true.
    LOGICAL :: DEF_URBAN_TREE   = .true.
@@ -357,8 +372,8 @@ MODULE MOD_Namelist
       LOGICAL :: t_roof       = .true.
       LOGICAL :: t_wall       = .true.
 #endif
-      LOGICAL :: assimsun        = .true. !1
-      LOGICAL :: assimsha        = .true. !1
+      LOGICAL :: assimsun      = .true. !1
+      LOGICAL :: assimsha      = .true. !1
       LOGICAL :: etrsun        = .true. !1
       LOGICAL :: etrsha        = .true. !1
 #ifdef BGC
@@ -630,6 +645,7 @@ CONTAINS
          USE_SITE_soilparameters,  &
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
+         USE_SITE_HistWriteBack,   &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -646,6 +662,13 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
 
+         DEF_USE_LCT,                     &
+         DEF_USE_PFT,                     &
+         DEF_USE_PC,                      &
+         DEF_FAST_PC,                     &
+         DEF_SOLO_PFT,                    &
+         DEF_SUBGRID_SCHEME,              &
+
          DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
@@ -656,7 +679,8 @@ CONTAINS
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
 
-        !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_type_scheme,           &
+         DEF_URBAN_ONLY,                  &
          DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
          DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
          DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
@@ -777,6 +801,28 @@ CONTAINS
 
 
 ! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
+
+#if (defined LULC_USGS || defined LULC_IGBP)
+         DEF_USE_LCT  = .true.
+         DEF_USE_PFT  = .false.
+         DEF_USE_PC   = .false.
+         DEF_FAST_PC  = .false.
+         DEF_SOLO_PFT = .false.
+#endif
+
+#ifdef LULC_IGBP_PFT
+         DEF_USE_LCT  = .false.
+         DEF_USE_PFT  = .true.
+         DEF_USE_PC   = .false.
+         DEF_FAST_PC  = .false.
+#endif
+
+#ifdef LULC_IGBP_PC
+         DEF_USE_LCT  = .false.
+         DEF_USE_PFT  = .false.
+         DEF_USE_PC   = .true.
+         DEF_SOLO_PFT = .false.
+#endif
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not.DEF_LAI_MONTHLY) THEN
@@ -989,17 +1035,26 @@ CONTAINS
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! 07/2023, added by yuan: subgrid setting related
+      CALL mpi_bcast (DEF_USE_LCT,          1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_PFT,          1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_PC,           1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_FAST_PC,          1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SOLO_PFT,         1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SUBGRID_SCHEME, 256, mpi_character, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY,  1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 05/2023, added by Xingjie lu
-      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,    1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_URBAN_ONLY,      1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)

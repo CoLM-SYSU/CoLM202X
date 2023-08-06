@@ -19,7 +19,7 @@ MODULE MOD_PhaseChange
 !-----------------------------------------------------------------------
 
 
-   subroutine meltf (itypwat,lb,nl_soil,deltim, &
+   subroutine meltf (patchtype,lb,nl_soil,deltim, &
                      fact,brr,hs,dhsdT, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
@@ -58,7 +58,7 @@ MODULE MOD_PhaseChange
 
 !-----------------------------------------------------------------------
 
-    integer, INTENT(in) :: itypwat      !land water type (0=soil,1=urban or built-up,2=wetland,
+    integer, INTENT(in) :: patchtype    !land patch type (0=soil,1=urban or built-up,2=wetland,
                                         !3=land ice, 4=deep lake, 5=shallow lake)
     integer, INTENT(in) :: nl_soil             ! upper bound of array (i.e., soil layers)
     integer, INTENT(in) :: lb                  ! lower bound of array (i.e., snl +1)
@@ -125,7 +125,7 @@ MODULE MOD_PhaseChange
    IF (DEF_USE_SUPERCOOL_WATER) THEN
       DO j = 1, nl_soil
          supercool(j) = 0.0
-         if(t_soisno(j) < tfrz .and. itypwat <=2 ) then
+         if(t_soisno(j) < tfrz .and. patchtype <=2 ) then
             smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
             if (porsl(j) > 0.) then
 #ifdef Campbell_SOIL_MODEL
@@ -259,7 +259,7 @@ MODULE MOD_PhaseChange
                t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
             endif
             if (DEF_USE_SUPERCOOL_WATER) then
-               IF(j <= 0 .or. itypwat == 3)THEN !snow
+               IF(j <= 0 .or. patchtype == 3)THEN !snow
                   if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
                ENDIF
             ELSE
@@ -286,7 +286,7 @@ MODULE MOD_PhaseChange
    end subroutine meltf
 
 
-   subroutine meltf_snicar (itypwat,lb,nl_soil,deltim, &
+   subroutine meltf_snicar (patchtype,lb,nl_soil,deltim, &
                      fact,brr,hs,dhsdT,sabg_lyr, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
@@ -326,7 +326,7 @@ MODULE MOD_PhaseChange
 
 !-----------------------------------------------------------------------
 
-    integer, INTENT(in) :: itypwat      !land water type (0=soil,1=urban or built-up,2=wetland,
+    integer, INTENT(in) :: patchtype    !land patch type (0=soil,1=urban or built-up,2=wetland,
                                         !3=land ice, 4=deep lake, 5=shallow lake)
     integer, INTENT(in) :: nl_soil             ! upper bound of array (i.e., soil layers)
     integer, INTENT(in) :: lb                  ! lower bound of array (i.e., snl +1)
@@ -395,7 +395,7 @@ MODULE MOD_PhaseChange
    if (DEF_USE_SUPERCOOL_WATER) then
       DO j = 1, nl_soil
          supercool(j) = 0.0
-         if(t_soisno(j) < tfrz .and. itypwat <= 2) then
+         if(t_soisno(j) < tfrz .and. patchtype <= 2) then
             smp = hfus * (t_soisno(j)-tfrz)/(grav*t_soisno(j)) * 1000.     ! mm
             if (porsl(j) > 0.) then
 #ifdef Campbell_SOIL_MODEL
@@ -534,7 +534,7 @@ MODULE MOD_PhaseChange
                t_soisno(j) = t_soisno(j) + fact(j)*heatr/(1.-fact(j)*dhsdT)
             endif
             if (DEF_USE_SUPERCOOL_WATER) then
-               IF(j <= 0 .or. itypwat == 3)THEN !snow
+               IF(j <= 0 .or. patchtype == 3)THEN !snow
                   if(wliq_soisno(j)*wice_soisno(j) > 0.) t_soisno(j) = tfrz
                ENDIF
             ELSE

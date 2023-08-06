@@ -138,7 +138,7 @@ CONTAINS
                   ENDIF
 
                   ! reconstruction of height of water near interface
-                  hand_fc  = min(hillslope%hand(i), hillslope%hand(j))
+                  hand_fc  = max(hillslope%hand(i), hillslope%hand(j))
                   wdsrf_up = max(0., hillslope%hand(i)+wdsrf_h(i) - hand_fc)
                   wdsrf_dn = max(0., hillslope%hand(j)+wdsrf_h(j) - hand_fc)
 
@@ -179,7 +179,7 @@ CONTAINS
                      mflux_fc = hillslope%flen(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
                         + vwave_up*vwave_dn*(hflux_dn-hflux_up)) / (vwave_dn-vwave_up)
                   ENDIF
-                  
+
                   sum_hflux_h(i) = sum_hflux_h(i) + hflux_fc
                   sum_hflux_h(j) = sum_hflux_h(j) - hflux_fc
 
@@ -243,7 +243,7 @@ CONTAINS
                ENDDO
 
                dt_res = dt_res - dt_this
-               
+
             ENDDO
 
             ! SAVE depth of surface water

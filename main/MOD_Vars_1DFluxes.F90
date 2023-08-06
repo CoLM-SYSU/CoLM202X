@@ -6,11 +6,8 @@ MODULE MOD_Vars_1DFluxes
 ! -------------------------------
 
   USE MOD_Precision
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_Vars_1DPFTFluxes
-#endif
-#ifdef LULC_IGBP_PC
-  USE MOD_Vars_1DPCFluxes
 #endif
 #ifdef BGC
   USE MOD_BGC_Vars_1DFluxes
@@ -154,12 +151,8 @@ MODULE MOD_Vars_1DFluxes
          end if
       end if
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL allocate_1D_PFTFluxes
-#endif
-
-#ifdef LULC_IGBP_PC
-      CALL allocate_1D_PCFluxes
 #endif
 
 #ifdef BGC
@@ -239,12 +232,8 @@ MODULE MOD_Vars_1DFluxes
         end if
      end if
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      CALL deallocate_1D_PFTFluxes
-#endif
-
-#ifdef LULC_IGBP_PC
-     CALL deallocate_1D_PCFluxes
 #endif
 
 #ifdef BGC

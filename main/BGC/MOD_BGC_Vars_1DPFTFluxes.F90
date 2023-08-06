@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 MODULE MOD_BGC_Vars_1DPFTFluxes
 #ifdef BGC

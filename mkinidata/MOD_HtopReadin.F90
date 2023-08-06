@@ -31,15 +31,10 @@ MODULE MOD_HtopReadin
          USE MOD_Const_PFT
          USE MOD_Vars_TimeInvariants
          USE MOD_LandPatch
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          USE MOD_LandPFT
          USE MOD_Vars_PFTimeInvariants
          USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-         USE MOD_LandPC
-         USE MOD_Vars_PCTimeInvariants
-         USE MOD_Vars_PCTimeVariables
 #endif
          USE MOD_NetCDFVector
 #ifdef SinglePoint
@@ -111,7 +106,7 @@ MODULE MOD_HtopReadin
 #endif
 
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 #ifdef SinglePoint
          allocate(htoppft(numpft))
          htoppft = pack(SITE_htop_pfts, SITE_pctpfts > 0.)
@@ -156,42 +151,6 @@ MODULE MOD_HtopReadin
          ENDIF
 
          IF (allocated(htoppft)) deallocate(htoppft)
-#endif
-
-#ifdef LULC_IGBP_PC
-#ifdef SinglePoint
-         allocate(htoplc(1))
-         htoplc(:) = sum(SITE_htop_pfts * SITE_pctpfts)
-#else
-         lndname = trim(landdir)//'/htop_patches.nc'
-         CALL ncio_read_vector (lndname, 'htop_patches', landpatch, htoplc )
-#endif
-
-         IF (p_is_worker) THEN
-            do npatch = 1, numpatch
-               t = patchtype(npatch)
-               m = patchclass(npatch)
-               IF (t == 0) THEN
-                  p = patch2pc(npatch)
-                  htop_c(:,p) = htop0_p(:)
-                  hbot_c(:,p) = hbot0_p(:)
-
-                  DO n = 1, N_PFT-1
-                     ! 01/06/2020, yuan: adjust htop reading
-                     IF (n < 9 .and. htoplc(npatch)>2.) THEN
-                        htop_c(n,p) = htoplc(npatch)
-                     ENDIF
-                  ENDDO
-                  htop(npatch) = sum(htop_c(:,p)*pcfrac(:,p))
-                  hbot(npatch) = sum(hbot_c(:,p)*pcfrac(:,p))
-               ELSE
-                  htop(npatch) = htop0(m)
-                  hbot(npatch) = hbot0(m)
-               ENDIF
-            end do
-         ENDIF
-
-         IF (allocated(htoplc)) deallocate(htoplc)
 #endif
 
    END SUBROUTINE HTOP_readin

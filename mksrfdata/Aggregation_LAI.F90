@@ -19,6 +19,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    USE MOD_Vars_Global
    USE MOD_Namelist
    USE MOD_SPMD_Task
+   USE MOD_TimeManager
    USE MOD_Grid
    USE MOD_LandPatch
    USE MOD_NetCDFBlock
@@ -31,11 +32,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
    USE MOD_Const_LC
    USE MOD_5x5DataReadin
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
 #endif
 #ifdef SinglePoint
    USE MOD_SingleSrfdata
@@ -57,6 +55,9 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ! local variables:
    ! ----------------------------------------------------------------------
    CHARACTER(len=256) :: landdir, lndname
+
+   integer :: simulation_lai_year_start, simulation_lai_year_end
+   integer :: idate(3)
 
    TYPE (block_data_real8_2d) :: LAI          ! plant leaf area index (m2/m2)
    REAL(r8), allocatable :: LAI_patches(:), lai_one(:), area_one(:)
@@ -112,6 +113,26 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 #endif
 
+   idate(1) = DEF_simulation_time%start_year
+   IF (.not. isgreenwich) THEN
+      idate(3) = DEF_simulation_time%start_sec
+      CALL monthday2julian (idate(1), &
+         DEF_simulation_time%start_month, DEF_simulation_time%start_day, idate(2))
+      CALL localtime2gmt(idate)
+   ENDIF
+
+   simulation_lai_year_start = idate(1)
+
+   idate(1) = DEF_simulation_time%end_year
+   IF (.not. isgreenwich) THEN
+      idate(3) = DEF_simulation_time%end_sec
+      CALL monthday2julian (idate(1), &
+         DEF_simulation_time%end_month, DEF_simulation_time%end_day, idate(2))
+      CALL localtime2gmt(idate)
+   ENDIF
+
+   simulation_lai_year_end = idate(1)
+
    ! ................................................
    ! ... global plant leaf area index
    ! ................................................
@@ -129,8 +150,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
       ntime      = 12
 #else
       IF (DEF_LAI_CHANGE_YEARLY) THEN
-         start_year = DEF_simulation_time%start_year
-         end_year   = DEF_simulation_time%end_year
+         start_year = simulation_lai_year_start
+         end_year   = simulation_lai_year_end
          ntime      = 12
       ELSE
          start_year = lc_year
@@ -140,8 +161,8 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 #endif
    ! 8-day LAI
    ELSE
-      start_year = DEF_simulation_time%start_year
-      end_year   = DEF_simulation_time%end_year
+      start_year = simulation_lai_year_start
+      end_year   = simulation_lai_year_end
       ntime      = 46
    ENDIF
 
@@ -362,15 +383,15 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
    ENDIF
 #endif
 
-! PFT LAI!!!!!
-#ifdef LULC_IGBP_PFT
+! For both PFT and PC run LAI!!!!!
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    ! add time variation of LAI
    ! monthly average LAI
    ! if use lai change, LAI data of simulation start year and end year will be made
    ! if not use lai change, only make LAI data of defined lc year
    IF (DEF_LAI_CHANGE_YEARLY) THEN
-      start_year = DEF_simulation_time%start_year
-      end_year   = DEF_simulation_time%end_year
+      start_year = simulation_lai_year_start
+      end_year   = simulation_lai_year_end
       ntime      = 12
    ELSE
       start_year = lc_year
@@ -441,7 +462,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                lai_one = sum(lai_pft_one * pct_pft_one, dim=1) / pct_one
                LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
 
-               IF (landpatch%settyp(ipatch) == 1) THEN
+               !IF (landpatch%settyp(ipatch) == 1) THEN
+#ifndef CROP
+               IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+#else
+               IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+#endif
                   DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
                      p = landpft%settyp(ip)
                      sumarea = sum(pct_pft_one(p,:) * area_one)
@@ -454,7 +480,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      ENDIF
                   ENDDO
 #ifdef CROP
-               ELSEIF (landpatch%settyp(ipatch) == 12) THEN
+               ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                   ip = patch_pft_s(ipatch)
                   LAI_pfts(ip) = LAI_patches(ipatch)
 #endif
@@ -559,7 +585,12 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                sai_one = sum(sai_pft_one * pct_pft_one, dim=1) / pct_one
                SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
 
-               IF (landpatch%settyp(ipatch) == 1) THEN
+               !IF (landpatch%settyp(ipatch) == 1) THEN
+#ifndef CROP
+               IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
+#else
+               IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
+#endif
                   DO ip = patch_pft_s(ipatch), patch_pft_e(ipatch)
                      p = landpft%settyp(ip)
                      sumarea = sum(pct_pft_one(p,:) * area_one)
@@ -572,7 +603,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
                      ENDIF
                   ENDDO
 #ifdef CROP
-               ELSEIF (landpatch%settyp(ipatch) == 12) THEN
+               ELSEIF (landpatch%settyp(ipatch) == CROPLAND) THEN
                   ip = patch_pft_s(ipatch)
                   SAI_pfts(ip) = SAI_patches(ipatch)
 #endif
@@ -643,241 +674,6 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
       IF (allocated(SAI_patches)) deallocate(SAI_patches)
       IF (allocated(SAI_pfts   )) deallocate(SAI_pfts   )
-      IF (allocated(sai_one    )) deallocate(sai_one    )
-      IF (allocated(pct_one    )) deallocate(pct_one    )
-      IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
-      IF (allocated(area_one   )) deallocate(area_one   )
-   ENDIF
-#endif
-
-! PC LAI!!!!!!!!
-#ifdef LULC_IGBP_PC
-   ! add time variation of LAI
-   ! monthly average LAI
-   ! if use lai change, LAI data of simulation start year and end year will be made
-   ! if not use lai change, only make LAI data of defined lc year
-   IF (DEF_LAI_CHANGE_YEARLY) THEN
-      start_year = DEF_simulation_time%start_year
-      end_year   = DEF_simulation_time%end_year
-      ntime      = 12
-   ELSE
-      start_year = lc_year
-      end_year   = lc_year
-      ntime      = 12
-   ENDIF
-
-   IF (p_is_io) THEN
-      CALL allocate_block_data (gridlai, pftLSAI, N_PFT_modis, lb1 = 0)
-      CALL allocate_block_data (gridlai, pftPCT,  N_PFT_modis, lb1 = 0)
-   ENDIF
-
-   IF (p_is_worker) THEN
-      allocate(LAI_patches (numpatch))
-      allocate(LAI_pcs (0:N_PFT-1, numpc))
-      allocate(SAI_patches (numpatch))
-      allocate(SAI_pcs (0:N_PFT-1, numpc))
-   ENDIF
-
-#ifdef SinglePoint
-   allocate (SITE_LAI_year (start_year:end_year))
-   SITE_LAI_year = (/(iy, iy = start_year, end_year)/)
-
-   !TODO-yuan-done: for multiple years
-   allocate (SITE_LAI_pfts_monthly (0:N_PFT-1,12,start_year:end_year))
-   allocate (SITE_SAI_pfts_monthly (0:N_PFT-1,12,start_year:end_year))
-#endif
-
-   dir_5x5 = trim(dir_rawdata) // '/plant_15s'
-   DO iy = start_year, end_year
-      write(cyear,'(i4.4)') iy
-      suffix  = 'MOD'//trim(cyear)
-      CALL system('mkdir -p ' // trim(landdir) // trim(cyear))
-
-      IF (p_is_io) THEN
-         CALL read_5x5_data_pft (dir_5x5, suffix, gridlai, 'PCT_PFT', pftPCT)
-      ENDIF
-
-      DO month = 1, 12
-         IF (p_is_io) THEN
-            ! change var name to MONTHLY_PFT_LAI
-            CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_LAI', month, pftLSAI)
-#ifdef USEMPI
-            CALL aggregation_data_daemon (gridlai, &
-               data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
-               data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
-#endif
-         ENDIF
-
-         ! ---------------------------------------------------------------
-         ! aggregate the plant leaf area index from the resolution of raw data to modelling resolution
-         ! ---------------------------------------------------------------
-
-         IF (p_is_worker) THEN
-            DO ipatch = 1, numpatch
-               CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-
-               IF (allocated(lai_one)) deallocate(lai_one)
-               allocate(lai_one(size(area_one)))
-
-               IF (allocated(pct_one)) deallocate(pct_one)
-               allocate(pct_one(size(area_one)))
-
-               pct_one = sum(pct_pft_one,dim=1)
-               pct_one = max(pct_one, 1.0e-6)
-
-               lai_one = sum(lai_pft_one * pct_pft_one, dim=1) / pct_one
-               LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
-
-               IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
-                  ipc = patch2pc(ipatch)
-                  DO ipft = 0, N_PFT-1
-                     sumarea = sum(pct_pft_one(ipft,:) * area_one)
-                     IF (sumarea > 0) THEN
-                        LAI_pcs(ipft,ipc) = sum(lai_pft_one(ipft,:) * pct_pft_one(ipft,:) * area_one) / sumarea
-                     ELSE
-                        ! 07/2023, yuan: bug may exist below
-                        !LAI_pcs(ipft,ipc) = LAI_patches(ipatch)
-                        LAI_pcs(ipft,ipc) = 0.
-                     ENDIF
-                  ENDDO
-               ENDIF
-            ENDDO
-
-#ifdef USEMPI
-            CALL aggregation_worker_done ()
-#endif
-         ENDIF
-
-      write(c2,'(i2.2)') month
-#ifdef RangeCheck
-      CALL check_vector_data ('LAI_patches ' // trim(c2), LAI_patches)
-      CALL check_vector_data ('LAI_pcs     ' // trim(c2), LAI_pcs   )
-#endif
-#ifdef USEMPI
-         CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-         ! ---------------------------------------------------
-         ! write out the plant leaf area index of grid patches
-         ! ---------------------------------------------------
-#ifndef SinglePoint
-         lndname = trim(landdir)//trim(cyear)//'/LAI_patches'//trim(c2)//'.nc'
-         CALL ncio_create_file_vector (lndname, landpatch)
-         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'LAI_patches', 'patch', landpatch, LAI_patches, 1)
-
-         lndname = trim(landdir)//trim(cyear)//'/LAI_pcs'//trim(c2)//'.nc'
-         CALL ncio_create_file_vector (lndname, landpc)
-         CALL ncio_define_dimension_vector (lndname, landpc, 'pc')
-         CALL ncio_define_dimension_vector (lndname, landpc, 'pft', N_PFT)
-         CALL ncio_write_vector (lndname, 'LAI_pcs', 'pft', N_PFT, 'pc', landpc, LAI_pcs, 1)
-#else
-         SITE_LAI_pfts_monthly(:,month,iy) = LAI_pcs(:,1)
-#endif
-      ! loop end of month
-      ENDDO
-
-      ! IF (p_is_worker) THEN
-      !    IF (allocated(LAI_patches)) deallocate(LAI_patches)
-      !    IF (allocated(LAI_pcs    )) deallocate(LAI_pcs    )
-      !    IF (allocated(lai_one    )) deallocate(lai_one    )
-      !    IF (allocated(pct_one    )) deallocate(pct_one    )
-      !    IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
-      !    IF (allocated(area_one   )) deallocate(area_one   )
-      ! ENDIF
-
-      DO month = 1, 12
-         IF (p_is_io) THEN
-            ! change var name to MONTHLY_PFT_SAI
-            CALL read_5x5_data_pft_time (dir_5x5, suffix, gridlai, 'MONTHLY_PFT_SAI', month, pftLSAI)
-#ifdef USEMPI
-            CALL aggregation_data_daemon (gridlai, &
-               data_r8_3d_in1 = pftPCT,  n1_r8_3d_in1 = 16, &
-               data_r8_3d_in2 = pftLSAI, n1_r8_3d_in2 = 16)
-#endif
-         ENDIF
-
-         ! ---------------------------------------------------------------
-         ! aggregate the plant leaf area index from the resolution of raw data to modelling resolution
-         ! ---------------------------------------------------------------
-
-         IF (p_is_worker) THEN
-            DO ipatch = 1, numpatch
-
-               CALL aggregation_request_data (landpatch, ipatch, gridlai, area = area_one, &
-                  data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
-                  data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
-
-               IF (allocated(sai_one)) deallocate(sai_one)
-               allocate(sai_one(size(area_one)))
-
-               IF (allocated(pct_one)) deallocate(pct_one)
-               allocate(pct_one(size(area_one)))
-
-               pct_one = sum(pct_pft_one,dim=1)
-               pct_one = max(pct_one, 1.0e-6)
-
-               sai_one = sum(sai_pft_one * pct_pft_one, dim=1) / pct_one
-               SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
-
-               IF (patchtypes(landpatch%settyp(ipatch)) == 0) THEN
-                  ipc = patch2pc(ipatch)
-                  DO ipft = 0, N_PFT-1
-                     sumarea = sum(pct_pft_one(ipft,:) * area_one)
-                     IF (sumarea > 0) THEN
-                        SAI_pcs(ipft,ipc) = sum(sai_pft_one(ipft,:) * pct_pft_one(ipft,:) * area_one) / sumarea
-                     ELSE
-                        ! 07/2023, yuan: bug may exist below
-                        !SAI_pcs(ipft,ipc) = SAI_patches(ipatch)
-                        SAI_pcs(ipft,ipc) = 0.
-                     ENDIF
-                  ENDDO
-               ENDIF
-            ENDDO
-
-#ifdef USEMPI
-            CALL aggregation_worker_done ()
-#endif
-         ENDIF
-
-      write(c2,'(i2.2)') month
-#ifdef RangeCheck
-      CALL check_vector_data ('SAI_patches ' // trim(c2), SAI_patches)
-      CALL check_vector_data ('SAI_pcs     ' // trim(c2), SAI_pcs   )
-#endif
-#ifdef USEMPI
-      CALL mpi_barrier (p_comm_glb, p_err)
-#endif
-
-         ! ---------------------------------------------------
-         ! write out the plant stem area index of grid patches
-         ! ---------------------------------------------------
-#ifndef SinglePoint
-         lndname = trim(landdir)//trim(cyear)//'/SAI_patches'//trim(c2)//'.nc'
-         CALL ncio_create_file_vector (lndname, landpatch)
-         CALL ncio_define_dimension_vector (lndname, landpatch, 'patch')
-         CALL ncio_write_vector (lndname, 'SAI_patches', 'patch', landpatch, SAI_patches, 1)
-
-         lndname = trim(landdir)//trim(cyear)//'/SAI_pcs'//trim(c2)//'.nc'
-         CALL ncio_create_file_vector (lndname, landpc)
-         CALL ncio_define_dimension_vector (lndname, landpc, 'pc')
-         CALL ncio_define_dimension_vector (lndname, landpc, 'pft', N_PFT)
-         CALL ncio_write_vector (lndname, 'SAI_pcs', 'pft', N_PFT, 'pc', landpc, SAI_pcs, 1)
-#else
-         !TODO: single points
-         SITE_SAI_pfts_monthly(:,month,iy) = SAI_pcs(:,1)
-#endif
-      ! loop end of month
-      ENDDO
-   ENDDO
-   IF (p_is_worker) THEN
-      IF (allocated(LAI_patches)) deallocate(LAI_patches)
-      IF (allocated(LAI_pcs    )) deallocate(LAI_pcs    )
-      IF (allocated(lai_one    )) deallocate(lai_one    )
-      IF (allocated(SAI_patches)) deallocate(SAI_patches)
-      IF (allocated(SAI_pcs    )) deallocate(SAI_pcs    )
       IF (allocated(sai_one    )) deallocate(sai_one    )
       IF (allocated(pct_one    )) deallocate(pct_one    )
       IF (allocated(pct_pft_one)) deallocate(pct_pft_one)
