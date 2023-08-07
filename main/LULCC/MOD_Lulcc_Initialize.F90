@@ -68,11 +68,8 @@ MODULE MOD_Lulcc_Initialize
    CALL mesh_free_mem
    CALL landelm%forc_free_mem
    CALL landpatch%forc_free_mem
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL landpft%forc_free_mem
-#endif
-#ifdef LULC_IGBP_PC
-   CALL landpc%forc_free_mem
 #endif
 #ifdef URBAN_MODEL
    CALL landurban%forc_free_mem
@@ -90,14 +87,9 @@ MODULE MOD_Lulcc_Initialize
 
    call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
-#endif
-
-#ifdef LULC_IGBP_PC
-   call pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , year)
-   CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL

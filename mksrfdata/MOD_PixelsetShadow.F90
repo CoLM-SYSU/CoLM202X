@@ -81,7 +81,7 @@ CONTAINS
       
                allocate (datashadow1d (nmaxshadow, ipxstt:ipxend))
 
-               CALL aggregation_request_data (pixelset, ipset, gshadow, &
+               CALL aggregation_request_data (pixelset, ipset, gshadow, zip = .false., &
                   data_r8_3d_in1 = datashadow, data_r8_3d_out1 = rbuff, n1_r8_3d_in1 = nmaxshadow)
 
                datashadow1d = rbuff

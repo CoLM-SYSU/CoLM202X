@@ -1,7 +1,7 @@
 #include <define.h>
 
 #ifdef LATERAL_FLOW
-MODULE MOD_Hydro_SurfaceFlow
+MODULE MOD_Hydro_HillslopeFlow
    !-------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !   
@@ -30,7 +30,7 @@ MODULE MOD_Hydro_SurfaceFlow
 CONTAINS
    
    ! ----------
-   SUBROUTINE surface_flow (dt)
+   SUBROUTINE hillslope_flow (dt)
 
       USE MOD_SPMD_Task
       USE MOD_Mesh
@@ -41,7 +41,7 @@ CONTAINS
       USE MOD_Vars_1DFluxes
       USE MOD_Hydro_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_SurfaceNetwork
+      USE MOD_Hydro_HillslopeNetwork
       USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Const_Physical, only : grav
 
@@ -52,7 +52,7 @@ CONTAINS
       ! Local Variables
       INTEGER :: numbasin, nhru, istt, iend, ibasin, i, j
 
-      TYPE(surface_network_info_type), pointer :: hrus
+      TYPE(hillslope_network_info_type), pointer :: hillslope
 
       REAL(r8), allocatable :: wdsrf_h (:) ! [m]
       REAL(r8), allocatable :: momen_h (:) ! [m^2/s]
@@ -68,7 +68,7 @@ CONTAINS
       
       REAL(r8), allocatable :: rsurf_h (:) ! [m/s]
 
-      REAL(r8) :: friction, ac
+      REAL(r8) :: friction
       REAL(r8) :: dt_res, dt_this
 
       IF (p_is_worker) THEN
@@ -91,9 +91,9 @@ CONTAINS
                ENDDO
             ENDIF
 
-            hrus => surface_network(ibasin)
+            hillslope => hillslope_network(ibasin)
 
-            nhru = hrus%nhru
+            nhru = hillslope%nhru
 
             allocate (wdsrf_h (nhru))
             allocate (veloc_h (nhru))
@@ -105,19 +105,18 @@ CONTAINS
                
             allocate (rsurf_h (nhru))
 
-            ! patch to hydrounit 
             DO i = 1, nhru
-               wdsrf_h(i) = wdsrf_hru(hrus%ihru(i)) 
-               momen_h(i) = momen_hru(hrus%ihru(i)) 
-               IF (wdsrf_h(i) > 0) THEN
+               wdsrf_h(i) = wdsrf_hru(hillslope%ihru(i)) 
+               momen_h(i) = momen_hru(hillslope%ihru(i)) 
+               IF (wdsrf_h(i) > 0.) THEN
                   veloc_h(i) = momen_h(i) / wdsrf_h(i)
                ELSE
-                  veloc_h(i) = 0
+                  veloc_h(i) = 0.
                ENDIF
             ENDDO
 
             dt_res = dt 
-            DO WHILE (dt_res > 0)
+            DO WHILE (dt_res > 0.)
 
                DO i = 1, nhru
                   sum_hflux_h(i) = 0.
@@ -129,17 +128,19 @@ CONTAINS
 
                DO i = 1, nhru
 
-                  j = hrus%inext(i)
-                  IF (j <= 0) CYCLE
+                  j = hillslope%inext(i)
 
+                  IF (j <= 0) CYCLE ! lowest HRUs
+
+                  ! dry HRU
                   IF ((wdsrf_h(i) < PONDMIN) .and. (wdsrf_h(j) < PONDMIN)) THEN
                      cycle
                   ENDIF
 
                   ! reconstruction of height of water near interface
-                  hand_fc  = min(hrus%hand(i), hrus%hand(j))
-                  wdsrf_up = max(0., hrus%hand(i)+wdsrf_h(i) - hand_fc)
-                  wdsrf_dn = max(0., hrus%hand(j)+wdsrf_h(j) - hand_fc)
+                  hand_fc  = max(hillslope%hand(i), hillslope%hand(j))
+                  wdsrf_up = max(0., hillslope%hand(i)+wdsrf_h(i) - hand_fc)
+                  wdsrf_dn = max(0., hillslope%hand(j)+wdsrf_h(j) - hand_fc)
 
                   ! velocity at hydrounit downstream face
                   veloc_fc = 0.5 * (veloc_h(i) + veloc_h(j)) &
@@ -167,56 +168,48 @@ CONTAINS
                   mflux_dn = veloc_h(j)**2 * wdsrf_dn + 0.5*grav * wdsrf_dn**2
 
                   IF (vwave_up >= 0.) THEN
-                     hflux_fc = hrus%flen(i) * hflux_up
-                     mflux_fc = hrus%flen(i) * mflux_up
+                     hflux_fc = hillslope%flen(i) * hflux_up
+                     mflux_fc = hillslope%flen(i) * mflux_up
                   ELSEIF (vwave_dn <= 0.) THEN
-                     hflux_fc = hrus%flen(i) * hflux_dn
-                     mflux_fc = hrus%flen(i) * mflux_dn
+                     hflux_fc = hillslope%flen(i) * hflux_dn
+                     mflux_fc = hillslope%flen(i) * mflux_dn
                   ELSE
-                     hflux_fc = hrus%flen(i) * (vwave_dn*hflux_up - vwave_up*hflux_dn &
+                     hflux_fc = hillslope%flen(i) * (vwave_dn*hflux_up - vwave_up*hflux_dn &
                         + vwave_up*vwave_dn*(wdsrf_dn-wdsrf_up)) / (vwave_dn-vwave_up)
-                     mflux_fc = hrus%flen(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
+                     mflux_fc = hillslope%flen(i) * (vwave_dn*mflux_up - vwave_up*mflux_dn &
                         + vwave_up*vwave_dn*(hflux_dn-hflux_up)) / (vwave_dn-vwave_up)
                   ENDIF
-                  
+
                   sum_hflux_h(i) = sum_hflux_h(i) + hflux_fc
                   sum_hflux_h(j) = sum_hflux_h(j) - hflux_fc
 
                   sum_mflux_h(i) = sum_mflux_h(i) + mflux_fc
                   sum_mflux_h(j) = sum_mflux_h(j) - mflux_fc
                   
-                  sum_zgrad_h(i) = sum_zgrad_h(i) + hrus%flen(i) * 0.5*grav * wdsrf_up**2
-                  sum_zgrad_h(j) = sum_zgrad_h(j) - hrus%flen(i) * 0.5*grav * wdsrf_dn**2 
+                  sum_zgrad_h(i) = sum_zgrad_h(i) + hillslope%flen(i) * 0.5*grav * wdsrf_up**2
+                  sum_zgrad_h(j) = sum_zgrad_h(j) - hillslope%flen(i) * 0.5*grav * wdsrf_dn**2 
 
                ENDDO
 
                DO i = 1, nhru
                   ! constraint 1: CFL condition
-                  IF (hrus%inext(i) > 0) then
+                  IF (hillslope%inext(i) > 0) then
                      IF ((veloc_h(i) /= 0.) .or. (wdsrf_h(i) > 0.)) THEN
-                        dt_this = min(dt_this, hrus%plen(i)/(abs(veloc_h(i)) + sqrt(grav*wdsrf_h(i)))*0.8)
+                        dt_this = min(dt_this, hillslope%plen(i)/(abs(veloc_h(i)) + sqrt(grav*wdsrf_h(i)))*0.8)
                      ENDIF
                   ENDIF
 
-                  ! IF (i > 1) THEN
-                  !    j = hrus%inext(i)
-                  !    ac = hrus%area(j) / (hrus%area(i)+hrus%area(j))
-                  ! ELSE
-                  !    ac = 1.
-                  ! ENDIF 
-                  ac = 1. 
-
                   ! constraint 2: Avoid negative values of water
-                  rsurf_h(i) = sum_hflux_h(i) / hrus%area(i)
+                  rsurf_h(i) = sum_hflux_h(i) / hillslope%area(i)
                   IF (rsurf_h(i) > 0) THEN
-                     dt_this = min(dt_this, ac * wdsrf_h(i) / rsurf_h(i))
+                     dt_this = min(dt_this, wdsrf_h(i) / rsurf_h(i))
                   ENDIF
                      
                   ! constraint 3: Avoid change of flow direction
                   IF ((abs(veloc_h(i)) > 0.1) &
                      .and. (veloc_h(i) * (sum_mflux_h(i) - sum_zgrad_h(i)) > 0)) THEN
-                     dt_this = min(dt_this, ac * &
-                        abs(momen_h(i) * hrus%area(i) / (sum_mflux_h(i) - sum_zgrad_h(i))))
+                     dt_this = min(dt_this, &
+                        abs(momen_h(i) * hillslope%area(i) / (sum_mflux_h(i) - sum_zgrad_h(i))))
                   ENDIF
                ENDDO 
 
@@ -229,33 +222,34 @@ CONTAINS
                      veloc_h(i) = 0
                   ELSE
                      friction = grav * nmanning_hslp**2 * abs(momen_h(i)) / wdsrf_h(i)**(7.0/3.0) 
-                     momen_h(i) = (momen_h(i) - (sum_mflux_h(i) - sum_zgrad_h(i)) / hrus%area(i) * dt_this) &
+                     momen_h(i) = (momen_h(i) - &
+                        (sum_mflux_h(i) - sum_zgrad_h(i)) / hillslope%area(i) * dt_this) &
                         / (1 + friction * dt_this) 
                      veloc_h(i) = momen_h(i) / wdsrf_h(i)
 
-                     IF (hrus%inext(i) <= 0) THEN
+                     IF (hillslope%inext(i) <= 0) THEN
                         veloc_h(i) = min(veloc_h(i), 0.)
                         momen_h(i) = min(momen_h(i), 0.)
                      ENDIF
 
-                     IF (all(hrus%inext /= i)) THEN
+                     IF (all(hillslope%inext /= i)) THEN
                         veloc_h(i) = max(veloc_h(i), 0.)
                         momen_h(i) = max(momen_h(i), 0.)
                      ENDIF
                   ENDIF
 
-                  wdsrf_hru_ta(hrus%ihru(i)) = wdsrf_hru_ta(hrus%ihru(i)) + wdsrf_h(i) * dt_this
-                  momen_hru_ta(hrus%ihru(i)) = momen_hru_ta(hrus%ihru(i)) + momen_h(i) * dt_this
+                  wdsrf_hru_ta(hillslope%ihru(i)) = wdsrf_hru_ta(hillslope%ihru(i)) + wdsrf_h(i) * dt_this
+                  momen_hru_ta(hillslope%ihru(i)) = momen_hru_ta(hillslope%ihru(i)) + momen_h(i) * dt_this
                ENDDO
 
                dt_res = dt_res - dt_this
-               
+
             ENDDO
 
             ! SAVE depth of surface water
             DO i = 1, nhru
-               wdsrf_hru(hrus%ihru(i)) = wdsrf_h(i)
-               veloc_hru(hrus%ihru(i)) = veloc_h(i)
+               wdsrf_hru(hillslope%ihru(i)) = wdsrf_h(i)
+               veloc_hru(hillslope%ihru(i)) = veloc_h(i)
             ENDDO
 
             deallocate (wdsrf_h)
@@ -274,7 +268,7 @@ CONTAINS
 
       ENDIF
 
-   END SUBROUTINE surface_flow
+   END SUBROUTINE hillslope_flow
 
-END MODULE MOD_Hydro_SurfaceFlow
+END MODULE MOD_Hydro_HillslopeFlow
 #endif

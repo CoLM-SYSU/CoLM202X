@@ -434,11 +434,7 @@ CONTAINS
 #endif
          IF (.not. fexists_any) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
 
          IF (pixelset%nset > 0) THEN

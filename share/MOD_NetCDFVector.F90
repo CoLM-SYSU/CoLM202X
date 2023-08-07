@@ -117,11 +117,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 
@@ -230,11 +226,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 
@@ -340,11 +332,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 
@@ -451,11 +439,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 
@@ -562,11 +546,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 
@@ -673,11 +653,7 @@ CONTAINS
 #endif
          IF (.not. any_file_exists) THEN
             write(*,*) 'Warning : restart file ' //trim(filename)// ' not found.'
-#ifdef USEMPI
-            CALL mpi_abort (p_comm_glb, p_err)
-#else
-            STOP
-#endif
+            CALL CoLM_stop ()
          ENDIF
       ENDIF
 

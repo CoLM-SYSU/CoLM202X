@@ -68,6 +68,6 @@
    DEF_HIST_COMPRESS_LEVEL = 1
 
    DEF_hist_vars_namelist = '/share/home/dq010/CoLM/CoLM202X-CROP//cases/test_20221221_full/history.nml'
-   DEF_hist_vars_turnon_all = .true.
+   DEF_hist_vars_out_default = .true.
 
 /

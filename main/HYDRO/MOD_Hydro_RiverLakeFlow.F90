@@ -23,8 +23,12 @@ MODULE MOD_Hydro_RiverLakeFlow
    USE MOD_Precision
    IMPLICIT NONE
    
-   REAL(r8), parameter :: RIVERMIN  = 1.e-4 
    REAL(r8), parameter :: nmanning_riv = 0.03
+   
+   REAL(r8), parameter :: RIVERMIN  = 1.e-4_r8 
+   REAL(r8), parameter :: VOLUMEMIN = 1.e-4_r8
+
+   integer :: ntimestep_riverlake
    
 CONTAINS
    
@@ -37,7 +41,7 @@ CONTAINS
       USE MOD_LandPatch
       USE MOD_Vars_TimeVariables
       USE MOD_Hydro_Vars_1DFluxes
-      USE MOD_Hydro_SurfaceNetwork
+      USE MOD_Hydro_HillslopeNetwork
       USE MOD_Hydro_RiverLakeNetwork
       USE MOD_Const_Physical, only : grav
       IMPLICIT NONE
@@ -66,7 +70,6 @@ CONTAINS
       REAL(r8) :: totalvolume, loss, friction, dvol, nextl, nexta, nextv, ddep
       REAL(r8) :: dt_res, dt_this
       logical, allocatable :: mask(:)
-      CHARACTER(len=50) :: fmtt
 
 
       IF (p_is_worker) THEN
@@ -81,22 +84,20 @@ CONTAINS
             IF (lake_id(i) <= 0) THEN
                ! river or lake catchment
 
-               wdsrf_bsn(i) = minval(surface_network(i)%hand + wdsrf_hru(istt:iend))
+               ! Water surface in a basin is defined as the lowest surface water in the basin
+               wdsrf_bsn(i) = minval(hillslope_network(i)%hand + wdsrf_hru(istt:iend))
 
-               totalvolume  = sum(wdsrf_bsn(i) - surface_network(i)%hand, &
-                  mask = surface_network(i)%hand <= wdsrf_bsn(i))
+               totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                  mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
 
-               IF (totalvolume < 1.0e-4) THEN
-                  wdsrf_bsn(i) = 0
-               ENDIF
             ELSEIF (lake_id(i) > 0) THEN
                ! lake 
                totalvolume  = sum(wdsrf_hru(istt:iend) * lakes(i)%area0)
                wdsrf_bsn(i) = lakes(i)%surface(totalvolume)
             ENDIF
 
-            ! river momentum is less or equal than the momentum at last time step.
             IF (lake_id(i) == 0) THEN
+               ! river momentum is less or equal than the momentum at last time step.
                IF (wdsrf_bsn_prev(i) < wdsrf_bsn(i)) THEN
                   momen_riv(i) = wdsrf_bsn_prev(i) * veloc_riv(i)
                   veloc_riv(i) = momen_riv(i) / wdsrf_bsn(i)
@@ -104,6 +105,8 @@ CONTAINS
                   momen_riv(i) = wdsrf_bsn(i) * veloc_riv(i)
                ENDIF
             ELSE
+               ! water in lake or lake catchment is assumued to be stationary.
+               ! TODO: lake dynamics
                momen_riv(i) = 0
                veloc_riv(i) = 0
             ENDIF
@@ -122,8 +125,11 @@ CONTAINS
             allocate (sum_zgrad_riv (nbasin))
          ENDIF
 
+         ntimestep_riverlake = 0
          dt_res = dt
          DO WHILE (dt_res > 0)
+         
+            ntimestep_riverlake = ntimestep_riverlake + 1
             
             DO i = 1, nbasin
                sum_hflux_riv(i) = 0.
@@ -146,8 +152,8 @@ CONTAINS
                vec_send2 = veloc_riv, vec_recv2 = veloc_riv_ds, &
                vec_send3 = momen_riv, vec_recv3 = momen_riv_ds )
 #endif
-            ! velocity in ocean is assumed to be 0.
-            WHERE (riverdown == 0)
+            ! velocity in ocean or inland depression is assumed to be 0.
+            WHERE (riverdown <= 0)
                veloc_riv_ds = 0.
             END WHERE
 
@@ -226,6 +232,11 @@ CONTAINS
                   zgrad_dn(i) = 0
                ENDIF
 
+               IF ((lake_id(i) < 0) .and. (hflux_fc(i) < 0)) THEN
+                  hflux_fc(i) = max(hflux_fc(i), (height_up-height_dn) / dt_this * &
+                     sum(hillslope_network(i)%area, mask = hillslope_network(i)%hand <= wdsrf_bsn(i)))
+               ENDIF
+
                sum_hflux_riv(i) = sum_hflux_riv(i) + hflux_fc(i)
                sum_mflux_riv(i) = sum_mflux_riv(i) + mflux_fc(i)
 
@@ -258,10 +269,14 @@ CONTAINS
 
                ! constraint 2: Avoid negative values of water
                IF (sum_hflux_riv(i) > 0) THEN
-                  IF (lake_id(i) <= 0) THEN
-                     ! for river or lake catchment
-                     totalvolume = sum(wdsrf_bsn(i) - surface_network(i)%hand, &
-                        mask = surface_network(i)%hand <= wdsrf_bsn(i))
+                  IF (lake_id(i) == 0) THEN
+                     ! for river 
+                     totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                        mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
+                  ELSEIF (lake_id(i) < 0) THEN
+                     ! for lake catchment
+                     totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                        mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
                   ELSEIF (lake_id(i) > 0) THEN
                      ! for lake
                      totalvolume = lakes(i)%volume(wdsrf_bsn(i))
@@ -291,61 +306,72 @@ CONTAINS
                   ! rivers or lake catchments
                   istt = basin_hru%substt(i)
                   iend = basin_hru%subend(i)
-                  allocate (mask (surface_network(i)%nhru))
+                  allocate (mask (hillslope_network(i)%nhru))
                   
-                  dvol = sum_hflux_riv(i) * dt_this
-                  IF (dvol > 0) THEN
-                     DO WHILE (dvol > 0)
-                        mask  = surface_network(i)%hand < wdsrf_bsn(i)
-                        nextl = maxval(surface_network(i)%hand, mask = mask)
-                        nexta = sum   (surface_network(i)%area, mask = mask) 
-                        nextv = nexta * (wdsrf_bsn(i)-nextl)
-                        IF (nextv > dvol) THEN
-                           ddep = dvol/nexta
-                           dvol = 0
-                        ELSE
-                           ddep = wdsrf_bsn(i) - nextl
-                           dvol = dvol - nextv
-                        ENDIF
-                           
-                        wdsrf_bsn(i) = wdsrf_bsn(i) - ddep
+                  totalvolume = sum((wdsrf_bsn(i) - hillslope_network(i)%hand) * hillslope_network(i)%area, &
+                     mask = hillslope_network(i)%hand <= wdsrf_bsn(i))
 
-                        DO j = 1, surface_network(i)%nhru
-                           IF (mask(j)) THEN
-                              wdsrf_hru(j+istt-1) = wdsrf_hru(j+istt-1) - ddep
+                  totalvolume = totalvolume - sum_hflux_riv(i) * dt_this
+
+                  IF (totalvolume < VOLUMEMIN) THEN
+                     wdsrf_bsn(i) = 0
+                  ELSE
+
+                     dvol = sum_hflux_riv(i) * dt_this
+                     IF (dvol > VOLUMEMIN) THEN
+                        DO WHILE (dvol > VOLUMEMIN)
+                           mask  = hillslope_network(i)%hand < wdsrf_bsn(i)
+                           nextl = maxval(hillslope_network(i)%hand, mask = mask)
+                           nexta = sum   (hillslope_network(i)%area, mask = mask) 
+                           nextv = nexta * (wdsrf_bsn(i)-nextl)
+                           IF (nextv > dvol) THEN
+                              ddep = dvol/nexta
+                              dvol = 0.
+                           ELSE
+                              ddep = wdsrf_bsn(i) - nextl
+                              dvol = dvol - nextv
                            ENDIF
+
+                           wdsrf_bsn(i) = wdsrf_bsn(i) - ddep
+
+                           DO j = 1, hillslope_network(i)%nhru
+                              IF (mask(j)) THEN
+                                 wdsrf_hru(j+istt-1) = wdsrf_hru(j+istt-1) - ddep
+                              ENDIF
+                           ENDDO
                         ENDDO
-                     ENDDO
-                  ELSEIF (dvol < 0) THEN
-                     DO WHILE (dvol < 0)
-                        mask  = surface_network(i)%hand + wdsrf_hru(istt:iend) > wdsrf_bsn(i)
-                        nexta = sum(surface_network(i)%area, mask = (.not. mask)) 
-                        IF (any(mask)) THEN
-                           nextl = minval(surface_network(i)%hand + wdsrf_hru(istt:iend), mask = mask)
-                           nextv = nexta*(nextl-wdsrf_bsn(i))
-                           IF ((-dvol) > nextv) THEN
-                              ddep = nextl - wdsrf_bsn(i)
-                              dvol = dvol + nextv
+                     ELSEIF (dvol < -VOLUMEMIN) THEN
+                        DO WHILE (dvol < -VOLUMEMIN)
+                           mask  = hillslope_network(i)%hand + wdsrf_hru(istt:iend) > wdsrf_bsn(i)
+                           nexta = sum(hillslope_network(i)%area, mask = (.not. mask)) 
+                           IF (any(mask)) THEN
+                              nextl = minval(hillslope_network(i)%hand + wdsrf_hru(istt:iend), mask = mask)
+                              nextv = nexta*(nextl-wdsrf_bsn(i))
+                              IF ((-dvol) > nextv) THEN
+                                 ddep = nextl - wdsrf_bsn(i)
+                                 dvol = dvol + nextv
+                              ELSE
+                                 ddep = (-dvol)/nexta
+                                 dvol = 0.
+                              ENDIF
                            ELSE
                               ddep = (-dvol)/nexta
-                              dvol = 0
+                              dvol = 0.
                            ENDIF
-                        ELSE
-                           ddep = (-dvol)/nexta
-                           dvol = 0
-                        ENDIF
 
-                        wdsrf_bsn(i) = wdsrf_bsn(i) + ddep
+                           wdsrf_bsn(i) = wdsrf_bsn(i) + ddep
 
-                        DO j = 1, surface_network(i)%nhru
-                           IF (.not. mask(j)) THEN
-                              wdsrf_hru(j+istt-1) = wdsrf_hru(j+istt-1) + ddep
-                           ENDIF
+                           DO j = 1, hillslope_network(i)%nhru
+                              IF (.not. mask(j)) THEN
+                                 wdsrf_hru(j+istt-1) = wdsrf_hru(j+istt-1) + ddep
+                              ENDIF
+                           ENDDO
                         ENDDO
-                     ENDDO
+                     ENDIF
+                     
                   ENDIF
-
                   deallocate(mask)
+
                ELSE
                   totalvolume  = lakes(i)%volume(wdsrf_bsn(i))
                   totalvolume  = totalvolume - sum_hflux_riv(i) * dt_this
@@ -391,7 +417,7 @@ CONTAINS
          ENDDO
 
          wdsrf_bsn_prev(:) = wdsrf_bsn(:)
-         
+
          IF (allocated(wdsrf_bsn_ds )) deallocate(wdsrf_bsn_ds )
          IF (allocated(veloc_riv_ds )) deallocate(veloc_riv_ds )
          IF (allocated(momen_riv_ds )) deallocate(momen_riv_ds )

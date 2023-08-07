@@ -12,7 +12,7 @@ IMPLICIT NONE
 SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-PUBLIC :: LeafTemp
+PUBLIC :: LeafTemperature
 
 ! PRIVATE MEMBER FUNCTIONS:
 PRIVATE :: dewfraction
@@ -20,7 +20,7 @@ PRIVATE :: cal_z0_displa
 
 CONTAINS
 
-   SUBROUTINE  LeafTemp(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai    ,&
+   SUBROUTINE  LeafTemperature(ipatch,ivt,deltim,csoilc,dewmx,htvp,lai,&
               sai     ,htop    ,hbot    ,sqrtdi  ,effcon  ,vmax25  ,&
               slti    ,hlti    ,shti    ,hhti    ,trda    ,trdm    ,&
               trop    ,gradm   ,binter  ,extkn   ,extkb   ,extkd   ,&
@@ -30,7 +30,7 @@ CONTAINS
               rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
-              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow   ,taux    ,tauy    ,&
+              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow ,taux    ,tauy    ,&
               fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
@@ -44,7 +44,7 @@ CONTAINS
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
               lai_old, o3uptakesun, o3uptakesha, forc_ozone,&
 !End ozone stress variables
-			  hpbl, &
+              hpbl, &
               qintr_rain,qintr_snow,t_precip,hprl,smp     ,hk      ,&
               hksati  ,rootr                                       )
 
@@ -191,13 +191,13 @@ CONTAINS
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
   REAL(r8), intent(in) :: &
-		hpbl        ! atmospheric boundary layer height [m]
+        hpbl         ! atmospheric boundary layer height [m]
 
   REAL(r8), intent(inout) :: &
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
-        ldew_rain,       &! depth of rain on foliage [mm]
-        ldew_snow,       &! depth of snow on foliage [mm]
+        ldew_rain,  &! depth of rain on foliage [mm]
+        ldew_snow,  &! depth of snow on foliage [mm]
 
 !Ozone stress variables
         lai_old    ,&! lai in last time step
@@ -938,7 +938,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
        IF(abs(err) .gt. .2) &
-       write(6,*) 'energy imbalance in leaftem.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
+       write(6,*) 'energy imbalance in LeafTemperature.F90',it-1,err,sabv,irab,fsenl,hvap*fevpl,hprl
 #endif
 
 !-----------------------------------------------------------------------
@@ -1003,7 +1003,7 @@ CONTAINS
        tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
        qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
 
-  END SUBROUTINE LeafTemp
+  END SUBROUTINE LeafTemperature
 !----------------------------------------------------------------------
 
    SUBROUTINE dewfraction (sigf,lai,sai,dewmx,ldew,ldew_rain,ldew_snow,fwet,fdry)

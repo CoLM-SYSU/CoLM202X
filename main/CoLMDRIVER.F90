@@ -51,9 +51,13 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
 #endif
   DO i = 1, numpatch
 
+     ! Apply forcing mask
      IF (DEF_forcing%has_missing_value) THEN
         IF (.not. forcmask(i)) CYCLE
      ENDIF
+
+     ! Apply patch mask
+     IF (.not. patchmask(i)) CYCLE
 
      m = patchclass(i)
 
