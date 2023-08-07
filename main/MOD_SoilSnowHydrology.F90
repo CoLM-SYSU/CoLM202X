@@ -474,13 +474,12 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
 
-
 #ifdef CROP
-   integer  :: ps, pe
-   real(r8) :: qflx_irrig_drip
-   real(r8) :: qflx_irrig_sprinkler
-   real(r8) :: qflx_irrig_flood
-   real(r8) :: qflx_irrig_paddy
+  integer  :: ps, pe
+  real(r8) :: qflx_irrig_drip
+  real(r8) :: qflx_irrig_sprinkler
+  real(r8) :: qflx_irrig_flood
+  real(r8) :: qflx_irrig_paddy
 #endif
 
   real(r8), INTENT(inout) :: &
@@ -762,7 +761,7 @@ MODULE MOD_SoilSnowHydrology
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
          qraing, etr, rootr(1:nl_soil), rsubst, qinfl, &
-         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil))
+         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
 
       ! update the mass of liquid water
       DO j = nl_soil, 1, -1
@@ -810,7 +809,7 @@ MODULE MOD_SoilSnowHydrology
       ENDIF
 #endif
 #if(defined CoLMDEBUG)
-      if(abs(err_solver) > 1.2e-3)then
+      if(abs(err_solver) > 1.e-3)then
          write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN

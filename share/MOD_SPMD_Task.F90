@@ -102,8 +102,11 @@ MODULE MOD_SPMD_Task
    PUBLIC :: spmd_exit
    PUBLIC :: divide_processes_into_groups
 
+#endif
+
 CONTAINS
 
+#ifdef USEMPI
    !-----------------------------------------
    SUBROUTINE spmd_init (MyComm_r)
 

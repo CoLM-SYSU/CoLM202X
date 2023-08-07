@@ -811,6 +811,7 @@ MODULE MOD_Initialize
          IF (numelm > 0) THEN
             wdsrf_bsn(:) = 0
             veloc_riv(:) = 0
+            wdsrf_bsn_prev(:) = wdsrf_bsn(:)
          ENDIF
 
          IF (numhru > 0) THEN
@@ -821,6 +822,7 @@ MODULE MOD_Initialize
                pe = hru_patch%subend(i)
                wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
                wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
+               wdsrf_hru_prev(i) = wdsrf_hru(i)
             ENDDO
          ENDIF
       ENDIF

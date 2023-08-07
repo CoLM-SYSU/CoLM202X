@@ -15,6 +15,7 @@ module MOD_HistSingle
    USE MOD_Precision
    USE MOD_NetCDFSerial
    USE MOD_Namelist, only : USE_SITE_HistWriteBack
+   USE MOD_SPMD_Task
 
    logical :: memory_to_disk
 

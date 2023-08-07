@@ -35,13 +35,13 @@
    DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/ERA5LAND.nml'
 
    ! ----- history -----
-   DEF_HISTORY_IN_VECTOR = .false.
+   DEF_HISTORY_IN_VECTOR = .true.
 
    DEF_hist_lon_res = 0.05
    DEF_hist_lat_res = 0.05       
    DEF_WRST_FREQ = 'MONTHLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
    DEF_HIST_FREQ = 'DAILY'   ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
-   DEF_HIST_groupby = 'YEAR'  ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_groupby = 'MONTH'  ! history in one file: DAY/MONTH/YEAR
    DEF_HIST_mode = 'one'     ! history in one or block 
 
    DEF_REST_COMPRESS_LEVEL = 1
