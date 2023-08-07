@@ -8,7 +8,7 @@ MODULE MOD_Const_LC
 !
 ! Created by Hua Yuan, 08/2019
 !
-! REVISIONS:
+! !REVISIONS:
 ! Hua Yuan, 08/2019: initial version adapted from IniTimeConst.F90 of CoLM2014
 ! Hua Yuan, 08/2019: added constants values for IGBP land cover types
 ! TODO...

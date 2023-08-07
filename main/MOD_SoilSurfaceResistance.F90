@@ -3,10 +3,11 @@
 MODULE MOD_SoilSurfaceResistance
    ! -----------------------------------------------------------------------
    ! !DESCRIPTION:
-   ! Calculate the soil surface resistance by using three parameterization schemes
+   ! Calculate the soil surface resistance with multiple parameterization schemes
    !
-   ! ORIGINAL:
-   ! Zhuo Liu, June, 2023
+   ! Created by Zhuo Liu and Hua Yuan, 06/2023
+   !
+   ! !REVISIONS:
    !
    ! -----------------------------------------------------------------------
    ! !USE
@@ -31,7 +32,7 @@ CONTAINS
 !-----------------------------------------------------------------------
 
  SUBROUTINE SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                   dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
+                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
 
   !=======================================================================
   ! !DESCRIPTION:
@@ -93,15 +94,16 @@ CONTAINS
 !-----------------------End Variables list---------------------------
 
 
-   !calculate the top soil volumetric water content (m3/m3), soil matrix potential and soil hydraulic conductivity
+   ! calculate the top soil volumetric water content (m3/m3), soil matrix potential
+   ! and soil hydraulic conductivity
    vol_liq      = max(wliq_soisno(1),1.0e-6_r8)/(denh2o*dz_soisno(1))
    smp_node     = (psi0(1)/1000.)*(vol_liq/porsl(1))**(-bsw(1))
    hk           = (hksati(1)/1000.)*(vol_liq/porsl(1))**(2.*bsw(1)+3.)
 
-   !eff_porosity not calculated til SoilHydrolog
+   ! eff_porosity not calculated til SoilHydrolog
    eff_porosity = max(0.01_r8,porsl(1)-min(porsl(1), wice_soisno(1)/(dz_soisno(1)*denice)))
 
-   !calculate diffusivity (dg, dw) and air free pore space
+   ! calculate diffusivity (dg, dw) and air free pore space
    aird = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
    d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75
    eps  = porsl(1) - aird
@@ -191,8 +193,9 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-     !rss = exp(8.206-4.255*fac)   ! Sellers (1992) original
-      rss = exp(8.206-6.0*fac)     ! Sellers (1992) adjusted to decrease rss for wet soil according to noahmp v5
+     !rss = exp(8.206-4.255*fac)   ! original Sellers (1992)
+      rss = exp(8.206-6.0*fac)     ! adjusted Sellers (1992) to decrease rss
+                                   ! for wet soil according to Noah-MP v5
    ENDSELECT
 
    rss = min(1.e6_r8,rss)
