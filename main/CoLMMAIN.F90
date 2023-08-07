@@ -864,7 +864,7 @@ ENDIF
       xerr=errorw/deltim
 
 #if(defined CoLMDEBUG)
-      IF (abs(errorw) > 1.2e-3) THEN
+      IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
          CALL CoLM_stop ()
       ENDIF
