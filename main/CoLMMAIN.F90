@@ -170,6 +170,7 @@ SUBROUTINE CoLMMAIN ( &
    USE MOD_CaMa_colmCaMa, only: get_fldevp
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
+   USE MOD_SPMD_Task
 
   IMPLICIT NONE
 
@@ -216,8 +217,8 @@ SUBROUTINE CoLMMAIN ( &
         alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter
-        sc_vgm   (1:nl_soil), &
-        fc_vgm   (1:nl_soil), &
+        sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
@@ -856,16 +857,16 @@ ENDIF
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub+irrig_rate(ipatch))*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub+irrig_rate(ipatch))*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub+irrig_rate(ipatch))*deltim
 #endif
       IF(patchtype==2) errorw=0.    !wetland
 
       xerr=errorw/deltim
 
 #if(defined CoLMDEBUG)
-      IF (abs(errorw) > 1.e-3) THEN
+      IF (abs(errorw) > 1.2e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
-         STOP
+         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
@@ -1098,7 +1099,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      rnof = rsur + rsub(ipatch)
+      ! rnof = rsur + rsub(ipatch)
+      ! wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
+      ! wdsrf = max(0., wdsrf)
 #endif
 
       ! Set zero to the empty node

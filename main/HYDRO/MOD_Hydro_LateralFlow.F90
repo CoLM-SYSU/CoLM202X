@@ -31,6 +31,7 @@ MODULE MOD_Hydro_LateralFlow
    IMPLICIT NONE 
 
    INTEGER, parameter :: nsubstep = 20
+   real(r8) :: dt_average
 
 CONTAINS
 
@@ -57,7 +58,7 @@ CONTAINS
       USE MOD_LandHRU,   only : landhru,  numhru,    basin_hru
       USE MOD_LandPatch, only : numpatch, elm_patch, hru_patch
 
-      USE MOD_Vars_1DFluxes,       only : rsur
+      USE MOD_Vars_1DFluxes,       only : rsur, rsub, rnof
       USE MOD_Vars_TimeVariables,  only : wdsrf
       USE MOD_Vars_TimeInvariants, only : lakedepth
       USE MOD_Hydro_Vars_1DFluxes
@@ -98,6 +99,8 @@ CONTAINS
             wdsrf_p = wdsrf
          ENDIF
 
+         dt_average = 0.
+
          DO istep = 1, nsubstep
 
             ! (1) Surface flow over hillslopes.
@@ -105,6 +108,8 @@ CONTAINS
          
             ! (2) River and Lake flow.
             CALL river_lake_flow (deltime/nsubstep)
+      
+            dt_average = dt_average + deltime/nsubstep/ntimestep_riverlake
          
          ENDDO
 
@@ -145,17 +150,27 @@ CONTAINS
 
          ! (3) Subsurface lateral flow.
          CALL subsurface_flow (deltime)
+         
+         IF (numpatch > 0) THEN
+            rnof(:) = rsur(:) + rsub(:)
+         ENDIF
 
       ENDIF
 
 #ifdef RangeCheck
       if (p_is_worker .and. (p_iam_worker == 0)) then
          write(*,'(/,A)') 'Checking Lateral Flow Variables ...'
+         write(*,'(A,F12.5,A)') 'River Lake Flow average timestep: ', &
+               dt_average/nsubstep, ' seconds'
       end if
-      CALL check_vector_data ('Basin Water Depth ', wdsrf_bsn)
-      CALL check_vector_data ('River Velocity    ', veloc_riv)
-      CALL check_vector_data ('HRU Water Depth   ', wdsrf_hru)
-      CALL check_vector_data ('HRU Water Velocity', veloc_hru)
+
+      CALL check_vector_data ('Basin Water Depth   [m]  ', wdsrf_bsn)
+      CALL check_vector_data ('River Velocity      [m/s]', veloc_riv)
+      CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_hru)
+      CALL check_vector_data ('HRU Water Velocity  [m/s]', veloc_hru)
+      CALL check_vector_data ('Subsurface bt basin [m/s]', rsubs_bsn)
+      CALL check_vector_data ('Subsurface bt HRU   [m/s]', rsubs_hru)
+      CALL check_vector_data ('Subsurface bt patch [m/s]', rsubs_pch)
 #endif
 
    END SUBROUTINE lateral_flow

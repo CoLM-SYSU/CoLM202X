@@ -148,11 +148,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
             IF (len_trim(info) > 0) THEN
-#ifdef USEMPI
-               CALL mpi_abort (p_comm_glb, p_err)
-#else
-               STOP
-#endif
+               CALL CoLM_stop ()
             ENDIF
 #endif
 
@@ -254,11 +250,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
             IF (len_trim(info) > 0) THEN
-#ifdef USEMPI
-               CALL mpi_abort (p_comm_glb, p_err)
-#else
-               STOP
-#endif
+               CALL CoLM_stop ()
             ENDIF
 #endif
 
@@ -361,11 +353,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
             IF (len_trim(info) > 0) THEN
-#ifdef USEMPI
-               CALL mpi_abort (p_comm_glb, p_err)
-#else
-               STOP
-#endif
+               CALL CoLM_stop ()
             ENDIF
 #endif
 
@@ -471,11 +459,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
             IF (len_trim(info) > 0) THEN
-#ifdef USEMPI
-               CALL mpi_abort (p_comm_glb, p_err)
-#else
-               STOP
-#endif
+               CALL CoLM_stop ()
             ENDIF
 #endif
 
@@ -583,11 +567,7 @@ CONTAINS
 
 #if(defined CoLMDEBUG)
             IF (len_trim(info) > 0) THEN
-#ifdef USEMPI
-               CALL mpi_abort (p_comm_glb, p_err)
-#else
-               STOP
-#endif
+               CALL CoLM_stop ()
             ENDIF
 #endif
 

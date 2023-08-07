@@ -141,6 +141,16 @@ CONTAINS
          CALL ncio_read_serial (river_file, 'basin_elevation' , basinelv )
 
          riverlen = riverlen * 1.e3 ! km to m
+         
+         nbasin = size(riverdown)
+         allocate (to_lake (nbasin))
+         to_lake = .false.
+         DO i = 1, nbasin
+            IF (riverdown(i) > 0) THEN
+               to_lake(i) = lake_id(riverdown(i)) > 0 
+            ENDIF
+         ENDDO
+
       ENDIF
 
 #ifdef USEMPI
@@ -150,14 +160,6 @@ CONTAINS
 
          allocate (addrbasin (2,nbasin))
          addrbasin(:,:) = -1
-
-         allocate (to_lake (nbasin))
-         to_lake = .false.
-         DO i = 1, nbasin
-            IF (riverdown(i) > 0) THEN
-               to_lake(i) = lake_id(riverdown(i)) > 0 
-            ENDIF
-         ENDDO
 
          DO iworker = 1, p_np_worker
 
@@ -586,8 +588,8 @@ CONTAINS
                   lakes(ibasin)%area = lakes(ibasin)%area(order)
                   
                   ! adjust to be from deepest to shallowest
-                  lakes(ibasin)%depth = lakes(ibasin)%depth(1:nsublake:-1)
-                  lakes(ibasin)%area  = lakes(ibasin)%area (1:nsublake:-1)
+                  lakes(ibasin)%depth = lakes(ibasin)%depth(nsublake:1:-1)
+                  lakes(ibasin)%area  = lakes(ibasin)%area (nsublake:1:-1)
 
                   allocate (lakes(ibasin)%dep_vol_curve (nsublake))
 
@@ -629,7 +631,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
             IF (lake_id(ibasin) < 0) THEN
-               bedelv(ibasin) = wtsrfelv_ds(ibasin)
+               bedelv(ibasin) = wtsrfelv_ds(ibasin) + minval(hillslope_network(ibasin)%hand)
             ENDIF
          ENDDO
 
@@ -664,8 +666,12 @@ CONTAINS
          surface = volume / this%area(1)
       ELSE
          i = 1
-         DO WHILE ((volume >= this%dep_vol_curve(i+1)) .and. (i < this%nsub)) 
-            i = i + 1
+         DO WHILE (i < this%nsub)
+            IF (volume >= this%dep_vol_curve(i+1)) THEN
+               i = i + 1
+            ELSE
+               EXIT
+            ENDIF
          ENDDO
          surface = this%depth(1) - this%depth(i) + &
             (volume - this%dep_vol_curve(i)) / sum(this%area(1:i)) 
@@ -694,8 +700,12 @@ CONTAINS
          volume = this%area(1) * surface 
       ELSE
          i = 1
-         DO WHILE ((surface >= this%depth(1)-this%depth(i+1)) .and. (i < this%nsub)) 
-            i = i + 1
+         DO WHILE (i < this%nsub)
+            IF (surface >= this%depth(1)-this%depth(i+1)) THEN
+               i = i + 1
+            ELSE
+               EXIT
+            ENDIF
          ENDDO
          volume = this%dep_vol_curve(i) &
             + (surface - (this%depth(1) - this%depth(i))) * sum(this%area(1:i)) 

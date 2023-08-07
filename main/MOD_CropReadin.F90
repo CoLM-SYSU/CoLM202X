@@ -36,24 +36,32 @@ MODULE MOD_CropReadin
       USE MOD_LandPFT
       USE MOD_Vars_PFTimeVariables
       USE MOD_RangeCheck
+      USE MOD_Block
 
       IMPLICIT NONE
 
       CHARACTER(len=256) :: file_crop
-      TYPE(grid_type) :: grid_crop
+      TYPE(grid_type)    :: grid_crop
       TYPE(block_data_real8_2d)    :: f_xy_crop
       type(mapping_grid2pset_type) :: mg2patch_crop
       type(mapping_grid2pset_type) :: mg2pft_crop
+      CHARACTER(len=256) :: file_irrig
+      TYPE(grid_type)    :: grid_irrig
+      TYPE(block_data_int32_2d)    :: f_xy_irrig
+      type(mapping_grid2pset_type) :: mg2pft_irrig
 
-      real(r8),allocatable :: pdrice2_tmp   (:)
-      real(r8),allocatable :: plantdate_tmp (:)
-      real(r8),allocatable :: fertnitro_tmp (:)
+      real(r8),allocatable :: pdrice2_tmp      (:)
+      real(r8),allocatable :: plantdate_tmp    (:)
+      real(r8),allocatable :: fertnitro_tmp    (:)
+      integer ,allocatable :: irrig_method_tmp (:)
 
       ! Local variables
       REAL(r8), allocatable :: lat(:), lon(:)
       real(r8) :: missing_value
       integer  :: cft, npatch, ipft
       CHARACTER(LEN=2) :: cx
+      integer  :: iblkme, iblk, jblk
+      integer  :: maxvalue, minvalue
       ! READ in crops
       
       file_crop = trim(DEF_dir_runtime) // '/crop/plantdt-colm-64cfts-rice2_fillcoast.nc'
@@ -88,6 +96,7 @@ MODULE MOD_CropReadin
          IF (numpatch > 0)  allocate(pdrice2_tmp   (numpatch))
          IF (numpft   > 0)  allocate(plantdate_tmp (numpft))
          IF (numpft   > 0)  allocate(fertnitro_tmp (numpft))
+         IF (numpft   > 0)  allocate(irrig_method_tmp (numpft))
       ENDIF
 
       ! (1) Read in plant date for rice2.
@@ -160,7 +169,7 @@ MODULE MOD_CropReadin
                IF(landpft%settyp(ipft) .eq. cft)THEN
                   fertnitro_p(ipft) = fertnitro_tmp(ipft)
                   if(fertnitro_p(ipft) <= 0._r8) then
-                     fertnitro_p(ipft) = -99999999._r8
+                     fertnitro_p(ipft) = 0._r8
                   end if
                endif
             end do
@@ -171,9 +180,56 @@ MODULE MOD_CropReadin
       CALL check_vector_data ('fert nitro value ', fertnitro_p)
 #endif
 
-      IF (allocated (pdrice2_tmp  )) deallocate(pdrice2_tmp  )
-      IF (allocated (plantdate_tmp)) deallocate(plantdate_tmp)
-      IF (allocated (fertnitro_tmp)) deallocate(fertnitro_tmp)
+      ! (4) Read in irrigation method
+!      file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method.nc'
+      file_irrig = trim(DEF_dir_runtime) // '/crop/surfdata_irrigation_method_96x144.nc'
+
+      CALL ncio_read_bcast_serial (file_irrig, 'lat', lat)
+      CALL ncio_read_bcast_serial (file_irrig, 'lon', lon)
+
+      CALL grid_irrig%define_by_center (lat, lon)
+
+      IF (p_is_io) THEN
+         CALL allocate_block_data  (grid_irrig, f_xy_irrig)
+      ENDIF
+
+      call mg2pft_irrig%build   (grid_irrig, landpft)
+
+      IF (allocated(lon)) deallocate(lon)
+      IF (allocated(lat)) deallocate(lat)
+
+      IF (p_is_worker) THEN
+         irrig_method_p(:) = -99999999
+      ENDIF
+
+      DO cft = 1, N_CFT
+         IF (p_is_io) THEN
+            CALL ncio_read_block_time (file_irrig, 'irrigation_method', grid_irrig, cft, f_xy_irrig)
+         ENDIF
+
+         call mg2pft_irrig%map_max_frenquency_2d (f_xy_irrig, irrig_method_tmp)
+
+         if (p_is_worker) then
+            do ipft = 1, numpft
+               
+               IF(landpft%settyp(ipft) .eq. cft + 14)THEN
+                  irrig_method_p(ipft) = irrig_method_tmp(ipft)
+                  if(irrig_method_p(ipft) < 0) then
+                     irrig_method_p(ipft) = -99999999
+                  end if
+               endif
+            end do
+         ENDIF
+      ENDDO
+
+#ifdef RangeCheck
+      CALL check_vector_data ('irrigation method ', irrig_method_p)
+#endif
+
+      IF (allocated (pdrice2_tmp  ))    deallocate(pdrice2_tmp  )
+      IF (allocated (plantdate_tmp))    deallocate(plantdate_tmp)
+      IF (allocated (fertnitro_tmp))    deallocate(fertnitro_tmp)
+      IF (allocated (irrig_method_tmp)) deallocate(irrig_method_tmp)
 
    END SUBROUTINE CROP_readin
 

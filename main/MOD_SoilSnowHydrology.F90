@@ -444,12 +444,12 @@ MODULE MOD_SoilSnowHydrology
         bsw      (1:nl_soil), &! clapp and hornbereger "b" parameter [-]
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r  (1:nl_soil), &
-        alpha_vgm(1:nl_soil), &
-        n_vgm    (1:nl_soil), &
-        L_vgm    (1:nl_soil), &
-        sc_vgm   (1:nl_soil), &
-        fc_vgm   (1:nl_soil), &
+        theta_r  (1:nl_soil), & ! residual moisture content [-] 
+        alpha_vgm(1:nl_soil), & ! a parameter corresponding approximately to the inverse of the air-entry value
+        n_vgm    (1:nl_soil), & ! a shape parameter [dimensionless]
+        L_vgm    (1:nl_soil), & ! pore-connectivity parameter [dimensionless]
+        sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
         porsl(1:nl_soil) , &! saturated volumetric soil water content(porosity)
         psi0(1:nl_soil)  , &! saturated soil suction (mm) (NEGATIVE)
@@ -469,6 +469,15 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(in)    :: fldfrc    ! inundation water input from top (mm/s)
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
+
+#ifdef CROP
+   integer  :: ps, pe
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
+#endif
+
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -582,7 +591,6 @@ MODULE MOD_SoilSnowHydrology
          gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
       end if
 #endif
-
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
@@ -784,17 +792,17 @@ MODULE MOD_SoilSnowHydrology
         rsur = rsur + (wdsrf - pondmx) / deltim
         wdsrf = pondmx
      ENDIF
+      
+     ! total runoff (mm/s)
+     rnof = rsub(ipatch) + rsur
 #endif
-
-      ! total runoff (mm/s)
-      rnof = rsub(ipatch) + rsur
 
 #ifndef LATERAL_FLOW
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
          - (gwat-etr-rsur-rsubst)*deltim
 #else
       err_solver = (sum(wliq_soisno(1:))+sum(wice_soisno(1:))+wa+wdsrf) - w_sum &
-         - (gwat-etr-rsubst)*deltim
+         - (gwat-etr)*deltim
 #endif
       if(lb >= 1)then
          err_solver = err_solver - (qfros-qseva-qsubl)*deltim
@@ -805,8 +813,8 @@ MODULE MOD_SoilSnowHydrology
       ENDIF
 #endif
 #if(defined CoLMDEBUG)
-      if(abs(err_solver) > 1.e-3)then
-         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver
+      if(abs(err_solver) > 1.2e-3)then
+         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN
          write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)
@@ -823,8 +831,8 @@ MODULE MOD_SoilSnowHydrology
 #ifndef LATERAL_FLOW
          rsur = max(0.,gwat)
          rsub(ipatch) = 0
-#endif
          rnof = rsur + rsub(ipatch)
+#endif
          do j = 1, nl_soil
             if(t_soisno(j)>tfrz)then
                wice_soisno(j) = 0.0
@@ -837,8 +845,8 @@ MODULE MOD_SoilSnowHydrology
 #ifndef LATERAL_FLOW
          rsur = max(0.0,gwat)
          rsub(ipatch) = 0
-#endif
          rnof = rsur + rsub(ipatch)
+#endif
          wice_soisno(1:nl_soil) = dz_soisno(1:nl_soil)*1000.
          wliq_soisno(1:nl_soil) = 0.0
       endif

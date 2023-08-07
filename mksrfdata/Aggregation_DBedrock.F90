@@ -85,7 +85,7 @@ SUBROUTINE Aggregation_DBedrock ( &
       allocate (dbedrock_patches (numpatch))
       
       DO ipatch = 1, numpatch
-         CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+         CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
             data_r8_2d_in1 = dbedrock, data_r8_2d_out1 = dbedrock_one)
          dbedrock_patches (ipatch) = sum(dbedrock_one * area_one) / sum(area_one)
       ENDDO

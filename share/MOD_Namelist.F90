@@ -33,7 +33,7 @@ MODULE MOD_Namelist
 
    ! ----- For Single Point -----
 #ifdef SinglePoint
-   
+
    CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
 
    LOGICAL  :: USE_SITE_pctpfts         = .true.
@@ -45,6 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_soilparameters  = .true.
    LOGICAL  :: USE_SITE_dbedrock        = .true.
    LOGICAL  :: USE_SITE_topography      = .true.
+   logical  :: USE_SITE_HistWriteBack   = .true.
 #endif
 
    ! ----- simulation time type -----
@@ -108,7 +109,7 @@ MODULE MOD_Namelist
    LOGICAL :: DEF_USE_LAIFEEDBACK = .true.
 
    ! use irrigation
-   LOGICAL :: DEF_USE_IRRIGATION = .true.
+   LOGICAL :: DEF_USE_IRRIGATION = .false.
 
    ! 06/2023, add by hua yuan and wenzong dong
    ! ------ Land use and land cover (LULC) related -------
@@ -122,7 +123,11 @@ MODULE MOD_Namelist
    INTEGER :: DEF_LULCC_SCHEME = 1
 
    ! ------ Urban model related -------
-   !INTEGER :: DEF_URBAN_type_scheme = 1
+   ! Options for urban type scheme
+   ! 1: NCAR Urban Classification, 3 urban type with Tall Building, High Density and Medium Density
+   ! 2: LCZ Classification, 10 urban type with LCZ 1-10
+   INTEGER :: DEF_URBAN_type_scheme = 1
+   LOGICAL :: DEF_URBAN_ONLY   = .false.
    logical :: DEF_URBAN_RUN    = .false.
    LOGICAL :: DEF_URBAN_BEM    = .true.
    LOGICAL :: DEF_URBAN_TREE   = .true.
@@ -194,7 +199,7 @@ MODULE MOD_Namelist
    INTEGER :: DEF_HIST_COMPRESS_LEVEL = 1
 
    CHARACTER(len=256) :: DEF_hist_vars_namelist = 'null'
-   LOGICAL :: DEF_hist_vars_turnon_all = .true.
+   LOGICAL :: DEF_hist_vars_out_default = .true.
 
    ! ----- forcing -----
    CHARACTER(len=256) :: DEF_forcing_namelist = 'null'
@@ -516,6 +521,14 @@ MODULE MOD_Namelist
       LOGICAL :: fertnitro_rice1    = .true.
       LOGICAL :: fertnitro_rice2    = .true.
       LOGICAL :: fertnitro_sugarcane= .true.
+      LOGICAL :: irrig_method_corn     = .true.
+      LOGICAL :: irrig_method_swheat   = .true.
+      LOGICAL :: irrig_method_wwheat   = .true.
+      LOGICAL :: irrig_method_soybean  = .true.
+      LOGICAL :: irrig_method_cotton   = .true.
+      LOGICAL :: irrig_method_rice1    = .true.
+      LOGICAL :: irrig_method_rice2    = .true.
+      LOGICAL :: irrig_method_sugarcane= .true.
       
       LOGICAL :: irrig_rate         = .true.
       LOGICAL :: deficit_irrig      = .true.
@@ -642,6 +655,7 @@ CONTAINS
          USE_SITE_soilparameters,  &
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
+         USE_SITE_HistWriteBack,   &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -670,7 +684,8 @@ CONTAINS
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
 
-        !DEF_URBAN_type_scheme,           &
+         DEF_URBAN_type_scheme,           &
+         DEF_URBAN_ONLY,                  &
          DEF_URBAN_RUN,                   &   !add by hua yuan, open urban model or not
          DEF_URBAN_BEM,                   &   !add by hua yuan, open urban BEM model or not
          DEF_URBAN_TREE,                  &   !add by hua yuan, modeling urban tree or not
@@ -730,7 +745,7 @@ CONTAINS
          DEF_REST_COMPRESS_LEVEL,         &
          DEF_HIST_COMPRESS_LEVEL,         &
          DEF_hist_vars_namelist,          &
-         DEF_hist_vars_turnon_all
+         DEF_hist_vars_out_default
 
       namelist /nl_colm_forcing/ DEF_dir_forcing, DEF_forcing
       namelist /nl_colm_history/ DEF_hist_vars
@@ -917,7 +932,7 @@ CONTAINS
 #if (defined LULC_USGS || defined BGC)
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_USGS/BGC at present. STOP! '
-         STOP
+         CALL CoLM_stop ()
 #endif
          IF (.not.DEF_LAI_MONTHLY) THEN
             write(*,*) '                  *****                  '
@@ -937,7 +952,7 @@ CONTAINS
          write(*,*) '                  *****                  '
          write(*,*) 'Fatal ERROR: LULCC is not supported for LULC_IGBP_PC/URBAN at present. STOP! '
          write(*,*) 'It is coming soon. '
-         STOP
+         CALL CoLM_stop ()
 #endif
 
 #endif
@@ -1014,6 +1029,7 @@ CONTAINS
 
       ! 05/2023, added by Xingjie lu
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_IRRIGATION ,     1, mpi_logical, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_USE_IRRIGATION,      1, mpi_logical, p_root, p_comm_glb, p_err)
       !  use irrigation temporary
@@ -1023,8 +1039,9 @@ CONTAINS
       CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      !CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
+      CALL mpi_bcast (DEF_URBAN_ONLY,      1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1475,7 +1492,7 @@ CONTAINS
 
       IF (p_is_master) THEN
          IF (set_defaults) THEN
-            onoff = DEF_hist_vars_turnon_all
+            onoff = DEF_hist_vars_out_default
          ENDIF
       ENDIF
 
