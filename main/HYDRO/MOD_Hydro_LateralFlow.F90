@@ -44,11 +44,6 @@ CONTAINS
       CALL river_lake_network_init ()
       CALL basin_neighbour_init    ()
 
-      IF (p_is_worker) THEN
-         wdsrf_bsn_prev(:) = wdsrf_bsn(:)
-         wdsrf_hru_prev(:) = wdsrf_hru(:)
-      ENDIF
-
    END SUBROUTINE lateral_flow_init
 
    ! ----------
