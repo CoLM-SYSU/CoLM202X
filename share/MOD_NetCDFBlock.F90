@@ -64,17 +64,10 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-<<<<<<< HEAD
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-
-         DO iblkme = 1, gblock%nblkme
-=======
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
->>>>>>> 5afddb92d6f4d3e969512e1a8c816a6d24f8bb76
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -131,17 +124,10 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-<<<<<<< HEAD
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-
-         DO iblkme = 1, gblock%nblkme
-=======
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
->>>>>>> 5afddb92d6f4d3e969512e1a8c816a6d24f8bb76
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -390,7 +376,7 @@ CONTAINS
 
          IF (.not. fid) THEN
             fid = .true.
-            CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+            CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid), trace=trim(filename)//' cannot open')
 
             CALL nccheck (nf90_inq_dimid(ncid, 'time', dimid), trace=trim(filename))
             CALL nccheck (nf90_inquire_dimension(ncid, dimid, len=time_dim), trace=trim(filename))
