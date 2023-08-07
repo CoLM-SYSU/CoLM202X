@@ -1506,9 +1506,7 @@ contains
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
 
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
+      if(.not. DEF_USE_IRRIGATION) qflx_irrig_sprinkler = 0._r8
 
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then

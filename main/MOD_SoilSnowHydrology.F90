@@ -470,14 +470,6 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
 
-#ifdef CROP
-  integer  :: ps, pe
-  real(r8) :: qflx_irrig_drip
-  real(r8) :: qflx_irrig_sprinkler
-  real(r8) :: qflx_irrig_flood
-  real(r8) :: qflx_irrig_paddy
-#endif
-
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)

@@ -66,7 +66,7 @@ contains
         !   calculate irrigation rate kg/m2->mm/s
         if (check_for_irrig) then
             irrig_nsteps_per_day = nint(irrig_time_per_day/deltim)
-            irrig_rate(i) = deficit_irrig(i)/deltim/irrig_time_per_day
+            irrig_rate(i) = deficit_irrig(i)/deltim/irrig_nsteps_per_day
             n_irrig_steps_left(i) = irrig_nsteps_per_day
             sum_irrig(i) = sum_irrig(i) + deficit_irrig(i)
             sum_irrig_count(i) = sum_irrig_count(i) + 1._r8
