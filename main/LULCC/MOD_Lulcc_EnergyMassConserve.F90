@@ -216,7 +216,6 @@
                         IF (patchclass(np)==GLACIERS) THEN
                            cvsoil_(1:,frnp_(k)) = cpliq*wliq_soisno_(1:,frnp_(k)) + cpice*wice_soisno_(1:,frnp_(k))
                            IF(z_sno_(0,frnp_(k))==0 .AND. scv_(frnp_(k))>0.) cvsoil_(1,frnp_(k)) = cvsoil_(1,frnp_(k)) + cpice*scv_(frnp_(k))
-
                         ELSE                    
                            ! Soil ground and wetland heat capacity
                            DO l = 1, nl_soil
@@ -307,10 +306,16 @@
                         ldew  (np) = ldew  (np) + ldew_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum(lccpct_np(1:nlc))
                         sag   (np) = sag   (np) + sag_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum(lccpct_np(1:nlc))
                         sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum(lccpct_np(1:nlc))
-                        zwt   (np) = zwt   (np) + zwt_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum(lccpct_np(1:nlc))
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum(lccpct_np(1:nlc))
                      ENDDO
-
+                     
+                     ! Get the lowest zwt from source patches and assign to np
+                     zwt(np) = zwt_(frnp_(1))
+                     k = 2
+                     DO WHILE (k .le. num)
+                        IF ( zwt_(frnp_(k)) .lt. zwt(np) ) zwt(np) = zwt_(frnp_(k))
+                        k = k + 1
+                     ENDDO
 
                      ! Use restart value from the same type of source patch or remain initialized
                      IF (lccpct_np(patchclass(np)) .gt. 0) THEN

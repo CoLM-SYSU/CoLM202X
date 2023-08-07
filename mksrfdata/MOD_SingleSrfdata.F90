@@ -16,7 +16,7 @@ MODULE MOD_SingleSrfdata
    USE MOD_Namelist
    IMPLICIT NONE
    SAVE
-   
+
    REAL(r8) :: SITE_lon_location = 0.
    REAL(r8) :: SITE_lat_location = 0.
 
@@ -81,7 +81,7 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_soil_BA_beta           (:)
 
    REAL(r8) :: SITE_dbedrock = 0.
-   
+
    REAL(r8) :: SITE_topography = 0.
 
 CONTAINS
@@ -89,8 +89,11 @@ CONTAINS
    ! -----
    SUBROUTINE read_surface_data_single (fsrfdata, mksrfdata)
 
+      USE MOD_TimeManager
       USE MOD_NetCDFSerial
       USE MOD_Namelist
+      USE MOD_Utils
+      USE MOD_Vars_Global, only : PI
       IMPLICIT NONE
 
       CHARACTER(len=*), intent(in) :: fsrfdata
@@ -98,15 +101,26 @@ CONTAINS
 
       ! Local Variables
       INTEGER :: iyear, itime
-      
+
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
+
+#ifdef LULC_USGS
+      CALL ncio_read_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_read_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
-   
+#endif
+
+      CALL normalize_longitude (SITE_lon_location)
+
       DEF_domain%edges = floor(SITE_lat_location)
       DEF_domain%edgen = DEF_domain%edges + 1.0
       DEF_domain%edgew = floor(SITE_lon_location)
       DEF_domain%edgee = DEF_domain%edgew + 1.0
+
+      IF (.not. isgreenwich) THEN
+         LocalLongitude = SITE_lon_location
+      ENDIF
 
 #if (defined LULC_IGBP_PFT)
       IF ((.not. mksrfdata) .or. USE_SITE_pctpfts) THEN
@@ -123,7 +137,7 @@ CONTAINS
 
 #ifdef CROP
       IF ((.not. mksrfdata) .or. USE_SITE_pctcrop) THEN
-         IF (SITE_landtype == 12) THEN
+         IF (SITE_landtype == CROPLAND) THEN
             CALL ncio_read_serial (fsrfdata, 'croptyp', SITE_croptyp)
             CALL ncio_read_serial (fsrfdata, 'pctcrop', SITE_pctcrop)
             ! otherwise, retrieve from database by MOD_LandPatch.F90
@@ -206,7 +220,7 @@ CONTAINS
             CALL ncio_read_serial (fsrfdata, 'depth_to_bedrock', SITE_dbedrock)
          ENDIF
       ENDIF
-         
+
       IF ((.not. mksrfdata) .or. USE_SITE_topography) THEN
          ! otherwise, retrieve from database by Aggregation_Topography.F90
          CALL ncio_read_serial (fsrfdata, 'elevation', SITE_topography)
@@ -242,7 +256,7 @@ CONTAINS
 #if (defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
-      
+
       CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
       IF (DEF_LAI_MONTHLY) THEN
          CALL ncio_define_dimension (fsrfdata, 'month', 12)
@@ -252,7 +266,12 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_write_serial (fsrfdata, 'longitude', SITE_lon_location)
+
+#ifdef LULC_USGS
+      CALL ncio_write_serial (fsrfdata, 'USGS_classification', SITE_landtype)
+#else
       CALL ncio_write_serial (fsrfdata, 'IGBP_classification', SITE_landtype)
+#endif
 
 #if (defined LULC_IGBP_PFT)
       CALL ncio_write_serial (fsrfdata, 'pfttyp',  SITE_pfttyp,  'pft')
@@ -263,7 +282,7 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'pctpfts', 'source', datasource(USE_SITE_pctpfts))
 #endif
 #if (defined CROP)
-      IF (SITE_landtype == 12) THEN
+      IF (SITE_landtype == CROPLAND) THEN
          CALL ncio_write_serial (fsrfdata, 'croptyp', SITE_croptyp, 'patch')
          CALL ncio_write_serial (fsrfdata, 'pctcrop', SITE_pctcrop, 'patch')
          CALL ncio_put_attr     (fsrfdata, 'croptyp', 'source', datasource(USE_SITE_pctcrop))

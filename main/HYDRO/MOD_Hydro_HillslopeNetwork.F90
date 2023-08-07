@@ -297,9 +297,9 @@ CONTAINS
                DO i = 1, nhru
                   hillslope_network(ibasin)%awat(i) = 0
                   ps = hru_patch%substt(i+istt-1)
-                  pe = hru_patch%subend(i+iend-1)
+                  pe = hru_patch%subend(i+istt-1)
                   DO ipatch = ps, pe
-                     IF (patchtype(ipatch) <= 2) THEN
+                     IF ((patchtype(ipatch) <= 2) .or. (patchtype(ipatch) == 4)) THEN
                         DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
                            hillslope_network(ibasin)%awat(i) = hillslope_network(ibasin)%awat(i) &
                               + 1.0e6 * areaquad ( &

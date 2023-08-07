@@ -44,15 +44,10 @@ MODULE MOD_Initialize
       use MOD_Const_Physical
       use MOD_Vars_TimeInvariants
       use MOD_Vars_TimeVariables
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
       USE MOD_Vars_PFTimeInvariants
       USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-      USE MOD_LandPC
-      USE MOD_Vars_PCTimeInvariants
-      USE MOD_Vars_PCTimeVariables
 #endif
       USE MOD_Const_LC
       USE MOD_Const_PFT
@@ -178,14 +173,26 @@ MODULE MOD_Initialize
       if (p_is_worker) then
 
          patchclass = landpatch%settyp
+         patchmask  = .true.
 
          DO ipatch = 1, numpatch
-            patchtype(ipatch) = patchtypes(patchclass(ipatch))
+
+            m = patchclass(ipatch)
+            patchtype(ipatch) = patchtypes(m)
+
+            !     ***** patch mask setting *****
+            ! ---------------------------------------
+
+            IF (DEF_URBAN_ONLY .and. m.ne.URBAN) THEN
+               patchmask(ipatch) = .false.
+               CYCLE
+            ENDIF
+
          ENDDO
 
          call landpatch%get_lonlat_radian (patchlonr, patchlatr)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          pftclass = landpft%settyp
 #endif
 
@@ -581,7 +588,7 @@ MODULE MOD_Initialize
          CALL CROP_readin ()
          if (p_is_worker) then
             do i = 1, numpatch
-               if(patchtype(i) .eq.  0)then
+               if(patchtype(i) .eq. 0)then
                   ps = patch_pft_s(i)
                   pe = patch_pft_e(i)
                   do m = ps, pe

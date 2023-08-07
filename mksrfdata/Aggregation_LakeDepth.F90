@@ -113,18 +113,8 @@ SUBROUTINE Aggregation_LakeDepth ( &
 
       DO ipatch = 1, numpatch
          L = landpatch%settyp(ipatch)
-#ifdef LULC_USGS
-         IF(L==16)THEN  ! LAND WATER BODIES (16)
-#endif
-#ifdef LULC_IGBP
-         IF(L==17)THEN  ! LAND WATER BODIES (17)
-#endif
-#ifdef LULC_IGBP_PFT
-         IF(L==17)THEN  ! LAND WATER BODIES (17)
-#endif
-#ifdef LULC_IGBP_PC
-         IF(L==17)THEN  ! LAND WATER BODIES (17)
-#endif
+         !TODO-done: could be simplified below
+         IF(L==WATERBODY)THEN  ! LAND WATER BODIES (17)
             CALL aggregation_request_data (landpatch, ipatch, gland, &
                data_r8_2d_in1 = lakedepth, data_r8_2d_out1 = lakedepth_one)
             lakedepth_patches (ipatch) = median (lakedepth_one, size(lakedepth_one))

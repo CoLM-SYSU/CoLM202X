@@ -103,7 +103,7 @@ MODULE MOD_Const_PFT
 !78  irrigated_tropical_soybean
 
    ! canopy layer number
-   INTEGER , parameter :: canlay(0:N_PFT+N_CFT-1) &
+   INTEGER , parameter :: canlay_p(0:N_PFT+N_CFT-1) &
       = (/0, 2, 2, 2, 2, 2, 2, 2 &
         , 2, 1, 1, 1, 1, 1, 1, 1 &
 #ifdef CROP
