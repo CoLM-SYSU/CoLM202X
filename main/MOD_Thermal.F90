@@ -115,7 +115,7 @@ MODULE MOD_Thermal
   USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+  USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
   USE MOD_SPMD_Task
   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, &

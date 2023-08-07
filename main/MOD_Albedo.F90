@@ -60,7 +60,7 @@ MODULE MOD_Albedo
 !
 ! Original author : Yongjiu Dai, 09/15/1999; 08/30/2002, 03/2014
 !
-! REVISIONS:
+! !REVISIONS:
 ! Hua Yuan, 12/2019: added a wrap FUNCTION for PFT calculation, details see
 !                    twostream_wrap() added a wrap FUNCTION for PC (3D) calculation,
 !                    details see ThreeDCanopy_wrap()
@@ -96,11 +96,11 @@ MODULE MOD_Albedo
 !------------------------- Dummy Arguments -----------------------------
 ! ground cover index
  integer, intent(in) :: &
-      ipatch,    &! patch index
-      patchtype   ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
-                  ! 3=land ice, 4=deep lake)
+      ipatch,       &! patch index
+      patchtype      ! land patch type (0=soil, 1=urban or built-up, 2=wetland,
+                     ! 3=land ice, 4=deep lake)
  integer, intent(in) :: &
-      snl         ! number of snow layers
+      snl            ! number of snow layers
 
  real(r8), intent(in) :: &
       deltim,       &! seconds in a time step [second]
@@ -108,23 +108,23 @@ MODULE MOD_Albedo
       soil_d_v_alb, &! albedo of visible of the dry soil
       soil_s_n_alb, &! albedo of near infrared of the saturated soil
       soil_d_n_alb, &! albedo of near infrared of the dry soil
-      chil,      &! leaf angle distribution factor
-      rho(2,2),  &! leaf reflectance (iw=iband, il=life and dead)
-      tau(2,2),  &! leaf transmittance (iw=iband, il=life and dead)
-      fveg,      &! fractional vegetation cover [-]
-      green,     &! green leaf fraction
-      lai,       &! leaf area index (LAI+SAI) [m2/m2]
-      sai,       &! stem area index (LAI+SAI) [m2/m2]
+      chil,         &! leaf angle distribution factor
+      rho(2,2),     &! leaf reflectance (iw=iband, il=life and dead)
+      tau(2,2),     &! leaf transmittance (iw=iband, il=life and dead)
+      fveg,         &! fractional vegetation cover [-]
+      green,        &! green leaf fraction
+      lai,          &! leaf area index (LAI+SAI) [m2/m2]
+      sai,          &! stem area index (LAI+SAI) [m2/m2]
 
-      coszen,    &! cosine of solar zenith angle [-]
-      wt,        &! fraction of vegetation covered by snow [-]
-      fsno,      &! fraction of soil covered by snow [-]
-      ssw,       &! water volumetric content of soil surface layer [m3/m3]
-      scv,       &! snow cover, water equivalent [mm]
-      scvold,    &! snow cover for previous time step [mm]
-      pg_snow,   &! snowfall onto ground including canopy runoff [kg/(m2 s)]
-      forc_t,    &! atmospheric temperature [K]
-      t_grnd      ! ground surface temperature [K]
+      coszen,       &! cosine of solar zenith angle [-]
+      wt,           &! fraction of vegetation covered by snow [-]
+      fsno,         &! fraction of soil covered by snow [-]
+      ssw,          &! water volumetric content of soil surface layer [m3/m3]
+      scv,          &! snow cover, water equivalent [mm]
+      scvold,       &! snow cover for previous time step [mm]
+      pg_snow,      &! snowfall onto ground including canopy runoff [kg/(m2 s)]
+      forc_t,       &! atmospheric temperature [K]
+      t_grnd         ! ground surface temperature [K]
 
  real(r8), intent(in) :: &
       wliq_soisno  ( maxsnl+1:0 ), &! liquid water (kg/m2)
@@ -147,51 +147,51 @@ MODULE MOD_Albedo
  real(r8), intent(inout) :: sag     ! non dimensional snow age [-]
 
  real(r8), intent(out) :: &
-      alb(2,2),  &! averaged albedo [-]
-      ssun(2,2), &! sunlit canopy absorption for solar radiation
-      ssha(2,2), &! shaded canopy absorption for solar radiation,
-                  ! normalized by the incident flux
-      thermk,    &! canopy gap fraction for tir radiation
-      extkb,     &! (k, g(mu)/mu) direct solar extinction coefficient
-      extkd       ! diffuse and scattered diffuse PAR extinction coefficient
+      alb(2,2),     &! averaged albedo [-]
+      ssun(2,2),    &! sunlit canopy absorption for solar radiation
+      ssha(2,2),    &! shaded canopy absorption for solar radiation,
+                     ! normalized by the incident flux
+      thermk,       &! canopy gap fraction for tir radiation
+      extkb,        &! (k, g(mu)/mu) direct solar extinction coefficient
+      extkd          ! diffuse and scattered diffuse PAR extinction coefficient
 
  real(r8), intent(out) :: &
       ssno(2,2,maxsnl+1:1) ! snow absorption [-]
 
 !-------------------------- Local variables ----------------------------
 
- real(r8) ::     &!
-      age,       &! factor to reduce visible snow alb due to snow age [-]
-      albg0,     &! temporary varaiable [-]
-      albsno(2,2),&! snow albedo [-]
+ real(r8) ::        &!
+      age,          &! factor to reduce visible snow alb due to snow age [-]
+      albg0,        &! temporary varaiable [-]
+      albsno(2,2),  &! snow albedo [-]
       albsno_pur(2,2),&! snow albedo [-]
       albsno_bc (2,2),&! snow albedo [-]
       albsno_oc (2,2),&! snow albedo [-]
       albsno_dst(2,2),&! snow albedo [-]
-      albg(2,2), &! albedo, ground
-      albv(2,2), &! albedo, vegetation [-]
-      alb_s_inc, &! decrease in soil albedo due to wetness [-]
-      beta0,     &! upscattering parameter for direct beam [-]
-      cff,       &! snow alb correction factor for zenith angle > 60 [-]
-      conn,      &! constant (=0.5) for visible snow alb calculation [-]
-      cons,      &! constant (=0.2) for nir snow albedo calculation [-]
-      czen,      &! cosine of solar zenith angle > 0 [-]
-      czf,       &! solar zenith correction for new snow albedo [-]
-      dfalbl,    &! snow albedo for diffuse nir radiation [-]
-      dfalbs,    &! snow albedo for diffuse visible solar radiation [-]
-      dralbl,    &! snow albedo for visible radiation [-]
-      dralbs,    &! snow albedo for near infrared radiation [-]
-      fsol1,     &! solar flux fraction for wavelength < 0.7 micron [-]
-      fsol2,     &! solar flux fraction for wavelength > 0.7 micron [-]
-      lsai,      &! leaf and stem area index (LAI+SAI) [m2/m2]
-      scat(2),   &! single scattering albedo for vir/nir beam [-]
-      sl,        &! factor that helps control alb zenith dependence [-]
-      snal0,     &! alb for visible,incident on new snow (zen ang<60) [-]
-      snal1,     &! alb for NIR, incident on new snow (zen angle<60) [-]
-      upscat,    &! upward scattered fraction for direct beam [-]
-      tran(2,2)   ! canopy transmittances for solar radiation
+      albg(2,2),    &! albedo, ground
+      albv(2,2),    &! albedo, vegetation [-]
+      alb_s_inc,    &! decrease in soil albedo due to wetness [-]
+      beta0,        &! upscattering parameter for direct beam [-]
+      cff,          &! snow alb correction factor for zenith angle > 60 [-]
+      conn,         &! constant (=0.5) for visible snow alb calculation [-]
+      cons,         &! constant (=0.2) for nir snow albedo calculation [-]
+      czen,         &! cosine of solar zenith angle > 0 [-]
+      czf,          &! solar zenith correction for new snow albedo [-]
+      dfalbl,       &! snow albedo for diffuse nir radiation [-]
+      dfalbs,       &! snow albedo for diffuse visible solar radiation [-]
+      dralbl,       &! snow albedo for visible radiation [-]
+      dralbs,       &! snow albedo for near infrared radiation [-]
+      fsol1,        &! solar flux fraction for wavelength < 0.7 micron [-]
+      fsol2,        &! solar flux fraction for wavelength > 0.7 micron [-]
+      lsai,         &! leaf and stem area index (LAI+SAI) [m2/m2]
+      scat(2),      &! single scattering albedo for vir/nir beam [-]
+      sl,           &! factor that helps control alb zenith dependence [-]
+      snal0,        &! alb for visible,incident on new snow (zen ang<60) [-]
+      snal1,        &! alb for NIR, incident on new snow (zen angle<60) [-]
+      upscat,       &! upward scattered fraction for direct beam [-]
+      tran(2,2)      ! canopy transmittances for solar radiation
 
-   integer ps, pe, pc
+   integer ps, pe
    logical do_capsnow      ! true => DO snow capping
    logical use_snicar_frc  ! true: IF radiative forcing is being calculated, first estimate clean-snow albedo
    logical use_snicar_ad   ! true: use SNICAR_AD_RT, false: use SNICAR_RT
@@ -278,7 +278,7 @@ ENDIF
            mss_dst1      ,mss_dst2        ,mss_dst3       ,mss_dst4      ,&
 
            mss_cnc_bcphi ,mss_cnc_bcpho   ,mss_cnc_ocphi  ,mss_cnc_ocpho ,&
-           mss_cnc_dst1  ,mss_cnc_dst2    ,mss_cnc_dst3   ,mss_cnc_dst4  )
+           mss_cnc_dst1  ,mss_cnc_dst2    ,mss_cnc_dst3   ,mss_cnc_dst4   )
 
 ! ----------------------------------------------------------------------
 ! Snow aging routine based on Flanner and Zender (2006), Linking snowpack
@@ -393,7 +393,7 @@ ENDIF
 
 ! 3.1 correction due to snow cover
       albg(:,:) = (1.-fsno)*albg(:,:) + fsno*albsno(:,:)
-      alb(:,:)  = albg(:,:)
+      alb (:,:) = albg(:,:)
 
 ! ----------------------------------------------------------------------
 ! 4. canopy albedos: two stream approximation or 3D canopy radiation transfer
@@ -406,15 +406,15 @@ ENDIF
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
-            albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
-            alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
+            alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 #endif
          ELSE  !other patchtypes (/=0)
             CALL twostream (chil,rho,tau,green,lai,sai,&
                             czen,albg,albv,tran,thermk,extkb,extkd,ssun,ssha)
 
-            albv(:,:) = (1.-wt)*albv(:,:) + wt*albsno(:,:)
-            alb(:,:)  = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
+            albv(:,:) = (1.-  wt)*albv(:,:) + wt*albsno(:,:)
+            alb (:,:) = (1.-fveg)*albg(:,:) + fveg*albv(:,:)
 
          ENDIF
       ENDIF
@@ -429,8 +429,7 @@ ENDIF
 #ifdef LULC_IGBP_PC
          !IF patchclass == CROPLAND, using twostream model
          IF (patchclass(ipatch) == CROPLAND) THEN
-            CALL twostream_wrap (ipatch, czen, albg, &
-                                 albv, tran, ssun, ssha)
+            CALL twostream_wrap (ipatch, czen, albg, albv, tran, ssun, ssha)
             alb(:,:) = albv(:,:)
          ELSE
             CALL ThreeDCanopy_wrap (ipatch, czen, albg, albv, ssun, ssha)
@@ -490,59 +489,59 @@ ENDIF
 
 !-------------------------- local -----------------------------------
   real(r8) :: &
-           lsai,           &! lai+sai
-           sai_,           &! sai=0 for USGS, no stem
-           phi1,           &! (phi-1)
-           phi2,           &! (phi-2)
-           scat,           &! (omega)
-           proj,           &! (g(mu))
-           zmu,            &! (int(mu/g(mu))
-           zmu2,           &! (zmu * zmu)
-           as,             &! (a-s(mu))
-           upscat,         &! (omega-beta)
-           betao,          &! (beta-0)
-           psi,            &! (h)
+            lsai,          &! lai+sai
+            sai_,          &! sai=0 for USGS, no stem
+            phi1,          &! (phi-1)
+            phi2,          &! (phi-2)
+            scat,          &! (omega)
+            proj,          &! (g(mu))
+            zmu,           &! (int(mu/g(mu))
+            zmu2,          &! (zmu * zmu)
+            as,            &! (a-s(mu))
+            upscat,        &! (omega-beta)
+            betao,         &! (beta-0)
+            psi,           &! (h)
 
-           be,             &! (b)
-           ce,             &! (c)
-           de,             &! (d)
-           fe,             &! (f)
+            be,            &! (b)
+            ce,            &! (c)
+            de,            &! (d)
+            fe,            &! (f)
 
-           power1,         &! (h*lai)
-           power2,         &! (k*lai)
-           power3,         &!
+            power1,        &! (h*lai)
+            power2,        &! (k*lai)
+            power3,        &!
 
-           sigma,          &!
-           s1,             &!
-           s2,             &!
-           p1,             &!
-           p2,             &!
-           p3,             &!
-           p4,             &!
-           f1,             &!
-           f2,             &!
-           h1,             &!
-           h4,             &!
-           m1,             &!
-           m2,             &!
-           m3,             &!
-           n1,             &!
-           n2,             &!
-           n3,             &!
+            sigma,         &!
+            s1,            &!
+            s2,            &!
+            p1,            &!
+            p2,            &!
+            p3,            &!
+            p4,            &!
+            f1,            &!
+            f2,            &!
+            h1,            &!
+            h4,            &!
+            m1,            &!
+            m2,            &!
+            m3,            &!
+            n1,            &!
+            n2,            &!
+            n3,            &!
 
-           hh1,            &! (h1/sigma)
-           hh2,            &! (h2)
-           hh3,            &! (h3)
-           hh4,            &! (h4/sigma)
-           hh5,            &! (h5)
-           hh6,            &! (h6)
-           hh7,            &! (h7)
-           hh8,            &! (h8)
-           hh9,            &! (h9)
-           hh10,           &! (h10)
+            hh1,           &! (h1/sigma)
+            hh2,           &! (h2)
+            hh3,           &! (h3)
+            hh4,           &! (h4/sigma)
+            hh5,           &! (h5)
+            hh6,           &! (h6)
+            hh7,           &! (h7)
+            hh8,           &! (h8)
+            hh9,           &! (h9)
+            hh10,          &! (h10)
 
-           eup(2,2),       &! (integral of i_up*exp(-kx) )
-           edown(2,2)       ! (integral of i_down*exp(-kx) )
+            eup(2,2),      &! (integral of i_up*exp(-kx) )
+            edown(2,2)      ! (integral of i_down*exp(-kx) )
 
   integer iw                !
 
@@ -805,58 +804,58 @@ ENDIF
 
 !-------------------------- local -----------------------------------
   real(r8) :: &
-           lsai,           &! lai+sai
-           phi1,           &! (phi-1)
-           phi2,           &! (phi-2)
-           scat,           &! (omega)
-           proj,           &! (g(mu))
-           zmu,            &! (int(mu/g(mu))
-           zmu2,           &! (zmu * zmu)
-           as,             &! (a-s(mu))
-           upscat,         &! (omega-beta)
-           betao,          &! (beta-0)
-           psi,            &! (h)
+            lsai,          &! lai+sai
+            phi1,          &! (phi-1)
+            phi2,          &! (phi-2)
+            scat,          &! (omega)
+            proj,          &! (g(mu))
+            zmu,           &! (int(mu/g(mu))
+            zmu2,          &! (zmu * zmu)
+            as,            &! (a-s(mu))
+            upscat,        &! (omega-beta)
+            betao,         &! (beta-0)
+            psi,           &! (h)
 
-           be,             &! (b)
-           ce,             &! (c)
-           de,             &! (d)
-           fe,             &! (f)
+            be,            &! (b)
+            ce,            &! (c)
+            de,            &! (d)
+            fe,            &! (f)
 
-           power1,         &! (h*lai)
-           power2,         &! (k*lai)
-           power3,         &!
+            power1,        &! (h*lai)
+            power2,        &! (k*lai)
+            power3,        &!
 
-           sigma,          &!
-           s1,             &!
-           s2,             &!
-           p1,             &!
-           p2,             &!
-           p3,             &!
-           p4,             &!
-           f1,             &!
-           f2,             &!
-           h1,             &!
-           h4,             &!
-           m1,             &!
-           m2,             &!
-           m3,             &!
-           n1,             &!
-           n2,             &!
-           n3,             &!
+            sigma,         &!
+            s1,            &!
+            s2,            &!
+            p1,            &!
+            p2,            &!
+            p3,            &!
+            p4,            &!
+            f1,            &!
+            f2,            &!
+            h1,            &!
+            h4,            &!
+            m1,            &!
+            m2,            &!
+            m3,            &!
+            n1,            &!
+            n2,            &!
+            n3,            &!
 
-           hh1,            &! (h1/sigma)
-           hh2,            &! (h2)
-           hh3,            &! (h3)
-           hh4,            &! (h4/sigma)
-           hh5,            &! (h5)
-           hh6,            &! (h6)
-           hh7,            &! (h7)
-           hh8,            &! (h8)
-           hh9,            &! (h9)
-           hh10,           &! (h10)
+            hh1,           &! (h1/sigma)
+            hh2,           &! (h2)
+            hh3,           &! (h3)
+            hh4,           &! (h4/sigma)
+            hh5,           &! (h5)
+            hh6,           &! (h6)
+            hh7,           &! (h7)
+            hh8,           &! (h8)
+            hh9,           &! (h9)
+            hh10,          &! (h10)
 
-           eup,            &! (integral of i_up*exp(-kx) )
-           edw              ! (integral of i_down*exp(-kx) )
+            eup,           &! (integral of i_up*exp(-kx) )
+            edw             ! (integral of i_down*exp(-kx) )
 
   integer iw                ! band loop index
   integer ic                ! direct/diffuse loop index
@@ -902,14 +901,14 @@ ENDIF
       DO ic = 1, 2
 
       IF (ic == 2) THEN
-         cosz = max(0.001_r8, cosdif)
+         cosz  = max(0.001_r8, cosdif)
          theta = acos(cosz)
          theta = theta/3.14159*180
 
          theta = theta + chil*5._r8
-         cosz = cos(theta/180*3.14159)
+         cosz  = cos(theta/180*3.14159)
       ELSE
-         cosz = coszen
+         cosz  = coszen
       ENDIF
 
       proj = phi1 + phi2 * cosz
