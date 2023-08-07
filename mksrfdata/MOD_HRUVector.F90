@@ -106,7 +106,7 @@ CONTAINS
 #else
          nhru_bsn_glb(elm_data_address(0)%val) = nhru_bsn
          IF (sum(nhru_bsn) > 0) THEN
-            allocate(hru_data_address(p_itis_worker(isrc))%val (sum(nhru_bsn)))
+            allocate(hru_data_address(0)%val (sum(nhru_bsn)))
          ENDIF
 #endif
       ENDIF
@@ -186,6 +186,12 @@ CONTAINS
 #else
          htype_hru(hru_data_address(0)%val) = landhru%settyp
 #endif
+
+         ! To distinguish between lake HRUs and hillslopes, the program sets the 
+         ! type of lake HRUs as a negative number. 
+         ! Set it as a positive number for output.
+         htype_hru = abs(htype_hru)
+
       ENDIF
 
 #ifdef USEMPI

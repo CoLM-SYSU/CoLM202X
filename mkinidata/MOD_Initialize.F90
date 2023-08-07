@@ -610,6 +610,13 @@ MODULE MOD_Initialize
                end if
             end do
          end if
+      if(DEF_USE_IRRIGATION)then
+         irrig_rate(:) = 0._r8
+         deficit_irrig(:) = 0._r8
+         sum_irrig(:) = 0._r8        
+         sum_irrig_count(:) = 0._r8
+         n_irrig_steps_left(:) = 0
+      end if
 #endif
 #endif
 
@@ -804,6 +811,7 @@ MODULE MOD_Initialize
          IF (numelm > 0) THEN
             wdsrf_bsn(:) = 0
             veloc_riv(:) = 0
+            wdsrf_bsn_prev(:) = wdsrf_bsn(:)
          ENDIF
 
          IF (numhru > 0) THEN
@@ -814,6 +822,7 @@ MODULE MOD_Initialize
                pe = hru_patch%subend(i)
                wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
                wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
+               wdsrf_hru_prev(i) = wdsrf_hru(i)
             ENDDO
          ENDIF
       ENDIF

@@ -77,7 +77,7 @@ module MOD_BGC_Veg_CNPhenology
       croplive_p        , gddplant_p          , harvdate_p          , gddmaturity_p  , &
       hui_p             , peaklai_p           , &
       tref_min_p        , tref_max_p          , tref_min_inst_p  , tref_max_inst_p, &
-      fertnitro_p       , plantdate_p         , &! input from files
+      fertnitro_p       , plantdate_p         , fert_p           ,&! input from files
 #endif
 
       leaf_prof_p        , froot_prof_p        , &
@@ -116,7 +116,7 @@ module MOD_BGC_Veg_CNPhenology
       grainc_to_food_p               , grainn_to_food_p               , &
       cpool_to_grainc_p              , npool_to_grainn_p              , &
       livestemc_to_litter_p          , livestemn_to_litter_p          , &
-      cpool_to_livestemc_p           , fert_p
+      cpool_to_livestemc_p           
 
   use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
 

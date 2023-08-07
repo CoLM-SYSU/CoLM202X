@@ -928,7 +928,7 @@ CONTAINS
       USE MOD_Precision
       IMPLICIT NONE
 
-      REAL(r8) :: arclen
+      REAL(r8) :: arclen ! in km
       REAL(r8), intent(in) :: lat1, lon1, lat2, lon2
 
       REAL(r8), parameter :: re = 6.37122e3 ! kilometer

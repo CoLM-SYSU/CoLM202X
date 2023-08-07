@@ -322,12 +322,12 @@ MODULE MOD_Vars_TimeInvariants
   REAL(r8), allocatable :: psi0         (:,:)  !minimum soil suction [mm] (NOTE: "-" valued)
   REAL(r8), allocatable :: bsw          (:,:)  !clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  REAL(r8), allocatable :: theta_r      (:,:)
-  REAL(r8), allocatable :: alpha_vgm    (:,:)
-  REAL(r8), allocatable :: L_vgm        (:,:)
-  REAL(r8), allocatable :: n_vgm        (:,:)
-  REAL(r8), allocatable :: sc_vgm       (:,:)
-  REAL(r8), allocatable :: fc_vgm       (:,:)
+  REAL(r8), allocatable :: theta_r      (:,:)  ! residual moisture content [-] 
+  REAL(r8), allocatable :: alpha_vgm    (:,:)  ! a parameter corresponding approximately to the inverse of the air-entry value
+  REAL(r8), allocatable :: L_vgm        (:,:)  ! pore-connectivity parameter [dimensionless]
+  REAL(r8), allocatable :: n_vgm        (:,:)  ! a shape parameter [dimensionless] 
+  REAL(r8), allocatable :: sc_vgm       (:,:)  ! saturation at the air entry value in the classical vanGenuchten model [-]
+  REAL(r8), allocatable :: fc_vgm       (:,:)  ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
   REAL(r8), allocatable :: hksati       (:,:)  !hydraulic conductivity at saturation [mm h2o/s]
   REAL(r8), allocatable :: csol         (:,:)  !heat capacity of soil solids [J/(m3 K)]
@@ -514,12 +514,12 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_read_vector (file_restart, 'psi0   ' ,     nl_soil, landpatch, psi0      ) ! minimum soil suction [mm] (NOTE: "-" valued)
      call ncio_read_vector (file_restart, 'bsw    ' ,     nl_soil, landpatch, bsw       ) ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   )
-     call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm )
-     call ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     )
-     call ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     )
-     call ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    )
-     call ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    )
+     call ncio_read_vector (file_restart, 'theta_r  ' ,   nl_soil, landpatch, theta_r   ) ! residual moisture content [-] 
+     call ncio_read_vector (file_restart, 'alpha_vgm' ,   nl_soil, landpatch, alpha_vgm ) ! a parameter corresponding approximately to the inverse of the air-entry value
+     call ncio_read_vector (file_restart, 'L_vgm    ' ,   nl_soil, landpatch, L_vgm     ) ! pore-connectivity parameter [dimensionless]
+     call ncio_read_vector (file_restart, 'n_vgm    ' ,   nl_soil, landpatch, n_vgm     ) ! a shape parameter [dimensionless] 
+     call ncio_read_vector (file_restart, 'sc_vgm   ' ,   nl_soil, landpatch, sc_vgm    ) ! saturation at the air entry value in the classical vanGenuchten model [-]
+     call ncio_read_vector (file_restart, 'fc_vgm   ' ,   nl_soil, landpatch, fc_vgm    ) ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
      call ncio_read_vector (file_restart, 'hksati ' ,     nl_soil, landpatch, hksati )    ! hydraulic conductivity at saturation [mm h2o/s]
      call ncio_read_vector (file_restart, 'csol   ' ,     nl_soil, landpatch, csol   )    ! heat capacity of soil solids [J/(m3 K)]
@@ -657,12 +657,12 @@ MODULE MOD_Vars_TimeInvariants
      call ncio_write_vector (file_restart, 'bsw       ', 'soil', nl_soil, 'patch', landpatch, bsw       , compress) ! clapp and hornbereger "b" parameter [-]
 
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress)
-     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress)
-     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress)
-     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress)
-     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress)
-     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress)
+     call ncio_write_vector (file_restart, 'theta_r  ' , 'soil', nl_soil, 'patch', landpatch, theta_r   , compress) ! residual moisture content [-] 
+     call ncio_write_vector (file_restart, 'alpha_vgm' , 'soil', nl_soil, 'patch', landpatch, alpha_vgm , compress) ! a parameter corresponding approximately to the inverse of the air-entry value
+     call ncio_write_vector (file_restart, 'L_vgm    ' , 'soil', nl_soil, 'patch', landpatch, L_vgm     , compress) ! pore-connectivity parameter [dimensionless]
+     call ncio_write_vector (file_restart, 'n_vgm    ' , 'soil', nl_soil, 'patch', landpatch, n_vgm     , compress) ! a shape parameter [dimensionless] 
+     call ncio_write_vector (file_restart, 'sc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, sc_vgm    , compress) ! saturation at the air entry value in the classical vanGenuchten model [-]
+     call ncio_write_vector (file_restart, 'fc_vgm   ' , 'soil', nl_soil, 'patch', landpatch, fc_vgm    , compress) ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
      call ncio_write_vector (file_restart, 'hksati   ' , 'soil', nl_soil, 'patch', landpatch, hksati    , compress) ! hydraulic conductivity at saturation [mm h2o/s]
      call ncio_write_vector (file_restart, 'csol     ' , 'soil', nl_soil, 'patch', landpatch, csol      , compress) ! heat capacity of soil solids [J/(m3 K)]
@@ -827,47 +827,47 @@ MODULE MOD_Vars_TimeInvariants
      call mpi_barrier (p_comm_glb, p_err)
 #endif
 
-     call check_vector_data ('lakedepth   ', lakedepth   ) !
-     call check_vector_data ('dz_lake     ', dz_lake     ) ! new lake scheme
+     call check_vector_data ('lakedepth    [m]     ', lakedepth   ) !
+     call check_vector_data ('dz_lake      [m]     ', dz_lake     ) ! new lake scheme
 
-     call check_vector_data ('soil_s_v_alb', soil_s_v_alb) ! albedo of visible of the saturated soil
-     call check_vector_data ('soil_d_v_alb', soil_d_v_alb) ! albedo of visible of the dry soil
-     call check_vector_data ('soil_s_n_alb', soil_s_n_alb) ! albedo of near infrared of the saturated soil
-     call check_vector_data ('soil_d_n_alb', soil_d_n_alb) ! albedo of near infrared of the dry soil
-     call check_vector_data ('vf_quartz   ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
-     call check_vector_data ('vf_gravels  ', vf_gravels  ) ! volumetric fraction of gravels
-     call check_vector_data ('vf_om       ', vf_om       ) ! volumetric fraction of organic matter
-     call check_vector_data ('vf_sand     ', vf_sand     ) ! volumetric fraction of sand
-     call check_vector_data ('wf_gravels  ', wf_gravels  ) ! gravimetric fraction of gravels
-     call check_vector_data ('wf_sand     ', wf_sand     ) ! gravimetric fraction of sand
-     call check_vector_data ('OM_density  ', OM_density  ) ! OM density
-     call check_vector_data ('BD_all      ', BD_all      ) ! bulk density of soils
-     call check_vector_data ('wfc         ', wfc         ) ! field capacity
-     call check_vector_data ('porsl       ', porsl       ) ! fraction of soil that is voids [-]
-     call check_vector_data ('psi0        ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
-     call check_vector_data ('bsw         ', bsw         ) ! clapp and hornbereger "b" parameter [-]
+     call check_vector_data ('soil_s_v_alb [-]     ', soil_s_v_alb) ! albedo of visible of the saturated soil
+     call check_vector_data ('soil_d_v_alb [-]     ', soil_d_v_alb) ! albedo of visible of the dry soil
+     call check_vector_data ('soil_s_n_alb [-]     ', soil_s_n_alb) ! albedo of near infrared of the saturated soil
+     call check_vector_data ('soil_d_n_alb [-]     ', soil_d_n_alb) ! albedo of near infrared of the dry soil
+     call check_vector_data ('vf_quartz    [m3/m3] ', vf_quartz   ) ! volumetric fraction of quartz within mineral soil
+     call check_vector_data ('vf_gravels   [m3/m3] ', vf_gravels  ) ! volumetric fraction of gravels
+     call check_vector_data ('vf_om        [m3/m3] ', vf_om       ) ! volumetric fraction of organic matter
+     call check_vector_data ('vf_sand      [m3/m3] ', vf_sand     ) ! volumetric fraction of sand
+     call check_vector_data ('wf_gravels   [kg/kg] ', wf_gravels  ) ! gravimetric fraction of gravels
+     call check_vector_data ('wf_sand      [kg/kg] ', wf_sand     ) ! gravimetric fraction of sand
+     call check_vector_data ('OM_density   [kg/m3] ', OM_density  ) ! OM density
+     call check_vector_data ('BD_all       [kg/m3] ', BD_all      ) ! bulk density of soils
+     call check_vector_data ('wfc          [m3/m3] ', wfc         ) ! field capacity
+     call check_vector_data ('porsl        [m3/m3] ', porsl       ) ! fraction of soil that is voids [-]
+     call check_vector_data ('psi0         [mm]    ', psi0        ) ! minimum soil suction [mm] (NOTE: "-" valued)
+     call check_vector_data ('bsw          [-]     ', bsw         ) ! clapp and hornbereger "b" parameter [-]
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-     call check_vector_data ('theta_r     ', theta_r     )
-     call check_vector_data ('alpha_vgm   ', alpha_vgm   )
-     call check_vector_data ('L_vgm       ', L_vgm       )
-     call check_vector_data ('n_vgm       ', n_vgm       )
-     call check_vector_data ('sc_vgm      ', sc_vgm      )
-     call check_vector_data ('fc_vgm      ', fc_vgm      )
+     call check_vector_data ('theta_r      [m3/m3] ', theta_r     ) ! residual moisture content [-] 
+     call check_vector_data ('alpha_vgm    [-]     ', alpha_vgm   ) ! a parameter corresponding approximately to the inverse of the air-entry value
+     call check_vector_data ('L_vgm        [-]     ', L_vgm       ) ! pore-connectivity parameter [dimensionless]
+     call check_vector_data ('n_vgm        [-]     ', n_vgm       ) ! a shape parameter [dimensionless] 
+     call check_vector_data ('sc_vgm       [-]     ', sc_vgm      ) ! saturation at the air entry value in the classical vanGenuchten model [-]
+     call check_vector_data ('fc_vgm       [-]     ', fc_vgm      ) ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
-     call check_vector_data ('hksati      ', hksati      ) ! hydraulic conductivity at saturation [mm h2o/s]
-     call check_vector_data ('csol        ', csol        ) ! heat capacity of soil solids [J/(m3 K)]
-     call check_vector_data ('k_solids    ', k_solids    ) ! thermal conductivity of soil solids [W/m-K]
-     call check_vector_data ('dksatu      ', dksatu      ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
-     call check_vector_data ('dksatf      ', dksatf      ) ! thermal conductivity of frozen saturated soil [W/m-K]
-     call check_vector_data ('dkdry       ', dkdry       ) ! thermal conductivity for dry soil  [W/(m-K)]
-     call check_vector_data ('BA_alpha    ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
-     call check_vector_data ('BA_beta     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
+     call check_vector_data ('hksati       [mm/s]  ', hksati      ) ! hydraulic conductivity at saturation [mm h2o/s]
+     call check_vector_data ('csol         [J/m3/K]', csol        ) ! heat capacity of soil solids [J/(m3 K)]
+     call check_vector_data ('k_solids     [W/m/K] ', k_solids    ) ! thermal conductivity of soil solids [W/m-K]
+     call check_vector_data ('dksatu       [W/m/K] ', dksatu      ) ! thermal conductivity of unfrozen saturated soil [W/m-K]
+     call check_vector_data ('dksatf       [W/m/K] ', dksatf      ) ! thermal conductivity of frozen saturated soil [W/m-K]
+     call check_vector_data ('dkdry        [W/m/K] ', dkdry       ) ! thermal conductivity for dry soil  [W/(m-K)]
+     call check_vector_data ('BA_alpha     [-]     ', BA_alpha    ) ! alpha in Balland and Arp(2005) thermal conductivity scheme
+     call check_vector_data ('BA_beta      [-]     ', BA_beta     ) ! beta in Balland and Arp(2005) thermal conductivity scheme
 
-     call check_vector_data ('htop        ', htop        )
-     call check_vector_data ('hbot        ', hbot        )
+     call check_vector_data ('htop         [m]     ', htop        )
+     call check_vector_data ('hbot         [m]     ', hbot        )
 
      IF(DEF_USE_BEDROCK)THEN
-        call check_vector_data ('dbedrock    ', dbedrock    ) !
+        call check_vector_data ('dbedrock     [m]     ', dbedrock    ) !
      ENDIF
 
 #ifdef USEMPI
@@ -875,20 +875,21 @@ MODULE MOD_Vars_TimeInvariants
 #endif
 
      if (p_is_master) then
-        write(*,'(A7,E20.10)') 'zlnd  ', zlnd   ! roughness length for soil [m]
-        write(*,'(A7,E20.10)') 'zsno  ', zsno   ! roughness length for snow [m]
-        write(*,'(A7,E20.10)') 'csoilc', csoilc ! drag coefficient for soil under canopy [-]
-        write(*,'(A7,E20.10)') 'dewmx ', dewmx  ! maximum dew
-        write(*,'(A7,E20.10)') 'wtfact', wtfact ! fraction of model area with high water table
-        write(*,'(A7,E20.10)') 'capr  ', capr   ! tuning factor to turn first layer T into surface T
-        write(*,'(A7,E20.10)') 'cnfac ', cnfac  ! Crank Nicholson factor between 0 and 1
-        write(*,'(A7,E20.10)') 'ssi   ', ssi    ! irreducible water saturation of snow
-        write(*,'(A7,E20.10)') 'wimp  ', wimp   ! water impremeable if porosity less than wimp
-        write(*,'(A7,E20.10)') 'pondmx', pondmx ! ponding depth (mm)
-        write(*,'(A7,E20.10)') 'smpmax', smpmax ! wilting point potential in mm
-        write(*,'(A7,E20.10)') 'smpmin', smpmin ! restriction for min of soil poten. (mm)
-        write(*,'(A7,E20.10)') 'trsmx0', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
-        write(*,'(A7,E20.10)') 'tcrit ', tcrit  ! critical temp. to determine rain or snow
+        write(*,'(/,A)') 'Checking Constants ...'
+        write(*,'(A,E20.10)') 'zlnd   [m]    ', zlnd   ! roughness length for soil [m]
+        write(*,'(A,E20.10)') 'zsno   [m]    ', zsno   ! roughness length for snow [m]
+        write(*,'(A,E20.10)') 'csoilc [-]    ', csoilc ! drag coefficient for soil under canopy [-]
+        write(*,'(A,E20.10)') 'dewmx  [mm]   ', dewmx  ! maximum dew
+        write(*,'(A,E20.10)') 'wtfact [-]    ', wtfact ! fraction of model area with high water table
+        write(*,'(A,E20.10)') 'capr   [-]    ', capr   ! tuning factor to turn first layer T into surface T
+        write(*,'(A,E20.10)') 'cnfac  [-]    ', cnfac  ! Crank Nicholson factor between 0 and 1
+        write(*,'(A,E20.10)') 'ssi    [-]    ', ssi    ! irreducible water saturation of snow
+        write(*,'(A,E20.10)') 'wimp   [m3/m3]', wimp   ! water impremeable if porosity less than wimp
+        write(*,'(A,E20.10)') 'pondmx [mm]   ', pondmx ! ponding depth (mm)
+        write(*,'(A,E20.10)') 'smpmax [mm]   ', smpmax ! wilting point potential in mm
+        write(*,'(A,E20.10)') 'smpmin [mm]   ', smpmin ! restriction for min of soil poten. (mm)
+        write(*,'(A,E20.10)') 'trsmx0 [mm/s] ', trsmx0 ! max transpiration for moist soil+100% veg.  [mm/s]
+        write(*,'(A,E20.10)') 'tcrit  [K]    ', tcrit  ! critical temp. to determine rain or snow
      end if
 
 #ifdef LULC_IGBP_PFT

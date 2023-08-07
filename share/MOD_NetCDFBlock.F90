@@ -64,8 +64,8 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
@@ -124,8 +124,8 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
@@ -185,8 +185,8 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
@@ -247,8 +247,8 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
@@ -309,8 +309,8 @@ CONTAINS
       IF (p_is_io) THEN
 
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
+         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename)//' cannot open')
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
@@ -323,9 +323,14 @@ CONTAINS
             count3(1) = min(grid%xcnt(iblk), grid%nlon-grid%xdsp(iblk))
             count3(2) = grid%ycnt(jblk)
             count3(3) = 1
+!            if(trim(dataname) == "irrigation_method")then
+!               print*,'irrig_method',p_iam_glb,gblock%nblkme,iblk,jblk
+!               print*,'start',p_iam_glb,start3
+!               print*,'count',p_iam_glb,count3
+!            end if
             IF (count3(1) == grid%xcnt(iblk)) THEN
                CALL nccheck (nf90_get_var(ncid, varid, rdata%blk(iblk,jblk)%val, &
-                  start3, count3) )
+                  start3, count3) ,trace=trim(filename))
             ELSE
                CALL nccheck (nf90_get_var(ncid, varid, &
                   rdata%blk(iblk,jblk)%val(1:count3(1),:), start3, count3) )
@@ -371,13 +376,13 @@ CONTAINS
 
          IF (.not. fid) THEN
             fid = .true.
-            CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename))
+            CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid), trace=trim(filename)//' cannot open')
 
             CALL nccheck (nf90_inq_dimid(ncid, 'time', dimid), trace=trim(filename))
             CALL nccheck (nf90_inquire_dimension(ncid, dimid, len=time_dim), trace=trim(filename))
          ENDIF
 
-         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname))
+         CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname)//' in file '//trim(filename))
 
          start3 = (/1, 1, itime/)
          count3 = (/1, 1, 1/)

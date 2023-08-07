@@ -137,7 +137,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz, denh2o, denice
-  USE MOD_Vars_TimeVariables, only: tlai, tsai
+  USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
 #ifdef LULC_IGBP_PFT
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
@@ -163,14 +163,14 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
   USE MOD_Vars_1DFluxes, only : rsub
-  USE MOD_Namelist, only: DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, &
-                          DEF_USE_PLANTHYDRAULICS
+  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    ! get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
    USE MOD_CaMa_colmCaMa, only: get_fldevp
    USE YOS_CMF_INPUT, only: LWINFILT,LWEVAP
 #endif
+   USE MOD_SPMD_Task
 
   IMPLICIT NONE
 
@@ -217,8 +217,8 @@ SUBROUTINE CoLMMAIN ( &
         alpha_vgm(1:nl_soil), & ! the parameter corresponding approximately to the inverse of the air-entry value
         n_vgm    (1:nl_soil), & ! a shape parameter
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter
-        sc_vgm   (1:nl_soil), &
-        fc_vgm   (1:nl_soil), &
+        sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
@@ -857,8 +857,10 @@ ENDIF
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-rsur-errw_rsub)*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub)*deltim
 #endif
+      IF(DEF_USE_IRRIGATION)errorw = errorw - irrig_rate(ipatch) * deltim
+
       IF(patchtype==2) errorw=0.    !wetland
 
       xerr=errorw/deltim
@@ -866,7 +868,7 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
-         STOP
+         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
@@ -980,7 +982,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb=scv+sum(wice_soisno(1:)+wliq_soisno(1:))
-      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
+      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof+irrig_rate(ipatch))*deltim
       xerr=errorw/deltim
 
 !======================================================================
@@ -1099,7 +1101,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      rnof = rsur + rsub(ipatch)
+      ! rnof = rsur + rsub(ipatch)
+      ! wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
+      ! wdsrf = max(0., wdsrf)
 #endif
 
       ! Set zero to the empty node

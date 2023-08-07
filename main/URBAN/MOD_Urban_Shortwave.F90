@@ -6,6 +6,7 @@ MODULE MOD_Urban_Shortwave
   USE MOD_LandUrban
   USE MOD_Vars_Global
   USE MOD_3DCanopyRadiation, only: tee, phi
+  USE MOD_SPMD_Task
 
   IMPLICIT NONE
   SAVE
@@ -678,14 +679,14 @@ CONTAINS
      ! using partial pivoting with row interchanges.
      CALL DGETRF(n, n, Ainv, n, ipiv, info)
      IF (info /= 0) THEN
-        stop 'Matrix is numerically singular!'
+        CALL CoLM_stop('Matrix is numerically singular!')
      ENDIF
 
      ! DGETRI computes the inverse of a matrix using the LU factorization
      ! computed by DGETRF.
      CALL DGETRI(n, Ainv, n, ipiv, work, n, info)
      IF (info /= 0) THEN
-        stop 'Matrix inversion failed!'
+        CALL CoLM_stop('Matrix inversion failed!')
      ENDIF
   END FUNCTION MatrixInverse
 
