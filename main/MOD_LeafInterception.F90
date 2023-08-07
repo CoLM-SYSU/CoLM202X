@@ -1498,6 +1498,9 @@ contains
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
       INTEGER i, p, ps, pe
+#ifdef CROP
+      INTEGER  :: irrig_flag  ! 1 if sprinker, 2 if others
+#endif
       REAL(r8) pg_rain_tmp, pg_snow_tmp
 
       pg_rain_tmp = 0.
@@ -1510,7 +1513,7 @@ contains
 
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=1)
       end if
 #endif
 

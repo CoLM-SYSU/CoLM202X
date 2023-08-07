@@ -168,6 +168,7 @@ MODULE MOD_SoilSnowHydrology
 
 #ifdef CROP
    integer  :: ps, pe
+   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood
@@ -198,7 +199,7 @@ MODULE MOD_SoilSnowHydrology
       if(DEF_USE_IRRIGATION)then
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
          gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
       end if
 #endif
@@ -527,6 +528,7 @@ MODULE MOD_SoilSnowHydrology
 
 #ifdef CROP
    integer  :: ps, pe
+   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood
@@ -579,7 +581,7 @@ MODULE MOD_SoilSnowHydrology
       if(DEF_USE_IRRIGATION)then
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
          gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
       end if
 #endif

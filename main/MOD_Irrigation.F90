@@ -185,16 +185,13 @@ contains
 
     end subroutine CalIrrigationPotentialNeeded
 
-
-
-!   需要调整方式在PFT上
-!   需要修改水量输出方式，增加新的水量变量
-    subroutine CalIrrigationApplicationFluxes(i,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+    subroutine CalIrrigationApplicationFluxes(i,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag)
         !   DESCRIPTION:
         !   This subroutine is used to calculate irrigation application fluxes for each irrigated crop patch
         integer , intent(in) :: i
         integer , intent(in) :: ps, pe
         real(r8), intent(in) :: deltim
+        integer , intent(in) :: irrig_flag  ! 1 if sprinker, 2 if others 
         real(r8), intent(out):: qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy
 
         integer :: m 
@@ -212,17 +209,21 @@ contains
         !   add irrigation fluxes to precipitation or land surface
         do m = ps, pe
             if (n_irrig_steps_left(i) > 0) then
-                if (irrig_method_p(m) == irrig_method_drip) then
-                    qflx_irrig_drip = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_sprinkler) then
-                    qflx_irrig_drip = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_flood) then
-                    qflx_irrig_flood = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_paddy) then
-                    qflx_irrig_paddy = irrig_rate(i)
+                if ((irrig_flag == 1) .and. (irrig_method_p(m) == irrig_method_sprinkler)) then 
+                    qflx_irrig_sprinkler = irrig_rate(i)
+                    n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+                    deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
+                else if (irrig_flag == 2) then
+                    if (irrig_method_p(m) == irrig_method_drip) then
+                        qflx_irrig_drip = irrig_rate(i)
+                    else if (irrig_method_p(m) == irrig_method_flood) then
+                        qflx_irrig_flood = irrig_rate(i)
+                    else if (irrig_method_p(m) == irrig_method_paddy) then
+                        qflx_irrig_paddy = irrig_rate(i)
+                    end if
+                    n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+                    deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
                 end if
-                n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
-                deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
                 if (deficit_irrig(i) < 0._r8) then
                     deficit_irrig(i) = 0._r8
                 end if
