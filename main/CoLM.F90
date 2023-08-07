@@ -373,7 +373,7 @@ PROGRAM CoLM
 
       ! Write out the model variables for restart run and the histroy file
       ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, ptstamp, dir_hist, casename)
+      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
 
 #ifdef LULCC
       ! DO land USE and land cover change simulation
@@ -387,7 +387,7 @@ PROGRAM CoLM
          CALL allocate_1D_Forcing
          CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
          CALL deallocate_acc_fluxes
-         CALL hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
+         CALL hist_init (dir_hist)
          CALL allocate_1D_Fluxes
       ENDIF
 #endif

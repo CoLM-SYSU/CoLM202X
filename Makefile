@@ -298,6 +298,8 @@ OBJS_MAIN = \
 				MOD_Lulcc_Vars_TimeInvariants.o           \
 				MOD_Lulcc_Vars_TimeVariables.o            \
 				MOD_Lulcc_Initialize.o                    \
+				MOD_Lulcc_TMatrix.o                       \
+				MOD_Lulcc_EnergyMassConserve.o                \
 				MOD_Lulcc_Driver.o                        \
 				CoLMDRIVER.o                              \
 				CoLMMAIN.o                                \
