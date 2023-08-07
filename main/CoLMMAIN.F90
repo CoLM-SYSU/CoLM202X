@@ -863,6 +863,7 @@ ENDIF
 #ifdef CROP
    if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
 #endif
+
       IF(patchtype==2) errorw=0.    !wetland
 
       xerr=errorw/deltim
