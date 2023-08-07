@@ -130,11 +130,7 @@ CONTAINS
             write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))
          ENDIF
 
-#ifdef USEMPI
-         CALL mpi_abort (p_comm_glb, p_err)
-#else
-         stop 2
-#endif
+         CALL CoLM_stop ()
       ENDIF
 
    END SUBROUTINE nccheck
@@ -152,11 +148,7 @@ CONTAINS
       inquire (file=trim(filename), exist=fexists)
       IF (.not. fexists) THEN
          write(*,*) trim(filename), ' does not exist.'
-#ifdef USEMPI
-         CALL mpi_abort (p_comm_glb, p_err)
-#else
-         stop 2
-#endif
+         CALL CoLM_stop ()
       ENDIF
 
    END SUBROUTINE check_ncfile_exist

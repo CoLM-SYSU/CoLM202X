@@ -566,7 +566,7 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
 
                     IF (ip.le.0 .or. ip_.le.0) THEN
                        print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PFT|LULC_IGBP_PC!"
-                       STOP
+                       CALL CoLM_stop ()
                     ENDIF
 
                     DO WHILE (ip.le.patch_pft_e(np) .and. ip_.le.patch_pft_e_(np_))
@@ -609,7 +609,7 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
 
                     IF (u.le.0 .or. u_.le.0) THEN
                        print *, "Error in REST_LuLccTimeVariables URBAN_MODEL!"
-                       STOP
+                       CALL CoLM_stop ()
                     ENDIF
 
                     ! if a Urban TYPE is missing, CYCLE

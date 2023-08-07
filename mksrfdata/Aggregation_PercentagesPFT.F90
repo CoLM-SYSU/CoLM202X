@@ -120,6 +120,7 @@ SUBROUTINE Aggregation_PercentagesPFT (gland, dir_rawdata, dir_model_landdata, l
          IF (patchtypes(landpatch%settyp(ipatch)) == 0 .and. landpatch%settyp(ipatch)/=CROPLAND) THEN
 #endif
             CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+            CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
             pct_one = sum(pct_pft_one, dim=1)
