@@ -1,5 +1,7 @@
 #include <define.h>
 
+#define SoilWaterDebug
+
 PROGRAM CoLM
    ! ======================================================================
    ! Reference:
@@ -81,6 +83,10 @@ PROGRAM CoLM
 
 #ifdef LULCC
    USE MOD_Lulcc_Driver
+#endif
+
+#ifdef SoilWaterDebug
+   USE MOD_Hydro_SoilWater
 #endif
 
    ! SNICAR
@@ -481,6 +487,10 @@ PROGRAM CoLM
       ENDIF
 
       istep = istep + 1
+
+#ifdef SoilWaterDebug
+      CALL print_iteration_stat_info ()
+#endif
 
    ENDDO TIMELOOP
 
