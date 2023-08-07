@@ -3534,7 +3534,7 @@ contains
    end function find_unsat_lev_lower
 
    ! -----
-   SUBROUTINE print_iteration_stat_info ()
+   SUBROUTINE print_VSF_iteration_stat_info ()
       
       USE MOD_SPMD_Task
       IMPLICIT NONE
@@ -3560,6 +3560,6 @@ contains
       ENDIF
 #endif
 
-   END SUBROUTINE print_iteration_stat_info
+   END SUBROUTINE print_VSF_iteration_stat_info
 
 end module MOD_Hydro_SoilWater
