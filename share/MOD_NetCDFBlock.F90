@@ -14,26 +14,26 @@ MODULE MOD_NetCDFBlock
    !               Notice: each file contains vector data in one block.
    !    3. Block : read blocked data by IO
    !               Notice: input file is a single file.
-   !    
+   !
    !    This module contains subroutines of "3. Block".
    !
    ! Created by Shupeng Zhang, May 2023
    !----------------------------------------------------------------------------------
 
-   USE netcdf 
+   USE netcdf
    USE MOD_NetCDFSerial
    IMPLICIT NONE
 
    ! PUBLIC subroutines
    interface ncio_read_block
-      MODULE procedure ncio_read_block_int32_2d 
-      MODULE procedure ncio_read_block_real8_2d 
-      MODULE procedure ncio_read_block_real8_3d 
+      MODULE procedure ncio_read_block_int32_2d
+      MODULE procedure ncio_read_block_real8_2d
+      MODULE procedure ncio_read_block_real8_3d
    END interface ncio_read_block
-   
+
    interface ncio_read_block_time
-      MODULE procedure ncio_read_block_int32_2d_time 
-      MODULE procedure ncio_read_block_real8_2d_time 
+      MODULE procedure ncio_read_block_int32_2d_time
+      MODULE procedure ncio_read_block_real8_2d_time
    END interface ncio_read_block_time
 
    PUBLIC :: ncio_read_site_time
@@ -42,14 +42,14 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_block_int32_2d (filename, dataname, grid, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
@@ -62,12 +62,12 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-         
+
          CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-         
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -93,7 +93,7 @@ CONTAINS
             ENDIF
 
          ENDDO
-                
+
          CALL nccheck( nf90_close(ncid) )
 
       ENDIF
@@ -102,14 +102,14 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_block_real8_2d (filename, dataname, grid, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
@@ -122,12 +122,12 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-                     
+
          CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-         
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -153,7 +153,7 @@ CONTAINS
             ENDIF
 
          ENDDO
-                
+
          CALL nccheck( nf90_close(ncid) )
 
       ENDIF
@@ -162,14 +162,14 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_block_real8_3d (filename, dataname, grid, ndim1, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
@@ -183,12 +183,12 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-                     
+
          CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-         
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -215,7 +215,7 @@ CONTAINS
             ENDIF
 
          ENDDO
-                
+
          CALL nccheck( nf90_close(ncid) )
 
       ENDIF
@@ -224,14 +224,14 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_block_int32_2d_time (filename, dataname, grid, itime, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
@@ -245,12 +245,12 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-                     
+
          CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-         
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -277,7 +277,7 @@ CONTAINS
             ENDIF
 
          ENDDO
-                
+
          CALL nccheck( nf90_close(ncid) )
 
       ENDIF
@@ -286,14 +286,14 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_block_real8_2d_time (filename, dataname, grid, itime, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_Grid
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       TYPE (grid_type),  intent(in) :: grid
@@ -307,12 +307,12 @@ CONTAINS
       INTEGER :: iblkme
 
       IF (p_is_io) THEN
-                     
+
          CALL check_ncfile_exist (filename)
          CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) )
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) )
-         
-         DO iblkme = 1, gblock%nblkme 
+
+         DO iblkme = 1, gblock%nblkme
             iblk = gblock%xblkme(iblkme)
             jblk = gblock%yblkme(iblkme)
 
@@ -338,7 +338,7 @@ CONTAINS
             ENDIF
 
          ENDDO
-                
+
          CALL nccheck( nf90_close(ncid) )
 
       ENDIF
@@ -347,13 +347,13 @@ CONTAINS
 
    ! ----
    SUBROUTINE ncio_read_site_time (filename, dataname, itime, rdata)
-     
+
       USE netcdf
       USE MOD_Block
       USE MOD_DataType
       USE MOD_SPMD_Task
       IMPLICIT NONE
-      
+
       CHARACTER (len=*), intent(in) :: filename
       CHARACTER (len=*), intent(in) :: dataname
       INTEGER, intent(in) :: itime
@@ -362,20 +362,33 @@ CONTAINS
 
       ! Local variables
       INTEGER :: start3(3), count3(3)
-      INTEGER :: ncid, varid
+      INTEGER :: varid, dimid
+      INTEGER, SAVE :: ncid, time_dim
+      LOGICAL, SAVE :: fid = .false.
 
       IF (p_is_io) THEN
-                     
          CALL check_ncfile_exist (filename)
-         CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename))
+
+         IF (.not. fid) THEN
+            fid = .true.
+            CALL nccheck (nf90_open(trim(filename), NF90_NOWRITE, ncid) ,trace=trim(filename))
+
+            CALL nccheck (nf90_inq_dimid(ncid, 'time', dimid), trace=trim(filename))
+            CALL nccheck (nf90_inquire_dimension(ncid, dimid, len=time_dim), trace=trim(filename))
+         ENDIF
+
          CALL nccheck (nf90_inq_varid(ncid, trim(dataname), varid) ,trace=trim(dataname))
-         
+
          start3 = (/1, 1, itime/)
          count3 = (/1, 1, 1/)
          CALL nccheck (nf90_get_var(ncid, varid, &
             rdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val, start3, count3) )
-                
-         CALL nccheck( nf90_close(ncid) )
+
+
+         IF (itime==time_dim) THEN
+            print*, 'close'
+            CALL nccheck( nf90_close(ncid) )
+         ENDIF
 
       ENDIF
 

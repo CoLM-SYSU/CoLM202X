@@ -637,7 +637,13 @@ ENDIF
 #endif
 
    DO iy = start_year, end_year
-      write(iyear,'(i4.4)') iy
+
+      IF (iy < 2000) THEN
+         write(iyear,'(i4.4)') 2000
+      ELSE
+         write(iyear,'(i4.4)') iy
+      ENDIF
+
       landsrfdir = trim(dir_srfdata) // '/urban/' // trim(iyear) // '/LAI'
       CALL system('mkdir -p ' // trim(adjustl(landsrfdir)))
 
@@ -991,17 +997,17 @@ IF (DEF_URBAN_type_scheme == 1) THEN
    SITE_thickroof(:) = th_roof
    SITE_thickwall(:) = th_wall
 
-   SITE_cv_roof  (:,:) = cv_roof
-   SITE_cv_wall  (:,:) = cv_wall
-   SITE_cv_gimp  (:,:) = cv_imrd
-   SITE_tk_roof  (:,:) = tk_roof
-   SITE_tk_wall  (:,:) = tk_wall
-   SITE_tk_gimp  (:,:) = tk_imrd
+   SITE_cv_roof  (:) = cv_roof(:,1)
+   SITE_cv_wall  (:) = cv_wall(:,1)
+   SITE_cv_gimp  (:) = cv_imrd(:,1)
+   SITE_tk_roof  (:) = tk_roof(:,1)
+   SITE_tk_wall  (:) = tk_wall(:,1)
+   SITE_tk_gimp  (:) = tk_imrd(:,1)
 
-   SITE_alb_roof (:,:,:) = alb_roof
-   SITE_alb_wall (:,:,:) = alb_wall
-   SITE_alb_gimp (:,:,:) = alb_imrd
-   SITE_alb_gper (:,:,:) = alb_perd
+   SITE_alb_roof (:,:) = alb_roof(:,:,1)
+   SITE_alb_wall (:,:) = alb_wall(:,:,1)
+   SITE_alb_gimp (:,:) = alb_imrd(:,:,1)
+   SITE_alb_gper (:,:) = alb_perd(:,:,1)
 
    IF (.not. USE_SITE_urban_paras) THEN
       SITE_hwr  (:) = hwr_can

@@ -142,7 +142,11 @@ PROGRAM CoLM
 
 #ifdef SinglePoint
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
+#ifndef URBAN_MODEL
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
+#else
+   CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkinidata=.true.)
+#endif
 #endif
 
    deltim    = DEF_simulation_time%timestep

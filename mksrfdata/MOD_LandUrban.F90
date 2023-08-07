@@ -303,7 +303,43 @@ ENDIF
 #endif
 
 #ifdef SinglePoint
-      allocate  (SITE_urbtyp(numurban))
+      allocate  ( SITE_urbtyp   (numurban) )
+      allocate  ( SITE_lucyid   (numurban) )
+      
+      IF (.not. USE_SITE_urban_paras) THEN
+         allocate  ( SITE_fveg_urb (numurban) )
+         allocate  ( SITE_htop_urb (numurban) )
+         allocate  ( SITE_flake_urb(numurban) )
+
+         allocate  ( SITE_popden   (numurban) )
+         allocate  ( SITE_froof    (numurban) )
+         allocate  ( SITE_hroof    (numurban) )
+         allocate  ( SITE_hwr      (numurban) )
+         allocate  ( SITE_fgper    (numurban) )
+         allocate  ( SITE_fgimp    (numurban) )
+      ENDIF
+      
+      allocate  ( SITE_em_roof  (numurban) )
+      allocate  ( SITE_em_wall  (numurban) )
+      allocate  ( SITE_em_gimp  (numurban) )
+      allocate  ( SITE_em_gper  (numurban) )
+      allocate  ( SITE_t_roommax(numurban) )
+      allocate  ( SITE_t_roommin(numurban) )
+      allocate  ( SITE_thickroof(numurban) )
+      allocate  ( SITE_thickwall(numurban) )
+
+      allocate  ( SITE_cv_roof(10) )
+      allocate  ( SITE_cv_wall(10) )
+      allocate  ( SITE_cv_gimp(10) )
+      allocate  ( SITE_tk_roof(10) )
+      allocate  ( SITE_tk_wall(10) )
+      allocate  ( SITE_tk_gimp(10) )
+
+      allocate  ( SITE_alb_roof(2, 2) )
+      allocate  ( SITE_alb_wall(2, 2) )
+      allocate  ( SITE_alb_gimp(2, 2) )
+      allocate  ( SITE_alb_gper(2, 2) )
+
       SITE_urbtyp(:) = landurban%settyp
 #endif
 

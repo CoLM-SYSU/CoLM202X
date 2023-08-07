@@ -53,6 +53,10 @@ module MOD_Forcing
 
    type(block_data_real8_2d) :: avgcos   ! time-average of cos(zenith)
    type(block_data_real8_2d) :: metdata  ! forcing data
+#if(defined URBAN_MODEL  && defined SinglePoint)
+   type(block_data_real8_2d) :: rainf
+   type(block_data_real8_2d) :: snowf
+#endif
 
    type(block_data_real8_2d), allocatable :: forcn    (:)  ! forcing data
    type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower bondary
@@ -130,6 +134,10 @@ contains
          ! allocate memory for forcing data
          call allocate_block_data (gforc, metdata)  ! forcing data
          call allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
+#if(defined URBAN_MODEL && defined SinglePoint)
+         call allocate_block_data (gforc, rainf)
+         call allocate_block_data (gforc, snowf)
+#endif
 
       end if
 
@@ -599,6 +607,7 @@ contains
       use MOD_UserSpecifiedForcing
       USE MOD_Namelist
       use MOD_DataType
+      use MOD_Block
       use MOD_NetCDFBlock
       use MOD_RangeCheck
       implicit none
@@ -608,6 +617,7 @@ contains
 
       ! Local variables
       integer         :: ivar, year, month, day, time_i
+      INTEGER         :: iblkme, ib, jb, i, j
       type(timestamp) :: mtstamp
       character(len=256) :: filename
 
@@ -630,7 +640,29 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+#ifndef URBAN_MODEL
                CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#else
+               IF (trim(vname(ivar)) == 'Rainf') THEN
+                  CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                  CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                  DO iblkme = 1, gblock%nblkme
+                     ib = gblock%xblkme(iblkme)
+                     jb = gblock%yblkme(iblkme)
+
+                     metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                     !DO j = 1, gforc%ycnt(jb)
+                     !   DO i = 1, gforc%xcnt(ib)
+                     !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
+                     !                                    +  snowf%blk(ib,jb)%val(i,j)
+                     !   ENDDO
+                     !ENDDO
+                  ENDDO
+               ELSE
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ENDIF
+#endif
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -649,7 +681,29 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
+#ifndef URBAN_MODEL
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+#else
+                  IF (trim(vname(ivar)) == 'Rainf') THEN
+                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                     DO iblkme = 1, gblock%nblkme
+                        ib = gblock%xblkme(iblkme)
+                        jb = gblock%yblkme(iblkme)
+
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                        !DO j = 1, gforc%ycnt(jb)
+                        !   DO i = 1, gforc%xcnt(ib)
+                        !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
+                        !                                    +  snowf%blk(ib,jb)%val(i,j)
+                        !   ENDDO
+                        !ENDDO
+                     ENDDO
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
+#endif
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF

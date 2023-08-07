@@ -38,6 +38,9 @@ MODULE MOD_UrbanReadin
       USE MOD_LandPatch
       USE MOD_LandUrban
       USE MOD_Urban_Const_LCZ
+#ifdef SinglePoint
+      USE MOD_SingleSrfdata
+#endif
 
       IMPLICIT NONE
 
@@ -75,6 +78,56 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
 
+#ifdef SinglePoint
+      ! allocate (hwr (numurban) )
+      ! allocate (fgper (numurban) )
+
+      lucyid(:) = SITE_lucyid
+      hwr   (:) = SITE_hwr
+      fgper (:) = SITE_fgper
+
+      ! allocate ( em_roof (numurban) )
+      ! allocate ( em_wall (numurban) )
+      ! allocate ( em_gimp (numurban) )
+      ! allocate ( em_gper (numurban) )
+
+      em_roof(:) = SITE_em_roof
+      em_wall(:) = SITE_em_wall
+      em_gimp(:) = SITE_em_gimp
+      em_gper(:) = SITE_em_gper
+
+      ! allocate ( t_roommax (numurban) )
+      ! allocate ( t_roommin (numurban) )
+
+      t_roommax(:) = SITE_t_roommax
+      t_roommin(:) = SITE_t_roommin
+      thickroof(:) = SITE_thickroof
+      thickwall(:) = SITE_thickwall
+
+      ! allocate ( alb_roof (2, 2, numurban) )
+      ! allocate ( alb_wall (2, 2, numurban) )
+      ! allocate ( alb_gimp (2, 2, numurban) )
+      ! allocate ( alb_gper (2, 2, numurban) )
+
+      alb_roof(:,:,1) = SITE_alb_roof
+      alb_wall(:,:,1) = SITE_alb_wall
+      alb_gimp(:,:,1) = SITE_alb_gimp
+      alb_gper(:,:,1) = SITE_alb_gper
+
+      ! allocate ( cv_roof (10, numurban) )
+      ! allocate ( cv_wall (10, numurban) )
+      ! allocate ( cv_gimp (10, numurban) )
+      ! allocate ( tk_roof (10, numurban) )
+      ! allocate ( tk_wall (10, numurban) )
+      ! allocate ( tk_gimp (10, numurban) )
+
+      cv_roof(:,1) = SITE_cv_roof
+      cv_wall(:,1) = SITE_cv_wall
+      cv_gimp(:,1) = SITE_cv_gimp
+      tk_roof(:,1) = SITE_tk_roof
+      tk_wall(:,1) = SITE_tk_wall
+      tk_gimp(:,1) = SITE_tk_gimp
+#else
       ! READ in urban data
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'
       print*,trim(lndname)
@@ -101,8 +154,26 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       CALL ncio_read_vector (lndname, 'TK_ROOF'       , nl_roof, landurban, tk_roof) ! thermal conductivity of roof [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_WALL'       , nl_wall, landurban, tk_wall) ! thermal conductivity of wall [W/m-K]
       CALL ncio_read_vector (lndname, 'TK_IMPROAD'    , nl_soil, landurban, tk_gimp) ! thermal conductivity of impervious road [W/m-K]
+#endif
 ENDIF
 
+#ifdef SinglePoint
+      ! allocate( pop_den  (numurban) )
+      ! allocate( lucyid   (numurban) )
+      ! allocate( froof    (numurban) )
+      ! allocate( hroof    (numurban) )
+      ! allocate( flake    (numurban) )
+      ! allocate( fveg_urb (numurban) )
+      ! allocate( htop_urb (numurban) )
+
+      pop_den  = SITE_popden
+      lucyid   = SITE_lucyid
+      froof    = SITE_froof
+      hroof    = SITE_hroof
+      flake    = SITE_flake_urb
+      fveg_urb = SITE_fveg_urb
+      htop_urb = SITE_htop_urb
+#else
       !TODO: Variables distinguish between time-varying and time-invariant variables
       ! write(cyear,'(i4.4)') lc_year
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/POP.nc'
@@ -132,6 +203,7 @@ ENDIF
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/htop_urb.nc'
       print*, lndname
       CALL ncio_read_vector (lndname, 'URBAN_TREE_TOP', landurban, htop_urb)
+#endif
 
       dir_rawdata = DEF_dir_rawdata
       lndname = trim(dir_rawdata)//'/urban/'//'/LUCY_rawdata.nc'

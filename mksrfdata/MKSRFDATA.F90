@@ -107,7 +107,11 @@ PROGRAM MKSRFDATA
    CALL read_namelist (nlfile)
 
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+#else
+   CALL read_urban_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+#endif
 #endif
 
    IF (USE_srfdata_from_larger_region) THEN
@@ -374,7 +378,11 @@ PROGRAM MKSRFDATA
 #if (defined LULC_IGBP_PFT)
    CALL write_surface_data_single (numpatch, numpft)
 #else
+#ifndef URBAN_MODEL
    CALL write_surface_data_single (numpatch)
+#else
+   CALL write_urban_surface_data_single (numurban)
+#endif
 #endif
    CALL single_srfdata_final ()
 #endif

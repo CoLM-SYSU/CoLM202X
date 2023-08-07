@@ -48,9 +48,9 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_HistWriteBack   = .true.
 
 #ifdef URBAN_MODEL
-   LOGICAL  :: USE_SITE_urban_paras            = .true.
-   LOGICAL  :: USE_SITE_building_thermal_paras = .false.
-   LOGICAL  :: USE_SITE_urban_LAI              = .false.
+   LOGICAL  :: USE_SITE_urban_paras   = .true.
+   LOGICAL  :: USE_SITE_thermal_paras = .false.
+   LOGICAL  :: USE_SITE_urban_LAI     = .false.
 #endif
 #endif
 
@@ -642,6 +642,9 @@ CONTAINS
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
          USE_SITE_HistWriteBack,   &
+         USE_SITE_urban_paras,     &
+         USE_SITE_thermal_paras,   &
+         USE_SITE_urban_LAI,       &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
