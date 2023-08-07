@@ -588,7 +588,7 @@ CONTAINS
                if(abs(errblc) > 1.e-3)then
                   write(6,'(A,I0,4E20.5)') 'Warning (Subsurface Runoff): water balance violation ', &
                      ipatch, errblc, exwater, zwtmm
-                  STOP
+                  CALL CoLM_stop ()
                endif
 #endif
             ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies

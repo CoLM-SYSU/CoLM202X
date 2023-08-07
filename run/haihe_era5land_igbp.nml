@@ -1,10 +1,10 @@
 &nl_colm
    
-   DEF_CASE_NAME = 'huaihe'         
+   DEF_CASE_NAME = 'haihe'         
    
-   DEF_domain%edges = 33.0
-   DEF_domain%edgen = 37.0      
-   DEF_domain%edgew = 114.0   
+   DEF_domain%edges = 35.0
+   DEF_domain%edgen = 45.0      
+   DEF_domain%edgew = 105.0   
    DEF_domain%edgee = 120.0      
    
    DEF_PIO_groupsize = 40
@@ -31,7 +31,7 @@
    DEF_dir_output  = '/tera05/zhangsp/cases'
    
    ! for CATCHMENT
-   DEF_CatchmentMesh_data = '/tera04/zhangsp/hillslope/output/huaihe_100km2.nc'
+   DEF_CatchmentMesh_data = '/tera04/zhangsp/hillslope/output/haihe_100km2.nc'
 
    ! ----- forcing -----
    DEF_forcing_namelist = '/tera04/zhangsp/CoLM202X/github/CoLM202X/run/forcing/ERA5LAND.nml'

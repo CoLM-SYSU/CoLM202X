@@ -631,7 +631,7 @@ CONTAINS
 
          DO ibasin = 1, numbasin
             IF (lake_id(ibasin) < 0) THEN
-               bedelv(ibasin) = wtsrfelv_ds(ibasin)
+               bedelv(ibasin) = wtsrfelv_ds(ibasin) + minval(hillslope_network(ibasin)%hand)
             ENDIF
          ENDDO
 
