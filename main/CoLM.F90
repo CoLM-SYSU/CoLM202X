@@ -487,7 +487,7 @@ PROGRAM CoLM
       istep = istep + 1
 
 #ifdef CoLMDEBUG
-      CALL print_iteration_stat_info ()
+      CALL print_VSF_iteration_stat_info ()
 #endif
 
    ENDDO TIMELOOP
