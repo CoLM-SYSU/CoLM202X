@@ -272,8 +272,8 @@ CONTAINS
 #endif
 
    !----------------------------------------------------
-   SUBROUTINE aggregation_request_data (  &
-         pixelset, iset, grid_in, area,   &
+   SUBROUTINE aggregation_request_data (     &
+         pixelset, iset, grid_in, zip, area, &
          data_r8_2d_in1, data_r8_2d_out1, &
          data_r8_2d_in2, data_r8_2d_out2, &
          data_r8_2d_in3, data_r8_2d_out3, &
@@ -302,6 +302,7 @@ CONTAINS
       INTEGER, intent(in)  :: iset
 
       TYPE (grid_type), intent(in) :: grid_in
+      logical, intent(in) :: zip
       
       REAL(r8), allocatable, intent(out), optional :: area(:)
 
@@ -340,53 +341,69 @@ CONTAINS
       INTEGER, intent(in), optional :: filledvalue_i4
 
       ! Local Variables
-      INTEGER :: nreq, smesg(2), isrc, idest, iproc
-      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc
-      INTEGER :: ipxl, ie, ipxstt, ipxend, lb1
+      INTEGER :: totalreq, ireq, nreq, smesg(2), isrc, idest, iproc
+      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc, iloc
+      INTEGER :: ie, ipxstt, ipxend, npxl, ipxl, lb1, xgrdthis, ygrdthis
       INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
-
-      REAL(r8), allocatable :: rbuf_r8_1d(:), rbuf_r8_2d(:,:)
-      INTEGER , allocatable :: rbuf_i4_1d(:)
-
       LOGICAL,  allocatable :: msk(:)
+      LOGICAL :: is_new
+
+      real(r8) :: areathis
+      REAL(r8), allocatable :: area0(:), rbuf_r8_1d(:), rbuf_r8_2d(:,:)
+      INTEGER , allocatable :: rbuf_i4_1d(:)
 
 
       ie     = pixelset%ielm  (iset)
       ipxstt = pixelset%ipxstt(iset)
       ipxend = pixelset%ipxend(iset)
 
-      IF (present (area)) THEN
-         allocate (area (ipxstt:ipxend))
-         DO ipxl = ipxstt, ipxend
-            area(ipxl) = areaquad (&
-               pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
-               pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
-         ENDDO
+      npxl = ipxend - ipxstt + 1
+
+      allocate(xlist (npxl))
+      allocate(ylist (npxl))
+      IF (present(area)) THEN
+         allocate (area0 (npxl))
+         area0(:) = 0
       ENDIF
 
-      IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1)) THEN
-         allocate (data_r8_2d_out1 (ipxstt:ipxend))
+      totalreq = 0
+
+      DO ipxl = ipxstt, ipxend
+         xgrdthis = grid_in%xgrd(mesh(ie)%ilon(ipxl))
+         ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+         areathis = areaquad (&
+            pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+            pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+
+         IF (zip) THEN
+            CALL insert_into_sorted_list2 (xgrdthis, ygrdthis, totalreq, xlist, ylist, iloc, is_new)
+            IF (present(area)) THEN
+               IF ((is_new) .and. (iloc < totalreq)) THEN
+                  area0(iloc+1:totalreq) = area0(iloc:totalreq-1) 
+               ENDIF
+               area0(iloc) = area0(iloc) + areathis
+            ENDIF
+         ELSE
+            xlist(ipxl-ipxstt+1) = xgrdthis
+            ylist(ipxl-ipxstt+1) = ygrdthis
+            IF (present(area)) area0(ipxl-ipxstt+1) = areathis
+         ENDIF
+      ENDDO  
+
+      IF (.not. zip) totalreq = npxl
+
+      IF (present(area)) THEN
+         allocate (area (totalreq))
+         area = area0(1:totalreq)
+         deallocate (area0)
       ENDIF
 
-      IF (present(data_r8_2d_in2) .and. present(data_r8_2d_out2)) THEN
-         allocate (data_r8_2d_out2 (ipxstt:ipxend))
-      ENDIF
-
-      IF (present(data_r8_2d_in3) .and. present(data_r8_2d_out3)) THEN
-         allocate (data_r8_2d_out3 (ipxstt:ipxend))
-      ENDIF
-
-      IF (present(data_r8_2d_in4) .and. present(data_r8_2d_out4)) THEN
-         allocate (data_r8_2d_out4 (ipxstt:ipxend))
-      ENDIF
-
-      IF (present(data_r8_2d_in5) .and. present(data_r8_2d_out5)) THEN
-         allocate (data_r8_2d_out5 (ipxstt:ipxend))
-      ENDIF
-
-      IF (present(data_r8_2d_in6) .and. present(data_r8_2d_out6)) THEN
-         allocate (data_r8_2d_out6 (ipxstt:ipxend))
-      ENDIF
+      IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1))  allocate (data_r8_2d_out1 (totalreq))
+      IF (present(data_r8_2d_in2) .and. present(data_r8_2d_out2))  allocate (data_r8_2d_out2 (totalreq))
+      IF (present(data_r8_2d_in3) .and. present(data_r8_2d_out3))  allocate (data_r8_2d_out3 (totalreq))
+      IF (present(data_r8_2d_in4) .and. present(data_r8_2d_out4))  allocate (data_r8_2d_out4 (totalreq))
+      IF (present(data_r8_2d_in5) .and. present(data_r8_2d_out5))  allocate (data_r8_2d_out5 (totalreq))
+      IF (present(data_r8_2d_in6) .and. present(data_r8_2d_out6))  allocate (data_r8_2d_out6 (totalreq))
 
       IF (present(data_r8_3d_in1) .and. present(data_r8_3d_out1) .and. present(n1_r8_3d_in1)) THEN
          IF (present(lb1_r8_3d_in1)) THEN
@@ -394,7 +411,7 @@ CONTAINS
          ELSE
             lb1 = 1
          ENDIF
-         allocate (data_r8_3d_out1 (lb1:lb1-1+n1_r8_3d_in1,ipxstt:ipxend))
+         allocate (data_r8_3d_out1 (lb1:lb1-1+n1_r8_3d_in1,totalreq))
       ENDIF
 
       IF (present(data_r8_3d_in2) .and. present(data_r8_3d_out2) .and. present(n1_r8_3d_in2)) THEN
@@ -403,18 +420,18 @@ CONTAINS
          ELSE
             lb1 = 1
          ENDIF
-         allocate (data_r8_3d_out2 (lb1:lb1-1+n1_r8_3d_in2,ipxstt:ipxend))
+         allocate (data_r8_3d_out2 (lb1:lb1-1+n1_r8_3d_in2,totalreq))
       ENDIF
 
       IF (present(data_i4_2d_in1) .and. present(data_i4_2d_out1)) THEN
-         allocate (data_i4_2d_out1 (ipxstt:ipxend))
+         allocate (data_i4_2d_out1 (totalreq))
          IF (present(filledvalue_i4)) THEN
             data_i4_2d_out1 = filledvalue_i4
          ENDIF
       ENDIF
 
       IF (present(data_i4_2d_in2) .and. present(data_i4_2d_out2)) THEN
-         allocate (data_i4_2d_out2 (ipxstt:ipxend))
+         allocate (data_i4_2d_out2 (totalreq))
          IF (present(filledvalue_i4)) THEN
             data_i4_2d_out2 = filledvalue_i4
          ENDIF
@@ -422,25 +439,15 @@ CONTAINS
 
 #ifdef USEMPI
 
-      allocate (xlist (ipxstt:ipxend))
-      allocate (ylist (ipxstt:ipxend))
-      allocate (ipt   (ipxstt:ipxend))
-      allocate (msk   (ipxstt:ipxend))
+      allocate (ipt (totalreq))
+      allocate (msk (totalreq))
 
       ipt(:) = -1
 
-      DO ipxl = ipxstt, ipxend
-         xlist(ipxl) = grid_in%xgrd(mesh(ie)%ilon(ipxl))
-         ylist(ipxl) = grid_in%ygrd(mesh(ie)%ilat(ipxl))
-
-         IF ((xlist(ipxl) < 0) .or. (ylist(ipxl) < 0)) THEN
-            write(*,*) 'Warning: request data out of range.'
-         ELSE
-            xblk = grid_in%xblk(xlist(ipxl))
-            yblk = grid_in%yblk(ylist(ipxl))
-            ipt(ipxl) = gblock%pio(xblk,yblk)
-         ENDIF
-
+      DO ireq = 1, totalreq
+         xblk = grid_in%xblk(xlist(ireq))
+         yblk = grid_in%yblk(ylist(ireq))
+         ipt(ireq) = gblock%pio(xblk,yblk)
       ENDDO
 
       DO iproc = 0, p_np_io-1
@@ -455,10 +462,10 @@ CONTAINS
 
             allocate (ibuf (nreq))
 
-            ibuf = pack(xlist, msk)
+            ibuf = pack(xlist(1:totalreq), msk)
             CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
 
-            ibuf = pack(ylist, msk)
+            ibuf = pack(ylist(1:totalreq), msk)
             CALL mpi_send (ibuf, nreq, MPI_INTEGER, idest, mpi_tag_data, p_comm_glb, p_err)
 
             isrc = idest
@@ -545,61 +552,52 @@ CONTAINS
 
 #else
       
-      DO ipxl = ipxstt, ipxend
+      DO ireq = 1, totalreq
 
-         ilon = grid_in%xgrd(mesh(ie)%ilon(ipxl))
-         ilat = grid_in%ygrd(mesh(ie)%ilat(ipxl))
-
-         IF ((ilon < 0) .or. (ilat < 0)) THEN
-            write(*,*) 'Warning: request data out of range.'
-            cycle
-         ENDIF
-
-         xblk = grid_in%xblk(ilon)
-         yblk = grid_in%yblk(ilat)
-         xloc = grid_in%xloc(ilon)
-         yloc = grid_in%yloc(ilat)
+         xblk = grid_in%xblk(xlist(ireq))
+         yblk = grid_in%yblk(ylist(ireq))
+         xloc = grid_in%xloc(xlist(ireq))
+         yloc = grid_in%yloc(ylist(ireq))
 
          IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1)) THEN
-            data_r8_2d_out1(ipxl) = data_r8_2d_in1%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out1(ireq) = data_r8_2d_in1%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_2d_in2) .and. present(data_r8_2d_out2)) THEN
-            data_r8_2d_out2(ipxl) = data_r8_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out2(ireq) = data_r8_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_2d_in3) .and. present(data_r8_2d_out3)) THEN
-            data_r8_2d_out3(ipxl) = data_r8_2d_in3%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out3(ireq) = data_r8_2d_in3%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_2d_in4) .and. present(data_r8_2d_out4)) THEN
-            data_r8_2d_out4(ipxl) = data_r8_2d_in4%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out4(ireq) = data_r8_2d_in4%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_2d_in5) .and. present(data_r8_2d_out5)) THEN
-            data_r8_2d_out5(ipxl) = data_r8_2d_in5%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out5(ireq) = data_r8_2d_in5%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_2d_in6) .and. present(data_r8_2d_out6)) THEN
-            data_r8_2d_out6(ipxl) = data_r8_2d_in6%blk(xblk,yblk)%val(xloc,yloc)
+            data_r8_2d_out6(ireq) = data_r8_2d_in6%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_r8_3d_in1) .and. present(data_r8_3d_out1) .and. present(n1_r8_3d_in1)) THEN
-            data_r8_3d_out1(:,ipxl) = data_r8_3d_in1%blk(xblk,yblk)%val(:,xloc,yloc)
+            data_r8_3d_out1(:,ireq) = data_r8_3d_in1%blk(xblk,yblk)%val(:,xloc,yloc)
          ENDIF
 
          IF (present(data_r8_3d_in2) .and. present(data_r8_3d_out2) .and. present(n1_r8_3d_in2)) THEN
-            data_r8_3d_out2(:,ipxl) = data_r8_3d_in2%blk(xblk,yblk)%val(:,xloc,yloc)
+            data_r8_3d_out2(:,ireq) = data_r8_3d_in2%blk(xblk,yblk)%val(:,xloc,yloc)
          ENDIF
 
          IF (present(data_i4_2d_in1) .and. present(data_i4_2d_out1)) THEN
-            data_i4_2d_out1(ipxl) = data_i4_2d_in1%blk(xblk,yblk)%val(xloc,yloc)
+            data_i4_2d_out1(ireq) = data_i4_2d_in1%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
 
          IF (present(data_i4_2d_in2) .and. present(data_i4_2d_out2)) THEN
-            data_i4_2d_out2(ipxl) = data_i4_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
+            data_i4_2d_out2(ireq) = data_i4_2d_in2%blk(xblk,yblk)%val(xloc,yloc)
          ENDIF
-
 
       ENDDO
       

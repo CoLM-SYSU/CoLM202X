@@ -164,7 +164,7 @@ CONTAINS
          DO ipatch = 1, numpatch
             IF (landpatch%settyp(ipatch) == 1) THEN
 
-               CALL aggregation_request_data (landpatch, ipatch, gpatch, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .false., area = area_one, &
                   data_r8_3d_in1 = pctpft, data_r8_3d_out1 = pctpft_one, n1_r8_3d_in1 = N_PFT_modis, lb1_r8_3d_in1 = 0)
 
                sumarea = sum(area_one)

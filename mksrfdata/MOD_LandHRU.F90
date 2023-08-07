@@ -150,7 +150,7 @@ CONTAINS
             
             allocate (types (1:npxl))
 
-            CALL aggregation_request_data (landelm, ie, ghru, &
+            CALL aggregation_request_data (landelm, ie, ghru, zip = .false., &
                data_i4_2d_in1 = hrudata, data_i4_2d_out1 = ibuff)
 
             types = ibuff
