@@ -436,7 +436,7 @@ PROGRAM CoLM
          ENDIF
       ENDIF
 #endif
-      
+
       IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
 #ifdef LULCC
          CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)

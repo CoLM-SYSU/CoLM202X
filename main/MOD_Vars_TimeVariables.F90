@@ -513,7 +513,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (smp               (1:nl_soil,numpatch)); smp         (:,:) = spval
            allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
            allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
-           allocate (cvsoil            (1:nl_soil,numpatch)); cvsoil      (:,:) = spval
+           allocate (cvsoil     (maxsnl+1:nl_soil,numpatch)); cvsoil      (:,:) = spval
            allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
 !Plant Hydraulic variables
            allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval

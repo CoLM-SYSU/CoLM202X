@@ -258,7 +258,7 @@ MODULE MOD_Thermal
         wliq_soisno(lb:nl_soil),&! liqui water [kg/m2]
         smp(1:nl_soil)         ,&! soil matrix potential [mm]
         hk(1:nl_soil)          ,&! hydraulic conductivity [mm h2o/s]
-        cvsoil(1:nl_soil)      ,&! heat capacity [J/(m2 K)]
+        cvsoil(lb:nl_soil)      ,&! heat capacity [J/(m2 K)]
         ldew,        &! depth of water on foliage [kg/(m2 s)]
         ldew_rain,   &! depth of rain on foliage [kg/(m2 s)]
         ldew_snow,   &! depth of rain on foliage [kg/(m2 s)]
