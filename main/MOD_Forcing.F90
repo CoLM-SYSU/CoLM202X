@@ -804,7 +804,7 @@ contains
       character(len=256) :: timeunit, timestr
       REAL(r8), allocatable :: forctime_sec (:)
       INTEGER :: year, month, day, hour, minute, second
-      INTEGER :: itime, maxday
+      INTEGER :: itime, maxday, id(3)
       INTEGER*8 :: sec_long
 
       filename = trim(dir_forcing)//trim(fprefix(1))
@@ -821,28 +821,15 @@ contains
       forctime(1)%year = year
       forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
       sec_long = hour*3600 + minute*60 + second + forctime_sec(1)
+         
+      id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
+      CALL adj2end(id)
+      forctime(1) = id
 
-      DO itime = 1, size(forctime)
-         IF (itime > 1) THEN
-            forctime(itime) = forctime(itime-1)
-            sec_long = sec_long + forctime_sec(itime) - forctime_sec(itime-1)
-         ENDIF
-
-         DO WHILE (sec_long > 86400)
-            sec_long = sec_long - 86400
-            IF( isleapyear(forctime(itime)%year) ) THEN
-               maxday = 366
-            ELSE
-               maxday = 365
-            ENDIF
-            forctime(itime)%day = forctime(itime)%day + 1
-            IF(forctime(itime)%day > maxday) THEN
-               forctime(itime)%year = forctime(itime)%year + 1
-               forctime(itime)%day = 1
-            ENDIF
-         ENDDO
-
-         forctime(itime)%sec = sec_long
+      DO itime = 2, size(forctime)
+         id(:) = (/forctime(itime-1)%year, forctime(itime-1)%day, forctime(itime-1)%sec/)
+         CALL ticktime (forctime_sec(itime)-forctime_sec(itime-1), id)
+         forctime(itime) = id
       ENDDO
 
    END SUBROUTINE metread_time
@@ -896,7 +883,6 @@ contains
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
-         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF
@@ -1110,10 +1096,10 @@ contains
          ELSE
             iforctime(var_i) = iforctime(var_i) + 1
             tstamp_LB(var_i) = forctime(iforctime(var_i))
-            tstamp_UB(var_i) = forctime(iforctime(var_i) + 1)
+            tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
          ENDIF
 
-         time_i = iforctime(var_i)
+         time_i = iforctime(var_i)+1
          year = tstamp_UB(var_i)%year
          RETURN
       ENDIF
