@@ -16,7 +16,7 @@ module MOD_Hist
    !----------------------------------------------------------------------------
 
    use MOD_Vars_1DAccFluxes
-   use MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
 
    use MOD_HistGridded
@@ -111,7 +111,7 @@ contains
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_Vars_PFTimeInvariants, only: pftclass
       USE MOD_LandPFT, only: patch_pft_s
 #endif
@@ -1085,12 +1085,32 @@ contains
              a_grainc_to_seed, file_hist, 'f_grainc_to_seed', itime_in_file, sumarea, filter, &
              'grain to crop seed carbon','gC/m2/s')
 
+
          ! grain to crop seed carbon
          call write_history_variable_2d ( DEF_hist_vars%fert_to_sminn, &
              a_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumarea, filter, &
              'fertilization','gN/m2/s')
 
 #endif
+
+         if(DEF_USE_IRRIGATION)then
+            ! irrigation rate mm/s in 4h is averaged to the given time resolution mm/s
+            call write_history_variable_2d ( DEF_hist_vars%irrig_rate, &
+               a_irrig_rate, file_hist, 'f_irrig_rate', itime_in_file, sumarea, filter, &
+               'irrigation rate mm/s in 4h is averaged to the given time resolution mm/s','mm/s')
+            !  still need irrigation amounts
+            call write_history_variable_2d ( DEF_hist_vars%deficit_irrig, &
+               a_deficit_irrig, file_hist, 'f_deficit_irrig', itime_in_file, sumarea, filter, &
+               'still need irrigation amounts','kg/m2')
+            !  total irrigation amounts at growing season
+            call write_history_variable_2d ( DEF_hist_vars%sum_irrig, &
+               a_sum_irrig, file_hist, 'f_sum_irrig', itime_in_file, sumarea, filter, &
+               'total irrigation amounts at growing season','kg/m2')
+            ! total irrigation times at growing season
+            call write_history_variable_2d ( DEF_hist_vars%sum_irrig_count, &
+               a_sum_irrig_count, file_hist, 'f_sum_irrig_count', itime_in_file, sumarea, filter, &
+               'total irrigation times at growing season','-')
+         end if
 
          ! grain to crop seed carbon
          call write_history_variable_2d ( DEF_hist_vars%ndep_to_sminn, &
@@ -1804,6 +1824,202 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%fertnitro_sugarcane, &
             a_fertnitro_sugarcane, file_hist, 'f_fertnitro_sugarcane', &
             itime_in_file, sumarea, filter,'nitrogen fertilizer for sugarcane','gN/m2/yr')
+
+         if(DEF_USE_IRRIGATION)THEN
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 17)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_corn, &
+               a_irrig_method_corn, file_hist, 'f_irrig_method_corn', &
+               itime_in_file, sumarea, filter,'irrigation method for corn','gN/m2/yr')
+
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 19 .or. pftclass(patch_pft_s(i)) .eq. 20)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_swheat, &
+               a_irrig_method_swheat, file_hist, 'f_irrig_method_swheat', &
+               itime_in_file, sumarea, filter,'irrigation method for spring wheat','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 21 .or. pftclass(patch_pft_s(i)) .eq. 22)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_wwheat, &
+               a_irrig_method_wwheat, file_hist, 'f_irrig_method_wwheat', &
+               itime_in_file, sumarea, filter,'irrigation method for winter wheat','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 23 .or. pftclass(patch_pft_s(i)) .eq. 24 &
+                      .or. pftclass(patch_pft_s(i)) .eq. 77 .or. pftclass(patch_pft_s(i)) .eq. 78)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_soybean, &
+               a_irrig_method_soybean, file_hist, 'f_irrig_method_soybean', &
+               itime_in_file, sumarea, filter,'irrigation method for soybean','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 41 .or. pftclass(patch_pft_s(i)) .eq. 42)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_cotton, &
+               a_irrig_method_cotton, file_hist, 'f_irrig_method_cotton', &
+               itime_in_file, sumarea, filter,'irrigation method for cotton','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 61 .or. pftclass(patch_pft_s(i)) .eq. 62)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_rice1, &
+               a_irrig_method_rice1, file_hist, 'f_irrig_method_rice1', &
+               itime_in_file, sumarea, filter,'irrigation method for rice1','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 61 .or. pftclass(patch_pft_s(i)) .eq. 62)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_rice2, &
+               a_irrig_method_rice2, file_hist, 'f_irrig_method_rice2', &
+               itime_in_file, sumarea, filter,'irrigation method for rice2','gN/m2/yr')
+   
+            if (p_is_worker) then
+               if (numpatch > 0) then
+                  do i=1,numpatch
+                     if(patchclass(i) == 12)then
+                        if(pftclass(patch_pft_s(i)) .eq. 67 .or. pftclass(patch_pft_s(i)) .eq. 68)then
+                           filter(i) = .true.
+                        else
+                           filter(i) = .false.
+                        end if
+                     else
+                        filter(i) = .false.
+                     end if
+                  end do
+               end if
+            end if
+   
+            IF (HistForm == 'Gridded') THEN
+               call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
+            ENDIF
+   
+            call write_history_variable_2d ( DEF_hist_vars%irrig_method_sugarcane, &
+               a_irrig_method_sugarcane, file_hist, 'f_irrig_method_sugarcane', &
+               itime_in_file, sumarea, filter,'irrigation method for sugarcane','gN/m2/yr')
+   
+         end if
 
          if (p_is_worker) then
             if (numpatch > 0) then

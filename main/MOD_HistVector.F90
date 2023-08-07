@@ -243,7 +243,7 @@ contains
       use MOD_Vars_Global, only: spval
       implicit none
 
-      real(r8), intent(in) :: acc_vec_patch (:,:)
+      real(r8), intent(in) :: acc_vec_patch (lb1:,:)
       character(len=*), intent(in) :: file_hist
       character(len=*), intent(in) :: varname
       integer,          intent(in) :: itime_in_file
@@ -413,7 +413,7 @@ contains
       use MOD_Vars_Global, only: spval
       implicit none
 
-      real(r8), intent(in) :: acc_vec_patch (:,:,:)
+      real(r8), intent(in) :: acc_vec_patch (lb1:,lb2:,:)
       character(len=*), intent(in) :: file_hist
       character(len=*), intent(in) :: varname
       integer,          intent(in) :: itime_in_file
@@ -633,7 +633,8 @@ contains
                IF ((istt > 0) .and. (iend >= istt)) THEN
                   allocate (mask(istt:iend))
                   allocate (frac(istt:iend))
-                  mask = (acc_vec_patch(istt:iend) /= spval) .and. filter(istt:iend) .and. (nac_ln > 0)
+                  mask = (acc_vec_patch(istt:iend) /= spval) &
+                     .and. filter(istt:iend) .and. (nac_ln(istt:iend) > 0)
                   IF (any(mask)) THEN
 #ifdef CATCHMENT
                      frac = hru_patch%subfrc(istt:iend)

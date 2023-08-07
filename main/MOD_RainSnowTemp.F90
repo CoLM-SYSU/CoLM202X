@@ -19,7 +19,7 @@ MODULE MOD_RainSnowTemp
 !-----------------------------------------------------------------------
 
 
-   SUBROUTINE rain_snow_temp (itypwat,&
+   SUBROUTINE rain_snow_temp (patchtype,&
               forc_t,forc_q,forc_psrf,forc_prc,forc_prl,forc_us,forc_vs,tcrit,&
               prc_rain,prc_snow,prl_rain,prl_snow,t_precip,bifall)
 
@@ -35,7 +35,7 @@ MODULE MOD_RainSnowTemp
    IMPLICIT NONE
 
 ! ------------------------ Dummy Argument ------------------------------
-   integer, INTENT(in) :: itypwat     ! land water type (3=glaciers)
+   integer, INTENT(in) :: patchtype   ! land patch type (3=glaciers)
 
 
    real(r8), INTENT(in) :: forc_t     ! temperature at agcm reference height [kelvin]
@@ -87,10 +87,10 @@ MODULE MOD_RainSnowTemp
       else
          flfall = 0.0
       endif
-          
+
    ELSEIF (trim(DEF_precip_phase_discrimination_scheme) == 'II') THEN
       glaciers = .false.
-      if (itypwat == 3) glaciers = .true.
+      if (patchtype == 3) glaciers = .true.
 
       if(glaciers) then
          all_snow_t_c = -2.0
@@ -110,14 +110,14 @@ MODULE MOD_RainSnowTemp
    ELSEIF (trim(DEF_precip_phase_discrimination_scheme) == 'III') THEN
    ! Phillip Harder and John Pomeroy (2013)
    ! Estimating precipitation phase using a psychrometric energy
-   ! balance method . Hydrol Process, 27, 1901–1914 
+   ! balance method . Hydrol Process, 27, 1901–1914
    ! Hydromet_Temp [K]
       call Hydromet_Temp(forc_t-273.15,forc_psrf,forc_q,t_hydro)
 
       if(t_hydro > 5.0)then
          flfall = 1.0      ! fraction of liquid water within falling precip
       else if ((t_hydro >= -5.0).and.(t_hydro <= 5.0))then
-         flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))             
+         flfall = max(0.0, 1.0/(1.0+2.50286*0.125006**t_hydro))
       else
          flfall = 0.0
       endif
@@ -205,9 +205,9 @@ MODULE MOD_RainSnowTemp
    end if
 
    END SUBROUTINE NewSnowBulkDensity
-   
-   !!============================================== 
-  
+
+   !!==============================================
+
    !-----------------------------------------------------------------------------
    SUBROUTINE HYDROMET_TEMP(PPA, PTA, PQA,PTI)
    !DESCRIPTION
@@ -225,11 +225,11 @@ MODULE MOD_RainSnowTemp
       !   Hydrological Processes  27(13), 1901-1914. https://dx.doi.org/10.1002/hyp.9799
    !REVISION HISTORY
    !----------------
-      !---2023.07.30  Aobo Tan & Zhongwang Wei @ SYSU  
+      !---2023.07.30  Aobo Tan & Zhongwang Wei @ SYSU
 
    real(r8), INTENT(in)   :: PPA          ! Air pressure (Pa)
-   real(r8), INTENT(in)   :: PTA          ! Air temperature (deg C) 
-   real(r8), INTENT(in)   :: PQA          ! Air specific humidity (kg/kg) 
+   real(r8), INTENT(in)   :: PTA          ! Air temperature (deg C)
+   real(r8), INTENT(in)   :: PQA          ! Air specific humidity (kg/kg)
    real(r8), INTENT(out)  :: PTI          ! Hydrometeo temprtature in deg C
    real(r8)               :: ZD    !diffusivity of water vapour in air [m^2 s-1]
    real(r8)               :: ZLAMBDAT !thermal conductivity of air [J m^-1 s^-1 K^-1]
@@ -257,8 +257,8 @@ MODULE MOD_RainSnowTemp
    !TODO:check use of dry air?
 
    ! 4. Compute density of dry air [kg m-3]
-   ZRHODA =  PPA/(287.04*(PTA+273.15))  
-  
+   ZRHODA =  PPA/(287.04*(PTA+273.15))
+
    ! 5. Compute saturated water vapour pressure [Pa]
    IF(PTA>0) THEN
       EVSAT = 611.0*EXP(17.27*PTA/(PTA+237.3))
@@ -268,19 +268,19 @@ MODULE MOD_RainSnowTemp
 
    ! 6.  Solve iteratively to get Ti in Harder and Pomeroy (2013). using a Newton-Raphston approach
    !set the 1st guess to PTA
-   ZT = PTA  
+   ZT = PTA
    !loop until convergence
    DO JITER = 1,10
-      ZTINI = ZT   ! 
-                  
+      ZTINI = ZT   !
+
       IF(ZT>0) THEN
          ESAT = 611.0*EXP(17.27*ZT/(ZT+237.3))
       ELSE
          ESAT = 611.0*EXP(21.87*ZT/(ZT+265.5))
       ENDIF
-   
+
       RHO_VSAT  = ESAT/(461.5*(ZT+273.15)) ! Saturated water vapour density
-   
+
       ZF = ZT - PTA - ZD*ZL/ZLAMBDAT * ( PQA*ZRHODA - RHO_VSAT)
 
       IF(ZT>0) THEN
@@ -289,12 +289,12 @@ MODULE MOD_RainSnowTemp
       ELSE
          RHO_VSAT_DIFF  = 611.0/( 461.5*(ZT+273.15)) * EXP( 21.87*ZT/(ZT+ 265.5)) *  &
                          (-1/(ZT+273.15) +  21.87* 265.5/((ZT+ 265.5))**2.)
-      ENDIF 
-   
+      ENDIF
+
 
       ZFDIFF = 1 +  ZD*ZL/ZLAMBDAT * RHO_VSAT_DIFF
       ZT = ZTINI - ZF/ZFDIFF
-      IF(ABS(ZT- ZTINI) .LT. 0.01) EXIT        
+      IF(ABS(ZT- ZTINI) .LT. 0.01) EXIT
    ENDDO
    PTI = ZT
    END SUBROUTINE HYDROMET_TEMP

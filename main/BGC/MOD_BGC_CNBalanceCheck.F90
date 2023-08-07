@@ -140,7 +140,11 @@ contains
        write(*,*)'wood_harvestc            = ',wood_harvestc(i)*deltim
        write(*,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(i)*deltim, grainc_to_food_p(ps)*deltim
        write(*,*)'-1*som_c_leached         = ',som_c_leached(i)*deltim
-       call abort
+#ifdef USEMPI
+       CALL mpi_abort (p_comm_glb, p_err)
+#else
+       CALL abort
+#endif
     end if
 
   end subroutine CBalanceCheck
@@ -210,7 +214,11 @@ contains
                     sminn_leached(i)*deltim,denit(i)*deltim,fire_nloss(i)*deltim,&
                     (wood_harvestn(i)+grainn_to_cropprodn(i))*deltim, - som_n_leached(i)
        end if
-       call abort
+#ifdef USEMPI
+       CALL mpi_abort (p_comm_glb, p_err)
+#else
+       CALL abort
+#endif
     end if
 
   end subroutine NBalanceCheck

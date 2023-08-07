@@ -44,11 +44,8 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_ElmVector
@@ -194,14 +191,9 @@ PROGRAM CoLM
 
    CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
    CALL map_patch_to_pft
-#endif
-
-#ifdef LULC_IGBP_PC
-   CALL pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , lc_year)
-   CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL
