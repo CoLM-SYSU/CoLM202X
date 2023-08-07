@@ -12,6 +12,7 @@ MODULE MOD_Vars_Global
 !
 ! !USES:
    USE MOD_Precision
+   USE MOD_Namelist
    IMPLICIT NONE
    SAVE
 
@@ -41,11 +42,8 @@ MODULE MOD_Vars_Global
    integer, parameter :: N_CFT     = 64
 #endif
 
-#ifdef URBAN_LCZ
-   integer, parameter :: N_URB     = 10
-#else
-   integer, parameter :: N_URB     = 3
-#endif
+   ! urban type number
+   integer :: N_URB
 
    ! vertical layer number
    integer, parameter :: maxsnl    = -5
@@ -104,6 +102,14 @@ MODULE MOD_Vars_Global
    real(r8), parameter :: PI      = 4*atan(1.) !pi value
    real(r8), parameter :: deg2rad = 1.745329251994330e-2_r8
 
+   integer , parameter :: irrig_start_time = 21600           ! local time of irrigation start
+   integer , parameter :: irrig_max_depth  = 10              ! max irrigation depth
+   real(r8), parameter :: irrig_threshold_fraction  = 1._r8  ! irrigation thershold
+   real(r8), parameter :: irrig_min_cphase = 1._r8           ! crop phenology when begin irrigation
+   real(r8), parameter :: irrig_max_cphase = 3._r8           ! crop phenology when end irrigation
+   integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time 
+
+
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
 
@@ -114,6 +120,12 @@ CONTAINS
       IMPLICIT NONE
 
       integer :: nsl
+
+IF (DEF_URBAN_type_scheme == 1) THEN
+      N_URB = 3
+ELSE IF(DEF_URBAN_type_scheme == 2) THEN
+      N_URB = 10
+ENDIF
 
       DO nsl = 1, nl_soil
          z_soi(nsl) = 0.025*(exp(0.5*(nsl-0.5))-1.)  !node depths

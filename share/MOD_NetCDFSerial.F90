@@ -105,6 +105,7 @@ MODULE MOD_NetCDFSerial
    PUBLIC :: ncio_write_lastdim
 
    INTERFACE ncio_write_serial_time
+      MODULE procedure ncio_write_serial_real8_0d_time
       MODULE procedure ncio_write_serial_real8_1d_time
       MODULE procedure ncio_write_serial_real8_2d_time
       MODULE procedure ncio_write_serial_real8_3d_time
@@ -129,11 +130,7 @@ CONTAINS
             write(*,'(A)') 'Netcdf error: ' //trim(nf90_strerror(status))
          ENDIF
 
-#ifdef USEMPI
-         CALL mpi_abort (p_comm_glb, p_err)
-#else
-         stop 2
-#endif
+         CALL CoLM_stop ()
       ENDIF
 
    END SUBROUTINE nccheck
@@ -151,11 +148,7 @@ CONTAINS
       inquire (file=trim(filename), exist=fexists)
       IF (.not. fexists) THEN
          write(*,*) trim(filename), ' does not exist.'
-#ifdef USEMPI
-         CALL mpi_abort (p_comm_glb, p_err)
-#else
-         stop 2
-#endif
+         CALL CoLM_stop ()
       ENDIF
 
    END SUBROUTINE check_ncfile_exist
@@ -1862,6 +1855,46 @@ CONTAINS
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_write_lastdim
+
+   !----------------------------------------------------------------------------
+   SUBROUTINE ncio_write_serial_real8_0d_time ( &
+         filename, dataname, itime, wdata, dim1name)
+
+      USE netcdf
+      USE MOD_Precision
+      IMPLICIT NONE
+
+      CHARACTER (len=*), intent(in) :: filename
+      CHARACTER (len=*), intent(in) :: dataname
+      INTEGER,  intent(in) :: itime
+      REAL(r8), intent(in) :: wdata
+
+      CHARACTER(len=*), intent(in), optional :: dim1name
+
+      ! Local variables
+      INTEGER :: ncid, varid, dimid, status
+
+      CALL nccheck( nf90_open(trim(filename), NF90_WRITE, ncid) )
+      status = nf90_inq_varid(ncid, trim(dataname), varid)
+      IF (status /= NF90_NOERR) THEN
+         IF (.not. present(dim1name)) THEN
+            write(*,*) 'Warning: no dimension name for ', trim(dataname)
+            RETURN
+         ENDIF
+
+         CALL nccheck (nf90_inq_dimid(ncid, trim(dim1name), dimid))
+
+         CALL nccheck (nf90_redef(ncid))
+         CALL nccheck (nf90_def_var(ncid, trim(dataname), NF90_DOUBLE, dimid, varid))
+
+         CALL nccheck (nf90_enddef(ncid))
+      ENDIF
+
+      CALL nccheck( nf90_put_var(ncid, varid, wdata, start = (/itime/)) )
+
+      CALL nccheck( nf90_close(ncid) )
+
+   END SUBROUTINE ncio_write_serial_real8_0d_time
 
    !----------------------------------------------------------------------------
    SUBROUTINE ncio_write_serial_real8_1d_time ( &

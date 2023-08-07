@@ -282,7 +282,7 @@ contains
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
             if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
-               write(6, *) "the data required is out of range! stop!"; stop
+               write(6, *) "the data required is out of range! stop!"; CALL CoLM_stop()
             end if
 
             ! calcualte distance to lower/upper boundary
@@ -323,7 +323,7 @@ contains
                         ilon = gforc%xdsp(ib) + i
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                        calday = calendarday(mtstamp, gforc%rlon(ilon)*180.0_r8/pi)
+                        calday = calendarday(mtstamp)
                         cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                         cosz = max(0.001, cosz)
                         forcn(ivar)%blk(ib,jb)%val(i,j) = &
@@ -363,7 +363,8 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            write(6, *) "At least one of the wind components must be provided! stop!"; stop
+            write(6, *) "At least one of the wind components must be provided! stop!"; 
+            CALL CoLM_stop()
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -423,7 +424,7 @@ contains
                         if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
                         a = forc_xy_solarin%blk(ib,jb)%val(i,j)
-                        calday = calendarday(idate,  gforc%rlon(ilon)*180.0_r8/pi)
+                        calday = calendarday(idate)
                         sunang = orb_coszen (calday, gforc%rlon(ilon), gforc%rlat(ilat))
 
                         cloud = (1160.*sunang-a)/(963.*sunang)
@@ -833,7 +834,7 @@ contains
          IF ((mtstamp < forctime(1)) .or. (forctime(ntime) < mtstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
             write(*,*) 'Need ', mtstamp, ', Forc start ', forctime(1), ', Forc END', forctime(ntime)
-            stop
+            CALL CoLM_stop ()
          ELSE
             DO WHILE (.not. (mtstamp < forctime(time_i+1)))
                time_i = time_i + 1
@@ -1021,7 +1022,7 @@ contains
          end if
 
          if (time_i <= 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; stop
+            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
          end if
 
          return
@@ -1181,7 +1182,7 @@ contains
          end if
 
          if (time_i < 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; stop
+            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
          end if
 
          return
@@ -1222,7 +1223,7 @@ contains
                      ilon = gforc%xdsp(ib) + i
                      if (ilon > gforc%nlon) ilon = ilon - gforc%nlon
 
-                     calday = calendarday(tstamp, gforc%rlon(ilon)*180.0_r8/pi)
+                     calday = calendarday(tstamp)
                      cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                      cosz = max(0.001, cosz)
                      avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &

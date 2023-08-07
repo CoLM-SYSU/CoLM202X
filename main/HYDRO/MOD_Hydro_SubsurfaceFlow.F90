@@ -521,14 +521,25 @@ CONTAINS
                      vol_liq(ilev) = wliq_soisno(ilev,ipatch)/denh2o*1000. / sp_dz(ilev)
                      vol_liq(ilev) = min(eff_porosity(ilev), max(0., vol_liq(ilev)))
                      wresi(ilev) = wliq_soisno(ilev,ipatch) - sp_dz(ilev)*vol_liq(ilev)/1000. * denh2o
+                  ELSE
+                     vol_liq(ilev) = eff_porosity(ilev)
+                     wresi(ilev) = 0.
+                  ENDIF
+               ENDDO
+      
+               zwtmm = zwt(ipatch) * 1000. ! m -> mm
+
+               ! check consistancy between water table location and liquid water content
+               DO ilev = 1, nl_soil
+                  IF ((vol_liq(ilev) < eff_porosity(ilev)-1.e-6) .and. (zwtmm <= sp_zi(ilev-1))) THEN
+                     zwtmm = sp_zi(ilev)
                   ENDIF
                ENDDO
 
-               zwtmm = zwt(ipatch) * 1000. ! m -> mm
-               izwt  = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
+               izwt = findloc(zwtmm >= sp_zi, .true., dim=1, back=.true.)
 
                IF (izwt <= nl_soil) THEN
-                  IF (is_permeable(izwt)) THEN
+                  IF (is_permeable(izwt) .and. (zwtmm > sp_zi(izwt-1))) THEN
                      vol_liq(izwt) = (wliq_soisno(izwt,ipatch)/denh2o*1000.0 &
                         - eff_porosity(izwt)*(sp_zi(izwt)-zwtmm)) / (zwtmm - sp_zi(izwt-1))
 
@@ -542,12 +553,12 @@ CONTAINS
                         + vol_liq(izwt)*(zwtmm-sp_zi(izwt-1))) /1000. * denh2o
                   ENDIF
                ENDIF
-
+               
                CALL soilwater_aquifer_exchange ( &
-                  nl_soil, exwater, sp_zi, is_permeable, porsl(:,ipatch), vl_r, psi0(:,ipatch), &
-                  hksati(:,ipatch), nprms, prms,   porsl(nl_soil,ipatch), wdsrf(ipatch), &
+                  nl_soil, exwater, sp_zi, is_permeable, eff_porosity, vl_r, psi0(:,ipatch), &
+                  hksati(:,ipatch), nprms, prms, porsl(nl_soil,ipatch), wdsrf(ipatch), &
                   vol_liq, zwtmm, wa(ipatch), izwt)
-
+               
                ! update the mass of liquid water
                DO ilev = nl_soil, 1, -1
                   IF (is_permeable(ilev)) THEN
@@ -575,7 +586,9 @@ CONTAINS
                errblc = w_sum_after - w_sum_before + exwater
 
                if(abs(errblc) > 1.e-3)then
-                  write(6,'(A,E20.5)') 'Warning (Subsurface Runoff): water balance violation', errblc
+                  write(6,'(A,I0,4E20.5)') 'Warning (Subsurface Runoff): water balance violation ', &
+                     ipatch, errblc, exwater, zwtmm
+                  CALL CoLM_stop ()
                endif
 #endif
             ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies

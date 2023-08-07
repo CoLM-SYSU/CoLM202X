@@ -161,7 +161,8 @@ contains
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
          rain,  etr,  rootr, rsubst,  qinfl,         &
-         ss_dp, zwt,  wa,    ss_vliq, smp,    hk    )
+         ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
+         tolerance )
 
       !=======================================================================
       ! this is the main subroutine to execute the calculation of
@@ -205,6 +206,8 @@ contains
       REAL(r8), intent(out) :: smp(1:nlev) ! soil matrix potential (mm)
       REAL(r8), intent(out) :: hk (1:nlev) ! hydraulic conductivity (mm/s)
 
+      real(r8), intent(in) :: tolerance
+
       ! Local variables
       integer  :: lb, ub, ilev, izwt
       REAL(r8) :: sumroot, deficit, wexchange
@@ -232,7 +235,7 @@ contains
       dp_m1 = ss_dp
 
       ! tolerances
-      tol_q = tol_richards / sqrt(real(nlev,r8)) * 0.5_r8
+      tol_q = tolerance / real(nlev,r8) / dt /2.0
       tol_z = tol_q * dt
       tol_v = tol_z / maxval(sp_dz)
       tol_p = 1.0e-14
@@ -413,7 +416,7 @@ contains
 
       wblc = w_sum_after - (w_sum_before + (rain - etr - rsubst) * dt)
 
-      IF (abs(wblc) > 1.0e-3) THEN
+      IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
          write(*,*) w_sum_after, w_sum_before, rain, etr, rsubst
       ENDIF
@@ -1002,9 +1005,9 @@ contains
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
 
 #ifdef  SoilWaterDebug
-         IF (abs(werr) > 1.0e-3) then
-             write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
-         ENDIF
+         ! IF (abs(werr) > 1.0e-3) then
+         !     write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
+         ! ENDIF
 #endif
 
       end do

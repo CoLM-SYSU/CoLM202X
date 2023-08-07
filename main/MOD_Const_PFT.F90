@@ -16,6 +16,7 @@ MODULE MOD_Const_PFT
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_TimeManager, only: get_calday
+   USE MOD_Namelist, only: DEF_USE_IRRIGATION
 
    IMPLICIT NONE
    SAVE
@@ -103,7 +104,7 @@ MODULE MOD_Const_PFT
 !78  irrigated_tropical_soybean
 
    ! canopy layer number
-   INTEGER , parameter :: canlay(0:N_PFT+N_CFT-1) &
+   INTEGER , parameter :: canlay_p(0:N_PFT+N_CFT-1) &
       = (/0, 2, 2, 2, 2, 2, 2, 2 &
         , 2, 1, 1, 1, 1, 1, 1, 1 &
 #ifdef CROP
@@ -1568,6 +1569,23 @@ MODULE MOD_Const_PFT
          /)
 !end plant hydraulic parameters
 
+      ! irrigation parameter for irrigated crop
+   LOGICAL , parameter :: irrig_crop(0:N_PFT+N_CFT-1)  & ! True => is tropical broadleaf evergreen tree
+            =(/.False., .False., .False., .False., .False., .False., .False., .False. &
+            , .False., .False., .False., .False., .False., .False., .False., .False. &
+#ifdef CROP
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True., .False. &
+            , .True., .False., .True., .False., .True., .False., .True.          &
+#endif
+            /)
+
+
    ! scheme 1: Zeng 2001, 2: Schenk and Jackson, 2002
    INTEGER, PRIVATE :: ROOTFR_SCHEME = 1
 
@@ -1581,6 +1599,7 @@ MODULE MOD_Const_PFT
 #endif
 
    INTEGER, PRIVATE :: i, nsl
+
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_PFT_Const

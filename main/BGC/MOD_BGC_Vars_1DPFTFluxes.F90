@@ -1,6 +1,6 @@
 #include <define.h>
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 MODULE MOD_BGC_Vars_1DPFTFluxes
 #ifdef BGC
@@ -318,7 +318,6 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
   REAL(r8), allocatable :: grainc_to_cropprodc_p        (:) ! pft level: harvested grain C (gC m-2 s-1)
   REAL(r8), allocatable :: grainn_to_cropprodn_p        (:) ! pft level: harvested grain N (gN m-2 s-1)
   REAL(r8), allocatable :: hrv_xsmrpool_to_atm_p        (:) ! pft level: maintenance respiration storage C to atmosphere due to harvest (gC m-2 s-1)
-  REAL(r8), allocatable :: fert_p                       (:) ! pft level: nitrogen fertilizer rate (gN m-2 s-1)
   REAL(r8), allocatable :: soyfixn_p                    (:) ! pft level: soybean fixed nitrogen rate (gN m-2 s-1)
 
 ! PUBLIC MEMBER FUNCTIONS:
@@ -650,7 +649,6 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
            allocate (grainc_to_cropprodc_p        (numpft)) ; grainc_to_cropprodc_p        (:) = spval
            allocate (grainn_to_cropprodn_p        (numpft)) ; grainn_to_cropprodn_p        (:) = spval
            allocate (hrv_xsmrpool_to_atm_p        (numpft)) ; hrv_xsmrpool_to_atm_p        (:) = spval
-           allocate (fert_p                       (numpft)) ; fert_p                       (:) = spval
            allocate (soyfixn_p                    (numpft)) ; soyfixn_p                    (:) = spval
 
         ENDIF
@@ -973,7 +971,6 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
            deallocate (grainc_to_cropprodc_p        )
            deallocate (grainn_to_cropprodn_p        )
            deallocate (hrv_xsmrpool_to_atm_p        )
-           deallocate (fert_p                       )
            deallocate (soyfixn_p                    )
 
         ENDIF
@@ -1300,7 +1297,6 @@ MODULE MOD_BGC_Vars_1DPFTFluxes
            grainc_to_cropprodc_p        (:) = Values
            grainn_to_cropprodn_p        (:) = Values
            hrv_xsmrpool_to_atm_p        (:) = Values
-           fert_p                       (:) = Values
            soyfixn_p                    (:) = Values
 
         ENDIF

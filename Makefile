@@ -23,10 +23,10 @@ mkdir_build :
 
 OBJS_SHARED =    \
 				  MOD_Precision.o              \
-				  MOD_Vars_Global.o            \
-				  MOD_Const_Physical.o         \
 				  MOD_SPMD_Task.o              \
 				  MOD_Namelist.o               \
+				  MOD_Vars_Global.o            \
+				  MOD_Const_Physical.o         \
 				  MOD_Const_LC.o               \
 				  MOD_Utils.o                  \
 				  MOD_TimeManager.o            \
@@ -52,11 +52,11 @@ OBJS_SHARED =    \
 				  MOD_LandPatch.o              \
 				  MOD_LandUrban.o              \
 				  MOD_LandPFT.o                \
-				  MOD_LandPC.o                 \
 				  MOD_SrfdataDiag.o            \
 				  MOD_SrfdataRestart.o         \
 				  MOD_ElmVector.o              \
-				  MOD_HRUVector.o
+				  MOD_HRUVector.o              \
+				  MOD_Urban_Const_LCZ.o
 
 ${OBJS_SHARED} : %.o : %.F90 ${HEADER}
 	${FF} -c ${FOPTS} $(INCLUDE_DIR) -o .bld/$@ $< ${MOD_CMD}.bld
@@ -99,20 +99,16 @@ OBJS_BASIC =    \
 				 MOD_Hydro_Vars_1DFluxes.o      \
 				 MOD_BGC_Vars_1DFluxes.o        \
 				 MOD_BGC_Vars_1DPFTFluxes.o     \
-				 MOD_BGC_Vars_2DFluxes.o        \
 				 MOD_BGC_Vars_PFTimeVariables.o \
 				 MOD_BGC_Vars_TimeInvariants.o  \
 				 MOD_BGC_Vars_TimeVariables.o   \
-				 MOD_Urban_Const_LCZ.o          \
 				 MOD_Urban_Vars_1DFluxes.o      \
-				 MOD_Urban_Vars_2DFluxes.o      \
 				 MOD_Urban_Vars_TimeVariables.o \
 				 MOD_Urban_Vars_TimeInvariants.o\
 				 MOD_Const_PFT.o                \
 				 MOD_Vars_TimeInvariants.o      \
 				 MOD_Vars_TimeVariables.o       \
 				 MOD_Vars_1DPFTFluxes.o         \
-				 MOD_Vars_1DPCFluxes.o          \
 				 MOD_Vars_1DFluxes.o            \
 				 MOD_Vars_1DForcing.o           \
 				 MOD_Hydro_SoilFunction.o       \
@@ -250,8 +246,8 @@ OBJS_MAIN = \
 				MOD_BGC_Veg_CNNDynamics.o                 \
 				MOD_BGC_Veg_CNFireBase.o                  \
 				MOD_BGC_Veg_CNFireLi2016.o                \
+				MOD_Irrigation.o 						  \
 				MOD_BGC_driver.o                          \
-				MOD_Vars_2DFluxes.o                       \
 				MOD_Vars_2DForcing.o                      \
 				MOD_UserSpecifiedForcing.o                \
 				MOD_ForcingDownscaling.o                  \
@@ -280,7 +276,9 @@ OBJS_MAIN = \
 				MOD_Thermal.o                             \
 				MOD_Vars_1DAccFluxes.o                    \
 				MOD_CaMa_Vars.o                           \
+				MOD_HistGridded.o                         \
 				MOD_HistVector.o                          \
+				MOD_HistSingle.o                          \
 				MOD_Hist.o                                \
 				MOD_LightningData.o                       \
 				MOD_CaMa_colmCaMa.o                       \
