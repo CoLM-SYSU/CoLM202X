@@ -128,7 +128,7 @@ CONTAINS
   INTEGER,  intent(in) :: &
         idate(3)   ,&
         ipatch     ,&! patch index
-        patchtype  ,&! land cover type (0=soil, 1=urban or built-up, 2=wetland,
+        patchtype  ,&! land patch type (0=soil, 1=urban or built-up, 2=wetland,
                      ! 3=glacier/ice sheet, 4=land water bodies)
         lbr        ,&! lower bound of array
         lbi        ,&! lower bound of array

@@ -138,15 +138,10 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: tfrz, denh2o, denice
   USE MOD_Vars_TimeVariables, only: tlai, tsai, irrig_rate
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
   USE MOD_Vars_PFTimeInvariants
   USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-  USE MOD_LandPC
-  USE MOD_Vars_PCTimeInvariants
-  USE MOD_Vars_PCTimeVariables
 #endif
   USE MOD_RainSnowTemp
   USE MOD_NetSolar
@@ -188,8 +183,8 @@ SUBROUTINE CoLMMAIN ( &
         patchlatr     ! latitude in radians
 
   integer, intent(in) :: &
-        patchclass  ,&! land cover type of USGS classification or others
-        patchtype     ! land water type (0=soil, 1=urban and built-up,
+        patchclass  ,&! land patch class of USGS classification or others
+        patchtype     ! land patch type (0=soil, 1=urban and built-up,
                       ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 ! Parameters
 ! ----------------------
@@ -218,7 +213,7 @@ SUBROUTINE CoLMMAIN ( &
         n_vgm    (1:nl_soil), & ! a shape parameter
         L_vgm    (1:nl_soil), & ! pore-connectivity parameter
         sc_vgm   (1:nl_soil), & ! saturation at the air entry value in the classical vanGenuchten model [-]
-        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]            
+        fc_vgm   (1:nl_soil), & ! a scaling factor by using air entry value in the Mualem model [-]
 #endif
         hksati(nl_soil)  ,&! hydraulic conductivity at saturation [mm h2o/s]
         csol(nl_soil)    ,&! heat capacity of soil solids [J/(m3 K)]
@@ -626,17 +621,11 @@ IF (patchtype == 0) THEN
 
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL LEAF_interception_pftwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,&
                               prc_rain,prc_snow,prl_rain,prl_snow,&
                               ldew,ldew_rain,ldew_snow,z0m,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 
-#endif
-
-#ifdef LULC_IGBP_PC
-      CALL LEAF_interception_pcwrap (ipatch,deltim,dewmx,forc_us,forc_vs,forc_t,chil,&
-                              prc_rain,prc_snow,prl_rain,prl_snow,&
-                              ldew,ldew_rain,ldew_snow,forc_hgt_u,pg_rain,pg_snow,qintr,qintr_rain,qintr_snow)
 #endif
 
 ELSE
@@ -1221,7 +1210,7 @@ IF (patchtype == 0) THEN
        sai = tsai(ipatch) * sigf
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
        ps = patch_pft_s(ipatch)
        pe = patch_pft_e(ipatch)
        CALL snowfraction_pftwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
@@ -1229,15 +1218,6 @@ IF (patchtype == 0) THEN
        sai_p(ps:pe) = tsai_p(ps:pe) * sigf_p(ps:pe)
        lai = tlai(ipatch)
        sai = sum(sai_p(ps:pe)*pftfrac(ps:pe))
-#endif
-
-#ifdef LULC_IGBP_PC
-       pc = patch2pc(ipatch)
-       CALL snowfraction_pcwrap (ipatch,zlnd,scv,snowdp,wt,sigf,fsno)
-       lai_c(:,pc) = tlai_c(:,pc)
-       sai_c(:,pc) = tsai_c(:,pc) * sigf_c(:,pc)
-       lai = tlai(ipatch)
-       sai = sum(sai_c(:,pc)*pcfrac(:,pc))
 #endif
 
 ELSE

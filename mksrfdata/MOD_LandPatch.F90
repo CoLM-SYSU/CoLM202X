@@ -14,7 +14,7 @@ MODULE MOD_LandPatch
    !       ELEMENT >>> HRU >>> PATCH
    !    If Plant Function Type classification is used, PATCH is further divided into PFT.
    !    If Plant Community classification is used,     PATCH is further divided into PC.
-   ! 
+   !
    !    "landpatch" refers to pixelset PATCH.
    !
    ! Created by Shupeng Zhang, May 2023
@@ -210,8 +210,9 @@ CONTAINS
             END WHERE
 #endif
 
-#ifdef LULC_IGBP_PFT
-            ! For classification of plant function types, merge all land types with soil ground
+IF ((DEF_USE_PFT .and. .not.DEF_SOLO_PFT) .or. DEF_FAST_PC) THEN
+            ! For classification of plant function types or fast PC,
+            ! merge all land types with soil ground
             DO ipxl = ipxstt, ipxend
                IF (types(ipxl) > 0) THEN
                   IF (patchtypes(types(ipxl)) == 0) THEN
@@ -227,7 +228,7 @@ CONTAINS
                   ENDIF
                ENDIF
             ENDDO
-#endif
+ENDIF
 
             allocate (order (ipxstt:ipxend))
             order = (/ (ipxl, ipxl = ipxstt, ipxend) /)

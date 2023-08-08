@@ -44,11 +44,8 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_ElmVector
@@ -198,14 +195,9 @@ PROGRAM CoLM
 
    CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
    CALL map_patch_to_pft
-#endif
-
-#ifdef LULC_IGBP_PC
-   CALL pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , lc_year)
-   CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL
@@ -375,7 +367,36 @@ PROGRAM CoLM
       ENDIF
 
 
-      ! Get leaf area index
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+
+#if(defined CaMa_Flood)
+      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+#endif
+
+      ! Write out the model variables for restart run and the histroy file
+      ! ----------------------------------------------------------------------
+      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
+
+#ifdef LULCC
+      ! DO land USE and land cover change simulation
+      IF ( isendofyear(idate, deltim) ) THEN
+         CALL deallocate_1D_Forcing
+         CALL deallocate_1D_Fluxes
+
+         CALL LulccDriver (casename,dir_landdata,dir_restart,&
+                           idate,greenwich)
+
+         CALL allocate_1D_Forcing
+         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
+         CALL deallocate_acc_fluxes
+         CALL hist_init (dir_hist)
+         CALL allocate_1D_Fluxes
+      ENDIF
+#endif
+
+! Get leaf area index
       ! ----------------------------------------------------------------------
 #if(defined DYN_PHENOLOGY)
       ! Update once a day
@@ -417,35 +438,6 @@ PROGRAM CoLM
             ! 06/2023, yuan: or depend on DEF_LAI_CHANGE_YEARLY nanemlist
             !CALL LAI_readin (lai_year, Julian_8day, dir_landdata)
          ENDIF
-      ENDIF
-#endif
-
-#if (defined LATERAL_FLOW)
-      CALL lateral_flow (deltim)
-#endif
-
-#if(defined CaMa_Flood)
-      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
-#endif
-
-      ! Write out the model variables for restart run and the histroy file
-      ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
-
-#ifdef LULCC
-      ! DO land USE and land cover change simulation
-      IF ( isendofyear(idate, deltim) ) THEN
-         CALL deallocate_1D_Forcing
-         CALL deallocate_1D_Fluxes
-
-         CALL LulccDriver (casename,dir_landdata,dir_restart,&
-                           idate,greenwich)
-
-         CALL allocate_1D_Forcing
-         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
-         CALL deallocate_acc_fluxes
-         CALL hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
-         CALL allocate_1D_Fluxes
       ENDIF
 #endif
 
