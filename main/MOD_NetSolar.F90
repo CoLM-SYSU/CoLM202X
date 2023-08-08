@@ -115,6 +115,7 @@ CONTAINS
    real(r8) :: radpsec, sabvg
 
    integer ps, pe, p
+
 !=======================================================================
 
       sabvsun = 0.
@@ -160,6 +161,10 @@ CONTAINS
 #endif
       ENDIF
 
+      IF(lai+sai < 1.e-6)then
+         ssun(:,:) = 0.
+         ssha(:,:) = 0.
+      END IF
 
       IF (forc_sols+forc_soll+forc_solsd+forc_solld > 0.) THEN
          IF (patchtype < 4) THEN    !non lake and ocean
@@ -175,7 +180,9 @@ CONTAINS
             sabg    = sabvg - sabvsun - sabvsha
 
             IF (patchtype == 0) THEN
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
