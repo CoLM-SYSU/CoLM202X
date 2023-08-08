@@ -68,7 +68,9 @@ CONTAINS
          forc_solld   ! atm nir diffuse solar rad onto srf [W/m2]
 
    real(r8), dimension(1:2,1:2), intent(in) :: &
-         alb,        &! averaged albedo [-]
+         alb          ! averaged albedo [-]
+
+   real(r8), dimension(1:2,1:2), intent(inout) :: &
          ssun,       &! sunlit canopy absorption for solar radiation
          ssha         ! shaded canopy absorption for solar radiation
 
@@ -112,7 +114,7 @@ CONTAINS
    integer  :: local_secs
    real(r8) :: radpsec, sabvg
 
-   integer ps, pe, pc
+   integer ps, pe, p
 !=======================================================================
 
       sabvsun = 0.
@@ -120,17 +122,41 @@ CONTAINS
       parsun  = 0.
       parsha  = 0.
 
-      sabg  = 0.
+      IF (lai+sai <= 1.e-6) THEN
+         ssun(:,:) = 0.
+         ssha(:,:) = 0.
+      ENDIF
+
+      sabg = 0.
       sabg_lyr(:) = 0.
 
       IF (patchtype == 0) THEN
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
+
          sabvsun_p(ps:pe) = 0.
          sabvsha_p(ps:pe) = 0.
-         parsun_p(ps:pe)  = 0.
-         parsha_p(ps:pe)  = 0.
+         parsun_p (ps:pe) = 0.
+         parsha_p (ps:pe) = 0.
+
+         DO p = ps, pe
+            IF (lai_p(p)+sai_p(p) <= 1.e-6) THEN
+               ssun_p(:,:,p) = 0.
+               ssha_p(:,:,p) = 0.
+            ENDIF
+         ENDDO
+
+         ssun(1,1) = sum( ssun_p(1,1,ps:pe)*pftfrac(ps:pe) )
+         ssun(1,2) = sum( ssun_p(1,2,ps:pe)*pftfrac(ps:pe) )
+         ssun(2,1) = sum( ssun_p(2,1,ps:pe)*pftfrac(ps:pe) )
+         ssun(2,2) = sum( ssun_p(2,2,ps:pe)*pftfrac(ps:pe) )
+
+         ssha(1,1) = sum( ssha_p(1,1,ps:pe)*pftfrac(ps:pe) )
+         ssha(1,2) = sum( ssha_p(1,2,ps:pe)*pftfrac(ps:pe) )
+         ssha(2,1) = sum( ssha_p(2,1,ps:pe)*pftfrac(ps:pe) )
+         ssha(2,2) = sum( ssha_p(2,2,ps:pe)*pftfrac(ps:pe) )
 #endif
       ENDIF
 
