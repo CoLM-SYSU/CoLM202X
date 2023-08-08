@@ -22,6 +22,7 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
   INTEGER              :: numurban_
   INTEGER, allocatable :: patchclass_    (:)  !index of land cover type
   INTEGER, allocatable :: patchtype_     (:)  !land patch type
+  REAL(r8), allocatable:: csol_        (:,:)  !heat capacity of soil solids [J/(m3 K)]
 
   ! for LULC_IGBP_PFT and LULC_IGBP_PC
   INTEGER, allocatable :: pftclass_      (:)  !PFT type
@@ -81,6 +82,7 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
 
            allocate (patchclass_                (numpatch))
            allocate (patchtype_                 (numpatch))
+           allocate (csol_              (nl_soil,numpatch))
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft > 0) THEN
@@ -129,6 +131,7 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
            numelm_               = numelm
            patchclass_       (:) = patchclass       (:)
            patchtype_        (:) = patchtype        (:)
+           csol_           (:,:) = csol           (:,:)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft > 0) THEN
@@ -163,6 +166,7 @@ MODULE MOD_LuLcc_Vars_TimeInvariants
            CALL landelm_%forc_free_mem
            deallocate    (patchclass_   )
            deallocate    (patchtype_    )
+           deallocate    (csol_         )
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
            IF (numpft_ > 0) THEN

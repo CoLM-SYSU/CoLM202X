@@ -909,7 +909,6 @@ ENDIF
                       frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
                       imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
-
 !=======================================================================
 ! [6] Correct fluxes to present soil temperature
 !=======================================================================
