@@ -266,7 +266,7 @@ CONTAINS
    END SUBROUTINE read_surface_data_single
 
    ! -----
-   SUBROUTINE read_urban_surface_data_single (fsrfdata, mksrfdata, mkinidata)
+   SUBROUTINE read_urban_surface_data_single (fsrfdata, mksrfdata, mkrun)
       USE MOD_TimeManager
       USE MOD_NetCDFSerial
       USE MOD_Namelist
@@ -276,10 +276,9 @@ CONTAINS
 
       CHARACTER(len=*), intent(in) :: fsrfdata
       LOGICAL, intent(in) :: mksrfdata
-      LOGICAL, intent(in), optional :: mkinidata
+      LOGICAL, intent(in), optional :: mkrun
 
       SITE_landtype = URBAN
-      print*, fsrfdata
       CALL ncio_read_serial (fsrfdata, 'latitude',  SITE_lat_location)
       CALL ncio_read_serial (fsrfdata, 'longitude', SITE_lon_location)
 
@@ -292,8 +291,7 @@ CONTAINS
          LocalLongitude = SITE_lon_location
       ENDIF
 
-      IF (.not. present(mkinidata)) THEN
-         print*, 'not present'
+      IF (.not. present(mkrun)) THEN
          IF ((.not. mksrfdata) .or. USE_SITE_urban_paras) THEN
 
             CALL ncio_read_serial (fsrfdata, 'tree_area_fraction'         , SITE_fveg_urb  )

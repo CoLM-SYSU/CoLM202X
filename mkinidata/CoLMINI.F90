@@ -95,7 +95,7 @@ PROGRAM CoLMINI
 #ifndef URBAN_MODEL
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
 #else
-   CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkinidata=.true.)
+   CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkrun=.true.)
 #endif
 #endif
 
