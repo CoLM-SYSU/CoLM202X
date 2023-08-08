@@ -115,7 +115,7 @@ MODULE MOD_Thermal
   USE MOD_Vars_1DPFTFluxes
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-  USE MOD_Hydro_SoilFunction, only : soil_psi_from_vliq
+  USE MOD_Hydro_SoilFunction, only: soil_psi_from_vliq
 #endif
   USE MOD_SPMD_Task
   USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, &
@@ -1010,7 +1010,7 @@ ENDIF
       IF (abs(errore) > .5) THEN
       write(6,*) 'MOD_Thermal.F90: energy balance violation'
       write(6,*) ipatch,errore,sabv,sabg,frl,olrg,fsenl,fseng,hvap*fevpl,htvp*fevpg,xmf,hprl
-      STOP
+      CALL CoLM_stop ()
       ENDIF
 100   format(10(f15.3))
 #endif

@@ -52,7 +52,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
    ! local variables:
    ! ---------------------------------------------------------------
-   CHARACTER(len=256) :: landdir, lndname, cyear, soildir
+   CHARACTER(len=256) :: landdir, lndname, cyear
    CHARACTER(len=256) :: c
    INTEGER :: nsl, ipatch, L, np, LL, ipxstt, ipxend
 
@@ -174,12 +174,6 @@ SUBROUTINE Aggregation_SoilParameters ( &
    external SW_VG_dist                    ! the objective function to be fitted for van Genuchten SW retention curve
 !   external Ke_Sr_dist                    ! the objective function to be fitted for Balland and Arp (2005) Ke-Sr relationship
 
-#ifdef LULC_USGS
-   soildir = '/soil_USGS/'
-#else
-   soildir = '/soil_IGBP/'
-#endif
-
    write(cyear,'(i4.4)') lc_year
    landdir = trim(dir_model_landdata) // '/soil/' // trim(cyear)
 
@@ -267,7 +261,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, vf_quartz_mineral_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'vf_quartz_mineral_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/vf_quartz_mineral_s.nc'
          CALL ncio_read_block (lndname, 'vf_quartz_mineral_s_l'//trim(c), gland, vf_quartz_mineral_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = vf_quartz_mineral_s_grid)
@@ -280,7 +274,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = vf_quartz_mineral_s_grid, data_r8_2d_out1 = vf_quartz_mineral_s_one)
                vf_quartz_mineral_s_patches (ipatch) = sum (vf_quartz_mineral_s_one * (area_one/sum(area_one)))
             ELSE
@@ -331,15 +325,15 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, vf_gravels_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'vf_gravels_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/vf_gravels_s.nc'
          CALL ncio_read_block (lndname, 'vf_gravels_s_l'//trim(c), gland, vf_gravels_s_grid)
 
          CALL allocate_block_data (gland, vf_sand_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'vf_sand_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/vf_sand_s.nc'
          CALL ncio_read_block (lndname, 'vf_sand_s_l'//trim(c), gland, vf_sand_s_grid)
 
          CALL allocate_block_data (gland, vf_om_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'vf_om_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/vf_om_s.nc'
          CALL ncio_read_block (lndname, 'vf_om_s_l'//trim(c), gland, vf_om_s_grid)
 
 #ifdef USEMPI
@@ -354,7 +348,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = vf_gravels_s_grid, data_r8_2d_out1 = vf_gravels_s_one, &
                   data_r8_2d_in2 = vf_sand_s_grid,    data_r8_2d_out2 = vf_sand_s_one, &
                   data_r8_2d_in3 = vf_om_s_grid,      data_r8_2d_out3 = vf_om_s_one)
@@ -366,11 +360,8 @@ SUBROUTINE Aggregation_SoilParameters ( &
                ! the parameter values of Balland and Arp (2005) Ke-Sr relationship,
                ! modified by Barry-Macaulay et al.(2015), Evaluation of soil thermal conductivity models
 
-               ipxstt = landpatch%ipxstt(ipatch)
-               ipxend = landpatch%ipxend(ipatch)
-
-               allocate(BA_alpha_one  (ipxstt:ipxend))
-               allocate(BA_beta_one   (ipxstt:ipxend))
+               allocate(BA_alpha_one  (size(area_one)))
+               allocate(BA_beta_one   (size(area_one)))
                where ((vf_gravels_s_one + vf_sand_s_one) > 0.4)
                        BA_alpha_one = 0.38
                        BA_beta_one = 35.0
@@ -562,7 +553,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, wf_gravels_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'wf_gravels_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/wf_gravels_s.nc'
          CALL ncio_read_block (lndname, 'wf_gravels_s_l'//trim(c), gland, wf_gravels_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_gravels_s_grid)
@@ -575,7 +566,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = wf_gravels_s_grid, data_r8_2d_out1 = wf_gravels_s_one)
                wf_gravels_s_patches (ipatch) = sum (wf_gravels_s_one * (area_one/sum(area_one)))
             ELSE
@@ -624,7 +615,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, wf_sand_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'wf_sand_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/wf_sand_s.nc'
          CALL ncio_read_block (lndname, 'wf_sand_s_l'//trim(c), gland, wf_sand_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = wf_sand_s_grid)
@@ -637,7 +628,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = wf_sand_s_grid, data_r8_2d_out1 = wf_sand_s_one)
                wf_sand_s_patches (ipatch) = sum (wf_sand_s_one * (area_one/sum(area_one)))
             ELSE
@@ -687,7 +678,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, L_vgm_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'VGM_L.nc'
+         lndname = trim(dir_rawdata)//'/soil/VGM_L.nc'
          CALL ncio_read_block (lndname, 'VGM_L_l'//trim(c), gland, L_vgm_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = L_vgm_grid)
@@ -700,7 +691,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
                   data_r8_2d_in1 = L_vgm_grid, data_r8_2d_out1 = L_vgm_one)
                L_vgm_patches (ipatch) = median (L_vgm_one, size(L_vgm_one), spval)
             ELSE
@@ -752,19 +743,19 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, theta_r_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'VGM_theta_r.nc'
+         lndname = trim(dir_rawdata)//'/soil/VGM_theta_r.nc'
          CALL ncio_read_block (lndname, 'VGM_theta_r_l'//trim(c), gland, theta_r_grid)
 
          CALL allocate_block_data (gland, alpha_vgm_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'VGM_alpha.nc'
+         lndname = trim(dir_rawdata)//'/soil/VGM_alpha.nc'
          CALL ncio_read_block (lndname, 'VGM_alpha_l'//trim(c), gland, alpha_vgm_grid)
 
          CALL allocate_block_data (gland, n_vgm_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'VGM_n.nc'
+         lndname = trim(dir_rawdata)//'/soil/VGM_n.nc'
          CALL ncio_read_block (lndname, 'VGM_n_l'//trim(c), gland, n_vgm_grid)
 
          CALL allocate_block_data (gland, theta_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'theta_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/theta_s.nc'
          CALL ncio_read_block (lndname, 'theta_s_l'//trim(c), gland, theta_s_grid)
 
 #ifdef USEMPI
@@ -780,7 +771,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                       data_r8_2d_in1 = theta_r_grid,   data_r8_2d_out1 = theta_r_one, &
                       data_r8_2d_in2 = alpha_vgm_grid, data_r8_2d_out2 = alpha_vgm_one, &
                       data_r8_2d_in3 = n_vgm_grid,     data_r8_2d_out3 = n_vgm_one, &
@@ -792,18 +783,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
                IF (DEF_USE_SOILPAR_UPS_FIT) THEN
                   np = size(theta_r_one)
-                  ipxstt = landpatch%ipxstt(ipatch)
-                  ipxend = landpatch%ipxend(ipatch)
 
                   IF( np > 1 ) then
-                     allocate ( ydatv  (ipxstt:ipxend,npointw) )
+                     allocate ( ydatv  (1:np,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                      allocate ( fjacv  (npointw,nv) )           ! calculated in SW_VG_dist
 ! the values of objective functions to be fitted
                      allocate ( fvecv  (npointw)    )           ! calculated in SW_VG_dist
 
 ! SW VG retentions at fine grids for each patch
-                     do LL = ipxstt,ipxend
+                     do LL = 1,np
                         ydatv(LL,:) = theta_r_one(LL)+(theta_s_one(LL) - theta_r_one(LL)) &
                                     * (1+(alpha_vgm_one(LL)*xdat)**n_vgm_one(LL))**(1.0/n_vgm_one(LL)-1)
                      end do
@@ -952,15 +941,15 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, theta_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'theta_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/theta_s.nc'
          CALL ncio_read_block (lndname, 'theta_s_l'//trim(c), gland, theta_s_grid)
 
          CALL allocate_block_data (gland, psi_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'psi_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/psi_s.nc'
          CALL ncio_read_block (lndname, 'psi_s_l'//trim(c), gland, psi_s_grid)
 
          CALL allocate_block_data (gland, lambda_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'lambda.nc'
+         lndname = trim(dir_rawdata)//'/soil/lambda.nc'
          CALL ncio_read_block (lndname, 'lambda_l'//trim(c), gland, lambda_grid)
 
 #ifdef USEMPI
@@ -975,7 +964,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                             data_r8_2d_in1 = theta_s_grid, data_r8_2d_out1 = theta_s_one, &
                             data_r8_2d_in2 = psi_s_grid,   data_r8_2d_out2 = psi_s_one, &
                             data_r8_2d_in3 = lambda_grid,  data_r8_2d_out3 = lambda_one)
@@ -985,18 +974,16 @@ SUBROUTINE Aggregation_SoilParameters ( &
 
                IF (DEF_USE_SOILPAR_UPS_FIT) THEN
                   np = size(psi_s_one)
-                  ipxstt = landpatch%ipxstt(ipatch)
-                  ipxend = landpatch%ipxend(ipatch)
 
                   IF( np > 1 ) then
-                     allocate ( ydatc  (ipxstt:ipxend,npointw) )
+                     allocate ( ydatc  (1:np,npointw) )
 ! the jacobian matrix required in Levenberg–Marquardt fitting method
                      allocate ( fjacc  (npointw,nc) )           ! calculated in SW_CB_dist
 ! the values of objective functions to be fitted
                      allocate ( fvecc  (npointw)    )           ! calculated in SW_CB_dist
 
 ! SW CB retentions at fine grids for each patch
-                     do LL = ipxstt,ipxend
+                     do LL = 1,np
                         ydatc(LL,:) = (-1.0*xdat/psi_s_one(LL))**(-1.0*lambda_one(LL)) * theta_s_one(LL)
                      end do
 
@@ -1114,7 +1101,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (14) saturated hydraulic conductivity [cm/day]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, k_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'k_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/k_s.nc'
          CALL ncio_read_block (lndname, 'k_s_l'//trim(c), gland, k_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_s_grid)
@@ -1127,7 +1114,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = k_s_grid, data_r8_2d_out1 = k_s_one)
                k_s_patches (ipatch) = product(k_s_one**(area_one/sum(area_one)))
             ELSE
@@ -1173,7 +1160,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (15) heat capacity of soil solids [J/(m3 K)]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, csol_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'csol.nc'
+         lndname = trim(dir_rawdata)//'/soil/csol.nc'
          CALL ncio_read_block (lndname, 'csol_l'//trim(c), gland, csol_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = csol_grid)
@@ -1186,7 +1173,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = csol_grid, data_r8_2d_out1 = csol_one)
                csol_patches (ipatch) = sum(csol_one*(area_one/sum(area_one)))
             ELSE
@@ -1232,7 +1219,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (16) thermal conductivity of unfrozen saturated soil [W/m-K]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, tksatu_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'tksatu.nc'
+         lndname = trim(dir_rawdata)//'/soil/tksatu.nc'
          CALL ncio_read_block (lndname, 'tksatu_l'//trim(c), gland, tksatu_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatu_grid)
@@ -1245,7 +1232,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = tksatu_grid, data_r8_2d_out1 = tksatu_one)
                tksatu_patches (ipatch) = product(tksatu_one**(area_one/sum(area_one)))
             ELSE
@@ -1291,7 +1278,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (17) thermal conductivity of frozen saturated soil [W/m-K]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, tksatf_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'tksatf.nc'
+         lndname = trim(dir_rawdata)//'/soil/tksatf.nc'
          CALL ncio_read_block (lndname, 'tksatf_l'//trim(c), gland, tksatf_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tksatf_grid)
@@ -1304,7 +1291,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = tksatf_grid, data_r8_2d_out1 = tksatf_one)
                tksatf_patches (ipatch) = product(tksatf_one**(area_one/sum(area_one)))
             ELSE
@@ -1350,7 +1337,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (18) thermal conductivity for dry soil [W/(m-K)]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, tkdry_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'tkdry.nc'
+         lndname = trim(dir_rawdata)//'/soil/tkdry.nc'
          CALL ncio_read_block (lndname, 'tkdry_l'//trim(c), gland, tkdry_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = tkdry_grid)
@@ -1363,7 +1350,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = tkdry_grid, data_r8_2d_out1 = tkdry_one)
                tkdry_patches (ipatch) = product(tkdry_one**(area_one/sum(area_one)))
             ELSE
@@ -1409,7 +1396,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       ! (19) thermal conductivity of soil solids [W/m-K]
       IF (p_is_io) THEN
          CALL allocate_block_data (gland, k_solids_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'k_solids.nc'
+         lndname = trim(dir_rawdata)//'/soil/k_solids.nc'
          CALL ncio_read_block (lndname, 'k_solids_l'//trim(c), gland, k_solids_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = k_solids_grid)
@@ -1422,7 +1409,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = k_solids_grid, data_r8_2d_out1 = k_solids_one)
                k_solids_patches (ipatch) = product(k_solids_one**(area_one/sum(area_one)))
             ELSE
@@ -1469,7 +1456,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, OM_density_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'OM_density_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/OM_density_s.nc'
          CALL ncio_read_block (lndname, 'OM_density_s_l'//trim(c), gland, OM_density_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = OM_density_s_grid)
@@ -1482,7 +1469,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = OM_density_s_grid, data_r8_2d_out1 = OM_density_s_one)
                OM_density_s_patches (ipatch) = sum (OM_density_s_one * (area_one/sum(area_one)))
             ELSE
@@ -1530,7 +1517,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
       IF (p_is_io) THEN
 
          CALL allocate_block_data (gland, BD_all_s_grid)
-         lndname = trim(dir_rawdata)//trim(soildir)//'BD_all_s.nc'
+         lndname = trim(dir_rawdata)//'/soil/BD_all_s.nc'
          CALL ncio_read_block (lndname, 'BD_all_s_l'//trim(c), gland, BD_all_s_grid)
 #ifdef USEMPI
          CALL aggregation_data_daemon (gland, data_r8_2d_in1 = BD_all_s_grid)
@@ -1543,7 +1530,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
                   data_r8_2d_in1 = BD_all_s_grid, data_r8_2d_out1 = BD_all_s_one)
                BD_all_s_patches (ipatch) = sum (BD_all_s_one * (area_one/sum(area_one)))
             ELSE

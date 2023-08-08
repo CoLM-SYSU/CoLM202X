@@ -30,7 +30,11 @@ MODULE MOD_LeafInterception
    ! 2002.08.31  Yongjiu Dai
    USE MOD_Precision
    USE MOD_Const_Physical, only: tfrz, denh2o, denice
-   USE MOD_Namelist, only : DEF_Interception_scheme
+   USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_IRRIGATION
+#ifdef CROP
+   USE MOD_Irrigation, only: CalIrrigationApplicationFluxes   
+#endif
+
    IMPLICIT NONE
 
    REAL(r8), parameter ::  CICE        = 2.094E06  !specific heat capacity of ice (j/m3/k)
@@ -76,6 +80,11 @@ MODULE MOD_LeafInterception
    REAL(r8)  :: FP
    REAL(r8)  :: int_rain
    REAL(r8)  :: int_snow
+
+   REAL(r8) :: qflx_irrig_drip
+   REAL(r8) :: qflx_irrig_sprinkler
+   REAL(r8) :: qflx_irrig_flood
+   REAL(r8) :: qflx_irrig_paddy
 
 contains
 
@@ -156,14 +165,18 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
          satcap = dewmx*vegt
 
-         p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+         p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
          ppc = (prc_rain+prc_snow)*deltim
-         ppl = (prl_rain+prl_snow)*deltim
+         ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
          w = ldew+p0
          IF (tleaf > tfrz) THEN
@@ -196,7 +209,7 @@ contains
             ! assume alpha_rain = alpha_snow
             alpha_rain = 0.25
             fpi = alpha_rain * ( 1.-exp(-exrain*lsai) )
-            tti_rain = (prc_rain+prl_rain)*deltim * ( 1.-fpi )
+            tti_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi )
             tti_snow = (prc_snow+prl_snow)*deltim * ( 1.-fpi )
 
             xs = 1.
@@ -211,7 +224,7 @@ contains
 
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
                      - (satcap-ldew) * xs
             tex_rain = max( tex_rain, 0. )
             tex_snow = 0.
@@ -243,7 +256,7 @@ contains
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 #if(defined CoLMDEBUG)
@@ -260,10 +273,10 @@ contains
          !NOTE: this bug should exist in other interception schemes @Zhongwang.
          IF (ldew > 0.) THEN
             IF (tleaf > tfrz) THEN
-               pg_rain = prc_rain + prl_rain + ldew/deltim
+               pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler + ldew/deltim
                pg_snow = prc_snow + prl_snow
             ELSE
-               pg_rain = prc_rain + prl_rain
+               pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
                pg_snow = prc_snow + prl_snow + ldew/deltim
             ENDIF
          ELSE
@@ -337,14 +350,18 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
          satcap = dewmx*vegt
 
-         p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+         p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
          ppc = (prc_rain+prc_snow)*deltim
-         ppl = (prl_rain+prl_snow)*deltim
+         ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
          w = ldew+p0
 
@@ -376,7 +393,7 @@ contains
             ! set fraction of potential interception to max 0.25 (Lawrence et al. 2007)
             alpha_rain = 0.25
             fpi = alpha_rain * ( 1.-exp(-exrain*lsai) )
-            tti_rain = (prc_rain+prl_rain)*deltim * ( 1.-fpi )
+            tti_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi )
             tti_snow = (prc_snow+prl_snow)*deltim * ( 1.-fpi )
 
             xs = 1.
@@ -390,7 +407,7 @@ contains
             ENDIF
 
             ! assume no fall down of the intercepted snowfall in a time step drainage
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
 
             !       tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
             !                - (satcap-ldew) * xs
@@ -424,7 +441,7 @@ contains
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
@@ -439,7 +456,7 @@ contains
 
       ELSE
          ldew = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -506,15 +523,19 @@ contains
       REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
+      
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
          satcap = dewmx*vegt
 
-         p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+         p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
          ppc = (prc_rain+prc_snow)*deltim
-         ppl = (prl_rain+prl_snow)*deltim
+         ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
          w = ldew+p0
 
@@ -549,7 +570,7 @@ contains
             ! set fraction of potential interception to max 0.25 (Lawrence et al. 2007)
             alpha_rain = 0.25
             fpi = alpha_rain * ( 1.-exp(-exrain*lsai) )
-            tti_rain = (prc_rain+prl_rain)*deltim * ( 1.-fpi )
+            tti_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi )
             tti_snow = (prc_snow+prl_snow)*deltim * ( 1.-fpi )
 
             xs = 1.
@@ -565,7 +586,7 @@ contains
             ! assume no fall down of the intercepted snowfall in a time step
             ! drainage
 
-            tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
             !       tex_rain = (prc_rain+prl_rain)*deltim * fpi * (ap/bp*(1.-exp(-bp*xs))+cp*xs) &
             !                - (satcap-ldew) * xs
             tex_rain = max( tex_rain, 0. )
@@ -597,7 +618,7 @@ contains
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
@@ -613,7 +634,7 @@ contains
       ELSE
 
          ldew = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -689,12 +710,16 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
-         p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+         p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
          ppc = (prc_rain+prc_snow)*deltim
-         ppl = (prl_rain+prl_snow)*deltim
+         ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
          w = ldew+p0
          satcap_rain = dewmx*vegt
          satcap_snow = satcap_rain*60.0
@@ -721,9 +746,9 @@ contains
             alpha_snow = 1.0
             fpi_rain   = alpha_rain * tanh(lsai)
             fpi_snow   = alpha_snow * ( 1.-exp(-0.5*lsai) )
-            tti_rain   = (prc_rain+prl_rain)*deltim * ( 1.-fpi_rain )
+            tti_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fpi_rain )
             tti_snow   = (prc_snow+prl_snow)*deltim * ( 1.-fpi_snow )
-            tex_rain   = (prc_rain+prl_rain)*deltim * fpi_rain -satcap_rain         !*(prc_rain+prl_rain)/p0 !(satcap-ldew) * xs
+            tex_rain   = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * fpi_rain -satcap_rain         !*(prc_rain+prl_rain)/p0 !(satcap-ldew) * xs
             tex_snow   = (prc_snow+prl_snow)*deltim * fpi_snow -satcap_snow         ! (ap/bp*(1.-exp(-bp*xs))+cp*xs) - (satcap-ldew) * xs
             tex_rain   = max( tex_rain, 0. )
             tex_snow   = max( tex_snow, 0. )
@@ -748,7 +773,7 @@ contains
          thru_rain = tti_rain + tex_rain
          thru_snow = tti_snow + tex_snow
          pinf      = p0 - (thru_rain + thru_snow)
-         ldew_rain = ldew_rain+ (prc_rain + prl_rain)*deltim - thru_rain -xsc_rain
+         ldew_rain = ldew_rain+ (prc_rain + prl_rain + qflx_irrig_sprinkler)*deltim - thru_rain -xsc_rain
          ldew_snow = ldew_snow+ (prc_snow + prl_snow)*deltim  - thru_snow-xsc_snow
          ldew_snow = max(0.0,ldew_snow)
          ldew_rain = max(0.0,ldew_rain)
@@ -757,7 +782,7 @@ contains
          pg_rain = (xsc_rain + thru_rain) / deltim
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 #if(defined CoLMDEBUG)
@@ -773,7 +798,7 @@ contains
          ldew = 0.
          ldew_rain = 0.
          ldew_snow = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -845,6 +870,10 @@ contains
       REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -881,22 +910,22 @@ contains
          ENDIF
 
          IF (p0 > 1.e-8) THEN
-            p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+            p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
             ppc = (prc_rain+prc_snow)*deltim
-            ppl = (prl_rain+prl_snow)*deltim
+            ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
             w = ldew+p0
 
-            tti_rain = (prc_rain+prl_rain)*deltim * ( 1.-fvegc )
+            tti_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1.-fvegc )
             tti_snow = (prc_snow+prl_snow)*deltim * ( 1.-fvegc )
 
             FP=p0/(10.*ppc+ppl)
-            int_rain=min(fvegc*FP,(satcap_rain-ldew_rain)/((prc_rain+prl_rain)*deltim)*(1.0-exp(-(prc_rain+prl_rain)*deltim/satcap_rain)))
+            int_rain=min(fvegc*FP,(satcap_rain-ldew_rain)/((prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim)*(1.0-exp(-(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim/satcap_rain)))
             int_snow=min(fvegc*FP,(satcap_snow-ldew_snow)/((prc_snow+prl_snow)*deltim)*(1.0-exp(-(prc_snow+prl_snow)*deltim/satcap_snow)))
             int_rain=max(0.,int_rain)
             int_snow=max(0.,int_snow)
 
-            tex_rain = (prc_rain+prl_rain)*deltim * ( 1. - int_rain )
+            tex_rain = (prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim * ( 1. - int_rain )
             tex_snow = (prc_snow+prl_snow)*deltim * ( 1. - int_snow )
 #if(defined CoLMDEBUG)
             IF (tex_rain+tex_snow+tti_rain+tti_snow-p0 > 1.e-10) THEN
@@ -927,7 +956,7 @@ contains
          qintr   = pinf / deltim
 
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 
 
@@ -942,7 +971,7 @@ contains
 
       ELSE
          ldew = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -1014,6 +1043,10 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1040,20 +1073,20 @@ contains
          ENDIF
 
          IF (p0 > 1.e-8) THEN
-            p0  = (prc_rain + prc_snow + prl_rain + prl_snow)*deltim
+            p0  = (prc_rain + prc_snow + prl_rain + prl_snow + qflx_irrig_sprinkler)*deltim
             ppc = (prc_rain+prc_snow)*deltim
-            ppl = (prl_rain+prl_snow)*deltim
+            ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
             w = ldew+p0
             fpi_rain   = max(min(lsai, 1.0),0.0)
             fpi_snow   = max(min(lsai, 1.0),0.0)
 
-            tti_rain = fpi_rain * (prc_rain/0.1+prl_rain)*deltim + fpi_rain * (prl_rain)*deltim
-            tti_snow = fpi_snow * (prc_snow/0.1+prl_snow)*deltim + fpi_snow * (prl_rain)*deltim
-            tti_rain = min(tti_rain,(prc_rain+prl_rain)*deltim)
+            tti_rain = fpi_rain * (prc_rain/0.1+prl_rain+qflx_irrig_sprinkler)*deltim + fpi_rain * (prl_rain+qflx_irrig_sprinkler)*deltim
+            tti_snow = fpi_snow * (prc_snow/0.1+prl_snow)*deltim + fpi_snow * (prl_rain+qflx_irrig_sprinkler)*deltim
+            tti_rain = min(tti_rain,(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim)
             tti_snow = min(tti_snow,(prc_snow+prl_snow)*deltim)
 
-            tex_rain=max(ldew_rain+(prc_rain+prl_rain)*deltim-tti_rain-satcap_rain,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_rain+(prc_rain+prl_rain)*deltim-tti_rain,satcap_rain)/deltim))*deltim
+            tex_rain=max(ldew_rain+(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim-tti_rain-satcap_rain,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_rain+(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim-tti_rain,satcap_rain)/deltim))*deltim
             tex_snow=max(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow-satcap_snow,0.0) + (1.14d-11)*exp(3.7d3*(min(ldew_snow+(prc_snow+prl_snow)*deltim-tti_snow,satcap_snow)/deltim))*deltim
 
 
@@ -1081,14 +1114,14 @@ contains
          thru_snow = tti_snow + tex_snow
          pinf = p0 - (thru_rain + thru_snow)
          ldew = ldew + pinf
-         ldew_rain= ldew_rain+(prc_rain+prl_rain)*deltim- thru_rain
+         ldew_rain= ldew_rain+(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim- thru_rain
          ldew_snow= ldew_snow+(prc_snow+prl_snow)*deltim- thru_snow
 
          pg_rain = (xsc_rain + thru_rain) / deltim
          pg_snow = (xsc_snow + thru_snow) / deltim
          qintr   = pinf / deltim
 
-         qintr_rain = prc_rain + prl_rain - thru_rain / deltim
+         qintr_rain = prc_rain + prl_rain + qflx_irrig_sprinkler - thru_rain / deltim
          qintr_snow = prc_snow + prl_snow - thru_snow / deltim
 #if(defined CoLMDEBUG)
          w = w - ldew - (pg_rain+pg_snow)*deltim
@@ -1103,7 +1136,7 @@ contains
          ldew = 0.
          ldew_rain = 0.
          ldew_snow = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -1180,6 +1213,10 @@ contains
       real(r8) :: MaxInt,MaxWaterInt,RainThroughFall,Overload,IntRainFract,IntSnowFract,ldew_smelt
       real(r8) :: drip
 
+      if(.not. DEF_USE_IRRIGATION)then
+         qflx_irrig_sprinkler = 0._r8
+      end if
+      
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1256,7 +1293,7 @@ contains
          MaxInt=exp(-4.0)*lsai !need check the unit!!  maximum interception capacity!!1
          MaxWaterInt =0.035 * (ldew_snow) + MaxInt
 
-         Rain=(prc_rain+prl_rain)*deltim
+         Rain=(prc_rain+prl_rain+qflx_irrig_sprinkler)*deltim
          if (ldew_rain+Rain <=MaxWaterInt) THEN
                !/* physical depth */
                ldew_rain=ldew_rain+Rain
@@ -1328,7 +1365,7 @@ contains
          qintr_rain=-0.0
       ELSE
          ldew = 0.
-         pg_rain = prc_rain + prl_rain
+         pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
          pg_snow = prc_snow + prl_snow
          qintr   = 0.
          qintr_rain = 0.
@@ -1490,6 +1527,12 @@ contains
 
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
+
+#ifdef CROP
+      if(DEF_USE_IRRIGATION)then
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+      end if
+#endif
 
       if (DEF_Interception_scheme==1) THEN
          DO i = ps, pe

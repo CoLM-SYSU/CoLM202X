@@ -78,9 +78,11 @@ CONTAINS
 
      CALL vector_read_basin (file_restart, wdsrf_bsn, numbasin, 'wdsrf_bsn', elm_data_address)
      CALL vector_read_basin (file_restart, veloc_riv, numbasin, 'veloc_riv', elm_data_address)
+     CALL vector_read_basin (file_restart, wdsrf_bsn_prev, numbasin, 'wdsrf_bsn_prev', elm_data_address)
 
      CALL vector_read_basin (file_restart, wdsrf_hru, numhru, 'wdsrf_hru', hru_data_address)
      CALL vector_read_basin (file_restart, veloc_hru, numhru, 'veloc_hru', hru_data_address)
+     CALL vector_read_basin (file_restart, wdsrf_hru_prev, numhru, 'wdsrf_hru_prev', hru_data_address)
 
   END SUBROUTINE READ_HydroTimeVariables
 
@@ -128,6 +130,12 @@ CONTAINS
 
      CALL vector_write_basin (&
         file_restart, veloc_hru, numhru, totalnumhru, 'veloc_hru', 'hydrounit', hru_data_address)
+     
+     CALL vector_write_basin (&
+        file_restart, wdsrf_bsn_prev, numbasin, totalnumelm, 'wdsrf_bsn_prev', 'basin', elm_data_address)
+
+     CALL vector_write_basin (&
+        file_restart, wdsrf_hru_prev, numhru, totalnumhru, 'wdsrf_hru_prev', 'hydrounit', hru_data_address)
 
   END SUBROUTINE WRITE_HydroTimeVariables
 

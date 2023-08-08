@@ -18,6 +18,7 @@ module MOD_BGC_CNSummary
   use MOD_Precision
   use MOD_Namelist, only : DEF_USE_NITRIF
   use MOD_Vars_PFTimeInvariants, only: pftclass
+  use MOD_Vars_PFTimeVariables, only :irrig_method_p
   use MOD_BGC_Vars_TimeVariables, only: &
       totlitc, totsomc, totcwdc, decomp_cpools, decomp_cpools_vr, ctrunc_soil,ctrunc_veg, ctrunc_vr, &
       totlitn, totsomn, totcwdn, decomp_npools, decomp_npools_vr, ntrunc_soil,ntrunc_veg, ntrunc_vr, &
@@ -94,6 +95,9 @@ module MOD_BGC_CNSummary
       m_livecrootc_to_fire_p, m_livecrootc_storage_to_fire_p, m_livecrootc_xfer_to_fire_p, &
       m_deadcrootc_to_fire_p, m_deadcrootc_storage_to_fire_p, m_deadcrootc_xfer_to_fire_p, &
       m_gresp_storage_to_fire_p, m_gresp_xfer_to_fire_p
+  use MOD_Vars_TimeVariables, only: &
+      irrig_method_corn  , irrig_method_swheat, irrig_method_wwheat, irrig_method_soybean  , &
+      irrig_method_cotton, irrig_method_rice1 , irrig_method_rice2 , irrig_method_sugarcane
   use MOD_Vars_TimeInvariants, only : patchclass
   use MOD_Vars_Global, only : spval
   use MOD_SPMD_Task
@@ -343,20 +347,28 @@ contains
 
 #ifdef CROP
        if(     pftclass(m) .eq. 17 .or. pftclass(m) .eq. 18 .or. pftclass(m) .eq. 63 .or. pftclass(m) .eq. 64)then
-          fertnitro_corn(i) = fertnitro_p(m) 
+          fertnitro_corn        (i) = fertnitro_p   (m) 
+          irrig_method_corn     (i) = irrig_method_p(m)
        else if(pftclass(m) .eq. 19 .or. pftclass(m) .eq. 20)then
-          fertnitro_swheat(i) = fertnitro_p(m)
+          fertnitro_swheat      (i) = fertnitro_p   (m)
+          irrig_method_swheat(i) = irrig_method_p   (m)
        else if(pftclass(m) .eq. 21 .or. pftclass(m) .eq. 22)then
-          fertnitro_wwheat(i) = fertnitro_p(m)
+          fertnitro_wwheat      (i) = fertnitro_p   (m)
+          irrig_method_wwheat   (i) = irrig_method_p(m)
        else if(pftclass(m) .eq. 23 .or. pftclass(m) .eq. 24 .or. pftclass(m) .eq. 77 .or. pftclass(m) .eq. 78)then
-          fertnitro_soybean(i) = fertnitro_p(m)
+          fertnitro_soybean     (i) = fertnitro_p   (m)
+          irrig_method_soybean  (i) = irrig_method_p(m)
        else if(pftclass(m) .eq. 41 .or. pftclass(m) .eq. 42)then
-          fertnitro_cotton(i) = fertnitro_p(m)
+          fertnitro_cotton      (i) = fertnitro_p   (m)
+          irrig_method_cotton   (i) = irrig_method_p(m)
        else if(pftclass(m) .eq. 61 .or. pftclass(m) .eq. 62)then
-          fertnitro_rice1(i) = fertnitro_p(m)
-          fertnitro_rice2(i) = fertnitro_p(m)
+          fertnitro_rice1       (i) = fertnitro_p   (m)
+          fertnitro_rice2       (i) = fertnitro_p   (m)
+          irrig_method_rice1    (i) = irrig_method_p(m)
+          irrig_method_rice2    (i) = irrig_method_p(m)
        else if(pftclass(m) .eq. 67 .or. pftclass(m) .eq. 68)then
-          fertnitro_sugarcane(i) = fertnitro_p(m)
+          fertnitro_sugarcane   (i) = fertnitro_p   (m)
+          irrig_method_sugarcane(i) = irrig_method_p(m)
        end if
 #endif
     end do

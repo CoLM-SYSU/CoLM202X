@@ -5,10 +5,16 @@ MODULE MOD_SoilSnowHydrology
 !-----------------------------------------------------------------------
   use MOD_Precision
   use MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_SNICAR, &
-                          DEF_URBAN_RUN
+                          DEF_URBAN_RUN, DEF_USE_IRRIGATION
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
+
+#ifdef CROP
+   use MOD_LandPFT, only: patch_pft_s, patch_pft_e
+   use MOD_Irrigation, only: CalIrrigationApplicationFluxes
+#endif
+
   IMPLICIT NONE
   SAVE
 
@@ -161,6 +167,15 @@ MODULE MOD_SoilSnowHydrology
 #if(defined CaMa_Flood)
   real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
+
+   integer  :: ps, pe
+#ifdef CROP
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
+#endif
+
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto soil
 !=======================================================================
@@ -181,6 +196,15 @@ MODULE MOD_SoilSnowHydrology
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
          ENDIF
       endif
+
+#ifdef CROP
+      if(DEF_USE_IRRIGATION)then
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+      end if
+#endif
 
 !=======================================================================
 ! [2] surface runoff and infiltration
@@ -449,6 +473,15 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(in)    :: fldfrc    ! inundation water input from top (mm/s)
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
+
+#ifdef CROP
+  integer  :: ps, pe
+  real(r8) :: qflx_irrig_drip
+  real(r8) :: qflx_irrig_sprinkler
+  real(r8) :: qflx_irrig_flood
+  real(r8) :: qflx_irrig_paddy
+#endif
+
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -546,6 +579,14 @@ MODULE MOD_SoilSnowHydrology
          ENDIF
       endif
 
+#ifdef CROP
+      if(DEF_USE_IRRIGATION)then
+         ps = patch_pft_s(ipatch)
+         pe = patch_pft_e(ipatch)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+      end if
+#endif
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
@@ -720,7 +761,7 @@ MODULE MOD_SoilSnowHydrology
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
          qraing, etr, rootr(1:nl_soil), rsubst, qinfl, &
-         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil))
+         wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
 
       ! update the mass of liquid water
       DO j = nl_soil, 1, -1
@@ -769,7 +810,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 #if(defined CoLMDEBUG)
       if(abs(err_solver) > 1.e-3)then
-         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver
+         write(6,'(A,E20.5)') 'Warning (WATER_VSF): water balance violation', err_solver,ipatch
       endif
       IF (any(wliq_soisno < -1.e-3)) THEN
          write(6,'(A,10E20.5)') 'Warning (WATER_VSF): negative soil water', wliq_soisno(1:nl_soil)

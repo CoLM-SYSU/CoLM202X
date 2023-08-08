@@ -162,7 +162,7 @@ CONTAINS
          ELSE                       !lake and ocean
             sabvg = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
                   + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
-            sabg = sabvg
+            sabg  = sabvg
          ENDIF
 
          IF (DEF_USE_SNICAR) THEN

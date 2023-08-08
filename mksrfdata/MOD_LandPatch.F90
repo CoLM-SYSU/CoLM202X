@@ -187,9 +187,9 @@ CONTAINS
 
 #ifndef SinglePoint
 #ifdef CATCHMENT
-            CALL aggregation_request_data (landhru, iset, gpatch, &
+            CALL aggregation_request_data (landhru, iset, gpatch, zip = .false., &
 #else
-            CALL aggregation_request_data (landelm, iset, gpatch, &
+            CALL aggregation_request_data (landelm, iset, gpatch, zip = .false., &
 #endif
                data_i4_2d_in1 = patchdata, data_i4_2d_out1 = ibuff)
 
@@ -204,6 +204,10 @@ CONTAINS
             IF (landhru%settyp(iset) <= 0) THEN
                types(ipxstt:ipxend) = WATERBODY
             ENDIF
+            WHERE (types == 0)
+               ! set land in MERITHydro while ocean in landtype data as water body
+               types = WATERBODY
+            END WHERE
 #endif
 
 IF ((DEF_USE_PFT .and. .not.DEF_SOLO_PFT) .or. DEF_FAST_PC) THEN

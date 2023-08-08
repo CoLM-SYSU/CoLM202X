@@ -85,6 +85,7 @@ CONTAINS
    USE MOD_Namelist
    USE MOD_Hydro_SoilWater
    USE MOD_SnowFraction
+   USE MOD_SPMD_Task
 
    IMPLICIT NONE
 
@@ -318,7 +319,7 @@ CONTAINS
         REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
         REAL(r8) snofrz     (maxsnl+1:0) ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
-        INTEGER ps, pe, pc
+        INTEGER ps, pe
 
    !-----------------------------------------------------------------------
    IF(patchtype <= 5)THEN ! land grid
@@ -798,6 +799,7 @@ CONTAINS
          tref_min_inst_p          (ps:pe) = spval
          tref_max_inst_p          (ps:pe) = spval
          latbaset_p               (ps:pe) = spval
+         fert_p                   (ps:pe) = 0._r8
 #endif
 
          if(DEF_USE_LAIFEEDBACK)then

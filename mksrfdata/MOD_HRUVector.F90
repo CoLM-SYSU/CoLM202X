@@ -186,6 +186,12 @@ CONTAINS
 #else
          htype_hru(hru_data_address(0)%val) = landhru%settyp
 #endif
+
+         ! To distinguish between lake HRUs and hillslopes, the program sets the 
+         ! type of lake HRUs as a negative number. 
+         ! Set it as a positive number for output.
+         htype_hru = abs(htype_hru)
+
       ENDIF
 
 #ifdef USEMPI
