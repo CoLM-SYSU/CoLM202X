@@ -88,7 +88,7 @@ mksrfdata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_MKSRFDATA}
 	@echo ''
 	@echo 'making CoLM surface data start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_MKSRFDATA_T} -o run/mksrfdata_pointur.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_MKSRFDATA_T} -o run/mksrfdata.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM surface data completed!'
 	@echo ''
@@ -163,7 +163,7 @@ mkinidata.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MKINIDAT
 	@echo ''
 	@echo 'making CoLM initial data start >>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MKINIDATA_T} -o run/mkinidata_pointur.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MKINIDATA_T} -o run/mkinidata.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM initial data completed!'
 	@echo ''
@@ -319,7 +319,7 @@ colm.x : mkdir_build ${HEADER} ${OBJS_SHARED} ${OBJS_BASIC} ${OBJS_MAIN}
 	@echo ''
 	@echo 'making CoLM start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
 	@echo ''
-	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm_pointur.x ${LDFLAGS}
+	${FF} ${FOPTS} ${OBJS_SHARED_T} ${OBJS_BASIC_T} ${OBJS_MAIN_T} -o run/colm.x ${LDFLAGS}
 	@echo ''
 	@echo '<<<<<<<<<<<<<<<<<<<<<<<<<<<<< making CoLM completed!'
 	@echo ''
@@ -397,7 +397,7 @@ lib :
 clean :
 	rm -rf .bld
 	rm -rf lib libcolm.a
-	rm -f run/mksrfdata_pointur.x run/mkinidata_pointur.x run/colm_pointur.x
+	rm -f run/mksrfdata.x run/mkinidata.x run/colm.x
 	rm -f run/hist_concatenate.x run/srfdata_concatenate.x run/post_vector2grid.x
 	rm -f CaMa/src/*.o CaMa/src/*.mod CaMa/src/*.a
 
