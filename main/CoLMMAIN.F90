@@ -73,7 +73,7 @@ SUBROUTINE CoLMMAIN ( &
            laisun,       laisha,       rootr,                       &
            rstfacsun_out,rstfacsha_out,gssun_out,    gssha_out,     &
            assimsun_out, etrsun_out,   assimsha_out, etrsha_out,    &
-           h2osoi,       cvsoil,       wat,          &
+           h2osoi,       wat,           &
 
          ! FLUXES
            taux,         tauy,         fsena,        fevpa,         &
@@ -377,8 +377,7 @@ SUBROUTINE CoLMMAIN ( &
         gssha_out     ,&! shaded stomata conductance
         wat           ,&! total water storage
         rootr(nl_soil),&! water exchange between soil and root. Positive: soil->root [?]
-        h2osoi(nl_soil),& ! volumetric soil water in layers [m3/m3]
-        cvsoil(maxsnl+1:nl_soil)   ! heat capacity [J/(m2 K)]
+        h2osoi(nl_soil) ! volumetric soil water in layers [m3/m3]
 
   real(r8), intent(out) :: &
         assimsun_out,&
@@ -709,7 +708,7 @@ ENDIF
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
-           snofrz(lbsn:0)    ,sabg_lyr(lb:1)    ,cvsoil(lb:)                           )
+           snofrz(lbsn:0)    ,sabg_lyr(lb:1)                                           )
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
 
@@ -1336,7 +1335,6 @@ ENDIF
        etrsha_out    = 0.
        rootr         = 0.
        zwt           = 0.
-       cvsoil        = 0.
 
        IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
           wa = 0.

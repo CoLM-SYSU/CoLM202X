@@ -33,7 +33,7 @@ MODULE MOD_GroundTemperature
                          sigf,dz_soisno,z_soisno,zi_soisno,&
                          t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                          frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
-                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip,cvsoil)
+                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! Snow and soil temperatures
@@ -130,7 +130,6 @@ MODULE MOD_GroundTemperature
    real(r8), intent(inout) :: t_soisno (lb:nl_soil)   !soil temperature [K]
    real(r8), intent(inout) :: wice_soisno(lb:nl_soil) !ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:nl_soil) !liqui water [kg/m2]
-   real(r8), intent(inout) :: cvsoil(lb:nl_soil)      !heat capacity [J/(m2 K)]
    real(r8), intent(inout) :: scv      !snow cover, water equivalent [mm, kg/m2]
    real(r8), intent(inout) :: snowdp   !snow depth [m]
 
@@ -185,9 +184,6 @@ MODULE MOD_GroundTemperature
    IF(lb <= 0)THEN
       cv(:0) = cpliq*wliq_soisno(:0) + cpice*wice_soisno(:0)
    ENDIF
-
-! heat content
-   cvsoil(:) = cv(:)
 
 ! Snow thermal conductivity
    IF(lb <= 0)THEN

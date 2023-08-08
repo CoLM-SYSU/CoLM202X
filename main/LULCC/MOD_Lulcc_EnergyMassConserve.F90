@@ -16,15 +16,10 @@
    USE MOD_Lulcc_Vars_TimeInvariants
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_TMatrix
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvariants
-   USE MOD_Vars_PCTimeVariables
 #endif
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
@@ -33,6 +28,7 @@
 #endif
    USE MOD_Const_Physical, only: cpice, cpliq, denh2o, denice
    USE MOD_GroundTemperature
+   USE MOD_Namelist
 
    IMPLICIT NONE
 !TODO: need coding below...
@@ -42,15 +38,16 @@
    INTEGER, allocatable, dimension(:) :: locpxl
    INTEGER :: numpxl,ipxl
 
-   INTEGER, allocatable :: frnp_(:) !index of source patches
-   INTEGER, allocatable :: gu_(:)   !index of urban patches in last year's grid
+   INTEGER, allocatable :: frnp_(:)     !index of source patches
+   INTEGER, allocatable :: gu_(:)       !index of urban patches in last year's grid
+   REAL(r8),allocatable :: cvsoil_(:,:) !heat capacity [J/(m2 K)]
 
    INTEGER :: k, ilc, num, inp_
    INTEGER :: i, j, np, np_, selfnp_, nsl, l, ipft, ip, ip_, pc, pc_
    INTEGER :: u, u_, iu, selfu_, nurb, duclass
    INTEGER :: nlc = N_land_classification
    REAL(r8), dimension(1:N_land_classification) :: lccpct_np
-   REAL(r8):: wgt(maxsnl+1:nl_soil),wliq_soisnotmp(maxsnl+1:nl_soil)
+   REAL(r8):: wgt(maxsnl+1:nl_soil)
    REAL(r8):: vf_water ! volumetric fraction liquid water within soil
    REAL(r8):: vf_ice   ! volumetric fraction ice len within soil
    REAL(r8):: hcap     ! J/(m3 K)
@@ -147,21 +144,22 @@
                   ENDIF
 
 
-                  ! ===============SOIL, URBAN, WETLAND patch==================
-#if (defined LULC_IGBP || defined LULC_IGBP_PC)
-                  lccpct_np(:) = lccpct_patches(np,1:nlc)
-#endif
+                  ! ===============SOIL, URBAN, WETLAND, WATERBODY patch==================
 
-#ifdef LULC_IGBP_PFT
+IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                   lccpct_np(:) = 0
                   lccpct_np(1) = sum(lccpct_patches(np,1:10)) + lccpct_patches(np,14) &
                                  +   lccpct_patches(np,12)    + lccpct_patches(np,16)
-                  lccpct_np(URBAN  ) = lccpct_patches(np,URBAN  )
-                  lccpct_np(WETLAND) = lccpct_patches(np,WETLAND)
-#endif
+                  lccpct_np(URBAN  )   = lccpct_patches(np,URBAN  )
+                  lccpct_np(WETLAND)   = lccpct_patches(np,WETLAND)
+                  lccpct_np(WATERBODY) = lccpct_patches(np,WATERBODY)
+ELSE
+                  lccpct_np(:) = lccpct_patches(np,1:nlc)
+ENDIF
 
                   num = count(lccpct_np .gt. 0)
-                  allocate ( frnp_ (num) )
+                  allocate ( frnp_  (                 num))
+                  allocate ( cvsoil_(maxsnl+1:nl_soil,num))
 
                   ! Source patch type which differs from np's type exists
                   IF ( (sum(lccpct_np) - lccpct_np(patchclass(np))) .gt. 0 ) THEN
@@ -208,6 +206,7 @@
                      wa            (np)                = 0  !water storage in aquifer [mm]
                      tleaf         (np)                = 0  !leaf temperature [K]
 
+                     cvsoil_(:,:) = 0
                      ! Weight of temperature adjustment
                      c_water = 4.188e6   ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3)
                      c_ice   = 1.94153e6 ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
@@ -380,6 +379,8 @@
                      inp_ = np_
                      DO WHILE (inp_ .le. grid_patch_e_(j))
                         IF (patchclass_(inp_) .eq. patchclass(np)) THEN
+                           ! check
+                           print*, 'np=',np
                            selfnp_            = inp_
                            frnp_(1)           = inp_
                            wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
@@ -409,7 +410,7 @@
                   ENDIF
 
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
                   IF (patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
                      ! Used restart value of the same pftclass for pft-specific variables
                      ! Note: For ip-specific variables, remain initialized value for new soil patch or pftclass
@@ -447,30 +448,6 @@
                      ENDDO
                   ENDIF
 
-#endif
-
-#ifdef LULC_IGBP_PC
-                  ! Note: For pc-specific variables, remain initialized value for newly appear soil patch
-                  IF ( patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
-
-                     pc = patch2pc (np )
-                     pc_= patch2pc_(selfnp_)
-
-                     IF (pc.le.0 .or. pc_.le.0) THEN
-                        print *, "Error in LuLccEnergyMassConserve LULC_IGBP_PC!"
-                        STOP
-                     ENDIF
-
-                     ! for the same patch TYPE
-                     tleaf_c    (:,pc) = tleaf_c_    (:,pc_)
-                     ldew_c     (:,pc) = ldew_c_     (:,pc_)
-                     sigf_c     (:,pc) = sigf_c_     (:,pc_)
-                     DO ipft = 0, N_PFT-1
-                        IF ( (lai_c(ipft,pc) + sai_c(ipft,pc)) .gt. 0) THEN
-                           sigf_c(ipft,pc) = 1
-                        ENDIF
-                     ENDDO
-                  ENDIF
 #endif
 
 #ifdef URBAN_MODEL

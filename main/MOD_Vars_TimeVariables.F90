@@ -399,7 +399,6 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
      real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]
      real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
-     real(r8), allocatable :: cvsoil     (:,:) !heat capacity [J/(m2 K)]
      real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
      real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
      real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
@@ -542,7 +541,6 @@ MODULE MOD_Vars_TimeVariables
            allocate (smp               (1:nl_soil,numpatch)); smp         (:,:) = spval
            allocate (hk                (1:nl_soil,numpatch)); hk          (:,:) = spval
            allocate (h2osoi            (1:nl_soil,numpatch)); h2osoi      (:,:) = spval
-           allocate (cvsoil     (maxsnl+1:nl_soil,numpatch)); cvsoil      (:,:) = spval
            allocate (rootr             (1:nl_soil,numpatch)); rootr       (:,:) = spval
 !Plant Hydraulic variables
            allocate (vegwp             (1:nvegwcs,numpatch)); vegwp       (:,:) = spval
@@ -688,7 +686,6 @@ MODULE MOD_Vars_TimeVariables
            deallocate (smp                    )
            deallocate (hk                     )
            deallocate (h2osoi                 )
-           deallocate (cvsoil                 )
            deallocate (rootr                  )
 !Plant Hydraulic variables
            deallocate (vegwp                  )

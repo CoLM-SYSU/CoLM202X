@@ -116,7 +116,7 @@ MODULE MOD_Lulcc_TMatrix
    
          DO ipatch = 1, numpatch
 
-            CALL aggregation_request_data (landpatch, ipatch, gpatch, area = area_one, &
+            CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
                   data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
             
             ipxstt = landpatch%ipxstt(ipatch)
