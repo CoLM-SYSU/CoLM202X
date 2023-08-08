@@ -1313,7 +1313,6 @@ ENDIF
        IF(doalb)THEN
             CALL albocean (oro,scv,coszen,alb)
        ENDIF
-    ENDIF
 
     ! zero-filling set for glacier/ice-sheet/land water bodies/ocean components
     IF (patchtype > 2) THEN
