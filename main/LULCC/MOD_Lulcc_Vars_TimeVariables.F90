@@ -453,7 +453,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      INTEGER , allocatable, dimension(:) :: locpxl
      INTEGER i, j, np, np_, ip, ip_, pc, pc_, u, u_
      INTEGER ps, ps_, pe, pe_
-     INTEGER numpxl, ipxl, ipft
+     INTEGER numpxl, ipxl
 
      IF (p_is_worker) THEN
         ! allocate with numelm
