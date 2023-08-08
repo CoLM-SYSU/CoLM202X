@@ -357,6 +357,7 @@ CONTAINS
       USE MOD_Block
       USE MOD_DataType
       USE MOD_SPMD_Task
+      USE MOD_Namelist
       IMPLICIT NONE
 
       CHARACTER (len=*), intent(in) :: filename
@@ -389,9 +390,7 @@ CONTAINS
          CALL nccheck (nf90_get_var(ncid, varid, &
             rdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val, start3, count3) )
 
-
-         IF (itime==time_dim) THEN
-            print*, 'close'
+         IF ((itime==time_dim) .and. trim(dataname)==DEF_forcing%vname(DEF_forcing%NVAR)) THEN
             CALL nccheck( nf90_close(ncid) )
          ENDIF
 
