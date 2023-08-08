@@ -1079,14 +1079,10 @@ contains
          call write_history_variable_2d ( DEF_hist_vars%grainc_to_seed, &
              a_grainc_to_seed, file_hist, 'f_grainc_to_seed', itime_in_file, sumarea, filter, &
              'grain to crop seed carbon','gC/m2/s')
-
-
          ! grain to crop seed carbon
          call write_history_variable_2d ( DEF_hist_vars%fert_to_sminn, &
              a_fert_to_sminn, file_hist, 'f_fert_to_sminn', itime_in_file, sumarea, filter, &
              'fertilization','gN/m2/s')
-
-#endif
 
          if(DEF_USE_IRRIGATION)then
             ! irrigation rate mm/s in 4h is averaged to the given time resolution mm/s
@@ -1105,7 +1101,8 @@ contains
             call write_history_variable_2d ( DEF_hist_vars%sum_irrig_count, &
                a_sum_irrig_count, file_hist, 'f_sum_irrig_count', itime_in_file, sumarea, filter, &
                'total irrigation times at growing season','-')
-         end if
+         end if    
+#endif
 
          ! grain to crop seed carbon
          call write_history_variable_2d ( DEF_hist_vars%ndep_to_sminn, &
@@ -1843,7 +1840,7 @@ contains
 
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_corn, &
                a_irrig_method_corn, file_hist, 'f_irrig_method_corn', &
-               itime_in_file, sumarea, filter,'irrigation method for corn','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for corn','-')
 
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1867,7 +1864,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_swheat, &
                a_irrig_method_swheat, file_hist, 'f_irrig_method_swheat', &
-               itime_in_file, sumarea, filter,'irrigation method for spring wheat','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for spring wheat','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1891,7 +1888,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_wwheat, &
                a_irrig_method_wwheat, file_hist, 'f_irrig_method_wwheat', &
-               itime_in_file, sumarea, filter,'irrigation method for winter wheat','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for winter wheat','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1916,7 +1913,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_soybean, &
                a_irrig_method_soybean, file_hist, 'f_irrig_method_soybean', &
-               itime_in_file, sumarea, filter,'irrigation method for soybean','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for soybean','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1940,7 +1937,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_cotton, &
                a_irrig_method_cotton, file_hist, 'f_irrig_method_cotton', &
-               itime_in_file, sumarea, filter,'irrigation method for cotton','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for cotton','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1964,7 +1961,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_rice1, &
                a_irrig_method_rice1, file_hist, 'f_irrig_method_rice1', &
-               itime_in_file, sumarea, filter,'irrigation method for rice1','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for rice1','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -1988,7 +1985,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_rice2, &
                a_irrig_method_rice2, file_hist, 'f_irrig_method_rice2', &
-               itime_in_file, sumarea, filter,'irrigation method for rice2','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for rice2','-')
    
             if (p_is_worker) then
                if (numpatch > 0) then
@@ -2012,7 +2009,7 @@ contains
    
             call write_history_variable_2d ( DEF_hist_vars%irrig_method_sugarcane, &
                a_irrig_method_sugarcane, file_hist, 'f_irrig_method_sugarcane', &
-               itime_in_file, sumarea, filter,'irrigation method for sugarcane','gN/m2/yr')
+               itime_in_file, sumarea, filter,'irrigation method for sugarcane','-')
    
          end if
 
@@ -2036,7 +2033,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to corn production carbon
+         ! planting date of rainfed temperate corn
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2044,7 +2041,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_temp_corn, &
              vecacc, file_hist, 'f_plantdate_rainfed_temp_corn', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed temperate corn)','gC/m2/s')
+             'Crop planting date (rainfed temperate corn)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2066,7 +2063,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to corn production carbon
+         ! planting date of irrigated temperate corn
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2074,7 +2071,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_temp_corn, &
              vecacc, file_hist, 'f_plantdate_irrigated_temp_corn', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated temperate corn)','gC/m2/s')
+             'Crop planting date (irrigated temperate corn)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2097,7 +2094,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to spring wheat production carbon
+         ! planting date of rainfed spring wheat
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2105,7 +2102,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_spwheat, &
              vecacc, file_hist, 'f_plantdate_rainfed_spwheat', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed spring wheat)','gC/m2/s')
+             'Crop planting date (rainfed spring wheat)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2128,7 +2125,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to spring wheat production carbon
+         ! planting date of irrigated spring wheat
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2136,7 +2133,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_spwheat, &
              vecacc, file_hist, 'f_plantdate_irrigated_spwheat', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated spring wheat)','gC/m2/s')
+             'Crop planting date (irrigated spring wheat)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2158,7 +2155,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to winter wheat production carbon
+         ! planting date of rainfed winter wheat
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2166,7 +2163,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_wtwheat, &
              vecacc, file_hist, 'f_plantdate_rainfed_wtwheat', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed winter wheat)','gC/m2/s')
+             'Crop planting date (rainfed winter wheat)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2188,7 +2185,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to winter wheat production carbon
+         ! planting date of irrigated winter wheat
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2196,7 +2193,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_wtwheat, &
              vecacc, file_hist, 'f_plantdate_irrigated_wtwheat', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated winter wheat)','gC/m2/s')
+             'Crop planting date (irrigated winter wheat)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2218,7 +2215,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to soybean production carbon
+         ! planting date of rainfed temperate soybean
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2226,7 +2223,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_temp_soybean, &
              vecacc, file_hist, 'f_plantdate_rainfed_temp_soybean', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed temperate soybean)','gC/m2/s')
+             'Crop planting date (rainfed temperate soybean)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2248,7 +2245,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to soybean production carbon
+         ! planting date of irrigated temperate soybean
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2256,7 +2253,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_temp_soybean, &
              vecacc, file_hist, 'f_plantdate_irrigated_temp_soybean', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated temperate soybean)','gC/m2/s')
+             'Crop planting date (irrigated temperate soybean)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2278,7 +2275,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to cotton production carbon
+         ! planting date of rainfed cotton
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2286,7 +2283,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_cotton, &
              vecacc, file_hist, 'f_plantdate_rainfed_cotton', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed cotton)','gC/m2/s')
+             'Crop planting date (rainfed cotton)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2308,7 +2305,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to cotton production carbon
+         ! planting date of irrigated cotton
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2316,7 +2313,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_cotton, &
              vecacc, file_hist, 'f_plantdate_irrigated_cotton', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated cotton)','gC/m2/s')
+             'Crop planting date (irrigated cotton)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2338,7 +2335,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to rice production carbon
+         ! planting date of rainfed rice
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2346,7 +2343,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_rice, &
              vecacc, file_hist, 'f_plantdate_rainfed_rice', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed rice)','gC/m2/s')
+             'Crop planting date (rainfed rice)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2368,7 +2365,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to rice production carbon
+         ! planting date of irrigated rice
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2376,7 +2373,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_rice, &
              vecacc, file_hist, 'f_plantdate_irrigated_rice', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated rice)','gC/m2/s')
+             'Crop planting date (irrigated rice)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2398,7 +2395,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of rainfed sugarcane
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2406,7 +2403,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_sugarcane, &
              vecacc, file_hist, 'f_plantdate_rainfed_sugarcane', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed sugarcane)','gC/m2/s')
+             'Crop planting date (rainfed sugarcane)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2428,7 +2425,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of irrigated sugarcane
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2436,7 +2433,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_sugarcane, &
              vecacc, file_hist, 'f_plantdate_irrigated_sugarcane', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated sugarcane)','gC/m2/s')
+             'Crop planting date (irrigated sugarcane)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2458,7 +2455,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of rainfed trop corn
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2466,7 +2463,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_trop_corn, &
              vecacc, file_hist, 'f_plantdate_rainfed_trop_corn', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed_trop_corn)','gC/m2/s')
+             'Crop planting date (rainfed trop corn)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2488,7 +2485,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of irrigated trop corn
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2496,7 +2493,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_trop_corn, &
              vecacc, file_hist, 'f_plantdate_irrigated_trop_corn', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated_trop_corn)','gC/m2/s')
+             'Crop planting date (irrigated trop corn)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2518,7 +2515,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of rainfed trop soybean
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2526,7 +2523,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_rainfed_trop_soybean, &
              vecacc, file_hist, 'f_plantdate_rainfed_trop_soybean', itime_in_file, sumarea, filter, &
-             'Crop production (rainfed trop soybean)','gC/m2/s')
+             'Crop planting date (rainfed trop soybean)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2548,7 +2545,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to sugarcane production carbon
+         ! planting date of irrigated trop soybean
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2556,7 +2553,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_irrigated_trop_soybean, &
              vecacc, file_hist, 'f_plantdate_irrigated_trop_soybean', itime_in_file, sumarea, filter, &
-             'Crop production (irrigated trop soybean)','gC/m2/s')
+             'Crop planting date (irrigated trop soybean)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then
@@ -2579,7 +2576,7 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
-         ! grain to unmanaged crop production carbon
+         ! planting date of unmanaged crop production
          if (p_is_worker) then
             if (numpatch > 0) then
                vecacc (:) = a_plantdate (:)
@@ -2587,7 +2584,7 @@ contains
          end if
          call write_history_variable_2d ( DEF_hist_vars%plantdate_unmanagedcrop, &
              vecacc, file_hist, 'f_plantdate_unmanagedcrop', itime_in_file, sumarea, filter, &
-             'Crop production (unmanaged crop production)','gC/m2/s')
+             'Crop planting date (unmanaged crop production)','day')
 
          if (p_is_worker) then
             if (numpatch > 0) then

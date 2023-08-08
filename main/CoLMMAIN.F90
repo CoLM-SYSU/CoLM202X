@@ -854,12 +854,15 @@ ENDIF
 #endif
 
 #ifndef LATERAL_FLOW
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub+irrig_rate(ipatch))*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-rnof-errw_rsub)*deltim
 #else
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
-      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub+irrig_rate(ipatch))*deltim
+      errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub)*deltim
 #endif
-      IF(DEF_USE_IRRIGATION)errorw = errorw - irrig_rate(ipatch) * deltim
+
+#ifdef CROP
+   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
+#endif
 
       IF(patchtype==2) errorw=0.    !wetland
 
@@ -1310,7 +1313,6 @@ ENDIF
        IF(doalb)THEN
             CALL albocean (oro,scv,coszen,alb)
        ENDIF
-    ENDIF
 
     ! zero-filling set for glacier/ice-sheet/land water bodies/ocean components
     IF (patchtype > 2) THEN

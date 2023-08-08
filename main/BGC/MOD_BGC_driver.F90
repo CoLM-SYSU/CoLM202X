@@ -113,11 +113,11 @@
     call CNNFert(i, ps, pe)
 #endif
     call CNGResp(i, ps, pe, npcropmin)
-
+#ifdef CROP
     if(DEF_USE_IRRIGATION)then
       call CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
     end if
-
+#endif
     ! update vegetation pools from phenology, allocation and nitrogen uptake
     ! update soil N pools from decomposition and nitrogen competition
     call CStateUpdate1(i, ps, pe, deltim, nl_soil, ndecomp_transitions, npcropmin)

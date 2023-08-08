@@ -9,12 +9,10 @@ MODULE MOD_SoilSnowHydrology
 #if(defined CaMa_Flood)
    USE YOS_CMF_INPUT,      ONLY: LWINFILT
 #endif
-
 #ifdef CROP
    use MOD_LandPFT, only: patch_pft_s, patch_pft_e
    use MOD_Irrigation, only: CalIrrigationApplicationFluxes
 #endif
-
   IMPLICIT NONE
   SAVE
 
@@ -168,8 +166,9 @@ MODULE MOD_SoilSnowHydrology
   real(r8) ::gfld ,rsur_fld, qinfl_fld_subgrid ! inundation water input from top (mm/s)
 #endif
 
-   integer  :: ps, pe
 #ifdef CROP
+   integer  :: ps, pe
+   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
    real(r8) :: qflx_irrig_drip
    real(r8) :: qflx_irrig_sprinkler
    real(r8) :: qflx_irrig_flood
@@ -196,16 +195,14 @@ MODULE MOD_SoilSnowHydrology
                          mss_dst1(lb:0), mss_dst2(lb:0), mss_dst3(lb:0), mss_dst4(lb:0) )
          ENDIF
       endif
-
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
          gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
       end if
 #endif
-
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
@@ -474,14 +471,6 @@ MODULE MOD_SoilSnowHydrology
   real(r8), INTENT(out)   :: qinfl_fld ! inundation water input from top (mm/s)
 #endif
 
-#ifdef CROP
-  integer  :: ps, pe
-  real(r8) :: qflx_irrig_drip
-  real(r8) :: qflx_irrig_sprinkler
-  real(r8) :: qflx_irrig_flood
-  real(r8) :: qflx_irrig_paddy
-#endif
-
   real(r8), INTENT(inout) :: &
         wice_soisno(lb:nl_soil) , &! ice lens (kg/m2)
         wliq_soisno(lb:nl_soil) , &! liquid water (kg/m2)
@@ -537,6 +526,15 @@ MODULE MOD_SoilSnowHydrology
   REAL(r8) :: dzsum, dz
   REAL(r8) :: icefracsum, fracice_rsub, imped
 
+#ifdef CROP
+   integer  :: ps, pe
+   integer  :: irrig_flag  ! 1 if sprinker, 2 if others
+   real(r8) :: qflx_irrig_drip
+   real(r8) :: qflx_irrig_sprinkler
+   real(r8) :: qflx_irrig_flood
+   real(r8) :: qflx_irrig_paddy
+#endif
+
 #ifdef Campbell_SOIL_MODEL
   real(r8) :: theta_r(1:nl_soil)
 #endif
@@ -583,7 +581,7 @@ MODULE MOD_SoilSnowHydrology
       if(DEF_USE_IRRIGATION)then
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
          gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
       end if
 #endif
