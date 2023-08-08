@@ -859,7 +859,10 @@ ENDIF
       ! for lateral flow, "rsur" is considered in HYDRO/MOD_Hydro_SurfaceFlow.F90
       errorw=(endwb-totwb)-(forc_prc+forc_prl-fevpa-errw_rsub)*deltim
 #endif
-      IF(DEF_USE_IRRIGATION)errorw = errorw - irrig_rate(ipatch) * deltim
+
+#ifdef CROP
+   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
+#endif
 
       IF(patchtype==2) errorw=0.    !wetland
 

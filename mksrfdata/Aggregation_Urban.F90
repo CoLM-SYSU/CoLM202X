@@ -188,7 +188,7 @@ SUBROUTINE Aggregation_Urban (dir_rawdata, dir_srfdata, lc_year, &
       ! loop for each urban patch to get the LUCY id of all fine grid
       ! of iurban patch, then assign the most frequence id to this urban patch
       DO iurban = 1, numurban
-         CALL aggregation_request_data (landurban, iurban, zip = .true., grid_urban_5km, &
+         CALL aggregation_request_data (landurban, iurban, grid_urban_5km, zip = .true., &
             data_i4_2d_in1 = LUCY_reg, data_i4_2d_out1 = LUCY_reg_one)
          ! the most frequence id to this urban patch
          LUCY_coun(iurban) = num_max_frequency (LUCY_reg_one)

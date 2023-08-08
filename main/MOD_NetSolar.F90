@@ -74,7 +74,8 @@ CONTAINS
          forc_solld   ! atm nir diffuse solar rad onto srf [W/m2]
 
    REAL(r8), dimension(1:2,1:2), intent(in) :: &
-         alb,      &! averaged albedo [-]
+         alb        ! averaged albedo [-]
+   REAL(r8), dimension(1:2,1:2), intent(inout) :: &
          ssun,     &! sunlit canopy absorption for solar radiation
          ssha       ! shaded canopy absorption for solar radiation
 
@@ -118,7 +119,7 @@ CONTAINS
    INTEGER  :: local_secs
    REAL(r8) :: radpsec, sabvg
 
-   INTEGER ps, pe, pc
+   INTEGER ps, pe, pc, m
 !=======================================================================
 
       sabvsun = 0.
@@ -149,6 +150,10 @@ CONTAINS
 #endif
       ENDIF
 
+      IF(lai+sai < 1.e-6)then
+         ssun(:,:) = 0.
+         ssha(:,:) = 0.
+      END IF
 
       IF (forc_sols+forc_soll+forc_solsd+forc_solld > 0.) THEN
          IF (patchtype < 4) THEN        !non lake and ocean
@@ -166,6 +171,12 @@ CONTAINS
             IF (patchtype == 0) THEN
 
 #ifdef LULC_IGBP_PFT
+               DO m = ps, pe
+                  IF(lai_p(m) + sai_p(m) < 1.e-6)then
+                     ssun_p(:,:,m) = 0.
+                     ssha_p(:,:,m) = 0.
+                  END IF
+               END DO
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
