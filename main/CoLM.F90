@@ -80,6 +80,10 @@ PROGRAM CoLM
    USE MOD_Lulcc_Driver
 #endif
 
+#ifdef CoLMDEBUG
+   USE MOD_Hydro_SoilWater
+#endif
+
    ! SNICAR
    USE MOD_SnowSnicar, only: SnowAge_init, SnowOptics_init
    USE MOD_Aerosol, only: AerosolDepInit, AerosolDepReadin
@@ -473,6 +477,10 @@ PROGRAM CoLM
       ENDIF
 
       istep = istep + 1
+
+#ifdef CoLMDEBUG
+      CALL print_VSF_iteration_stat_info ()
+#endif
 
    ENDDO TIMELOOP
 
