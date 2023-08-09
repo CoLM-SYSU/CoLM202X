@@ -372,24 +372,40 @@ CONTAINS
    END SUBROUTINE grid_define_by_center
 
    !-----------------------------------------------------
-   SUBROUTINE grid_define_from_file (this, filename)
+   SUBROUTINE grid_define_from_file (this, filename, latname, lonname)
 
       USE MOD_NetCDFSerial
       IMPLICIT NONE
       class (grid_type) :: this
 
       CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in), optional :: latname, lonname
 
-      CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
-      CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
-      CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
-      CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
+      ! Local Variables
+      real(r8), allocatable :: lon_in(:)
+      real(r8), allocatable :: lat_in(:)
 
-      this%nlat = size(this%lat_s)
-      this%nlon = size(this%lon_w)
+      IF (.not. (present(latname) .and. present(lonname))) THEN
 
-      CALL this%normalize  ()
-      CALL this%set_blocks ()
+         CALL ncio_read_bcast_serial (filename, 'lat_s', this%lat_s)
+         CALL ncio_read_bcast_serial (filename, 'lat_n', this%lat_n)
+         CALL ncio_read_bcast_serial (filename, 'lon_w', this%lon_w)
+         CALL ncio_read_bcast_serial (filename, 'lon_e', this%lon_e)
+
+         this%nlat = size(this%lat_s)
+         this%nlon = size(this%lon_w)
+
+         CALL this%normalize  ()
+         CALL this%set_blocks ()
+
+      ELSE
+
+         call ncio_read_bcast_serial (filename, latname, lat_in)
+         call ncio_read_bcast_serial (filename, lonname, lon_in)
+         call this%define_by_center (lat_in, lon_in)
+         
+         deallocate (lat_in, lon_in)
+      ENDIF
 
    END SUBROUTINE grid_define_from_file
 

@@ -16,6 +16,7 @@ module MOD_Forcing
 !                         3) interface for downscaling
 !
 ! TODO...(need complement)
+! forcing final
 
    use MOD_Precision
    USE MOD_Namelist
@@ -46,7 +47,8 @@ module MOD_Forcing
 
    !  for SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
-   INTEGER, allocatable :: iforctime(:)
+   INTEGER,  allocatable :: iforctime(:)
+   real(r8), allocatable :: forc_disk(:,:)
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
    type(timestamp), allocatable :: tstamp_UB(:)  ! time stamp of up boundary data
@@ -204,6 +206,22 @@ contains
       ENDIF
 
    end subroutine forcing_init
+
+   ! ---- forcing finalize ----
+   SUBROUTINE forcing_final ()
+      
+      IMPLICIT NONE
+
+      IF (allocated(forcmask    )) deallocate(forcmask    )
+      IF (allocated(forcmask_elm)) deallocate(forcmask_elm)
+      IF (allocated(glacierss   )) deallocate(glacierss   )
+      IF (allocated(forctime    )) deallocate(forctime    )
+      IF (allocated(iforctime   )) deallocate(iforctime   )
+      IF (allocated(forc_disk   )) deallocate(forc_disk   )
+      IF (allocated(tstamp_LB   )) deallocate(tstamp_LB   )
+      IF (allocated(tstamp_UB   )) deallocate(tstamp_UB   )
+
+   END SUBROUTINE forcing_final
 
    ! ------------
    SUBROUTINE forcing_reset ()
@@ -599,6 +617,7 @@ contains
 
       use MOD_UserSpecifiedForcing
       USE MOD_Namelist
+      USE MOD_Block
       use MOD_DataType
       use MOD_NetCDFBlock
       use MOD_RangeCheck
@@ -631,7 +650,11 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-               CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               IF (USE_SITE_ForcingReadAhead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+               ELSE
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ENDIF
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -650,7 +673,11 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  IF (USE_SITE_ForcingReadAhead) THEN
+                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
@@ -748,10 +775,11 @@ contains
       ! Local variables
       character(len=256) :: filename
       character(len=256) :: timeunit, timestr
-      REAL(r8), allocatable :: forctime_sec (:)
+      REAL(r8), allocatable :: forctime_sec(:), metcache(:,:,:)
       INTEGER :: year, month, day, hour, minute, second
       INTEGER :: itime, maxday, id(3)
       INTEGER*8 :: sec_long
+      integer :: ivar
 
       filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -777,6 +805,23 @@ contains
          CALL ticktime (forctime_sec(itime)-forctime_sec(itime-1), id)
          forctime(itime) = id
       ENDDO
+
+#ifdef SinglePoint
+      IF (USE_SITE_ForcingReadAhead) THEN
+
+         allocate (forc_disk (size(forctime),NVAR))
+
+         filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
+         DO ivar = 1, NVAR
+            if (trim(vname(ivar)) /= 'NULL') THEN
+               CALL ncio_read_serial (filename, vname(ivar), metcache)
+               forc_disk(:,ivar) = metcache(1,1,:)
+            ENDIF
+         ENDDO
+
+         IF (allocated(metcache)) deallocate(metcache)
+      ENDIF
+#endif
 
    END SUBROUTINE metread_time
 

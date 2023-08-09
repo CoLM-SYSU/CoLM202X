@@ -274,7 +274,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = vf_quartz_mineral_s_grid, data_r8_2d_out1 = vf_quartz_mineral_s_one)
                vf_quartz_mineral_s_patches (ipatch) = sum (vf_quartz_mineral_s_one * (area_one/sum(area_one)))
             ELSE
@@ -348,7 +348,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = vf_gravels_s_grid, data_r8_2d_out1 = vf_gravels_s_one, &
                   data_r8_2d_in2 = vf_sand_s_grid,    data_r8_2d_out2 = vf_sand_s_one, &
                   data_r8_2d_in3 = vf_om_s_grid,      data_r8_2d_out3 = vf_om_s_one)
@@ -566,7 +566,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = wf_gravels_s_grid, data_r8_2d_out1 = wf_gravels_s_one)
                wf_gravels_s_patches (ipatch) = sum (wf_gravels_s_one * (area_one/sum(area_one)))
             ELSE
@@ -628,7 +628,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = wf_sand_s_grid, data_r8_2d_out1 = wf_sand_s_one)
                wf_sand_s_patches (ipatch) = sum (wf_sand_s_one * (area_one/sum(area_one)))
             ELSE
@@ -691,7 +691,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
                   data_r8_2d_in1 = L_vgm_grid, data_r8_2d_out1 = L_vgm_one)
                L_vgm_patches (ipatch) = median (L_vgm_one, size(L_vgm_one), spval)
             ELSE
@@ -771,7 +771,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                       data_r8_2d_in1 = theta_r_grid,   data_r8_2d_out1 = theta_r_one, &
                       data_r8_2d_in2 = alpha_vgm_grid, data_r8_2d_out2 = alpha_vgm_one, &
                       data_r8_2d_in3 = n_vgm_grid,     data_r8_2d_out3 = n_vgm_one, &
@@ -964,7 +964,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                             data_r8_2d_in1 = theta_s_grid, data_r8_2d_out1 = theta_s_one, &
                             data_r8_2d_in2 = psi_s_grid,   data_r8_2d_out2 = psi_s_one, &
                             data_r8_2d_in3 = lambda_grid,  data_r8_2d_out3 = lambda_one)
@@ -1114,7 +1114,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = k_s_grid, data_r8_2d_out1 = k_s_one)
                k_s_patches (ipatch) = product(k_s_one**(area_one/sum(area_one)))
             ELSE
@@ -1173,7 +1173,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = csol_grid, data_r8_2d_out1 = csol_one)
                csol_patches (ipatch) = sum(csol_one*(area_one/sum(area_one)))
             ELSE
@@ -1232,7 +1232,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = tksatu_grid, data_r8_2d_out1 = tksatu_one)
                tksatu_patches (ipatch) = product(tksatu_one**(area_one/sum(area_one)))
             ELSE
@@ -1291,7 +1291,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = tksatf_grid, data_r8_2d_out1 = tksatf_one)
                tksatf_patches (ipatch) = product(tksatf_one**(area_one/sum(area_one)))
             ELSE
@@ -1350,7 +1350,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = tkdry_grid, data_r8_2d_out1 = tkdry_one)
                tkdry_patches (ipatch) = product(tkdry_one**(area_one/sum(area_one)))
             ELSE
@@ -1409,7 +1409,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = k_solids_grid, data_r8_2d_out1 = k_solids_one)
                k_solids_patches (ipatch) = product(k_solids_one**(area_one/sum(area_one)))
             ELSE
@@ -1469,7 +1469,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = OM_density_s_grid, data_r8_2d_out1 = OM_density_s_one)
                OM_density_s_patches (ipatch) = sum (OM_density_s_one * (area_one/sum(area_one)))
             ELSE
@@ -1530,7 +1530,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
             L = landpatch%settyp(ipatch)
 
             IF (L /= 0) THEN
-               CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_2d_in1 = BD_all_s_grid, data_r8_2d_out1 = BD_all_s_one)
                BD_all_s_patches (ipatch) = sum (BD_all_s_one * (area_one/sum(area_one)))
             ELSE
