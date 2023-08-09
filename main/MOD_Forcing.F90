@@ -371,7 +371,7 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            write(6, *) "At least one of the wind components must be provided! stop!"; 
+            write(6, *) "At least one of the wind components must be provided! stop!";
             CALL CoLM_stop()
          ENDIF
 
@@ -820,8 +820,8 @@ contains
 
       forctime(1)%year = year
       forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      sec_long = hour*3600 + minute*60 + second + forctime_sec(1)
-         
+      forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
+
       id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
       CALL adj2end(id)
       forctime(1) = id
