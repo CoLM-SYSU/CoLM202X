@@ -261,7 +261,7 @@ MODULE MOD_Lake
   subroutine laketem (&
            ! "in" arguments
            ! -------------------
-           itypwat      , maxsnl      , nl_soil      , nl_lake   ,&
+           patchtype    , maxsnl      , nl_soil      , nl_lake   ,&
            dlat         , deltim      , forc_hgt_u   , forc_hgt_t,&
            forc_hgt_q   , forc_us     , forc_vs      , forc_t    ,&
            forc_q       , forc_rhoair , forc_psrf    , forc_sols ,&
@@ -361,20 +361,20 @@ MODULE MOD_Lake
 
   IMPLICIT NONE
 ! ------------------------ input/output variables -----------------
-  integer, INTENT(in) :: itypwat  ! land water type (4=deep lake, 5=shallow lake)
-  integer, INTENT(in) :: maxsnl   ! maximum number of snow layers
-  integer, INTENT(in) :: nl_soil  ! number of soil layers
-  integer, INTENT(in) :: nl_lake  ! number of lake layers
+  integer, INTENT(in) :: patchtype    ! land patch type (4=deep lake, 5=shallow lake)
+  integer, INTENT(in) :: maxsnl       ! maximum number of snow layers
+  integer, INTENT(in) :: nl_soil      ! number of soil layers
+  integer, INTENT(in) :: nl_lake      ! number of lake layers
 
-  real(r8), INTENT(in) :: dlat    ! latitude (radians)
-  real(r8), INTENT(in) :: deltim  ! seconds in a time step (s)
-  real(r8), INTENT(in) :: forc_hgt_u ! observational height of wind [m]
-  real(r8), INTENT(in) :: forc_hgt_t ! observational height of temperature [m]
-  real(r8), INTENT(in) :: forc_hgt_q ! observational height of humidity [m]
-  real(r8), INTENT(in) :: forc_us ! wind component in eastward direction [m/s]
-  real(r8), INTENT(in) :: forc_vs ! wind component in northward direction [m/s]
-  real(r8), INTENT(in) :: forc_t  ! temperature at agcm reference height [kelvin]
-  real(r8), INTENT(in) :: forc_q  ! specific humidity at agcm reference height [kg/kg]
+  real(r8), INTENT(in) :: dlat        ! latitude (radians)
+  real(r8), INTENT(in) :: deltim      ! seconds in a time step (s)
+  real(r8), INTENT(in) :: forc_hgt_u  ! observational height of wind [m]
+  real(r8), INTENT(in) :: forc_hgt_t  ! observational height of temperature [m]
+  real(r8), INTENT(in) :: forc_hgt_q  ! observational height of humidity [m]
+  real(r8), INTENT(in) :: forc_us     ! wind component in eastward direction [m/s]
+  real(r8), INTENT(in) :: forc_vs     ! wind component in northward direction [m/s]
+  real(r8), INTENT(in) :: forc_t      ! temperature at agcm reference height [kelvin]
+  real(r8), INTENT(in) :: forc_q      ! specific humidity at agcm reference height [kg/kg]
   real(r8), INTENT(in) :: forc_rhoair ! density air [kg/m3]
   real(r8), INTENT(in) :: forc_psrf   ! atmosphere pressure at the surface [pa]
   real(r8), INTENT(in) :: forc_sols   ! atm vis direct beam solar rad onto srf [W/m2]
@@ -388,8 +388,8 @@ MODULE MOD_Lake
   real(r8), INTENT(in) :: z_soisno(maxsnl+1:nl_soil)  ! soil/snow node depth [m]
   real(r8), INTENT(in) :: zi_soisno(maxsnl:nl_soil)   ! soil/snow depth of layer interface [m]
 
-  real(r8), INTENT(in) :: dz_lake(nl_lake)  ! lake layer thickness (m)
-  real(r8), INTENT(in) :: lakedepth         ! column lake depth (m)
+  real(r8), INTENT(in) :: dz_lake(nl_lake)      ! lake layer thickness (m)
+  real(r8), INTENT(in) :: lakedepth             ! column lake depth (m)
 
   real(r8), INTENT(in) :: vf_quartz (1:nl_soil) ! volumetric fraction of quartz within mineral soil
   real(r8), INTENT(in) :: vf_gravels(1:nl_soil) ! volumetric fraction of gravels
@@ -397,20 +397,20 @@ MODULE MOD_Lake
   real(r8), INTENT(in) :: vf_sand   (1:nl_soil) ! volumetric fraction of sand
   real(r8), INTENT(in) :: wf_gravels(1:nl_soil) ! gravimetric fraction of gravels
   real(r8), INTENT(in) :: wf_sand   (1:nl_soil) ! gravimetric fraction of sand
-  real(r8), INTENT(in) :: porsl(1:nl_soil) ! soil porosity [-]
+  real(r8), INTENT(in) :: porsl(1:nl_soil)      ! soil porosity [-]
 
-  real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil solids [J/(m3 K)]
-  real(r8), INTENT(in) :: k_solids(1:nl_soil) ! thermal conductivity of mineralssoil [W/m-K]
-  real(r8), INTENT(in) :: dksatu(1:nl_soil) ! thermal conductivity of saturated unfrozen soil [W/m-K]
-  real(r8), INTENT(in) :: dksatf(1:nl_soil) ! thermal conductivity of saturated frozen soil [W/m-K]
-  real(r8), INTENT(in) :: dkdry(1:nl_soil)  ! thermal conductivity of dry soil [W/m-K]
-  real(r8), INTENT(in) :: BA_alpha(1:nl_soil) ! alpha in Balland and Arp(2005) thermal conductivity scheme
-  real(r8), INTENT(in) :: BA_beta(1:nl_soil)  ! beta in Balland and Arp(2005) thermal conductivity scheme
-  real(r8), INTENT(in) :: hpbl       ! atmospheric boundary layer height [m]
+  real(r8), INTENT(in) :: csol(1:nl_soil)       ! heat capacity of soil solids [J/(m3 K)]
+  real(r8), INTENT(in) :: k_solids(1:nl_soil)   ! thermal conductivity of mineralssoil [W/m-K]
+  real(r8), INTENT(in) :: dksatu(1:nl_soil)     ! thermal conductivity of saturated unfrozen soil [W/m-K]
+  real(r8), INTENT(in) :: dksatf(1:nl_soil)     ! thermal conductivity of saturated frozen soil [W/m-K]
+  real(r8), INTENT(in) :: dkdry(1:nl_soil)      ! thermal conductivity of dry soil [W/m-K]
+  real(r8), INTENT(in) :: BA_alpha(1:nl_soil)   ! alpha in Balland and Arp(2005) thermal conductivity scheme
+  real(r8), INTENT(in) :: BA_beta(1:nl_soil)    ! beta in Balland and Arp(2005) thermal conductivity scheme
+  real(r8), INTENT(in) :: hpbl                  ! atmospheric boundary layer height [m]
 
-  real(r8), INTENT(inout) :: t_grnd  ! surface temperature (kelvin)
-  real(r8), INTENT(inout) :: scv     ! snow water equivalent [mm]
-  real(r8), INTENT(inout) :: snowdp  ! snow depth [mm]
+  real(r8), INTENT(inout) :: t_grnd             ! surface temperature (kelvin)
+  real(r8), INTENT(inout) :: scv                ! snow water equivalent [mm]
+  real(r8), INTENT(inout) :: snowdp             ! snow depth [mm]
 
   real(r8), INTENT(inout) :: t_soisno    (maxsnl+1:nl_soil) ! soil/snow temperature [K]
   real(r8), INTENT(inout) :: wliq_soisno (maxsnl+1:nl_soil) ! soil/snow liquid water (kg/m2)

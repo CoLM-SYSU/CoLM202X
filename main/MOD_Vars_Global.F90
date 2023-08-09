@@ -106,9 +106,8 @@ MODULE MOD_Vars_Global
    integer , parameter :: irrig_max_depth  = 10              ! max irrigation depth
    real(r8), parameter :: irrig_threshold_fraction  = 1._r8  ! irrigation thershold
    real(r8), parameter :: irrig_min_cphase = 1._r8           ! crop phenology when begin irrigation
-   real(r8), parameter :: irrig_max_cphase = 3._r8           ! crop phenology when end irrigation
+   real(r8), parameter :: irrig_max_cphase = 4._r8           ! crop phenology when end irrigation
    integer , parameter :: irrig_time_per_day = 14400         ! irrigation last time 
-
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: Init_GlobalVars
