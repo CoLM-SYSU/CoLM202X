@@ -121,7 +121,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
          L = landpatch%settyp(ipatch)
          if(L/=0 .and. L/=1 .and. L/=16 .and. L/=24)then
             ! NOT OCEAN(0)/URBAN and BUILT-UP(1)/WATER BODIES(16)/ICE(24)
-            CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
+            CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
                data_r8_2d_in1 = tree_height, data_r8_2d_out1 = tree_height_one)
             tree_height_patches (ipatch) = median (tree_height_one, size(tree_height_one))
          ELSE
@@ -186,7 +186,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
       DO ipatch = 1, numpatch
 
          IF (landpatch%settyp(ipatch) /= 0) THEN
-            CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
+            CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
                area = area_one, data_r8_2d_in1 = htop, data_r8_2d_out1 = htop_one)
             htop_patches(ipatch) = sum(htop_one * area_one) / sum(area_one)
          ENDIF
@@ -255,7 +255,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
       DO ipatch = 1, numpatch
 
-         CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
+         CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
             area = area_one, data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
             data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
 
@@ -361,7 +361,7 @@ SUBROUTINE Aggregation_ForestHeight ( &
 
       DO ipatch = 1, numpatch
 
-         CALL aggregation_request_data (landpatch, ipatch, gland, zip = .true., &
+         CALL aggregation_request_data (landpatch, ipatch, gland, zip = USE_zip_for_aggregation, &
             area = area_one, data_r8_2d_in1 = htop,   data_r8_2d_out1 = htop_one, &
             data_r8_3d_in1 = pftPCT, data_r8_3d_out1 = pct_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0)
 
