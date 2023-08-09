@@ -21,6 +21,9 @@ MODULE MOD_Lulcc_Initialize
 !
 ! Initialization routine for Land-use-Land-cover-change (Lulcc) case
 !
+! Created by Hua Yuan, 04/08/2022
+!
+! TODO: add authors Wenzong Dong and Wanyi Lin
 ! ======================================================================
 
    USE MOD_Precision
@@ -35,7 +38,7 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_LandUrban
    USE MOD_Const_LC
    USE MOD_Const_PFT
-   use MOD_TimeManager
+   USE MOD_TimeManager
    USE MOD_Lulcc_Vars_TimeInvariants
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_SrfdataRestart
@@ -54,7 +57,7 @@ MODULE MOD_Lulcc_Initialize
    logical, intent(in)    :: greenwich  ! true: greenwich time, false: local time
 
    ! local vars
-   INTEGER :: year, jday
+   integer :: year, jday
    ! ----------------------------------------------------------------------
 
    ! initial time of model run
@@ -80,19 +83,19 @@ MODULE MOD_Lulcc_Initialize
 #endif
 
    ! load pixelset and mesh data of next year
-   ! call pixel%load_from_file  (dir_landdata)
-   ! call gblock%load_from_file (dir_landdata)
-   call mesh_load_from_file     (dir_landdata, year)
+   ! CALL pixel%load_from_file  (dir_landdata)
+   ! CALL gblock%load_from_file (dir_landdata)
+   CALL mesh_load_from_file     (dir_landdata, year)
    CALL pixelset_load_from_file (dir_landdata, 'landelm'  , landelm  , numelm  , year)
 
 #ifdef CATCHMENT
    CALL pixelset_load_from_file (dir_landdata, 'landhru'  , landhru  , numhru  , year)
 #endif
 
-   call pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
+   CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, year)
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-   call pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
+   CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , year)
    CALL map_patch_to_pft
 #endif
 
