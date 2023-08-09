@@ -5,11 +5,11 @@ MODULE MOD_SrfdataDiag
    !-----------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !    This module includes subroutines for checking the results of making surface data. 
+   !    This module includes subroutines for checking the results of making surface data.
    !
-   !    The surface data in vector form is mapped to gridded data with last 
+   !    The surface data in vector form is mapped to gridded data with last
    !    three dimensions of [type,longitude,latitude], which can be viewed by other softwares.
-   ! 
+   !
    !    In GRIDBASED, the grid of gridded data is just the grid of the mesh.
    !    In UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses area
    !    weighted scheme.
@@ -29,7 +29,7 @@ MODULE MOD_SrfdataDiag
    type(grid_type) :: gdiag
 
    TYPE(mapping_pset2grid_type) :: m_patch2diag
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    TYPE(mapping_pset2grid_type) :: m_pft2diag
 #endif
 #ifdef URBAN_MODEL
@@ -50,7 +50,7 @@ CONTAINS
 
       USE MOD_SPMD_Task
       USE MOD_LandPatch
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
 #endif
 #ifdef URBAN_MODEL
@@ -79,7 +79,7 @@ CONTAINS
       CALL m_patch2diag%build (landpatch, gdiag, pctcrop)
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL m_pft2diag%build (landpft, gdiag)
 #endif
 
@@ -129,7 +129,7 @@ CONTAINS
       integer, intent(in) :: compress
 
       character (len=*), intent(in), optional :: write_mode
-      
+
       character (len=*), intent(in), optional :: lastdimname
       integer, intent(in), optional :: lastdimvalue
 
@@ -144,7 +144,7 @@ CONTAINS
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
       LOGICAL :: fexists
-      integer :: ilastdim 
+      integer :: ilastdim
 
       IF (present(write_mode)) THEN
          wmode = trim(write_mode)
@@ -355,226 +355,6 @@ CONTAINS
       IF (allocated(vecone)) deallocate(vecone)
 
    end subroutine srfdata_map_and_write
-
-!    ! ------ SUBROUTINE ------
-!    subroutine srfdata_map_and_write_int ( &
-!          vsrfdata, settyp, typindex, m_srf, spv, filename, dataname, &
-!          compress, write_mode)
-
-!       use MOD_SPMD_Task
-!       use MOD_Namelist
-!       use MOD_Block
-!       use MOD_Grid
-!       USE MOD_DataType
-!       USE MOD_NetCDFSerial
-!       implicit none
-
-!       INTEGER , intent(in) :: vsrfdata (:)
-!       INTEGER , intent(in) :: settyp   (:)
-!       INTEGER , intent(in) :: typindex (:)
-
-!       TYPE(mapping_pset2grid_type), intent(in) :: m_srf
-
-!       INTEGER , intent(in) :: spv
-
-!       character (len=*), intent(in) :: filename
-!       character (len=*), intent(in) :: dataname
-!       integer, intent(in) :: compress
-
-!       character (len=*), intent(in), optional :: write_mode
-
-!       ! Local variables
-!       type(block_data_real8_3d) :: wdata, sumwt
-!       REAL(r8), allocatable :: vecone (:)
-
-!       CHARACTER(len=10) :: wmode
-!       integer :: iblkme, ib, jb, iblk, jblk, idata, ixseg, iyseg
-!       integer :: ntyps, xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
-!       integer :: rmesg(3), smesg(3), isrc
-!       character(len=256) :: fileblock
-!       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
-!       LOGICAL :: fexists
-
-!       IF (present(write_mode)) THEN
-!          wmode = trim(write_mode)
-!       ELSE
-!          wmode = 'one'
-!       ENDIF
-
-!       ntyps = size(typindex)
-
-!       IF (p_is_io) THEN
-!          call allocate_block_data (gdiag, sumwt, ntyps)
-!          call allocate_block_data (gdiag, wdata, ntyps)
-!       ENDIF
-
-!       IF (p_is_worker) THEN
-!          IF (size(vsrfdata) > 0) THEN
-!             allocate (vecone (size(vsrfdata)))
-!             vecone(:) = 1.0
-!          ENDIF
-!       ENDIF
-
-!       CALL m_srf%map_split (vecone  , settyp, typindex, sumwt, spv)
-!       CALL m_srf%map_split (vsrfdata, settyp, typindex, wdata, spv)
-
-!       IF (p_is_io) THEN
-!          DO iblkme = 1, gblock%nblkme
-!             ib = gblock%xblkme(iblkme)
-!             jb = gblock%yblkme(iblkme)
-
-!             where ((sumwt%blk(ib,jb)%val > 0.) .and. (wdata%blk(ib,jb)%val /= spv))
-!                wdata%blk(ib,jb)%val = wdata%blk(ib,jb)%val / sumwt%blk(ib,jb)%val
-!             elsewhere
-!                wdata%blk(ib,jb)%val = spv
-!             end where
-!          ENDDO
-!       ENDIF
-
-!       if (trim(wmode) == 'one') then
-
-!          if (p_is_master) then
-
-!             allocate (vdata (ntyps, srf_concat%ginfo%nlon, srf_concat%ginfo%nlat))
-!             vdata(:,:,:) = spv
-
-! #ifdef USEMPI
-!             do idata = 1, srf_concat%ndatablk
-
-!                call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, &
-!                   srf_data_id, p_comm_glb, p_stat, p_err)
-
-!                isrc  = rmesg(1)
-!                ixseg = rmesg(2)
-!                iyseg = rmesg(3)
-
-!                xgdsp = srf_concat%xsegs(ixseg)%gdsp
-!                ygdsp = srf_concat%ysegs(iyseg)%gdsp
-!                xcnt  = srf_concat%xsegs(ixseg)%cnt
-!                ycnt  = srf_concat%ysegs(iyseg)%cnt
-
-!                allocate (rbuf (ntyps,xcnt,ycnt))
-
-!                call mpi_recv (rbuf, ntyps * xcnt * ycnt, MPI_DOUBLE, &
-!                   isrc, srf_data_id, p_comm_glb, p_stat, p_err)
-
-!                vdata (:,xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
-
-!                deallocate (rbuf)
-!             end do
-! #else
-!             do iyseg = 1, srf_concat%nyseg
-!                do ixseg = 1, srf_concat%nxseg
-!                   iblk  = srf_concat%xsegs(ixseg)%blk
-!                   jblk  = srf_concat%ysegs(iyseg)%blk
-!                   xbdsp = srf_concat%xsegs(ixseg)%bdsp
-!                   ybdsp = srf_concat%ysegs(iyseg)%bdsp
-!                   xgdsp = srf_concat%xsegs(ixseg)%gdsp
-!                   ygdsp = srf_concat%ysegs(iyseg)%gdsp
-!                   xcnt  = srf_concat%xsegs(ixseg)%cnt
-!                   ycnt  = srf_concat%ysegs(iyseg)%cnt
-
-!                   vdata (:,xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
-!                      wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
-!                end do
-!             ENDDO
-! #endif
-
-!             write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
-
-!             inquire (file=trim(filename), exist=fexists)
-!             IF (.not. fexists) THEN
-!                CALL ncio_create_file (filename)
-
-!                call ncio_define_dimension (filename, 'TypeIndex', ntyps)
-!                call ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
-!                call ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
-
-!                call ncio_write_serial (filename, 'lat', srf_concat%ginfo%lat_c, 'lat')
-!                CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
-!                CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
-
-!                call ncio_write_serial (filename, 'lon', srf_concat%ginfo%lon_c, 'lon')
-!                CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
-!                CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
-
-!                call ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
-!             ENDIF
-
-!             call ncio_write_serial (filename, dataname, vdata, 'TypeIndex', 'lon', 'lat', compress)
-
-!             CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
-
-!             deallocate (vdata)
-
-!          ENDIF
-
-! #ifdef USEMPI
-!          if (p_is_io) then
-
-!             do iyseg = 1, srf_concat%nyseg
-!                do ixseg = 1, srf_concat%nxseg
-
-!                   iblk = srf_concat%xsegs(ixseg)%blk
-!                   jblk = srf_concat%ysegs(iyseg)%blk
-
-!                   if (gblock%pio(iblk,jblk) == p_iam_glb) then
-
-!                      xbdsp = srf_concat%xsegs(ixseg)%bdsp
-!                      ybdsp = srf_concat%ysegs(iyseg)%bdsp
-!                      xcnt  = srf_concat%xsegs(ixseg)%cnt
-!                      ycnt  = srf_concat%ysegs(iyseg)%cnt
-
-!                      allocate (sbuf (ntyps,xcnt,ycnt))
-!                      sbuf = wdata%blk(iblk,jblk)%val(:,xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
-
-!                      smesg = (/p_iam_glb, ixseg, iyseg/)
-!                      call mpi_send (smesg, 3, MPI_INTEGER, &
-!                         p_root, srf_data_id, p_comm_glb, p_err)
-!                      call mpi_send (sbuf, ntyps*xcnt*ycnt, MPI_DOUBLE, &
-!                         p_root, srf_data_id, p_comm_glb, p_err)
-
-!                      deallocate (sbuf)
-!                   end if
-!                end do
-!             end do
-!          end if
-! #endif
-
-!          srf_data_id = srf_data_id + 1
-
-!       elseif (trim(wmode) == 'block') then
-
-!          if (p_is_io) then
-
-!             DO iblkme = 1, gblock%nblkme
-!                iblk = gblock%xblkme(iblkme)
-!                jblk = gblock%yblkme(iblkme)
-
-!                if ((gdiag%xcnt(iblk) == 0) .or. (gdiag%ycnt(jblk) == 0)) cycle
-
-!                call get_filename_block (filename, iblk, jblk, fileblock)
-
-!                inquire (file=trim(filename), exist=fexists)
-!                IF (.not. fexists) THEN
-!                   CALL ncio_create_file (fileblock)
-!                   call ncio_define_dimension (fileblock, 'TypeIndex', ntyps)
-!                   CALL srf_write_grid_info   (fileblock, gdiag, iblk, jblk)
-!                ENDIF
-
-!                call ncio_write_serial (fileblock, dataname, &
-!                   wdata%blk(iblk,jblk)%val, 'TypeIndex', 'lon', 'lat', compress)
-
-!                CALL ncio_put_attr (fileblock, dataname, 'missing_value', spv)
-
-!             end do
-
-!          end if
-!       end if
-
-!       IF (allocated(vecone)) deallocate(vecone)
-
-!    end subroutine srfdata_map_and_write_int
 
    !------------------
    subroutine srf_write_grid_info (fileblock, grid, iblk, jblk)

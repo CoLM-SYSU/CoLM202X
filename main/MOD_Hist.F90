@@ -16,7 +16,7 @@ module MOD_Hist
    !----------------------------------------------------------------------------
 
    use MOD_Vars_1DAccFluxes
-   use MOD_Vars_Global, only : spval
+   USE MOD_Vars_Global, only : spval
    USE MOD_NetCDFSerial
 
    use MOD_HistGridded
@@ -111,7 +111,7 @@ contains
 #ifdef URBAN_MODEL
       USE MOD_LandUrban
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_Vars_PFTimeInvariants, only: pftclass
       USE MOD_LandPFT, only: patch_pft_s
 #endif

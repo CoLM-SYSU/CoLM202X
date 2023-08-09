@@ -1,7 +1,5 @@
 #include <define.h>
 
-#define SoilWaterDebug
-
 module MOD_Hydro_SoilWater
 
    !-------------------------------------------------------------------------
@@ -45,7 +43,7 @@ module MOD_Hydro_SoilWater
    integer,  parameter :: max_iters_richards = 6
    real(r8), parameter :: tol_richards = 1.e-7
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
    INTEGER(8) :: count_iters_this(max_iters_richards) = 0
    INTEGER(8) :: count_iters_accm(max_iters_richards) = 0
 #endif
@@ -224,7 +222,7 @@ contains
       integer  :: lbc_typ_sub
       real(r8) :: lbc_val_sub
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
       REAL(r8) :: w_sum_before, w_sum_after, wblc
 #endif
 
@@ -243,7 +241,7 @@ contains
       ! water table location
       izwt = findloc(zwt >= sp_zi, .true., dim=1, back=.true.)
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
       ! total water mass
       w_sum_before = ss_dp
       DO ilev = 1, nlev
@@ -397,7 +395,7 @@ contains
 
       qinfl = rain - (ss_dp - dp_m1)/dt
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
       ! total water mass
       w_sum_after = ss_dp
       DO ilev = 1, nlev
@@ -786,7 +784,7 @@ contains
 
                dt_done = dt_done + dt_this
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
                count_iters_this(iter) = count_iters_this(iter) + 1
 #endif
 
@@ -1004,7 +1002,7 @@ contains
 
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
 
-#ifdef  SoilWaterDebug
+#ifdef  CoLMDEBUG
          ! IF (abs(werr) > 1.0e-3) then
          !     write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
          ! ENDIF
@@ -2821,7 +2819,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLMDEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_at_unsaturated_interface: not converged.'
       end if
@@ -2989,7 +2987,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLMDEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_top_transitive_interface: not converged.'
       end if
@@ -3160,7 +3158,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLMDEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_btm_transitive_interface: not converged.'
       end if
@@ -3321,7 +3319,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLMDEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : flux_both_transitive_interface: not converged.'
       end if
@@ -3391,7 +3389,7 @@ contains
          iter = iter + 1
       end do
 
-#if (defined SoilWaterDebug)
+#if (defined CoLMDEBUG)
       if (iter == 50) then
          write(*,*) 'Warning : get_zwt_from_wa: not converged.'
       end if
@@ -3536,14 +3534,14 @@ contains
    end function find_unsat_lev_lower
 
    ! -----
-   SUBROUTINE print_iteration_stat_info ()
+   SUBROUTINE print_VSF_iteration_stat_info ()
       
       USE MOD_SPMD_Task
       IMPLICIT NONE
 
       CHARACTER(len=20) :: fmtt
 
-#ifdef SoilWaterDebug
+#ifdef CoLMDEBUG
       IF (p_is_worker) THEN
 #ifdef USEMPI
          CALL mpi_allreduce (MPI_IN_PLACE, count_iters_this, size(count_iters_this), &
@@ -3562,6 +3560,6 @@ contains
       ENDIF
 #endif
 
-   END SUBROUTINE print_iteration_stat_info
+   END SUBROUTINE print_VSF_iteration_stat_info
 
 end module MOD_Hydro_SoilWater

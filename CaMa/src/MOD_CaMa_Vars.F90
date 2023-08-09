@@ -324,7 +324,7 @@ contains
          D2RIVVEL_AVG, D2GDWRTN_AVG, D2RUNOFF_AVG, D2ROFSUB_AVG,               &
          D2OUTFLW_MAX, D2STORGE_MAX, D2RIVDPH_MAX, &
          d2daminf_avg,D2WEVAPEX_AVG,D2WINFILTEX_AVG,D2LEVDPH !!! added
-      USE MOD_Vars_2DFluxes
+ !      USE MOD_Vars_2DFluxes
 
       IMPLICIT NONE
 
