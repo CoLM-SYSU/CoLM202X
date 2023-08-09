@@ -28,7 +28,6 @@ module MOD_BGC_Veg_CNNDynamics
   use MOD_Precision
 
   use MOD_Vars_PFTimeInvariants, only: pftclass, pftfrac
-  use MOD_BGC_Vars_PFTimeVariables, only: fertnitro_p, fert_p
   use MOD_Vars_TimeInvariants, only: porsl, psi0, bsw
   use MOD_Vars_TimeVariables, only: h2osoi
 
@@ -37,6 +36,7 @@ module MOD_BGC_Veg_CNNDynamics
   use MOD_BGC_Vars_TimeVariables, only: sminn, fpg, lag_npp
 #ifdef CROP
   use MOD_BGC_Vars_PFTimeVariables, only: croplive_p, hui_p
+  use MOD_BGC_Vars_PFTimeVariables, only: fert_p
 #endif
 
   use MOD_BGC_Vars_1DPFTFluxes, only: plant_ndemand_p, soyfixn_p

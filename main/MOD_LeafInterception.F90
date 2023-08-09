@@ -165,10 +165,6 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
 
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
-
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -280,7 +276,7 @@ contains
                pg_snow = prc_snow + prl_snow + ldew/deltim
             ENDIF
          ELSE
-            pg_rain = prc_rain + prl_rain
+            pg_rain = prc_rain + prl_rain + qflx_irrig_sprinkler
             pg_snow = prc_snow + prl_snow
          ENDIF
 
@@ -349,10 +345,6 @@ contains
       REAL(r8), INTENT(out) :: qintr         ! interception [kg/(m2 s)]
       REAL(r8), INTENT(out) :: qintr_rain    ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow    ! snowfall interception (mm h2o/s)
-
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -523,10 +515,6 @@ contains
       REAL(r8), INTENT(out) :: qintr    !interception [kg/(m2 s)]
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
-      
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -710,10 +698,6 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
-
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -869,10 +853,6 @@ contains
       REAL(r8), INTENT(out)   :: qintr    !interception [kg/(m2 s)]
       REAL(r8), INTENT(out)   :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out)   :: qintr_snow ! snowfall interception (mm h2o/s)
-
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
 
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -1043,10 +1023,6 @@ contains
       REAL(r8), INTENT(out) :: qintr_rain ! rainfall interception (mm h2o/s)
       REAL(r8), INTENT(out) :: qintr_snow ! snowfall interception (mm h2o/s)
 
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
-
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
          vegt   = lsai
@@ -1212,10 +1188,6 @@ contains
       real(r8) :: Imax1,Lr,ldew_max_snow,Snow,Rain,DeltaSnowInt,Wind,BlownSnow,SnowThroughFall
       real(r8) :: MaxInt,MaxWaterInt,RainThroughFall,Overload,IntRainFract,IntSnowFract,ldew_smelt
       real(r8) :: drip
-
-      if(.not. DEF_USE_IRRIGATION)then
-         qflx_irrig_sprinkler = 0._r8
-      end if
       
       IF (lai+sai > 1e-6) THEN
          lsai   = lai + sai
@@ -1520,6 +1492,9 @@ contains
       REAL(r8), INTENT(out) :: qintr_snow !snowfall interception (mm h2o/s)
 
       INTEGER i, p, ps, pe
+#ifdef CROP
+      INTEGER  :: irrig_flag  ! 1 if sprinker, 2 if others
+#endif
       REAL(r8) pg_rain_tmp, pg_snow_tmp
 
       pg_rain_tmp = 0.
@@ -1528,9 +1503,11 @@ contains
       ps = patch_pft_s(ipatch)
       pe = patch_pft_e(ipatch)
 
+      if(.not. DEF_USE_IRRIGATION) qflx_irrig_sprinkler = 0._r8
+
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=1)
       end if
 #endif
 
