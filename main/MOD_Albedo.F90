@@ -300,7 +300,7 @@ ENDIF
          RETURN  !only DO albedo when coszen > 0
       ENDIF
 
-      czen=max(coszen,0.01)
+      czen=max(coszen,0.001)
 
 ! ----------------------------------------------------------------------
 ! 2. get albedo over land

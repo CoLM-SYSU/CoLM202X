@@ -137,7 +137,7 @@ SUBROUTINE CoLMDRIVER (idate,deltim,dolai,doalb,dosst,oro)
         laisun(i),       laisha(i),       rootr(1:,i),                      &
         rstfacsun_out(i),rstfacsha_out(i),gssun_out(i),    gssha_out(i),    &
         assimsun_out(i), etrsun_out(i),   assimsha_out(i), etrsha_out(i),   &
-        h2osoi(1:,i),    cvsoil(1:,i) ,   wat(i),          &
+        h2osoi(1:,i),    wat(i),          &
 
       ! FLUXES
         taux(i),         tauy(i),         fsena(i),        fevpa(i),        &

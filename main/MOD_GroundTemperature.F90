@@ -33,7 +33,7 @@ MODULE MOD_GroundTemperature
                          sigf,dz_soisno,z_soisno,zi_soisno,&
                          t_soisno,wice_soisno,wliq_soisno,scv,snowdp,&
                          frl,dlrad,sabg,sabg_lyr,fseng,fevpg,cgrnd,htvp,emg,&
-                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip,cvsoil)
+                         imelt,snofrz,sm,xmf,fact,pg_rain,pg_snow,t_precip)
 
 !=======================================================================
 ! Snow and soil temperatures
@@ -180,9 +180,6 @@ MODULE MOD_GroundTemperature
       cv(i) = hcap(i)*dz_soisno(i)
    ENDDO
    IF(lb==1 .and. scv>0.) cv(1) = cv(1) + cpice*scv
-
-! heat content
-   cvsoil = cv(1:nl_soil)
 
 ! Snow heat capacity
    IF(lb <= 0)THEN

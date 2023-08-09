@@ -1,8 +1,11 @@
 #include <define.h>
 
-MODULE MOD_LuLcc_Vars_TimeVariables
+MODULE MOD_Lulcc_Vars_TimeVariables
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
+!
+! !TODO: add authors
+!
 ! -------------------------------
 
   USE MOD_Precision
@@ -11,132 +14,133 @@ MODULE MOD_LuLcc_Vars_TimeVariables
   SAVE
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
-  REAL(r8), allocatable :: z_sno_       (:,:)  !node depth [m]
-  REAL(r8), allocatable :: dz_sno_      (:,:)  !interface depth [m]
-  REAL(r8), allocatable :: t_soisno_    (:,:)  !soil temperature [K]
-  REAL(r8), allocatable :: wliq_soisno_ (:,:)  !liquid water in layers [kg/m2]
-  REAL(r8), allocatable :: wice_soisno_ (:,:)  !ice lens in layers [kg/m2]
-  REAL(r8), allocatable :: cvsoil_      (:,:)  !heat capacity [J/(m2 K)]
-  REAL(r8), allocatable :: t_grnd_        (:)  !ground surface temperature [K]
+  !TODO: need to check with MOD_Vars_TimeVariables.F90 whether
+  !      there is any variables missing.
+  real(r8), allocatable :: z_sno_       (:,:)  !node depth [m]
+  real(r8), allocatable :: dz_sno_      (:,:)  !interface depth [m]
+  real(r8), allocatable :: t_soisno_    (:,:)  !soil temperature [K]
+  real(r8), allocatable :: wliq_soisno_ (:,:)  !liquid water in layers [kg/m2]
+  real(r8), allocatable :: wice_soisno_ (:,:)  !ice lens in layers [kg/m2]
+  real(r8), allocatable :: t_grnd_        (:)  !ground surface temperature [K]
 
-  REAL(r8), allocatable :: tleaf_         (:)  !leaf temperature [K]
-  REAL(r8), allocatable :: ldew_          (:)  !depth of water on foliage [mm]
-  REAL(r8), allocatable :: sag_           (:)  !non dimensional snow age [-]
-  REAL(r8), allocatable :: scv_           (:)  !snow cover, water equivalent [mm]
-  REAL(r8), allocatable :: snowdp_        (:)  !snow depth [meter]
-  REAL(r8), allocatable :: fveg_          (:)  !fraction of vegetation cover
-  REAL(r8), allocatable :: fsno_          (:)  !fraction of snow cover on ground
-  REAL(r8), allocatable :: sigf_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
-  REAL(r8), allocatable :: green_         (:)  !leaf greenness
-  REAL(r8), allocatable :: lai_           (:)  !leaf area index
-  REAL(r8), allocatable :: sai_           (:)  !stem area index
-  REAL(r8), allocatable :: coszen_        (:)  !cosine of solar zenith angle
-  REAL(r8), allocatable :: alb_       (:,:,:)  !averaged albedo [-]
-  REAL(r8), allocatable :: ssun_      (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: ssha_      (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: thermk_        (:)  !canopy gap fraction for tir radiation
-  REAL(r8), allocatable :: extkb_         (:)  !(k, g(mu)/mu) direct solar extinction coefficient
-  REAL(r8), allocatable :: extkd_         (:)  !diffuse and scattered diffuse PAR extinction coefficient
-  REAL(r8), allocatable :: zwt_           (:)  !the depth to water table [m]
-  REAL(r8), allocatable :: wa_            (:)  !water storage in aquifer [mm]
+  real(r8), allocatable :: tleaf_         (:)  !leaf temperature [K]
+  real(r8), allocatable :: ldew_          (:)  !depth of water on foliage [mm]
+  real(r8), allocatable :: sag_           (:)  !non dimensional snow age [-]
+  real(r8), allocatable :: scv_           (:)  !snow cover, water equivalent [mm]
+  real(r8), allocatable :: snowdp_        (:)  !snow depth [meter]
+  real(r8), allocatable :: fveg_          (:)  !fraction of vegetation cover
+  real(r8), allocatable :: fsno_          (:)  !fraction of snow cover on ground
+  real(r8), allocatable :: sigf_          (:)  !fraction of veg cover, excluding snow-covered veg [-]
+  real(r8), allocatable :: green_         (:)  !leaf greenness
+  real(r8), allocatable :: lai_           (:)  !leaf area index
+  real(r8), allocatable :: sai_           (:)  !stem area index
+  real(r8), allocatable :: coszen_        (:)  !cosine of solar zenith angle
+  real(r8), allocatable :: alb_       (:,:,:)  !averaged albedo [-]
+  real(r8), allocatable :: ssun_      (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
+  real(r8), allocatable :: ssha_      (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
+  real(r8), allocatable :: thermk_        (:)  !canopy gap fraction for tir radiation
+  real(r8), allocatable :: extkb_         (:)  !(k, g(mu)/mu) direct solar extinction coefficient
+  real(r8), allocatable :: extkd_         (:)  !diffuse and scattered diffuse PAR extinction coefficient
+  real(r8), allocatable :: zwt_           (:)  !the depth to water table [m]
+  real(r8), allocatable :: wa_            (:)  !water storage in aquifer [mm]
 
-  REAL(r8), allocatable :: t_lake_      (:,:)  !lake layer teperature [K]
-  REAL(r8), allocatable :: lake_icefrac_(:,:)  !lake mass fraction of lake layer that is frozen
+  real(r8), allocatable :: t_lake_      (:,:)  !lake layer teperature [K]
+  real(r8), allocatable :: lake_icefrac_(:,:)  !lake mass fraction of lake layer that is frozen
 
   ! for LULC_IGBP_PFT and LULC_IGBP_PC
-  REAL(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
-  REAL(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
-  REAL(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
-  REAL(r8), allocatable :: lai_p_         (:)  !leaf area index
-  REAL(r8), allocatable :: sai_p_         (:)  !stem area index
-  REAL(r8), allocatable :: ssun_p_    (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: ssha_p_    (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
-  REAL(r8), allocatable :: thermk_p_      (:)  !canopy gap fraction for tir radiation
-  REAL(r8), allocatable :: fshade_p_      (:)  !canopy shade fraction for tir radiation
-  REAL(r8), allocatable :: extkb_p_       (:)  !(k, g(mu)/mu) direct solar extinction coefficient
-  REAL(r8), allocatable :: extkd_p_       (:)  !diffuse and scattered diffuse PAR extinction coefficient
+  real(r8), allocatable :: tleaf_p_       (:)  !shaded leaf temperature [K]
+  real(r8), allocatable :: ldew_p_        (:)  !depth of water on foliage [mm]
+  real(r8), allocatable :: sigf_p_        (:)  !fraction of veg cover, excluding snow-covered veg [-]
+  real(r8), allocatable :: lai_p_         (:)  !leaf area index
+  real(r8), allocatable :: sai_p_         (:)  !stem area index
+  real(r8), allocatable :: ssun_p_    (:,:,:)  !sunlit canopy absorption for solar radiation (0-1)
+  real(r8), allocatable :: ssha_p_    (:,:,:)  !shaded canopy absorption for solar radiation (0-1)
+  real(r8), allocatable :: thermk_p_      (:)  !canopy gap fraction for tir radiation
+  real(r8), allocatable :: fshade_p_      (:)  !canopy shade fraction for tir radiation
+  real(r8), allocatable :: extkb_p_       (:)  !(k, g(mu)/mu) direct solar extinction coefficient
+  real(r8), allocatable :: extkd_p_       (:)  !diffuse and scattered diffuse PAR extinction coefficient
 
   ! for URBAN_MODEL
-  REAL(r8), allocatable :: fwsun_         (:)  !sunlit fraction of walls [-]
-  REAL(r8), allocatable :: dfwsun_        (:)  !change of sunlit fraction of walls [-]
+  real(r8), allocatable :: fwsun_         (:)  !sunlit fraction of walls [-]
+  real(r8), allocatable :: dfwsun_        (:)  !change of sunlit fraction of walls [-]
 
   ! shortwave absorption
-  REAL(r8), allocatable :: sroof_     (:,:,:)  !roof aborption [-]
-  REAL(r8), allocatable :: swsun_     (:,:,:)  !sunlit wall absorption [-]
-  REAL(r8), allocatable :: swsha_     (:,:,:)  !shaded wall absorption [-]
-  REAL(r8), allocatable :: sgimp_     (:,:,:)  !impervious absorptioin [-]
-  REAL(r8), allocatable :: sgper_     (:,:,:)  !pervious absorptioin [-]
-  REAL(r8), allocatable :: slake_     (:,:,:)  !urban lake absorptioin [-]
+  real(r8), allocatable :: sroof_     (:,:,:)  !roof aborption [-]
+  real(r8), allocatable :: swsun_     (:,:,:)  !sunlit wall absorption [-]
+  real(r8), allocatable :: swsha_     (:,:,:)  !shaded wall absorption [-]
+  real(r8), allocatable :: sgimp_     (:,:,:)  !impervious absorptioin [-]
+  real(r8), allocatable :: sgper_     (:,:,:)  !pervious absorptioin [-]
+  real(r8), allocatable :: slake_     (:,:,:)  !urban lake absorptioin [-]
 
   ! net longwave radiation for last time temperature change
-  REAL(r8), allocatable :: lwsun_         (:)  !net longwave of sunlit wall [W/m2]
-  REAL(r8), allocatable :: lwsha_         (:)  !net longwave of shaded wall [W/m2]
-  REAL(r8), allocatable :: lgimp_         (:)  !net longwave of impervious  [W/m2]
-  REAL(r8), allocatable :: lgper_         (:)  !net longwave of pervious [W/m2]
-  REAL(r8), allocatable :: lveg_          (:)  !net longwave of vegetation [W/m2]
+  real(r8), allocatable :: lwsun_         (:)  !net longwave of sunlit wall [W/m2]
+  real(r8), allocatable :: lwsha_         (:)  !net longwave of shaded wall [W/m2]
+  real(r8), allocatable :: lgimp_         (:)  !net longwave of impervious  [W/m2]
+  real(r8), allocatable :: lgper_         (:)  !net longwave of pervious [W/m2]
+  real(r8), allocatable :: lveg_          (:)  !net longwave of vegetation [W/m2]
 
-  REAL(r8), allocatable :: z_sno_roof_  (:,:)  !node depth of roof [m]
-  REAL(r8), allocatable :: z_sno_gimp_  (:,:)  !node depth of impervious [m]
-  REAL(r8), allocatable :: z_sno_gper_  (:,:)  !node depth pervious [m]
-  REAL(r8), allocatable :: z_sno_lake_  (:,:)  !node depth lake [m]
+  real(r8), allocatable :: z_sno_roof_  (:,:)  !node depth of roof [m]
+  real(r8), allocatable :: z_sno_gimp_  (:,:)  !node depth of impervious [m]
+  real(r8), allocatable :: z_sno_gper_  (:,:)  !node depth pervious [m]
+  real(r8), allocatable :: z_sno_lake_  (:,:)  !node depth lake [m]
 
-  REAL(r8), allocatable :: dz_sno_roof_ (:,:)  !interface depth of roof [m]
-  REAL(r8), allocatable :: dz_sno_gimp_ (:,:)  !interface depth of impervious [m]
-  REAL(r8), allocatable :: dz_sno_gper_ (:,:)  !interface depth pervious [m]
-  REAL(r8), allocatable :: dz_sno_lake_ (:,:)  !interface depth lake [m]
+  real(r8), allocatable :: dz_sno_roof_ (:,:)  !interface depth of roof [m]
+  real(r8), allocatable :: dz_sno_gimp_ (:,:)  !interface depth of impervious [m]
+  real(r8), allocatable :: dz_sno_gper_ (:,:)  !interface depth pervious [m]
+  real(r8), allocatable :: dz_sno_lake_ (:,:)  !interface depth lake [m]
 
-  REAL(r8), allocatable :: troof_inner_   (:)  !temperature of roof [K]
-  REAL(r8), allocatable :: twsun_inner_   (:)  !temperature of sunlit wall [K]
-  REAL(r8), allocatable :: twsha_inner_   (:)  !temperature of shaded wall [K]
+  real(r8), allocatable :: troof_inner_   (:)  !temperature of roof [K]
+  real(r8), allocatable :: twsun_inner_   (:)  !temperature of sunlit wall [K]
+  real(r8), allocatable :: twsha_inner_   (:)  !temperature of shaded wall [K]
 
-  REAL(r8), allocatable :: t_roofsno_   (:,:)  !temperature of roof [K]
-  REAL(r8), allocatable :: t_wallsun_   (:,:)  !temperature of sunlit wall [K]
-  REAL(r8), allocatable :: t_wallsha_   (:,:)  !temperature of shaded wall [K]
-  REAL(r8), allocatable :: t_gimpsno_   (:,:)  !temperature of impervious [K]
-  REAL(r8), allocatable :: t_gpersno_   (:,:)  !temperature of pervious [K]
-  REAL(r8), allocatable :: t_lakesno_   (:,:)  !temperature of pervious [K]
+  real(r8), allocatable :: t_roofsno_   (:,:)  !temperature of roof [K]
+  real(r8), allocatable :: t_wallsun_   (:,:)  !temperature of sunlit wall [K]
+  real(r8), allocatable :: t_wallsha_   (:,:)  !temperature of shaded wall [K]
+  real(r8), allocatable :: t_gimpsno_   (:,:)  !temperature of impervious [K]
+  real(r8), allocatable :: t_gpersno_   (:,:)  !temperature of pervious [K]
+  real(r8), allocatable :: t_lakesno_   (:,:)  !temperature of pervious [K]
 
-  REAL(r8), allocatable :: wliq_roofsno_(:,:)  !liquid water in layers [kg/m2]
-  REAL(r8), allocatable :: wliq_gimpsno_(:,:)  !liquid water in layers [kg/m2]
-  REAL(r8), allocatable :: wliq_gpersno_(:,:)  !liquid water in layers [kg/m2]
-  REAL(r8), allocatable :: wliq_lakesno_(:,:)  !liquid water in layers [kg/m2]
-  REAL(r8), allocatable :: wice_roofsno_(:,:)  !ice lens in layers [kg/m2]
-  REAL(r8), allocatable :: wice_gimpsno_(:,:)  !ice lens in layers [kg/m2]
-  REAL(r8), allocatable :: wice_gpersno_(:,:)  !ice lens in layers [kg/m2]
-  REAL(r8), allocatable :: wice_lakesno_(:,:)  !ice lens in layers [kg/m2]
+  real(r8), allocatable :: wliq_roofsno_(:,:)  !liquid water in layers [kg/m2]
+  real(r8), allocatable :: wliq_gimpsno_(:,:)  !liquid water in layers [kg/m2]
+  real(r8), allocatable :: wliq_gpersno_(:,:)  !liquid water in layers [kg/m2]
+  real(r8), allocatable :: wliq_lakesno_(:,:)  !liquid water in layers [kg/m2]
+  real(r8), allocatable :: wice_roofsno_(:,:)  !ice lens in layers [kg/m2]
+  real(r8), allocatable :: wice_gimpsno_(:,:)  !ice lens in layers [kg/m2]
+  real(r8), allocatable :: wice_gpersno_(:,:)  !ice lens in layers [kg/m2]
+  real(r8), allocatable :: wice_lakesno_(:,:)  !ice lens in layers [kg/m2]
 
-  REAL(r8), allocatable :: sag_roof_      (:)  !roof snow age [-]
-  REAL(r8), allocatable :: sag_gimp_      (:)  !impervious ground snow age [-]
-  REAL(r8), allocatable :: sag_gper_      (:)  !pervious ground snow age [-]
-  REAL(r8), allocatable :: sag_lake_      (:)  !urban lake snow age [-]
+  real(r8), allocatable :: sag_roof_      (:)  !roof snow age [-]
+  real(r8), allocatable :: sag_gimp_      (:)  !impervious ground snow age [-]
+  real(r8), allocatable :: sag_gper_      (:)  !pervious ground snow age [-]
+  real(r8), allocatable :: sag_lake_      (:)  !urban lake snow age [-]
 
-  REAL(r8), allocatable :: scv_roof_      (:)  !roof snow cover [-]
-  REAL(r8), allocatable :: scv_gimp_      (:)  !impervious ground snow cover [-]
-  REAL(r8), allocatable :: scv_gper_      (:)  !pervious ground snow cover [-]
-  REAL(r8), allocatable :: scv_lake_      (:)  !urban lake snow cover [-]
+  real(r8), allocatable :: scv_roof_      (:)  !roof snow cover [-]
+  real(r8), allocatable :: scv_gimp_      (:)  !impervious ground snow cover [-]
+  real(r8), allocatable :: scv_gper_      (:)  !pervious ground snow cover [-]
+  real(r8), allocatable :: scv_lake_      (:)  !urban lake snow cover [-]
 
-  REAL(r8), allocatable :: fsno_roof_     (:)  !roof snow fraction [-]
-  REAL(r8), allocatable :: fsno_gimp_     (:)  !impervious ground snow fraction [-]
-  REAL(r8), allocatable :: fsno_gper_     (:)  !pervious ground snow fraction [-]
-  REAL(r8), allocatable :: fsno_lake_     (:)  !urban lake snow fraction [-]
+  real(r8), allocatable :: fsno_roof_     (:)  !roof snow fraction [-]
+  real(r8), allocatable :: fsno_gimp_     (:)  !impervious ground snow fraction [-]
+  real(r8), allocatable :: fsno_gper_     (:)  !pervious ground snow fraction [-]
+  real(r8), allocatable :: fsno_lake_     (:)  !urban lake snow fraction [-]
 
-  REAL(r8), allocatable :: snowdp_roof_   (:)  !roof snow depth [m]
-  REAL(r8), allocatable :: snowdp_gimp_   (:)  !impervious ground snow depth [m]
-  REAL(r8), allocatable :: snowdp_gper_   (:)  !pervious ground snow depth [m]
-  REAL(r8), allocatable :: snowdp_lake_   (:)  !urban lake snow depth [m]
+  real(r8), allocatable :: snowdp_roof_   (:)  !roof snow depth [m]
+  real(r8), allocatable :: snowdp_gimp_   (:)  !impervious ground snow depth [m]
+  real(r8), allocatable :: snowdp_gper_   (:)  !pervious ground snow depth [m]
+  real(r8), allocatable :: snowdp_lake_   (:)  !urban lake snow depth [m]
 
-  REAL(r8), allocatable :: t_room_        (:)  !temperature of inner building [K]
-  REAL(r8), allocatable :: tafu_          (:)  !temperature of outer building [K]
-  REAL(r8), allocatable :: Fhac_          (:)  !sensible flux from heat or cool AC [W/m2]
-  REAL(r8), allocatable :: Fwst_          (:)  !waste heat flux from heat or cool AC [W/m2]
-  REAL(r8), allocatable :: Fach_          (:)  !flux from inner and outter air exchange [W/m2]
+  real(r8), allocatable :: t_room_        (:)  !temperature of inner building [K]
+  real(r8), allocatable :: tafu_          (:)  !temperature of outer building [K]
+  real(r8), allocatable :: Fhac_          (:)  !sensible flux from heat or cool AC [W/m2]
+  real(r8), allocatable :: Fwst_          (:)  !waste heat flux from heat or cool AC [W/m2]
+  real(r8), allocatable :: Fach_          (:)  !flux from inner and outter air exchange [W/m2]
 
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: allocate_LuLccTimeVariables
-  PUBLIC :: deallocate_LuLccTimeVariables
-  PUBLIC :: SAVE_LuLccTimeVariables
-  PUBLIC :: REST_LuLccTimeVariables
+  PUBLIC :: allocate_LulccTimeVariables
+  PUBLIC :: deallocate_LulccTimeVariables
+  PUBLIC :: SAVE_LulccTimeVariables
+  PUBLIC :: REST_LulccTimeVariables
 
 ! PRIVATE MEMBER FUNCTIONS:
 
@@ -146,12 +150,12 @@ MODULE MOD_LuLcc_Vars_TimeVariables
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE allocate_LuLccTimeVariables
+  SUBROUTINE allocate_LulccTimeVariables
   ! --------------------------------------------------------------------
-  ! Allocates memory for LuLcc time variant variables
+  ! Allocates memory for Lulcc time variant variables
   ! --------------------------------------------------------------------
 
-     use MOD_SPMD_Task
+     USE MOD_SPMD_Task
      USE MOD_Precision
      USE MOD_Vars_Global
      USE MOD_LandPatch
@@ -173,7 +177,6 @@ MODULE MOD_LuLcc_Vars_TimeVariables
            allocate (t_soisno_    (maxsnl+1:nl_soil,numpatch))
            allocate (wliq_soisno_ (maxsnl+1:nl_soil,numpatch))
            allocate (wice_soisno_ (maxsnl+1:nl_soil,numpatch))
-           allocate (cvsoil_             (1:nl_soil,numpatch))
            allocate (t_grnd_                       (numpatch))
            allocate (tleaf_                        (numpatch))
            allocate (ldew_                         (numpatch))
@@ -289,13 +292,13 @@ MODULE MOD_LuLcc_Vars_TimeVariables
         ENDIF
 #endif
      ENDIF
-  END SUBROUTINE allocate_LuLccTimeVariables
+  END SUBROUTINE allocate_LulccTimeVariables
 
 
-  SUBROUTINE SAVE_LuLccTimeVariables
+  SUBROUTINE SAVE_LulccTimeVariables
 
      USE MOD_Precision
-     use MOD_SPMD_Task
+     USE MOD_SPMD_Task
      USE MOD_Vars_Global
      USE MOD_Vars_TimeVariables
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
@@ -313,7 +316,6 @@ MODULE MOD_LuLcc_Vars_TimeVariables
          t_soisno_     = t_soisno
          wliq_soisno_  = wliq_soisno
          wice_soisno_  = wice_soisno
-         cvsoil_       = cvsoil
          t_grnd_       = t_grnd
          tleaf_        = tleaf
          ldew_         = ldew
@@ -425,12 +427,12 @@ MODULE MOD_LuLcc_Vars_TimeVariables
 #endif
      ENDIF
 
-  END SUBROUTINE SAVE_LuLccTimeVariables
+  END SUBROUTINE SAVE_LulccTimeVariables
 
 
-  SUBROUTINE REST_LuLccTimeVariables
+  SUBROUTINE REST_LulccTimeVariables
 
-     use MOD_SPMD_Task
+     USE MOD_SPMD_Task
      USE MOD_Precision
      USE MOD_Vars_Global
      USE MOD_LandPatch
@@ -438,7 +440,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
      USE MOD_Mesh
      USE MOD_Vars_TimeInvariants
      USE MOD_Vars_TimeVariables
-     USE MOD_LuLcc_Vars_TimeInvariants
+     USE MOD_Lulcc_Vars_TimeInvariants
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
      USE MOD_Vars_PFTimeInvariants
      USE MOD_Vars_PFTimeVariables
@@ -451,12 +453,12 @@ MODULE MOD_LuLcc_Vars_TimeVariables
 
      IMPLICIT NONE
 
-     REAL(r8), allocatable, dimension(:) :: grid_patch_s , grid_patch_e
-     REAL(r8), allocatable, dimension(:) :: grid_patch_s_, grid_patch_e_
-     INTEGER , allocatable, dimension(:) :: locpxl
-     INTEGER i, j, np, np_, ip, ip_, pc, pc_, u, u_
-     INTEGER ps, ps_, pe, pe_
-     INTEGER numpxl, ipxl
+     real(r8), allocatable, dimension(:) :: grid_patch_s , grid_patch_e
+     real(r8), allocatable, dimension(:) :: grid_patch_s_, grid_patch_e_
+     integer , allocatable, dimension(:) :: locpxl
+     integer i, j, np, np_, ip, ip_, pc, pc_, u, u_
+     integer ps, ps_, pe, pe_
+     integer numpxl, ipxl
 
      IF (p_is_worker) THEN
         ! allocate with numelm
@@ -531,7 +533,7 @@ MODULE MOD_LuLcc_Vars_TimeVariables
                     ENDIF
 
                     ! otherwise, set patch value
-                    ! only for the same patch TYPE
+                    ! only for the same patch type
                     z_sno       (:,np) = z_sno_       (:,np_)
                     dz_sno      (:,np) = dz_sno_      (:,np_)
                     t_soisno    (:,np) = t_soisno_    (:,np_)
@@ -546,9 +548,13 @@ MODULE MOD_LuLcc_Vars_TimeVariables
                     fveg          (np) = fveg_          (np_)
                     fsno          (np) = fsno_          (np_)
                     sigf          (np) = sigf_          (np_)
+                    IF (lai(np)+sai(np)>1e-6) THEN
+                       sigf(np) = 1-fsno(np)
+                    ENDIF
                     green         (np) = green_         (np_)
-                    lai           (np) = lai_           (np_)
-                    sai           (np) = sai_           (np_)
+                    ! Note: may not read lai and sai since LAIReadin was put after LULCC
+                    ! lai           (np) = lai_           (np_)
+                    ! sai           (np) = sai_           (np_)
                     coszen        (np) = coszen_        (np_)
                     alb       (:,:,np) = alb_       (:,:,np_)
                     ssun      (:,:,np) = ssun_      (:,:,np_)
@@ -568,7 +574,7 @@ IF (patchtype(np)==0 .and. patchtype_(np_)==0) THEN
                     ip_= patch_pft_s_(np_)
 
                     IF (ip.le.0 .or. ip_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVariables LULC_IGBP_PFT|LULC_IGBP_PC!"
+                       print *, "Error in REST_LulccTimeVariables LULC_IGBP_PFT|LULC_IGBP_PC!"
                        CALL CoLM_stop ()
                     ENDIF
 
@@ -611,24 +617,24 @@ IF (patchclass(np)==URBAN .and. patchclass_(np_)==URBAN) THEN
                     u_= patch2urban_(np_)
 
                     IF (u.le.0 .or. u_.le.0) THEN
-                       print *, "Error in REST_LuLccTimeVariables URBAN_MODEL!"
+                       print *, "Error in REST_LulccTimeVariables URBAN_MODEL!"
                        CALL CoLM_stop ()
                     ENDIF
 
-                    ! if a Urban TYPE is missing, CYCLE
+                    ! if a Urban type is missing, CYCLE
                     IF (landurban%settyp(u) > urbclass_(u_)) THEN
                        np_= np_+ 1
                        CYCLE
                     ENDIF
 
-                    ! if a urban TYPE is added, CYCLE
+                    ! if a urban type is added, CYCLE
                     IF (landurban%settyp(u) < urbclass_(u_)) THEN
                        np = np + 1
                        CYCLE
                     ENDIF
 
                     ! otherwise, set urban value
-                    ! include added urban and the same urban TYPE
+                    ! include added urban and the same urban type
                     fwsun          (u) = fwsun_          (u_)
                     dfwsun         (u) = dfwsun_         (u_)
 
@@ -714,15 +720,15 @@ ENDIF
         IF (allocated(grid_patch_e_)) deallocate(grid_patch_e_)
         IF (allocated(locpxl       )) deallocate(locpxl       )
      ENDIF
-  END SUBROUTINE REST_LuLccTimeVariables
+  END SUBROUTINE REST_LulccTimeVariables
 
 
-  SUBROUTINE deallocate_LuLccTimeVariables
-     use MOD_SPMD_Task
-     USE MOD_LuLcc_Vars_TimeInvariants, only: numpatch_, numpft_, numpc_, numurban_
+  SUBROUTINE deallocate_LulccTimeVariables
+     USE MOD_SPMD_Task
+     USE MOD_Lulcc_Vars_TimeInvariants, only: numpatch_, numpft_, numpc_, numurban_
 
 ! --------------------------------------------------
-! Deallocates memory for LuLcc time variant variables
+! Deallocates memory for Lulcc time variant variables
 ! --------------------------------------------------
      IF (p_is_worker) THEN
         IF (numpatch_ > 0) THEN
@@ -731,7 +737,6 @@ ENDIF
            deallocate (t_soisno_     )
            deallocate (wliq_soisno_  )
            deallocate (wice_soisno_  )
-           deallocate (cvsoil_       )
            deallocate (t_grnd_       )
            deallocate (tleaf_        )
            deallocate (ldew_         )
@@ -848,7 +853,7 @@ ENDIF
 #endif
      ENDIF
 
-  END SUBROUTINE deallocate_LuLccTimeVariables
+  END SUBROUTINE deallocate_LulccTimeVariables
 
-END MODULE MOD_LuLcc_Vars_TimeVariables
+END MODULE MOD_Lulcc_Vars_TimeVariables
 ! ---------- EOP ------------

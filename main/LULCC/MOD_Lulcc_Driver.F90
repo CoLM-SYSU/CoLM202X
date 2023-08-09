@@ -1,7 +1,6 @@
 #include <define.h>
 
 #ifdef LULCC
-
 MODULE MOD_Lulcc_Driver
 
 !-----------------------------------------------------------------------
@@ -15,7 +14,7 @@ MODULE MOD_Lulcc_Driver
 
 !-----------------------------------------------------------------------
 
-   CONTAINS
+ CONTAINS
 
 !-----------------------------------------------------------------------
 
@@ -25,10 +24,14 @@ MODULE MOD_Lulcc_Driver
                          idate,greenwich)
 
 !=======================================================================
-! PURPOSE:
+! !PURPOSE:
 !   the main subroutine for Land use and land cover change simulation
 !
 ! Created by Hua Yuan, 04/08/2022
+!
+! !REVISONS:
+! TODO: add authors Wanyi Lin and Wenzong Dong.
+!
 !=======================================================================
 
    USE MOD_Precision
@@ -37,16 +40,18 @@ MODULE MOD_Lulcc_Driver
    USE MOD_Lulcc_Vars_TimeVariables
    USE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeVariables
-   USE MOD_Lulcc_TMatrix
+   USE MOD_Lulcc_PatchTrace
+   USE MOD_Lulcc_MassEnergyConserve
+   USE MOD_Namelist
 
    IMPLICIT NONE
 
-   CHARACTER(LEN=256), intent(in) :: casename      !casename name
-   CHARACTER(LEN=256), intent(in) :: dir_landdata  !surface data directory
-   CHARACTER(LEN=256), intent(in) :: dir_restart   !case restart data directory
+   character(LEN=256), intent(in) :: casename      !casename name
+   character(LEN=256), intent(in) :: dir_landdata  !surface data directory
+   character(LEN=256), intent(in) :: dir_restart   !case restart data directory
 
-   LOGICAL, intent(in)    :: greenwich   !true: greenwich time, false: local time
-   INTEGER, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
+   logical, intent(in)    :: greenwich   !true: greenwich time, false: local time
+   integer, intent(inout) :: idate(3)    !year, julian day, seconds of the starting time
 
    ! allocate Lulcc memory
    CALL allocate_LulccTimeInvariants
@@ -65,24 +70,29 @@ MODULE MOD_Lulcc_Driver
                          idate,greenwich)
 
    ! simple method for variable recovery
-   IF (p_is_master) THEN
-      print *, ">>> LULCC: simple method for variable recovery..."
+   IF (DEF_LULCC_SCHEME == 1) THEN
+      IF (p_is_master) THEN
+         print *, ">>> LULCC: simple method for variable recovery..."
+      ENDIF
+      CALL REST_LulccTimeVariables
    ENDIF
-   !CALL REST_LulccTimeVariables
 
    ! conserved method for variable revocery
-   IF (p_is_master) THEN
-      print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+   IF (DEF_LULCC_SCHEME == 2) THEN
+      IF (p_is_master) THEN
+         print *, ">>> LULCC: Mass&Energy conserve for variable recovery..."
+      ENDIF
+      CALL allocate_LulccPatchTrace()
+      CALL READ_LulccPatchTrace(idate(1))
+      CALL LulccMassEnergyConserve()
    ENDIF
-   CALL allocate_LulccTMatrix()
-   CALL READ_LulccTMatrix(idate(1))
-   CALL LulccEnergyConserve()
-   !CALL LulccWaterConserve()
 
    ! deallocate Lulcc memory
    CALL deallocate_LulccTimeInvariants()
    CALL deallocate_LulccTimeVariables()
-   CALL deallocate_LulccTMatrix()
+   IF (DEF_LULCC_SCHEME == 2) THEN
+      CALL deallocate_LulccPatchTrace()
+   ENDIF
 
    ! write out state variables
    CALL WRITE_TimeVariables (idate, idate(1), casename, dir_restart)
@@ -90,5 +100,4 @@ MODULE MOD_Lulcc_Driver
  END SUBROUTINE LulccDriver
 
 END MODULE MOD_Lulcc_Driver
-
 #endif
