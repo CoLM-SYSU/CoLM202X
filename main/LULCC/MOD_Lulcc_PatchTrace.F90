@@ -1,9 +1,9 @@
 #include <define.h>
 
-MODULE MOD_Lulcc_TMatrix
+MODULE MOD_Lulcc_PatchTrace
 ! -------------------------------
-! Created by Hua Yuan, 04/2022
-! may be renamed as MOD_Lulcc_Ptrace
+! Created by Wanyi Lin and Hua Yuan, 07/2023
+! may be renamed as MOD_Lulcc_PatchTrace
 ! -------------------------------
 
    USE MOD_Precision
@@ -11,13 +11,13 @@ MODULE MOD_Lulcc_TMatrix
    IMPLICIT NONE
    SAVE
 ! -----------------------------------------------------------------
-   ! TODO: need coding below...
-   real(r8), allocatable :: lccpct_patches(:,:) ! Percent area of source patches 
+
+   real(r8), allocatable :: lccpct_patches(:,:) ! Percent area of source patches
 
    ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: allocate_LulccTMatrix
-   PUBLIC :: deallocate_LulccTMatrix
-   PUBLIC :: READ_LulccTMatrix
+   PUBLIC :: allocate_LulccPatchTrace
+   PUBLIC :: deallocate_LulccPatchTrace
+   PUBLIC :: READ_LulccPatchTrace
 
    ! PRIVATE MEMBER FUNCTIONS:
 
@@ -27,7 +27,7 @@ MODULE MOD_Lulcc_TMatrix
 
 !-----------------------------------------------------------------------
 
-   SUBROUTINE allocate_LulccTMatrix
+   SUBROUTINE allocate_LulccPatchTrace
    ! --------------------------------------------------------------------
    ! Allocates memory for Lulcc time invariant variables
    ! --------------------------------------------------------------------
@@ -35,20 +35,20 @@ MODULE MOD_Lulcc_TMatrix
       USE MOD_Precision
       USE MOD_Vars_Global
       USE MOD_LandPatch
-      use MOD_SPMD_Task
+      USE MOD_SPMD_Task
 
       IMPLICIT NONE
-      !TODO: need coding below...
-      INTEGER :: nlc = N_land_classification
+
+      integer :: nlc = N_land_classification
 
       IF (p_is_worker) THEN
          allocate (lccpct_patches (numpatch, nlc))
          lccpct_patches (:,:) = 0
       ENDIF
-      
-   END SUBROUTINE allocate_LulccTMatrix
 
-   SUBROUTINE READ_LulccTMatrix (lc_year)
+   END SUBROUTINE allocate_LulccPatchTrace
+
+   SUBROUTINE READ_LulccPatchTrace (lc_year)
 
       USE MOD_Precision
       USE MOD_Namelist
@@ -58,7 +58,7 @@ MODULE MOD_Lulcc_TMatrix
       USE MOD_NetCDFVector
       USE MOD_NetCDFBlock
       USE MOD_5x5DataReadin
-      USE MOD_Namelist, only : DEF_dir_rawdata
+      USE MOD_Namelist, only: DEF_dir_rawdata
 #ifdef CoLMDEBUG
       USE MOD_RangeCheck
 #endif
@@ -76,16 +76,17 @@ MODULE MOD_Lulcc_TMatrix
 
       IMPLICIT NONE
 
-      INTEGER, intent(in) :: lc_year
+      integer, intent(in) :: lc_year
 
       ! local variables:
       ! ---------------------------------------------------------------
-      CHARACTER(len=256) :: dir_5x5, suffix, cyear
-      INTEGER :: ipatch,ipxl,ipxstt, ipxend
+      character(len=256) :: dir_5x5, suffix, cyear
+      integer :: ipatch,ipxl,ipxstt, ipxend
 
-      TYPE (block_data_int32_2d) :: lcdatafr ! land cover data of last year
-      REAL(r8), allocatable :: area_one(:)    , areabuff(:)
-      INTEGER,  allocatable :: lcdatafr_one(:), ibuff(:)
+      type (block_data_int32_2d) :: lcdatafr ! land cover data of last year
+      integer,  allocatable :: lcdatafr_one(:), ibuff(:)
+      real(r8), allocatable :: area_one(:)    , areabuff(:)
+      real(r8) :: sum_areabuff
 
       write(cyear,'(i4.4)') lc_year-1
 
@@ -100,7 +101,7 @@ MODULE MOD_Lulcc_TMatrix
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, lcdatafr)
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
-         suffix  = 'MOD'//trim(cyear) 
+         suffix  = 'MOD'//trim(cyear)
          CALL read_5x5_data (dir_5x5, suffix, gpatch, 'LC', lcdatafr)
 
 #ifdef USEMPI
@@ -108,34 +109,34 @@ MODULE MOD_Lulcc_TMatrix
 #endif
       ENDIF
 
-      !   -----------------------------------------------------------------
-      !   extract the land cover type of pixels of last year for each patch
-      !   -----------------------------------------------------------------
+      ! -----------------------------------------------------------------
+      ! extract the land cover type of pixels of last year for each patch
+      ! -----------------------------------------------------------------
 
       IF (p_is_worker) THEN
-   
+
          DO ipatch = 1, numpatch
 
             CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
                   data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
-            
+
             ipxstt = landpatch%ipxstt(ipatch)
             ipxend = landpatch%ipxend(ipatch)
-            
-            if (allocated(ibuff)) deallocate(ibuff)
+
+            IF (allocated(ibuff)) deallocate(ibuff)
             allocate(ibuff(ipxstt:ipxend))
             ibuff(:) = lcdatafr_one(:)
-            
-            if (allocated(areabuff)) deallocate(areabuff)
+
+            IF (allocated(areabuff)) deallocate(areabuff)
             allocate(areabuff(ipxstt:ipxend))
             areabuff(:) = area_one(:)
 
+            sum_areabuff = sum(areabuff)
             DO ipxl = ipxstt, ipxend
-               lccpct_patches(ipatch, ibuff(ipxl)) = lccpct_patches(ipatch, ibuff(ipxl)) + areabuff(ipxl) / sum(areabuff)
+               lccpct_patches(ipatch, ibuff(ipxl)) = lccpct_patches(ipatch, ibuff(ipxl)) + areabuff(ipxl) / sum_areabuff
             ENDDO
 
          ENDDO
-
 
 #ifdef USEMPI
          CALL aggregation_worker_done ()
@@ -153,19 +154,19 @@ MODULE MOD_Lulcc_TMatrix
    CALL check_vector_data ('lccpct_patches ', lccpct_patches)
 #endif
 
-   END SUBROUTINE READ_LulccTMatrix
+   END SUBROUTINE READ_LulccPatchTrace
 
-   SUBROUTINE deallocate_LulccTMatrix
+   SUBROUTINE deallocate_LulccPatchTrace
       ! --------------------------------------------------
       ! Deallocates memory for Lulcc time invariant variables
       ! --------------------------------------------------
-      use MOD_SPMD_Task
-      !TODO: need coding below...
+      USE MOD_SPMD_Task
+
       IF (p_is_worker) THEN
          IF (allocated(lccpct_patches)) deallocate (lccpct_patches)
       ENDIF
 
-   END SUBROUTINE deallocate_LulccTMatrix
+   END SUBROUTINE deallocate_LulccPatchTrace
 
-END MODULE MOD_Lulcc_TMatrix
+END MODULE MOD_Lulcc_PatchTrace
 ! ---------- EOP ------------

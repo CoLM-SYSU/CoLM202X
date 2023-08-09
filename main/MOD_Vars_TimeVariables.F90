@@ -183,7 +183,7 @@ IF(DEF_USE_OZONESTRESS)THEN
       CALL ncio_read_vector (file_restart, 'o3uptakesha_p', landpft, o3uptakesha_p, defval = 0._r8)
 ENDIF
 IF(DEF_USE_IRRIGATION)THEN
-      CALL ncio_read_vector (file_restart,'irrig_method_p', landpft,irrig_method_p, defval = 0)
+      CALL ncio_read_vector (file_restart,'irrig_method_p', landpft,irrig_method_p, defval = 1)
 ENDIF
 
 #ifdef BGC

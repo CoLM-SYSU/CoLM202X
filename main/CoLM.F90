@@ -493,7 +493,8 @@ PROGRAM CoLM
    CALL lateral_flow_final ()
 #endif
 
-   CALL hist_final ()
+   CALL forcing_final ()
+   CALL hist_final    ()
 
 #ifdef SinglePoint
    CALL single_srfdata_final ()
