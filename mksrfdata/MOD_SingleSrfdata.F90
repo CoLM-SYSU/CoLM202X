@@ -174,7 +174,7 @@ CONTAINS
 
 #ifdef CROP
       IF ((.not. mksrfdata) .or. USE_SITE_pctcrop) THEN
-         IF (SITE_landtype == 12) THEN
+         IF (SITE_landtype == CROPLAND) THEN
             CALL ncio_read_serial (fsrfdata, 'croptyp', SITE_croptyp)
             CALL ncio_read_serial (fsrfdata, 'pctcrop', SITE_pctcrop)
             ! otherwise, retrieve from database by MOD_LandPatch.F90
@@ -455,7 +455,7 @@ CONTAINS
       CALL ncio_put_attr     (fsrfdata, 'pctpfts', 'source', datasource(USE_SITE_pctpfts))
 #endif
 #if (defined CROP)
-      IF (SITE_landtype == 12) THEN
+      IF (SITE_landtype == CROPLAND) THEN
          CALL ncio_write_serial (fsrfdata, 'croptyp', SITE_croptyp, 'patch')
          CALL ncio_write_serial (fsrfdata, 'pctcrop', SITE_pctcrop, 'patch')
          CALL ncio_put_attr     (fsrfdata, 'croptyp', 'source', datasource(USE_SITE_pctcrop))

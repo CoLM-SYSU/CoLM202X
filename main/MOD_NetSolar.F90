@@ -44,81 +44,78 @@ CONTAINS
    USE MOD_Vars_Global
    USE MOD_Namelist, only: DEF_USE_SNICAR
    USE MOD_TimeManager, only: isgreenwich
-#ifdef LULC_IGBP_PFT
-   USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+   USE MOD_LandPFT, only: patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
    USE MOD_Vars_1DPFTFluxes
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvariants
-   USE MOD_Vars_PCTimeVariables
-   USE MOD_Vars_1DPCFluxes
 #endif
 
    IMPLICIT NONE
 
 ! Dummy argument
-   INTEGER,  intent(in) :: ipatch     !patch index
-   INTEGER,  intent(in) :: idate(3)   !model time
-   INTEGER,  intent(in) :: patchtype  !land water TYPE (99-sea)
+   integer,  intent(in) :: ipatch     !patch index
+   integer,  intent(in) :: idate(3)   !model time
+   integer,  intent(in) :: patchtype  !land patch type (99-sea)
 
-   REAL(r8), intent(in) :: dlon       !logitude in radians
-   REAL(r8), intent(in) :: deltim     !seconds in a time step [second]
+   real(r8), intent(in) :: dlon       !logitude in radians
+   real(r8), intent(in) :: deltim     !seconds in a time step [second]
 
-   REAL(r8), intent(in) :: &
+   real(r8), intent(in) :: &
          forc_sols,  &! atm vis direct beam solar rad onto srf [W/m2]
          forc_soll,  &! atm nir direct beam solar rad onto srf [W/m2]
          forc_solsd, &! atm vis diffuse solar rad onto srf [W/m2]
          forc_solld   ! atm nir diffuse solar rad onto srf [W/m2]
 
-   REAL(r8), dimension(1:2,1:2), intent(in) :: &
-         alb,      &! averaged albedo [-]
-         ssun,     &! sunlit canopy absorption for solar radiation
-         ssha       ! shaded canopy absorption for solar radiation
+   real(r8), dimension(1:2,1:2), intent(in) :: &
+         alb          ! averaged albedo [-]
 
-   REAL(r8), dimension(1:2,1:2,maxsnl+1:1), intent(inout) :: &
-         ssno       ! snow layer absorption
+   real(r8), dimension(1:2,1:2), intent(inout) :: &
+         ssun,       &! sunlit canopy absorption for solar radiation
+         ssha         ! shaded canopy absorption for solar radiation
 
-   REAL(r8), intent(in) :: &
-         lai,      &! leaf area index
-         sai,      &! stem area index
-         rho(2,2), &! leaf reflectance (iw=iband, il=life and dead)
-         tau(2,2)   ! leaf transmittance (iw=iband, il=life and dead)
+   real(r8), dimension(1:2,1:2,maxsnl+1:1), intent(inout) :: &
+         ssno         ! snow layer absorption
 
-   REAL(r8), intent(out) :: &
-         parsun,   &! PAR absorbed by sunlit vegetation [W/m2]
-         parsha,   &! PAR absorbed by shaded vegetation [W/m2]
-         sabvsun,  &! solar absorbed by sunlit vegetation [W/m2]
-         sabvsha,  &! solar absorbed by shaded vegetation [W/m2]
-         sabg,     &! solar absorbed by ground  [W/m2]
-         sr,       &! total reflected solar radiation (W/m2)
-         solvd,    &! incident direct beam vis solar radiation (W/m2)
-         solvi,    &! incident diffuse beam vis solar radiation (W/m2)
-         solnd,    &! incident direct beam nir solar radiation (W/m2)
-         solni,    &! incident diffuse beam nir solar radiation (W/m2)
-         srvd,     &! reflected direct beam vis solar radiation (W/m2)
-         srvi,     &! reflected diffuse beam vis solar radiation (W/m2)
-         srnd,     &! reflected direct beam nir solar radiation (W/m2)
-         srni,     &! reflected diffuse beam nir solar radiation (W/m2)
-         solvdln,  &! incident direct beam vis solar radiation at local noon(W/m2)
-         solviln,  &! incident diffuse beam vis solar radiation at local noon(W/m2)
-         solndln,  &! incident direct beam nir solar radiation at local noon(W/m2)
-         solniln,  &! incident diffuse beam nir solar radiation at local noon(W/m2)
-         srvdln,   &! reflected direct beam vis solar radiation at local noon(W/m2)
-         srviln,   &! reflected diffuse beam vis solar radiation at local noon(W/m2)
-         srndln,   &! reflected direct beam nir solar radiation at local noon(W/m2)
-         srniln     ! reflected diffuse beam nir solar radiation at local noon(W/m2)
+   real(r8), intent(in) :: &
+         lai,        &! leaf area index
+         sai,        &! stem area index
+         rho(2,2),   &! leaf reflectance (iw=iband, il=life and dead)
+         tau(2,2)     ! leaf transmittance (iw=iband, il=life and dead)
 
-   REAL(r8), intent(out) :: &
+   real(r8), intent(out) :: &
+         parsun,     &! PAR absorbed by sunlit vegetation [W/m2]
+         parsha,     &! PAR absorbed by shaded vegetation [W/m2]
+         sabvsun,    &! solar absorbed by sunlit vegetation [W/m2]
+         sabvsha,    &! solar absorbed by shaded vegetation [W/m2]
+         sabg,       &! solar absorbed by ground  [W/m2]
+         sr,         &! total reflected solar radiation (W/m2)
+         solvd,      &! incident direct beam vis solar radiation (W/m2)
+         solvi,      &! incident diffuse beam vis solar radiation (W/m2)
+         solnd,      &! incident direct beam nir solar radiation (W/m2)
+         solni,      &! incident diffuse beam nir solar radiation (W/m2)
+         srvd,       &! reflected direct beam vis solar radiation (W/m2)
+         srvi,       &! reflected diffuse beam vis solar radiation (W/m2)
+         srnd,       &! reflected direct beam nir solar radiation (W/m2)
+         srni,       &! reflected diffuse beam nir solar radiation (W/m2)
+         solvdln,    &! incident direct beam vis solar radiation at local noon(W/m2)
+         solviln,    &! incident diffuse beam vis solar radiation at local noon(W/m2)
+         solndln,    &! incident direct beam nir solar radiation at local noon(W/m2)
+         solniln,    &! incident diffuse beam nir solar radiation at local noon(W/m2)
+         srvdln,     &! reflected direct beam vis solar radiation at local noon(W/m2)
+         srviln,     &! reflected diffuse beam vis solar radiation at local noon(W/m2)
+         srndln,     &! reflected direct beam nir solar radiation at local noon(W/m2)
+         srniln       ! reflected diffuse beam nir solar radiation at local noon(W/m2)
+
+   real(r8), intent(out) :: &
          sabg_lyr(maxsnl+1:1)   ! solar absorbed by snow layers [W/m2]
 
 ! ----------------local variables ---------------------------------
-   INTEGER  :: local_secs
-   REAL(r8) :: radpsec, sabvg
+   integer  :: local_secs
+   real(r8) :: radpsec, sabvg
 
-   INTEGER ps, pe, pc
+   integer ps, pe, p
+
 !=======================================================================
 
       sabvsun = 0.
@@ -126,32 +123,51 @@ CONTAINS
       parsun  = 0.
       parsha  = 0.
 
-      sabg  = 0.
+      IF (lai+sai <= 1.e-6) THEN
+         ssun(:,:) = 0.
+         ssha(:,:) = 0.
+      ENDIF
+
+      sabg = 0.
       sabg_lyr(:) = 0.
 
       IF (patchtype == 0) THEN
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
-#ifdef LULC_IGBP_PFT
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
+
          sabvsun_p(ps:pe) = 0.
          sabvsha_p(ps:pe) = 0.
-         parsun_p(ps:pe)  = 0.
-         parsha_p(ps:pe)  = 0.
-#endif
+         parsun_p (ps:pe) = 0.
+         parsha_p (ps:pe) = 0.
 
-#ifdef LULC_IGBP_PC
-         pc = patch2pc(ipatch)
-         sabvsun_c(:,pc) = 0.
-         sabvsha_c(:,pc) = 0.
-         parsun_c(:,pc)  = 0.
-         parsha_c(:,pc)  = 0.
+         DO p = ps, pe
+            IF (lai_p(p)+sai_p(p) <= 1.e-6) THEN
+               ssun_p(:,:,p) = 0.
+               ssha_p(:,:,p) = 0.
+            ENDIF
+         ENDDO
+
+         ssun(1,1) = sum( ssun_p(1,1,ps:pe)*pftfrac(ps:pe) )
+         ssun(1,2) = sum( ssun_p(1,2,ps:pe)*pftfrac(ps:pe) )
+         ssun(2,1) = sum( ssun_p(2,1,ps:pe)*pftfrac(ps:pe) )
+         ssun(2,2) = sum( ssun_p(2,2,ps:pe)*pftfrac(ps:pe) )
+
+         ssha(1,1) = sum( ssha_p(1,1,ps:pe)*pftfrac(ps:pe) )
+         ssha(1,2) = sum( ssha_p(1,2,ps:pe)*pftfrac(ps:pe) )
+         ssha(2,1) = sum( ssha_p(2,1,ps:pe)*pftfrac(ps:pe) )
+         ssha(2,2) = sum( ssha_p(2,2,ps:pe)*pftfrac(ps:pe) )
 #endif
       ENDIF
 
+      IF(lai+sai < 1.e-6)then
+         ssun(:,:) = 0.
+         ssha(:,:) = 0.
+      END IF
 
       IF (forc_sols+forc_soll+forc_solsd+forc_solld > 0.) THEN
-         IF (patchtype < 4) THEN        !non lake and ocean
+         IF (patchtype < 4) THEN    !non lake and ocean
           ! Radiative fluxes onto surface
             parsun  = forc_sols*ssun(1,1) + forc_solsd*ssun(1,2)
             parsha  = forc_sols*ssha(1,1) + forc_solsd*ssha(1,2)
@@ -165,7 +181,8 @@ CONTAINS
 
             IF (patchtype == 0) THEN
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+
                parsun_p(ps:pe)  = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe)
                parsha_p(ps:pe)  = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe)
                sabvsun_p(ps:pe) = forc_sols*ssun_p(1,1,ps:pe) + forc_solsd*ssun_p(1,2,ps:pe) &
@@ -173,33 +190,23 @@ CONTAINS
                sabvsha_p(ps:pe) = forc_sols*ssha_p(1,1,ps:pe) + forc_solsd*ssha_p(1,2,ps:pe) &
                                 + forc_soll*ssha_p(2,1,ps:pe) + forc_solld*ssha_p(2,2,ps:pe)
 #endif
-
-#ifdef LULC_IGBP_PC
-               parsun_c(:,pc)  = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc)
-               parsha_c(:,pc)  = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc)
-               sabvsun_c(:,pc) = forc_sols*ssun_c(1,1,:,pc) + forc_solsd*ssun_c(1,2,:,pc) &
-                               + forc_soll*ssun_c(2,1,:,pc) + forc_solld*ssun_c(2,2,:,pc)
-               sabvsha_c(:,pc) = forc_sols*ssha_c(1,1,:,pc) + forc_solsd*ssha_c(1,2,:,pc) &
-                               + forc_soll*ssha_c(2,1,:,pc) + forc_solld*ssha_c(2,2,:,pc)
-#endif
-
             ENDIF
 
-         ELSE               !lake or ocean
+         ELSE                       !lake and ocean
             sabvg = forc_sols *(1.-alb(1,1)) + forc_soll *(1.-alb(2,1)) &
                   + forc_solsd*(1.-alb(1,2)) + forc_solld*(1.-alb(2,2))
-            sabg = sabvg
+            sabg  = sabvg
          ENDIF
 
          IF (DEF_USE_SNICAR) THEN
 
-            IF (patchtype < 4) THEN        !non lake and ocean
+            IF (patchtype < 4) THEN !non lake and ocean
                ! normalization
                IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)-ssun(1,1)-ssha(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
                IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)-ssun(1,2)-ssha(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))
                IF(sum(ssno(2,1,:))>0.) ssno(2,1,:) = (1-alb(2,1)-ssun(2,1)-ssha(2,1)) * ssno(2,1,:)/sum(ssno(2,1,:))
                IF(sum(ssno(2,2,:))>0.) ssno(2,2,:) = (1-alb(2,2)-ssun(2,2)-ssha(2,2)) * ssno(2,2,:)/sum(ssno(2,2,:))
-            ELSE                           !lake case
+            ELSE                    !lake and ocean
                ! normalization
                IF(sum(ssno(1,1,:))>0.) ssno(1,1,:) = (1-alb(1,1)) * ssno(1,1,:)/sum(ssno(1,1,:))
                IF(sum(ssno(1,2,:))>0.) ssno(1,2,:) = (1-alb(1,2)) * ssno(1,2,:)/sum(ssno(1,2,:))

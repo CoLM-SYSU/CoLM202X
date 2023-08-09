@@ -33,7 +33,7 @@ MODULE MOD_NewSnow
 ! ------------------------ Dummy Argument ------------------------------
 
    integer, INTENT(in) :: maxsnl     ! maximum number of snow layers
-   integer, INTENT(in) :: patchtype  ! land water type (0=soil, 1=urban and built-up,
+   integer, INTENT(in) :: patchtype  ! land patch type (0=soil, 1=urban and built-up,
                                      ! 2=wetland, 3=land ice, 4=land water bodies, 99=ocean)
    real(r8), INTENT(in) :: deltim    ! model time step [second]
    real(r8), INTENT(in) :: t_grnd    ! ground surface temperature [k]

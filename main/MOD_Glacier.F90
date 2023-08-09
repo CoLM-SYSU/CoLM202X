@@ -81,7 +81,7 @@
 !---------------------Argument------------------------------------------
 
   integer, INTENT(in) :: &
-        patchtype,&   ! land water type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
+        patchtype,&   ! land patch type (0=soil, 1=urban and built-up,  2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
         lb,          &! lower bound of array
         nl_ice        ! upper bound of array
 
@@ -600,7 +600,7 @@
 
   IMPLICIT NONE
 
-  integer, INTENT(in) :: patchtype     ! land water type (0=soil, 1=urban and built-up,
+  integer, INTENT(in) :: patchtype     ! land patch type (0=soil, 1=urban and built-up,
                                        ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
   integer, INTENT(in) :: lb         !lower bound of array
   integer, INTENT(in) :: nl_ice     !upper bound of array

@@ -5,11 +5,11 @@ MODULE MOD_SrfdataDiag
    !-----------------------------------------------------------------------------------------
    ! DESCRIPTION:
    !
-   !    This module includes subroutines for checking the results of making surface data. 
+   !    This module includes subroutines for checking the results of making surface data.
    !
-   !    The surface data in vector form is mapped to gridded data with last 
+   !    The surface data in vector form is mapped to gridded data with last
    !    three dimensions of [type,longitude,latitude], which can be viewed by other softwares.
-   ! 
+   !
    !    In GRIDBASED, the grid of gridded data is just the grid of the mesh.
    !    In UNSTRUCTURED or CATCHMENT, the grid is user defined and the mapping uses area
    !    weighted scheme.
@@ -29,7 +29,7 @@ MODULE MOD_SrfdataDiag
    type(grid_type) :: gdiag
 
    TYPE(mapping_pset2grid_type) :: m_patch2diag
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    TYPE(mapping_pset2grid_type) :: m_pft2diag
 #endif
 #ifdef URBAN_MODEL
@@ -50,7 +50,7 @@ CONTAINS
 
       USE MOD_SPMD_Task
       USE MOD_LandPatch
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
 #endif
 #ifdef URBAN_MODEL
@@ -79,7 +79,7 @@ CONTAINS
       CALL m_patch2diag%build (landpatch, gdiag, pctcrop)
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL m_pft2diag%build (landpft, gdiag)
 #endif
 
@@ -129,7 +129,7 @@ CONTAINS
       integer, intent(in) :: compress
 
       character (len=*), intent(in), optional :: write_mode
-      
+
       character (len=*), intent(in), optional :: lastdimname
       integer, intent(in), optional :: lastdimvalue
 
@@ -144,7 +144,7 @@ CONTAINS
       character(len=256) :: fileblock
       real(r8), allocatable :: rbuf(:,:,:), sbuf(:,:,:), vdata(:,:,:)
       LOGICAL :: fexists
-      integer :: ilastdim 
+      integer :: ilastdim
 
       IF (present(write_mode)) THEN
          wmode = trim(write_mode)
