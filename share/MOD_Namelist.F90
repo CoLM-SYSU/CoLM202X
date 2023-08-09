@@ -32,21 +32,20 @@ MODULE MOD_Namelist
    INTEGER :: DEF_PIO_groupsize = 12
 
    ! ----- For Single Point -----
-#ifdef SinglePoint
 
-   CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
+   CHARACTER(len=256) :: SITE_fsrfdata   = 'null'
 
-   LOGICAL  :: USE_SITE_pctpfts         = .true.
-   LOGICAL  :: USE_SITE_pctcrop         = .true.
-   LOGICAL  :: USE_SITE_htop            = .true.
-   LOGICAL  :: USE_SITE_LAI             = .true.
-   LOGICAL  :: USE_SITE_lakedepth       = .true.
-   LOGICAL  :: USE_SITE_soilreflectance = .true.
-   LOGICAL  :: USE_SITE_soilparameters  = .true.
-   LOGICAL  :: USE_SITE_dbedrock        = .true.
-   LOGICAL  :: USE_SITE_topography      = .true.
-   logical  :: USE_SITE_HistWriteBack   = .true.
-#endif
+   LOGICAL  :: USE_SITE_pctpfts          = .true.
+   LOGICAL  :: USE_SITE_pctcrop          = .true.
+   LOGICAL  :: USE_SITE_htop             = .true.
+   LOGICAL  :: USE_SITE_LAI              = .true.
+   LOGICAL  :: USE_SITE_lakedepth        = .true.
+   LOGICAL  :: USE_SITE_soilreflectance  = .true.
+   LOGICAL  :: USE_SITE_soilparameters   = .true.
+   LOGICAL  :: USE_SITE_dbedrock         = .true.
+   LOGICAL  :: USE_SITE_topography       = .true.
+   logical  :: USE_SITE_HistWriteBack    = .true.
+   logical  :: USE_SITE_ForcingReadAhead = .false.
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -104,6 +103,9 @@ MODULE MOD_Namelist
    logical :: DEF_SOLO_PFT = .false.
    logical :: DEF_FAST_PC  = .false.
    CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
+
+   ! ----- compress data in aggregation when send data from IO to worker -----
+   logical :: USE_zip_for_aggregation = .false.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -666,6 +668,7 @@ CONTAINS
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
          USE_SITE_HistWriteBack,   &
+         USE_SITE_ForcingReadAhead,&
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -717,6 +720,7 @@ CONTAINS
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
+         USE_zip_for_aggregation,         &
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
@@ -999,6 +1003,13 @@ CONTAINS
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
+#if (defined SinglePoint)
+#ifdef SrfdataDiag
+         write(*,*) '                  *****                  '
+         write(*,*) 'Surface data diagnose is closed in SinglePoint case.'
+#undef SrfdataDiag
+#endif
+#endif
 
 
 ! -----END Macros&Namelist conflicts and dependency management -----
@@ -1063,6 +1074,7 @@ CONTAINS
       CALL mpi_bcast (DEF_dir_existing_srfdata,     256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_zip_for_aggregation,          1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 07/2023, added by yuan: subgrid setting related
       CALL mpi_bcast (DEF_USE_LCT,           1, mpi_logical,   p_root, p_comm_glb, p_err)

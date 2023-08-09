@@ -235,7 +235,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = .true., &
+               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, &
                   area = area_one, data_r8_2d_in1 = LAI, data_r8_2d_out1 = lai_one)
                LAI_patches(ipatch) = sum(lai_one * area_one) / sum(area_one)
             ENDDO
@@ -334,7 +334,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
             IF (p_is_worker) THEN
                DO ipatch = 1, numpatch
 
-                  CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = .true., &
+                  CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, &
                      area = area_one, data_r8_2d_in1 = SAI, data_r8_2d_out1 = sai_one)
                   SAI_patches(ipatch) = sum(sai_one * area_one) / sum(area_one)
 
@@ -453,7 +453,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
 
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
-               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                   data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = lai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
@@ -576,7 +576,7 @@ SUBROUTINE Aggregation_LAI (gridlai, dir_rawdata, dir_model_landdata, lc_year)
          IF (p_is_worker) THEN
             DO ipatch = 1, numpatch
 
-               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = .true., area = area_one, &
+               CALL aggregation_request_data (landpatch, ipatch, gridlai, zip = USE_zip_for_aggregation, area = area_one, &
                   data_r8_3d_in1 = pftPCT,  data_r8_3d_out1 = pct_pft_one, n1_r8_3d_in1 = 16, lb1_r8_3d_in1 = 0, &
                   data_r8_3d_in2 = pftLSAI, data_r8_3d_out2 = sai_pft_one, n1_r8_3d_in2 = 16, lb1_r8_3d_in2 = 0)
 
