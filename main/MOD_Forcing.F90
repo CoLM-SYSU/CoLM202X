@@ -697,7 +697,7 @@ contains
                print *, 'NOTE: reaching the end of forcing data, always reuse the last time step data!'
             end if
             if (ivar == 7) then  ! calculate time average coszen, for shortwave radiation
-               call calavgcos()
+               call calavgcos(idate)
             end if
          end if
 
@@ -1279,22 +1279,22 @@ contains
       ! REVISIONS:
       ! 04/2014, yuan: this method is adapted from CLM
       ! ------------------------------------------------------------
-      SUBROUTINE calavgcos()
+      SUBROUTINE calavgcos(idate)
 
          use MOD_Block
          use MOD_DataType
          implicit none
 
+         integer, intent(in) :: idate(3)
+
          integer  :: iblkme, ib, jb, i, j, ilon, ilat
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
 
-         tstamp = tstamp_LB(7)
+         tstamp = idate ! tstamp_LB(7)
          call flush_block_data (avgcos, 0._r8)
 
-         do while (tstamp < tstamp_UB(7))
-
-            tstamp = tstamp + deltim_int
+         do while (tstamp <= tstamp_UB(7))
 
             DO iblkme = 1, gblock%nblkme
                ib = gblock%xblkme(iblkme)
@@ -1315,6 +1315,9 @@ contains
                   end do
                end do
             end do
+            
+            tstamp = tstamp + deltim_int
+
          end do
 
       END SUBROUTINE calavgcos
