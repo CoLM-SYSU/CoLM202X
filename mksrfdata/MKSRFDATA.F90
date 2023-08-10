@@ -189,9 +189,7 @@ PROGRAM MKSRFDATA
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL gcrop%define_from_file ( &
-      trim(DEF_dir_rawdata) // '/global_0.25x0.25.MOD2000_V4.5_CFT_lf-merged-20230808.nc', &
-      'lat', 'lon')
+   CALL gcrop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
 #endif
 
    ! define grid for soil parameters raw data

@@ -16,7 +16,6 @@ module MOD_Forcing
 !                         3) interface for downscaling
 !
 ! TODO...(need complement)
-! forcing final
 
    use MOD_Precision
    USE MOD_Namelist
@@ -48,6 +47,8 @@ module MOD_Forcing
    !  for SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
    INTEGER,  allocatable :: iforctime(:)
+
+   logical :: forcing_read_ahead
    real(r8), allocatable :: forc_disk(:,:)
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
@@ -66,7 +67,7 @@ module MOD_Forcing
 contains
 
    !--------------------------------
-   subroutine forcing_init (dir_forcing, deltatime, idate, lc_year)
+   subroutine forcing_init (dir_forcing, deltatime, ststamp, lc_year, etstamp)
 
       use MOD_SPMD_Task
       USE MOD_Namelist
@@ -84,13 +85,14 @@ contains
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
-      real(r8), intent(in) :: deltatime  ! model time step
-      integer,  intent(in) :: idate(3)
+      real(r8),         intent(in) :: deltatime  ! model time step
+      type(timestamp),  intent(in) :: ststamp
       INTEGER, intent(in) :: lc_year    ! which year of land cover data used
+      type(timestamp),  intent(in), optional :: etstamp
 
       ! Local variables
+      integer            :: idate(3)
       CHARACTER(len=256) :: filename, lndname, cyear
-      type(timestamp)    :: mtstamp
       integer            :: ivar, year, month, day, time_i
       REAL(r8)           :: missing_value
       INTEGER            :: ielm, istt, iend
@@ -111,6 +113,8 @@ contains
       allocate (tstamp_UB(NVAR))
       tstamp_LB(:) = timestamp(-1, -1, -1)
       tstamp_UB(:) = timestamp(-1, -1, -1)
+
+      idate = (/ststamp%year, ststamp%day, ststamp%sec/)
 
       call metread_latlon (dir_forcing, idate)
 
@@ -141,8 +145,7 @@ contains
             call mg2p_forc_elm%build (gforc, landelm)
          ENDIF
       ELSE
-         mtstamp = idate
-         call setstampLB(mtstamp, 1, year, month, day, time_i)
+         call setstampLB(ststamp, 1, year, month, day, time_i)
          filename = trim(dir_forcing)//trim(metfilename(year, month, day, 1))
          tstamp_LB(1) = timestamp(-1, -1, -1)
 
@@ -200,8 +203,14 @@ contains
 
       ENDIF
 
-      IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-         CALL metread_time (dir_forcing)
+      forcing_read_ahead = .false.
+      IF (trim(DEF_forcing%dataset) == 'POINT') then
+         IF (USE_SITE_ForcingReadAhead .and. present(etstamp)) THEN
+            forcing_read_ahead = .true.
+            CALL metread_time (dir_forcing, ststamp, etstamp, deltatime)
+         ELSE
+            CALL metread_time (dir_forcing)
+         ENDIF
          allocate (iforctime(NVAR))
       ENDIF
 
@@ -650,7 +659,7 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-               IF (USE_SITE_ForcingReadAhead) THEN
+               IF (forcing_read_ahead) THEN
                   metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
                ELSE
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
@@ -673,7 +682,7 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-                  IF (USE_SITE_ForcingReadAhead) THEN
+                  IF (forcing_read_ahead) THEN
                      metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
                   ELSE
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
@@ -762,7 +771,7 @@ contains
    END SUBROUTINE metread_latlon
 
    !-------------------------------------------------
-   SUBROUTINE metread_time (dir_forcing)
+   SUBROUTINE metread_time (dir_forcing, ststamp, etstamp, deltime)
 
       use MOD_SPMD_Task
       use MOD_NetCDFSerial
@@ -771,6 +780,8 @@ contains
       implicit none
 
       character(len=*), intent(in) :: dir_forcing
+      type(timestamp),  intent(in), optional :: ststamp, etstamp
+      real(r8),         intent(in), optional :: deltime
 
       ! Local variables
       character(len=256) :: filename
@@ -779,7 +790,11 @@ contains
       INTEGER :: year, month, day, hour, minute, second
       INTEGER :: itime, maxday, id(3)
       INTEGER*8 :: sec_long
-      integer :: ivar
+      integer :: ivar, ntime, its, ite, it
+      
+      TYPE(timestamp) :: etstamp_f
+      TYPE(timestamp), allocatable :: forctime_ (:)
+
 
       filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -800,28 +815,65 @@ contains
       CALL adj2end(id)
       forctime(1) = id
 
-      DO itime = 2, size(forctime)
+      ntime = size(forctime)
+
+      DO itime = 2, ntime
          id(:) = (/forctime(itime-1)%year, forctime(itime-1)%day, forctime(itime-1)%sec/)
          CALL ticktime (forctime_sec(itime)-forctime_sec(itime-1), id)
          forctime(itime) = id
       ENDDO
 
-#ifdef SinglePoint
-      IF (USE_SITE_ForcingReadAhead) THEN
+      IF (forcing_read_ahead) THEN
+      
+         CALL ticktime (deltime, id)
+         etstamp_f = id
+
+         IF ((ststamp < forctime(1)) .or. (etstamp_f < etstamp)) THEN
+            write(*,*) 'Error: Forcing does not cover simulation period!'
+            write(*,*) 'Model start ', ststamp,     ' -> Model end ', etstamp
+            write(*,*) 'Forc  start ', forctime(1), ' -> Forc end  ', etstamp_f
+            CALL CoLM_stop ()
+         ELSE
+            its = 1
+            DO WHILE (.not. (ststamp < forctime(its+1)))
+               its = its + 1
+               IF (its >= ntime) EXIT
+            ENDDO
+
+            ite = ntime
+            DO WHILE (etstamp < forctime(ite-1))
+               ite = ite - 1
+               IF (ite <= 1) EXIT
+            ENDDO
+
+            ntime = ite-its+1
+
+            allocate (forctime_(ntime))
+            DO it = 1, ntime
+               forctime_(it) = forctime(it+its-1)
+            ENDDO
+
+            deallocate (forctime)
+            allocate (forctime (ntime))
+            DO it = 1, ntime
+               forctime(it) = forctime_(it)
+            ENDDO
+
+            deallocate(forctime_)
+         ENDIF
 
          allocate (forc_disk (size(forctime),NVAR))
 
          filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
          DO ivar = 1, NVAR
             if (trim(vname(ivar)) /= 'NULL') THEN
-               CALL ncio_read_serial (filename, vname(ivar), metcache)
+               CALL ncio_read_period_serial (filename, vname(ivar), its, ite, metcache)
                forc_disk(:,ivar) = metcache(1,1,:)
             ENDIF
          ENDDO
 
          IF (allocated(metcache)) deallocate(metcache)
       ENDIF
-#endif
 
    END SUBROUTINE metread_time
 
