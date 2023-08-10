@@ -25,13 +25,24 @@ MODULE MOD_SoilSurfaceResistance
    ! 4: MA_WLR (Marshal Water Linear Reduction Model), Moldrup et al., 2000
    ! 5: M_Q, Millington and Quirk, 1961
    ! 6: 3POE (Three-Porosity-Encased), Moldrup et al., 2005
+#ifdef Campbell_SOIL_MODEL
    integer, parameter :: soil_gas_diffusivity_scheme = 1
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   integer, parameter :: soil_gas_diffusivity_scheme = 4
+#endif
 
 
 CONTAINS
 !-----------------------------------------------------------------------
 
- SUBROUTINE SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
+ SUBROUTINE SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,psi0, &
+#ifdef Campbell_SOIL_MODEL
+                            bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
                             dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
 
   !=======================================================================
@@ -43,8 +54,9 @@ CONTAINS
   !=======================================================================
 
    USE MOD_Precision
-   USE MOD_Const_Physical, only: denice, denh2o  ! physical constant
+   USE MOD_Const_Physical, only: denice, denh2o
    USE MOD_Namelist, only: DEF_RSS_SCHEME
+   USE MOD_Hydro_SoilFunction
    IMPLICIT NONE
 
 
@@ -54,16 +66,27 @@ CONTAINS
         nl_soil                       ! upper bound of array
 
    real(r8), intent(in) :: &
-        porsl           (1:nl_soil), &! soil porosity [-]
-        bsw             (1:nl_soil), &! Clapp-Hornberger "B"
-        psi0            (1:nl_soil), &! saturated soil suction [mm] (NEGATIVE)
-        dz_soisno       (1:nl_soil), &! layer thickness [m]
-        t_soisno        (1:nl_soil), &! soil/snow skin temperature [K]
-        wliq_soisno     (1:nl_soil), &! liquid water [kg/m2]
-        wice_soisno     (1:nl_soil), &! ice lens [kg/m2]
-        hksati          (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
-        qg,                          &! ground specific humidity [kg/kg]
-        forc_rhoair                   ! density air [kg/m**3]
+        forc_rhoair,                 &! density air [kg/m**3]
+        hksati      (1:nl_soil),     &! hydraulic conductivity at saturation [mm h2o/s]
+        porsl       (1:nl_soil),     &! soil porosity [-]
+        psi0        (1:nl_soil),     &! saturated soil suction [mm] (NEGATIVE)
+#ifdef Campbell_SOIL_MODEL
+        bsw         (1:nl_soil),     &! clapp and hornbereger "b" parameter [-]
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+        theta_r     (1:nl_soil),     &! residual moisture content [-]
+        alpha_vgm   (1:nl_soil),     &! a parameter corresponding approximately to the inverse of the air-entry value
+        n_vgm       (1:nl_soil),     &! pore-connectivity parameter [dimensionless]
+        L_vgm       (1:nl_soil),     &! a shape parameter [dimensionless]
+        sc_vgm      (1:nl_soil),     &! saturation at the air entry value in the classical vanGenuchten model [-]
+        fc_vgm      (1:nl_soil),     &! a scaling factor by using air entry value in the Mualem model [-]
+#endif
+        dz_soisno   (1:nl_soil),     &! layer thickness [m]
+        t_soisno    (1:nl_soil),     &! soil/snow skin temperature [K]
+        wliq_soisno (1:nl_soil),     &! liquid water [kg/m2]
+        wice_soisno (1:nl_soil),     &! ice lens [kg/m2]
+        qg                            ! ground specific humidity [kg/kg]
+
    real(r8), intent(out) :: &
         rss                           ! soil surface resistance [s/m]
 
@@ -72,6 +95,7 @@ CONTAINS
    REAL(r8) :: &
         wx,               &! patitial volume of ice and water of surface layer
         vol_liq,          &! water content by volume [m3/m3]
+        s_node,           &! vol_liq/porosity
         smp_node,         &! matrix potential [m]
         eff_porosity,     &! effective porosity = porosity - vol_ice
         aird,             &! “air-dry” soil moisture value
@@ -81,6 +105,8 @@ CONTAINS
         dsl,              &! soil dry surface layer thickness [m]
         dw,               &! aqueous diffusivity [m2/s]
         hk,               &! hydraulic conductivity [m h2o/s]
+        m_vgm,            &! pore-connectivity related parameter [dimensionless]
+        S,                &! Van Genuchten relative saturation [-]
         wfc,              &! field capacity of the first layer soil
         rg_1,             &! inverse of vapor diffusion resistance [m/s]
         rw_1,             &! inverse of volatilization resistance [m/s]
@@ -96,15 +122,37 @@ CONTAINS
 
    ! calculate the top soil volumetric water content (m3/m3), soil matrix potential
    ! and soil hydraulic conductivity
-   vol_liq      = max(wliq_soisno(1),1.0e-6_r8)/(denh2o*dz_soisno(1))
-   smp_node     = (psi0(1)/1000.)*(vol_liq/porsl(1))**(-bsw(1))
-   hk           = (hksati(1)/1000.)*(vol_liq/porsl(1))**(2.*bsw(1)+3.)
+   vol_liq  = max(wliq_soisno(1),1.0e-6_r8)/(denh2o*dz_soisno(1))
+   s_node   = min(1., vol_liq/porsl(1))
 
-   ! eff_porosity not calculated til SoilHydrolog
+   ! calculate effective soil porosity
    eff_porosity = max(0.01_r8,porsl(1)-min(porsl(1), wice_soisno(1)/(dz_soisno(1)*denice)))
 
-   ! calculate diffusivity (dg, dw) and air free pore space
-   aird = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
+
+#ifdef Campbell_SOIL_MODEL
+   smp_node = (psi0(1)/1000.)*s_node**(-bsw(1))
+   hk       = (hksati(1)/1000.)*(vol_liq/porsl(1))**(2.*bsw(1)+3.)
+
+   ! calculate air free pore space
+   aird     = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
+#endif
+   !TODO: need double check below
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   smp_node = soil_psi_from_vliq ( s_node*(porsl(1)-theta_r(1)) + theta_r(1), &
+                porsl(1), theta_r(1), psi0(1), &
+                5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+   smp_node = smp_node/1000.
+
+   hk       = soil_hk_from_psi   (smp_node, psi0(1), hksati(1), &
+                5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+   hk       = hk/1000.
+
+   ! calculate air free pore space
+   aird     = soil_vliq_from_psi (-1.e7_r8, porsl(1), theta_r(1), psi0(1), &
+                5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+#endif
+
+   !TODO: check and compare with Tang2013
    d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75
    eps  = porsl(1) - aird
 
@@ -112,7 +160,9 @@ CONTAINS
 
    ! 1: BBC
    CASE (1)
+#ifdef Campbell_SOIL_MODEL
       tao = eps*eps*(eps/porsl(1))**(3._r8/max(3._r8,bsw(1)))
+#endif
 
    ! 2: P_WLR
    CASE (2)
@@ -132,14 +182,32 @@ CONTAINS
 
    ! 6: 3POE
    CASE (6)
+#ifdef Campbell_SOIL_MODEL
       eps100 = porsl(1) - porsl(1)*(psi0(1)/-1000.)**(1./bsw(1))
       tao    = porsl(1)*porsl(1)*(eps/porsl(1))**(2.+log(eps100**0.25_r8)/log(eps100/porsl(1)))
+#endif
 
    ENDSELECT
 
 
+   ! calculate gas and water diffusivity (dg and dw)
    dg = d0*tao
+
+   !NOTE: dw is only for TR13 scheme
+#ifdef Campbell_SOIL_MODEL
+   ! TR13, Eq.(A5):
    dw = -hk*bsw(1)*smp_node/vol_liq
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+   !TODO: need double check below
+   ! TR13, Eqs. (A2), (A7), (A8) and (A10):
+   ! dw = hk*(m-1)/(k*m*(theta_s-theta_r))*S**(-1/m)*(1-S**(1/m))**(-m)
+   ! where k=alpha_vgm, S=(1+(-k*psi0(1))**(n))**(-m), m=m_vgm=1-1/n_vgm
+   m_vgm = 1. - 1./n_vgm(1)
+   S     = (1. + (- alpha_vgm(1)*psi0(1))**(n_vgm(1)))**(-m_vgm)
+   dw    = hk*(m_vgm-1)/(alpha_vgm(1)*m_vgm*(porsl(1)-theta_r(1))) &
+         * S**(-1/m_vgm)*(1-S**(1/m_vgm))**(-m_vgm)
+#endif
 
    SELECTCASE (DEF_RSS_SCHEME)
 
@@ -163,7 +231,7 @@ CONTAINS
 
    ! calculate rss by TR13
    CASE (3)
-      B     = denh2o/(qg*forc_rhoair)             ! Eq.(12)
+      B     = denh2o/(qg*forc_rhoair)
       rg_1  = 2.0_r8*dg*eps/dz_soisno(1)
       rw_1  = 2.0_r8*dw*B*vol_liq/dz_soisno(1)
       rss_1 = rg_1 + rw_1
@@ -174,17 +242,22 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
+#ifdef Campbell_SOIL_MODEL
       wfc = porsl(1)*(0.1/(86400.*hksati(1)))**(1./(2.*bsw(1)+3.))
-      write(*,*) wfc
-      ! CoLM
-      ! wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
+      !NOTE: CoLM wfc = (-339.9/soil_psi_s_l(ipatch))**(-1.0*soil_lambda_l(ipatch)) * soil_theta_s_l(ipatch)
+      !wfc = porsl(1)*(-3399._r8/psi0(1))**(-1./bsw(1))
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      wfc = theta_r(1)+(porsl(1)-theta_r(1))*(1+(alpha_vgm(1)*339.9)**n_vgm(1))**(1.0/n_vgm(1)-1)
+#endif
+      !write(*,*) wfc  !fordebug only
 
       ! Lee and Pielke 1992 beta
       IF (wx < wfc ) THEN  !when water content of ths top layer is less than that at F.C.
          fac_fc = min(1._r8, wx/wfc)
          fac_fc = max(fac_fc,0.001_r8)
          rss  = 0.25_r8*(1._r8 - cos(fac_fc*3.1415926))**2._r8
-      ELSE   ! when water content of ths top layer is more than that at F.C.
+      ELSE                 !when water content of ths top layer is more than that at F.C.
          rss  = 1._r8
       ENDIF
 
@@ -193,9 +266,9 @@ CONTAINS
       wx  = (max(wliq_soisno(1),1.e-6)/denh2o+wice_soisno(1)/denice)/dz_soisno(1)
       fac = min(1._r8, wx/porsl(1))
       fac = max(fac , 0.001_r8)
-     !rss = exp(8.206-4.255*fac)   ! original Sellers (1992)
-      rss = exp(8.206-6.0*fac)     ! adjusted Sellers (1992) to decrease rss
-                                   ! for wet soil according to Noah-MP v5
+     !rss = exp(8.206-4.255*fac)   !original Sellers (1992)
+      rss = exp(8.206-6.0*fac)     !adjusted Sellers (1992) to decrease rss
+                                   !for wet soil according to Noah-MP v5
    ENDSELECT
 
    rss = min(1.e6_r8,rss)

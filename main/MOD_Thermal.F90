@@ -499,13 +499,20 @@ MODULE MOD_Thermal
       ENDIF
 
       ! calculate soil surface resistance (rss)
+      ! ------------------------------------------------
       !NOTE: DEF_RSS_SCHEME=0 means no rss considered
       IF (DEF_RSS_SCHEME > 0) THEN
 
          !NOTE: If the beta scheme is used, the rss is not soil resistance
          !      but soil wetness relative to field capacity [0-1]
-         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,bsw,psi0,&
-                              dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
+         CALL SoilSurfaceResistance (nl_soil,forc_rhoair,hksati,porsl,psi0, &
+#ifdef Campbell_SOIL_MODEL
+                            bsw, &
+#endif
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+                            theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
+#endif
+                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
 
          ! modify rss by snow cover, assuming rss for snow surface is 1.
          rss = (1.-fsno)*rss
