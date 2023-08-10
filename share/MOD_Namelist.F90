@@ -45,7 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_dbedrock         = .true.
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .false.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -105,7 +105,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    ! ----- compress data in aggregation when send data from IO to worker -----
-   logical :: USE_zip_for_aggregation = .false.
+   logical :: USE_zip_for_aggregation = .true.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23

@@ -326,9 +326,7 @@ ENDIF
 #else
 #if (defined CROP)
       IF (p_is_io) THEN
-         ! file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
-         ! file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_lf-merged-20220930.nc'
-         file_patch = trim(DEF_dir_rawdata) // '/global_0.25x0.25.MOD2000_V4.5_CFT_lf-merged-20230808.nc'
+         file_patch = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
          CALL allocate_block_data (gcrop, cropdata, N_CFT)
          CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
       ENDIF

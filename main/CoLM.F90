@@ -250,7 +250,7 @@ PROGRAM CoLM
 
    ! Initialize meteorological forcing data module
    CALL allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, sdate, lc_year)
+   CALL forcing_init (dir_forcing, deltim, ststamp, etstamp, lc_year)
    CALL allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
