@@ -46,12 +46,11 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .false.
-   
+
 #ifdef URBAN_MODEL
    LOGICAL  :: USE_SITE_urban_paras      = .true.
    LOGICAL  :: USE_SITE_thermal_paras    = .false.
    LOGICAL  :: USE_SITE_urban_LAI        = .false.
-#endif
 #endif
 
    ! ----- simulation time type -----
@@ -1103,7 +1102,7 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_IRRIGATION,      1, mpi_logical, p_root, p_comm_glb, p_err)
       !  use irrigation temporary
       CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
-      
+
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)
