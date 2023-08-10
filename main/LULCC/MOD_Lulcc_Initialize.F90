@@ -29,6 +29,10 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_Mesh
    USE MOD_LandElm
    USE MOD_LandPatch
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+   USE MOD_LandPFT
+#endif
+   USE MOD_LandUrban
    USE MOD_Const_LC
    USE MOD_Const_PFT
    use MOD_TimeManager
