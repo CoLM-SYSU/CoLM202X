@@ -59,11 +59,8 @@ PROGRAM MKSRFDATA
    USE MOD_LandPatch
    USE MOD_SrfdataRestart
    USE MOD_Const_LC
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
 #endif
 #ifdef URBAN_MODEL
    USE MOD_LandUrban
@@ -187,15 +184,12 @@ PROGRAM MKSRFDATA
 #ifdef LULC_IGBP
    CALL gpatch%define_by_name ('colm_500m')
 #endif
-#ifdef LULC_IGBP_PFT
-   CALL gpatch%define_by_name ('colm_500m')
-#endif
-#ifdef LULC_IGBP_PC
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL gpatch%define_by_name ('colm_500m')
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL gcrop%define_by_ndims (720,360)
+   CALL gcrop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
 #endif
 
    ! define grid for soil parameters raw data
@@ -295,12 +289,8 @@ PROGRAM MKSRFDATA
    CALL landurban_build(lc_year)
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL landpft_build(lc_year)
-#endif
-
-#ifdef LULC_IGBP_PC
-   CALL landpc_build(lc_year)
 #endif
 
    ! ................................................................
@@ -321,12 +311,8 @@ PROGRAM MKSRFDATA
 
    CALL pixelset_save_to_file  (dir_landdata, 'landpatch', landpatch, lc_year)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pixelset_save_to_file  (dir_landdata, 'landpft'  , landpft  , lc_year)
-#endif
-
-#ifdef LULC_IGBP_PC
-   CALL pixelset_save_to_file  (dir_landdata, 'landpc'   , landpc   , lc_year)
 #endif
 
 #ifdef URBAN_MODEL
@@ -357,7 +343,7 @@ PROGRAM MKSRFDATA
    CALL Aggregation_SoilBrightness  (gpatch , dir_rawdata, dir_landdata, lc_year)
 
    IF (DEF_USE_BEDROCK) THEN
-      CALL Aggregation_DBedrock        (gpatch , dir_rawdata, dir_landdata)
+      CALL Aggregation_DBedrock     (gpatch , dir_rawdata, dir_landdata)
    ENDIF
 
    CALL Aggregation_LAI             (gridlai, dir_rawdata, dir_landdata, lc_year)
@@ -376,7 +362,7 @@ PROGRAM MKSRFDATA
    ! ................................................................
 
 #ifdef SinglePoint
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL write_surface_data_single (numpatch, numpft)
 #else
    CALL write_surface_data_single (numpatch)

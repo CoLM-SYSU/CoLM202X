@@ -75,15 +75,10 @@ CONTAINS
    USE MOD_Vars_TimeVariables, only: tlai, tsai, wdsrf
    USE MOD_Const_PFT, only: isevg, woody, leafcn, deadwdcn, slatop
    USE MOD_Vars_TimeInvariants, only : ibedrock, dbedrock
-#if(defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT, only : patch_pft_s, patch_pft_e
    USE MOD_Vars_PFTimeInvariants
    USE MOD_Vars_PFTimeVariables
-#endif
-#if(defined LULC_IGBP_PC)
-   USE MOD_LandPC
-   USE MOD_Vars_PCTimeInvariants
-   USE MOD_Vars_PCTimeVariables
 #endif
    USE MOD_Vars_Global
    USE MOD_Albedo
@@ -324,7 +319,7 @@ CONTAINS
         REAL(r8) pg_snow                 ! snowfall onto ground including canopy runoff [kg/(m2 s)]
         REAL(r8) snofrz     (maxsnl+1:0) ! snow freezing rate (col,lyr) [kg m-2 s-1]
 
-        INTEGER ps, pe, pc
+        INTEGER ps, pe
 
    !-----------------------------------------------------------------------
    IF(patchtype <= 5)THEN ! land grid
@@ -363,12 +358,14 @@ CONTAINS
          sag    = 0.
          scv    = snowdp*rhosno_ini
          z0m    = htop * z0mr
-#ifdef LULC_IGBP_PFT
-         if(ps .ne. -1)then ! for vegetation if(patchtype == 0)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+         IF(patchtype==0)THEN
             ps = patch_pft_s(ipatch)
             pe = patch_pft_e(ipatch)
-            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-         end if
+            IF (ps>0 .and. pe>0) THEN
+               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+            ENDIF
+         ENDIF
 #endif
 
          ! 08/02/2019, yuan: NOTE! need to be changed in future
@@ -414,12 +411,14 @@ CONTAINS
          fsno   = 0.
          snl    = 0
          z0m    = htop * z0mr
-#ifdef LULC_IGBP_PFT
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         if(ps .ne. -1)then ! for vegetation if(patchtype == 0)
-            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
-         end if
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+         IF(patchtype==0)THEN
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            IF (ps>0 .and. pe>0) THEN
+               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+            ENDIF
+         ENDIF
 #endif
 
          ! snow temperature and water content
@@ -477,32 +476,19 @@ CONTAINS
       END IF
 
       IF (patchtype == 0) THEN
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          ldew_rain_p(ps:pe) = 0.
          ldew_snow_p(ps:pe) = 0.
          ldew_p(ps:pe) = 0.
-         tleaf_p(ps:pe)  = t_soisno(1)
+         tleaf_p(ps:pe)= t_soisno(1)
          tref_p(ps:pe) = t_soisno(1)
          qref_p(ps:pe) = 0.3
          IF(DEF_USE_PLANTHYDRAULICS)THEN
             vegwp_p(1:nvegwcs,ps:pe) = -2.5e4
             gs0sun_p(ps:pe) = 1.0e4
             gs0sha_p(ps:pe) = 1.0e4
-         END IF
-#endif
-
-#ifdef LULC_IGBP_PC
-         pc = patch2pc(ipatch)
-         ldew_rain_c(:,pc)  = 0.
-         ldew_snow_c(:,pc)  = 0.
-         ldew_c(:,pc)   = 0.
-         tleaf_c(:,pc)  = t_soisno(1)
-         IF(DEF_USE_PLANTHYDRAULICS)THEN
-            vegwp_c(1:nvegwcs,:,pc) = -2.5e4
-            gs0sun_c(:,pc) = 1.0e4
-            gs0sha_c(:,pc) = 1.0e4
          END IF
 #endif
       ENDIF
@@ -515,13 +501,13 @@ CONTAINS
       ! (6) Leaf area
       ! Variables: sigf, lai, sai
       IF (patchtype == 0) THEN
-#if(defined LULC_USGS || defined LULC_IGBP)
+#if (defined LULC_USGS || defined LULC_IGBP)
          sigf = fveg
          lai  = tlai(ipatch)
          sai  = tsai(ipatch) * sigf
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          ps = patch_pft_s(ipatch)
          pe = patch_pft_e(ipatch)
          sigf_p (ps:pe)  = 1.
@@ -531,17 +517,6 @@ CONTAINS
          sigf  = 1.
          lai   = tlai(ipatch)
          sai   = sum(sai_p(ps:pe) * pftfrac(ps:pe))
-#endif
-
-#ifdef LULC_IGBP_PC
-         pc = patch2pc(ipatch)
-         sigf_c(:,pc)   = 1.
-         lai_c(:,pc)    = tlai_c(:,pc)
-         sai_c(:,pc)    = tsai_c(:,pc) * sigf_c(:,pc)
-
-         sigf  = 1.
-         lai   = tlai(ipatch)
-         sai   = sum(sai_c(:,pc)*pcfrac(:,pc))
 #endif
       ELSE
          sigf  = fveg
@@ -639,7 +614,7 @@ CONTAINS
       AKX_soil1_exit_c_vr_acc     (:) = 0.0
       AKX_soil2_exit_c_vr_acc     (:) = 0.0
       AKX_soil3_exit_c_vr_acc     (:) = 0.0
-   
+
       decomp0_npools_vr         (:,:) = 0.0
       I_met_n_vr_acc              (:) = 0.0
       I_cel_n_vr_acc              (:) = 0.0
@@ -662,18 +637,18 @@ CONTAINS
       AKX_soil1_exit_n_vr_acc     (:) = 0.0
       AKX_soil2_exit_n_vr_acc     (:) = 0.0
       AKX_soil3_exit_n_vr_acc     (:) = 0.0
-   
+
       diagVX_c_vr_acc           (:,:) = 0.0
       upperVX_c_vr_acc          (:,:) = 0.0
       lowerVX_c_vr_acc          (:,:) = 0.0
       diagVX_n_vr_acc           (:,:) = 0.0
       upperVX_n_vr_acc          (:,:) = 0.0
       lowerVX_n_vr_acc          (:,:) = 0.0
-   
+
     !----------------------------------------------------
       skip_balance_check              = .false.
-   
-#if(defined LULC_IGBP_PFT)
+
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       IF (patchtype == 0) THEN
          do m = ps, pe
             ivt = pftclass(m)
@@ -737,7 +712,7 @@ CONTAINS
          cpool_p                  (ps:pe) = 0.0
          ctrunc_p                 (ps:pe) = 0.0
          cropprod1c_p             (ps:pe) = 0.0
-   
+
          leafn_xfer_p             (ps:pe) = 0.0
          frootn_p                 (ps:pe) = 0.0
          frootn_storage_p         (ps:pe) = 0.0
@@ -760,9 +735,9 @@ CONTAINS
          ntrunc_p                 (ps:pe) = 0.0
          cropseedn_deficit_p      (ps:pe) = 0.0
          retransn_p               (ps:pe) = 0.0
-   
+
          harvdate_p               (ps:pe) = 99999999
-   
+
          tempsum_potential_gpp_p  (ps:pe) = 0.0
          tempmax_retransn_p       (ps:pe) = 0.0
          tempavg_tref_p           (ps:pe) = 0.0
@@ -773,7 +748,7 @@ CONTAINS
          annavg_tref_p            (ps:pe) = 280.0
          annsum_npp_p             (ps:pe) = 0.0
          annsum_litfall_p         (ps:pe) = 0.0
-   
+
          bglfr_p                  (ps:pe) = 0.0
          bgtr_p                   (ps:pe) = 0.0
          lgsf_p                   (ps:pe) = 0.0
@@ -784,7 +759,7 @@ CONTAINS
          gdd820_p                 (ps:pe) = 0.0
          gdd1020_p                (ps:pe) = 0.0
          nyrs_crop_active_p       (ps:pe) = 0
-   
+
          offset_flag_p            (ps:pe) = 0.0
          offset_counter_p         (ps:pe) = 0.0
          onset_flag_p             (ps:pe) = 0.0
@@ -799,10 +774,10 @@ CONTAINS
          prev_leafc_to_litter_p   (ps:pe) = 0.0
          prev_frootc_to_litter_p  (ps:pe) = 0.0
          days_active_p            (ps:pe) = 0.0
-   
+
          burndate_p               (ps:pe) = 10000
          grain_flag_p             (ps:pe) = 0.0
-   
+
 #ifdef CROP
    ! crop variables
          croplive_p               (ps:pe) = .false.
@@ -816,7 +791,7 @@ CONTAINS
          astemi_p                 (ps:pe) =  spval
          aleafi_p                 (ps:pe) =  spval
          gddmaturity_p            (ps:pe) =  spval
-   
+
          cropplant_p              (ps:pe) = .false.
          idop_p                   (ps:pe) = 99999999
          cumvd_p                  (ps:pe) = spval
@@ -830,14 +805,14 @@ CONTAINS
          latbaset_p               (ps:pe) = spval
          fert_p                   (ps:pe) = 0._r8
 #endif
-   
+
          if(DEF_USE_LAIFEEDBACK)then
             tlai_p                (ps:pe) = slatop(pftclass(ps:pe)) * leafc_p(ps:pe)
             tlai_p                (ps:pe) = max(0._r8, tlai_p(ps:pe))
             lai_p                 (ps:pe) = tlai_p(ps:pe)
             lai                           = sum(lai_p(ps:pe) * pftfrac(ps:pe))
          end if
-   
+
    ! SASU varaibles
          leafc0_p                 (ps:pe) = 0.0
          leafc0_storage_p         (ps:pe) = 0.0
@@ -860,7 +835,7 @@ CONTAINS
          grainc0_p                (ps:pe) = 0.0
          grainc0_storage_p        (ps:pe) = 0.0
          grainc0_xfer_p           (ps:pe) = 0.0
-   
+
          leafn0_p                 (ps:pe) = 0.0
          leafn0_storage_p         (ps:pe) = 0.0
          leafn0_xfer_p            (ps:pe) = 0.0
@@ -883,7 +858,7 @@ CONTAINS
          grainn0_storage_p        (ps:pe) = 0.0
          grainn0_xfer_p           (ps:pe) = 0.0
          retransn0_p              (ps:pe) = 0.0
-   
+
          I_leafc_p_acc            (ps:pe) = 0._r8
          I_leafc_st_p_acc         (ps:pe) = 0._r8
          I_frootc_p_acc           (ps:pe) = 0._r8
@@ -912,7 +887,7 @@ CONTAINS
          I_deadcrootn_st_p_acc    (ps:pe) = 0._r8
          I_grainn_p_acc           (ps:pe) = 0._r8
          I_grainn_st_p_acc        (ps:pe) = 0._r8
-   
+
          AKX_leafc_xf_to_leafc_p_acc                 (ps:pe) = 0._r8
          AKX_frootc_xf_to_frootc_p_acc               (ps:pe) = 0._r8
          AKX_livestemc_xf_to_livestemc_p_acc         (ps:pe) = 0._r8
@@ -922,7 +897,7 @@ CONTAINS
          AKX_grainc_xf_to_grainc_p_acc               (ps:pe) = 0._r8
          AKX_livestemc_to_deadstemc_p_acc            (ps:pe) = 0._r8
          AKX_livecrootc_to_deadcrootc_p_acc          (ps:pe) = 0._r8
-   
+
          AKX_leafc_st_to_leafc_xf_p_acc              (ps:pe) = 0._r8
          AKX_frootc_st_to_frootc_xf_p_acc            (ps:pe) = 0._r8
          AKX_livestemc_st_to_livestemc_xf_p_acc      (ps:pe) = 0._r8
@@ -930,7 +905,7 @@ CONTAINS
          AKX_livecrootc_st_to_livecrootc_xf_p_acc    (ps:pe) = 0._r8
          AKX_deadcrootc_st_to_deadcrootc_xf_p_acc    (ps:pe) = 0._r8
          AKX_grainc_st_to_grainc_xf_p_acc            (ps:pe) = 0._r8
-   
+
          AKX_leafc_exit_p_acc                        (ps:pe) = 0._r8
          AKX_frootc_exit_p_acc                       (ps:pe) = 0._r8
          AKX_livestemc_exit_p_acc                    (ps:pe) = 0._r8
@@ -938,7 +913,7 @@ CONTAINS
          AKX_livecrootc_exit_p_acc                   (ps:pe) = 0._r8
          AKX_deadcrootc_exit_p_acc                   (ps:pe) = 0._r8
          AKX_grainc_exit_p_acc                       (ps:pe) = 0._r8
-   
+
          AKX_leafc_st_exit_p_acc                     (ps:pe) = 0._r8
          AKX_frootc_st_exit_p_acc                    (ps:pe) = 0._r8
          AKX_livestemc_st_exit_p_acc                 (ps:pe) = 0._r8
@@ -946,7 +921,7 @@ CONTAINS
          AKX_livecrootc_st_exit_p_acc                (ps:pe) = 0._r8
          AKX_deadcrootc_st_exit_p_acc                (ps:pe) = 0._r8
          AKX_grainc_st_exit_p_acc                    (ps:pe) = 0._r8
-   
+
          AKX_leafc_xf_exit_p_acc                     (ps:pe) = 0._r8
          AKX_frootc_xf_exit_p_acc                    (ps:pe) = 0._r8
          AKX_livestemc_xf_exit_p_acc                 (ps:pe) = 0._r8
@@ -954,7 +929,7 @@ CONTAINS
          AKX_livecrootc_xf_exit_p_acc                (ps:pe) = 0._r8
          AKX_deadcrootc_xf_exit_p_acc                (ps:pe) = 0._r8
          AKX_grainc_xf_exit_p_acc                    (ps:pe) = 0._r8
-   
+
          AKX_leafn_xf_to_leafn_p_acc                 (ps:pe) = 0._r8
          AKX_frootn_xf_to_frootn_p_acc               (ps:pe) = 0._r8
          AKX_livestemn_xf_to_livestemn_p_acc         (ps:pe) = 0._r8
@@ -964,7 +939,7 @@ CONTAINS
          AKX_grainn_xf_to_grainn_p_acc               (ps:pe) = 0._r8
          AKX_livestemn_to_deadstemn_p_acc            (ps:pe) = 0._r8
          AKX_livecrootn_to_deadcrootn_p_acc          (ps:pe) = 0._r8
-   
+
          AKX_leafn_st_to_leafn_xf_p_acc              (ps:pe) = 0._r8
          AKX_frootn_st_to_frootn_xf_p_acc            (ps:pe) = 0._r8
          AKX_livestemn_st_to_livestemn_xf_p_acc      (ps:pe) = 0._r8
@@ -972,12 +947,12 @@ CONTAINS
          AKX_livecrootn_st_to_livecrootn_xf_p_acc    (ps:pe) = 0._r8
          AKX_deadcrootn_st_to_deadcrootn_xf_p_acc    (ps:pe) = 0._r8
          AKX_grainn_st_to_grainn_xf_p_acc            (ps:pe) = 0._r8
-   
+
          AKX_leafn_to_retransn_p_acc                 (ps:pe) = 0._r8
          AKX_frootn_to_retransn_p_acc                (ps:pe) = 0._r8
          AKX_livestemn_to_retransn_p_acc             (ps:pe) = 0._r8
          AKX_livecrootn_to_retransn_p_acc            (ps:pe) = 0._r8
-   
+
          AKX_retransn_to_leafn_p_acc                 (ps:pe) = 0._r8
          AKX_retransn_to_frootn_p_acc                (ps:pe) = 0._r8
          AKX_retransn_to_livestemn_p_acc             (ps:pe) = 0._r8
@@ -985,7 +960,7 @@ CONTAINS
          AKX_retransn_to_livecrootn_p_acc            (ps:pe) = 0._r8
          AKX_retransn_to_deadcrootn_p_acc            (ps:pe) = 0._r8
          AKX_retransn_to_grainn_p_acc                (ps:pe) = 0._r8
-   
+
          AKX_retransn_to_leafn_st_p_acc              (ps:pe) = 0._r8
          AKX_retransn_to_frootn_st_p_acc             (ps:pe) = 0._r8
          AKX_retransn_to_livestemn_st_p_acc          (ps:pe) = 0._r8
@@ -993,7 +968,7 @@ CONTAINS
          AKX_retransn_to_livecrootn_st_p_acc         (ps:pe) = 0._r8
          AKX_retransn_to_deadcrootn_st_p_acc         (ps:pe) = 0._r8
          AKX_retransn_to_grainn_st_p_acc             (ps:pe) = 0._r8
-   
+
          AKX_leafn_exit_p_acc                        (ps:pe) = 0._r8
          AKX_frootn_exit_p_acc                       (ps:pe) = 0._r8
          AKX_livestemn_exit_p_acc                    (ps:pe) = 0._r8
@@ -1002,7 +977,7 @@ CONTAINS
          AKX_deadcrootn_exit_p_acc                   (ps:pe) = 0._r8
          AKX_grainn_exit_p_acc                       (ps:pe) = 0._r8
          AKX_retransn_exit_p_acc                     (ps:pe) = 0._r8
-   
+
          AKX_leafn_st_exit_p_acc                     (ps:pe) = 0._r8
          AKX_frootn_st_exit_p_acc                    (ps:pe) = 0._r8
          AKX_livestemn_st_exit_p_acc                 (ps:pe) = 0._r8
@@ -1010,7 +985,7 @@ CONTAINS
          AKX_livecrootn_st_exit_p_acc                (ps:pe) = 0._r8
          AKX_deadcrootn_st_exit_p_acc                (ps:pe) = 0._r8
          AKX_grainn_st_exit_p_acc                    (ps:pe) = 0._r8
-   
+
          AKX_leafn_xf_exit_p_acc                     (ps:pe) = 0._r8
          AKX_frootn_xf_exit_p_acc                    (ps:pe) = 0._r8
          AKX_livestemn_xf_exit_p_acc                 (ps:pe) = 0._r8
@@ -1018,7 +993,7 @@ CONTAINS
          AKX_livecrootn_xf_exit_p_acc                (ps:pe) = 0._r8
          AKX_deadcrootn_xf_exit_p_acc                (ps:pe) = 0._r8
          AKX_grainn_xf_exit_p_acc                    (ps:pe) = 0._r8
-   
+
       end if
 #endif
 #endif

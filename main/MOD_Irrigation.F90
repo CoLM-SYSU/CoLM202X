@@ -4,9 +4,10 @@ module MOD_Irrigation
 
 !   DESCRIPTION:
 !       This module has all irrigation related subroutines for irrigated crop at either IGBP/USGS or PFT Land type classification and even in the C and N cycle.
-    
     use MOD_Precision
     USE MOD_TimeManager
+    USE MOD_Namelist, only: DEF_simulation_time
+    ! ,DEF_IRRIGATION_METHOD
     use MOD_Const_Physical, only: tfrz
     use MOD_Const_PFT, only: irrig_crop
     use MOD_Vars_Global, only: irrig_start_time, irrig_max_depth, irrig_threshold_fraction, irrig_min_cphase, irrig_max_cphase, irrig_time_per_day    
@@ -31,7 +32,6 @@ module MOD_Irrigation
     integer :: irrig_method_paddy = 4
 
 contains
-
             
     subroutine CalIrrigationNeeded(i,ps,pe,idate,nl_soil,nbedrock,z_soi,dz_soi,deltim,dlon,npcropmin)
 
@@ -57,6 +57,7 @@ contains
 
         !   calculate whether irrigation needed
         call PointNeedsCheckForIrrig(i,ps,pe,idate,deltim,dlon,npcropmin,check_for_irrig)
+
         !   calculate irrigation needed
         if (check_for_irrig) then
             call CalIrrigationPotentialNeeded(i,ps,pe,nl_soil,nbedrock,z_soi,dz_soi)
@@ -66,7 +67,7 @@ contains
         !   calculate irrigation rate kg/m2->mm/s
         if (check_for_irrig) then
             irrig_nsteps_per_day = nint(irrig_time_per_day/deltim)
-            irrig_rate(i) = deficit_irrig(i)/deltim/irrig_time_per_day
+            irrig_rate(i) = deficit_irrig(i)/deltim/irrig_nsteps_per_day
             n_irrig_steps_left(i) = irrig_nsteps_per_day
             sum_irrig(i) = sum_irrig(i) + deficit_irrig(i)
             sum_irrig_count(i) = sum_irrig_count(i) + 1._r8
@@ -74,7 +75,7 @@ contains
 
     end subroutine CalIrrigationNeeded
 
-!   需要修改，调试潜在蒸散发计算
+
     subroutine CalIrrigationPotentialNeeded(i,ps,pe,nl_soil,nbedrock,z_soi,dz_soi)
 
         !   DESCRIPTION:
@@ -107,9 +108,14 @@ contains
         h2osoi_liq_wilting_point_tot = 0._r8
         h2osoi_liq_saturation_capacity_tot = 0._r8
 
+        ! !   single site initialization
+        ! do m = ps, pe
+        !     irrig_method_p(m) = DEF_IRRIGATION_METHOD
+        ! enddo
+
 !   calculate wilting point and field capacity
         do j = 1, nl_soil
-            if (t_soisno(j,i)>tfrz .and. porsl(j,i)>=1.e-6) then         
+            if (t_soisno(j,i) > tfrz .and. porsl(j,i) >= 1.e-6) then         
 #ifdef Campbell_SOIL_MODEL
                 smpswc = -1.5e5
                 smpsfc = -3.3e3
@@ -180,16 +186,13 @@ contains
 
     end subroutine CalIrrigationPotentialNeeded
 
-
-
-!   需要调整方式在PFT上
-!   需要修改水量输出方式，增加新的水量变量
-    subroutine CalIrrigationApplicationFluxes(i,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy)
+    subroutine CalIrrigationApplicationFluxes(i,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag)
         !   DESCRIPTION:
         !   This subroutine is used to calculate irrigation application fluxes for each irrigated crop patch
         integer , intent(in) :: i
         integer , intent(in) :: ps, pe
         real(r8), intent(in) :: deltim
+        integer , intent(in) :: irrig_flag  ! 1 if sprinker, 2 if others 
         real(r8), intent(out):: qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy
 
         integer :: m 
@@ -199,20 +202,29 @@ contains
         qflx_irrig_flood = 0._r8
         qflx_irrig_paddy = 0._r8
 
+        ! !   single site initialization
+        ! do m = ps, pe
+        !     irrig_method_p(m) = DEF_IRRIGATION_METHOD
+        ! enddo
+
         !   add irrigation fluxes to precipitation or land surface
         do m = ps, pe
             if (n_irrig_steps_left(i) > 0) then
-                if (irrig_method_p(m) == irrig_method_drip) then
-                    qflx_irrig_drip = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_sprinkler) then
-                    qflx_irrig_drip = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_flood) then
-                    qflx_irrig_flood = irrig_rate(i)
-                else if (irrig_method_p(m) == irrig_method_paddy) then
-                    qflx_irrig_paddy = irrig_rate(i)
+                if ((irrig_flag == 1) .and. (irrig_method_p(m) == irrig_method_sprinkler)) then 
+                    qflx_irrig_sprinkler = irrig_rate(i)
+                    n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+                    deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
+                else if (irrig_flag == 2) then
+                    if (irrig_method_p(m) == irrig_method_drip) then
+                        qflx_irrig_drip = irrig_rate(i)
+                    else if (irrig_method_p(m) == irrig_method_flood) then
+                        qflx_irrig_flood = irrig_rate(i)
+                    else if (irrig_method_p(m) == irrig_method_paddy) then
+                        qflx_irrig_paddy = irrig_rate(i)
+                    end if
+                    n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
+                    deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
                 end if
-                n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
-                deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
                 if (deficit_irrig(i) < 0._r8) then
                     deficit_irrig(i) = 0._r8
                 end if
@@ -242,8 +254,12 @@ contains
             ivt = pftclass(m)
             if ((ivt >= npcropmin) .and. (irrig_crop(ivt)) .and. &
                 (cphase_p(m) >= irrig_min_cphase) .and. (cphase_p(m)<irrig_max_cphase)) then
-                call gmt2local(idate, dlon, ldate)
-                seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
+                if (DEF_simulation_time%greenwich) then
+                    call gmt2local(idate, dlon, ldate)
+                    seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
+                else
+                    seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
+                end if
                 if ((seconds_since_irrig_start_time >= 0._r8) .and. (seconds_since_irrig_start_time < deltim)) then
                     check_for_irrig = .true.
                 else
@@ -256,13 +272,16 @@ contains
 
     end subroutine PointNeedsCheckForIrrig
 
-
     ! subroutine CalPotentialEvapotranspiration(i,idate,dlon)
     !     integer , intent(in) :: i
     !     integer , intent(in) :: ps, pe
     !     integer , intent(in) :: idate(3)
-    !     call gmt2local(idate, dlon, ldate)
-    !     seconds_since_irrig_start_time = ldate(3) - irrig_start_time
+    !     if (DEF_simulation_time%greenwich) then
+    !         call gmt2local(idate, dlon, ldate)
+    !         seconds_since_irrig_start_time = ldate(3) - irrig_start_time
+    !     else
+    !         seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
+    !     end if
     !     if (seconds_since_irrig_start_time >= 0) .and. (seconds_since_irrig_start_time < deltim) then
     !         potential_evapotranspiration(i) = 0.408*delta*(rnet-fgrnd)+gamma*(900/(t+273))*ur* &
     !             (es-ea)/(delta+(gamma)*(1+0.34*u))*deltim/86400
@@ -271,5 +290,6 @@ contains
     !             deltim+gamma*(900/(tm+273))*ur*(es-ea)/(delta+(gamma)*(1+0.34*ur))*deltim/86400
     !     end if
     ! end subroutine CalPotentialEvapotranspiration
+
 end module MOD_Irrigation
 #endif

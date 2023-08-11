@@ -6,7 +6,7 @@ MODULE MOD_GroundFluxes
    SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-   PUBLIC :: groundfluxes
+   PUBLIC :: GroundFluxes
 
 
 !-----------------------------------------------------------------------
@@ -16,7 +16,7 @@ MODULE MOD_GroundFluxes
 !-----------------------------------------------------------------------
 
 
-   subroutine groundfluxes (zlnd, zsno, hu, ht, hq,&
+   subroutine GroundFluxes (zlnd, zsno, hu, ht, hq,&
                             hpbl, &
                             us, vs, tm, qm, rhoair, psrf,&
                             ur, thm, th, thv, t_grnd, qg, dqgdT, htvp,&
@@ -232,6 +232,6 @@ MODULE MOD_GroundFluxes
         tref   = thm + vonkar/fh*dth * (fh2m/vonkar - fh/vonkar)
         qref   =  qm + vonkar/fq*dqh * (fq2m/vonkar - fq/vonkar)
 
-   end subroutine groundfluxes
+   end subroutine GroundFluxes
 
 END MODULE MOD_GroundFluxes

@@ -1335,7 +1335,7 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF, DEF_USE_IRRIGATION
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
@@ -1622,14 +1622,14 @@ contains
             call acc1d (fertnitro_rice1    ,   a_fertnitro_rice1    )
             call acc1d (fertnitro_rice2    ,   a_fertnitro_rice2    )
             call acc1d (fertnitro_sugarcane,   a_fertnitro_sugarcane)
-            call acc1d (dble(irrig_method_corn     ),   a_irrig_method_corn     )
-            call acc1d (dble(irrig_method_swheat   ),   a_irrig_method_swheat   )
-            call acc1d (dble(irrig_method_wwheat   ),   a_irrig_method_wwheat   )
-            call acc1d (dble(irrig_method_soybean  ),   a_irrig_method_soybean  )
-            call acc1d (dble(irrig_method_cotton   ),   a_irrig_method_cotton   )
-            call acc1d (dble(irrig_method_rice1    ),   a_irrig_method_rice1    )
-            call acc1d (dble(irrig_method_rice2    ),   a_irrig_method_rice2    )
-            call acc1d (dble(irrig_method_sugarcane),   a_irrig_method_sugarcane)
+            call acc1d (real(irrig_method_corn     ,r8),   a_irrig_method_corn     )
+            call acc1d (real(irrig_method_swheat   ,r8),   a_irrig_method_swheat   )
+            call acc1d (real(irrig_method_wwheat   ,r8),   a_irrig_method_wwheat   )
+            call acc1d (real(irrig_method_soybean  ,r8),   a_irrig_method_soybean  )
+            call acc1d (real(irrig_method_cotton   ,r8),   a_irrig_method_cotton   )
+            call acc1d (real(irrig_method_rice1    ,r8),   a_irrig_method_rice1    )
+            call acc1d (real(irrig_method_rice2    ,r8),   a_irrig_method_rice2    )
+            call acc1d (real(irrig_method_sugarcane,r8),   a_irrig_method_sugarcane)
             call acc1d (cphase             ,   a_cphase             )
             call acc1d (hui                ,   a_hui                )
             call acc1d (vf                 ,   a_vf                 )

@@ -44,11 +44,8 @@ PROGRAM CoLM
    USE MOD_LandUrban
    USE MOD_Urban_LAIReadin
 #endif
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    USE MOD_LandPFT
-#endif
-#ifdef LULC_IGBP_PC
-   USE MOD_LandPC
 #endif
 #if (defined UNSTRUCTURED || defined CATCHMENT)
    USE MOD_ElmVector
@@ -81,6 +78,10 @@ PROGRAM CoLM
 
 #ifdef LULCC
    USE MOD_Lulcc_Driver
+#endif
+
+#ifdef CoLMDEBUG
+   USE MOD_Hydro_SoilWater
 #endif
 
    ! SNICAR
@@ -194,14 +195,9 @@ PROGRAM CoLM
 
    CALL pixelset_load_from_file (dir_landdata, 'landpatch', landpatch, numpatch, lc_year)
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL pixelset_load_from_file (dir_landdata, 'landpft'  , landpft  , numpft  , lc_year)
    CALL map_patch_to_pft
-#endif
-
-#ifdef LULC_IGBP_PC
-   CALL pixelset_load_from_file (dir_landdata, 'landpc'   , landpc   , numpc   , lc_year)
-   CALL map_patch_to_pc
 #endif
 
 #ifdef URBAN_MODEL
@@ -254,7 +250,7 @@ PROGRAM CoLM
 
    ! Initialize meteorological forcing data module
    CALL allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, sdate, lc_year)
+   CALL forcing_init (dir_forcing, deltim, ststamp, lc_year, etstamp)
    CALL allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
@@ -371,7 +367,36 @@ PROGRAM CoLM
       ENDIF
 
 
-      ! Get leaf area index
+#if (defined LATERAL_FLOW)
+      CALL lateral_flow (deltim)
+#endif
+
+#if(defined CaMa_Flood)
+      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
+#endif
+
+      ! Write out the model variables for restart run and the histroy file
+      ! ----------------------------------------------------------------------
+      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
+
+#ifdef LULCC
+      ! DO land USE and land cover change simulation
+      IF ( isendofyear(idate, deltim) ) THEN
+         CALL deallocate_1D_Forcing
+         CALL deallocate_1D_Fluxes
+
+         CALL LulccDriver (casename,dir_landdata,dir_restart,&
+                           idate,greenwich)
+
+         CALL allocate_1D_Forcing
+         CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
+         CALL deallocate_acc_fluxes
+         CALL hist_init (dir_hist)
+         CALL allocate_1D_Fluxes
+      ENDIF
+#endif
+
+! Get leaf area index
       ! ----------------------------------------------------------------------
 #if(defined DYN_PHENOLOGY)
       ! Update once a day
@@ -416,35 +441,6 @@ PROGRAM CoLM
       ENDIF
 #endif
 
-#if (defined LATERAL_FLOW)
-      CALL lateral_flow (deltim)
-#endif
-
-#if(defined CaMa_Flood)
-      call colm_CaMa_drv(idate(3)) ! run CaMa-Flood
-#endif
-
-      ! Write out the model variables for restart run and the histroy file
-      ! ----------------------------------------------------------------------
-      CALL hist_out (idate, deltim, itstamp, etstamp, ptstamp, dir_hist, casename)
-
-#ifdef LULCC
-      ! DO land USE and land cover change simulation
-      IF ( isendofyear(idate, deltim) ) THEN
-         CALL deallocate_1D_Forcing
-         CALL deallocate_1D_Fluxes
-
-         CALL LulccDriver (casename,dir_landdata,dir_restart,&
-                           idate,greenwich)
-
-         CALL allocate_1D_Forcing
-         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
-         CALL deallocate_acc_fluxes
-         CALL hist_init (dir_hist, DEF_hist_lon_res, DEF_hist_lat_res)
-         CALL allocate_1D_Fluxes
-      ENDIF
-#endif
-
       IF (save_to_restart (idate, deltim, itstamp, ptstamp)) THEN
 #ifdef LULCC
          CALL WRITE_TimeVariables (jdate, jdate(1), casename, dir_restart)
@@ -482,6 +478,10 @@ PROGRAM CoLM
 
       istep = istep + 1
 
+#ifdef CoLMDEBUG
+      CALL print_VSF_iteration_stat_info ()
+#endif
+
    ENDDO TIMELOOP
 
    CALL deallocate_TimeInvariants ()
@@ -493,7 +493,8 @@ PROGRAM CoLM
    CALL lateral_flow_final ()
 #endif
 
-   CALL hist_final ()
+   CALL forcing_final ()
+   CALL hist_final    ()
 
 #ifdef SinglePoint
    CALL single_srfdata_final ()

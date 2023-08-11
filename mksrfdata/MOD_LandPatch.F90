@@ -14,7 +14,7 @@ MODULE MOD_LandPatch
    !       ELEMENT >>> HRU >>> PATCH
    !    If Plant Function Type classification is used, PATCH is further divided into PFT.
    !    If Plant Community classification is used,     PATCH is further divided into PC.
-   ! 
+   !
    !    "landpatch" refers to pixelset PATCH.
    !
    ! Created by Shupeng Zhang, May 2023
@@ -210,8 +210,9 @@ CONTAINS
             END WHERE
 #endif
 
-#ifdef LULC_IGBP_PFT
-            ! For classification of plant function types, merge all land types with soil ground
+IF ((DEF_USE_PFT .and. .not.DEF_SOLO_PFT) .or. DEF_FAST_PC) THEN
+            ! For classification of plant function types or fast PC,
+            ! merge all land types with soil ground
             DO ipxl = ipxstt, ipxend
                IF (types(ipxl) > 0) THEN
                   IF (patchtypes(types(ipxl)) == 0) THEN
@@ -227,7 +228,7 @@ CONTAINS
                   ENDIF
                ENDIF
             ENDDO
-#endif
+ENDIF
 
             allocate (order (ipxstt:ipxend))
             order = (/ (ipxl, ipxl = ipxstt, ipxend) /)
@@ -325,8 +326,7 @@ CONTAINS
 #else
 #if (defined CROP)
       IF (p_is_io) THEN
-!         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_mergetoclmpft.nc'
-         file_patch = trim(DEF_dir_rawdata) // '/global_0.5x0.5.MOD2005_V4.5_CFT_lf-merged-20220930.nc'
+         file_patch = trim(DEF_dir_rawdata) // '/global_CFT_surface_data.nc'
          CALL allocate_block_data (gcrop, cropdata, N_CFT)
          CALL ncio_read_block (file_patch, 'PCT_CFT', gcrop, N_CFT, cropdata)
       ENDIF

@@ -32,21 +32,20 @@ MODULE MOD_Namelist
    INTEGER :: DEF_PIO_groupsize = 12
 
    ! ----- For Single Point -----
-#ifdef SinglePoint
 
-   CHARACTER(len=256) :: SITE_fsrfdata  = 'null'
+   CHARACTER(len=256) :: SITE_fsrfdata   = 'null'
 
-   LOGICAL  :: USE_SITE_pctpfts         = .true.
-   LOGICAL  :: USE_SITE_pctcrop         = .true.
-   LOGICAL  :: USE_SITE_htop            = .true.
-   LOGICAL  :: USE_SITE_LAI             = .true.
-   LOGICAL  :: USE_SITE_lakedepth       = .true.
-   LOGICAL  :: USE_SITE_soilreflectance = .true.
-   LOGICAL  :: USE_SITE_soilparameters  = .true.
-   LOGICAL  :: USE_SITE_dbedrock        = .true.
-   LOGICAL  :: USE_SITE_topography      = .true.
-   logical  :: USE_SITE_HistWriteBack   = .true.
-#endif
+   LOGICAL  :: USE_SITE_pctpfts          = .true.
+   LOGICAL  :: USE_SITE_pctcrop          = .true.
+   LOGICAL  :: USE_SITE_htop             = .true.
+   LOGICAL  :: USE_SITE_LAI              = .true.
+   LOGICAL  :: USE_SITE_lakedepth        = .true.
+   LOGICAL  :: USE_SITE_soilreflectance  = .true.
+   LOGICAL  :: USE_SITE_soilparameters   = .true.
+   LOGICAL  :: USE_SITE_dbedrock         = .true.
+   LOGICAL  :: USE_SITE_topography       = .true.
+   logical  :: USE_SITE_HistWriteBack    = .true.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -94,6 +93,19 @@ MODULE MOD_Namelist
    ! case 2: from gridded data with dimensions [patch,lon,lat] or [pft,lon,lat]
    !         only available for USGS/IGBP/PFT CLASSIFICATION
    LOGICAL :: USE_srfdata_from_3D_gridded_data = .false.
+
+   ! ----- Subgrid scheme -----
+   logical :: DEF_USE_USGS = .false.
+   logical :: DEF_USE_IGBP = .false.
+   logical :: DEF_USE_LCT  = .false.
+   logical :: DEF_USE_PFT  = .false.
+   logical :: DEF_USE_PC   = .false.
+   logical :: DEF_SOLO_PFT = .false.
+   logical :: DEF_FAST_PC  = .false.
+   CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
+
+   ! ----- compress data in aggregation when send data from IO to worker -----
+   logical :: USE_zip_for_aggregation = .true.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -173,6 +185,9 @@ MODULE MOD_Namelist
 
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
+
+   ! !  irrigation method temporary
+   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -365,8 +380,8 @@ MODULE MOD_Namelist
       LOGICAL :: t_roof       = .true.
       LOGICAL :: t_wall       = .true.
 #endif
-      LOGICAL :: assimsun        = .true. !1
-      LOGICAL :: assimsha        = .true. !1
+      LOGICAL :: assimsun      = .true. !1
+      LOGICAL :: assimsha      = .true. !1
       LOGICAL :: etrsun        = .true. !1
       LOGICAL :: etrsha        = .true. !1
 #ifdef BGC
@@ -526,7 +541,7 @@ MODULE MOD_Namelist
       LOGICAL :: irrig_method_rice1    = .true.
       LOGICAL :: irrig_method_rice2    = .true.
       LOGICAL :: irrig_method_sugarcane= .true.
-      
+
       LOGICAL :: irrig_rate         = .true.
       LOGICAL :: deficit_irrig      = .true.
       LOGICAL :: sum_irrig          = .true.
@@ -653,6 +668,7 @@ CONTAINS
          USE_SITE_dbedrock,        &
          USE_SITE_topography,      &
          USE_SITE_HistWriteBack,   &
+         USE_SITE_ForcingReadAhead,&
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -669,6 +685,13 @@ CONTAINS
 #endif
          DEF_file_mesh_filter,            &
 
+         DEF_USE_LCT,                     &
+         DEF_USE_PFT,                     &
+         DEF_USE_PC,                      &
+         DEF_FAST_PC,                     &
+         DEF_SOLO_PFT,                    &
+         DEF_SUBGRID_SCHEME,              &
+
          DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
@@ -676,6 +699,7 @@ CONTAINS
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
+         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -696,6 +720,7 @@ CONTAINS
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
          USE_srfdata_from_3D_gridded_data,&
+         USE_zip_for_aggregation,         &
 
          DEF_USE_CBL_HEIGHT,              &   !add by zhongwang wei @ sysu 2022/12/31
          DEF_USE_PLANTHYDRAULICS,         &   !add by xingjie lu @ sysu 2023/05/28
@@ -803,6 +828,28 @@ CONTAINS
 
 ! ----- subgrid type related ------ Macros&Namelist conflicts and dependency management
 
+#if (defined LULC_USGS || defined LULC_IGBP)
+         DEF_USE_LCT  = .true.
+         DEF_USE_PFT  = .false.
+         DEF_USE_PC   = .false.
+         DEF_FAST_PC  = .false.
+         DEF_SOLO_PFT = .false.
+#endif
+
+#ifdef LULC_IGBP_PFT
+         DEF_USE_LCT  = .false.
+         DEF_USE_PFT  = .true.
+         DEF_USE_PC   = .false.
+         DEF_FAST_PC  = .false.
+#endif
+
+#ifdef LULC_IGBP_PC
+         DEF_USE_LCT  = .false.
+         DEF_USE_PFT  = .false.
+         DEF_USE_PC   = .true.
+         DEF_SOLO_PFT = .false.
+#endif
+
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
          IF (.not.DEF_LAI_MONTHLY) THEN
             write(*,*) '                  *****                  '
@@ -873,7 +920,7 @@ CONTAINS
             write(*,*) '                  *****                  '
             write(*,*) 'Warning: irrigation is on when CROP is off.'
             write(*,*) 'DEF_USE_IRRIGATION is set to false automatically when CROP is turned off.'
-         ENDIF               
+         ENDIF
 #endif
 
          IF(.not. DEF_USE_OZONESTRESS)then
@@ -956,6 +1003,13 @@ CONTAINS
 
 ! ----- [Complement IF needed] ----- Macros&Namelist conflicts and dependency management
 
+#if (defined SinglePoint)
+#ifdef SrfdataDiag
+         write(*,*) '                  *****                  '
+         write(*,*) 'Surface data diagnose is closed in SinglePoint case.'
+#undef SrfdataDiag
+#endif
+#endif
 
 
 ! -----END Macros&Namelist conflicts and dependency management -----
@@ -994,7 +1048,7 @@ CONTAINS
       CALL mpi_bcast (DEF_simulation_time%spinup_sec,    1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_simulation_time%spinup_repeat, 1, mpi_integer, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_simulation_time%timestep,     1, mpi_real8,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_simulation_time%timestep,      1, mpi_real8,   p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_dir_rawdata,  256, mpi_character, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_dir_runtime,  256, mpi_character, p_root, p_comm_glb, p_err)
@@ -1015,30 +1069,42 @@ CONTAINS
       CALL mpi_bcast (DEF_CatchmentMesh_data, 256, mpi_character, p_root, p_comm_glb, p_err)
 #endif
 
-      CALL mpi_bcast (DEF_file_mesh_filter, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_file_mesh_filter,   256, mpi_character, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_dir_existing_srfdata, 256, mpi_character, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_dir_existing_srfdata,     256, mpi_character, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_larger_region,   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (USE_srfdata_from_3D_gridded_data, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (USE_zip_for_aggregation,          1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! 07/2023, added by yuan: subgrid setting related
+      CALL mpi_bcast (DEF_USE_LCT,           1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_PFT,           1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_PC,            1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_FAST_PC,           1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SOLO_PFT,          1, mpi_logical,   p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_SUBGRID_SCHEME,  256, mpi_character, p_root, p_comm_glb, p_err)
+
+      CALL mpi_bcast (DEF_LAI_CHANGE_YEARLY, 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 05/2023, added by Xingjie lu
-      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_USE_IRRIGATION ,     1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
+      !  use irrigation temporary
+      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      
       ! LULC related
-      CALL mpi_bcast (DEF_LC_YEAR,         1, mpi_integer, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_LULCC_SCHEME,    1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)
 
       CALL mpi_bcast (DEF_URBAN_type_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       ! 05/2023, added by yuan
-      CALL mpi_bcast (DEF_URBAN_ONLY,      1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_RUN,       1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_BEM,       1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_TREE,      1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_WATER,     1, mpi_logical, p_root, p_comm_glb, p_err)
-      CALL mpi_bcast (DEF_URBAN_LUCY,      1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_ONLY,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_RUN,         1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_BEM,         1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_TREE,        1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_WATER,       1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_URBAN_LUCY,        1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! 06/2023, added by weinan
       CALL mpi_bcast (DEF_USE_SOILPAR_UPS_FIT,          1, mpi_logical, p_root, p_comm_glb, p_err)
@@ -1050,16 +1116,16 @@ CONTAINS
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_SSP, 256, mpi_character, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_SSP,             256, mpi_character, p_root, p_comm_glb, p_err)
 
-      call mpi_bcast (DEF_USE_CBL_HEIGHT, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_CBL_HEIGHT     , 1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_PLANTHYDRAULICS, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_SASU, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_PN, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_FERT, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_NITRIF, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_CNSOYFIXN, 1, mpi_logical, p_root, p_comm_glb, p_err)
-      call mpi_bcast (DEF_USE_FIRE, 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_SASU           , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_PN             , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FERT           , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_NITRIF         , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_CNSOYFIXN      , 1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_USE_FIRE           , 1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LANDONLY,                   1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_USE_DOMINANT_PATCHTYPE,     1, mpi_logical, p_root, p_comm_glb, p_err)
