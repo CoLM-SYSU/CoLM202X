@@ -42,7 +42,7 @@ module MOD_Forcing
 
    ! local variables
    integer  :: deltim_int                ! model time step length
-   real(r8) :: deltim_real               ! model time step length
+   ! real(r8) :: deltim_real               ! model time step length
 
    !  for SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
@@ -104,7 +104,7 @@ contains
 
       ! get value of fmetdat and deltim
       deltim_int  = int(deltatime)
-      deltim_real = deltatime
+      ! deltim_real = deltatime
 
       ! set initial values
       IF (allocated(tstamp_LB)) deallocate(tstamp_LB)
@@ -1287,9 +1287,16 @@ contains
 
          integer, intent(in) :: idate(3)
 
-         integer  :: iblkme, ib, jb, i, j, ilon, ilat
+         integer  :: ntime, iblkme, ib, jb, i, j, ilon, ilat
          real(r8) :: calday, cosz
          type(timestamp) :: tstamp
+         
+         tstamp = idate ! tstamp_LB(7)
+         ntime = 0
+         do while (tstamp <= tstamp_UB(7))
+            ntime  = ntime + 1
+            tstamp = tstamp + deltim_int
+         ENDDO
 
          tstamp = idate ! tstamp_LB(7)
          call flush_block_data (avgcos, 0._r8)
@@ -1310,7 +1317,7 @@ contains
                      cosz = orb_coszen(calday, gforc%rlon(ilon), gforc%rlat(ilat))
                      cosz = max(0.001, cosz)
                      avgcos%blk(ib,jb)%val(i,j) = avgcos%blk(ib,jb)%val(i,j) &
-                        + cosz*deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
+                        + cosz / real(ntime,r8) !  * deltim_real /real(tstamp_UB(7)-tstamp_LB(7))
 
                   end do
                end do
