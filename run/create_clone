@@ -53,4 +53,7 @@ sed -i "s/$SourceName/$DestName/g" ./input_$DestName.nml
 
 echo copy source files 
 cp -pr $SourcePath/$SourceName/bld $DestPath/$DestName/
-
+echo copy restart files
+cp -pr $SourcePath/$SourceName/restart/$SourceName*nc $DestPath/$DestName/restart/
+cd $DestPath/$DestName/restart/
+rename $SourceName $DestName *nc
