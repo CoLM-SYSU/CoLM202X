@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#----------------------------------------------------------
+
+# usage: ./create_clone $SourcePath/$SourceName $DestPath/DestName
+# no "/" at end of both paths.
+
+#----------------------------------------------------------
+if [ $# -ne 2 ];then
+   echo "error: argument number. 2 arguments are expected. $# arguments were used"
+   exit
+else 
+   if [ "${1:0:1}" == '/' ];then
+      SourceName=`echo "${1##*/}"`
+      SourcePath=`echo "${1%/*}"`
+      echo $SourceName
+      echo $SourcePath
+   else
+      TMPPATHNAME=$PWD/$1
+      SourceName=`echo "${TMPPATHNAME##*/}"`
+      SourcePath=`echo "${TMPPATHNAME%/*}"`
+      echo $SourcePath
+      echo $SourceName
+   fi
+   if [ "${2:0:1}" == '/' ];then
+      DestName=`echo "${2##*/}"`
+      DestPath=`echo "${2%/*}"`
+      echo $DestName
+      echo $DestPath
+   else
+      TMPPATHNAME=$PWD/$2
+      DestName=`echo "${TMPPATHNAME##*/}"`
+      DestPath=`echo "${TMPPATHNAME%/*}"`
+      echo $DestPath
+      echo $DestName
+   fi
+fi
+
+mkdir -p $DestPath/$DestName
+cd $DestPath/$DestName
+mkdir -p history
+mkdir -p restart
+cp -pr $SourcePath/$SourceName/landdata ./
+echo copy scripts and namelist
+cp -p $SourcePath/$SourceName/mksrf.submit ./
+sed -i "s/$SourceName/$DestName/g" ./mksrf.submit
+cp -p $SourcePath/$SourceName/init.submit ./
+sed -i "s/$SourceName/$DestName/g" ./init.submit
+cp -p $SourcePath/$SourceName/case.submit ./
+sed -i "s/$SourceName/$DestName/g" ./case.submit
+cp -p $SourcePath/$SourceName/input_$SourceName.nml ./input_$DestName.nml
+sed -i "s/$SourceName/$DestName/g" ./input_$DestName.nml
+
+echo copy source files 
+cp -pr $SourcePath/$SourceName/bld $DestPath/$DestName/
+
