@@ -984,14 +984,15 @@ CONTAINS
       endif
 
       ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-         if (taf .gt. tfrz) then
-            ldew_rain = ldew_rain-evplwet*deltim 
-            ldew_rain = max(ldew_rain,0.0)
-         else
-            ldew_snow = ldew_snow-evplwet*deltim
-            ldew_snow=max(ldew_snow,0.0)
-         endif
+         if (ldew_rain.gt.evplwet*deltim) then
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
             ldew=ldew_rain+ldew_snow
+         else
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         endif
       ELSE
          call abort
 
