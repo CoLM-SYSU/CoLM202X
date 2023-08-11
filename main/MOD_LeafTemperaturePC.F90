@@ -79,7 +79,7 @@ MODULE MOD_LeafTemperaturePC
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
   USE MOD_Const_PFT
   USE MOD_FrictionVelocity
-  USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS
+  USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_Interception_scheme
   USE MOD_TurbulenceLEddy
   USE MOD_Qsadv
   USE MOD_AssimStomataConductance
@@ -1634,19 +1634,54 @@ MODULE MOD_LeafTemperaturePC
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
-!#ifdef CLM5_INTERCEPTION
-!            IF (ldew_rain(i).gt.evplwet(i)*deltim) THEN
-!               ldew_rain(i) = ldew_rain(i)-evplwet(i)*deltim
-!               ldew_snow(i) = ldew_snow(i)
-!               ldew=ldew_rain(i)+ldew_snow(i)
-!            ELSE
-!               ldew_rain(i) = 0.0
-!               ldew_snow(i) = max(0., ldew(i)-evplwet(i)*deltim)
-!               ldew(i)      = ldew_snow(i)
-!            ENDIF
-!#else
-             ldew(i) = max(0., ldew(i)-evplwet(i)*deltim)
-!#endif
+            IF (DEF_Interception_scheme .eq. 1) then !colm2014
+               ldew = max(0., ldew-evplwet*deltim)
+            ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
+               ldew = max(0., ldew-evplwet*deltim)
+            ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
+               if (ldew_rain.gt.evplwet*deltim) then
+                  ldew_rain = ldew_rain-evplwet*deltim
+                  ldew_snow = ldew_snow
+                  ldew=ldew_rain+ldew_snow
+               else
+                  ldew_rain = 0.0
+                  ldew_snow = max(0., ldew-evplwet*deltim)
+                  ldew      = ldew_snow
+               endif
+            ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
+               if (ldew_rain.gt.evplwet*deltim) then
+                  ldew_rain = ldew_rain-evplwet*deltim
+                  ldew_snow = ldew_snow
+                  ldew=ldew_rain+ldew_snow
+               else
+                  ldew_rain = 0.0
+                  ldew_snow = max(0., ldew-evplwet*deltim)
+                  ldew      = ldew_snow
+               endif
+            ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
+               if (ldew_rain.gt.evplwet*deltim) then
+                  ldew_rain = ldew_rain-evplwet*deltim
+                  ldew_snow = ldew_snow
+                  ldew=ldew_rain+ldew_snow
+               else
+                  ldew_rain = 0.0
+                  ldew_snow = max(0., ldew-evplwet*deltim)
+                  ldew      = ldew_snow
+               endif
+            ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
+               if (taf .gt. tfrz) then
+                  ldew_rain = ldew_rain-evplwet*deltim 
+                  ldew_rain = max(ldew_rain,0.0)
+               else
+                  ldew_snow = ldew_snow-evplwet*deltim
+                  ldew_snow=max(ldew_snow,0.0)
+               endif
+                  ldew=ldew_rain+ldew_snow
+            ELSE
+               call abort
+            ENDIF
+
+
 
 !-----------------------------------------------------------------------
 ! balance check
