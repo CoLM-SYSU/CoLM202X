@@ -1639,7 +1639,7 @@ MODULE MOD_LeafTemperaturePC
             ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
                ldew = max(0., ldew-evplwet*deltim)
             ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
-               if (ldew_rain.gt.evplwet*deltim) then
+               if (ldew_rain .gt. evplwet*deltim) then
                   ldew_rain = ldew_rain-evplwet*deltim
                   ldew_snow = ldew_snow
                   ldew=ldew_rain+ldew_snow
@@ -1649,7 +1649,7 @@ MODULE MOD_LeafTemperaturePC
                   ldew      = ldew_snow
                endif
             ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
-               if (ldew_rain.gt.evplwet*deltim) then
+               if (ldew_rain .gt. evplwet*deltim) then
                   ldew_rain = ldew_rain-evplwet*deltim
                   ldew_snow = ldew_snow
                   ldew=ldew_rain+ldew_snow
@@ -1659,7 +1659,7 @@ MODULE MOD_LeafTemperaturePC
                   ldew      = ldew_snow
                endif
             ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
-               if (ldew_rain.gt.evplwet*deltim) then
+               if (ldew_rain .gt. evplwet*deltim) then
                   ldew_rain = ldew_rain-evplwet*deltim
                   ldew_snow = ldew_snow
                   ldew=ldew_rain+ldew_snow
@@ -1669,7 +1669,7 @@ MODULE MOD_LeafTemperaturePC
                   ldew      = ldew_snow
                endif
             ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-               if (ldew_rain.gt.evplwet*deltim) then
+               if (ldew_rain .gt. evplwet*deltim) then
                   ldew_rain = ldew_rain-evplwet*deltim
                   ldew_snow = ldew_snow
                   ldew=ldew_rain+ldew_snow
