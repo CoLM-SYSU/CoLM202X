@@ -8,7 +8,7 @@ MODULE MOD_LeafTemperaturePC
  SAVE
 
 ! PUBLIC MEMBER FUNCTIONS:
-  PUBLIC :: LeafTempPC
+  PUBLIC :: LeafTemperaturePC
 
 ! PRIVATE MEMBER FUNCTIONS:
   PRIVATE :: dewfraction
@@ -21,11 +21,9 @@ MODULE MOD_LeafTemperaturePC
 
 !-----------------------------------------------------------------------
 
-  SUBROUTINE  LeafTempPC (ipatch,npft,deltim,csoilc,dewmx ,htvp    ,&
-              fcover  ,canlev  ,htop    ,hbot    ,lai     ,sai     ,&
-              sqrtdi  ,effcon  ,vmax25  ,slti    ,hlti    ,shti    ,&
-              hhti    ,trda    ,trdm    ,trop    ,gradm   ,binter  ,&
-              extkn   ,extkb   ,extkd   ,hu      ,ht      ,hq      ,&
+  SUBROUTINE  LeafTemperaturePC (ipatch,ps,pe,deltim,csoilc,dewmx,htvp,&
+              pftclass,fcover  ,htop    ,hbot    ,lai     ,sai     ,&
+              extkb   ,extkd   ,hu      ,ht      ,hq      ,&
               us      ,vs      ,thm     ,th      ,thv     ,qm      ,&
               psrf    ,rhoair  ,parsun  ,parsha  ,fsun    ,sabv    ,&
               frl     ,thermk  ,fshade  ,rstfacsun,       rstfacsha,&
@@ -38,9 +36,7 @@ MODULE MOD_LeafTemperaturePC
               rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
               qstar   ,tstar   ,fm      ,fh      ,fq               ,&
-              rootfr                             ,&
-              kmax_sun,kmax_sha,kmax_xyl,kmax_root,psi50_sun,psi50_sha,&
-              psi50_xyl,psi50_root,ck   ,vegwp   ,gs0sun  ,gs0sha  ,&
+              vegwp   ,gs0sun  ,gs0sha  ,&
               assimsun,etrsun  ,assimsha,etrsha  ,&
 !Ozone stress variables
               o3coefv_sun ,o3coefv_sha ,o3coefg_sun ,o3coefg_sha, &
@@ -62,8 +58,7 @@ MODULE MOD_LeafTemperaturePC
 ! transfer between foliage and atmosphere and ground is linked by the equations:
 !                      Ha = Hf + Hg and Ea = Ef + Eg
 !
-! Original author : Yongjiu Dai, August 15, 2001
-!                   Hua Yuan, September, 2017
+! Original author : Hua Yuan and Yongjiu Dai, September, 2017
 !
 ! REFERENCES:
 ! 1) Dai, Y., Yuan, H., Xin, Q., Wang, D., Shangguan, W., Zhang, S., et al. (2019).
@@ -82,6 +77,7 @@ MODULE MOD_LeafTemperaturePC
   USE MOD_Precision
   USE MOD_Vars_Global
   USE MOD_Const_Physical, only: vonkar, grav, hvap, cpair, stefnc, cpliq, cpice
+  USE MOD_Const_PFT
   USE MOD_FrictionVelocity
   USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_RSS_SCHEME
   USE MOD_TurbulenceLEddy
@@ -94,111 +90,87 @@ MODULE MOD_LeafTemperaturePC
 !-----------------------Arguments---------------------------------------
 
   integer,  intent(in) :: ipatch
-  integer , intent(in) :: &
-        npft,       &! potential PFT number in a column
-        canlev(npft) ! potential canopy layer in a column
+  integer,  intent(in) :: &
+        ps,            &! start PFT index in a patch
+        pe              ! END PFT index in a patch
 
   real(r8), intent(in) :: &
-        deltim,     &! seconds in a time step [second]
-        csoilc,     &! drag coefficient for soil under canopy [-]
-        dewmx,      &! maximum dew
-        htvp         ! latent heat of evaporation (/sublimation) [J/kg]
+        deltim,        &! seconds in a time step [second]
+        csoilc,        &! drag coefficient for soil under canopy [-]
+        dewmx,         &! maximum dew
+        htvp            ! latent heat of evaporation (/sublimation) [J/kg]
 
 ! vegetation parameters
-  real(r8), dimension(npft), intent(in) :: &
-        fcover,     &! PFT fractiona coverage [-]
-        htop,       &! PFT crown top height [m]
-        hbot,       &! PFT crown bottom height [m]
-        lai,        &! adjusted leaf area index for seasonal variation [-]
-        sai,        &! stem area index  [-]
-        sqrtdi,     &! inverse sqrt of leaf dimension [m**-0.5]
+  integer,  dimension(ps:pe), intent(in) :: &
+        pftclass        ! PFT class
 
-        effcon,     &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
-        vmax25,     &! maximum carboxylation rate at 25 C at canopy top
-                     ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
-        shti,       &! slope of high temperature inhibition function     (s1)
-        hhti,       &! 1/2 point of high temperature inhibition function (s2)
-        slti,       &! slope of low temperature inhibition function      (s3)
-        hlti,       &! 1/2 point of low temperature inhibition function  (s4)
-        trda,       &! temperature coefficient in gs-a model             (s5)
-        trdm,       &! temperature coefficient in gs-a model             (s6)
-        trop,       &! temperature coefficient in gs-a model         (273+25)
-        gradm,      &! conductance-photosynthesis slope parameter
-        binter,     &! conductance-photosynthesis intercept
-        extkn        ! coefficient of leaf nitrogen allocation
-
-  real(r8), dimension(npft), intent(in), optional :: &
-        kmax_sun,   &
-        kmax_sha,   &
-        kmax_xyl,   &
-        kmax_root,  &
-        psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
-        psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
-        psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
-        psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
-        ck           ! shape-fitting parameter for vulnerability curve (-)
+  real(r8), dimension(ps:pe), intent(in) :: &
+        fcover,        &! PFT fractiona coverage [-]
+        htop,          &! PFT crown top height [m]
+        hbot,          &! PFT crown bottom height [m]
+        lai,           &! adjusted leaf area index for seasonal variation [-]
+        sai             ! stem area index  [-]
 
   real(r8), intent(inout) :: &
-        vegwp(1:nvegwcs,npft),  &! vegetation water potential
-        gs0sun(npft),           &!
-        gs0sha(npft)
+        vegwp(1:nvegwcs,ps:pe),  &! vegetation water potential
+        gs0sun(ps:pe),           &!
+        gs0sha(ps:pe)
 
 ! input variables
   real(r8), intent(in) :: &
-        hu,         &! observational height of wind [m]
-        ht,         &! observational height of temperature [m]
-        hq,         &! observational height of humidity [m]
-        us,         &! wind component in eastward direction [m/s]
-        vs,         &! wind component in northward direction [m/s]
-        thm,        &! intermediate variable (tm+0.0098*ht)
-        th,         &! potential temperature (kelvin)
-        thv,        &! virtual potential temperature (kelvin)
-        qm,         &! specific humidity at reference height [kg/kg]
-        psrf,       &! pressure at reference height [pa]
-        rhoair,     &! density air [kg/m**3]
+        hu,            &! observational height of wind [m]
+        ht,            &! observational height of temperature [m]
+        hq,            &! observational height of humidity [m]
+        us,            &! wind component in eastward direction [m/s]
+        vs,            &! wind component in northward direction [m/s]
+        thm,           &! intermediate variable (tm+0.0098*ht)
+        th,            &! potential temperature (kelvin)
+        thv,           &! virtual potential temperature (kelvin)
+        qm,            &! specific humidity at reference height [kg/kg]
+        psrf,          &! pressure at reference height [pa]
+        rhoair,        &! density air [kg/m**3]
 
-        parsun(npft),&! par absorbed per unit sunlit lai [w/m**2]
-        parsha(npft),&! par absorbed per unit shaded lai [w/m**2]
-        fsun(npft),  &! sunlit fraction of canopy
-        sabv(npft),  &! solar radiation absorbed by vegetation [W/m2]
-        frl,         &! atmospheric infrared (longwave) radiation [W/m2]
+        parsun(ps:pe), &! par absorbed per unit sunlit lai [w/m**2]
+        parsha(ps:pe), &! par absorbed per unit shaded lai [w/m**2]
+        fsun  (ps:pe), &! sunlit fraction of canopy
+        sabv  (ps:pe), &! solar radiation absorbed by vegetation [W/m2]
+        frl,           &! atmospheric infrared (longwave) radiation [W/m2]
 
-        extkb(npft), &! (k, g(mu)/mu) direct solar extinction coefficient
-        extkd(npft), &! diffuse and scattered diffuse PAR extinction coefficient
-        thermk(npft),&! canopy gap fraction for tir radiation
-        fshade(npft),&! shadow for each PFT
+        extkb (ps:pe), &! (k, g(mu)/mu) direct solar extinction coefficient
+        extkd (ps:pe), &! diffuse and scattered diffuse PAR extinction coefficient
+        thermk(ps:pe), &! canopy gap fraction for tir radiation
+        fshade(ps:pe), &! shadow for each PFT
 
-        po2m,       &! atmospheric partial pressure  o2 (pa)
-        pco2m,      &! atmospheric partial pressure co2 (pa)
+        po2m,          &! atmospheric partial pressure  o2 (pa)
+        pco2m,         &! atmospheric partial pressure co2 (pa)
 
-        z0h_g,      &! bare soil roughness length, sensible heat [m]
-        obug,       &! bare soil obu
-        ustarg,     &! bare soil ustar
-        zlnd,       &! roughness length for soil [m]
-        zsno,       &! roughness length for snow [m]
-        fsno,       &! fraction of snow cover on ground
+        z0h_g,         &! bare soil roughness length, sensible heat [m]
+        obug,          &! bare soil obu
+        ustarg,        &! bare soil ustar
+        zlnd,          &! roughness length for soil [m]
+        zsno,          &! roughness length for snow [m]
+        fsno,          &! fraction of snow cover on ground
 
-        sigf(npft), &! fraction of veg cover, excluding snow-covered veg [-]
-        etrc(npft), &! maximum possible transpiration rate (mm/s)
-        tg,         &! ground surface temperature [K]
-        qg,         &! specific humidity at ground surface [kg/kg]
-        dqgdT,      &! temperature derivative of "qg"
-        rss,        &! soil surface resistance [s/m]
-        emg          ! vegetation emissivity
+        sigf  (ps:pe), &! fraction of veg cover, excluding snow-covered veg [-]
+        etrc  (ps:pe), &! maximum possible transpiration rate (mm/s)
+        tg,            &! ground surface temperature [K]
+        qg,            &! specific humidity at ground surface [kg/kg]
+        dqgdT,         &! temperature derivative of "qg"
+        rss,           &! soil surface resistance [s/m]
+        emg             ! vegetation emissivity
 
   real(r8), intent(in) :: &
         t_precip,            &! snowfall/rainfall temperature [kelvin]
-        qintr_rain(npft),    &! rainfall interception (mm h2o/s)
-        qintr_snow(npft),    &! snowfall interception (mm h2o/s)
+        qintr_rain(ps:pe),   &! rainfall interception (mm h2o/s)
+        qintr_snow(ps:pe),   &! snowfall interception (mm h2o/s)
         smp     (1:nl_soil), &! precipitation sensible heat from canopy
-        rootfr  (1:nl_soil,npft), &! root fraction
         hksati  (1:nl_soil), &! hydraulic conductivity at saturation [mm h2o/s]
         hk      (1:nl_soil)   ! soil hydraulic conducatance
 
   real(r8), intent(in) :: &
         hpbl        ! atmospheric boundary layer height [m]
 
-  real(r8), dimension(npft), intent(inout) :: &
+  real(r8), dimension(ps:pe), intent(inout) :: &
         tl,         &! leaf temperature [K]
         ldew,       &! depth of water on foliage [mm]
         ldew_rain,  &! depth of rain on foliage [mm]
@@ -217,7 +189,7 @@ MODULE MOD_LeafTemperaturePC
         gssun,      &
         gssha
 
-  real(r8), dimension(npft), intent(inout) :: &
+  real(r8), dimension(ps:pe), intent(inout) :: &
         assimsun,   &! sunlit leaf assimilation rate [umol co2 /m**2/ s] [+]
         etrsun,     &
         assimsha,   &! shaded leaf assimilation rate [umol co2 /m**2/ s] [+]
@@ -236,9 +208,9 @@ MODULE MOD_LeafTemperaturePC
         fevpg,      &! evaporation heat flux from ground [mm/s]
         tref,       &! 2 m height air temperature (kelvin)
         qref,       &! 2 m height air specific humidity
-        rootr(nl_soil,npft)    ! fraction of root water uptake from different layers
+        rootr(nl_soil,ps:pe)    ! fraction of root water uptake from different layers
 
-  real(r8), dimension(npft), intent(out) :: &
+  real(r8), dimension(ps:pe), intent(out) :: &
         z0mpc,      &! z0m for individual PFT
         rst,        &! stomatal resistance
         assim,      &! rate of assimilation
@@ -272,91 +244,127 @@ MODULE MOD_LeafTemperaturePC
    real(r8),parameter :: dtmin  = 0.01 !max limit for temperature convergence [K]
    real(r8),parameter :: dlemin = 0.1  !max limit for energy flux convergence [w/m2]
 
-   real(r8) dtl(0:itmax+1,npft)     !difference of tl between two iterative step
+   real(r8) dtl(0:itmax+1,ps:pe)     !difference of tl between two iterative step
+
+
+   !TODO: read from mod_const_pft.F90
+   real(r8), dimension(ps:pe) :: &
+        canlay,     &! PFT canopy layer number
+        sqrtdi       ! inverse sqrt of leaf dimension [m**-0.5]
+
+   !TODO: read from mod_const_pft.F90 file
+   real(r8), dimension(ps:pe) :: &
+        effcon,     &! quantum efficiency of RuBP regeneration (mol CO2 / mol quanta)
+        vmax25,     &! maximum carboxylation rate at 25 C at canopy top
+                     ! the range : 30.e-6 <-> 100.e-6 (mol co2 m-2 s-1)
+        shti,       &! slope of high temperature inhibition function     (s1)
+        hhti,       &! 1/2 point of high temperature inhibition function (s2)
+        slti,       &! slope of low temperature inhibition function      (s3)
+        hlti,       &! 1/2 point of low temperature inhibition function  (s4)
+        trda,       &! temperature coefficient in gs-a model             (s5)
+        trdm,       &! temperature coefficient in gs-a model             (s6)
+        trop,       &! temperature coefficient in gs-a model         (273+25)
+        gradm,      &! conductance-photosynthesis slope parameter
+        binter,     &! conductance-photosynthesis intercept
+        extkn        ! coefficient of leaf nitrogen allocation
+
+  real(r8), dimension(ps:pe) :: &
+        kmax_sun,   &
+        kmax_sha,   &
+        kmax_xyl,   &
+        kmax_root,  &
+        psi50_sun,  &! water potential at 50% loss of sunlit leaf tissue conductance (mmH2O)
+        psi50_sha,  &! water potential at 50% loss of shaded leaf tissue conductance (mmH2O)
+        psi50_xyl,  &! water potential at 50% loss of xylem tissue conductance (mmH2O)
+        psi50_root, &! water potential at 50% loss of root tissue conductance (mmH2O)
+        ck           ! shape-fitting parameter for vulnerability curve (-)
 
    real(r8) :: &
-        zldis,      &! reference height "minus" zero displacement heght [m]
-        zii,        &! convective boundary layer height [m]
-        z0mv,       &! roughness length, momentum [m]
-        z0hv,       &! roughness length, sensible heat [m]
-        z0qv,       &! roughness length, latent heat [m]
-        zeta,       &! dimensionless height used in Monin-Obukhov theory
-        beta,       &! coefficient of conective velocity [-]
-        wc,         &! convective velocity [m/s]
-        wc2,        &! wc**2
-        dth,        &! diff of virtual temp. between ref. height and surface
-        dthv,       &! diff of vir. poten. temp. between ref. height and surface
-        dqh,        &! diff of humidity between ref. height and surface
-        obu,        &! monin-obukhov length (m)
-        um,         &! wind speed including the stablity effect [m/s]
-        ur,         &! wind speed at reference height [m/s]
-        uaf,        &! velocity of air within foliage [m/s]
-        fh2m,       &! relation for temperature at 2m
-        fq2m,       &! relation for specific humidity at 2m
-        fm10m,      &! integral of profile function for momentum at 10m
-        thvstar,    &! virtual potential temperature scaling parameter
-        eah,        &! canopy air vapor pressure (pa)
-        pco2g,      &! co2 pressure (pa) at ground surface (pa)
-        pco2a,      &! canopy air co2 pressure (pa)
+        rootfr(nl_soil,ps:pe) ! root fraction
 
-        fdry(npft), &! fraction of foliage that is green and dry [-]
-        fwet(npft), &! fraction of foliage covered by water [-]
-        cf,         &! heat transfer coefficient from leaves [-]
-        rb(npft),   &! leaf boundary layer resistance [s/m]
-        rbone,      &! canopy bulk boundary layer resistance
-        rbsun,      &! bulk boundary layer resistance of sunlit fraction of canopy
-        rbsha,      &! bulk boundary layer resistance of shaded fraction of canopy
-        ram,        &! aerodynamical resistance [s/m]
-        rah,        &! thermal resistance [s/m]
-        raw,        &! moisture resistance [s/m]
-        clai,       &! canopy heat capacity [Jm-2K-1]
-        cfh(npft),  &! heat conductance for leaf [m/s]
-        cfw(npft),  &! latent heat conductance for leaf [m/s]
-        wtl0(npft), &! normalized heat conductance for air and leaf [-]
-        wtlq0(npft),&! normalized latent heat cond. for air and leaf [-]
+   real(r8) :: &
+        zldis,           &! reference height "minus" zero displacement heght [m]
+        zii,             &! convective boundary layer height [m]
+        z0mv,            &! roughness length, momentum [m]
+        z0hv,            &! roughness length, sensible heat [m]
+        z0qv,            &! roughness length, latent heat [m]
+        zeta,            &! dimensionless height used in Monin-Obukhov theory
+        beta,            &! coefficient of conective velocity [-]
+        wc,              &! convective velocity [m/s]
+        wc2,             &! wc**2
+        dth,             &! diff of virtual temp. between ref. height and surface
+        dthv,            &! diff of vir. poten. temp. between ref. height and surface
+        dqh,             &! diff of humidity between ref. height and surface
+        obu,             &! monin-obukhov length (m)
+        um,              &! wind speed including the stablity effect [m/s]
+        ur,              &! wind speed at reference height [m/s]
+        uaf,             &! velocity of air within foliage [m/s]
+        fh2m,            &! relation for temperature at 2m
+        fq2m,            &! relation for specific humidity at 2m
+        fm10m,           &! integral of profile function for momentum at 10m
+        thvstar,         &! virtual potential temperature scaling parameter
+        eah,             &! canopy air vapor pressure (pa)
+        pco2g,           &! co2 pressure (pa) at ground surface (pa)
+        pco2a,           &! canopy air co2 pressure (pa)
 
-        ei(npft),   &! vapor pressure on leaf surface [pa]
-        deidT(npft),&! derivative of "ei" on "tl" [pa/K]
-        qsatl(npft),&! leaf specific humidity [kg/kg]
-        qsatldT(npft),&! derivative of "qsatl" on "tlef"
+        cf,              &! heat transfer coefficient from leaves [-]
+        rbsun,           &! bulk boundary layer resistance of sunlit fraction of canopy
+        rbsha,           &! bulk boundary layer resistance of shaded fraction of canopy
+        ram,             &! aerodynamical resistance [s/m]
+        rah,             &! thermal resistance [s/m]
+        raw,             &! moisture resistance [s/m]
+        clai,            &! canopy heat capacity [Jm-2K-1]
+        fdry    (ps:pe), &! fraction of foliage that is green and dry [-]
+        fwet    (ps:pe), &! fraction of foliage covered by water [-]
+        rb      (ps:pe), &! leaf boundary layer resistance [s/m]
+        cfh     (ps:pe), &! heat conductance for leaf [m/s]
+        cfw     (ps:pe), &! latent heat conductance for leaf [m/s]
+        wtl0    (ps:pe), &! normalized heat conductance for air and leaf [-]
+        wtlq0   (ps:pe), &! normalized latent heat cond. for air and leaf [-]
 
-        del(npft),  &! absolute change in leaf temp in current iteration [K]
-        del2(npft), &! change in leaf temperature in previous iteration [K]
-        dele(npft), &! change in heat fluxes from leaf [W/m2]
-        dele2(npft),&! change in heat fluxes from leaf in previous iteration [W/m2]
-        det,        &! maximum leaf temp. change in two consecutive iter [K]
-        dee,        &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
+        ei      (ps:pe), &! vapor pressure on leaf surface [pa]
+        deidT   (ps:pe), &! derivative of "ei" on "tl" [pa/K]
+        qsatl   (ps:pe), &! leaf specific humidity [kg/kg]
+        qsatldT (ps:pe), &! derivative of "qsatl" on "tlef"
 
-        obuold,     &! monin-obukhov length from previous iteration
-        tlbef(npft),&! leaf temperature from previous iteration [K]
-        err,        &! balance error
+        del     (ps:pe), &! absolute change in leaf temp in current iteration [K]
+        del2    (ps:pe), &! change in leaf temperature in previous iteration [K]
+        dele    (ps:pe), &! change in heat fluxes from leaf [W/m2]
+        dele2   (ps:pe), &! change in heat fluxes from leaf in previous iteration [W/m2]
+        det,             &! maximum leaf temp. change in two consecutive iter [K]
+        dee,             &! maximum leaf heat fluxes change in two consecutive iter [W/m2]
 
-        fsha(npft),    &! shaded fraction of canopy
-        laisun(npft),  &! sunlit leaf area index, one-sided
-        laisha(npft),  &! shaded leaf area index, one-sided
-        rssun(npft),   &! sunlit leaf stomatal resistance [s/m]
-        rssha(npft),   &! shaded leaf stomatal resistance [s/m]
-        respcsun(npft),&! sunlit leaf respiration rate [umol co2 /m**2/ s] [+]
-        respcsha(npft),&! shaded leaf respiration rate [umol co2 /m**2/ s] [+]
+        obuold,          &! monin-obukhov length from previous iteration
+        tlbef   (ps:pe), &! leaf temperature from previous iteration [K]
+        err,             &! balance error
 
-        rsoil,      &! soil respiration
-        gah2o,      &! conductance between canopy and atmosphere
-        gdh2o,      &! conductance between canopy and ground
-        tprcor,     &! tf*psur*100./1.013e5
+        fsha    (ps:pe), &! shaded fraction of canopy
+        laisun  (ps:pe), &! sunlit leaf area index, one-sided
+        laisha  (ps:pe), &! shaded leaf area index, one-sided
+        rssun   (ps:pe), &! sunlit leaf stomatal resistance [s/m]
+        rssha   (ps:pe), &! shaded leaf stomatal resistance [s/m]
+        respcsun(ps:pe), &! sunlit leaf respiration rate [umol co2 /m**2/ s] [+]
+        respcsha(ps:pe), &! shaded leaf respiration rate [umol co2 /m**2/ s] [+]
 
-        fht,        &! integral of profile function for heat at the top layer
-        fqt,        &! integral of profile function for moisture at the top layer
-        phih         ! phi(h), similarity function for sensible heat
+        rsoil,           &! soil respiration
+        gah2o,           &! conductance between canopy and atmosphere
+        gdh2o,           &! conductance between canopy and ground
+        tprcor,          &! tf*psur*100./1.013e5
+
+        fht,             &! integral of profile function for heat at the top layer
+        fqt,             &! integral of profile function for moisture at the top layer
+        phih              ! phi(h), similarity function for sensible heat
 
 
    integer it, nmozsgn
 
-   real(r8) delta(npft), fac(npft), etr0(npft)
-   real(r8) evplwet(npft), evplwet_dtl(npft), etr_dtl(npft), elwmax, elwdif
-   real(r8) irab(npft), dirab_dtl(npft), fsenl_dtl(npft), fevpl_dtl(npft)
-   real(r8) w, csoilcn, z0mg, z0hg, z0qg, cintsun(3, npft), cintsha(3, npft)
-   real(r8), dimension(npft) :: fevpl_bef, fevpl_noadj, dtl_noadj, erre
-   real(r8),dimension(npft) :: gb_mol_sun,gb_mol_sha
+   real(r8) w, csoilcn, z0mg, z0hg, z0qg, elwmax, elwdif
+   real(r8) cintsun(3, ps:pe), cintsha(3, ps:pe)
+   real(r8),dimension(ps:pe)   :: delta, fac, etr0
+   real(r8),dimension(ps:pe)   :: irab, dirab_dtl, fsenl_dtl, fevpl_dtl
+   real(r8),dimension(ps:pe)   :: evplwet, evplwet_dtl, etr_dtl
+   real(r8),dimension(ps:pe)   :: fevpl_bef, fevpl_noadj, dtl_noadj, erre
+   real(r8),dimension(ps:pe)   :: gb_mol_sun,gb_mol_sha
    real(r8),dimension(nl_soil) :: k_soil_root    ! radial root and soil conductance
    real(r8),dimension(nl_soil) :: k_ax_root      ! axial root conductance
 
@@ -386,7 +394,7 @@ MODULE MOD_LeafTemperaturePC
         displa_lays,   &! displacement height for the layer and below
         fcover_lays     ! vegetation fractional cover for this layer and above
 
-   real(r8), dimension(npft) :: &
+   real(r8), dimension(ps:pe) :: &
         lsai            ! lai + sai
 
    real(r8), dimension(nlay) :: &
@@ -426,7 +434,7 @@ MODULE MOD_LeafTemperaturePC
 
    real(r8) :: ktop, utop, fmtop, bee, tmpw1, tmpw2, fact, facq
 
-   integer i, clev
+   integer i, p, clev
    integer toplay, botlay, upplay, numlay
    integer d_opt, rb_opt, rd_opt
 
@@ -445,8 +453,8 @@ MODULE MOD_LeafTemperaturePC
    real(r8) :: Ld(0:4)          !total downward longwave radiation for each layer
    real(r8) :: Lu(0:4)          !total upward longwave radiation for each layer
    real(r8) :: Lg               !emitted longwave radiation from ground
-   real(r8) :: Lv(npft)         !absorbed longwave raidation for each pft
-   real(r8) :: dLv(npft)        !LW change due to temperature change
+   real(r8) :: Lv(ps:pe)        !absorbed longwave raidation for each pft
+   real(r8) :: dLv(ps:pe)       !LW change due to temperature change
    real(r8) :: dLvpar(nlay)     !temporal variable for calcualting dLv
 
 !-----------------------End Variable List-------------------------------
@@ -467,6 +475,40 @@ MODULE MOD_LeafTemperaturePC
        z0mg = (1.-fsno)*zlnd + fsno*zsno
        z0hg = z0mg
        z0qg = z0mg
+
+
+! initialization of PFT constants
+       DO i = ps, pe
+          p = pftclass(i)
+
+          canlay     (i) = canlay_p     (p)
+          sqrtdi     (i) = sqrtdi_p     (p)
+
+          effcon     (i) = effcon_p     (p)
+          vmax25     (i) = vmax25_p     (p)
+          shti       (i) = shti_p       (p)
+          hhti       (i) = hhti_p       (p)
+          slti       (i) = slti_p       (p)
+          hlti       (i) = hlti_p       (p)
+          trda       (i) = trda_p       (p)
+          trdm       (i) = trdm_p       (p)
+          trop       (i) = trop_p       (p)
+          gradm      (i) = gradm_p      (p)
+          binter     (i) = binter_p     (p)
+          extkn      (i) = extkn_p      (p)
+
+          kmax_sun   (i) = kmax_sun_p   (p)
+          kmax_sha   (i) = kmax_sha_p   (p)
+          kmax_xyl   (i) = kmax_xyl_p   (p)
+          kmax_root  (i) = kmax_root_p  (p)
+          psi50_sun  (i) = psi50_sun_p  (p)
+          psi50_sha  (i) = psi50_sha_p  (p)
+          psi50_xyl  (i) = psi50_xyl_p  (p)
+          psi50_root (i) = psi50_root_p (p)
+          ck         (i) = ck_p         (p)
+
+          rootfr   (:,i) = rootfr_p   (:,p)
+       ENDDO
 
 !-----------------------------------------------------------------------
 ! scaling-up coefficients from leaf to canopy
@@ -498,7 +540,7 @@ MODULE MOD_LeafTemperaturePC
        clai = 0.0
        lsai(:) = lai(:) + sai(:)
 
-       DO i = 1, npft
+       DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
              CALL dewfraction (sigf(i),lai(i),sai(i),dewmx,ldew(i),ldew_rain(i),ldew_snow(i),fwet(i),fdry(i))
              CALL qsadv(tl(i),psrf,ei(i),deiDT(i),qsatl(i),qsatlDT(i))
@@ -523,9 +565,9 @@ MODULE MOD_LeafTemperaturePC
        lsai_lay(:)   = 0
        fcover_lay(:) = 0
 
-       DO i = 1, npft
+       DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-             clev = canlev(i)
+             clev = canlay(i)
              htop_lay(clev) = htop_lay(clev) + htop(i) * fcover(i)
              hbot_lay(clev) = hbot_lay(clev) + hbot(i) * fcover(i)
              lsai_lay(clev) = lsai_lay(clev) + lsai(i) * fcover(i)
@@ -559,7 +601,7 @@ MODULE MOD_LeafTemperaturePC
 !-----------------------------------------------------------------------
 ! calculate z0m and displa for PFTs
 !-----------------------------------------------------------------------
-       DO i = 1, npft
+       DO i = ps, pe
           IF (lsai(i) > 1.e-6) THEN
              CALL cal_z0_displa(lsai(i), htop(i), 1., z0mpc(i), displa)
           ELSE
@@ -578,11 +620,8 @@ MODULE MOD_LeafTemperaturePC
 
        DO i = 1, nlay
           IF (fcover_lay(i)>0 .and. lsai_lay(i)>0) THEN
-
              CALL cal_z0_displa(lsai_lay(i), htop_lay(i), 1., z0m_lay(i), displa_lay(i))
-
              CALL cal_z0_displa(lsai_lay(i), htop_lay(i), fcover_lay(i), z0m_lays(i), displa_lays(i))
-
           ENDIF
        ENDDO
 
@@ -683,9 +722,9 @@ MODULE MOD_LeafTemperaturePC
        thermk_lay(:) = 0.
        fshade_lay(:) = 0.
 
-       DO i = 1, npft
-          IF (fshade(i) > 0) THEN
-             clev = canlev(i)
+       DO i = ps, pe
+          IF (fshade(i)>0 .and. canlay(i)>0) THEN
+             clev = canlay(i)
              thermk_lay(clev) = thermk_lay(clev) + fshade(i) * thermk(i)
              fshade_lay(clev) = fshade_lay(clev) + fshade(i)
           ENDIF
@@ -821,12 +860,12 @@ MODULE MOD_LeafTemperaturePC
 
           IF (DEF_USE_CBL_HEIGHT) THEN
              CALL moninobukm_leddy(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
-                                  displa_lay(toplay),z0m_lay(toplay), hpbl, ustar,fh2m,fq2m, &
-                                  htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+                                   displa_lay(toplay),z0m_lay(toplay), hpbl, ustar,fh2m,fq2m, &
+                                   htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
           ELSE
              CALL moninobukm(hu,ht,hq,displa_lays(toplay),z0mv,z0hv,z0qv,obu,um, &
-                            displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
-                            htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
+                             displa_lay(toplay),z0m_lay(toplay),ustar,fh2m,fq2m, &
+                             htop_lay(toplay),fmtop,fm,fh,fq,fht,fqt,phih)
           ENDIF
 
 ! Aerodynamic resistance
@@ -951,9 +990,9 @@ MODULE MOD_LeafTemperaturePC
 ! ......................................................................
           rb(:) = 0.
 
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-                clev = canlev(i)
+                clev = canlay(i)
                 cf = 0.01*sqrtdi(i)*sqrt(ueff_lay(clev))
                 rb(i) = 1./cf
              ENDIF
@@ -984,20 +1023,21 @@ MODULE MOD_LeafTemperaturePC
 ! stomatal resistances
 !-----------------------------------------------------------------------
 
-          DO i = 1, npft
+          DO i = ps, pe
+             p = pftclass(i)
              IF(fcover(i)>0 .and. lai(i)>0.001) THEN
 
                 rbsun = rb(i) / laisun(i)
                 rbsha = rb(i) / laisha(i)
 
-                clev = canlev(i)
+                clev = canlay(i)
                 eah = qaf(clev) * psrf / ( 0.622 + 0.378 * qaf(clev) )    !pa
 
                 IF(DEF_USE_OZONESTRESS)THEN
                    CALL CalcOzoneStress(o3coefv_sun(i),o3coefg_sun(i),forc_ozone,psrf,th,ram,&
-                                        rssun(i),rbsun,lai(i),lai_old(i),i,o3uptakesun(i),deltim)
+                                        rssun(i),rbsun,lai(i),lai_old(i),p,o3uptakesun(i),deltim)
                    CALL CalcOzoneStress(o3coefv_sha(i),o3coefg_sha(i),forc_ozone,psrf,th,ram,&
-                                        rssha(i),rbsha,lai(i),lai_old(i),i,o3uptakesha(i),deltim)
+                                        rssha(i),rbsha,lai(i),lai_old(i),p,o3uptakesha(i),deltim)
                    lai_old(i) = lai(i)
                 ENDIF
                 IF(DEF_USE_PLANTHYDRAULICS)THEN
@@ -1016,10 +1056,10 @@ MODULE MOD_LeafTemperaturePC
 
 ! note: calculate resistance for sunlit/shaded leaves
 !-----------------------------------------------------------------------
-                CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+                CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
-                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     , parsun(i)  ,&
+                    pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsun(i) ,&
 !Ozone stress variables
                     o3coefv_sun(i), o3coefg_sun(i), &
 !End ozone stress variables
@@ -1027,7 +1067,7 @@ MODULE MOD_LeafTemperaturePC
                     assimsun(i),respcsun(i),rssun(i)  &
                     )
 
-                CALL stomata (vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
+                CALL stomata ( vmax25(i)   ,effcon(i) ,slti(i)   ,hlti(i)   ,&
                     shti(i)    ,hhti(i)    ,trda(i)   ,trdm(i)   ,trop(i)   ,&
                     gradm(i)   ,binter(i)  ,thm       ,psrf      ,po2m      ,&
                     pco2m      ,pco2a      ,eah       ,ei(i)     ,tl(i)     ,parsha(i) ,&
@@ -1071,10 +1111,10 @@ MODULE MOD_LeafTemperaturePC
           cfh(:) = 0.
           cfw(:) = 0.
 
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
 
-                clev = canlev(i)
+                clev = canlay(i)
                 delta(i) = 0.0
                 IF(qsatl(i)-qaf(clev) .gt. 0.) delta(i) = 1.0
 
@@ -1109,11 +1149,11 @@ MODULE MOD_LeafTemperaturePC
                    IF (qg < qaf(botlay)) THEN
                       cgw(i) = 1. / rd(i) !dew case. no soil resistance
                    ELSE
-                      IF (DEF_RSS_SCHEME .eq. 4) THEN              
+                      IF (DEF_RSS_SCHEME .eq. 4) THEN
                          cgw(i) = rss/ rd(i)
-                      ELSE        
+                      ELSE
                          cgw(i) = 1. / (rd(i) + rss)
-                      ENDIF   
+                      ENDIF
                    ENDIF
                 ELSE
                 cgw(i) = 1. / rd(i)
@@ -1125,9 +1165,9 @@ MODULE MOD_LeafTemperaturePC
           wtshi(:) = cah(:) + cgh(:)
           wtsqi(:) = caw(:) + cgw(:)
 
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-                clev = canlev(i)
+                clev = canlay(i)
                 wtshi(clev) = wtshi(clev) + fcover(i)*cfh(i)
                 wtsqi(clev) = wtsqi(clev) + fcover(i)*cfw(i)
              ENDIF
@@ -1150,9 +1190,9 @@ MODULE MOD_LeafTemperaturePC
           wtll(:)  = 0.
           wtlql(:) = 0.
 
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-                clev = canlev(i)
+                clev = canlay(i)
 
                 wtl0(i)  = cfh(i) * wtshi(clev) * fcover(i)
                 wtll(clev) = wtll(clev) + wtl0(i)*tl(i)
@@ -1176,7 +1216,7 @@ MODULE MOD_LeafTemperaturePC
 
              tmpw1 = wtg0(botlay)*tg + wtll(botlay)
              fact  = 1. - wtg0(toplay)*wta0(botlay)
-             taf(toplay) = ( wta0(toplay)*thm + wtg0(toplay)*tmpw1 + wtll(toplay) ) /  fact
+             taf(toplay) = ( wta0(toplay)*thm + wtg0(toplay)*tmpw1 + wtll(toplay) ) / fact
 
              tmpw1 = wtgq0(botlay)*qg + wtlql(botlay)
              facq  = 1. - wtgq0(toplay)*wtaq0(botlay)
@@ -1215,9 +1255,9 @@ MODULE MOD_LeafTemperaturePC
 
 ! calculate L for each canopy layer
           L(:) = 0.
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-                clev = canlev(i)
+                clev = canlay(i)
                 ! according to absorption = emissivity, fcover -> fshade
                 L(clev) = L(clev) + fshade(i) * (1-thermk(i)) * stefnc * tl(i)**4
              ENDIF
@@ -1258,9 +1298,9 @@ MODULE MOD_LeafTemperaturePC
 
 ! calculate Lv
           Lv(:) = 0.
-          DO i = 1, npft
-             IF (fshade(i) > 0) THEN
-                clev  = canlev(i)
+          DO i = ps, pe
+             IF (fshade(i)>0 .and. canlay(i)>0) THEN
+                clev  = canlay(i)
                 Lv(i) = fshade(i)/fshade_lay(clev) * (1-thermk(i)) * Lin(clev) / fcover(i) &
                       - 2. * fshade(i) * (1-thermk(i)) * stefnc * tl(i)**4 / fcover(i)
              ENDIF
@@ -1268,9 +1308,9 @@ MODULE MOD_LeafTemperaturePC
 
 ! calculate delata(Lv)
           dLv(:) = 0.
-          DO i = 1, npft
-             IF (fshade(i) > 0) THEN
-                clev   = canlev(i)
+          DO i = ps, pe
+             IF (fshade(i)>0 .and. canlay(i)>0) THEN
+                clev   = canlay(i)
                 dLv(i) = (4.*dLvpar(clev)*(1-emg)*fshade(i)*(1-thermk(i)) - 8.) &
                        * fshade(i) * (1-thermk(i)) * stefnc *  tl(i)**3 / fcover(i)
              ENDIF
@@ -1281,11 +1321,11 @@ MODULE MOD_LeafTemperaturePC
           irab(:)      = Lv(:)
           dirab_dtl(:) = dLv(:)
 
-          DO i = 1, npft
+          DO i = ps, pe
 
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
 
-                clev = canlev(i)
+                clev = canlay(i)
                 fac(i) = 1. - thermk(i)
 
 ! sensible heat fluxes and their derivatives
@@ -1432,9 +1472,9 @@ MODULE MOD_LeafTemperaturePC
           wtll(:)  = 0.
           wtlql(:) = 0.
 
-          DO i = 1, npft
+          DO i = ps, pe
              IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
-                clev = canlev(i)
+                clev = canlay(i)
                 wtll(clev)  =  wtll(clev) +  wtl0(i)*tl(i)
                 wtlql(clev) = wtlql(clev) + wtlq0(i)*qsatl(i)
              ENDIF
@@ -1490,8 +1530,8 @@ MODULE MOD_LeafTemperaturePC
           ! level vegetation should have different gdh2o, i.e.,
           ! different rd(layer) values.
           gah2o = 1.0/raw * tprcor/thm                     !mol m-2 s-1
-        
-          IF (DEF_RSS_SCHEME .eq. 4) THEN              
+
+          IF (DEF_RSS_SCHEME .eq. 4) THEN
              gdh2o = rss/rd(botlay) * tprcor/thm              !mol m-2 s-1
           ELSE
              gdh2o = 1.0/(rd(botlay)+rss) * tprcor/thm              !mol m-2 s-1
@@ -1560,7 +1600,7 @@ MODULE MOD_LeafTemperaturePC
 
 ! canopy fluxes and total assimilation amd respiration
 
-       DO i = 1, npft
+       DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
 
              IF(lai(i) .gt. 0.001) THEN
@@ -1635,7 +1675,7 @@ MODULE MOD_LeafTemperaturePC
 
 #if(defined CoLMDEBUG)
              IF(abs(err) .gt. .2) &
-                write(6,*) 'energy imbalance in LeafTempPC.F90', &
+                write(6,*) 'energy imbalance in LeafTemperaturePC.F90', &
                            i,it-1,err,sabv(i),irab(i),fsenl(i),hvap*fevpl(i),hprl(i)
 #endif
 
@@ -1685,7 +1725,7 @@ MODULE MOD_LeafTemperaturePC
        tref = thm + vonkar/(fh-fht)*dth * (fh2m/vonkar - fh/vonkar)
        qref =  qm + vonkar/(fq-fqt)*dqh * (fq2m/vonkar - fq/vonkar)
 
-  END SUBROUTINE LeafTempPC
+  END SUBROUTINE LeafTemperaturePC
 !----------------------------------------------------------------------
 
 

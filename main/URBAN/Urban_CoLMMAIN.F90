@@ -146,7 +146,7 @@ SUBROUTINE UrbanCoLMMAIN ( &
         ipatch     ,&! maximum number of snow layers
         idate(3)   ,&! next time-step /year/julian day/second in a day/
         patchclass ,&! land cover type of USGS classification or others
-        patchtype    ! land water type (0=soil, 1=urban and built-up,
+        patchtype    ! land patch type (0=soil, 1=urban and built-up,
                      ! 2=wetland, 3=land ice, 4=land water bodies, 99 = ocean)
 
   REAL(r8),intent(in) :: &

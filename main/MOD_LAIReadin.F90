@@ -36,14 +36,9 @@ MODULE MOD_LAIReadin
 
       USE MOD_Vars_Global
       USE MOD_Const_LC
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       USE MOD_LandPFT
       USE MOD_Vars_PFTimeVariables
-#endif
-#ifdef LULC_IGBP_PC
-      USE MOD_LandPC
-      USE MOD_Vars_PCTimeVariables
-      USE MOD_Vars_PCTimeInvariants
 #endif
 #ifdef SinglePoint
       USE MOD_SingleSrfdata
@@ -124,9 +119,9 @@ MODULE MOD_LAIReadin
                   IF (fveg0(m) > 0) THEN
                      tlai(npatch)  = tlai(npatch)/fveg0(m) !leaf area index
                      IF (DEF_LAI_MONTHLY) THEN
-                        tsai(npatch)  = tsai(npatch)/fveg0(m) !stem are index
+                        tsai(npatch) = tsai(npatch)/fveg0(m) !stem are index
                      ELSE
-                        tsai(npatch)  = sai0(m) !stem are index
+                        tsai(npatch) = sai0(m) !stem are index
                      ENDIF
                      green(npatch) = 1.      !fraction of green leaf
                   ELSE
@@ -142,7 +137,7 @@ MODULE MOD_LAIReadin
 
 #endif
 
-#ifdef LULC_IGBP_PFT
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 #ifdef SinglePoint
       !TODO: how to add time parameter in single point case
@@ -186,59 +181,10 @@ MODULE MOD_LAIReadin
 #ifdef URBAN_MODEL
                IF (m == URBAN) CYCLE
 #endif
+               !TODO@yuan: may need to revise patch LAI/SAI
                green(npatch) = 1.
-               fveg (npatch)  = fveg0(m)
-
-            end do
-         ENDIF
-      ENDIF
-
-#endif
-
-#ifdef LULC_IGBP_PC
-
-#ifdef SinglePoint
-      IF (DEF_LAI_MONTHLY) THEN
-         tlai(:)   = sum(SITE_LAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
-         tsai(:)   = sum(SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
-         tlai_c(:,1) = SITE_LAI_pfts_monthly(:,time,iyear)
-         tsai_c(:,1) = SITE_SAI_pfts_monthly(:,time,iyear)
-      ENDIF
-#else
-
-      write(cyear,'(i4.4)') year
-      write(ctime,'(i2.2)') time
-      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_patches'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'LAI_patches',  landpatch, tlai )
-
-      lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_patches'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'SAI_patches',  landpatch, tsai )
-
-      lndname = trim(landdir)//'/'//trim(cyear)//'/LAI_pcs'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'LAI_pcs', N_PFT, landpc, tlai_c )
-
-      lndname = trim(landdir)//'/'//trim(cyear)//'/SAI_pcs'//trim(ctime)//'.nc'
-      call ncio_read_vector (lndname, 'SAI_pcs', N_PFT, landpc, tsai_c )
-
-#endif
-
-      if (p_is_worker) then
-         if (numpatch > 0) then
-            do npatch = 1, numpatch
-               m = patchclass(npatch)
-
-#ifdef URBAN_MODEL
-               IF (m == URBAN) CYCLE
-#endif
-               IF (patchtypes(landpatch%settyp(npatch)) == 0) THEN
-                  pc = patch2pc(npatch)
-
-                  tlai(npatch) = sum(tlai_c(:,pc)*pcfrac(:,pc))
-                  tsai(npatch) = sum(tsai_c(:,pc)*pcfrac(:,pc))
-               ENDIF
-
                fveg (npatch) = fveg0(m)
-               green(npatch) = 1.
+
             end do
          ENDIF
       ENDIF

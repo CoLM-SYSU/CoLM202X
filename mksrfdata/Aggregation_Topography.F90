@@ -87,7 +87,7 @@ SUBROUTINE Aggregation_Topography ( &
       allocate (topography_patches (numpatch))
 
       DO ipatch = 1, numpatch
-         CALL aggregation_request_data (landpatch, ipatch, gtopo, area = area_one, &
+         CALL aggregation_request_data (landpatch, ipatch, gtopo, zip = USE_zip_for_aggregation, area = area_one, &
             data_r8_2d_in1 = topography, data_r8_2d_out1 = topography_one)
          IF (any(topography_one /= -9999.0)) THEN
             topography_patches (ipatch) = &

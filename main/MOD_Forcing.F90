@@ -16,6 +16,7 @@ module MOD_Forcing
 !                         3) interface for downscaling
 !
 ! TODO...(need complement)
+! forcing final
 
    use MOD_Precision
    USE MOD_Namelist
@@ -46,7 +47,8 @@ module MOD_Forcing
 
    !  for SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
-   INTEGER, allocatable :: iforctime(:)
+   INTEGER,  allocatable :: iforctime(:)
+   real(r8), allocatable :: forc_disk(:,:)
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
    type(timestamp), allocatable :: tstamp_UB(:)  ! time stamp of up boundary data
@@ -205,6 +207,22 @@ contains
 
    end subroutine forcing_init
 
+   ! ---- forcing finalize ----
+   SUBROUTINE forcing_final ()
+      
+      IMPLICIT NONE
+
+      IF (allocated(forcmask    )) deallocate(forcmask    )
+      IF (allocated(forcmask_elm)) deallocate(forcmask_elm)
+      IF (allocated(glacierss   )) deallocate(glacierss   )
+      IF (allocated(forctime    )) deallocate(forctime    )
+      IF (allocated(iforctime   )) deallocate(iforctime   )
+      IF (allocated(forc_disk   )) deallocate(forc_disk   )
+      IF (allocated(tstamp_LB   )) deallocate(tstamp_LB   )
+      IF (allocated(tstamp_UB   )) deallocate(tstamp_UB   )
+
+   END SUBROUTINE forcing_final
+
    ! ------------
    SUBROUTINE forcing_reset ()
 
@@ -282,7 +300,7 @@ contains
             ! to make sure the forcing data calculated is in the range of time
             ! interval [LB, UB]
             if ( (mtstamp < tstamp_LB(ivar)) .or. (tstamp_UB(ivar) < mtstamp) ) then
-               write(6, *) "the data required is out of range! stop!"; stop
+               write(6, *) "the data required is out of range! stop!"; CALL CoLM_stop()
             end if
 
             ! calcualte distance to lower/upper boundary
@@ -363,7 +381,8 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            write(6, *) "At least one of the wind components must be provided! stop!"; stop
+            write(6, *) "At least one of the wind components must be provided! stop!"; 
+            CALL CoLM_stop()
          ENDIF
 
          call flush_block_data (forc_xy_hgt_u, real(HEIGHT_V,r8))
@@ -598,6 +617,7 @@ contains
 
       use MOD_UserSpecifiedForcing
       USE MOD_Namelist
+      USE MOD_Block
       use MOD_DataType
       use MOD_NetCDFBlock
       use MOD_RangeCheck
@@ -630,7 +650,11 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-               CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               IF (USE_SITE_ForcingReadAhead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+               ELSE
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ENDIF
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -649,7 +673,11 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  IF (USE_SITE_ForcingReadAhead) THEN
+                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
@@ -747,10 +775,11 @@ contains
       ! Local variables
       character(len=256) :: filename
       character(len=256) :: timeunit, timestr
-      REAL(r8), allocatable :: forctime_sec (:)
+      REAL(r8), allocatable :: forctime_sec(:), metcache(:,:,:)
       INTEGER :: year, month, day, hour, minute, second
-      INTEGER :: itime, maxday
+      INTEGER :: itime, maxday, id(3)
       INTEGER*8 :: sec_long
+      integer :: ivar
 
       filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -766,29 +795,33 @@ contains
       forctime(1)%year = year
       forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
       sec_long = hour*3600 + minute*60 + second + forctime_sec(1)
+         
+      id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
+      CALL adj2end(id)
+      forctime(1) = id
 
-      DO itime = 1, size(forctime)
-         IF (itime > 1) THEN
-            forctime(itime) = forctime(itime-1)
-            sec_long = sec_long + forctime_sec(itime) - forctime_sec(itime-1)
-         ENDIF
+      DO itime = 2, size(forctime)
+         id(:) = (/forctime(itime-1)%year, forctime(itime-1)%day, forctime(itime-1)%sec/)
+         CALL ticktime (forctime_sec(itime)-forctime_sec(itime-1), id)
+         forctime(itime) = id
+      ENDDO
 
-         DO WHILE (sec_long > 86400)
-            sec_long = sec_long - 86400
-            IF( isleapyear(forctime(itime)%year) ) THEN
-               maxday = 366
-            ELSE
-               maxday = 365
-            ENDIF
-            forctime(itime)%day = forctime(itime)%day + 1
-            IF(forctime(itime)%day > maxday) THEN
-               forctime(itime)%year = forctime(itime)%year + 1
-               forctime(itime)%day = 1
+#ifdef SinglePoint
+      IF (USE_SITE_ForcingReadAhead) THEN
+
+         allocate (forc_disk (size(forctime),NVAR))
+
+         filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
+         DO ivar = 1, NVAR
+            if (trim(vname(ivar)) /= 'NULL') THEN
+               CALL ncio_read_serial (filename, vname(ivar), metcache)
+               forc_disk(:,ivar) = metcache(1,1,:)
             ENDIF
          ENDDO
 
-         forctime(itime)%sec = sec_long
-      ENDDO
+         IF (allocated(metcache)) deallocate(metcache)
+      ENDIF
+#endif
 
    END SUBROUTINE metread_time
 
@@ -833,7 +866,7 @@ contains
          IF ((mtstamp < forctime(1)) .or. (forctime(ntime) < mtstamp)) THEN
             write(*,*) 'Error: Forcing does not cover simulation period!'
             write(*,*) 'Need ', mtstamp, ', Forc start ', forctime(1), ', Forc END', forctime(ntime)
-            stop
+            CALL CoLM_stop ()
          ELSE
             DO WHILE (.not. (mtstamp < forctime(time_i+1)))
                time_i = time_i + 1
@@ -841,7 +874,6 @@ contains
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
-         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF
@@ -1021,7 +1053,7 @@ contains
          end if
 
          if (time_i <= 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; stop
+            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
          end if
 
          return
@@ -1055,10 +1087,10 @@ contains
          ELSE
             iforctime(var_i) = iforctime(var_i) + 1
             tstamp_LB(var_i) = forctime(iforctime(var_i))
-            tstamp_UB(var_i) = forctime(iforctime(var_i) + 1)
+            tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
          ENDIF
 
-         time_i = iforctime(var_i)
+         time_i = iforctime(var_i)+1
          year = tstamp_UB(var_i)%year
          RETURN
       ENDIF
@@ -1181,7 +1213,7 @@ contains
          end if
 
          if (time_i < 0) then
-            write(6, *) "got the wrong time record of forcing! stop!"; stop
+            write(6, *) "got the wrong time record of forcing! stop!"; CALL CoLM_stop()
          end if
 
          return

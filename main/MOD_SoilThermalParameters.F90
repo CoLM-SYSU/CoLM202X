@@ -49,7 +49,7 @@ MODULE MOD_SoilThermalParameters
 
   integer, INTENT(in) :: lb       ! lower bound of array
   integer, INTENT(in) :: nl_soil  ! upper bound of array
-  integer, INTENT(in) :: patchtype! land water type (0=soil, 1=urban, 2=wetland,
+  integer, INTENT(in) :: patchtype! land patch type (0=soil, 1=urban, 2=wetland,
   real(r8), INTENT(in) :: csol(1:nl_soil)   ! heat capacity of soil soilds [J/(m3 K)]
   real(r8), INTENT(in) :: porsl(1:nl_soil)  ! soil porosity
   real(r8), INTENT(in) :: wice_soisno(lb:nl_soil)  ! ice lens [kg/m2]
@@ -108,7 +108,7 @@ MODULE MOD_SoilThermalParameters
 
   integer, INTENT(in) :: lb       ! lower bound of array
   integer, INTENT(in) :: nl_soil  ! upper bound of array
-  integer, INTENT(in) :: patchtype! land water type (0=soil, 1=urban, 2=wetland,
+  integer, INTENT(in) :: patchtype! land patch type (0=soil, 1=urban, 2=wetland,
                                   ! 3=land ice, 4=deep lake, 5=shallow lake)
   real(r8), INTENT(in) ::  dkdry(1:nl_soil)  ! thermal conductivity for dry soil [W/m-K]
   real(r8), INTENT(in) :: dksatu(1:nl_soil)  ! Thermal conductivity of saturated soil [W/m-K]
