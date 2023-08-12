@@ -1,5 +1,5 @@
 #include <define.h>
-
+#ifdef LULCC
   SUBROUTINE LulccEnergyMassConserve
 ! -------------------------------
 ! Created by Hua Yuan, 04/2022
@@ -606,3 +606,4 @@ ENDIF
 
   END SUBROUTINE LulccEnergyMassConserve
 ! ---------- EOP ------------
+#endif

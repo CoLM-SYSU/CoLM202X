@@ -976,7 +976,10 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb=scv+sum(wice_soisno(1:)+wliq_soisno(1:))
-      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof+irrig_rate(ipatch))*deltim
+      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
+#ifdef CROP
+   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
+#endif
       xerr=errorw/deltim
 
 !======================================================================

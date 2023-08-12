@@ -342,61 +342,95 @@ CONTAINS
 
       ! Local Variables
       INTEGER :: totalreq, ireq, nreq, smesg(2), isrc, idest, iproc
-      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc, iloc
+      INTEGER :: ilon, ilat, xblk, yblk, xloc, yloc, iloc, nx, ny, ix, iy, ig
       INTEGER :: ie, ipxstt, ipxend, npxl, ipxl, lb1, xgrdthis, ygrdthis
-      INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:)
+      INTEGER,  allocatable :: ylist(:), xlist(:), ipt(:), ibuf(:), rbuf_i4_1d(:)
+      INTEGER,  allocatable :: xsorted(:), ysorted(:), xy2d(:,:)
+      REAL(r8), allocatable :: area2d(:,:), rbuf_r8_1d(:), rbuf_r8_2d(:,:)
       LOGICAL,  allocatable :: msk(:)
-      LOGICAL :: is_new
-
-      real(r8) :: areathis
-      REAL(r8), allocatable :: area0(:), rbuf_r8_1d(:), rbuf_r8_2d(:,:)
-      INTEGER , allocatable :: rbuf_i4_1d(:)
 
 
       ie     = pixelset%ielm  (iset)
       ipxstt = pixelset%ipxstt(iset)
       ipxend = pixelset%ipxend(iset)
+      npxl   = ipxend - ipxstt + 1
 
-      npxl = ipxend - ipxstt + 1
+      IF (zip) THEN
 
-      allocate(xlist (npxl))
-      allocate(ylist (npxl))
-      IF (present(area)) THEN
-         allocate (area0 (npxl))
-         area0(:) = 0
-      ENDIF
+         allocate (xsorted(npxl))
+         allocate (ysorted(npxl))
 
-      totalreq = 0
+         nx = 0; ny = 0
+         DO ipxl = ipxstt, ipxend
+            xgrdthis = grid_in%xgrd(mesh(ie)%ilon(ipxl))
+            ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+            CALL insert_into_sorted_list1 (xgrdthis, nx, xsorted, iloc)
+            CALL insert_into_sorted_list1 (ygrdthis, ny, ysorted, iloc)
+         ENDDO  
 
-      DO ipxl = ipxstt, ipxend
-         xgrdthis = grid_in%xgrd(mesh(ie)%ilon(ipxl))
-         ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
-         areathis = areaquad (&
-            pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
-            pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
-
-         IF (zip) THEN
-            CALL insert_into_sorted_list2 (xgrdthis, ygrdthis, totalreq, xlist, ylist, iloc, is_new)
-            IF (present(area)) THEN
-               IF ((is_new) .and. (iloc < totalreq)) THEN
-                  area0(iloc+1:totalreq) = area0(iloc:totalreq-1) 
-               ENDIF
-               area0(iloc) = area0(iloc) + areathis
-            ENDIF
-         ELSE
-            xlist(ipxl-ipxstt+1) = xgrdthis
-            ylist(ipxl-ipxstt+1) = ygrdthis
-            IF (present(area)) area0(ipxl-ipxstt+1) = areathis
+         allocate (xy2d (nx,ny));     xy2d(:,:) = 0
+         
+         IF (present(area)) THEN
+            allocate(area2d(nx,ny));  area2d(:,:) = 0.
          ENDIF
-      ENDDO  
 
-      IF (.not. zip) totalreq = npxl
+         DO ipxl = ipxstt, ipxend
+            xgrdthis = grid_in%xgrd(mesh(ie)%ilon(ipxl))
+            ygrdthis = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+            
+            ix = find_in_sorted_list1(xgrdthis, nx, xsorted)
+            iy = find_in_sorted_list1(ygrdthis, ny, ysorted)
 
-      IF (present(area)) THEN
-         allocate (area (totalreq))
-         area = area0(1:totalreq)
-         deallocate (area0)
-      ENDIF
+            xy2d(ix,iy) = xy2d(ix,iy) + 1
+
+            IF (present(area)) THEN
+               area2d(ix,iy) = area2d(ix,iy) + areaquad (&
+                  pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+                  pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+            ENDIF
+         ENDDO
+
+         totalreq = count(xy2d > 0)
+
+         allocate (xlist (totalreq))
+         allocate (ylist (totalreq))
+
+         IF (present(area)) allocate(area(totalreq))
+      
+         ig = 0
+         DO ix = 1, nx
+            DO iy = 1, ny
+               IF (xy2d(ix,iy) > 0) THEN
+                  ig = ig + 1
+                  xlist(ig) = xsorted(ix)
+                  ylist(ig) = ysorted(iy)
+                  IF (present(area)) area (ig) = area2d(ix,iy)
+               ENDIF
+            ENDDO
+         ENDDO
+
+         deallocate (xsorted, ysorted, xy2d)
+         IF (present(area)) deallocate (area2d)
+
+      ELSE
+      
+         allocate(xlist (npxl))
+         allocate(ylist (npxl))
+
+         IF (present(area)) allocate (area (npxl))
+         
+         totalreq = npxl
+         DO ipxl = ipxstt, ipxend
+            xlist(ipxl-ipxstt+1) = grid_in%xgrd(mesh(ie)%ilon(ipxl))
+            ylist(ipxl-ipxstt+1) = grid_in%ygrd(mesh(ie)%ilat(ipxl))
+            IF (present(area)) THEN
+               area(ipxl-ipxstt+1) = areaquad (&
+                  pixel%lat_s(mesh(ie)%ilat(ipxl)), pixel%lat_n(mesh(ie)%ilat(ipxl)), &
+                  pixel%lon_w(mesh(ie)%ilon(ipxl)), pixel%lon_e(mesh(ie)%ilon(ipxl)) )
+            ENDIF
+         ENDDO
+
+      ENDIF 
 
       IF (present(data_r8_2d_in1) .and. present(data_r8_2d_out1))  allocate (data_r8_2d_out1 (totalreq))
       IF (present(data_r8_2d_in2) .and. present(data_r8_2d_out2))  allocate (data_r8_2d_out2 (totalreq))
