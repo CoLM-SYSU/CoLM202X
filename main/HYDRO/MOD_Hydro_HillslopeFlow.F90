@@ -50,7 +50,7 @@ CONTAINS
       REAL(r8), intent(in) :: dt
 
       ! Local Variables
-      INTEGER :: numbasin, nhru, istt, iend, ibasin, i, j
+      INTEGER :: numbasin, nhru, hs, he, ibasin, i, j, ps, pe
 
       TYPE(hillslope_network_info_type), pointer :: hillslope
 
@@ -66,10 +66,13 @@ CONTAINS
       REAL(r8) :: wdsrf_up, wdsrf_dn, vwave_up, vwave_dn
       REAL(r8) :: hflux_up, hflux_dn, mflux_up, mflux_dn
       
-      REAL(r8), allocatable :: rsurf_h (:) ! [m/s]
+      REAL(r8), allocatable :: xsurf_h (:) ! [m/s]
 
       REAL(r8) :: friction
       REAL(r8) :: dt_res, dt_this
+
+      logical, allocatable :: mask(:)
+      real(r8) :: srfbsn, dvol, nextl, nexta, nextv, ddep
 
       IF (p_is_worker) THEN
 
@@ -77,15 +80,15 @@ CONTAINS
 
          DO ibasin = 1, numbasin
 
-            istt = basin_hru%substt(ibasin)
-            iend = basin_hru%subend(ibasin)
+            hs = basin_hru%substt(ibasin)
+            he = basin_hru%subend(ibasin)
 
             IF (lake_id(ibasin) > 0) THEN
-               veloc_hru(istt:iend) = 0
-               momen_hru(istt:iend) = 0
+               veloc_hru(hs:he) = 0
+               momen_hru(hs:he) = 0
                CYCLE ! skip lakes
             ELSE
-               DO i = istt, iend
+               DO i = hs, he
                   ! momentum is less or equal than the momentum at last time step.
                   momen_hru(i) = min(wdsrf_hru_prev(i), wdsrf_hru(i)) * veloc_hru(i)
                ENDDO
@@ -103,7 +106,7 @@ CONTAINS
             allocate (sum_mflux_h (nhru))
             allocate (sum_zgrad_h (nhru))
                
-            allocate (rsurf_h (nhru))
+            allocate (xsurf_h (nhru))
 
             DO i = 1, nhru
                wdsrf_h(i) = wdsrf_hru(hillslope%ihru(i)) 
@@ -200,9 +203,9 @@ CONTAINS
                   ENDIF
 
                   ! constraint 2: Avoid negative values of water
-                  rsurf_h(i) = sum_hflux_h(i) / hillslope%area(i)
-                  IF (rsurf_h(i) > 0) THEN
-                     dt_this = min(dt_this, wdsrf_h(i) / rsurf_h(i))
+                  xsurf_h(i) = sum_hflux_h(i) / hillslope%area(i)
+                  IF (xsurf_h(i) > 0) THEN
+                     dt_this = min(dt_this, wdsrf_h(i) / xsurf_h(i))
                   ENDIF
                      
                   ! constraint 3: Avoid change of flow direction
@@ -215,37 +218,84 @@ CONTAINS
 
                DO i = 1, nhru
 
-                  wdsrf_h(i) = max(0., wdsrf_h(i) - rsurf_h(i) * dt_this)
+                  wdsrf_h(i) = max(0., wdsrf_h(i) - xsurf_h(i) * dt_this)
 
                   IF (wdsrf_h(i) < PONDMIN) THEN
                      momen_h(i) = 0
-                     veloc_h(i) = 0
                   ELSE
                      friction = grav * nmanning_hslp**2 * abs(momen_h(i)) / wdsrf_h(i)**(7.0/3.0) 
                      momen_h(i) = (momen_h(i) - &
                         (sum_mflux_h(i) - sum_zgrad_h(i)) / hillslope%area(i) * dt_this) &
                         / (1 + friction * dt_this) 
-                     veloc_h(i) = momen_h(i) / wdsrf_h(i)
 
                      IF (hillslope%inext(i) <= 0) THEN
-                        veloc_h(i) = min(veloc_h(i), 0.)
                         momen_h(i) = min(momen_h(i), 0.)
                      ENDIF
 
                      IF (all(hillslope%inext /= i)) THEN
-                        veloc_h(i) = max(veloc_h(i), 0.)
                         momen_h(i) = max(momen_h(i), 0.)
                      ENDIF
+                  ENDIF
+
+               ENDDO
+
+               IF (hillslope%indx(1) == 0) THEN
+                  srfbsn = minval(hillslope%hand + wdsrf_h)
+                  IF (srfbsn < wdsrf_h(1)) THEN
+                     allocate (mask (hillslope%nhru))
+                     dvol = (wdsrf_h(1) - srfbsn) * hillslope%area(1)
+                     momen_h(1) = srfbsn/wdsrf_h(1) * momen_h(1)
+                     wdsrf_h(1) = srfbsn
+                     DO WHILE (dvol > 0)
+                        mask  = hillslope%hand + wdsrf_h > srfbsn
+                        nexta = sum(hillslope%area, mask = (.not. mask)) 
+                        IF (any(mask)) THEN
+                           nextl = minval(hillslope%hand + wdsrf_h, mask = mask)
+                           nextv = nexta*(nextl-srfbsn)
+                           IF (dvol > nextv) THEN
+                              ddep = nextl - srfbsn
+                              dvol = dvol - nextv
+                           ELSE
+                              ddep = dvol/nexta
+                              dvol = 0.
+                           ENDIF
+                        ELSE
+                           ddep = dvol/nexta
+                           dvol = 0.
+                        ENDIF
+
+                        srfbsn = srfbsn + ddep
+
+                        WHERE (.not. mask)
+                           wdsrf_h = wdsrf_h + ddep
+                        END WHERE 
+                     ENDDO
+                     deallocate(mask)
+                  ENDIF
+               ENDIF
+
+               DO i = 1, nhru
+                  IF (wdsrf_h(i) < PONDMIN) THEN
+                     veloc_h(i) = 0
+                  ELSE
+                     veloc_h(i) = momen_h(i) / wdsrf_h(i)
                   ENDIF
 
                   wdsrf_hru_ta(hillslope%ihru(i)) = wdsrf_hru_ta(hillslope%ihru(i)) + wdsrf_h(i) * dt_this
                   momen_hru_ta(hillslope%ihru(i)) = momen_hru_ta(hillslope%ihru(i)) + momen_h(i) * dt_this
                ENDDO
 
+               IF (hillslope%indx(1) == 0) THEN
+                  ps = elm_patch%substt(ibasin)
+                  pe = elm_patch%subend(ibasin)
+                  ! m/s to mm/s
+                  rsur(ps:pe) = rsur(ps:pe) - sum_hflux_h(1) * dt_this / sum(hillslope%area) * 1.0e3
+               ENDIF
+
                dt_res = dt_res - dt_this
 
             ENDDO
-
+            
             ! SAVE depth of surface water
             DO i = 1, nhru
                wdsrf_hru(hillslope%ihru(i)) = wdsrf_h(i)
@@ -260,7 +310,7 @@ CONTAINS
             deallocate (sum_mflux_h)
             deallocate (sum_zgrad_h)
 
-            deallocate (rsurf_h)
+            deallocate (xsurf_h)
 
          ENDDO
 
