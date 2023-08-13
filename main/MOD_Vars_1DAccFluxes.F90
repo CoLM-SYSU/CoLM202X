@@ -1642,10 +1642,15 @@ contains
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
+            ! call acc1d (irrig_rate         ,   a_irrig_rate         )
+            ! call acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! call acc1d (sum_irrig          ,   a_sum_irrig          )
+            ! call acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             call acc1d (irrig_rate         ,   a_irrig_rate         )
-            a_deficit_irrig = deficit_irrig
+            call acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
+
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

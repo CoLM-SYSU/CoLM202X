@@ -54,11 +54,12 @@ contains
         integer , intent(in) :: npcropmin
 
         ! local 
+        integer :: m
         integer :: irrig_nsteps_per_day
         logical :: check_for_irrig 
 
         ! !   calculate last day potential evapotranspiration 
-        call CalPotentialEvapotranspiration(i,idate,dlon,deltim)
+        ! call CalPotentialEvapotranspiration(i,idate,dlon,deltim)
 
         !   calculate whether irrigation needed
         call PointNeedsCheckForIrrig(i,ps,pe,idate,deltim,dlon,npcropmin,check_for_irrig)
@@ -70,14 +71,21 @@ contains
         end if
 
         !   calculate irrigation rate kg/m2->mm/s
-        if (check_for_irrig) then
+        if ((check_for_irrig) .and. (deficit_irrig(i) > 0)) then
             irrig_nsteps_per_day = nint(irrig_time_per_day/deltim)
             irrig_rate(i) = deficit_irrig(i)/deltim/irrig_nsteps_per_day
             n_irrig_steps_left(i) = irrig_nsteps_per_day
             sum_irrig(i) = sum_irrig(i) + deficit_irrig(i)
             sum_irrig_count(i) = sum_irrig_count(i) + 1._r8
         end if
-
+        
+        ! !   zero irrigation at the end of growing season 
+        ! do m = ps, pe
+        !     if (cphase_p(m) >= 4._r8) then
+        !         sum_irrig(i) = 0._r8
+        !         sum_irrig_count(i) = 0._r8
+        !     end if
+        ! end do
     end subroutine CalIrrigationNeeded
 
 
@@ -177,8 +185,8 @@ contains
         do m = ps, pe
             if (h2osoi_liq_tot < h2osoi_liq_at_threshold) then
                 if (irrig_method_p(m) == irrig_method_sprinkler) then 
-                    ! deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot
-                    deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot + potential_evapotranspiration(i)
+                    deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot
+                    ! deficit_irrig(i) = h2osoi_liq_target_tot - h2osoi_liq_tot + potential_evapotranspiration(i)
                 else if (irrig_method_p(m) == irrig_method_flood) then
                     deficit_irrig(i) = h2osoi_liq_saturation_capacity_tot - h2osoi_liq_tot
                 else
@@ -277,61 +285,60 @@ contains
 
     end subroutine PointNeedsCheckForIrrig
 
+    ! subroutine CalPotentialEvapotranspiration(i,idate,dlon,deltim)
+    !     !   DESCRIPTION:
+    !     !   This subroutine is used to calculate daily potential evapotranspiration
+    !     integer , intent(in) :: i
+    !     integer , intent(in) :: idate(3)
+    !     real(r8), intent(in) :: dlon
+    !     real(r8), intent(in) :: deltim
 
-    subroutine CalPotentialEvapotranspiration(i,idate,dlon,deltim)
-        !   DESCRIPTION:
-        !   This subroutine is used to calculate daily potential evapotranspiration
-        integer , intent(in) :: i
-        integer , intent(in) :: idate(3)
-        real(r8), intent(in) :: dlon
-        real(r8), intent(in) :: deltim
+    !     !   local variable
+    !     real(r8):: ldate(3)
+    !     real(r8):: seconds_since_irrig_start_time
+    !     real(r8) :: es,esdT,qs,qsdT     ! saturation vapour pressure
+    !     real(r8) :: evsat               ! vapour pressure
+    !     real(r8) :: ur                  ! wind speed
+    !     real(r8) :: delta               ! slope of saturation vapour pressure curve 
+    !     real(r8) :: gamma               ! Psychrometric constant
 
-        !   local variable
-        real(r8):: ldate(3)
-        real(r8):: seconds_since_irrig_start_time
-        real(r8) :: es,esdT,qs,qsdT     ! saturation vapour pressure
-        real(r8) :: evsat               ! vapour pressure
-        real(r8) :: ur                  ! wind speed
-        real(r8) :: delta               ! slope of saturation vapour pressure curve 
-        real(r8) :: gamma               ! Psychrometric constant
+    !     if (DEF_simulation_time%greenwich) then
+    !         call gmt2local(idate, dlon, ldate)
+    !         seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
+    !     else
+    !         seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
+    !     end if
 
-        if (DEF_simulation_time%greenwich) then
-            call gmt2local(idate, dlon, ldate)
-            seconds_since_irrig_start_time = ldate(3) - irrig_start_time + deltim
-        else
-            seconds_since_irrig_start_time = idate(3) - irrig_start_time + deltim
-        end if
+    !     if (((seconds_since_irrig_start_time-deltim) >= 0) .and. ((seconds_since_irrig_start_time-deltim) < deltim)) then
+    !         tairday(i) = (forc_t(i)-tfrz)*deltim/86400
+    !         usday(i) = forc_us(i)*deltim/86400
+    !         vsday(i) = forc_vs(i)*deltim/86400
+    !         pairday(i) = forc_psrf(i)*deltim/86400/1000
+    !         rnetday(i) = (sabg(i)+sabvsun(i)+sabvsha(i)-olrg(i)+forc_frl(i))*deltim/1000000
+    !         fgrndday(i) = fgrnd(i)*deltim/1000000
+    !     else
+    !         tairday(i) = tairday(i) + (forc_t(i)-tfrz)*deltim/86400
+    !         usday(i) = usday(i) + forc_us(i)*deltim/86400
+    !         vsday(i) = vsday(i) + forc_vs(i)*deltim/86400
+    !         pairday(i) = pairday(i) + forc_psrf(i)*deltim/86400/1000
+    !         rnetday(i) = rnetday(i) + (sabg(i)+sabvsun(i)+sabvsha(i)-olrg(i)+forc_frl(i))*deltim/1000000
+    !         fgrndday(i) = fgrndday(i) + fgrnd(i)*deltim/1000000
+    !     endif
 
-        if (((seconds_since_irrig_start_time-deltim) >= 0) .and. ((seconds_since_irrig_start_time-deltim) < deltim)) then
-            tairday(i) = (forc_t(i)-tfrz)*deltim/86400
-            usday(i) = forc_us(i)*deltim/86400
-            vsday(i) = forc_vs(i)*deltim/86400
-            pairday(i) = forc_psrf(i)*deltim/86400/1000
-            rnetday(i) = (sabg(i)+sabvsun(i)+sabvsha(i)-olrg(i)+forc_frl(i))*deltim/1000000
-            fgrndday(i) = fgrnd(i)*deltim/1000000
-        else
-            tairday(i) = tairday(i) + (forc_t(i)-tfrz)*deltim/86400
-            usday(i) = usday(i) + forc_us(i)*deltim/86400
-            vsday(i) = vsday(i) + forc_vs(i)*deltim/86400
-            pairday(i) = pairday(i) + forc_psrf(i)*deltim/86400/1000
-            rnetday(i) = rnetday(i) + (sabg(i)+sabvsun(i)+sabvsha(i)-olrg(i)+forc_frl(i))*deltim/1000000
-            fgrndday(i) = fgrndday(i) + fgrnd(i)*deltim/1000000
-        endif
-
-        if ((seconds_since_irrig_start_time >= 0) .and. (seconds_since_irrig_start_time < deltim)) then
-            call qsadv(tairday(i),pairday(i),es,esdT,qs,qsdT)
-            if (tairday(i) > 0)then
-                evsat = 0.611*EXP(17.27*tairday(i)/(tairday(i)+237.3))
-            else
-                evsat = 0.611*EXP(21.87*tairday(i)/(tairday(i)+265.5))
-            endif
-            ur = max(0.1,sqrt(usday(i)*usday(i)+vsday(i)*vsday(i)))
-            delta = 4098*evsat/((tairday(i)+237.3)*(tairday(i)+237.3))
-            gamma = 0.665*0.001*pairday(i)
-            potential_evapotranspiration(i) = (0.408*delta*(rnetday(i)-fgrndday(i))+gamma*(900/(tairday(i)+273))*ur* &
-                (evsat-es))/(delta+(gamma*(1+0.34*ur)))
-        end if
-    end subroutine CalPotentialEvapotranspiration
+    !     if ((seconds_since_irrig_start_time >= 0) .and. (seconds_since_irrig_start_time < deltim)) then
+    !         call qsadv(tairday(i),pairday(i),es,esdT,qs,qsdT)
+    !         if (tairday(i) > 0)then
+    !             evsat = 0.611*EXP(17.27*tairday(i)/(tairday(i)+237.3))
+    !         else
+    !             evsat = 0.611*EXP(21.87*tairday(i)/(tairday(i)+265.5))
+    !         endif
+    !         ur = max(0.1,sqrt(usday(i)*usday(i)+vsday(i)*vsday(i)))
+    !         delta = 4098*evsat/((tairday(i)+237.3)*(tairday(i)+237.3))
+    !         gamma = 0.665*0.001*pairday(i)
+    !         potential_evapotranspiration(i) = (0.408*delta*(rnetday(i)-fgrndday(i))+gamma*(900/(tairday(i)+273))*ur* &
+    !             (evsat-es))/(delta+(gamma*(1+0.34*ur)))
+    !     end if
+    ! end subroutine CalPotentialEvapotranspiration
 
 end module MOD_Irrigation
 #endif
