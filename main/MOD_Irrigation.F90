@@ -114,6 +114,9 @@ contains
         real(r8) :: h2osoi_liq_saturation_capacity(1:nl_soil)
         real(r8) :: h2osoi_liq_at_threshold
 
+        real(r8) :: smpswc = -1.5e5
+        real(r8) :: smpsfc = -3.3e3  
+
         !   initialize local variables
         reached_max_depth = .false.
         h2osoi_liq_tot = 0._r8
@@ -128,21 +131,19 @@ contains
 
 !   calculate wilting point and field capacity
         do j = 1, nl_soil
-            if (t_soisno(j,i) > tfrz .and. porsl(j,i) >= 1.e-6) then         
+            if (t_soisno(j,i) > tfrz .and. porsl(j,i) >= 1.e-6) then           
 #ifdef Campbell_SOIL_MODEL
-                smpswc = -1.5e5
-                smpsfc = -3.3e3
                 h2osoi_liq_wilting_point(j) = 1000.*dz_soi(j)*porsl(j,i)*((smpswc/psi0(j,i))**(-1/bsw(j,i)))
                 h2osoi_liq_field_capacity(j) = 1000.*dz_soi(j)*porsl(j,i)*((smpsfc/psi0(j,i))**(-1/bsw(j,i)))
                 h2osoi_liq_saturation_capacity(j) = 1000.*dz_soi(j)*porsl(j,i)
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-                smpswc = 1.5e5
-                smpsfc = 3.3e3
-                h2osoi_liq_wilting_point(j) = theta_r(j,i)+(1000.*dz_soi(j)*porsl(j,i)-1000.*dz_soi(j)* &
-                    theta_r(j,i))*((1+(alpha_vgm(j,i)*smpswc)**n_vgm(j,i))**(1./n_vgm(j,i)-1.))
-                h2osoi_liq_field_capacity(j) = theta_r(j,i)+(1000.*dz_soi(j)*porsl(j,i)-1000.*dz_soi(j)* &
-                    theta_r(j,i))*((1+(alpha_vgm(j,i)*smpsfc)**n_vgm(j,i))**(1./n_vgm(j,i)-1.))
+                h2osoi_liq_wilting_point(j) = soil_vliq_from_psi(smpswc, porsl(j,i), theta_r(j,i), psi0(j,i), 5, &
+                  (/alpha_vgm(j,i), n_vgm(j,i), L_vgm(j,i), sc_vgm(j,i), fc_vgm(j,i)/))
+                h2osoi_liq_wilting_point(j) = 1000.*dz_soi(j)*h2osoi_liq_wilting_point(j)
+                h2osoi_liq_field_capacity(j) = soil_vliq_from_psi(smpsfc, porsl(j,i), theta_r(j,i), psi0(j,i), 5, &
+                  (/alpha_vgm(j,i), n_vgm(j,i), L_vgm(j,i), sc_vgm(j,i), fc_vgm(j,i)/))
+                h2osoi_liq_field_capacity(j) = 1000.*dz_soi(j)*h2osoi_liq_field_capacity(j)
                 h2osoi_liq_saturation_capacity(j) = 1000.*dz_soi(j)*porsl(j,i)      
 #endif
             end if
