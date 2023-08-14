@@ -136,15 +136,16 @@ CONTAINS
    ! calculate air free pore space
    aird     = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
 #endif
+
    !TODO: need double check below
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    smp_node = soil_psi_from_vliq ( s_node*(porsl(1)-theta_r(1)) + theta_r(1), &
                 porsl(1), theta_r(1), psi0(1), &
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
-   smp_node = smp_node/1000.
-   ! When calculating hk, the unit of smp_node is m, so it is re-multiplied by 1000
    hk       = soil_hk_from_psi   (smp_node*1000., psi0(1), hksati(1), &
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+
+   smp_node = smp_node/1000.
    hk       = hk/1000.
 
    ! calculate air free pore space
@@ -152,13 +153,14 @@ CONTAINS
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
 #endif
 
-   !TODO: check and compare with Tang2013
-   d0   = 2.12e-5*(t_soisno(1)/273.15)**1.75
-   eps  = porsl(1) - aird
    ! D0 : 2.12e-5 unit: m2 s-1
    ! ref1: CLM5 Documentation formula (5.81)
    ! ref2: Sakaguchi and Zeng, 2009
-   ! ref3: Tang and Riley, 2013. Figure 2, 3, 4, and 5.    
+   ! ref3: Tang and Riley, 2013. Figure 2, 3, 4, and 5.
+   d0  = 2.12e-5*(t_soisno(1)/273.15)**1.75
+   eps = porsl(1) - aird
+
+
    SELECTCASE (soil_gas_diffusivity_scheme)
 
    ! 1: BBC
@@ -203,7 +205,6 @@ CONTAINS
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
    !TODO: need double check below
-   ! modify 1-->1.
    ! TR13, Eqs. (A2), (A7), (A8) and (A10):
    ! dw = hk*(m-1)/(k*m*(theta_s-theta_r))*S**(-1/m)*(1-S**(1/m))**(-m)
    ! where k=alpha_vgm, S=(1+(-k*psi0(1))**(n))**(-m), m=m_vgm=1-1/n_vgm
@@ -224,7 +225,8 @@ CONTAINS
       dsl = min(dsl,0.2_r8)
 
       rss = dsl/dg
-      !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss 
+      !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss
+
    ! calculate rss by SZ09
    CASE (2)
       dsl = dz_soisno(1)*(exp((1._r8 - vol_liq/porsl(1))**5) - 1._r8)/ (exp(1._r8) - 1._r8)
