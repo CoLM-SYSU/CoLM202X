@@ -19,7 +19,7 @@ MODULE MOD_Hydro_HillslopeNetwork
       INTEGER , pointer :: ihru (:) ! location of HRU in global vector "landhru"
       INTEGER , pointer :: indx (:) ! index of HRU
       REAL(r8), pointer :: area (:) ! area of HRU [m^2]
-      REAL(r8), pointer :: awat (:) ! water area only including (patchtype <= 2) [m^2]
+      REAL(r8), pointer :: agwt (:) ! water area only including (patchtype <= 2) [m^2]
       REAL(r8), pointer :: hand (:) ! height above nearest drainage [m]
       REAL(r8), pointer :: elva (:) ! elevation [m]
       REAL(r8), pointer :: plen (:) ! average drainage path length to downstream HRU [m]
@@ -49,7 +49,7 @@ CONTAINS
       ! Local Variables
       CHARACTER(len=256) :: hillslope_network_file
 
-      INTEGER :: numbasin, maxnumhru, ibasin, nhru, istt, iend, ihru, ipatch, ps, pe, i, j, ipxl
+      INTEGER :: numbasin, maxnumhru, ibasin, nhru, hs, he, ihru, ipatch, ps, pe, i, j, ipxl
       INTEGER :: iworker, mesg(2), nrecv, irecv, isrc, idest
    
       INTEGER , allocatable :: indxhru (:,:)
@@ -267,7 +267,7 @@ CONTAINS
                allocate (hillslope_network(ibasin)%ihru  (nhru))
                allocate (hillslope_network(ibasin)%indx  (nhru))
                allocate (hillslope_network(ibasin)%area  (nhru))
-               allocate (hillslope_network(ibasin)%awat  (nhru))
+               allocate (hillslope_network(ibasin)%agwt  (nhru))
                allocate (hillslope_network(ibasin)%hand  (nhru))
                allocate (hillslope_network(ibasin)%elva  (nhru))
                allocate (hillslope_network(ibasin)%plen  (nhru))
@@ -281,9 +281,9 @@ CONTAINS
                hillslope_network(ibasin)%plen = plenhru(1:nhru,ibasin) * 1.0e3 ! km to m      
                hillslope_network(ibasin)%flen = lfachru(1:nhru,ibasin) * 1.0e3 ! km to m
 
-               istt = basin_hru%substt(ibasin)
-               iend = basin_hru%subend(ibasin)
-               hillslope_network(ibasin)%ihru = (/ (i, i = istt, iend) /)
+               hs = basin_hru%substt(ibasin)
+               he = basin_hru%subend(ibasin)
+               hillslope_network(ibasin)%ihru = (/ (i, i = hs, he) /)
 
                DO i = 1, nhru
                   IF (nexthru(i,ibasin) >= 0) THEN
@@ -295,13 +295,13 @@ CONTAINS
                ENDDO
 
                DO i = 1, nhru
-                  hillslope_network(ibasin)%awat(i) = 0
-                  ps = hru_patch%substt(i+istt-1)
-                  pe = hru_patch%subend(i+istt-1)
+                  hillslope_network(ibasin)%agwt(i) = 0
+                  ps = hru_patch%substt(i+hs-1)
+                  pe = hru_patch%subend(i+hs-1)
                   DO ipatch = ps, pe
-                     IF ((patchtype(ipatch) <= 2) .or. (patchtype(ipatch) == 4)) THEN
+                     IF (patchtype(ipatch) <= 2) THEN
                         DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
-                           hillslope_network(ibasin)%awat(i) = hillslope_network(ibasin)%awat(i) &
+                           hillslope_network(ibasin)%agwt(i) = hillslope_network(ibasin)%agwt(i) &
                               + 1.0e6 * areaquad ( &
                               pixel%lat_s(mesh(ibasin)%ilat(ipxl)), pixel%lat_n(mesh(ibasin)%ilat(ipxl)), &
                               pixel%lon_w(mesh(ibasin)%ilon(ipxl)), pixel%lon_e(mesh(ibasin)%ilon(ipxl)) )
@@ -344,7 +344,7 @@ CONTAINS
             IF (associated(hillslope_network(ibasin)%ihru )) deallocate(hillslope_network(ibasin)%ihru )
             IF (associated(hillslope_network(ibasin)%indx )) deallocate(hillslope_network(ibasin)%indx )
             IF (associated(hillslope_network(ibasin)%area )) deallocate(hillslope_network(ibasin)%area )
-            IF (associated(hillslope_network(ibasin)%awat )) deallocate(hillslope_network(ibasin)%awat )
+            IF (associated(hillslope_network(ibasin)%agwt )) deallocate(hillslope_network(ibasin)%agwt )
             IF (associated(hillslope_network(ibasin)%hand )) deallocate(hillslope_network(ibasin)%hand )
             IF (associated(hillslope_network(ibasin)%elva )) deallocate(hillslope_network(ibasin)%elva )
             IF (associated(hillslope_network(ibasin)%plen )) deallocate(hillslope_network(ibasin)%plen )
