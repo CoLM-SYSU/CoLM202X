@@ -876,29 +876,23 @@ contains
          ppc = (prc_rain+prc_snow)*deltim
          ppl = (prl_rain+prl_snow+qflx_irrig_sprinkler)*deltim
 
-         w = ldew+p0
+         w   = ldew+p0
 
+         xsc_rain    = max(0., ldew_rain-satcap_rain)
+         xsc_snow    = max(0., ldew_snow-satcap_snow)
 
-         xsc_rain      = max(0., ldew_rain-satcap_rain)
-         xsc_snow      = max(0., ldew_snow-satcap_snow)
-
-         ldew_rain     = ldew_rain-xsc_rain
-         ldew_snow     = ldew_snow-xsc_snow
-
-
+         ldew_rain   = ldew_rain-xsc_rain
+         ldew_snow   = ldew_snow-xsc_snow
 
          !snow unloading
          IF (ldew_snow>1.e-8) THEN
             FT = MAX(0.0,(tair - 270.15) / 1.87E5)
             FV = SQRT(forc_us*forc_us + forc_vs*forc_vs) / 1.56E5
             ICEDRIP = MAX(0.,ldew_snow) * (FV+FT)    !MB: removed /DT
-            ICEDRIP = min(ICEDRIP,ldew_snow)           
+            ICEDRIP = MIN(ICEDRIP,ldew_snow)           
             xsc_snow      =  xsc_snow+ICEDRIP
             ldew_snow     =  ldew_snow - ICEDRIP    
-         ELSE
-            ICEDRIP = 0.
          ENDIF
-
 
          ! phase change and excess !
          IF (tleaf > tfrz) THEN
@@ -908,7 +902,6 @@ contains
                ldew_snow  = ldew_snow-ldew_smelt
                ldew_rain  = ldew_rain+ldew_smelt
                xsc_rain   = xsc_rain + max(0., ldew_rain-satcap_rain)
-               xsc_snow   = xsc_snow + max(0., ldew_snow-satcap_snow)
             ENDIF
             ! tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ELSE
@@ -917,14 +910,12 @@ contains
                ldew_frzc  = max(ldew_frzc,0.0)
                ldew_snow  = ldew_snow+ldew_frzc
                ldew_rain  = ldew_rain-ldew_frzc
-               xsc_rain   = xsc_rain + max(0., ldew_rain-satcap_rain)
                xsc_snow   = xsc_snow + max(0., ldew_snow-satcap_snow)
             ENDIF
             !tleaf      = fvegc*tfrz+ (1.0-fwet)*tleaf
          ENDIF
 
-         ldew_rain     = ldew_rain-xsc_rain
-         ldew_snow     = ldew_snow-xsc_snow
+
          ldew          = ldew - (xsc_rain + xsc_snow)
 
          IF (p0 > 1.e-8) THEN
@@ -1091,9 +1082,10 @@ contains
 
          xsc_rain = max(0., ldew_rain-satcap_rain)
          xsc_snow = max(0., ldew_snow-satcap_snow)
-         
+
          ldew_rain     = ldew_rain-xsc_rain
          ldew_snow     = ldew_snow-xsc_snow
+
          ! phase change and excess !
          IF (tleaf > tfrz) THEN
             ldew_smelt = MIN(ldew_snow,(tleaf-tfrz)*CICE*ldew_snow/DENICE/(HFUS))
