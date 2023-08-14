@@ -50,7 +50,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_urban_paras      = .true.
    LOGICAL  :: USE_SITE_thermal_paras    = .false.
    LOGICAL  :: USE_SITE_urban_LAI        = .false.
-#ENDIF
+#endif
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
