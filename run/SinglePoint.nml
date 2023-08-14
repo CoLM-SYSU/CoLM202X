@@ -41,8 +41,8 @@
    ! LAI setting
    DEF_LAI_MONTHLY = .false.
 
-   ! irrigation method
-   DEF_IRRIGATION_METHOD = 1 ! 1:drip; 2:sprinkler; 3:flood; 4:paddy
+   !! irrigation method
+   !DEF_IRRIGATION_METHOD = 1 ! 1:drip; 2:sprinkler; 3:flood; 4:paddy
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme = 1 ! 1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
