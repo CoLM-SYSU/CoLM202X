@@ -149,7 +149,7 @@ MODULE MOD_Lulcc_TMatrix
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
-#ifdef CoLMDEBUG
+#ifdef RangeCheck
    CALL check_vector_data ('lccpct_patches ', lccpct_patches)
 #endif
 
