@@ -235,6 +235,8 @@ contains
                         qflx_irrig_flood = irrig_rate(i)
                     else if (irrig_method_p(m) == irrig_method_paddy) then
                         qflx_irrig_paddy = irrig_rate(i)
+                    else
+                        qflx_irrig_drip = irrig_rate(i)
                     end if
                     n_irrig_steps_left(i) = n_irrig_steps_left(i) -1
                     deficit_irrig(i) = deficit_irrig(i) - irrig_rate(i)*deltim
