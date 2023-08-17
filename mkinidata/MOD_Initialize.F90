@@ -72,6 +72,7 @@ MODULE MOD_Initialize
       USE MOD_HRUVector
       USE MOD_Hydro_HillslopeNetwork
       USE MOD_Hydro_RiverLakeNetwork
+      USE MOD_Hydro_RiverDepth
 #endif
 #ifdef CROP
       USE MOD_CropReadin
@@ -802,7 +803,9 @@ MODULE MOD_Initialize
 #ifdef LATERAL_FLOW
 
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init ()
+      CALL river_lake_network_init (use_calc_rivdpt = .false.)
+
+      CALL calc_riverdepth_from_runoff ()
 
       IF (p_is_worker) THEN
 
