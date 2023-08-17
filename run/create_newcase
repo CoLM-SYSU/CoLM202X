@@ -86,7 +86,7 @@ cat>input_${CASENAME}.nml<<EOF
 
    ! Canopy DEF Interception scheme selection
    DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
-   DEF_USE_IRRIGATION = .true.
+!   DEF_USE_IRRIGATION = .true.
 
    ! ----- forcing -----
    ! Options :
@@ -360,9 +360,9 @@ NP='$NP'
 endyr=`expr $iyr_e + 1`
 iloop='$iloop'
 SELFPLUS='`expr $iloop + 1`'
-SEQYR='`seq -w ${iyr_s} ${iyr_e}`'
+SEQYR='`seq -w '${iyr_s}' '${iyr_e}'`'
 SEQMO='`seq -w 1 12`'
-RESETTIME='${files} ${files/${endyr}-001/${iyr_s}-001}'
+RESETTIME='${files} ${files/'${endyr}'-001/'${iyr_s}'-001}'
 YEARMON='${iyr}-${i}'
 cat>mksrf.submit<<EOF
 #!/bin/bash
