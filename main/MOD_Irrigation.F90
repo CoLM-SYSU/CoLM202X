@@ -108,7 +108,6 @@ contains
         real(r8) :: h2osoi_liq_target_tot
         real(r8) :: h2osoi_liq_wilting_point_tot
         real(r8) :: h2osoi_liq_saturation_capacity_tot
-        real(r8) :: smpswc,smpsfc
         real(r8) :: h2osoi_liq_wilting_point(1:nl_soil)
         real(r8) :: h2osoi_liq_field_capacity(1:nl_soil)
         real(r8) :: h2osoi_liq_saturation_capacity(1:nl_soil)

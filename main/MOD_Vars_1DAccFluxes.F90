@@ -1483,7 +1483,7 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
-            lai = laisun + laisha
+                        
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
