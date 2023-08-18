@@ -21,6 +21,7 @@ CONTAINS
       USE MOD_DataType
       USE MOD_NetCDFSerial
       USE MOD_NetCDFBlock
+      USE MOD_Block
       USE MOD_Mesh
       USE MOD_Grid
       USE MOD_Mapping_Grid2Pset
@@ -39,7 +40,7 @@ CONTAINS
       real(r8), allocatable :: bsnrnof(:) , bsndis(:)
       integer,  allocatable :: nups_riv(:), iups_riv(:), b_up2down(:)
 
-      integer :: i, j, ithis
+      integer :: i, j, ithis, ib, jb, iblkme
       integer :: iwork, mesg(2), isrc, ndata
       real(r8), allocatable :: rcache(:)
 
@@ -53,6 +54,16 @@ CONTAINS
       IF (p_is_io) THEN
          CALL allocate_block_data (grid_rnof, f_rnof)
          CALL ncio_read_block (file_rnof, 'ro', grid_rnof, f_rnof)
+
+         DO iblkme = 1, gblock%nblkme
+            ib = gblock%xblkme(iblkme)
+            jb = gblock%yblkme(iblkme)
+            do j = 1, grid_rnof%ycnt(jb)
+               do i = 1, grid_rnof%xcnt(ib)
+                  f_rnof%blk(ib,jb)%val(i,j) = max(f_rnof%blk(ib,jb)%val(i,j), 0.)
+               ENDDO
+            ENDDO
+         ENDDO
       ENDIF
 
       IF (p_is_worker) THEN
@@ -172,8 +183,6 @@ CONTAINS
             riverdpth(i) = max(cH_rivdpt * (bsndis(i)**pH_rivdpt) + B0_rivdpt, Bmin_rivdpt)
          ENDDO
 
-         write(*,*) bsndis
-     
          file_rivdpt = trim(DEF_dir_restart) // '/' // trim(DEF_CASE_NAME) //'_riverdepth.nc'
          CALL ncio_create_file      (file_rivdpt)
          CALL ncio_define_dimension (file_rivdpt, 'basin', totalnumelm)

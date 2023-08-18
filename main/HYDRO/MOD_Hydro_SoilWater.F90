@@ -3539,7 +3539,7 @@ contains
       USE MOD_SPMD_Task
       IMPLICIT NONE
 
-      CHARACTER(len=20) :: fmtt
+      ! CHARACTER(len=20) :: fmtt
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
@@ -3548,12 +3548,21 @@ contains
             MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,*)
-            write(fmtt,'("(A,",I1,"I12)")') max_iters_richards
-            write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
+            ! write(*,*)
+            ! write(fmtt,'("(A,",I1,"I12)")') max_iters_richards
+            ! write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
+
+            ! count_iters_accm = count_iters_accm + count_iters_this
+            ! write(*,fmtt) 'VSF Iteration stat all steps: ', count_iters_accm(:)
+            
+            write(*,"(/,A,I13,A,I13,A)") 'VSF Iteration stat this step: ',    &
+               sum(count_iters_this(1:max_iters_richards-1)), ' (converged)', &
+               count_iters_this(max_iters_richards), ' (failed)'
 
             count_iters_accm = count_iters_accm + count_iters_this
-            write(*,fmtt) 'VSF Iteration stat all steps: ', count_iters_accm(:)
+            write(*,"(A,I13,A,I13,A)") 'VSF Iteration stat all steps: ',      &
+               sum(count_iters_accm(1:max_iters_richards-1)), ' (converged)', &
+               count_iters_accm(max_iters_richards), ' (failed)'
          ENDIF
 
          count_iters_this = 0
