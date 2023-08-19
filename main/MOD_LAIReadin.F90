@@ -67,22 +67,26 @@ MODULE MOD_LAIReadin
       landdir = trim(dir_landdata) // '/LAI'
 
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
       iyear = findloc(SITE_LAI_year, year, dim=1)
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
 #endif
+#endif
 
 #if (defined LULC_USGS || defined LULC_IGBP)
 
-!TODO: need to consider single point for urban model
+!TODO-done: need to consider single point for urban model
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
       IF (DEF_LAI_MONTHLY) THEN
          tlai(:) = SITE_LAI_monthly(time,iyear)
          tsai(:) = SITE_SAI_monthly(time,iyear)
       ELSE
          tlai(:) = SITE_LAI_8day(itime,iyear)
       ENDIF
+#endif
 #else
       IF (DEF_LAI_MONTHLY) THEN
          write(cyear,'(i4.4)') year
@@ -140,7 +144,8 @@ MODULE MOD_LAIReadin
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 #ifdef SinglePoint
-      !TODO: how to add time parameter in single point case
+      !TODO-done@wenzong: need to add for urban model CASE like IGBP/USGS above?
+#ifndef URBAN_MODEL
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          IF (DEF_LAI_MONTHLY) THEN
             tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
@@ -154,6 +159,7 @@ MODULE MOD_LAIReadin
             tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
          ENDIF
       ENDIF
+#endif
 #else
 
       write(cyear,'(i4.4)') year

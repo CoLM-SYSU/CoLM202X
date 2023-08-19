@@ -236,10 +236,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
 
-   real(r8), allocatable :: a_irrig_rate         (:)        
-   real(r8), allocatable :: a_deficit_irrig      (:)      
-   real(r8), allocatable :: a_sum_irrig          (:)          
-   real(r8), allocatable :: a_sum_irrig_count    (:) 
+   real(r8), allocatable :: a_irrig_rate         (:)
+   real(r8), allocatable :: a_deficit_irrig      (:)
+   real(r8), allocatable :: a_sum_irrig          (:)
+   real(r8), allocatable :: a_sum_irrig_count    (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
    real(r8), allocatable :: a_abm                (:)
@@ -1046,7 +1046,7 @@ contains
             a_rsub    (:) = spval
             a_rnof    (:) = spval
 #ifdef LATERAL_FLOW
-            a_xwsur   (:) = spval  
+            a_xwsur   (:) = spval
             a_xwsub   (:) = spval
 #endif
             a_qintr   (:) = spval
@@ -1244,9 +1244,9 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
-            a_irrig_rate         (:) = spval     
-            a_deficit_irrig      (:) = spval  
-            a_sum_irrig          (:) = spval      
+            a_irrig_rate         (:) = spval
+            a_deficit_irrig      (:) = spval
+            a_sum_irrig          (:) = spval
             a_sum_irrig_count    (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
@@ -1483,7 +1483,6 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
-            lai = laisun + laisha
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
