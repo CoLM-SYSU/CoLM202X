@@ -45,7 +45,7 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_dbedrock         = .true.
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .false.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
 
 #ifdef URBAN_MODEL
    LOGICAL  :: USE_SITE_urban_paras      = .true.
@@ -111,7 +111,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    ! ----- compress data in aggregation when send data from IO to worker -----
-   logical :: USE_zip_for_aggregation = .false.
+   logical :: USE_zip_for_aggregation = .true.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -192,8 +192,8 @@ MODULE MOD_Namelist
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
-   !  irrigation method temporary
-   INTEGER :: DEF_IRRIGATION_METHOD = 1
+   ! !  irrigation method temporary
+   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -708,7 +708,7 @@ CONTAINS
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
-         DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
+         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -1099,9 +1099,8 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_USE_IRRIGATION,      1, mpi_logical, p_root, p_comm_glb, p_err)
       !  use irrigation temporary
-      CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
