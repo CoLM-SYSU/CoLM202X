@@ -121,7 +121,7 @@ CONTAINS
       INTEGER, allocatable :: basin_sorted(:), order(:)
 
       ! for lakes
-      integer :: istt, iend, nsublake, i, ipatch, ipxl
+      integer :: ps, pe, nsublake, i, ipatch, ipxl
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -548,12 +548,12 @@ CONTAINS
                
                   wtsrfelv(ibasin) = basinelv(ibasin)
 
-                  istt = elm_patch%substt(ibasin)
-                  iend = elm_patch%subend(ibasin)
+                  ps = elm_patch%substt(ibasin)
+                  pe = elm_patch%subend(ibasin)
 
-                  bedelv(ibasin) = basinelv(ibasin) - maxval(lakedepth(istt:iend))
+                  bedelv(ibasin) = basinelv(ibasin) - maxval(lakedepth(ps:pe))
 
-                  nsublake = iend - istt + 1
+                  nsublake = pe - ps + 1
                   lakes(ibasin)%nsub = nsublake
 
                   allocate (lakes(ibasin)%area0  (nsublake))
@@ -562,7 +562,7 @@ CONTAINS
                   allocate (lakes(ibasin)%depth  (nsublake))
 
                   DO i = 1, nsublake
-                     ipatch = i + istt - 1
+                     ipatch = i + ps - 1
                      lakes(ibasin)%area(i) = 0
                      DO ipxl = landpatch%ipxstt(ipatch), landpatch%ipxend(ipatch)
                         lakes(ibasin)%area(i) = lakes(ibasin)%area(i) &
@@ -575,7 +575,7 @@ CONTAINS
                   ! area data in HRU order
                   lakes(ibasin)%area0 = lakes(ibasin)%area
 
-                  lakes(ibasin)%depth = lakedepth(istt:iend)
+                  lakes(ibasin)%depth = lakedepth(ps:pe)
                   ! depth data in HRU order
                   lakes(ibasin)%depth0 = lakes(ibasin)%depth
 
