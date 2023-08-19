@@ -509,7 +509,12 @@ MODULE MOD_Initialize
             write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
                // ' to initialize soil water content: ', trim(fwtd)
          ENDIF
+         ! use_wtd = .false.
       ENDIF
+
+      IF (DEF_RSS_SCHEME > 0) THEN
+         use_wtd = .false.
+      ENDIF   
 #ifdef USEMPI
       call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
