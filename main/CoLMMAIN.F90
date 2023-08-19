@@ -611,7 +611,7 @@ IF (patchtype <= 2) THEN ! <=== is - URBAN and BUILT-UP   (patchtype = 1)
 !----------------------------------------------------------------------
 ! [2] Canopy interception and precipitation onto ground surface
 !----------------------------------------------------------------------
-
+qflx_irrig_sprinkler = 0._r8
 IF (patchtype == 0) THEN
 
 #if(defined LULC_USGS || defined LULC_IGBP)
@@ -859,7 +859,7 @@ ENDIF
 
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
-         write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
+         write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass,p_iam_glb
          ! CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
