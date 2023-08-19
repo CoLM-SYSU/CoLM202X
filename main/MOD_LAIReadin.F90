@@ -77,7 +77,7 @@ MODULE MOD_LAIReadin
 
 #if (defined LULC_USGS || defined LULC_IGBP)
 
-!TODO: need to consider single point for urban model
+!TODO-done: need to consider single point for urban model
 #ifdef SinglePoint
 #ifndef URBAN_MODEL
       IF (DEF_LAI_MONTHLY) THEN
@@ -144,7 +144,8 @@ MODULE MOD_LAIReadin
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 #ifdef SinglePoint
-      !TODO@wenzong: need to add for urban model CASE like IGBP/USGS above?
+      !TODO-done@wenzong: need to add for urban model CASE like IGBP/USGS above?
+#ifndef URBAN_MODEL
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          IF (DEF_LAI_MONTHLY) THEN
             tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)
@@ -158,6 +159,7 @@ MODULE MOD_LAIReadin
             tsai(:)   = sum (SITE_SAI_pfts_monthly(:,time,iyear) * SITE_pctpfts)
          ENDIF
       ENDIF
+#endif
 #else
 
       write(cyear,'(i4.4)') year
