@@ -27,11 +27,12 @@ module MOD_Hydro_Hist
    REAL(r8), allocatable :: a_wdsrf_hru  (:)
    REAL(r8), allocatable :: a_veloc_hru  (:)
 
-   REAL(r8), allocatable :: a_rsubs_bsn  (:)
-   REAL(r8), allocatable :: a_rsubs_hru  (:)
+   REAL(r8), allocatable :: a_xsubs_bsn  (:)
+   REAL(r8), allocatable :: a_xsubs_hru  (:)
 
    REAL(r8), allocatable :: a_height_riv (:)
    REAL(r8), allocatable :: a_veloct_riv (:)
+   REAL(r8), allocatable :: a_discharge  (:)
 
    ! -- PUBLIC SUBROUTINEs --
    public :: hist_basin_init
@@ -53,13 +54,14 @@ CONTAINS
          IF (numhru > 0) THEN
             allocate ( a_wdsrf_hru  (numhru))
             allocate ( a_veloc_hru  (numhru))
-            allocate ( a_rsubs_hru  (numhru))
+            allocate ( a_xsubs_hru  (numhru))
          ENDIF
 
          IF (numbasin > 0) THEN
             allocate ( a_height_riv (numbasin))
             allocate ( a_veloct_riv (numbasin))
-            allocate ( a_rsubs_bsn  (numbasin))
+            allocate ( a_discharge  (numbasin))
+            allocate ( a_xsubs_bsn  (numbasin))
          ENDIF
       ENDIF
 
@@ -75,11 +77,12 @@ CONTAINS
       IF (allocated(a_wdsrf_hru )) deallocate(a_wdsrf_hru )
       IF (allocated(a_veloc_hru )) deallocate(a_veloc_hru )
 
-      IF (allocated(a_rsubs_bsn )) deallocate(a_rsubs_bsn )
-      IF (allocated(a_rsubs_hru )) deallocate(a_rsubs_hru )
+      IF (allocated(a_xsubs_bsn )) deallocate(a_xsubs_bsn )
+      IF (allocated(a_xsubs_hru )) deallocate(a_xsubs_hru )
 
       IF (allocated(a_height_riv)) deallocate(a_height_riv)
       IF (allocated(a_veloct_riv)) deallocate(a_veloct_riv)
+      IF (allocated(a_discharge )) deallocate(a_discharge )
 
    end subroutine hist_basin_final
 
@@ -157,6 +160,16 @@ CONTAINS
          DEF_hist_vars%riv_veloct, itime_in_file, 'River Velocity', 'm/s')
 
       IF (p_is_worker) THEN
+         where(a_discharge /= spval)
+            a_discharge = a_discharge / nac_basin
+         END where
+      ENDIF
+
+      CALL vector_write_basin (&
+         file_hist_basin, a_discharge, numbasin, totalnumelm, 'discharge', 'basin', elm_data_address, &
+         DEF_hist_vars%discharge, itime_in_file, 'River Discharge', 'm^3/s')
+
+      IF (p_is_worker) THEN
          where(a_wdsrf_hru /= spval)
             a_wdsrf_hru = a_wdsrf_hru / nac_basin
          END where
@@ -177,24 +190,24 @@ CONTAINS
          DEF_hist_vars%veloc_hru, itime_in_file, 'Surface Flow Velocity in Hydro unit', 'm/s')
 
       IF (p_is_worker) THEN
-         where(a_rsubs_bsn /= spval)
-            a_rsubs_bsn = a_rsubs_bsn / nac_basin
+         where(a_xsubs_bsn /= spval)
+            a_xsubs_bsn = a_xsubs_bsn / nac_basin
          END where
       ENDIF
 
       CALL vector_write_basin (&
-         file_hist_basin, a_rsubs_bsn, numbasin, totalnumelm, 'rsubs_bsn', 'basin', elm_data_address, &
-         DEF_hist_vars%rsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
+         file_hist_basin, a_xsubs_bsn, numbasin, totalnumelm, 'xsubs_bsn', 'basin', elm_data_address, &
+         DEF_hist_vars%xsubs_bsn, itime_in_file, 'Subsurface lateral flow between basins', 'm/s')
 
       IF (p_is_worker) THEN
-         where(a_rsubs_hru /= spval)
-            a_rsubs_hru = a_rsubs_hru / nac_basin
+         where(a_xsubs_hru /= spval)
+            a_xsubs_hru = a_xsubs_hru / nac_basin
          END where
       ENDIF
 
       CALL vector_write_basin (&
-         file_hist_basin, a_rsubs_hru, numhru, totalnumhru, 'rsubs_hru', 'hydrounit', hru_data_address, &
-         DEF_hist_vars%rsubs_hru, itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
+         file_hist_basin, a_xsubs_hru, numhru, totalnumhru, 'xsubs_hru', 'hydrounit', hru_data_address, &
+         DEF_hist_vars%xsubs_hru, itime_in_file, 'SubSurface lateral flow between HRUs', 'm/s')
 
       call FLUSH_acc_fluxes_basin ()
 
@@ -220,13 +233,14 @@ CONTAINS
          IF (numbasin > 0) THEN
             a_height_riv(:) = spval
             a_veloct_riv(:) = spval
-            a_rsubs_bsn (:) = spval
+            a_discharge (:) = spval
+            a_xsubs_bsn (:) = spval
          ENDIF
 
          IF (numhru > 0) THEN
             a_wdsrf_hru(:) = spval
             a_veloc_hru(:) = spval
-            a_rsubs_hru(:) = spval
+            a_xsubs_hru(:) = spval
          ENDIF
 
       ENDIF
@@ -249,13 +263,14 @@ CONTAINS
          IF (numbasin > 0) THEN
             CALL acc1d_basin (wdsrf_bsn_ta, a_height_riv)
             CALL acc1d_basin (veloc_riv_ta, a_veloct_riv)
-            CALL acc1d_basin (rsubs_bsn     , a_rsubs_bsn )
+            CALL acc1d_basin (discharge   , a_discharge )
+            CALL acc1d_basin (xsubs_bsn   , a_xsubs_bsn )
          ENDIF
 
          IF (numhru > 0) THEN
             CALL acc1d_basin (wdsrf_hru_ta, a_wdsrf_hru)
             CALL acc1d_basin (veloc_hru_ta, a_veloc_hru)
-            CALL acc1d_basin (rsubs_hru   , a_rsubs_hru)
+            CALL acc1d_basin (xsubs_hru   , a_xsubs_hru)
          ENDIF
       ENDIF
 

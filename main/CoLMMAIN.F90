@@ -974,7 +974,10 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
       zerr=errore
 
       endwb=scv+sum(wice_soisno(1:)+wliq_soisno(1:))
-      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof+irrig_rate(ipatch))*deltim
+      errorw=(endwb-totwb)-(pg_rain+pg_snow-fevpa-rnof)*deltim
+#ifdef CROP
+   if (DEF_USE_IRRIGATION) errorw = errorw - irrig_rate(ipatch)*deltim
+#endif
       xerr=errorw/deltim
 
 !======================================================================
@@ -1093,9 +1096,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      ! rnof = rsur + rsub(ipatch)
-      ! wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
-      ! wdsrf = max(0., wdsrf)
+      rnof = rsur + rsub(ipatch)
+      wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
+      wdsrf = max(0., wdsrf)
 #endif
 
       ! Set zero to the empty node
