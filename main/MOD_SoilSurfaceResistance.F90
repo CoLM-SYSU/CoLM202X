@@ -29,7 +29,7 @@ MODULE MOD_SoilSurfaceResistance
    integer, parameter :: soil_gas_diffusivity_scheme = 1
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   integer, parameter :: soil_gas_diffusivity_scheme = 4
+   integer, parameter :: soil_gas_diffusivity_scheme = 6
 #endif
 
 
@@ -112,7 +112,7 @@ CONTAINS
         rw_1,             &! inverse of volatilization resistance [m/s]
         rss_1,            &! inverse of soil surface resistance [m/s]
         tao,              &! tortuosity of the vapor flow paths through the soil matrix
-        eps100,           &! air-filled porosity (cm3 soil-air cm−3 soil) at −1000 mm of water matric potential
+        eps100,           &! air-filled porosity at −1000 mm of water matric potential
         fac,              &! temporal variable for calculating wx/porsl
         fac_fc,           &! temporal variable for calculating wx/wfc
         B                  ! bunsen solubility coefficient
@@ -142,7 +142,7 @@ CONTAINS
    smp_node = soil_psi_from_vliq ( s_node*(porsl(1)-theta_r(1)) + theta_r(1), &
                 porsl(1), theta_r(1), psi0(1), &
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
-   hk       = soil_hk_from_psi   (smp_node*1000., psi0(1), hksati(1), &
+   hk       = soil_hk_from_psi   (smp_node, psi0(1), hksati(1), &
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
 
    smp_node = smp_node/1000.
@@ -189,8 +189,13 @@ CONTAINS
    CASE (6)
 #ifdef Campbell_SOIL_MODEL
       eps100 = porsl(1) - porsl(1)*(psi0(1)/-1000.)**(1./bsw(1))
-      tao    = porsl(1)*porsl(1)*(eps/porsl(1))**(2.+log(eps100**0.25_r8)/log(eps100/porsl(1)))
 #endif
+
+#ifdef vanGenuchten_Mualem_SOIL_MODEL
+      eps100 = porsl(1) - soil_vliq_from_psi (-1000., porsl(1), theta_r(1), psi0(1), &
+                5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
+#endif
+      tao    = porsl(1)*porsl(1)*(eps/porsl(1))**(2.+log(eps100**0.25_r8)/log(eps100/porsl(1)))
 
    ENDSELECT
 
