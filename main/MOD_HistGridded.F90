@@ -510,9 +510,14 @@ contains
                call ncio_write_serial (filename, 'lon_e', hist_concat%ginfo%lon_e, 'lon')
 #endif
             endif
+         
             call ncio_write_time (filename, dataname, time, itime, DEF_HIST_FREQ)
 
          ENDIF
+
+#ifdef USEMPI
+         CALL mpi_bcast (itime, 1, MPI_INTEGER, p_root, p_comm_glb, p_err)
+#endif
 
       elseif (trim(DEF_HIST_mode) == 'block') then
 
@@ -538,6 +543,10 @@ contains
             end do
 
          end if
+#ifdef USEMPI
+         IF (.not. p_is_master) CALL mpi_bcast (itime, 1, MPI_INTEGER, p_root, p_comm_group, p_err)
+#endif
+
       endif
 
    end subroutine hist_gridded_write_time

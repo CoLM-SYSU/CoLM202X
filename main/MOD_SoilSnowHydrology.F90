@@ -625,6 +625,8 @@ MODULE MOD_SoilSnowHydrology
             vol_liq(j) = wliq_soisno(j)/(dz_soisno(j)*denh2o)
             vol_liq(j) = min(eff_porosity(j), max(0., vol_liq(j)))
             wresi(j) = wliq_soisno(j) - dz_soisno(j) * denh2o * vol_liq(j)
+         ELSE
+            vol_liq(j) = 0.
          ENDIF
       enddo
 

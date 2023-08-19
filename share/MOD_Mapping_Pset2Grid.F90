@@ -101,10 +101,8 @@ CONTAINS
 #endif
 
       IF (p_is_master) THEN
-         write(*,101)
-         101 format (/, 'Making mapping from pixel set to grid ...')
-         write(*,*) fgrid%nlat, 'grids in latitude'
-         write(*,*) fgrid%nlon, 'grids in longitude'
+         write(*,"('Making mapping from pixel set to grid: ', I7, A, I7, A)") &
+            fgrid%nlat, ' grids in latitude', fgrid%nlon, ' grids in longitude'
       ENDIF
 
       IF (allocated(this%grid%xblk)) deallocate(this%grid%xblk)
