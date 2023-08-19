@@ -441,17 +441,29 @@ contains
          ! surface runoff [mm/s]
          call write_history_variable_2d ( DEF_hist_vars%rsur, &
             a_rsur, file_hist, 'f_rsur', itime_in_file, sumarea, filter, &
-            'surface runoff / surface water change by lateral flow)','mm/s')
+            'surface runoff','mm/s')
 
          ! subsurface runoff [mm/s]
          call write_history_variable_2d ( DEF_hist_vars%rsub, &
             a_rsub, file_hist, 'f_rsub', itime_in_file, sumarea, filter, &
-            'subsurface runoff / groundwater change by lateral flow','mm/s')
+            'subsurface runoff','mm/s')
 
          ! total runoff [mm/s]
          call write_history_variable_2d ( DEF_hist_vars%rnof, &
             a_rnof, file_hist, 'f_rnof', itime_in_file, sumarea, filter, &
-            'total runoff / total change of surface water and groundwater by lateral flow','mm/s')
+            'total runoff','mm/s')
+
+#ifdef LATERAL_FLOW
+         ! rate of surface water depth change [mm/s]
+         call write_history_variable_2d ( DEF_hist_vars%xwsur, &
+            a_xwsur, file_hist, 'f_xwsur', itime_in_file, sumarea, filter, &
+            'rate of surface water depth change','mm/s')
+
+         ! rate of ground water change [mm/s]
+         call write_history_variable_2d ( DEF_hist_vars%xwsub, &
+            a_xwsub, file_hist, 'f_xwsub', itime_in_file, sumarea, filter, &
+            'rate of ground water change','mm/s')
+#endif
 
          ! interception [mm/s]
          call write_history_variable_2d ( DEF_hist_vars%qintr, &

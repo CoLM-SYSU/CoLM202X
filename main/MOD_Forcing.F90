@@ -671,7 +671,7 @@ contains
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
 #ifndef URBAN_MODEL
-               IF (USE_SITE_ForcingReadAhead) THEN
+               IF (forcing_read_ahead) THEN
                   metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                ELSE
                   CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
@@ -717,7 +717,7 @@ contains
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
 
 #ifndef URBAN_MODEL
-                  IF (USE_SITE_ForcingReadAhead) THEN
+                  IF (forcing_read_ahead) THEN
                      metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar)
                   ELSE
                      CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)

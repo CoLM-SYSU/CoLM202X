@@ -1098,9 +1098,9 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
       rnof = rsur
 #else
       ! for lateral flow, "rsub" refers to water exchage between hillslope and river
-      ! rnof = rsur + rsub(ipatch)
-      ! wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
-      ! wdsrf = max(0., wdsrf)
+      rnof = rsur + rsub(ipatch)
+      wdsrf = wdsrf + (pg_rain + pg_snow - aa) * deltim
+      wdsrf = max(0., wdsrf)
 #endif
 
       ! Set zero to the empty node

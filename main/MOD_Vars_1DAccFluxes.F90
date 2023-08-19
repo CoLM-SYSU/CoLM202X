@@ -39,6 +39,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rsur   (:)
    real(r8), allocatable :: a_rsub   (:)
    real(r8), allocatable :: a_rnof   (:)
+#ifdef LATERAL_FLOW
+   real(r8), allocatable :: a_xwsur  (:)
+   real(r8), allocatable :: a_xwsub  (:)
+#endif
    real(r8), allocatable :: a_qintr  (:)
    real(r8), allocatable :: a_qinfl  (:)
    real(r8), allocatable :: a_qdrip  (:)
@@ -365,6 +369,10 @@ contains
             allocate (a_rsur      (numpatch))
             allocate (a_rsub      (numpatch))
             allocate (a_rnof      (numpatch))
+#ifdef LATERAL_FLOW
+            allocate (a_xwsur     (numpatch))
+            allocate (a_xwsub     (numpatch))
+#endif
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
             allocate (a_qdrip     (numpatch))
@@ -701,6 +709,10 @@ contains
             deallocate (a_rsur      )
             deallocate (a_rsub      )
             deallocate (a_rnof      )
+#ifdef LATERAL_FLOW
+            deallocate (a_xwsur     )
+            deallocate (a_xwsub     )
+#endif
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
             deallocate (a_qdrip     )
@@ -1036,6 +1048,10 @@ contains
             a_rsur    (:) = spval
             a_rsub    (:) = spval
             a_rnof    (:) = spval
+#ifdef LATERAL_FLOW
+            a_xwsur   (:) = spval  
+            a_xwsub   (:) = spval
+#endif
             a_qintr   (:) = spval
             a_qinfl   (:) = spval
             a_qdrip   (:) = spval
@@ -1343,6 +1359,7 @@ contains
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
+      USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
 #endif
 
@@ -1432,6 +1449,10 @@ contains
             call acc1d (rsur    , a_rsur   )
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
+#ifdef LATERAL_FLOW
+            CALL acc1d (xwsur   , a_xwsur  )
+            CALL acc1d (xwsub   , a_xwsub  )
+#endif
             call acc1d (qintr   , a_qintr  )
             call acc1d (qinfl   , a_qinfl  )
             call acc1d (qdrip   , a_qdrip  )
