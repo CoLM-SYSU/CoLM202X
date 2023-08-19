@@ -197,10 +197,12 @@ MODULE MOD_SoilSnowHydrology
       endif
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
-         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+         if(patchtype==0)then
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
+            gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+         end if
       end if
 #endif
 !=======================================================================
@@ -623,6 +625,8 @@ MODULE MOD_SoilSnowHydrology
             vol_liq(j) = wliq_soisno(j)/(dz_soisno(j)*denh2o)
             vol_liq(j) = min(eff_porosity(j), max(0., vol_liq(j)))
             wresi(j) = wliq_soisno(j) - dz_soisno(j) * denh2o * vol_liq(j)
+         ELSE
+            vol_liq(j) = 0.
          ENDIF
       enddo
 

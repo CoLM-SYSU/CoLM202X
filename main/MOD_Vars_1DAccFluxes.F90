@@ -236,10 +236,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
 
-   real(r8), allocatable :: a_irrig_rate         (:)        
-   real(r8), allocatable :: a_deficit_irrig      (:)      
-   real(r8), allocatable :: a_sum_irrig          (:)          
-   real(r8), allocatable :: a_sum_irrig_count    (:) 
+   real(r8), allocatable :: a_irrig_rate         (:)
+   real(r8), allocatable :: a_deficit_irrig      (:)
+   real(r8), allocatable :: a_sum_irrig          (:)
+   real(r8), allocatable :: a_sum_irrig_count    (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
    real(r8), allocatable :: a_abm                (:)
@@ -1046,7 +1046,7 @@ contains
             a_rsub    (:) = spval
             a_rnof    (:) = spval
 #ifdef LATERAL_FLOW
-            a_xwsur   (:) = spval  
+            a_xwsur   (:) = spval
             a_xwsub   (:) = spval
 #endif
             a_qintr   (:) = spval
@@ -1244,9 +1244,9 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
-            a_irrig_rate         (:) = spval     
-            a_deficit_irrig      (:) = spval  
-            a_sum_irrig          (:) = spval      
+            a_irrig_rate         (:) = spval
+            a_deficit_irrig      (:) = spval
+            a_sum_irrig          (:) = spval
             a_sum_irrig_count    (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
@@ -1483,7 +1483,6 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
-            lai = laisun + laisha
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
@@ -1663,10 +1662,15 @@ contains
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
+            ! call acc1d (irrig_rate         ,   a_irrig_rate         )
+            ! call acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! call acc1d (sum_irrig          ,   a_sum_irrig          )
+            ! call acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             call acc1d (irrig_rate         ,   a_irrig_rate         )
-            a_deficit_irrig = deficit_irrig
+            call acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
+
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

@@ -41,7 +41,7 @@ CONTAINS
       IMPLICIT NONE
 
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init ()
+      CALL river_lake_network_init (use_calc_rivdpt = .true.)
       CALL basin_neighbour_init    ()
 
    END SUBROUTINE lateral_flow_init
