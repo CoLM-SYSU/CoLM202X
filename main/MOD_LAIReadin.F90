@@ -144,7 +144,7 @@ MODULE MOD_LAIReadin
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
 
 #ifdef SinglePoint
-      !TODO: how to add time parameter in single point case
+      !TODO@wenzong: need to add for urban model CASE like IGBP/USGS above?
       IF (.not. DEF_USE_LAIFEEDBACK)THEN
          IF (DEF_LAI_MONTHLY) THEN
             tlai_p(:) = pack(SITE_LAI_pfts_monthly(:,time,iyear), SITE_pctpfts > 0.)

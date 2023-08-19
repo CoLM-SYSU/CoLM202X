@@ -101,4 +101,4 @@
 !#undef WUEdiag
 
 ! 12. If defined, open Land use and land cover change mode.
-#define LULCC
+#undef LULCC
