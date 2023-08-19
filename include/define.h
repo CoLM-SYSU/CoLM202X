@@ -8,8 +8,8 @@
 ! 2. Land TYPE classification :
 !    Select one of the following options.
 #undef LULC_USGS
-#define LULC_IGBP
-#undef LULC_IGBP_PFT
+#undef LULC_IGBP
+#define LULC_IGBP_PFT
 #undef LULC_IGBP_PC
 
 ! 2.1 Urban model setting (put it temporarily here):
@@ -101,4 +101,4 @@
 !#undef WUEdiag
 
 ! 12. If defined, open Land use and land cover change mode.
-#undef LULCC
+#define LULCC

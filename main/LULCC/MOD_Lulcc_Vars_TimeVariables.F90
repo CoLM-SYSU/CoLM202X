@@ -543,9 +543,13 @@ MODULE MOD_LuLcc_Vars_TimeVariables
                     fveg          (np) = fveg_          (np_)
                     fsno          (np) = fsno_          (np_)
                     sigf          (np) = sigf_          (np_)
+                    IF (lai(np)+sai(np)>1e-6) THEN
+                       sigf(np) = 1-fsno(np)
+                    ENDIF
                     green         (np) = green_         (np_)
-                    lai           (np) = lai_           (np_)
-                    sai           (np) = sai_           (np_)
+                    ! Note: may not read lai and sai since LAIReadin was put after LULCC
+                    ! lai           (np) = lai_           (np_)
+                    ! sai           (np) = sai_           (np_)
                     coszen        (np) = coszen_        (np_)
                     alb       (:,:,np) = alb_       (:,:,np_)
                     ssun      (:,:,np) = ssun_      (:,:,np_)

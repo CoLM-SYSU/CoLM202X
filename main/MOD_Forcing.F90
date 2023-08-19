@@ -16,6 +16,7 @@ module MOD_Forcing
 !                         3) interface for downscaling
 !
 ! TODO...(need complement)
+! forcing final
 
    use MOD_Precision
    USE MOD_Namelist
@@ -46,13 +47,18 @@ module MOD_Forcing
 
    !  for SinglePoint
    TYPE(timestamp), allocatable :: forctime (:)
-   INTEGER, allocatable :: iforctime(:)
+   INTEGER,  allocatable :: iforctime(:)
+   real(r8), allocatable :: forc_disk(:,:)
 
    type(timestamp), allocatable :: tstamp_LB(:)  ! time stamp of low boundary data
    type(timestamp), allocatable :: tstamp_UB(:)  ! time stamp of up boundary data
 
    type(block_data_real8_2d) :: avgcos   ! time-average of cos(zenith)
    type(block_data_real8_2d) :: metdata  ! forcing data
+#if(defined URBAN_MODEL  && defined SinglePoint)
+   type(block_data_real8_2d) :: rainf
+   type(block_data_real8_2d) :: snowf
+#endif
 
    type(block_data_real8_2d), allocatable :: forcn    (:)  ! forcing data
    type(block_data_real8_2d), allocatable :: forcn_LB (:)  ! forcing data at lower bondary
@@ -130,6 +136,10 @@ contains
          ! allocate memory for forcing data
          call allocate_block_data (gforc, metdata)  ! forcing data
          call allocate_block_data (gforc, avgcos )  ! time-average of cos(zenith)
+#if(defined URBAN_MODEL && defined SinglePoint)
+         call allocate_block_data (gforc, rainf)
+         call allocate_block_data (gforc, snowf)
+#endif
 
       end if
 
@@ -204,6 +214,22 @@ contains
       ENDIF
 
    end subroutine forcing_init
+
+   ! ---- forcing finalize ----
+   SUBROUTINE forcing_final ()
+      
+      IMPLICIT NONE
+
+      IF (allocated(forcmask    )) deallocate(forcmask    )
+      IF (allocated(forcmask_elm)) deallocate(forcmask_elm)
+      IF (allocated(glacierss   )) deallocate(glacierss   )
+      IF (allocated(forctime    )) deallocate(forctime    )
+      IF (allocated(iforctime   )) deallocate(iforctime   )
+      IF (allocated(forc_disk   )) deallocate(forc_disk   )
+      IF (allocated(tstamp_LB   )) deallocate(tstamp_LB   )
+      IF (allocated(tstamp_UB   )) deallocate(tstamp_UB   )
+
+   END SUBROUTINE forcing_final
 
    ! ------------
    SUBROUTINE forcing_reset ()
@@ -363,7 +389,7 @@ contains
             call block_data_copy (forcn(6), forc_xy_us , sca = 1/sqrt(2.0_r8))
             call block_data_copy (forcn(6), forc_xy_vs , sca = 1/sqrt(2.0_r8))
          ELSE
-            write(6, *) "At least one of the wind components must be provided! stop!"; 
+            write(6, *) "At least one of the wind components must be provided! stop!";
             CALL CoLM_stop()
          ENDIF
 
@@ -599,7 +625,9 @@ contains
 
       use MOD_UserSpecifiedForcing
       USE MOD_Namelist
+      USE MOD_Block
       use MOD_DataType
+      use MOD_Block
       use MOD_NetCDFBlock
       use MOD_RangeCheck
       implicit none
@@ -609,6 +637,7 @@ contains
 
       ! Local variables
       integer         :: ivar, year, month, day, time_i
+      INTEGER         :: iblkme, ib, jb, i, j
       type(timestamp) :: mtstamp
       character(len=256) :: filename
 
@@ -631,7 +660,34 @@ contains
             ! read forcing data
             filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
             IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-               CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+
+#ifndef URBAN_MODEL
+               IF (USE_SITE_ForcingReadAhead) THEN
+                  metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+               ELSE
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ENDIF
+#else
+               IF (trim(vname(ivar)) == 'Rainf') THEN
+                  CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                  CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                  DO iblkme = 1, gblock%nblkme
+                     ib = gblock%xblkme(iblkme)
+                     jb = gblock%yblkme(iblkme)
+
+                     metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                     !DO j = 1, gforc%ycnt(jb)
+                     !   DO i = 1, gforc%xcnt(ib)
+                     !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
+                     !                                    +  snowf%blk(ib,jb)%val(i,j)
+                     !   ENDDO
+                     !ENDDO
+                  ENDDO
+               ELSE
+                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+               ENDIF
+#endif
             ELSE
                call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
             ENDIF
@@ -650,7 +706,34 @@ contains
                ! read forcing data
                filename = trim(dir_forcing)//trim(metfilename(year, month, day, ivar))
                IF (trim(DEF_forcing%dataset) == 'POINT') THEN
-                  CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+
+#ifndef URBAN_MODEL
+                  IF (USE_SITE_ForcingReadAhead) THEN
+                     metdata%blk(gblock%xblkme(1),gblock%yblkme(1))%val = forc_disk(time_i,ivar) 
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
+#else
+                  IF (trim(vname(ivar)) == 'Rainf') THEN
+                     CALL ncio_read_site_time (filename, 'Rainf', time_i, rainf)
+                     CALL ncio_read_site_time (filename, 'Snowf', time_i, snowf)
+
+                     DO iblkme = 1, gblock%nblkme
+                        ib = gblock%xblkme(iblkme)
+                        jb = gblock%yblkme(iblkme)
+
+                        metdata%blk(ib,jb)%val(1,1) = rainf%blk(ib,jb)%val(1,1) + snowf%blk(ib,jb)%val(1,1)
+                        !DO j = 1, gforc%ycnt(jb)
+                        !   DO i = 1, gforc%xcnt(ib)
+                        !      metdata%blk(ib,jb)%val(i,j) = rainf%blk(ib,jb)%val(i,j) &
+                        !                                    +  snowf%blk(ib,jb)%val(i,j)
+                        !   ENDDO
+                        !ENDDO
+                     ENDDO
+                  ELSE
+                     CALL ncio_read_site_time (filename, vname(ivar), time_i, metdata)
+                  ENDIF
+#endif
                ELSE
                   call ncio_read_block_time (filename, vname(ivar), gforc, time_i, metdata)
                ENDIF
@@ -748,10 +831,11 @@ contains
       ! Local variables
       character(len=256) :: filename
       character(len=256) :: timeunit, timestr
-      REAL(r8), allocatable :: forctime_sec (:)
+      REAL(r8), allocatable :: forctime_sec(:), metcache(:,:,:)
       INTEGER :: year, month, day, hour, minute, second
-      INTEGER :: itime, maxday
+      INTEGER :: itime, maxday, id(3)
       INTEGER*8 :: sec_long
+      integer :: ivar
 
       filename = trim(dir_forcing)//trim(fprefix(1))
 
@@ -766,30 +850,34 @@ contains
 
       forctime(1)%year = year
       forctime(1)%day  = get_calday(month*100+day, isleapyear(year))
-      sec_long = hour*3600 + minute*60 + second + forctime_sec(1)
+      forctime(1)%sec = hour*3600 + minute*60 + second + forctime_sec(1)
 
-      DO itime = 1, size(forctime)
-         IF (itime > 1) THEN
-            forctime(itime) = forctime(itime-1)
-            sec_long = sec_long + forctime_sec(itime) - forctime_sec(itime-1)
-         ENDIF
+      id(:) = (/forctime(1)%year, forctime(1)%day, forctime(1)%sec/)
+      CALL adj2end(id)
+      forctime(1) = id
 
-         DO WHILE (sec_long > 86400)
-            sec_long = sec_long - 86400
-            IF( isleapyear(forctime(itime)%year) ) THEN
-               maxday = 366
-            ELSE
-               maxday = 365
-            ENDIF
-            forctime(itime)%day = forctime(itime)%day + 1
-            IF(forctime(itime)%day > maxday) THEN
-               forctime(itime)%year = forctime(itime)%year + 1
-               forctime(itime)%day = 1
+      DO itime = 2, size(forctime)
+         id(:) = (/forctime(itime-1)%year, forctime(itime-1)%day, forctime(itime-1)%sec/)
+         CALL ticktime (forctime_sec(itime)-forctime_sec(itime-1), id)
+         forctime(itime) = id
+      ENDDO
+
+#ifdef SinglePoint
+      IF (USE_SITE_ForcingReadAhead) THEN
+
+         allocate (forc_disk (size(forctime),NVAR))
+
+         filename = trim(dir_forcing)//trim(metfilename(-1,-1,-1,-1))
+         DO ivar = 1, NVAR
+            if (trim(vname(ivar)) /= 'NULL') THEN
+               CALL ncio_read_serial (filename, vname(ivar), metcache)
+               forc_disk(:,ivar) = metcache(1,1,:)
             ENDIF
          ENDDO
 
-         forctime(itime)%sec = sec_long
-      ENDDO
+         IF (allocated(metcache)) deallocate(metcache)
+      ENDIF
+#endif
 
    END SUBROUTINE metread_time
 
@@ -842,7 +930,6 @@ contains
             iforctime(var_i) = time_i
             tstamp_LB(var_i) = forctime(iforctime(var_i))
          ENDIF
-         write(*,*) mtstamp, forctime(time_i)
 
          RETURN
       ENDIF
@@ -1056,10 +1143,10 @@ contains
          ELSE
             iforctime(var_i) = iforctime(var_i) + 1
             tstamp_LB(var_i) = forctime(iforctime(var_i))
-            tstamp_UB(var_i) = forctime(iforctime(var_i) + 1)
+            tstamp_UB(var_i) = forctime(iforctime(var_i)+1)
          ENDIF
 
-         time_i = iforctime(var_i)
+         time_i = iforctime(var_i)+1
          year = tstamp_UB(var_i)%year
          RETURN
       ENDIF
