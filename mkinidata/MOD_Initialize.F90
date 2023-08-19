@@ -514,12 +514,13 @@ MODULE MOD_Initialize
             write(*,'(/, 2A)') 'Use water table depth and derived equilibrium state ' &
                // ' to initialize soil water content: ', trim(fwtd)
          ENDIF
-         ! use_wtd = .false.
       ENDIF
 
+      ! temporal setting for using soil resistance module
       IF (DEF_RSS_SCHEME > 0) THEN
          use_wtd = .false.
-      ENDIF   
+      ENDIF
+
 #ifdef USEMPI
       call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
@@ -618,7 +619,7 @@ MODULE MOD_Initialize
       if(DEF_USE_IRRIGATION)then
          irrig_rate(:) = 0._r8
          deficit_irrig(:) = 0._r8
-         sum_irrig(:) = 0._r8        
+         sum_irrig(:) = 0._r8
          sum_irrig_count(:) = 0._r8
          n_irrig_steps_left(:) = 0
       end if
@@ -816,7 +817,7 @@ MODULE MOD_Initialize
 
          IF (numpatch > 0) THEN
             wdsrf(:) = 0.
-         ENDIF 
+         ENDIF
 
          DO i = 1, numelm
             IF (lake_id(i) > 0) THEN
@@ -851,7 +852,7 @@ MODULE MOD_Initialize
                IF (lake_id(i) <= 0) THEN
                   wdsrf_bsn(i) = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he))
                ELSE
-                  ! lake 
+                  ! lake
                   totalvolume  = sum(wdsrf_hru(hs:he) * lakes(i)%area0)
                   wdsrf_bsn(i) = lakes(i)%surface(totalvolume)
                ENDIF

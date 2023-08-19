@@ -137,9 +137,8 @@ CONTAINS
    aird     = porsl(1)*(psi0(1)/-1.e7_r8)**(1./bsw(1))
 #endif
 
-   !TODO: need double check below
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   smp_node = soil_psi_from_vliq ( s_node*(porsl(1)-theta_r(1)) + theta_r(1), &
+   smp_node = soil_psi_from_vliq (s_node*(porsl(1)-theta_r(1)) + theta_r(1), &
                 porsl(1), theta_r(1), psi0(1), &
                 5, (/alpha_vgm(1), n_vgm(1), L_vgm(1), sc_vgm(1), fc_vgm(1)/))
    hk       = soil_hk_from_psi   (smp_node, psi0(1), hksati(1), &
@@ -209,7 +208,6 @@ CONTAINS
    dw = -hk*bsw(1)*smp_node/vol_liq
 #endif
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-   !TODO: need double check below
    ! TR13, Eqs. (A2), (A7), (A8) and (A10):
    ! dw = hk*(m-1)/(k*m*(theta_s-theta_r))*S**(-1/m)*(1-S**(1/m))**(-m)
    ! where k=alpha_vgm, S=(1+(-k*psi0(1))**(n))**(-m), m=m_vgm=1-1/n_vgm
@@ -230,6 +228,7 @@ CONTAINS
       dsl = min(dsl,0.2_r8)
 
       rss = dsl/dg
+      !fordebug only
       !write(*,*) dsl, dg, aird, vol_liq/porsl(1), eff_porosity, wice_soisno(1),vol_liq, rss
 
    ! calculate rss by SZ09
