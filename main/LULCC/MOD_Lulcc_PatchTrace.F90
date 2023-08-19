@@ -2,7 +2,7 @@
 
 MODULE MOD_Lulcc_PatchTrace
 ! -------------------------------
-! Created by Wanyi Lin and Hua Yuan, 07/2023
+! Created by Wanyi Lin, Shupeng Zhang and Hua Yuan, 07/2023
 ! may be renamed as MOD_Lulcc_PatchTrace
 ! -------------------------------
 
@@ -12,7 +12,8 @@ MODULE MOD_Lulcc_PatchTrace
    SAVE
 ! -----------------------------------------------------------------
 
-   real(r8), allocatable :: lccpct_patches(:,:) ! Percent area of source patches
+   real(r8), allocatable, dimension(:,:) :: lccpct_patches(:,:) ! Percent area of source patches in patch
+   real(r8), allocatable, dimension(:,:) :: lccpct_matrix(:,:)  ! Percent area of source patches in grid
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_LulccPatchTrace
@@ -44,11 +45,13 @@ MODULE MOD_Lulcc_PatchTrace
       IF (p_is_worker) THEN
          allocate (lccpct_patches (numpatch, nlc))
          lccpct_patches (:,:) = 0
+         allocate (lccpct_matrix (numpatch, nlc))
+         lccpct_matrix (:,:) = 0         
       ENDIF
 
    END SUBROUTINE allocate_LulccPatchTrace
 
-   SUBROUTINE READ_LulccPatchTrace (lc_year)
+   SUBROUTINE READ_LulccPatchTrace (lc_year,dir_landdata)
 
       USE MOD_Precision
       USE MOD_Namelist
@@ -73,6 +76,9 @@ MODULE MOD_Lulcc_PatchTrace
       USE MOD_5x5DataReadin
       USE MOD_RegionClip
       USE MOD_Utils
+#ifdef SrfdataDiag
+      USE MOD_SrfdataDiag
+#endif
 
       IMPLICIT NONE
 
@@ -80,15 +86,24 @@ MODULE MOD_Lulcc_PatchTrace
 
       ! local variables:
       ! ---------------------------------------------------------------
-      character(len=256) :: dir_5x5, suffix, cyear
-      integer :: ipatch,ipxl,ipxstt, ipxend
-
+      character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
+      integer :: i,ipatch,ipxl,ipxstt, ipxend,numpxl,ilc
+      integer, allocatable, dimension(:) :: locpxl
       type (block_data_int32_2d) :: lcdatafr ! land cover data of last year
-      integer,  allocatable :: lcdatafr_one(:), ibuff(:)
-      real(r8), allocatable :: area_one(:)    , areabuff(:)
-      real(r8) :: sum_areabuff
+      integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
+      real(r8),allocatable, dimension(:) :: area_one(:)    , areabuff(:)
+      real(r8) :: sum_areabuff, gridarea
+      integer, allocatable, dimension(:) :: grid_patch_s , grid_patch_e
+! for surface data diag
+#ifdef SrfdataDiag
+      INTEGER  :: ityp
+      INTEGER, allocatable, dimension(:) :: typindex
 
-      write(cyear,'(i4.4)') lc_year-1
+      allocate( typindex(N_land_classification+1) )
+#endif
+
+      write(thisyr,'(i4.4)') lc_year  
+      write(lastyr,'(i4.4)') lc_year-1
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -101,7 +116,7 @@ MODULE MOD_Lulcc_PatchTrace
       IF (p_is_io) THEN
          CALL allocate_block_data (gpatch, lcdatafr)
          dir_5x5 = trim(DEF_dir_rawdata) // '/plant_15s'
-         suffix  = 'MOD'//trim(cyear)
+         suffix  = 'MOD'//trim(lastyr)
          CALL read_5x5_data (dir_5x5, suffix, gpatch, 'LC', lcdatafr)
 
 #ifdef USEMPI
@@ -112,48 +127,96 @@ MODULE MOD_Lulcc_PatchTrace
       ! -----------------------------------------------------------------
       ! extract the land cover type of pixels of last year for each patch
       ! -----------------------------------------------------------------
+      IF (p_is_worker) THEN  
+         ! allocate with numelm
+         allocate(grid_patch_s (numelm ))
+         allocate(grid_patch_e (numelm ))
 
-      IF (p_is_worker) THEN
+         grid_patch_e (:) = -1
+         grid_patch_s (:) = -1
+         
+         DO i=1, numelm
+            ! how many patches in ith element in this worker
+            numpxl = count(landpatch%eindex==landelm%eindex(i))
 
-         DO ipatch = 1, numpatch
+            IF (allocated(locpxl)) deallocate(locpxl)
+            allocate(locpxl(numpxl))
 
-            CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
-                  data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
+            ! get all patches' index that eindex is equal the i element
+            locpxl = pack([(ipxl, ipxl=1, numpatch)], &
+                         landpatch%eindex==landelm%eindex(i))
+            ! the min index is the start of patch's index
+            grid_patch_s(i) = minval(locpxl)
+            ! the max index is the end of patch's index
+            grid_patch_e(i) = maxval(locpxl)
+         ENDDO
 
-            ipxstt = landpatch%ipxstt(ipatch)
-            ipxend = landpatch%ipxend(ipatch)
+         DO i=1, numelm
+            ipatch = grid_patch_s (i)
 
-            IF (allocated(ibuff)) deallocate(ibuff)
-            allocate(ibuff(ipxstt:ipxend))
-            ibuff(:) = lcdatafr_one(:)
+            IF (ipatch.le.0) CYCLE
+            gridarea = 0
+            DO WHILE (ipatch.le.grid_patch_e(i))
+               IF (ipatch.le.0) THEN
+                  CYCLE
+               ENDIF
 
-            IF (allocated(areabuff)) deallocate(areabuff)
-            allocate(areabuff(ipxstt:ipxend))
-            areabuff(:) = area_one(:)
+               CALL aggregation_request_data (landpatch, ipatch, gpatch, zip = .true., area = area_one, &
+                     data_i4_2d_in1 = lcdatafr, data_i4_2d_out1 = lcdatafr_one)
 
-            sum_areabuff = sum(areabuff)
-            DO ipxl = ipxstt, ipxend
-               lccpct_patches(ipatch, ibuff(ipxl)) = lccpct_patches(ipatch, ibuff(ipxl)) + areabuff(ipxl) / sum_areabuff
+               ipxstt = landpatch%ipxstt(ipatch)
+               ipxend = landpatch%ipxend(ipatch)
+
+               IF (allocated(lcfrbuff)) deallocate(lcfrbuff)
+               allocate(lcfrbuff(ipxstt:ipxend))
+               lcfrbuff(:) = lcdatafr_one(:)
+
+               IF (allocated(areabuff)) deallocate(areabuff)
+               allocate(areabuff(ipxstt:ipxend))
+               areabuff(:) = area_one(:)
+
+               sum_areabuff = sum(areabuff)
+               DO ipxl = ipxstt, ipxend
+                  lccpct_patches(ipatch, lcfrbuff(ipxl)) = lccpct_patches(ipatch, lcfrbuff(ipxl)) + areabuff(ipxl) / sum_areabuff
+                  lccpct_matrix (ipatch, lcfrbuff(ipxl)) = lccpct_matrix (ipatch, lcfrbuff(ipxl)) + areabuff(ipxl)
+               ENDDO
+               gridarea = gridarea + sum_areabuff
+               ipatch = ipatch + 1            
             ENDDO
 
+            lccpct_matrix(grid_patch_s(i):grid_patch_e(i), :) = lccpct_matrix (grid_patch_s(i):grid_patch_e(i), :) / gridarea
+            
          ENDDO
 
 #ifdef USEMPI
          CALL aggregation_worker_done ()
 #endif
-
-         IF (allocated(area_one))    deallocate (area_one)
-
       ENDIF
 
+
+#ifdef SrfdataDiag
+      typindex = (/(ityp, ityp = 0, N_land_classification)/)
+      lndname  = trim(dir_landdata) // '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
+      DO ilc = 0, N_land_classification                  
+         CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, m_patch2diag, &
+         -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, write_mode = 'one', lastdimname = 'land cover type', lastdimvalue = ilc)
+      ENDDO
+      deallocate(typindex)
+#endif
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
 
+
 #ifdef CoLMDEBUG
-   CALL check_vector_data ('lccpct_patches ', lccpct_patches)
+   CALL check_vector_data ('lccpct_patches', lccpct_patches)
+   CALL check_vector_data ('lccpct_matrix' , lccpct_matrix )
 #endif
 
+      IF (p_is_worker) THEN
+         IF (allocated(area_one))    deallocate (area_one)
+      ENDIF
+      
    END SUBROUTINE READ_LulccPatchTrace
 
    SUBROUTINE deallocate_LulccPatchTrace
@@ -164,6 +227,7 @@ MODULE MOD_Lulcc_PatchTrace
 
       IF (p_is_worker) THEN
          IF (allocated(lccpct_patches)) deallocate (lccpct_patches)
+         IF (allocated(lccpct_matrix )) deallocate (lccpct_matrix )
       ENDIF
 
    END SUBROUTINE deallocate_LulccPatchTrace
