@@ -142,6 +142,7 @@ OBJS_BASIC =    \
 				 MOD_UrbanIniTimeVariable.o     \
 				 MOD_Hydro_HillslopeNetwork.o   \
 				 MOD_Hydro_RiverLakeNetwork.o   \
+				 MOD_Hydro_RiverDepth.o         \
 				 MOD_Initialize.o
 
 

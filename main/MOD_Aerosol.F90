@@ -419,8 +419,8 @@ CONTAINS
      CALL mg2p_aerdep%map_aweighted (f_aerdep, forc_aerdep(14,:))
 
 #ifdef RangeCheck 
-     CALL check_block_data  ('aerosol', f_aerdep)
-     CALL check_vector_data ('aerosol', forc_aerdep)
+     ! CALL check_block_data  ('aerosol', f_aerdep)
+     CALL check_vector_data ('      aerosol [kg/m/s]', forc_aerdep)
 #endif
 
 
