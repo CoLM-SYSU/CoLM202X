@@ -210,8 +210,8 @@ MODULE MOD_Lulcc_PatchTrace
 
 
 #ifdef CoLMDEBUG
-   CALL check_vector_data ('lccpct_patches', lccpct_patches)
-   CALL check_vector_data ('lccpct_matrix' , lccpct_matrix )
+      CALL check_vector_data ('lccpct_patches', lccpct_patches)
+      CALL check_vector_data ('lccpct_matrix' , lccpct_matrix )
 #endif
 
       IF (p_is_worker) THEN

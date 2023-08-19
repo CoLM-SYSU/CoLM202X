@@ -139,7 +139,8 @@ MODULE MOD_Lulcc_MassEnergyConserve
                IF (np.le.0) CYCLE
 
                DO WHILE (np.le.grid_patch_e(i))
-IF (patchtype(np)==0 .or. patchclass(np)==URBAN .or. patchclass(np)==WETLAND .or. patchclass(np)==WATERBODY) THEN
+
+IF (patchtype(np) .ne. 3) THEN !not a glacier patch
 
 IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                   lccpct_np(:) = 0
@@ -479,7 +480,7 @@ ENDIF
 
                   ENDIF
 
-ELSEIF (patchclass(np)==GLACIERS) THEN
+ELSEIF (patchtype(np)==3) THEN !glacier patch
                   ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
                   inp_ = np_
                   DO WHILE (inp_ .le. grid_patch_e_(j))
