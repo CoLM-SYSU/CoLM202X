@@ -130,7 +130,6 @@ MODULE MOD_GroundTemperature
    real(r8), intent(inout) :: t_soisno (lb:nl_soil)   !soil temperature [K]
    real(r8), intent(inout) :: wice_soisno(lb:nl_soil) !ice lens [kg/m2]
    real(r8), intent(inout) :: wliq_soisno(lb:nl_soil) !liqui water [kg/m2]
-   real(r8), intent(inout) :: cvsoil(1:nl_soil)       !heat capacity [J/(m2 K)]
    real(r8), intent(inout) :: scv      !snow cover, water equivalent [mm, kg/m2]
    real(r8), intent(inout) :: snowdp   !snow depth [m]
 

@@ -46,12 +46,12 @@ MODULE MOD_Lulcc_PatchTrace
          allocate (lccpct_patches (numpatch, nlc))
          lccpct_patches (:,:) = 0
          allocate (lccpct_matrix (numpatch, nlc))
-         lccpct_matrix (:,:) = 0         
+         lccpct_matrix (:,:) = 0
       ENDIF
 
    END SUBROUTINE allocate_LulccPatchTrace
 
-   SUBROUTINE READ_LulccPatchTrace (lc_year,dir_landdata)
+   SUBROUTINE READ_LulccPatchTrace (lc_year)
 
       USE MOD_Precision
       USE MOD_Namelist
@@ -61,7 +61,7 @@ MODULE MOD_Lulcc_PatchTrace
       USE MOD_NetCDFVector
       USE MOD_NetCDFBlock
       USE MOD_5x5DataReadin
-      USE MOD_Namelist, only: DEF_dir_rawdata
+      USE MOD_Namelist, only: DEF_dir_rawdata, DEF_dir_landdata
 #ifdef CoLMDEBUG
       USE MOD_RangeCheck
 #endif
@@ -87,7 +87,7 @@ MODULE MOD_Lulcc_PatchTrace
       ! local variables:
       ! ---------------------------------------------------------------
       character(len=256) :: dir_5x5, suffix, lastyr, thisyr, dir_landdata, lndname
-      integer :: i,ipatch,ipxl,ipxstt, ipxend,numpxl,ilc
+      integer :: i,ipatch,ipxl,ipxstt,ipxend,numpxl,ilc
       integer, allocatable, dimension(:) :: locpxl
       type (block_data_int32_2d) :: lcdatafr ! land cover data of last year
       integer, allocatable, dimension(:) :: lcdatafr_one(:), lcfrbuff(:)
@@ -102,7 +102,7 @@ MODULE MOD_Lulcc_PatchTrace
       allocate( typindex(N_land_classification+1) )
 #endif
 
-      write(thisyr,'(i4.4)') lc_year  
+      write(thisyr,'(i4.4)') lc_year
       write(lastyr,'(i4.4)') lc_year-1
 
 #ifdef USEMPI
@@ -127,14 +127,14 @@ MODULE MOD_Lulcc_PatchTrace
       ! -----------------------------------------------------------------
       ! extract the land cover type of pixels of last year for each patch
       ! -----------------------------------------------------------------
-      IF (p_is_worker) THEN  
+      IF (p_is_worker) THEN
          ! allocate with numelm
          allocate(grid_patch_s (numelm ))
          allocate(grid_patch_e (numelm ))
 
          grid_patch_e (:) = -1
          grid_patch_s (:) = -1
-         
+
          DO i=1, numelm
             ! how many patches in ith element in this worker
             numpxl = count(landpatch%eindex==landelm%eindex(i))
@@ -181,11 +181,11 @@ MODULE MOD_Lulcc_PatchTrace
                   lccpct_matrix (ipatch, lcfrbuff(ipxl)) = lccpct_matrix (ipatch, lcfrbuff(ipxl)) + areabuff(ipxl)
                ENDDO
                gridarea = gridarea + sum_areabuff
-               ipatch = ipatch + 1            
+               ipatch = ipatch + 1
             ENDDO
 
             lccpct_matrix(grid_patch_s(i):grid_patch_e(i), :) = lccpct_matrix (grid_patch_s(i):grid_patch_e(i), :) / gridarea
-            
+
          ENDDO
 
 #ifdef USEMPI
@@ -195,9 +195,10 @@ MODULE MOD_Lulcc_PatchTrace
 
 
 #ifdef SrfdataDiag
+      dir_landdata = DEF_dir_landdata
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       lndname  = trim(dir_landdata) // '/diag/transfer_matrix'// trim(lastyr)//'-'// trim(thisyr) // '.nc'
-      DO ilc = 0, N_land_classification                  
+      DO ilc = 0, N_land_classification
          CALL srfdata_map_and_write (lccpct_matrix(:,ilc), landpatch%settyp, typindex, m_patch2diag, &
          -1.0e36_r8, lndname, 'TRANSFER_MATRIX', compress = 0, write_mode = 'one', lastdimname = 'land cover type', lastdimvalue = ilc)
       ENDDO
@@ -216,7 +217,7 @@ MODULE MOD_Lulcc_PatchTrace
       IF (p_is_worker) THEN
          IF (allocated(area_one))    deallocate (area_one)
       ENDIF
-      
+
    END SUBROUTINE READ_LulccPatchTrace
 
    SUBROUTINE deallocate_LulccPatchTrace
