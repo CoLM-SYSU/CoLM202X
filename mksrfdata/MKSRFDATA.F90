@@ -104,7 +104,11 @@ PROGRAM MKSRFDATA
    CALL read_namelist (nlfile)
 
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
    CALL read_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+#else
+   CALL read_urban_surface_data_single (SITE_fsrfdata, mksrfdata=.true.)
+#endif
 #endif
 
    IF (USE_srfdata_from_larger_region) THEN
@@ -189,9 +193,7 @@ PROGRAM MKSRFDATA
 #endif
 #if (defined CROP)
    ! define grid for crop parameters
-   CALL gcrop%define_from_file ( &
-      trim(DEF_dir_rawdata) // '/global_0.25x0.25.MOD2000_V4.5_CFT_lf-merged-20230808.nc', &
-      'lat', 'lon')
+   CALL gcrop%define_from_file (trim(DEF_dir_rawdata)//'/global_CFT_surface_data.nc', 'lat', 'lon')
 #endif
 
    ! define grid for soil parameters raw data
@@ -367,7 +369,11 @@ PROGRAM MKSRFDATA
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
    CALL write_surface_data_single (numpatch, numpft)
 #else
+#ifndef URBAN_MODEL
    CALL write_surface_data_single (numpatch)
+#else
+   CALL write_urban_surface_data_single (numurban)
+#endif
 #endif
    CALL single_srfdata_final ()
 #endif

@@ -45,7 +45,13 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_dbedrock         = .true.
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .false.
+   logical  :: USE_SITE_ForcingReadAhead = .true.
+
+#ifdef URBAN_MODEL
+   LOGICAL  :: USE_SITE_urban_paras      = .true.
+   LOGICAL  :: USE_SITE_thermal_paras    = .false.
+   LOGICAL  :: USE_SITE_urban_LAI        = .false.
+#endif
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -105,7 +111,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    ! ----- compress data in aggregation when send data from IO to worker -----
-   logical :: USE_zip_for_aggregation = .false.
+   logical :: USE_zip_for_aggregation = .true.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
@@ -186,8 +192,8 @@ MODULE MOD_Namelist
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
-   !  irrigation method temporary
-   INTEGER :: DEF_IRRIGATION_METHOD = 1
+   ! !  irrigation method temporary
+   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -333,6 +339,8 @@ MODULE MOD_Namelist
       LOGICAL :: rsur         = .true.
       LOGICAL :: rsub         = .true.
       LOGICAL :: rnof         = .true.
+      LOGICAL :: xwsur        = .true.
+      LOGICAL :: xwsub        = .true.
       LOGICAL :: qintr        = .true.
       LOGICAL :: qinfl        = .true.
       LOGICAL :: qdrip        = .true.
@@ -628,10 +636,11 @@ MODULE MOD_Namelist
       LOGICAL :: srndln       = .true.
       LOGICAL :: srniln       = .true.
 
-      LOGICAL :: rsubs_bsn    = .true.
-      LOGICAL :: rsubs_hru    = .true.
+      LOGICAL :: xsubs_bsn    = .true.
+      LOGICAL :: xsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
+      LOGICAL :: discharge    = .true.
       LOGICAL :: wdsrf_hru    = .true.
       LOGICAL :: veloc_hru    = .true.
 
@@ -669,6 +678,9 @@ CONTAINS
          USE_SITE_topography,      &
          USE_SITE_HistWriteBack,   &
          USE_SITE_ForcingReadAhead,&
+         USE_SITE_urban_paras,     &
+         USE_SITE_thermal_paras,   &
+         USE_SITE_urban_LAI,       &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -699,7 +711,7 @@ CONTAINS
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
-         DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
+         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -1090,10 +1102,9 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_USE_IRRIGATION,      1, mpi_logical, p_root, p_comm_glb, p_err)
       !  use irrigation temporary
-      CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
-      
+      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
+
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1264,6 +1275,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsub       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
@@ -1311,6 +1324,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%t_roof      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_wall      ,  set_defaults)
 #endif
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha      ,  set_defaults)
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%leafc              ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      ,  set_defaults)
@@ -1391,10 +1408,6 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -1532,10 +1545,11 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_bsn   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%discharge   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
 

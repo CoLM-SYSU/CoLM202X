@@ -143,7 +143,11 @@ PROGRAM CoLM
 
 #ifdef SinglePoint
    fsrfdata = trim(dir_landdata) // '/srfdata.nc'
+#ifndef URBAN_MODEL
    CALL read_surface_data_single (fsrfdata, mksrfdata=.false.)
+#else
+   CALL read_urban_surface_data_single (fsrfdata, mksrfdata=.false., mkrun=.true.)
+#endif
 #endif
 
    deltim    = DEF_simulation_time%timestep
@@ -250,7 +254,7 @@ PROGRAM CoLM
 
    ! Initialize meteorological forcing data module
    CALL allocate_1D_Forcing ()
-   CALL forcing_init (dir_forcing, deltim, sdate, lc_year)
+   CALL forcing_init (dir_forcing, deltim, ststamp, lc_year, etstamp)
    CALL allocate_2D_Forcing (gforc)
 
    ! Initialize history data module
@@ -389,7 +393,7 @@ PROGRAM CoLM
                            idate,greenwich)
 
          CALL allocate_1D_Forcing
-         CALL forcing_init (dir_forcing, deltim, idate, jdate(1))
+         CALL forcing_init (dir_forcing, deltim, itstamp, jdate(1))
          CALL deallocate_acc_fluxes
          CALL hist_init (dir_hist)
          CALL allocate_1D_Fluxes

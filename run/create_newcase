@@ -1,0 +1,553 @@
+#!/bin/bash
+#./create_newcase CASENAME
+
+#--------------------------------------------------------------------------------------
+# Assign following path before running the scripts
+
+ROOT=/public/home/sysu_daiyj_01/data/luxj/CoLM202X-GPAM/
+RAWDATA=/data/sysu_daiyj_01/data_mpi/CLMrawdata_igbp/
+RUNTIME=/data/sysu_daiyj_01/data_mpi/CoLMruntime/
+MAKEOPTION=/data/sysu_daiyj_01/CoLM202X-master/include/Makeoptions.intel
+FORCINGNML=/data/sysu_daiyj_01/CoLM202X-master/run/forcing/GSWP3.nml
+
+iyr_s=1981
+iyr_e=1981
+nloop=100
+
+#--------------------------------------------------------------------------------------
+
+#usage: ./create_newcase $CASEPATH/CASENAME
+
+#-------------------------------------------------------------------------------------
+
+if [ $# -ne 1 ];then
+   echo 'error: argument number. 1 argument is expected, $# arguments were given'
+   exit
+else
+   if [ "${1:0:1}" == '/' ];then
+      CASENAME=`echo "${1##*/}"`
+      CASEPATH=`echo "${1%/*}"`
+      echo $CASEPATH
+      echo $CASENAME
+   else
+      CASEPATHNAME=$PWD/$1
+      CASENAME=`echo "${CASEPATHNAME##*/}"`
+      CASEPATH=`echo "${CASEPATHNAME%/*}"`
+      echo $CASEPATH
+      echo $CASENAME
+   fi
+fi
+mkdir -p $CASEPATH/$CASENAME
+
+cd $CASEPATH/$CASENAME
+mkdir -p history
+mkdir -p restart
+mkdir -p landdata
+cat>input_${CASENAME}.nml<<EOF
+&nl_colm
+
+   DEF_CASE_NAME = '$CASENAME'
+
+   DEF_domain%edges = -90.0
+   DEF_domain%edgen = 90.0
+   DEF_domain%edgew = -180.0
+   DEF_domain%edgee = 180.0
+
+   DEF_nx_blocks = 3
+   DEF_ny_blocks = 3
+   DEF_PIO_groupsize = 6
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
+   DEF_simulation_time%start_month  = 12
+   DEF_simulation_time%start_day    = 31
+   DEF_simulation_time%start_sec    = 86400
+   DEF_simulation_time%end_year     = $iyr_e
+   DEF_simulation_time%end_month    = 12
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 1980
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata  = '$RAWDATA/'
+   DEF_dir_runtime  = '$RUNTIME/'
+   DEF_dir_output   = '$CASEPATH/'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+!   DEF_USE_IRRIGATION = .true.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   DEF_forcing_namelist = '$FORCINGNML'
+
+   ! ----- history -----
+   DEF_hist_lon_res = 2.5
+   DEF_hist_lat_res = 1.875
+   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_COMPRESS_LEVEL = 1
+   DEF_HIST_COMPRESS_LEVEL = 1
+
+   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
+   DEF_hist_vars_out_default = .true.
+
+/
+EOF
+
+cat>input_${CASENAME}-PN.nml<<EOF
+&nl_colm
+
+   DEF_CASE_NAME = '$CASENAME'
+
+   DEF_domain%edges = -90.0
+   DEF_domain%edgen = 90.0
+   DEF_domain%edgew = -180.0
+   DEF_domain%edgee = 180.0
+
+   DEF_nx_blocks = 3
+   DEF_ny_blocks = 3
+   DEF_PIO_groupsize = 6
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
+   DEF_simulation_time%start_month  = 12
+   DEF_simulation_time%start_day    = 31
+   DEF_simulation_time%start_sec    = 86400
+   DEF_simulation_time%end_year     = $iyr_e
+   DEF_simulation_time%end_month    = 12
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 1980
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata  = '$RAWDATA/'
+   DEF_dir_runtime  = '$RUNTIME/'
+   DEF_dir_output   = '$CASEPATH/'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   DEF_USE_PN = .true.
+   DEF_USE_IRRIGATION = .true.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   DEF_forcing_namelist = '$FORCINGNML'
+
+   ! ----- history -----
+   DEF_hist_lon_res = 2.5
+   DEF_hist_lat_res = 1.875
+   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_COMPRESS_LEVEL = 1
+   DEF_HIST_COMPRESS_LEVEL = 1
+
+   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
+   DEF_hist_vars_out_default = .true.
+
+/
+EOF
+
+cat>input_${CASENAME}-SASU.nml<<EOF
+&nl_colm
+
+   DEF_CASE_NAME = '$CASENAME'
+
+   DEF_domain%edges = -90.0
+   DEF_domain%edgen = 90.0
+   DEF_domain%edgew = -180.0
+   DEF_domain%edgee = 180.0
+
+   DEF_nx_blocks = 3
+   DEF_ny_blocks = 3
+   DEF_PIO_groupsize = 6
+
+   DEF_simulation_time%greenwich    = .TRUE.
+   DEF_simulation_time%start_year   = `expr $iyr_s - 1`
+   DEF_simulation_time%start_month  = 12
+   DEF_simulation_time%start_day    = 31
+   DEF_simulation_time%start_sec    = 86400
+   DEF_simulation_time%end_year     = $iyr_e
+   DEF_simulation_time%end_month    = 12
+   DEF_simulation_time%end_day      = 31
+   DEF_simulation_time%end_sec      = 86400
+   DEF_simulation_time%spinup_year  = 1980
+   DEF_simulation_time%spinup_month = 1
+   DEF_simulation_time%spinup_day   = 365
+   DEF_simulation_time%spinup_sec   = 86400
+
+   DEF_simulation_time%timestep     = 1800.
+
+   DEF_dir_rawdata  = '$RAWDATA/'
+   DEF_dir_runtime  = '$RUNTIME/'
+   DEF_dir_output   = '$CASEPATH/'
+
+   ! ----- land units and land sets -----
+   ! for GRIDBASED
+   DEF_file_mesh = '$RAWDATA/landmask_igbp_144x96.nc'
+
+   ! LAI setting
+   DEF_LAI_MONTHLY = .true.
+
+   ! Canopy DEF Interception scheme selection
+   DEF_Interception_scheme=1 !1:CoLM2014；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   DEF_USE_SASU = .true.
+   DEF_USE_IRRIGATION = .true.
+
+   ! ----- forcing -----
+   ! Options :
+   ! PRINCETON | GSWP3   | QIAN  | CRUNCEPV4 | CRUNCEPV7 | ERA5LAND | ERA5 |  MSWX
+   ! WFDE5     | CRUJRA  | WFDEI | JRA55     | GDAS      | CMFD     | POINT
+   DEF_forcing_namelist = '$FORCINGNML'
+
+   ! ----- history -----
+   DEF_hist_lon_res = 2.5
+   DEF_hist_lat_res = 1.875
+   DEF_WRST_FREQ = 'YEARLY' ! write restart file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_FREQ = 'MONTHLY' ! write history file frequency: HOURLY/DAILY/MONTHLY/YEARLY
+   DEF_HIST_groupby = 'MONTH' ! history in one file: DAY/MONTH/YEAR
+   DEF_HIST_mode = 'one' ! history in one or block
+   DEF_REST_COMPRESS_LEVEL = 1
+   DEF_HIST_COMPRESS_LEVEL = 1
+
+   DEF_hist_vars_namelist = '$CASEPATH/$CASENAME/history.nml'
+   DEF_hist_vars_out_default = .true.
+
+/
+EOF
+
+cat>history.nml<<EOF
+&nl_colm_history
+   
+   ! ----- history -----
+   DEF_hist_vars%xy_us        = .true.
+   DEF_hist_vars%xy_vs        = .true.
+   DEF_hist_vars%xy_t         = .true.
+   DEF_hist_vars%xy_q         = .true.
+   DEF_hist_vars%xy_prc       = .true.
+   DEF_hist_vars%xy_prl       = .true.
+   DEF_hist_vars%xy_pbot      = .true.
+   DEF_hist_vars%xy_frl       = .true.
+   DEF_hist_vars%xy_solarin   = .true.
+   DEF_hist_vars%xy_rain      = .true.
+   DEF_hist_vars%xy_snow      = .true.
+
+   DEF_hist_vars%taux         = .true. 
+   DEF_hist_vars%tauy         = .true. 
+   DEF_hist_vars%fsena        = .true. 
+   DEF_hist_vars%lfevpa       = .true. 
+   DEF_hist_vars%fevpa        = .true. 
+   DEF_hist_vars%fsenl        = .true. 
+   DEF_hist_vars%fevpl        = .true. 
+   DEF_hist_vars%etr          = .true. 
+   DEF_hist_vars%fseng        = .true. 
+   DEF_hist_vars%fevpg        = .true. 
+   DEF_hist_vars%fgrnd        = .true. 
+   DEF_hist_vars%sabvsun      = .true. 
+   DEF_hist_vars%sabvsha      = .true. 
+   DEF_hist_vars%sabg         = .true. 
+   DEF_hist_vars%olrg         = .true. 
+   DEF_hist_vars%rnet         = .true. 
+   DEF_hist_vars%xerr         = .true. 
+   DEF_hist_vars%zerr         = .true. 
+   DEF_hist_vars%rsur         = .true. 
+   DEF_hist_vars%rnof         = .true. 
+   DEF_hist_vars%qintr        = .true. 
+   DEF_hist_vars%qinfl        = .true. 
+   DEF_hist_vars%qdrip        = .true. 
+   DEF_hist_vars%wat          = .true. 
+   DEF_hist_vars%assim        = .true. 
+   DEF_hist_vars%respc        = .true. 
+   DEF_hist_vars%qcharge      = .true. 
+   DEF_hist_vars%t_grnd       = .true. 
+   DEF_hist_vars%tleaf        = .true. 
+   DEF_hist_vars%ldew         = .true. 
+   DEF_hist_vars%scv          = .true. 
+   DEF_hist_vars%snowdp       = .true. 
+   DEF_hist_vars%fsno         = .true. 
+   DEF_hist_vars%sigf         = .true. 
+   DEF_hist_vars%green        = .true. 
+   DEF_hist_vars%lai          = .true. 
+   DEF_hist_vars%laisun       = .true. 
+   DEF_hist_vars%laisha       = .true. 
+   DEF_hist_vars%sai          = .true. 
+   DEF_hist_vars%alb          = .true. 
+   DEF_hist_vars%emis         = .true. 
+   DEF_hist_vars%z0m          = .true. 
+   DEF_hist_vars%trad         = .true. 
+   DEF_hist_vars%tref         = .true. 
+   DEF_hist_vars%qref         = .true. 
+
+   DEF_hist_vars%t_soisno     = .true. 
+   DEF_hist_vars%wliq_soisno  = .true. 
+   DEF_hist_vars%wice_soisno  = .true. 
+
+   DEF_hist_vars%h2osoi       = .true. 
+   DEF_hist_vars%rstfacsun    = .true. 
+   DEF_hist_vars%rstfacsha    = .true.
+   DEF_hist_vars%rootr        = .true.
+   DEF_hist_vars%vegwp        = .true.
+   DEF_hist_vars%dpond        = .true.
+   DEF_hist_vars%zwt          = .true. 
+   DEF_hist_vars%wa           = .true. 
+
+   DEF_hist_vars%t_lake       = .true. 
+   DEF_hist_vars%lake_icefrac = .true. 
+
+   DEF_hist_vars%ustar        = .true.
+   DEF_hist_vars%tstar        = .true.
+   DEF_hist_vars%qstar        = .true.
+   DEF_hist_vars%zol          = .true.
+   DEF_hist_vars%rib          = .true.
+   DEF_hist_vars%fm           = .true.
+   DEF_hist_vars%fh           = .true.
+   DEF_hist_vars%fq           = .true.
+   DEF_hist_vars%us10m        = .true.
+   DEF_hist_vars%vs10m        = .true.
+   DEF_hist_vars%fm10m        = .true.
+   DEF_hist_vars%sr           = .true.
+   DEF_hist_vars%solvd        = .true.
+   DEF_hist_vars%solvi        = .true.
+   DEF_hist_vars%solnd        = .true.
+   DEF_hist_vars%solni        = .true.
+   DEF_hist_vars%srvd         = .true.
+   DEF_hist_vars%srvi         = .true.
+   DEF_hist_vars%srnd         = .true.
+   DEF_hist_vars%srni         = .true.
+   DEF_hist_vars%solvdln      = .true.
+   DEF_hist_vars%solviln      = .true.
+   DEF_hist_vars%solndln      = .true.
+   DEF_hist_vars%solniln      = .true.
+   DEF_hist_vars%srvdln       = .true.
+   DEF_hist_vars%srviln       = .true.
+   DEF_hist_vars%srndln       = .true.
+   DEF_hist_vars%srniln       = .true.
+/
+EOF
+
+SLURM_NPROCS='$SLURM_NPROCS'
+NP='$NP'
+endyr=`expr $iyr_e + 1`
+iloop='$iloop'
+SELFPLUS='`expr $iloop + 1`'
+SEQYR='`seq -w '${iyr_s}' '${iyr_e}'`'
+SEQMO='`seq -w 1 12`'
+RESETTIME='${files} ${files/'${endyr}'-001/'${iyr_s}'-001}'
+YEARMON='${iyr}-${i}'
+cat>mksrf.submit<<EOF
+#!/bin/bash
+
+#SBATCH -J colm_${CASENAME}-mksrf
+#SBATCH -p cpu_parallel
+#SBATCH -o mksrf-%j.out
+#SBATCH -e mksrf-%j.err
+#SBATCH -N 20
+#SBATCH -n 1200
+#SBATCH --ntasks-per-node=60
+#SBATCH --mem=220G
+#SBATCH --exclusive
+#SBATCH -t 24:00:00
+
+module purge
+module load compiler/intel/2021.3.1
+module load mpi/intelmpi/2018.4.274
+module load mathlib/netcdf/intel/4.4.1
+module load mathlib/hdf5/intel/1.8.20
+source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
+
+export I_MPI_FABRICS=shm:dapl
+export I_MPI_DAPL_UD=1
+export I_MPI_DAPL_UD_RDMA_MIXED=1
+export I_MPI_LARGE_SCALE_THRESHOLD=8192
+export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
+export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
+export I_MPI_DAPL_UD_RNDV_EP_NUM=2
+
+export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
+export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
+export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
+export DAPL_UCM_CQ_SIZE=2000
+export DAPL_UCM_QP_SIZE=2000
+
+export DAPL_UCM_DREQ_RETRY=4 #default == 1
+export DAPL_UCM_DREP_TIME=200 #default == 200ms
+export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
+
+ulimit -s unlimited
+scontrol show hostname > bld/run/nd
+NP=$SLURM_NPROCS
+
+cd ${CASEPATH}/${CASENAME}/bld/run/
+mpirun -np $NP -machinefile nd ./mksrfdata.x ../../input_${CASENAME}.nml > ../../logmksrfdata
+EOF
+
+cat>init.submit<<EOF
+#!/bin/bash
+
+#SBATCH -J colm_${CASENAME}-init
+#SBATCH -p cpu_parallel
+#SBATCH -o mkini-%j.out
+#SBATCH -e mkini-%j.err
+#SBATCH -N 2
+#SBATCH -n 120
+#SBATCH --ntasks-per-node=60
+#SBATCH --mem=220G
+#SBATCH --exclusive
+#SBATCH -t 7-24:00
+
+module purge
+module load compiler/intel/2021.3.1
+module load mpi/intelmpi/2018.4.274
+module load mathlib/netcdf/intel/4.4.1
+module load mathlib/hdf5/intel/1.8.20
+source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
+
+export I_MPI_FABRICS=shm:dapl
+export I_MPI_DAPL_UD=1
+export I_MPI_DAPL_UD_RDMA_MIXED=1
+export I_MPI_LARGE_SCALE_THRESHOLD=8192
+export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
+export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
+export I_MPI_DAPL_UD_RNDV_EP_NUM=2
+
+export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
+export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
+export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
+export DAPL_UCM_CQ_SIZE=2000
+export DAPL_UCM_QP_SIZE=2000
+
+export DAPL_UCM_DREQ_RETRY=4 #default == 1
+export DAPL_UCM_DREP_TIME=200 #default == 200ms
+export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
+
+ulimit -s unlimited
+scontrol show hostname > bld/run/nd
+NP=$SLURM_NPROCS
+
+cd ${CASEPATH}/${CASENAME}/bld/run/
+mpirun -np 48 ./mkinidata.x ../../input_${CASENAME}.nml > ../../logini
+EOF
+
+cat>'case.submit'<<EOF
+#!/bin/bash
+
+#SBATCH -J colm_$CASENAME
+#SBATCH -p cpu_parallel
+#SBATCH -o colm-%j.out
+#SBATCH -e colm-%j.err
+#SBATCH -N 10
+#SBATCH -n 600
+#SBATCH --ntasks-per-node=60
+#SBATCH --mem=220G
+#SBATCH --exclusive
+#SBATCH -t 7-24:00
+
+module purge
+module load compiler/intel/2021.3.1
+module load mpi/intelmpi/2018.4.274
+module load mathlib/netcdf/intel/4.4.1
+module load mathlib/hdf5/intel/1.8.20
+source /public/software/compiler/intel-compiler/2021.3.0/mkl/env/vars.sh
+
+export I_MPI_FABRICS=shm:dapl
+export I_MPI_DAPL_UD=1
+export I_MPI_DAPL_UD_RDMA_MIXED=1
+export I_MPI_LARGE_SCALE_THRESHOLD=8192
+export I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE=8704
+export I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE=8704
+export I_MPI_DAPL_UD_RNDV_EP_NUM=2
+
+export DAPL_UCM_REP_TIME=8000 #  REQUEST timer, waiting for REPLY in millisecs
+export DAPL_UCM_RTU_TIME=8000 #  REPLY timer, waiting for RTU in millisecs
+export DAPL_UCM_RETRY=10 #  REQUEST and REPLY retries
+export DAPL_UCM_CQ_SIZE=2000
+export DAPL_UCM_QP_SIZE=2000
+
+export DAPL_UCM_DREQ_RETRY=4 #default == 1
+export DAPL_UCM_DREP_TIME=200 #default == 200ms
+export DAPL_UCM_WAIT_TIME=10000 #default == 60000ms
+
+ulimit -s unlimited
+scontrol show hostname > bld/run/nd
+NP=$SLURM_NPROCS
+
+iloop=1
+
+while [ $iloop -le $nloop ]
+do
+   cd ${CASEPATH}/${CASENAME}
+   echo start running clm.x
+   mpirun -np $NP bld/run/colm.x ./input_${CASENAME}.nml > log-${iloop}
+   echo clm completed
+   echo archive history and rename restart
+   if [ ! -d ${CASEPATH}/${CASENAME}/restart/loop-${iloop} ];then
+      mkdir ${CASEPATH}/${CASENAME}/restart/loop-${iloop}
+   fi
+   if [ ! -d ${CASEPATH}/${CASENAME}/history/loop-${iloop} ];then
+      mkdir ${CASEPATH}/${CASENAME}/history/loop-${iloop}
+   fi
+   cd ${CASEPATH}/${CASENAME}/restart
+   cp -p ${CASENAME}*_${endyr}*nc ${CASENAME}*_const_*nc loop-${iloop}
+   for files in *${endyr}-001-00000*nc
+   do
+      cp -p $RESETTIME
+   done
+   echo finish restart copy
+   cd ${CASEPATH}/${CASENAME}/history
+   for iyr in $SEQYR
+   do
+      for i in $SEQMO
+      do
+         mv ${CASENAME}_hist_$YEARMON.nc loop-${iloop}/
+      done
+   done
+   iloop=$SELFPLUS   
+done
+
+EOF
+
+cd ${CASEPATH}/$CASENAME/
+mkdir -p bld
+cp -pr $ROOT/CaMa bld/
+mkdir -p bld/CaMa/map
+ln -sf $RAWDATA/CaMaMap4CoLM_glb_0.25in_0.25out ${CASEPATH}/$CASENAME/bld/CaMa/map/CaMaMap4CoLM_glb_0.25in_0.25out
+cp -pr $ROOT/main bld/
+cp -pr $ROOT/include bld/
+cp -pr $ROOT/mksrfdata bld/
+cp -pr $ROOT/mkinidata bld/
+cp -pr $ROOT/postprocess bld/
+cp -pr $ROOT/preprocess bld/
+cp -pr $ROOT/share bld/
+cp -p $ROOT/Makefile bld/
+ln -sf $MAKEOPTION bld/include/Makeoptions
+cp -pr $ROOT/run/  bld/

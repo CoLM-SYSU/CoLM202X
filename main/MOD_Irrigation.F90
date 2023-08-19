@@ -4,10 +4,10 @@ module MOD_Irrigation
 
 !   DESCRIPTION:
 !       This module has all irrigation related subroutines for irrigated crop at either IGBP/USGS or PFT Land type classification and even in the C and N cycle.
-    
     use MOD_Precision
     USE MOD_TimeManager
-    USE MOD_Namelist, only: DEF_simulation_time,DEF_IRRIGATION_METHOD
+    USE MOD_Namelist, only: DEF_simulation_time
+    ! ,DEF_IRRIGATION_METHOD
     use MOD_Const_Physical, only: tfrz
     use MOD_Const_PFT, only: irrig_crop
     use MOD_Vars_Global, only: irrig_start_time, irrig_max_depth, irrig_threshold_fraction, irrig_min_cphase, irrig_max_cphase, irrig_time_per_day    
@@ -57,6 +57,7 @@ contains
 
         !   calculate whether irrigation needed
         call PointNeedsCheckForIrrig(i,ps,pe,idate,deltim,dlon,npcropmin,check_for_irrig)
+
         !   calculate irrigation needed
         if (check_for_irrig) then
             call CalIrrigationPotentialNeeded(i,ps,pe,nl_soil,nbedrock,z_soi,dz_soi)
@@ -74,7 +75,7 @@ contains
 
     end subroutine CalIrrigationNeeded
 
-!   需要修改，调试潜在蒸散发计算
+
     subroutine CalIrrigationPotentialNeeded(i,ps,pe,nl_soil,nbedrock,z_soi,dz_soi)
 
         !   DESCRIPTION:
@@ -107,10 +108,10 @@ contains
         h2osoi_liq_wilting_point_tot = 0._r8
         h2osoi_liq_saturation_capacity_tot = 0._r8
 
-        !   single site initialization
-        do m = ps, pe
-            irrig_method_p(m) = DEF_IRRIGATION_METHOD
-        enddo
+        ! !   single site initialization
+        ! do m = ps, pe
+        !     irrig_method_p(m) = DEF_IRRIGATION_METHOD
+        ! enddo
 
 !   calculate wilting point and field capacity
         do j = 1, nl_soil
@@ -201,10 +202,10 @@ contains
         qflx_irrig_flood = 0._r8
         qflx_irrig_paddy = 0._r8
 
-        !   single site initialization
-        do m = ps, pe
-            irrig_method_p(m) = DEF_IRRIGATION_METHOD
-        enddo
+        ! !   single site initialization
+        ! do m = ps, pe
+        !     irrig_method_p(m) = DEF_IRRIGATION_METHOD
+        ! enddo
 
         !   add irrigation fluxes to precipitation or land surface
         do m = ps, pe

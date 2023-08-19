@@ -67,22 +67,26 @@ MODULE MOD_LAIReadin
       landdir = trim(dir_landdata) // '/LAI'
 
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
       iyear = findloc(SITE_LAI_year, year, dim=1)
       IF (.not. DEF_LAI_MONTHLY) THEN
          itime = (time-1)/8 + 1
       ENDIF
+#endif
 #endif
 
 #if (defined LULC_USGS || defined LULC_IGBP)
 
 !TODO: need to consider single point for urban model
 #ifdef SinglePoint
+#ifndef URBAN_MODEL
       IF (DEF_LAI_MONTHLY) THEN
          tlai(:) = SITE_LAI_monthly(time,iyear)
          tsai(:) = SITE_SAI_monthly(time,iyear)
       ELSE
          tlai(:) = SITE_LAI_8day(itime,iyear)
       ENDIF
+#endif
 #else
       IF (DEF_LAI_MONTHLY) THEN
          write(cyear,'(i4.4)') year

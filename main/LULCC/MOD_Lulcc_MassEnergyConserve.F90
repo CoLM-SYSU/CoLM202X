@@ -202,7 +202,7 @@ ENDIF
 
                      cvsoil_(:,:) = 0
                      ! Weight of temperature adjustment
-                     c_water = cpliq * denh2o ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3) 
+                     c_water = cpliq * denh2o ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3)
                      c_ice   = cpice * denice ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
                      wgt(maxsnl+1:nl_soil) = 0
 
@@ -222,7 +222,7 @@ ENDIF
                         IF( z_sno_(0,frnp_(k)) < 0 ) THEN
                            cvsoil_(:0,k) = cpliq*wliq_soisno_(:0,frnp_(k)) + cpice*wice_soisno_(:0,frnp_(k))
                         ENDIF
-                        wgt(maxsnl+1:nl_soil) = wgt(maxsnl+1:nl_soil) + cvsoil_(maxsnl+1:nl_soil,k) * lccpct_np(patchclass_(frnp_(k)))                       
+                        wgt(maxsnl+1:nl_soil) = wgt(maxsnl+1:nl_soil) + cvsoil_(maxsnl+1:nl_soil,k) * lccpct_np(patchclass_(frnp_(k)))
                      ENDDO
 
                      ! Get the maximum lccpct for snow layers assignment
@@ -237,12 +237,12 @@ ENDIF
 
                      ! check if snow layer exist in patch inp_
                      nsl     = count(z_sno_(:,inp_) .lt. 0)
-                     nsl_max = count(wgt(:0)        .gt. 0) 
+                     nsl_max = count(wgt(:0)        .gt. 0)
                      denh2o_np(maxsnl+1:0) = 0
                      denice_np(maxsnl+1:0) = 0
                      IF (nsl > 0) THEN
                         ! move wgt above nsl to nsl
-                        IF ( nsl_max > nsl) THEN  
+                        IF ( nsl_max > nsl) THEN
                            DO l = nsl+1, nsl_max
                               wgt(-nsl+1) = wgt(-nsl+1) + wgt(-l+1)
                            ENDDO
@@ -252,7 +252,7 @@ ENDIF
                            t_soisno (-nsl+1:0,np) = t_soisno (-nsl+1:0,np) + t_soisno_(-nsl+1:0,frnp_(k))*cvsoil_(-nsl+1:0,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1:0)
                            wliq_soisno (-nsl+1:0,np) = wliq_soisno (-nsl+1:0,np) + wliq_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            wice_soisno (-nsl+1:0,np) = wice_soisno (-nsl+1:0,np) + wice_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                           
+
                            l = 1
                            DO WHILE ( (l .le. nsl) .and. (dz_sno_(-l+1,frnp_(k)) .gt. 0) )
                               denh2o_np (-l+1) = denh2o_np(-l+1) + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
@@ -268,8 +268,8 @@ ENDIF
                                  wliq_soisno(-nsl+1,np) = wliq_soisno (-nsl+1,np) + wliq_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  wice_soisno(-nsl+1,np) = wice_soisno (-nsl+1,np) + wice_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  t_soisno (-nsl+1,np) = t_soisno (-nsl+1,np) + t_soisno_(-l+1,frnp_(k))*cvsoil_(-l+1,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1)
-                                 denh2o_np (-nsl+1) = denh2o_np(-nsl+1) + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np 
-                                 denice_np (-nsl+1) = denice_np(-nsl+1) + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np                           
+                                 denh2o_np (-nsl+1) = denh2o_np(-nsl+1) + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 denice_np (-nsl+1) = denice_np(-nsl+1) + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  l = l + 1
                                  IF (l .gt. -maxsnl) EXIT
                               ENDDO
@@ -309,11 +309,11 @@ ENDIF
                      ELSE
                         ! no snow layer exist in the main patch, add a layer
                         ! move wgt above soil to layer 0
-                        IF ( nsl_max > nsl) THEN  
+                        IF ( nsl_max > nsl) THEN
                            DO l = nsl+1, nsl_max
                               wgt(0) = wgt(0) + wgt(-l+1)
                            ENDDO
-                        ENDIF                       
+                        ENDIF
                         l=0
                         DO WHILE (wgt(l) .gt. 0)
                            DO k = 1, num
@@ -332,16 +332,16 @@ ENDIF
                         IF (wgt(0) .gt. 0) THEN
                            ! snow layer node and depth calculation according to new mass and density
                            IF (denh2o_np(0)>0 .and. denh2o_np(0)>0) THEN
-                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) + wliq_soisno(0,np)/denh2o_np(0) 
+                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) + wliq_soisno(0,np)/denh2o_np(0)
                            ELSEIF (denice_np(0)==0 .and. denh2o_np(0)>0) THEN
-                              dz_sno (0,np) = wliq_soisno(0,np)/denh2o_np(0) 
+                              dz_sno (0,np) = wliq_soisno(0,np)/denh2o_np(0)
                               ! print*, 'denice=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
                               ! DO k = 1,num
                               !    print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
-                              ! ENDDO 
+                              ! ENDDO
                            ELSEIF (denice_np(0)>0 .and. denh2o_np(0)==0) THEN
-                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) 
-                              ! print*, 'denh2o=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_ 
+                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0)
+                              ! print*, 'denh2o=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
                               ! DO k = 1,num
                               !    print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
                               ! ENDDO

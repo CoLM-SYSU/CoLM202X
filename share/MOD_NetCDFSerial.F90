@@ -77,6 +77,10 @@ MODULE MOD_NetCDFSerial
       MODULE procedure ncio_read_part_serial_int32_2d
    END interface ncio_read_part_serial
 
+   interface ncio_read_period_serial
+      MODULE procedure ncio_read_period_serial_real8_2d
+   END interface ncio_read_period_serial
+
 
    interface ncio_define_dimension
       MODULE procedure ncio_define_dimension_int32
@@ -996,6 +1000,38 @@ CONTAINS
       CALL nccheck( nf90_close(ncid) )
 
    END SUBROUTINE ncio_read_part_serial_int32_2d
+
+   !---------------------------------------------------------
+   SUBROUTINE ncio_read_period_serial_real8_2d (filename, dataname, timestt, timeend, rdata)
+
+      USE netcdf
+      IMPLICIT NONE
+
+      CHARACTER(len=*), intent(in) :: filename
+      CHARACTER(len=*), intent(in) :: dataname
+      INTEGER, intent(in) :: timestt, timeend
+
+      real(r8), allocatable, intent(out) :: rdata (:,:,:)
+
+      ! Local variables
+      INTEGER :: ncid, varid
+      INTEGER, allocatable :: varsize(:)
+
+      CALL check_ncfile_exist (filename)
+   
+      CALL ncio_inquire_varsize (filename, dataname, varsize)
+
+      allocate (rdata (varsize(1), varsize(2), timestt:timeend) )
+
+      CALL nccheck( nf90_open(trim(filename), NF90_NOWRITE, ncid) )
+      CALL nccheck( nf90_inq_varid(ncid, trim(dataname), varid) )
+      CALL nccheck( nf90_get_var(ncid, varid, rdata, &
+         (/1,1,timestt/), (/varsize(1),varsize(2), timeend-timestt+1/)) )
+      CALL nccheck( nf90_close(ncid) )
+
+      deallocate(varsize)
+
+   END SUBROUTINE ncio_read_period_serial_real8_2d
 
    ! -------------------------------
    SUBROUTINE ncio_define_dimension_int32 (filename, dimname, dimlen)
