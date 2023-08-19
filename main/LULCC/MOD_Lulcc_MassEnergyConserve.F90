@@ -64,17 +64,22 @@ MODULE MOD_Lulcc_MassEnergyConserve
    real(r8),allocatable :: cvsoil_(:,:) !heat capacity [J/(m2 K)]
 
    integer :: k, ilc, num, inp_
-   integer :: i, j, np, np_, selfnp_, nsl, l, ipft, ip, ip_, pc, pc_
+   integer :: i, j, np, np_, selfnp_, l, ipft, ip, ip_, pc, pc_
+   integer :: nsl      ! number of snow layer of the source patch with maximum area
+   integer :: nsl_max  ! maximum number of snow layer considering all source patches
    integer :: u, u_, iu, selfu_, nurb, duclass
    integer :: nlc = N_land_classification
    real(r8), dimension(1:N_land_classification) :: lccpct_np
    real(r8):: sum_lccpct_np, wgt(maxsnl+1:nl_soil)
+   real(r8):: zi_sno(maxsnl+1:0) ! local variable for snow node and depth calculation
    real(r8):: vf_water ! volumetric fraction liquid water within soil
    real(r8):: vf_ice   ! volumetric fraction ice len within soil
    real(r8):: hcap     ! J/(m3 K)
-   real(r8):: c_water, c_ice
-   real(r8):: wbef,wpre
-   real(r8):: fmelt               ! dimensionless metling factor
+   real(r8):: c_water  ! Specific heat of water * density of liquid water
+   real(r8):: c_ice    ! Specific heat of ice   * density of ice
+   real(r8):: denice_np(maxsnl+1:0), denh2o_np(maxsnl+1:0)
+   real(r8):: wbef,wpre! water before and water present for water calculation heck
+   real(r8):: fmelt    ! dimensionless metling factor
    real(r8), parameter :: m = 1.0 ! the value of m used in CLM4.5 is 1.0.
    logical :: FROM_SOIL
 
@@ -125,7 +130,6 @@ MODULE MOD_Lulcc_MassEnergyConserve
          grid_patch_e_(i) = maxval(locpxl)
       ENDDO
 
-
       DO i=1, numelm
          DO j=1,numelm_
             IF (landelm%eindex(i) == landelm_%eindex(j)) THEN
@@ -135,44 +139,10 @@ MODULE MOD_Lulcc_MassEnergyConserve
                IF (np.le.0) CYCLE
 
                DO WHILE (np.le.grid_patch_e(i))
-
-                  ! =============== GLACIER patch ==================
-                  IF ( patchclass(np)==GLACIERS) THEN
-                     ! Used restart value for GLACIERS patches if patchclass exists last year
-                     inp_ = np_
-                     DO WHILE (inp_ .le. grid_patch_e_(j))
-                        IF (patchclass_(inp_) .eq. patchclass(np)) THEN
-                           wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
-                           wice_soisno (:,np) = wice_soisno_ (:,inp_)
-                           t_soisno    (:,np) = t_soisno_    (:,inp_)
-                           z_sno       (:,np) = z_sno_       (:,inp_)
-                           dz_sno      (:,np) = dz_sno_      (:,inp_)
-                           t_grnd        (np) = t_grnd_        (inp_)
-                           tleaf         (np) = tleaf_         (inp_)
-                           ldew          (np) = ldew_          (inp_)
-                           sag           (np) = sag_           (inp_)
-                           scv           (np) = scv_           (inp_)
-                           snowdp        (np) = snowdp_        (inp_)
-                           fsno          (np) = fsno_          (inp_)
-                           sigf          (np) = sigf_          (inp_)
-                           zwt           (np) = zwt_           (inp_)
-                           wa            (np) = wa_            (inp_)
-                           EXIT
-                        ENDIF
-                        inp_ = inp_ + 1
-                     ENDDO
-                     np = np + 1
-                     CYCLE
-                  ENDIF
-
-
-                  ! ===============SOIL, URBAN, WETLAND, WATERBODY patch==================
+IF (patchtype(np)==0 .or. patchclass(np)==URBAN .or. patchclass(np)==WETLAND .or. patchclass(np)==WATERBODY) THEN
 
 IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                   lccpct_np(:) = 0
-                  !TODO: change to patchtypes
-                  !lccpct_np(1) = sum(lccpct_patches(np,1:10)) + lccpct_patches(np,14) &
-                  !               +   lccpct_patches(np,12)    + lccpct_patches(np,16)
                   lccpct_np(1) = sum(lccpct_patches(np,:), mask=patchtypes(:)==0)
                   lccpct_np(URBAN  )   = lccpct_patches(np,URBAN  )
                   lccpct_np(WETLAND)   = lccpct_patches(np,WETLAND)
@@ -182,12 +152,12 @@ ELSE
 ENDIF
 
                   num = count(lccpct_np .gt. 0)
-                  sum_lccpct_np = sum_lccpct_np
+                  sum_lccpct_np = sum(lccpct_np)
                   allocate ( frnp_  (                 num))
                   allocate ( cvsoil_(maxsnl+1:nl_soil,num))
 
                   ! Source patch type which differs from np's type exists
-                  IF ( (sum(lccpct_np) - lccpct_np(patchclass(np))) .gt. 0 ) THEN
+                  IF ( (sum_lccpct_np - lccpct_np(patchclass(np))) .gt. 0 ) THEN
 
                      ! Get the index of source patches, and stored as frnp_
                      k = 0
@@ -229,37 +199,30 @@ ENDIF
                      sigf          (np)                = 0  !fraction of veg cover, excluding snow-covered veg [-]
                      zwt           (np)                = 0  !the depth to water table [m]
                      wa            (np)                = 0  !water storage in aquifer [mm]
-                     tleaf         (np)                = 0  !leaf temperature [K]
 
                      cvsoil_(:,:) = 0
-                     !TODO: could USE MOD_Const_Physical.F90
                      ! Weight of temperature adjustment
-                     c_water = 4.188e6   ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3)
-                     c_ice   = 1.94153e6 ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
+                     c_water = cpliq * denh2o ! J/(m3 K) = 4188   [J/(kg K)]*1000(kg/m3) 
+                     c_ice   = cpice * denice ! J/(m3 K) = 2117.27[J/(kg K)]*917 (kg/m3)
                      wgt(maxsnl+1:nl_soil) = 0
 
                      DO k = 1, num
-                        IF (patchclass(np)==GLACIERS) THEN !TODO? been processed? around line 136
-                           cvsoil_(1:,frnp_(k)) = cpliq*wliq_soisno_(1:,frnp_(k)) + cpice*wice_soisno_(1:,frnp_(k))
-                           !TODO: to check ==0 判断是否合适
-                           IF(z_sno_(0,frnp_(k))==0 .and. scv_(frnp_(k))>0.) cvsoil_(1,frnp_(k)) = cvsoil_(1,frnp_(k)) + cpice*scv_(frnp_(k))
-                        ELSE
-                           ! Soil ground and wetland heat capacity
-                           DO l = 1, nl_soil
-                              vf_water = wliq_soisno_(l,frnp_(k))/(dz_soi(l)*denh2o)
-                              vf_ice   = wice_soisno_(l,frnp_(k))/(dz_soi(l)*denice)
-                              hcap     = csol_(l,frnp_(k)) + vf_water*c_water + vf_ice*c_ice
-                              cvsoil_(l,frnp_(k))    = hcap*dz_soi(l)
-                           ENDDO
-                           !TODO: to check ==0 判断是否合适
-                           IF(z_sno_(0,frnp_(k))==0 .and. scv_(frnp_(k))>0.) cvsoil_(1,frnp_(k)) = cvsoil_(1,frnp_(k)) + cpice*scv_(frnp_(k))
-                        ENDIF
+                        ! Soil ground and wetland heat capacity
+                        DO l = 1, nl_soil
+                           vf_water = wliq_soisno_(l,frnp_(k))/(dz_soi(l)*denh2o)
+                           vf_ice   = wice_soisno_(l,frnp_(k))/(dz_soi(l)*denice)
+                           hcap     = csol_(l,frnp_(k)) + vf_water*c_water + vf_ice*c_ice
+                           cvsoil_(l,k) = hcap*dz_soi(l)
+                        ENDDO
+
+                        !TODO: to check ==0 判断是否合适
+                        IF( dz_sno_(0,frnp_(k))>0 .and. scv_(frnp_(k))>0.) cvsoil_(1,k) = cvsoil_(1,k) + cpice*scv_(frnp_(k))
 
                         ! Snow heat capacity
                         IF( z_sno_(0,frnp_(k)) < 0 ) THEN
-                           cvsoil_(:0,frnp_(k)) = cpliq*wliq_soisno_(:0,frnp_(k)) + cpice*wice_soisno_(:0,frnp_(k))
+                           cvsoil_(:0,k) = cpliq*wliq_soisno_(:0,frnp_(k)) + cpice*wice_soisno_(:0,frnp_(k))
                         ENDIF
-                        wgt(maxsnl+1:nl_soil) = wgt(maxsnl+1:nl_soil) + cvsoil_(maxsnl+1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))
+                        wgt(maxsnl+1:nl_soil) = wgt(maxsnl+1:nl_soil) + cvsoil_(maxsnl+1:nl_soil,k) * lccpct_np(patchclass_(frnp_(k)))                       
                      ENDDO
 
                      ! Get the maximum lccpct for snow layers assignment
@@ -273,74 +236,149 @@ ENDIF
                      ENDDO
 
                      ! check if snow layer exist in patch inp_
-                     nsl = count(z_sno_(:,inp_) .lt. 0)
+                     nsl     = count(z_sno_(:,inp_) .lt. 0)
+                     nsl_max = count(wgt(:0)        .gt. 0) 
+                     denh2o_np(maxsnl+1:0) = 0
+                     denice_np(maxsnl+1:0) = 0
                      IF (nsl > 0) THEN
-                        z_sno   (:,np) = z_sno_      (:,inp_)
-                        dz_sno  (:,np) = dz_sno_     (:,inp_)
                         ! move wgt above nsl to nsl
-                        IF ( count(wgt(:0) .gt. 0) > nsl) THEN
-                           DO k = nsl+1, count(wgt(:0) .gt. 0)
-                              wgt(-nsl+1) = wgt(-nsl+1) + wgt(-k+1)
+                        IF ( nsl_max > nsl) THEN  
+                           DO l = nsl+1, nsl_max
+                              wgt(-nsl+1) = wgt(-nsl+1) + wgt(-l+1)
                            ENDDO
                         ENDIF
 
                         DO k = 1, num
-
-                           t_soisno (-nsl+1:0,np) = t_soisno (-nsl+1:0,np) + t_soisno_(-nsl+1:0,frnp_(k))*cvsoil_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1:0)
+                           t_soisno (-nsl+1:0,np) = t_soisno (-nsl+1:0,np) + t_soisno_(-nsl+1:0,frnp_(k))*cvsoil_(-nsl+1:0,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1:0)
                            wliq_soisno (-nsl+1:0,np) = wliq_soisno (-nsl+1:0,np) + wliq_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                            wice_soisno (-nsl+1:0,np) = wice_soisno (-nsl+1:0,np) + wice_soisno_(-nsl+1:0,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                           
+                           l = 1
+                           DO WHILE ( (l .le. nsl) .and. (dz_sno_(-l+1,frnp_(k)) .gt. 0) )
+                              denh2o_np (-l+1) = denh2o_np(-l+1) + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              denice_np (-l+1) = denice_np(-l+1) + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                              l = l + 1
+                              IF (l .gt. -maxsnl) EXIT
+                           ENDDO
 
-                           IF ( count(z_sno_(:,frnp_(k)) .lt. 0) .gt. nsl) THEN
-                              ! if source patch has more snow layer than the main patch
+                           ! if source patch has more snow layer than the main patch
+                           IF (nsl .lt. -maxsnl) THEN
                               l = nsl+1
-                              DO WHILE ( (l<5) .and. (wgt(-l+1)>0) )
+                              DO WHILE ( (l .le. -maxsnl) .and. (dz_sno_(-l+1,frnp_(k)) .gt. 0) )
                                  wliq_soisno(-nsl+1,np) = wliq_soisno (-nsl+1,np) + wliq_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                                  wice_soisno(-nsl+1,np) = wice_soisno (-nsl+1,np) + wice_soisno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                                 t_soisno (-nsl+1,np) = t_soisno (-nsl+1,np) + t_soisno_(-l+1,frnp_(k))*cvsoil_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1)
+                                 t_soisno (-nsl+1,np) = t_soisno (-nsl+1,np) + t_soisno_(-l+1,frnp_(k))*cvsoil_(-l+1,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(-nsl+1)
+                                 denh2o_np (-nsl+1) = denh2o_np(-nsl+1) + wliq_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np 
+                                 denice_np (-nsl+1) = denice_np(-nsl+1) + wice_soisno_(-l+1,frnp_(k))/dz_sno_(-l+1,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np                           
                                  l = l + 1
+                                 IF (l .gt. -maxsnl) EXIT
                               ENDDO
                            ENDIF
                         ENDDO
+
+                        ! snow layer node and depth calculation according to new mass and density
+                        zi_sno(0) = 0._r8
+                        DO l = 0, -nsl+1, -1
+                           IF (denice_np(l)>0 .and. denh2o_np(l)>0) THEN
+                              dz_sno (l,np) = wice_soisno(l,np)/denice_np(l) + wliq_soisno(l,np)/denh2o_np(l)
+                           ELSEIF (denice_np(l)==0 .and. denh2o_np(l)>0) THEN
+                              dz_sno (l,np) = wliq_soisno(l,np)/denh2o_np(l)
+                              ! print*, 'denice=0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              ! DO k = 1,num
+                              !    print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
+                              ! ENDDO
+                           ELSEIF (denh2o_np(l)==0 .and. denice_np(l)>0) THEN
+                              dz_sno (l,np) = wice_soisno(l,np)/denice_np(l)
+                              ! print*, 'denh2o=0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              ! DO k = 1,num
+                              !    print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
+                              ! ENDDO
+                           ELSE
+                              print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              DO k = 1,num
+                                 print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
+                                 print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
+                              ENDDO
+                              CALL CoLM_stop()
+                           ENDIF
+                           z_sno  (l,np) = zi_sno(l) - 0.5_r8*dz_sno(l,np)
+                           IF (l-1 .lt. maxsnl+1) EXIT
+                           zi_sno (l-1)  = zi_sno(l) - dz_sno(l,np)
+                        ENDDO
+
                      ELSE
                         ! no snow layer exist in the main patch, add a layer
+                        ! move wgt above soil to layer 0
+                        IF ( nsl_max > nsl) THEN  
+                           DO l = nsl+1, nsl_max
+                              wgt(0) = wgt(0) + wgt(-l+1)
+                           ENDDO
+                        ENDIF                       
                         l=0
                         DO WHILE (wgt(l) .gt. 0)
-                           z_sno (0,np) = z_sno_ (0,frnp_(1))
-                           dz_sno(0,np) = dz_sno_(0,frnp_(1))
                            DO k = 1, num
                               wliq_soisno(0,np) = wliq_soisno(0,np) + wliq_soisno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                               wice_soisno(0,np) = wice_soisno(0,np) + wice_soisno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                              t_soisno   (0,np) = t_soisno   (0,np) + t_soisno_(l,frnp_(k))*cvsoil_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/wgt(l)
-                              IF ( dz_sno_(0,frnp_(k)) > dz_sno(0,np) ) THEN
-                                 z_sno (0,np) = z_sno_ (0,frnp_(k))
-                                 dz_sno(0,np) = dz_sno_(0,frnp_(k))
+                              t_soisno   (0,np) = t_soisno   (0,np) + t_soisno_(l,frnp_(k))*cvsoil_(l,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(0)
+                              IF (dz_sno_(l,frnp_(k)) .gt. 0) THEN
+                                 denh2o_np(0) = denh2o_np(0) + wliq_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                                 denice_np(0) = denice_np(0) + wice_soisno_(l,frnp_(k))/dz_sno_(l,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                               ENDIF
                            ENDDO
                            l=l-1
+                           IF (l .lt. maxsnl+1) EXIT
                         ENDDO
+
+                        IF (wgt(0) .gt. 0) THEN
+                           ! snow layer node and depth calculation according to new mass and density
+                           IF (denh2o_np(0)>0 .and. denh2o_np(0)>0) THEN
+                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) + wliq_soisno(0,np)/denh2o_np(0) 
+                           ELSEIF (denice_np(0)==0 .and. denh2o_np(0)>0) THEN
+                              dz_sno (0,np) = wliq_soisno(0,np)/denh2o_np(0) 
+                              ! print*, 'denice=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              ! DO k = 1,num
+                              !    print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
+                              ! ENDDO 
+                           ELSEIF (denice_np(0)>0 .and. denh2o_np(0)==0) THEN
+                              dz_sno (0,np) = wice_soisno(0,np)/denice_np(0) 
+                              ! print*, 'denh2o=0! stop! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_ 
+                              ! DO k = 1,num
+                              !    print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
+                              ! ENDDO
+                           ELSE
+                              print*, 'denh2o and denice == 0! np=',np,'igbp=',patchclass(np),'nsl=',nsl,'frnp_=',frnp_
+                              DO k = 1,num
+                                 print*,'frnp_=',frnp_(k),'wliq=',wliq_soisno(:0,frnp_(k))
+                                 print*,'frnp_=',frnp_(k),'wice=',wice_soisno(:0,frnp_(k))
+                              ENDDO
+                              CALL CoLM_stop()
+                           ENDIF
+
+                           zi_sno (0)    = 0._r8
+                           z_sno  (0,np) = zi_sno(0) - 0.5_r8*dz_sno(0,np)
+                        ENDIF
+
                      ENDIF
 
-                     nsl = count(z_sno(:,np) .lt. 0)
-                     IF (nsl>0) THEN
-                        DO l = -nsl+1,0
+                     DO l = maxsnl+1, 0
+                        IF ( z_sno(l,np) .lt. 0 ) THEN
                            scv(np) = scv(np) + wice_soisno(l,np) + wliq_soisno(l,np)
                            snowdp(np) = snowdp(np) + dz_sno(l,np)
-                        ENDDO
-                     ENDIF
-
+                        ENDIF
+                     ENDDO
 
                      ! Variable adjustment
                      DO k = 1, num
                         wliq_soisno (1:nl_soil,np) = wliq_soisno (1:nl_soil,np) + wliq_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wice_soisno (1:nl_soil,np) = wice_soisno (1:nl_soil,np) + wice_soisno_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
-                        t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
+                        t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
                         ldew  (np) = ldew  (np) + ldew_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         sag   (np) = sag   (np) + sag_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                      ENDDO
 
-                     ! Get the lowest zwt from source patches and assign to np
+                     ! Get the lowest zwt from source patches and assign to np suggested by Shupeng Zhang
                      zwt(np) = zwt_(frnp_(1))
                      k = 2
                      DO WHILE (k .le. num)
@@ -407,13 +445,11 @@ ENDIF
                      ENDIF
 
                   ELSE
-                  ! Patch area stay unchanged or decrease, use restart value
+                  ! Patch area stay unchanged or decrease, use restart value or remain initialized
 
                      inp_ = np_
                      DO WHILE (inp_ .le. grid_patch_e_(j))
                         IF (patchclass_(inp_) .eq. patchclass(np)) THEN
-                           ! check
-                           print*, 'np=',np
                            selfnp_            = inp_
                            frnp_(1)           = inp_
                            wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
@@ -443,8 +479,38 @@ ENDIF
 
                   ENDIF
 
+ELSEIF (patchclass(np)==GLACIERS) THEN
+                  ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
+                  inp_ = np_
+                  DO WHILE (inp_ .le. grid_patch_e_(j))
+                     IF (patchclass_(inp_) .eq. patchclass(np)) THEN
+                        wliq_soisno (:,np) = wliq_soisno_ (:,inp_)
+                        wice_soisno (:,np) = wice_soisno_ (:,inp_)
+                        t_soisno    (:,np) = t_soisno_    (:,inp_)
+                        z_sno       (:,np) = z_sno_       (:,inp_)
+                        dz_sno      (:,np) = dz_sno_      (:,inp_)
+                        t_grnd        (np) = t_grnd_        (inp_)
+                        tleaf         (np) = tleaf_         (inp_)
+                        ldew          (np) = ldew_          (inp_)
+                        sag           (np) = sag_           (inp_)
+                        scv           (np) = scv_           (inp_)
+                        snowdp        (np) = snowdp_        (inp_)
+                        fsno          (np) = fsno_          (inp_)
+                        sigf          (np) = sigf_          (inp_)
+                        zwt           (np) = zwt_           (inp_)
+                        wa            (np) = wa_            (inp_)
+                        EXIT
+                     ENDIF
+                     inp_ = inp_ + 1
+                  ENDDO
+ENDIF
 
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
+                  IF (patchtype(np)==0) THEN
+                     ! if totally come from other types,ldew set to zero since ldew_p(:)=0
+                     ldew(np) = sum( ldew_p(patch_pft_s(np):patch_pft_e(np))*pftfrac(patch_pft_s(np):patch_pft_e(np)) )
+                  ENDIF
+
                   IF (patchtype(np)==0 .and. lccpct_np(patchclass(np)) .gt. 0) THEN
                      ! Used restart value of the same pftclass for pft-specific variables
                      ! Note: For ip-specific variables, remain initialized value for new soil patch or pftclass
@@ -472,6 +538,7 @@ ENDIF
                         ! for the same PFT, set PFT value
                         tleaf_p    (ip) = tleaf_p_    (ip_)
                         ldew_p     (ip) = ldew_p_     (ip_)
+                        !TODO: check sigf, is related to wt, see MOD_SnowFraction.F90
                         sigf_p     (ip) = sigf_p_     (ip_)
                         IF ( (lai_p(ip) + sai_p(ip)) .gt. 0) THEN
                            sigf_p(ip) = 1
@@ -480,6 +547,7 @@ ENDIF
                         ip = ip + 1
                         ip_= ip_+ 1
                      ENDDO
+                     ldew(np) = sum( ldew_p(patch_pft_s(np):patch_pft_e(np))*pftfrac(patch_pft_s(np):patch_pft_e(np)) )
                   ENDIF
 #endif
 
@@ -610,7 +678,6 @@ ENDIF
 
                      ! Use the first source soil patch temporarily
                      IF (FROM_SOIL) THEN
-                        sgper      (:,:,u) = ssun_   (:,:,frnp_(1)) + ssha_(:,:,frnp_(1)) !check if is the same meaning
                         z_sno_gper   (:,u) = z_sno_    (:,frnp_(1))
                         sag_gper       (u) = sag_        (frnp_(1))
                         scv_gper       (u) = scv_        (frnp_(1))
@@ -622,6 +689,7 @@ ENDIF
 
                   IF (allocated(frnp_  )) deallocate(frnp_  )
                   IF (allocated(gu_    )) deallocate(gu_    )
+                  IF (allocated(cvsoil_)) deallocate(cvsoil_)
                   np = np + 1
                ENDDO
             ENDIF
