@@ -266,6 +266,17 @@ contains
             call mp2g_hist%map (VecOnes, sumarea, spv = spval, msk = filter)
          ENDIF
 
+         IF (HistForm == 'Gridded') THEN
+            IF (itime_in_file == 1) then
+               call hist_write_var_real8_2d (file_hist, 'landarea', ghist, 1, sumarea, compress = 1)
+               IF (p_is_master .and. (trim(DEF_HIST_mode) == 'one')) then
+                  CALL ncio_put_attr (file_hist, 'landarea', 'long_name', 'land area')
+                  CALL ncio_put_attr (file_hist, 'landarea', 'units', 'km2')
+                  CALL ncio_put_attr (file_hist, 'landarea', 'missing_value', spval)
+               ENDIF
+            ENDIF
+         ENDIF
+
          ! wind in eastward direction [m/s]
          call write_history_variable_2d ( DEF_hist_vars%xy_us, &
             a_us, file_hist, 'f_xy_us', itime_in_file, sumarea, filter, &

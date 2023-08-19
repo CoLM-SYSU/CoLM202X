@@ -84,7 +84,7 @@ MODULE MOD_Hydro_RiverLakeNetwork
 CONTAINS
    
    ! ----------
-   SUBROUTINE river_lake_network_init ()
+   SUBROUTINE river_lake_network_init (use_calc_rivdpt)
 
       USE MOD_SPMD_Task
       USE MOD_Namelist
@@ -99,8 +99,10 @@ CONTAINS
       USE MOD_Vars_TimeInvariants, only : lakedepth
       IMPLICIT NONE
 
+      logical, intent(in) :: use_calc_rivdpt
+
       ! Local Variables
-      CHARACTER(len=256) :: river_file
+      CHARACTER(len=256) :: river_file, rivdpt_file
 
       INTEGER :: numbasin, ibasin, nbasin
       INTEGER :: iworker, mesg(4), isrc, idest, iproc
@@ -129,7 +131,11 @@ CONTAINS
 
       numbasin = numelm
 
-      river_file = DEF_CatchmentMesh_data 
+      river_file  = DEF_CatchmentMesh_data 
+
+      IF (use_calc_rivdpt) THEN
+         rivdpt_file = trim(DEF_dir_restart) // '/' // trim(DEF_CASE_NAME) //'_riverdepth.nc'
+      ENDIF
 
       IF (p_is_master) THEN
          
@@ -137,8 +143,13 @@ CONTAINS
          CALL ncio_read_serial (river_file, 'basin_downstream', riverdown)
          CALL ncio_read_serial (river_file, 'river_length'    , riverlen )
          CALL ncio_read_serial (river_file, 'river_elevation' , riverelv )
-         CALL ncio_read_serial (river_file, 'river_depth    ' , riverdpth)
          CALL ncio_read_serial (river_file, 'basin_elevation' , basinelv )
+         
+         IF (use_calc_rivdpt) THEN
+            CALL ncio_read_serial (rivdpt_file, 'riverdepth' , riverdpth)
+         ELSE
+            CALL ncio_read_serial (river_file, 'river_depth' , riverdpth)
+         ENDIF
 
          riverlen = riverlen * 1.e3 ! km to m
          
