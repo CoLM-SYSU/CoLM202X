@@ -47,6 +47,12 @@ MODULE MOD_Namelist
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
 
+#ifdef URBAN_MODEL
+   LOGICAL  :: USE_SITE_urban_paras      = .true.
+   LOGICAL  :: USE_SITE_thermal_paras    = .false.
+   LOGICAL  :: USE_SITE_urban_LAI        = .false.
+#endif
+
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
       LOGICAL  :: greenwich   = .TRUE.
@@ -196,7 +202,7 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
    ! !  irrigation method temporary
-   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
+   INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -679,6 +685,9 @@ CONTAINS
          USE_SITE_topography,      &
          USE_SITE_HistWriteBack,   &
          USE_SITE_ForcingReadAhead,&
+         USE_SITE_urban_paras,     &
+         USE_SITE_thermal_paras,   &
+         USE_SITE_urban_LAI,       &
 #endif
          DEF_nx_blocks,                   &
          DEF_ny_blocks,                   &
@@ -709,7 +718,7 @@ CONTAINS
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
-         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
+         DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -1102,8 +1111,9 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
       !  use irrigation temporary
-      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
-      
+      CALL mpi_bcast (DEF_USE_IRRIGATION,    1, mpi_logical, p_root, p_comm_glb, p_err)
+      CALL mpi_bcast (DEF_IRRIGATION_METHOD, 1, mpi_logical, p_root, p_comm_glb, p_err)
+
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_LULCC_SCHEME,      1, mpi_integer, p_root, p_comm_glb, p_err)

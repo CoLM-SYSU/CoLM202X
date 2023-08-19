@@ -792,7 +792,7 @@ IF (DEF_USE_PC .and. patchclass(ipatch)/=CROPLAND) THEN
             rstfacsun_p(:)  ,rstfacsha_p(:)    ,&
             gssun_p(:)      ,gssha_p(:)        ,forc_po2m     ,forc_pco2m         ,z0h_g       ,obu_g ,&
             ustar_g         ,zlnd              ,zsno          ,fsno               ,sigf_p(ps:pe)      ,&
-            etrc_p(:)       ,t_grnd            ,qg            ,dqgdT              ,emg                ,&
+            etrc_p(:)       ,t_grnd            ,qg,rss        ,dqgdT              ,emg                ,&
             z0m_p(ps:pe)    ,tleaf_p(ps:pe)    ,ldew_p(ps:pe) ,ldew_rain_p(ps:pe) ,ldew_snow_p(ps:pe) ,&
             taux            ,tauy              ,&
             fseng           ,fevpg             ,cgrnd         ,cgrndl             ,cgrnds             ,&
