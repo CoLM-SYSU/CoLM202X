@@ -43,10 +43,10 @@ MODULE MOD_Lulcc_PatchTrace
       integer :: nlc = N_land_classification
 
       IF (p_is_worker) THEN
-         allocate (lccpct_patches (numpatch, nlc))
+         allocate (lccpct_patches (numpatch, 0:nlc))
          lccpct_patches (:,:) = 0
-         allocate (lccpct_matrix (numpatch, nlc))
-         lccpct_matrix (:,:) = 0
+         allocate (lccpct_matrix  (numpatch, 0:nlc))
+         lccpct_matrix  (:,:) = 0
       ENDIF
 
    END SUBROUTINE allocate_LulccPatchTrace
@@ -193,7 +193,6 @@ MODULE MOD_Lulcc_PatchTrace
 #endif
       ENDIF
 
-
 #ifdef SrfdataDiag
       dir_landdata = DEF_dir_landdata
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
@@ -204,10 +203,10 @@ MODULE MOD_Lulcc_PatchTrace
       ENDDO
       deallocate(typindex)
 #endif
+
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
 #endif
-
 
 #ifdef CoLMDEBUG
    CALL check_vector_data ('lccpct_patches', lccpct_patches)

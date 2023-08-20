@@ -139,7 +139,7 @@ MODULE MOD_Lulcc_MassEnergyConserve
                IF (np.le.0) CYCLE
 
                DO WHILE (np.le.grid_patch_e(i))
-IF (patchtype(np)==0 .or. patchclass(np)==URBAN .or. patchclass(np)==WETLAND .or. patchclass(np)==WATERBODY) THEN
+IF (patchtype(np) .ne. 3) THEN
 
 IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                   lccpct_np(:) = 0

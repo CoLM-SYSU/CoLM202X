@@ -23,7 +23,7 @@ MODULE MOD_Lulcc_Initialize
 !
 ! Created by Hua Yuan, 04/08/2022
 !
-! TODO: add authors Wenzong Dong and Wanyi Lin
+! TODO: add authors Wenzong Dong
 ! ======================================================================
 
    USE MOD_Precision
@@ -45,6 +45,9 @@ MODULE MOD_Lulcc_Initialize
    USE MOD_Vars_TimeInvariants
    USE MOD_Vars_TimeVariables
    USE MOD_Initialize
+#ifdef SrfdataDiag
+   USE MOD_SrfdataDiag, only : gdiag, srfdata_diag_init
+#endif
 
    IMPLICIT NONE
 
@@ -109,6 +112,20 @@ MODULE MOD_Lulcc_Initialize
 #ifdef CATCHMENT
    CALL hru_vector_init ()
 #endif
+#endif
+
+   IF (p_is_worker) THEN
+      CALL elm_patch%build (landelm, landpatch, use_frac = .true.)
+   ENDIF
+
+#ifdef SrfdataDiag
+#ifdef GRIDBASED
+   CALL init_gridbased_mesh_grid ()
+   CALL gdiag%define_by_copy (gridmesh)
+#else
+   CALL gdiag%define_by_ndims(3600,1800)
+#endif
+   CALL srfdata_diag_init (dir_landdata)
 #endif
 
    ! --------------------------------------------------------------------
