@@ -678,6 +678,8 @@ contains
       integer  :: ilev, iter
       real(r8) :: dlt
 
+      logical  :: all_infil
+
       REAL(r8) :: wsum_m1, wsum, werr
 
       ss_wf(lb:ub) = 0
@@ -756,16 +758,25 @@ contains
                q_wt_0 = q_wt
             end if
 
+            all_infil = .false.
+            if (ubc_typ == bc_rainfall) then
+               IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) then
+                  all_infil = .true.
+               ENDIF
+            ENDIF
+
             f2_norm(iter) = sqrt(sum(blc**2))
 
             if (    (f2_norm(iter) < tol_richards * dt_this)  &
                .or. (dt_this < dt_explicit)                   &
                .or. (iter >= max_iters_richards) &
-               .or. (.not. is_solvable) ) then
+               .or. (.not. is_solvable)          &
+               .or. all_infil) THEN
 
                if ((dt_this < dt_explicit) &
                   .or. (iter >= max_iters_richards) &
-                  .or. (.not. is_solvable) ) then
+                  .or. (.not. is_solvable) &
+                  .or. all_infil) THEN
 
                   dt_this = min(dt_this, dt_explicit)
                   q_this  = q_0
@@ -2479,7 +2490,9 @@ contains
          if (qlower - qupper >= tol_q) then
             if ((psi_s(iface) < psi_s(iface+1)) &
                .or. &
-               ((psi_s(iface) == psi_s(iface+1)) .and. (is_sat(iface+1)))) then
+               ((psi_s(iface) == psi_s(iface+1)) .and. (is_sat(iface+1))) &
+               .or. &
+               (top_at_interface .and. (iface == i_stt))) then
 
                qq(iface) = qupper
 
@@ -2502,7 +2515,9 @@ contains
 
             elseif ((psi_s(iface) > psi_s(iface+1)) &
                   .or. &
-                  ((psi_s(iface) == psi_s(iface+1)) .and. (.not. is_sat(iface+1)))) then
+                  ((psi_s(iface) == psi_s(iface+1)) .and. (.not. is_sat(iface+1))) &
+                  .or. &
+                  (btm_at_interface .and. (iface == i_end-1))) then
 
                qq(iface) = qlower
 
