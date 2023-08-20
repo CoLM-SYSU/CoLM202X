@@ -43,7 +43,7 @@ CONTAINS
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
                             theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
 #endif
-                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,qg,rss)
+                            dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
 
   !=======================================================================
   ! !DESCRIPTION:
@@ -85,6 +85,7 @@ CONTAINS
         t_soisno    (1:nl_soil),     &! soil/snow skin temperature [K]
         wliq_soisno (1:nl_soil),     &! liquid water [kg/m2]
         wice_soisno (1:nl_soil),     &! ice lens [kg/m2]
+        fsno,                        &! fractional snow cover [-]
         qg                            ! ground specific humidity [kg/kg]
 
    real(r8), intent(out) :: &
@@ -281,7 +282,20 @@ CONTAINS
                                    !for wet soil according to Noah-MP v5
    ENDSELECT
 
-   rss = min(1.e6_r8,rss)
+   ! account for snow fractional cover for rss
+   IF (DEF_RSS_SCHEME .ne. 4) THEN
+      ! with 1/rss = fsno/rss_snow + (1-fsno)/rss_soil,
+      ! assuming rss_snow = 1, so rss is calibrated as:
+      rss = rss / (1.-fsno+fsno*rss)
+      rss = min(1.e6_r8,rss)
+   ENDIF
+
+   ! account for snow fractional cover for LP92 beta scheme
+   !NOTE: rss here is for soil beta value
+   IF (DEF_RSS_SCHEME .eq. 4) THEN
+      ! modify soil beta by snow cover, assuming soil beta for snow surface is 1.
+      rss = (1.-fsno)*rss + fsno
+   ENDIF
 
  END Subroutine SoilSurfaceResistance
 
