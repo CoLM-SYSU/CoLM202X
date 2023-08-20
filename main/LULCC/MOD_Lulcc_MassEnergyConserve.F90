@@ -139,7 +139,8 @@ MODULE MOD_Lulcc_MassEnergyConserve
                IF (np.le.0) CYCLE
 
                DO WHILE (np.le.grid_patch_e(i))
-IF (patchtype(np) .ne. 3) THEN
+
+IF (patchtype(np) .ne. 3) THEN !not a glacier patch
 
 IF (DEF_USE_PFT .or. DEF_FAST_PC) THEN
                   lccpct_np(:) = 0
@@ -215,7 +216,6 @@ ENDIF
                            cvsoil_(l,k) = hcap*dz_soi(l)
                         ENDDO
 
-                        !TODO: to check ==0 判断是否合适
                         IF( dz_sno_(0,frnp_(k))>0 .and. scv_(frnp_(k))>0.) cvsoil_(1,k) = cvsoil_(1,k) + cpice*scv_(frnp_(k))
 
                         ! Snow heat capacity
@@ -401,7 +401,9 @@ ENDIF
                         fsno(np)  = tanh(snowdp(np)/(2.5 * zlnd * fmelt))
                      ENDIF
 
-                     !TODO: check sigf, is related to wt, see MOD_SnowFraction.F90
+                     !TODO: check sigf, is related to wt
+                     ! see MOD_SnowFraction.F90 and CoLMMAIN.F90
+                     ! why recalculat sigf here?
                      IF ( (lai(np) + sai(np)) .gt. 0) THEN
                         sigf(np) = 1 - fsno(np)
                      ENDIF
@@ -465,7 +467,7 @@ ENDIF
                            snowdp        (np) = snowdp_        (inp_)
                            fsno          (np) = fsno_          (inp_)
                            sigf          (np) = sigf_          (inp_)
-                           !TODO: check
+                           !TODO: check. why recalculate sigf here?
                            IF ( (lai(np) + sai(np)) .gt. 1e-6) THEN
                               sigf(np) = 1 - fsno(np)
                            ENDIF
@@ -479,7 +481,7 @@ ENDIF
 
                   ENDIF
 
-ELSEIF (patchclass(np)==GLACIERS) THEN
+ELSEIF (patchtype(np)==3) THEN !glacier patch
                   ! Used restart value for GLACIERS patches if patchclass exists last year, or remain initialized
                   inp_ = np_
                   DO WHILE (inp_ .le. grid_patch_e_(j))
@@ -540,6 +542,7 @@ ENDIF
                         ldew_p     (ip) = ldew_p_     (ip_)
                         !TODO: check sigf, is related to wt, see MOD_SnowFraction.F90
                         sigf_p     (ip) = sigf_p_     (ip_)
+                        ! why recalculate sigf_p here?
                         IF ( (lai_p(ip) + sai_p(ip)) .gt. 0) THEN
                            sigf_p(ip) = 1
                         ENDIF
