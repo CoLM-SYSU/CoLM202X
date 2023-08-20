@@ -123,7 +123,7 @@ MODULE MOD_Namelist
    !1: To allow annuaul ndep data to be read in
    !2: To allow monthly ndep data to be read in
    INTEGER :: DEF_NDEP_FREQUENCY = 1
-   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
 
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year

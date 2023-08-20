@@ -993,6 +993,26 @@ CONTAINS
             ldew_snow = max(0., ldew-evplwet*deltim)
             ldew      = ldew_snow
          endif
+      ELSEIF (DEF_Interception_scheme .eq. 7) then !JULES
+            if (ldew_rain .gt. evplwet*deltim) then
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            else
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            endif
+      ELSEIF (DEF_Interception_scheme .eq. 8) then !JULES
+            if (ldew_rain .gt. evplwet*deltim) then
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            else
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            endif
       ELSE
          call abort
 
