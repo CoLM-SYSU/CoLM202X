@@ -84,7 +84,6 @@ MODULE MOD_SingleSrfdata
 
    REAL(r8) :: SITE_topography = 0.
 
-#ifdef URBAN_MODEL
    INTEGER , allocatable :: SITE_urbtyp   (:)
 
    REAL(r8), allocatable :: SITE_lucyid   (:)
@@ -119,7 +118,6 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_alb_wall (:,:)
    REAL(r8), allocatable :: SITE_alb_gimp (:,:)
    REAL(r8), allocatable :: SITE_alb_gper (:,:)
-#endif
 
 CONTAINS
 
