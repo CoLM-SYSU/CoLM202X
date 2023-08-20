@@ -421,11 +421,8 @@ CONTAINS
 
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
       CALL ncio_define_dimension (fsrfdata, 'patch', numpatch)
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', numpft)
-#endif
-#if (defined LULC_IGBP_PC)
-      CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
 
       CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
