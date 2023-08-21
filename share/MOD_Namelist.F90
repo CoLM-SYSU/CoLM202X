@@ -46,12 +46,10 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
-
-#ifdef URBAN_MODEL
    LOGICAL  :: USE_SITE_urban_paras      = .true.
    LOGICAL  :: USE_SITE_thermal_paras    = .false.
    LOGICAL  :: USE_SITE_urban_LAI        = .false.
-#endif
+
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
