@@ -158,7 +158,7 @@ SUBROUTINE CoLMMAIN ( &
   USE MOD_LAIEmpirical
   USE MOD_TimeManager
   USE MOD_Vars_1DFluxes, only : rsub
-  USE MOD_Namelist, only : DEF_Interception_scheme, DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
+  USE MOD_Namelist, only :  DEF_USE_VARIABLY_SATURATED_FLOW, DEF_USE_PLANTHYDRAULICS, DEF_USE_IRRIGATION
   USE MOD_LeafInterception
 #if(defined CaMa_Flood)
    ! get flood depth [mm], flood fraction[0-1], flood evaporation [mm/s], flood inflow [mm/s]
