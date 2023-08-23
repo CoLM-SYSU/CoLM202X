@@ -374,6 +374,7 @@ ENDIF
                         t_soisno (1:nl_soil,np) = t_soisno (1:nl_soil,np) + t_soisno_(1:nl_soil,frnp_(k))*cvsoil_(1:nl_soil,k)*lccpct_np(patchclass_(frnp_(k)))/wgt(1:nl_soil)
                         ldew  (np) = ldew  (np) + ldew_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         sag   (np) = sag   (np) + sag_    (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
+                        ! use MOD_SnowFraction.F90 to calculate sigf later
                         sigf  (np) = sigf  (np) + sigf_   (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                         wa    (np) = wa    (np) + wa_     (frnp_(k))*lccpct_np(patchclass_(frnp_(k)))/sum_lccpct_np
                      ENDDO
@@ -401,11 +402,9 @@ ENDIF
                         fsno(np)  = tanh(snowdp(np)/(2.5 * zlnd * fmelt))
                      ENDIF
 
-                     !TODO: check sigf, is related to wt
-                     ! see MOD_SnowFraction.F90 and CoLMMAIN.F90
-                     ! why recalculat sigf here?
-                     IF ( (lai(np) + sai(np)) .gt. 0) THEN
-                        sigf(np) = 1 - fsno(np)
+                     ! In case lai+sai come into existence this year, set sigf to 1
+                     IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
+                        sigf(np) = 1
                      ENDIF
 
                      ! Set Groud temperature
@@ -467,9 +466,9 @@ ENDIF
                            snowdp        (np) = snowdp_        (inp_)
                            fsno          (np) = fsno_          (inp_)
                            sigf          (np) = sigf_          (inp_)
-                           !TODO: check. why recalculate sigf here?
-                           IF ( (lai(np) + sai(np)) .gt. 1e-6) THEN
-                              sigf(np) = 1 - fsno(np)
+                           ! In case lai+sai come into existence this year, set sigf to 1
+                           IF ( (lai(np) + sai(np)).gt.0 .and. sigf(np).eq.0 ) THEN
+                              sigf(np) = 1
                            ENDIF
                            zwt           (np) = zwt_           (inp_)
                            wa            (np) = wa_            (inp_)
@@ -540,10 +539,9 @@ ENDIF
                         ! for the same PFT, set PFT value
                         tleaf_p    (ip) = tleaf_p_    (ip_)
                         ldew_p     (ip) = ldew_p_     (ip_)
-                        !TODO: check sigf, is related to wt, see MOD_SnowFraction.F90
+                        ! use MOD_SnowFraction.F90 later
                         sigf_p     (ip) = sigf_p_     (ip_)
-                        ! why recalculate sigf_p here?
-                        IF ( (lai_p(ip) + sai_p(ip)) .gt. 0) THEN
+                        IF ( (lai_p(ip) + sai_p(ip)).gt.0 .and. sigf_p(ip).eq.0 ) THEN
                            sigf_p(ip) = 1
                         ENDIF
 
