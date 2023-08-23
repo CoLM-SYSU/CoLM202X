@@ -56,7 +56,7 @@ module MOD_Forcing
 
    type(block_data_real8_2d) :: avgcos   ! time-average of cos(zenith)
    type(block_data_real8_2d) :: metdata  ! forcing data
-#if(defined URBAN_MODEL)
+#ifdef URBAN_MODEL
    type(block_data_real8_2d) :: rainf
    type(block_data_real8_2d) :: snowf
 #endif
