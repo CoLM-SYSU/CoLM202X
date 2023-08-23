@@ -27,6 +27,17 @@ MODULE MOD_Lulcc_MassEnergyConserve
 !
 ! -------------------------------
 
+!=======================================================================
+! This is the main subroutine to execute the calculation of the restart
+! variables for the begin of next year.
+! There are mainly three ways to adjust restart variables:
+! 1) variable related to mass: area weighted mean of the source patches,
+!    e.g., ldew, wliq_soisno.
+! 2) variable related to energy: keep energy conserve after the change
+!    of temperature, e.g., t_soisno.
+! 3) recalculate according to physical process, e.g., dz_sno, scv, fsno.
+!=======================================================================
+
    USE MOD_Precision
    USE MOD_Vars_Global
    USE MOD_LandPatch
