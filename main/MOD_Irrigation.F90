@@ -14,7 +14,7 @@ module MOD_Irrigation
     use MOD_Qsadv, only: qsadv
     use MOD_Vars_TimeInvariants, only: &
 #ifdef vanGenuchten_Mualem_SOIL_MODEL
-        theta_r, alpha_vgm, n_vgm, &
+        theta_r, alpha_vgm, n_vgm, L_vgm, fc_vgm, sc_vgm,&
 #endif
         porsl, psi0, bsw
     use MOD_Vars_TimeVariables, only : tref, t_soisno, wliq_soisno, irrig_rate, deficit_irrig, sum_irrig, sum_irrig_count, n_irrig_steps_left, &
@@ -24,6 +24,7 @@ module MOD_Irrigation
     use MOD_BGC_Vars_PFTimeVariables, only: cphase_p
     use MOD_Vars_1DForcing, only: forc_t, forc_frl, forc_psrf, forc_us, forc_vs
     use MOD_Vars_1DFluxes, only: sabg, sabvsun, sabvsha, olrg, fgrnd
+    use MOD_Hydro_SoilFunction, only: soil_vliq_from_psi
 
     implicit none
 
