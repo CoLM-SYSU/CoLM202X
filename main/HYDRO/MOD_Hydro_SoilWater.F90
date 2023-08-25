@@ -44,8 +44,9 @@ module MOD_Hydro_SoilWater
    real(r8), parameter :: tol_richards = 1.e-7
 
 #ifdef CoLMDEBUG
-   INTEGER(8) :: count_iters_this(max_iters_richards) = 0
-   INTEGER(8) :: count_iters_accm(max_iters_richards) = 0
+   INTEGER(8) :: count_implicit = 0
+   INTEGER(8) :: count_explicit = 0
+   INTEGER(8) :: count_wet2dry  = 0
 #endif
 
    ! private subroutines and functions
@@ -678,7 +679,7 @@ contains
       integer  :: ilev, iter
       real(r8) :: dlt
 
-      logical  :: all_infil
+      logical  :: wet2dry
 
       REAL(r8) :: wsum_m1, wsum, werr
 
@@ -699,7 +700,7 @@ contains
          wf_m1 = ss_wf
          vl_m1 = ss_vl
          wt_m1 = ss_wt
-
+      
          wsum_m1 = sum(ss_vl * (sp_dz - ss_wt)) + sum(ss_wt * vl_s)
          IF (ubc_typ == bc_rainfall) THEN
             wsum_m1 = wsum_m1 + ss_dp
@@ -710,6 +711,7 @@ contains
 
          if (ubc_typ == bc_rainfall) then
             dp_m1 = max(ss_dp, 0._r8)
+            IF (dp_m1 < tol_z) dp_m1 = 0.
             infl_max = dp_m1/dt_this + ubc_val
          end if
 
@@ -758,10 +760,10 @@ contains
                q_wt_0 = q_wt
             end if
 
-            all_infil = .false.
+            wet2dry = .false.
             if (ubc_typ == bc_rainfall) then
                IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) then
-                  all_infil = .true.
+                  wet2dry = .true.
                ENDIF
             ENDIF
 
@@ -771,12 +773,12 @@ contains
                .or. (dt_this < dt_explicit)                   &
                .or. (iter >= max_iters_richards) &
                .or. (.not. is_solvable)          &
-               .or. all_infil) THEN
+               .or. wet2dry) THEN
 
                if ((dt_this < dt_explicit) &
                   .or. (iter >= max_iters_richards) &
                   .or. (.not. is_solvable) &
-                  .or. all_infil) THEN
+                  .or. wet2dry) THEN
 
                   dt_this = min(dt_this, dt_explicit)
                   q_this  = q_0
@@ -796,7 +798,14 @@ contains
                dt_done = dt_done + dt_this
 
 #ifdef CoLMDEBUG
-               count_iters_this(iter) = count_iters_this(iter) + 1
+               if (f2_norm(iter) < tol_richards * dt_this) THEN
+                  count_implicit = count_implicit + 1
+               else
+                  count_explicit = count_explicit + 1
+                  IF (wet2dry) THEN
+                     count_wet2dry = count_wet2dry + 1
+                  ENDIF
+               ENDIF
 #endif
 
                exit
@@ -3553,34 +3562,33 @@ contains
       
       USE MOD_SPMD_Task
       IMPLICIT NONE
-
-      ! CHARACTER(len=20) :: fmtt
+   
+      INTEGER(8), SAVE :: count_implicit_accum = 0
+      INTEGER(8), SAVE :: count_explicit_accum = 0
+      INTEGER(8), SAVE :: count_wet2dry_accum  = 0
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
 #ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, count_iters_this, size(count_iters_this), &
-            MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_implicit, 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_explicit, 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_wet2dry , 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            ! write(*,*)
-            ! write(fmtt,'("(A,",I1,"I12)")') max_iters_richards
-            ! write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
+            write(*,"(/,A,I13,A,I13,A,I13,A)") 'VSF scheme this step: ',    &
+               count_implicit, ' (implicit)', count_explicit, ' (explicit)', count_wet2dry, ' (wet2dry)'
 
-            ! count_iters_accm = count_iters_accm + count_iters_this
-            ! write(*,fmtt) 'VSF Iteration stat all steps: ', count_iters_accm(:)
-            
-            write(*,"(/,A,I13,A,I13,A)") 'VSF Iteration stat this step: ',    &
-               sum(count_iters_this(1:max_iters_richards-1)), ' (converged)', &
-               count_iters_this(max_iters_richards), ' (failed)'
-
-            count_iters_accm = count_iters_accm + count_iters_this
-            write(*,"(A,I13,A,I13,A)") 'VSF Iteration stat all steps: ',      &
-               sum(count_iters_accm(1:max_iters_richards-1)), ' (converged)', &
-               count_iters_accm(max_iters_richards), ' (failed)'
+            count_implicit_accum = count_implicit_accum + count_implicit
+            count_explicit_accum = count_explicit_accum + count_explicit
+            count_wet2dry_accum  = count_wet2dry_accum  + count_wet2dry
+            write(*,"(A,I13,A,I13,A,I13,A)") 'VSF scheme all steps: ',      &
+               count_implicit_accum, ' (implicit)', count_explicit_accum, ' (explicit)', &
+               count_wet2dry_accum, ' (wet2dry)'
          ENDIF
 
-         count_iters_this = 0
+         count_implicit = 0
+         count_explicit = 0
+         count_wet2dry  = 0
       ENDIF
 #endif
 

@@ -739,15 +739,19 @@ CONTAINS
       IF (allocated(Ks_nb     )) deallocate(Ks_nb     )
       IF (allocated(wdsrf_nb  )) deallocate(wdsrf_nb  )
       
-      DO i = lbound(recvaddr,1), ubound(recvaddr,1)
-         IF (allocated(recvaddr(i)%bindex)) deallocate(recvaddr(i)%bindex)
-         IF (allocated(recvaddr(i)%ibasin )) deallocate(recvaddr(i)%ibasin )
-      ENDDO 
+      IF (allocated(recvaddr)) THEN
+         DO i = lbound(recvaddr,1), ubound(recvaddr,1)
+            IF (allocated(recvaddr(i)%bindex)) deallocate(recvaddr(i)%bindex)
+            IF (allocated(recvaddr(i)%ibasin)) deallocate(recvaddr(i)%ibasin)
+         ENDDO 
+      ENDIF
 
-      DO i = lbound(sendaddr,1), ubound(sendaddr,1)
-         IF (allocated(sendaddr(i)%bindex)) deallocate(sendaddr(i)%bindex)
-         IF (allocated(sendaddr(i)%ibasin )) deallocate(sendaddr(i)%ibasin )
-      ENDDO
+      IF (allocated(sendaddr)) THEN
+         DO i = lbound(sendaddr,1), ubound(sendaddr,1)
+            IF (allocated(sendaddr(i)%bindex)) deallocate(sendaddr(i)%bindex)
+            IF (allocated(sendaddr(i)%ibasin)) deallocate(sendaddr(i)%ibasin)
+         ENDDO
+      ENDIF
          
       IF (allocated(recvaddr)) deallocate(recvaddr)
       IF (allocated(sendaddr)) deallocate(sendaddr)

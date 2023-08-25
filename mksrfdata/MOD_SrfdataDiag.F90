@@ -65,6 +65,8 @@ CONTAINS
       CHARACTER(len=256) :: landdir, landname
       INTEGER :: ityp
       INTEGER :: typindex(N_land_classification+1)
+      real(r8), allocatable :: elmid(:)
+      type(block_data_real8_2d) :: elmid2d 
 
       landdir = trim(dir_landdata) // '/diag/'
       IF (p_is_master) THEN
@@ -88,6 +90,19 @@ CONTAINS
 #endif
 
       srf_data_id = 666
+
+      IF (p_is_worker) THEN
+         allocate (elmid (numpatch))
+         elmid = real(landpatch%eindex, r8)
+      ENDIF
+
+      IF (p_is_io) call allocate_block_data (gdiag, elmid2d)
+      CALL m_patch2diag%map (elmid, elmid2d, -1.0e36_r8)
+
+      CALL write_gridded_data ( elmid2d, gdiag, srf_concat, -1.0e36_r8, &
+         trim(dir_landdata)//'/diag/element.nc', 'element', compress = 1, write_mode = 'one')
+
+      IF (allocated(elmid)) deallocate(elmid)
 
       typindex = (/(ityp, ityp = 0, N_land_classification)/)
       landname = trim(dir_landdata)//'/diag/patchfrac_elm.nc'
@@ -355,6 +370,201 @@ CONTAINS
       IF (allocated(vecone)) deallocate(vecone)
 
    end subroutine srfdata_map_and_write
+
+   ! ------ SUBROUTINE ------
+   subroutine write_gridded_data ( &
+         wdata, grid, datacat, spv, filename, dataname, compress, write_mode)
+
+      use MOD_SPMD_Task
+      use MOD_Namelist
+      use MOD_Block
+      use MOD_Grid
+      USE MOD_DataType
+      USE MOD_NetCDFSerial
+      implicit none
+
+      type(block_data_real8_2d), intent(in) :: wdata
+      type(grid_type),           intent(in) :: grid
+      TYPE(grid_concat_type),    intent(in) :: datacat
+
+      character (len=*), intent(in) :: filename
+      character (len=*), intent(in) :: dataname
+
+      REAL(r8), intent(in) :: spv
+      integer,  intent(in) :: compress
+      character (len=*), intent(in), optional :: write_mode
+
+      ! Local variables
+
+      CHARACTER(len=10) :: wmode
+      integer :: iblkme, ib, jb, iblk, jblk, idata, ixseg, iyseg
+      integer :: xcnt, ycnt, xbdsp, ybdsp, xgdsp, ygdsp
+      integer :: rmesg(3), smesg(3), isrc
+      character(len=256) :: fileblock
+      real(r8), allocatable :: rbuf(:,:), sbuf(:,:), vdata(:,:)
+      LOGICAL :: fexists
+
+      IF (present(write_mode)) THEN
+         wmode = trim(write_mode)
+      ELSE
+         wmode = 'one'
+      ENDIF
+
+      if (trim(wmode) == 'one') then
+
+         if (p_is_master) then
+
+            allocate (vdata (datacat%ginfo%nlon, datacat%ginfo%nlat))
+            vdata(:,:) = spv
+
+#ifdef USEMPI
+            do idata = 1, datacat%ndatablk
+
+               call mpi_recv (rmesg, 3, MPI_INTEGER, MPI_ANY_SOURCE, &
+                  srf_data_id, p_comm_glb, p_stat, p_err)
+
+               isrc  = rmesg(1)
+               ixseg = rmesg(2)
+               iyseg = rmesg(3)
+
+               xgdsp = datacat%xsegs(ixseg)%gdsp
+               ygdsp = datacat%ysegs(iyseg)%gdsp
+               xcnt  = datacat%xsegs(ixseg)%cnt
+               ycnt  = datacat%ysegs(iyseg)%cnt
+
+               allocate (rbuf (xcnt,ycnt))
+
+               call mpi_recv (rbuf, xcnt * ycnt, MPI_DOUBLE, &
+                  isrc, srf_data_id, p_comm_glb, p_stat, p_err)
+
+               vdata (xgdsp+1:xgdsp+xcnt,ygdsp+1:ygdsp+ycnt) = rbuf
+
+               deallocate (rbuf)
+            end do
+#else
+            do iyseg = 1, datacat%nyseg
+               do ixseg = 1, datacat%nxseg
+                  iblk  = datacat%xsegs(ixseg)%blk
+                  jblk  = datacat%ysegs(iyseg)%blk
+                  xbdsp = datacat%xsegs(ixseg)%bdsp
+                  ybdsp = datacat%ysegs(iyseg)%bdsp
+                  xgdsp = datacat%xsegs(ixseg)%gdsp
+                  ygdsp = datacat%ysegs(iyseg)%gdsp
+                  xcnt  = datacat%xsegs(ixseg)%cnt
+                  ycnt  = datacat%ysegs(iyseg)%cnt
+
+                  vdata (xgdsp+1:xgdsp+xcnt, ygdsp+1:ygdsp+ycnt) = &
+                     wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+               end do
+            ENDDO
+#endif
+
+            write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
+
+            inquire (file=trim(filename), exist=fexists)
+            IF (.not. fexists) THEN
+               CALL ncio_create_file (filename)
+
+               call ncio_define_dimension (filename, 'lon' , datacat%ginfo%nlon)
+               call ncio_define_dimension (filename, 'lat' , datacat%ginfo%nlat)
+
+               call ncio_write_serial (filename, 'lat', datacat%ginfo%lat_c, 'lat')
+               CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
+               CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lon', datacat%ginfo%lon_c, 'lon')
+               CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
+               CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
+
+               call ncio_write_serial (filename, 'lat_s', datacat%ginfo%lat_s, 'lat')
+               CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lat_n', datacat%ginfo%lat_n, 'lat')
+               CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
+
+               call ncio_write_serial (filename, 'lon_w', datacat%ginfo%lon_w, 'lon')
+               CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
+
+               call ncio_write_serial (filename, 'lon_e', datacat%ginfo%lon_e, 'lon')
+               CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
+
+            ENDIF
+
+            call ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
+
+            CALL ncio_put_attr (filename, dataname, 'missing_value', spv)
+
+            deallocate (vdata)
+
+         ENDIF
+
+#ifdef USEMPI
+         if (p_is_io) then
+
+            do iyseg = 1, datacat%nyseg
+               do ixseg = 1, datacat%nxseg
+
+                  iblk = datacat%xsegs(ixseg)%blk
+                  jblk = datacat%ysegs(iyseg)%blk
+
+                  if (gblock%pio(iblk,jblk) == p_iam_glb) then
+
+                     xbdsp = datacat%xsegs(ixseg)%bdsp
+                     ybdsp = datacat%ysegs(iyseg)%bdsp
+                     xcnt  = datacat%xsegs(ixseg)%cnt
+                     ycnt  = datacat%ysegs(iyseg)%cnt
+
+                     allocate (sbuf (xcnt,ycnt))
+                     sbuf = wdata%blk(iblk,jblk)%val(xbdsp+1:xbdsp+xcnt,ybdsp+1:ybdsp+ycnt)
+
+                     smesg = (/p_iam_glb, ixseg, iyseg/)
+                     call mpi_send (smesg, 3, MPI_INTEGER, &
+                        p_root, srf_data_id, p_comm_glb, p_err)
+                     call mpi_send (sbuf, xcnt*ycnt, MPI_DOUBLE, &
+                        p_root, srf_data_id, p_comm_glb, p_err)
+
+                     deallocate (sbuf)
+                  end if
+               end do
+            end do
+         end if
+#endif
+
+         srf_data_id = srf_data_id + 1
+
+      elseif (trim(wmode) == 'block') then
+
+         if (p_is_io) then
+
+            DO iblkme = 1, gblock%nblkme
+               iblk = gblock%xblkme(iblkme)
+               jblk = gblock%yblkme(iblkme)
+
+               if ((grid%xcnt(iblk) == 0) .or. (grid%ycnt(jblk) == 0)) cycle
+
+               call get_filename_block (filename, iblk, jblk, fileblock)
+
+               inquire (file=trim(filename), exist=fexists)
+               IF (.not. fexists) THEN
+                  CALL ncio_create_file (fileblock)
+                  CALL srf_write_grid_info (fileblock, grid, iblk, jblk)
+               ENDIF
+
+               call ncio_write_serial (fileblock, dataname, &
+                  wdata%blk(iblk,jblk)%val, 'lon', 'lat', compress)
+
+               CALL ncio_put_attr (fileblock, dataname, 'missing_value', spv)
+
+            end do
+
+         end if
+      end if
+
+   end subroutine write_gridded_data
 
    !------------------
    subroutine srf_write_grid_info (fileblock, grid, iblk, jblk)

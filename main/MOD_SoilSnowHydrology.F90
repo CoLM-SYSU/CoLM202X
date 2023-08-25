@@ -420,7 +420,6 @@ MODULE MOD_SoilSnowHydrology
   use MOD_Precision
   USE MOD_Hydro_SoilWater
   use MOD_Const_Physical, only : denice, denh2o, tfrz
-  USE MOD_Vars_1DFluxes,  only : rsub
 
   implicit none
 
@@ -688,7 +687,7 @@ MODULE MOD_SoilSnowHydrology
 
       ! check consistancy between water table location and liquid water content
       DO j = 1, nl_soil
-         IF ((vol_liq(j) < eff_porosity(j)-1.e-6) .and. (zwtmm <= sp_zi(j-1))) THEN
+         IF ((vol_liq(j) < eff_porosity(j)-1.e-8) .and. (zwtmm <= sp_zi(j-1))) THEN
             zwtmm = sp_zi(j)
          ENDIF
       ENDDO
@@ -714,8 +713,7 @@ MODULE MOD_SoilSnowHydrology
          ENDIF
       ENDIF
 
-      rsub(ipatch) = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-      rsubst = rsub(ipatch)
+      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 #else
       ! for lateral flow:
       ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
@@ -794,7 +792,7 @@ MODULE MOD_SoilSnowHydrology
      ENDIF
 
      ! total runoff (mm/s)
-     rnof = rsub(ipatch) + rsur
+     rnof = rsubst + rsur
 #endif
 
 #ifndef LATERAL_FLOW
@@ -822,7 +820,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 
 !=======================================================================
-! [6] assumed hydrological scheme for the wetland and glacier
+! [6] assumed hydrological scheme for the wetland 
 !=======================================================================
 
   else
@@ -830,8 +828,7 @@ MODULE MOD_SoilSnowHydrology
          qinfl = 0.
 #ifndef LATERAL_FLOW
          rsur = max(0.,gwat)
-         rsub(ipatch) = 0
-         rnof = rsur + rsub(ipatch)
+         rnof = rsur
 #endif
          do j = 1, nl_soil
             if(t_soisno(j)>tfrz)then
@@ -839,16 +836,6 @@ MODULE MOD_SoilSnowHydrology
                wliq_soisno(j) = porsl(j)*dz_soisno(j)*1000.
             endif
          enddo
-      endif
-      if(patchtype==3)then        ! LAND ICE
-         qinfl = 0.
-#ifndef LATERAL_FLOW
-         rsur = max(0.0,gwat)
-         rsub(ipatch) = 0
-         rnof = rsur + rsub(ipatch)
-#endif
-         wice_soisno(1:nl_soil) = dz_soisno(1:nl_soil)*1000.
-         wliq_soisno(1:nl_soil) = 0.0
       endif
 
       wa = 0.

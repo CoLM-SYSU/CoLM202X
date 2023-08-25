@@ -327,11 +327,11 @@ PROGRAM MKSRFDATA
    ! 3. Mapping land characteristic parameters to the model grids
    ! ................................................................
 #ifdef SrfdataDiag
-#ifdef GRIDBASED
-   CALL gdiag%define_by_copy (gridmesh)
-#else
-   CALL gdiag%define_by_ndims(3600,1800)
-#endif
+! #ifdef GRIDBASED
+!   CALL gdiag%define_by_copy (gridmesh)
+! #else
+   CALL gdiag%define_by_ndims(43200,21600)
+! #endif
 
    CALL srfdata_diag_init (dir_landdata)
 #endif

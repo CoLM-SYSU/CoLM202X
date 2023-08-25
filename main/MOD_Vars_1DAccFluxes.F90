@@ -1444,6 +1444,13 @@ contains
             call acc1d (xerr    , a_xerr   )
             call acc1d (zerr    , a_zerr   )
             call acc1d (rsur    , a_rsur   )
+#ifndef LATERAL_FLOW
+            WHERE ((rsur /= spval) .and. (rnof /= spval))
+               rsub = rnof - rsur
+            ELSEWHERE
+               rsub = spval
+            END WHERE 
+#endif
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
 #ifdef LATERAL_FLOW
