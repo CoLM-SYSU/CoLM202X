@@ -267,42 +267,42 @@ CONTAINS
 
             write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
 
-            ! inquire (file=trim(filename), exist=fexists)
-            ! IF (.not. fexists) THEN
+            inquire (file=trim(filename), exist=fexists)
+            IF (.not. fexists) THEN
 
-            CALL ncio_create_file (filename)
+               CALL ncio_create_file (filename)
 
-            call ncio_define_dimension (filename, 'TypeIndex', ntyps)
-            call ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
-            call ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
+               call ncio_define_dimension (filename, 'TypeIndex', ntyps)
+               call ncio_define_dimension (filename, 'lon' , srf_concat%ginfo%nlon)
+               call ncio_define_dimension (filename, 'lat' , srf_concat%ginfo%nlat)
 
-            call ncio_write_serial (filename, 'lat', srf_concat%ginfo%lat_c, 'lat')
-            CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
-            CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat', srf_concat%ginfo%lat_c, 'lat')
+               CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
+               CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lon', srf_concat%ginfo%lon_c, 'lon')
-            CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
-            CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon', srf_concat%ginfo%lon_c, 'lon')
+               CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
+               CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
 
-            call ncio_write_serial (filename, 'lat_s', srf_concat%ginfo%lat_s, 'lat')
-            CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
-            CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat_s', srf_concat%ginfo%lat_s, 'lat')
+               CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lat_n', srf_concat%ginfo%lat_n, 'lat')
-            CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
-            CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat_n', srf_concat%ginfo%lat_n, 'lat')
+               CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lon_w', srf_concat%ginfo%lon_w, 'lon')
-            CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
-            CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon_w', srf_concat%ginfo%lon_w, 'lon')
+               CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
 
-            call ncio_write_serial (filename, 'lon_e', srf_concat%ginfo%lon_e, 'lon')
-            CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
-            CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon_e', srf_concat%ginfo%lon_e, 'lon')
+               CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
 
-            call ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
+               call ncio_write_serial (filename, 'TypeIndex', typindex, 'TypeIndex')
 
-            ! ENDIF
+            ENDIF
 
             IF (present(lastdimname) .and. present(lastdimvalue)) THEN
                CALL ncio_write_lastdim (filename, lastdimname, lastdimvalue, ilastdim)
@@ -364,12 +364,12 @@ CONTAINS
 
                call get_filename_block (filename, iblk, jblk, fileblock)
 
-               ! inquire (file=trim(filename), exist=fexists)
-               ! IF (.not. fexists) THEN
-               CALL ncio_create_file (fileblock)
-               call ncio_define_dimension (fileblock, 'TypeIndex', ntyps)
-               CALL srf_write_grid_info   (fileblock, gdiag, iblk, jblk)
-               ! ENDIF
+               inquire (file=trim(filename), exist=fexists)
+               IF (.not. fexists) THEN
+                  CALL ncio_create_file (fileblock)
+                  call ncio_define_dimension (fileblock, 'TypeIndex', ntyps)
+                  CALL srf_write_grid_info   (fileblock, gdiag, iblk, jblk)
+               ENDIF
 
                IF (present(lastdimname) .and. present(lastdimvalue)) THEN
                   CALL ncio_write_lastdim (fileblock, lastdimname, lastdimvalue, ilastdim)
@@ -481,38 +481,38 @@ CONTAINS
 
             write(*,*) 'Please check gridded data < ', trim(dataname), ' > in ', trim(filename)
 
-            ! inquire (file=trim(filename), exist=fexists)
-            ! IF (.not. fexists) THEN
-            CALL ncio_create_file (filename)
+            inquire (file=trim(filename), exist=fexists)
+            IF (.not. fexists) THEN
+               CALL ncio_create_file (filename)
 
-            call ncio_define_dimension (filename, 'lon' , datacat%ginfo%nlon)
-            call ncio_define_dimension (filename, 'lat' , datacat%ginfo%nlat)
+               call ncio_define_dimension (filename, 'lon' , datacat%ginfo%nlon)
+               call ncio_define_dimension (filename, 'lat' , datacat%ginfo%nlat)
 
-            call ncio_write_serial (filename, 'lat', datacat%ginfo%lat_c, 'lat')
-            CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
-            CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat', datacat%ginfo%lat_c, 'lat')
+               CALL ncio_put_attr (filename, 'lat', 'long_name', 'latitude')
+               CALL ncio_put_attr (filename, 'lat', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lon', datacat%ginfo%lon_c, 'lon')
-            CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
-            CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon', datacat%ginfo%lon_c, 'lon')
+               CALL ncio_put_attr (filename, 'lon', 'long_name', 'longitude')
+               CALL ncio_put_attr (filename, 'lon', 'units', 'degrees_east')
 
-            call ncio_write_serial (filename, 'lat_s', datacat%ginfo%lat_s, 'lat')
-            CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
-            CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat_s', datacat%ginfo%lat_s, 'lat')
+               CALL ncio_put_attr (filename, 'lat_s', 'long_name', 'southern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_s', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lat_n', datacat%ginfo%lat_n, 'lat')
-            CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
-            CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
+               call ncio_write_serial (filename, 'lat_n', datacat%ginfo%lat_n, 'lat')
+               CALL ncio_put_attr (filename, 'lat_n', 'long_name', 'northern latitude boundary')
+               CALL ncio_put_attr (filename, 'lat_n', 'units', 'degrees_north')
 
-            call ncio_write_serial (filename, 'lon_w', datacat%ginfo%lon_w, 'lon')
-            CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
-            CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon_w', datacat%ginfo%lon_w, 'lon')
+               CALL ncio_put_attr (filename, 'lon_w', 'long_name', 'western longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_w', 'units', 'degrees_east')
 
-            call ncio_write_serial (filename, 'lon_e', datacat%ginfo%lon_e, 'lon')
-            CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
-            CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
+               call ncio_write_serial (filename, 'lon_e', datacat%ginfo%lon_e, 'lon')
+               CALL ncio_put_attr (filename, 'lon_e', 'long_name', 'eastern longitude boundary')
+               CALL ncio_put_attr (filename, 'lon_e', 'units', 'degrees_east')
 
-            ! ENDIF
+            ENDIF
 
             call ncio_write_serial (filename, dataname, vdata, 'lon', 'lat', compress)
 
