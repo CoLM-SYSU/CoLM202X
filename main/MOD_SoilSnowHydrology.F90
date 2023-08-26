@@ -519,7 +519,7 @@ MODULE MOD_SoilSnowHydrology
        icefrac(1:nl_soil)   ! ice fraction (-)
 
   real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
-  REAL(r8) :: qraing
+  REAL(r8) :: qgtop
 
   REAL(r8) :: zwtmm
   REAL(r8) :: sp_zc(1:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil) ! in mm
@@ -633,11 +633,11 @@ MODULE MOD_SoilSnowHydrology
       endif
 
       ! infiltration into surface soil layer
-      qraing = gwat - rsur
+      qgtop = gwat - rsur
 #else
       ! for lateral flow, "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
       ! and is removed from surface water there.
-      qraing = gwat
+      qgtop = gwat
 #endif
 
 #if(defined CaMa_Flood)
@@ -664,7 +664,7 @@ MODULE MOD_SoilSnowHydrology
 
          ENDIF
          qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
-         qraing=qinfl_fld+qraing ! [mm/s] total infiltration in grid.
+         qgtop=qinfl_fld+qgtop ! [mm/s] total infiltration in grid.
          flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
       ENDIF
 #endif
@@ -750,11 +750,26 @@ MODULE MOD_SoilSnowHydrology
 
       wdsrf = max(0., wdsrf)
 
+      IF ((.not. is_permeable(1)) .and. (qgtop < 0.)) THEN
+         IF (wdsrf > 0) THEN
+            wdsrf = wdsrf + qgtop * deltim
+            IF (wdsrf < 0) THEN
+               wliq_soisno(1) = max(0., wliq_soisno(1) + wdsrf)
+               wdsrf = 0
+            ENDIF
+         ELSE
+            wliq_soisno(1) = max(0., wliq_soisno(1) + qgtop * deltim)
+         ENDIF 
+
+         qgtop = 0.
+
+      ENDIF
+
       CALL soil_water_vertical_movement ( &
          nl_soil, deltim, sp_zc(1:nl_soil), sp_zi(0:nl_soil), is_permeable(1:nl_soil),    &
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
-         qraing, etr, rootr(1:nl_soil), rsubst, qinfl, &
+         qgtop, etr, rootr(1:nl_soil), rsubst, qinfl, &
          wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
 
       ! update the mass of liquid water

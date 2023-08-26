@@ -159,7 +159,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         gwat,  etr,  rootr, rsubst,  qinfl,         &
+         qgtop, etr,  rootr, rsubst,  qinfl,         &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
@@ -191,7 +191,7 @@ contains
       real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
       
       ! ground water including rain, snow melt and dew formation (mm/s)
-      REAL(r8), intent(in) :: gwat          
+      REAL(r8), intent(in) :: qgtop          
       
       REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
       REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
@@ -280,12 +280,17 @@ contains
             ss_vliq(ilev) = (ss_vliq(ilev) * sp_dz(ilev) &
                - etroot(ilev)*dt - deficit) / sp_dz(ilev)
 
-            IF (ss_vliq(ilev) < 0.) THEN
-               deficit = - ss_vliq(ilev) * sp_dz(ilev)
-               ss_vliq(ilev) = 0.
+            IF (ss_vliq(ilev) < vl_r(ilev)) THEN
+               deficit = (vl_r(ilev) - ss_vliq(ilev)) * sp_dz(ilev)
+               ss_vliq(ilev) = vl_r(ilev)
+            ELSEIF (ss_vliq(ilev) > porsl(ilev)) THEN
+               deficit = - (ss_vliq(ilev) - porsl(ilev)) * sp_dz(ilev)
+               ss_vliq(ilev) = porsl(ilev)
             ELSE
                deficit = 0.
             ENDIF
+         ELSE
+            deficit = deficit + etroot(ilev)*dt
          ENDIF
       enddo
 
@@ -335,7 +340,7 @@ contains
 
          if (lb == 1) then
             ubc_typ_sub = bc_rainfall
-            ubc_val_sub = gwat
+            ubc_val_sub = qgtop
          else
             ubc_typ_sub = bc_fix_flux
             ubc_val_sub = 0
@@ -362,7 +367,7 @@ contains
       end do soilcolumn
 
       IF (.not. is_permeable(1)) THEN
-         ss_dp = max(ss_dp + gwat * dt, 0._r8)
+         ss_dp = max(ss_dp + qgtop * dt, 0._r8)
       ENDIF
 
       IF (wa >= 0) THEN
@@ -396,7 +401,7 @@ contains
          ENDIF
       ENDDO
 
-      qinfl = gwat - (ss_dp - dp_m1)/dt
+      qinfl = qgtop - (ss_dp - dp_m1)/dt
 
 #ifdef CoLMDEBUG
       ! total water mass
@@ -415,11 +420,11 @@ contains
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (gwat - etr - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (qgtop - etr - rsubst) * dt)
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, gwat, etr, rsubst
+         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst
       ENDIF
 #endif
 
@@ -1023,12 +1028,6 @@ contains
          ENDIF
 
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
-
-#ifdef  CoLMDEBUG
-         ! IF (abs(werr) > 1.0e-3) then
-         !     write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
-         ! ENDIF
-#endif
 
       end do
 
