@@ -159,7 +159,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         rain,  etr,  rootr, rsubst,  qinfl,         &
+         gwat,  etr,  rootr, rsubst,  qinfl,         &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
@@ -189,8 +189,10 @@ contains
       real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
       real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
-
-      REAL(r8), intent(in) :: rain          ! rain fall on ponding layer (mm/s)
+      
+      ! ground water including rain, snow melt and dew formation (mm/s)
+      REAL(r8), intent(in) :: gwat          
+      
       REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
       REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
 
@@ -333,7 +335,7 @@ contains
 
          if (lb == 1) then
             ubc_typ_sub = bc_rainfall
-            ubc_val_sub = rain
+            ubc_val_sub = gwat
          else
             ubc_typ_sub = bc_fix_flux
             ubc_val_sub = 0
@@ -360,7 +362,7 @@ contains
       end do soilcolumn
 
       IF (.not. is_permeable(1)) THEN
-         ss_dp = max(ss_dp + rain * dt, 0._r8)
+         ss_dp = max(ss_dp + gwat * dt, 0._r8)
       ENDIF
 
       IF (wa >= 0) THEN
@@ -394,7 +396,7 @@ contains
          ENDIF
       ENDDO
 
-      qinfl = rain - (ss_dp - dp_m1)/dt
+      qinfl = gwat - (ss_dp - dp_m1)/dt
 
 #ifdef CoLMDEBUG
       ! total water mass
@@ -413,11 +415,11 @@ contains
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (rain - etr - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (gwat - etr - rsubst) * dt)
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, rain, etr, rsubst
+         write(*,*) w_sum_after, w_sum_before, gwat, etr, rsubst
       ENDIF
 #endif
 
@@ -3566,6 +3568,7 @@ contains
       INTEGER(8), SAVE :: count_implicit_accum = 0
       INTEGER(8), SAVE :: count_explicit_accum = 0
       INTEGER(8), SAVE :: count_wet2dry_accum  = 0
+      integer :: iwork
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
@@ -3575,20 +3578,42 @@ contains
          CALL mpi_allreduce (MPI_IN_PLACE, count_wet2dry , 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            write(*,"(/,A,I13,A,I13,A,I13,A)") 'VSF scheme this step: ',    &
-               count_implicit, ' (implicit)', count_explicit, ' (explicit)', count_wet2dry, ' (wet2dry)'
-
             count_implicit_accum = count_implicit_accum + count_implicit
             count_explicit_accum = count_explicit_accum + count_explicit
             count_wet2dry_accum  = count_wet2dry_accum  + count_wet2dry
-            write(*,"(A,I13,A,I13,A,I13,A)") 'VSF scheme all steps: ',      &
-               count_implicit_accum, ' (implicit)', count_explicit_accum, ' (explicit)', &
-               count_wet2dry_accum, ' (wet2dry)'
+            
+#ifdef USEMPI
+            CALL mpi_send (count_implicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_implicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry_accum,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+#endif
          ENDIF
 
          count_implicit = 0
          count_explicit = 0
          count_wet2dry  = 0
+      ENDIF
+
+      IF (p_is_master) THEN
+
+#ifdef USEMPI
+         iwork = p_address_worker(0)
+         CALL mpi_recv (count_implicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_explicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_wet2dry , 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_implicit_accum, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_explicit_accum, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_wet2dry_accum , 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+#endif
+
+         write(*,"(/,A,I13,A,I13,A,I13,A)") 'VSF scheme this step: ',    &
+            count_implicit, ' (implicit)', count_explicit, ' (explicit)', count_wet2dry, ' (wet2dry)'
+         write(*,"(A,I13,A,I13,A,I13,A)") 'VSF scheme all steps: ',      &
+            count_implicit_accum, ' (implicit)', count_explicit_accum, ' (explicit)', &
+            count_wet2dry_accum, ' (wet2dry)'
       ENDIF
 #endif
 

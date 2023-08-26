@@ -560,8 +560,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
       if (lb>=1)then
-         ! gwat = pg_rain + sm - qseva + qsdew
-         gwat = pg_rain + sm + qsdew
+         gwat = pg_rain + sm - qseva
       else
 
          IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
@@ -596,13 +595,6 @@ MODULE MOD_SoilSnowHydrology
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
-
-      ! Renew the ice and liquid mass due to condensation
-      if(lb >= 1)then
-         ! make consistent with how evap_grnd removed in infiltration
-         wliq_soisno(1) = max(0., wliq_soisno(1) - qseva * deltim)
-         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
-      end if
 
       ! Due to the increase in volume after freezing, the total volume of water and
       ! ice may exceed the porosity of the soil. This excess water is temporarily
@@ -784,6 +776,13 @@ MODULE MOD_SoilSnowHydrology
       ENDDO
 
       zwt = zwtmm/1000.0
+      
+      ! Renew the ice and liquid mass due to condensation
+      if(lb >= 1)then
+         ! make consistent with how evap_grnd removed in infiltration
+         wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew * deltim)
+         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
+      end if
 
 #ifndef LATERAL_FLOW
      IF (wdsrf > pondmx) THEN
@@ -803,7 +802,7 @@ MODULE MOD_SoilSnowHydrology
          - (gwat-etr)*deltim
 #endif
       if(lb >= 1)then
-         err_solver = err_solver - (qfros-qseva-qsubl)*deltim
+         err_solver = err_solver - (qsdew+qfros-qsubl)*deltim
       endif
 #if(defined CaMa_Flood)
       IF (LWINFILT) THEN
