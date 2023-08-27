@@ -820,7 +820,10 @@
          wice_icesno_bef(lb:0) = wice_icesno(lb:0)
 
          call meltf_snicar (patchtype,lb,nl_ice,deltim, &
-                  fact(lb:),brr(lb:),hs,dhsdT,sabg_lyr, &
+                  !NOTE: compatibility settings for spliting soil&snow temproal input,
+                  ! cause glacier patch doesn't support split soil&snow
+                  ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
+                  fact(lb:),brr(lb:),hs,hs,hs,1.,sabg_lyr,dhsdT, &
                   t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
                   scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
@@ -841,7 +844,10 @@
 
       ELSE
          call meltf (patchtype,lb,nl_ice,deltim, &
-                   fact(lb:),brr(lb:),hs,dhsdT, &
+                   !NOTE: compatibility settings for spliting soil&snow temproal input,
+                   ! cause glacier patch doesn't support split soil&snow
+                   ! hs_soil=hs, hs_snow=hs, fsno=1. not go into effect.
+                   fact(lb:),brr(lb:),hs,hs,hs,1.,dhsdT, &
                    t_icesno_bef(lb:),t_icesno(lb:),wliq_icesno(lb:),wice_icesno(lb:),imelt(lb:), &
                    scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL

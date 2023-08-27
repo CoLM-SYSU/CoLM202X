@@ -30,9 +30,10 @@ MODULE MOD_LeafTemperaturePC
               gssun   ,gssha   ,po2m    ,pco2m   ,&
               z0h_g   ,obug    ,ustarg  ,zlnd    ,zsno    ,fsno    ,&
               sigf    ,etrc    ,tg      ,qg      ,dqgdT   ,emg     ,&
-              z0mpc   ,tl      ,ldew    ,ldew_rain       ,ldew_snow,&
-              taux    ,tauy    ,fseng   ,&
-              fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
+              t_soil  ,t_snow  ,q_soil  ,q_snow  ,z0mpc   ,tl      ,&
+              ldew,ldew_rain,ldew_snow  ,taux    ,tauy    ,&
+              fseng,fseng_soil,fseng_snow,fevpg,fevpg_soil,fevpg_snow,&
+              cgrnd   ,cgrndl  ,cgrnds  ,tref    ,qref    ,&
               rst     ,assim   ,respc   ,fsenl   ,fevpl   ,etr     ,&
               dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,ustar   ,&
               qstar   ,tstar   ,fm      ,fh      ,fq               ,&
@@ -154,9 +155,13 @@ MODULE MOD_LeafTemperaturePC
         sigf  (ps:pe), &! fraction of veg cover, excluding snow-covered veg [-]
         etrc  (ps:pe), &! maximum possible transpiration rate (mm/s)
         tg,            &! ground surface temperature [K]
+        t_soil,        &! ground surface soil temperature [K]
+        t_snow,        &! ground surface snow temperature [K]
         qg,            &! specific humidity at ground surface [kg/kg]
+        q_soil,        &! specific humidity at ground surface soil [kg/kg]
+        q_snow,        &! specific humidity at ground surface snow [kg/kg]
         dqgdT,         &! temperature derivative of "qg"
-        emg          ! vegetation emissivity
+        emg             ! vegetation emissivity
 
   real(r8), intent(in) :: &
         t_precip,            &! snowfall/rainfall temperature [kelvin]
@@ -204,7 +209,11 @@ MODULE MOD_LeafTemperaturePC
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
+        fseng_soil, &! sensible heat flux from ground soil [W/m2]
+        fseng_snow, &! sensible heat flux from ground snow [W/m2]
         fevpg,      &! evaporation heat flux from ground [mm/s]
+        fevpg_soil, &! evaporation heat flux from ground soil [mm/s]
+        fevpg_snow, &! evaporation heat flux from ground snow [mm/s]
         tref,       &! 2 m height air temperature (kelvin)
         qref,       &! 2 m height air specific humidity
         rootr(nl_soil,ps:pe)    ! fraction of root water uptake from different layers
@@ -433,11 +442,12 @@ MODULE MOD_LeafTemperaturePC
 
    real(r8) :: ktop, utop, fmtop, bee, tmpw1, tmpw2, fact, facq
 
+   logical is_vegetated_patch
    integer i, p, clev
    integer toplay, botlay, upplay, numlay
    integer d_opt, rb_opt, rd_opt
 
-   real(r8) :: displa
+   REAL(r8) :: displa, ttaf, tqaf
 
    ! variables for longwave transfer calculation
    ! .................................................................
@@ -458,6 +468,22 @@ MODULE MOD_LeafTemperaturePC
 
 !-----------------------End Variable List-------------------------------
 
+! only process with vegetated patches
+
+       lsai(:) = lai(:) + sai(:)
+       is_vegetated_patch = .false.
+
+       DO i = ps, pe
+          IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
+             is_vegetated_patch = .true.
+          ENDIF
+       ENDDO
+
+       IF (.not. is_vegetated_patch) THEN
+          print *, "NOTE: There is no vegetation in this Plant Community Patch, RETURN."
+          RETURN
+       ENDIF
+
 ! initialization of errors and  iteration parameters
        it       = 1    !counter for leaf temperature iteration
        del(:)   = 0.0  !change in leaf temperature from previous iteration
@@ -475,6 +501,8 @@ MODULE MOD_LeafTemperaturePC
        z0hg = z0mg
        z0qg = z0mg
 
+       !clai = 4.2 * 1000. * 0.2
+       clai = 0.0
 
 ! initialization of PFT constants
        DO i = ps, pe
@@ -534,10 +562,6 @@ MODULE MOD_LeafTemperaturePC
 ! get fraction of wet and dry canopy surface (fwet & fdry)
 ! initial saturated vapor pressure and humidity and their derivation
 !-----------------------------------------------------------------------
-
-       !clai = 4.2 * 1000. * 0.2
-       clai = 0.0
-       lsai(:) = lai(:) + sai(:)
 
        DO i = ps, pe
           IF (fcover(i)>0 .and. lsai(i)>1.e-6) THEN
@@ -1267,7 +1291,9 @@ MODULE MOD_LeafTemperaturePC
 
 ! calcilate Lg = (1-emg)*dlrad + emg*stefnc*tg**4
 ! dlrad = Lin(0)
-          Lg = (1 - emg)*Lin(0) + emg*stefnc*tg**4
+          Lg = (1 - emg)*Lin(0) &
+             + (1.-fsno)*emg*stefnc*t_soil**4 &
+             + fsno*emg*stefnc*t_snow**4
 
 ! calculate Ltu
           Ltu(1) = thermk_lay(1) * tup(0,1) * Lg
@@ -1684,8 +1710,39 @@ MODULE MOD_LeafTemperaturePC
 ! fluxes from ground to canopy space
 !-----------------------------------------------------------------------
 
+! 03/07/2020, yuan: TODO-done, calculate fseng_soil/snow, fevpg_soil/snow
+       IF (numlay .EQ. 1) THEN
+          ttaf = taf(botlay)
+          tqaf = qaf(botlay)
+       ENDIF
+
+       IF (numlay .EQ. 2) THEN
+          ttaf = taf(toplay)
+          tqaf = qaf(toplay)
+       ENDIF
+
+       IF (numlay .EQ. 3) THEN
+          ttaf = taf(2)
+          tqaf = qaf(2)
+       ENDIF
+
+! for check purpose ONLY
+! taf = wta0*thm + wtg0*tg + wtl0*tl
+! taf(1) = wta0(1)*taf(2) + wtg0(1)*tg + wtll(1)
+! qaf(1) = wtaq0(1)*qaf(2) + wtgq0(1)*qg + wtlql(1)
+! taf(botlay) = wta0(botlay)*taf(toplay) + wtg0(botlay)*tg + wtll(botlay)
+! qaf(botlay) = wtaq0(botlay)*qaf(toplay) + wtgq0(botlay)*qg + wtlql(botlay)
+! taf(toplay) = wta0(toplay)*thm +  wtg0(toplay)*tg + wtll(toplay)
+! qaf(toplay) = wtaq0(toplay)*qm + wtgq0(toplay)*qg + wtlql(toplay)
+
        fseng = cpair*rhoair*cgh(botlay)*(tg-taf(botlay))
+       !print *, "fseng, tg, taf:", fseng, tg, taf !fordebug
+       fseng_soil = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_soil-wta0(botlay)*ttaf-wtll(botlay))
+       fseng_snow = cpair*rhoair*cgh(botlay)*((1.-wtg0(botlay))*t_snow-wta0(botlay)*ttaf-wtll(botlay))
+
        fevpg = rhoair*cgw(botlay)*(qg-qaf(botlay))
+       fevpg_soil = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_soil-wtaq0(botlay)*tqaf-wtlql(botlay))
+       fevpg_snow = rhoair*cgw(botlay)*((1.-wtgq0(botlay))*q_snow-wtaq0(botlay)*tqaf-wtlql(botlay))
 
 !-----------------------------------------------------------------------
 ! Derivative of soil energy flux with respect to soil temperature (cgrnd)

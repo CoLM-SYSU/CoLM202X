@@ -56,8 +56,8 @@ SUBROUTINE CoLMMAIN ( &
            sag,          scv,          snowdp,       fveg,          &
            fsno,         sigf,         green,        lai,           &
            sai,          alb,          ssun,         ssha,          &
-           thermk,       extkb,        extkd,                       &
-           vegwp,        gs0sun,       gs0sha,                      &
+           ssoi,         ssno,         thermk,       extkb,         &
+           extkd,        vegwp,        gs0sun,       gs0sha,        &
            !Ozone stress variables
            lai_old,      o3uptakesun,  o3uptakesha,  forc_ozone,    &
            !End ozone stress variables
@@ -65,7 +65,7 @@ SUBROUTINE CoLMMAIN ( &
            t_lake,       lake_icefrac, savedtke1,                   &
 
          ! SNICAR snow model related
-           snw_rds,      ssno,                                      &
+           snw_rds,      ssno_lyr,                                  &
            mss_bcpho,    mss_bcphi,    mss_ocpho,     mss_ocphi,    &
            mss_dst1,     mss_dst2,     mss_dst3,      mss_dst4,     &
 
@@ -349,7 +349,7 @@ SUBROUTINE CoLMMAIN ( &
         mss_dst2  ( maxsnl+1:0 ) ,&! mass of dust species 2 in snow  (col,lyr) [kg]
         mss_dst3  ( maxsnl+1:0 ) ,&! mass of dust species 3 in snow  (col,lyr) [kg]
         mss_dst4  ( maxsnl+1:0 ) ,&! mass of dust species 4 in snow  (col,lyr) [kg]
-        ssno    (2,2,maxsnl+1:1) ,&! snow layer absorption [-]
+        ssno_lyr  (2,2,maxsnl+1:1),&! snow layer absorption [-]
 
         fveg        ,&! fraction of vegetation cover
         fsno        ,&! fractional snow cover
@@ -362,6 +362,8 @@ SUBROUTINE CoLMMAIN ( &
         alb(2,2)    ,&! averaged albedo [-]
         ssun(2,2)   ,&! sunlit canopy absorption for solar radiation
         ssha(2,2)   ,&! shaded canopy absorption for solar radiation
+        ssoi(2,2)   ,&! ground soil absorption [-]
+        ssno(2,2)   ,&! ground snow absorption [-]
         thermk      ,&! canopy gap fraction for tir radiation
         extkb       ,&! (k, g(mu)/mu) direct solar extinction coefficient
         extkd         ! diffuse and scattered diffuse PAR extinction coefficient
@@ -459,12 +461,23 @@ SUBROUTINE CoLMMAIN ( &
         errorw      ,&! water balnce errore (mm)
         fiold(maxsnl+1:nl_soil), &! fraction of ice relative to the total water
         w_old       ,&! liquid water mass of the column at the previous time step (mm)
+! 03/06/2020, yuan: added
+        sabg_soil  , &! solar absorbed by soil fraction
+        sabg_snow  , &! solar absorbed by snow fraction
         parsun      ,&! PAR by sunlit leaves [W/m2]
         parsha      ,&! PAR by shaded leaves [W/m2]
         qseva       ,&! ground surface evaporation rate (mm h2o/s)
         qsdew       ,&! ground surface dew formation (mm h2o /s) [+]
         qsubl       ,&! sublimation rate from snow pack (mm h2o /s) [+]
         qfros       ,&! surface dew added to snow pack (mm h2o /s) [+]
+        qseva_soil , &! ground soil surface evaporation rate (mm h2o/s)
+        qsdew_soil , &! ground soil surface dew formation (mm h2o /s) [+]
+        qsubl_soil , &! sublimation rate from soil ice pack (mm h2o /s) [+]
+        qfros_soil , &! surface dew added to soil ice pack (mm h2o /s) [+]
+        qseva_snow , &! ground snow surface evaporation rate (mm h2o/s)
+        qsdew_snow , &! ground snow surface dew formation (mm h2o /s) [+]
+        qsubl_snow , &! sublimation rate from snow pack (mm h2o /s) [+]
+        qfros_snow , &! surface dew added to snow pack (mm h2o /s) [+]
         scvold      ,&! snow cover for previous time step [mm]
         sm          ,&! rate of snowmelt [kg/(m2 s)]
         ssw         ,&! water volumetric content of soil surface layer [m3/m3]
@@ -496,12 +509,12 @@ SUBROUTINE CoLMMAIN ( &
 
       ! For SNICAR snow model
       !----------------------------------------------------------------------
-      integer  snl_bef                 !number of snow layers
-      real(r8) forc_aer        ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
-      real(r8) snofrz    (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
-      real(r8) t_soisno_ (maxsnl+1:1)  !soil + snow layer temperature [K]
-      real(r8) dz_soisno_(maxsnl+1:1)  !layer thickness (m)
-      real(r8) sabg_lyr  (maxsnl+1:1)  !snow layer absorption [W/m-2]
+      integer  snl_bef                    !number of snow layers
+      real(r8) forc_aer           ( 14 )  !aerosol deposition from atmosphere model (grd,aer) [kg m-1 s-1]
+      real(r8) snofrz       (maxsnl+1:0)  !snow freezing rate (col,lyr) [kg m-2 s-1]
+      real(r8) t_soisno_    (maxsnl+1:1)  !soil + snow layer temperature [K]
+      real(r8) dz_soisno_   (maxsnl+1:1)  !layer thickness (m)
+      real(r8) sabg_snow_lyr(maxsnl+1:1)  !snow layer absorption [W/m-2]
 
       !----------------------------------------------------------------------
 
@@ -547,8 +560,8 @@ SUBROUTINE CoLMMAIN ( &
       IF (DEF_Aerosol_Readin) THEN
          forc_aer(:) = forc_aerdep   ! read from outside forcing file
       ELSE
-         forc_aer(:) = 4.2E-7        ! manual setting
-         !forc_aer(:) = 0.
+         !forc_aer(:) = 4.2E-7        ! manual setting
+         forc_aer(:) = 0.            ! no Aerosol deposition
       ENDIF
 
 
@@ -559,8 +572,8 @@ SUBROUTINE CoLMMAIN ( &
 
       CALL netsolar (ipatch,idate,deltim,patchlonr,patchtype,&
                      forc_sols,forc_soll,forc_solsd,forc_solld,&
-                     alb,ssun,ssha,lai,sai,rho,tau,ssno,&
-                     parsun,parsha,sabvsun,sabvsha,sabg,sabg_lyr,sr,&
+                     alb,ssun,ssha,lai,sai,rho,tau,ssoi,ssno,ssno_lyr,&
+                     parsun,parsha,sabvsun,sabvsha,sabg,sabg_soil,sabg_snow,fsno,sabg_snow_lyr,sr,&
                      solvd,solvi,solnd,solni,srvd,srvi,srnd,srni,&
                      solvdln,solviln,solndln,solniln,srvdln,srviln,srndln,srniln)
 
@@ -646,10 +659,10 @@ ENDIF
                     t_precip,zi_soisno(:0),z_soisno(:0),dz_soisno(:0),t_soisno(:0),&
                     wliq_soisno(:0),wice_soisno(:0),fiold(:0),snl,sag,scv,snowdp,fsno)
 
-      ! new snow layer
+      ! new snow layer emerge, pull up the snow layer absorption
       IF (snl .lt. snl_bef) THEN
-         sabg_lyr(snl+1:snl-snl_bef+1) = sabg_lyr(snl_bef+1:1)
-         sabg_lyr(snl-snl_bef+2:1) = 0.
+         sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
+         sabg_snow_lyr(snl-snl_bef+2:1) = 0.
       ENDIF
 
 !----------------------------------------------------------------------
@@ -693,7 +706,7 @@ ENDIF
            forc_q            ,forc_rhoair       ,forc_psrf         ,forc_pco2m        ,&
            forc_hpbl                                                                  ,&
            forc_po2m         ,coszen            ,parsun            ,parsha            ,&
-           sabvsun           ,sabvsha           ,sabg              ,forc_frl          ,&
+           sabvsun           ,sabvsha           ,sabg,sabg_soil,sabg_snow,forc_frl    ,&
            extkb             ,extkd             ,thermk            ,fsno              ,&
            sigf              ,dz_soisno(lb:)    ,z_soisno(lb:)     ,zi_soisno(lb-1:)  ,&
            tleaf             ,t_soisno(lb:)     ,wice_soisno(lb:)  ,wliq_soisno(lb:)  ,&
@@ -701,14 +714,17 @@ ENDIF
            taux              ,tauy              ,fsena             ,fevpa             ,&
            lfevpa            ,fsenl             ,fevpl             ,etr               ,&
            fseng             ,fevpg             ,olrg              ,fgrnd             ,&
-           rootr             ,qseva             ,qsdew             ,qsubl             ,&
-           qfros             ,sm                ,tref              ,qref              ,&
+           rootr             ,&
+           qseva             ,qsdew             ,qsubl             ,qfros             ,&
+           qseva_soil        ,qsdew_soil        ,qsubl_soil        ,qfros_soil        ,&
+           qseva_snow        ,qsdew_snow        ,qsubl_snow        ,qfros_snow        ,&
+           sm                ,tref              ,qref              ,&
            trad              ,rst               ,assim             ,respc             ,&
            errore            ,emis              ,z0m               ,zol               ,&
            rib               ,ustar             ,qstar             ,tstar             ,&
            fm                ,fh                ,fq                ,pg_rain           ,&
            pg_snow           ,t_precip          ,qintr_rain        ,qintr_snow        ,&
-           snofrz(lbsn:0)    ,sabg_lyr(lb:1)                                           )
+           snofrz(lbsn:0)    ,sabg_snow_lyr(lb:0)                                      )
 
       IF (.not. DEF_USE_VARIABLY_SATURATED_FLOW) THEN
 
@@ -716,8 +732,11 @@ ENDIF
               deltim            ,z_soisno(lb:)     ,dz_soisno(lb:)    ,zi_soisno(lb-1:)  ,&
               bsw               ,porsl             ,psi0              ,hksati            ,&
               rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
-              pg_rain           ,sm                ,etr               ,qseva             ,&
-              qsdew             ,qsubl             ,qfros             ,rsur              ,&
+              pg_rain           ,sm                ,etr               ,&
+              qseva             ,qsdew             ,qsubl             ,qfros             ,&
+              qseva_soil        ,qsdew_soil        ,qsubl_soil        ,qfros_soil        ,&
+              qseva_snow        ,qsdew_snow        ,qsubl_snow        ,qfros_snow        ,&
+              fsno              ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,pondmx            ,&
               ssi               ,wimp              ,smpmin            ,zwt               ,&
               wa                ,qcharge           ,errw_rsub &
@@ -746,7 +765,10 @@ ENDIF
               porsl             ,psi0              ,hksati            ,&
               rootr             ,t_soisno(lb:)     ,wliq_soisno(lb:)  ,wice_soisno(lb:)  ,smp,hk,&
               pg_rain           ,sm                ,etr               ,qseva             ,&
-              qsdew             ,qsubl             ,qfros             ,rsur              ,&
+              qsdew             ,qsubl             ,qfros             ,&
+              qseva_soil        ,qsdew_soil        ,qsubl_soil        ,qfros_soil        ,&
+              qseva_snow        ,qsdew_snow        ,qsubl_snow        ,qfros_snow        ,&
+              fsno              ,rsur              ,&
               rnof              ,qinfl             ,wtfact            ,ssi               ,&
               pondmx,                                                                     &
               wimp              ,zwt               ,wdsrf             ,wa                ,&
@@ -860,7 +882,7 @@ ENDIF
 #if(defined CoLMDEBUG)
       IF (abs(errorw) > 1.e-3) THEN
          write(6,*) 'Warning: water balance violation', ipatch,errorw,patchclass
-         ! CALL CoLM_stop ()
+         CALL CoLM_stop ()
       ENDIF
       IF(abs(errw_rsub*deltim)>1.e-3) THEN
          write(6,*) 'Subsurface runoff deficit due to PHS', errw_rsub*deltim
@@ -911,8 +933,8 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
 
       ! new snow layer
       IF (snl .lt. snl_bef) THEN
-         sabg_lyr(snl+1:snl-snl_bef+1) = sabg_lyr(snl_bef+1:1)
-         sabg_lyr(snl-snl_bef+2:1) = 0.
+         sabg_snow_lyr(snl+1:snl-snl_bef+1) = sabg_snow_lyr(snl_bef+1:1)
+         sabg_snow_lyr(snl-snl_bef+2:1) = 0.
       ENDIF
 
       !----------------------------------------------------------------
@@ -939,7 +961,7 @@ ELSE IF(patchtype == 3)THEN   ! <=== is LAND ICE (glacier/ice sheet) (patchtype 
                    rib         ,ustar       ,qstar      ,tstar       ,&
                    fm          ,fh          ,fq         ,pg_rain     ,&
                    pg_snow     ,t_precip    ,                         &
-                   snofrz(lbsn:0), sabg_lyr(lb:1)                     )
+                   snofrz(lbsn:0), sabg_snow_lyr(lb:1)                )
 
 
       IF (DEF_USE_SNICAR) THEN
@@ -1047,7 +1069,7 @@ ELSE IF(patchtype == 4) THEN   ! <=== is LAND WATER BODIES (lake, reservior and 
            lake_icefrac ,savedtke1    ,&
 
 ! SNICAR model variables
-           snofrz       ,sabg_lyr     ,&
+           snofrz       ,sabg_snow_lyr,&
 ! END SNICAR model variables
 
            ! "out" laketem arguments
@@ -1286,7 +1308,7 @@ ENDIF
                  snl,wliq_soisno,wice_soisno,snw_rds,snofrz,&
                  mss_bcpho,mss_bcphi,mss_ocpho,mss_ocphi,&
                  mss_dst1,mss_dst2,mss_dst3,mss_dst4,&
-                 alb,ssun,ssha,ssno,thermk,extkb,extkd)
+                 alb,ssun,ssha,ssoi,ssno,ssno_lyr,thermk,extkb,extkd)
        ENDIF
     ELSE                   !OCEAN
        sag = 0.0

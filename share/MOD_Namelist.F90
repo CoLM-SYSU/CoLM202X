@@ -172,16 +172,22 @@ MODULE MOD_Namelist
    ! 2: Read a global soil color map from CLM
    INTEGER :: DEF_SOIL_REFL_SCHEME = 2
 
+   ! Treat exposed soil and snow surface separatly, including
+   ! solar absorption, sensible/latent heat, ground temperature,
+   ! ground heat flux and groud evp/dew/subl/fros.
+   ! Corresponding vars are named as ***_soil, ***_snow.
+   logical :: DEF_SPLIT_SOILSNOW = .false.
+
    ! ----- Model settings -----
    LOGICAL :: DEF_LANDONLY                    = .true.
    LOGICAL :: DEF_USE_DOMINANT_PATCHTYPE      = .false.
-   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .true.
+   LOGICAL :: DEF_USE_VARIABLY_SATURATED_FLOW = .false.
    LOGICAL :: DEF_USE_BEDROCK                 = .false.
    LOGICAL :: DEF_USE_OZONESTRESS             = .false.
    LOGICAL :: DEF_USE_OZONEDATA               = .false.
 
    ! .true. for running SNICAR model
-   logical :: DEF_USE_SNICAR                  = .true.
+   logical :: DEF_USE_SNICAR                  = .false.
 
    ! .true. read aerosol deposition data from file or .false. set in the code
    logical :: DEF_Aerosol_Readin              = .true.
@@ -725,6 +731,7 @@ CONTAINS
          DEF_THERMAL_CONDUCTIVITY_SCHEME, &
          DEF_USE_SUPERCOOL_WATER,         &
          DEF_SOIL_REFL_SCHEME,            &
+         DEF_SPLIT_SOILSNOW,              &
 
          DEF_dir_existing_srfdata,        &
          USE_srfdata_from_larger_region,  &
@@ -1123,6 +1130,9 @@ CONTAINS
 
       ! 06/2023, added by hua yuan
       CALL mpi_bcast (DEF_SOIL_REFL_SCHEME,             1, mpi_integer, p_root, p_comm_glb, p_err)
+
+      ! 08/2023, added by hua yuan
+      CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)

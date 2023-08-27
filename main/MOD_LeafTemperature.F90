@@ -30,8 +30,10 @@ CONTAINS
               rstfacsun  , rstfacsha    ,gssun   ,gssha   ,&
               po2m    ,pco2m   ,z0h_g   ,obug    ,ustarg  ,zlnd    ,&
               zsno    ,fsno    ,sigf    ,etrc    ,tg      ,qg      ,&
-              dqgdT   ,emg     ,tl      ,ldew, ldew_rain,ldew_snow ,taux    ,tauy    ,&
-              fseng   ,fevpg   ,cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
+              t_soil  ,t_snow  ,q_soil  ,q_snow  ,dqgdT   ,emg     ,&
+              tl      ,ldew,ldew_rain,ldew_snow  ,taux    ,tauy    ,&
+              fseng,fseng_soil,fseng_snow,fevpg,fevpg_soil,fevpg_snow,&
+              cgrnd   ,cgrndl  ,cgrnds  ,tref    ,&
               qref    ,rst     ,assim   ,respc   ,fsenl   ,fevpl   ,&
               etr     ,dlrad   ,ulrad   ,z0m     ,zol     ,rib     ,&
               ustar   ,qstar   ,tstar   ,fm      ,fh      ,fq      ,&
@@ -178,7 +180,11 @@ CONTAINS
         sigf,       &! fraction of veg cover, excluding snow-covered veg [-]
         etrc,       &! maximum possible transpiration rate (mm/s)
         tg,         &! ground surface temperature [K]
+        t_soil,     &! ground surface soil temperature [K]
+        t_snow,     &! ground surface snow temperature [K]
         qg,         &! specific humidity at ground surface [kg/kg]
+        q_soil,     &! specific humidity at ground soil surface [kg/kg]
+        q_snow,     &! specific humidity at ground snow surface [kg/kg]
         dqgdT,      &! temperature derivative of "qg"
         emg          ! vegetation emissivity
 
@@ -208,7 +214,11 @@ CONTAINS
         taux,       &! wind stress: E-W [kg/m/s**2]
         tauy,       &! wind stress: N-S [kg/m/s**2]
         fseng,      &! sensible heat flux from ground [W/m2]
+        fseng_soil, &! sensible heat flux from ground soil [W/m2]
+        fseng_snow, &! sensible heat flux from ground snow [W/m2]
         fevpg,      &! evaporation heat flux from ground [mm/s]
+        fevpg_soil, &! evaporation heat flux from ground soil [mm/s]
+        fevpg_snow, &! evaporation heat flux from ground snow [mm/s]
         cgrnd,      &! deriv. of soil energy flux wrt to soil temp [w/m2/k]
         cgrndl,     &! deriv, of soil sensible heat flux wrt soil temp [w/m2/k]
         cgrnds,     &! deriv of soil latent heat flux wrt soil temp [w/m**2/k]
@@ -678,10 +688,12 @@ CONTAINS
 
 ! longwave absorption and their derivatives
          ! 10/16/2017, yuan: added reflected longwave by the ground
-         irab = (frl - 2. * stefnc * tl**4 + emg*stefnc*tg**4 ) * fac &
-            + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
+         irab = (frl - 2. * stefnc * tl**4 &
+              + (1.-fsno)*emg*stefnc*t_soil**4 &
+              + fsno*emg*stefnc*t_snow**4 )                     * fac &
+              + (1-emg)*thermk*fac*frl + (1-emg)*(1-thermk)*fac*stefnc*tl**4
          dirab_dtl = - 8. * stefnc * tl**3                      * fac &
-            + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
+                   + 4.*(1-emg)*(1-thermk)*fac*stefnc*tl**3
 
 ! sensible heat fluxes and their derivatives
          fsenl = rhoair * cpair * cfh * ( (wta0 + wtg0)*tl - wta0*thm - wtg0*tg )
@@ -878,13 +890,13 @@ CONTAINS
                + hvap*erre
        etr0    = etr
        etr     = etr     +     etr_dtl*dtl(it-1)
-      if(DEF_USE_PLANTHYDRAULICS) then
-         if(abs(etr0) .ge. 1.e-15)then
-             rootr = rootr * etr / etr0
-         else
-             rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
-         end if
-      end if
+       if(DEF_USE_PLANTHYDRAULICS) then
+          if(abs(etr0) .ge. 1.e-15)then
+              rootr = rootr * etr / etr0
+          else
+              rootr = rootr + dz_soi / sum(dz_soi) * etr_dtl* dtl(it-1)
+          end if
+       end if
 
        evplwet = evplwet + evplwet_dtl*dtl(it-1)
        fevpl   = fevpl_noadj
@@ -905,7 +917,17 @@ CONTAINS
 !-----------------------------------------------------------------------
 
        fseng = cpair*rhoair*cgh*(tg-taf)
+! 03/07/2020, yuan: calculate fseng_soil/snow
+! taf = wta0*thm + wtg0*tg + wtl0*tl
+       fseng_soil = cpair*rhoair*cgh*((1.-wtg0)*t_soil - wta0*thm - wtl0*tl)
+       fseng_snow = cpair*rhoair*cgh*((1.-wtg0)*t_snow - wta0*thm - wtl0*tl)
+
+       !print *, fseng, tg, taf !fordebug
+! 03/07/2020, yuan: calculate fevpg_soil/snow
+! qaf = wtaq0*qm + wtgq0*qg + wtlq0*qsatl
        fevpg = rhoair*cgw*(qg-qaf)
+       fevpg_soil = rhoair*cgw*((1.-wtgq0)*q_soil - wtaq0*qm - wtlq0*qsatl)
+       fevpg_snow = rhoair*cgw*((1.-wtgq0)*q_snow - wtaq0*qm - wtlq0*qsatl)
 
 !-----------------------------------------------------------------------
 ! downward (upward) longwave radiation below (above) the canopy and prec. sensible heat
@@ -915,7 +937,9 @@ CONTAINS
        dlrad = thermk * frl &
              + stefnc * fac * tlbef**3 * (tlbef + 4.*dtl(it-1))
        ulrad = stefnc * ( fac * tlbef**3 * (tlbef + 4.*dtl(it-1)) &
-             + thermk*emg*tg**4 ) &
+             !+ thermk*emg*tg**4 ) &
+             + (1.-fsno)*thermk*emg*t_soil**4 &
+             + fsno*thermk*emg*t_snow**4 ) &
              + (1-emg)*thermk*thermk*frl &
              + (1-emg)*thermk*fac*stefnc*tlbef**4 &
              + 4.*(1-emg)*thermk*fac*stefnc*tlbef**3*dtl(it-1)

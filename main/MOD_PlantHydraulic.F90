@@ -560,6 +560,11 @@ end do
 
     soilflux = sum(rootr(:))
 
+    IF (soilflux-etr > 1.e-6) THEN
+       print *, "Warning: PHS one leaf soil flux is not equal to etr:"
+       print *, "soilflux:", soilflux, "etr", etr
+    ENDIF
+
   end subroutine calcstress_oneleaf
 
   subroutine calcstress_twoleaf(x,nvegwcs,rstfacsun, rstfacsha, etrsun, etrsha, rootr,&
@@ -714,6 +719,11 @@ end do
     end if
 
     soilflux = sum(rootr(:))
+
+    IF (soilflux-etrsun-etrsha > 1.e-6) THEN
+       print *, "Warning: PHS two leaf soil flux is not equal to etr:"
+       print *, "soilflux:", soilflux, "etrsun+etrsha", etrsun+etrsha
+    ENDIF
 
   end subroutine calcstress_twoleaf
 

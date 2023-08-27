@@ -20,7 +20,7 @@ MODULE MOD_PhaseChange
 
 
    subroutine meltf (patchtype,lb,nl_soil,deltim, &
-                     fact,brr,hs,dhsdT, &
+                     fact,brr,hs,hs_soil,hs_snow,fsno,dhsdT, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
@@ -67,6 +67,9 @@ MODULE MOD_PhaseChange
    real(r8), INTENT(in) :: brr (lb:nl_soil)    !
    real(r8), INTENT(in) :: fact(lb:nl_soil)    ! temporary variables
    real(r8), INTENT(in) :: hs                  ! net ground heat flux into the surface
+   real(r8), INTENT(in) :: hs_soil             ! net ground heat flux into the surface soil
+   real(r8), INTENT(in) :: hs_snow             ! net ground heat flux into the surface snow
+   real(r8), INTENT(in) :: fsno                ! snow fractional cover
    real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
    real(r8), INTENT(in) :: porsl(1:nl_soil)    ! soil porosity [-]
    real(r8), INTENT(in) :: psi0 (1:nl_soil)    ! soil water suction, negative potential [mm]
@@ -184,11 +187,25 @@ MODULE MOD_PhaseChange
    do j = lb, nl_soil
       if(imelt(j) > 0)then
          tinc = t_soisno(j)-t_soisno_bef(j)
-         if(j > lb)then
-            hm(j) = brr(j) - tinc/fact(j)
-         else
-            hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
+
+         if(j > lb)then             ! => not the top layer
+            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+                                    ! -> interface soil layer
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
+            ELSE                    ! -> internal layers other than the interface soil layer
+               hm(j) = brr(j) - tinc/fact(j)
+            ENDIF
+         else                       ! => top layer
+            IF (j==1 .or. .not.DEF_SPLIT_SOILSNOW .or. (patchtype==1.or.patchtype==3)) THEN
+                                    ! -> soil layer
+               hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
+            ELSE                    ! -> snow cover
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
+            ENDIF
          endif
+
       endif
    enddo
 
@@ -287,7 +304,7 @@ MODULE MOD_PhaseChange
 
 
    subroutine meltf_snicar (patchtype,lb,nl_soil,deltim, &
-                     fact,brr,hs,dhsdT,sabg_lyr, &
+                     fact,brr,hs,hs_soil,hs_snow,fsno,sabg_snow_lyr,dhsdT, &
                      t_soisno_bef,t_soisno,wliq_soisno,wice_soisno,imelt, &
                      scv,snowdp,sm,xmf,porsl,psi0,&
 #ifdef Campbell_SOIL_MODEL
@@ -335,8 +352,11 @@ MODULE MOD_PhaseChange
    real(r8), INTENT(in) :: brr (lb:nl_soil)    !
    real(r8), INTENT(in) :: fact(lb:nl_soil)    ! temporary variables
    real(r8), INTENT(in) :: hs                  ! net ground heat flux into the surface
+   real(r8), INTENT(in) :: hs_soil             ! net ground heat flux into the surface soil
+   real(r8), INTENT(in) :: hs_snow             ! net ground heat flux into the surface snow
+   real(r8), INTENT(in) :: fsno                ! snow fractional cover
    real(r8), INTENT(in) :: dhsdT               ! temperature derivative of "hs"
-   real(r8), INTENT(in) :: sabg_lyr (lb:1)     ! snow layer absorption [W/m-2]
+   real(r8), INTENT(in) :: sabg_snow_lyr (lb:0)! snow layer absorption [W/m-2]
    real(r8), INTENT(in) :: porsl(1:nl_soil)    ! soil porosity [-]
    real(r8), INTENT(in) :: psi0 (1:nl_soil)    ! soil water suction, negative potential [mm]
 #ifdef Campbell_SOIL_MODEL
@@ -455,15 +475,25 @@ MODULE MOD_PhaseChange
    do j = lb, nl_soil
       if(imelt(j) > 0)then
          tinc = t_soisno(j)-t_soisno_bef(j)
-         if(j > lb)then
-            IF (j <= 1) THEN
-               hm(j) = brr(j) - tinc/fact(j) + sabg_lyr(j)
-            ELSE
-               hm(j) = brr(j) - tinc/fact(j)
+
+         if(j > lb)then             ! => not the top layer
+            IF (j==1 .and. DEF_SPLIT_SOILSNOW .and. (patchtype==0.or.patchtype==2)) THEN
+                                    ! -> interface soil layer
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               hm(j) = hs_soil + (1.-fsno)*dhsdT*tinc + brr(j) - tinc/fact(j)
+            ELSE                    ! -> internal layers other than the interface soil layer
+               hm(j) = brr(j) - tinc/fact(j) + sabg_snow_lyr(j)
             ENDIF
-         else
-            hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
+         else                       ! => top layer
+            IF (j==1 .or. .not.DEF_SPLIT_SOILSNOW .or. (patchtype==1.or.patchtype==3)) THEN
+                                    ! -> soil layer
+               hm(j) = hs + dhsdT*tinc + brr(j) - tinc/fact(j)
+            ELSE                    ! -> snow cover
+               ! 03/08/2020, yuan: seperate soil/snow heat flux, exclude urban(1) and glacier(3)
+               hm(j) = hs_snow + fsno*dhsdT*tinc + brr(j) - tinc/fact(j)
+            ENDIF
          endif
+
       endif
    enddo
 

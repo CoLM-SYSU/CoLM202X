@@ -483,7 +483,9 @@ PROGRAM CoLM
       istep = istep + 1
 
 #ifdef CoLMDEBUG
-      CALL print_VSF_iteration_stat_info ()
+      IF (DEF_USE_VARIABLY_SATURATED_FLOW) THEN
+         CALL print_VSF_iteration_stat_info ()
+      ENDIF
 #endif
 
    ENDDO TIMELOOP

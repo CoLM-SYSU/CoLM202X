@@ -224,7 +224,14 @@ CONTAINS
              bsw         ,porsl       ,psi0        ,hksati    ,rootr     ,&
              t_gpersno   ,wliq_gpersno,wice_gpersno,smp,hk,pgper_rain,sm_gper,&
              etr         ,qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
-             rsur_gper   ,rnof_gper   ,qinfl       ,wtfact    ,pondmx    ,&
+             !NOTE: temporal input, as urban mode doesn't support split soil&snow
+             ! set all the same for soil and snow surface,
+             ! and fsno=0. (no physical meaning here)
+             qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
+             qseva_gper  ,qsdew_gper  ,qsubl_gper,qfros_gper,&
+             0.          ,& ! fsno, not active
+             rsur_gper   ,&
+             rnof_gper   ,qinfl       ,wtfact    ,pondmx    ,&
              ssi         ,wimp        ,smpmin      ,zwt       ,wa        ,&
              qcharge     ,errw_rsub                                       &
 #if(defined CaMa_Flood)

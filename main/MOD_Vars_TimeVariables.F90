@@ -194,7 +194,8 @@ ENDIF
 
    SUBROUTINE WRITE_PFTimeVariables (file_restart)
 
-      USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
+      USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                               DEF_USE_IRRIGATION
       USE MOD_LandPFT
       USE MOD_NetCDFVector
       USE MOD_Vars_Global
@@ -393,99 +394,101 @@ MODULE MOD_Vars_TimeVariables
   SAVE
 ! -----------------------------------------------------------------
 ! Time-varying state variables which reaquired by restart run
-     real(r8), allocatable :: z_sno      (:,:) ! node depth [m]
-     real(r8), allocatable :: dz_sno     (:,:) ! interface depth [m]
-     real(r8), allocatable :: t_soisno   (:,:) ! soil temperature [K]
-     real(r8), allocatable :: wliq_soisno(:,:) ! liquid water in layers [kg/m2]
-     real(r8), allocatable :: wice_soisno(:,:) ! ice lens in layers [kg/m2]
-     real(r8), allocatable :: h2osoi     (:,:) ! volumetric soil water in layers [m3/m3]
-     real(r8), allocatable :: smp        (:,:) ! soil matrix potential [mm]
-     real(r8), allocatable :: hk         (:,:) ! hydraulic conductivity [mm h2o/s]
-     real(r8), allocatable :: rootr      (:,:) ! water exchange between soil and root. Positive: soil->root [?]
+     real(r8), allocatable :: z_sno       (:,:) ! node depth [m]
+     real(r8), allocatable :: dz_sno      (:,:) ! interface depth [m]
+     real(r8), allocatable :: t_soisno    (:,:) ! soil temperature [K]
+     real(r8), allocatable :: wliq_soisno (:,:) ! liquid water in layers [kg/m2]
+     real(r8), allocatable :: wice_soisno (:,:) ! ice lens in layers [kg/m2]
+     real(r8), allocatable :: h2osoi      (:,:) ! volumetric soil water in layers [m3/m3]
+     real(r8), allocatable :: smp         (:,:) ! soil matrix potential [mm]
+     real(r8), allocatable :: hk          (:,:) ! hydraulic conductivity [mm h2o/s]
+     real(r8), allocatable :: rootr       (:,:) ! water exchange between soil and root. Positive: soil->root [?]
 !Plant Hydraulic variables
-     real(r8), allocatable :: vegwp      (:,:) ! vegetation water potential [mm]
-     real(r8), allocatable :: gs0sun       (:) ! working copy of sunlit stomata conductance
-     real(r8), allocatable :: gs0sha       (:) ! working copy of shalit stomata conductance
+     real(r8), allocatable :: vegwp       (:,:) ! vegetation water potential [mm]
+     real(r8), allocatable :: gs0sun        (:) ! working copy of sunlit stomata conductance
+     real(r8), allocatable :: gs0sha        (:) ! working copy of shalit stomata conductance
 !END plant hydraulic variables
 !Ozone stress variables
-     real(r8), allocatable :: o3coefv_sun  (:) ! Ozone stress factor for photosynthesis on sunlit leaf
-     real(r8), allocatable :: o3coefv_sha  (:) ! Ozone stress factor for photosynthesis on shaded leaf
-     real(r8), allocatable :: o3coefg_sun  (:) ! Ozone stress factor for stomata on sunlit leaf
-     real(r8), allocatable :: o3coefg_sha  (:) ! Ozone stress factor for stomata on shaded leaf
-     real(r8), allocatable :: lai_old      (:) ! lai in last time step
-     real(r8), allocatable :: o3uptakesun  (:) ! Ozone does, sunlit leaf (mmol O3/m^2)
-     real(r8), allocatable :: o3uptakesha  (:) ! Ozone does, shaded leaf (mmol O3/m^2)
+     real(r8), allocatable :: o3coefv_sun   (:) ! Ozone stress factor for photosynthesis on sunlit leaf
+     real(r8), allocatable :: o3coefv_sha   (:) ! Ozone stress factor for photosynthesis on shaded leaf
+     real(r8), allocatable :: o3coefg_sun   (:) ! Ozone stress factor for stomata on sunlit leaf
+     real(r8), allocatable :: o3coefg_sha   (:) ! Ozone stress factor for stomata on shaded leaf
+     real(r8), allocatable :: lai_old       (:) ! lai in last time step
+     real(r8), allocatable :: o3uptakesun   (:) ! Ozone does, sunlit leaf (mmol O3/m^2)
+     real(r8), allocatable :: o3uptakesha   (:) ! Ozone does, shaded leaf (mmol O3/m^2)
 !End ozone stress variables
-     real(r8), allocatable :: rstfacsun_out(:) ! factor of soil water stress on sunlit leaf
-     real(r8), allocatable :: rstfacsha_out(:) ! factor of soil water stress on shaded leaf
-     real(r8), allocatable :: gssun_out    (:) ! stomata conductance on sunlit leaf
-     real(r8), allocatable :: gssha_out    (:) ! stomata conductance on shaded leaf
-     real(r8), allocatable :: t_grnd       (:) ! ground surface temperature [K]
+     real(r8), allocatable :: rstfacsun_out (:) ! factor of soil water stress on sunlit leaf
+     real(r8), allocatable :: rstfacsha_out (:) ! factor of soil water stress on shaded leaf
+     real(r8), allocatable :: gssun_out     (:) ! stomata conductance on sunlit leaf
+     real(r8), allocatable :: gssha_out     (:) ! stomata conductance on shaded leaf
+     real(r8), allocatable :: t_grnd        (:) ! ground surface temperature [K]
 
-     real(r8), allocatable :: assimsun_out (:) ! diagnostic sunlit leaf assim value for output
-     real(r8), allocatable :: assimsha_out (:) ! diagnostic sunlit leaf etr value for output
-     real(r8), allocatable :: etrsun_out   (:) ! diagnostic shaded leaf assim for output
-     real(r8), allocatable :: etrsha_out   (:) ! diagnostic shaded leaf etr for output
+     real(r8), allocatable :: assimsun_out  (:) ! diagnostic sunlit leaf assim value for output
+     real(r8), allocatable :: assimsha_out  (:) ! diagnostic sunlit leaf etr value for output
+     real(r8), allocatable :: etrsun_out    (:) ! diagnostic shaded leaf assim for output
+     real(r8), allocatable :: etrsha_out    (:) ! diagnostic shaded leaf etr for output
 
-     real(r8), allocatable :: tleaf        (:) ! leaf temperature [K]
-     real(r8), allocatable :: ldew         (:) ! depth of water on foliage [mm]
-     real(r8), allocatable :: ldew_rain    (:) ! depth of rain on foliage [mm]
-     real(r8), allocatable :: ldew_snow    (:) ! depth of rain on foliage [mm]
-     real(r8), allocatable :: sag          (:) ! non dimensional snow age [-]
-     real(r8), allocatable :: scv          (:) ! snow cover, water equivalent [mm]
-     real(r8), allocatable :: snowdp       (:) ! snow depth [meter]
-     real(r8), allocatable :: fveg         (:) ! fraction of vegetation cover
-     real(r8), allocatable :: fsno         (:) ! fraction of snow cover on ground
-     real(r8), allocatable :: sigf         (:) ! fraction of veg cover, excluding snow-covered veg [-]
-     real(r8), allocatable :: green        (:) ! leaf greenness
-     real(r8), allocatable :: tlai         (:) ! leaf area index
-     real(r8), allocatable :: lai          (:) ! leaf area index
-     real(r8), allocatable :: laisun       (:) ! leaf area index for sunlit leaf
-     real(r8), allocatable :: laisha       (:) ! leaf area index for shaded leaf
-     real(r8), allocatable :: tsai         (:) ! stem area index
-     real(r8), allocatable :: sai          (:) ! stem area index
-     real(r8), allocatable :: coszen       (:) ! cosine of solar zenith angle
-     real(r8), allocatable :: alb      (:,:,:) ! averaged albedo [-]
-     real(r8), allocatable :: ssun     (:,:,:) ! sunlit canopy absorption for solar radiation (0-1)
-     real(r8), allocatable :: ssha     (:,:,:) ! shaded canopy absorption for solar radiation (0-1)
-     real(r8), allocatable :: thermk       (:) ! canopy gap fraction for tir radiation
-     real(r8), allocatable :: extkb        (:) ! (k, g(mu)/mu) direct solar extinction coefficient
-     real(r8), allocatable :: extkd        (:) ! diffuse and scattered diffuse PAR extinction coefficient
-     real(r8), allocatable :: zwt          (:) ! the depth to water table [m]
-     real(r8), allocatable :: wa           (:) ! water storage in aquifer [mm]
-     real(r8), allocatable :: wat          (:) ! total water storage [mm]
-     real(r8), allocatable :: wdsrf        (:) ! depth of surface water [mm]
+     real(r8), allocatable :: tleaf         (:) ! leaf temperature [K]
+     real(r8), allocatable :: ldew          (:) ! depth of water on foliage [mm]
+     real(r8), allocatable :: ldew_rain     (:) ! depth of rain on foliage [mm]
+     real(r8), allocatable :: ldew_snow     (:) ! depth of rain on foliage [mm]
+     real(r8), allocatable :: sag           (:) ! non dimensional snow age [-]
+     real(r8), allocatable :: scv           (:) ! snow cover, water equivalent [mm]
+     real(r8), allocatable :: snowdp        (:) ! snow depth [meter]
+     real(r8), allocatable :: fveg          (:) ! fraction of vegetation cover
+     real(r8), allocatable :: fsno          (:) ! fraction of snow cover on ground
+     real(r8), allocatable :: sigf          (:) ! fraction of veg cover, excluding snow-covered veg [-]
+     real(r8), allocatable :: green         (:) ! leaf greenness
+     real(r8), allocatable :: tlai          (:) ! leaf area index
+     real(r8), allocatable :: lai           (:) ! leaf area index
+     real(r8), allocatable :: laisun        (:) ! leaf area index for sunlit leaf
+     real(r8), allocatable :: laisha        (:) ! leaf area index for shaded leaf
+     real(r8), allocatable :: tsai          (:) ! stem area index
+     real(r8), allocatable :: sai           (:) ! stem area index
+     real(r8), allocatable :: coszen        (:) ! cosine of solar zenith angle
+     real(r8), allocatable :: alb       (:,:,:) ! averaged albedo [-]
+     real(r8), allocatable :: ssun      (:,:,:) ! sunlit canopy absorption for solar radiation (0-1)
+     real(r8), allocatable :: ssha      (:,:,:) ! shaded canopy absorption for solar radiation (0-1)
+     real(r8), allocatable :: ssoi      (:,:,:) ! soil absorption for solar radiation (0-1)
+     real(r8), allocatable :: ssno      (:,:,:) ! snow absorption for solar radiation (0-1)
+     real(r8), allocatable :: thermk        (:) ! canopy gap fraction for tir radiation
+     real(r8), allocatable :: extkb         (:) ! (k, g(mu)/mu) direct solar extinction coefficient
+     real(r8), allocatable :: extkd         (:) ! diffuse and scattered diffuse PAR extinction coefficient
+     real(r8), allocatable :: zwt           (:) ! the depth to water table [m]
+     real(r8), allocatable :: wa            (:) ! water storage in aquifer [mm]
+     real(r8), allocatable :: wat           (:) ! total water storage [mm]
+     real(r8), allocatable :: wdsrf         (:) ! depth of surface water [mm]
 
-     real(r8), allocatable :: t_lake      (:,:)! lake layer teperature [K]
-     real(r8), allocatable :: lake_icefrac(:,:)! lake mass fraction of lake layer that is frozen
-     real(r8), allocatable :: savedtke1     (:)! top level eddy conductivity (W/m K)
+     real(r8), allocatable :: t_lake      (:,:) ! lake layer teperature [K]
+     real(r8), allocatable :: lake_icefrac(:,:) ! lake mass fraction of lake layer that is frozen
+     real(r8), allocatable :: savedtke1     (:) ! top level eddy conductivity (W/m K)
 
-     real(r8), allocatable :: snw_rds    (:,:) ! effective grain radius (col,lyr) [microns, m-6]
-     real(r8), allocatable :: mss_bcpho  (:,:) ! mass of hydrophobic BC in snow  (col,lyr) [kg]
-     real(r8), allocatable :: mss_bcphi  (:,:) ! mass of hydrophillic BC in snow (col,lyr) [kg]
-     real(r8), allocatable :: mss_ocpho  (:,:) ! mass of hydrophobic OC in snow  (col,lyr) [kg]
-     real(r8), allocatable :: mss_ocphi  (:,:) ! mass of hydrophillic OC in snow (col,lyr) [kg]
-     real(r8), allocatable :: mss_dst1   (:,:) ! mass of dust species 1 in snow  (col,lyr) [kg]
-     real(r8), allocatable :: mss_dst2   (:,:) ! mass of dust species 2 in snow  (col,lyr) [kg]
-     real(r8), allocatable :: mss_dst3   (:,:) ! mass of dust species 3 in snow  (col,lyr) [kg]
-     real(r8), allocatable :: mss_dst4   (:,:) ! mass of dust species 4 in snow  (col,lyr) [kg]
-     real(r8), allocatable :: ssno   (:,:,:,:) ! snow layer absorption [-]
+     real(r8), allocatable :: snw_rds     (:,:) ! effective grain radius (col,lyr) [microns, m-6]
+     real(r8), allocatable :: mss_bcpho   (:,:) ! mass of hydrophobic BC in snow  (col,lyr) [kg]
+     real(r8), allocatable :: mss_bcphi   (:,:) ! mass of hydrophillic BC in snow (col,lyr) [kg]
+     real(r8), allocatable :: mss_ocpho   (:,:) ! mass of hydrophobic OC in snow  (col,lyr) [kg]
+     real(r8), allocatable :: mss_ocphi   (:,:) ! mass of hydrophillic OC in snow (col,lyr) [kg]
+     real(r8), allocatable :: mss_dst1    (:,:) ! mass of dust species 1 in snow  (col,lyr) [kg]
+     real(r8), allocatable :: mss_dst2    (:,:) ! mass of dust species 2 in snow  (col,lyr) [kg]
+     real(r8), allocatable :: mss_dst3    (:,:) ! mass of dust species 3 in snow  (col,lyr) [kg]
+     real(r8), allocatable :: mss_dst4    (:,:) ! mass of dust species 4 in snow  (col,lyr) [kg]
+     real(r8), allocatable :: ssno_lyr(:,:,:,:) ! snow layer absorption [-]
 
-     real(r8), allocatable :: trad         (:) ! radiative temperature of surface [K]
-     real(r8), allocatable :: tref         (:) ! 2 m height air temperature [kelvin]
-     real(r8), allocatable :: qref         (:) ! 2 m height air specific humidity
-     real(r8), allocatable :: rst          (:) ! canopy stomatal resistance (s/m)
-     real(r8), allocatable :: emis         (:) ! averaged bulk surface emissivity
-     real(r8), allocatable :: z0m          (:) ! effective roughness [m]
-     real(r8), allocatable :: displa       (:) ! zero displacement height [m]
-     real(r8), allocatable :: zol          (:) ! dimensionless height (z/L) used in Monin-Obukhov theory
-     real(r8), allocatable :: rib          (:) ! bulk Richardson number in surface layer
-     real(r8), allocatable :: ustar        (:) ! u* in similarity theory [m/s]
-     real(r8), allocatable :: qstar        (:) ! q* in similarity theory [kg/kg]
-     real(r8), allocatable :: tstar        (:) ! t* in similarity theory [K]
-     real(r8), allocatable :: fm           (:) ! integral of profile function for momentum
-     real(r8), allocatable :: fh           (:) ! integral of profile function for heat
-     real(r8), allocatable :: fq           (:) ! integral of profile function for moisture
+     real(r8), allocatable :: trad          (:) ! radiative temperature of surface [K]
+     real(r8), allocatable :: tref          (:) ! 2 m height air temperature [kelvin]
+     real(r8), allocatable :: qref          (:) ! 2 m height air specific humidity
+     real(r8), allocatable :: rst           (:) ! canopy stomatal resistance (s/m)
+     real(r8), allocatable :: emis          (:) ! averaged bulk surface emissivity
+     real(r8), allocatable :: z0m           (:) ! effective roughness [m]
+     real(r8), allocatable :: displa        (:) ! zero displacement height [m]
+     real(r8), allocatable :: zol           (:) ! dimensionless height (z/L) used in Monin-Obukhov theory
+     real(r8), allocatable :: rib           (:) ! bulk Richardson number in surface layer
+     real(r8), allocatable :: ustar         (:) ! u* in similarity theory [m/s]
+     real(r8), allocatable :: qstar         (:) ! q* in similarity theory [kg/kg]
+     real(r8), allocatable :: tstar         (:) ! t* in similarity theory [K]
+     real(r8), allocatable :: fm            (:) ! integral of profile function for momentum
+     real(r8), allocatable :: fh            (:) ! integral of profile function for heat
+     real(r8), allocatable :: fq            (:) ! integral of profile function for moisture
 
      real(r8), allocatable :: irrig_rate          (:) ! irrigation rate (mm s-1)
      real(r8), allocatable :: deficit_irrig       (:) ! irrigation amount (kg/m2)
@@ -588,6 +591,8 @@ MODULE MOD_Vars_TimeVariables
            allocate (alb                     (2,2,numpatch)); alb       (:,:,:) = spval
            allocate (ssun                    (2,2,numpatch)); ssun      (:,:,:) = spval
            allocate (ssha                    (2,2,numpatch)); ssha      (:,:,:) = spval
+           allocate (ssoi                    (2,2,numpatch)); ssoi      (:,:,:) = spval
+           allocate (ssno                    (2,2,numpatch)); ssno      (:,:,:) = spval
            allocate (thermk                      (numpatch)); thermk        (:) = spval
            allocate (extkb                       (numpatch)); extkb         (:) = spval
            allocate (extkd                       (numpatch)); extkd         (:) = spval
@@ -609,7 +614,7 @@ MODULE MOD_Vars_TimeVariables
            allocate (mss_dst2         (maxsnl+1:0,numpatch)); mss_dst2    (:,:) = spval
            allocate (mss_dst3         (maxsnl+1:0,numpatch)); mss_dst3    (:,:) = spval
            allocate (mss_dst4         (maxsnl+1:0,numpatch)); mss_dst4    (:,:) = spval
-           allocate (ssno         (2,2,maxsnl+1:1,numpatch)); ssno    (:,:,:,:) = spval
+           allocate (ssno_lyr     (2,2,maxsnl+1:1,numpatch)); ssno_lyr(:,:,:,:) = spval
 
            allocate (trad                        (numpatch)); trad          (:) = spval
            allocate (tref                        (numpatch)); tref          (:) = spval
@@ -732,6 +737,8 @@ MODULE MOD_Vars_TimeVariables
            deallocate (alb                    )
            deallocate (ssun                   )
            deallocate (ssha                   )
+           deallocate (ssoi                   )
+           deallocate (ssno                   )
            deallocate (thermk                 )
            deallocate (extkb                  )
            deallocate (extkd                  )
@@ -753,7 +760,7 @@ MODULE MOD_Vars_TimeVariables
            deallocate (mss_dst2               )
            deallocate (mss_dst3               )
            deallocate (mss_dst4               )
-           deallocate (ssno                   )
+           deallocate (ssno_lyr               )
 
            deallocate (trad                   )
            deallocate (tref                   )
@@ -849,7 +856,8 @@ MODULE MOD_Vars_TimeVariables
      ! Original version: Yongjiu Dai, September 15, 1999, 03/2014
      !=======================================================================
 
-     USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
+     USE MOD_Namelist, only : DEF_REST_COMPRESS_LEVEL, DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, &
+                              DEF_USE_IRRIGATION
      USE MOD_LandPatch
      USE MOD_NetCDFVector
      USE MOD_Vars_Global
@@ -929,6 +937,8 @@ ENDIF
      CALL ncio_write_vector (file_restart, 'alb     '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, alb , compress)    ! averaged albedo [-]
      CALL ncio_write_vector (file_restart, 'ssun    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssun, compress)    ! sunlit canopy absorption for solar radiation (0-1)
      CALL ncio_write_vector (file_restart, 'ssha    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssha, compress)    ! shaded canopy absorption for solar radiation (0-1)
+     CALL ncio_write_vector (file_restart, 'ssoi    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssoi, compress)    ! shaded canopy absorption for solar radiation (0-1)
+     CALL ncio_write_vector (file_restart, 'ssno    '   , 'band', 2, 'rtyp', 2, 'patch', landpatch, ssno, compress)    ! shaded canopy absorption for solar radiation (0-1)
      CALL ncio_write_vector (file_restart, 'thermk  '   , 'patch', landpatch, thermk    , compress)                    ! canopy gap fraction for tir radiation
      CALL ncio_write_vector (file_restart, 'extkb   '   , 'patch', landpatch, extkb     , compress)                    ! (k, g(mu)/mu) direct solar extinction coefficient
      CALL ncio_write_vector (file_restart, 'extkd   '   , 'patch', landpatch, extkd     , compress)                    ! diffuse and scattered diffuse PAR extinction coefficient
@@ -948,7 +958,7 @@ ENDIF
      CALL ncio_write_vector (file_restart, 'mss_dst2 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst2 , compress)
      CALL ncio_write_vector (file_restart, 'mss_dst3 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst3 , compress)
      CALL ncio_write_vector (file_restart, 'mss_dst4 ', 'snow', -maxsnl, 'patch', landpatch, mss_dst4 , compress)
-     CALL ncio_write_vector (file_restart, 'ssno', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno, compress)
+     CALL ncio_write_vector (file_restart, 'ssno_lyr', 'band', 2, 'rtyp', 2, 'snowp1', -maxsnl+1, 'patch', landpatch, ssno_lyr, compress)
 
      ! Additional va_vectorriables required by reginal model (such as WRF ) RSM)
      CALL ncio_write_vector (file_restart, 'trad ', 'patch', landpatch, trad , compress) ! radiative temperature of surface [K]
@@ -1082,6 +1092,8 @@ ENDIF
      CALL ncio_read_vector (file_restart, 'alb     '   , 2, 2, landpatch, alb  ) ! averaged albedo [-]
      CALL ncio_read_vector (file_restart, 'ssun    '   , 2, 2, landpatch, ssun ) ! sunlit canopy absorption for solar radiation (0-1)
      CALL ncio_read_vector (file_restart, 'ssha    '   , 2, 2, landpatch, ssha ) ! shaded canopy absorption for solar radiation (0-1)
+     CALL ncio_read_vector (file_restart, 'ssoi    '   , 2, 2, landpatch, ssoi ) ! soil absorption for solar radiation (0-1)
+     CALL ncio_read_vector (file_restart, 'ssno    '   , 2, 2, landpatch, ssno ) ! snow absorption for solar radiation (0-1)
      CALL ncio_read_vector (file_restart, 'thermk  '   , landpatch, thermk     ) ! canopy gap fraction for tir radiation
      CALL ncio_read_vector (file_restart, 'extkb   '   , landpatch, extkb      ) ! (k, g(mu)/mu) direct solar extinction coefficient
      CALL ncio_read_vector (file_restart, 'extkd   '   , landpatch, extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
@@ -1091,7 +1103,7 @@ ENDIF
 
      CALL ncio_read_vector (file_restart, 't_lake  '   , nl_lake, landpatch, t_lake      ) !
      CALL ncio_read_vector (file_restart, 'lake_icefrc', nl_lake, landpatch, lake_icefrac) !
-     CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1) !
+     CALL ncio_read_vector (file_restart, 'savedtke1', landpatch, savedtke1)     !
 
      CALL ncio_read_vector (file_restart, 'snw_rds  ', -maxsnl, landpatch, snw_rds  ) !
      CALL ncio_read_vector (file_restart, 'mss_bcpho', -maxsnl, landpatch, mss_bcpho) !
@@ -1102,7 +1114,7 @@ ENDIF
      CALL ncio_read_vector (file_restart, 'mss_dst2 ', -maxsnl, landpatch, mss_dst2 ) !
      CALL ncio_read_vector (file_restart, 'mss_dst3 ', -maxsnl, landpatch, mss_dst3 ) !
      CALL ncio_read_vector (file_restart, 'mss_dst4 ', -maxsnl, landpatch, mss_dst4 ) !
-     CALL ncio_read_vector (file_restart, 'ssno', 2,2, -maxsnl+1, landpatch, ssno) !
+     CALL ncio_read_vector (file_restart, 'ssno_lyr', 2,2, -maxsnl+1, landpatch, ssno_lyr) !
 
      ! Additional variables required by reginal model (such as WRF ) RSM)
      CALL ncio_read_vector (file_restart, 'trad ', landpatch, trad ) ! radiative temperature of surface [K]
@@ -1172,7 +1184,8 @@ ENDIF
 
      USE MOD_SPMD_Task
      USE MOD_RangeCheck
-     USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION
+     USE MOD_Namelist, only: DEF_USE_PLANTHYDRAULICS, DEF_USE_OZONESTRESS, DEF_USE_IRRIGATION, &
+                             DEF_USE_SNICAR
 
      IMPLICIT NONE
 
@@ -1224,6 +1237,8 @@ ENDIF
      CALL check_vector_data ('alb         [-]    ', alb        ) ! averaged albedo [-]
      CALL check_vector_data ('ssun        [-]    ', ssun       ) ! sunlit canopy absorption for solar radiation (0-1)
      CALL check_vector_data ('ssha        [-]    ', ssha       ) ! shaded canopy absorption for solar radiation (0-1)
+     CALL check_vector_data ('ssoi        [-]    ', ssoi       ) ! soil absorption for solar radiation (0-1)
+     CALL check_vector_data ('ssno        [-]    ', ssno       ) ! snow absorption for solar radiation (0-1)
      CALL check_vector_data ('thermk      [-]    ', thermk     ) ! canopy gap fraction for tir radiation
      CALL check_vector_data ('extkb       [-]    ', extkb      ) ! (k, g(mu)/mu) direct solar extinction coefficient
      CALL check_vector_data ('extkd       [-]    ', extkd      ) ! diffuse and scattered diffuse PAR extinction coefficient
@@ -1234,6 +1249,19 @@ ENDIF
      CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
      CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
      CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
+
+IF (DEF_USE_SNICAR) THEN
+     CALL check_vector_data ('snw_rds     [m-6]  ',  snw_rds   ) !
+     CALL check_vector_data ('mss_bcpho   [Kg]   ',  mss_bcpho ) !
+     CALL check_vector_data ('mss_bcphi   [Kg]   ',  mss_bcphi ) !
+     CALL check_vector_data ('mss_ocpho   [Kg]   ',  mss_ocpho ) !
+     CALL check_vector_data ('mss_ocphi   [Kg]   ',  mss_ocphi ) !
+     CALL check_vector_data ('mss_dst1    [Kg]   ',  mss_dst1  ) !
+     CALL check_vector_data ('mss_dst2    [Kg]   ',  mss_dst2  ) !
+     CALL check_vector_data ('mss_dst3    [Kg]   ',  mss_dst3  ) !
+     CALL check_vector_data ('mss_dst4    [Kg]   ',  mss_dst4  ) !
+     CALL check_vector_data ('ssno_lyr    [-]    ',  ssno_lyr  ) !
+ENDIF
 
 IF (DEF_USE_IRRIGATION) THEN
      CALL check_vector_data ('irrig_rate            ' , irrig_rate            )
