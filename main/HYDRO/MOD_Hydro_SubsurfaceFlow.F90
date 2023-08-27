@@ -524,7 +524,7 @@ CONTAINS
 
                ! check consistancy between water table location and liquid water content
                DO ilev = 1, nl_soil
-                  IF ((vol_liq(ilev) < eff_porosity(ilev)-1.e-6) .and. (zwtmm <= sp_zi(ilev-1))) THEN
+                  IF ((vol_liq(ilev) < eff_porosity(ilev)-1.e-8) .and. (zwtmm <= sp_zi(ilev-1))) THEN
                      zwtmm = sp_zi(ilev)
                   ENDIF
                ENDDO
@@ -546,7 +546,7 @@ CONTAINS
                         + vol_liq(izwt)*(zwtmm-sp_zi(izwt-1))) /1000. * denh2o
                   ENDIF
                ENDIF
-               
+
                CALL soilwater_aquifer_exchange ( &
                   nl_soil, exwater, sp_zi, is_permeable, eff_porosity, vl_r, psi0(:,ipatch), &
                   hksati(:,ipatch), nprms, prms, porsl(nl_soil,ipatch), wdsrf(ipatch), &
