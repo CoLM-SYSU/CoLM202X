@@ -1049,7 +1049,7 @@ contains
             a_rsub    (:) = spval
             a_rnof    (:) = spval
 #ifdef LATERAL_FLOW
-            a_xwsur   (:) = spval  
+            a_xwsur   (:) = spval
             a_xwsub   (:) = spval
 #endif
             a_qintr   (:) = spval
@@ -1447,6 +1447,13 @@ contains
             call acc1d (xerr    , a_xerr   )
             call acc1d (zerr    , a_zerr   )
             call acc1d (rsur    , a_rsur   )
+#ifndef LATERAL_FLOW
+            WHERE ((rsur /= spval) .and. (rnof /= spval))
+               rsub = rnof - rsur
+            ELSEWHERE
+               rsub = spval
+            END WHERE 
+#endif
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
 #ifdef LATERAL_FLOW
@@ -1487,7 +1494,6 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
-            lai = laisun + laisha
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
@@ -1667,10 +1673,15 @@ contains
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
+            ! call acc1d (irrig_rate         ,   a_irrig_rate         )
+            ! call acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! call acc1d (sum_irrig          ,   a_sum_irrig          )
+            ! call acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             call acc1d (irrig_rate         ,   a_irrig_rate         )
-            a_deficit_irrig = deficit_irrig
+            call acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
+
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

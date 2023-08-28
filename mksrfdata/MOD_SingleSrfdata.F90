@@ -84,7 +84,6 @@ MODULE MOD_SingleSrfdata
 
    REAL(r8) :: SITE_topography = 0.
 
-#ifdef URBAN_MODEL
    INTEGER , allocatable :: SITE_urbtyp   (:)
 
    REAL(r8), allocatable :: SITE_lucyid   (:)
@@ -119,7 +118,6 @@ MODULE MOD_SingleSrfdata
    REAL(r8), allocatable :: SITE_alb_wall (:,:)
    REAL(r8), allocatable :: SITE_alb_gimp (:,:)
    REAL(r8), allocatable :: SITE_alb_gper (:,:)
-#endif
 
 CONTAINS
 
@@ -312,37 +310,37 @@ CONTAINS
          CALL ncio_read_serial (fsrfdata, 'TREE_LAI'      , SITE_LAI_monthly)
          CALL ncio_read_serial (fsrfdata, 'TREE_SAI'      , SITE_SAI_monthly)
 
-         CALL ncio_read_serial (fsrfdata, 'URBAN_TYPE'    , SITE_urbtyp   )
-         CALL ncio_read_serial (fsrfdata, 'LUCY_id'       , SITE_lucyid   )
-         CALL ncio_read_serial (fsrfdata, 'PCT_Tree'      , SITE_fveg_urb )
-         CALL ncio_read_serial (fsrfdata, 'URBAN_TREE_TOP', SITE_htop_urb )
-         CALL ncio_read_serial (fsrfdata, 'PCT_Water'     , SITE_flake_urb)
-         CALL ncio_read_serial (fsrfdata, 'WT_ROOF'       , SITE_froof    )
-         CALL ncio_read_serial (fsrfdata, 'HT_ROOF'       , SITE_hroof    )
-         CALL ncio_read_serial (fsrfdata, 'WTROAD_PERV'   , SITE_fgper    )
-         CALL ncio_read_serial (fsrfdata, 'CANYON_HWR'    , SITE_hwr      )
-         CALL ncio_read_serial (fsrfdata, 'POP_DEN'       , SITE_popden   )
+         CALL ncio_read_serial (fsrfdata, 'URBAN_TYPE'    , SITE_urbtyp     )
+         CALL ncio_read_serial (fsrfdata, 'LUCY_id'       , SITE_lucyid     )
+         CALL ncio_read_serial (fsrfdata, 'PCT_Tree'      , SITE_fveg_urb   )
+         CALL ncio_read_serial (fsrfdata, 'URBAN_TREE_TOP', SITE_htop_urb   )
+         CALL ncio_read_serial (fsrfdata, 'PCT_Water'     , SITE_flake_urb  )
+         CALL ncio_read_serial (fsrfdata, 'WT_ROOF'       , SITE_froof      )
+         CALL ncio_read_serial (fsrfdata, 'HT_ROOF'       , SITE_hroof      )
+         CALL ncio_read_serial (fsrfdata, 'WTROAD_PERV'   , SITE_fgper      )
+         CALL ncio_read_serial (fsrfdata, 'CANYON_HWR'    , SITE_hwr        )
+         CALL ncio_read_serial (fsrfdata, 'POP_DEN'       , SITE_popden     )
 
-         CALL ncio_read_serial (fsrfdata, 'EM_ROOF'       , SITE_em_roof  )
-         CALL ncio_read_serial (fsrfdata, 'EM_WALL'       , SITE_em_wall  )
-         CALL ncio_read_serial (fsrfdata, 'EM_IMPROAD'    , SITE_em_gimp  )
-         CALL ncio_read_serial (fsrfdata, 'EM_PERROAD'    , SITE_em_gper  )
-         CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MAX', SITE_t_roommax)
-         CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MIN', SITE_t_roommin)
-         CALL ncio_read_serial (fsrfdata, 'THICK_ROOF'    , SITE_thickroof)
-         CALL ncio_read_serial (fsrfdata, 'THICK_WALL'    , SITE_thickwall)
+         CALL ncio_read_serial (fsrfdata, 'EM_ROOF'       , SITE_em_roof    )
+         CALL ncio_read_serial (fsrfdata, 'EM_WALL'       , SITE_em_wall    )
+         CALL ncio_read_serial (fsrfdata, 'EM_IMPROAD'    , SITE_em_gimp    )
+         CALL ncio_read_serial (fsrfdata, 'EM_PERROAD'    , SITE_em_gper    )
+         CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MAX', SITE_t_roommax  )
+         CALL ncio_read_serial (fsrfdata, 'T_BUILDING_MIN', SITE_t_roommin  )
+         CALL ncio_read_serial (fsrfdata, 'THICK_ROOF'    , SITE_thickroof  )
+         CALL ncio_read_serial (fsrfdata, 'THICK_WALL'    , SITE_thickwall  )
 
-         CALL ncio_read_serial (fsrfdata, 'ALB_ROOF'      , SITE_alb_roof)
-         CALL ncio_read_serial (fsrfdata, 'ALB_WALL'      , SITE_alb_wall)
-         CALL ncio_read_serial (fsrfdata, 'ALB_IMPROAD'   , SITE_alb_gimp)
-         CALL ncio_read_serial (fsrfdata, 'ALB_PERROAD'   , SITE_alb_gper)
+         CALL ncio_read_serial (fsrfdata, 'ALB_ROOF'      , SITE_alb_roof   )
+         CALL ncio_read_serial (fsrfdata, 'ALB_WALL'      , SITE_alb_wall   )
+         CALL ncio_read_serial (fsrfdata, 'ALB_IMPROAD'   , SITE_alb_gimp   )
+         CALL ncio_read_serial (fsrfdata, 'ALB_PERROAD'   , SITE_alb_gper   )
 
-         CALL ncio_read_serial (fsrfdata, 'CV_ROOF'       , SITE_cv_roof )
-         CALL ncio_read_serial (fsrfdata, 'CV_WALL'       , SITE_cv_wall )
-         CALL ncio_read_serial (fsrfdata, 'CV_IMPROAD'    , SITE_cv_gimp )
-         CALL ncio_read_serial (fsrfdata, 'TK_ROOF'       , SITE_tk_roof )
-         CALL ncio_read_serial (fsrfdata, 'TK_WALL'       , SITE_tk_wall )
-         CALL ncio_read_serial (fsrfdata, 'TK_IMPROAD'    , SITE_tk_gimp )
+         CALL ncio_read_serial (fsrfdata, 'CV_ROOF'       , SITE_cv_roof    )
+         CALL ncio_read_serial (fsrfdata, 'CV_WALL'       , SITE_cv_wall    )
+         CALL ncio_read_serial (fsrfdata, 'CV_IMPROAD'    , SITE_cv_gimp    )
+         CALL ncio_read_serial (fsrfdata, 'TK_ROOF'       , SITE_tk_roof    )
+         CALL ncio_read_serial (fsrfdata, 'TK_WALL'       , SITE_tk_wall    )
+         CALL ncio_read_serial (fsrfdata, 'TK_IMPROAD'    , SITE_tk_gimp    )
       ENDIF
 
       IF ((.not. mksrfdata) .or. USE_SITE_lakedepth) THEN
@@ -423,11 +421,8 @@ CONTAINS
 
       CALL ncio_define_dimension (fsrfdata, 'soil',  nl_soil )
       CALL ncio_define_dimension (fsrfdata, 'patch', numpatch)
-#if (defined LULC_IGBP_PFT)
+#if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
       CALL ncio_define_dimension (fsrfdata, 'pft', numpft)
-#endif
-#if (defined LULC_IGBP_PC)
-      CALL ncio_define_dimension (fsrfdata, 'pft', N_PFT)
 #endif
 
       CALL ncio_define_dimension (fsrfdata, 'LAI_year', size(SITE_LAI_year))
@@ -609,7 +604,7 @@ CONTAINS
 
       CALL ncio_write_serial (fsrfdata, 'URBAN_TYPE'    , SITE_urbtyp     , 'patch')
       CALL ncio_write_serial (fsrfdata, 'LUCY_id'       , SITE_lucyid     , 'patch')
-      ! CALL ncio_put_attr     (fsrfdata, 'LUCY_id'       , 'source', source)
+      !CALL ncio_put_attr    (fsrfdata, 'LUCY_id'       , 'source', source)
       source = datasource(USE_SITE_urban_paras)
       CALL ncio_write_serial (fsrfdata, 'PCT_Tree'      , SITE_fveg_urb   , 'patch')
       CALL ncio_write_serial (fsrfdata, 'URBAN_TREE_TOP', SITE_htop_urb   , 'patch')

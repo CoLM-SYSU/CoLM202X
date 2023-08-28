@@ -46,12 +46,10 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
    logical  :: USE_SITE_ForcingReadAhead = .true.
-
-#ifdef URBAN_MODEL
    LOGICAL  :: USE_SITE_urban_paras      = .true.
    LOGICAL  :: USE_SITE_thermal_paras    = .false.
    LOGICAL  :: USE_SITE_urban_LAI        = .false.
-#endif
+
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -118,7 +116,12 @@ MODULE MOD_Namelist
    !To allow read satellite observed LAI
    ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
    logical :: DEF_LAI_MONTHLY = .true.
-   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   ! ----- Atmospheric Nitrogen Deposition -----
+   !add by Fang Shang @ pku 2023/08
+   !1: To allow annuaul ndep data to be read in
+   !2: To allow monthly ndep data to be read in
+   INTEGER :: DEF_NDEP_FREQUENCY = 1
+   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
 
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
@@ -715,6 +718,7 @@ CONTAINS
          DEF_SUBGRID_SCHEME,              &
 
          DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_NDEP_FREQUENCY,              &   !add by Fang Shang    @ pku  2023/08
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
@@ -1140,6 +1144,7 @@ CONTAINS
       CALL mpi_bcast (DEF_RSS_SCHEME,                   1, mpi_integer, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_SSP,             256, mpi_character, p_root, p_comm_glb, p_err)
 

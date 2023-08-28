@@ -166,13 +166,13 @@ contains
       case ('TIMESTEP')
          lwrite = .true.
       case ('HOURLY')
-         lwrite = isendofhour (idate, deltim)
+         lwrite = isendofhour (idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('DAILY')
-         lwrite = isendofday(idate, deltim)
+         lwrite = isendofday  (idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('MONTHLY')
-         lwrite = isendofmonth(idate, deltim)
+         lwrite = isendofmonth(idate, deltim) .or. (.not. (itstamp < etstamp))
       case ('YEARLY')
-         lwrite = isendofyear(idate, deltim)
+         lwrite = isendofyear (idate, deltim) .or. (.not. (itstamp < etstamp))
       case default
          write(*,*) 'Warning : Please use one of TIMESTEP/HOURLY/DAILY/MONTHLY/YEARLY for history frequency.'
       end select

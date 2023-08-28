@@ -44,8 +44,9 @@ module MOD_Hydro_SoilWater
    real(r8), parameter :: tol_richards = 1.e-7
 
 #ifdef CoLMDEBUG
-   INTEGER(8) :: count_iters_this(max_iters_richards) = 0
-   INTEGER(8) :: count_iters_accm(max_iters_richards) = 0
+   INTEGER(8) :: count_implicit = 0
+   INTEGER(8) :: count_explicit = 0
+   INTEGER(8) :: count_wet2dry  = 0
 #endif
 
    ! private subroutines and functions
@@ -158,7 +159,7 @@ contains
          nlev,  dt,   sp_zc, sp_zi,   is_permeable,  &
          porsl, vl_r, psi_s, hksat,   nprm,   prms,  &
          porsl_wa,                                   &
-         rain,  etr,  rootr, rsubst,  qinfl,         &
+         qgtop, etr,  rootr, rsubst,  qinfl,         &
          ss_dp, zwt,  wa,    ss_vliq, smp,    hk  ,  &
          tolerance )
 
@@ -188,8 +189,10 @@ contains
       real(r8), intent(in) :: prms (nprm,1:nlev)  ! parameters included in soil function
 
       real(r8), intent(in) :: porsl_wa      ! soil porosity in aquifer (mm^3/mm^3)
-
-      REAL(r8), intent(in) :: rain          ! rain fall on ponding layer (mm/s)
+      
+      ! ground water including rain, snow melt and dew formation (mm/s)
+      REAL(r8), intent(in) :: qgtop          
+      
       REAL(r8), intent(in) :: etr           ! transpiration rate (mm/s)
       REAL(r8), intent(in) :: rootr(1:nlev) ! root fractions (percentage)
 
@@ -277,12 +280,17 @@ contains
             ss_vliq(ilev) = (ss_vliq(ilev) * sp_dz(ilev) &
                - etroot(ilev)*dt - deficit) / sp_dz(ilev)
 
-            IF (ss_vliq(ilev) < 0.) THEN
-               deficit = - ss_vliq(ilev) * sp_dz(ilev)
-               ss_vliq(ilev) = 0.
+            IF (ss_vliq(ilev) < vl_r(ilev)) THEN
+               deficit = (vl_r(ilev) - ss_vliq(ilev)) * sp_dz(ilev)
+               ss_vliq(ilev) = vl_r(ilev)
+            ELSEIF (ss_vliq(ilev) > porsl(ilev)) THEN
+               deficit = - (ss_vliq(ilev) - porsl(ilev)) * sp_dz(ilev)
+               ss_vliq(ilev) = porsl(ilev)
             ELSE
                deficit = 0.
             ENDIF
+         ELSE
+            deficit = deficit + etroot(ilev)*dt
          ENDIF
       enddo
 
@@ -332,7 +340,7 @@ contains
 
          if (lb == 1) then
             ubc_typ_sub = bc_rainfall
-            ubc_val_sub = rain
+            ubc_val_sub = qgtop
          else
             ubc_typ_sub = bc_fix_flux
             ubc_val_sub = 0
@@ -359,7 +367,7 @@ contains
       end do soilcolumn
 
       IF (.not. is_permeable(1)) THEN
-         ss_dp = max(ss_dp + rain * dt, 0._r8)
+         ss_dp = max(ss_dp + qgtop * dt, 0._r8)
       ENDIF
 
       IF (wa >= 0) THEN
@@ -393,7 +401,7 @@ contains
          ENDIF
       ENDDO
 
-      qinfl = rain - (ss_dp - dp_m1)/dt
+      qinfl = qgtop - (ss_dp - dp_m1)/dt
 
 #ifdef CoLMDEBUG
       ! total water mass
@@ -412,11 +420,11 @@ contains
       ENDDO
       w_sum_after = w_sum_after + wa
 
-      wblc = w_sum_after - (w_sum_before + (rain - etr - rsubst) * dt)
+      wblc = w_sum_after - (w_sum_before + (qgtop - etr - rsubst) * dt)
 
       IF (abs(wblc) > tolerance) THEN
          write(*,*) 'soil_water_vertical_movement balance error: ', wblc
-         write(*,*) w_sum_after, w_sum_before, rain, etr, rsubst
+         write(*,*) w_sum_after, w_sum_before, qgtop, etr, rsubst
       ENDIF
 #endif
 
@@ -678,6 +686,8 @@ contains
       integer  :: ilev, iter
       real(r8) :: dlt
 
+      logical  :: wet2dry
+
       REAL(r8) :: wsum_m1, wsum, werr
 
       ss_wf(lb:ub) = 0
@@ -697,7 +707,7 @@ contains
          wf_m1 = ss_wf
          vl_m1 = ss_vl
          wt_m1 = ss_wt
-
+      
          wsum_m1 = sum(ss_vl * (sp_dz - ss_wt)) + sum(ss_wt * vl_s)
          IF (ubc_typ == bc_rainfall) THEN
             wsum_m1 = wsum_m1 + ss_dp
@@ -708,6 +718,7 @@ contains
 
          if (ubc_typ == bc_rainfall) then
             dp_m1 = max(ss_dp, 0._r8)
+            IF (dp_m1 < tol_z) dp_m1 = 0.
             infl_max = dp_m1/dt_this + ubc_val
          end if
 
@@ -756,16 +767,25 @@ contains
                q_wt_0 = q_wt
             end if
 
+            wet2dry = .false.
+            if (ubc_typ == bc_rainfall) then
+               IF ((dp_m1 > 0.) .and. (q_0(lb-1) >= infl_max)) then
+                  wet2dry = .true.
+               ENDIF
+            ENDIF
+
             f2_norm(iter) = sqrt(sum(blc**2))
 
             if (    (f2_norm(iter) < tol_richards * dt_this)  &
                .or. (dt_this < dt_explicit)                   &
                .or. (iter >= max_iters_richards) &
-               .or. (.not. is_solvable) ) then
+               .or. (.not. is_solvable)          &
+               .or. wet2dry) THEN
 
                if ((dt_this < dt_explicit) &
                   .or. (iter >= max_iters_richards) &
-                  .or. (.not. is_solvable) ) then
+                  .or. (.not. is_solvable) &
+                  .or. wet2dry) THEN
 
                   dt_this = min(dt_this, dt_explicit)
                   q_this  = q_0
@@ -785,7 +805,14 @@ contains
                dt_done = dt_done + dt_this
 
 #ifdef CoLMDEBUG
-               count_iters_this(iter) = count_iters_this(iter) + 1
+               if (f2_norm(iter) < tol_richards * dt_this) THEN
+                  count_implicit = count_implicit + 1
+               else
+                  count_explicit = count_explicit + 1
+                  IF (wet2dry) THEN
+                     count_wet2dry = count_wet2dry + 1
+                  ENDIF
+               ENDIF
 #endif
 
                exit
@@ -1001,12 +1028,6 @@ contains
          ENDIF
 
          werr = wsum - (wsum_m1 + ubc_val * dt_this - lbc_val * dt_this)
-
-#ifdef  CoLMDEBUG
-         ! IF (abs(werr) > 1.0e-3) then
-         !     write(*,*)  'Richards solver water balance violation: ', werr, ubc_val, lbc_val
-         ! ENDIF
-#endif
 
       end do
 
@@ -2479,7 +2500,9 @@ contains
          if (qlower - qupper >= tol_q) then
             if ((psi_s(iface) < psi_s(iface+1)) &
                .or. &
-               ((psi_s(iface) == psi_s(iface+1)) .and. (is_sat(iface+1)))) then
+               ((psi_s(iface) == psi_s(iface+1)) .and. (is_sat(iface+1))) &
+               .or. &
+               (top_at_interface .and. (iface == i_stt))) then
 
                qq(iface) = qupper
 
@@ -2502,7 +2525,9 @@ contains
 
             elseif ((psi_s(iface) > psi_s(iface+1)) &
                   .or. &
-                  ((psi_s(iface) == psi_s(iface+1)) .and. (.not. is_sat(iface+1)))) then
+                  ((psi_s(iface) == psi_s(iface+1)) .and. (.not. is_sat(iface+1))) &
+                  .or. &
+                  (btm_at_interface .and. (iface == i_end-1))) then
 
                qq(iface) = qlower
 
@@ -3538,34 +3563,56 @@ contains
       
       USE MOD_SPMD_Task
       IMPLICIT NONE
-
-      ! CHARACTER(len=20) :: fmtt
+   
+      INTEGER(8), SAVE :: count_implicit_accum = 0
+      INTEGER(8), SAVE :: count_explicit_accum = 0
+      INTEGER(8), SAVE :: count_wet2dry_accum  = 0
+      integer :: iwork
 
 #ifdef CoLMDEBUG
       IF (p_is_worker) THEN
 #ifdef USEMPI
-         CALL mpi_allreduce (MPI_IN_PLACE, count_iters_this, size(count_iters_this), &
-            MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_implicit, 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_explicit, 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
+         CALL mpi_allreduce (MPI_IN_PLACE, count_wet2dry , 1, MPI_INTEGER8, MPI_SUM, p_comm_worker, p_err)
 #endif
          IF (p_iam_worker == 0) THEN
-            ! write(*,*)
-            ! write(fmtt,'("(A,",I1,"I12)")') max_iters_richards
-            ! write(*,fmtt) 'VSF Iteration stat this step: ', count_iters_this(:)
-
-            ! count_iters_accm = count_iters_accm + count_iters_this
-            ! write(*,fmtt) 'VSF Iteration stat all steps: ', count_iters_accm(:)
+            count_implicit_accum = count_implicit_accum + count_implicit
+            count_explicit_accum = count_explicit_accum + count_explicit
+            count_wet2dry_accum  = count_wet2dry_accum  + count_wet2dry
             
-            write(*,"(/,A,I13,A,I13,A)") 'VSF Iteration stat this step: ',    &
-               sum(count_iters_this(1:max_iters_richards-1)), ' (converged)', &
-               count_iters_this(max_iters_richards), ' (failed)'
-
-            count_iters_accm = count_iters_accm + count_iters_this
-            write(*,"(A,I13,A,I13,A)") 'VSF Iteration stat all steps: ',      &
-               sum(count_iters_accm(1:max_iters_richards-1)), ' (converged)', &
-               count_iters_accm(max_iters_richards), ' (failed)'
+#ifdef USEMPI
+            CALL mpi_send (count_implicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_implicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_explicit_accum, 1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+            CALL mpi_send (count_wet2dry_accum,  1, MPI_INTEGER, 0, mpi_tag_mesg, p_comm_glb, p_err)
+#endif
          ENDIF
 
-         count_iters_this = 0
+         count_implicit = 0
+         count_explicit = 0
+         count_wet2dry  = 0
+      ENDIF
+
+      IF (p_is_master) THEN
+
+#ifdef USEMPI
+         iwork = p_address_worker(0)
+         CALL mpi_recv (count_implicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_explicit, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_wet2dry , 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_implicit_accum, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_explicit_accum, 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+         CALL mpi_recv (count_wet2dry_accum , 1, MPI_INTEGER, iwork, mpi_tag_mesg, p_comm_glb, p_stat, p_err)
+#endif
+
+         write(*,"(/,A,I13,A,I13,A,I13,A)") 'VSF scheme this step: ',    &
+            count_implicit, ' (implicit)', count_explicit, ' (explicit)', count_wet2dry, ' (wet2dry)'
+         write(*,"(A,I13,A,I13,A,I13,A)") 'VSF scheme all steps: ',      &
+            count_implicit_accum, ' (implicit)', count_explicit_accum, ' (explicit)', &
+            count_wet2dry_accum, ' (wet2dry)'
       ENDIF
 #endif
 
