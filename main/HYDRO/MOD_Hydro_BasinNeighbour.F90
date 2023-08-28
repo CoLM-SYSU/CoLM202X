@@ -24,9 +24,10 @@ MODULE MOD_Hydro_BasinNeighbour
       real(r8), allocatable :: dist    (:)   ! distance between basin centers [m]
       real(r8), allocatable :: lenbdr  (:)   ! length of boundary line [m]
       real(r8), allocatable :: area    (:)   ! area of neighbours [m^2]
+      real(r8), allocatable :: agwt    (:)   ! ground water area (for patchtype <= 2) of neighbours [m^2]
       real(r8), allocatable :: elva    (:)   ! elevation of neighbours [m]
       real(r8), allocatable :: slope   (:)   ! slope (positive) [-]
-      logical , allocatable :: iswatb  (:)   ! whether a neighbour is water body
+      logical , allocatable :: islake  (:)   ! whether a neighbour is water body
    END type basin_neighbour_type
 
    type(basin_neighbour_type), allocatable :: basinneighbour (:)
@@ -92,10 +93,12 @@ CONTAINS
       TYPE(pointer_real8_1d), allocatable :: rlon_nb(:), rlat_nb(:)
    
       REAL(r8), allocatable :: area_b(:)
+      REAL(r8), allocatable :: agwt_b(:)
       REAL(r8), allocatable :: elva_b(:)
-      real(r8), allocatable :: iswatb(:)
+      real(r8), allocatable :: islake(:)
 
       TYPE(pointer_real8_1d), allocatable :: area_nb  (:)  ! m^2
+      TYPE(pointer_real8_1d), allocatable :: agwt_nb  (:)  ! m^2
       TYPE(pointer_real8_1d), allocatable :: elva_nb  (:)  ! m
       TYPE(pointer_real8_1d), allocatable :: iswat_nb (:)  
 
@@ -445,9 +448,10 @@ CONTAINS
             IF (nnb > 0) THEN
                allocate (basinneighbour(ibasin)%dist  (nnb))
                allocate (basinneighbour(ibasin)%area  (nnb))
+               allocate (basinneighbour(ibasin)%agwt  (nnb))
                allocate (basinneighbour(ibasin)%elva  (nnb))
                allocate (basinneighbour(ibasin)%slope (nnb))
-               allocate (basinneighbour(ibasin)%iswatb(nnb))
+               allocate (basinneighbour(ibasin)%islake(nnb))
             ENDIF
          ENDDO
 
@@ -475,19 +479,18 @@ CONTAINS
          
          IF (numbasin > 0) THEN
             allocate (area_b(numbasin))
+            allocate (agwt_b(numbasin))
             allocate (elva_b(numbasin))
-            allocate (iswatb(numbasin))
+            allocate (islake(numbasin))
             DO ibasin = 1, numbasin
                IF (lake_id(ibasin) <= 0) THEN
                   area_b(ibasin) = sum(hillslope_network(ibasin)%area)
-                  IF ((hillslope_network(ibasin)%nhru == 1) .and. (hillslope_network(ibasin)%indx(1) == 0)) THEN
-                     iswatb(ibasin) = 1.
-                  ELSE
-                     iswatb(ibasin) = 0.
-                  ENDIF
+                  agwt_b(ibasin) = sum(hillslope_network(ibasin)%agwt)
+                  islake(ibasin) = 0.
                ELSE
                   area_b(ibasin) = sum(lakes(ibasin)%area0)
-                  iswatb(ibasin) = 1.
+                  agwt_b(ibasin) = 0.
+                  islake(ibasin) = 1.
                ENDIF
                
                elva_b(ibasin) = basinelv(ibasin)
@@ -503,24 +506,28 @@ CONTAINS
          CALL allocate_neighbour_data (area_nb)
          CALL retrieve_neighbour_data (area_b, area_nb)
          
+         CALL allocate_neighbour_data (agwt_nb)
+         CALL retrieve_neighbour_data (agwt_b, agwt_nb)
+         
          CALL allocate_neighbour_data (elva_nb)
          CALL retrieve_neighbour_data (elva_b, elva_nb)
          
          CALL allocate_neighbour_data (iswat_nb)
-         CALL retrieve_neighbour_data (iswatb, iswat_nb)
+         CALL retrieve_neighbour_data (islake, iswat_nb)
          
          DO ibasin = 1, numbasin
             DO inb = 1, basinneighbour(ibasin)%nnb
                IF (basinneighbour(ibasin)%bindex(inb) > 0) THEN ! skip ocean neighbour
                   basinneighbour(ibasin)%area (inb) = area_nb(ibasin)%val(inb)
+                  basinneighbour(ibasin)%agwt (inb) = agwt_nb(ibasin)%val(inb)
                   basinneighbour(ibasin)%elva (inb) = elva_nb(ibasin)%val(inb)
                   basinneighbour(ibasin)%slope(inb) = &
                      abs(elva_nb(ibasin)%val(inb) - elva_b(ibasin)) / basinneighbour(ibasin)%dist(inb)
 
                   IF (iswat_nb(ibasin)%val(inb) > 0) THEN
-                     basinneighbour(ibasin)%iswatb(inb) = .true.
+                     basinneighbour(ibasin)%islake(inb) = .true.
                   ELSE
-                     basinneighbour(ibasin)%iswatb(inb) = .false.
+                     basinneighbour(ibasin)%islake(inb) = .false.
                   ENDIF
                ENDIF
             ENDDO
@@ -535,7 +542,8 @@ CONTAINS
          IF (allocated(rlat_b)) deallocate(rlat_b)
          IF (allocated(elva_b)) deallocate(elva_b)
          IF (allocated(area_b)) deallocate(area_b)
-         IF (allocated(iswatb)) deallocate(iswatb)
+         IF (allocated(agwt_b)) deallocate(agwt_b)
+         IF (allocated(islake)) deallocate(islake)
          
          IF (allocated(rlon_nb )) deallocate(rlon_nb )
          IF (allocated(rlat_nb )) deallocate(rlat_nb )
@@ -721,7 +729,7 @@ CONTAINS
             IF (allocated(basinneighbour(i)%area  )) deallocate(basinneighbour(i)%area  )
             IF (allocated(basinneighbour(i)%elva  )) deallocate(basinneighbour(i)%elva  )
             IF (allocated(basinneighbour(i)%slope )) deallocate(basinneighbour(i)%slope )
-            IF (allocated(basinneighbour(i)%iswatb)) deallocate(basinneighbour(i)%iswatb)
+            IF (allocated(basinneighbour(i)%islake)) deallocate(basinneighbour(i)%islake)
          ENDDO
          deallocate(basinneighbour)
       ENDIF
@@ -731,15 +739,19 @@ CONTAINS
       IF (allocated(Ks_nb     )) deallocate(Ks_nb     )
       IF (allocated(wdsrf_nb  )) deallocate(wdsrf_nb  )
       
-      DO i = lbound(recvaddr,1), ubound(recvaddr,1)
-         IF (allocated(recvaddr(i)%bindex)) deallocate(recvaddr(i)%bindex)
-         IF (allocated(recvaddr(i)%ibasin )) deallocate(recvaddr(i)%ibasin )
-      ENDDO 
+      IF (allocated(recvaddr)) THEN
+         DO i = lbound(recvaddr,1), ubound(recvaddr,1)
+            IF (allocated(recvaddr(i)%bindex)) deallocate(recvaddr(i)%bindex)
+            IF (allocated(recvaddr(i)%ibasin)) deallocate(recvaddr(i)%ibasin)
+         ENDDO 
+      ENDIF
 
-      DO i = lbound(sendaddr,1), ubound(sendaddr,1)
-         IF (allocated(sendaddr(i)%bindex)) deallocate(sendaddr(i)%bindex)
-         IF (allocated(sendaddr(i)%ibasin )) deallocate(sendaddr(i)%ibasin )
-      ENDDO
+      IF (allocated(sendaddr)) THEN
+         DO i = lbound(sendaddr,1), ubound(sendaddr,1)
+            IF (allocated(sendaddr(i)%bindex)) deallocate(sendaddr(i)%bindex)
+            IF (allocated(sendaddr(i)%ibasin)) deallocate(sendaddr(i)%ibasin)
+         ENDDO
+      ENDIF
          
       IF (allocated(recvaddr)) deallocate(recvaddr)
       IF (allocated(sendaddr)) deallocate(sendaddr)

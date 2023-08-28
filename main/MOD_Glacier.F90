@@ -871,7 +871,7 @@
                     wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
                     sm          ,scv         ,snowdp    ,imelt   ,&
                     fiold       ,snl         ,qseva     ,qsdew   ,&
-                    qsubl       ,qfros       ,rsur      ,rnof    ,&
+                    qsubl       ,qfros       ,gwat      ,         &
                     ssi         ,wimp        ,forc_us   ,forc_vs )
 
 !=======================================================================
@@ -917,15 +917,11 @@
        snowdp       ! snow depth (m)
 
   real(r8), INTENT(out) :: &
-       rsur      , &! surface runoff (mm h2o/s)
-       rnof         ! total runoff (mm h2o/s)
+       gwat   ! net water input from top (mm/s)
 !
 !-----------------------Local Variables------------------------------
 !
   integer lb, j
-
-  real(r8) :: gwat   ! net water input from top (mm/s)
-  real(r8) :: rsubst ! subsurface runoff (mm h2o/s)
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto the ice surface
@@ -949,10 +945,6 @@
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
-
-      rsur = max(0.0,gwat)
-      rsubst = 0.
-      rnof = rsur
 
       if(snl<0)then
          ! Compaction rate for snow
@@ -993,7 +985,7 @@
                     wliq_icesno ,wice_icesno ,pg_rain   ,pg_snow ,&
                     sm          ,scv         ,snowdp    ,imelt   ,&
                     fiold       ,snl         ,qseva     ,qsdew   ,&
-                    qsubl       ,qfros       ,rsur      ,rnof    ,&
+                    qsubl       ,qfros       ,gwat      ,         &
                     ssi         ,wimp        ,forc_us   ,forc_vs ,&
                     ! SNICAR
                     forc_aer    ,&
@@ -1039,8 +1031,7 @@
        snowdp       ! snow depth (m)
 
   real(r8), INTENT(out) :: &
-       rsur      , &! surface runoff (mm h2o/s)
-       rnof         ! total runoff (mm h2o/s)
+       gwat   ! net water input from top (mm/s)
 
   real(r8), intent(in) :: forc_us
   real(r8), intent(in) :: forc_vs
@@ -1063,9 +1054,6 @@
 !-----------------------Local Variables------------------------------
 !
   integer lb, j
-
-  real(r8) :: gwat   ! net water input from top (mm/s)
-  real(r8) :: rsubst ! subsurface runoff (mm h2o/s)
 
 !=======================================================================
 ! [1] update the liquid water within snow layer and the water onto the ice surface
@@ -1092,10 +1080,6 @@
 !=======================================================================
 ! [2] surface runoff and infiltration
 !=======================================================================
-
-      rsur = max(0.0,gwat)
-      rsubst = 0.
-      rnof = rsur
 
       if(snl<0)then
          ! Compaction rate for snow

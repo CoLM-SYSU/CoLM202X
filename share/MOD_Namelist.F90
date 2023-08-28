@@ -45,13 +45,11 @@ MODULE MOD_Namelist
    LOGICAL  :: USE_SITE_dbedrock         = .true.
    LOGICAL  :: USE_SITE_topography       = .true.
    logical  :: USE_SITE_HistWriteBack    = .true.
-   logical  :: USE_SITE_ForcingReadAhead = .false.
-
-#ifdef URBAN_MODEL
+   logical  :: USE_SITE_ForcingReadAhead = .true.
    LOGICAL  :: USE_SITE_urban_paras      = .true.
    LOGICAL  :: USE_SITE_thermal_paras    = .false.
    LOGICAL  :: USE_SITE_urban_LAI        = .false.
-#endif
+
 
    ! ----- simulation time type -----
    TYPE nl_simulation_time_type
@@ -111,14 +109,19 @@ MODULE MOD_Namelist
    CHARACTER(len=256) :: DEF_SUBGRID_SCHEME = 'LCT'
 
    ! ----- compress data in aggregation when send data from IO to worker -----
-   logical :: USE_zip_for_aggregation = .false.
+   logical :: USE_zip_for_aggregation = .true.
 
    ! ----- Leaf Area Index -----
    !add by zhongwang wei @ sysu 2021/12/23
    !To allow read satellite observed LAI
    ! 06/2023, note by hua yuan: change DEF_LAI_CLIM to DEF_LAI_MONTHLY
    logical :: DEF_LAI_MONTHLY = .true.
-   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC
+   ! ----- Atmospheric Nitrogen Deposition -----
+   !add by Fang Shang @ pku 2023/08
+   !1: To allow annuaul ndep data to be read in
+   !2: To allow monthly ndep data to be read in
+   INTEGER :: DEF_NDEP_FREQUENCY = 1
+   INTEGER :: DEF_Interception_scheme = 1  !1:CoLM；2:CLM4.5; 3:CLM5; 4:Noah-MP; 5:MATSIRO; 6:VIC; 7:JULES
 
    ! ------LAI change and Land cover year setting ----------
    ! 06/2023, add by wenzong dong and hua yuan: use for updating LAI with simulation year
@@ -198,8 +201,8 @@ MODULE MOD_Namelist
    CHARACTER(len=5)   :: DEF_precip_phase_discrimination_scheme = 'II'
    CHARACTER(len=256) :: DEF_SSP='585' ! Co2 path for CMIP6 future scenario.
 
-   !  irrigation method temporary
-   INTEGER :: DEF_IRRIGATION_METHOD = 1
+   ! !  irrigation method temporary
+   ! INTEGER :: DEF_IRRIGATION_METHOD = 1
 
    ! ----- Initialization -----
    LOGICAL            :: DEF_USE_SOIL_INIT  = .false.
@@ -345,6 +348,8 @@ MODULE MOD_Namelist
       LOGICAL :: rsur         = .true.
       LOGICAL :: rsub         = .true.
       LOGICAL :: rnof         = .true.
+      LOGICAL :: xwsur        = .true.
+      LOGICAL :: xwsub        = .true.
       LOGICAL :: qintr        = .true.
       LOGICAL :: qinfl        = .true.
       LOGICAL :: qdrip        = .true.
@@ -640,10 +645,11 @@ MODULE MOD_Namelist
       LOGICAL :: srndln       = .true.
       LOGICAL :: srniln       = .true.
 
-      LOGICAL :: rsubs_bsn    = .true.
-      LOGICAL :: rsubs_hru    = .true.
+      LOGICAL :: xsubs_bsn    = .true.
+      LOGICAL :: xsubs_hru    = .true.
       LOGICAL :: riv_height   = .true.
       LOGICAL :: riv_veloct   = .true.
+      LOGICAL :: discharge    = .true.
       LOGICAL :: wdsrf_hru    = .true.
       LOGICAL :: veloc_hru    = .true.
 
@@ -708,13 +714,14 @@ CONTAINS
          DEF_SUBGRID_SCHEME,              &
 
          DEF_LAI_MONTHLY,                 &   !add by zhongwang wei @ sysu 2021/12/23
+         DEF_NDEP_FREQUENCY,              &   !add by Fang Shang    @ pku  2023/08
          DEF_Interception_scheme,         &   !add by zhongwang wei @ sysu 2022/05/23
          DEF_SSP,                         &   !add by zhongwang wei @ sysu 2023/02/07
 
          DEF_LAI_CHANGE_YEARLY,           &
          DEF_USE_LAIFEEDBACK,             &   !add by Xingjie Lu, use for updating LAI with leaf carbon
          DEF_USE_IRRIGATION,              &   ! use irrigation
-         DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
+         ! DEF_IRRIGATION_METHOD,           &   ! use irrigation temporary
 
          DEF_LC_YEAR,                     &
          DEF_LULCC_SCHEME,                &
@@ -1106,9 +1113,8 @@ CONTAINS
       CALL mpi_bcast (DEF_USE_LAIFEEDBACK,   1, mpi_logical, p_root, p_comm_glb, p_err)
       CALL mpi_bcast (DEF_USE_IRRIGATION ,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
-      CALL mpi_bcast (DEF_USE_IRRIGATION,      1, mpi_logical, p_root, p_comm_glb, p_err)
       !  use irrigation temporary
-      CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
+      ! CALL mpi_bcast (DEF_IRRIGATION_METHOD,   1, mpi_logical, p_root, p_comm_glb, p_err)
 
       ! LULC related
       CALL mpi_bcast (DEF_LC_YEAR,           1, mpi_integer, p_root, p_comm_glb, p_err)
@@ -1135,6 +1141,7 @@ CONTAINS
       CALL mpi_bcast (DEF_SPLIT_SOILSNOW,      1, mpi_logical, p_root, p_comm_glb, p_err)
 
       call mpi_bcast (DEF_LAI_MONTHLY,         1, mpi_logical, p_root, p_comm_glb, p_err)
+      call mpi_bcast (DEF_NDEP_FREQUENCY,      1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_Interception_scheme, 1, mpi_integer, p_root, p_comm_glb, p_err)
       call mpi_bcast (DEF_SSP,             256, mpi_character, p_root, p_comm_glb, p_err)
 
@@ -1283,6 +1290,8 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%rsur        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rsub        ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%rnof        ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsur       ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xwsub       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qintr       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qinfl       ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%qdrip       ,  set_defaults)
@@ -1330,6 +1339,10 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%t_roof      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%t_wall      ,  set_defaults)
 #endif
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsun    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%assimsha    ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsun      ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%etrsha      ,  set_defaults)
 #ifdef BGC
       CALL sync_hist_vars_one (DEF_hist_vars%leafc              ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_storage      ,  set_defaults)
@@ -1410,10 +1423,6 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3arcgrass   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c3grass      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%leafc_c4grass      ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assimsun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%assimsha        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%etrsun        ,  set_defaults)
-         CALL sync_hist_vars_one (DEF_hist_vars%etrsha        ,  set_defaults)
 #ifdef CROP
       CALL sync_hist_vars_one (DEF_hist_vars%cphase                          , set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%cropprod1c                      , set_defaults)
@@ -1551,10 +1560,11 @@ CONTAINS
       CALL sync_hist_vars_one (DEF_hist_vars%srndln      ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%srniln      ,  set_defaults)
 
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_bsn   ,  set_defaults)
-      CALL sync_hist_vars_one (DEF_hist_vars%rsubs_hru   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_bsn   ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%xsubs_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_height  ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%riv_veloct  ,  set_defaults)
+      CALL sync_hist_vars_one (DEF_hist_vars%discharge   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%wdsrf_hru   ,  set_defaults)
       CALL sync_hist_vars_one (DEF_hist_vars%veloc_hru   ,  set_defaults)
 

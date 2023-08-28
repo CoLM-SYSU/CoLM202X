@@ -68,6 +68,11 @@ MODULE MOD_Initialize
       USE MOD_Mesh
       USE MOD_LandHRU
       USE MOD_LandPatch
+      USE MOD_ElmVector
+      USE MOD_HRUVector
+      USE MOD_Hydro_HillslopeNetwork
+      USE MOD_Hydro_RiverLakeNetwork
+      USE MOD_Hydro_RiverDepth
 #endif
 #ifdef CROP
       USE MOD_CropReadin
@@ -143,8 +148,8 @@ MODULE MOD_Initialize
       integer  :: year, jday                ! Julian day and seconds
       INTEGER  :: month, mday
 
-      integer  :: i,j,ipatch,nsl,ps,pe,ivt,m, u  ! indices
-      INTEGER  :: hs, he
+      integer  :: i,j,ipatch,nsl,hs,he,ps,pe,ivt,m, u  ! indices
+      real(r8) :: totalvolume
 
       integer :: Julian_8day
       integer :: ltyp
@@ -502,7 +507,7 @@ MODULE MOD_Initialize
       ENDIF
 
       ! for SOIL Water INIT by using water table depth
-      fwtd = trim(DEF_dir_runtime) // 'wtd.nc'
+      fwtd = trim(DEF_dir_runtime) // '/wtd.nc'
       IF (p_is_master) THEN
          inquire (file=trim(fwtd), exist=use_wtd)
          IF (use_wtd) THEN
@@ -798,29 +803,59 @@ MODULE MOD_Initialize
       ! -----
 #ifdef LATERAL_FLOW
 
-#if (defined CROP)
-      IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true., shadowfrac = pctcrop)
-#else
-      IF (p_is_worker) CALL hru_patch%build (landhru, landpatch, use_frac = .true.)
-#endif
+      CALL hillslope_network_init  ()
+      CALL river_lake_network_init (use_calc_rivdpt = .false.)
+
+      CALL calc_riverdepth_from_runoff ()
+
       IF (p_is_worker) THEN
-         IF (numelm > 0) THEN
-            wdsrf_bsn(:) = 0
-            veloc_riv(:) = 0
-            wdsrf_bsn_prev(:) = wdsrf_bsn(:)
-         ENDIF
+
+         IF (numpatch > 0) THEN
+            wdsrf(:) = 0.
+         ENDIF 
+
+         DO i = 1, numelm
+            IF (lake_id(i) > 0) THEN
+               ps = elm_patch%substt(i)
+               pe = elm_patch%subend(i)
+               wdsrf(ps:pe) = lakedepth(ps:pe) * 1.0e3 ! m to mm
+            ELSE
+               IF (hillslope_network(i)%indx(1) == 0) THEN
+                  hs = basin_hru%substt(i)
+                  ps = hru_patch%substt(hs)
+                  pe = hru_patch%subend(hs)
+                  wdsrf(ps:pe) = riverdpth(i) * 1.0e3 ! m to mm
+               ENDIF
+            ENDIF
+         ENDDO
 
          IF (numhru > 0) THEN
-            veloc_hru(:) = 0
-
             DO i = 1, numhru
                ps = hru_patch%substt(i)
                pe = hru_patch%subend(i)
                wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
                wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
-               wdsrf_hru_prev(i) = wdsrf_hru(i)
             ENDDO
+            veloc_hru(:) = 0
+            wdsrf_hru_prev(:) = wdsrf_hru(:)
          ENDIF
+
+         IF (numelm > 0) THEN
+            DO i = 1, numelm
+               hs = basin_hru%substt(i)
+               he = basin_hru%subend(i)
+               IF (lake_id(i) <= 0) THEN
+                  wdsrf_bsn(i) = minval(hillslope_network(i)%hand + wdsrf_hru(hs:he))
+               ELSE
+                  ! lake 
+                  totalvolume  = sum(wdsrf_hru(hs:he) * lakes(i)%area0)
+                  wdsrf_bsn(i) = lakes(i)%surface(totalvolume)
+               ENDIF
+            ENDDO
+            veloc_riv(:) = 0
+            wdsrf_bsn_prev(:) = wdsrf_bsn(:)
+         ENDIF
+
       ENDIF
 #endif
       ! ...............................................................

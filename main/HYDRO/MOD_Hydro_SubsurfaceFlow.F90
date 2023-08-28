@@ -52,9 +52,8 @@ CONTAINS
       REAL(r8), allocatable :: theta_a_h (:) 
       REAL(r8), allocatable :: zwt_h     (:) 
       REAL(r8), allocatable :: Ks_h      (:) ! [m/s]
-      REAL(r8), allocatable :: rsubs_h   (:) ! [m/s]
-      REAL(r8), allocatable :: rsubs_fc  (:) ! [m/s]
-      REAL(r8) :: rsubs_riv
+      REAL(r8), allocatable :: xsubs_h   (:) ! [m/s]
+      REAL(r8), allocatable :: xsubs_fc  (:) ! [m/s]
 
       logical  :: j_is_river
       REAL(r8) :: theta_s_h, air_h, icefrac, imped, delp
@@ -71,8 +70,8 @@ CONTAINS
       INTEGER  :: jnb
       REAL(r8) :: zsubs_up, zwt_up, Ks_up, theta_a_up, area_up
       REAL(r8) :: zsubs_dn, zwt_dn, Ks_dn, theta_a_dn, area_dn
-      REAL(r8) :: lenbdr, rsubs_nb
-      logical  :: iam_watb, nb_is_watb, has_river
+      REAL(r8) :: lenbdr, xsubs_nb
+      logical  :: iam_lake, nb_is_lake, has_river
 
       ! for water exchange
       integer  :: izwt
@@ -98,62 +97,58 @@ CONTAINS
 
          numbasin = numelm
             
-         rsubs_bsn(:) = 0.  ! subsurface lateral flow between basins                     
-         rsubs_hru(:) = 0.  ! subsurface lateral flow between hydrological response units
-         rsubs_pch(:) = 0.  ! subsurface lateral flow between patches inside one HRU     
+         xsubs_bsn(:) = 0.  ! subsurface lateral flow between basins                     
+         xsubs_hru(:) = 0.  ! subsurface lateral flow between hydrological response units
+         xsubs_pch(:) = 0.  ! subsurface lateral flow between patches inside one HRU     
 
-         rsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
+         xwsub(:) = 0. ! total recharge/discharge from subsurface lateral flow
 
          bdamp = 4.8
 
          IF (numbasin > 0) THEN
-            allocate (theta_a_bsn (numbasin))
-            allocate (zwt_bsn     (numbasin))
-            allocate (Ks_bsn      (numbasin))
+            allocate (theta_a_bsn (numbasin));  theta_a_bsn = 0.
+            allocate (zwt_bsn     (numbasin));  zwt_bsn     = 0.
+            allocate (Ks_bsn      (numbasin));  Ks_bsn      = 0.
          ENDIF
 
          DO ibasin = 1, numbasin
 
             hrus => hillslope_network(ibasin)
-            
-            theta_a_bsn (ibasin) = 0.
-            zwt_bsn     (ibasin) = 0.
-            Ks_bsn      (ibasin) = 0.
 
             nhru = hrus%nhru
 
-            IF (lake_id(ibasin) > 0)               CYCLE  ! lake
-            IF ((hrus%indx(1)==0) .and. (nhru==1)) CYCLE  ! only river in a catchment
+            IF (lake_id(ibasin) > 0) CYCLE  ! lake
+            IF (sum(hrus%agwt) <= 0) CYCLE  ! no area of soil, urban or wetland
             
-            allocate (theta_a_h (nhru))
-            allocate (zwt_h     (nhru))
-            allocate (Ks_h      (nhru))
-
-            theta_a_h = 0.
-            zwt_h     = 0.
-            Ks_h      = 0.
+            allocate (theta_a_h (nhru));  theta_a_h = 0.
+            allocate (zwt_h     (nhru));  zwt_h     = 0.
+            allocate (Ks_h      (nhru));  Ks_h      = 0.
 
             DO i = 1, nhru
                
                IF (hrus%indx(i) == 0) CYCLE ! river
-               IF (hrus%awat(i) == 0) CYCLE ! only land ice or water body in this HRU
+               IF (hrus%agwt(i) == 0) CYCLE ! no area of soil, urban or wetland
 
                ps = hru_patch%substt(hrus%ihru(i))
                pe = hru_patch%subend(hrus%ihru(i))
 
                theta_s_h = 0
+               sumwt = 0
                DO ipatch = ps, pe
                   IF (patchtype(ipatch) <= 2) THEN
                      theta_s_h = theta_s_h + hru_patch%subfrc(ipatch) &
                         * sum(porsl(1:nl_soil,ipatch) * dz_soi(1:nl_soil) &
                         - wice_soisno(1:nl_soil,ipatch)/denice) / sum(dz_soi(1:nl_soil)) 
+                     sumwt = sumwt + hru_patch%subfrc(ipatch)
                   ENDIF 
                ENDDO
+               IF (sumwt > 0) theta_s_h = theta_s_h / sumwt
 
                IF (theta_s_h > 0.) THEN
                   
                   air_h    = 0.
                   zwt_h(i) = 0.
+                  sumwt    = 0.
                   DO ipatch = ps, pe
                      IF (patchtype(ipatch) <= 2) THEN
                         air_h = air_h + hru_patch%subfrc(ipatch) &
@@ -163,8 +158,12 @@ CONTAINS
                         air_h = max(0., air_h)
                         
                         zwt_h(i) = zwt_h(i) + zwt(ipatch) * hru_patch%subfrc(ipatch)
+                        
+                        sumwt = sumwt + hru_patch%subfrc(ipatch)
                      ENDIF
                   ENDDO
+                  IF (sumwt > 0) air_h    = air_h / sumwt
+                  IF (sumwt > 0) zwt_h(i) = zwt_h(i) / sumwt
 
                   IF ((air_h <= 0.) .or. (zwt_h(i) <= 0.)) THEN
                      theta_a_h(i) = theta_s_h
@@ -178,6 +177,7 @@ CONTAINS
                   ENDIF
 
                   Ks_h(i) = 0.
+                  sumwt   = 0.
                   DO ipatch = ps, pe
                      IF (patchtype(ipatch) <= 2) THEN
                         DO ilev = 1, nl_soil
@@ -186,8 +186,10 @@ CONTAINS
                            Ks_h(i) = Ks_h(i) + hru_patch%subfrc(ipatch) &
                               * hksati(ilev,ipatch)/1.0e3 * imped * dz_soi(ilev)/zi_soi(nl_soil) 
                         ENDDO
+                        sumwt = sumwt + hru_patch%subfrc(ipatch)
                      ENDIF
                   ENDDO
+                  IF (sumwt > 0) Ks_h(i) = Ks_h(i) / sumwt
                ELSE
                   ! Frozen soil.
                   Ks_h(i) = 0.
@@ -195,11 +197,11 @@ CONTAINS
 
             ENDDO
             
-            allocate (rsubs_h  (nhru))
-            allocate (rsubs_fc (nhru))
+            allocate (xsubs_h  (nhru))
+            allocate (xsubs_fc (nhru))
 
-            rsubs_h (:) = 0.
-            rsubs_fc(:) = 0.
+            xsubs_h (:) = 0.
+            xsubs_fc(:) = 0.
 
             DO i = 1, nhru
                   
@@ -250,52 +252,64 @@ CONTAINS
                   ENDIF
                ENDIF
 
-               ca = hrus%flen(i) * Ks_fc / theta_a_h(i) / delp / hrus%awat(i) * deltime
+               ca = hrus%flen(i) * Ks_fc / theta_a_h(i) / delp / hrus%agwt(i) * deltime
 
                IF (.not. j_is_river) THEN
-                  cb = hrus%flen(i) * Ks_fc / theta_a_h(j) / delp / hrus%awat(j) * deltime
+                  cb = hrus%flen(i) * Ks_fc / theta_a_h(j) / delp / hrus%agwt(j) * deltime
                ELSE
-                  cb = hrus%flen(i) * Ks_fc / delp / hrus%awat(j) * deltime
+                  cb = hrus%flen(i) * Ks_fc / delp / hrus%area(j) * deltime
                ENDIF
                
-               rsubs_fc(i) = (zsubs_h_up - zsubs_h_dn) * hrus%flen(i) * Ks_fc / (1+ca+cb) / delp
+               xsubs_fc(i) = (zsubs_h_up - zsubs_h_dn) * hrus%flen(i) * Ks_fc / (1+ca+cb) / delp
 
-               rsubs_h(i) = rsubs_h(i) + rsubs_fc(i) / hrus%awat(i)
-               rsubs_h(j) = rsubs_h(j) - rsubs_fc(i) / hrus%awat(j)
+               xsubs_h(i) = xsubs_h(i) + xsubs_fc(i) / hrus%agwt(i)
+
+               IF (j_is_river) THEN
+                  xsubs_h(j) = xsubs_h(j) - xsubs_fc(i) / hrus%area(j)
+               ELSE
+                  xsubs_h(j) = xsubs_h(j) - xsubs_fc(i) / hrus%agwt(j)
+               ENDIF
                
             ENDDO
             
             IF (hrus%indx(1) == 0) THEN
-               ! rsubs_h(1) is positive = out of soil column
-               IF (rsubs_h(1)*deltime > wdsrf_bsn(ibasin)*riverarea(ibasin)) THEN 
-                  alp = wdsrf_bsn(ibasin)*riverarea(ibasin) / (rsubs_h(1)*deltime)
-                  rsubs_h(1) = rsubs_h(1) * alp
+               ! xsubs_h(1) is positive = out of soil column
+               IF (xsubs_h(1)*deltime > wdsrf_bsn(ibasin)) THEN 
+                  alp = wdsrf_bsn(ibasin) / (xsubs_h(1)*deltime)
+                  xsubs_h(1) = xsubs_h(1) * alp
                   DO i = 2, nhru
-                     IF (hrus%inext(i) == 1) THEN
-                        rsubs_h(i) = rsubs_h(i) - (1.0-alp)*rsubs_fc(i)/hrus%awat(i)
+                     IF ((hrus%inext(i) == 1) .and. (hrus%agwt(i) > 0.)) THEN
+                        xsubs_h(i) = xsubs_h(i) - (1.0-alp)*xsubs_fc(i)/hrus%agwt(i)
                      ENDIF
                   ENDDO
                ENDIF
             ENDIF
                
             ! Update total subsurface lateral flow (1): Between hydrological units
+            ! for soil, urban, wetland or river patches
             DO i = 1, nhru
-               rsubs_hru(hrus%ihru(i)) = rsubs_h(i)
+               xsubs_hru(hrus%ihru(i)) = xsubs_h(i)
                
                ps = hru_patch%substt(hrus%ihru(i))
                pe = hru_patch%subend(hrus%ihru(i))
                DO ipatch = ps, pe
-                  IF (patchtype(ipatch) <= 2) THEN 
-                     rsub(ipatch) = rsub(ipatch) + rsubs_h(i) * 1.e3 ! (positive = out of soil column) 
+                  IF ((patchtype(ipatch) <= 2) .or. (hrus%indx(i) == 0)) THEN 
+                     xwsub(ipatch) = xwsub(ipatch) + xsubs_h(i) * 1.e3 ! (positive = out of soil column) 
                   ENDIF
                ENDDO
+
+               IF (hrus%indx(1) == 0) THEN
+                  DO ipatch = ps, pe
+                     IF (patchtype(ipatch) <= 2) THEN 
+                        rsub(ipatch) = - xsubs_h(1) * riverarea(ibasin) / sum(hrus%agwt) * 1.0e3 ! m/s to mm/s
+                     ENDIF
+                  ENDDO
+               ENDIF
             ENDDO
             
             DO i = 1, nhru
                ! Inside hydrological units
-               IF (hrus%indx(i) /= 0) THEN
-                  ps = hru_patch%substt(hrus%ihru(i))
-                  pe = hru_patch%subend(hrus%ihru(i))
+               IF (hrus%agwt(i) > 0) THEN
                
                   IF (zwt_h(i) > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
@@ -304,33 +318,35 @@ CONTAINS
                      Ks_in = raniso * Ks_h(i) * ((1.5-zwt_h(i)) + bdamp)
                   ENDIF
 
+                  ps = hru_patch%substt(hrus%ihru(i))
+                  pe = hru_patch%subend(hrus%ihru(i))
                   sumwt = sum(hru_patch%subfrc(ps:pe), mask = patchtype(ps:pe) <= 2)
                   IF (sumwt > 0) THEN
                      zwt_mean = sum(zwt(ps:pe)*hru_patch%subfrc(ps:pe), mask = patchtype(ps:pe) <= 2) / sumwt
 
                      DO ipatch = ps, pe
                         IF (patchtype(ipatch) <= 2) THEN
-                           rsubs_pch(ipatch) = - Ks_in * (zwt(ipatch) - zwt_mean) *6.0*pi/hrus%awat(i)
+                           xsubs_pch(ipatch) = - Ks_in * (zwt(ipatch) - zwt_mean) *6.0*pi/hrus%agwt(i)
                            ! Update total subsurface lateral flow (2): Between patches
-                           rsub(ipatch) = rsub(ipatch) + rsubs_pch(ipatch) * 1.e3 ! m/s to mm/s
+                           xwsub(ipatch) = xwsub(ipatch) + xsubs_pch(ipatch) * 1.e3 ! m/s to mm/s
                         ENDIF
                      ENDDO
                   ENDIF
                ENDIF
             ENDDO
 
-            sumarea = sum(hrus%awat)
+            sumarea = sum(hrus%agwt)
             IF (sumarea > 0) THEN
-               theta_a_bsn (ibasin) = sum(theta_a_h * hrus%awat) / sumarea
-               zwt_bsn     (ibasin) = sum(zwt_h     * hrus%awat) / sumarea
-               Ks_bsn      (ibasin) = sum(Ks_h      * hrus%awat) / sumarea
+               theta_a_bsn (ibasin) = sum(theta_a_h * hrus%agwt) / sumarea
+               zwt_bsn     (ibasin) = sum(zwt_h     * hrus%agwt) / sumarea
+               Ks_bsn      (ibasin) = sum(Ks_h      * hrus%agwt) / sumarea
             ENDIF
 
             deallocate (theta_a_h)
             deallocate (zwt_h    )
             deallocate (Ks_h     )
-            deallocate (rsubs_h  )
-            deallocate (rsubs_fc )
+            deallocate (xsubs_h  )
+            deallocate (xsubs_fc )
 
          ENDDO
 
@@ -343,71 +359,63 @@ CONTAINS
             
             hrus => hillslope_network(ibasin)
                
-            iam_watb = .false.
-            IF (lake_id(ibasin) > 0) THEN
-               iam_watb = .true.
-            ELSEIF ((hrus%nhru == 1) .and. (hrus%indx(1) == 0)) THEN
-               iam_watb = .true.
-            ENDIF
+            iam_lake = (lake_id(ibasin) > 0)
             
             DO jnb = 1, basinneighbour(ibasin)%nnb
 
                IF (basinneighbour(ibasin)%bindex(jnb) == -9) CYCLE ! skip ocean neighbour
 
-               nb_is_watb = basinneighbour(ibasin)%iswatb(jnb)
+               nb_is_lake = basinneighbour(ibasin)%islake(jnb)
 
-               IF (iam_watb .and. nb_is_watb) then
+               IF (iam_lake .and. nb_is_lake) then
                   CYCLE
                ENDIF
-
-               IF (.not. iam_watb)   Ks_up = Ks_bsn(ibasin)
-               IF (.not. nb_is_watb) Ks_dn = Ks_nb(ibasin)%val(jnb)
-
-               IF ((Ks_up == 0.) .or. (Ks_dn == 0.)) THEN
-                  cycle
-               ENDIF
-
-               IF (.not. iam_watb)   zwt_up = zwt_bsn(ibasin)
-               IF (.not. nb_is_watb) zwt_dn = zwt_nb(ibasin)%val(jnb)
-
-               IF (.not. iam_watb) then
+               
+               IF (.not. iam_lake) then
+                  Ks_up      = Ks_bsn     (ibasin)
+                  zwt_up     = zwt_bsn    (ibasin)
                   theta_a_up = theta_a_bsn(ibasin)
+                  zsubs_up   = basinneighbour(ibasin)%myelva - zwt_up 
+                  area_up    = sum(hrus%agwt)
                ELSE
                   theta_a_up = 1.
-               ENDIF 
+                  zsubs_up   = basinneighbour(ibasin)%myelva + wdsrf_bsn(ibasin) 
+                  area_up    = basinneighbour(ibasin)%myarea
+               ENDIF
 
-               IF (.not. nb_is_watb) THEN
+               IF (.not. nb_is_lake) THEN
+                  Ks_dn      = Ks_nb(ibasin)%val(jnb)
+                  zwt_dn     = zwt_nb(ibasin)%val(jnb)
                   theta_a_dn = theta_a_nb(ibasin)%val(jnb)
+                  zsubs_dn   = basinneighbour(ibasin)%elva(jnb) - zwt_dn
+                  area_dn    = basinneighbour(ibasin)%agwt(jnb)
                ELSE
                   theta_a_dn = 1.
+                  zsubs_dn   = basinneighbour(ibasin)%elva(jnb) + wdsrf_nb(ibasin)%val(jnb)
+                  area_dn    = basinneighbour(ibasin)%area(jnb)
                ENDIF
 
-               IF (iam_watb) then
-                  zsubs_up = basinneighbour(ibasin)%myelva + wdsrf_bsn(ibasin) 
-                  IF ((zsubs_up > zsubs_dn) .and. (wdsrf_bsn(ibasin) == 0.)) THEN
-                     CYCLE
-                  ENDIF
-                  delp = basinneighbour(ibasin)%area(jnb) / basinneighbour(ibasin)%lenbdr(jnb) * 0.5
-               ELSE
-                  zsubs_up = basinneighbour(ibasin)%myelva - zwt_up 
-                  delp = basinneighbour(ibasin)%dist(jnb)
+               IF ((.not. iam_lake)   .and. (area_up <= 0)) CYCLE
+               IF ((.not. nb_is_lake) .and. (area_dn <= 0)) CYCLE
+               IF ((Ks_up == 0.) .or. (Ks_dn == 0.))        CYCLE
+
+               ! water body is dry.
+               IF (iam_lake .and. (zsubs_up > zsubs_dn) .and. (wdsrf_bsn(ibasin) == 0.)) THEN
+                  CYCLE
                ENDIF
-
-               IF (nb_is_watb) THEN
-                  zsubs_dn = basinneighbour(ibasin)%elva(jnb) + wdsrf_nb(ibasin)%val(jnb)
-                  IF ((zsubs_up < zsubs_dn) .and. (wdsrf_nb(ibasin)%val(jnb) == 0.)) THEN
-                     CYCLE
-                  ENDIF
-                  delp = basinneighbour(ibasin)%myarea / basinneighbour(ibasin)%lenbdr(jnb) * 0.5
-               ELSE
-                  zsubs_dn = basinneighbour(ibasin)%elva(jnb) - zwt_dn
-                  delp = basinneighbour(ibasin)%dist(jnb)
-               ENDIF 
-                  
-               area_up = basinneighbour(ibasin)%myarea
-               area_dn = basinneighbour(ibasin)%area(jnb)
-
+               IF (nb_is_lake .and. (zsubs_up < zsubs_dn) .and. (wdsrf_nb(ibasin)%val(jnb) == 0.)) THEN
+                  CYCLE
+               ENDIF
+               
                lenbdr = basinneighbour(ibasin)%lenbdr(jnb)
+
+               delp = basinneighbour(ibasin)%dist(jnb)
+               IF (iam_lake) then
+                  delp = basinneighbour(ibasin)%area(jnb) / lenbdr * 0.5
+               ENDIF
+               IF (nb_is_lake) THEN
+                  delp = basinneighbour(ibasin)%myarea / lenbdr * 0.5
+               ENDIF
 
                ! from Fan et al., JGR 112(D10125)
                slope = abs(basinneighbour(ibasin)%slope(jnb))
@@ -418,7 +426,7 @@ CONTAINS
                ENDIF
 
                ! Upstream scheme for hydraulic conductivity
-               IF (nb_is_watb .or. ((.not. iam_watb) .and. (zsubs_up > zsubs_dn))) THEN
+               IF (nb_is_lake .or. ((.not. iam_lake) .and. (zsubs_up > zsubs_dn))) THEN
                   IF (zwt_up > 1.5) THEN
                      ! from Fan et al., JGR 112(D10125)
                      Ks_fc = raniso * Ks_up * bdamp * exp(-(zwt_up-1.5)/bdamp)
@@ -436,41 +444,26 @@ CONTAINS
                ca = lenbdr * Ks_fc / theta_a_up / delp / area_up * deltime
                cb = lenbdr * Ks_fc / theta_a_dn / delp / area_dn * deltime
 
-               rsubs_nb = (zsubs_up - zsubs_dn) * lenbdr * Ks_fc / (1+ca+cb) / delp
+               xsubs_nb = (zsubs_up - zsubs_dn) * lenbdr * Ks_fc / (1+ca+cb) / delp
 
-               IF (.not. iam_watb) THEN
-                  IF (hrus%indx(1) == 0) THEN
-                     rsubs_nb = rsubs_nb / sum(hrus%area(2:))
-                  ELSE
-                     rsubs_nb = rsubs_nb / basinneighbour(ibasin)%myarea
-                  ENDIF
+               IF (.not. iam_lake) THEN
+                  xsubs_nb = xsubs_nb / sum(hrus%agwt)
                ELSE
-                  rsubs_nb = rsubs_nb / basinneighbour(ibasin)%myarea
+                  xsubs_nb = xsubs_nb / basinneighbour(ibasin)%myarea
                ENDIF
                
-               rsubs_bsn(ibasin) = rsubs_bsn(ibasin) + rsubs_nb
+               xsubs_bsn(ibasin) = xsubs_bsn(ibasin) + xsubs_nb
 
             ENDDO
 
-            IF (iam_watb) THEN
-               ps = elm_patch%substt(ibasin)
-               pe = elm_patch%subend(ibasin)
-               ! Update total subsurface lateral flow (3): Between basins
-               rsub(ps:pe) = rsub(ps:pe) + rsubs_bsn(ibasin) * 1.e3 ! m/s to mm/s
-            ELSE
-               IF (hrus%indx(1) == 0) THEN
-                  i0 = 2 ! excluding river HRU
-               ELSE
-                  i0 = 1
+            ! Update total subsurface lateral flow (3): Between basins
+            ps = elm_patch%substt(ibasin)
+            pe = elm_patch%subend(ibasin)
+            DO ipatch = ps, pe
+               IF (iam_lake .or. (patchtype(ipatch) <= 2)) THEN
+                  xwsub(ipatch) = xwsub(ipatch) + xsubs_bsn(ibasin) * 1.e3 ! m/s to mm/s
                ENDIF
-
-               DO i = i0, hrus%nhru
-                  ps = hru_patch%substt(hrus%ihru(i))
-                  pe = hru_patch%subend(hrus%ihru(i))
-                  ! Update total subsurface lateral flow (3): Between basins
-                  rsub(ps:pe) = rsub(ps:pe) + rsubs_bsn(ibasin) * 1.e3 ! m/s to mm/s
-               ENDDO
-            ENDIF
+            ENDDO
 
          ENDDO
 
@@ -496,7 +489,7 @@ CONTAINS
                   + wa(ipatch) + wdsrf(ipatch)
 #endif
 
-               exwater = rsub(ipatch) * deltime
+               exwater = xwsub(ipatch) * deltime
 
 #ifdef Campbell_SOIL_MODEL
                vl_r(1:nl_soil) = 0._r8
@@ -531,7 +524,7 @@ CONTAINS
 
                ! check consistancy between water table location and liquid water content
                DO ilev = 1, nl_soil
-                  IF ((vol_liq(ilev) < eff_porosity(ilev)-1.e-6) .and. (zwtmm <= sp_zi(ilev-1))) THEN
+                  IF ((vol_liq(ilev) < eff_porosity(ilev)-1.e-8) .and. (zwtmm <= sp_zi(ilev-1))) THEN
                      zwtmm = sp_zi(ilev)
                   ENDIF
                ENDDO
@@ -553,7 +546,7 @@ CONTAINS
                         + vol_liq(izwt)*(zwtmm-sp_zi(izwt-1))) /1000. * denh2o
                   ENDIF
                ENDIF
-               
+
                CALL soilwater_aquifer_exchange ( &
                   nl_soil, exwater, sp_zi, is_permeable, eff_porosity, vl_r, psi0(:,ipatch), &
                   hksati(:,ipatch), nprms, prms, porsl(nl_soil,ipatch), wdsrf(ipatch), &
@@ -593,13 +586,13 @@ CONTAINS
 #endif
             ELSEIF (patchtype(ipatch) == 4) THEN ! land water bodies
                IF (wa(ipatch) < 0) THEN
-                  wa(ipatch) = wa(ipatch) - rsub(ipatch)*deltime
+                  wa(ipatch) = wa(ipatch) - xwsub(ipatch)*deltime
                   IF (wa(ipatch) > 0) THEN
                      wdsrf(ipatch) = wa(ipatch) 
                      wa(ipatch) = 0
                   ENDIF
                ELSE
-                  wdsrf(ipatch) = wdsrf(ipatch) - rsub(ipatch)*deltime
+                  wdsrf(ipatch) = wdsrf(ipatch) - xwsub(ipatch)*deltime
                   IF (wdsrf(ipatch) < 0) THEN
                      wa(ipatch) = wdsrf(ipatch) 
                      wdsrf(ipatch) = 0

@@ -14,9 +14,9 @@ MODULE MOD_Hydro_Vars_1DFluxes
    IMPLICIT NONE
 
    ! -- fluxes --
-   REAL(r8), allocatable :: rsubs_bsn (:)  ! subsurface lateral flow between basins                      [m/s]
-   REAL(r8), allocatable :: rsubs_hru (:)  ! subsurface lateral flow between hydrological response units [m/s]
-   REAL(r8), allocatable :: rsubs_pch (:)  ! subsurface lateral flow between patches inside one HRU      [m/s]
+   REAL(r8), allocatable :: xsubs_bsn (:)  ! subsurface lateral flow between basins                      [m/s]
+   REAL(r8), allocatable :: xsubs_hru (:)  ! subsurface lateral flow between hydrological response units [m/s]
+   REAL(r8), allocatable :: xsubs_pch (:)  ! subsurface lateral flow between patches inside one HRU      [m/s]
 
    REAL(r8), allocatable :: wdsrf_bsn_ta (:) ! time step average of river height   [m]
    REAL(r8), allocatable :: momen_riv_ta (:) ! time step average of river momentum [m^2/s]
@@ -25,11 +25,15 @@ MODULE MOD_Hydro_Vars_1DFluxes
    REAL(r8), allocatable :: wdsrf_hru_ta (:) ! time step average of surface water depth    [m]
    REAL(r8), allocatable :: momen_hru_ta (:) ! time step average of surface water momentum [m^2/s]
    REAL(r8), allocatable :: veloc_hru_ta (:) ! time step average of surface water veloctiy [m/s]
+  
+   REAL(r8), allocatable :: xwsur (:) ! surface water exchange [mm h2o/s]
+   REAL(r8), allocatable :: xwsub (:) ! subsurface water exchange [mm h2o/s]
+   
+   REAL(r8), allocatable :: discharge (:) ! river discharge [m^3/s]
 
    ! PUBLIC MEMBER FUNCTIONS:
    PUBLIC :: allocate_1D_HydroFluxes
    PUBLIC :: deallocate_1D_HydroFluxes
-   PUBLIC :: set_1D_HydroFluxes
 
 CONTAINS 
 
@@ -48,16 +52,19 @@ CONTAINS
 
      IF (p_is_worker) THEN
         IF (numpatch > 0) THEN
-           allocate (rsubs_pch (numpatch)) ; rsubs_pch (:) = spval
+           allocate (xsubs_pch (numpatch)) ; xsubs_pch (:) = spval
+           allocate (xwsur     (numpatch)) ; xwsur     (:) = spval
+           allocate (xwsub     (numpatch)) ; xwsub     (:) = spval
         ENDIF
         IF (numbasin > 0) THEN
-           allocate (rsubs_bsn      (numbasin)) ; rsubs_bsn      (:) = spval
+           allocate (xsubs_bsn    (numbasin)) ; xsubs_bsn    (:) = spval
            allocate (wdsrf_bsn_ta (numbasin)) ; wdsrf_bsn_ta (:) = spval
            allocate (momen_riv_ta (numbasin)) ; momen_riv_ta (:) = spval
            allocate (veloc_riv_ta (numbasin)) ; veloc_riv_ta (:) = spval
+           allocate (discharge    (numbasin)) ; discharge    (:) = spval
         ENDIF
         IF (numhru > 0) THEN
-           allocate (rsubs_hru    (numhru)) ; rsubs_hru    (:) = spval
+           allocate (xsubs_hru    (numhru)) ; xsubs_hru    (:) = spval
            allocate (wdsrf_hru_ta (numhru)) ; wdsrf_hru_ta (:) = spval
            allocate (momen_hru_ta (numhru)) ; momen_hru_ta (:) = spval
            allocate (veloc_hru_ta (numhru)) ; veloc_hru_ta (:) = spval
@@ -70,9 +77,9 @@ CONTAINS
 
      IMPLICIT NONE
 
-     IF (allocated(rsubs_pch)) deallocate(rsubs_pch)
-     IF (allocated(rsubs_hru)) deallocate(rsubs_hru)
-     IF (allocated(rsubs_bsn)) deallocate(rsubs_bsn)
+     IF (allocated(xsubs_pch)) deallocate(xsubs_pch)
+     IF (allocated(xsubs_hru)) deallocate(xsubs_hru)
+     IF (allocated(xsubs_bsn)) deallocate(xsubs_bsn)
      
      IF (allocated(wdsrf_bsn_ta)) deallocate(wdsrf_bsn_ta)
      IF (allocated(momen_riv_ta)) deallocate(momen_riv_ta)
@@ -81,40 +88,13 @@ CONTAINS
      IF (allocated(wdsrf_hru_ta)) deallocate(wdsrf_hru_ta)
      IF (allocated(momen_hru_ta)) deallocate(momen_hru_ta)
      IF (allocated(veloc_hru_ta)) deallocate(veloc_hru_ta)
+     
+     IF (allocated(xwsur)) deallocate(xwsur)
+     IF (allocated(xwsub)) deallocate(xwsub)
+
+     IF (allocated(discharge)) deallocate(discharge)
 
   END SUBROUTINE deallocate_1D_HydroFluxes
-
-  SUBROUTINE set_1D_HydroFluxes
-
-     USE MOD_SPMD_Task
-     USE MOD_Mesh,      only : numelm
-     USE MOD_LandHRU,   only : numhru
-     USE MOD_LandPatch, only : numpatch
-     IMPLICIT NONE
-
-     INTEGER :: numbasin
-
-     numbasin = numelm
-
-     IF (p_is_worker) THEN
-        IF (numpatch > 0) THEN
-           rsubs_pch (:) = 0._r8
-        ENDIF
-        IF (numbasin > 0) THEN
-           rsubs_bsn      (:) = 0._r8
-           wdsrf_bsn_ta (:) = 0._r8
-           momen_riv_ta (:) = 0._r8
-           veloc_riv_ta (:) = 0._r8
-        ENDIF
-        IF (numhru > 0) THEN
-           rsubs_hru    (:) = 0._r8
-           wdsrf_hru_ta (:) = 0._r8
-           momen_hru_ta (:) = 0._r8
-           veloc_hru_ta (:) = 0._r8
-        ENDIF
-     ENDIF
-
-  END SUBROUTINE set_1D_HydroFluxes
 
 END MODULE MOD_Hydro_Vars_1DFluxes
 #endif

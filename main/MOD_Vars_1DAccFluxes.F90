@@ -39,6 +39,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_rsur   (:)
    real(r8), allocatable :: a_rsub   (:)
    real(r8), allocatable :: a_rnof   (:)
+#ifdef LATERAL_FLOW
+   real(r8), allocatable :: a_xwsur  (:)
+   real(r8), allocatable :: a_xwsub  (:)
+#endif
    real(r8), allocatable :: a_qintr  (:)
    real(r8), allocatable :: a_qinfl  (:)
    real(r8), allocatable :: a_qdrip  (:)
@@ -232,10 +236,10 @@ module MOD_Vars_1DAccFluxes
    real(r8), allocatable :: a_grainc_to_seed     (:)
    real(r8), allocatable :: a_fert_to_sminn      (:)
 
-   real(r8), allocatable :: a_irrig_rate         (:)        
-   real(r8), allocatable :: a_deficit_irrig      (:)      
-   real(r8), allocatable :: a_sum_irrig          (:)          
-   real(r8), allocatable :: a_sum_irrig_count    (:) 
+   real(r8), allocatable :: a_irrig_rate         (:)
+   real(r8), allocatable :: a_deficit_irrig      (:)
+   real(r8), allocatable :: a_sum_irrig          (:)
+   real(r8), allocatable :: a_sum_irrig_count    (:)
 #endif
    real(r8), allocatable :: a_ndep_to_sminn      (:)
    real(r8), allocatable :: a_abm                (:)
@@ -364,6 +368,10 @@ contains
             allocate (a_rsur      (numpatch))
             allocate (a_rsub      (numpatch))
             allocate (a_rnof      (numpatch))
+#ifdef LATERAL_FLOW
+            allocate (a_xwsur     (numpatch))
+            allocate (a_xwsub     (numpatch))
+#endif
             allocate (a_qintr     (numpatch))
             allocate (a_qinfl     (numpatch))
             allocate (a_qdrip     (numpatch))
@@ -699,6 +707,10 @@ contains
             deallocate (a_rsur      )
             deallocate (a_rsub      )
             deallocate (a_rnof      )
+#ifdef LATERAL_FLOW
+            deallocate (a_xwsur     )
+            deallocate (a_xwsub     )
+#endif
             deallocate (a_qintr     )
             deallocate (a_qinfl     )
             deallocate (a_qdrip     )
@@ -1033,6 +1045,10 @@ contains
             a_rsur    (:) = spval
             a_rsub    (:) = spval
             a_rnof    (:) = spval
+#ifdef LATERAL_FLOW
+            a_xwsur   (:) = spval
+            a_xwsub   (:) = spval
+#endif
             a_qintr   (:) = spval
             a_qinfl   (:) = spval
             a_qdrip   (:) = spval
@@ -1228,9 +1244,9 @@ contains
             a_grainc_to_cropprodc(:) = spval
             a_grainc_to_seed     (:) = spval
             a_fert_to_sminn      (:) = spval
-            a_irrig_rate         (:) = spval     
-            a_deficit_irrig      (:) = spval  
-            a_sum_irrig          (:) = spval      
+            a_irrig_rate         (:) = spval
+            a_deficit_irrig      (:) = spval
+            a_sum_irrig          (:) = spval
             a_sum_irrig_count    (:) = spval
 #endif
             a_ndep_to_sminn      (:) = spval
@@ -1335,10 +1351,11 @@ contains
       use MOD_Vars_1DForcing
       use MOD_Vars_1DFluxes
       use MOD_FrictionVelocity
-      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF, DEF_USE_IRRIGATION
+      USE MOD_Namelist, only: DEF_USE_CBL_HEIGHT, DEF_USE_OZONESTRESS, DEF_USE_PLANTHYDRAULICS, DEF_USE_NITRIF
       USE MOD_TurbulenceLEddy
       use MOD_Vars_Global
 #ifdef LATERAL_FLOW
+      USE MOD_Hydro_Vars_1DFluxes
       USE MOD_Hydro_Hist, only: accumulate_fluxes_basin
 #endif
 
@@ -1427,8 +1444,19 @@ contains
             call acc1d (xerr    , a_xerr   )
             call acc1d (zerr    , a_zerr   )
             call acc1d (rsur    , a_rsur   )
+#ifndef LATERAL_FLOW
+            WHERE ((rsur /= spval) .and. (rnof /= spval))
+               rsub = rnof - rsur
+            ELSEWHERE
+               rsub = spval
+            END WHERE 
+#endif
             call acc1d (rsub    , a_rsub   )
             call acc1d (rnof    , a_rnof   )
+#ifdef LATERAL_FLOW
+            CALL acc1d (xwsur   , a_xwsur  )
+            CALL acc1d (xwsub   , a_xwsub  )
+#endif
             call acc1d (qintr   , a_qintr  )
             call acc1d (qinfl   , a_qinfl  )
             call acc1d (qdrip   , a_qdrip  )
@@ -1462,7 +1490,6 @@ contains
             call acc1d (fsno   , a_fsno   )
             call acc1d (sigf   , a_sigf   )
             call acc1d (green  , a_green  )
-            lai = laisun + laisha
             call acc1d (lai    , a_lai    )
             call acc1d (laisun , a_laisun )
             call acc1d (laisha , a_laisha )
@@ -1642,10 +1669,15 @@ contains
             call acc1d (grainc_to_seed     ,   a_grainc_to_seed     )
             call acc1d (fert_to_sminn      ,   a_fert_to_sminn      )
 
+            ! call acc1d (irrig_rate         ,   a_irrig_rate         )
+            ! call acc1d (deficit_irrig      ,   a_deficit_irrig      )
+            ! call acc1d (sum_irrig          ,   a_sum_irrig          )
+            ! call acc1d (sum_irrig_count    ,   a_sum_irrig_count    )
             call acc1d (irrig_rate         ,   a_irrig_rate         )
-            a_deficit_irrig = deficit_irrig
+            call acc1d (deficit_irrig      ,   a_deficit_irrig      )
             a_sum_irrig = sum_irrig
             a_sum_irrig_count = sum_irrig_count
+
 #endif
             call acc1d (ndep_to_sminn      ,   a_ndep_to_sminn      )
             if(DEF_USE_FIRE)then

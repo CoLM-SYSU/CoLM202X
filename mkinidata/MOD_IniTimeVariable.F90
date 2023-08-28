@@ -361,10 +361,12 @@ CONTAINS
          scv    = snowdp*rhosno_ini
          z0m    = htop * z0mr
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         IF (ps>0 .and. pe>0) THEN
-            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         IF(patchtype==0)THEN
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            IF (ps>0 .and. pe>0) THEN
+               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+            ENDIF
          ENDIF
 #endif
 
@@ -412,10 +414,12 @@ CONTAINS
          snl    = 0
          z0m    = htop * z0mr
 #if (defined LULC_IGBP_PFT || defined LULC_IGBP_PC)
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         IF (ps>0 .and. pe>0) THEN
-            z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+         IF(patchtype==0)THEN
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            IF (ps>0 .and. pe>0) THEN
+               z0m_p(ps:pe) = htop_p(ps:pe) * z0mr
+            ENDIF
          ENDIF
 #endif
 

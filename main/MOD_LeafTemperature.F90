@@ -968,57 +968,79 @@ CONTAINS
 !-----------------------------------------------------------------------
 ! Update dew accumulation (kg/m2)
 !-----------------------------------------------------------------------
- if (DEF_Interception_scheme .eq. 1) then
-      ldew = max(0., ldew-evplwet*deltim)
+      IF (DEF_Interception_scheme .eq. 1) then
+         ldew = max(0., ldew-evplwet*deltim)
 
- ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
-      ldew = max(0., ldew-evplwet*deltim)
+      ELSEIF (DEF_Interception_scheme .eq. 2) then!CLM4.5
+         ldew = max(0., ldew-evplwet*deltim)
 
- ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
-      if (ldew_rain.gt.evplwet*deltim) then
-         ldew_rain = ldew_rain-evplwet*deltim
-         ldew_snow = ldew_snow
-         ldew=ldew_rain+ldew_snow
+      ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
+         if (ldew_rain .gt. evplwet*deltim) then
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         else
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         endif
+
+      ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
+         if (ldew_rain .gt. evplwet*deltim) then
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         else
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         endif
+
+      ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
+         if (ldew_rain .gt. evplwet*deltim) then
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
       else
          ldew_rain = 0.0
          ldew_snow = max(0., ldew-evplwet*deltim)
          ldew      = ldew_snow
       endif
 
- ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
-      if (taf .gt. tfrz) then
-         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
-         ldew_rain=max(ldew_rain,0.0)
-      else
-         ldew_snow = ldew_snow-evplwet*deltim
-         ldew_snow=max(ldew_snow,0.0)
-      endif
-         ldew=ldew_rain+ldew_snow
+      ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
+         if (ldew_rain .gt. evplwet*deltim) then
+            ldew_rain = ldew_rain-evplwet*deltim
+            ldew_snow = ldew_snow
+            ldew=ldew_rain+ldew_snow
+         else
+            ldew_rain = 0.0
+            ldew_snow = max(0., ldew-evplwet*deltim)
+            ldew      = ldew_snow
+         endif
+      ELSEIF (DEF_Interception_scheme .eq. 7) then !JULES
+            if (ldew_rain .gt. evplwet*deltim) then
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            else
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            endif
+      ELSEIF (DEF_Interception_scheme .eq. 8) then !JULES
+            if (ldew_rain .gt. evplwet*deltim) then
+               ldew_rain = ldew_rain-evplwet*deltim
+               ldew_snow = ldew_snow
+               ldew=ldew_rain+ldew_snow
+            else
+               ldew_rain = 0.0
+               ldew_snow = max(0., ldew-evplwet*deltim)
+               ldew      = ldew_snow
+            endif
+      ELSE
+         call abort
 
-   ELSEIF (DEF_Interception_scheme .eq. 5) then !MATSIRO
-      if (taf .gt. tfrz) then
-         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
-         ldew_rain=max(ldew_rain,0.0)
-      else
-         ldew_snow = ldew_snow-evplwet*deltim
-         ldew_snow=max(ldew_snow,0.0)
-      endif
-         ldew=ldew_rain+ldew_snow
-
-   ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-      if (taf .gt. tfrz) then
-         ldew_rain = ldew_rain-evplwet*deltim !max(0., ldew-evplwet*deltim)
-         ldew_rain=max(ldew_rain,0.0)
-      else
-         ldew_snow = ldew_snow-evplwet*deltim
-         ldew_snow=max(ldew_snow,0.0)
-      endif
-         ldew=ldew_rain+ldew_snow
-
-   else
-      call abort
-
- endif
+      ENDIF
 
 
 !-----------------------------------------------------------------------
@@ -1079,72 +1101,20 @@ CONTAINS
       !-----------------------------------------------------------------------
       ! Fwet is the fraction of all vegetation surfaces which are wet
       ! including stem area which contribute to evaporation
-      if (DEF_Interception_scheme .eq. 1) then !CoLM2014
-         lsai   = lai + sai ! effective leaf area index
-         dewmxi = 1.0/dewmx
-         ! 06/2018, yuan: remove sigf, to compatible with PFT
-         vegt   =  lsai
-         fwet = 0
-         IF(ldew > 0.) THEN
-            fwet = ((dewmxi/vegt)*ldew)**.666666666666
-            ! Check for maximum limit of fwet
-            fwet = min(fwet,1.0)
-         ENDIF
-      ELSEIF (DEF_Interception_scheme .eq. 2) then !CLM4.5
-         lsai = lai + sai
-         dewmxi = 1.0/dewmx
-         vegt   =  lsai
-         fwet = 0
-         IF(ldew > 0.) THEN
-            fwet = ((dewmxi/vegt)*ldew)**.666666666666
-            ! Check for maximum limit of fwet
-            fwet = min(fwet,1.0)
-         ENDIF
-      ELSEIF (DEF_Interception_scheme .eq. 3) then !CLM5
-         print *, "NOAHMP canopy evaporation scheme to be implemented"
-         call abort
-      ELSEIF (DEF_Interception_scheme .eq. 4) then !Noah-MP
-         lsai = lai + sai
-         satcap_rain = dewmx*lsai
-         satcap_snow = satcap_rain*60.0
-         IF(ldew_snow > 0. .and. ldew_snow>ldew_rain) THEN
-            fwet=(ldew_snow/satcap_snow)**.666666666666
-         ELSEIF (ldew_rain > 0. .and. ldew_snow<=ldew_rain) then
-            fwet=(ldew_rain/satcap_rain)**.666666666666
-         else
-            fwet=0.0
-         endif
+      lsai   = lai + sai ! effective leaf area index
+      dewmxi = 1.0/dewmx
+      ! 06/2018, yuan: remove sigf, to compatible with PFT
+      vegt   =  lsai
+      fwet = 0
+      IF(ldew > 0.) THEN
+         fwet = ((dewmxi/vegt)*ldew)**.666666666666
          ! Check for maximum limit of fwet
          fwet = min(fwet,1.0)
-         print *, "MATSIRO canopy evaporation scheme to be implemented"
-         call abort
-      ELSEIF (DEF_Interception_scheme .eq. 5) then !Matsiro
-         IF(ldew > 0.) THEN
-            satcap_rain=0.2*lsai
-            satcap_snow=0.2*lsai
-            fwet=(ldew/(satcap_rain))**.666666666666
-         else
-            fwet=0.0
-         endif
-         fwet = min(fwet,1.0)
-         print *, "VIC canopy evaporation scheme to be implemented"
-         call abort
-      ELSEIF (DEF_Interception_scheme .eq. 6) then !VIC
-         IF(ldew > 0.) THEN
-            fwet=(ldew/(lsai*0.2))**.666666666666
-         else
-            fwet=0.0
-         endif
-      ELSEIF (DEF_Interception_scheme .eq. 7) then
-         print *, "CoLM202X canopy evaporation scheme to be implemented"
-         call abort
-      else
-         call abort
-      endif
+      ENDIF
 
 
-! fdry is the fraction of lai which is dry because only leaves can
-! transpire. Adjusted for stem area which does not transpire
+      ! fdry is the fraction of lai which is dry because only leaves can
+      ! transpire. Adjusted for stem area which does not transpire
       fdry = (1.-fwet)*lai/lsai
 
 

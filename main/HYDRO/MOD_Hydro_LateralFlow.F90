@@ -41,7 +41,7 @@ CONTAINS
       IMPLICIT NONE
 
       CALL hillslope_network_init  ()
-      CALL river_lake_network_init ()
+      CALL river_lake_network_init (use_calc_rivdpt = .true.)
       CALL basin_neighbour_init    ()
 
    END SUBROUTINE lateral_flow_init
@@ -65,12 +65,12 @@ CONTAINS
       REAL(r8), intent(in) :: deltime
 
       ! Local Variables
-      INTEGER  :: nbasin, ibasin, ihru, i, j, istt, iend, istep
+      INTEGER  :: numbasin, ibasin, ihru, i, j, ps, pe, istep
       real(r8), allocatable :: wdsrf_p (:)
 
       IF (p_is_worker) THEN
 
-         nbasin = numelm
+         numbasin = numelm
 
          ! a) The smallest unit in surface lateral flow (including hillslope flow and river-lake flow)
          !    is HRU and the main prognostic variable is "wdsrf_hru" (surface water depth).
@@ -78,9 +78,9 @@ CONTAINS
          ! c) Water surface in a basin ("wdsrf_bsn", defined as the lowest surface water in the basin) 
          ! is derived from "wdsrf_hru".
          DO i = 1, numhru
-            istt = hru_patch%substt(i)
-            iend = hru_patch%subend(i)
-            wdsrf_hru(i) = sum(wdsrf(istt:iend) * hru_patch%subfrc(istt:iend))
+            ps = hru_patch%substt(i)
+            pe = hru_patch%subend(i)
+            wdsrf_hru(i) = sum(wdsrf(ps:pe) * hru_patch%subfrc(ps:pe))
             wdsrf_hru(i) = wdsrf_hru(i) / 1.0e3 ! mm to m
          ENDDO
 
@@ -96,6 +96,9 @@ CONTAINS
 
          dt_average = 0.
 
+         IF (numpatch > 0) rsur     (:) = 0.
+         IF (numbasin > 0) discharge(:) = 0.
+
          DO istep = 1, nsubstep
 
             ! (1) Surface flow over hillslopes.
@@ -107,8 +110,11 @@ CONTAINS
             dt_average = dt_average + deltime/nsubstep/ntimestep_riverlake
          
          ENDDO
+         
+         IF (numpatch > 0) rsur = rsur / deltime
+         IF (numbasin > 0) discharge = discharge / deltime
 
-         IF (nbasin > 0) THEN
+         IF (numbasin > 0) THEN
             wdsrf_bsn_ta(:) = wdsrf_bsn_ta(:) / deltime
             momen_riv_ta(:) = momen_riv_ta(:) / deltime
 
@@ -132,13 +138,13 @@ CONTAINS
 
          ! update surface water depth on patches
          DO i = 1, numhru
-            istt = hru_patch%substt(i)
-            iend = hru_patch%subend(i)
-            wdsrf(istt:iend) = wdsrf_hru(i) * 1.0e3 ! m to mm
+            ps = hru_patch%substt(i)
+            pe = hru_patch%subend(i)
+            wdsrf(ps:pe) = wdsrf_hru(i) * 1.0e3 ! m to mm
          ENDDO
             
          IF (numpatch > 0) THEN
-            rsur(:) = (wdsrf_p(:) - wdsrf(:)) / deltime
+            xwsur(:) = (wdsrf_p(:) - wdsrf(:)) / deltime
          ENDIF
 
          IF (allocated(wdsrf_p)) deallocate(wdsrf_p)
@@ -163,9 +169,9 @@ CONTAINS
       CALL check_vector_data ('River Velocity      [m/s]', veloc_riv)
       CALL check_vector_data ('HRU Water Depth     [m]  ', wdsrf_hru)
       CALL check_vector_data ('HRU Water Velocity  [m/s]', veloc_hru)
-      CALL check_vector_data ('Subsurface bt basin [m/s]', rsubs_bsn)
-      CALL check_vector_data ('Subsurface bt HRU   [m/s]', rsubs_hru)
-      CALL check_vector_data ('Subsurface bt patch [m/s]', rsubs_pch)
+      CALL check_vector_data ('Subsurface bt basin [m/s]', xsubs_bsn)
+      CALL check_vector_data ('Subsurface bt HRU   [m/s]', xsubs_hru)
+      CALL check_vector_data ('Subsurface bt patch [m/s]', xsubs_pch)
 #endif
 
    END SUBROUTINE lateral_flow
