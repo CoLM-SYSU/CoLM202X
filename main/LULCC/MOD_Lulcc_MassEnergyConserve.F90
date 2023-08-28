@@ -227,7 +227,8 @@ ENDIF
                            cvsoil_(l,k) = hcap*dz_soi(l)
                         ENDDO
 
-                        IF( dz_sno_(0,frnp_(k))>0 .and. scv_(frnp_(k))>0.) cvsoil_(1,k) = cvsoil_(1,k) + cpice*scv_(frnp_(k))
+                        ! no snow layer exist
+                        IF( dz_sno_(0,frnp_(k))<1.e-6 .and. scv_(frnp_(k))>0.) cvsoil_(1,k) = cvsoil_(1,k) + cpice*scv_(frnp_(k))
 
                         ! Snow heat capacity
                         IF( z_sno_(0,frnp_(k)) < 0 ) THEN
