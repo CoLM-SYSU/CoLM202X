@@ -280,7 +280,14 @@ PROGRAM CoLM
       CALL init_nitrif_data (sdate)
    ENDIF
 
-   CALL init_ndep_data (sdate(1))
+   IF (DEF_NDEP_FREQUENCY==1)THEN ! Initial annual ndep data readin
+      CALL init_ndep_data_annually (sdate(1)) 
+   ELSEIF(DEF_NDEP_FREQUENCY==2)THEN ! Initial monthly ndep data readin
+      CALL init_ndep_data_monthly (sdate(1),s_month) ! sf_add
+   ELSE
+      write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:',DEF_NDEP_FREQUENCY
+      CALL CoLM_stop ()
+   ENDIF
 
    IF (DEF_USE_FIRE) THEN
       CALL init_fire_data (sdate(1))
@@ -352,8 +359,17 @@ PROGRAM CoLM
          ENDIF
       ENDIF
 
-      IF (jdate(1) /= year_p) THEN
-         CALL update_ndep_data (idate(1), iswrite = .true.)
+      IF (DEF_NDEP_FREQUENCY==1)THEN ! Read Annual Ndep data
+         IF (jdate(1) /= year_p) THEN
+            CALL update_ndep_data_annually (idate(1), iswrite = .true.)
+         ENDIF
+      ELSEIF(DEF_NDEP_FREQUENCY==2)THEN! Read Monthly Ndep data 
+         IF (jdate(1) /= year_p .or. month /= month_p) THEN  !sf_add
+            CALL update_ndep_data_monthly (jdate(1), month, iswrite = .true.) !sf_add
+         ENDIF
+      ELSE
+         write(6,*) 'ERROR: DEF_NDEP_FREQUENCY should be only 1-2, Current is:',DEF_NDEP_FREQUENCY
+         CALL CoLM_stop ()
       ENDIF
 
       IF(DEF_USE_FIRE)THEN
@@ -456,6 +472,9 @@ PROGRAM CoLM
 #ifdef RangeCheck
       CALL check_TimeVariables ()
 #endif
+#ifdef CoLMDEBUG
+      CALL print_VSF_iteration_stat_info ()
+#endif
 
 #ifdef USEMPI
       CALL mpi_barrier (p_comm_glb, p_err)
@@ -481,10 +500,6 @@ PROGRAM CoLM
       ENDIF
 
       istep = istep + 1
-
-#ifdef CoLMDEBUG
-      CALL print_VSF_iteration_stat_info ()
-#endif
 
    ENDDO TIMELOOP
 

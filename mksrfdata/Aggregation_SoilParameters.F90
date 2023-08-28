@@ -776,7 +776,7 @@ SUBROUTINE Aggregation_SoilParameters ( &
                       data_r8_2d_in2 = alpha_vgm_grid, data_r8_2d_out2 = alpha_vgm_one, &
                       data_r8_2d_in3 = n_vgm_grid,     data_r8_2d_out3 = n_vgm_one, &
                       data_r8_2d_in4 = theta_s_grid,   data_r8_2d_out4 = theta_s_one)
-               theta_r_patches (ipatch) = median (theta_r_one, size(theta_r_one), spval)
+               theta_r_patches (ipatch) = sum (theta_r_one * (area_one/sum(area_one)))
                alpha_vgm_patches (ipatch) = median (alpha_vgm_one, size(alpha_vgm_one), spval)
                n_vgm_patches (ipatch) = median (n_vgm_one, size(n_vgm_one), spval)
                theta_s_patches (ipatch) = sum (theta_s_one * (area_one/sum(area_one)))

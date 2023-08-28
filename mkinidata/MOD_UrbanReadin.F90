@@ -75,11 +75,12 @@ MODULE MOD_UrbanReadin
       allocate (lucyid    (numurban))
 
 IF (DEF_URBAN_type_scheme == 1) THEN
+
       allocate (thickroof (numurban))
       allocate (thickwall (numurban))
 
 #ifdef SinglePoint
-      ! allocate (hwr (numurban) )
+      ! allocate (hwr   (numurban) )
       ! allocate (fgper (numurban) )
 
       lucyid(:) = SITE_lucyid
@@ -127,6 +128,7 @@ IF (DEF_URBAN_type_scheme == 1) THEN
       tk_roof(:,1) = SITE_tk_roof
       tk_wall(:,1) = SITE_tk_wall
       tk_gimp(:,1) = SITE_tk_gimp
+
 #else
       ! READ in urban data
       lndname = trim(dir_landdata)//'/urban/'//trim(cyear)//'/urban.nc'

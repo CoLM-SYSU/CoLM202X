@@ -197,10 +197,12 @@ MODULE MOD_SoilSnowHydrology
       endif
 #ifdef CROP
       if(DEF_USE_IRRIGATION)then
-         ps = patch_pft_s(ipatch)
-         pe = patch_pft_e(ipatch)
-         call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
-         gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+         if(patchtype==0)then
+            ps = patch_pft_s(ipatch)
+            pe = patch_pft_e(ipatch)
+            call CalIrrigationApplicationFluxes(ipatch,ps,pe,deltim,qflx_irrig_drip,qflx_irrig_sprinkler,qflx_irrig_flood,qflx_irrig_paddy,irrig_flag=2)
+            gwat = gwat + qflx_irrig_drip + qflx_irrig_flood + qflx_irrig_paddy
+         end if
       end if
 #endif
 !=======================================================================
@@ -418,7 +420,6 @@ MODULE MOD_SoilSnowHydrology
   use MOD_Precision
   USE MOD_Hydro_SoilWater
   use MOD_Const_Physical, only : denice, denh2o, tfrz
-  USE MOD_Vars_1DFluxes,  only : rsub
 
   implicit none
 
@@ -518,7 +519,7 @@ MODULE MOD_SoilSnowHydrology
        icefrac(1:nl_soil)   ! ice fraction (-)
 
   real(r8) :: err_solver, w_sum, wresi(1:nl_soil)
-  REAL(r8) :: qraing
+  REAL(r8) :: qgtop
 
   REAL(r8) :: zwtmm
   REAL(r8) :: sp_zc(1:nl_soil), sp_zi(0:nl_soil), sp_dz(1:nl_soil) ! in mm
@@ -559,8 +560,7 @@ MODULE MOD_SoilSnowHydrology
 !=======================================================================
 
       if (lb>=1)then
-         ! gwat = pg_rain + sm - qseva + qsdew
-         gwat = pg_rain + sm + qsdew
+         gwat = pg_rain + sm - qseva
       else
 
          IF (.not. DEF_USE_SNICAR .or. (patchtype==1 .and. DEF_URBAN_RUN)) THEN
@@ -595,13 +595,6 @@ MODULE MOD_SoilSnowHydrology
 
       ! For water balance check, the sum of water in soil column before the calcultion
       w_sum = sum(wliq_soisno(1:nl_soil)) + sum(wice_soisno(1:nl_soil)) + wa + wdsrf
-
-      ! Renew the ice and liquid mass due to condensation
-      if(lb >= 1)then
-         ! make consistent with how evap_grnd removed in infiltration
-         wliq_soisno(1) = max(0., wliq_soisno(1) - qseva * deltim)
-         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
-      end if
 
       ! Due to the increase in volume after freezing, the total volume of water and
       ! ice may exceed the porosity of the soil. This excess water is temporarily
@@ -640,11 +633,11 @@ MODULE MOD_SoilSnowHydrology
       endif
 
       ! infiltration into surface soil layer
-      qraing = gwat - rsur
+      qgtop = gwat - rsur
 #else
       ! for lateral flow, "rsur" is calculated in HYDRO/MOD_Hydro_SurfaceFlow.F90
       ! and is removed from surface water there.
-      qraing = gwat
+      qgtop = gwat
 #endif
 
 #if(defined CaMa_Flood)
@@ -671,7 +664,7 @@ MODULE MOD_SoilSnowHydrology
 
          ENDIF
          qinfl_fld=qinfl_fld_subgrid*fldfrc ! [mm/s] re-infiltration in grid.
-         qraing=qinfl_fld+qraing ! [mm/s] total infiltration in grid.
+         qgtop=qinfl_fld+qgtop ! [mm/s] total infiltration in grid.
          flddepth=flddepth-deltim*qinfl_fld_subgrid ! renew flood depth [mm], the flood depth is reduced by re-infiltration but only in inundation area.
       ENDIF
 #endif
@@ -686,7 +679,7 @@ MODULE MOD_SoilSnowHydrology
 
       ! check consistancy between water table location and liquid water content
       DO j = 1, nl_soil
-         IF ((vol_liq(j) < eff_porosity(j)-1.e-6) .and. (zwtmm <= sp_zi(j-1))) THEN
+         IF ((vol_liq(j) < eff_porosity(j)-1.e-8) .and. (zwtmm <= sp_zi(j-1))) THEN
             zwtmm = sp_zi(j)
          ENDIF
       ENDDO
@@ -712,8 +705,7 @@ MODULE MOD_SoilSnowHydrology
          ENDIF
       ENDIF
 
-      rsub(ipatch) = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
-      rsubst = rsub(ipatch)
+      rsubst = imped * 5.5e-3 * exp(-2.5*zwt)  ! drainage (positive = out of soil column)
 #else
       ! for lateral flow:
       ! "rsub" is calculated and removed from soil water in HYDRO/MOD_Hydro_SubsurfaceFlow.F90
@@ -758,11 +750,26 @@ MODULE MOD_SoilSnowHydrology
 
       wdsrf = max(0., wdsrf)
 
+      IF ((.not. is_permeable(1)) .and. (qgtop < 0.)) THEN
+         IF (wdsrf > 0) THEN
+            wdsrf = wdsrf + qgtop * deltim
+            IF (wdsrf < 0) THEN
+               wliq_soisno(1) = max(0., wliq_soisno(1) + wdsrf)
+               wdsrf = 0
+            ENDIF
+         ELSE
+            wliq_soisno(1) = max(0., wliq_soisno(1) + qgtop * deltim)
+         ENDIF 
+
+         qgtop = 0.
+
+      ENDIF
+
       CALL soil_water_vertical_movement ( &
          nl_soil, deltim, sp_zc(1:nl_soil), sp_zi(0:nl_soil), is_permeable(1:nl_soil),    &
          eff_porosity(1:nl_soil), theta_r(1:nl_soil), psi0(1:nl_soil), hksati(1:nl_soil), &
          nprms, prms(:,1:nl_soil), porsl(nl_soil),     &
-         qraing, etr, rootr(1:nl_soil), rsubst, qinfl, &
+         qgtop, etr, rootr(1:nl_soil), rsubst, qinfl, &
          wdsrf, zwtmm, wa, vol_liq(1:nl_soil), smp(1:nl_soil), hk(1:nl_soil), 1.e-3)
 
       ! update the mass of liquid water
@@ -784,6 +791,13 @@ MODULE MOD_SoilSnowHydrology
       ENDDO
 
       zwt = zwtmm/1000.0
+      
+      ! Renew the ice and liquid mass due to condensation
+      if(lb >= 1)then
+         ! make consistent with how evap_grnd removed in infiltration
+         wliq_soisno(1) = max(0., wliq_soisno(1) + qsdew * deltim)
+         wice_soisno(1) = max(0., wice_soisno(1) + (qfros-qsubl) * deltim)
+      end if
 
 #ifndef LATERAL_FLOW
      IF (wdsrf > pondmx) THEN
@@ -792,7 +806,7 @@ MODULE MOD_SoilSnowHydrology
      ENDIF
 
      ! total runoff (mm/s)
-     rnof = rsub(ipatch) + rsur
+     rnof = rsubst + rsur
 #endif
 
 #ifndef LATERAL_FLOW
@@ -803,7 +817,7 @@ MODULE MOD_SoilSnowHydrology
          - (gwat-etr)*deltim
 #endif
       if(lb >= 1)then
-         err_solver = err_solver - (qfros-qseva-qsubl)*deltim
+         err_solver = err_solver - (qsdew+qfros-qsubl)*deltim
       endif
 #if(defined CaMa_Flood)
       IF (LWINFILT) THEN
@@ -820,7 +834,7 @@ MODULE MOD_SoilSnowHydrology
 #endif
 
 !=======================================================================
-! [6] assumed hydrological scheme for the wetland and glacier
+! [6] assumed hydrological scheme for the wetland 
 !=======================================================================
 
   else
@@ -828,8 +842,7 @@ MODULE MOD_SoilSnowHydrology
          qinfl = 0.
 #ifndef LATERAL_FLOW
          rsur = max(0.,gwat)
-         rsub(ipatch) = 0
-         rnof = rsur + rsub(ipatch)
+         rnof = rsur
 #endif
          do j = 1, nl_soil
             if(t_soisno(j)>tfrz)then
@@ -837,16 +850,6 @@ MODULE MOD_SoilSnowHydrology
                wliq_soisno(j) = porsl(j)*dz_soisno(j)*1000.
             endif
          enddo
-      endif
-      if(patchtype==3)then        ! LAND ICE
-         qinfl = 0.
-#ifndef LATERAL_FLOW
-         rsur = max(0.0,gwat)
-         rsub(ipatch) = 0
-         rnof = rsur + rsub(ipatch)
-#endif
-         wice_soisno(1:nl_soil) = dz_soisno(1:nl_soil)*1000.
-         wliq_soisno(1:nl_soil) = 0.0
       endif
 
       wa = 0.

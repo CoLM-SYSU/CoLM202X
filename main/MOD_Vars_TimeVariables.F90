@@ -487,11 +487,18 @@ MODULE MOD_Vars_TimeVariables
      real(r8), allocatable :: fh           (:) ! integral of profile function for heat
      real(r8), allocatable :: fq           (:) ! integral of profile function for moisture
 
-     real(r8), allocatable :: irrig_rate          (:) ! irrigation rate (mm s-1)
-     real(r8), allocatable :: deficit_irrig       (:) ! irrigation amount (kg/m2)
-     real(r8), allocatable :: sum_irrig           (:) ! total irrigation amount (kg/m2)
-     real(r8), allocatable :: sum_irrig_count     (:) ! total irrigation times (-)
-     integer , allocatable :: n_irrig_steps_left  (:) ! left steps for once irrigation (-)
+     real(r8), allocatable :: irrig_rate          (:) ! irrigation rate [mm s-1]
+     real(r8), allocatable :: deficit_irrig       (:) ! irrigation amount [kg/m2]
+     real(r8), allocatable :: sum_irrig           (:) ! total irrigation amount [kg/m2]
+     real(r8), allocatable :: sum_irrig_count     (:) ! total irrigation counts [-]
+     integer , allocatable :: n_irrig_steps_left  (:) ! left steps for once irrigation [-]
+     real(r8), allocatable :: tairday                       (:) ! daily mean temperature [degree C]
+     real(r8), allocatable :: usday                         (:) ! daily mean wind component in eastward direction [m/s]
+     real(r8), allocatable :: vsday                         (:) ! daily mean wind component in northward direction [m/s]
+     real(r8), allocatable :: pairday                       (:) ! daily mean pressure [kPa]
+     real(r8), allocatable :: rnetday                       (:) ! daily net radiation flux [MJ/m2/day]
+     real(r8), allocatable :: fgrndday                      (:) ! daily ground heat flux [MJ/m2/day]
+     real(r8), allocatable :: potential_evapotranspiration  (:) ! daily potential evapotranspiration [mm/day]
 
      integer , allocatable :: irrig_method_corn      (:) ! irrigation method for corn (0-3)
      integer , allocatable :: irrig_method_swheat    (:) ! irrigation method for spring wheat (0-3)
@@ -632,6 +639,14 @@ MODULE MOD_Vars_TimeVariables
            allocate ( sum_irrig                  (numpatch)); sum_irrig              (:) = spval
            allocate ( sum_irrig_count            (numpatch)); sum_irrig_count        (:) = spval
            allocate ( n_irrig_steps_left         (numpatch)); n_irrig_steps_left     (:) = spval_i4
+           allocate ( tairday                    (numpatch)); tairday                (:) = spval
+           allocate ( usday                      (numpatch)); usday                  (:) = spval
+           allocate ( vsday                      (numpatch)); vsday                  (:) = spval
+           allocate ( pairday                    (numpatch)); pairday                (:) = spval
+           allocate ( rnetday                    (numpatch)); rnetday                (:) = spval
+           allocate ( fgrndday                   (numpatch)); fgrndday               (:) = spval
+           allocate ( potential_evapotranspiration(numpatch)); potential_evapotranspiration(:) = spval
+
            allocate ( irrig_method_corn          (numpatch)); irrig_method_corn      (:) = spval_i4
            allocate ( irrig_method_swheat        (numpatch)); irrig_method_swheat    (:) = spval_i4
            allocate ( irrig_method_wwheat        (numpatch)); irrig_method_wwheat    (:) = spval_i4
@@ -776,6 +791,14 @@ MODULE MOD_Vars_TimeVariables
            deallocate (sum_irrig              )
            deallocate (sum_irrig_count        )
            deallocate (n_irrig_steps_left     )
+
+           deallocate (tairday                )
+           deallocate (usday                  )
+           deallocate (vsday                  )
+           deallocate (pairday                )
+           deallocate (rnetday                )
+           deallocate (fgrndday               )
+           deallocate (potential_evapotranspiration)
 
            deallocate ( irrig_method_corn     )
            deallocate ( irrig_method_swheat   )
@@ -972,6 +995,13 @@ IF (DEF_USE_IRRIGATION) THEN
      CALL Ncio_write_vector (file_restart, 'sum_irrig             ' , 'patch',landpatch,sum_irrig             , compress)
      CALL Ncio_write_vector (file_restart, 'sum_irrig_count       ' , 'patch',landpatch,sum_irrig_count       , compress)
      CALL Ncio_write_vector (file_restart, 'n_irrig_steps_left    ' , 'patch',landpatch,n_irrig_steps_left    , compress)
+     CALL Ncio_write_vector (file_restart, 'tairday               ' , 'patch',landpatch,tairday               , compress)
+     CALL Ncio_write_vector (file_restart, 'usday                 ' , 'patch',landpatch,usday                 , compress)
+     CALL Ncio_write_vector (file_restart, 'vsday                 ' , 'patch',landpatch,vsday                 , compress)
+     CALL Ncio_write_vector (file_restart, 'pairday               ' , 'patch',landpatch,pairday               , compress)
+     CALL Ncio_write_vector (file_restart, 'rnetday               ' , 'patch',landpatch,rnetday               , compress)
+     CALL Ncio_write_vector (file_restart, 'fgrndday              ' , 'patch',landpatch,fgrndday              , compress)
+     CALL Ncio_write_vector (file_restart, 'potential_evapotranspiration', 'patch',landpatch, potential_evapotranspiration, compress)
      CALL Ncio_write_vector (file_restart, 'irrig_method_corn     ' , 'patch',landpatch,irrig_method_corn     , compress)
      CALL Ncio_write_vector (file_restart, 'irrig_method_swheat   ' , 'patch',landpatch,irrig_method_swheat   , compress)
      CALL Ncio_write_vector (file_restart, 'irrig_method_wwheat   ' , 'patch',landpatch,irrig_method_wwheat   , compress)
@@ -1126,6 +1156,13 @@ IF (DEF_USE_IRRIGATION) THEN
      CALL ncio_read_vector (file_restart, 'sum_irrig             ' , landpatch, sum_irrig             )
      CALL ncio_read_vector (file_restart, 'sum_irrig_count       ' , landpatch, sum_irrig_count       )
      CALL ncio_read_vector (file_restart, 'n_irrig_steps_left    ' , landpatch, n_irrig_steps_left    )
+     CALL ncio_read_vector (file_restart, 'tairday               ' , landpatch, tairday               )
+     CALL ncio_read_vector (file_restart, 'usday                 ' , landpatch, usday                 )
+     CALL ncio_read_vector (file_restart, 'vsday                 ' , landpatch, vsday                 )
+     CALL ncio_read_vector (file_restart, 'pairday               ' , landpatch, pairday               )
+     CALL ncio_read_vector (file_restart, 'rnetday               ' , landpatch, rnetday               )
+     CALL ncio_read_vector (file_restart, 'fgrndday              ' , landpatch, fgrndday              )
+     CALL ncio_read_vector (file_restart, 'potential_evapotranspiration' , landpatch, potential_evapotranspiration)
      CALL ncio_read_vector (file_restart, 'irrig_method_corn     ' , landpatch, irrig_method_corn     )
      CALL ncio_read_vector (file_restart, 'irrig_method_swheat   ' , landpatch, irrig_method_swheat   )
      CALL ncio_read_vector (file_restart, 'irrig_method_wwheat   ' , landpatch, irrig_method_wwheat   )
@@ -1241,6 +1278,13 @@ IF (DEF_USE_IRRIGATION) THEN
      CALL check_vector_data ('sum_irrig             ' , sum_irrig             )
      CALL check_vector_data ('sum_irrig_count       ' , sum_irrig_count       )
      CALL check_vector_data ('n_irrig_steps_left    ' , n_irrig_steps_left    )
+     CALL check_vector_data ('tairday               ' , tairday               )
+     CALL check_vector_data ('usday                 ' , usday                 )
+     CALL check_vector_data ('vsday                 ' , vsday                 )
+     CALL check_vector_data ('pairday               ' , pairday               )
+     CALL check_vector_data ('rnetday               ' , rnetday               )
+     CALL check_vector_data ('fgrndday              ' , fgrndday              )
+     CALL check_vector_data ('potential_evapotranspiration' , potential_evapotranspiration)
      CALL check_vector_data ('irrig_method_corn     ' , irrig_method_corn     )
      CALL check_vector_data ('irrig_method_swheat   ' , irrig_method_swheat   )
      CALL check_vector_data ('irrig_method_wwheat   ' , irrig_method_wwheat   )
