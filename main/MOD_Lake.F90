@@ -1542,6 +1542,7 @@ MODULE MOD_Lake
              ! ---------------------------
              z_soisno    , dz_soisno   , zi_soisno , t_soisno     ,&
              wice_soisno , wliq_soisno , t_lake    , lake_icefrac ,&
+             qout_snowb  ,                                         &
              fseng       , fgrnd       , snl       , scv          ,&
              snowdp      , sm          , forc_us   , forc_vs      ,&
 ! SNICAR model variables
@@ -1607,6 +1608,7 @@ MODULE MOD_Lake
   real(r8), INTENT(inout) :: wliq_soisno(maxsnl+1:nl_soil) ! liquid water (kg/m2)
   real(r8), INTENT(inout) :: t_lake      (1:nl_lake) ! lake temperature (Kelvin)
   real(r8), INTENT(inout) :: lake_icefrac(1:nl_lake) ! mass fraction of lake layer that is frozen
+  real(r8), INTENT(inout) :: qout_snowb ! rate of water out of snow bottom (mm/s)
 
   real(r8), INTENT(inout) :: fseng  ! total sensible heat flux (W/m**2) [+ to atm]
   real(r8), INTENT(inout) :: fgrnd  ! heat flux into snow / lake (W/m**2) [+ = into soil]
@@ -1641,7 +1643,6 @@ MODULE MOD_Lake
   integer  j          ! indices
   integer lb          ! lower bound of array
 
-  real(r8) qout_snowb ! rate of water out of snow bottom (mm/s)
   real(r8) xmf        ! snow melt heat flux (W/m**2)
 
   real(r8) sumsnowice ! sum of snow ice if snow layers found above unfrozen lake [kg/m&2]
