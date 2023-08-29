@@ -1248,7 +1248,7 @@ ENDIF
      CALL check_vector_data ('zwt         [m]    ', zwt        ) ! the depth to water table [m]
      CALL check_vector_data ('wa          [mm]   ', wa         ) ! water storage in aquifer [mm]
      CALL check_vector_data ('wdsrf       [mm]   ', wdsrf      ) ! depth of surface water [mm]
-     CALL check_vector_data ('rss         [s/m]  ', rss        ) ! depth of surface water [mm]
+     CALL check_vector_data ('rss         [s/m]  ', rss        ) ! soil surface resistance [s/m]
      CALL check_vector_data ('t_lake      [K]    ', t_lake      )!
      CALL check_vector_data ('lake_icefrc [-]    ', lake_icefrac)!
      CALL check_vector_data ('savedtke1   [W/m K]', savedtke1   )!
