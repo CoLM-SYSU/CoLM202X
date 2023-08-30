@@ -464,7 +464,6 @@ MODULE MOD_Thermal
 ! [2] specific humidity and its derivative at ground surface
 !     calculate soil surface resistance
 !=======================================================================
-      rss  = 0.
       qred = 1.
 
       CALL qsadv(t_grnd,forc_psrf,eg,degdT,qsatg,qsatgdT)
@@ -500,8 +499,9 @@ MODULE MOD_Thermal
 
       ! calculate soil surface resistance (rss)
       ! ------------------------------------------------
-      !NOTE: DEF_RSS_SCHEME=0 means no rss considered
-      IF (DEF_RSS_SCHEME > 0) THEN
+      !NOTE: (1) DEF_RSS_SCHEME=0 means no rss considered
+      !      (2) Do NOT calculate rss for the first timestep
+      IF (DEF_RSS_SCHEME>0 .and. rss/=spval) THEN
 
          !NOTE: If the beta scheme is used, the rss is not soil resistance,
          !but soil beta factor (soil wetness relative to field capacity [0-1]).
@@ -513,6 +513,8 @@ MODULE MOD_Thermal
                             theta_r, alpha_vgm, n_vgm, L_vgm, sc_vgm, fc_vgm, &
 #endif
                             dz_soisno,t_soisno,wliq_soisno,wice_soisno,fsno,qg,rss)
+      ELSE
+         rss = 0.
       ENDIF
 
 !=======================================================================

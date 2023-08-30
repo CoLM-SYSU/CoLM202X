@@ -286,7 +286,11 @@ CONTAINS
    IF (DEF_RSS_SCHEME .ne. 4) THEN
       ! with 1/rss = fsno/rss_snow + (1-fsno)/rss_soil,
       ! assuming rss_snow = 1, so rss is calibrated as:
-      rss = rss / (1.-fsno+fsno*rss)
+      IF (1.-fsno+fsno*rss > 0.) THEN
+         rss = rss / (1.-fsno+fsno*rss)
+      ELSE
+         rss = 0.
+      ENDIF
       rss = min(1.e6_r8,rss)
    ENDIF
 

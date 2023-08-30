@@ -516,11 +516,6 @@ MODULE MOD_Initialize
          ENDIF
       ENDIF
 
-      ! temporal setting for using soil resistance module
-      IF (DEF_RSS_SCHEME > 0) THEN
-         use_wtd = .false.
-      ENDIF
-
 #ifdef USEMPI
       call mpi_bcast (use_wtd, 1, MPI_LOGICAL, p_root, p_comm_glb, p_err)
 #endif
